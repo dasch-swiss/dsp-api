@@ -36,9 +36,9 @@
     <logger name="org.knora" level="INFO"/>
     <logger name="org.knora.webapi" level="INFO"/>
     <logger name="org.knora.webapi.util.cache" level="INFO"/>
-    <logger name="org.knora.webapi.util.PermissionUtilV1" level="DEBUG"/>
-    <logger name="org.knora.webapi.util.TransformData" level="DEBUG"/>
-    <logger name="org.knora.webapi.routing.Authenticator" level="DEBUG"/>
+    <logger name="org.knora.webapi.util.PermissionUtilV1" level="INFO"/>
+    <logger name="org.knora.webapi.util.TransformData" level="INFO"/>
+    <logger name="org.knora.webapi.routing.Authenticator" level="INFO"/>
     <logger name="org.knora.webapi.routing.v1.AssetsRouteV1" level="INFO"/>
     <logger name="org.knora.webapi.store.StoreManager" level="INFO"/>
     <logger name="org.knora.webapi.store.triplestore" level="INFO"/>
@@ -46,9 +46,9 @@
     <logger name="org.knora.webapi.responders.v1.CkanResponderV1" level="INFO"/>
     <logger name="org.knora.webapi.responders.v1.UsersResponderV1" level="INFO"/>
     <logger name="org.knora.webapi.responders.v1.ProjectsResponderV1" level="INFO"/>
-    <logger name="org.knora.webapi.responders.v1.PermissionsResponderV1" level="DEBUG"/>
-    <logger name="org.knora.webapi.responders.v1.ResourcesResponderV1" level="DEBUG"/>
-    <logger name="org.knora.webapi.responders.v1.ValuesResponderV1" level="DEBUG"/>
+    <logger name="org.knora.webapi.responders.v1.PermissionsResponderV1" level="INFO"/>
+    <logger name="org.knora.webapi.responders.v1.ResourcesResponderV1" level="INFO"/>
+    <logger name="org.knora.webapi.responders.v1.ValuesResponderV1" level="INFO"/>
     <logger name="org.knora.webapi.responders.v1.StoreResponderV1" level="INFO"/>
     <logger name="org.knora.webapi.viewhandlers.ResourceHtmlView" level="INFO"/>
 

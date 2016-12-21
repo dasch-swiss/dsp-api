@@ -1470,7 +1470,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
             actorUnderTest ! GraphDataGetRequestV1(
                 resourceIri = "http://data.knora.org/anything/start",
                 depth = 6,
-                userProfile = SharedAdminTestData.anythingUser1
+                userProfile = SharedAdminTestData.incunabulaProjectAdminUser
             )
 
             expectMsgPF(timeout) {

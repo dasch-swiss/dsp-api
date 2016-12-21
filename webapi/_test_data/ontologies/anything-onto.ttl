@@ -490,7 +490,7 @@
                  "Cosa"@it ,
                  "Thing"@en ;
 
-      rdfs:comment """'The whole world is full of things, which means there's a real need for someone to go searching for them. And that's exactly what a thing-searcher does.' --Pippi Longstocking"""@de ;
+      rdfs:comment """'The whole world is full of things, which means there's a real need for someone to go searching for them. And that's exactly what a thing-searcher does.' --Pippi Longstocking"""@de .
 
 
 

@@ -209,9 +209,9 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 	knora-base:valueHasString "1492-01-01 - 1492-12-31" ;
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueHasCalendar "JULIAN" ;
-	knora-base:valueHasStartJDC 2266011 ;
+	knora-base:valueHasStartJDN 2266011 ;
 	knora-base:valueHasStartPrecision "YEAR" ;
-	knora-base:valueHasEndJDC 2266376 ;
+	knora-base:valueHasEndJDN 2266376 ;
 	knora-base:valueHasEndPrecision "YEAR" ;
 	knora-base:valueCreationDate "2011-04-14T11:15:27"^^xsd:dateTimeStamp ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser" .

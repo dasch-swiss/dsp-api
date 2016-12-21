@@ -296,8 +296,18 @@ object Authenticator {
       */
     private def authenticateCredentials(username: String, password: String, session: Boolean)(implicit system: ActorSystem, executionContext: ExecutionContext): String = {
         val userProfileV1 = getUserProfileByUsername(username)
+        //log.debug(s"authenticateCredentials - userProfileV1: $userProfileV1")
 
-        if (userProfileV1.passwordMatch(password) && userProfileV1.userData.isActiveUser.get) {
+        /* check if the user is active, if not, then no need to check the password */
+        val isActiveUser = if (userProfileV1.userData.isActiveUser.get) {
+            true
+        } else {
+            log.debug("authenticateCredentials - user is not active")
+            throw BadCredentialsException(BAD_CRED_USER_INACTIVE)
+        }
+
+        /* check the password and if session is started, store it in the cache */
+        if (userProfileV1.passwordMatch(password)) {
             // create session id and cache user profile under this id
             log.debug("authenticateCredentials - password matched")
             if (session) {
@@ -307,11 +317,8 @@ object Authenticator {
             } else {
                 "0"
             }
-        } else if (!userProfileV1.userData.isActiveUser.get) {
-            log.debug("authenticateCredentials - user is not active")
-            throw BadCredentialsException(BAD_CRED_USER_INACTIVE)
         } else {
-            log.debug("authenticateCredentials - password did not match")
+            log.debug(s"authenticateCredentials - password did not match")
             throw BadCredentialsException(BAD_CRED_PASSWORD_MISMATCH)
         }
     }
@@ -426,7 +433,7 @@ object Authenticator {
       */
     private def getUserProfileByIri(iri: IRI)(implicit system: ActorSystem, timeout: Timeout, executionContext: ExecutionContext): UserProfileV1 = {
         val responderManager = system.actorSelection(RESPONDER_MANAGER_ACTOR_PATH)
-        val userProfileV1Future = (responderManager ? UserProfileByIRIGetRequestV1(iri)).mapTo[UserProfileV1]
+        val userProfileV1Future = (responderManager ? UserProfileByIRIGetRequestV1(iri, UserProfileType.FULL)).mapTo[UserProfileV1]
 
         userProfileV1Future.recover {
             case nfe: NotFoundException => throw BadCredentialsException(s"$BAD_CRED_USER_NOT_FOUND: ${nfe.message}")
@@ -457,7 +464,7 @@ object Authenticator {
                 case None =>
                     // didn't found one, so I will try to get it from the triple store
                     val userProfileV1Future = for {
-                        userProfileV1 <- (responderManager ? UserProfileByUsernameGetRequestV1(username)).mapTo[UserProfileV1]
+                        userProfileV1 <- (responderManager ? UserProfileByUsernameGetRequestV1(username, UserProfileType.FULL)).mapTo[UserProfileV1]
                         _ = CacheUtil.put(AUTHENTICATION_CACHE_NAME, username, userProfileV1)
                     } yield userProfileV1
 

@@ -64,7 +64,7 @@
 
                                          knora-base:familyName "User"^^xsd:string ;
 
-                                         knora-base:password "$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW" ;
+                                         knora-base:password "$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"^^xsd:string ;
 
                                          knora-base:email "normal.user@example.com"^^xsd:string ;
 
@@ -175,9 +175,9 @@
 
 <http://data.knora.org/groups/images-reviewer> rdf:type knora-base:UserGroup ;
 
-                                               knora-base:groupName "Image reviewer" ;
+                                               knora-base:groupName "Image reviewer"^^xsd:string ;
 
-                                               knora-base:groupDescription "A group for image reviewers." ;
+                                               knora-base:groupDescription "A group for image reviewers."^^xsd:string ;
 
                                                knora-base:belongsToProject <http://data.knora.org/projects/images> ;
 
@@ -333,7 +333,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 
                                         knora-base:familyName "User"^^xsd:string ;
 
-                                        knora-base:password "$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW" ;
+                                        knora-base:password "$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"^^xsd:string ;
 
                                         knora-base:email "multi.user@example.com"^^xsd:string ;
 
@@ -363,22 +363,22 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 ###################################
 
 <http://data.knora.org/projects/anything> a knora-base:knoraProject ;
-	knora-base:projectShortname "anything" ;
-	knora-base:projectLongname "Anything Project" ;
-	knora-base:projectDescription "Anything Project" ;
+	knora-base:projectShortname "anything"^^xsd:string ;
+	knora-base:projectLongname "Anything Project"^^xsd:string ;
+	knora-base:projectDescription "Anything Project"^^xsd:string ;
 	knora-base:projectOntologyGraph "http://www.knora.org/ontology/anything"^^xsd:string ;
-    knora-base:projectDataGraph "http://www.knora.org/data/anything"^^xsd:string ;
-    knora-base:projectBasepath "/foo/bar/baz"^^xsd:string ;
-    knora-base:isActiveProject "true"^^xsd:boolean ;
-    knora-base:hasSelfJoinEnabled "false"^^xsd:boolean .
+  knora-base:projectDataGraph "http://www.knora.org/data/anything"^^xsd:string ;
+  knora-base:projectBasepath "/foo/bar/baz"^^xsd:string ;
+  knora-base:isActiveProject "true"^^xsd:boolean ;
+  knora-base:hasSelfJoinEnabled "false"^^xsd:boolean .
 
 <http://data.knora.org/users/9XBCrDV3SRa7kS1WwynB4Q> a knora-base:User ;
-	knora-base:userid "anything-user" ;
-	knora-base:givenName "Anything" ;
-	knora-base:familyName "User01" ;
-	knora-base:password "$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW" ;
-	knora-base:email "anything.user01@example.org" ;
-	knora-base:preferredLanguage "de" ;
+	knora-base:userid "anything-user"^^xsd:string ;
+	knora-base:givenName "Anything"^^xsd:string ;
+	knora-base:familyName "User01"^^xsd:string ;
+	knora-base:password "$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"^^xsd:string ;
+	knora-base:email "anything.user01@example.org"^^xsd:string ;
+	knora-base:preferredLanguage "de"^^xsd:string ;
 	knora-base:isActiveUser "true"^^xsd:boolean ;
 	knora-base:isInProject <http://data.knora.org/projects/anything> ;
 	knora-base:isInSystemAdminGroup "false"^^xsd:boolean .
@@ -389,7 +389,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 	knora-base:familyName "User02" ;
 	knora-base:password "$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW" ;
 	knora-base:email "anything.user02@example.org" ;
-	knora-base:preferredLanguage "de" ;
+	knora-base:preferredLanguage "de"^^xsd:string ;
 	knora-base:isActiveUser "true"^^xsd:boolean ;
 	knora-base:isInProject <http://data.knora.org/projects/anything> ;
 	knora-base:isInSystemAdminGroup "false"^^xsd:boolean .
@@ -399,14 +399,14 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 ###################################
 
 <http://data.knora.org/projects/b83b99ca01> a knora-base:knoraProject ;
-	knora-base:projectShortname "dokubib" ;
-	knora-base:projectLongname "Dokubib" ;
-    knora-base:projectDescription "Dokubib" ;
+	knora-base:projectShortname "dokubib"^^xsd:string ;
+	knora-base:projectLongname "Dokubib"^^xsd:string ;
+  knora-base:projectDescription "Dokubib"^^xsd:string ;
 	knora-base:projectOntologyGraph "http://www.knora.org/ontology/dokubib"^^xsd:string ;
-    knora-base:projectDataGraph "http://www.knora.org/data/dokubib"^^xsd:string ;
-    knora-base:projectBasepath "/foo/bar/baz"^^xsd:string ;
-    knora-base:isActiveProject "false"^^xsd:boolean ;
-    knora-base:hasSelfJoinEnabled "false"^^xsd:boolean .
+  knora-base:projectDataGraph "http://www.knora.org/data/dokubib"^^xsd:string ;
+  knora-base:projectBasepath "/foo/bar/baz"^^xsd:string ;
+  knora-base:isActiveProject "false"^^xsd:boolean ;
+  knora-base:hasSelfJoinEnabled "false"^^xsd:boolean .
 
 
 ###################################
@@ -414,23 +414,23 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 ###################################
 
 <http://data.knora.org/projects/yTerZGyxjZVqFMNNKXCDPF> a knora-base:knoraProject ;
-	knora-base:projectShortname "beol" ;
-	knora-base:projectLongname "Bernoulli-Euler Online" ;
-    knora-base:projectDescription "Bernoulli-Euler Online" ;
+	knora-base:projectShortname "beol"^^xsd:string ;
+	knora-base:projectLongname "Bernoulli-Euler Online"^^xsd:string ;
+  knora-base:projectDescription "Bernoulli-Euler Online"^^xsd:string ;
 	knora-base:projectOntologyGraph "http://www.knora.org/ontology/beol"^^xsd:string ;
-    knora-base:projectDataGraph "http://www.knora.org/data/beol"^^xsd:string ;
-    knora-base:projectBasepath "/foo/bar/baz"^^xsd:string ;
-    knora-base:isActiveProject "true"^^xsd:boolean ;
-    knora-base:hasSelfJoinEnabled "false"^^xsd:boolean .
+  knora-base:projectDataGraph "http://www.knora.org/data/beol"^^xsd:string ;
+  knora-base:projectBasepath "/foo/bar/baz"^^xsd:string ;
+  knora-base:isActiveProject "true"^^xsd:boolean ;
+  knora-base:hasSelfJoinEnabled "false"^^xsd:boolean .
 
 
 <http://data.knora.org/users/PSGbemdjZi4kQ6GHJVkLGF> a knora-base:User ;
-	knora-base:userid "beol" ;
-	knora-base:familyName "BEOL" ;
-	knora-base:givenName "BEOL" ;
-	knora-base:password "a94a8fe5ccb19ba61c4c0873d391e987982fbbd3" ;
-	knora-base:email "t.schweizer@unibas.ch" ;
-	knora-base:preferredLanguage "de" ;
+	knora-base:userid "beol"^^xsd:string ;
+	knora-base:familyName "BEOL"^^xsd:string ;
+	knora-base:givenName "BEOL"^^xsd:string ;
+	knora-base:password "a94a8fe5ccb19ba61c4c0873d391e987982fbbd3"^^xsd:string ;
+	knora-base:email "t.schweizer@unibas.ch"^^xsd:string ;
+	knora-base:preferredLanguage "de"^^xsd:string ;
 	knora-base:isInProject <http://data.knora.org/projects/yTerZGyxjZVqFMNNKXCDPF> ;
 	knora-base:isInSystemAdminGroup "false"^^xsd:boolean .
 
@@ -441,22 +441,22 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 ###################################
 
 <http://data.knora.org/projects/DczxPs-sR6aZN91qV92ZmQ> a knora-base:knoraProject ;
-	knora-base:projectShortname "biblio" ;
-	knora-base:projectLongname "Bibliography" ;
-    knora-base:projectDescription "Bibliography" ;
+	knora-base:projectShortname "biblio"^^xsd:string ;
+	knora-base:projectLongname "Bibliography"^^xsd:string ;
+  knora-base:projectDescription "Bibliography"^^xsd:string ;
 	knora-base:projectOntologyGraph "http://www.knora.org/ontology/biblio"^^xsd:string ;
-    knora-base:projectDataGraph "http://www.knora.org/data/biblio"^^xsd:string ;
-    knora-base:projectBasepath "/foo/bar/baz"^^xsd:string ;
-    knora-base:isActiveProject "true"^^xsd:boolean ;
-    knora-base:hasSelfJoinEnabled "false"^^xsd:boolean .
+  knora-base:projectDataGraph "http://www.knora.org/data/biblio"^^xsd:string ;
+  knora-base:projectBasepath "/foo/bar/baz"^^xsd:string ;
+  knora-base:isActiveProject "true"^^xsd:boolean ;
+  knora-base:hasSelfJoinEnabled "false"^^xsd:boolean .
 
 
 <http://data.knora.org/users/Q-6Sssu8TBWrcCGuVJ0lVw> a knora-base:User ;
-	knora-base:userid "biblio" ;
-	knora-base:familyName "biblio" ;
-	knora-base:givenName "biblio" ;
-	knora-base:password "biblio" ;
-	knora-base:email "sepideh.alassi@unibas.ch" ;
-	knora-base:preferredLanguage "de" ;
+	knora-base:userid "biblio"^^xsd:string ;
+	knora-base:familyName "biblio"^^xsd:string ;
+	knora-base:givenName "biblio"^^xsd:string ;
+	knora-base:password "biblio"^^xsd:string ;
+	knora-base:email "sepideh.alassi@unibas.ch"^^xsd:string ;
+	knora-base:preferredLanguage "de"^^xsd:string ;
 	knora-base:isInProject <http://data.knora.org/projects/DczxPs-sR6aZN91qV92ZmQ> ;
 	knora-base:isInSystemAdminGroup "false"^^xsd:boolean .

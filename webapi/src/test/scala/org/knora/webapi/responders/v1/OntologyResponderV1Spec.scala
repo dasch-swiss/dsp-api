@@ -621,7 +621,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
     )
 
     private val vocabulariesResponseV1 = NamedGraphsResponseV1(
-        userdata = SharedAdminTestData.incunabulaProjectAdminUser.userData,
+        userdata = OntologyResponderV1Spec.userProfileWithEnglish.userData,
         vocabularies = Vector(
             NamedGraphV1( // SystemProject
                 active = true,
