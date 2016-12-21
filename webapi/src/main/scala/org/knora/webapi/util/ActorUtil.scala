@@ -76,7 +76,16 @@ object ActorUtil {
       */
     def try2Message[ReplyT](sender: ActorRef, tryObj: Try[ReplyT], log: LoggingAdapter): Unit = {
         tryObj match {
-            case Success(result) => sender ! result
+            case Success(result) => {
+                //println(s"ActorUtil - try2Message: $result ${result.getClass}")
+                if (result != null) {
+                    println(s"ActorUtil - try2Message: $result not null")
+                    sender ! result
+                } else {
+                    println(s"ActorUtil - try2Message: $result is null")
+                    sender ! akka.actor.Status.Failure(throw MessageNullException())
+                }
+            }
             case Failure(e) => e match {
                 case rejectedEx: RequestRejectedException =>
                     sender ! akka.actor.Status.Failure(rejectedEx)
