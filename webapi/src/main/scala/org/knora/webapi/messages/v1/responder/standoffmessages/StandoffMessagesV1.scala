@@ -42,17 +42,18 @@ sealed trait StandoffResponderRequestV1 extends KnoraRequestV1
   *
   * @param xml the mapping in XML.
   * @param projectIri the IRI of the project the mapping belongs to.
+  * @param mappingName the name of the mapping to be created.
   * @param userProfile the profile of the user making the request.
   */
-case class CreateMappingRequestV1(xml: String, projectIri: IRI, userProfile: UserProfileV1) extends StandoffResponderRequestV1
+case class CreateMappingRequestV1(xml: String, label: String, projectIri: IRI, mappingName: String, userProfile: UserProfileV1) extends StandoffResponderRequestV1
 
 /**
   * Provides the name of the file containing the mapping.
   *
-  * @param resourceIri the Iri of the resource (knora-base:XMLToStandoffMapping) representing the mapping that has been created.
+  * @param mappingIri the Iri of the resource (knora-base:XMLToStandoffMapping) representing the mapping that has been created.
   * @param userdata information about the user that made the request.
   */
-case class CreateMappingResponseV1(resourceIri: IRI, userdata: UserDataV1) extends KnoraResponseV1 {
+case class CreateMappingResponseV1(mappingIri: IRI, userdata: UserDataV1) extends KnoraResponseV1 {
     def toJsValue = RepresentationV1JsonProtocol.createMappingResponseV1Format.write(this)
 }
 

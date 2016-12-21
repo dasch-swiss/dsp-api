@@ -32,7 +32,7 @@ import org.knora.webapi.messages.v1.responder.sipimessages._
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v1.store.triplestoremessages._
-import org.knora.webapi.responders.ResourceLocker
+import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.v1.GroupedProps._
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util._
@@ -1282,7 +1282,7 @@ class ResourcesResponderV1 extends ResponderV1 {
 
         /**
           * Does pre-update checks, creates an empty resource, and asks the values responder to create the resource's
-          * values. This function is called by [[ResourceLocker]] once it has acquired an update lock on the resource.
+          * values. This function is called by [[IriLocker]] once it has acquired an update lock on the resource.
           *
           * @param resourceIri  the Iri of the resource to be created.
           * @param values       the values to be attached to the resource.
@@ -1503,7 +1503,7 @@ class ResourcesResponderV1 extends ResponderV1 {
             // e.g. (http://www.knora.org/ontology/knora-base#hasViewPermission,http://www.knora.org/ontology/knora-base#KnownUser)
             permissions: Option[String] = PermissionUtilV1.makePermissionsFromEntityDefaults(entityInfoResponse.resourceEntityInfoMap(resourceClassIri))
 
-            result: ResourceCreateResponseV1 <- ResourceLocker.runWithResourceLock(
+            result: ResourceCreateResponseV1 <- IriLocker.runWithIriLock(
                 apiRequestID,
                 resourceIri,
                 () => createResourceAndCheck(
@@ -1586,7 +1586,7 @@ class ResourcesResponderV1 extends ResponderV1 {
             }
 
             // Do the remaining pre-update checks and the update while holding an update lock on the resource.
-            taskResult <- ResourceLocker.runWithResourceLock(
+            taskResult <- IriLocker.runWithIriLock(
                 resourceDeleteRequest.apiRequestID,
                 resourceDeleteRequest.resourceIri,
                 () => makeTaskFuture(userIri)
@@ -1685,7 +1685,7 @@ class ResourcesResponderV1 extends ResponderV1 {
             }
 
             // Do the remaining pre-update checks and the update while holding an update lock on the resource.
-            taskResult <- ResourceLocker.runWithResourceLock(
+            taskResult <- IriLocker.runWithIriLock(
                 apiRequestID,
                 resourceIri,
                 () => makeTaskFuture(userIri)

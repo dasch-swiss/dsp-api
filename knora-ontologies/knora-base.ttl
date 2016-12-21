@@ -956,6 +956,126 @@
               rdfs:subPropertyOf :hasValue .
 
 
+###  http://www.knora.org/ontology/knora-base#hasMappingElement
+
+:hasMappingElement rdf:type owl:ObjectProperty ;
+
+                   rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
+
+                   rdfs:label "mapping element"@en ;
+
+                   rdfs:comment """Represents an element in a mapping"""@en ;
+
+                   :subjectClassConstraint :XMLToStandoffMapping ;
+
+                   :objectClassConstraint :MappingElement .
+
+
+###  http://www.knora.org/ontology/knora-base#hasXMLTagname
+
+:hasXMLTagname rdf:type owl:DataTypeProperty ;
+
+               rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
+
+               rdfs:label "name of the XML tag"@en ;
+
+               rdfs:comment """name of the XML tag"""@en ;
+
+#               :subjectClassConstraint :MappingElement ;
+
+               :objectClassConstraint xsd:string .
+
+
+###  http://www.knora.org/ontology/knora-base#hasXMLNamespace
+
+:hasXMLNamespace rdf:type owl:DataTypeProperty ;
+
+               rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
+
+               rdfs:label "namespace of the XML tag"@en ;
+
+               rdfs:comment """namespace of the XML tag"""@en ;
+
+#               :subjectClassConstraint :MappingElement ;
+
+               :objectClassConstraint xsd:string .
+
+
+###  http://www.knora.org/ontology/knora-base#hasXMLClass
+
+:hasXMLClass rdf:type owl:DataTypeProperty ;
+
+               rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
+
+               rdfs:label "class of the XML tag"@en ;
+
+               rdfs:comment """class of the XML tag"""@en ;
+
+               :subjectClassConstraint :MappingElement ;
+
+               :objectClassConstraint xsd:string .
+
+
+###  http://www.knora.org/ontology/knora-base#hasStandoffClass
+
+:hasStandoffClass rdf:type owl:ObjectProperty ;
+
+               rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
+
+               rdfs:label "IRI of the standoff class"@en ;
+
+               rdfs:comment """IRI of the standoff class"""@en ;
+
+ #              :subjectClassConstraint :MappingElement ;
+
+               :objectClassConstraint :StandoffTag .
+
+
+###  http://www.knora.org/ontology/knora-base#hasXMLAttribute
+
+:hasXMLAttribute rdf:type owl:DataTypeProperty ;
+
+                 rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
+
+                 rdfs:label "name of the XML attribute"@en ;
+
+                 rdfs:comment """name of the XML attribute"""@en ;
+
+                 :subjectClassConstraint :MappingElement ;
+
+                 :objectClassConstraint :MappingXMLAttribute .
+
+
+###  http://www.knora.org/ontology/knora-base#hasXMLAttributename
+
+:hasXMLAttributename rdf:type owl:DataTypeProperty ;
+
+               rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
+
+               rdfs:label "name of the XML attribute"@en ;
+
+               rdfs:comment """name of the XML attribute"""@en ;
+
+  #             :subjectClassConstraint :MappingXMLAttribute ;
+
+               :objectClassConstraint xsd:string .
+
+
+
+###  http://www.knora.org/ontology/knora-base#hasStandoffProperty
+
+:hasStandoffProperty rdf:type owl:ObjectProperty ;
+
+               rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
+
+               rdfs:label "IRI of the standoff property"@en ;
+
+               rdfs:comment """IRI of the standoff property"""@en ;
+
+               :subjectClassConstraint :MappingElement ;
+
+               :objectClassConstraint :MappingXMLAttribute .
+
 
 #################################################################
 #
@@ -2609,21 +2729,93 @@
 
                     rdfs:comment "A resource containing text files"@en .
 
+### http://www.knora.org/ontology/knora-base#MappingStandoffDataTypeClass
+
+:MappingStandoffDataTypeClass rdf:type owl:Class ;
+
+                     rdfs:subClassOf
+                     [ rdf:type owl:Restriction ;
+                       owl:onProperty :hasXMLAttributename ;
+                       owl:cardinality "1"^^xsd:nonNegativeInteger
+                     ],
+                     [ rdf:type owl:Restriction ;
+                       owl:onProperty :hasStandoffClass ;
+                       owl:cardinality "1"^^xsd:nonNegativeInteger
+                     ];
+
+                     rdfs:label "Mapping from XML attributes to standoff properties"@en ;
+
+                     rdfs:comment "Mapping from XML attributes to standoff properties" .
+
+
+### http://www.knora.org/ontology/knora-base#MappingXMLAttribute
+
+:MappingXMLAttribute rdf:type owl:Class ;
+
+                     rdfs:subClassOf
+                     [ rdf:type owl:Restriction ;
+                       owl:onProperty :hasXMLAttributename ;
+                       owl:cardinality "1"^^xsd:nonNegativeInteger
+                     ],
+                     [ rdf:type owl:Restriction ;
+                       owl:onProperty :hasXMLNamespace ;
+                       owl:cardinality "1"^^xsd:nonNegativeInteger
+                     ],
+                     [ rdf:type owl:Restriction ;
+                       owl:onProperty :hasStandoffProperty ;
+                       owl:cardinality "1"^^xsd:nonNegativeInteger
+                     ];
+
+                     rdfs:label "Mapping from XML attributes to standoff properties"@en ;
+
+                     rdfs:comment "Mapping from XML attributes to standoff properties" .
+
+
+###  http://www.knora.org/ontology/knora-base#MappingElement
+
+:MappingElement rdf:type owl:Class ;
+
+                rdfs:subClassOf
+                [ rdf:type owl:Restriction ;
+                   owl:onProperty :hasXMLTagname ;
+                   owl:cardinality "1"^^xsd:nonNegativeInteger
+                ],
+                [ rdf:type owl:Restriction ;
+                   owl:onProperty :hasXMLNamespace ;
+                   owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                ],
+                [ rdf:type owl:Restriction ;
+                  owl:onProperty :hasXMLClass ;
+                  owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                ],
+                [ rdf:type owl:Restriction ;
+                  owl:onProperty :hasStandoffClass ;
+                  owl:cardinality "1"^^xsd:nonNegativeInteger
+                ],
+                [ rdf:type owl:Restriction ;
+                  owl:onProperty :hasXMLAttribute ;
+                  owl:minCardinality "0"^^xsd:nonNegativeInteger
+                ],
+                [ rdf:type owl:Restriction ;
+                  owl:onProperty :hasStandoffDataTypeClass ;
+                  owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                ];
+
+                rdfs:label "Mapping from XML to standoff entities"@en ;
+
+                rdfs:comment "Mapping from XML to standoff entities" .
+
 ###  http://www.knora.org/ontology/knora-base#XMLToStandoffMapping
 
 :XMLToStandoffMapping rdf:type owl:Class ;
 
-                    rdfs:subClassOf :TextRepresentation,
+                    rdfs:subClassOf
                     [ rdf:type owl:Restriction ;
-                       owl:onProperty :hasComment ;
-                       owl:minCardinality "0"^^xsd:nonNegativeInteger
+                       owl:onProperty :hasMappingElement ;
+                       owl:minCardinality "1"^^xsd:nonNegativeInteger
                     ];
 
                     rdfs:label "Mapping from XML to standoff entities"@en ;
-
-                    :hasDefaultViewPermission :UnknownUser , :KnownUser ;
-
-                    :hasDefaultModifyPermission :ProjectMember ;
 
                     rdfs:comment "Mapping from XML to standoff entities" .
 

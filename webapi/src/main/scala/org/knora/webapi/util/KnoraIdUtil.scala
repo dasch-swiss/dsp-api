@@ -181,6 +181,29 @@ class KnoraIdUtil {
     }
 
     /**
+      * Creates a mapping IRI based on a project IRI and a mapping name.
+      *
+      * @param projectIri the IRI of the project the mapping will belong to.
+      * @return a mapping IRI.
+      */
+    def makeProjectMappingIri(projectIri: IRI, mappingName: String): IRI = {
+        val mappingIri = s"$projectIri/mappings/$mappingName"
+        // check that the mapping Iri is valid (mappingName is user input)
+        InputValidation.toIri(mappingIri, () => throw BadRequestException(s"the created mapping Iri $mappingIri is invalid"))
+    }
+
+    /**
+      * Creates a random ID for an element of a mapping based on a mapping IRI.
+      *
+      * @param mappingIri the IRI of the mapping the element belongs to.
+      * @return a new mapping element IRI.
+      */
+    def makeRandomMappingElementIri(mappingIri: IRI) = {
+        val knoraMappingElementID = makeRandomBase64EncodedUuid
+        s"$mappingIri/elements/$knoraMappingElementID"
+    }
+
+    /**
       * Converts a SALSAH file value ID into a Knora file value IRI.
       *
       * @param salsahResourceID  the SALSAH ID of the Representation resource that the file value belongs to.
