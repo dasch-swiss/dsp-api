@@ -27,7 +27,6 @@ import org.knora.webapi.messages.v1.responder.storemessages.{ResetTriplestoreCon
 import org.knora.webapi.messages.v1.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
 
-import scala.concurrent.Future
 import scala.concurrent.duration._
 
 /**

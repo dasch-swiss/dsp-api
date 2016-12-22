@@ -30,8 +30,6 @@ import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
 import org.knora.webapi.util.InputValidation
 import org.knora.webapi.{BadRequestException, SettingsImpl}
 
-import scala.concurrent.Future
-
 object ProjectsRouteV1 extends Authenticator {
 
     def knoraApiPath(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter): Route = {
