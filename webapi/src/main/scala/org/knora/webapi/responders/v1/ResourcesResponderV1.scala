@@ -68,6 +68,8 @@ class ResourcesResponderV1 extends ResponderV1 {
         case resourceDeleteRequest: ResourceDeleteRequestV1 => future2Message(sender(), deleteResourceV1(resourceDeleteRequest), log)
         case ChangeResourceLabelRequestV1(resourceIri, label, userProfile, apiRequestID) => future2Message(sender(), changeResourceLabelV1(resourceIri, label, apiRequestID, userProfile), log)
         case UnexpectedMessageRequest() => future2Message(sender(), Future(()), log)
+        case InternalServerExceptionMessageRequest() => future2Message(sender, Future.failed(UpdateNotPerformedException("thrown inside the ResourcesResponder")), log)
+
         case other => sender ! Status.Failure(UnexpectedMessageException(s"Unexpected message $other of type ${other.getClass.getCanonicalName}"))
     }
 

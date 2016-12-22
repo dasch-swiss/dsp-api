@@ -346,6 +346,11 @@ case class GraphDataGetResponseV1(nodes: Seq[GraphNodeV1], edges: Seq[GraphEdgeV
   */
 case class UnexpectedMessageRequest() extends ResourcesResponderRequestV1
 
+/**
+  * Causes the resources responder to return a response message containing an internal servers exception.
+  */
+case class InternalServerExceptionMessageRequest() extends ResourcesResponderRequestV1
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Components of messages
 

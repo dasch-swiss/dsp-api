@@ -463,11 +463,20 @@ object ResourcesRouteV1 extends Authenticator {
                         )
                 }
             }
-        } ~ path("v1" / "error") {
+        } ~ path("v1" / "error" / Segment) { errorType =>
             get {
                 requestContext =>
+
+                    val msg = if (errorType == "unitMsg") {
+                        UnexpectedMessageRequest()
+                    } else if (errorType == "iseMsg") {
+                        InternalServerExceptionMessageRequest()
+                    } else {
+                        InternalServerExceptionMessageRequest()
+                    }
+
                     RouteUtilV1.runJsonRoute(
-                        Future(UnexpectedMessageRequest()),
+                        Future(msg),
                         requestContext,
                         settings,
                         responderManager,
