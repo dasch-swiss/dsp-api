@@ -68,36 +68,11 @@ class UsersResponderV1Spec extends CoreSpec() with ImplicitSender {
 
     val mockUserProfileV1 = UserProfileV1(UserDataV1(lang, user_id, token, username, firstname, lastname, email, password), Nil, Nil)
 
-    /*
-    val gaga = new ErrorHandlingMap(Map("x" -> "y"), "No such foo found: {{ key }}")
-
-    gaga("bar")
-
-    val storeResponseUserIdFound = SparqlSelectResponse(
-        SparqlSelectJsonResponse(SparqlSelectJsonResponseHeader(Vector("")), SparqlSelectJsonResponseBody(Vector(VariableResultsRow(gaga)))),
-        "",
-        ""
-    )
-
-    */
-
     val storeResponseUserIdNotFound = SparqlSelectResponse(
         SparqlSelectResponseHeader(Vector("p", "o")),
         SparqlSelectResponseBody(Nil)
     )
 
-    /*
-        val mockStoreManagerActor = actor(STORE_MANAGER_ACTOR_NAME)(new Act {
-            become {
-                case SparqlPebbleSelectRequest(templatename, templateContext) => {
-                  if (templatename == "get-user-by-username" && templateContext == Map("userId" -> usernameWrong)) {
-                      println(templateContext)
-                      sender ! storeResponseUserIdNotFound
-                  }
-                }
-            }
-        })
-    */
     val actorUnderTest = TestActorRef[UsersResponderV1]
 
     "The UsersResponder " when {

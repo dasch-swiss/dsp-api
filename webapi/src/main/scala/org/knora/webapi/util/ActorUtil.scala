@@ -77,13 +77,13 @@ object ActorUtil {
     def try2Message[ReplyT](sender: ActorRef, tryObj: Try[ReplyT], log: LoggingAdapter): Unit = {
         tryObj match {
             case Success(result) => {
-                //println(s"ActorUtil - try2Message: $result ${result.getClass.toString}")
-                if (result != ()) {
-                    //println(s"ActorUtil - try2Message: $result not null")
+                if ((result: Any).getClass.getName != "scala.runtime.BoxedUnit") {
                     sender ! result
                 } else {
-                    //println(s"ActorUtil - try2Message: $result is null")
-                    sender ! akka.actor.Status.Failure(throw MessageNullException())
+                    println("here")
+                    val exToReport = new MessageEmptyException()
+                    sender ! akka.actor.Status.Failure(exToReport)
+                    throw MessageEmptyException()
                 }
             }
             case Failure(e) => e match {
