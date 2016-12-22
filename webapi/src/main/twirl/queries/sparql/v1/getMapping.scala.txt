@@ -37,21 +37,21 @@ construct {
     ?mapping rdf:type ?mappingType .
 
     ?mappingElement rdf:type ?mappingElementType .
-    ?mappingElement knora-base:hasXMLTagname ?tagName .
-    ?mappingElement knora-base:hasXMLNamespace ?tagNamespace .
-    ?mappingElement knora-base:hasXMLClass ?tagClass .
-    ?mappingElement knora-base:hasStandoffClass ?standoffClass .
+    ?mappingElement knora-base:mappingHasXMLTagname ?tagName .
+    ?mappingElement knora-base:mappingHasXMLNamespace ?tagNamespace .
+    ?mappingElement knora-base:mappingHasXMLClass ?tagClass .
+    ?mappingElement knora-base:mappingHasStandoffClass ?standoffClass .
 
-    ?mappingElement knora-base:hasXMLAttribute ?attribute .
+    ?mappingElement knora-base:mappingHasXMLAttribute ?attribute .
     ?attribute rdf:type ?attributeType .
-    ?attribute knora-base:hasXMLAttributename ?attributeName .
-    ?attribute knora-base:hasXMLNamespace ?attributeNamespace .
-    ?attribute knora-base:hasStandoffProperty ?standoffProperty .
+    ?attribute knora-base:mappingHasXMLAttributename ?attributeName .
+    ?attribute knora-base:mappingHasXMLNamespace ?attributeNamespace .
+    ?attribute knora-base:mappingHasStandoffProperty ?standoffProperty .
 
-    ?mappingElement knora-base:hasStandoffDataTypeClass ?datatypeClass .
+    ?mappingElement knora-base:mappingHasStandoffDataTypeClass ?datatypeClass .
     ?datatypeClass rdf:type ?datatypeType .
-    ?datatypeClass knora-base:hasXMLAttributename ?datatypeAttributeName .
-    ?datatypeClass knora-base:hasStandoffClass ?datatypeStandoffClass .
+    ?datatypeClass knora-base:mappingHasXMLAttributename ?datatypeAttributeName .
+    ?datatypeClass knora-base:mappingHasStandoffClass ?datatypeStandoffClass .
 
 
 
@@ -63,27 +63,27 @@ construct {
     ?mapping rdf:type ?mappingType .
     ?mapping knora-base:hasMappingElement ?mappingElement .
     ?mappingElement rdf:type ?mappingElementType .
-    ?mappingElement knora-base:hasXMLTagname ?tagName .
-    ?mappingElement knora-base:hasXMLNamespace ?tagNamespace .
-    ?mappingElement knora-base:hasXMLClass ?tagClass .
-    ?mappingElement knora-base:hasStandoffClass ?standoffClass .
+    ?mappingElement knora-base:mappingHasXMLTagname ?tagName .
+    ?mappingElement knora-base:mappingHasXMLNamespace ?tagNamespace .
+    ?mappingElement knora-base:mappingHasXMLClass ?tagClass .
+    ?mappingElement knora-base:mappingHasStandoffClass ?standoffClass .
 
 
     OPTIONAL {
 
-        ?mappingElement knora-base:hasXMLAttribute ?attribute .
+        ?mappingElement knora-base:mappingHasXMLAttribute ?attribute .
         ?attribute rdf:type ?attributeType .
-        ?attribute knora-base:hasXMLAttributename ?attributeName .
-        ?attribute knora-base:hasXMLNamespace ?attributeNamespace .
-        ?attribute knora-base:hasStandoffProperty ?standoffProperty .
+        ?attribute knora-base:mappingHasXMLAttributename ?attributeName .
+        ?attribute knora-base:mappingHasXMLNamespace ?attributeNamespace .
+        ?attribute knora-base:mappingHasStandoffProperty ?standoffProperty .
     }
 
     OPTIONAL {
 
-        ?mappingElement knora-base:hasStandoffDataTypeClass ?datatypeClass .
+        ?mappingElement knora-base:mappingHasStandoffDataTypeClass ?datatypeClass .
         ?datatypeClass rdf:type ?datatypeType .
-        ?datatypeClass knora-base:hasXMLAttributename ?datatypeAttributeName .
-        ?datatypeClass knora-base:hasStandoffClass ?datatypeStandoffClass .
+        ?datatypeClass knora-base:mappingHasXMLAttributename ?datatypeAttributeName .
+        ?datatypeClass knora-base:mappingHasStandoffClass ?datatypeStandoffClass .
 
     }
 

@@ -50,29 +50,29 @@ INSERT {
             ?mapping knora-base:hasMappingElement <@mappingEle.mappingElementIri> .
 
             <@mappingEle.mappingElementIri> rdf:type knora-base:MappingElement ;
-                                            knora-base:hasXMLTagname """@mappingEle.tagName""" ;
-                                            knora-base:hasXMLNamespace """@mappingEle.namespace""" ;
-                                            knora-base:hasXMLClass """@mappingEle.className""" ;
-                                            knora-base:hasStandoffClass <@mappingEle.standoffClass> .
+                                            knora-base:mappingHasXMLTagname """@mappingEle.tagName""" ;
+                                            knora-base:mappingHasXMLNamespace """@mappingEle.namespace""" ;
+                                            knora-base:mappingHasXMLClass """@mappingEle.className""" ;
+                                            knora-base:mappingHasStandoffClass <@mappingEle.standoffClass> .
 
             @for(attr <- mappingEle.attributes) {
 
-                <@mappingEle.mappingElementIri> knora-base:hasXMLAttribute <@attr.mappingXMLAttributeElementIri> .
+                <@mappingEle.mappingElementIri> knora-base:mappingHasXMLAttribute <@attr.mappingXMLAttributeElementIri> .
 
                 <@attr.mappingXMLAttributeElementIri> rdf:type knora-base:MappingXMLAttribute ;
-                                                      knora-base:hasXMLAttributename """@attr.attributeName""" ;
-                                                      knora-base:hasXMLNamespace """@attr.namespace""" ;
-                                                      knora-base:hasStandoffProperty <@attr.standoffProperty> .
+                                                      knora-base:mappingHasXMLAttributename """@attr.attributeName""" ;
+                                                      knora-base:mappingHasXMLNamespace """@attr.namespace""" ;
+                                                      knora-base:mappingHasStandoffProperty <@attr.standoffProperty> .
 
             }
 
             @if(mappingEle.standoffDataTypeClass.nonEmpty) {
 
-                <@mappingEle.mappingElementIri> knora-base:hasStandoffDataTypeClass <@mappingEle.standoffDataTypeClass.get.mappingStandoffDataTypeClassElementIri> .
+                <@mappingEle.mappingElementIri> knora-base:mappingHasStandoffDataTypeClass <@mappingEle.standoffDataTypeClass.get.mappingStandoffDataTypeClassElementIri> .
 
                 <@mappingEle.standoffDataTypeClass.get.mappingStandoffDataTypeClassElementIri> rdf:type knora-base:MappingStandoffDataTypeClass ;
-                                                                                               knora-base:hasXMLAttributename """@mappingEle.standoffDataTypeClass.get.attributeName""" ;
-                                                                                               knora-base:hasStandoffClass <@mappingEle.standoffDataTypeClass.get.datatype> .
+                                                                                               knora-base:mappingHasXMLAttributename """@mappingEle.standoffDataTypeClass.get.attributeName""" ;
+                                                                                               knora-base:mappingHasStandoffClass <@mappingEle.standoffDataTypeClass.get.datatype> .
 
             }
 

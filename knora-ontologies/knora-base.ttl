@@ -971,9 +971,9 @@
                    :objectClassConstraint :MappingElement .
 
 
-###  http://www.knora.org/ontology/knora-base#hasXMLTagname
+###  http://www.knora.org/ontology/knora-base#mappingHasXMLTagname
 
-:hasXMLTagname rdf:type owl:DataTypeProperty ;
+:mappingHasXMLTagname rdf:type owl:DataTypeProperty ;
 
                rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
@@ -981,14 +981,14 @@
 
                rdfs:comment """name of the XML tag"""@en ;
 
-#               :subjectClassConstraint :MappingElement ;
+               :subjectClassConstraint :MappingElement ;
 
                :objectClassConstraint xsd:string .
 
 
-###  http://www.knora.org/ontology/knora-base#hasXMLNamespace
+###  http://www.knora.org/ontology/knora-base#mappingHasXMLNamespace
 
-:hasXMLNamespace rdf:type owl:DataTypeProperty ;
+:mappingHasXMLNamespace rdf:type owl:DataTypeProperty ;
 
                rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
@@ -996,14 +996,14 @@
 
                rdfs:comment """namespace of the XML tag"""@en ;
 
-#               :subjectClassConstraint :MappingElement ;
+               :subjectClassConstraint :MappingComponent ;
 
                :objectClassConstraint xsd:string .
 
 
-###  http://www.knora.org/ontology/knora-base#hasXMLClass
+###  http://www.knora.org/ontology/knora-base#mappingHasXMLClass
 
-:hasXMLClass rdf:type owl:DataTypeProperty ;
+:mappingHasXMLClass rdf:type owl:DataTypeProperty ;
 
                rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
@@ -1016,9 +1016,9 @@
                :objectClassConstraint xsd:string .
 
 
-###  http://www.knora.org/ontology/knora-base#hasStandoffClass
+###  http://www.knora.org/ontology/knora-base#mappingHasStandoffClass
 
-:hasStandoffClass rdf:type owl:ObjectProperty ;
+:mappingHasStandoffClass rdf:type owl:ObjectProperty ;
 
                rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
@@ -1026,14 +1026,14 @@
 
                rdfs:comment """IRI of the standoff class"""@en ;
 
- #              :subjectClassConstraint :MappingElement ;
+               :subjectClassConstraint :MappingComponent ;
 
                :objectClassConstraint :StandoffTag .
 
 
-###  http://www.knora.org/ontology/knora-base#hasXMLAttribute
+###  http://www.knora.org/ontology/knora-base#mappingHasXMLAttribute
 
-:hasXMLAttribute rdf:type owl:DataTypeProperty ;
+:mappingHasXMLAttribute rdf:type owl:DataTypeProperty ;
 
                  rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
@@ -1046,9 +1046,9 @@
                  :objectClassConstraint :MappingXMLAttribute .
 
 
-###  http://www.knora.org/ontology/knora-base#hasXMLAttributename
+###  http://www.knora.org/ontology/knora-base#mappingHasXMLAttributename
 
-:hasXMLAttributename rdf:type owl:DataTypeProperty ;
+:mappingHasXMLAttributename rdf:type owl:DataTypeProperty ;
 
                rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
@@ -1056,15 +1056,15 @@
 
                rdfs:comment """name of the XML attribute"""@en ;
 
-  #             :subjectClassConstraint :MappingXMLAttribute ;
+               :subjectClassConstraint :MappingComponent ;
 
                :objectClassConstraint xsd:string .
 
 
 
-###  http://www.knora.org/ontology/knora-base#hasStandoffProperty
+###  http://www.knora.org/ontology/knora-base#mappingHasStandoffProperty
 
-:hasStandoffProperty rdf:type owl:ObjectProperty ;
+:mappingHasStandoffProperty rdf:type owl:ObjectProperty ;
 
                rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
@@ -1077,9 +1077,9 @@
                :objectClassConstraint :MappingXMLAttribute .
 
 
-###  http://www.knora.org/ontology/knora-base#hasStandoffDatatypeClass
+###  http://www.knora.org/ontology/knora-base#mappingHasStandoffDataTypeClass
 
-:hasStandoffDatatypeClass rdf:type owl:ObjectProperty ;
+:mappingHasStandoffDataTypeClass rdf:type owl:ObjectProperty ;
 
                rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
@@ -2743,17 +2743,27 @@
 
                     rdfs:comment "A resource containing text files"@en .
 
+
+### http://www.knora.org/ontology/knora-base#MappingComponent
+
+:MappingComponent rdf:type owl:Class ;
+
+               rdfs:label "Component of a mapping"@en ;
+
+               rdfs:comment "Component of a mapping" .
+
+
 ### http://www.knora.org/ontology/knora-base#MappingStandoffDataTypeClass
 
 :MappingStandoffDataTypeClass rdf:type owl:Class ;
 
-                     rdfs:subClassOf
+                     rdfs:subClassOf :MappingComponent ,
                      [ rdf:type owl:Restriction ;
-                       owl:onProperty :hasXMLAttributename ;
+                       owl:onProperty :mappingHasXMLAttributename ;
                        owl:cardinality "1"^^xsd:nonNegativeInteger
                      ],
                      [ rdf:type owl:Restriction ;
-                       owl:onProperty :hasStandoffClass ;
+                       owl:onProperty :mappingHasStandoffClass ;
                        owl:cardinality "1"^^xsd:nonNegativeInteger
                      ];
 
@@ -2766,17 +2776,17 @@
 
 :MappingXMLAttribute rdf:type owl:Class ;
 
-                     rdfs:subClassOf
+                     rdfs:subClassOf :MappingComponent ,
                      [ rdf:type owl:Restriction ;
-                       owl:onProperty :hasXMLAttributename ;
+                       owl:onProperty :mappingHasXMLAttributename ;
                        owl:cardinality "1"^^xsd:nonNegativeInteger
                      ],
                      [ rdf:type owl:Restriction ;
-                       owl:onProperty :hasXMLNamespace ;
+                       owl:onProperty :mappingHasXMLNamespace ;
                        owl:cardinality "1"^^xsd:nonNegativeInteger
                      ],
                      [ rdf:type owl:Restriction ;
-                       owl:onProperty :hasStandoffProperty ;
+                       owl:onProperty :mappingHasStandoffProperty ;
                        owl:cardinality "1"^^xsd:nonNegativeInteger
                      ];
 
@@ -2789,29 +2799,29 @@
 
 :MappingElement rdf:type owl:Class ;
 
-                rdfs:subClassOf
+                rdfs:subClassOf :MappingComponent ,
                 [ rdf:type owl:Restriction ;
-                   owl:onProperty :hasXMLTagname ;
+                   owl:onProperty :mappingHasXMLTagname ;
                    owl:cardinality "1"^^xsd:nonNegativeInteger
                 ],
                 [ rdf:type owl:Restriction ;
-                   owl:onProperty :hasXMLNamespace ;
+                   owl:onProperty :mappingHasXMLNamespace ;
                    owl:maxCardinality "1"^^xsd:nonNegativeInteger
                 ],
                 [ rdf:type owl:Restriction ;
-                  owl:onProperty :hasXMLClass ;
+                  owl:onProperty :mappingHasXMLClass ;
                   owl:maxCardinality "1"^^xsd:nonNegativeInteger
                 ],
                 [ rdf:type owl:Restriction ;
-                  owl:onProperty :hasStandoffClass ;
+                  owl:onProperty :mappingHasStandoffClass ;
                   owl:cardinality "1"^^xsd:nonNegativeInteger
                 ],
                 [ rdf:type owl:Restriction ;
-                  owl:onProperty :hasXMLAttribute ;
+                  owl:onProperty :mappingHasXMLAttribute ;
                   owl:minCardinality "0"^^xsd:nonNegativeInteger
                 ],
                 [ rdf:type owl:Restriction ;
-                  owl:onProperty :hasStandoffDataTypeClass ;
+                  owl:onProperty :mappingHasStandoffDataTypeClass ;
                   owl:maxCardinality "1"^^xsd:nonNegativeInteger
                 ];
 
