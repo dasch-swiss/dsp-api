@@ -101,6 +101,19 @@ case class XMLTagToStandoffClass(standoffClassIri: IRI, attributesToProps: Map[S
 case class XMLStandoffDataTypeClass(standoffDataTypeClass: StandoffDataTypeClasses.Value, dataTypeXMLAttribute: String)
 
 /**
+  * Represents an API request to create a mapping.
+  *
+  * @param project_id the project in which the mapping is to be added.
+  * @param label the label describing the mapping.
+  * @param mappingName the name of the mapping (will be appended to the mapping Iri).
+  */
+case class CreateMappingApiRequestV1(project_id: IRI, label: String, mappingName: String) {
+
+    def toJsValue = RepresentationV1JsonProtocol.createMappingApiRequestV1Format.write(this)
+
+}
+
+/**
   * Represents an API request to create a text value with standoff.
   *
   * @param resource_id the IRI of the resource to which the text value should be added.
@@ -293,6 +306,7 @@ object RepresentationV1JsonProtocol extends DefaultJsonProtocol with NullOptions
     implicit val createStandoffResponseV1Format: RootJsonFormat[CreateStandoffResponseV1] = jsonFormat2(CreateStandoffResponseV1)
     implicit val changeStandoffResponseV1Format: RootJsonFormat[ChangeStandoffResponseV1] = jsonFormat2(ChangeStandoffResponseV1)
     implicit val createStandoffApiRequestV1Format: RootJsonFormat[CreateStandoffApiRequestV1] = jsonFormat4(CreateStandoffApiRequestV1)
+    implicit val createMappingApiRequestV1Format: RootJsonFormat[CreateMappingApiRequestV1] = jsonFormat3(CreateMappingApiRequestV1)
     implicit val changeStandoffApiRequestV1Format: RootJsonFormat[ChangeStandoffApiRequestV1] = jsonFormat2(ChangeStandoffApiRequestV1)
     implicit val standoffGetResponseV1Format: RootJsonFormat[StandoffGetResponseV1] = jsonFormat2(StandoffGetResponseV1)
     implicit val createMappingResponseV1Format: RootJsonFormat[CreateMappingResponseV1] = jsonFormat2(CreateMappingResponseV1)
