@@ -55,7 +55,7 @@ object ListsRouteV1 extends Authenticator {
                     }
 
                     RouteUtilV1.runJsonRoute(
-                        Future(requestMessage),
+                        requestMessage,
                         requestContext,
                         settings,
                         responderManager,
@@ -76,7 +76,7 @@ object ListsRouteV1 extends Authenticator {
                         }
 
                         RouteUtilV1.runJsonRoute(
-                            Future(requestMessage),
+                            requestMessage,
                             requestContext,
                             settings,
                             responderManager,

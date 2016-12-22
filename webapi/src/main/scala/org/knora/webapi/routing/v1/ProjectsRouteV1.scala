@@ -48,7 +48,7 @@ object ProjectsRouteV1 extends Authenticator {
                     val requestMessage = ProjectsGetRequestV1(Some(userProfile))
 
                     RouteUtilV1.runJsonRoute(
-                        Future(requestMessage),
+                        requestMessage,
                         requestContext,
                         settings,
                         responderManager,
@@ -67,7 +67,7 @@ object ProjectsRouteV1 extends Authenticator {
                             val requestMessage = ProjectInfoByIRIGetRequest(resIri, ProjectInfoType.lookup(requestType), Some(userProfile))
 
                             RouteUtilV1.runJsonRoute(
-                                Future(requestMessage),
+                                requestMessage,
                                 requestContext,
                                 settings,
                                 responderManager,

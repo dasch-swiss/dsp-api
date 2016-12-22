@@ -54,7 +54,7 @@ object SipiRouteV1 extends Authenticator {
                     val requestMessage = SipiFileInfoGetRequestV1(filename, userProfile)
 
                     RouteUtilV1.runJsonRoute(
-                        Future(requestMessage),
+                        requestMessage,
                         requestContext,
                         settings,
                         responderManager,

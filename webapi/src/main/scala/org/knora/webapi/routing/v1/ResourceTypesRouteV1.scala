@@ -59,7 +59,7 @@ object ResourceTypesRouteV1 extends Authenticator {
                     val requestMessage = makeResourceTypeRequestMessage(resourceTypeIri, userProfile)
 
                     RouteUtilV1.runJsonRoute(
-                        Future(requestMessage),
+                        requestMessage,
                         requestContext,
                         settings,
                         responderManager,
@@ -82,7 +82,7 @@ object ResourceTypesRouteV1 extends Authenticator {
                     val requestMessage = ResourceTypesForNamedGraphGetRequestV1(namedGraphIri, userProfile)
 
                     RouteUtilV1.runJsonRoute(
-                        Future(requestMessage),
+                        requestMessage,
                         requestContext,
                         settings,
                         responderManager,
@@ -119,7 +119,7 @@ object ResourceTypesRouteV1 extends Authenticator {
                     }
 
                     RouteUtilV1.runJsonRoute(
-                        Future(requestMessage),
+                        requestMessage,
                         requestContext,
                         settings,
                         responderManager,
@@ -134,7 +134,7 @@ object ResourceTypesRouteV1 extends Authenticator {
                     val requestMessage = NamedGraphsGetRequestV1(userProfile)
 
                     RouteUtilV1.runJsonRoute(
-                        Future(requestMessage),
+                        requestMessage,
                         requestContext,
                         settings,
                         responderManager,
@@ -146,10 +146,10 @@ object ResourceTypesRouteV1 extends Authenticator {
             get {
                 requestContext =>
                     val userProfile = getUserProfileV1(requestContext)
-                    val requestMessageTry = LoadOntologiesRequest(userProfile)
+                    val requestMessage = LoadOntologiesRequest(userProfile)
 
                     RouteUtilV1.runJsonRoute(
-                        Future(requestMessageTry),
+                        requestMessage,
                         requestContext,
                         settings,
                         responderManager,
@@ -168,7 +168,7 @@ object ResourceTypesRouteV1 extends Authenticator {
                         val requestMessage = SubClassesGetRequestV1(resourceClassIri, userProfile)
 
                         RouteUtilV1.runJsonRoute(
-                            Future(requestMessage),
+                            requestMessage,
                             requestContext,
                             settings,
                             responderManager,

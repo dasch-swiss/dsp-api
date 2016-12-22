@@ -196,7 +196,7 @@ object SearchRouteV1 extends Authenticator {
                     val requestMessage = makeExtendedSearchRequestMessage(userProfile, params)
 
                     RouteUtilV1.runJsonRoute(
-                        Future(requestMessage),
+                        requestMessage,
                         requestContext,
                         settings,
                         responderManager,
@@ -212,7 +212,7 @@ object SearchRouteV1 extends Authenticator {
                     val requestMessage = makeFulltextSearchRequestMessage(userProfile, searchval, params)
 
                     RouteUtilV1.runJsonRoute(
-                        Future(requestMessage),
+                        requestMessage,
                         requestContext,
                         settings,
                         responderManager,

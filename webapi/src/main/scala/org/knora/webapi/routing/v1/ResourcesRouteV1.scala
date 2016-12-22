@@ -234,7 +234,7 @@ object ResourcesRouteV1 extends Authenticator {
                     )
 
                     RouteUtilV1.runJsonRoute(
-                        Future(requestMessage),
+                        requestMessage,
                         requestContext,
                         settings,
                         responderManager,
@@ -249,7 +249,7 @@ object ResourcesRouteV1 extends Authenticator {
                     val requestMessage = makeCreateResourceRequestMessage(apiRequest = apiRequest, userProfile = userProfile)
 
                     RouteUtilV1.runJsonRoute(
-                        Future(requestMessage),
+                        requestMessage,
                         requestContext,
                         settings,
                         responderManager,
@@ -341,7 +341,7 @@ object ResourcesRouteV1 extends Authenticator {
                         requestMessage
                     }
 
-                    RouteUtilV1.runJsonRoute(
+                    RouteUtilV1.runJsonRouteWithFuture(
                         requestMessageFuture,
                         requestContext,
                         settings,
@@ -361,7 +361,7 @@ object ResourcesRouteV1 extends Authenticator {
                         val requestMessage = makeResourceRequestMessage(resIri = resIri, resinfo = resinfo, requestType = requestType, userProfile = userProfile)
 
                         RouteUtilV1.runJsonRoute(
-                            Future(requestMessage),
+                            requestMessage,
                             requestContext,
                             settings,
                             responderManager,
@@ -375,7 +375,7 @@ object ResourcesRouteV1 extends Authenticator {
                         val requestMessage = makeResourceDeleteMessage(resIri = resIri, deleteComment = deleteCommentParam, userProfile = userProfile)
 
                         RouteUtilV1.runJsonRoute(
-                            Future(requestMessage),
+                            requestMessage,
                             requestContext,
                             settings,
                             responderManager,
@@ -413,7 +413,7 @@ object ResourcesRouteV1 extends Authenticator {
                     val requestMessage = makeGetPropertiesRequestMessage(resIri, userProfile)
 
                     RouteUtilV1.runJsonRoute(
-                        Future(requestMessage),
+                        requestMessage,
                         requestContext,
                         settings,
                         responderManager,
@@ -438,7 +438,7 @@ object ResourcesRouteV1 extends Authenticator {
 
 
                     RouteUtilV1.runJsonRoute(
-                        Future(requestMessage),
+                        requestMessage,
                         requestContext,
                         settings,
                         responderManager,
@@ -455,7 +455,7 @@ object ResourcesRouteV1 extends Authenticator {
                         val requestMessage = GraphDataGetRequestV1(resourceIri, depth.getOrElse(4), userProfile)
 
                         RouteUtilV1.runJsonRoute(
-                            Future(requestMessage),
+                            requestMessage,
                             requestContext,
                             settings,
                             responderManager,
@@ -476,7 +476,7 @@ object ResourcesRouteV1 extends Authenticator {
                     }
 
                     RouteUtilV1.runJsonRoute(
-                        Future(msg),
+                        msg,
                         requestContext,
                         settings,
                         responderManager,

@@ -55,7 +55,7 @@ object CkanRouteV1 extends Authenticator {
                     val requestMessage = CkanRequestV1(project, limit, info, userProfile)
 
                     RouteUtilV1.runJsonRoute(
-                        Future(requestMessage),
+                        requestMessage,
                         requestContext,
                         settings,
                         responderManager,
