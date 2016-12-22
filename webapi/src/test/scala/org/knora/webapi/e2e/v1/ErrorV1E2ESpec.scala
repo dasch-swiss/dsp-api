@@ -30,7 +30,7 @@ class ErrorV1E2ESpec extends E2ESpec with TriplestoreJsonProtocol {
         val request = Get(baseApiUrl + "/v1/error/iseMsg")
         val response = singleAwaitingRequest(request, 1.second)
         println(response.toString())
-        assert(response.status == StatusCodes.InternalServerError)
+        assert(response.status == StatusCodes.Conflict)
     }
 
 }
