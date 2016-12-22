@@ -93,7 +93,7 @@ object RouteUtilV1 {
     }
 
     /**
-      * Sends a message (which is the result of a [[Future]] to a responder and completes the HTTP request by returning the response as JSON.
+      * Sends a message (resulting from a [[Future]]) to a responder and completes the HTTP request by returning the response as JSON.
       * @param requestMessageF  a [[Future]] containing a [[KnoraRequestV1]] message that should be sent to the responder manager.
       * @param requestContext   the akka-http [[RequestContext]].
       * @param settings         the application's settings.
