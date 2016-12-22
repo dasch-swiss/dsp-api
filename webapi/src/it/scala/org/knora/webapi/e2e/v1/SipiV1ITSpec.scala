@@ -138,6 +138,15 @@ class SipiV1ITSpec extends ITSpec(SipiV1ITSpec.config) with TriplestoreJsonProto
            }
          """
 
+        val paramsCreateMappingFromXML =
+            s"""
+               |{
+               |  "project_id": "http://data.knora.org/projects/anything",
+               |  "label": "mapping for letters",
+               |  "mappingName": "StandardMapping"
+               |}
+             """.stripMargin
+
         def paramsCreateLetterFromXML(mappingIri: IRI): String =
             s"""
                 {
@@ -160,6 +169,8 @@ class SipiV1ITSpec extends ITSpec(SipiV1ITSpec.config) with TriplestoreJsonProto
 
         val pathToImageFile = "_test_data/test_route/images/Chlaus.jpg"
 
+        val pathToMapping = "_test_data/test_route/texts/mapping.xml"
+
         val pathToLetterXML = "_test_data/test_route/texts/letter.xml"
 
         val pathToLetter2XML = "_test_data/test_route/texts/letter2.xml"
@@ -179,96 +190,6 @@ class SipiV1ITSpec extends ITSpec(SipiV1ITSpec.config) with TriplestoreJsonProto
                 }
             }
         }
-
-        // a mapping from XML to standoff entities
-        val mappingXML =
-            """<?xml version="1.0" encoding="UTF-8"?>
-              |<mapping xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="mapping.xsd">
-              |  <mappingElement>
-              |    <tag>
-              |     <name>text</name>
-              |     <class>noClass</class>
-              |     <namespace>noNamespace</namespace>
-              |    </tag>
-              |    <standoffClass>
-              |      <classIri>http://www.knora.org/ontology/standoff#StandoffRootTag</classIri>
-              |      <attributes>
-              |        <attribute><attributeName>documentType</attributeName><namespace>noNamespace</namespace><propertyIri>http://www.knora.org/ontology/standoff#standoffRootTagHasDocumentType</propertyIri></attribute>
-              |      </attributes>
-              |    </standoffClass>
-              |  </mappingElement>
-              |
-              |  <mappingElement>
-              |    <tag>
-              |      <name>p</name>
-              |      <class>noClass</class>
-              |      <namespace>noNamespace</namespace>
-              |    </tag>
-              |    <standoffClass>
-              |      <classIri>http://www.knora.org/ontology/standoff#StandoffParagraphTag</classIri>
-              |    </standoffClass>
-              |  </mappingElement>
-              |
-              |  <mappingElement>
-              |    <tag>
-              |      <name>i</name>
-              |      <class>noClass</class>
-              |      <namespace>noNamespace</namespace>
-              |    </tag>
-              |    <standoffClass>
-              |      <classIri>http://www.knora.org/ontology/standoff#StandoffItalicTag</classIri>
-              |    </standoffClass>
-              |  </mappingElement>
-              |
-              |  <mappingElement>
-              |    <tag>
-              |      <name>b</name>
-              |      <class>noClass</class>
-              |      <namespace>noNamespace</namespace>
-              |    </tag>
-              |    <standoffClass>
-              |      <classIri>http://www.knora.org/ontology/standoff#StandoffBoldTag</classIri>
-              |    </standoffClass>
-              |  </mappingElement>
-              |
-              |  <mappingElement>
-              |    <tag>
-              |      <name>facsimile</name>
-              |      <class>noClass</class>
-              |      <namespace>noNamespace</namespace>
-              |      </tag>
-              |    <standoffClass>
-              |      <classIri>http://www.knora.org/ontology/beol#StandoffFacsimileTag</classIri>
-              |      <datatype><type>http://www.knora.org/ontology/knora-base#StandoffUriTag</type>
-              |        <attributeName>src</attributeName>
-              |      </datatype>
-              |    </standoffClass>
-              |  </mappingElement>
-              |
-              |  <mappingElement>
-              |    <tag>
-              |      <name>math</name>
-              |      <class>noClass</class>
-              |      <namespace>noNamespace</namespace>
-              |    </tag>
-              |    <standoffClass>
-              |      <classIri>http://www.knora.org/ontology/beol#StandoffMathTag</classIri>
-              |    </standoffClass>
-              |  </mappingElement>
-              |
-              |  <mappingElement>
-              |    <tag>
-              |      <name>ref</name>
-              |      <class>noClass</class>
-              |      <namespace>noNamespace</namespace>
-              |    </tag>
-              |    <standoffClass>
-              |      <classIri>http://www.knora.org/ontology/beol#StandoffReferenceTag</classIri>
-              |    </standoffClass>
-              |  </mappingElement>
-              |
-              |</mapping>
-            """.stripMargin
 
     }
 
@@ -361,30 +282,44 @@ class SipiV1ITSpec extends ITSpec(SipiV1ITSpec.config) with TriplestoreJsonProto
 
         "create a mapping resource for standoff conversion and do a standoff conversion for a text value" in {
 
+            val mappingFileToSend = new File(RequestParams.pathToMapping)
+
+            val formDataMapping = Multipart.FormData(
+                Multipart.FormData.BodyPart(
+                    "json",
+                    HttpEntity(ContentTypes.`application/json`, RequestParams.paramsCreateMappingFromXML)
+                ),
+                Multipart.FormData.BodyPart(
+                    "xml",
+                    HttpEntity.fromPath(ContentTypes.`text/xml(UTF-8)`, mappingFileToSend.toPath),
+                    Map("filename" -> mappingFileToSend.getName)
+                )
+            )
+
             // send mapping xml to route
-            val mappingRequest = Post(baseApiUrl + "/v1/mapping/" + URLEncoder.encode(RequestParams.anythingProjectIri, "UTF-8"), HttpEntity(ContentTypes.`text/xml(UTF-8)`, RequestParams.mappingXML)) ~> addCredentials(BasicHttpCredentials(anythingUser, password))
+            val mappingRequest = Post(baseApiUrl + "/v1/mapping", formDataMapping) ~> addCredentials(BasicHttpCredentials(anythingUser, password))
             val mappingResponse: HttpResponse = singleAwaitingRequest(mappingRequest, 20.seconds)
 
             assert(mappingResponse.status == StatusCodes.OK, "standoff mapping creation route returned a non successful HTTP status code: " + mappingResponse.entity.toString)
 
-            RequestParams.mappingIri = ResponseUtils.getStringMemberFromResponse(mappingResponse, "resourceIri")
+            RequestParams.mappingIri = ResponseUtils.getStringMemberFromResponse(mappingResponse, "mappingIri")
 
-            val fileToSend = new File(RequestParams.pathToLetterXML)
+            val textFileToSend = new File(RequestParams.pathToLetterXML)
 
-            val formData = Multipart.FormData(
+            val formDataStandoff = Multipart.FormData(
                 Multipart.FormData.BodyPart(
                     "json",
                     HttpEntity(ContentTypes.`application/json`, RequestParams.paramsCreateLetterFromXML(RequestParams.mappingIri))
                 ),
                 Multipart.FormData.BodyPart(
                     "xml",
-                    HttpEntity.fromPath(ContentTypes.`text/xml(UTF-8)`, fileToSend.toPath),
-                    Map("filename" -> fileToSend.getName)
+                    HttpEntity.fromPath(ContentTypes.`text/xml(UTF-8)`, textFileToSend.toPath),
+                    Map("filename" -> textFileToSend.getName)
                 )
             )
 
             // create standoff from XML
-            val standoffCreationRequest = Post(baseApiUrl + "/v1/standoff", formData) ~> addCredentials(BasicHttpCredentials(anythingUser, password))
+            val standoffCreationRequest = Post(baseApiUrl + "/v1/standoff", formDataStandoff) ~> addCredentials(BasicHttpCredentials(anythingUser, password))
 
             val standoffCreationResponse: HttpResponse = singleAwaitingRequest(standoffCreationRequest, 20.seconds)
 
@@ -401,7 +336,7 @@ class SipiV1ITSpec extends ITSpec(SipiV1ITSpec.config) with TriplestoreJsonProto
             val XMLString = ResponseUtils.getStringMemberFromResponse(standoffResponse, "xml")
 
             // Compare the original XML with the regenerated XML.
-            val xmlDiff: Diff = DiffBuilder.compare(Input.fromString(Source.fromFile(fileToSend)(Codec.UTF8).mkString)).withTest(Input.fromString(XMLString)).build()
+            val xmlDiff: Diff = DiffBuilder.compare(Input.fromString(Source.fromFile(textFileToSend)(Codec.UTF8).mkString)).withTest(Input.fromString(XMLString)).build()
 
             xmlDiff.hasDifferences should be(false)
 
