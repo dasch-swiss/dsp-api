@@ -30,16 +30,63 @@
 @(triplestore: String,
   mappingIri: IRI)
 
-PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-PREFIX owl: <http://www.w3.org/2002/07/owl#>
-PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+construct {
+    ?mapping rdfs:label ?label .
+    ?mapping rdf:type ?mappingType .
 
-SELECT * WHERE {
+    ?mappingElement rdf:type ?mappingElementType .
+    ?mappingElement knora-base:hasXMLTagname ?tagName .
+    ?mappingElement knora-base:hasXMLNamespace ?tagNamespace .
+    ?mappingElement knora-base:hasXMLClass ?tagClass .
+    ?mappingElement knora-base:hasStandoffClass ?standoffClass .
 
+    ?mappingElement knora-base:hasXMLAttribute ?attribute .
+    ?attribute rdf:type ?attributeType .
+    ?attribute knora-base:hasXMLAttributename ?attributeName .
+    ?attribute knora-base:hasXMLNamespace ?attributeNamespace .
+    ?attribute knora-base:hasStandoffProperty ?standoffProperty .
+
+    ?mappingElement knora-base:hasStandoffDataTypeClass ?datatypeClass .
+    ?datatypeClass rdf:type ?datatypeType .
+    ?datatypeClass knora-base:hasXMLAttributename ?datatypeAttributeName .
+    ?datatypeClass knora-base:hasStandoffClass ?datatypeStandoffClass .
+
+
+
+} where {
     BIND(IRI("@mappingIri") as ?mapping)
 
-    ?mapping ?p ?o .
+    ?mapping rdfs:label ?label .
+
+    ?mapping rdf:type ?mappingType .
+    ?mapping knora-base:hasMappingElement ?mappingElement .
+    ?mappingElement rdf:type ?mappingElementType .
+    ?mappingElement knora-base:hasXMLTagname ?tagName .
+    ?mappingElement knora-base:hasXMLNamespace ?tagNamespace .
+    ?mappingElement knora-base:hasXMLClass ?tagClass .
+    ?mappingElement knora-base:hasStandoffClass ?standoffClass .
+
+
+    OPTIONAL {
+
+        ?mappingElement knora-base:hasXMLAttribute ?attribute .
+        ?attribute rdf:type ?attributeType .
+        ?attribute knora-base:hasXMLAttributename ?attributeName .
+        ?attribute knora-base:hasXMLNamespace ?attributeNamespace .
+        ?attribute knora-base:hasStandoffProperty ?standoffProperty .
+    }
+
+    OPTIONAL {
+
+        ?mappingElement knora-base:hasStandoffDataTypeClass ?datatypeClass .
+        ?datatypeClass rdf:type ?datatypeType .
+        ?datatypeClass knora-base:hasXMLAttributename ?datatypeAttributeName .
+        ?datatypeClass knora-base:hasStandoffClass ?datatypeStandoffClass .
+
+    }
+
 
 }
+

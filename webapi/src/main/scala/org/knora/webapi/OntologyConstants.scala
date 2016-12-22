@@ -83,6 +83,16 @@ object OntologyConstants {
         val TextRepresentation = "http://www.knora.org/ontology/knora-base#TextRepresentation"
         val Region = "http://www.knora.org/ontology/knora-base#Region"
         val XMLToStandoffMapping = "http://www.knora.org/ontology/knora-base#XMLToStandoffMapping"
+        val MappingElement = "http://www.knora.org/ontology/knora-base#MappingElement"
+        val hasStandoffClass = "http://www.knora.org/ontology/knora-base#hasStandoffClass"
+        val hasStandoffProperty = "http://www.knora.org/ontology/knora-base#hasStandoffProperty"
+        val hasXMLClass = "http://www.knora.org/ontology/knora-base#hasXMLClass"
+        val hasXMLNamespace = "http://www.knora.org/ontology/knora-base#hasXMLNamespace"
+        val hasXMLTagname = "http://www.knora.org/ontology/knora-base#hasXMLTagname"
+        val hasXMLAttribute = "http://www.knora.org/ontology/knora-base#hasXMLAttribute"
+        val hasXMLAttributename = "http://www.knora.org/ontology/knora-base#hasXMLAttributename"
+        val hasStandoffDataTypeClass = "http://www.knora.org/ontology/knora-base#hasStandoffDataTypeClass"
+
 
         val AbstractResourceClasses = Set(
             Resource,

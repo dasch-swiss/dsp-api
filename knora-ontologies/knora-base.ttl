@@ -1077,6 +1077,20 @@
                :objectClassConstraint :MappingXMLAttribute .
 
 
+###  http://www.knora.org/ontology/knora-base#hasStandoffDatatypeClass
+
+:hasStandoffDatatypeClass rdf:type owl:ObjectProperty ;
+
+               rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
+
+               rdfs:label "datatype of the XML tag"@en ;
+
+               rdfs:comment """datatype of the XML tag"""@en ;
+
+               :subjectClassConstraint :MappingElement ;
+
+               :objectClassConstraint :MappingStandoffDataTypeClass .
+
 #################################################################
 #
 #    Datatype properties
