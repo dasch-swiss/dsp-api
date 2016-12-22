@@ -84,7 +84,8 @@ lazy val webapi = (project in file(".")).
             testOptions in Test += Tests.Argument("-oDF") // show full stack traces and test case durations
         ).
         settings(Revolver.settings: _*).
-        enablePlugins(SbtTwirl) // Enable the SbtTwirl plugin
+        enablePlugins(SbtTwirl). // Enable the SbtTwirl plugin
+        enablePlugins(JavaAppPackaging) // Enable the sbt-native-packager docker plugin
 
 lazy val webApiCommonSettings = Seq(
     organization := "org.knora",
@@ -200,32 +201,3 @@ lazy val EmbeddedJenaTDBTest = config("tdb") extend(Test)
 lazy val javaEmbeddedJenaTDBTestOptions = Seq(
     "-Dconfig.resource=jenatdb.conf"
 ) ++ javaTestOptions
-
-// skip test before creating fat-jar
-test in assembly := {}
-
-// set fat-jar main class
-mainClass in assembly := Some("org.knora.webapi.Main")
-
-// change merge strategy for fat-jar
-assemblyMergeStrategy in assembly := {
-    case PathList("org", "apache", "commons", "logging", xs @ _*)   => MergeStrategy.first
-    case PathList("META-INF", xs @ _*) =>
-    xs.map(_.toLowerCase) match {
-        case ("manifest.mf" :: Nil) | ("index.list" :: Nil) | ("dependencies" :: Nil) =>
-        MergeStrategy.discard
-        case ps @ (x :: xs) if ps.last.endsWith(".sf") || ps.last.endsWith(".dsa") || ps.last.endsWith("license") || ps.last.endsWith("license.txt") || ps.last.endsWith("notice") || ps.last.endsWith("notice.txt") =>
-        MergeStrategy.discard
-        case "plexus" :: xs =>
-        MergeStrategy.discard
-        case "services" :: xs =>
-        MergeStrategy.filterDistinctLines
-        case ("spring.schemas" :: Nil) | ("spring.handlers" :: Nil) =>
-        MergeStrategy.filterDistinctLines
-        case ps@(x :: xs) if ps.last.endsWith("aop.xml") => MergeStrategy.first
-        case _ => MergeStrategy.deduplicate
-    }
-    case x =>
-    val oldStrategy = (assemblyMergeStrategy in assembly).value
-    oldStrategy(x)
-}
