@@ -34,12 +34,14 @@ import akka.http.scaladsl.model._
 import akka.pattern._
 import akka.stream.ActorMaterializer
 import org.knora.webapi.messages.v1.responder.ontologymessages.{Cardinality, StandoffEntityInfoGetRequestV1, StandoffEntityInfoGetResponseV1, StandoffPropertyEntityInfoV1}
+import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoByIRIGetRequest, ProjectInfoResponseV1, ProjectInfoType}
 import org.knora.webapi.messages.v1.responder.resourcemessages._
 import org.knora.webapi.messages.v1.responder.sipimessages.SipiResponderConversionPathRequestV1
 import org.knora.webapi.messages.v1.responder.standoffmessages._
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v1.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, SparqlUpdateRequest, SparqlUpdateResponse}
+import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.twirl._
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.standoff._
@@ -73,7 +75,7 @@ class StandoffResponderV1 extends ResponderV1 {
         case CreateStandoffRequestV1(projIri, resIri, propIri, mappingIri, xml, userProfile, uuid) => future2Message(sender(), createStandoffV1(projIri, resIri, propIri, mappingIri, xml, userProfile, uuid), log)
         case ChangeStandoffRequestV1(valIri, mappingIri, xml, userProfile, uuid) => future2Message(sender(), changeStandoffV1(valIri, mappingIri, xml, userProfile, uuid), log)
         case StandoffGetRequestV1(valueIri, userProfile) => future2Message(sender(), getStandoffV1(valueIri, userProfile), log)
-        case CreateMappingRequestV1(xml, label, projectIri, mappingName, userProfile) => future2Message(sender(), createMappingV1(xml, label, projectIri, mappingName, userProfile), log)
+        case CreateMappingRequestV1(xml, label, projectIri, mappingName, userProfile, uuid) => future2Message(sender(), createMappingV1(xml, label, projectIri, mappingName, userProfile, uuid), log)
         case other => sender ! Status.Failure(UnexpectedMessageException(s"Unexpected message $other of type ${other.getClass.getCanonicalName}"))
     }
 
@@ -84,17 +86,11 @@ class StandoffResponderV1 extends ResponderV1 {
       * @param xml         the provided mapping.
       * @param userProfile the client that made the request.
       */
-    private def createMappingV1(xml: String, label: String, projectIri: IRI, mappingName: String, userProfile: UserProfileV1): Future[CreateMappingResponseV1] = {
+    private def createMappingV1(xml: String, label: String, projectIri: IRI, mappingName: String, userProfile: UserProfileV1, apiRequestID: UUID): Future[CreateMappingResponseV1] = {
 
-        def createMappingAndCheck(xml: String, label: String, projectIri: IRI, mappingName: String, userProfile: UserProfileV1): Future[CreateMappingResponseV1] = {
+        def createMappingAndCheck(xml: String, label: String, mappingIri: IRI, namedGraph: String, userProfile: UserProfileV1): Future[CreateMappingResponseV1] = {
 
             val knoraIdUtil = new KnoraIdUtil
-
-            // TODO: make sure that the project Iri exists and the user has sufficient permissions
-
-            val mappingIri = knoraIdUtil.makeProjectMappingIri(projectIri, mappingName)
-
-            val namedGraph = settings.projectNamedGraphs(projectIri).data
 
             val createMappingFuture = for {
 
@@ -187,6 +183,8 @@ class StandoffResponderV1 extends ResponderV1 {
 
                 }
 
+                // TODO: construct a `MappingXMLtoStandoff` from Seq[MappingElement] before writing the mapping to the triplestore (checks are done)
+
                 // check if the mapping Iri already exists
                 getExistingMappingSparql = queries.sparql.v1.txt.getMapping(
                     triplestore = settings.triplestoreType,
@@ -233,7 +231,45 @@ class StandoffResponderV1 extends ResponderV1 {
 
         }
 
-        createMappingAndCheck(xml, label, projectIri, mappingName, userProfile)
+        for {
+        // Don't allow anonymous users to create resources.
+            userIri: IRI <- Future {
+                userProfile.userData.user_id match {
+                    case Some(iri) => iri
+                    case None => throw ForbiddenException("Anonymous users aren't allowed to create resources")
+                }
+            }
+
+            // check if the given project Iri represents an actual project
+            projectInfo: ProjectInfoResponseV1 <- (responderManager ? ProjectInfoByIRIGetRequest(
+                iri = projectIri,
+                requestType = ProjectInfoType.SHORT,
+                Some(userProfile)
+            )).mapTo[ProjectInfoResponseV1]
+
+            knoraIdUtil = new KnoraIdUtil
+
+            // TODO: make sure that has sufficient permissions to create a mapping in the given project
+
+            mappingIri = knoraIdUtil.makeProjectMappingIri(projectIri, mappingName)
+
+            namedGraph = settings.projectNamedGraphs(projectIri).data
+
+            result: CreateMappingResponseV1 <- IriLocker.runWithIriLock(
+                apiRequestID,
+                knoraIdUtil.createMappingLockIriForProject(projectIri), // use a special project specific Iri to lock the creation of mappings for the given project
+                () => createMappingAndCheck(
+                    xml = xml,
+                    label = label,
+                    mappingIri = mappingIri,
+                    namedGraph = namedGraph,
+                    userProfile = userProfile
+                )
+            )
+
+        } yield result
+
+
 
     }
 
@@ -251,12 +287,12 @@ class StandoffResponderV1 extends ResponderV1 {
 
         CacheUtil.get[MappingXMLtoStandoff](cacheName = MappingCacheName, key = mappingIri) match {
             case Some(data: MappingXMLtoStandoff) => Future(data)
-            case None => getMappingFromSipi(mappingIri, userProfile)
+            case None => getMappingFromTriplestore(mappingIri, userProfile)
         }
 
     }
 
-    private def getMappingFromSipi(mappingIri: IRI, userProfile: UserProfileV1): Future[MappingXMLtoStandoff] = {
+    private def getMappingFromTriplestore(mappingIri: IRI, userProfile: UserProfileV1): Future[MappingXMLtoStandoff] = {
 
         // get mapping from file value
         for {
