@@ -59,11 +59,12 @@ case class CreateMappingResponseV1(mappingIri: IRI, userdata: UserDataV1) extend
 
 /**
   * Represents a mapping between XML tags and standoff entities (classes and properties).
-  * The map's keys are XML namespaces, the values are Maps themselves that have XML tag names as keys.
   *
   * Example:
   *
-  * namespace = Map("myXMLNamespace" -> Map("myXMLTagName" Map("myClassname" -> XMLTag(...))))
+  * namespace = Map("myXMLNamespace" -> Map("myXMLTagName" -> Map("myXMLClassname" -> XMLTag(...))))
+  *
+  * The class names allow for the ruse of the same tag name. This is important when using HTML since the tag set is very limited.
   *
   * @param namespace a Map of XML namespaces and a Map of tag names and [[XMLTag]].
   */
@@ -88,9 +89,16 @@ case class XMLTag(name: String, mapping: XMLTagToStandoffClass)
   * @param standoffClassIri the Iri of the standoff class.
   * @param attributesToProps a mapping between XML namespaces and attribute names and standoff properties.
   * @param dataType the data type of the standoff class (e.g., a date).
+  */
+case class XMLTagToStandoffClass(standoffClassIri: IRI, attributesToProps: Map[String, Map[String, IRI]] = Map.empty[String, Map[String, IRI]], dataType: Option[XMLStandoffDataTypeClass])
+
+/**
+  * Represents a data type standoff class in mapping for an XML element.
+  *
+  * @param standoffDataTypeClass the data type of the standoff class (e.g., a date).
   * @param dataTypeXMLAttribute the XML attribute holding the information needed for the standoff class data type (e.g., a date string).
   */
-case class XMLTagToStandoffClass(standoffClassIri: IRI, attributesToProps: Map[String, Map[String, IRI]] = Map.empty[String, Map[String, IRI]], dataType: Option[StandoffDataTypeClasses.Value] = None, dataTypeXMLAttribute: Option[String] = None)
+case class XMLStandoffDataTypeClass(standoffDataTypeClass: StandoffDataTypeClasses.Value, dataTypeXMLAttribute: String)
 
 /**
   * Represents an API request to create a text value with standoff.

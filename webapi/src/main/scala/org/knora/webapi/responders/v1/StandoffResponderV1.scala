@@ -336,18 +336,21 @@ class StandoffResponderV1 extends ResponderV1 {
                         namespace -> attributesInNamespace
                 }
 
-                // get the optional element datatype
-                val datatypeMaybe: Option[MappingStandoffDatatypeClass] = curEle.standoffDataTypeClass
+                // if "datatype" is given, create a `XMLStandoffDataTypeClass`
+                val dataTypeOption: Option[XMLStandoffDataTypeClass] = curEle.standoffDataTypeClass match {
 
-                // if "datatype" is given, get the the standoff class data type and the name of the XML data type attribute
-                val (dataTypeOption: Option[StandoffDataTypeClasses.Value], dataTypeAttributeOption: Option[String]) = if (datatypeMaybe.nonEmpty) {
-                    val dataType = StandoffDataTypeClasses.lookup(datatypeMaybe.get.datatype, () => throw BadRequestException(s"Invalid data type provided for $tagname"))
+                    case Some(dataTypeClass: MappingStandoffDatatypeClass) =>
 
-                    val dataTypeAttribute = datatypeMaybe.get.attributeName
+                        val dataType = StandoffDataTypeClasses.lookup(dataTypeClass.datatype, () => throw BadRequestException(s"Invalid data type provided for $tagname"))
 
-                    (Some(dataType), Some(dataTypeAttribute))
-                } else {
-                    (None, None)
+                        val dataTypeAttribute = dataTypeClass.attributeName
+
+                        Some(XMLStandoffDataTypeClass(
+                            standoffDataTypeClass = dataType,
+                            dataTypeXMLAttribute = dataTypeAttribute
+                        ))
+
+                    case None => None
                 }
 
                 // add the current tag to the map
@@ -357,7 +360,7 @@ class StandoffResponderV1 extends ResponderV1 {
                             case Some(existingClassname) => throw BadRequestException("Duplicate tag and classname combination in the same namespace")
                             case None =>
                                 // create the definition for the current element
-                                val xmlElementDef = XMLTag(name = tagname, mapping = XMLTagToStandoffClass(standoffClassIri = standoffClassIri, attributesToProps = attributes, dataType = dataTypeOption, dataTypeXMLAttribute = dataTypeAttributeOption))
+                                val xmlElementDef = XMLTag(name = tagname, mapping = XMLTagToStandoffClass(standoffClassIri = standoffClassIri, attributesToProps = attributes, dataType = dataTypeOption))
 
                                 // combine the definition for the this classname with the existing definitions beloning to the same element
                                 val combinedClassDef: Map[String, XMLTag] = namespaceMap(tagname) + (classname -> xmlElementDef)
@@ -367,7 +370,7 @@ class StandoffResponderV1 extends ResponderV1 {
 
                         }
                     case None =>
-                        namespaceMap + (tagname -> Map(classname -> XMLTag(name = tagname, mapping = XMLTagToStandoffClass(standoffClassIri = standoffClassIri, attributesToProps = attributes, dataType = dataTypeOption, dataTypeXMLAttribute = dataTypeAttributeOption))))
+                        namespaceMap + (tagname -> Map(classname -> XMLTag(name = tagname, mapping = XMLTagToStandoffClass(standoffClassIri = standoffClassIri, attributesToProps = attributes, dataType = dataTypeOption))))
                 }
 
                 // recreate the whole structure for all namespaces
@@ -507,11 +510,11 @@ class StandoffResponderV1 extends ResponderV1 {
       */
     private def getDataTypeAttribute(XMLtoStandoffMapping: XMLTagToStandoffClass, dataType: StandoffDataTypeClasses.Value, standoffNodeFromXML: StandoffTag): String = {
 
-        if (XMLtoStandoffMapping.dataType.isEmpty || XMLtoStandoffMapping.dataType.get != dataType) {
-            throw BadRequestException(s"wrong data type definition provided in mapping for standoff class ${XMLtoStandoffMapping.standoffClassIri}")
+        if (XMLtoStandoffMapping.dataType.isEmpty || XMLtoStandoffMapping.dataType.get.standoffDataTypeClass != dataType) {
+            throw BadRequestException(s"no or wrong data type definition provided in mapping for standoff class ${XMLtoStandoffMapping.standoffClassIri}")
         }
 
-        val attrName = XMLtoStandoffMapping.dataTypeXMLAttribute.getOrElse(throw BadRequestException(s"no data type attribute definition provided in mapping for ${XMLtoStandoffMapping.standoffClassIri}"))
+        val attrName = XMLtoStandoffMapping.dataType.get.dataTypeXMLAttribute
 
         val attrStringOption: Option[StandoffTagAttribute] = standoffNodeFromXML.attributes.find(attr => attr.key == attrName)
 
@@ -538,7 +541,7 @@ class StandoffResponderV1 extends ResponderV1 {
             // additional standoff properties are required
 
             // map over all non data type attributes
-            val attrs: Seq[StandoffTagAttributeV1] = standoffNodeFromXML.attributes.filterNot(attr => XMLtoStandoffMapping.dataType.nonEmpty && XMLtoStandoffMapping.dataTypeXMLAttribute.nonEmpty && XMLtoStandoffMapping.dataTypeXMLAttribute.get == attr.key).map {
+            val attrs: Seq[StandoffTagAttributeV1] = standoffNodeFromXML.attributes.filterNot(attr => XMLtoStandoffMapping.dataType.nonEmpty && XMLtoStandoffMapping.dataType.get.dataTypeXMLAttribute == attr.key).map {
                 attr: StandoffTagAttribute =>
                     // get the standoff property Iri for this XML attribute
 
@@ -1202,11 +1205,11 @@ class StandoffResponderV1 extends ResponderV1 {
 
                     val xmlItemForStandoffClass: XMLTagItem = mappingStandoffToXML.getOrElse(standoffTagV1.standoffTagClassIri, throw NotFoundException(s"standoff class Iri ${standoffTagV1.standoffTagClassIri} not found in mapping"))
 
-                    // recreate data type specific attribute (optional)
+                    // recreate data type specific attributes (optional)
                     val attributes: Seq[StandoffTagAttribute] = standoffTagV1.dataType match {
 
                         case Some(StandoffDataTypeClasses.StandoffLinkTag) =>
-                            val dataTypeAttrName = xmlItemForStandoffClass.tagItem.mapping.dataTypeXMLAttribute.getOrElse(throw NotFoundException(s"data type attribute not found in mapping for ${xmlItemForStandoffClass.tagname}"))
+                            val dataTypeAttrName = xmlItemForStandoffClass.tagItem.mapping.dataType.getOrElse(throw NotFoundException(s"data type attribute not found in mapping for ${xmlItemForStandoffClass.tagname}")).dataTypeXMLAttribute
 
                             val linkIri = standoffTagV1.attributes.find(_.standoffPropertyIri == OntologyConstants.KnoraBase.StandoffTagHasLink).get.stringValue
 
@@ -1215,7 +1218,7 @@ class StandoffResponderV1 extends ResponderV1 {
                             convertStandoffAttributeTags(xmlItemForStandoffClass.attributes, conventionalAttributes) :+ StandoffTagAttribute(key = dataTypeAttrName, value = linkIri, xmlNamespace = None)
 
                         case Some(StandoffDataTypeClasses.StandoffColorTag) =>
-                            val dataTypeAttrName = xmlItemForStandoffClass.tagItem.mapping.dataTypeXMLAttribute.getOrElse(throw NotFoundException(s"data type attribute not found in mapping for ${xmlItemForStandoffClass.tagname}"))
+                            val dataTypeAttrName = xmlItemForStandoffClass.tagItem.mapping.dataType.getOrElse(throw NotFoundException(s"data type attribute not found in mapping for ${xmlItemForStandoffClass.tagname}")).dataTypeXMLAttribute
 
                             val colorString = standoffTagV1.attributes.find(_.standoffPropertyIri == OntologyConstants.KnoraBase.ValueHasColor).get.stringValue
 
@@ -1224,7 +1227,7 @@ class StandoffResponderV1 extends ResponderV1 {
                             convertStandoffAttributeTags(xmlItemForStandoffClass.attributes, conventionalAttributes) :+ StandoffTagAttribute(key = dataTypeAttrName, value = colorString, xmlNamespace = None)
 
                         case Some(StandoffDataTypeClasses.StandoffUriTag) =>
-                            val dataTypeAttrName = xmlItemForStandoffClass.tagItem.mapping.dataTypeXMLAttribute.getOrElse(throw NotFoundException(s"data type attribute not found in mapping for ${xmlItemForStandoffClass.tagname}"))
+                            val dataTypeAttrName = xmlItemForStandoffClass.tagItem.mapping.dataType.getOrElse(throw NotFoundException(s"data type attribute not found in mapping for ${xmlItemForStandoffClass.tagname}")).dataTypeXMLAttribute
 
                             val uriRef = standoffTagV1.attributes.find(_.standoffPropertyIri == OntologyConstants.KnoraBase.ValueHasUri).get.stringValue
 
@@ -1233,7 +1236,7 @@ class StandoffResponderV1 extends ResponderV1 {
                             convertStandoffAttributeTags(xmlItemForStandoffClass.attributes, conventionalAttributes) :+ StandoffTagAttribute(key = dataTypeAttrName, value = uriRef, xmlNamespace = None)
 
                         case Some(StandoffDataTypeClasses.StandoffIntegerTag) =>
-                            val dataTypeAttrName = xmlItemForStandoffClass.tagItem.mapping.dataTypeXMLAttribute.getOrElse(throw NotFoundException(s"data type attribute not found in mapping for ${xmlItemForStandoffClass.tagname}"))
+                            val dataTypeAttrName = xmlItemForStandoffClass.tagItem.mapping.dataType.getOrElse(throw NotFoundException(s"data type attribute not found in mapping for ${xmlItemForStandoffClass.tagname}")).dataTypeXMLAttribute
 
                             val integerString = standoffTagV1.attributes.find(_.standoffPropertyIri == OntologyConstants.KnoraBase.ValueHasInteger).get.stringValue
 
@@ -1242,7 +1245,7 @@ class StandoffResponderV1 extends ResponderV1 {
                             convertStandoffAttributeTags(xmlItemForStandoffClass.attributes, conventionalAttributes) :+ StandoffTagAttribute(key = dataTypeAttrName, value = integerString, xmlNamespace = None)
 
                         case Some(StandoffDataTypeClasses.StandoffDecimalTag) =>
-                            val dataTypeAttrName = xmlItemForStandoffClass.tagItem.mapping.dataTypeXMLAttribute.getOrElse(throw NotFoundException(s"data type attribute not found in mapping for ${xmlItemForStandoffClass.tagname}"))
+                            val dataTypeAttrName = xmlItemForStandoffClass.tagItem.mapping.dataType.getOrElse(throw NotFoundException(s"data type attribute not found in mapping for ${xmlItemForStandoffClass.tagname}")).dataTypeXMLAttribute
 
                             val decimalString = standoffTagV1.attributes.find(_.standoffPropertyIri == OntologyConstants.KnoraBase.ValueHasDecimal).get.stringValue
 
@@ -1251,7 +1254,7 @@ class StandoffResponderV1 extends ResponderV1 {
                             convertStandoffAttributeTags(xmlItemForStandoffClass.attributes, conventionalAttributes) :+ StandoffTagAttribute(key = dataTypeAttrName, value = decimalString, xmlNamespace = None)
 
                         case Some(StandoffDataTypeClasses.StandoffBooleanTag) =>
-                            val dataTypeAttrName = xmlItemForStandoffClass.tagItem.mapping.dataTypeXMLAttribute.getOrElse(throw NotFoundException(s"data type attribute not found in mapping for ${xmlItemForStandoffClass.tagname}"))
+                            val dataTypeAttrName = xmlItemForStandoffClass.tagItem.mapping.dataType.getOrElse(throw NotFoundException(s"data type attribute not found in mapping for ${xmlItemForStandoffClass.tagname}")).dataTypeXMLAttribute
 
                             val booleanString = standoffTagV1.attributes.find(_.standoffPropertyIri == OntologyConstants.KnoraBase.ValueHasBoolean).get.stringValue
 
@@ -1260,7 +1263,7 @@ class StandoffResponderV1 extends ResponderV1 {
                             convertStandoffAttributeTags(xmlItemForStandoffClass.attributes, conventionalAttributes) :+ StandoffTagAttribute(key = dataTypeAttrName, value = booleanString, xmlNamespace = None)
 
                         case Some(StandoffDataTypeClasses.StandoffIntervalTag) =>
-                            val dataTypeAttrName = xmlItemForStandoffClass.tagItem.mapping.dataTypeXMLAttribute.getOrElse(throw NotFoundException(s"data type attribute not found in mapping for ${xmlItemForStandoffClass.tagname}"))
+                            val dataTypeAttrName = xmlItemForStandoffClass.tagItem.mapping.dataType.getOrElse(throw NotFoundException(s"data type attribute not found in mapping for ${xmlItemForStandoffClass.tagname}")).dataTypeXMLAttribute
 
                             val intervalString = Vector(standoffTagV1.attributes.find(_.standoffPropertyIri == OntologyConstants.KnoraBase.ValueHasIntervalStart).get.stringValue, standoffTagV1.attributes.find(_.standoffPropertyIri == OntologyConstants.KnoraBase.ValueHasIntervalEnd).get.stringValue).mkString(",")
 
@@ -1270,7 +1273,7 @@ class StandoffResponderV1 extends ResponderV1 {
 
                         case Some(StandoffDataTypeClasses.StandoffDateTag) =>
                             // create one attribute from date properties
-                            val dataTypeAttrName = xmlItemForStandoffClass.tagItem.mapping.dataTypeXMLAttribute.getOrElse(throw NotFoundException(s"data type attribute not found in mapping for ${xmlItemForStandoffClass.tagname}"))
+                            val dataTypeAttrName = xmlItemForStandoffClass.tagItem.mapping.dataType.getOrElse(throw NotFoundException(s"data type attribute not found in mapping for ${xmlItemForStandoffClass.tagname}")).dataTypeXMLAttribute
 
                             val calendar = KnoraCalendarV1.lookup(standoffTagV1.attributes.find(_.standoffPropertyIri == OntologyConstants.KnoraBase.ValueHasCalendar).get.stringValue)
 

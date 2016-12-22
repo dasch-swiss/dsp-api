@@ -688,7 +688,7 @@ case class TextValueV1(utf8str: String,
       */
     override def isDuplicateOfOtherValue(other: ApiValueV1): Boolean = {
         other match {
-            case TextValueV1(otherUtf8Str, _, _, _, _) => utf8str == otherUtf8Str
+            case TextValueV1(otherUtf8str, _, _, _, _) => utf8str == otherUtf8str // FIXME: this does not work properly at the moment because $otherUtf8Str contains unescaped newlines while $utf8str does not
             case otherValue => throw InconsistentTriplestoreDataException(s"Cannot compare a $valueTypeIri to a ${otherValue.valueTypeIri}")
         }
     }
