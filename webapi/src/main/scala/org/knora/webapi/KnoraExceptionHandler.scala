@@ -24,12 +24,7 @@ object KnoraExceptionHandler {
 
         case other =>
             extractUri { uri =>
-                if (log == null) {
-                    println("******** log is null") // FIXME: why is this null?
-                } else {
-                    log.error(other, s"Unable to run route $uri")
-                }
-
+                log.error(other, s"Unable to run route $uri")
                 complete(exceptionToJsonHttpResponse(other, settingsImpl))
             }
     }
