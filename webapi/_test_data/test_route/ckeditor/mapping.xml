@@ -115,4 +115,20 @@
     </datatype>
   </standoffClass>
 </mappingElement>
+
+  <mappingElement>
+    <tag>
+      <name>span</name>
+      <class>date</class>
+      <namespace>noNamespace</namespace>
+    </tag>
+    <standoffClass>
+      <classIri>http://www.knora.org/ontology/knora-base#StandoffDateTag</classIri>
+      <datatype>
+        <type>http://www.knora.org/ontology/knora-base#StandoffDateTag</type>
+        <attributeName>data-date</attributeName>
+      </datatype>
+    </standoffClass>
+  </mappingElement>
+
 </mapping>
