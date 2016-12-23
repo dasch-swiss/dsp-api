@@ -30,9 +30,11 @@
 @(triplestore: String,
   mappingIri: IRI)
 
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
-construct {
+
+CONSTRUCT {
     ?mapping rdfs:label ?label .
     ?mapping rdf:type ?mappingType .
 
@@ -55,7 +57,7 @@ construct {
 
 
 
-} where {
+} WHERE {
     BIND(IRI("@mappingIri") as ?mapping)
 
     ?mapping rdfs:label ?label .

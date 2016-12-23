@@ -136,7 +136,7 @@ class StandoffV1R2RSpec extends R2RSpec {
 
     object RequestParams {
 
-        val paramsCreateMappingFromXML =
+        val paramsCreateLetterMappingFromXML =
             s"""
                |{
                |  "project_id": "$anythingProjectIri",
@@ -145,7 +145,7 @@ class StandoffV1R2RSpec extends R2RSpec {
                |}
              """.stripMargin
 
-        def paramsCreateLetterFromXML(mappingIri: IRI): String =
+        def paramsCreateTextValueFromXML(mappingIri: IRI): String =
             s"""
                 {
                     "resource_id": "http://data.knora.org/a-thing",
@@ -163,11 +163,23 @@ class StandoffV1R2RSpec extends R2RSpec {
                 }
             """
 
-        val pathToMapping = "_test_data/test_route/texts/mapping.xml"
+        val pathToLetterMapping = "_test_data/test_route/texts/mappingForLetter.xml"
 
         val pathToLetterXML = "_test_data/test_route/texts/letter.xml"
 
         val pathToLetter2XML = "_test_data/test_route/texts/letter2.xml"
+
+        val paramsCreateHTMLMappingFromXML =
+            s"""
+               |{
+               |  "project_id": "$anythingProjectIri",
+               |  "label": "mapping for HTML",
+               |  "mappingName": "HTMLMapping"
+               |}
+             """.stripMargin
+
+        val pathToHTMLMapping = "_test_data/test_route/texts/mappingForHTML.xml"
+
 
     }
 
@@ -175,12 +187,12 @@ class StandoffV1R2RSpec extends R2RSpec {
 
         "create a mapping resource for standoff conversion for letters" in {
 
-            val mappingFileToSend = new File(RequestParams.pathToMapping)
+            val mappingFileToSend = new File(RequestParams.pathToLetterMapping)
 
             val formDataMapping = Multipart.FormData(
                 Multipart.FormData.BodyPart(
                     "json",
-                    HttpEntity(ContentTypes.`application/json`, RequestParams.paramsCreateMappingFromXML)
+                    HttpEntity(ContentTypes.`application/json`, RequestParams.paramsCreateLetterMappingFromXML)
                 ),
                 Multipart.FormData.BodyPart(
                     "xml",
@@ -211,7 +223,7 @@ class StandoffV1R2RSpec extends R2RSpec {
             val formDataStandoff = Multipart.FormData(
                 Multipart.FormData.BodyPart(
                     "json",
-                    HttpEntity(ContentTypes.`application/json`, RequestParams.paramsCreateLetterFromXML(anythingProjectIri + "/mappings/LetterMapping"))
+                    HttpEntity(ContentTypes.`application/json`, RequestParams.paramsCreateTextValueFromXML(anythingProjectIri + "/mappings/LetterMapping"))
                 ),
                 Multipart.FormData.BodyPart(
                     "xml",
@@ -297,6 +309,38 @@ class StandoffV1R2RSpec extends R2RSpec {
             }
 
         }
+
+        "create a mapping resource for standoff conversion for HTML" in {
+
+            val mappingFileToSend = new File(RequestParams.pathToHTMLMapping)
+
+            val formDataMapping = Multipart.FormData(
+                Multipart.FormData.BodyPart(
+                    "json",
+                    HttpEntity(ContentTypes.`application/json`, RequestParams.paramsCreateHTMLMappingFromXML)
+                ),
+                Multipart.FormData.BodyPart(
+                    "xml",
+                    HttpEntity.fromPath(ContentTypes.`text/xml(UTF-8)`, mappingFileToSend.toPath),
+                    Map("filename" -> mappingFileToSend.getName)
+                )
+            )
+
+            // send mapping xml to route
+            Post("/v1/mapping", formDataMapping) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> standoffPath ~> check {
+
+                assert(status == StatusCodes.OK, "standoff mapping creation route returned a non successful HTTP status code: " + responseAs[String])
+
+                // check if mappingIri is correct
+                val mappingIri = ResponseUtils.getStringMemberFromResponse(response, "mappingIri")
+
+                assert(mappingIri == anythingProjectIri + "/mappings/HTMLMapping", "Iri of the new mapping is not correct")
+
+
+            }
+
+        }
+
 
     }
 }
