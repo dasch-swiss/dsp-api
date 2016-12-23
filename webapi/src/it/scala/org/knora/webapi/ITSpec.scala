@@ -29,7 +29,7 @@ import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContextExecutor}
 import scala.languageFeature.postfixOps
 
-object E2ESpec {
+object ITSpec {
     val defaultConfig: Config = ConfigFactory.load()
 }
 
@@ -37,22 +37,23 @@ object E2ESpec {
   * This class can be used in End-to-End testing. It starts the Knora server and
   * provides access to settings and logging.
   */
-class E2ESpec(_system: ActorSystem) extends Core with KnoraService with Suite with WordSpecLike with Matchers with BeforeAndAfterAll with RequestBuilding {
+class ITSpec(_system: ActorSystem) extends Core with KnoraService with Suite with WordSpecLike with Matchers with BeforeAndAfterAll with RequestBuilding {
 
-    def this(name: String, config: Config) = this(ActorSystem(name, config.withFallback(E2ESpec.defaultConfig)))
+    def this(name: String, config: Config) = this(ActorSystem(name, config.withFallback(ITSpec.defaultConfig)))
 
-    def this(config: Config) = this(ActorSystem("E2ETest", config.withFallback(E2ESpec.defaultConfig)))
+    def this(config: Config) = this(ActorSystem("IntegrationTests", config.withFallback(ITSpec.defaultConfig)))
 
-    def this(name: String) = this(ActorSystem(name, E2ESpec.defaultConfig))
+    def this(name: String) = this(ActorSystem(name, ITSpec.defaultConfig))
 
-    def this() = this(ActorSystem("E2ETest", E2ESpec.defaultConfig))
+    def this() = this(ActorSystem("IntegrationTests", ITSpec.defaultConfig))
 
     /* needed by the core trait */
     implicit lazy val system: ActorSystem = _system
 
-    if (!settings.knoraApiUseHttp) throw HttpConfigurationException("E2E tests currently require HTTP")
+    if (!settings.knoraApiUseHttp) throw HttpConfigurationException("Integration tests currently require HTTP")
 
     protected val baseApiUrl: String = settings.knoraApiHttpBaseUrl
+    protected val baseSipiUrl: String = s"${settings.sipiBaseUrl}:${settings.sipiPort}"
 
     implicit protected val postfix: postfixOps = scala.language.postfixOps
 

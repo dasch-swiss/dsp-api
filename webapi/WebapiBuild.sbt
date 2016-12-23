@@ -15,49 +15,57 @@ lazy val webapi = (project in file(".")).
             GraphDBTest,
             GraphDBFreeTest,
             SesameTest,
-            EmbeddedJenaTDBTest
+            EmbeddedJenaTDBTest,
+            IntegrationTest
         ).
         settings(webApiCommonSettings:  _*).
         settings(inConfig(FusekiTest)(
             Defaults.testTasks ++ Seq(
                 fork := true,
                 javaOptions ++= javaFusekiTestOptions,
-                testOptions += Tests.Argument("-oDF")
+                testOptions += Tests.Argument("-oDF") // show full stack traces and test case durations
             )
         ): _*).
         settings(inConfig(FusekiTomcatTest)(
             Defaults.testTasks ++ Seq(
                 fork := true,
                 javaOptions ++= javaFusekiTomcatTestOptions,
-                testOptions += Tests.Argument("-oDF")
+                testOptions += Tests.Argument("-oDF") // show full stack traces and test case durations
             )
         ): _*).
         settings(inConfig(GraphDBTest)(
             Defaults.testTasks ++ Seq(
                 fork := true,
                 javaOptions ++= javaGraphDBTestOptions,
-                testOptions += Tests.Argument("-oDF")
+                testOptions += Tests.Argument("-oDF") // show full stack traces and test case durations
             )
         ): _*).
         settings(inConfig(GraphDBFreeTest)(
             Defaults.testTasks ++ Seq(
                 fork := true,
                 javaOptions ++= javaGraphDBFreeTestOptions,
-                testOptions += Tests.Argument("-oDF")
+                testOptions += Tests.Argument("-oDF") // show full stack traces and test case durations
             )
         ): _*).
         settings(inConfig(SesameTest)(
             Defaults.testTasks ++ Seq(
                 fork := true,
                 javaOptions ++= javaSesameTestOptions,
-                testOptions += Tests.Argument("-oDF")
+                testOptions += Tests.Argument("-oDF") // show full stack traces and test case durations
             )
         ): _*).
         settings(inConfig(EmbeddedJenaTDBTest)(
             Defaults.testTasks ++ Seq(
                 fork := true,
                 javaOptions ++= javaEmbeddedJenaTDBTestOptions,
-                testOptions += Tests.Argument("-oDF")
+                testOptions += Tests.Argument("-oDF") // show full stack traces and test case durations
+            )
+        ): _*).
+        settings(inConfig(IntegrationTest)(
+            Defaults.itSettings ++ Seq(
+                fork := true,
+                javaOptions ++= javaIntegrationTestOptions,
+                testOptions += Tests.Argument("-oDF") // show full stack traces and test case durations
             )
         ): _*).
         settings(
@@ -80,8 +88,7 @@ lazy val webapi = (project in file(".")).
             mainClass in (Compile, run) := Some("org.knora.webapi.Main"),
             fork in Test := true,
             javaOptions in Test ++= javaTestOptions,
-            parallelExecution in Test := false,
-            testOptions in Test += Tests.Argument("-oDF") // show full stack traces and test case durations
+            parallelExecution in Test := false
         ).
         settings(Revolver.settings: _*).
         enablePlugins(SbtTwirl) // Enable the SbtTwirl plugin
@@ -143,10 +150,10 @@ lazy val webApiLibs = Seq(
     "com.sksamuel.diff" % "diff" % "1.1.11",
     "org.xmlunit" % "xmlunit-core" % "2.1.1",
     // testing
-    "com.typesafe.akka" %% "akka-testkit" % akkaVersion % "test, fuseki, fuseki-tomcat, graphdb, tdb",
-    "com.typesafe.akka" %% "akka-http-testkit" % akkaHttpVersion % "test, fuseki, fuseki-tomcat, graphdb, tdb",
-    "com.typesafe.akka" %% "akka-stream-testkit" % akkaVersion % "test, fuseki, fuseki-tomcat, graphdb, tdb",
-    "org.scalatest" %% "scalatest" % "3.0.0" % "test, fuseki, fuseki-tomcat, graphdb, tdb",
+    "com.typesafe.akka" %% "akka-testkit" % akkaVersion % "test, fuseki, fuseki-tomcat, graphdb, tdb, it",
+    "com.typesafe.akka" %% "akka-http-testkit" % akkaHttpVersion % "test, fuseki, fuseki-tomcat, graphdb, tdb, it",
+    "com.typesafe.akka" %% "akka-stream-testkit" % akkaVersion % "test, fuseki, fuseki-tomcat, graphdb, tdb, it",
+    "org.scalatest" %% "scalatest" % "3.0.0" % "test, fuseki, fuseki-tomcat, graphdb, tdb, it",
     "org.eclipse.rdf4j" % "rdf4j-rio-turtle" % "2.0M3",
     "org.rogach" %% "scallop" % "2.0.5"
 )
@@ -195,10 +202,16 @@ lazy val javaSesameTestOptions = Seq(
     "-Dconfig.resource=sesame.conf"
 ) ++ javaTestOptions
 
-
 lazy val EmbeddedJenaTDBTest = config("tdb") extend(Test)
 lazy val javaEmbeddedJenaTDBTestOptions = Seq(
     "-Dconfig.resource=jenatdb.conf"
+) ++ javaTestOptions
+
+// The 'IntegrationTest' config does not need to be created here, as it is a built-in config!
+// The standard testing tasks are available, but must be prefixed with 'it:', e.g., 'it:test'
+// The test need to be stored in the 'it' (and not 'test') folder. The standard source hierarchy is used, e.g., 'src/it/scala'
+lazy val javaIntegrationTestOptions = Seq(
+    "-Dconfig.resource=graphdb.conf"
 ) ++ javaTestOptions
 
 // skip test before creating fat-jar

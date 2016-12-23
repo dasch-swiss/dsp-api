@@ -26,23 +26,24 @@ import java.util.UUID
 import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.model.Multipart
+import akka.http.scaladsl.model.Multipart.BodyPart
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.server.directives.FileInfo
 import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.FileIO
-import akka.util.Timeout
+import com.typesafe.scalalogging.Logger
 import org.knora.webapi.messages.v1.responder.sipimessages.{SipiResponderConversionFileRequestV1, SipiResponderConversionPathRequestV1}
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
-import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v1.responder.valuemessages.ApiValueV1JsonProtocol._
+import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
 import org.knora.webapi.util.InputValidation.RichtextComponents
 import org.knora.webapi.util.{DateUtilV1, InputValidation}
 import org.knora.webapi.{BadRequestException, FileUploadException, IRI, SettingsImpl}
+import org.slf4j.LoggerFactory
 
-import scala.concurrent.{Await, Future}
-import scala.concurrent.duration._
+import scala.concurrent.Future
 
 /**
   * Provides a spray-routing function for API routes that deal with values.
@@ -270,12 +271,14 @@ object ValuesRouteV1 extends Authenticator {
 
     }
 
-    def knoraApiPath(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter): Route = {
+    def knoraApiPath(_system: ActorSystem, settings: SettingsImpl, loggingAdapter: LoggingAdapter): Route = {
         implicit val system: ActorSystem = _system
         implicit val materializer = ActorMaterializer()
         implicit val executionContext = system.dispatcher
         implicit val timeout = settings.defaultTimeout
         val responderManager = system.actorSelection("/user/responderManager")
+
+        val log = Logger(LoggerFactory.getLogger(this.getClass))
 
         // Version history request requires 3 URL path segments: resource IRI, property IRI, and current value IRI
         path("v1" / "values" / "history" / Segments) { iris =>
@@ -290,7 +293,7 @@ object ValuesRouteV1 extends Authenticator {
                         requestContext,
                         settings,
                         responderManager,
-                        log
+                        loggingAdapter
                     )
                 }
             }
@@ -305,7 +308,7 @@ object ValuesRouteV1 extends Authenticator {
                         requestContext,
                         settings,
                         responderManager,
-                        log
+                        loggingAdapter
                     )
                 }
             }
@@ -320,7 +323,7 @@ object ValuesRouteV1 extends Authenticator {
                         requestContext,
                         settings,
                         responderManager,
-                        log
+                        loggingAdapter
                     )
                 }
             } ~ put {
@@ -339,7 +342,7 @@ object ValuesRouteV1 extends Authenticator {
                         requestContext,
                         settings,
                         responderManager,
-                        log
+                        loggingAdapter
                     )
                 }
             } ~ delete {
@@ -354,7 +357,7 @@ object ValuesRouteV1 extends Authenticator {
                         requestContext,
                         settings,
                         responderManager,
-                        log
+                        loggingAdapter
                     )
                 }
             }
@@ -369,7 +372,7 @@ object ValuesRouteV1 extends Authenticator {
                         requestContext,
                         settings,
                         responderManager,
-                        log
+                        loggingAdapter
                     )
                 }
             }
@@ -385,7 +388,7 @@ object ValuesRouteV1 extends Authenticator {
                             requestContext,
                             settings,
                             responderManager,
-                            log
+                            loggingAdapter
                         )
                     }
                 }
@@ -400,12 +403,17 @@ object ValuesRouteV1 extends Authenticator {
                         requestContext,
                         settings,
                         responderManager,
-                        log
+                        loggingAdapter
                     )
                 }
             } ~ put {
                 entity(as[Multipart.FormData]) { formdata => requestContext =>
+
+                    log.debug("/v1/filevalue - PUT - Multipart.FormData - Route")
+
                     val userProfile = getUserProfileV1(requestContext)
+
+                    val FILE_PART = "file"
 
                     type Name = String
 
@@ -419,49 +427,47 @@ object ValuesRouteV1 extends Authenticator {
                     // TODO: how to check if the user has sent multiple files?
 
                     /* get the file data and save file to temporary location */
-                    val fileMapFuture = formdata.parts.mapAsync(1) { p: Multipart.FormData.BodyPart =>
-                        if (p.name == "file") {
-                            //println(s"part named ${p.name} has file named ${p.filename}")
-                            val filename = p.filename.getOrElse(throw BadRequestException(s"Filename is not given"))
+                    // collect all parts of the multipart as it arrives into a map
+                    val allPartsFuture: Future[Map[Name, Any]] = formdata.parts.mapAsync[(Name, Any)](1) {
+                        case b: BodyPart if b.name == FILE_PART => {
+                            log.debug(s"inside allPartsFuture - processing $FILE_PART")
+                            val filename = b.filename.getOrElse(throw BadRequestException(s"Filename is not given"))
                             val tmpFile = InputValidation.createTempFile(settings)
-                            val written = p.entity.dataBytes.runWith(FileIO.toPath(tmpFile.toPath))
+                            val written = b.entity.dataBytes.runWith(FileIO.toPath(tmpFile.toPath))
                             written.map { written =>
-                                //println(s"written result: ${written.wasSuccessful}, ${p.filename.get}, ${tmpFile.getAbsolutePath}")
+                                log.debug(s"written result: ${written.wasSuccessful}, ${b.filename.get}, ${tmpFile.getAbsolutePath}")
                                 receivedFile = Some(tmpFile)
-                                Map(p.name -> FileInfo(p.name, p.filename.get, p.entity.contentType))
+                                (b.name, FileInfo(b.name, filename, b.entity.contentType))
                             }
-                        } else {
-                            Future(Map.empty[Name, FileInfo])
                         }
-                    }.runFold(Map.empty[Name, FileInfo])((set, value) => set ++ value)
+                    }.runFold(Map.empty[Name, Any])((map, tuple) => map + tuple)
 
+                    val requestMessageFuture = allPartsFuture.map { allParts =>
 
-                    // TODO: refactor to remove blocking (issue #291)
-                    val fileMap = Await.result(fileMapFuture, Timeout(10.seconds).duration)
+                        /* Check to see if a file was received */
+                        val sourcePath = receivedFile.getOrElse(throw FileUploadException())
 
-                    val sourcePath = receivedFile.getOrElse(throw FileUploadException("Error during file upload. Please report this as a possible bug."))
+                        // get the file info containing the original filename and content type.
+                        val fileInfo = allParts.getOrElse(FILE_PART, throw BadRequestException(s"MultiPart POST request was sent without required '$FILE_PART' part!")).asInstanceOf[FileInfo]
+                        val originalFilename = fileInfo.fileName
+                        val originalMimeType = fileInfo.contentType.toString
 
-                    val (originalFilename, originalMimeType) = fileMap.headOption match {
-                        case Some((name, fileinfo)) => (name, fileinfo.contentType.toString)
-                        case None => throw BadRequestException("MultiPart Post request was sent but no files")
+                        val sipiConvertPathRequest = SipiResponderConversionPathRequestV1(
+                            originalFilename = InputValidation.toSparqlEncodedString(originalFilename, () => throw BadRequestException(s"The original filename is invalid: '$originalFilename'")),
+                            originalMimeType = InputValidation.toSparqlEncodedString(originalMimeType, () => throw BadRequestException(s"The original MIME type is invalid: '$originalMimeType'")),
+                            source = sourcePath,
+                            userProfile = userProfile
+                        )
+
+                        makeChangeFileValueRequest(resIriStr = resIriStr, apiRequest = None, multipartConversionRequest = Some(sipiConvertPathRequest), userProfile = userProfile)
                     }
 
-
-                    val sipiConvertPathRequest = SipiResponderConversionPathRequestV1(
-                        originalFilename = InputValidation.toSparqlEncodedString(originalFilename, () => throw BadRequestException(s"The original filename is invalid: '$originalFilename'")),
-                        originalMimeType = InputValidation.toSparqlEncodedString(originalMimeType, () => throw BadRequestException(s"The original MIME type is invalid: '$originalMimeType'")),
-                        source = sourcePath,
-                        userProfile = userProfile
-                    )
-
-                    val requestMessage = makeChangeFileValueRequest(resIriStr = resIriStr, apiRequest = None, multipartConversionRequest = Some(sipiConvertPathRequest), userProfile = userProfile)
-
-                    RouteUtilV1.runJsonRoute(
-                        requestMessage,
+                    RouteUtilV1.runJsonRouteWithFuture(
+                        requestMessageFuture,
                         requestContext,
                         settings,
                         responderManager,
-                        log
+                        loggingAdapter
                     )
                 }
             }
