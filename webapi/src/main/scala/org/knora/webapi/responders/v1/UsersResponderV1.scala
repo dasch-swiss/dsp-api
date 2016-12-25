@@ -54,7 +54,7 @@ class UsersResponderV1 extends ResponderV1 {
         case UserProfileByUsernameGetRequestV1(username, profileType) => future2Message(sender(), getUserProfileByUsernameV1(username, profileType), log)
         case UserCreateRequestV1(newUserData, userProfile, apiRequestID) => future2Message(sender(), createNewUserV1(newUserData, userProfile, apiRequestID), log)
         case UserUpdateRequestV1(userIri, propertyIri, newValue, userProfile, apiRequestID) => future2Message(sender(), updateUserV1(userIri, propertyIri, newValue, userProfile, apiRequestID), log)
-        case other => sender ! Status.Failure(UnexpectedMessageException(s"Unexpected message $other of type ${other.getClass.getCanonicalName}"))
+        case other => handleUnexpectedMessage(sender(), other, log)
     }
 
     /**
