@@ -96,7 +96,7 @@ object StandoffRouteV1 extends Authenticator {
                             case _ => throw BadRequestException("multipart request could not be handled")
                         }.runFold(Map.empty[Name, String])((map, tuple) => map + tuple)
 
-                        val requestMessage: Future[CreateStandoffRequestV1] = allPartsFuture.map {
+                        val requestMessageFuture: Future[CreateStandoffRequestV1] = allPartsFuture.map {
                             (allParts: Map[Name, String]) =>
 
                                 // get the json params and turn them into a case class
@@ -123,8 +123,8 @@ object StandoffRouteV1 extends Authenticator {
                         }
 
 
-                        RouteUtilV1.runJsonRoute(
-                            requestMessage,
+                        RouteUtilV1.runJsonRouteWithFuture(
+                            requestMessageFuture,
                             requestContext,
                             settings,
                             responderManager,
@@ -166,7 +166,7 @@ object StandoffRouteV1 extends Authenticator {
                             case _ => throw BadRequestException("multipart request could not be handled")
                         }.runFold(Map.empty[Name, String])((map, tuple) => map + tuple)
 
-                        val requestMessage: Future[ChangeStandoffRequestV1] = allPartsFuture.map {
+                        val requestMessageFuture: Future[ChangeStandoffRequestV1] = allPartsFuture.map {
                             (allParts: Map[Name, String]) =>
 
                                 // get the json params and turn them into a case class
@@ -192,8 +192,8 @@ object StandoffRouteV1 extends Authenticator {
 
                         }
 
-                        RouteUtilV1.runJsonRoute(
-                            requestMessage,
+                        RouteUtilV1.runJsonRouteWithFuture(
+                            requestMessageFuture,
                             requestContext,
                             settings,
                             responderManager,
@@ -209,7 +209,7 @@ object StandoffRouteV1 extends Authenticator {
                     val requestMessage = StandoffGetRequestV1(valueIri = InputValidation.toIri(iri, () => throw BadRequestException("invalid Iri")), userProfile = userProfile)
 
                     RouteUtilV1.runJsonRoute(
-                        Future(requestMessage),
+                        requestMessage,
                         requestContext,
                         settings,
                         responderManager,
@@ -255,7 +255,7 @@ object StandoffRouteV1 extends Authenticator {
                             case _ => throw BadRequestException("multipart request could not be handled")
                         }.runFold(Map.empty[Name, String])((map, tuple) => map + tuple)
 
-                        val requestMessage: Future[CreateMappingRequestV1] = allPartsFuture.map {
+                        val requestMessageFuture: Future[CreateMappingRequestV1] = allPartsFuture.map {
                             (allParts: Map[Name, String]) =>
 
                                 // get the json params and turn them into a case class
@@ -281,8 +281,8 @@ object StandoffRouteV1 extends Authenticator {
 
                         }
 
-                        RouteUtilV1.runJsonRoute(
-                            requestMessage,
+                        RouteUtilV1.runJsonRouteWithFuture(
+                            requestMessageFuture,
                             requestContext,
                             settings,
                             responderManager,

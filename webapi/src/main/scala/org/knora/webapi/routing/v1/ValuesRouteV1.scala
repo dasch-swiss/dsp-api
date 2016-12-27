@@ -289,7 +289,7 @@ object ValuesRouteV1 extends Authenticator {
 
 
                     RouteUtilV1.runJsonRoute(
-                        Future(requestMessage),
+                        requestMessage,
                         requestContext,
                         settings,
                         responderManager,
@@ -304,7 +304,7 @@ object ValuesRouteV1 extends Authenticator {
                     val requestMessage = makeCreateValueRequestMessage(apiRequest = apiRequest, userProfile = userProfile)
 
                     RouteUtilV1.runJsonRoute(
-                        Future(requestMessage),
+                        requestMessage,
                         requestContext,
                         settings,
                         responderManager,
@@ -319,7 +319,7 @@ object ValuesRouteV1 extends Authenticator {
                     val requestMessage = makeGetValueRequest(valueIriStr = valueIriStr, userProfile = userProfile)
 
                     RouteUtilV1.runJsonRoute(
-                        Future(requestMessage),
+                        requestMessage,
                         requestContext,
                         settings,
                         responderManager,
@@ -338,7 +338,7 @@ object ValuesRouteV1 extends Authenticator {
                     }
 
                     RouteUtilV1.runJsonRoute(
-                        Future(requestMessage),
+                        requestMessage,
                         requestContext,
                         settings,
                         responderManager,
@@ -353,7 +353,7 @@ object ValuesRouteV1 extends Authenticator {
                     val requestMessage = makeDeleteValueRequest(valueIriStr = valueIriStr, deleteComment = deleteComment, userProfile = userProfile)
 
                     RouteUtilV1.runJsonRoute(
-                        Future(requestMessage),
+                        requestMessage,
                         requestContext,
                         settings,
                         responderManager,
@@ -368,7 +368,7 @@ object ValuesRouteV1 extends Authenticator {
                     val requestMessage = makeChangeCommentRequestMessage(valueIriStr = valueIriStr, comment = None, userProfile = userProfile)
 
                     RouteUtilV1.runJsonRoute(
-                        Future(requestMessage),
+                        requestMessage,
                         requestContext,
                         settings,
                         responderManager,
@@ -384,7 +384,7 @@ object ValuesRouteV1 extends Authenticator {
                         val requestMessage = makeLinkValueGetRequestMessage(iris = iris, userProfile = userProfile)
 
                         RouteUtilV1.runJsonRoute(
-                            Future(requestMessage),
+                            requestMessage,
                             requestContext,
                             settings,
                             responderManager,
@@ -399,7 +399,7 @@ object ValuesRouteV1 extends Authenticator {
                     val requestMessage = makeChangeFileValueRequest(resIriStr = resIriStr, apiRequest = Some(apiRequest), multipartConversionRequest = None, userProfile = userProfile)
 
                     RouteUtilV1.runJsonRoute(
-                        Future(requestMessage),
+                        requestMessage,
                         requestContext,
                         settings,
                         responderManager,
@@ -437,7 +437,7 @@ object ValuesRouteV1 extends Authenticator {
                             written.map { written =>
                                 log.debug(s"written result: ${written.wasSuccessful}, ${b.filename.get}, ${tmpFile.getAbsolutePath}")
                                 receivedFile = Some(tmpFile)
-                                (b.name, FileInfo(b.name, b.filename.get, b.entity.contentType))
+                                (b.name, FileInfo(b.name, filename, b.entity.contentType))
                             }
                         }
                     }.runFold(Map.empty[Name, Any])((map, tuple) => map + tuple)
@@ -462,7 +462,7 @@ object ValuesRouteV1 extends Authenticator {
                         makeChangeFileValueRequest(resIriStr = resIriStr, apiRequest = None, multipartConversionRequest = Some(sipiConvertPathRequest), userProfile = userProfile)
                     }
 
-                    RouteUtilV1.runJsonRoute(
+                    RouteUtilV1.runJsonRouteWithFuture(
                         requestMessageFuture,
                         requestContext,
                         settings,

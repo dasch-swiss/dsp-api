@@ -49,7 +49,7 @@ class HierarchicalListsResponderV1 extends ResponderV1 {
         case HListGetRequestV1(listIri, userProfile) => future2Message(sender(), getListResponseV1(listIri, userProfile, PathType.HList), log)
         case SelectionGetRequestV1(listIri, userProfile) => future2Message(sender(), getListResponseV1(listIri, userProfile, PathType.Selection), log)
         case NodePathGetRequestV1(iri: IRI, userProfile: UserProfileV1) => future2Message(sender(), getNodePathResponseV1(iri, userProfile), log)
-        case other => sender ! Status.Failure(UnexpectedMessageException(s"Unexpected message $other of type ${other.getClass.getCanonicalName}"))
+        case other => handleUnexpectedMessage(sender(), other, log)
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

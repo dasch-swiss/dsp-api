@@ -20,9 +20,10 @@
 
 package org.knora.webapi.responders.v1
 
-import akka.actor.{Actor, ActorLogging, Props, Status}
+import akka.actor.{Actor, ActorLogging, Props}
 import akka.event.LoggingReceive
 import akka.routing.FromConfig
+import org.knora.webapi.ActorMaker
 import org.knora.webapi.messages.v1.responder.ckanmessages.CkanResponderRequestV1
 import org.knora.webapi.messages.v1.responder.listmessages.ListsResponderRequestV1
 import org.knora.webapi.messages.v1.responder.ontologymessages.OntologyResponderRequestV1
@@ -35,13 +36,23 @@ import org.knora.webapi.messages.v1.responder.usermessages.UsersResponderRequest
 import org.knora.webapi.messages.v1.responder.valuemessages.ValuesResponderRequestV1
 import org.knora.webapi.messages.v1.responder.standoffmessages.StandoffResponderRequestV1
 import org.knora.webapi.responders._
-import org.knora.webapi.{ActorMaker, UnexpectedMessageException}
+import org.knora.webapi.util.ActorUtil.handleUnexpectedMessage
 
 /**
   * This actor receives messages representing client requests, and forwards them to pools specialised actors that it supervises.
   */
 class ResponderManagerV1 extends Actor with ActorLogging {
     this: ActorMaker =>
+
+    /**
+      * The responder's Akka actor system.
+      */
+    protected implicit val system = context.system
+
+    /**
+      * The Akka actor system's execution context for futures.
+      */
+    protected implicit val executionContext = system.dispatcher
 
     // A subclass can replace the standard responders with custom responders, e.g. for testing. To do this, it must
     // override one or more of the protected val members below representing actors that route requests to particular
@@ -180,6 +191,5 @@ class ResponderManagerV1 extends Actor with ActorLogging {
         case ckanResponderRequest: CkanResponderRequestV1 => ckanRouter.forward(ckanResponderRequest)
         case storeResponderRequest: StoreResponderRequestV1 => storeRouter.forward(storeResponderRequest)
         case standoffResponderRequest: StandoffResponderRequestV1 => standoffRouter forward standoffResponderRequest
-        case other => sender ! Status.Failure(UnexpectedMessageException(s"Unexpected message $other of type ${other.getClass.getCanonicalName}"))
-    }
+        case other => handleUnexpectedMessage(sender(), other, log)    }
 }

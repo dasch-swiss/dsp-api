@@ -50,8 +50,6 @@ class ITSpec(_system: ActorSystem) extends Core with KnoraService with Suite wit
     /* needed by the core trait */
     implicit lazy val system: ActorSystem = _system
 
-    override protected val log: LoggingAdapter = akka.event.Logging(system, this.getClass)
-
     if (!settings.knoraApiUseHttp) throw HttpConfigurationException("Integration tests currently require HTTP")
 
     protected val baseApiUrl: String = settings.knoraApiHttpBaseUrl

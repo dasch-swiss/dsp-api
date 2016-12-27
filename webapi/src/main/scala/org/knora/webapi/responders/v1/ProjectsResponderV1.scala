@@ -46,7 +46,7 @@ class ProjectsResponderV1 extends ResponderV1 {
         case ProjectsGetRequestV1(userProfile) => future2Message(sender(), getProjectsResponseV1(userProfile), log)
         case ProjectInfoByIRIGetRequest(iri, infoType, userProfile) => future2Message(sender(), getProjectInfoByIRIGetRequest(iri, infoType, userProfile), log)
         case ProjectInfoByShortnameGetRequest(shortname, infoType, userProfile) => future2Message(sender(), getProjectInfoByShortnameGetRequest(shortname, infoType, userProfile), log)
-        case other => sender ! Status.Failure(UnexpectedMessageException(s"Unexpected message $other of type ${other.getClass.getCanonicalName}"))
+        case other => handleUnexpectedMessage(sender(), other, log)
     }
 
     /**

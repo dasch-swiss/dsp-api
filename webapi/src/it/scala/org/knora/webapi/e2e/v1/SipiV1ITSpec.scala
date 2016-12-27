@@ -23,10 +23,10 @@ import java.nio.file.{Files, Paths}
 import akka.http.scaladsl.model.headers._
 import akka.http.scaladsl.model.{HttpEntity, _}
 import com.typesafe.config.ConfigFactory
+import org.knora.webapi.messages.v1.responder.resourcemessages.{CreateResourceApiRequestV1, CreateResourceValueV1}
+import org.knora.webapi.messages.v1.responder.valuemessages.CreateRichtextV1
 import org.knora.webapi.messages.v1.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
 import org.knora.webapi.{FileWriteException, IRI, ITSpec, InvalidApiJsonException}
-import org.xmlunit.builder.{DiffBuilder, Input}
-import org.xmlunit.diff.Diff
 import spray.json._
 
 import scala.concurrent.duration._
@@ -49,19 +49,15 @@ class SipiV1ITSpec extends ITSpec(SipiV1ITSpec.config) with TriplestoreJsonProto
 
     private val rdfDataObjects = List(
         RdfDataObject(path = "../knora-ontologies/knora-base.ttl", name = "http://www.knora.org/ontology/knora-base"),
-        RdfDataObject(path = "_test_data/ontologies/standoff-onto.ttl", name = "http://www.knora.org/ontology/standoff"),
         RdfDataObject(path = "../knora-ontologies/knora-dc.ttl", name = "http://www.knora.org/ontology/dc"),
         RdfDataObject(path = "../knora-ontologies/salsah-gui.ttl", name = "http://www.knora.org/ontology/salsah-gui"),
         RdfDataObject(path = "_test_data/ontologies/incunabula-onto.ttl", name = "http://www.knora.org/ontology/incunabula"),
         RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/incunabula"),
         RdfDataObject(path = "_test_data/ontologies/anything-onto.ttl", name = "http://www.knora.org/ontology/anything"),
-        RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/anything"),
-        RdfDataObject(path = "_test_data/ontologies/beol-onto.ttl", name = "http://www.knora.org/ontology/beol"),
-        RdfDataObject(path = "_test_data/all_data/beol-data.ttl", name = "http://www.knora.org/data/beol")
+        RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/anything")
     )
 
-    private val rootUser = "root"
-    private val anythingUser = "anything-user"
+    private val username = "root"
     private val password = "test"
 
     "Check if SIPI is running" in {
@@ -180,14 +176,14 @@ class SipiV1ITSpec extends ITSpec(SipiV1ITSpec.config) with TriplestoreJsonProto
             )
 
             RequestParams.createTmpFileDir()
-            val request = Post(baseApiUrl + "/v1/resources", formData) ~> addCredentials(BasicHttpCredentials(rootUser, password))
+            val request = Post(baseApiUrl + "/v1/resources", formData) ~> addCredentials(BasicHttpCredentials(username, password))
             val response = singleAwaitingRequest(request, 20.seconds)
 
             assert(response.status === StatusCodes.OK)
 
             val newResourceIri: String = ResponseUtils.getStringMemberFromResponse(response, "res_id")
 
-            val requestNewResource = Get(baseApiUrl + "/v1/resources/" + URLEncoder.encode(newResourceIri, "UTF-8")) ~> addCredentials(BasicHttpCredentials(rootUser, password))
+            val requestNewResource = Get(baseApiUrl + "/v1/resources/" + URLEncoder.encode(newResourceIri, "UTF-8")) ~> addCredentials(BasicHttpCredentials(username, password))
             val responseNewResource = singleAwaitingRequest(requestNewResource, 20.seconds)
 
             assert(responseNewResource.status == StatusCodes.OK, responseNewResource.entity.toString)
@@ -228,10 +224,9 @@ class SipiV1ITSpec extends ITSpec(SipiV1ITSpec.config) with TriplestoreJsonProto
 
         }
 
+        "change an 'incunabula:page' with binary data" in {}
 
         "create an 'incunabula:page' with parameters" in {}
-
-        "change an 'incunabula:page' with binary data" in {}
 
         "change an 'incunabula:page' with parameters" in {}
 

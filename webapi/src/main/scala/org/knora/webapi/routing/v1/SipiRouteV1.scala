@@ -21,13 +21,13 @@
 package org.knora.webapi.routing.v1
 
 import akka.actor.ActorSystem
+import akka.event.LoggingAdapter
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
-import akka.event.LoggingAdapter
-import org.knora.webapi.{BadRequestException, SettingsImpl}
 import org.knora.webapi.messages.v1.responder.sipimessages.SipiFileInfoGetRequestV1
 import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
 import org.knora.webapi.util.InputValidation
+import org.knora.webapi.{BadRequestException, SettingsImpl}
 
 import scala.concurrent.Future
 
@@ -54,7 +54,7 @@ object SipiRouteV1 extends Authenticator {
                     val requestMessage = SipiFileInfoGetRequestV1(filename, userProfile)
 
                     RouteUtilV1.runJsonRoute(
-                        Future(requestMessage),
+                        requestMessage,
                         requestContext,
                         settings,
                         responderManager,

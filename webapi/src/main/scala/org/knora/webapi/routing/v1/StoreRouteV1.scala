@@ -59,7 +59,7 @@ object StoreRouteV1 extends Authenticator with StoreV1JsonProtocol {
                         val requestMessage = ResetTriplestoreContentRequestV1(apiRequest)
 
                         RouteUtilV1.runJsonRoute(
-                            Future(requestMessage),
+                            requestMessage,
                             requestContext,
                             settings,
                             responderManager,

@@ -50,8 +50,6 @@ class E2ESpec(_system: ActorSystem) extends Core with KnoraService with Suite wi
     /* needed by the core trait */
     implicit lazy val system: ActorSystem = _system
 
-    override protected val log: LoggingAdapter = akka.event.Logging(system, this.getClass)
-
     if (!settings.knoraApiUseHttp) throw HttpConfigurationException("E2E tests currently require HTTP")
 
     protected val baseApiUrl: String = settings.knoraApiHttpBaseUrl
