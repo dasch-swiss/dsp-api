@@ -86,6 +86,7 @@
         </standoffClass>
     </mappingElement>
 
+    <!-- a tag without class -> external link -->
     <mappingElement>
         <tag>
             <name>a</name>
@@ -101,6 +102,7 @@
         </standoffClass>
     </mappingElement>
 
+    <!-- a tag with class "salsah-link" -> internal link -->
     <mappingElement>
         <tag>
             <name>a</name>
@@ -116,6 +118,7 @@
         </standoffClass>
     </mappingElement>
 
+    <!-- span tag with class "date" -> data type date -->
     <mappingElement>
         <tag>
             <name>span</name>
@@ -126,11 +129,89 @@
             <classIri>http://www.knora.org/ontology/knora-base#StandoffDateTag</classIri>
             <datatype>
                 <type>http://www.knora.org/ontology/knora-base#StandoffDateTag</type>
-                <attributeName>date</attributeName>
+                <attributeName>data-date</attributeName>
             </datatype>
         </standoffClass>
     </mappingElement>
 
+    <!-- span tag with class "interval" -> data type interval -->
+    <mappingElement>
+        <tag>
+            <name>span</name>
+            <class>interval</class>
+            <namespace>noNamespace</namespace>
+        </tag>
+        <standoffClass>
+            <classIri>http://www.knora.org/ontology/knora-base#StandoffIntervalTag</classIri>
+            <datatype>
+                <type>http://www.knora.org/ontology/knora-base#StandoffIntervalTag</type>
+                <attributeName>data-interval</attributeName>
+            </datatype>
+        </standoffClass>
+    </mappingElement>
 
+    <!-- span tag with class "color" -> data type color -->
+    <mappingElement>
+        <tag>
+            <name>span</name>
+            <class>color</class>
+            <namespace>noNamespace</namespace>
+        </tag>
+        <standoffClass>
+            <classIri>http://www.knora.org/ontology/knora-base#StandoffColorTag</classIri>
+            <datatype>
+                <type>http://www.knora.org/ontology/knora-base#StandoffColorTag</type>
+                <attributeName>data-color</attributeName>
+            </datatype>
+        </standoffClass>
+    </mappingElement>
+
+    <!-- span tag with class "integer" -> data type integer -->
+    <mappingElement>
+        <tag>
+            <name>span</name>
+            <class>integer</class>
+            <namespace>noNamespace</namespace>
+        </tag>
+        <standoffClass>
+            <classIri>http://www.knora.org/ontology/knora-base#StandoffIntegerTag</classIri>
+            <datatype>
+                <type>http://www.knora.org/ontology/knora-base#StandoffIntegerTag</type>
+                <attributeName>data-integer</attributeName>
+            </datatype>
+        </standoffClass>
+    </mappingElement>
+
+    <!-- span tag with class "decimal" -> data type decimal -->
+    <mappingElement>
+        <tag>
+            <name>span</name>
+            <class>decimal</class>
+            <namespace>noNamespace</namespace>
+        </tag>
+        <standoffClass>
+            <classIri>http://www.knora.org/ontology/knora-base#StandoffDecimalTag</classIri>
+            <datatype>
+                <type>http://www.knora.org/ontology/knora-base#StandoffDecimalTag</type>
+                <attributeName>data-decimal</attributeName>
+            </datatype>
+        </standoffClass>
+    </mappingElement>
+
+    <!-- span tag with class "boolean" -> data type boolean -->
+    <mappingElement>
+        <tag>
+            <name>span</name>
+            <class>boolean</class>
+            <namespace>noNamespace</namespace>
+        </tag>
+        <standoffClass>
+            <classIri>http://www.knora.org/ontology/knora-base#StandoffBooleanTag</classIri>
+            <datatype>
+                <type>http://www.knora.org/ontology/knora-base#StandoffBooleanTag</type>
+                <attributeName>data-boolean</attributeName>
+            </datatype>
+        </standoffClass>
+    </mappingElement>
 
 </mapping>

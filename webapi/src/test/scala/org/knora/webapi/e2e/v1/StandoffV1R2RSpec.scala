@@ -111,6 +111,7 @@ class StandoffV1R2RSpec extends R2RSpec {
     }
 
     private val firstTextValueIri = new MutableTestIri
+    private val secondTextValueIri = new MutableTestIri
 
     object ResponseUtils {
 
@@ -180,6 +181,8 @@ class StandoffV1R2RSpec extends R2RSpec {
 
         val pathToHTMLMapping = "_test_data/test_route/texts/mappingForHTML.xml"
 
+        val pathToHTML = "_test_data/test_route/texts/HTML.xml"
+
 
     }
 
@@ -216,7 +219,7 @@ class StandoffV1R2RSpec extends R2RSpec {
 
         }
 
-        "create a TextValue from XML represnting a letter" in {
+        "create a TextValue from XML representing a letter" in {
 
             val xmlFileToSend = new File(RequestParams.pathToLetterXML)
 
@@ -336,6 +339,53 @@ class StandoffV1R2RSpec extends R2RSpec {
 
                 assert(mappingIri == anythingProjectIri + "/mappings/HTMLMapping", "Iri of the new mapping is not correct")
 
+
+            }
+
+        }
+
+        "create a TextValue from XML representing HTML (in strict XML notation)" in {
+
+            val xmlFileToSend = new File(RequestParams.pathToHTML)
+
+            val formDataStandoff = Multipart.FormData(
+                Multipart.FormData.BodyPart(
+                    "json",
+                    HttpEntity(ContentTypes.`application/json`, RequestParams.paramsCreateTextValueFromXML(anythingProjectIri + "/mappings/HTMLMapping"))
+                ),
+                Multipart.FormData.BodyPart(
+                    "xml",
+                    HttpEntity.fromPath(ContentTypes.`text/xml(UTF-8)`, xmlFileToSend.toPath),
+                    Map("filename" -> xmlFileToSend.getName)
+                )
+            )
+
+            // create standoff from XML
+            val standoffCreationRequest = Post("/v1/standoff", formDataStandoff) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> standoffPath ~> check {
+
+                assert(status == StatusCodes.OK, "creation of a TextValue from XML returned a non successful HTTP status code: " + responseAs[String])
+
+                secondTextValueIri.set(ResponseUtils.getStringMemberFromResponse(response, "id"))
+
+
+            }
+
+        }
+
+        "read the TextValue back to XML and compare it to the HTML that was originally sent" in {
+
+            val htmlFile = new File(RequestParams.pathToHTML)
+
+            Get("/v1/standoff/" + URLEncoder.encode(secondTextValueIri.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> standoffPath ~> check {
+
+                assert(response.status == StatusCodes.OK, "reading back text value to XML failed")
+
+                val XMLString = ResponseUtils.getStringMemberFromResponse(response, "xml")
+
+                // Compare the original XML with the regenerated XML.
+                val xmlDiff: Diff = DiffBuilder.compare(Input.fromString(Source.fromFile(htmlFile)(Codec.UTF8).mkString)).withTest(Input.fromString(XMLString)).build()
+
+                xmlDiff.hasDifferences should be(false)
 
             }
 

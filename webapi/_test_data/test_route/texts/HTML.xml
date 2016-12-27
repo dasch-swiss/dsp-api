@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<text documentType="html">
+    <p>
+        This is very boring text that as boring markup as well: <strong>strong</strong>, <strike>struck</strike>, <em>emphasized</em>, <u>underlined</u>,
+        <sub>subtext</sub>m <sup>supertext</sup>, <a href="http://www.knora.org">KNORA</a>, <a class="salsah-link" href="http://data.knora.org/7uuGcnFcQJq08dMOralyCQ">internal link</a>, <span class="date" data-date="GREGORIAN:2016-12-24">Christmas 2016</span>,
+        and an interval <span class="interval" data-interval="1,3">one to three</span>.
+    </p>
+
+    <p>
+        And here comes some more stuff: <span class="color" data-color="#1d2a4f">blue color</span>, a <span class="integer" data-integer="1">number one (integer)</span>, a <span class="decimal" data-decimal="2.1">number two point 1 (decimal)</span>, <span class="boolean" data-boolean="false">a Boolean false</span>
+    </p>
+</text>
