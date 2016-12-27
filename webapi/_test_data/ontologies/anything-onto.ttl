@@ -454,7 +454,22 @@
 
                knora-base:hasDefaultModifyPermission knora-base:ProjectMember .
 
+#################################################################
+#
+#    Standoff Properties
+#
+#################################################################
 
+
+###  http://www.knora.org/ontology/anything#standoffEventTagHasDescription
+
+:standoffEventTagHasDescription rdf:type owl:DatatypeProperty ;
+
+                  rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
+
+                  knora-base:subjectClassConstraint :StandoffEventTag ;
+
+                  knora-base:objectDatatypeConstraint xsd:string .
 
 :Thing rdf:type owl:Class ;
 
@@ -625,4 +640,23 @@
     knora-base:hasDefaultViewPermission knora-base:UnknownUser ;
 
     knora-base:hasDefaultModifyPermission knora-base:ProjectMember .
-    
+
+
+#################################################################
+#
+#    Standoff Classes
+#
+#################################################################
+
+:StandoffEventTag rdf:type owl:Class ;
+
+    rdfs:subClassOf knora-base:StandoffDateTag,
+                   [
+                      rdf:type owl:Restriction ;
+                      owl:onProperty :standoffEventTagHasDescription ;
+                      owl:cardinality "1"^^xsd:nonNegativeInteger
+                   ] ;
+
+    rdfs:label "Represents an event in a TextValue"@en ;
+
+    rdfs:comment """Represents an event in a TextValue"""@en .

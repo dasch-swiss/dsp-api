@@ -134,6 +134,25 @@
         </standoffClass>
     </mappingElement>
 
+    <!-- span tag with class "event" -> data type date -->
+    <mappingElement>
+        <tag>
+            <name>span</name>
+            <class>event</class>
+            <namespace>noNamespace</namespace>
+        </tag>
+        <standoffClass>
+            <classIri>http://www.knora.org/ontology/anything#StandoffEventTag</classIri>
+            <attributes>
+                <attribute><attributeName>data-description</attributeName><namespace>noNamespace</namespace><propertyIri>http://www.knora.org/ontology/anything#standoffEventTagHasDescription</propertyIri></attribute>
+            </attributes>
+            <datatype>
+                <type>http://www.knora.org/ontology/knora-base#StandoffDateTag</type>
+                <attributeName>data-date</attributeName>
+            </datatype>
+        </standoffClass>
+    </mappingElement>
+
     <!-- span tag with class "interval" -> data type interval -->
     <mappingElement>
         <tag>

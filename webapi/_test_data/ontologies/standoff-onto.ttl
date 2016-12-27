@@ -26,6 +26,8 @@
 
                   rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
 
+                  rdfs:comment "describes the document type"@en ;
+
                   knora-base:subjectClassConstraint :StandoffRootTag ;
 
                   knora-base:objectDatatypeConstraint xsd:string .

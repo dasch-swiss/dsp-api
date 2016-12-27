@@ -9,4 +9,10 @@
     <p>
         And here comes some more stuff: <span class="color" data-color="#1d2a4f">blue color</span>, a <span class="integer" data-integer="1">number one (integer)</span>, a <span class="decimal" data-decimal="2.1">number two point 1 (decimal)</span>, <span class="boolean" data-boolean="false">a Boolean false</span>
     </p>
+
+    <p>
+
+        On the <span class="event" data-description="New year's eve" data-date="GREGORIAN:2016-12-31">31st of December 2016, we will have a party</span>. Most probably it will be boring.
+
+    </p>
 </text>

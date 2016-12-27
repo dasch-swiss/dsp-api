@@ -537,11 +537,12 @@ class StandoffResponderV1 extends ResponderV1 {
       */
     private def createAttributes(XMLtoStandoffMapping: XMLTagToStandoffClass, classSpecificProps: Map[IRI, Cardinality.Value], standoffNodeFromXML: StandoffTag, standoffPropertyEntities: Map[IRI, StandoffPropertyEntityInfoV1]): Seq[StandoffTagAttributeV1] = {
 
+
         if (classSpecificProps.nonEmpty) {
             // additional standoff properties are required
 
-            // map over all non data type attributes
-            val attrs: Seq[StandoffTagAttributeV1] = standoffNodeFromXML.attributes.filterNot(attr => XMLtoStandoffMapping.dataType.nonEmpty && XMLtoStandoffMapping.dataType.get.dataTypeXMLAttribute == attr.key).map {
+            // map over all non data type attributes, ignore the "class" attribute ("class" is only used in the mapping to allow for the reuse of the same tag name, not to store actual data).
+            val attrs: Seq[StandoffTagAttributeV1] = standoffNodeFromXML.attributes.filterNot(attr => (XMLtoStandoffMapping.dataType.nonEmpty && XMLtoStandoffMapping.dataType.get.dataTypeXMLAttribute == attr.key) || attr.key == "class").map {
                 attr: StandoffTagAttribute =>
                     // get the standoff property Iri for this XML attribute
 
@@ -550,7 +551,7 @@ class StandoffResponderV1 extends ResponderV1 {
                         case Some(namespace) => namespace
                     }
 
-                    val standoffTagPropIri = XMLtoStandoffMapping.attributesToProps.getOrElse(xmlNamespace, throw BadRequestException(s"namespace $xmlNamespace unknown for attribute ${attr.key}")).getOrElse(attr.key, throw BadRequestException(s"mapping for attr '${attr.key}' not provided"))
+                    val standoffTagPropIri = XMLtoStandoffMapping.attributesToProps.getOrElse(xmlNamespace, throw BadRequestException(s"namespace $xmlNamespace unknown for attribute ${attr.key} in mapping")).getOrElse(attr.key, throw BadRequestException(s"mapping for attr '${attr.key}' not provided"))
 
                     // check if a cardinality exists for the current attribute
                     if (classSpecificProps.get(standoffTagPropIri).isEmpty) {
