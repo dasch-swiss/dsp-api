@@ -35,7 +35,7 @@
 
        rdfs:comment """Titel"""@de ;
 
-       knora-base:subjectClassConstraint :manuscript ;
+       knora-base:subjectClassConstraint :writtenSource ;
 
        knora-base:objectClassConstraint knora-base:TextValue ;
 
@@ -52,6 +52,7 @@
        knora-base:hasDefaultModifyPermission knora-base:ProjectMember ;
 
        knora-base:hasDefaultDeletePermission knora-base:Owner .
+
 
 ### ###########################################
 ### beol:creationDate
@@ -82,27 +83,25 @@
 
               knora-base:hasDefaultDeletePermission knora-base:Owner .
 
+
 ### ###########################################
 ### beol:hasAuthor
 
 :hasAuthor rdf:type owl:ObjectProperty ;
 
-           rdfs:subPropertyOf dc:creator ;
+           rdfs:subPropertyOf knora-base:hasLinkTo ;
 
            rdfs:label "Creator"@de ;
 
            rdfs:comment """Erzeuger/Autor"""@de ;
 
-           knora-base:subjectClassConstraint :manuscript ;
+           knora-base:subjectClassConstraint :writtenSource ;
 
-           knora-base:objectClassConstraint knora-base:TextValue ;
+           knora-base:objectClassConstraint :person ;
 
            salsah-gui:guiOrder "2"^^xsd:integer ;
 
-           salsah-gui:guiElement salsah-gui:SimpleText ;
-
-           salsah-gui:guiAttribute "size=60" ,
-                                   "maxlength=255" ;
+           salsah-gui:guiElement salsah-gui:Searchbox ;
 
            knora-base:hasDefaultViewPermission knora-base:KnownUser ,
                                                knora-base:UnknownUser ;
@@ -112,160 +111,250 @@
            knora-base:hasDefaultDeletePermission knora-base:Owner .
 
 
-   ### ###########################################
-   ### beol:location
+### ###########################################
+### beol:hasAuthorValue
 
-   :location rdf:type owl:ObjectProperty ;
-
-             rdfs:subPropertyOf knora-base:hasValue ;
-
-             rdfs:label "Standort"@de ,
-                        "Emplacement"@fr ,
-                        "Postazione"@it ,
-                        "Location"@en ;
-
-             rdfs:comment """Der Ort, wo sich das physische Original befindet"""@de ;
-
-             knora-base:subjectClassConstraint :manuscript ;
-
-             knora-base:objectClassConstraint knora-base:TextValue ;
-
-             salsah-gui:guiOrder "4"^^xsd:integer ;
-
-             salsah-gui:guiElement salsah-gui:Textarea ;
-
-             salsah-gui:guiAttribute "cols=60" ,
-                                     "rows=4" ,
-                                     "wrap=soft" ;
-
-             knora-base:hasDefaultViewPermission knora-base:KnownUser ,
-                                                 knora-base:UnknownUser ;
-
-             knora-base:hasDefaultDeletePermission knora-base:ProjectMember ,
-                                                   knora-base:Owner .
-
-   ### ###########################################
-   ### beol:partOfValue
-
-   :partOfValue rdf:type owl:ObjectProperty ;
-
-                rdfs:subPropertyOf knora-base:isPartOfValue ;
+:hasAuthorValue rdf:type owl:ObjectProperty ;
 
                 knora-base:objectClassConstraint knora-base:LinkValue ;
 
-                rdfs:label "ist ein Teil von"@de ,
-                           "est un part de"@fr ,
-                           "e una parte di"@it ,
-                           "is a part of"@en ;
+                knora-base:subjectClassConstraint :writtenSource ;
 
-                rdfs:comment """Diese Property bezeichnet eine Verbindung zu einer anderen Resource, in dem ausgesagt wird, dass die vorliegende Resource ein integraler Teil der anderen Resource ist. Zum Beispiel ist eine Buchseite ein integraler Bestandteil genau eines Buches."""@de ;
+                rdfs:subPropertyOf knora-base:hasLinkToValue ;
 
-                knora-base:subjectClassConstraint :page ;
+                rdfs:label "Creator"@de ;
 
-                salsah-gui:guiOrder "2"^^xsd:integer ;
+                rdfs:comment """Erzeuger/Autor"""@de .
 
-                salsah-gui:guiElement salsah-gui:Searchbox .
+### ###########################################
+### beol:hasRecipient
 
+:hasRecipient rdf:type owl:ObjectProperty ;
 
-   ### ###########################################
-   ### beol:partOf
+              rdfs:subPropertyOf knora-base:hasLinkTo ;
 
-   :partOf rdf:type owl:ObjectProperty ;
+              rdfs:label "Empfänger"@de ;
 
-           rdfs:subPropertyOf knora-base:isPartOf ;
+              rdfs:comment """Empfänger"""@de ;
 
-           rdfs:label "ist ein Teil von"@de ,
-                      "est un part de"@fr ,
-                      "e una parte di"@it ,
-                      "is a part of"@en ;
+              knora-base:subjectClassConstraint :letter ;
 
-           rdfs:comment """Diese Property bezeichnet eine Verbindung zu einer anderen Resource, in dem ausgesagt wird, dass die vorliegende Resource ein integraler Teil der anderen Resource ist. Zum Beispiel ist eine Buchseite ein integraler Bestandteil genau eines Buches."""@de ;
+              knora-base:objectClassConstraint :person ;
 
-           knora-base:subjectClassConstraint :page ;
+              salsah-gui:guiOrder "4"^^xsd:integer ;
 
-           knora-base:objectClassConstraint :manuscript ;
+              salsah-gui:guiElement salsah-gui:Searchbox ;
 
-           salsah-gui:guiOrder "2"^^xsd:integer ;
+              knora-base:hasDefaultViewPermission knora-base:KnownUser ,
+                                                  knora-base:UnknownUser ;
 
-           salsah-gui:guiElement salsah-gui:Searchbox ;
+              knora-base:hasDefaultModifyPermission knora-base:ProjectMember ;
 
-           knora-base:hasDefaultViewPermission knora-base:KnownUser ,
-                                               knora-base:UnknownUser ,
-                                               knora-base:ProjectMember ;
+              knora-base:hasDefaultDeletePermission knora-base:Owner .
 
-           knora-base:hasDefaultDeletePermission knora-base:Owner .
+### ###########################################
+### beol:hasRecipientValue
 
-   ### ###########################################
-   ### beol:seqnum
+:hasRecipientValue rdf:type owl:ObjectProperty ;
 
-   :seqnum rdf:type owl:ObjectProperty ;
+                   knora-base:objectClassConstraint knora-base:LinkValue ;
 
-           rdfs:subPropertyOf knora-base:seqnum ;
+                   knora-base:subjectClassConstraint :letter ;
 
-           rdfs:label "Sequenznummer"@de ,
-                      "Numéro de Séquence"@fr ,
-                      "Numero di scala"@it ,
-                      "Sequence number"@en ;
-
-           rdfs:comment """Diese Property bezeichnet die Position in einer geordneten Reihenfolge"""@de ,
-                        """Cette \"property\" dénote la position dans un séquence."""@fr ,
-                        """This property stands for the position within a set of rdered items (resoucres)"""@en ;
-
-           knora-base:subjectClassConstraint :page ;
-
-           knora-base:objectClassConstraint knora-base:IntValue ;
-
-           salsah-gui:guiOrder "1"^^xsd:integer ;
-
-           salsah-gui:guiElement salsah-gui:Spinbox ;
-
-           salsah-gui:guiAttribute "min=0" ,
-                                   "max=-1" ;
-
-           knora-base:hasDefaultViewPermission knora-base:KnownUser ,
-                                               knora-base:UnknownUser ,
-                                               knora-base:ProjectMember ;
-
-           knora-base:hasDefaultModifyPermission knora-base:Owner .
-
-    ### ###########################################
-    ### beol:pagenum
-
-    :pagenum rdf:type owl:ObjectProperty ;
-
-            rdfs:subPropertyOf knora-base:hasValue ;
-
-            rdfs:label "Seitenbezeichnung"@de ,
-                       "Désignation de page"@fr ,
-                       "Page identifier"@en ;
-
-            rdfs:comment """Eine eindeutige numerische Bezeichnung einer Seite"""@de ,
-                         """A distinct identification of a page"""@en ;
-
-            knora-base:subjectClassConstraint :page ;
-
-            knora-base:objectClassConstraint knora-base:TextValue ;
-
-            salsah-gui:guiOrder "3"^^xsd:integer ;
-
-            salsah-gui:guiElement salsah-gui:SimpleText ;
-
-            salsah-gui:guiAttribute "min=4" ,
-                                    "max=8" ;
-
-            knora-base:hasDefaultViewPermission knora-base:UnknownUser ,
-                                                knora-base:KnownUser ;
-
-            knora-base:hasDefaultModifyPermission knora-base:ProjectMember ;
-
-            knora-base:hasDefaultDeletePermission knora-base:Owner .
+                   rdfs:subPropertyOf knora-base:hasLinkToValue .
 
 
+### ###########################################
+### beol:mentionsPerson
 
-    ### ###########################################
-    ### beol:comment
+:mentionsPerson rdf:type owl:ObjectProperty ;
 
-    :comment rdf:type owl:ObjectProperty ;
+                rdfs:subPropertyOf knora-base:hasLinkTo ;
+
+                rdfs:label "erwähnte Person"@de ;
+
+                rdfs:comment """erwähnte Person"""@de ;
+
+                knora-base:subjectClassConstraint :letter ;
+
+                knora-base:objectClassConstraint knora-base:Person ;
+
+                salsah-gui:guiOrder "5"^^xsd:integer ;
+
+                salsah-gui:guiElement salsah-gui:Searchbox ;
+
+                knora-base:hasDefaultViewPermission knora-base:KnownUser ,
+                                                    knora-base:UnknownUser ;
+
+                knora-base:hasDefaultModifyPermission knora-base:ProjectMember ;
+
+                knora-base:hasDefaultDeletePermission knora-base:Owner .
+
+### ###########################################
+### beol:mentionsPersonValue
+
+:mentionsPersonValue rdf:type owl:ObjectProperty ;
+
+                     knora-base:objectClassConstraint knora-base:LinkValue ;
+
+                     knora-base:subjectClassConstraint :letter ;
+
+                     rdfs:subPropertyOf knora-base:hasLinkToValue .
+
+
+### ###########################################
+### beol:location
+
+:location rdf:type owl:ObjectProperty ;
+
+          rdfs:subPropertyOf knora-base:hasValue ;
+
+          rdfs:label "Standort"@de ,
+                     "Emplacement"@fr ,
+                     "Postazione"@it ,
+                     "Location"@en ;
+
+          rdfs:comment """Der Ort, wo sich das physische Original befindet"""@de ;
+
+          knora-base:subjectClassConstraint :manuscript ;
+
+          knora-base:objectClassConstraint knora-base:TextValue ;
+
+          salsah-gui:guiOrder "6"^^xsd:integer ;
+
+          salsah-gui:guiElement salsah-gui:Textarea ;
+
+          salsah-gui:guiAttribute "cols=60" ,
+                                  "rows=4" ,
+                                  "wrap=soft" ;
+
+          knora-base:hasDefaultViewPermission knora-base:KnownUser ,
+                                              knora-base:UnknownUser ;
+
+          knora-base:hasDefaultDeletePermission knora-base:ProjectMember ,
+                                                knora-base:Owner .
+
+### ###########################################
+### beol:partOfValue
+
+:partOfValue rdf:type owl:ObjectProperty ;
+
+             rdfs:subPropertyOf knora-base:isPartOfValue ;
+
+             knora-base:objectClassConstraint knora-base:LinkValue ;
+
+             rdfs:label "ist ein Teil von"@de ,
+                        "est un part de"@fr ,
+                        "e una parte di"@it ,
+                        "is a part of"@en ;
+
+             rdfs:comment """Diese Property bezeichnet eine Verbindung zu einer anderen Resource, in dem ausgesagt wird, dass die vorliegende Resource ein integraler Teil der anderen Resource ist. Zum Beispiel ist eine Buchseite ein integraler Bestandteil genau eines Buches."""@de ;
+
+             knora-base:subjectClassConstraint :page ;
+
+             salsah-gui:guiOrder "2"^^xsd:integer ;
+
+             salsah-gui:guiElement salsah-gui:Searchbox .
+
+
+### ###########################################
+### beol:partOf
+
+:partOf rdf:type owl:ObjectProperty ;
+
+        rdfs:subPropertyOf knora-base:isPartOf ;
+
+        rdfs:label "ist ein Teil von"@de ,
+                   "est un part de"@fr ,
+                   "fa parte di"@it ,
+                   "is a part of"@en ;
+
+        rdfs:comment """Diese Property bezeichnet eine Verbindung zu einer anderen Resource, in dem ausgesagt wird, dass die vorliegende Resource ein integraler Teil der anderen Resource ist. Zum Beispiel ist eine Buchseite ein integraler Bestandteil genau eines Buches."""@de ;
+
+        knora-base:subjectClassConstraint :page ;
+
+        knora-base:objectClassConstraint :manuscript ;
+
+        salsah-gui:guiOrder "7"^^xsd:integer ;
+
+        salsah-gui:guiElement salsah-gui:Searchbox ;
+
+        knora-base:hasDefaultViewPermission knora-base:KnownUser ,
+                                            knora-base:UnknownUser ,
+                                            knora-base:ProjectMember ;
+
+        knora-base:hasDefaultDeletePermission knora-base:Owner .
+
+### ###########################################
+### beol:seqnum
+
+:seqnum rdf:type owl:ObjectProperty ;
+
+        rdfs:subPropertyOf knora-base:seqnum ;
+
+        rdfs:label "Sequenznummer"@de ,
+                   "Numéro de Séquence"@fr ,
+                   "Numero di scala"@it ,
+                   "Sequence number"@en ;
+
+        rdfs:comment """Diese Property bezeichnet die Position in einer geordneten Reihenfolge"""@de ,
+                     """Cette \"property\" dénote la position dans un séquence."""@fr ,
+                     """This property stands for the position within a set of rdered items (resoucres)"""@en ;
+
+        knora-base:subjectClassConstraint :page ;
+
+        knora-base:objectClassConstraint knora-base:IntValue ;
+
+        salsah-gui:guiOrder "9"^^xsd:integer ;
+
+        salsah-gui:guiElement salsah-gui:Spinbox ;
+
+        salsah-gui:guiAttribute "min=0" ,
+                                "max=-1" ;
+
+        knora-base:hasDefaultViewPermission knora-base:KnownUser ,
+                                            knora-base:UnknownUser ,
+                                            knora-base:ProjectMember ;
+
+        knora-base:hasDefaultModifyPermission knora-base:Owner .
+
+### ###########################################
+### beol:pagenum
+
+:pagenum rdf:type owl:ObjectProperty ;
+
+         rdfs:subPropertyOf knora-base:hasValue ;
+
+         rdfs:label "Seitenbezeichnung"@de ,
+                    "Désignation de page"@fr ,
+                    "Page identifier"@en ;
+
+         rdfs:comment """Eine eindeutige numerische Bezeichnung einer Seite"""@de ,
+                      """A distinct identification of a page"""@en ;
+
+         knora-base:subjectClassConstraint :page ;
+
+         knora-base:objectClassConstraint knora-base:TextValue ;
+
+         salsah-gui:guiOrder "10"^^xsd:integer ;
+
+         salsah-gui:guiElement salsah-gui:SimpleText ;
+
+         salsah-gui:guiAttribute "min=4" ,
+                                 "max=8" ;
+
+         knora-base:hasDefaultViewPermission knora-base:UnknownUser ,
+                                             knora-base:KnownUser ;
+
+         knora-base:hasDefaultModifyPermission knora-base:ProjectMember ;
+
+         knora-base:hasDefaultDeletePermission knora-base:Owner .
+
+
+### ###########################################
+### beol:comment
+
+:comment rdf:type owl:ObjectProperty ;
 
                   rdfs:subPropertyOf knora-base:hasComment ;
 
@@ -280,7 +369,7 @@
 
                   knora-base:objectClassConstraint knora-base:TextValue ;
 
-                  salsah-gui:guiOrder "5"^^xsd:integer ;
+                  salsah-gui:guiOrder "11"^^xsd:integer ;
 
                   salsah-gui:guiElement salsah-gui:Richtext ;
 
@@ -291,10 +380,42 @@
 
                   knora-base:hasDefaultDeletePermission knora-base:Owner .
 
-    ### ###########################################
-    ### beol:hasSon
 
-    :hasSon rdf:type owl:ObjectProperty ;
+### ###########################################
+### beol:hasText
+
+:hasText rdf:type owl:ObjectProperty ;
+
+                  rdfs:subPropertyOf knora-base:hasValue ;
+
+                  rdfs:label "Text"@de ,
+                             "texte"@fr ,
+                             "testo"@it ,
+                             "text"@en ;
+
+                  rdfs:comment """Text"""@de ;
+
+                  knora-base:subjectClassConstraint :writtenSource ;
+
+                  knora-base:objectClassConstraint knora-base:TextValue ;
+
+                  salsah-gui:guiOrder "11"^^xsd:integer ;
+
+                  salsah-gui:guiElement salsah-gui:Richtext ;
+
+                  knora-base:hasDefaultViewPermission knora-base:UnknownUser ,
+                                                      knora-base:KnownUser ;
+
+                  knora-base:hasDefaultModifyPermission knora-base:ProjectMember ;
+
+                  knora-base:hasDefaultDeletePermission knora-base:Owner .
+
+
+
+### ###########################################
+### beol:hasSon
+
+:hasSon rdf:type owl:ObjectProperty ;
 
                       rdfs:subPropertyOf knora-base:hasLinkTo ;
 
@@ -305,7 +426,7 @@
 
                       rdfs:comment """Repräsentiert eine Vater-Sohn Beziehung"""@de ;
 
-                      knora-base:subjectClassConstraint :Person ;
+                      knora-base:subjectClassConstraint :person ;
 
                       knora-base:objectClassConstraint knora-base:Person ;
 
@@ -320,14 +441,15 @@
 
                       knora-base:hasDefaultDeletePermission knora-base:Owner .
 
-    ### ###########################################
-    ### beol:hasSonValue
 
-    :hasSonValue rdf:type owl:ObjectProperty ;
+### ###########################################
+### beol:hasSonValue
+
+:hasSonValue rdf:type owl:ObjectProperty ;
 
                     rdfs:subPropertyOf knora-base:hasLinkToValue ;
 
-                    knora-base:subjectClassConstraint :Person ;
+                    knora-base:subjectClassConstraint :person ;
 
                     knora-base:objectClassConstraint knora-base:LinkValue ;
 
@@ -343,35 +465,19 @@
                     salsah-gui:guiElement salsah-gui:Searchbox .
 
 
-    ##########################################################
-    #
-    # RESOURCES
-    #
-    ##########################################################
+##########################################################
+#
+# RESOURCES
+#
+##########################################################
 
 
-    ### ###########################################
-    ### beol:manuscript
+### ###########################################
+### beol:manuscript
 
-    :manuscript rdf:type owl:Class ;
+:manuscript rdf:type owl:Class ;
 
-          rdfs:subClassOf knora-base:Resource ,
-                          [
-                             rdf:type owl:Restriction ;
-                             owl:onProperty :title ;
-                             owl:minCardinality "1"^^xsd:nonNegativeInteger                      ] ,
-                          [
-                             rdf:type owl:Restriction ;
-                             owl:onProperty :hasAuthor ;
-                             owl:minCardinality "0"^^xsd:nonNegativeInteger                      ] ,
-                          [
-                             rdf:type owl:Restriction ;
-                             owl:onProperty :creationDate ;
-                             owl:maxCardinality "1"^^xsd:nonNegativeInteger                      ] ,
-                          [
-                             rdf:type owl:Restriction ;
-                             owl:onProperty :location ;
-                             owl:maxCardinality "1"^^xsd:nonNegativeInteger                      ] ,
+          rdfs:subClassOf :writtenSource ,
                           [
                              rdf:type owl:Restriction ;
                              owl:onProperty :comment ;
@@ -394,10 +500,10 @@
           knora-base:hasDefaultModifyPermission knora-base:ProjectMember ,
                                                 knora-base:Owner .
 
-    ### ###########################################
-    ### beol:page
+### ###########################################
+### beol:page
 
-    :page rdf:type owl:Class ;
+:page rdf:type owl:Class ;
 
           rdfs:subClassOf knora-base:StillImageRepresentation ,
                           [
@@ -439,10 +545,94 @@
           knora-base:hasDefaultModifyPermission knora-base:ProjectMember ,
                                                 knora-base:Owner .
 
-    ### ###########################################
-    ### beol:Person
 
-    :Person rdf:type owl:Class ;
+### ###########################################
+### beol:letter
+
+:letter rdf:type owl:Class ;
+
+        rdfs:subClassOf :writtenSource,
+                        [
+                          rdf:type owl:Restriction ;
+                          owl:onProperty :hasRecipient ;
+                          owl:minCardinality "0"^^xsd:nonNegativeInteger
+                        ] ,
+                        [
+                          rdf:type owl:Restriction ;
+                          owl:onProperty :hasRecipientValue ;
+                          owl:minCardinality "0"^^xsd:nonNegativeInteger
+                        ],
+                        [
+                          rdf:type owl:Restriction ;
+                          owl:onProperty :mentionsPerson ;
+                          owl:minCardinality "0"^^xsd:nonNegativeInteger
+                        ] ,
+                        [
+                          rdf:type owl:Restriction ;
+                          owl:onProperty :mentionsPersonValue ;
+                          owl:minCardinality "0"^^xsd:nonNegativeInteger
+                        ];
+
+        rdfs:label "Brief"@de ,
+                   "Lettre"@fr ,
+                   "Letter"@en ;
+
+        rdfs:comment "A resource representing a letter"@en ;
+
+        knora-base:hasDefaultRestrictedViewPermission knora-base:UnknownUser ;
+
+        knora-base:hasDefaultViewPermission knora-base:KnownUser ;
+
+        knora-base:hasDefaultModifyPermission knora-base:ProjectMember ,
+                                              knora-base:Owner .
+
+
+### ###########################################
+### beol:writtenSource
+
+:writtenSource rdf:type owl:Class ;
+
+             rdfs:subClassOf knora-base:Resource ,
+             [
+               rdf:type owl:Restriction ;
+               owl:onProperty :title ;
+               owl:minCardinality "1"^^xsd:nonNegativeInteger
+             ] ,
+             [
+               rdf:type owl:Restriction ;
+               owl:onProperty :hasAuthorValue ;
+               owl:minCardinality "0"^^xsd:nonNegativeInteger
+             ],
+             [
+               rdf:type owl:Restriction ;
+               owl:onProperty :hasAuthor ;
+               owl:minCardinality "0"^^xsd:nonNegativeInteger
+             ],
+             [
+               rdf:type owl:Restriction ;
+               owl:onProperty :creationDate ;
+               owl:maxCardinality "1"^^xsd:nonNegativeInteger
+             ] ,
+             [
+               rdf:type owl:Restriction ;
+               owl:onProperty :location ;
+               owl:maxCardinality "1"^^xsd:nonNegativeInteger
+             ],
+             [
+               rdf:type owl:Restriction ;
+               owl:onProperty :hasText ;
+               owl:maxCardinality "1"^^xsd:nonNegativeInteger
+             ];
+
+    rdfs:comment "schriftliche Quelle"@de ;
+
+    rdfs:label "schriftliche Quelle"@de .
+
+
+### ###########################################
+### beol:person
+
+:person rdf:type owl:Class ;
 
     rdfs:subClassOf knora-base:Person ,
                     [
@@ -470,34 +660,34 @@
                                           knora-base:Owner .
 
 
-    ##########################################################
-    #
-    # Standoff Tags
-    #
-    ##########################################################
+##########################################################
+#
+# Standoff Tags
+#
+##########################################################
 
-    ###  http://www.knora.org/ontology/beol#StandoffFacsimileTag
+###  http://www.knora.org/ontology/beol#StandoffFacsimileTag
 
-    :StandoffFacsimileTag rdf:type owl:Class ;
+:StandoffFacsimileTag rdf:type owl:Class ;
 
-                    rdfs:subClassOf knora-base:StandoffUriTag ;
+                      rdfs:subClassOf knora-base:StandoffUriTag ;
 
-                    rdfs:comment "a URI referring to a facsimile"@en .
-
-
-    ###  http://www.knora.org/ontology/beol#StandoffMathTag
-
-    :StandoffMathTag rdf:type owl:Class ;
-
-                    rdfs:subClassOf knora-base:StandoffTag ;
-
-                    rdfs:comment "mathematical notation encoded in LaTeX"@en .
+                      rdfs:comment "a URI referring to a facsimile"@en .
 
 
-    ###  http://www.knora.org/ontology/beol#StandoffReferenceTag
+###  http://www.knora.org/ontology/beol#StandoffMathTag
 
-    :StandoffReferenceTag rdf:type owl:Class ;
+:StandoffMathTag rdf:type owl:Class ;
 
-                    rdfs:subClassOf standoff:StandoffStructuralTag ;
+                 rdfs:subClassOf knora-base:StandoffTag ;
 
-                    rdfs:comment "represents a reference/footnote in the text"@en .
+                 rdfs:comment "mathematical notation encoded in LaTeX"@en .
+
+
+###  http://www.knora.org/ontology/beol#StandoffReferenceTag
+
+:StandoffReferenceTag rdf:type owl:Class ;
+
+                      rdfs:subClassOf standoff:StandoffStructuralTag ;
+
+                      rdfs:comment "represents a reference/footnote in the text"@en .
