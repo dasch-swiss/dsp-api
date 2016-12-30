@@ -112,6 +112,7 @@ class StandoffV1R2RSpec extends R2RSpec {
 
     private val firstTextValueIri = new MutableTestIri
     private val secondTextValueIri = new MutableTestIri
+    private val thirdTextValueIri = new MutableTestIri
 
     object ResponseUtils {
 
@@ -170,6 +171,8 @@ class StandoffV1R2RSpec extends R2RSpec {
 
         val pathToLetter2XML = "_test_data/test_route/texts/letter2.xml"
 
+        val pathToLetter3XML = "_test_data/test_route/texts/letter3.xml"
+
         val paramsCreateHTMLMappingFromXML =
             s"""
                |{
@@ -219,7 +222,7 @@ class StandoffV1R2RSpec extends R2RSpec {
 
         }
 
-        "create a TextValue from XML representing a letter" in {
+        "create a TextValue from a simple XML representing a letter" in {
 
             val xmlFileToSend = new File(RequestParams.pathToLetterXML)
 
@@ -248,7 +251,7 @@ class StandoffV1R2RSpec extends R2RSpec {
 
         }
 
-        "read the TextValue back to XML and compare it to the XML that was originally sent" in {
+        "read the simple TextValue back to XML and compare it to the XML that was originally sent" in {
 
             val xmlFile = new File(RequestParams.pathToLetterXML)
 
@@ -289,6 +292,54 @@ class StandoffV1R2RSpec extends R2RSpec {
                 assert(status == StatusCodes.OK, "standoff creation route returned a non successful HTTP status code: " + responseAs[String])
 
                 firstTextValueIri.set(ResponseUtils.getStringMemberFromResponse(response, "id"))
+
+            }
+
+        }
+
+        "create a TextValue from complex XML representing a letter" in {
+
+            val xmlFileToSend = new File(RequestParams.pathToLetter3XML)
+
+            val formDataStandoff = Multipart.FormData(
+                Multipart.FormData.BodyPart(
+                    "json",
+                    HttpEntity(ContentTypes.`application/json`, RequestParams.paramsCreateTextValueFromXML(anythingProjectIri + "/mappings/LetterMapping"))
+                ),
+                Multipart.FormData.BodyPart(
+                    "xml",
+                    HttpEntity.fromPath(ContentTypes.`text/xml(UTF-8)`, xmlFileToSend.toPath),
+                    Map("filename" -> xmlFileToSend.getName)
+                )
+            )
+
+            // create standoff from XML
+            val standoffCreationRequest = Post("/v1/standoff", formDataStandoff) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> standoffPath ~> check {
+
+                assert(status == StatusCodes.OK, "creation of a TextValue from XML returned a non successful HTTP status code: " + responseAs[String])
+
+                secondTextValueIri.set(ResponseUtils.getStringMemberFromResponse(response, "id"))
+
+
+            }
+
+
+        }
+
+        "read the complex TextValue back to XML and compare it to the XML that was originally sent" in {
+
+            val xmlFile = new File(RequestParams.pathToLetter3XML)
+
+            Get("/v1/standoff/" + URLEncoder.encode(secondTextValueIri.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> standoffPath ~> check {
+
+                assert(response.status == StatusCodes.OK, "reading back text value to XML failed")
+
+                val XMLString = ResponseUtils.getStringMemberFromResponse(response, "xml")
+
+                // Compare the original XML with the regenerated XML.
+                val xmlDiff: Diff = DiffBuilder.compare(Input.fromString(Source.fromFile(xmlFile)(Codec.UTF8).mkString)).withTest(Input.fromString(XMLString)).build()
+
+                xmlDiff.hasDifferences should be(false)
 
             }
 
@@ -365,7 +416,7 @@ class StandoffV1R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, "creation of a TextValue from XML returned a non successful HTTP status code: " + responseAs[String])
 
-                secondTextValueIri.set(ResponseUtils.getStringMemberFromResponse(response, "id"))
+                thirdTextValueIri.set(ResponseUtils.getStringMemberFromResponse(response, "id"))
 
 
             }
@@ -376,7 +427,7 @@ class StandoffV1R2RSpec extends R2RSpec {
 
             val htmlFile = new File(RequestParams.pathToHTML)
 
-            Get("/v1/standoff/" + URLEncoder.encode(secondTextValueIri.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> standoffPath ~> check {
+            Get("/v1/standoff/" + URLEncoder.encode(thirdTextValueIri.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> standoffPath ~> check {
 
                 assert(response.status == StatusCodes.OK, "reading back text value to XML failed")
 

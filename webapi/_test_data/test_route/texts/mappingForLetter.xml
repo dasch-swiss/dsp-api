@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<mapping xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../src/main/resources/mappingXMLToStandoff.xsd">
+<mapping xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="../../../src/main/resources/mappingXMLToStandoff.xsd">
     <mappingElement>
         <tag>
             <name>text</name>
@@ -9,7 +10,11 @@
         <standoffClass>
             <classIri>http://www.knora.org/ontology/standoff#StandoffRootTag</classIri>
             <attributes>
-                <attribute><attributeName>documentType</attributeName><namespace>noNamespace</namespace><propertyIri>http://www.knora.org/ontology/standoff#standoffRootTagHasDocumentType</propertyIri></attribute>
+                <attribute>
+                    <attributeName>documentType</attributeName>
+                    <namespace>noNamespace</namespace>
+                    <propertyIri>http://www.knora.org/ontology/standoff#standoffRootTagHasDocumentType</propertyIri>
+                </attribute>
             </attributes>
         </standoffClass>
     </mappingElement>
@@ -55,7 +60,8 @@
         </tag>
         <standoffClass>
             <classIri>http://www.knora.org/ontology/beol#StandoffFacsimileTag</classIri>
-            <datatype><type>http://www.knora.org/ontology/knora-base#StandoffUriTag</type>
+            <datatype>
+                <type>http://www.knora.org/ontology/knora-base#StandoffUriTag</type>
                 <attributeName>src</attributeName>
             </datatype>
         </standoffClass>
@@ -80,6 +86,54 @@
         </tag>
         <standoffClass>
             <classIri>http://www.knora.org/ontology/beol#StandoffReferenceTag</classIri>
+        </standoffClass>
+    </mappingElement>
+
+    <mappingElement>
+        <tag>
+            <name>sub</name>
+            <class>noClass</class>
+            <namespace>noNamespace</namespace>
+        </tag>
+        <standoffClass>
+            <classIri>http://www.knora.org/ontology/standoff#StandoffSubscriptTag</classIri>
+        </standoffClass>
+    </mappingElement>
+
+    <mappingElement>
+        <tag>
+            <name>sup</name>
+            <class>noClass</class>
+            <namespace>noNamespace</namespace>
+        </tag>
+        <standoffClass>
+            <classIri>http://www.knora.org/ontology/standoff#StandoffSuperscriptTag</classIri>
+        </standoffClass>
+    </mappingElement>
+
+    <mappingElement>
+        <tag>
+            <name>nowiki</name>
+            <class>noClass</class>
+            <namespace>noNamespace</namespace>
+        </tag>
+        <standoffClass>
+            <classIri>http://www.knora.org/ontology/beol#StandoffNoWikiTag</classIri>
+        </standoffClass>
+    </mappingElement>
+
+    <mappingElement>
+        <tag>
+            <name>a</name>
+            <class>noClass</class>
+            <namespace>noNamespace</namespace>
+        </tag>
+        <standoffClass>
+            <classIri>http://www.knora.org/ontology/knora-base#StandoffUriTag</classIri>
+            <datatype>
+                <type>http://www.knora.org/ontology/knora-base#StandoffUriTag</type>
+                <attributeName>href</attributeName>
+            </datatype>
         </standoffClass>
     </mappingElement>
 

@@ -390,8 +390,8 @@ class StandoffUtil(xmlNamespaces: Map[String, IRI] = Map.empty[IRI, String],
         // Start with the root.
         groupedTags.get(None) match {
             case Some(children) if children.size == 1 =>
-                standoffTags2XmlString(
-                    text = InputValidation.toSparqlEncodedString(textWithStandoff.text, () => throw InconsistentTriplestoreDataException("string returned by triplestore could not be reverted correctly"), revert = true),
+                standoffTags2XmlString( // FIXME: I think it is not necessary to run InputValidation in reverted mode
+                    text = textWithStandoff.text /*InputValidation.toSparqlEncodedString(textWithStandoff.text, () => throw InconsistentTriplestoreDataException("string returned by triplestore could not be reverted correctly"), revert = true)*/,
                     groupedTags = groupedTags,
                     posBeforeSiblings = 0,
                     siblings = children,

@@ -71,7 +71,7 @@
             rdfs:subClassOf knora-base:StandoffTag ,
                             [ rdf:type owl:Restriction ;
                               owl:onProperty :standoffRootTagHasDocumentType ;
-                              owl:cardinality "1"^^xsd:nonNegativeInteger
+                              owl:maxCardinality "1"^^xsd:nonNegativeInteger
                             ] ;
 
             rdfs:comment "Represents the root node if the TextValue has been created from XML"@en .
