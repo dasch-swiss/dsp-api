@@ -281,7 +281,7 @@
 
                   salsah-gui:guiOrder "5"^^xsd:integer ;
 
-                  salsah-gui:guiElement salsah-gui:Richtext ;
+                  salsah-gui:guiElement salsah-gui:SimpleText  ;
 
                   knora-base:hasDefaultViewPermission knora-base:UnknownUser ,
                                                       knora-base:KnownUser ;
