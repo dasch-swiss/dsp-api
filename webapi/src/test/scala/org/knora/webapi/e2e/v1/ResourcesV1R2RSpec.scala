@@ -30,9 +30,10 @@ import akka.pattern._
 import akka.util.Timeout
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.ontologymessages.LoadOntologiesRequest
-import org.knora.webapi.messages.v1.responder.resourcemessages.PropsGetForRegionV1
+import org.knora.webapi.messages.v1.responder.resourcemessages.{CreateResourceApiRequestV1, CreateResourceValueV1, PropsGetForRegionV1}
 import org.knora.webapi.messages.v1.responder.resourcemessages.ResourceV1JsonProtocol._
 import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
+import org.knora.webapi.messages.v1.responder.valuemessages.{CreateFileV1, CreateRichtextV1}
 import org.knora.webapi.messages.v1.store.triplestoremessages._
 import org.knora.webapi.responders._
 import org.knora.webapi.responders.v1.ResponderManagerV1
@@ -1385,5 +1386,26 @@ class ResourcesV1R2RSpec extends R2RSpec {
                 assert(linkValueComment == notTheMostBoringComment)
             }
         }
+        "create a Person from simple xml" in {
+
+                val params =
+                    s"""<beol:Person id="id12345"><Person:hasGivenName>Niels Henrik</Person:hasGivenName><Person:hasFamilyName>Abel</Person:hasFamilyName><Person:comment></Person:comment></beol:Person>""".stripMargin
+
+                Post("/v1/resources/xml", HttpEntity(ContentTypes.`text/xml(UTF-8)`, params)) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> resourcesPath ~> check {
+                    assert(status == StatusCodes.OK, response.toString)
+
+                        val responseExpected = CreateResourceApiRequestV1("http://www.knora.org/ontology/beol#Person",
+                            "A Person",
+                            properties = Map(
+                                    "http://www.knora.org/ontology/beol/Person#hasGivenName" -> List(CreateResourceValueV1(richtext_value = Some(CreateRichtextV1("Niels Henrik", None, None)))),
+                                    "http://www.knora.org/ontology/beol/Person#hasFamilyName" -> List(CreateResourceValueV1(richtext_value = Some(CreateRichtextV1("Abel", None, None)))),
+                                    "http://www.knora.org/ontology/beol/Person#comment" -> List(CreateResourceValueV1(richtext_value = Some(CreateRichtextV1("", None, None))))
+                                    ),
+                             None,
+                            "project_id")
+
+                        responseAs[String] shouldEqual responseExpected.toJsValue.toString()
+               }
+            }
     }
 }

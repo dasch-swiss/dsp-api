@@ -21,6 +21,7 @@
 
 package org.knora.webapi.routing.v1
 
+import akka.http.scaladsl.marshallers.xml.ScalaXmlSupport._
 import java.io.File
 import java.util.UUID
 
@@ -47,6 +48,7 @@ import spray.json._
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
+import scala.xml.NodeSeq
 
 /**
   * Provides a spray-routing function for API routes that deal with resources.
@@ -462,6 +464,30 @@ object ResourcesRouteV1 extends Authenticator {
                         )
                 }
             }
+        } ~  path("v1" / "resources" / "xml" ) {
+                post {
+                        entity(as[NodeSeq]) { xml =>
+                                val projectId = "project_id"
+                                val createResources = xml.map(
+                                        node => {
+                                            val entityType = node.label
+                                            val restypeId = "http://www.knora.org/ontology/beol#" + entityType
+                                            val label = "A "+ entityType
+                                            val properties = node.child.map(
+                                                    child =>
+                                                    ( "http://www.knora.org/ontology/beol/Person#" + child.label
+                                                          -> List(CreateResourceValueV1(Some(CreateRichtextV1(child.text)))))
+                                            ).toMap
+                                            CreateResourceApiRequestV1(restypeId,
+                                                    label,
+                                                    properties,
+                                                    None,
+                                                    projectId)
+                                        }
+                                )
+                                complete(createResources.head.toJsValue)
+                            }
+                    }
         }
     }
 }

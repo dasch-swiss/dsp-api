@@ -75,8 +75,8 @@ case class CreateValueApiRequestV1(project_id: IRI,
   * @param resource_reference references to Knora resources out of the text.
   */
 case class CreateRichtextV1(utf8str: String,
-                            textattr: Option[String], // textattr is a String that can be parsed into another JsObject
-                            resource_reference: Option[Seq[IRI]]) {
+                            textattr: Option[String] = None, // textattr is a String that can be parsed into another JsObject
+                            resource_reference: Option[Seq[IRI]] = None) {
 
     def toJsValue = ApiValueV1JsonProtocol.createRichtextV1Format.write(this)
 }
