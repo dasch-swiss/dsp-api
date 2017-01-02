@@ -75,7 +75,7 @@ class StandoffUtilSpec extends WordSpec with Matchers {
             xmlDiff.hasDifferences should be(false)
         }
 
-        "calculate the diffs between a critical text and a diplomatic transcription (1)" ignore { // FIXME: there is a problem with the handling of newlines (StandoffUtil escapes \n to \\n)
+        "calculate the diffs between a critical text and a diplomatic transcription (1)" in {
             val regionID = UUID.randomUUID
 
             val documentSpecificIDs = Map(
@@ -145,7 +145,7 @@ class StandoffUtilSpec extends WordSpec with Matchers {
             standoffRemoved.exists(_.uuid == regionID) should be(false)
         }
 
-        "calculate the diffs between a critical text and a diplomatic transcription (2)" ignore { // FIXME: there is a problem with the handling of newlines (StandoffUtil escapes \n to \\n)
+        "calculate the diffs between a critical text and a diplomatic transcription (2)" in {
 
             val regionID = UUID.randomUUID
 

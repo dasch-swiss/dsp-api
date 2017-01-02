@@ -26,8 +26,8 @@ import javax.xml.parsers.SAXParserFactory
 import com.sksamuel.diffpatch.DiffMatchPatch
 import com.sksamuel.diffpatch.DiffMatchPatch._
 import org.apache.commons.lang3.StringEscapeUtils
-import org.knora.webapi.util.{ErrorHandlingMap, InputValidation, KnoraIdUtil}
 import org.knora.webapi._
+import org.knora.webapi.util.{ErrorHandlingMap, KnoraIdUtil}
 
 import scala.xml._
 
@@ -332,9 +332,8 @@ class StandoffUtil(xmlNamespaces: Map[String, IRI] = Map.empty[IRI, String],
             throw InvalidStandoffException(s"One or more CLIX milestones were not closed: $missingEndTags")
         }
 
-        // TODO: How to unescape backslashes when the XML is recreated?
         TextWithStandoff(
-            text = InputValidation.toSparqlEncodedString(nodes.text, () => throw BadRequestException("The submitted XML contains illegal characters")),
+            text = nodes.text,
             standoff = finishedConversionState.standoffTags
         )
     }
@@ -390,8 +389,8 @@ class StandoffUtil(xmlNamespaces: Map[String, IRI] = Map.empty[IRI, String],
         // Start with the root.
         groupedTags.get(None) match {
             case Some(children) if children.size == 1 =>
-                standoffTags2XmlString( // FIXME: I think it is not necessary to run InputValidation in reverted mode
-                    text = textWithStandoff.text /*InputValidation.toSparqlEncodedString(textWithStandoff.text, () => throw InconsistentTriplestoreDataException("string returned by triplestore could not be reverted correctly"), revert = true)*/,
+                standoffTags2XmlString(
+                    text = textWithStandoff.text,
                     groupedTags = groupedTags,
                     posBeforeSiblings = 0,
                     siblings = children,

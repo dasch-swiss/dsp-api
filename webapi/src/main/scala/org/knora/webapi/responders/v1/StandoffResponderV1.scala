@@ -1004,7 +1004,7 @@ class StandoffResponderV1 extends ResponderV1 {
                 resourceIri = resourceIri,
                 propertyIri = propertyIRI,
                 value = TextValueV1(
-                    utf8str = textWithStandoff.text,
+                    utf8str = InputValidation.toSparqlEncodedString(textWithStandoff.text, () => throw InconsistentTriplestoreDataException("utf8str for for TextValue contains invalid characters")),
                     resource_reference = resourceReferences,
                     textattr = standoffNodesToCreate,
                     xml = Some(xml),
@@ -1051,7 +1051,7 @@ class StandoffResponderV1 extends ResponderV1 {
             changeValueResponse: ChangeValueResponseV1 <- (responderManager ? ChangeValueRequestV1(
                 valueIri = valueIri,
                 value = TextValueV1(
-                    utf8str = textWithStandoff.text,
+                    utf8str = InputValidation.toSparqlEncodedString(textWithStandoff.text, () => throw InconsistentTriplestoreDataException("utf8str for for TextValue contains invalid characters")),
                     resource_reference = resourceReferences,
                     textattr = standoffNodesToCreate,
                     xml = Some(xml),
@@ -1348,6 +1348,7 @@ class StandoffResponderV1 extends ResponderV1 {
 
             _ = println("standoff converted " + (java.lang.System.currentTimeMillis() - enterMillis))
 
+            // TODO: Does the string need to be unescaped?
             textWithStandoff = TextWithStandoff(text = textValue.utf8str, standoff = standoffTags)
 
             xml = standoffUtil.textWithStandoff2Xml(textWithStandoff)
