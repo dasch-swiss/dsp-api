@@ -34,6 +34,7 @@ import org.knora.webapi.messages.v1.responder.standoffmessages.StandoffDataTypeC
 import org.knora.webapi.messages.v1.responder.valuemessages.{CreateRichtextV1, StandoffPositionV1, TextValueV1}
 import org.knora.webapi.twirl.{StandoffTagIriAttributeV1, StandoffTagStringAttributeV1, StandoffTagV1}
 import spray.json.JsonParser
+import com.google.gwt.safehtml.shared.UriUtils._
 
 
 /**
@@ -77,8 +78,10 @@ object InputValidation {
     }
 
     def toIri(s: String, errorFun: () => Nothing): IRI = {
-        if (urlValidator.isValid(s)) {
-            s
+        val urlEncodedStr = encodeAllowEscapes(s)
+
+        if (urlValidator.isValid(urlEncodedStr)) {
+            urlEncodedStr
         } else {
             errorFun()
         }

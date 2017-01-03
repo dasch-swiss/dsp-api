@@ -155,7 +155,8 @@ lazy val webApiLibs = Seq(
     "com.typesafe.akka" %% "akka-stream-testkit" % akkaVersion % "test, fuseki, fuseki-tomcat, graphdb, tdb, it",
     "org.scalatest" %% "scalatest" % "3.0.0" % "test, fuseki, fuseki-tomcat, graphdb, tdb, it",
     "org.eclipse.rdf4j" % "rdf4j-rio-turtle" % "2.0M3",
-    "org.rogach" %% "scallop" % "2.0.5"
+    "org.rogach" %% "scallop" % "2.0.5",
+    "com.google.gwt" % "gwt-servlet" % "2.8.0"
 )
 
 lazy val javaRunOptions = Seq(
