@@ -48,7 +48,7 @@ import spray.json._
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
-import scala.xml.NodeSeq
+import scala.xml.{Node, NodeSeq}
 
 /**
   * Provides a spray-routing function for API routes that deal with resources.
@@ -474,13 +474,14 @@ object ResourcesRouteV1 extends Authenticator {
                                 val createResources = root.child.map(
                                             node => {
                                             val entityType = node.label
-                                            val namespace = node.prefix
 
-                                            val restypeId = "http://www.knora.org/ontology/beol#" + entityType
+                                            val elemNS = node.getNamespace(node.prefix)
+                                            val restypeId = elemNS +  entityType
+
                                             val label = "A "+ entityType
                                             val properties = node.child.map(
                                                     child =>
-                                                    ( "http://www.knora.org/ontology/beol/Person#" + child.label
+                                                    ( child.getNamespace(child.prefix) + child.label
                                                           -> List(CreateResourceValueV1(Some(CreateRichtextV1(child.text)))))
                                             ).toMap
                                             CreateResourceApiRequestV1(restypeId,
@@ -489,7 +490,7 @@ object ResourcesRouteV1 extends Authenticator {
                                                     None,
                                                     projectId)
                                         }
-                                        )
+                                )
                                 complete(createResources)
                             }
                     }

@@ -1389,17 +1389,19 @@ class ResourcesV1R2RSpec extends R2RSpec {
         "create a Person from simple xml" in {
 
             val params =
-                s"""<xml><beol:Person id="id12345"><Person:hasGivenName>Niels Henrik</Person:hasGivenName><Person:hasFamilyName>Abel</Person:hasFamilyName><Person:comment></Person:comment></beol:Person><beol:Person id="idXYZ"><Person:hasGivenName>Bar</Person:hasGivenName><Person:hasFamilyName>Foo</Person:hasFamilyName><Person:comment></Person:comment></beol:Person></xml>""".stripMargin
-
+                s"""<xml xmlns:beol="http://example.com#" xmlns:Person="http://example.com/Person#">
+                   |<beol:Person id="id12345"><Person:hasGivenName>Niels Henrik</Person:hasGivenName><Person:hasFamilyName>Abel</Person:hasFamilyName><Person:comment></Person:comment></beol:Person>
+                   |<beol:Person id="idXYZ"><Person:hasGivenName>Bar</Person:hasGivenName><Person:hasFamilyName>Foo</Person:hasFamilyName><Person:comment></Person:comment></beol:Person>
+                   |</xml>""".stripMargin
             Post("/v1/resources/xml", HttpEntity(ContentTypes.`text/xml(UTF-8)`, params)) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> resourcesPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)
 
-                val responseExpected = CreateResourceApiRequestV1("http://www.knora.org/ontology/beol#Person",
+                val responseExpected = CreateResourceApiRequestV1("http://example.com#Person",
                     "A Person",
                     properties = Map(
-                        "http://www.knora.org/ontology/beol/Person#hasGivenName" -> List(CreateResourceValueV1(richtext_value = Some(CreateRichtextV1("Niels Henrik", None, None)))),
-                        "http://www.knora.org/ontology/beol/Person#hasFamilyName" -> List(CreateResourceValueV1(richtext_value = Some(CreateRichtextV1("Abel", None, None)))),
-                        "http://www.knora.org/ontology/beol/Person#comment" -> List(CreateResourceValueV1(richtext_value = Some(CreateRichtextV1("", None, None))))
+                        "http://example.com/Person#hasGivenName" -> List(CreateResourceValueV1(richtext_value = Some(CreateRichtextV1("Niels Henrik", None, None)))),
+                        "http://example.com/Person#hasFamilyName" -> List(CreateResourceValueV1(richtext_value = Some(CreateRichtextV1("Abel", None, None)))),
+                        "http://example.com/Person#comment" -> List(CreateResourceValueV1(richtext_value = Some(CreateRichtextV1("", None, None))))
                     ),
                     None,
                     "project_id")
