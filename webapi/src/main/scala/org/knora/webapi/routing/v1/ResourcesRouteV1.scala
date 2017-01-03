@@ -471,26 +471,28 @@ object ResourcesRouteV1 extends Authenticator {
 
                                 val root = xml.head
 
-                                val createResources = root.child.map(
-                                            node => {
-                                            val entityType = node.label
+                                val createResources = root.child
+                                    .filter(node => node.label != "#PCDATA")
+                                    .map( node => {
+                                        val entityType = node.label
 
-                                            val elemNS = node.getNamespace(node.prefix)
-                                            val restypeId = elemNS +  entityType
+                                        val elemNS = node.getNamespace(node.prefix)
+                                        val restypeId = elemNS + "#" + entityType
 
-                                            val label = "A "+ entityType
-                                            val properties = node.child.map(
-                                                    child =>
-                                                    ( child.getNamespace(child.prefix) + child.label
-                                                          -> List(CreateResourceValueV1(Some(CreateRichtextV1(child.text)))))
+                                        val label = "A "+ entityType
+                                        val properties = node.child
+                                            .filter(child => child.label != "#PCDATA")
+                                            .map( child =>
+                                                ( child.getNamespace(child.prefix) + "#" + child.label
+                                                     -> List(CreateResourceValueV1(Some(CreateRichtextV1(child.text)))))
                                             ).toMap
-                                            CreateResourceApiRequestV1(restypeId,
-                                                    label,
-                                                    properties,
-                                                    None,
-                                                    projectId)
+                                        CreateResourceApiRequestV1(restypeId,
+                                                label,
+                                                properties,
+                                                None,
+                                                projectId)
                                         }
-                                )
+                                    )
                                 complete(createResources)
                             }
                     }
