@@ -1388,24 +1388,24 @@ class ResourcesV1R2RSpec extends R2RSpec {
         }
         "create a Person from simple xml" in {
 
-                val params =
-                    s"""<beol:Person id="id12345"><Person:hasGivenName>Niels Henrik</Person:hasGivenName><Person:hasFamilyName>Abel</Person:hasFamilyName><Person:comment></Person:comment></beol:Person>""".stripMargin
+            val params =
+                s"""<xml><beol:Person id="id12345"><Person:hasGivenName>Niels Henrik</Person:hasGivenName><Person:hasFamilyName>Abel</Person:hasFamilyName><Person:comment></Person:comment></beol:Person><beol:Person id="idXYZ"><Person:hasGivenName>Bar</Person:hasGivenName><Person:hasFamilyName>Foo</Person:hasFamilyName><Person:comment></Person:comment></beol:Person></xml>""".stripMargin
 
-                Post("/v1/resources/xml", HttpEntity(ContentTypes.`text/xml(UTF-8)`, params)) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> resourcesPath ~> check {
-                    assert(status == StatusCodes.OK, response.toString)
+            Post("/v1/resources/xml", HttpEntity(ContentTypes.`text/xml(UTF-8)`, params)) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> resourcesPath ~> check {
+                assert(status == StatusCodes.OK, response.toString)
 
-                        val responseExpected = CreateResourceApiRequestV1("http://www.knora.org/ontology/beol#Person",
-                            "A Person",
-                            properties = Map(
-                                    "http://www.knora.org/ontology/beol/Person#hasGivenName" -> List(CreateResourceValueV1(richtext_value = Some(CreateRichtextV1("Niels Henrik", None, None)))),
-                                    "http://www.knora.org/ontology/beol/Person#hasFamilyName" -> List(CreateResourceValueV1(richtext_value = Some(CreateRichtextV1("Abel", None, None)))),
-                                    "http://www.knora.org/ontology/beol/Person#comment" -> List(CreateResourceValueV1(richtext_value = Some(CreateRichtextV1("", None, None))))
-                                    ),
-                             None,
-                            "project_id")
+                val responseExpected = CreateResourceApiRequestV1("http://www.knora.org/ontology/beol#Person",
+                    "A Person",
+                    properties = Map(
+                        "http://www.knora.org/ontology/beol/Person#hasGivenName" -> List(CreateResourceValueV1(richtext_value = Some(CreateRichtextV1("Niels Henrik", None, None)))),
+                        "http://www.knora.org/ontology/beol/Person#hasFamilyName" -> List(CreateResourceValueV1(richtext_value = Some(CreateRichtextV1("Abel", None, None)))),
+                        "http://www.knora.org/ontology/beol/Person#comment" -> List(CreateResourceValueV1(richtext_value = Some(CreateRichtextV1("", None, None))))
+                    ),
+                    None,
+                    "project_id")
 
-                        responseAs[String] shouldEqual responseExpected.toJsValue.toString()
-               }
+                responseAs[Seq[CreateResourceApiRequestV1]] should contain(responseExpected)
+                }
             }
     }
 }

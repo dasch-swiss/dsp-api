@@ -468,9 +468,14 @@ object ResourcesRouteV1 extends Authenticator {
                 post {
                         entity(as[NodeSeq]) { xml =>
                                 val projectId = "project_id"
-                                val createResources = xml.map(
-                                        node => {
+
+                                val root = xml.head
+
+                                val createResources = root.child.map(
+                                            node => {
                                             val entityType = node.label
+                                            val namespace = node.prefix
+
                                             val restypeId = "http://www.knora.org/ontology/beol#" + entityType
                                             val label = "A "+ entityType
                                             val properties = node.child.map(
@@ -484,8 +489,8 @@ object ResourcesRouteV1 extends Authenticator {
                                                     None,
                                                     projectId)
                                         }
-                                )
-                                complete(createResources.head.toJsValue)
+                                        )
+                                complete(createResources)
                             }
                     }
         }
