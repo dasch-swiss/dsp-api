@@ -675,6 +675,15 @@
                       rdfs:comment "a URI referring to a facsimile"@en .
 
 
+###  http://www.knora.org/ontology/beol#StandoffFigureTag
+
+:StandoffFigureTag rdf:type owl:Class ;
+
+                      rdfs:subClassOf knora-base:StandoffUriTag ;
+
+                      rdfs:comment "a URI referring to a figure"@en .
+
+
 ###  http://www.knora.org/ontology/beol#StandoffMathTag
 
 :StandoffMathTag rdf:type owl:Class ;
@@ -700,3 +709,39 @@
                  rdfs:subClassOf knora-base:StandoffTag ;
 
                  rdfs:comment "escapes a special character in the MediaWiki syntax"@en .
+
+
+###  http://www.knora.org/ontology/beol#StandoffHrTag
+
+:StandoffHrTag rdf:type owl:Class ;
+
+                 rdfs:subClassOf knora-base:StandoffTag ;
+
+                 rdfs:comment "represents a horizontal line"@en .
+
+
+###  http://www.knora.org/ontology/beol#StandoffNbspTag
+
+:StandoffNbspTag rdf:type owl:Class ;
+
+                 rdfs:subClassOf knora-base:StandoffTag ;
+
+                 rdfs:comment "represents a non breaking space"@en .
+
+
+###  http://www.knora.org/ontology/beol#StandoffBrTag
+
+:StandoffBrTag rdf:type owl:Class ;
+
+              rdfs:subClassOf knora-base:StandoffTag ;
+
+              rdfs:comment "represents a break"@en .
+
+              ###  http://www.knora.org/ontology/beol#StandoffBrTag
+
+
+:StandoffHtmlTag rdf:type owl:Class ;
+
+            rdfs:subClassOf knora-base:StandoffTag ;
+
+            rdfs:comment "represents a HTML tag in MediaWiki"@en .
