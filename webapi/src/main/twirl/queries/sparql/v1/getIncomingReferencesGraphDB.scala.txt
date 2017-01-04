@@ -40,22 +40,36 @@ PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 
 SELECT ?referringResource ?linkProp ?prop ?obj ?isLinkValue ?objPred ?objObj
 WHERE {
-    BIND(IRI("@resourceIri") as ?resource)
 
-    ?resource a knora-base:Resource ;
-        knora-base:isDeleted false .
+    @*
 
-    @* Find incoming links that are subproperties of knora-base:hasLinkTo but not knora-base:isPartOf. *@
+        Find incoming links that are subproperties of knora-base:hasLinkTo but not knora-base:isPartOf.
 
-    ?referringResource knora-base:hasLinkTo ?resource ;
-        knora-base:isDeleted false .
+        Makes use of a subquery in order to limit the number of referring resources.
 
-    FILTER NOT EXISTS {
-        ?referringResource knora-base:isPartOf ?resource .
-    }
+    *@
 
-    GRAPH <http://www.ontotext.com/explicit> {
-        ?referringResource ?linkProp ?resource .
+    {
+        SELECT ?resource ?referringResource ?linkProp
+        WHERE {
+            BIND(IRI("@resourceIri") as ?resource)
+
+            ?resource a knora-base:Resource ;
+                knora-base:isDeleted false .
+
+            @* Find incoming links that are subproperties of knora-base:hasLinkTo but not knora-base:isPartOf. *@
+
+            ?referringResource knora-base:hasLinkTo ?resource ;
+                knora-base:isDeleted false .
+
+            FILTER NOT EXISTS {
+                ?referringResource knora-base:isPartOf ?resource .
+            }
+
+            GRAPH <http://www.ontotext.com/explicit> {
+                ?referringResource ?linkProp ?resource .
+            }
+        } LIMIT 50
     }
 
     {
