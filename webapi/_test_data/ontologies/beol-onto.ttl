@@ -697,7 +697,12 @@
 
 :StandoffReferenceTag rdf:type owl:Class ;
 
-                      rdfs:subClassOf standoff:StandoffStructuralTag ;
+                      rdfs:subClassOf standoff:StandoffStructuralTag,
+                                      [
+                                           rdf:type owl:Restriction ;
+                                           owl:onProperty knora-base:standoffTagHasInternalReference ;
+                                           owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                                      ] ;
 
                       rdfs:comment "represents a reference/footnote in the text"@en .
 

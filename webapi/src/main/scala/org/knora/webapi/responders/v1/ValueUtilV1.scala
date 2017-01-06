@@ -31,7 +31,7 @@ import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v1.store.triplestoremessages.VariableResultsRow
 import org.knora.webapi.responders.v1.GroupedProps._
 import org.knora.webapi.twirl._
-import org.knora.webapi.util.{DateUtilV1, ErrorHandlingMap, InputValidation}
+import org.knora.webapi.util.{DateUtilV1, ErrorHandlingMap, InputValidation, KnoraIdUtil}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -445,6 +445,7 @@ class ValueUtilV1(private val settings: SettingsImpl) {
             throw NotFoundException(s"Ontology information about standoff entities is missing")
         }
 
+        val knoraIdUtil = new KnoraIdUtil
 
         val standoffTags: Seq[StandoffTagV1] = valueProps.standoff.map {
 
@@ -458,11 +459,34 @@ class ValueUtilV1(private val settings: SettingsImpl) {
                         if (valueProps.standoffAllPropertyEntities(propIri).predicates.get(OntologyConstants.KnoraBase.ObjectClassConstraint).isDefined) {
 
                             // it is a linking property
-                            StandoffTagIriAttributeV1(standoffPropertyIri = propIri, value = value)
+
+                            // check if it refers to a resource or a standoff node
+
+                            // TODO: find a better way to determine the type of the target (resource or standoff node)
+                            if (value.contains("/standoff/")) {
+                                // it refers to a standoff node, recreate the original id
+
+                                // get the UUID of the referred resource from its Iri
+                                val uuidStartIndex: Int = value.indexOfSlice("/standoff/") + "/standoff/".length
+                                val targetUUIDAsString = knoraIdUtil.base64DecodeUuid(value.substring(uuidStartIndex)).toString
+
+                                // TODO: we do not have the IRIs of the standoff nodes in the map `valueProps.standoff`, so we need to loop over them and look for the matching UUID. There should be a way to get this information directly by the standoff IRI
+                                val originalId: String = valueProps.standoff.find {
+                                    standoffNodeAssertions =>
+
+                                        standoffNodeAssertions(OntologyConstants.KnoraBase.StandoffTagHasUUID) == targetUUIDAsString
+
+                                }.getOrElse(throw InconsistentTriplestoreDataException(s"no standoff node found with UUID $targetUUIDAsString"))
+                                    .getOrElse(OntologyConstants.KnoraBase.StandoffTagHasOriginalXMLID, throw InconsistentTriplestoreDataException(s"referred standoff $value node has no original XML id"))
+
+                                StandoffTagStringAttributeV1(standoffPropertyIri = propIri, value = "#" + originalId)
+                            } else {
+                                // it refers to a knora resource
+                                StandoffTagIriAttributeV1(standoffPropertyIri = propIri, value = value)
+                            }
                         } else if (valueProps.standoffAllPropertyEntities(propIri).predicates.get(OntologyConstants.KnoraBase.ObjectDatatypeConstraint).isDefined) {
 
                             // it is a data type property (literal)
-
                             val propDataType = valueProps.standoffAllPropertyEntities(propIri).predicates(OntologyConstants.KnoraBase.ObjectDatatypeConstraint)
 
                             propDataType.objects.headOption match {

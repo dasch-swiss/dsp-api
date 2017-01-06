@@ -633,11 +633,11 @@ case class TextValueV1(utf8str: String,
 
                         val (resid, href) = if (standoffTag.dataType.isDefined && standoffTag.dataType.get == StandoffDataTypeClasses.StandoffLinkTag) {
                             // It is a reference to a Knora resource, resid and href contain its Iri
-                            val resRef = Some(standoffTag.attributes.find(_.standoffPropertyIri == OntologyConstants.KnoraBase.StandoffTagHasLink).getOrElse(throw NotFoundException(s"${OntologyConstants.KnoraBase.StandoffTagHasLink} was not found in $standoffTag")).stringValue)
+                            val resRef = Some(standoffTag.attributes.find(_.standoffPropertyIri == OntologyConstants.KnoraBase.StandoffTagHasLink).getOrElse(throw NotFoundException(s"${OntologyConstants.KnoraBase.StandoffTagHasLink} was not found in $standoffTag")).stringValue())
                             (resRef, resRef)
                         } else if (standoffTag.dataType.isDefined && standoffTag.dataType.get == StandoffDataTypeClasses.StandoffUriTag) {
                             // it is a hyperlink, only href is given
-                            val urlRef = Some(standoffTag.attributes.find(_.standoffPropertyIri == OntologyConstants.KnoraBase.ValueHasUri).getOrElse(throw NotFoundException(s"${OntologyConstants.KnoraBase.ValueHasUri} was not found in $standoffTag")).stringValue)
+                            val urlRef = Some(standoffTag.attributes.find(_.standoffPropertyIri == OntologyConstants.KnoraBase.ValueHasUri).getOrElse(throw NotFoundException(s"${OntologyConstants.KnoraBase.ValueHasUri} was not found in $standoffTag")).stringValue())
                             (None, urlRef)
                         } else {
                             // it is not a link
@@ -673,7 +673,7 @@ case class TextValueV1(utf8str: String,
             case (standoffNode: StandoffTagV1) =>
                 CreateStandoffPositionV1InTriplestore(
                     standoffNode = standoffNode,
-                    standoffTagInstanceIri = knoraIdUtil.makeRandomStandoffTagIri(valueIri) // generate IRI for new standoff node
+                    standoffTagInstanceIri = knoraIdUtil.makePredictableStandoffTagIri(valueIri, UUID.fromString(standoffNode.uuid)) // generate IRI for new standoff node
                 )
         }
     }

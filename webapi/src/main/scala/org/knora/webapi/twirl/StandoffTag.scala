@@ -22,9 +22,10 @@ package org.knora.webapi.twirl
 
 import java.util.UUID
 
-import org.knora.webapi.IRI
+import org.knora.webapi.{IRI, NotFoundException}
 import org.knora.webapi.messages.v1.responder.standoffmessages.StandoffDataTypeClasses
 import org.knora.webapi.messages.v1.responder.valuemessages.{KnoraCalendarV1, KnoraPrecisionV1}
+import org.knora.webapi.util.KnoraIdUtil
 
 /**
   * The following case classes represent standoff classes and attributes
@@ -40,23 +41,43 @@ trait StandoffTagAttributeV1 {
 
     def standoffPropertyIri: IRI
 
-    def stringValue: String
+    def stringValue(valueIri: Option[IRI] = None): String
 
-    def rdfValue: String
+    def rdfValue(valueIri: Option[IRI] = None): String
 
 }
 
 /**
-  * Represents a standoff tag attribute of type string.
+  * Represents a standoff tag attribute of type Iri.
   *
   * @param standoffPropertyIri the Iri of the standoff property
   * @param value the value of the standoff property.
   */
 case class StandoffTagIriAttributeV1(standoffPropertyIri: IRI, value: IRI) extends StandoffTagAttributeV1 {
 
-    def stringValue = value
+    def stringValue(valueIri: Option[IRI] = None) = value
 
-    def rdfValue = s"<$value>"
+    def rdfValue(valueIri: Option[IRI] = None) = s"<$value>"
+
+}
+
+/**
+  * Represents a standoff tag attribute that refers to another standoff node.
+  *
+  * @param standoffPropertyIri the Iri of the standoff property
+  * @param value the value of the standoff property.
+  */
+case class StandoffTagInternalReferenceAttributeV1(standoffPropertyIri: IRI, value: UUID) extends StandoffTagAttributeV1 {
+
+    def stringValue(valueIri: Option[IRI] = None) = value.toString
+
+    def rdfValue(valueIri: Option[IRI] = None) = {
+
+        val knoraIdUtil = new KnoraIdUtil
+
+        s"<${knoraIdUtil.makePredictableStandoffTagIri(valueIri.getOrElse(throw NotFoundException("expected value Iri not given")), value)}>"
+
+    }
 
 }
 
@@ -68,9 +89,9 @@ case class StandoffTagIriAttributeV1(standoffPropertyIri: IRI, value: IRI) exten
   */
 case class StandoffTagStringAttributeV1(standoffPropertyIri: IRI, value: String) extends StandoffTagAttributeV1 {
 
-    def stringValue = value
+    def stringValue(valueIri: Option[IRI] = None) = value
 
-    def rdfValue = s"""\"\"\"$value\"\"\""""
+    def rdfValue(valueIri: Option[IRI] = None) = s"""\"\"\"$value\"\"\""""
 
 }
 
@@ -82,9 +103,9 @@ case class StandoffTagStringAttributeV1(standoffPropertyIri: IRI, value: String)
   */
 case class StandoffTagIntegerAttributeV1(standoffPropertyIri: IRI, value: Int) extends StandoffTagAttributeV1 {
 
-    def stringValue = value.toString
+    def stringValue(valueIri: Option[IRI] = None) = value.toString
 
-    def rdfValue = value.toString
+    def rdfValue(valueIri: Option[IRI] = None) = value.toString
 
 }
 
@@ -96,9 +117,9 @@ case class StandoffTagIntegerAttributeV1(standoffPropertyIri: IRI, value: Int) e
   */
 case class StandoffTagDecimalAttributeV1(standoffPropertyIri: IRI, value: BigDecimal) extends StandoffTagAttributeV1 {
 
-    def stringValue = value.toString
+    def stringValue(valueIri: Option[IRI] = None) = value.toString
 
-    def rdfValue = s""""${value.toString}"^^xsd:decimal"""
+    def rdfValue(valueIri: Option[IRI] = None) = s""""${value.toString}"^^xsd:decimal"""
 
 }
 
@@ -110,9 +131,9 @@ case class StandoffTagDecimalAttributeV1(standoffPropertyIri: IRI, value: BigDec
   */
 case class StandoffTagBooleanAttributeV1(standoffPropertyIri: IRI, value: Boolean) extends StandoffTagAttributeV1 {
 
-    def stringValue = value.toString
+    def stringValue(valueIri: Option[IRI] = None) = value.toString
 
-    def rdfValue = value.toString
+    def rdfValue(valueIri: Option[IRI] = None) = value.toString
 
 }
 

@@ -563,6 +563,17 @@
                  :subjectClassConstraint :StandoffLinkTag .
 
 
+###  http://www.knora.org/ontology/knora-base#standoffTagHasInternalReference
+
+:standoffTagHasInternalReference rdf:type owl:ObjectProperty ;
+
+                 rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
+
+                 :objectClassConstraint :StandoffTag ;
+
+                 :subjectClassConstraint :StandoffTag .
+
+
 ###  http://www.knora.org/ontology/knora-base#standoffTagHasStart
 
 :standoffTagHasStart rdf:type owl:DatatypeProperty ;

@@ -20,6 +20,7 @@
 
 @import org.knora.webapi._
 @import org.knora.webapi.twirl.SparqlTemplateLinkUpdate
+@import org.knora.webapi.twirl.StandoffTagInternalReferenceAttributeV1
 @import org.knora.webapi.messages.v1.responder.valuemessages._
 
 @**
@@ -138,7 +139,16 @@ DELETE {
                         *@
                         @for(createProperty <- createStandoff.standoffNode.attributes) {
 
-                            <@createProperty.standoffPropertyIri> @createProperty.rdfValue ;
+                            @createProperty match {
+
+                                case internalRefProp: StandoffTagInternalReferenceAttributeV1 => {
+                                    <@internalRefProp.standoffPropertyIri> @internalRefProp.rdfValue(Some(newValueIri)) ;
+                                }
+
+                                case otherProp => {
+                                    <@otherProp.standoffPropertyIri> @otherProp.rdfValue() ;
+                                }
+                            }
 
                         }
 

@@ -523,7 +523,7 @@ object TransformData extends App {
                     // Is the object an old-style blank node identifier?
                     val standoffTagIri = if (!oldStandoffIri.contains("/standoff/")) {
                         // Yes. Make a new IRI for it.
-                        val newStandoffIri = knoraIdUtil.makeRandomStandoffTagIri(valueObjectIri)
+                        val newStandoffIri = knoraIdUtil.makePredictableStandoffTagIri(valueObjectIri, UUID.randomUUID())
                         standoffTagIriMap += (oldStandoffIri -> newStandoffIri)
                         newStandoffIri
                     } else {

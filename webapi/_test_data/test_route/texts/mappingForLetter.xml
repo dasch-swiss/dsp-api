@@ -86,6 +86,13 @@
         </tag>
         <standoffClass>
             <classIri>http://www.knora.org/ontology/beol#StandoffReferenceTag</classIri>
+            <attributes>
+                <attribute>
+                    <attributeName>href</attributeName>
+                    <namespace>noNamespace</namespace>
+                    <propertyIri>http://www.knora.org/ontology/knora-base#standoffTagHasInternalReference</propertyIri>
+                </attribute>
+            </attributes>
         </standoffClass>
     </mappingElement>
 
