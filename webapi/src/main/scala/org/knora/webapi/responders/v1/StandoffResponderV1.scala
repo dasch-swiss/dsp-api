@@ -1216,7 +1216,7 @@ class StandoffResponderV1 extends ResponderV1 {
 
             _ = println("mapping inverted" + (java.lang.System.currentTimeMillis() - enterMillis))
 
-            standoffUtil = new StandoffUtil(writeAllIDsToXml = false)
+            standoffUtil = new StandoffUtil(writeUuidsToXml = false)
 
             standoffTags: Seq[StandoffTag] = textValue.textattr.map {
                 (standoffTagV1: StandoffTagV1) =>

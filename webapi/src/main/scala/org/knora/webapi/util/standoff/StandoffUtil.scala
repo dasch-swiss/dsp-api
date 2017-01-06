@@ -261,8 +261,8 @@ object StandoffUtil {
   * - UUIDs are written in Base64 encoding if `writeBase64Ids` is `true` (the default), otherwise in canonical form.
   *
   * @param xmlNamespaces       A map of prefixes to XML namespaces, to be used when converting standoff to XML.
-  * @param writeAllIDsToXml         If `true` (the default), adds the ID of every standoff tag as an attribute when writing
-  *                            XML. Otherwise, only the IDs of CLIX milestones are included.
+  * @param writeUuidsToXml         If `true` (the default), adds the ID of every standoff tag as an attribute when writing
+  *                            XML. Otherwise, only the IDs of CLIX milestones and elements that originally had an id in XML are included.
   * @param writeBase64IDs      If `true`, writes UUIDs in Base64 encoding; otherwise, writes UUIDs in canonical form.
   * @param documentSpecificIDs An optional mapping between document-specific IDs and UUIDs. When reading XML,
   *                            each document-specific ID will be converted to the corresponding UUID. Elements that
@@ -271,7 +271,7 @@ object StandoffUtil {
   */
 class StandoffUtil(xmlNamespaces: Map[String, IRI] = Map.empty[IRI, String],
                    defaultXmlNamespace: Option[IRI] = None,
-                   writeAllIDsToXml: Boolean = true,
+                   writeUuidsToXml: Boolean = true,
                    writeBase64IDs: Boolean = true,
                    documentSpecificIDs: Map[String, UUID] = Map.empty[String, UUID]) {
 
@@ -785,7 +785,7 @@ class StandoffUtil(xmlNamespaces: Map[String, IRI] = Map.empty[IRI, String],
                 case None => knoraIdUtil.encodeUuid(tag.uuid, writeBase64IDs)
             }
 
-            val maybeIdAttr: Option[(String, String)] = if (writeAllIDsToXml) {
+            val maybeIdAttr: Option[(String, String)] = if (writeUuidsToXml) {
                 Some(XmlHierarchicalIdAttrName, id)
             } else {
                 tag match {
@@ -796,7 +796,11 @@ class StandoffUtil(xmlNamespaces: Map[String, IRI] = Map.empty[IRI, String],
                             Some(XmlClixEndIdAttrName, id)
                         }
 
-                    case _ => None
+                        // write the original XML id back, if any
+                    case _ => tag.originalID match {
+                        case Some(originalId) => Some(XmlHierarchicalIdAttrName, originalId)
+                        case None => None
+                    }
                 }
             }
 

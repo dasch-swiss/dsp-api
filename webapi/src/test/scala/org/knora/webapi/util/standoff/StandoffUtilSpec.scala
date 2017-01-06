@@ -37,13 +37,13 @@ class StandoffUtilSpec extends WordSpec with Matchers {
     "The standoff utility" should {
 
         "convert an XML document to text with standoff, then back to an equivalent XML document" in {
-            val standoffUtil = new StandoffUtil(writeAllIDsToXml = false)
+            val standoffUtil = new StandoffUtil(writeUuidsToXml = false)
 
             // Convert the XML document to text with standoff.
             val textWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(StandoffUtilSpec.simpleXmlDoc)
 
             // Convert the text with standoff back to XML.
-            val backToXml = standoffUtil.textWithStandoff2Xml(textWithStandoff)
+            val backToXml: String = standoffUtil.textWithStandoff2Xml(textWithStandoff)
 
             // Compare the original XML with the regenerated XML.
             val xmlDiff: Diff = DiffBuilder.compare(Input.fromString(StandoffUtilSpec.simpleXmlDoc)).withTest(Input.fromString(backToXml)).build()
@@ -60,7 +60,7 @@ class StandoffUtilSpec extends WordSpec with Matchers {
             val standoffUtil = new StandoffUtil(
                 defaultXmlNamespace = Some("http://www.example.org/ns1"),
                 xmlNamespaces = Map("ns2" -> "http://www.example.org/ns2"),
-                writeAllIDsToXml = false,
+                writeUuidsToXml = false,
                 documentSpecificIDs = documentSpecificIDs
             )
 
@@ -509,7 +509,7 @@ object StandoffUtilSpec {
 
     val simpleXmlDoc =
         """<?xml version="1.0" encoding="UTF-8"?>
-          |<article>
+          |<article id="first">
           |    <title>Special Relativity</title>
           |
           |    <paragraph>

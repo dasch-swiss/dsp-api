@@ -297,6 +297,25 @@ class StandoffV1R2RSpec extends R2RSpec {
 
         }
 
+        "read the changed TextValue back to XML and compare it to the XML that was originally sent" in {
+
+            val xmlFile = new File(RequestParams.pathToLetter2XML)
+
+            Get("/v1/standoff/" + URLEncoder.encode(firstTextValueIri.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> standoffPath ~> check {
+
+                assert(response.status == StatusCodes.OK, "reading back text value to XML failed")
+
+                val XMLString = ResponseUtils.getStringMemberFromResponse(response, "xml")
+
+                // Compare the original XML with the regenerated XML.
+                val xmlDiff: Diff = DiffBuilder.compare(Input.fromString(Source.fromFile(xmlFile)(Codec.UTF8).mkString)).withTest(Input.fromString(XMLString)).build()
+
+                xmlDiff.hasDifferences should be(false)
+
+            }
+
+        }
+
         "create a TextValue from complex XML representing a letter" in {
 
             val xmlFileToSend = new File(RequestParams.pathToLetter3XML)
@@ -331,25 +350,6 @@ class StandoffV1R2RSpec extends R2RSpec {
             val xmlFile = new File(RequestParams.pathToLetter3XML)
 
             Get("/v1/standoff/" + URLEncoder.encode(secondTextValueIri.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> standoffPath ~> check {
-
-                assert(response.status == StatusCodes.OK, "reading back text value to XML failed")
-
-                val XMLString = ResponseUtils.getStringMemberFromResponse(response, "xml")
-
-                // Compare the original XML with the regenerated XML.
-                val xmlDiff: Diff = DiffBuilder.compare(Input.fromString(Source.fromFile(xmlFile)(Codec.UTF8).mkString)).withTest(Input.fromString(XMLString)).build()
-
-                xmlDiff.hasDifferences should be(false)
-
-            }
-
-        }
-
-        "read the changed TextValue back to XML and compare it to the XML that was originally sent" in {
-
-            val xmlFile = new File(RequestParams.pathToLetter2XML)
-
-            Get("/v1/standoff/" + URLEncoder.encode(firstTextValueIri.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> standoffPath ~> check {
 
                 assert(response.status == StatusCodes.OK, "reading back text value to XML failed")
 
