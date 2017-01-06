@@ -1130,7 +1130,8 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
                         standoffTagClassIri = OntologyConstants.Standoff.StandoffBoldTag,
                         startPosition = 5,
                         endPosition = 13,
-                        uuid = UUID.randomUUID().toString
+                        uuid = UUID.randomUUID().toString,
+                        originalXMLID = None
                     ),
                     StandoffTagV1(
                         standoffTagClassIri = OntologyConstants.KnoraBase.StandoffLinkTag,
@@ -1138,7 +1139,8 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
                         startPosition = 32,
                         endPosition = 40,
                         attributes = Vector(StandoffTagIriAttributeV1(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink, value = "http://data.knora.org/c5058f3a")),
-                        uuid = UUID.randomUUID().toString
+                        uuid = UUID.randomUUID().toString,
+                        originalXMLID = None
                     )
                 ),
                 resource_reference = Set("http://data.knora.org/c5058f3a")

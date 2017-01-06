@@ -45,6 +45,11 @@ case class StandoffTagAttribute(key: String, xmlNamespace: Option[IRI], value: S
   */
 sealed trait StandoffTag {
     /**
+      * The document-specific ID of this tag, if any.
+      */
+    def originalID: Option[String]
+
+    /**
       * A [[UUID]] representing this tag and any other tags that point to semantically equivalent
       * content in other versions of the same text.
       */
@@ -102,7 +107,8 @@ sealed trait IndexedStandoffTag extends StandoffTag {
   * @param parentIndex   the index of the [[HierarchicalStandoffTag]] that contains this tag. If a tag has no
   *                      parent, it is the root of the tree.
   */
-case class HierarchicalStandoffTag(uuid: UUID,
+case class HierarchicalStandoffTag(originalID: Option[String],
+                                   uuid: UUID,
                                    tagName: String,
                                    xmlNamespace: Option[IRI] = None,
                                    attributes: Set[StandoffTagAttribute] = Set.empty[StandoffTagAttribute],
@@ -129,7 +135,8 @@ case class HierarchicalStandoffTag(uuid: UUID,
   * @param endIndex         the index of the end position.
   * @param endParentIndex   the index of the [[HierarchicalStandoffTag]], if any, that contains the end position.
   */
-case class FreeStandoffTag(uuid: UUID,
+case class FreeStandoffTag(originalID: Option[String],
+                           uuid: UUID,
                            tagName: String,
                            xmlNamespace: Option[IRI] = None,
                            attributes: Set[StandoffTagAttribute] = Set.empty[StandoffTagAttribute],
@@ -294,7 +301,8 @@ class StandoffUtil(xmlNamespaces: Map[String, IRI] = Map.empty[IRI, String],
       *
       * @param isStartTag if `true`, this tag represents the start element, otherwise it represents the end element.
       */
-    private case class ClixMilestoneTag(uuid: UUID,
+    private case class ClixMilestoneTag(originalID: Option[String],
+                                        uuid: UUID,
                                         tagName: String,
                                         xmlNamespace: Option[IRI] = None,
                                         attributes: Set[StandoffTagAttribute] = Set.empty[StandoffTagAttribute],
@@ -349,6 +357,7 @@ class StandoffUtil(xmlNamespaces: Map[String, IRI] = Map.empty[IRI, String],
             // Split each free tag into a pair of CLIX milestones.
             case (acc, freeTag: FreeStandoffTag) =>
                 val startTag = ClixMilestoneTag(
+                    originalID = freeTag.originalID,
                     uuid = freeTag.uuid,
                     tagName = freeTag.tagName,
                     xmlNamespace = freeTag.xmlNamespace,
@@ -361,6 +370,7 @@ class StandoffUtil(xmlNamespaces: Map[String, IRI] = Map.empty[IRI, String],
                 )
 
                 val endTag = ClixMilestoneTag(
+                    originalID = freeTag.originalID,
                     uuid = freeTag.uuid,
                     tagName = freeTag.tagName,
                     xmlNamespace = freeTag.xmlNamespace,
@@ -574,7 +584,7 @@ class StandoffUtil(xmlNamespaces: Map[String, IRI] = Map.empty[IRI, String],
                     if (knoraIdUtil.couldBeUuid(id)) {
                         knoraIdUtil.decodeUuid(id)
                     } else {
-                        // If the ID doesn't seem to be a UUID, replace it with a random UUID.
+                        // If the ID doesn't seem to be a UUID, replace it with a random UUID. TODO: this should throw an exception instead.
                         UUID.randomUUID
                     }
             }
@@ -614,6 +624,7 @@ class StandoffUtil(xmlNamespaces: Map[String, IRI] = Map.empty[IRI, String],
                     val sID = attrMap(XmlClixStartIdAttrName)
 
                     val tag = ClixMilestoneTag(
+                        originalID = Some(sID),
                         tagName = elem.label,
                         xmlNamespace = Option(elem.namespace),
                         attributes = xmlAttrs2StandoffAttrs(elem),
@@ -648,6 +659,7 @@ class StandoffUtil(xmlNamespaces: Map[String, IRI] = Map.empty[IRI, String],
                     }
 
                     val freeTag = FreeStandoffTag(
+                        originalID = Some(eID),
                         uuid = startMilestone.uuid,
                         tagName = startMilestone.tagName,
                         xmlNamespace = startMilestone.xmlNamespace,
@@ -675,6 +687,7 @@ class StandoffUtil(xmlNamespaces: Map[String, IRI] = Map.empty[IRI, String],
                         endPosition = acc.currentPos + elem.text.length,
                         index = newTagIndex,
                         parentIndex = startState.parentId,
+                        originalID = attrMap.get(XmlHierarchicalIdAttrName),
                         uuid = attrMap.get(XmlHierarchicalIdAttrName) match {
                             case Some(id) => id2Uuid(id)
                             case None => UUID.randomUUID

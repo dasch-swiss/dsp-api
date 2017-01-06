@@ -334,7 +334,7 @@ object InputValidation {
                                         value = InputValidation.toIri(position.resid.get, () => throw BadRequestException(s"Invalid Knora resource Iri in attribute resid: ${position.resid}"))
                                     )
 
-                                    StandoffTagV1(dataType = Some(StandoffDataTypeClasses.StandoffLinkTag), standoffTagClassIri = OntologyConstants.KnoraBase.StandoffLinkTag, uuid = UUID.randomUUID.toString, startPosition = position.start, endPosition = position.end, attributes = List(internalLink))
+                                    StandoffTagV1(dataType = Some(StandoffDataTypeClasses.StandoffLinkTag), standoffTagClassIri = OntologyConstants.KnoraBase.StandoffLinkTag, uuid = UUID.randomUUID.toString, originalXMLID = None, startPosition = position.start, endPosition = position.end, attributes = List(internalLink))
 
                                 case internalLink if internalLink.href.isDefined =>
                                     val reference = StandoffTagIriAttributeV1(
@@ -342,7 +342,7 @@ object InputValidation {
                                         value = InputValidation.toIri(position.href.get, () => throw BadRequestException(s"Invalid URL in attribute href: ${position.href}"))
                                     )
 
-                                    StandoffTagV1(dataType = Some(StandoffDataTypeClasses.StandoffUriTag), standoffTagClassIri = OntologyConstants.KnoraBase.StandoffUriTag, uuid = UUID.randomUUID.toString, startPosition = position.start, endPosition = position.end, attributes = List(reference))
+                                    StandoffTagV1(dataType = Some(StandoffDataTypeClasses.StandoffUriTag), standoffTagClassIri = OntologyConstants.KnoraBase.StandoffUriTag, uuid = UUID.randomUUID.toString, originalXMLID = None, startPosition = position.start, endPosition = position.end, attributes = List(reference))
 
                                 case _ => throw BadRequestException("no resid or href given for linking tag")
                             }
@@ -357,7 +357,7 @@ object InputValidation {
                                 throw BadRequestException(s"members 'resid' or 'href' given for non linking standoff tag $nonLinkingTag")
                             }
 
-                            StandoffTagV1(standoffTagClassIri = EnumValueToIri(nonLinkingTag), startPosition = position.start, endPosition = position.end, uuid = UUID.randomUUID.toString)
+                            StandoffTagV1(standoffTagClassIri = EnumValueToIri(nonLinkingTag), startPosition = position.start, endPosition = position.end, uuid = UUID.randomUUID.toString, originalXMLID = None)
                     }
             }
 

@@ -585,17 +585,6 @@
                 :objectDatatypeConstraint xsd:integer .
 
 
-###  http://www.knora.org/ontology/knora-base#standoffTagHasHref
-
-:standoffTagHasHref rdf:type owl:DatatypeProperty ;
-
-                 rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
-
-                 :subjectClassConstraint :StandoffUriTag ;
-
-                 :objectDatatypeConstraint xsd:anyURI .
-
-
 ### http://www.knora.org/ontology/knora-base#standoffTagHasStartIndex
 
 :standoffTagHasStartIndex rdf:type owl:DatatypeProperty ;
@@ -834,6 +823,17 @@
                  :objectClassConstraint :Resource ;
 
                  :subjectClassConstraint :StandoffLink .
+
+
+###  http://www.knora.org/ontology/knora-base#standoffTagHasOriginalXMLID
+
+:standoffTagHasOriginalXMLID rdf:type owl:ObjectProperty ;
+
+                 rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
+
+                 :objectClassConstraint xsd:string ;
+
+                 :subjectClassConstraint :StandoffTag .
 
 
 
@@ -2549,6 +2549,10 @@
                             owl:onProperty :standoffTagHasUUID ;
                             owl:cardinality "1"^^xsd:nonNegativeInteger
                           ],
+                          [ rdf:type owl:Restriction ;
+                            owl:onProperty :standoffTagHasOriginalXMLID ;
+                            owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                          ] ,
                           [ rdf:type owl:Restriction ;
                             owl:onProperty :standoffTagHasStartIndex ;
                             owl:maxCardinality "1"^^xsd:nonNegativeInteger

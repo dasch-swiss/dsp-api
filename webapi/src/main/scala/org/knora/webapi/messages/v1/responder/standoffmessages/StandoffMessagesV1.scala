@@ -256,7 +256,8 @@ object StandoffProperties {
         OntologyConstants.KnoraBase.StandoffTagHasEndIndex,
         OntologyConstants.KnoraBase.StandoffTagHasStartParentIndex,
         OntologyConstants.KnoraBase.StandoffTagHasEndParentIndex,
-        OntologyConstants.KnoraBase.StandoffTagHasUUID
+        OntologyConstants.KnoraBase.StandoffTagHasUUID,
+        OntologyConstants.KnoraBase.StandoffTagHasOriginalXMLID
     )
 
     // represents the standoff properties defined on the date standoff tag

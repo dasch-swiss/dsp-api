@@ -29,6 +29,7 @@ import javax.xml.validation.{Schema, SchemaFactory, Validator => JValidator}
 import akka.actor.Status
 import akka.pattern._
 import akka.stream.ActorMaterializer
+
 import org.knora.webapi.messages.v1.responder.ontologymessages.{Cardinality, StandoffEntityInfoGetRequestV1, StandoffEntityInfoGetResponseV1, StandoffPropertyEntityInfoV1}
 import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoByIRIGetRequest, ProjectInfoResponseV1, ProjectInfoType}
 import org.knora.webapi.messages.v1.responder.standoffmessages._
@@ -671,6 +672,10 @@ class StandoffResponderV1 extends ResponderV1 {
                             startPosition = hierarchicalStandoffTag.startPosition,
                             endPosition = hierarchicalStandoffTag.endPosition,
                             uuid = hierarchicalStandoffTag.uuid.toString,
+                            originalXMLID = hierarchicalStandoffTag.originalID match {
+                                case Some(id: String) => Some(InputValidation.toSparqlEncodedString(id, () => throw BadRequestException(s"XML id $id cannot be converted to a Sparql conform string")))
+                                case None => None
+                            },
                             startIndex = Some(hierarchicalStandoffTag.index),
                             endIndex = None,
                             startParentIndex = hierarchicalStandoffTag.parentIndex,
@@ -683,6 +688,10 @@ class StandoffResponderV1 extends ResponderV1 {
                             startPosition = freeStandoffTag.startPosition,
                             endPosition = freeStandoffTag.endPosition,
                             uuid = freeStandoffTag.uuid.toString,
+                            originalXMLID = freeStandoffTag.originalID match {
+                                case Some(id: String) => Some(InputValidation.toSparqlEncodedString(id, () => throw BadRequestException(s"XML id $id cannot be converted to a Sparql conform string")))
+                                case None => None
+                            },
                             startIndex = Some(freeStandoffTag.startIndex),
                             endIndex = Some(freeStandoffTag.endIndex),
                             startParentIndex = freeStandoffTag.startParentIndex,
@@ -712,6 +721,7 @@ class StandoffResponderV1 extends ResponderV1 {
                             startPosition = standoffBaseTagV1.startPosition,
                             endPosition = standoffBaseTagV1.endPosition,
                             uuid = standoffBaseTagV1.uuid,
+                            originalXMLID = standoffBaseTagV1.originalXMLID,
                             startIndex = standoffBaseTagV1.startIndex,
                             endIndex = standoffBaseTagV1.endIndex,
                             startParentIndex = standoffBaseTagV1.startParentIndex,
@@ -735,6 +745,7 @@ class StandoffResponderV1 extends ResponderV1 {
                             startPosition = standoffBaseTagV1.startPosition,
                             endPosition = standoffBaseTagV1.endPosition,
                             uuid = standoffBaseTagV1.uuid,
+                            originalXMLID = standoffBaseTagV1.originalXMLID,
                             startIndex = standoffBaseTagV1.startIndex,
                             endIndex = standoffBaseTagV1.endIndex,
                             startParentIndex = standoffBaseTagV1.startParentIndex,
@@ -758,6 +769,7 @@ class StandoffResponderV1 extends ResponderV1 {
                             startPosition = standoffBaseTagV1.startPosition,
                             endPosition = standoffBaseTagV1.endPosition,
                             uuid = standoffBaseTagV1.uuid,
+                            originalXMLID = standoffBaseTagV1.originalXMLID,
                             startIndex = standoffBaseTagV1.startIndex,
                             endIndex = standoffBaseTagV1.endIndex,
                             startParentIndex = standoffBaseTagV1.startParentIndex,
@@ -782,6 +794,7 @@ class StandoffResponderV1 extends ResponderV1 {
                             startPosition = standoffBaseTagV1.startPosition,
                             endPosition = standoffBaseTagV1.endPosition,
                             uuid = standoffBaseTagV1.uuid,
+                            originalXMLID = standoffBaseTagV1.originalXMLID,
                             startIndex = standoffBaseTagV1.startIndex,
                             endIndex = standoffBaseTagV1.endIndex,
                             startParentIndex = standoffBaseTagV1.startParentIndex,
@@ -805,6 +818,7 @@ class StandoffResponderV1 extends ResponderV1 {
                             startPosition = standoffBaseTagV1.startPosition,
                             endPosition = standoffBaseTagV1.endPosition,
                             uuid = standoffBaseTagV1.uuid,
+                            originalXMLID = standoffBaseTagV1.originalXMLID,
                             startIndex = standoffBaseTagV1.startIndex,
                             endIndex = standoffBaseTagV1.endIndex,
                             startParentIndex = standoffBaseTagV1.startParentIndex,
@@ -828,6 +842,7 @@ class StandoffResponderV1 extends ResponderV1 {
                             startPosition = standoffBaseTagV1.startPosition,
                             endPosition = standoffBaseTagV1.endPosition,
                             uuid = standoffBaseTagV1.uuid,
+                            originalXMLID = standoffBaseTagV1.originalXMLID,
                             startIndex = standoffBaseTagV1.startIndex,
                             endIndex = standoffBaseTagV1.endIndex,
                             startParentIndex = standoffBaseTagV1.startParentIndex,
@@ -859,6 +874,7 @@ class StandoffResponderV1 extends ResponderV1 {
                             startPosition = standoffBaseTagV1.startPosition,
                             endPosition = standoffBaseTagV1.endPosition,
                             uuid = standoffBaseTagV1.uuid,
+                            originalXMLID = standoffBaseTagV1.originalXMLID,
                             startIndex = standoffBaseTagV1.startIndex,
                             endIndex = standoffBaseTagV1.endIndex,
                             startParentIndex = standoffBaseTagV1.startParentIndex,
@@ -892,6 +908,7 @@ class StandoffResponderV1 extends ResponderV1 {
                             startPosition = standoffBaseTagV1.startPosition,
                             endPosition = standoffBaseTagV1.endPosition,
                             uuid = standoffBaseTagV1.uuid,
+                            originalXMLID = standoffBaseTagV1.originalXMLID,
                             startIndex = standoffBaseTagV1.startIndex,
                             endIndex = standoffBaseTagV1.endIndex,
                             startParentIndex = standoffBaseTagV1.startParentIndex,
@@ -1313,6 +1330,7 @@ class StandoffResponderV1 extends ResponderV1 {
                     if (standoffTagV1.endIndex.isDefined) {
                         // it is a free standoff tag
                         FreeStandoffTag(
+                            originalID = standoffTagV1.originalXMLID,
                             tagName = xmlItemForStandoffClass.tagname,
                             xmlNamespace = xmlItemForStandoffClass.namespace match {
                                 case `noNamespace` => None
@@ -1330,6 +1348,7 @@ class StandoffResponderV1 extends ResponderV1 {
                     } else {
                         // it is a hierarchical standoff tag
                         HierarchicalStandoffTag(
+                            originalID =standoffTagV1.originalXMLID,
                             tagName = xmlItemForStandoffClass.tagname,
                             xmlNamespace = xmlItemForStandoffClass.namespace match {
                                 case `noNamespace` => None

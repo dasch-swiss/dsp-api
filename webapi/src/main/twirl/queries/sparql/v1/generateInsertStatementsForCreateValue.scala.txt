@@ -95,6 +95,10 @@
                                 knora-base:standoffTagHasEndParentIndex @createStandoff.standoffNode.endParentIndex.get ;
                             }
 
+                            @if(createStandoff.standoffNode.originalXMLID.isDefined) {
+                                knora-base:standoffTagHasOriginalXMLID """@createStandoff.standoffNode.originalXMLID.get""" ;
+                            }
+
                             @*
 
                             Handle standoff class specific standoff properties

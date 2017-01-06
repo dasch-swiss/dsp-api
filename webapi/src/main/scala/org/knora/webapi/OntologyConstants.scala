@@ -240,6 +240,7 @@ object OntologyConstants {
         val StandoffTagHasStartParentIndex = "http://www.knora.org/ontology/knora-base#standoffTagHasStartParentIndex"
         val StandoffTagHasEndParentIndex = "http://www.knora.org/ontology/knora-base#standoffTagHasEndParentIndex"
         val StandoffTagHasUUID = "http://www.knora.org/ontology/knora-base#standoffTagHasUUID"
+        val StandoffTagHasOriginalXMLID = "http://www.knora.org/ontology/knora-base#standoffTagHasOriginalXMLID"
 
         val StandoffTagHasLink = "http://www.knora.org/ontology/knora-base#standoffTagHasLink"
         val HasStandoffLinkTo = "http://www.knora.org/ontology/knora-base#hasStandoffLinkTo"

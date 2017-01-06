@@ -163,7 +163,8 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
                 standoffTagClassIri = OntologyConstants.Standoff.StandoffBoldTag,
                 startPosition = 21,
                 endPosition = 25,
-                uuid = UUID.randomUUID().toString
+                uuid = UUID.randomUUID().toString,
+                originalXMLID = None
             )
         )
 
@@ -222,12 +223,15 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
             standoffTagClassIri = OntologyConstants.Standoff.StandoffBoldTag,
             startPosition = 0,
             endPosition = 7,
-            uuid = UUID.randomUUID().toString),
+            uuid = UUID.randomUUID().toString,
+            originalXMLID = None
+        ),
         StandoffTagV1(
             standoffTagClassIri = OntologyConstants.Standoff.StandoffParagraphTag,
             startPosition = 0,
             endPosition = 10,
-            uuid = UUID.randomUUID().toString
+            uuid = UUID.randomUUID().toString,
+            originalXMLID = None
         )
     )
 
@@ -708,7 +712,8 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
                         startPosition = 31,
                         endPosition = 39,
                         attributes = Vector(StandoffTagIriAttributeV1(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink, value = zeitglöckleinIri)),
-                        uuid = UUID.randomUUID().toString
+                        uuid = UUID.randomUUID().toString,
+                        originalXMLID = None
                     )
                 ),
                 resource_reference = Set(zeitglöckleinIri)
@@ -783,7 +788,8 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
                             startPosition = 39,
                             endPosition = 47,
                             attributes = Vector(StandoffTagIriAttributeV1(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink, value = zeitglöckleinIri)),
-                            uuid = UUID.randomUUID().toString
+                            uuid = UUID.randomUUID().toString,
+                            originalXMLID = None
                         ),
                         StandoffTagV1(
                             dataType = Some(StandoffDataTypeClasses.StandoffLinkTag),
@@ -791,7 +797,8 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
                             startPosition = 0,
                             endPosition = 4,
                             attributes = Vector(StandoffTagIriAttributeV1(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink, value = zeitglöckleinIri)),
-                            uuid = UUID.randomUUID().toString
+                            uuid = UUID.randomUUID().toString,
+                            originalXMLID = None
                         )
                 ),
                 resource_reference = Set(zeitglöckleinIri)
@@ -862,7 +869,8 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
                         startPosition = 30,
                         endPosition = 38,
                         attributes = Vector(StandoffTagIriAttributeV1(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink, value = zeitglöckleinIri)),
-                        uuid = UUID.randomUUID().toString
+                        uuid = UUID.randomUUID().toString,
+                        originalXMLID = None
                     )
                 ),
                 resource_reference = Set(zeitglöckleinIri)
@@ -1059,7 +1067,8 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
                         startPosition = 45,
                         endPosition = 53,
                         attributes = Vector(StandoffTagIriAttributeV1(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink, value = zeitglöckleinIri)),
-                        uuid = UUID.randomUUID().toString
+                        uuid = UUID.randomUUID().toString,
+                        originalXMLID = None
                     )
                 ),
                 resource_reference = Set(zeitglöckleinIri)
