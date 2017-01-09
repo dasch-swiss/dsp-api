@@ -459,11 +459,9 @@ class ValueUtilV1(private val settings: SettingsImpl) {
                         if (valueProps.standoffAllPropertyEntities(propIri).predicates.get(OntologyConstants.KnoraBase.ObjectClassConstraint).isDefined) {
 
                             // it is a linking property
-
                             // check if it refers to a resource or a standoff node
 
-                            // TODO: find a better way to determine the type of the target (resource or standoff node)
-                            if (value.contains("/standoff/")) {
+                            if (valueProps.standoffAllPropertyEntities(propIri).isSubPropertyOf.contains(OntologyConstants.KnoraBase.StandoffTagHasInternalReference)) {
                                 // it refers to a standoff node, recreate the original id
 
                                 // get the UUID of the referred resource from its Iri

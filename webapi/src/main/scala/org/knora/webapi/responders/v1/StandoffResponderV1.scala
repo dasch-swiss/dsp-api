@@ -591,11 +591,10 @@ class StandoffResponderV1 extends ResponderV1 {
 
                         // property is an object property
 
-                        val propClassConstraint = standoffPropertyEntities(standoffTagPropIri).predicates(OntologyConstants.KnoraBase.ObjectClassConstraint)
-
-                        //println(standoffPropertyEntities(standoffTagPropIri).isSubPropertyOf)
-
-                        // TODO: check if the object class constraint is met
+                        // we expect a property of type http://www.knora.org/ontology/knora-base#standoffTagHasInternalReference
+                        if (!standoffPropertyEntities(standoffTagPropIri).isSubPropertyOf.contains(OntologyConstants.KnoraBase.StandoffTagHasInternalReference)) {
+                            throw BadRequestException(s"wrong type given for ${standoffTagPropIri}: a standoff object property is expected to be a subproperty of ${OntologyConstants.KnoraBase.StandoffTagHasInternalReference}")
+                        }
 
                         StandoffTagInternalReferenceAttributeV1(standoffPropertyIri = standoffTagPropIri, value = IDsToUUIDs.getOrElse(getTargetIDFromInternalReference(attr.value), throw BadRequestException(s"internal reference is invalid: ${attr.value}")))
 
@@ -646,6 +645,9 @@ class StandoffResponderV1 extends ResponderV1 {
 
         } else {
             // only system props are required
+
+            // TODO: check if there are superfluous attributes defined and throw an error if so
+
             Seq.empty[StandoffTagAttributeV1]
         }
 
