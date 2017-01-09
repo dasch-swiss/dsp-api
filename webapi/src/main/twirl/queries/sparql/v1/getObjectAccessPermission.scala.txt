@@ -28,8 +28,8 @@
  * @param valueIri the value's IRI.
  *@
 @(triplestore: String,
-  resourceIri: IRI,
-  valueIri: IRI
+  resourceIri: Option[IRI],
+  valueIri: Option[IRI]
   )
 
 prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -46,7 +46,7 @@ SELECT ?s ?p ?o
 WHERE {
 
     @if(resourceIri.nonEmpty) {
-        BIND(IRI("@resourceIri") AS ?s)
+        BIND(IRI("@resourceIri.get") AS ?s)
 
         ?s rdf:type ?resourceClass ;
            knora-base:isDeleted false .
@@ -59,7 +59,7 @@ WHERE {
     }
 
     @if(valueIri.nonEmpty) {
-        BIND(IRI("@valueIri") AS ?s)
+        BIND(IRI("@valueIri.get") AS ?s)
 
         ?s rdf:type ?valueClass ;
            knora-base:isDeleted false .

@@ -25,10 +25,10 @@ import akka.pattern._
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.ontologymessages.{Cardinality, EntityInfoGetRequestV1, EntityInfoGetResponseV1}
 import org.knora.webapi.messages.v1.responder.permissionmessages.DefaultObjectAccessPermissionsStringForPropertyGetV1
-import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoByIRIGetV1, ProjectInfoType, ProjectInfoV1}
+import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoByIRIGetV1, ProjectInfoV1}
 import org.knora.webapi.messages.v1.responder.resourcemessages._
 import org.knora.webapi.messages.v1.responder.sipimessages.{SipiConstants, SipiResponderConversionPathRequestV1, SipiResponderConversionRequestV1, SipiResponderConversionResponseV1}
-import org.knora.webapi.messages.v1.responder.usermessages.{UserProfileByIRIGetRequestV1, UserProfileV1}
+import org.knora.webapi.messages.v1.responder.usermessages.{UserProfileByIRIGetRequestV1, UserProfileType, UserProfileV1}
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v1.store.triplestoremessages._
 import org.knora.webapi.responders.ResourceLocker
@@ -87,7 +87,7 @@ class ValuesResponderV1 extends ResponderV1 {
             response <- maybeValueQueryResult match {
                 case Some(valueQueryResult) =>
                     for {
-                        valueOwnerProfile <- (responderManager ? UserProfileByIRIGetRequestV1(valueQueryResult.ownerIri)).mapTo[UserProfileV1]
+                        valueOwnerProfile <- (responderManager ? UserProfileByIRIGetRequestV1(valueQueryResult.ownerIri, UserProfileType.RESTRICTED)).mapTo[UserProfileV1]
                     } yield ValueGetResponseV1(
                         valuetype = valueQueryResult.value.valueTypeIri,
                         rights = valueQueryResult.permissionCode,
@@ -949,7 +949,6 @@ class ValuesResponderV1 extends ResponderV1 {
                 projectInfo <- {
                     responderManager ? ProjectInfoByIRIGetV1(
                         findResourceWithValueResult.projectIri,
-                        infoType = ProjectInfoType.FULL,
                         None
                     )
                 }.mapTo[ProjectInfoV1]
@@ -1054,7 +1053,6 @@ class ValuesResponderV1 extends ResponderV1 {
                         projectInfo <- {
                             responderManager ? ProjectInfoByIRIGetV1(
                                 findResourceWithValueResult.projectIri,
-                                infoType = ProjectInfoType.FULL,
                                 None
                             )
                         }.mapTo[ProjectInfoV1]
@@ -1110,7 +1108,6 @@ class ValuesResponderV1 extends ResponderV1 {
                         projectInfo <- {
                             responderManager ? ProjectInfoByIRIGetV1(
                                 findResourceWithValueResult.projectIri,
-                                infoType = ProjectInfoType.FULL,
                                 None
                             )
                         }.mapTo[ProjectInfoV1]
@@ -1292,7 +1289,7 @@ class ValuesResponderV1 extends ResponderV1 {
             linkValueResponse <- maybeValueQueryResult match {
                 case Some(valueQueryResult) =>
                     for {
-                        valueOwnerProfile <- (responderManager ? UserProfileByIRIGetRequestV1(valueQueryResult.ownerIri)).mapTo[UserProfileV1]
+                        valueOwnerProfile <- (responderManager ? UserProfileByIRIGetRequestV1(valueQueryResult.ownerIri, UserProfileType.RESTRICTED)).mapTo[UserProfileV1]
                     } yield ValueGetResponseV1(
                         valuetype = valueQueryResult.value.valueTypeIri,
                         rights = valueQueryResult.permissionCode,
@@ -1842,7 +1839,6 @@ class ValuesResponderV1 extends ResponderV1 {
             projectInfo <- {
                 responderManager ? ProjectInfoByIRIGetV1(
                     valueProject,
-                    infoType = ProjectInfoType.FULL,
                     None
                 )
             }.mapTo[ProjectInfoV1]
@@ -1925,7 +1921,6 @@ class ValuesResponderV1 extends ResponderV1 {
             projectInfo <- {
                 responderManager ? ProjectInfoByIRIGetV1(
                     valueProject,
-                    infoType = ProjectInfoType.FULL,
                     None
                 )
             }.mapTo[ProjectInfoV1]
@@ -2012,7 +2007,6 @@ class ValuesResponderV1 extends ResponderV1 {
             projectInfo <- {
                 responderManager ? ProjectInfoByIRIGetV1(
                     projectIri,
-                    infoType = ProjectInfoType.FULL,
                     None
                 )
             }.mapTo[ProjectInfoV1]
@@ -2139,7 +2133,6 @@ class ValuesResponderV1 extends ResponderV1 {
             projectInfo <- {
                 responderManager ? ProjectInfoByIRIGetV1(
                     projectIri,
-                    infoType = ProjectInfoType.FULL,
                     None
                 )
             }.mapTo[ProjectInfoV1]

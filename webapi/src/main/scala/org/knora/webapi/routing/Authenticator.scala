@@ -211,7 +211,7 @@ trait Authenticator {
     def getUserProfileV1(requestContext: RequestContext)(implicit system: ActorSystem, executionContext: ExecutionContext): UserProfileV1 = {
         val settings = Settings(system)
         if (settings.skipAuthentication) {
-            UserProfileV1(UserDataV1(settings.fallbackLanguage)).ofType(UserProfileType.SAFE)
+            UserProfileV1(UserDataV1(settings.fallbackLanguage)).ofType(UserProfileType.RESTRICTED)
         }
         else {
             // let us first try to get the user profile through the session id from the cookie
@@ -219,7 +219,7 @@ trait Authenticator {
                 case Some(userProfile) =>
                     log.debug(s"Got this UserProfileV1 through the session id: '${userProfile.toString}'")
                     /* we return the userProfileV1 without sensitive information */
-                    userProfile.ofType(UserProfileType.SAFE)
+                    userProfile.ofType(UserProfileType.RESTRICTED)
                 case None => {
                     log.debug("No cookie or valid session id, so let's look for supplied credentials")
                     extractCredentials(requestContext) match {
@@ -232,7 +232,7 @@ trait Authenticator {
                             val userProfileV1 = getUserProfileByUsername(u)
                             log.debug (s"I got a UserProfileV1 '${userProfileV1.toString}', which means that the password is a match")
                             /* we return the userProfileV1 without sensitive information */
-                            userProfileV1.ofType(UserProfileType.SAFE)
+                            userProfileV1.ofType(UserProfileType.RESTRICTED)
 
                         case None =>
                             log.debug("No credentials found, returning default UserProfileV1!")

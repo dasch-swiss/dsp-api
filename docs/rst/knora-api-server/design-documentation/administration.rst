@@ -194,7 +194,7 @@ The format of the object of ``knora-base:hasPermissions`` is as follows:
   - Each permission is represented by the name given above.
   - Each permission is followed by a space, then if applicable, by a comma separated list of IRIs, as defined above.
   - The IRIs of built-in values (e.g., built-in groups, resource classes, etc.) are shortened using the knora-base
-    prefix ``kb:``.
+    prefix ``knora-base:``.
   - Multiple permissions are separated by a vertical bar (|).
   
 For example, if an administrative permission grants the ``knora-base:ProjectMember`` group the permission to create
@@ -268,15 +268,15 @@ Example default object access permission instance:
           rdf:type knora-base:DefaultObjectAccessPermission ;
           knora-base:forProject <http://data.knora.org/projects/images> ;
           knora-base:forGroup knora-base:ProjectMember ;
-          knora-base:hasPermissions "CR kb:Creator|M kb:ProjectMember|V kb:KnownUser"^^xsd:string .
+          knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser"^^xsd:string .
 
 This instance is setting default object access permissions to the project member group of a project, giving change
 right permission to the creator, modify permission to all project members, and view permission to known users. Further,
 this **implicitly** applies to all resource classes and all their properties inside the project.
 
 
-Implicite Permissions
-----------------------
+Implicit Permissions
+---------------------
 
 The ``knora-base:SystemAdmin`` group receives implicitly the following permissions:
      
@@ -284,7 +284,7 @@ The ``knora-base:SystemAdmin`` group receives implicitly the following permissio
      - receives implicitly *ProjectResourceCreateAllPermission* for all projects.
      - receives implicitly *CR* on all objects from all projects.
      
-Theses permissions are backed into the system, and cannot be changed.
+Theses permissions are baked into the system, and cannot be changed.
 
 
 Permission Templates
@@ -473,8 +473,7 @@ the necessary information.
 
 Permission Class Hierarchy and Structure
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-The following graphs show the class hierarchy and the structure of each permission class. For space saving purposes we
-use 'kb:' or 'knora-base:' interchangeably where appropriate.
+The following graphs show the class hierarchy and the structure of each permission class.
 
 **Permission Class Hierarchy**
 
@@ -501,29 +500,29 @@ use 'kb:' or 'knora-base:' interchangeably where appropriate.
    digraph AdministrativePermissions {
      rankdir="LR"
      
-     ap [label="kb:AdministrativePermission"]
-     kp [label="kb:knoraProject"]
-     ug [label="kb:UserGroup"]
+     ap [label="knora-base:AdministrativePermission"]
+     kp [label="knora-base:knoraProject"]
+     ug [label="knora-base:UserGroup"]
      
-     ap -> kp [ label="kb:forProject" ]
-     ap -> ug [ label="kb:forGroup" ]
+     ap -> kp [ label="knora-base:forProject" ]
+     ap -> ug [ label="knora-base:forGroup" ]
      
-     ap -> "Administrative permissions compact format string" [ label="kb:hasPermissions" ]
+     ap -> "Administrative permissions compact format string" [ label="knora-base:hasPermissions" ]
    }
 
 and the same as RDF:
 ::
   
   <http://data.knora.org/permissions/[UUID]> rdf:type knora-base:AdministrativePermission ;
-       kb:forProject <http://data.knora.org/projects/[UUID]> ;
-       kb:forGroup <http://data.knora.org/groups/[UUID]> ; 
-       kb:hasPermissions "ProjectResourceCreateAllPermission|
-                          ProjectResourceCreateRestrictedPermission "<Resource Class IRI>"|
-                          ProjectAdminAllPermission|
-                          ProjectAdminGroupAllPermission|
-                          ProjectAdminGroupRestrictedPermission "<http://data.knora.org/groups/[UUID]>, <http://data.knora.org/groups/[UUID]>"|
-                          ProjectAdminRightsAllPermission|
-                          ProjectAdminOntologyAllPermission"^^xsd:string .
+       knora-base:forProject <http://data.knora.org/projects/[UUID]> ;
+       knora-base:forGroup <http://data.knora.org/groups/[UUID]> ; 
+       knora-base:hasPermissions "ProjectResourceCreateAllPermission|
+                                  ProjectResourceCreateRestrictedPermission "<Resource Class IRI>"|
+                                  ProjectAdminAllPermission|
+                                  ProjectAdminGroupAllPermission|
+                                  ProjectAdminGroupRestrictedPermission "<http://data.knora.org/groups/[UUID]>, <http://data.knora.org/groups/[UUID]>"|
+                                  ProjectAdminRightsAllPermission|
+                                  ProjectAdminOntologyAllPermission"^^xsd:string .
 
 
 **Default Object Access Permission Structure**:
@@ -533,18 +532,18 @@ and the same as RDF:
    digraph DefaultObjectAccessPermissions {
      rankdir="LR"
      
-     doap [label="kb:DefaultObjectAccessPermission"]
-     kp [label="kb:knoraProject"]
-     ug [label="kb:UserGroup"]
+     doap [label="knora-base:DefaultObjectAccessPermission"]
+     kp [label="knora-base:knoraProject"]
+     ug [label="knora-base:UserGroup"]
      rc [label="Resource Class Name"]
      pr [label="Resource Property Name"]
      
-     doap -> kp [ label="kb:forProject" ]
-     doap -> ug [ label="kb:forGroup" ]
-     doap -> rc [ label="kb:forResourceClass" ]
-     doap -> pr [ label="kb:forProperty" ]
+     doap -> kp [ label="knora-base:forProject" ]
+     doap -> ug [ label="knora-base:forGroup" ]
+     doap -> rc [ label="knora-base:forResourceClass" ]
+     doap -> pr [ label="knora-base:forProperty" ]
      
-     doap -> "Default object access permission compact format string" [ label="kb:hasPermissions"]
+     doap -> "Default object access permission compact format string" [ label="knora-base:hasPermissions"]
    }
 
 
@@ -552,15 +551,15 @@ and the same as RDF:
 ::
   
   <http://data.knora.org/permissions/[UUID]> rdf:type knora-base:DefaultObjectAccessPermission ;
-       kb:forProject <http://data.knora.org/projects/[UUID]> ;
-       kb:forGroup <http://data.knora.org/groups/[UUID]> ; 
-       kb:forResourceClass "Resource Class Name" ;
-       kb:forProperty "Resource Property Name" ; 
-       kb:hasPermissions "RV <http://data.knora.org/groups/[UUID]>|
-                           V <http://data.knora.org/groups/[UUID]>|
-                           M <http://data.knora.org/groups/[UUID]>|
-                           D <http://data.knora.org/groups/[UUID]>|
-                          CR <http://data.knora.org/groups/[UUID]>"^^xsd:string .
+       knora-base:forProject <http://data.knora.org/projects/[UUID]> ;
+       knora-base:forGroup <http://data.knora.org/groups/[UUID]> ; 
+       knora-base:forResourceClass "Resource Class Name" ;
+       knora-base:forProperty "Resource Property Name" ; 
+       knora-base:hasPermissions "RV <http://data.knora.org/groups/[UUID]>|
+                                   V <http://data.knora.org/groups/[UUID]>|
+                                   M <http://data.knora.org/groups/[UUID]>|
+                                   D <http://data.knora.org/groups/[UUID]>|
+                                  CR <http://data.knora.org/groups/[UUID]>"^^xsd:string .
 
 
 Querying Permission Instances
@@ -571,11 +570,11 @@ The properties **forProject** and either of **forGroup**, **forResourceClass**, 
 ResourceClass / Property combination, thus making it possible to extend or change the attached permissions.
 
 **Administrative Permission Instances**: For each group inside the project, there can be **zero** or **one** instance
-holding administrative permission information. Querying is strait forward by using the *knora-base:forProject* and
+holding administrative permission information. Querying is straitforward by using the *knora-base:forProject* and
 *knora-base:forGroup* properties as the compound key.
 
 **Default Object Access Permission Instances**: For each group, resource class, or property inside the project, there
-can be **zero** or **one** instances holding default object access permission informations. Querying is strait forward
+can be **zero** or **one** instances holding default object access permission informations. Querying is straitforward
 by using the *knora-base:forProject* and either *knora-base:forGroup*, *knora-base:forResourceClass*, or
 *knora-base:forProperty* properties as part of the compound key.
 
@@ -587,68 +586,68 @@ Example Data stored in the permissions graph
 ::
 
   <http://data.knora.org/permissions/[UUID]> rdf:type knora-base:AdministrativePermission ;
-       kb:forProject <http://data.knora.org/projects/images> ;
-       kb:forGroup knora-base:ProjectAdmin ;
-       kb:hasPermissions "ProjectResourceCreateAllPermission|
-                          ProjectAdminAllPermission"^^xsd:string .
+       knora-base:forProject <http://data.knora.org/projects/images> ;
+       knora-base:forGroup knora-base:ProjectAdmin ;
+       knora-base:hasPermissions "ProjectResourceCreateAllPermission|
+                                  ProjectAdminAllPermission"^^xsd:string .
 
 
 **Administrative permissions on a 'ProjectMember' group:**
 ::
 
   <http://data.knora.org/permissions/[UUID]> rdf:type knora-base:AdministrativePermission ;
-       kb:forProject <http://data.knora.org/projects/images> ;
-       kb:forGroup knora-base:ProjectMember ;
-       kb:hasPermission "ProjectResourceCreateAllPermission"^^xsd:string .
+       knora-base:forProject <http://data.knora.org/projects/images> ;
+       knora-base:forGroup knora-base:ProjectMember ;
+       knora-base:hasPermission "ProjectResourceCreateAllPermission"^^xsd:string .
 
 
 **Administrative permission restricting project admin permission on a group:**
 ::
 
   <http://data.knora.org/permissions/[UUID]> rdf:type knora-base:Permission ;
-       kb:forProject <http://data.knora.org/projects/[UUID]> ;
-       kb:forGroup <http://data.knora.org/groups/[UUID]> ;
-       kb:hasPermissions "ProjectGroupAdminRestrictedPermission <http://data.knora.org/groups/[UUID]>"^^xsd:string .
+       knora-base:forProject <http://data.knora.org/projects/[UUID]> ;
+       knora-base:forGroup <http://data.knora.org/groups/[UUID]> ;
+       knora-base:hasPermissions "ProjectGroupAdminRestrictedPermission <http://data.knora.org/groups/[UUID]>"^^xsd:string .
 
 
 **Administrative permission restricting resource creation for a group:**
 ::
 
   <http://data.knora.org/permissions/[UUID]> rdf:type knora-base:AdministrativePermission ;
-       kb:forProject <http://data.knora.org/projects/[UUID]> ;
-       kb:forGroup <http://data.knora.org/groups/[UUID]> ;
-       kb:hasPermissions "ProjectResourceCreateRestrictedPermission <http://www.knora.org/ontology/images#Person>"^^xsd:string .
+       knora-base:forProject <http://data.knora.org/projects/[UUID]> ;
+       knora-base:forGroup <http://data.knora.org/groups/[UUID]> ;
+       knora-base:hasPermissions "ProjectResourceCreateRestrictedPermission <http://www.knora.org/ontology/images#Person>"^^xsd:string .
 
 
 **Default object access permission on a 'ProjectMember' group:**
 ::
 
   <http://data.knora.org/permissions/[UUID]> rdf:type knora-base:DefaultObjectAccessPermission ;
-       kb:forProject <http://data.knora.org/projects/images> ;
-       kb:forGroup knora-base:ProjectMember ;
-       kb:hasPermissions "CR knora-base:Creator|
-                           M <http://data.knora.org/permissions/[UUID]>|
-                           V knora-base:KnownUser"^^xsd:string .
+       knora-base:forProject <http://data.knora.org/projects/images> ;
+       knora-base:forGroup knora-base:ProjectMember ;
+       knora-base:hasPermissions "CR knora-base:Creator|
+                                   M <http://data.knora.org/permissions/[UUID]>|
+                                   V knora-base:KnownUser"^^xsd:string .
 
 
 **Default object access permission on a resource class:**
 ::
 
   <http://data.knora.org/permissions/[UUID]> rdf:type knora-base:DefaultObjectAccessPermission ;
-       kb:forProject <http://data.knora.org/projects/[UUID]> ;
-       kb:forResourceClass <http://www.knora.org/ontology/images#person> ;
-       kb:hasPermissions "CR knora-base:Creator,knora-base:ProjectMember|
-                           V knora-base:KnownUser,knora-base:UnknownUser"^^xsd:string .
+       knora-base:forProject <http://data.knora.org/projects/[UUID]> ;
+       knora-base:forResourceClass <http://www.knora.org/ontology/images#person> ;
+       knora-base:hasPermissions "CR knora-base:Creator,knora-base:ProjectMember|
+                                   V knora-base:KnownUser,knora-base:UnknownUser"^^xsd:string .
 
 
 **Default object access permission on a resource property:**
 ::
 
   <http://data.knora.org/permissions/[UUID]> rdf:type knora-base:DefaultObjectAccessPermission ;
-       kb:forProject <http://data.knora.org/projects/[UUID]> ;
-       kb:forProperty <http://www.knora.org/ontology/images#lastname> ;
-       kb:hasPermissions "D knora-base:ProjectMember,knora-base:Creator|
-                          V knora-base:KnownUser,knora-base:UnknownUser"^^ .
+       knora-base:forProject <http://data.knora.org/projects/[UUID]> ;
+       knora-base:forProperty <http://www.knora.org/ontology/images#lastname> ;
+       knora-base:hasPermissions "D knora-base:ProjectMember,knora-base:Creator|
+                                  V knora-base:KnownUser,knora-base:UnknownUser"^^ .
        
        
        
@@ -656,11 +655,11 @@ Example Data stored in the permissions graph
 ::
 
   <http://data.knora.org/permissions/[UUID]> rdf:type knora-base:DefaultObjectAccessPermission ;
-       kb:forProject knora-base:SystemProject ;
-       kb:forProperty <http://www.knora.org/ontology/knora-base#hasStillImageFileValue> ;
-       kb:hasPermissions "RV knora-base:UnknownUser|
-                           V knora-base:KnownUser|
-                           M knora-base:ProjectMember,knora-base:Creator"^^xsd:string .
+       knora-base:forProject knora-base:SystemProject ;
+       knora-base:forProperty <http://www.knora.org/ontology/knora-base#hasStillImageFileValue> ;
+       knora-base:hasPermissions "RV knora-base:UnknownUser|
+                                   V knora-base:KnownUser|
+                                   M knora-base:ProjectMember,knora-base:Creator"^^xsd:string .
 
 
 A the time the user's ``UserProfile`` is queried, all permissions for all projects and groups the user is a member of

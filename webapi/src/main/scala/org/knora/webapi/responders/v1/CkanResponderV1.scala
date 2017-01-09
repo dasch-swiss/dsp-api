@@ -29,7 +29,7 @@ import org.knora.webapi
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.ckanmessages._
 import org.knora.webapi.messages.v1.responder.listmessages.{NodePathGetRequestV1, NodePathGetResponseV1}
-import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoByShortnameGetRequestV1, ProjectInfoResponseV1, ProjectInfoType, ProjectInfoV1}
+import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoByShortnameGetRequestV1, ProjectInfoResponseV1, ProjectInfoV1}
 import org.knora.webapi.messages.v1.responder.resourcemessages._
 import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
 import org.knora.webapi.messages.v1.responder.valuemessages.{DateValueV1, HierarchicalListValueV1, LinkV1, TextValueV1}
@@ -301,7 +301,7 @@ class CkanResponderV1 extends ResponderV1 {
         Future.sequence {
             for {
                 pName <- projectNames
-                projectInfoResponseFuture = (responderManager ? ProjectInfoByShortnameGetRequestV1(pName, ProjectInfoType.SHORT, Some(userProfile))).mapTo[ProjectInfoResponseV1]
+                projectInfoResponseFuture = (responderManager ? ProjectInfoByShortnameGetRequestV1(pName, Some(userProfile))).mapTo[ProjectInfoResponseV1]
                 result = projectInfoResponseFuture.map(_.project_info) map {
                     case pInfo => (pName, pInfo)
                 }

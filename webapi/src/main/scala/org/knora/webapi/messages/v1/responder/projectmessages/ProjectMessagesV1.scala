@@ -21,10 +21,9 @@
 package org.knora.webapi.messages.v1.responder.projectmessages
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoType.ProjectInfoType
+import org.knora.webapi.IRI
 import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1, UserV1JsonProtocol}
 import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
-import org.knora.webapi.{BadRequestException, IRI, InconsistentTriplestoreDataException}
 import spray.json.{DefaultJsonProtocol, JsonFormat, NullOptions, RootJsonFormat}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -72,10 +71,9 @@ sealed trait ProjectsResponderRequestV1 extends KnoraRequestV1
 /**
   * Get all information about all projects.
   *
-  * @param infoType is the type of the project information: full or short.
   * @param userProfile the profile of the user making the request.
   */
-case class ProjectsGetRequestV1(infoType: ProjectInfoType, userProfile: Option[UserProfileV1]) extends ProjectsResponderRequestV1
+case class ProjectsGetRequestV1(userProfile: Option[UserProfileV1]) extends ProjectsResponderRequestV1
 
 
 /**
@@ -89,29 +87,26 @@ case class ProjectsNamedGraphGetV1(userProfile: UserProfileV1) extends ProjectsR
   * Get info about a single project identified through it's IRI. The response is in form of [[ProjectInfoResponseV1]].
   *
   * @param iri the IRI of the project.
-  * @param infoType the type of the project information: full or short.
   * @param userProfileV1 the profile of the user making the request (optional).
   */
-case class ProjectInfoByIRIGetRequestV1(iri: IRI, infoType: ProjectInfoType, userProfileV1: Option[UserProfileV1]) extends ProjectsResponderRequestV1
+case class ProjectInfoByIRIGetRequestV1(iri: IRI, userProfileV1: Option[UserProfileV1]) extends ProjectsResponderRequestV1
 
 /**
   *Get info about a single project identified through it's IRI. The response is in form of [[ProjectInfoV1]].
   *
   * @param iri the IRI of the project.
-  * @param infoType the type of the project information: full or short.
   * @param userProfileV1 the profile of the user making the request (optional).
   */
-case class ProjectInfoByIRIGetV1(iri: IRI, infoType: ProjectInfoType, userProfileV1: Option[UserProfileV1]) extends ProjectsResponderRequestV1
+case class ProjectInfoByIRIGetV1(iri: IRI, userProfileV1: Option[UserProfileV1]) extends ProjectsResponderRequestV1
 
 
 /**
   * Find everything about a single project identified through it's shortname.
   *
   * @param shortname of the project.
-  * @param infoType is the type of the project information.
   * @param userProfileV1 the profile of the user making the request.
   */
-case class ProjectInfoByShortnameGetRequestV1(shortname: String, infoType: ProjectInfoType, userProfileV1: Option[UserProfileV1]) extends ProjectsResponderRequestV1
+case class ProjectInfoByShortnameGetRequestV1(shortname: String, userProfileV1: Option[UserProfileV1]) extends ProjectsResponderRequestV1
 
 /**
   * Requests the cration of a new project.
@@ -179,72 +174,7 @@ case class ProjectInfoV1(id: IRI,
                          dataNamedGraph: IRI,
                          isActiveProject: Boolean,
                          hasSelfJoinEnabled: Boolean
-                        ) {
-
-    def ofType(projectInfoType: ProjectInfoType): ProjectInfoV1 = {
-
-        projectInfoType match {
-            case ProjectInfoType.FULL => {
-                ProjectInfoV1(
-                    id = id,
-                    shortname = shortname,
-                    longname = longname,
-                    description = description,
-                    keywords = keywords,
-                    logo = logo,
-                    basepath = basepath,
-                    belongsToInstitution = belongsToInstitution,
-                    ontologyNamedGraph = ontologyNamedGraph,
-                    dataNamedGraph = dataNamedGraph,
-                    isActiveProject = isActiveProject,
-                    hasSelfJoinEnabled = hasSelfJoinEnabled
-                )
-            }
-            case ProjectInfoType.SHORT => {
-                ProjectInfoV1(
-                    id = id,
-                    shortname = shortname,
-                    longname = longname,
-                    description = description,
-                    keywords = None, // removed
-                    belongsToInstitution = None, //removed
-                    logo = None, //removed
-                    basepath = basepath,
-                    ontologyNamedGraph = ontologyNamedGraph,
-                    dataNamedGraph = dataNamedGraph,
-                    isActiveProject = isActiveProject,
-                    hasSelfJoinEnabled = hasSelfJoinEnabled
-                )
-            }
-            case _ => throw BadRequestException(s"The requested projectInfoType: $projectInfoType is invalid.")
-        }
-    }
-}
-
-object ProjectInfoType extends Enumeration {
-
-    type ProjectInfoType = Value
-
-    val SHORT = Value(0, "short")
-    val FULL = Value(1, "full")
-
-    val valueMap: Map[String, Value] = values.map(v => (v.toString, v)).toMap
-
-    /**
-      * Given the name of a value in this enumeration, returns the value. If the value is not found, throws an
-      * [[InconsistentTriplestoreDataException]].
-      *
-      * @param name the name of the value.
-      * @return the requested value.
-      */
-    def lookup(name: String): Value = {
-        valueMap.get(name) match {
-            case Some(value) => value
-            case None => throw InconsistentTriplestoreDataException(s"Project info type not supported: $name")
-        }
-    }
-}
-
+                        )
 
 case class NewProjectDataV1(shortname: String,
                             longname: String,

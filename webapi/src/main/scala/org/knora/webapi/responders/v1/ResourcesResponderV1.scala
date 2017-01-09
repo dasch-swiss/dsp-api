@@ -1445,7 +1445,6 @@ class ResourcesResponderV1 extends ResponderV1 {
             projectInfo <- {
                 responderManager ? ProjectInfoByIRIGetRequestV1(
                     projectIri,
-                    infoType = ProjectInfoType.FULL,
                     Some(userProfile)
                 )
             }.mapTo[ProjectInfoResponseV1]
@@ -1528,7 +1527,6 @@ class ResourcesResponderV1 extends ResponderV1 {
                 projectInfo <- {
                     responderManager ? ProjectInfoByIRIGetV1(
                         resourceInfo.project_id,
-                        infoType = ProjectInfoType.FULL,
                         None
                     )
                 }.mapTo[ProjectInfoV1]
@@ -1629,7 +1627,6 @@ class ResourcesResponderV1 extends ResponderV1 {
                 projectInfo <- {
                     responderManager ? ProjectInfoByIRIGetV1(
                         resourceInfo.project_id,
-                        infoType = ProjectInfoType.FULL,
                         None
                     )
                 }.mapTo[ProjectInfoV1]

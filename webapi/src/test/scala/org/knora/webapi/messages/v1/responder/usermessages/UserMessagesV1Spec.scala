@@ -72,11 +72,11 @@ class UserMessagesV1Spec extends WordSpecLike with Matchers {
                     ),
                 groups = groups,
                 projects = projects,
-                permissionData = permissionData.ofType(PermissionDataType.SAFE),
+                permissionData = permissionData.ofType(PermissionDataType.RESTRICTED),
                 sessionId = sessionId
             )
 
-            assert(rootUserProfileV1.ofType(UserProfileType.SAFE) === rootUserProfileV1Safe)
+            assert(rootUserProfileV1.ofType(UserProfileType.RESTRICTED) === rootUserProfileV1Safe)
         }
         "allow checking the password (1)" in {
             val hp = BCrypt.hashpw("123456", BCrypt.gensalt())

@@ -610,8 +610,6 @@ class OntologyResponderV1 extends ResponderV1 {
       */
     private def getNamedGraphs(userProfile: UserProfileV1): Future[NamedGraphsResponseV1] = {
 
-        // FIXME: Get this information from the ProjectsResponder instead of application.conf
-
         for {
             projectsNamedGraph <- (responderManager ? ProjectsNamedGraphGetV1(userProfile)).mapTo[Seq[NamedGraphV1]]
 
@@ -620,21 +618,6 @@ class OntologyResponderV1 extends ResponderV1 {
                 userdata = userProfile.userData
             )
         } yield response
-
-        /*
-        val namedGraphs: Vector[NamedGraphV1] = settings.namedGraphs.filter(_.visibleInGUI).map {
-            (namedGraph: ProjectNamedGraphs) =>
-                NamedGraphV1(
-                    id = namedGraph.ontology,
-                    shortname = namedGraph.name,
-                    longname = namedGraph.name,
-                    description = namedGraph.name,
-                    project_id = namedGraph.project,
-                    uri = namedGraph.ontology,
-                    active = false
-                )
-        }
-        */
     }
 
     /**

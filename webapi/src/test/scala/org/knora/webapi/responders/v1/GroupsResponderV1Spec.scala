@@ -53,14 +53,9 @@ class GroupsResponderV1Spec extends CoreSpec(GroupsResponderV1Spec.config) with 
     implicit val executionContext = system.dispatcher
     private val timeout = 5.seconds
 
-    val imageReviewerFullGroupInfo = SharedAdminTestData.imageReviewerGroupInfo
-    val imageReviewerSafeGroupInfo = SharedAdminTestData.imageReviewerGroupInfo.ofType(GroupInfoType.SAFE)
-
-    val imagesProjectAdminFullGroupInfo = SharedAdminTestData.imagesProjectAdminGroupInfo
-    val imagesProjectAdminSafeGroupInfo = SharedAdminTestData.imagesProjectAdminGroupInfo.ofType(GroupInfoType.SAFE)
-
-    val imagesProjectMemberFullGroupInfo = SharedAdminTestData.imagesProjectMemberGroupInfo
-    val imagesProjectMemberSafeGroupInfo = SharedAdminTestData.imagesProjectMemberGroupInfo.ofType(GroupInfoType.SAFE)
+    val imageReviewerGroupInfo = SharedAdminTestData.imageReviewerGroupInfo
+    val imagesProjectAdminGroupInfo = SharedAdminTestData.imagesProjectAdminGroupInfo
+    val imagesProjectMemberGroupInfo = SharedAdminTestData.imagesProjectMemberGroupInfo
 
     val rootUserProfileV1 = SharedAdminTestData.rootUser
 
@@ -80,35 +75,27 @@ class GroupsResponderV1Spec extends CoreSpec(GroupsResponderV1Spec.config) with 
 
     "The GroupsResponder " when {
         "asked about a group identified by 'iri' " should {
-            "return full group info if the group is known " in {
-                actorUnderTest ! GroupInfoByIRIGetRequest(imageReviewerFullGroupInfo.id, GroupInfoType.FULL, Some(rootUserProfileV1))
-                expectMsg(GroupInfoResponseV1(imageReviewerFullGroupInfo, Some(rootUserProfileV1.userData)))
-            }
-            "return short group info if the group is known " in {
-                actorUnderTest ! GroupInfoByIRIGetRequest(imageReviewerSafeGroupInfo.id, GroupInfoType.SAFE, Some(rootUserProfileV1))
-                expectMsg(GroupInfoResponseV1(imageReviewerSafeGroupInfo, Some(rootUserProfileV1.userData)))
+            "return group info if the group is known " in {
+                actorUnderTest ! GroupInfoByIRIGetRequest(imageReviewerGroupInfo.id, Some(rootUserProfileV1))
+                expectMsg(GroupInfoResponseV1(imageReviewerGroupInfo, Some(rootUserProfileV1.userData)))
             }
             "return 'NotFoundException' when the group is unknown " in {
-                actorUnderTest ! GroupInfoByIRIGetRequest("http://data.knora.org/groups/notexisting", GroupInfoType.FULL, Some(rootUserProfileV1))
+                actorUnderTest ! GroupInfoByIRIGetRequest("http://data.knora.org/groups/notexisting", Some(rootUserProfileV1))
                 expectMsg(Failure(NotFoundException(s"For the given group iri 'http://data.knora.org/groups/notexisting' no information was found")))
             }
         }
         "asked about a group identified by 'name' " should {
-            "return full group info if the group is known " in {
-                actorUnderTest ! GroupInfoByNameGetRequest(imagesProjectAdminFullGroupInfo.belongsToProject, imagesProjectAdminFullGroupInfo.name, GroupInfoType.FULL, Some(rootUserProfileV1))
-                expectMsg(GroupInfoResponseV1(imagesProjectAdminFullGroupInfo, Some(rootUserProfileV1.userData)))
-            }
-            "return short group info if the group is known " in {
-                actorUnderTest ! GroupInfoByNameGetRequest(imagesProjectMemberSafeGroupInfo.belongsToProject, imagesProjectMemberSafeGroupInfo.name, GroupInfoType.SAFE, Some(rootUserProfileV1))
-                expectMsg(GroupInfoResponseV1(imagesProjectMemberSafeGroupInfo, Some(rootUserProfileV1.userData)))
+            "return group info if the group is known " in {
+                actorUnderTest ! GroupInfoByNameGetRequest(imagesProjectAdminGroupInfo.belongsToProject, imagesProjectAdminGroupInfo.name, Some(rootUserProfileV1))
+                expectMsg(GroupInfoResponseV1(imagesProjectAdminGroupInfo, Some(rootUserProfileV1.userData)))
             }
             "return 'NotFoundException' when the group is unknown " in {
-                actorUnderTest ! GroupInfoByNameGetRequest(imagesProjectMemberFullGroupInfo.belongsToProject,"groupwrong", GroupInfoType.FULL, Some(rootUserProfileV1))
+                actorUnderTest ! GroupInfoByNameGetRequest(imagesProjectMemberGroupInfo.belongsToProject, "groupwrong", Some(rootUserProfileV1))
                 expectMsg(Failure(NotFoundException(s"For the given group name 'groupwrong' no information was found")))
             }
         }
         "asked to create a new group " should {
-            "create the group and return the group's full info if the supplied group name is unique " in {
+            "create the group and return the group's info if the supplied group name is unique " in {
                 actorUnderTest ! GroupCreateRequestV1(
                     NewGroupInfoV1("NewGroup", Some("NewGroupDescription"), "http://data.knora.org/projects/images", true, false),
                     SharedAdminTestData.imagesUser01,

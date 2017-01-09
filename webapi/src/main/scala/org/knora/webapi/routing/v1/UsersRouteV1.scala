@@ -47,16 +47,11 @@ object UsersRouteV1 extends Authenticator {
         implicit val timeout = settings.defaultTimeout
         val responderManager = system.actorSelection("/user/responderManager")
 
-        path("v1" / "users" / Segment) { value =>
+        path("v1" / "users" / "iri" / Segment) {value =>
             get {
                 requestContext =>
-                    val requestMessage = if (urlValidator.isValid(value)) {
-                        /* valid URL */
-                        UserProfileByIRIGetRequestV1(value, UserProfileType.SAFE)
-                    } else {
-                        /* not valid URL so I assume it is an username */
-                        UserProfileByUsernameGetRequestV1(value, UserProfileType.SAFE)
-                    }
+                    val userIri = InputValidation.toIri(value, () => throw BadRequestException(s"Invalid user IRI $value"))
+                    val requestMessage = UserProfileByIRIGetRequestV1(userIri, UserProfileType.RESTRICTED)
                     RouteUtilV1.runJsonRoute(
                         requestMessage,
                         requestContext,
@@ -64,7 +59,23 @@ object UsersRouteV1 extends Authenticator {
                         responderManager,
                         log
                     )
-            } ~ post {
+            }
+        } ~
+        path("v1" / "users" / "username" / Segment) {value =>
+            get {
+                requestContext =>
+                    val requestMessage = UserProfileByUsernameGetRequestV1(value, UserProfileType.RESTRICTED)
+                    RouteUtilV1.runJsonRoute(
+                        requestMessage,
+                        requestContext,
+                        settings,
+                        responderManager,
+                        log
+                    )
+            }
+        } ~
+        path("v1" / "users" / Segment) { value =>
+            post {
                 /* create a new user */
                 entity(as[CreateUserApiRequestV1]) { apiRequest => requestContext =>
                     val userProfile = getUserProfileV1(requestContext)

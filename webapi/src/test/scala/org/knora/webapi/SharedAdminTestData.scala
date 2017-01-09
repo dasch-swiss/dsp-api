@@ -20,7 +20,7 @@
 
 package org.knora.webapi
 
-import org.knora.webapi.messages.v1.responder.groupmessages.{GroupInfoV1, GroupPermissionV1}
+import org.knora.webapi.messages.v1.responder.groupmessages.{GroupInfoV1}
 import org.knora.webapi.messages.v1.responder.permissionmessages.{PermissionDataV1, PermissionV1}
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1
 import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
@@ -276,8 +276,7 @@ object SharedAdminTestData {
         description = Some("Default Project Admin Group"),
         belongsToProject = "http://data.knora.org/projects/images",
         isActiveGroup = true,
-        hasSelfJoinEnabled = false,
-        hasPermissions = Vector.empty[GroupPermissionV1]
+        hasSelfJoinEnabled = false
     )
 
     /* represents the full GroupInfoV1 of the images ProjectMember group */
@@ -287,8 +286,7 @@ object SharedAdminTestData {
         description = Some("Default Project Member Group"),
         belongsToProject = "http://data.knora.org/projects/images",
         isActiveGroup = true,
-        hasSelfJoinEnabled = false,
-        hasPermissions = Vector.empty[GroupPermissionV1]
+        hasSelfJoinEnabled = false
     )
 
     /* represents the full GroupInfoV1 of the images project reviewer group */
@@ -298,8 +296,7 @@ object SharedAdminTestData {
         description = Some("A group for image reviewers."),
         belongsToProject = "http://data.knora.org/projects/images",
         isActiveGroup = true,
-        hasSelfJoinEnabled = false,
-        hasPermissions = Vector.empty[GroupPermissionV1]
+        hasSelfJoinEnabled = false
     )
 
 

@@ -26,9 +26,10 @@ import akka.event.LoggingAdapter
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import org.apache.commons.validator.routines.UrlValidator
-import org.knora.webapi.SettingsImpl
+import org.knora.webapi.{BadRequestException, SettingsImpl}
 import org.knora.webapi.messages.v1.responder.projectmessages._
 import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
+import org.knora.webapi.util.InputValidation
 
 object ProjectsRouteV1 extends Authenticator {
 
@@ -47,9 +48,7 @@ object ProjectsRouteV1 extends Authenticator {
                 requestContext =>
                     val userProfile = getUserProfileV1(requestContext)
                     val params = requestContext.request.uri.query().toMap
-                    val infoType = params.getOrElse("infoType", ProjectInfoType.SHORT.toString)
-                    val requestMessage = ProjectsGetRequestV1(ProjectInfoType.lookup(infoType), Some(userProfile))
-
+                    val requestMessage = ProjectsGetRequestV1(Some(userProfile))
                     RouteUtilV1.runJsonRoute(
                         requestMessage,
                         requestContext,
@@ -58,20 +57,28 @@ object ProjectsRouteV1 extends Authenticator {
                         log
                     )
             }
-        } ~ path("v1" / "projects" / Segment) { value =>
+        } ~ path("v1" / "projects" / "iri" / Segment) { value =>
+            get {
+                parameters("reqtype".?) { reqtypeParam => requestContext =>
+                    val projectIri = InputValidation.toIri(value, () => throw BadRequestException(s"Invalid user IRI $value"))
+                    val userProfile = getUserProfileV1(requestContext)
+                    val params = requestContext.request.uri.query().toMap
+                    val requestMessage = ProjectInfoByIRIGetRequestV1(projectIri, Some(userProfile))
+                    RouteUtilV1.runJsonRoute(
+                        requestMessage,
+                        requestContext,
+                        settings,
+                        responderManager,
+                        log
+                    )
+                }
+            }
+        } ~ path("v1" / "projects" / "shortname" / Segment) { value =>
             get {
                 parameters("reqtype".?) { reqtypeParam => requestContext =>
                     val userProfile = getUserProfileV1(requestContext)
                     val params = requestContext.request.uri.query().toMap
-                    val requestType = params.getOrElse("infoType", ProjectInfoType.SHORT.toString)
-                    val requestMessage = if (urlValidator.isValid(value)) {
-                        /* valid URL */
-                        ProjectInfoByIRIGetRequestV1(value, ProjectInfoType.lookup(requestType), Some(userProfile))
-                    } else {
-                        /* not valid URL so I assume it is a project's shortname */
-                        ProjectInfoByShortnameGetRequestV1(value, ProjectInfoType.lookup(requestType), Some(userProfile))
-                    }
-
+                    val requestMessage = ProjectInfoByShortnameGetRequestV1(value, Some(userProfile))
                     RouteUtilV1.runJsonRoute(
                         requestMessage,
                         requestContext,

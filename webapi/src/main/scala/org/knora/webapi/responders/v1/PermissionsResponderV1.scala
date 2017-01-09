@@ -19,8 +19,7 @@ package org.knora.webapi.responders.v1
 import akka.actor.Status
 import akka.pattern._
 import org.knora.webapi._
-import org.knora.webapi.messages.v1.responder.groupmessages.{GroupInfoByIRIGetRequest, GroupInfoResponseV1, GroupInfoType}
-import org.knora.webapi.messages.v1.responder.permissionmessages.PermissionType.PermissionType
+import org.knora.webapi.messages.v1.responder.groupmessages.{GroupInfoByIRIGetRequest, GroupInfoResponseV1}
 import org.knora.webapi.messages.v1.responder.permissionmessages.{AdministrativePermissionForProjectGroupGetResponseV1, AdministrativePermissionV1, DefaultObjectAccessPermissionGetResponseV1, DefaultObjectAccessPermissionV1, PermissionType, _}
 import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.messages.v1.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
@@ -63,7 +62,7 @@ class PermissionsResponderV1 extends ResponderV1 {
         //case DefaultObjectAccessPermissionCreateRequestV1(newDefaultObjectAccessPermissionV1, userProfileV1) => future2Message(sender(), createDefaultObjectAccessPermissionV1(newDefaultObjectAccessPermissionV1, userProfileV1), log)
         //case DefaultObjectAccessPermissionDeleteRequestV1(defaultObjectAccessPermissionIri, userProfileV1) => future2Message(sender(), deleteDefaultObjectAccessPermissionV1(defaultObjectAccessPermissionIri, userProfileV1), log)
         //case TemplatePermissionsCreateRequestV1(projectIri, permissionsTemplate, userProfileV1) => future2Message(sender(), templatePermissionsCreateRequestV1(projectIri, permissionsTemplate, userProfileV1), log)
-        case other => sender ! Status.Failure(UnexpectedMessageException(s"Unexpected message $other of type ${other.getClass.getCanonicalName}"))
+        case other => handleUnexpectedMessage(sender(), other, log)
     }
 
 
@@ -99,7 +98,7 @@ class PermissionsResponderV1 extends ResponderV1 {
                 groupIris.map {
                     groupIri => {
                         val resFuture = for {
-                            groupInfo <- (responderManager ? GroupInfoByIRIGetRequest(groupIri, GroupInfoType.SAFE, None)).mapTo[GroupInfoResponseV1]
+                            groupInfo <- (responderManager ? GroupInfoByIRIGetRequest(groupIri, None)).mapTo[GroupInfoResponseV1]
                             res = (groupInfo.group_info.belongsToProject, groupIri)
                         } yield res
                         Await.result(resFuture, 1.seconds)
@@ -168,7 +167,6 @@ class PermissionsResponderV1 extends ResponderV1 {
 
             /* construct the permission profile from the different parts */
             result = PermissionDataV1(
-                //projectInfos = projectInfos,
                 groupsPerProject = groupsPerProject,
                 administrativePermissionsPerProject = administrativePermissionsPerProject,
                 defaultObjectAccessPermissionsPerProject = defaultObjectAccessPermissionsPerProject
@@ -273,7 +271,7 @@ class PermissionsResponderV1 extends ResponderV1 {
       */
     private def administrativePermissionsForProjectGetRequestV1(projectIRI: IRI, userProfileV1: UserProfileV1): Future[AdministrativePermissionsForProjectGetResponseV1] = {
 
-        // FIXME: Check user's permission for operation
+        // FIXME: Check user's permission for operation (issue #370)
 
         for {
             sparqlQueryString <- Future(queries.sparql.v1.txt.getAdministrativePermissionsForProject(
@@ -319,7 +317,7 @@ class PermissionsResponderV1 extends ResponderV1 {
       */
     def administrativePermissionForIriGetRequestV1(administrativePermissionIRI: IRI, userProfileV1: UserProfileV1): Future[AdministrativePermissionForIriGetResponseV1] = {
 
-        // FIXME: Check user's permission for operation
+        // FIXME: Check user's permission for operation (issue #370)
 
         for {
             sparqlQueryString <- Future(queries.sparql.v1.txt.getAdministrativePermissionByIRI(
@@ -415,7 +413,7 @@ class PermissionsResponderV1 extends ResponderV1 {
       */
     private def administrativePermissionForProjectGroupGetRequestV1(projectIRI: IRI, groupIRI: IRI, userProfile: UserProfileV1): Future[AdministrativePermissionForProjectGroupGetResponseV1] = {
 
-        // FIXME: Check user's permission for operation
+        // FIXME: Check user's permission for operation (issue #370)
 
         for {
             ap <- administrativePermissionForProjectGroupGetV1(projectIRI, groupIRI)
@@ -435,7 +433,7 @@ class PermissionsResponderV1 extends ResponderV1 {
     private def administrativePermissionCreateRequestV1(newAdministrativePermissionV1: NewAdministrativePermissionV1, userProfileV1: UserProfileV1): Future[AdministrativePermissionCreateResponseV1] = {
         //log.debug("administrativePermissionCreateRequestV1")
 
-        // FIXME: Check user's permission for operation
+        // FIXME: Check user's permission for operation (issue #370)
 
         for {
             a <- Future("")
@@ -479,8 +477,8 @@ class PermissionsResponderV1 extends ResponderV1 {
         for {
             sparqlQueryString <- Future(queries.sparql.v1.txt.getObjectAccessPermission(
                 triplestore = settings.triplestoreType,
-                resourceIri = resourceIri,
-                valueIri = ""
+                resourceIri = Some(resourceIri),
+                valueIri = None
             ).toString())
             //_ = log.debug(s"getObjectAccessPermission - query: $sparqlQueryString")
 
@@ -521,8 +519,8 @@ class PermissionsResponderV1 extends ResponderV1 {
         for {
             sparqlQueryString <- Future(queries.sparql.v1.txt.getObjectAccessPermission(
                 triplestore = settings.triplestoreType,
-                resourceIri = "",
-                valueIri = valueIri
+                resourceIri = None,
+                valueIri = Some(valueIri)
             ).toString())
             //_ = log.debug(s"getObjectAccessPermission - query: $sparqlQueryString")
 
@@ -566,7 +564,7 @@ class PermissionsResponderV1 extends ResponderV1 {
       */
     private def defaultObjectAccessPermissionsForProjectGetRequestV1(projectIRI: IRI, userProfile: UserProfileV1): Future[DefaultObjectAccessPermissionsForProjectGetResponseV1] = {
 
-        // FIXME: Check user's permission for operation
+        // FIXME: Check user's permission for operation (issue #370)
 
         for {
             sparqlQueryString <- Future(queries.sparql.v1.txt.getDefaultObjectAccessPermissionsForProject(
@@ -613,7 +611,7 @@ class PermissionsResponderV1 extends ResponderV1 {
       */
     private def defaultObjectAccessPermissionForIriGetRequestV1(permissionIri: IRI, userProfileV1: UserProfileV1): Future[DefaultObjectAccessPermissionForIriGetResponseV1] = {
 
-        // FIXME: Check user's permission for operation
+        // FIXME: Check user's permission for operation (issue #370)
 
         for {
             sparqlQueryString <- Future(queries.sparql.v1.txt.getDefaultObjectAccessPermissionByIRI(
@@ -665,13 +663,13 @@ class PermissionsResponderV1 extends ResponderV1 {
             parametersSupplied = List(groupIRI, resourceClassIRI, propertyIRI).flatten.size
             _ = if (parametersSupplied != 1) throw BadRequestException("Either groupIri or resourceClassIri or propertyTypeIri can be supplied")
 
-            sparqlQueryString <- Future(queries.sparql.v1.txt.getDefaultObjectAccessPermission(
+            sparqlQueryString = queries.sparql.v1.txt.getDefaultObjectAccessPermission(
                 triplestore = settings.triplestoreType,
                 projectIri = projectIRI,
                 groupIri = groupIRI.getOrElse(""),
                 resourceClassIri = resourceClassIRI.getOrElse(""),
                 propertyIri = propertyIRI.getOrElse("")
-            ).toString())
+            ).toString()
             //_ = log.debug(s"defaultObjectAccessPermissionForProjectGroupGetV1 - query: $sparqlQueryString")
 
             permissionQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResponse]
@@ -717,7 +715,7 @@ class PermissionsResponderV1 extends ResponderV1 {
       */
     def defaultObjectAccessPermissionGetRequestV1(projectIRI: IRI, groupIRI: Option[IRI], resourceClassIri: Option[IRI], propertyIri: Option[IRI], userProfile: UserProfileV1): Future[DefaultObjectAccessPermissionGetResponseV1] = {
 
-        // FIXME: Check user's permission for operation
+        // FIXME: Check user's permission for operation (issue #370)
 
         defaultObjectAccessPermissionGetV1(projectIRI, groupIRI, resourceClassIri, propertyIri)
                 .mapTo[Option[DefaultObjectAccessPermissionV1]]

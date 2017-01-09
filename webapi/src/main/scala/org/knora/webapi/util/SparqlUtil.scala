@@ -16,13 +16,17 @@
 
 package org.knora.webapi.util
 
+import com.sun.xml.internal.bind.v2.TODO
+
 /**
   * Utility functions for converting to SPARQL literal strings.
   */
 object SparqlUtil {
 
+    // TODO: Refactor so Any is not used (issue #371)
+
     /**
-      * Converts any given value of any type to a SPARQL literal string.
+      * Converts the value of any type to a SPARQL literal string.
       * @param value the value to be converted.
       * @return a string containing the SPARQL literal.
       */
@@ -35,6 +39,33 @@ object SparqlUtil {
             }
             case value: String if value.nonEmpty => "\"" + value.asInstanceOf[String] + "\"^^xsd:string"
             case value: String if value.isEmpty => ""
+        }
+    }
+
+    /**
+      * Converts a string to a SPARQL literal string.
+      * @param value the value to be converted.
+      * @return a string containing the SPARQL literal.
+      */
+    def string2SparqlLiteral(value: String): String = {
+        value match {
+            case value: String if value.nonEmpty => "\"" + value.asInstanceOf[String] + "\"^^xsd:string"
+            case value: String if value.isEmpty => ""
+        }
+    }
+
+    /**
+      * Converts a boolean to a SPARQL literal string.
+      * @param value the value to be converted.
+      * @return a string containing the SPARQL literal.
+      */
+    def boolean2SparqlLiteral(value: Boolean): String = {
+        value match {
+            case value: Boolean => if (value.asInstanceOf[Boolean]) {
+                "\"true\"^^xsd:boolean"
+            } else {
+                "\"false\"^^xsd:boolean"
+            }
         }
     }
 }

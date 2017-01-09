@@ -20,11 +20,10 @@ import java.util.UUID
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi
+import org.knora.webapi.IRI
 import org.knora.webapi.messages.v1.responder._
-import org.knora.webapi.messages.v1.responder.groupmessages.GroupInfoType.GroupInfoType
 import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1, UserV1JsonProtocol}
 import org.knora.webapi.responders.v1.GroupsResponderV1
-import org.knora.webapi.{BadRequestException, IRI, InconsistentTriplestoreDataException}
 import spray.json.{DefaultJsonProtocol, JsonFormat, NullOptions, RootJsonFormat}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -70,20 +69,18 @@ sealed trait GroupsResponderRequestV1 extends KnoraRequestV1
 /**
   * Get all information about all groups.
   *
-  * @param infoType is the type of the group information: full or short.
   * @param userProfile the profile of the user making the request.
   */
-case class GroupsGetRequestV1(infoType: GroupInfoType, userProfile: Option[UserProfileV1]) extends GroupsResponderRequestV1
+case class GroupsGetRequestV1(userProfile: Option[UserProfileV1]) extends GroupsResponderRequestV1
 
 
 /**
   * Get everything about a single group identified through it's IRI.
   *
   * @param iri Iri of the group.
-  * @param infoType is the type of the group information: full or short.
   * @param userProfileV1 the profile of the user making the request.
   */
-case class GroupInfoByIRIGetRequest(iri: IRI, infoType: GroupInfoType.Value, userProfileV1: Option[UserProfileV1]) extends GroupsResponderRequestV1
+case class GroupInfoByIRIGetRequest(iri: IRI, userProfileV1: Option[UserProfileV1]) extends GroupsResponderRequestV1
 
 
 /**
@@ -92,10 +89,9 @@ case class GroupInfoByIRIGetRequest(iri: IRI, infoType: GroupInfoType.Value, use
   *
   * @param projectIri the IRI of the project the group is part of.
   * @param groupName the name of the group.
-  * @param infoType is the type of the project information.
   * @param userProfileV1 the profile of the user making the request.
   */
-case class GroupInfoByNameGetRequest(projectIri: IRI, groupName: String, infoType: GroupInfoType.Value, userProfileV1: Option[UserProfileV1]) extends GroupsResponderRequestV1
+case class GroupInfoByNameGetRequest(projectIri: IRI, groupName: String, userProfileV1: Option[UserProfileV1]) extends GroupsResponderRequestV1
 
 
 /**
@@ -176,7 +172,6 @@ case class GroupOperationResponseV1(group_info: GroupInfoV1, userdata: UserDataV
   * @param belongsToProject the project this group belongs to.
   * @param isActiveGroup the group's status.
   * @param hasSelfJoinEnabled the group's self-join status.
-  * @param hasPermissions the permissions attached to the group.
   *
   */
 case class GroupInfoV1(id: IRI,
@@ -184,39 +179,8 @@ case class GroupInfoV1(id: IRI,
                        description: Option[String] = None,
                        belongsToProject: IRI,
                        isActiveGroup: Boolean = false,
-                       hasSelfJoinEnabled: Boolean = false,
-                       hasPermissions: Seq[GroupPermissionV1] = Vector.empty[GroupPermissionV1]) {
-
-    def ofType(groupInfoType: GroupInfoType): GroupInfoV1 = {
-
-        groupInfoType match {
-            case GroupInfoType.FULL => {
-                GroupInfoV1(
-                    id = id,
-                    name = name,
-                    description = description,
-                    belongsToProject = belongsToProject,
-                    isActiveGroup = isActiveGroup,
-                    hasSelfJoinEnabled = hasSelfJoinEnabled,
-                    hasPermissions = hasPermissions
-                )
-            }
-            case GroupInfoType.SAFE => {
-                GroupInfoV1(
-                    id = id,
-                    name = name,
-                    description = description,
-                    belongsToProject = belongsToProject,
-                    isActiveGroup = isActiveGroup,
-                    hasSelfJoinEnabled = hasSelfJoinEnabled,
-                    hasPermissions = Vector.empty[GroupPermissionV1]
-                )
-            }
-            case _ => throw BadRequestException(s"The requested groupInfoType: $groupInfoType is invalid.")
-        }
-    }
-}
-
+                       hasSelfJoinEnabled: Boolean = false
+                      )
 
 /**
   * Represents basic information about the group which need to be supplied during group creation.
@@ -233,37 +197,6 @@ case class NewGroupInfoV1(name: String,
                           isActiveGroup: Boolean = true,
                           hasSelfJoinEnabled: Boolean = false)
 
-/**
-  * Represents a group permission.
-  * @param name the name of the permission.
-  * @param value the value of the permission.
-  */
-case class GroupPermissionV1(name: IRI, value: Either[Boolean, List[IRI]])
-
-object GroupInfoType extends Enumeration {
-
-    type GroupInfoType = Value
-
-    val SAFE = Value(0, "safe") // everything without sensitive information (permissions)
-    val FULL = Value(1, "full") // everything, including permissions
-
-    val valueMap: Map[String, Value] = values.map(v => (v.toString, v)).toMap
-
-    /**
-      * Given the name of a value in this enumeration, returns the value. If the value is not found, throws an
-      * [[InconsistentTriplestoreDataException]].
-      *
-      * @param name the name of the value.
-      * @return the requested value.
-      */
-    def lookup(name: String): Value = {
-        valueMap.get(name) match {
-            case Some(value) => value
-            case None => throw InconsistentTriplestoreDataException(s"Project info type not supported: $name")
-        }
-    }
-}
-
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // JSON formating
 
@@ -274,8 +207,7 @@ object GroupV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol wit
 
     import UserV1JsonProtocol.userDataV1Format
 
-    implicit val groupPermissionV1Format: JsonFormat[GroupPermissionV1] = jsonFormat2(GroupPermissionV1)
-    implicit val groupInfoV1Format: JsonFormat[GroupInfoV1] = jsonFormat7(GroupInfoV1)
+    implicit val groupInfoV1Format: JsonFormat[GroupInfoV1] = jsonFormat6(GroupInfoV1)
     // we have to use lazyFormat here because `UserV1JsonProtocol` contains an import statement for this object.
     // this results in recursive import statements
     // rootFormat makes it return the expected type again.

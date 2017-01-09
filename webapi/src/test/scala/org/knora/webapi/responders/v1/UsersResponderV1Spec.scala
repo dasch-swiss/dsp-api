@@ -93,24 +93,24 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
             }
 
             "return 'NotFoundException' when the user is unknown " in {
-                actorUnderTest ! UserProfileByIRIGetRequestV1("http://data.knora.org/users/notexisting", UserProfileType.SHORT)
+                actorUnderTest ! UserProfileByIRIGetRequestV1("http://data.knora.org/users/notexisting", UserProfileType.RESTRICTED)
                 expectMsg(Failure(NotFoundException(s"User 'http://data.knora.org/users/notexisting' not found")))
             }
         }
         "asked about an user identified by 'username' " should {
 
             "return a profile if the user (root) is known " in {
-                actorUnderTest ! UserProfileByUsernameGetRequestV1(rootUserName, UserProfileType.SHORT)
-                expectMsg(rootUser.ofType(UserProfileType.SHORT))
+                actorUnderTest ! UserProfileByUsernameGetRequestV1(rootUserName, UserProfileType.RESTRICTED)
+                expectMsg(rootUser.ofType(UserProfileType.RESTRICTED))
             }
 
             "return a profile if the user (testuser) is known " in {
-                actorUnderTest ! UserProfileByUsernameGetRequestV1(incunabulaUserName, UserProfileType.SHORT)
-                expectMsg(incunabulaUser.ofType(UserProfileType.SHORT))
+                actorUnderTest ! UserProfileByUsernameGetRequestV1(incunabulaUserName, UserProfileType.RESTRICTED)
+                expectMsg(incunabulaUser.ofType(UserProfileType.RESTRICTED))
             }
 
             "return 'NotFoundException' when the user is unknown " in {
-                actorUnderTest ! UserProfileByUsernameGetRequestV1("userwrong", UserProfileType.SHORT)
+                actorUnderTest ! UserProfileByUsernameGetRequestV1("userwrong", UserProfileType.RESTRICTED)
                 expectMsg(Failure(NotFoundException(s"User 'userwrong' not found")))
             }
         }

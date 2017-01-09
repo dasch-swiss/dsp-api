@@ -25,7 +25,7 @@ import java.util.UUID
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi
 import org.knora.webapi._
-import org.knora.webapi.messages.v1.responder.permissionmessages.{PermissionDataType, PermissionDataV1, PermissionV1JsonProtocol}
+import org.knora.webapi.messages.v1.responder.permissionmessages.{PermissionDataV1, PermissionV1JsonProtocol}
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectV1JsonProtocol
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileType.UserProfileType
 import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
@@ -86,7 +86,7 @@ sealed trait UsersResponderRequestV1 extends KnoraRequestV1
   * @param userProfileType the extent of the information returned.
   */
 case class UserProfileByIRIGetRequestV1(userIri: IRI,
-                                        userProfileType: UserProfileType = UserProfileType.SHORT) extends UsersResponderRequestV1
+                                        userProfileType: UserProfileType) extends UsersResponderRequestV1
 
 /**
   * A message that requests a user's profile. A successful response will be a [[UserProfileV1]].
@@ -95,7 +95,7 @@ case class UserProfileByIRIGetRequestV1(userIri: IRI,
   * @param userProfileType the extent of the information returned.
   */
 case class UserProfileByUsernameGetRequestV1(username: String,
-                                             userProfileType: UserProfileType = UserProfileType.SHORT) extends UsersResponderRequestV1
+                                             userProfileType: UserProfileType) extends UsersResponderRequestV1
 
 
 /**
@@ -206,38 +206,14 @@ case class UserProfileV1(userData: UserDataV1 = UserDataV1(lang = "en"),
     }
 
     /**
-      * Creating a [[UserProfileV1]] with sensitive information stripped.
+      * Creating a [[UserProfileV1]] of the requested type.
       *
       * @return a [[UserProfileV1]]
       */
     def ofType(userProfileType: UserProfileType): UserProfileV1 = {
 
-        /* TODO: Need to rething this as only information from userdata is allowed to be changed. The rest is always needed */
         userProfileType match {
-            case UserProfileType.SHORT => {
-                val olduserdata = userData
-                val newuserdata = UserDataV1(
-                    lang = olduserdata.lang,
-                    user_id = olduserdata.user_id,
-                    token = None, // remove token
-                    username = olduserdata.username,
-                    firstname = olduserdata.firstname,
-                    lastname = olduserdata.lastname,
-                    email = olduserdata.email,
-                    password = None, // remove password
-                    isActiveUser = olduserdata.isActiveUser,
-                    active_project = olduserdata.active_project
-                )
-
-                UserProfileV1(
-                    userData = newuserdata,
-                    groups = groups,
-                    projects = projects,
-                    permissionData = permissionData,
-                    sessionId = sessionId
-                )
-            }
-            case UserProfileType.SAFE => {
+            case UserProfileType.RESTRICTED => {
                 val olduserdata = userData
                 val newuserdata = UserDataV1(
                     lang = olduserdata.lang,
@@ -369,18 +345,21 @@ case class NewUserDataV1(username: String,
 
 /**
   * UserProfile types:
-  * short: short without sensitive information
-  * safe: everything without sensitive information
-  * full: everything
+  * restricted: everything without sensitive information, i.e. token, password.
+  * full: everything.
+  *
+  * Mainly used in combination with the 'ofType' method, to make sure that a request receiving this information
+  * also returns the user profile of the correct type. Should be used in cases where we don't want to expose
+  * sensitive information to the outside world. Since in API V1 [[UserDataV1]] is returned with almost every response,
+  * we use 'restricted' in those cases every time.
   */
 object UserProfileType extends Enumeration {
     /* TODO: Extend to incorporate user privacy wishes */
 
     type UserProfileType = Value
 
-    val SHORT = Value(0, "short") // short without sensitive information
-    val SAFE = Value(1, "safe") // everything without sensitive information (password, etc.)
-    val FULL = Value(2, "full") // everything
+    val RESTRICTED = Value(0, "restricted") // without sensitive information
+    val FULL = Value(1, "full") // everything, including sensitive information
 
     val valueMap: Map[String, Value] = values.map(v => (v.toString, v)).toMap
 

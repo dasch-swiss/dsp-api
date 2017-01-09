@@ -72,9 +72,9 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
 
         "asked about all projects " should {
 
-            "return 'full' project info for every project" in {
+            "return project info for every project" in {
 
-                actorUnderTest ! ProjectsGetRequestV1(ProjectInfoType.FULL, Some(rootUserProfileV1))
+                actorUnderTest ! ProjectsGetRequestV1(Some(rootUserProfileV1))
                 expectMsgPF(timeout) {
                     case ProjectsResponseV1(projects, userdata) => {
                         //println(projects)
@@ -96,7 +96,6 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
                 /* Incunabula project */
                 actorUnderTest ! ProjectInfoByIRIGetRequestV1(
                     SharedAdminTestData.incunabulaProjectInfo.id,
-                    ProjectInfoType.FULL,
                     Some(SharedAdminTestData.rootUser)
                 )
                 expectMsg(ProjectInfoResponseV1(SharedAdminTestData.incunabulaProjectInfo, Some(rootUserProfileV1.userData)))
@@ -104,7 +103,6 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
                 /* Images project */
                 actorUnderTest ! ProjectInfoByIRIGetRequestV1(
                     SharedAdminTestData.imagesProjectInfo.id,
-                    ProjectInfoType.FULL,
                     Some(SharedAdminTestData.rootUser)
                 )
                 expectMsg(ProjectInfoResponseV1(SharedAdminTestData.imagesProjectInfo, Some(rootUserProfileV1.userData)))
@@ -112,7 +110,6 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
                 /* 'SystemProject' */
                 actorUnderTest ! ProjectInfoByIRIGetRequestV1(
                     SharedAdminTestData.systemProjectInfo.id,
-                    ProjectInfoType.FULL,
                     Some(SharedAdminTestData.rootUser)
                 )
                 expectMsg(ProjectInfoResponseV1(SharedAdminTestData.systemProjectInfo, Some(rootUserProfileV1.userData)))
@@ -121,7 +118,7 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
 
             "return 'NotFoundException' when the project is unknown " in {
 
-                actorUnderTest ! ProjectInfoByIRIGetRequestV1("http://data.knora.org/projects/notexisting", ProjectInfoType.FULL, Some(rootUserProfileV1))
+                actorUnderTest ! ProjectInfoByIRIGetRequestV1("http://data.knora.org/projects/notexisting", Some(rootUserProfileV1))
                 expectMsg(Failure(NotFoundException(s"Project 'http://data.knora.org/projects/notexisting' not found")))
 
             }
@@ -130,12 +127,12 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
         "asked about a project identified by 'shortname' " should {
 
             "return 'full' project info if the project is known " in {
-                actorUnderTest ! ProjectInfoByShortnameGetRequestV1(SharedAdminTestData.incunabulaProjectInfo.shortname, ProjectInfoType.FULL, Some(rootUserProfileV1))
+                actorUnderTest ! ProjectInfoByShortnameGetRequestV1(SharedAdminTestData.incunabulaProjectInfo.shortname, Some(rootUserProfileV1))
                 expectMsg(ProjectInfoResponseV1(SharedAdminTestData.incunabulaProjectInfo, Some(rootUserProfileV1.userData)))
             }
 
             "return 'NotFoundException' when the project is unknown " in {
-                actorUnderTest ! ProjectInfoByShortnameGetRequestV1("projectwrong", ProjectInfoType.FULL, Some(rootUserProfileV1))
+                actorUnderTest ! ProjectInfoByShortnameGetRequestV1("projectwrong", Some(rootUserProfileV1))
                 expectMsg(Failure(NotFoundException(s"Project 'projectwrong' not found")))
             }
 

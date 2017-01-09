@@ -64,7 +64,6 @@ class UsersResponderV1 extends ResponderV1 {
       * @return a [[UserProfileV1]] describing the user.
       */
     private def getUserProfileByIRIV1(userIRI: IRI, profileType: UserProfileType.Value): Future[UserProfileV1] = {
-        // TODO: add caching of user profiles that was removed from [[Authenticator]]
         //log.debug(s"getUserProfileByIRIV1: userIri = $userIRI', clean = '$clean'")
         for {
             sparqlQueryString <- Future(queries.sparql.v1.txt.getUserByIri(
@@ -179,7 +178,7 @@ class UsersResponderV1 extends ResponderV1 {
             }
 
             // create the user profile
-            newUserProfile <- userDataQueryResponse2UserProfile(userDataQueryResponse, UserProfileType.SAFE)
+            newUserProfile <- userDataQueryResponse2UserProfile(userDataQueryResponse, UserProfileType.RESTRICTED)
 
             // create the user operation response
             userOperationResponseV1 = UserOperationResponseV1(newUserProfile, userProfile.userData)
@@ -188,7 +187,7 @@ class UsersResponderV1 extends ResponderV1 {
 
     }
 
-
+    // TODO: Refactor method so it doesn't use Any or asInstanceOf (issue #371)
     private def updateUserV1(userIri: webapi.IRI, propertyIri: webapi.IRI, newValue: Any, userProfile: UserProfileV1, apiRequestID: UUID): Future[UserOperationResponseV1] = for {
         a <- Future("")
 
@@ -317,9 +316,9 @@ class UsersResponderV1 extends ResponderV1 {
                 case None => // user has not session id, so no cache to update
             }
 
-            UserOperationResponseV1(updatedUserProfile.ofType(UserProfileType.SAFE), updatedUserProfile.ofType(UserProfileType.SAFE).userData)
+            UserOperationResponseV1(updatedUserProfile.ofType(UserProfileType.RESTRICTED), updatedUserProfile.ofType(UserProfileType.RESTRICTED).userData)
         } else {
-            UserOperationResponseV1(updatedUserProfile.ofType(UserProfileType.SAFE), userProfile.userData)
+            UserOperationResponseV1(updatedUserProfile.ofType(UserProfileType.RESTRICTED), userProfile.userData)
         }
     } yield userOperationResponseV1
 
