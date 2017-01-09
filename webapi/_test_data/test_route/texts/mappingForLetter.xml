@@ -90,7 +90,7 @@
                 <attribute>
                     <attributeName>href</attributeName>
                     <namespace>noNamespace</namespace>
-                    <propertyIri>http://www.knora.org/ontology/knora-base#standoffTagHasInternalReference</propertyIri>
+                    <propertyIri>http://www.knora.org/ontology/beol#standoffTagHasInternalReference</propertyIri>
                 </attribute>
             </attributes>
         </standoffClass>

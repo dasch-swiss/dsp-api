@@ -662,6 +662,24 @@
 
 ##########################################################
 #
+# Standoff Properties
+#
+##########################################################
+
+###  http://www.knora.org/ontology/beol#standoffTagHasInternalReference
+
+:standoffTagHasInternalReference rdf:type owl:ObjectProperty ;
+
+                 rdfs:subPropertyOf knora-base:standoffTagHasInternalReference ;
+
+                 knora-base:objectClassConstraint :StandoffTag ;
+
+                 knora-base:subjectClassConstraint :StandoffTag .
+
+
+
+##########################################################
+#
 # Standoff Tags
 #
 ##########################################################
@@ -700,7 +718,7 @@
                       rdfs:subClassOf standoff:StandoffStructuralTag,
                                       [
                                            rdf:type owl:Restriction ;
-                                           owl:onProperty knora-base:standoffTagHasInternalReference ;
+                                           owl:onProperty :standoffTagHasInternalReference ;
                                            owl:maxCardinality "1"^^xsd:nonNegativeInteger
                                       ] ;
 

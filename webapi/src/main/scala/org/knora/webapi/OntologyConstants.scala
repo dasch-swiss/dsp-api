@@ -114,6 +114,9 @@ object OntologyConstants {
         val HasLinkToValue = "http://www.knora.org/ontology/knora-base#hasLinkToValue"
         val IsRegionOf = "http://www.knora.org/ontology/knora-base#isRegionOf"
 
+        val ValueHas = "http://www.knora.org/ontology/knora-base#valueHas"
+        val ObjectCannotBeMarkedAsDeleted = "http://www.knora.org/ontology/knora-base#objectCannotBeMarkedAsDeleted"
+
         val ValueHasString = "http://www.knora.org/ontology/knora-base#valueHasString"
         val ValueHasMapping = "http://www.knora.org/ontology/knora-base#valueHasMapping"
         val ValueHasInteger = "http://www.knora.org/ontology/knora-base#valueHasInteger"

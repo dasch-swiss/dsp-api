@@ -469,10 +469,12 @@ case class PropertyEntityInfoV1(propertyIri: IRI,
   * @param standoffPropertyIri the IRI of the queried standoff property.
   * @param ontologyIri         the IRI of the ontology in which the standoff property is defined.
   * @param predicates          a [[Map]] of predicate IRIs to [[PredicateInfoV1]] objects.
+  * @param isSubPropertyOf     a [[Set]] of IRIs representing this standoff property's super properties.
   */
 case class StandoffPropertyEntityInfoV1(standoffPropertyIri: IRI,
                                         ontologyIri: IRI,
-                                        predicates: Map[IRI, PredicateInfoV1]) extends EntityInfoV1
+                                        predicates: Map[IRI, PredicateInfoV1],
+                                        isSubPropertyOf: Set[IRI]) extends EntityInfoV1
 
 /**
   * Represents the assertions about a given named graph entity.

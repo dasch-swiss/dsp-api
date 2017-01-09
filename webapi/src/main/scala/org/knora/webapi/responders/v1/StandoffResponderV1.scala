@@ -593,6 +593,8 @@ class StandoffResponderV1 extends ResponderV1 {
 
                         val propClassConstraint = standoffPropertyEntities(standoffTagPropIri).predicates(OntologyConstants.KnoraBase.ObjectClassConstraint)
 
+                        //println(standoffPropertyEntities(standoffTagPropIri).isSubPropertyOf)
+
                         // TODO: check if the object class constraint is met
 
                         StandoffTagInternalReferenceAttributeV1(standoffPropertyIri = standoffTagPropIri, value = IDsToUUIDs.getOrElse(getTargetIDFromInternalReference(attr.value), throw BadRequestException(s"internal reference is invalid: ${attr.value}")))

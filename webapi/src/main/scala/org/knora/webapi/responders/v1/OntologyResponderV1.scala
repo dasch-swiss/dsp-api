@@ -481,8 +481,12 @@ class OntologyResponderV1 extends ResponderV1 {
             // Group the rows representing property definitions by property IRI.
             standoffPropertyDefsGrouped: Map[IRI, Seq[VariableResultsRow]] = standoffPropsRows.groupBy(_.rowMap("prop"))
 
-            // Make a map of property IRIs to their immediate base properties.
-            directStandoffSubPropertyOfRelations = Map.empty[IRI, Set[IRI]]
+            // Make a map of standoff property IRIs to their immediate base properties.
+            directStandoffSubPropertyOfRelations: Map[IRI, Set[IRI]] = standoffPropertyDefsGrouped.map {
+                case (propertyIri, rows) =>
+                    val baseProperties = rows.filter(_.rowMap.get("propPred").contains(OntologyConstants.Rdfs.SubPropertyOf)).map(_.rowMap("propObj")).toSet
+                    (propertyIri, baseProperties)
+            }
 
             // Make a map of standoff class IRIs to their immediate base classes.
             directStandoffSubClassOfRelations: Map[IRI, Set[IRI]] = standoffClassesGrouped.map {
@@ -603,6 +607,13 @@ class OntologyResponderV1 extends ResponderV1 {
                     standoffClassIri -> standoffInfo
             }
 
+            // Make a map in which each standoff property IRI points to the full set of its base properties. A property is also
+            // a subproperty of itself.
+            allStandoffSubPropertyOfRelations: Map[IRI, Set[IRI]] = standoffPropertyIris.map {
+                propertyIri => (propertyIri, getAllBaseDefs(propertyIri, directStandoffSubPropertyOfRelations) + propertyIri)
+            }.toMap
+
+
             // Construct a StandoffPropertyEntityInfoV1 for each property definition, not taking inheritance into account.
             standoffPropertyEntityInfos: Map[IRI, StandoffPropertyEntityInfoV1] = standoffPropertyDefsGrouped.map {
                 case (standoffPropertyIri, propertyRows) =>
@@ -630,13 +641,14 @@ class OntologyResponderV1 extends ResponderV1 {
                     val standoffPropertyEntityInfo = StandoffPropertyEntityInfoV1(
                         standoffPropertyIri = standoffPropertyIri,
                         ontologyIri = ontologyIri,
-                        predicates = predicates
+                        predicates = predicates,
+                        isSubPropertyOf = allStandoffSubPropertyOfRelations(standoffPropertyIri)
                     )
 
                     standoffPropertyIri -> standoffPropertyEntityInfo
             }
 
-            // collect all the standoff classes that hace a data type (i.e. are subclasses of a data type standoff class)
+            // collect all the standoff classes that have a data type (i.e. are subclasses of a data type standoff class)
             standoffClassEntityInfosWithDataType: Map[IRI, StandoffClassEntityInfoV1] = standoffClassEntityInfos.filter {
                 case (standoffClassIri: IRI, entityInfo: StandoffClassEntityInfoV1) =>
                     entityInfo.dataType.isDefined
@@ -646,6 +658,7 @@ class OntologyResponderV1 extends ResponderV1 {
             _ = println("+++++++++")
             _ = println(ScalaPrettyPrinter.prettyPrint(standoffClassEntityInfosWithDataType))*/
 
+            //_ = println(MessageUtil.toSource(standoffPropertyEntityInfos))
 
             // Cache all the data.
 

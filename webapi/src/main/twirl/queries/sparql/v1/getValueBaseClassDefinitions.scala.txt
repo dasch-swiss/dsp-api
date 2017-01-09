@@ -34,7 +34,10 @@ PREFIX owl: <http://www.w3.org/2002/07/owl#>
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 
 SELECT ?graph ?valueBaseClass ?valueBaseClassPred ?valueBaseClassObj ?valueBaseClassObjLang ?cardinalityProp ?cardinality ?cardinalityVal
-
+@* Ensure that inference is not used in this query. *@
+@if(triplestore.startsWith("graphdb")) {
+    FROM <http://www.ontotext.com/explicit>
+}
 WHERE {
 
     GRAPH ?graph {
