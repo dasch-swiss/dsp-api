@@ -1,0 +1,59 @@
+@*
+ * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
+ * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ *
+ * This file is part of Knora.
+ *
+ * Knora is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Knora is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public
+ * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ *@
+
+@import org.knora.webapi.IRI
+
+@**
+ * Returns the permission-relevant assertions on the subject and object of a link value.
+ *
+ * @param triplestore the name of the triplestore being used.
+ * @param linkValueIri the IRI of the link value.
+ *@
+@(triplestore: String,
+  linkValueIri: IRI)
+
+prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+prefix knora-base: <http://www.knora.org/ontology/knora-base#>
+
+SELECT ?source ?sourceOwner ?sourceProject ?sourcePermissions ?target ?targetOwner ?targetProject ?targetPermissions
+@* Ensure that inference is not used in this query. *@
+@if(triplestore.startsWith("graphdb")) {
+    FROM <http://www.ontotext.com/explicit>
+}
+WHERE {
+    BIND(IRI("@linkValueIri") AS ?linkValue)
+
+    ?linkValue rdf:type knora-base:LinkValue ;
+               rdf:subject ?source ;
+               rdf:predicate ?predicate ;
+               rdf:object ?target ;
+               knora-base:isDeleted false .
+
+    ?source knora-base:attachedToUser ?sourceOwner ;
+             knora-base:attachedToProject ?sourceProject ;
+             knora-base:hasPermissions ?sourcePermissions ;
+             knora-base:isDeleted false .
+
+    ?target knora-base:attachedToUser ?targetOwner ;
+            knora-base:attachedToProject ?targetProject ;
+            knora-base:hasPermissions ?targetPermissions ;
+            knora-base:isDeleted false .
+}
