@@ -57,6 +57,10 @@ INSERT {
     GRAPH ?adminNamedGraphIri {
         ?userIri rdf:type ?userClassIri ;
 
+            @if(email.nonEmpty) {
+                knora-base:email @email ;
+            }
+
             knora-base:userid @username ;
 
             knora-base:password @password ;
@@ -67,10 +71,6 @@ INSERT {
 
             @if(familyName.nonEmpty) {
                 knora-base:familyName @familyName ;
-            }
-
-            @if(email.nonEmpty) {
-                knora-base:email @email ;
             }
 
             knora-base:preferredLanguage @preferredLanguage ;

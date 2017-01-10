@@ -24,11 +24,11 @@ import java.util.UUID
 
 import akka.actor.Status
 import akka.pattern._
-import org.knora.webapi
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.permissionmessages._
 import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.messages.v1.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, SparqlUpdateRequest, SparqlUpdateResponse}
+import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.{CacheUtil, KnoraIdUtil, SparqlUtil}
@@ -53,7 +53,7 @@ class UsersResponderV1 extends ResponderV1 {
         case UserProfileByIRIGetRequestV1(userIri, profileType) => future2Message(sender(), getUserProfileByIRIV1(userIri, profileType), log)
         case UserProfileByUsernameGetRequestV1(username, profileType) => future2Message(sender(), getUserProfileByUsernameV1(username, profileType), log)
         case UserCreateRequestV1(newUserData, userProfile, apiRequestID) => future2Message(sender(), createNewUserV1(newUserData, userProfile, apiRequestID), log)
-        case UserUpdateRequestV1(userIri, propertyIri, newValue, userProfile, apiRequestID) => future2Message(sender(), updateUserV1(userIri, propertyIri, newValue, userProfile, apiRequestID), log)
+        case UserUpdateRequestV1(userIri, changeUserData, userProfile, apiRequestID) => future2Message(sender(), updateUserDataV1(userIri, changeUserData, userProfile, apiRequestID), log)
         case other => handleUnexpectedMessage(sender(), other, log)
     }
 
@@ -188,139 +188,108 @@ class UsersResponderV1 extends ResponderV1 {
     }
 
     // TODO: Refactor method so it doesn't use Any or asInstanceOf (issue #371)
-    private def updateUserV1(userIri: webapi.IRI, propertyIri: webapi.IRI, newValue: Any, userProfile: UserProfileV1, apiRequestID: UUID): Future[UserOperationResponseV1] = for {
-        a <- Future("")
+    /**
+      * Updates an existing user. Only basic user data information (username, givenName, familyName, email, lang)
+      * can be changed. For changing the password or user status, use the separate methods.
+      *
+      * @param userIri        the IRI of the existing user that we want to update.
+      * @param changeUserData the updated information.
+      * @param userProfile    the user profile of the requesting user.
+      * @param apiRequestID   the unique api request ID.
+      * @return a [[UserOperationResponseV1]]
+      */
+    private def updateUserDataV1(userIri: IRI, changeUserData: ChangeUserDataV1, userProfile: UserProfileV1, apiRequestID: UUID): Future[UserOperationResponseV1] = {
+
+
+        /**
+          * Execute the update with an IRI lock.
+          */
+        def makeTaskFuture(userIri: IRI, changeUserData: ChangeUserDataV1, userProfileV1: UserProfileV1, apiRequestID: UUID): Future[UserOperationResponseV1] = for {
 
         // check if necessary information is present
-        _ = if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty")
+            _ <- Future(if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty"))
 
-        // check if the requesting user is allowed to perform updates
-        _ = if (!userProfile.userData.user_id.contains(userIri) && !userProfile.permissionData.isSystemAdmin) {
-            // not the user and not a system admin
-            throw ForbiddenException("User information can only be changed by the user itself or a system administrator")
-        }
+            // check if the requesting user is allowed to perform updates
+            _ = if (!userProfile.userData.user_id.contains(userIri) && !userProfile.permissionData.isSystemAdmin) {
+                // not the user and not a system admin
+                throw ForbiddenException("User information can only be changed by the user itself or a system administrator")
+            }
 
-        /*
-        Check needs to be moved into GroupsResponder.
-        _ = if (newValue.equals(OntologyConstants.KnoraBase.SystemAdmin) && !userProfile.isSystemAdmin) {
-            // the operation of promoting to system admin is only allowed by another system admin
-            throw ForbiddenException("Giving an user system admin rights can only be performed by another system admin")
-        }
-        */
+            // get current value.
+            sparqlQueryString = queries.sparql.v1.txt.getUserByIri(
+                triplestore = settings.triplestoreType,
+                userIri = userIri
+            ).toString()
+            userDataQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResponse]
 
-        // get current value.
-        sparqlQueryString = queries.sparql.v1.txt.getUserByIri(
-            triplestore = settings.triplestoreType,
-            userIri = userIri
-        ).toString()
-        userDataQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResponse]
+            // Update the user
+            updateUserSparqlString = queries.sparql.v1.txt.updateUser(
+                adminNamedGraphIri = "http://www.knora.org/data/admin",
+                triplestore = settings.triplestoreType,
+                userIri = userIri,
+                maybeEmail = changeUserData.email,
+                maybeGivenName = changeUserData.givenName,
+                maybeFamilyName = changeUserData.familyName,
+                maybeLang = changeUserData.lang
+            ).toString
+            //_ = log.debug(s"updateUserV1 - query: $updateUserSparqlString")
+            createResourceResponse <- (storeManager ? SparqlUpdateRequest(updateUserSparqlString)).mapTo[SparqlUpdateResponse]
 
-        // create the user profile including sensitive information
-        currentUserProfile <- userDataQueryResponse2UserProfile(userDataQueryResponse, UserProfileType.FULL)
-
-        // get the current value
-        currentValue = propertyIri match {
-            case OntologyConstants.KnoraBase.Username => currentUserProfile.userData.username.getOrElse("")
-            case OntologyConstants.KnoraBase.GivenName => currentUserProfile.userData.firstname.getOrElse("")
-            case OntologyConstants.KnoraBase.FamilyName => currentUserProfile.userData.lastname.getOrElse("")
-            case OntologyConstants.KnoraBase.Email => currentUserProfile.userData.email.getOrElse("")
-            case OntologyConstants.KnoraBase.Password => currentUserProfile.userData.password.getOrElse("")
-            case OntologyConstants.KnoraBase.IsActiveUser => currentUserProfile.userData.isActiveUser.getOrElse(false)
-            case OntologyConstants.KnoraBase.PreferredLanguage => currentUserProfile.userData.lang
-            case x => throw BadRequestException(s"The property $propertyIri is not allowed")
-        }
-
-        // get the current value as a string for adding directly into SPARQL
-        currentValueLiteral = SparqlUtil.any2SparqlLiteral(currentValue)
+            // Verify that the user was updated.
+            sparqlQueryString = queries.sparql.v1.txt.getUserByIri(
+                triplestore = settings.triplestoreType,
+                userIri = userIri
+            ).toString()
+            userDataQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResponse]
 
 
-        // get the new value as a literal string for directly adding into SPARQL
-        newValueLiteral = if (propertyIri.equals(OntologyConstants.KnoraBase.Password)) {
-            // if password then first create hash
-            val hashedPassword = BCrypt.hashpw(newValue.asInstanceOf[String], BCrypt.gensalt())
-            SparqlUtil.any2SparqlLiteral(hashedPassword)
-        } else {
-            SparqlUtil.any2SparqlLiteral(newValue)
-        }
+            // create the user profile including sensitive information
+            updatedUserProfile <- userDataQueryResponse2UserProfile(userDataQueryResponse, UserProfileType.FULL)
+            updatedUserData = updatedUserProfile.userData
 
-        // Update the user
-        updateUserSparqlString = queries.sparql.v1.txt.updateUser(
-            adminNamedGraphIri = "http://www.knora.org/data/admin",
-            triplestore = settings.triplestoreType,
-            userIri = userIri,
-            propertyIri = propertyIri,
-            currentValue = currentValueLiteral,
-            newValue = newValueLiteral
-        ).toString
-        //_ = log.debug(s"updateUserV1 - query: $updateUserSparqlString")
-        createResourceResponse <- (storeManager ? SparqlUpdateRequest(updateUserSparqlString)).mapTo[SparqlUpdateResponse]
+            // check if what we wanted to update actually got updated
+            _ = if (changeUserData.email.isDefined) {
+                if (updatedUserData.email != changeUserData.email) throw UpdateNotPerformedException("User's 'email' was not updated. Please report this as a possible bug.")
+            }
 
-        // Verify that the user was updated.
-        sparqlQueryString = queries.sparql.v1.txt.getUserByIri(
-            triplestore = settings.triplestoreType,
-            userIri = userIri
-        ).toString()
-        userDataQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResponse]
+            _ = if (changeUserData.givenName.isDefined) {
+                if (updatedUserData.firstname != changeUserData.givenName) throw UpdateNotPerformedException("User's 'givenName' was not updated. Please report this as a possible bug.")
+            }
 
+            _ = if (changeUserData.familyName.isDefined) {
+                if (updatedUserData.lastname != changeUserData.familyName) throw UpdateNotPerformedException("User's 'familyName' was not updated. Please report this as a possible bug.")
+            }
 
-        // create the user profile including sensitive information
-        updatedUserProfile <- userDataQueryResponse2UserProfile(userDataQueryResponse, UserProfileType.FULL)
+            _ = if (changeUserData.lang.isDefined) {
+                if (updatedUserData.lang != changeUserData.lang.get) throw UpdateNotPerformedException("User's 'lang' was not updated. Please report this as a possible bug.")
+            }
 
-        // check if what we wanted to update actually got updated
-        //_ = log.debug(s"currentValue: ${currentValue.toString}, newValue: ${newValue.toString}")
-        _ = propertyIri match {
-            case OntologyConstants.KnoraBase.Username => {
-                if (!updatedUserProfile.userData.username.contains(newValue.asInstanceOf[String])) {
-                    throw UpdateNotPerformedException("User's 'username' was not updated. Please report this as a possible bug.")
+            // create the user operation response
+            userOperationResponseV1 = if (userIri == userProfile.userData.user_id.get) {
+                // the user is updating itself
+
+                // update cache if session id is available
+                userProfile.sessionId match {
+                    case Some(sessionId) => CacheUtil.put[UserProfileV1](Authenticator.AUTHENTICATION_CACHE_NAME, sessionId, updatedUserProfile.setSessionId(sessionId))
+                    case None => // user has not session id, so no cache to update
                 }
-            }
-            case OntologyConstants.KnoraBase.GivenName => {
-                if (!updatedUserProfile.userData.firstname.contains(newValue.asInstanceOf[String])) {
-                    throw UpdateNotPerformedException("User's 'given name' was not updated. Please report this as a possible bug.")
-                }
-            }
-            case OntologyConstants.KnoraBase.FamilyName => {
-                if (!updatedUserProfile.userData.lastname.contains(newValue.asInstanceOf[String])) {
-                    throw UpdateNotPerformedException("User's 'family name' was not updated. Please report this as a possible bug.")
-                }
-            }
-            case OntologyConstants.KnoraBase.Email => {
-                if (!updatedUserProfile.userData.email.contains(newValue.asInstanceOf[String])) {
-                    throw UpdateNotPerformedException("User's 'email' was not updated. Please report this as a possible bug.")
-                }
-            }
-            case OntologyConstants.KnoraBase.Password => {
-                if (!updatedUserProfile.userData.password.contains(newValue.asInstanceOf[String])) {
-                    throw UpdateNotPerformedException("User's 'password' was not updated. Please report this as a possible bug.")
-                }
-            }
-            case OntologyConstants.KnoraBase.IsActiveUser => {
-                if (!updatedUserProfile.userData.isActiveUser.contains(newValue.asInstanceOf[Boolean])) {
-                    throw UpdateNotPerformedException("User's 'active status' was not updated. Please report this as a possible bug.")
-                }
-            }
-            case OntologyConstants.KnoraBase.PreferredLanguage => {
-                if (!updatedUserProfile.userData.lang.equals(newValue.asInstanceOf[String])) {
-                    throw UpdateNotPerformedException("User's 'preferred language' was not updated. Please report this as a possible bug.")
-                }
-            }
-        }
 
-        // create the user operation response
-        userOperationResponseV1 = if (userIri == userProfile.userData.user_id.get) {
-            // the user is updating itself
-
-            // update cache if session id is available
-            userProfile.sessionId match {
-                case Some(sessionId) => CacheUtil.put[UserProfileV1](Authenticator.AUTHENTICATION_CACHE_NAME, sessionId, updatedUserProfile.setSessionId(sessionId))
-                case None => // user has not session id, so no cache to update
+                UserOperationResponseV1(updatedUserProfile.ofType(UserProfileType.RESTRICTED), updatedUserProfile.ofType(UserProfileType.RESTRICTED).userData)
+            } else {
+                UserOperationResponseV1(updatedUserProfile.ofType(UserProfileType.RESTRICTED), userProfile.userData)
             }
+        } yield userOperationResponseV1
 
-            UserOperationResponseV1(updatedUserProfile.ofType(UserProfileType.RESTRICTED), updatedUserProfile.ofType(UserProfileType.RESTRICTED).userData)
-        } else {
-            UserOperationResponseV1(updatedUserProfile.ofType(UserProfileType.RESTRICTED), userProfile.userData)
-        }
-    } yield userOperationResponseV1
+
+        for {
+        // run the user update with an IRI lock
+            taskResult <- IriLocker.runWithIriLock(
+                apiRequestID,
+                userIri,
+                () => makeTaskFuture(userIri, changeUserData, userProfile, apiRequestID)
+            )
+        } yield taskResult
+    }
 
 
     ////////////////////
@@ -331,7 +300,7 @@ class UsersResponderV1 extends ResponderV1 {
       * Helper method used to create a [[UserProfileV1]] from the [[SparqlSelectResponse]] containing user data.
       *
       * @param userDataQueryResponse a [[SparqlSelectResponse]] containing user data.
-      * @param userProfileType a flag denoting if sensitive information should be stripped from the returned [[UserProfileV1]]
+      * @param userProfileType       a flag denoting if sensitive information should be stripped from the returned [[UserProfileV1]]
       * @return a [[UserProfileV1]] containing the user's data.
       */
     private def userDataQueryResponse2UserProfile(userDataQueryResponse: SparqlSelectResponse, userProfileType: UserProfileType.Value): Future[UserProfileV1] = {

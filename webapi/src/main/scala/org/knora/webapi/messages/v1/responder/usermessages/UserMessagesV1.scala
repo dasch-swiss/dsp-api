@@ -39,13 +39,13 @@ import spray.json._
 /**
   * Represents an API request payload that asks the Knora API server to create a new user.
   *
-  * @param username      the username of the user to be created (unique).
-  * @param givenName     the given name of the user to be created.
-  * @param familyName    the family name of the user to be created
-  * @param email         the email of the user to be created.
-  * @param password      the password of the user to be created.
-  * @param isActive      the status of the user to be created.
-  * @param lang          the default language of the user to be created.
+  * @param username   the username of the user to be created (unique).
+  * @param givenName  the given name of the user to be created.
+  * @param familyName the family name of the user to be created
+  * @param email      the email of the user to be created.
+  * @param password   the password of the user to be created.
+  * @param isActive   the status of the user to be created.
+  * @param lang       the default language of the user to be created.
   */
 case class CreateUserApiRequestV1(username: String,
                                   givenName: String,
@@ -62,8 +62,8 @@ case class CreateUserApiRequestV1(username: String,
 /**
   * Represents an API request payload that asks the Knora API server to update one property of an existing user.
   *
-  * @param propertyIri  the property of the user to be updated.
-  * @param newValue     the new value for the property of the user to be updated.
+  * @param propertyIri the property of the user to be updated.
+  * @param newValue    the new value for the property of the user to be updated.
   */
 case class UpdateUserApiRequestV1(propertyIri: String,
                                   newValue: String) {
@@ -82,7 +82,7 @@ sealed trait UsersResponderRequestV1 extends KnoraRequestV1
 /**
   * A message that requests a user's profile. A successful response will be a [[UserProfileV1]].
   *
-  * @param userIri the IRI of the user to be queried.
+  * @param userIri         the IRI of the user to be queried.
   * @param userProfileType the extent of the information returned.
   */
 case class UserProfileByIRIGetRequestV1(userIri: IRI,
@@ -91,7 +91,7 @@ case class UserProfileByIRIGetRequestV1(userIri: IRI,
 /**
   * A message that requests a user's profile. A successful response will be a [[UserProfileV1]].
   *
-  * @param username the username of the user to be queried.
+  * @param username        the username of the user to be queried.
   * @param userProfileType the extent of the information returned.
   */
 case class UserProfileByUsernameGetRequestV1(username: String,
@@ -112,17 +112,58 @@ case class UserCreateRequestV1(newUserData: NewUserDataV1,
 /**
   * Request updating of an existing user.
   *
-  * @param userIri the IRI of the user to be updated.
-  * @param propertyIri the IRI of the property to be updated.
-  * @param newValue the new value for the property.
-  * @param userProfile the user profile of the user requesting the update.
-  * @param apiRequestID the ID of the API request.
+  * @param userIri        the IRI of the user to be updated.
+  * @param changeUserData the data which needs to be update.
+  * @param userProfile    the user profile of the user requesting the update.
+  * @param apiRequestID   the ID of the API request.
   */
-case class UserUpdateRequestV1(userIri: webapi.IRI,
-                               propertyIri: webapi.IRI,
-                               newValue: Any,
+case class UserUpdateRequestV1(userIri: IRI,
+                               changeUserData: ChangeUserDataV1,
                                userProfile: UserProfileV1,
                                apiRequestID: UUID) extends UsersResponderRequestV1
+
+/**
+  * Request updating the username of an existing user.
+  *
+  * @param userIri      the IRI of the user to be updated.
+  * @param oldUsername  the old username.
+  * @param newUsername  the old password.
+  * @param userProfile  the user profile of the user requesting the update.
+  * @param apiRequestID the ID of the API request.
+  */
+case class UserChangeUsernameRequestV1(userIri: IRI,
+                                       oldUsername: String,
+                                       newUsername: String,
+                                       userProfile: UserProfileV1,
+                                       apiRequestID: UUID) extends UsersResponderRequestV1
+
+/**
+  * Request updating the users password.
+  *
+  * @param userIri      the IRI of the user to be updated.
+  * @param oldPassword  the old password.
+  * @param newPassword  the new password.
+  * @param userProfile  the user profile of the user requesting the update.
+  * @param apiRequestID the ID of the API request.
+  */
+case class UserChangePasswordRequestV1(userIri: IRI,
+                                       oldPassword: String,
+                                       newPassword: String,
+                                       userProfile: UserProfileV1,
+                                       apiRequestID: UUID) extends UsersResponderRequestV1
+
+/**
+  * Request updating the users status ('knora-base:isActiveUser' property)
+  *
+  * @param userIri      the IRI of the user to be updated.
+  * @param newStatus    the new status (true / false).
+  * @param userProfile  the user profile of the user requesting the update.
+  * @param apiRequestID the ID of the API request.
+  */
+case class UserChangeStatusRequestV1(userIri: IRI,
+                                     newStatus: Boolean,
+                                     userProfile: UserProfileV1,
+                                     apiRequestID: UUID) extends UsersResponderRequestV1
 
 
 // Responses
@@ -143,10 +184,10 @@ case class UserOperationResponseV1(userProfile: UserProfileV1, userData: UserDat
 /**
   * Represents a user's profile.
   *
-  * @param userData basic information about the user.
-  * @param groups   the groups that the user belongs to.
-  * @param projects the projects that the user belongs to.
-  * @param sessionId the sessionId,.
+  * @param userData       basic information about the user.
+  * @param groups         the groups that the user belongs to.
+  * @param projects       the projects that the user belongs to.
+  * @param sessionId      the sessionId,.
   * @param permissionData the user's permission data.
   */
 case class UserProfileV1(userData: UserDataV1 = UserDataV1(lang = "en"),
@@ -165,17 +206,18 @@ case class UserProfileV1(userData: UserDataV1 = UserDataV1(lang = "en"),
       */
     def passwordMatch(password: String): Boolean = {
         userData.password.exists {
-            hashedpassword => hashedpassword match {
-                case hp if hp.startsWith("$2a$") => {
-                    println(s"UserProfileV1 - passwordMatch - password: $password, hashedpassword: $hashedpassword")
-                    import org.mindrot.jbcrypt.BCrypt
-                    BCrypt.checkpw(password, hp)
+            hashedpassword =>
+                hashedpassword match {
+                    case hp if hp.startsWith("$2a$") => {
+                        println(s"UserProfileV1 - passwordMatch - password: $password, hashedpassword: $hashedpassword")
+                        import org.mindrot.jbcrypt.BCrypt
+                        BCrypt.checkpw(password, hp)
+                    }
+                    case hp => {
+                        val md = java.security.MessageDigest.getInstance("SHA-1")
+                        md.digest(password.getBytes("UTF-8")).map("%02x".format(_)).mkString.equals(hp)
+                    }
                 }
-                case hp => {
-                    val md = java.security.MessageDigest.getInstance("SHA-1")
-                    md.digest(password.getBytes("UTF-8")).map("%02x".format(_)).mkString.equals(hp)
-                }
-            }
         }
     }
 
@@ -252,7 +294,7 @@ case class UserProfileV1(userData: UserDataV1 = UserDataV1(lang = "en"),
     def getDigest: String = {
         val md = java.security.MessageDigest.getInstance("SHA-1")
         val time = System.currentTimeMillis().toString
-        val value = (time + userData.toString)getBytes("UTF-8")
+        val value = (time + userData.toString) getBytes ("UTF-8")
         md.digest(value).map("%02x".format(_)).mkString
     }
 
@@ -310,7 +352,7 @@ case class UserDataV1(lang: String,
                       email: Option[String] = None,
                       password: Option[String] = None,
                       isActiveUser: Option[Boolean] = None,
-                      active_project: Option[IRI] = None ) {
+                      active_project: Option[IRI] = None) {
 
     def fullname: Option[String] = {
         (firstname, lastname) match {
@@ -344,6 +386,19 @@ case class NewUserDataV1(username: String,
                          lang: String)
 
 /**
+  * Represents basic information about the user supplied during user update.
+  *
+  * @param givenName  the new given name.
+  * @param familyName the new family name.
+  * @param email      the new email address. Needs to be unique on the server.
+  * @param lang       the new ISO 639-1 code of the new preferred language.
+  */
+case class ChangeUserDataV1(email: Option[String] = None,
+                            givenName: Option[String] = None,
+                            familyName: Option[String] = None,
+                            lang: Option[String] = None)
+
+/**
   * UserProfile types:
   * restricted: everything without sensitive information, i.e. token, password.
   * full: everything.
@@ -358,7 +413,8 @@ object UserProfileType extends Enumeration {
 
     type UserProfileType = Value
 
-    val RESTRICTED = Value(0, "restricted") // without sensitive information
+    val RESTRICTED = Value(0, "restricted")
+    // without sensitive information
     val FULL = Value(1, "full") // everything, including sensitive information
 
     val valueMap: Map[String, Value] = values.map(v => (v.toString, v)).toMap
