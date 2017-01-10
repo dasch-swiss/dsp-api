@@ -31,7 +31,7 @@ import org.knora.webapi.messages.v1.responder.sipimessages.{SipiConstants, SipiR
 import org.knora.webapi.messages.v1.responder.usermessages.{UserProfileByIRIGetRequestV1, UserProfileType, UserProfileV1}
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v1.store.triplestoremessages._
-import org.knora.webapi.responders.ResourceLocker
+import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.twirl.SparqlTemplateLinkUpdate
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util._
@@ -114,7 +114,7 @@ class ValuesResponderV1 extends ResponderV1 {
     private def createValueV1(createValueRequest: CreateValueRequestV1): Future[CreateValueResponseV1] = {
         /**
           * Creates a [[Future]] that does pre-update checks and performs the update. This function will be
-          * called by [[ResourceLocker]] once it has acquired an update lock on the resource.
+          * called by [[IriLocker]] once it has acquired an update lock on the resource.
           *
           * @param userIri the IRI of the user making the request.
           * @return a [[Future]] that does pre-update checks and performs the update.
@@ -221,7 +221,7 @@ class ValuesResponderV1 extends ResponderV1 {
             }
 
             // Do the remaining pre-update checks and the update while holding an update lock on the resource.
-            taskResult <- ResourceLocker.runWithResourceLock(
+            taskResult <- IriLocker.runWithIriLock(
                 createValueRequest.apiRequestID,
                 createValueRequest.resourceIri,
                 () => makeTaskFuture(userIri)
@@ -244,7 +244,7 @@ class ValuesResponderV1 extends ResponderV1 {
       */
     private def createMultipleValuesV1(createMultipleValuesRequest: GenerateSparqlToCreateMultipleValuesRequestV1): Future[GenerateSparqlToCreateMultipleValuesResponseV1] = {
         /**
-          * Creates a [[Future]] that performs the update. This function will be called by [[ResourceLocker]] once it
+          * Creates a [[Future]] that performs the update. This function will be called by [[IriLocker]] once it
           * has acquired an update lock on the resource.
           *
           * @param userIri the IRI of the user making the request.
@@ -516,7 +516,7 @@ class ValuesResponderV1 extends ResponderV1 {
             }
 
             // Do the remaining pre-update checks and the update while holding an update lock on the resource.
-            taskResult <- ResourceLocker.runWithResourceLock(
+            taskResult <- IriLocker.runWithIriLock(
                 createMultipleValuesRequest.apiRequestID,
                 createMultipleValuesRequest.resourceIri,
                 () => makeTaskFuture(userIri)
@@ -708,7 +708,7 @@ class ValuesResponderV1 extends ResponderV1 {
         // Using the lock, we make sure that these are still up to date when `changeValueV1` is being called.
         //
         // The method `changeValueV1` will be called using the same lock.
-            taskResult <- ResourceLocker.runWithResourceLock(
+            taskResult <- IriLocker.runWithIriLock(
                 changeFileValueRequest.apiRequestID,
                 changeFileValueRequest.resourceIri,
                 () => makeTaskFuture(changeFileValueRequest)
@@ -726,7 +726,7 @@ class ValuesResponderV1 extends ResponderV1 {
     private def changeValueV1(changeValueRequest: ChangeValueRequestV1): Future[ChangeValueResponseV1] = {
         /**
           * Creates a [[Future]] that does pre-update checks and performs the update. This function will be
-          * called by [[ResourceLocker]] once it has acquired an update lock on the resource.
+          * called by [[IriLocker]] once it has acquired an update lock on the resource.
           *
           * @param userIri                     the IRI of the user making the request.
           * @param findResourceWithValueResult a [[FindResourceWithValueResult]] indicating which resource contains the value
@@ -909,7 +909,7 @@ class ValuesResponderV1 extends ResponderV1 {
             findResourceWithValueResult <- findResourceWithValue(changeValueRequest.valueIri)
 
             // Do the remaining pre-update checks and the update while holding an update lock on the resource.
-            taskResult <- ResourceLocker.runWithResourceLock(
+            taskResult <- IriLocker.runWithIriLock(
                 changeValueRequest.apiRequestID,
                 findResourceWithValueResult.resourceIri,
                 () => makeTaskFuture(userIri, findResourceWithValueResult)
@@ -920,7 +920,7 @@ class ValuesResponderV1 extends ResponderV1 {
     private def changeCommentV1(changeCommentRequest: ChangeCommentRequestV1): Future[ChangeValueResponseV1] = {
         /**
           * Creates a [[Future]] that does pre-update checks and performs the update. This function will be
-          * called by [[ResourceLocker]] once it has acquired an update lock on the resource.
+          * called by [[IriLocker]] once it has acquired an update lock on the resource.
           *
           * @param userIri the IRI of the user making the request.
           * @return a [[Future]] that does pre-update checks and performs the update.
@@ -995,7 +995,7 @@ class ValuesResponderV1 extends ResponderV1 {
             findResourceWithValueResult <- findResourceWithValue(changeCommentRequest.valueIri)
 
             // Do the remaining pre-update checks and the update while holding an update lock on the resource.
-            taskResult <- ResourceLocker.runWithResourceLock(
+            taskResult <- IriLocker.runWithIriLock(
                 changeCommentRequest.apiRequestID,
                 findResourceWithValueResult.resourceIri,
                 () => makeTaskFuture(userIri, findResourceWithValueResult)
@@ -1013,7 +1013,7 @@ class ValuesResponderV1 extends ResponderV1 {
     private def deleteValueV1(deleteValueRequest: DeleteValueRequestV1): Future[DeleteValueResponseV1] = {
         /**
           * Creates a [[Future]] that does pre-update checks and performs the update. This function will be
-          * called by [[ResourceLocker]] once it has acquired an update lock on the resource.
+          * called by [[IriLocker]] once it has acquired an update lock on the resource.
           *
           * @param userIri                     the IRI of the user making the request.
           * @param findResourceWithValueResult a [[FindResourceWithValueResult]] indicating which resource contains the value
@@ -1154,7 +1154,7 @@ class ValuesResponderV1 extends ResponderV1 {
             findResourceWithValueResult <- findResourceWithValue(deleteValueRequest.valueIri)
 
             // Do the remaining pre-update checks and the update while holding an update lock on the resource.
-            taskResult <- ResourceLocker.runWithResourceLock(
+            taskResult <- IriLocker.runWithIriLock(
                 deleteValueRequest.apiRequestID,
                 findResourceWithValueResult.resourceIri,
                 () => makeTaskFuture(userIri, findResourceWithValueResult)
