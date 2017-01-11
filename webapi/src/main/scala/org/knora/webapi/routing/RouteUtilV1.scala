@@ -27,8 +27,13 @@ import akka.http.scaladsl.server.{RequestContext, RouteResult}
 import akka.pattern._
 import akka.util.Timeout
 import org.knora.webapi._
+import org.knora.webapi.messages.v1.responder.ontologymessages.StandoffEntityInfoGetResponseV1
+import org.knora.webapi.messages.v1.responder.standoffmessages.{GetMappingRequestV1, GetMappingResponseV1, GetStandoffEntitiesFromMappingRequestV1, GetStandoffEntitiesFromMappingResponseV1}
+import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.responder.{ApiStatusCodesV1, KnoraRequestV1, KnoraResponseV1}
+import org.knora.webapi.twirl.StandoffTagV1
 import org.knora.webapi.util.MessageUtil
+import org.knora.webapi.util.standoff.{StandoffTagUtilV1, XMLToStandoffUtil, TextWithStandoff}
 import spray.json.{JsNumber, JsObject}
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -174,5 +179,41 @@ object RouteUtilV1 {
         )
 
         requestContext.complete(httpResponse)
+    }
+
+    def convertXMLtoStandoffTagV1(xml: String,
+                                  mappingIri: IRI,
+                                  userProfile: UserProfileV1,
+                                  settings: SettingsImpl,
+                                  responderManager: ActorSelection,
+                                  log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[Seq[StandoffTagV1]] = {
+
+        for {
+
+            // get the mapping
+            mappingResponse: GetMappingResponseV1 <- (responderManager ? GetMappingRequestV1(mappingIri = mappingIri, userProfile = userProfile)).mapTo[GetMappingResponseV1]
+
+            // get information about the standoff entities used in the mapping
+            standoffEntities: GetStandoffEntitiesFromMappingResponseV1  <- (responderManager ? GetStandoffEntitiesFromMappingRequestV1(mapping = mappingResponse.mapping, userProfile = userProfile)).mapTo[GetStandoffEntitiesFromMappingResponseV1]
+
+            standoffUtil = new XMLToStandoffUtil()
+
+            // FIXME: if the XML is not well formed, the error is not handled correctly
+
+            textWithStandoff: TextWithStandoff = try {
+                standoffUtil.xml2TextWithStandoff(xml)
+            } catch {
+                case e: org.xml.sax.SAXParseException => throw BadRequestException(s"there was a problem parsing the provided XML: ${e.getMessage}")
+
+                case other: Exception => throw BadRequestException(s"there was a problem processing the provided XML: ${other.getMessage}")
+            }
+
+            standoffTagV1: Seq[StandoffTagV1] = StandoffTagUtilV1.convertStandoffUtilStandoffTagToStandoffTagV1(
+                textWithStandoff = textWithStandoff,
+                mappingXMLtoStandoff = mappingResponse.mapping,
+                standoffEntities = standoffEntities.entities
+            )
+
+        } yield standoffTagV1
     }
 }

@@ -210,7 +210,7 @@ case class StandoffDiffDelete(baseStartPosition: Int,
 /**
   * Standoff-related constants.
   */
-object StandoffUtil {
+object XMLToStandoffUtil {
     // The header written at the start of every XML document.
     private val XmlHeader = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
 
@@ -269,13 +269,13 @@ object StandoffUtil {
   *                            don't specify an ID will be assigned a random UUID. When writing XML, each UUID will
   *                            be converted to the corresponding document-specific ID if available.
   */
-class StandoffUtil(xmlNamespaces: Map[String, IRI] = Map.empty[IRI, String],
-                   defaultXmlNamespace: Option[IRI] = None,
-                   writeUuidsToXml: Boolean = true,
-                   writeBase64IDs: Boolean = true,
-                   documentSpecificIDs: Map[String, UUID] = Map.empty[String, UUID]) {
+class XMLToStandoffUtil(xmlNamespaces: Map[String, IRI] = Map.empty[IRI, String],
+                        defaultXmlNamespace: Option[IRI] = None,
+                        writeUuidsToXml: Boolean = true,
+                        writeBase64IDs: Boolean = true,
+                        documentSpecificIDs: Map[String, UUID] = Map.empty[String, UUID]) {
 
-    import StandoffUtil._
+    import XMLToStandoffUtil._
 
     // Parse XML with an XML parser configured to prevent certain security risks.
     // See <https://github.com/scala/scala-xml/issues/17>.

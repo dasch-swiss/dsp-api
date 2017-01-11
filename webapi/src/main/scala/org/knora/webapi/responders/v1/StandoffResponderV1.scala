@@ -68,6 +68,8 @@ class StandoffResponderV1 extends ResponderV1 {
         case ChangeStandoffRequestV1(valIri, mappingIri, xml, userProfile, uuid) => future2Message(sender(), changeStandoffV1(valIri, mappingIri, xml, userProfile, uuid), log)
         case StandoffGetRequestV1(valueIri, userProfile) => future2Message(sender(), getStandoffV1(valueIri, userProfile), log)
         case CreateMappingRequestV1(xml, label, projectIri, mappingName, userProfile, uuid) => future2Message(sender(), createMappingV1(xml, label, projectIri, mappingName, userProfile, uuid), log)
+        case GetMappingRequestV1(mappingIri, userProfile) => future2Message(sender(), getMappingV1(mappingIri, userProfile), log)
+        case GetStandoffEntitiesFromMappingRequestV1(mapping, userProfile) => future2Message(sender(), getStandoffEntitiesFromMappingV1(mapping, userProfile), log)
         case other => sender ! Status.Failure(UnexpectedMessageException(s"Unexpected message $other of type ${other.getClass.getCanonicalName}"))
     }
 
@@ -405,11 +407,24 @@ class StandoffResponderV1 extends ResponderV1 {
       * @param userProfile the user making the request.
       * @return a [[MappingXMLtoStandoff]].
       */
-    private def getMapping(mappingIri: IRI, userProfile: UserProfileV1): Future[MappingXMLtoStandoff] = {
+    private def getMappingV1(mappingIri: IRI, userProfile: UserProfileV1): Future[GetMappingResponseV1] = {
+
+        // TODO: integrate ontology information about standoff entities used in the mapping to be returned
 
         CacheUtil.get[MappingXMLtoStandoff](cacheName = MappingCacheName, key = mappingIri) match {
-            case Some(data: MappingXMLtoStandoff) => Future(data)
-            case None => getMappingFromTriplestore(mappingIri, userProfile)
+            case Some(mapping: MappingXMLtoStandoff) =>
+
+                Future(GetMappingResponseV1(mappingIri = mappingIri, mapping = mapping, userdata = userProfile.userData))
+
+            case None =>
+
+                for {
+                    mapping <- getMappingFromTriplestore(mappingIri, userProfile)
+
+
+                } yield GetMappingResponseV1(mappingIri = mappingIri, mapping = mapping, userdata = userProfile.userData)
+
+
         }
 
     }
@@ -655,10 +670,10 @@ class StandoffResponderV1 extends ResponderV1 {
 
     /**
       *
-      * Turns a sequence of [[StandoffTag]] returned by [[StandoffUtil.xml2TextWithStandoff]] into a sequence of [[StandoffTagV1]].
+      * Turns a sequence of [[StandoffTag]] returned by [[XMLToStandoffUtil.xml2TextWithStandoff]] into a sequence of [[StandoffTagV1]].
       * This method handles the creation of data type specific properties (e.g. for a date value) on the basis of the provided mapping.
       *
-      * @param textWithStandoff     sequence of [[StandoffTag]] returned by [[StandoffUtil.xml2TextWithStandoff]].
+      * @param textWithStandoff     sequence of [[StandoffTag]] returned by [[XMLToStandoffUtil.xml2TextWithStandoff]].
       * @param mappingXMLtoStandoff the mapping to be used.
       * @param standoffEntities     the standoff entities (classes and properties) to be used.
       * @return a sequence of [[StandoffTagV1]].
@@ -971,7 +986,7 @@ class StandoffResponderV1 extends ResponderV1 {
       * @param userProfile          the client that made the request.
       * @return a [[StandoffEntityInfoGetResponseV1]] holding information about standoff classes and properties.
       */
-    private def getStandoffEntitiesFromMapping(mappingXMLtoStandoff: MappingXMLtoStandoff, userProfile: UserProfileV1): Future[StandoffEntityInfoGetResponseV1] = {
+    private def getStandoffEntitiesFromMappingV1(mappingXMLtoStandoff: MappingXMLtoStandoff, userProfile: UserProfileV1): Future[GetStandoffEntitiesFromMappingResponseV1] = {
 
         // collect standoff classes Iris from mapping
         val standoffTagIris: Set[IRI] = mappingXMLtoStandoff.namespace.flatMap {
@@ -1000,9 +1015,11 @@ class StandoffResponderV1 extends ResponderV1 {
             // request information about the standoff properties
             standoffPropertyEntities: StandoffEntityInfoGetResponseV1 <- (responderManager ? StandoffEntityInfoGetRequestV1(standoffPropertyIris = standoffPropertyIris, userProfile = userProfile)).mapTo[StandoffEntityInfoGetResponseV1]
 
-        } yield StandoffEntityInfoGetResponseV1(
-            standoffClassEntityInfoMap = standoffClassEntities.standoffClassEntityInfoMap,
-            standoffPropertyEntityInfoMap = standoffPropertyEntities.standoffPropertyEntityInfoMap
+        } yield GetStandoffEntitiesFromMappingResponseV1(
+            entities = StandoffEntityInfoGetResponseV1(
+                standoffClassEntityInfoMap = standoffClassEntities.standoffClassEntityInfoMap,
+                standoffPropertyEntityInfoMap = standoffPropertyEntities.standoffPropertyEntityInfoMap
+            )
         )
 
     }
@@ -1017,7 +1034,7 @@ class StandoffResponderV1 extends ResponderV1 {
       */
     private def createStandoffV1(projectIri: IRI, resourceIri: IRI, propertyIRI: IRI, mappingIri: IRI, xml: String, userProfile: UserProfileV1, apiRequestID: UUID): Future[CreateStandoffResponseV1] = {
 
-        val standoffUtil = new StandoffUtil()
+        val standoffUtil = new XMLToStandoffUtil()
 
         // FIXME: if the XML is not well formed, the error is not handled correctly
         // FIXME: this should be done in StandoffUtil but the error is swallowed (Future issue?)
@@ -1032,15 +1049,15 @@ class StandoffResponderV1 extends ResponderV1 {
 
         for {
 
-            mappingXMLtoStandoff: MappingXMLtoStandoff <- getMapping(mappingIri, userProfile)
+            mappingXMLtoStandoff: GetMappingResponseV1 <- getMappingV1(mappingIri, userProfile)
 
-            standoffEntities: StandoffEntityInfoGetResponseV1 <- getStandoffEntitiesFromMapping(mappingXMLtoStandoff, userProfile)
+            standoffEntities: GetStandoffEntitiesFromMappingResponseV1 <- getStandoffEntitiesFromMappingV1(mappingXMLtoStandoff.mapping, userProfile)
 
             // map over the standoff nodes returned by the StandoffUtil and map them to type safe case classes
             standoffNodesToCreate: Seq[StandoffTagV1] = convertStandoffUtilStandoffTagToStandoffTagV1(
                 textWithStandoff = textWithStandoff,
-                mappingXMLtoStandoff = mappingXMLtoStandoff,
-                standoffEntities = standoffEntities
+                mappingXMLtoStandoff = mappingXMLtoStandoff.mapping,
+                standoffEntities = standoffEntities.entities
             )
 
             // collect the resource references from the linking standoff nodes
@@ -1066,7 +1083,7 @@ class StandoffResponderV1 extends ResponderV1 {
 
     private def changeStandoffV1(valueIri: IRI, mappingIri: IRI, xml: String, userProfile: UserProfileV1, apiRequestID: UUID): Future[ChangeStandoffResponseV1] = {
 
-        val standoffUtil = new StandoffUtil()
+        val standoffUtil = new XMLToStandoffUtil()
 
         // FIXME: if the XML is not well formed, the error is not handled correctly
         // FIXME: this should be done in StandoffUtil but the error is swallowed (Future issue?)
@@ -1081,15 +1098,15 @@ class StandoffResponderV1 extends ResponderV1 {
 
         for {
 
-            mappingXMLtoStandoff: MappingXMLtoStandoff <- getMapping(mappingIri, userProfile)
+            mappingXMLtoStandoff: GetMappingResponseV1 <- getMappingV1(mappingIri, userProfile)
 
-            standoffEntities: StandoffEntityInfoGetResponseV1 <- getStandoffEntitiesFromMapping(mappingXMLtoStandoff, userProfile)
+            standoffEntities: GetStandoffEntitiesFromMappingResponseV1 <- getStandoffEntitiesFromMappingV1(mappingXMLtoStandoff.mapping, userProfile)
 
             // map over the standoff nodes returned by the StandoffUtil and map them to type safe case classes
             standoffNodesToCreate: Seq[StandoffTagV1] = convertStandoffUtilStandoffTagToStandoffTagV1(
                 textWithStandoff = textWithStandoff,
-                mappingXMLtoStandoff = mappingXMLtoStandoff,
-                standoffEntities = standoffEntities
+                mappingXMLtoStandoff = mappingXMLtoStandoff.mapping,
+                standoffEntities = standoffEntities.entities
             )
 
             // collect the resource references from the linking standoff nodes
@@ -1237,16 +1254,16 @@ class StandoffResponderV1 extends ResponderV1 {
             _ = println("ask for mapping " + (java.lang.System.currentTimeMillis() - enterMillis))
 
             // get the mapping that was used when creating the standoff values
-            mappingXMLtoStandoff: MappingXMLtoStandoff <- getMapping(textValue.mappingIri.getOrElse(throw BadRequestException(s"the requested text value was created without a mapping")), userProfile)
+            mappingXMLtoStandoff: GetMappingResponseV1 <- getMappingV1(textValue.mappingIri.getOrElse(throw BadRequestException(s"the requested text value was created without a mapping")), userProfile)
 
             _ = println("got mapping " + (java.lang.System.currentTimeMillis() - enterMillis))
 
             // inverts the mapping and makes standoff class Iris keys (for tags)
-            mappingStandoffToXML: Map[IRI, XMLTagItem] = invertXMLToStandoffMapping(mappingXMLtoStandoff)
+            mappingStandoffToXML: Map[IRI, XMLTagItem] = invertXMLToStandoffMapping(mappingXMLtoStandoff.mapping)
 
             _ = println("mapping inverted" + (java.lang.System.currentTimeMillis() - enterMillis))
 
-            standoffUtil = new StandoffUtil(writeUuidsToXml = false)
+            standoffUtil = new XMLToStandoffUtil(writeUuidsToXml = false)
 
             standoffTags: Seq[StandoffTag] = textValue.textattr.map {
                 (standoffTagV1: StandoffTagV1) =>
@@ -1378,7 +1395,7 @@ class StandoffResponderV1 extends ResponderV1 {
                     } else {
                         // it is a hierarchical standoff tag
                         HierarchicalStandoffTag(
-                            originalID =standoffTagV1.originalXMLID,
+                            originalID = standoffTagV1.originalXMLID,
                             tagName = xmlItemForStandoffClass.tagname,
                             xmlNamespace = xmlItemForStandoffClass.namespace match {
                                 case `noNamespace` => None

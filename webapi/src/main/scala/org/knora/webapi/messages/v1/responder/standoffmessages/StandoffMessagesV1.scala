@@ -23,6 +23,7 @@ package org.knora.webapi.messages.v1.responder.standoffmessages
 import java.util.UUID
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
+import org.knora.webapi.messages.v1.responder.ontologymessages.StandoffEntityInfoGetResponseV1
 import org.knora.webapi.{IRI, OntologyConstants}
 import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
 import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
@@ -56,6 +57,27 @@ case class CreateMappingRequestV1(xml: String, label: String, projectIri: IRI, m
 case class CreateMappingResponseV1(mappingIri: IRI, userdata: UserDataV1) extends KnoraResponseV1 {
     def toJsValue = RepresentationV1JsonProtocol.createMappingResponseV1Format.write(this)
 }
+
+/**
+  * Represents a request to get a mapping from XML elements and attributes to standoff entities.
+  *
+  * @param mappingIri  the IRI of the mapping.
+  * @param userProfile the profile of the user making the request.
+  */
+case class GetMappingRequestV1(mappingIri: IRI, userProfile: UserProfileV1)
+
+/**
+  * Represents a response to a [[GetMappingRequestV1]].
+  *
+  * @param mappingIri the Iri of the requested mapping.
+  * @param mapping    the requested mapping.
+  * @param userdata   information about the user that made the request.
+  */
+case class GetMappingResponseV1(mappingIri: IRI, mapping: MappingXMLtoStandoff, userdata: UserDataV1)
+
+case class GetStandoffEntitiesFromMappingRequestV1(mapping: MappingXMLtoStandoff, userProfile: UserProfileV1)
+
+case class GetStandoffEntitiesFromMappingResponseV1(entities: StandoffEntityInfoGetResponseV1)
 
 /**
   * Represents a mapping between XML tags and standoff entities (classes and properties).

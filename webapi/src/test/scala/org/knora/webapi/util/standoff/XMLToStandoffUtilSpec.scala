@@ -28,7 +28,7 @@ import org.xmlunit.builder.{DiffBuilder, Input}
 import org.xmlunit.diff.Diff
 
 /**
-  * Tests [[StandoffUtil]].
+  * Tests [[XMLToStandoffUtil]].
   */
 class StandoffUtilSpec extends WordSpec with Matchers {
 
@@ -37,7 +37,7 @@ class StandoffUtilSpec extends WordSpec with Matchers {
     "The standoff utility" should {
 
         "convert an XML document to text with standoff, then back to an equivalent XML document" in {
-            val standoffUtil = new StandoffUtil(writeUuidsToXml = false)
+            val standoffUtil = new XMLToStandoffUtil(writeUuidsToXml = false)
 
             // Convert the XML document to text with standoff.
             val textWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(StandoffUtilSpec.simpleXmlDoc)
@@ -57,7 +57,7 @@ class StandoffUtilSpec extends WordSpec with Matchers {
                 "s04" -> UUID.randomUUID
             )
 
-            val standoffUtil = new StandoffUtil(
+            val standoffUtil = new XMLToStandoffUtil(
                 defaultXmlNamespace = Some("http://www.example.org/ns1"),
                 xmlNamespaces = Map("ns2" -> "http://www.example.org/ns2"),
                 writeUuidsToXml = false,
@@ -82,7 +82,7 @@ class StandoffUtilSpec extends WordSpec with Matchers {
                 "1" -> regionID
             )
 
-            val standoffUtil = new StandoffUtil(documentSpecificIDs = documentSpecificIDs)
+            val standoffUtil = new XMLToStandoffUtil(documentSpecificIDs = documentSpecificIDs)
 
             val diplomaticTranscription =
                 """<?xml version="1.0" encoding="UTF-8"?>
@@ -153,7 +153,7 @@ class StandoffUtilSpec extends WordSpec with Matchers {
                 "2" -> regionID
             )
 
-            val standoffUtil = new StandoffUtil(documentSpecificIDs = documentSpecificIDs)
+            val standoffUtil = new XMLToStandoffUtil(documentSpecificIDs = documentSpecificIDs)
 
             val diplomaticTranscription =
                 """<?xml version="1.0" encoding="UTF-8"?>
@@ -227,7 +227,7 @@ class StandoffUtilSpec extends WordSpec with Matchers {
                 "3" -> blueID
             )
 
-            val standoffUtil = new StandoffUtil(documentSpecificIDs = documentSpecificIDs)
+            val standoffUtil = new XMLToStandoffUtil(documentSpecificIDs = documentSpecificIDs)
 
             // The diplomatic transcription has a structural tag (paragraph), an abbreviation ('d' for 'den'), a
             // strikethrough, and a repeated word (which could be the author's mistake or the transcriber's mistake).
@@ -367,7 +367,7 @@ class StandoffUtilSpec extends WordSpec with Matchers {
                 "1" -> regionID
             )
 
-            val standoffUtil = new StandoffUtil(documentSpecificIDs = documentSpecificIDs)
+            val standoffUtil = new XMLToStandoffUtil(documentSpecificIDs = documentSpecificIDs)
 
             val diplomaticTranscription =
                 """<?xml version="1.0" encoding="UTF-8"?>
@@ -423,7 +423,7 @@ class StandoffUtilSpec extends WordSpec with Matchers {
                 "2" -> regionID
             )
 
-            val standoffUtil = new StandoffUtil(documentSpecificIDs = documentSpecificIDs)
+            val standoffUtil = new XMLToStandoffUtil(documentSpecificIDs = documentSpecificIDs)
 
             val diplomaticTranscription =
                 """<?xml version="1.0" encoding="UTF-8"?>
@@ -488,7 +488,7 @@ class StandoffUtilSpec extends WordSpec with Matchers {
                 """.stripMargin
 
 
-            val standoffUtil = new StandoffUtil()
+            val standoffUtil = new XMLToStandoffUtil()
 
             val textWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(BEBBXML)
 
