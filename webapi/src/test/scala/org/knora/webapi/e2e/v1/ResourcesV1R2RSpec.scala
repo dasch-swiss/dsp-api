@@ -21,7 +21,7 @@
 package org.knora.webapi.e2e.v1
 
 import java.net.URLEncoder
-
+import java.util.UUID
 import akka.actor.{ActorSystem, Props}
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
@@ -30,16 +30,17 @@ import akka.pattern._
 import akka.util.Timeout
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.ontologymessages.LoadOntologiesRequest
-import org.knora.webapi.messages.v1.responder.resourcemessages.{CreateResourceApiRequestV1, CreateResourceValueV1, PropsGetForRegionV1}
+import org.knora.webapi.messages.v1.responder.resourcemessages.{CreateResourceApiRequestV1, CreateResourceValueV1, PropsGetForRegionV1, ResourceCreateRequestV1}
 import org.knora.webapi.messages.v1.responder.resourcemessages.ResourceV1JsonProtocol._
 import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
-import org.knora.webapi.messages.v1.responder.valuemessages.{CreateFileV1, CreateRichtextV1}
+import org.knora.webapi.messages.v1.responder.valuemessages.{CreateFileV1, CreateRichtextV1, CreateValueV1WithComment, TextValueV1}
 import org.knora.webapi.messages.v1.store.triplestoremessages._
 import org.knora.webapi.responders._
 import org.knora.webapi.responders.v1.ResponderManagerV1
 import org.knora.webapi.routing.v1.{ResourcesRouteV1, ValuesRouteV1}
 import org.knora.webapi.store._
-import org.knora.webapi.util.{AkkaHttpUtils, MutableTestIri}
+import org.knora.webapi.util.InputValidation.RichtextComponents
+import org.knora.webapi.util.{AkkaHttpUtils, InputValidation, MutableTestIri}
 import spray.json._
 
 import scala.concurrent.Await
@@ -1386,36 +1387,51 @@ class ResourcesV1R2RSpec extends R2RSpec {
                 assert(linkValueComment == notTheMostBoringComment)
             }
         }
-        "create a Person from simple xml" in {
+        "create a resources from simple xml" in {
 
             val params =
                 s"""<xml xmlns:beol="http://www.knora.org/ontology/beol"
-                   |    xmlns:Person="http://www.knora.org/ontology/beol/Person">
-                   |    <beol:Person id="id12345">
-                   |        <Person:hasGivenName>Niels Henrik</Person:hasGivenName>
-                   |        <Person:hasFamilyName>Abel</Person:hasFamilyName>
-                   |        <Person:comment></Person:comment>
-                   |    </beol:Person>
-                   |    <beol:Person id="idXYZ">
-                   |        <Person:hasGivenName>Bar</Person:hasGivenName>
-                   |        <Person:hasFamilyName>Foo</Person:hasFamilyName>
-                   |        <Person:comment></Person:comment>
-                   |    </beol:Person>
+                   |    xmlns:Person="http://www.knora.org/ontology/beol/Person"
+                   |    xmlns:Journal="http://www.knora.org/ontology/biblio/Journal"
+                   |    xmlns:biblio="http://www.knora.org/ontology/biblio">
+                   |    <beol:Person id="abel">
+                   |		<Person:hasGivenName>Niels Henrik</Person:hasGivenName>
+                   |		<Person:hasFamilyName>Abel</Person:hasFamilyName>
+                   |	</beol:Person>
+                   |    <beol:Person id="fooBar">
+                   |		<Person:hasGivenName>foo</Person:hasGivenName>
+                   |		<Person:hasFamilyName>Bar</Person:hasFamilyName>
+                   |	</beol:Person>
+                   |    <biblio:Journal id=" Mém. Berlin ">
+                   |		<Journal:hasName><b> Mém. Berlin </b></Journal:hasName>
+                   |	</biblio:Journal>
                    |</xml>""".stripMargin
             Post("/v1/resources/xml", HttpEntity(ContentTypes.`text/xml(UTF-8)`, params)) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> resourcesPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)
+                def check_richtext(string: String): CreateValueV1WithComment = {
+                    val richtext_value = CreateRichtextV1(string, None, None)
+                    val richtextComponents: RichtextComponents = InputValidation.handleRichtext(richtext_value)
+                    CreateValueV1WithComment(TextValueV1(InputValidation.toSparqlEncodedString(richtext_value.utf8str, () => throw BadRequestException(s"Invalid text: '${richtext_value.utf8str}'")),
+                    textattr = richtextComponents.textattr,
+                    resource_reference = richtextComponents.resource_reference),
+                    None)
+                }
 
-                val responseExpected = CreateResourceApiRequestV1("http://www.knora.org/ontology/beol#Person",
-                    "A Person",
-                    properties = Map(
-                        "http://www.knora.org/ontology/beol/Person#hasGivenName" -> List(CreateResourceValueV1(richtext_value = Some(CreateRichtextV1("Niels Henrik", None, None)))),
-                        "http://www.knora.org/ontology/beol/Person#hasFamilyName" -> List(CreateResourceValueV1(richtext_value = Some(CreateRichtextV1("Abel", None, None)))),
-                        "http://www.knora.org/ontology/beol/Person#comment" -> List(CreateResourceValueV1(richtext_value = Some(CreateRichtextV1("", None, None))))
+
+                val responseExpected = ResourceCreateRequestV1("http://www.knora.org/ontology/beol#Person",
+                    "abel",
+
+                    values = Map(
+                        "http://www.knora.org/ontology/beol/Person#hasGivenName" -> List(check_richtext("Niels Henrik")),
+                        "http://www.knora.org/ontology/beol/Person#hasFamilyName" -> List(check_richtext("Abel"))
                     ),
                     None,
-                    "project_id")
+                    "http://data.knora.org/projects/DczxPs-sR6aZN91qV92ZmQ",
+                    userProfile = UserProfileV1(UserDataV1("en")),
+                    apiRequestID = UUID.fromString("26106dcd-865a-4c81-b0e8-914e46939e70")
+                    )
 
-                responseAs[Seq[CreateResourceApiRequestV1]] should contain(responseExpected)
+                responseAs[String] shouldEqual responseExpected.label
                 }
             }
     }

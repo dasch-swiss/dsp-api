@@ -38,8 +38,9 @@ import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.resourcemessages.ResourceV1JsonProtocol._
 import org.knora.webapi.messages.v1.responder.resourcemessages._
 import org.knora.webapi.messages.v1.responder.sipimessages.{SipiResponderConversionFileRequestV1, SipiResponderConversionPathRequestV1}
-import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
+import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
 import org.knora.webapi.messages.v1.responder.valuemessages._
+import org.knora.webapi.messages.v1.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, SparqlUpdateRequest, SparqlUpdateResponse}
 import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
 import org.knora.webapi.util.InputValidation.RichtextComponents
 import org.knora.webapi.util.{DateUtilV1, InputValidation}
@@ -49,6 +50,10 @@ import spray.json._
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
 import scala.xml.{Node, NodeSeq}
+
+//mport org.knora.webapi.util._
+
+
 
 /**
   * Provides a spray-routing function for API routes that deal with resources.
@@ -467,33 +472,38 @@ object ResourcesRouteV1 extends Authenticator {
         } ~  path("v1" / "resources" / "xml" ) {
                 post {
                         entity(as[NodeSeq]) { xml =>
-                                val projectId = "project_id"
-
+//                                val knoraIdUtil = new KnoraIdUtil
+//                                val projectId = knoraIdUtil.makeRandomProjectIri
+                                val projectId = "http://data.knora.org/projects/DczxPs-sR6aZN91qV92ZmQ"
                                 val root = xml.head
 
-                                val createResources = root.child
+                            val userProfile = UserProfileV1(UserDataV1("en"))
+                            val createResources = root.child
                                     .filter(node => node.label != "#PCDATA")
                                     .map( node => {
                                         val entityType = node.label
+                                        val resLabel = (node \"@id").toString
 
                                         val elemNS = node.getNamespace(node.prefix)
-                                        val restypeId = elemNS + "#" + entityType
-
-                                        val label = "A "+ entityType
+                                        val restype_id = elemNS + "#" + entityType
                                         val properties = node.child
                                             .filter(child => child.label != "#PCDATA")
                                             .map( child =>
                                                 ( child.getNamespace(child.prefix) + "#" + child.label
                                                      -> List(CreateResourceValueV1(Some(CreateRichtextV1(child.text)))))
                                             ).toMap
-                                        CreateResourceApiRequestV1(restypeId,
-                                                label,
+
+                                        val apiRequest = CreateResourceApiRequestV1(restype_id ,
+                                                resLabel,
                                                 properties,
                                                 None,
                                                 projectId)
-                                        }
+                                        makeCreateResourceRequestMessage(apiRequest , None, userProfile)
+
+                                    }
                                     )
-                                complete(createResources)
+
+                            complete(createResources.head.label.toString)
                             }
                     }
         }
