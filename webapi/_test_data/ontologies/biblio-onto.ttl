@@ -106,7 +106,7 @@
 
 
 
-###  http://www.knora.org/ontology/bibliopublicationHasPublisherValue
+###  http://www.knora.org/ontology/biblio#publicationHasPublisherValue
 
 :publicationHasPublisherValue rdf:type owl:ObjectProperty ;
 
