@@ -59,11 +59,11 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
 
     val rootUser = SharedAdminTestData.rootUser
     val rootUserIri = rootUser.userData.user_id.get
-    val rootUserName = rootUser.userData.username.get
+    val rootUserEmail = rootUser.userData.email.get
 
     val incunabulaUser = SharedAdminTestData.incunabulaProjectAdminUser
     val incunabulaUserIri = incunabulaUser.userData.user_id.get
-    val incunabulaUserName = incunabulaUser.userData.username.get
+    val incunabulaUserEmail = incunabulaUser.userData.email.get
 
     val actorUnderTest = TestActorRef[UsersResponderV1]
     val responderManager = system.actorOf(Props(new ResponderManagerV1 with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
@@ -82,12 +82,12 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
     "The UsersResponder " when {
         "asked about an user identified by 'iri' " should {
 
-            "return a profile if the user (root) is known" in {
+            "return a profile if the user (root user) is known" in {
                 actorUnderTest ! UserProfileByIRIGetRequestV1(rootUserIri, UserProfileType.FULL)
                 expectMsg(rootUser.ofType(UserProfileType.FULL))
             }
 
-            "return a profile if the user (incunabulaUser) is known" in {
+            "return a profile if the user (incunabula user) is known" in {
                 actorUnderTest ! UserProfileByIRIGetRequestV1(incunabulaUserIri, UserProfileType.FULL)
                 expectMsg(incunabulaUser.ofType(UserProfileType.FULL))
             }
@@ -97,34 +97,40 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
                 expectMsg(Failure(NotFoundException(s"User 'http://data.knora.org/users/notexisting' not found")))
             }
         }
-        "asked about an user identified by 'username' " should {
+        "asked about an user identified by 'email'" should {
 
-            "return a profile if the user (root) is known " in {
-                actorUnderTest ! UserProfileByUsernameGetRequestV1(rootUserName, UserProfileType.RESTRICTED)
+            "return a profile if the user (root user) is known " in {
+                actorUnderTest ! UserProfileByEmailGetRequestV1(rootUserEmail, UserProfileType.RESTRICTED)
                 expectMsg(rootUser.ofType(UserProfileType.RESTRICTED))
             }
 
-            "return a profile if the user (testuser) is known " in {
-                actorUnderTest ! UserProfileByUsernameGetRequestV1(incunabulaUserName, UserProfileType.RESTRICTED)
+            "return a profile if the user (incunabula user) is known " in {
+                actorUnderTest ! UserProfileByEmailGetRequestV1(incunabulaUserEmail, UserProfileType.RESTRICTED)
                 expectMsg(incunabulaUser.ofType(UserProfileType.RESTRICTED))
             }
 
             "return 'NotFoundException' when the user is unknown " in {
-                actorUnderTest ! UserProfileByUsernameGetRequestV1("userwrong", UserProfileType.RESTRICTED)
-                expectMsg(Failure(NotFoundException(s"User 'userwrong' not found")))
+                actorUnderTest ! UserProfileByEmailGetRequestV1("userwrong@example.com", UserProfileType.RESTRICTED)
+                expectMsg(Failure(NotFoundException(s"User 'userwrong@example.com' not found")))
             }
         }
         "asked to create a new user " should {
 
             "create the user and return it's profile if the supplied username is unique " in {
                 actorUnderTest ! UserCreateRequestV1(
-                    NewUserDataV1("dduck", "Donald", "Duck", "donald.duck@example.com", "test", "en"),
-                    SharedAdminTestData.anonymousUser,
-                    UUID.randomUUID
+                    createRequest = CreateUserApiRequestV1(
+                        email = "donald.duck@example.com",
+                        givenName = Some("Donald"),
+                        familyName = Some("Duck"),
+                        password ="test",
+                        isActive = true,
+                        lang = "en"
+                    ),
+                    userProfile = SharedAdminTestData.anonymousUser,
+                    apiRequestID = UUID.randomUUID
                 )
                 expectMsgPF(timeout) {
                     case UserOperationResponseV1(newUserProfile, requestingUserData) => {
-                        assert(newUserProfile.userData.username.get.equals("dduck"))
                         assert(newUserProfile.userData.firstname.get.equals("Donald"))
                         assert(newUserProfile.userData.lastname.get.equals("Duck"))
                         assert(newUserProfile.userData.email.get.equals("donald.duck@example.com"))
@@ -133,28 +139,49 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
                 }
             }
 
-            "return a 'DuplicateValueException' if the supplied username is not unique " in {
+            "return a 'DuplicateValueException' if the supplied 'email' is not unique" in {
                 actorUnderTest ! UserCreateRequestV1(
-                    NewUserDataV1("root", "", "", "", "test", ""),
+                    createRequest = CreateUserApiRequestV1(
+                        email = "root@example.com",
+                        givenName = None,
+                        familyName = None,
+                        password ="test",
+                        isActive = true,
+                        lang = "en"
+                    ),
                     SharedAdminTestData.anonymousUser,
                     UUID.randomUUID
                 )
-                expectMsg(Failure(DuplicateValueException(s"User with the username: 'root' already exists")))
+                expectMsg(Failure(DuplicateValueException(s"User with the email: 'root@example.com' already exists")))
             }
 
-            "return 'BadRequestException' if username or password are missing" in {
+            "return 'BadRequestException' if 'email' or 'password' are missing" in {
 
-                /* missing username */
+                /* missing email */
                 actorUnderTest ! UserCreateRequestV1(
-                    NewUserDataV1("", "", "", "", "test", ""),
+                    createRequest = CreateUserApiRequestV1(
+                        email = "",
+                        givenName = None,
+                        familyName = None,
+                        password ="test",
+                        isActive = true,
+                        lang = "en"
+                    ),
                     SharedAdminTestData.anonymousUser,
                     UUID.randomUUID
                 )
-                expectMsg(Failure(BadRequestException("Username cannot be empty")))
+                expectMsg(Failure(BadRequestException("Email cannot be empty")))
 
                 /* missing password */
                 actorUnderTest ! UserCreateRequestV1(
-                    NewUserDataV1("dduck", "", "", "", "", ""),
+                    createRequest = CreateUserApiRequestV1(
+                        email = "donald.duck@example.com",
+                        givenName = None,
+                        familyName = None,
+                        password = "",
+                        isActive = true,
+                        lang = "en"
+                    ),
                     SharedAdminTestData.anonymousUser,
                     UUID.randomUUID
                 )
@@ -163,13 +190,17 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
         }
         "asked to update a user " should {
 
-            "update the user " in {
+            "update the user" in {
 
                 /* User information is updated by the user */
                 actorUnderTest ! UserUpdateRequestV1(
                     userIri = SharedAdminTestData.normalUser.userData.user_id.get,
-                    propertyIri = OntologyConstants.KnoraBase.GivenName,
-                    newValue = "Donald",
+                    updateRequest = UpdateUserApiRequestV1(
+                        email = None,
+                        givenName = Some("Donald"),
+                        familyName = None,
+                        lang = None
+                    ),
                     userProfile = SharedAdminTestData.normalUser,
                     UUID.randomUUID
                 )
@@ -186,8 +217,12 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
                 /* User information is updated by a system admin */
                 actorUnderTest ! UserUpdateRequestV1(
                     userIri = SharedAdminTestData.normalUser.userData.user_id.get,
-                    propertyIri = OntologyConstants.KnoraBase.FamilyName,
-                    newValue = "Duck",
+                    updateRequest = UpdateUserApiRequestV1(
+                        email = None,
+                        givenName = None,
+                        familyName = Some("Duck"),
+                        lang = None
+                    ),
                     userProfile = SharedAdminTestData.superUser,
                     UUID.randomUUID
                 )
@@ -203,13 +238,17 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
 
             }
 
-            "return a 'ForbiddenException' if the user requesting update is not the user itself or system admin " in {
+            "return a 'ForbiddenException' if the user requesting update is not the user itself or system admin" in {
 
                 /* User information is updated by other normal user */
                 actorUnderTest ! UserUpdateRequestV1(
                     userIri = SharedAdminTestData.superUser.userData.user_id.get,
-                    propertyIri = OntologyConstants.KnoraBase.GivenName,
-                    newValue = "Donald",
+                    updateRequest = UpdateUserApiRequestV1(
+                        email = None,
+                        givenName = Some("Donald"),
+                        familyName = None,
+                        lang = None
+                    ),
                     userProfile = SharedAdminTestData.normalUser,
                     UUID.randomUUID
                 )
@@ -218,8 +257,12 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
                 /* User information is updated by anonymous */
                 actorUnderTest ! UserUpdateRequestV1(
                     userIri = SharedAdminTestData.superUser.userData.user_id.get,
-                    propertyIri = OntologyConstants.KnoraBase.GivenName,
-                    newValue = ("Donald"),
+                    updateRequest = UpdateUserApiRequestV1(
+                        email = None,
+                        givenName = Some("Donald"),
+                        familyName = None,
+                        lang = None
+                    ),
                     userProfile = SharedAdminTestData.anonymousUser,
                     UUID.randomUUID
                 )
@@ -227,11 +270,32 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
 
             }
 
-            "update the user, (deleting) making him inactive " in {
-                actorUnderTest ! UserUpdateRequestV1(
+            "update the user's password" in {
+                actorUnderTest ! UserChangePasswordRequestV1(
                     userIri = SharedAdminTestData.normalUser.userData.user_id.get,
-                    propertyIri = OntologyConstants.KnoraBase.IsActiveUser,
-                    newValue = false,
+                    changePasswordRequest = ChangeUserPasswordApiRequestV1(
+                        oldPassword = "test",
+                        newPassword = "test123456"
+                    ),
+                    userProfile = SharedAdminTestData.normalUser,
+                    apiRequestID = UUID.randomUUID()
+                )
+                expectMsgPF(timeout) {
+                    case UserOperationResponseV1(updatedUserProfile, requestingUserData) => {
+                        // cant check if passord was changed, since it will not be returned. but if no error message
+                        // is returned, then I can assume that the password was successfully changed, as this check is
+                        // perfomed in the responder itself.
+
+                        // check if the correct userdata is returned
+                        assert(requestingUserData.user_id.contains(SharedAdminTestData.normalUser.userData.user_id.get))
+                    }
+                }
+            }
+
+            "update the user, (deleting) making him inactive " in {
+                actorUnderTest ! UserChangeStatusRequestV1(
+                    userIri = SharedAdminTestData.normalUser.userData.user_id.get,
+                    changeStatusRequest = ChangeUserStatusApiRequestV1(newStatus = false),
                     userProfile = SharedAdminTestData.superUser,
                     UUID.randomUUID
                 )
@@ -243,6 +307,8 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
                 }
 
             }
+
+
         }
     }
 

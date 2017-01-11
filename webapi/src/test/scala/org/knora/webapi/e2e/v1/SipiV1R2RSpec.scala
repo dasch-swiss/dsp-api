@@ -69,19 +69,7 @@ class SipiV1R2RSpec extends R2RSpec {
 
     implicit private val timeout: Timeout = settings.defaultRestoreTimeout
 
-    private val incunabulaUser = UserProfileV1(
-        projects = Vector("http://data.knora.org/projects/77275339"),
-        groups = Nil,
-        userData = UserDataV1(
-            email = Some("test@test.ch"),
-            lastname = Some("Test"),
-            firstname = Some("User"),
-            username = Some("testuser"),
-            token = None,
-            user_id = Some("http://data.knora.org/users/b83acc5f05"),
-            lang = "de"
-        )
-    )
+    private val incunabulaUser = SharedAdminTestData.incunabulaProjectAdminUser
 
     implicit def default(implicit system: ActorSystem) = RouteTestTimeout(new DurationInt(15).second)
 

@@ -51,8 +51,8 @@ class UsersResponderV1 extends ResponderV1 {
       */
     def receive = {
         case UserProfileByIRIGetRequestV1(userIri, profileType) => future2Message(sender(), getUserProfileByIRIV1(userIri, profileType), log)
-        case UserProfileByUsernameGetRequestV1(username, profileType) => future2Message(sender(), getUserProfileByUsernameV1(username, profileType), log)
-        case UserCreateRequestV1(newUserData, userProfile, apiRequestID) => future2Message(sender(), createNewUserV1(newUserData, userProfile, apiRequestID), log)
+        case UserProfileByEmailGetRequestV1(username, profileType) => future2Message(sender(), getUserProfileByEmailV1(username, profileType), log)
+        case UserCreateRequestV1(createRequest, userProfile, apiRequestID) => future2Message(sender(), createNewUserV1(createRequest, userProfile, apiRequestID), log)
         case UserUpdateRequestV1(userIri, changeUserData, userProfile, apiRequestID) => future2Message(sender(), updateUserDataV1(userIri, changeUserData, userProfile, apiRequestID), log)
         case other => handleUnexpectedMessage(sender(), other, log)
     }
@@ -87,23 +87,23 @@ class UsersResponderV1 extends ResponderV1 {
     /**
       * Gets information about a Knora user, and returns it in a [[UserProfileV1]].
       *
-      * @param username the username of the user.
+      * @param email the username of the user.
       * @return a [[UserProfileV1]] describing the user.
       */
-    private def getUserProfileByUsernameV1(username: String, profileType: UserProfileType.Value): Future[UserProfileV1] = {
+    private def getUserProfileByEmailV1(email: String, profileType: UserProfileType.Value): Future[UserProfileV1] = {
         // TODO: add caching of user profiles that was removed from [[Authenticator]]
-        log.debug(s"getUserProfileByUsernameV1: username = '$username', clean = '$profileType'")
+        log.debug(s"getUserProfileByEmailV1: username = '$email', type = '$profileType'")
         for {
-            sparqlQueryString <- Future(queries.sparql.v1.txt.getUserByUsername(
+            sparqlQueryString <- Future(queries.sparql.v1.txt.getUserByEmail(
                 triplestore = settings.triplestoreType,
-                username = SparqlUtil.any2SparqlLiteral(username)
+                email = email
             ).toString())
             userDataQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResponse]
 
             //_ = log.debug(MessageUtil.toSource(userDataQueryResponse))
 
             _ = if (userDataQueryResponse.results.bindings.isEmpty) {
-                throw NotFoundException(s"User '$username' not found")
+                throw NotFoundException(s"User '$email' not found")
             }
 
             userProfileV1 <- userDataQueryResponse2UserProfile(userDataQueryResponse, profileType)
@@ -119,22 +119,22 @@ class UsersResponderV1 extends ResponderV1 {
       *                     - https://crackstation.net/hashing-security.htm
       *                     - http://blog.ircmaxell.com/2012/12/seven-ways-to-screw-up-bcrypt.html
       *
-      * @param newUserData a [[NewUserDataV1]] object containing information about the new user to be created.
-      * @param userProfile a [[UserProfileV1]] object containing information about the requesting user.
+      * @param createRequest a [[CreateUserApiRequestV1]] object containing information about the new user to be created.
+      * @param userProfile   a [[UserProfileV1]] object containing information about the requesting user.
       * @return a future containing the [[UserOperationResponseV1]].
       */
-    private def createNewUserV1(newUserData: NewUserDataV1, userProfile: UserProfileV1, apiRequestID: UUID): Future[UserOperationResponseV1] = {
+    private def createNewUserV1(createRequest: CreateUserApiRequestV1, userProfile: UserProfileV1, apiRequestID: UUID): Future[UserOperationResponseV1] = {
         for {
             a <- Future("")
 
-            // check if username or password are not empty
-            _ = if (newUserData.username.isEmpty) throw BadRequestException("Username cannot be empty")
-            _ = if (newUserData.password.isEmpty) throw BadRequestException("Password cannot be empty")
+            // check if email or password are not empty
+            _ = if (createRequest.email.isEmpty) throw BadRequestException("Email cannot be empty")
+            _ = if (createRequest.password.isEmpty) throw BadRequestException("Password cannot be empty")
 
-            // check if the supplied username for the new user is unique, i.e. not already registered
-            sparqlQueryString = queries.sparql.v1.txt.getUserByUsername(
+            // check if the supplied email for the new user is unique, i.e. not already registered
+            sparqlQueryString = queries.sparql.v1.txt.getUserByEmail(
                 triplestore = settings.triplestoreType,
-                username = SparqlUtil.any2SparqlLiteral(newUserData.username)
+                email = SparqlUtil.string2SparqlLiteral(createRequest.email)
             ).toString()
             //_ = log.debug(s"createNewUser - check duplicate name: $sparqlQueryString")
             userDataQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResponse]
@@ -142,12 +142,12 @@ class UsersResponderV1 extends ResponderV1 {
             //_ = log.debug(MessageUtil.toSource(userDataQueryResponse))
 
             _ = if (userDataQueryResponse.results.bindings.nonEmpty) {
-                throw DuplicateValueException(s"User with the username: '${newUserData.username}' already exists")
+                throw DuplicateValueException(s"User with the username: '${createRequest.email}' already exists")
             }
 
             userIri = knoraIdUtil.makeRandomPersonIri
 
-            hashedPassword = BCrypt.hashpw(newUserData.password, BCrypt.gensalt())
+            hashedPassword = BCrypt.hashpw(createRequest.password, BCrypt.gensalt())
 
             // Create the new user.
             createNewUserSparqlString = queries.sparql.v1.txt.createNewUser(
@@ -155,12 +155,11 @@ class UsersResponderV1 extends ResponderV1 {
                 triplestore = settings.triplestoreType,
                 userIri = userIri,
                 userClassIri = OntologyConstants.KnoraBase.User,
-                username = SparqlUtil.any2SparqlLiteral(newUserData.username),
-                password = SparqlUtil.any2SparqlLiteral(hashedPassword),
-                givenName = SparqlUtil.any2SparqlLiteral(newUserData.givenName),
-                familyName = SparqlUtil.any2SparqlLiteral(newUserData.familyName),
-                email = SparqlUtil.any2SparqlLiteral(newUserData.email),
-                preferredLanguage = SparqlUtil.any2SparqlLiteral(newUserData.lang)
+                email = createRequest.email,
+                password = hashedPassword,
+                maybeGivenName = createRequest.givenName,
+                maybeFamilyName = createRequest.familyName,
+                preferredLanguage = createRequest.lang
             ).toString
             //_ = log.debug(s"createNewUser: $createNewUserSparqlString")
             createResourceResponse <- (storeManager ? SparqlUpdateRequest(createNewUserSparqlString)).mapTo[SparqlUpdateResponse]
@@ -192,19 +191,18 @@ class UsersResponderV1 extends ResponderV1 {
       * Updates an existing user. Only basic user data information (username, givenName, familyName, email, lang)
       * can be changed. For changing the password or user status, use the separate methods.
       *
-      * @param userIri        the IRI of the existing user that we want to update.
-      * @param changeUserData the updated information.
-      * @param userProfile    the user profile of the requesting user.
-      * @param apiRequestID   the unique api request ID.
+      * @param userIri          the IRI of the existing user that we want to update.
+      * @param apiUpdateRequest the updated information.
+      * @param userProfile      the user profile of the requesting user.
+      * @param apiRequestID     the unique api request ID.
       * @return a [[UserOperationResponseV1]]
       */
-    private def updateUserDataV1(userIri: IRI, changeUserData: ChangeUserDataV1, userProfile: UserProfileV1, apiRequestID: UUID): Future[UserOperationResponseV1] = {
-
+    private def updateUserDataV1(userIri: IRI, apiUpdateRequest: UpdateUserApiRequestV1, userProfile: UserProfileV1, apiRequestID: UUID): Future[UserOperationResponseV1] = {
 
         /**
           * Execute the update with an IRI lock.
           */
-        def makeTaskFuture(userIri: IRI, changeUserData: ChangeUserDataV1, userProfileV1: UserProfileV1, apiRequestID: UUID): Future[UserOperationResponseV1] = for {
+        def makeTaskFuture(userIri: IRI, apiUpdateRequest: UpdateUserApiRequestV1, userProfileV1: UserProfileV1, apiRequestID: UUID): Future[UserOperationResponseV1] = for {
 
         // check if necessary information is present
             _ <- Future(if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty"))
@@ -227,10 +225,10 @@ class UsersResponderV1 extends ResponderV1 {
                 adminNamedGraphIri = "http://www.knora.org/data/admin",
                 triplestore = settings.triplestoreType,
                 userIri = userIri,
-                maybeEmail = changeUserData.email,
-                maybeGivenName = changeUserData.givenName,
-                maybeFamilyName = changeUserData.familyName,
-                maybeLang = changeUserData.lang
+                maybeEmail = apiUpdateRequest.email,
+                maybeGivenName = apiUpdateRequest.givenName,
+                maybeFamilyName = apiUpdateRequest.familyName,
+                maybeLang = apiUpdateRequest.lang
             ).toString
             //_ = log.debug(s"updateUserV1 - query: $updateUserSparqlString")
             createResourceResponse <- (storeManager ? SparqlUpdateRequest(updateUserSparqlString)).mapTo[SparqlUpdateResponse]
@@ -248,20 +246,20 @@ class UsersResponderV1 extends ResponderV1 {
             updatedUserData = updatedUserProfile.userData
 
             // check if what we wanted to update actually got updated
-            _ = if (changeUserData.email.isDefined) {
-                if (updatedUserData.email != changeUserData.email) throw UpdateNotPerformedException("User's 'email' was not updated. Please report this as a possible bug.")
+            _ = if (apiUpdateRequest.email.isDefined) {
+                if (updatedUserData.email != apiUpdateRequest.email) throw UpdateNotPerformedException("User's 'email' was not updated. Please report this as a possible bug.")
             }
 
-            _ = if (changeUserData.givenName.isDefined) {
-                if (updatedUserData.firstname != changeUserData.givenName) throw UpdateNotPerformedException("User's 'givenName' was not updated. Please report this as a possible bug.")
+            _ = if (apiUpdateRequest.givenName.isDefined) {
+                if (updatedUserData.firstname != apiUpdateRequest.givenName) throw UpdateNotPerformedException("User's 'givenName' was not updated. Please report this as a possible bug.")
             }
 
-            _ = if (changeUserData.familyName.isDefined) {
-                if (updatedUserData.lastname != changeUserData.familyName) throw UpdateNotPerformedException("User's 'familyName' was not updated. Please report this as a possible bug.")
+            _ = if (apiUpdateRequest.familyName.isDefined) {
+                if (updatedUserData.lastname != apiUpdateRequest.familyName) throw UpdateNotPerformedException("User's 'familyName' was not updated. Please report this as a possible bug.")
             }
 
-            _ = if (changeUserData.lang.isDefined) {
-                if (updatedUserData.lang != changeUserData.lang.get) throw UpdateNotPerformedException("User's 'lang' was not updated. Please report this as a possible bug.")
+            _ = if (apiUpdateRequest.lang.isDefined) {
+                if (updatedUserData.lang != apiUpdateRequest.lang.get) throw UpdateNotPerformedException("User's 'lang' was not updated. Please report this as a possible bug.")
             }
 
             // create the user operation response
@@ -286,7 +284,7 @@ class UsersResponderV1 extends ResponderV1 {
             taskResult <- IriLocker.runWithIriLock(
                 apiRequestID,
                 userIri,
-                () => makeTaskFuture(userIri, changeUserData, userProfile, apiRequestID)
+                () => makeTaskFuture(userIri, apiUpdateRequest, userProfile, apiRequestID)
             )
         } yield taskResult
     }
@@ -324,10 +322,9 @@ class UsersResponderV1 extends ResponderV1 {
                     case None => settings.fallbackLanguage
                 },
                 user_id = Some(returnedUserIri),
-                username = groupedUserData.get(OntologyConstants.KnoraBase.Username).map(_.head),
+                email = groupedUserData.get(OntologyConstants.KnoraBase.Email).map(_.head),
                 firstname = groupedUserData.get(OntologyConstants.KnoraBase.GivenName).map(_.head),
                 lastname = groupedUserData.get(OntologyConstants.KnoraBase.FamilyName).map(_.head),
-                email = groupedUserData.get(OntologyConstants.KnoraBase.Email).map(_.head),
                 password = groupedUserData.get(OntologyConstants.KnoraBase.Password).map(_.head),
                 isActiveUser = groupedUserData.get(OntologyConstants.KnoraBase.IsActiveUser).map(_.head.toBoolean),
                 active_project = groupedUserData.get(OntologyConstants.KnoraBase.UsersActiveProject).map(_.head)

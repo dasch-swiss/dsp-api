@@ -1407,23 +1407,12 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         }
 
         "try to change the partOf property of a page, but submit the current target Iri" in {
-            // A test UserDataV1.
-            val userData = UserDataV1(
-                email = Some("test@test.ch"),
-                lastname = Some("Test"),
-                firstname = Some("User"),
-                username = Some("testuser"),
-                token = None,
-                user_id = Some("http://data.knora.org/users/91e19f1e01"),
-                lang = "de"
-            )
 
             // A test UserProfileV1.
-            val userProfile = UserProfileV1(
-                projects = Vector("http://data.knora.org/projects/77275339"),
-                groups = Nil,
-                userData = userData
-            )
+            val userProfile = SharedAdminTestData.incunabulaProjectAdminUser
+
+            // A test UserDataV1.
+            val userData = userProfile.userData
 
             val linkTargetIri = "http://data.knora.org/e41ab5695c"
 

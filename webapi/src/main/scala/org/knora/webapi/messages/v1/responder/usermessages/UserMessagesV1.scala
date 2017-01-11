@@ -23,7 +23,6 @@ package org.knora.webapi.messages.v1.responder.usermessages
 import java.util.UUID
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import org.knora.webapi
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.permissionmessages.{PermissionDataV1, PermissionV1JsonProtocol}
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectV1JsonProtocol
@@ -39,36 +38,49 @@ import spray.json._
 /**
   * Represents an API request payload that asks the Knora API server to create a new user.
   *
-  * @param username   the username of the user to be created (unique).
+  * @param email      the email of the user to be created (unique).
   * @param givenName  the given name of the user to be created.
   * @param familyName the family name of the user to be created
-  * @param email      the email of the user to be created.
   * @param password   the password of the user to be created.
-  * @param isActive   the status of the user to be created.
-  * @param lang       the default language of the user to be created.
+  * @param isActive   the status of the user to be created (default = true).
+  * @param lang       the default language of the user to be created (default = "en").
   */
-case class CreateUserApiRequestV1(username: String,
-                                  givenName: String,
-                                  familyName: String,
-                                  email: String,
+case class CreateUserApiRequestV1(email: String,
+                                  givenName: Option[String] = None,
+                                  familyName: Option[String] = None,
                                   password: String,
-                                  isActive: Boolean,
-                                  lang: String) {
+                                  isActive: Boolean = true,
+                                  lang: String = "en") {
 
     def toJsValue = UserV1JsonProtocol.createUserApiRequestV1Format.write(this)
-
 }
 
 /**
-  * Represents an API request payload that asks the Knora API server to update one property of an existing user.
+  * Represents an API request payload that asks the Knora API server to update an existing user.
   *
-  * @param propertyIri the property of the user to be updated.
-  * @param newValue    the new value for the property of the user to be updated.
+  * @param email      the new email address. Needs to be unique on the server.
+  * @param givenName  the new given name.
+  * @param familyName the new family name.
+  * @param lang       the new ISO 639-1 code of the new preferred language.
   */
-case class UpdateUserApiRequestV1(propertyIri: String,
-                                  newValue: String) {
+case class UpdateUserApiRequestV1(email: Option[String] = None,
+                                  givenName: Option[String] = None,
+                                  familyName: Option[String] = None,
+                                  lang: Option[String] = None) {
 
     def toJsValue = UserV1JsonProtocol.updateUserApiRequestV1Format.write(this)
+}
+
+
+case class ChangeUserPasswordApiRequestV1(oldPassword: String,
+                                          newPassword: String) {
+
+    def toJsValue = UserV1JsonProtocol.changeUserPasswordApiRequestV1Format.write(this)
+}
+
+case class ChangeUserStatusApiRequestV1(newStatus: Boolean) {
+
+    def toJsValue = UserV1JsonProtocol.changeUserStatusApiRequestV1Format.write(this)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -91,77 +103,60 @@ case class UserProfileByIRIGetRequestV1(userIri: IRI,
 /**
   * A message that requests a user's profile. A successful response will be a [[UserProfileV1]].
   *
-  * @param username        the username of the user to be queried.
+  * @param email           the username of the user to be queried.
   * @param userProfileType the extent of the information returned.
   */
-case class UserProfileByUsernameGetRequestV1(username: String,
-                                             userProfileType: UserProfileType) extends UsersResponderRequestV1
+case class UserProfileByEmailGetRequestV1(email: String,
+                                          userProfileType: UserProfileType) extends UsersResponderRequestV1
 
 
 /**
   * Requests the creation of a new user.
   *
-  * @param newUserData  the [[NewUserDataV1]] information for creating the new user.
-  * @param userProfile  the user profile of the user creating the new user.
-  * @param apiRequestID the ID of the API request.
+  * @param createRequest the [[CreateUserApiRequestV1]] information used for creating the new user.
+  * @param userProfile   the user profile of the user creating the new user.
+  * @param apiRequestID  the ID of the API request.
   */
-case class UserCreateRequestV1(newUserData: NewUserDataV1,
+case class UserCreateRequestV1(createRequest: CreateUserApiRequestV1,
                                userProfile: UserProfileV1,
                                apiRequestID: UUID) extends UsersResponderRequestV1
 
 /**
   * Request updating of an existing user.
   *
-  * @param userIri        the IRI of the user to be updated.
-  * @param changeUserData the data which needs to be update.
-  * @param userProfile    the user profile of the user requesting the update.
-  * @param apiRequestID   the ID of the API request.
+  * @param userIri       the IRI of the user to be updated.
+  * @param updateRequest the data which needs to be update.
+  * @param userProfile   the user profile of the user requesting the update.
+  * @param apiRequestID  the ID of the API request.
   */
 case class UserUpdateRequestV1(userIri: IRI,
-                               changeUserData: ChangeUserDataV1,
+                               updateRequest: UpdateUserApiRequestV1,
                                userProfile: UserProfileV1,
                                apiRequestID: UUID) extends UsersResponderRequestV1
 
 /**
-  * Request updating the username of an existing user.
-  *
-  * @param userIri      the IRI of the user to be updated.
-  * @param oldUsername  the old username.
-  * @param newUsername  the old password.
-  * @param userProfile  the user profile of the user requesting the update.
-  * @param apiRequestID the ID of the API request.
-  */
-case class UserChangeUsernameRequestV1(userIri: IRI,
-                                       oldUsername: String,
-                                       newUsername: String,
-                                       userProfile: UserProfileV1,
-                                       apiRequestID: UUID) extends UsersResponderRequestV1
-
-/**
   * Request updating the users password.
   *
-  * @param userIri      the IRI of the user to be updated.
-  * @param oldPassword  the old password.
-  * @param newPassword  the new password.
-  * @param userProfile  the user profile of the user requesting the update.
-  * @param apiRequestID the ID of the API request.
+  * @param userIri               the IRI of the user to be updated.
+  * @param changePasswordRequest the [[ChangeUserPasswordApiRequestV1]] object containing the old and new password.
+  * @param userProfile           the user profile of the user requesting the update.
+  * @param apiRequestID          the ID of the API request.
   */
 case class UserChangePasswordRequestV1(userIri: IRI,
-                                       oldPassword: String,
-                                       newPassword: String,
+                                       changePasswordRequest: ChangeUserPasswordApiRequestV1,
                                        userProfile: UserProfileV1,
                                        apiRequestID: UUID) extends UsersResponderRequestV1
 
 /**
   * Request updating the users status ('knora-base:isActiveUser' property)
   *
-  * @param userIri      the IRI of the user to be updated.
-  * @param newStatus    the new status (true / false).
-  * @param userProfile  the user profile of the user requesting the update.
-  * @param apiRequestID the ID of the API request.
+  * @param userIri             the IRI of the user to be updated.
+  * @param changeStatusRequest the [[ChangeUserStatusApiRequestV1]] containing the new status (true / false).
+  * @param userProfile         the user profile of the user requesting the update.
+  * @param apiRequestID        the ID of the API request.
   */
 case class UserChangeStatusRequestV1(userIri: IRI,
-                                     newStatus: Boolean,
+                                     changeStatusRequest: ChangeUserStatusApiRequestV1,
                                      userProfile: UserProfileV1,
                                      apiRequestID: UUID) extends UsersResponderRequestV1
 
@@ -261,7 +256,6 @@ case class UserProfileV1(userData: UserDataV1 = UserDataV1(lang = "en"),
                     lang = olduserdata.lang,
                     user_id = olduserdata.user_id,
                     token = None, // remove token
-                    username = olduserdata.username,
                     firstname = olduserdata.firstname,
                     lastname = olduserdata.lastname,
                     email = olduserdata.email,
@@ -334,8 +328,7 @@ case class UserProfileV1(userData: UserDataV1 = UserDataV1(lang = "en"),
   *
   * @param lang         The ISO 639-1 code of the user's preferred language.
   * @param user_id      The user's IRI.
-  * @param token        TODO: document this
-  * @param username     The user's username.
+  * @param token        The API token. Can be used instead of email/password for authentication.
   * @param firstname    The user's given name.
   * @param lastname     The user's surname.
   * @param email        The user's email address.
@@ -346,7 +339,6 @@ case class UserProfileV1(userData: UserDataV1 = UserDataV1(lang = "en"),
 case class UserDataV1(lang: String,
                       user_id: Option[IRI] = None,
                       token: Option[String] = None,
-                      username: Option[String] = None,
                       firstname: Option[String] = None,
                       lastname: Option[String] = None,
                       email: Option[String] = None,
@@ -366,37 +358,6 @@ case class UserDataV1(lang: String,
     def toJsValue = UserV1JsonProtocol.userDataV1Format.write(this)
 
 }
-
-
-/**
-  * Represents basic information about the user which needs to be supplied during user creation.
-  *
-  * @param username   the new user's username. Needs to be unique on the server.
-  * @param givenName  the new user's given name.
-  * @param familyName the new user's family name.
-  * @param email      the new users's email address. Needs to be unique on the server.
-  * @param password   the new user's password in clear text.
-  * @param lang       the ISO 639-1 code of the new user's preferred language.
-  */
-case class NewUserDataV1(username: String,
-                         givenName: String,
-                         familyName: String,
-                         email: String,
-                         password: String,
-                         lang: String)
-
-/**
-  * Represents basic information about the user supplied during user update.
-  *
-  * @param givenName  the new given name.
-  * @param familyName the new family name.
-  * @param email      the new email address. Needs to be unique on the server.
-  * @param lang       the new ISO 639-1 code of the new preferred language.
-  */
-case class ChangeUserDataV1(email: Option[String] = None,
-                            givenName: Option[String] = None,
-                            familyName: Option[String] = None,
-                            lang: Option[String] = None)
 
 /**
   * UserProfile types:
@@ -442,10 +403,11 @@ object UserProfileType extends Enumeration {
   */
 object UserV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with NullOptions with ProjectV1JsonProtocol with PermissionV1JsonProtocol {
 
-    implicit val userDataV1Format: JsonFormat[UserDataV1] = lazyFormat(jsonFormat10(UserDataV1))
+    implicit val userDataV1Format: JsonFormat[UserDataV1] = lazyFormat(jsonFormat9(UserDataV1))
     implicit val userProfileV1Format: JsonFormat[UserProfileV1] = jsonFormat6(UserProfileV1)
-    implicit val newUserDataV1Format: JsonFormat[NewUserDataV1] = jsonFormat6(NewUserDataV1)
-    implicit val createUserApiRequestV1Format: RootJsonFormat[CreateUserApiRequestV1] = jsonFormat7(CreateUserApiRequestV1)
-    implicit val updateUserApiRequestV1Format: RootJsonFormat[UpdateUserApiRequestV1] = jsonFormat2(UpdateUserApiRequestV1)
+    implicit val createUserApiRequestV1Format: RootJsonFormat[CreateUserApiRequestV1] = jsonFormat6(CreateUserApiRequestV1)
+    implicit val updateUserApiRequestV1Format: RootJsonFormat[UpdateUserApiRequestV1] = jsonFormat4(UpdateUserApiRequestV1)
+    implicit val changeUserPasswordApiRequestV1Format: RootJsonFormat[ChangeUserPasswordApiRequestV1] = jsonFormat2(ChangeUserPasswordApiRequestV1)
+    implicit val changeUserStatusApiRequestV1Format: RootJsonFormat[ChangeUserStatusApiRequestV1] = jsonFormat1(ChangeUserStatusApiRequestV1)
     implicit val userOperationResponseV1Format: RootJsonFormat[UserOperationResponseV1] = jsonFormat2(UserOperationResponseV1)
 }

@@ -64,7 +64,7 @@ object UsersRouteV1 extends Authenticator {
         path("v1" / "users" / "username" / Segment) {value =>
             get {
                 requestContext =>
-                    val requestMessage = UserProfileByUsernameGetRequestV1(value, UserProfileType.RESTRICTED)
+                    val requestMessage = UserProfileByEmailGetRequestV1(value, UserProfileType.RESTRICTED)
                     RouteUtilV1.runJsonRoute(
                         requestMessage,
                         requestContext,
@@ -74,22 +74,14 @@ object UsersRouteV1 extends Authenticator {
                     )
             }
         } ~
-        path("v1" / "users" / Segment) { value =>
+        path("v1" / "users") {
             post {
                 /* create a new user */
                 entity(as[CreateUserApiRequestV1]) { apiRequest => requestContext =>
                     val userProfile = getUserProfileV1(requestContext)
 
-                    val newUserData = NewUserDataV1(
-                        username = apiRequest.username,
-                        givenName = apiRequest.givenName,
-                        familyName = apiRequest.familyName,
-                        email = apiRequest.email,
-                        password = apiRequest.password,
-                        lang = apiRequest.lang)
-
                     val requestMessage = UserCreateRequestV1(
-                        newUserData,
+                        createRequest = apiRequest,
                         userProfile,
                         apiRequestID = UUID.randomUUID
                     )
@@ -102,8 +94,11 @@ object UsersRouteV1 extends Authenticator {
                         log
                     )
                 }
-            } ~ put {
-                /* update an existing user */
+            }
+        } ~
+        path("v1" / "users" / Segment) { value =>
+            put {
+                /* update existing user's information */
                 entity(as[UpdateUserApiRequestV1]) { apiRequest => requestContext =>
 
                     val userIri = InputValidation.toIri(value, () => throw BadRequestException(s"Invalid user IRI $value"))
@@ -111,8 +106,49 @@ object UsersRouteV1 extends Authenticator {
 
                     val requestMessage = UserUpdateRequestV1(
                         userIri = userIri,
-                        propertyIri = apiRequest.propertyIri,
-                        newValue = apiRequest.newValue,
+                        updateRequest = apiRequest,
+                        userProfile,
+                        apiRequestID = UUID.randomUUID
+                    )
+                    RouteUtilV1.runJsonRoute(
+                        requestMessage,
+                        requestContext,
+                        settings,
+                        responderManager,
+                        log
+                    )
+                }
+            } ~ put {
+                /* update existing user's password */
+                entity(as[ChangeUserPasswordApiRequestV1]) { apiRequest => requestContext =>
+
+                    val userIri = InputValidation.toIri(value, () => throw BadRequestException(s"Invalid user IRI $value"))
+                    val userProfile = getUserProfileV1(requestContext)
+
+                    val requestMessage = UserChangePasswordRequestV1(
+                        userIri = userIri,
+                        changePasswordRequest = apiRequest,
+                        userProfile,
+                        apiRequestID = UUID.randomUUID
+                    )
+                    RouteUtilV1.runJsonRoute(
+                        requestMessage,
+                        requestContext,
+                        settings,
+                        responderManager,
+                        log
+                    )
+                }
+            } ~ put {
+                /* update existing user's status */
+                entity(as[ChangeUserStatusApiRequestV1]) { apiRequest => requestContext =>
+
+                    val userIri = InputValidation.toIri(value, () => throw BadRequestException(s"Invalid user IRI $value"))
+                    val userProfile = getUserProfileV1(requestContext)
+
+                    val requestMessage = UserChangeStatusRequestV1(
+                        userIri = userIri,
+                        changeStatusRequest = apiRequest,
                         userProfile,
                         apiRequestID = UUID.randomUUID
                     )

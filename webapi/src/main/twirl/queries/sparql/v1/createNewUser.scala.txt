@@ -40,11 +40,10 @@
   triplestore: String,
   userIri: IRI,
   userClassIri: IRI,
-  username: String,
-  password: String,
-  givenName: String,
-  familyName: String,
   email: String,
+  password: String,
+  maybeGivenName: Option[String],
+  maybeFamilyName: Option[String],
   preferredLanguage: String)
 
 prefix xsd: <http://www.w3.org/2001/XMLSchema#>
@@ -55,27 +54,23 @@ PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 
 INSERT {
     GRAPH ?adminNamedGraphIri {
-        ?userIri rdf:type ?userClassIri ;
+        ?userIri rdf:type ?userClassIri .
 
-            @if(email.nonEmpty) {
-                knora-base:email @email ;
-            }
+        ?userIri knora-base:email "@email"^^xsd:string .
 
-            knora-base:userid @username ;
+        ?userIri knora-base:password "@password"^^xsd:string .
 
-            knora-base:password @password ;
+        @if(maybeGivenName.nonEmpty) {
+            ?userIri knora-base:givenName "@maybeGivenName.get"^^xsd:string .
+        }
 
-            @if(givenName.nonEmpty) {
-                knora-base:givenName @givenName ;
-            }
+        @if(maybeFamilyName.nonEmpty) {
+            ?userIri knora-base:familyName "@maybeFamilyName.get"^^xsd:string .
+        }
 
-            @if(familyName.nonEmpty) {
-                knora-base:familyName @familyName ;
-            }
+        ?userIri knora-base:preferredLanguage "@preferredLanguage"^^xsd:string .
 
-            knora-base:preferredLanguage @preferredLanguage ;
-
-            knora-base:isInSystemAdminGroup "false"^^xsd:boolean .
+        ?userIri knora-base:isInSystemAdminGroup "false"^^xsd:boolean .
     }
 }
 @*

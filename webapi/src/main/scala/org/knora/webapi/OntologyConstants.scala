@@ -196,10 +196,9 @@ object OntologyConstants {
 
         /* User */
         val User = KnoraBasePrefixExpansion                   + "User"
-        val Username = KnoraBasePrefixExpansion               + "userid"
+        val Email = KnoraBasePrefixExpansion                  + "email"
         val GivenName = KnoraBasePrefixExpansion              + "givenName"
         val FamilyName = KnoraBasePrefixExpansion             + "familyName"
-		val Email = KnoraBasePrefixExpansion                  + "email"
         val Password = KnoraBasePrefixExpansion               + "password"
         val UsersActiveProject = KnoraBasePrefixExpansion     + "currentproject"
         val IsActiveUser = KnoraBasePrefixExpansion           + "isActiveUser"

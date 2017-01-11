@@ -41,7 +41,6 @@ object SharedAdminTestData {
     def rootUser = UserProfileV1(
         UserDataV1(
             user_id = Some("http://data.knora.org/users/root"),
-            username = Some("root"),
             firstname = Some("System"),
             lastname = Some("Administrator"),
             email = Some("root@example.com"),
@@ -66,7 +65,6 @@ object SharedAdminTestData {
     def superUser = UserProfileV1(
         UserDataV1(
             user_id = Some("http://data.knora.org/users/superuser"),
-            username = Some("superuser"),
             firstname = Some("Super"),
             lastname = Some("User"),
             email = Some("super.user@example.com"),
@@ -89,7 +87,6 @@ object SharedAdminTestData {
     def normalUser = UserProfileV1(
         UserDataV1(
             user_id = Some("http://data.knora.org/users/normaluser"),
-            username = Some("normaluser"),
             firstname = Some("Normal"),
             lastname = Some("User"),
             email = Some("normal.user@example.com"),
@@ -120,7 +117,6 @@ object SharedAdminTestData {
     def multiuserUser = UserProfileV1(
         userData = UserDataV1(
             user_id = Some("http://data.knora.org/users/multiuser"),
-            username = Some("multiuser"),
             firstname = Some("Multi"),
             lastname = Some("User"),
             email = Some("multi.user@example.com"),
@@ -199,7 +195,6 @@ object SharedAdminTestData {
     def imagesUser01 = UserProfileV1(
         userData = UserDataV1(
             user_id = Some("http://data.knora.org/users/c266a56709"),
-            username = Some("images-user01"),
             firstname = Some("User01"),
             lastname = Some("User"),
             email = Some("user01.user1@example.com"),
@@ -235,7 +230,6 @@ object SharedAdminTestData {
     def imagesUser02 = UserProfileV1(
         userData = UserDataV1(
             user_id = Some("http://data.knora.org/users/97cec4000f"),
-            username = Some("images-user02"),
             firstname = Some("User02"),
             lastname = Some("User"),
             email = Some("user02.user@example.com"),
@@ -312,7 +306,6 @@ object SharedAdminTestData {
     def incunabulaProjectAdminUser = UserProfileV1(
         userData = UserDataV1(
             user_id = Some("http://data.knora.org/users/b83acc5f05"),
-            username = Some("testuser"),
             firstname = Some("User"),
             lastname = Some("Test"),
             email = Some("user.test@example.com"),
@@ -349,10 +342,9 @@ object SharedAdminTestData {
     def incunabulaCreatorUser = UserProfileV1(
         userData = UserDataV1(
             user_id = Some("http://data.knora.org/users/91e19f1e01"),
-            username = Some("root-alt"),
             firstname = Some("Administrator-alt"),
             lastname = Some("Admin-alt"),
-            email = Some("test@test.ch"),
+            email = Some("old.admin@example.com"),
             password = Some("$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"), // -> "test"
             token = None,
             isActiveUser = Some(true),
@@ -385,7 +377,6 @@ object SharedAdminTestData {
     def incunabulaMemberUser = UserProfileV1(
         userData = UserDataV1(
             user_id = Some("http://data.knora.org/users/incunabulaMemberUser"),
-            username = Some("incunabula2"),
             firstname = Some("User"),
             lastname = Some("Test2"),
             email = Some("user.test2t@test.ch"),
@@ -464,7 +455,6 @@ object SharedAdminTestData {
     def anythingUser1 = UserProfileV1(
         userData = UserDataV1(
             user_id = Some("http://data.knora.org/users/9XBCrDV3SRa7kS1WwynB4Q"),
-            username = Some("anything-user"),
             firstname = Some("Anything"),
             lastname = Some("User01"),
             email = Some("anything.user01@example.org"),
@@ -500,10 +490,9 @@ object SharedAdminTestData {
     def anythingUser2 = UserProfileV1(
         userData = UserDataV1(
             user_id = Some("http://data.knora.org/users/BhkfBc3hTeS_IDo-JgXRbQ"),
-            username = Some("anything-user-2"),
             firstname = Some("Anything"),
             lastname = Some("User02"),
-            email = Some("anything.user01@example.org"),
+            email = Some("anything.user02@example.org"),
             password = Some("$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"), // -> "test"
             token = None,
             isActiveUser = Some(true),

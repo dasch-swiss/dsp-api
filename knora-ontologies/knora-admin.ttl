@@ -464,13 +464,13 @@
 
 
 
-###  http://www.knora.org/ontology/knora-base#userid
+###  http://www.knora.org/ontology/knora-base#email
 
-:userid rdf:type owl:DatatypeProperty ;
+:email rdf:type owl:DatatypeProperty ;
 
         rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
-        rdfs:comment "The login name of a user of Knora"@en ;
+        rdfs:comment "The email address and login name of a user of Knora"@en ;
 
         :subjectClassConstraint :User ;
 
@@ -526,16 +526,12 @@
 
       rdfs:subClassOf foaf:Person ,
                       [ rdf:type owl:Restriction ;
+                        owl:onProperty :email ;
+                        owl:cardinality "1"^^xsd:nonNegativeInteger
+                      ] ,
+                      [ rdf:type owl:Restriction ;
                         owl:onProperty :familyName ;
                         owl:cardinality "1"^^xsd:nonNegativeInteger
-                      ] ,
-                      [ rdf:type owl:Restriction ;
-                        owl:onProperty :userid ;
-                        owl:cardinality "1"^^xsd:nonNegativeInteger
-                      ] ,
-                      [ rdf:type owl:Restriction ;
-                        owl:onProperty :email ;
-                        owl:minCardinality "0"^^xsd:nonNegativeInteger
                       ] ,
                       [ rdf:type owl:Restriction ;
                         owl:onProperty :givenName ;
@@ -680,11 +676,10 @@
 ###  http://www.knora.org/ontology/knora-base#SystemUser
 :SystemUser rdf:type :User ;
             rdfs:comment "A built-in system user."@en ;
-            :userid "system" ;
+            :email "system@localhost" ;
             :givenName "Knora" ;
             :familyName "System" ;
             :password "-" ;
-            :email "-" ;
             :preferredLanguage "en" ;
             :isInSystemAdminGroup "false"^^xsd:boolean .
 

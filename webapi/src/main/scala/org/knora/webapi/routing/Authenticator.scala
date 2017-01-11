@@ -200,7 +200,7 @@ trait Authenticator {
 
     /**
       * Returns a [[UserProfileV1]] matching the credentials found in the [[RequestContext]].
-      * The credentials can be username/password as parameters, auth headers, or username in a cookie if the profile is
+      * The credentials can be email/password as parameters, auth headers, or email in a cookie if the profile is
       * found in the cache. If no credentials are found, then a default [[UserProfileV1]] is returned. If the credentials
       * not correct, then the corresponding error is returned.
       *
@@ -223,13 +223,13 @@ trait Authenticator {
                 case None => {
                     log.debug("No cookie or valid session id, so let's look for supplied credentials")
                     extractCredentials(requestContext) match {
-                        case Some((u, p)) =>
-                            log.debug(s"found some credentials '$u', '$p', lets try to authenticate them first")
+                        case Some((e, p)) =>
+                            log.debug(s"found some credentials '$e', '$p', lets try to authenticate them first")
 
-                            authenticateCredentials(u, p, session = false)
+                            authenticateCredentials(e, p, session = false)
                             log.debug("Supplied credentials pass authentication, get the UserProfileV1")
 
-                            val userProfileV1 = getUserProfileByUsername(u)
+                            val userProfileV1 = getUserProfileByEmail(e)
                             log.debug (s"I got a UserProfileV1 '${userProfileV1.toString}', which means that the password is a match")
                             /* we return the userProfileV1 without sensitive information */
                             userProfileV1.ofType(UserProfileType.RESTRICTED)
@@ -253,7 +253,7 @@ object Authenticator {
 
     val BAD_CRED_PASSWORD_MISMATCH = "bad credentials: user found, but password did not match"
     val BAD_CRED_USER_NOT_FOUND = "bad credentials: user not found"
-    val BAD_CRED_USERNAME_NOT_SUPPLIED = "bad credentials: no username supplied"
+    val BAD_CRED_USERNAME_NOT_SUPPLIED = "bad credentials: no email supplied"
     val BAD_CRED_USERNAME_PASSWORD_NOT_EXTRACTABLE = "bad credentials: none found"
     val BAD_CRED_USER_INACTIVE = "bad credentials: user inactive"
 
@@ -288,14 +288,14 @@ object Authenticator {
       * password matches. Caches the user profile after successful authentication under a generated session id if 'session=true', and
       * returns that said session id (or 0 if no session is needed).
       *
-      * @param username the username of the user
+      * @param email the email of the user
       * @param password the password of th user
       * @param session  a [[Boolean]] if set true then a session id will be created and the user profile cached
       * @param system   the current [[ActorSystem]]
       * @return a [[Try[String]] which is the session id under which the profile is stored if authentication was successful.
       */
-    private def authenticateCredentials(username: String, password: String, session: Boolean)(implicit system: ActorSystem, executionContext: ExecutionContext): String = {
-        val userProfileV1 = getUserProfileByUsername(username)
+    private def authenticateCredentials(email: String, password: String, session: Boolean)(implicit system: ActorSystem, executionContext: ExecutionContext): String = {
+        val userProfileV1 = getUserProfileByEmail(email)
         //log.debug(s"authenticateCredentials - userProfileV1: $userProfileV1")
 
         /* check if the user is active, if not, then no need to check the password */
@@ -350,7 +350,7 @@ object Authenticator {
       * Tries to extract the credentials from the requestContext (parameters, auth headers)
       *
       * @param requestContext a [[RequestContext]] containing the http request
-      * @return a [[Option[(String, String)]] either a [[Some]] containing a tuple with the username and password, or a [[None]]
+      * @return a [[Option[(String, String)]] either a [[Some]] containing a tuple with the email and password, or a [[None]]
       *         if no credentials could be found.
       */
     private def extractCredentials(requestContext: RequestContext): Option[(String, String)] = {
@@ -359,8 +359,8 @@ object Authenticator {
         val headers: Seq[HttpHeader] = requestContext.request.headers
 
 
-        // extract username / password from parameters
-        val usernameFromParams: String = params get "username" match {
+        // extract email / password from parameters
+        val usernameFromParams: String = params get "email" match {
             case Some(value) => value.head
             case None => ""
         }
@@ -377,7 +377,7 @@ object Authenticator {
             log.debug("no credentials sent as parameters")
         }
 
-        // extract username / password from the auth header
+        // extract email / password from the auth header
         val authHeaderList = headers filter (httpHeader => httpHeader.lowercaseName.equals("authorization"))
         val authHeaderEncoded = if (authHeaderList.nonEmpty) {
             authHeaderList.head.value.substring(6)
@@ -443,29 +443,29 @@ object Authenticator {
     }
 
     /**
-      * Tries to get a [[UserProfileV1]] from the cache or from the triple store matching the username.
+      * Tries to get a [[UserProfileV1]] from the cache or from the triple store matching the email.
       *
-      * @param username         the username of the user to be queried
+      * @param email            the email of the user to be queried
       * @param system           the current akka actor system
       * @param timeout          the timeout of the query
       * @param executionContext the current execution context
       * @return a [[Success(UserProfileV1)]]
       */
-    private def getUserProfileByUsername(username: String)(implicit system: ActorSystem, timeout: Timeout, executionContext: ExecutionContext): UserProfileV1 = {
+    private def getUserProfileByEmail(email: String)(implicit system: ActorSystem, timeout: Timeout, executionContext: ExecutionContext): UserProfileV1 = {
         val responderManager = system.actorSelection(RESPONDER_MANAGER_ACTOR_PATH)
 
-        if (username.nonEmpty) {
+        if (email.nonEmpty) {
             // try to get it from the cache
-            CacheUtil.get[UserProfileV1](AUTHENTICATION_CACHE_NAME, username) match {
+            CacheUtil.get[UserProfileV1](AUTHENTICATION_CACHE_NAME, email) match {
                 case Some(userProfile) =>
                     // found a user profile in the cache
-                    log.debug(s"getUserProfileByUsername - cache hit: $userProfile")
+                    log.debug(s"getUserProfileByEmail - cache hit: $userProfile")
                     userProfile
                 case None =>
                     // didn't found one, so I will try to get it from the triple store
                     val userProfileV1Future = for {
-                        userProfileV1 <- (responderManager ? UserProfileByUsernameGetRequestV1(username, UserProfileType.FULL)).mapTo[UserProfileV1]
-                        _ = CacheUtil.put(AUTHENTICATION_CACHE_NAME, username, userProfileV1)
+                        userProfileV1 <- (responderManager ? UserProfileByEmailGetRequestV1(email, UserProfileType.FULL)).mapTo[UserProfileV1]
+                        _ = CacheUtil.put(AUTHENTICATION_CACHE_NAME, email, userProfileV1)
                     } yield userProfileV1
 
                     userProfileV1Future.recover {

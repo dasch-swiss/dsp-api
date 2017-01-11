@@ -29,7 +29,6 @@ class UserMessagesV1Spec extends WordSpecLike with Matchers {
     val lang = SharedAdminTestData.rootUser.userData.lang
     val user_id = SharedAdminTestData.rootUser.userData.user_id
     val token = SharedAdminTestData.rootUser.userData.token
-    val username = SharedAdminTestData.rootUser.userData.username
     val firstname = SharedAdminTestData.rootUser.userData.firstname
     val lastname = SharedAdminTestData.rootUser.userData.lastname
     val email = SharedAdminTestData.rootUser.userData.email
@@ -45,10 +44,9 @@ class UserMessagesV1Spec extends WordSpecLike with Matchers {
             val rootUserProfileV1 = UserProfileV1(
                 UserDataV1(
                     user_id = user_id,
-                    username = username,
+                    email = email,
                     firstname = firstname,
                     lastname = lastname,
-                    email = email,
                     password = password,
                     token = token,
                     lang = lang
@@ -62,10 +60,9 @@ class UserMessagesV1Spec extends WordSpecLike with Matchers {
             val rootUserProfileV1Safe = UserProfileV1(
                 UserDataV1(
                     user_id = user_id,
-                    username = username,
+                    email = email,
                     firstname = firstname,
                     lastname = lastname,
-                    email = email,
                     password = None,
                     token = None,
                     lang = lang

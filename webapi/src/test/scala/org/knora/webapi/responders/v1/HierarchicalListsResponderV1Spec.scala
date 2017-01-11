@@ -59,23 +59,11 @@ class HierarchicalListsResponderV1Spec extends CoreSpec() with ImplicitSender {
         RdfDataObject(path = "_test_data/responders.v1.HierarchicalListsResponderV1Spec/dokubib-data.ttl", name = "http://www.knora.org/data/dokubib")
     )
 
-    // A test UserDataV1.
-    private val userData = UserDataV1(
-        email = Some("test@test.ch"),
-        lastname = Some("Test"),
-        firstname = Some("User"),
-        username = Some("testuser"),
-        token = None,
-        user_id = Some("http://data.knora.org/users/b83acc5f05"),
-        lang = "de"
-    )
-
     // A test UserProfileV1.
-    private val userProfile = UserProfileV1(
-        projects = Vector("http://data.knora.org/projects/77275339"),
-        groups = Nil,
-        userData = userData
-    )
+    private val userProfile = SharedAdminTestData.incunabulaProjectAdminUser
+
+    // A test UserDataV1.
+    private val userData = userProfile.userData
 
     private val hKeywords = HListGetResponseV1(
         userdata = userData,
