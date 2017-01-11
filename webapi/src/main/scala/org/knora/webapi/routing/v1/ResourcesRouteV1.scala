@@ -110,55 +110,62 @@ object ResourcesRouteV1 extends Authenticator {
                 case (propIri: IRI, values: Seq[CreateResourceValueV1]) =>
                     (InputValidation.toIri(propIri, () => throw BadRequestException(s"Invalid property IRI $propIri")), values.map {
                         case (givenValue: CreateResourceValueV1) =>
-                            // TODO: These match-case statements with lots of underlines are ugly and confusing.
 
-                            givenValue match {
+                            givenValue.getValueClassIri match {
                                 // create corresponding UpdateValueV1
 
-                                case CreateResourceValueV1(Some(richtext: CreateRichtextV1), _, _, _, _, _, _, _, _, _, _, _, comment) =>
+                                case OntologyConstants.KnoraBase.TextValue =>
+                                    val richtext: CreateRichtextV1 = givenValue.richtext_value.get
 
                                     val richtextComponents: RichtextComponents = InputValidation.handleRichtext(richtext)
 
                                     CreateValueV1WithComment(TextValueV1(InputValidation.toSparqlEncodedString(richtext.utf8str, () => throw BadRequestException(s"Invalid text: '${richtext.utf8str}'")),
                                         textattr = richtextComponents.textattr,
                                         resource_reference = richtextComponents.resource_reference),
-                                        comment)
+                                        givenValue.comment)
 
-                                case CreateResourceValueV1(_, Some(linkValue: IRI), _, _, _, _, _, _, _, _, _, _, comment) =>
-                                    val linkVal = InputValidation.toIri(linkValue, () => throw BadRequestException(s"Invalid Knora resource IRI: $linkValue"))
-                                    CreateValueV1WithComment(LinkUpdateV1(linkVal), comment)
+                                case OntologyConstants.KnoraBase.LinkValue =>
+                                    val linkVal = InputValidation.toIri(givenValue.link_value.get, () => throw BadRequestException(s"Invalid Knora resource IRI: $givenValue.link_value.get"))
+                                    CreateValueV1WithComment(LinkUpdateV1(linkVal), givenValue.comment)
 
-                                case CreateResourceValueV1(_, _, Some(intValue: Int), _, _, _, _, _, _, _, _, _, comment) => CreateValueV1WithComment(IntegerValueV1(intValue), comment)
+                                case OntologyConstants.KnoraBase.IntValue =>
+                                    CreateValueV1WithComment(IntegerValueV1(givenValue.int_value.get), givenValue.comment)
 
-                                case CreateResourceValueV1(_, _, _, Some(decimalValue: BigDecimal), _, _, _, _, _, _, _, _, comment) =>
-                                    CreateValueV1WithComment(DecimalValueV1(decimalValue), comment)
+                                case OntologyConstants.KnoraBase.DecimalValue =>
+                                    CreateValueV1WithComment(DecimalValueV1(givenValue.decimal_value.get), givenValue.comment)
 
-                                case CreateResourceValueV1(_, _, _, _, Some(booleanValue: Boolean), _, _, _, _, _, _, _, comment) =>
-                                    CreateValueV1WithComment(BooleanValueV1(booleanValue), comment)
+                                case OntologyConstants.KnoraBase.BooleanValue =>
+                                    CreateValueV1WithComment(BooleanValueV1(givenValue.boolean_value.get), givenValue.comment)
 
-                                case CreateResourceValueV1(_, _, _, _, _, Some(uriValue: String), _, _, _, _, _, _, comment) =>
-                                    CreateValueV1WithComment(UriValueV1(InputValidation.toIri(uriValue, () => throw BadRequestException(s"Invalid URI: $uriValue"))), comment)
+                                case OntologyConstants.KnoraBase.UriValue =>
+                                    val uriValue = InputValidation.toIri(givenValue.uri_value.get, () => throw BadRequestException(s"Invalid URI: ${givenValue.uri_value.get}"))
+                                    CreateValueV1WithComment(UriValueV1(uriValue), givenValue.comment)
 
-                                case CreateResourceValueV1(_, _, _, _, _, _, Some(dateStr: String), _, _, _, _, _, comment) =>
-                                    CreateValueV1WithComment(DateUtilV1.createJDNValueV1FromDateString(dateStr), comment)
+                                case OntologyConstants.KnoraBase.DateValue =>
+                                    val dateVal: JulianDayNumberValueV1 = DateUtilV1.createJDNValueV1FromDateString(givenValue.date_value.get)
+                                    CreateValueV1WithComment(dateVal, givenValue.comment)
 
-                                case CreateResourceValueV1(_, _, _, _, _, _, _, Some(colorStr: String), _, _, _, _, comment) =>
-                                    val colorValue = InputValidation.toColor(colorStr, () => throw BadRequestException(s"Invalid color value: $colorStr"))
-                                    CreateValueV1WithComment(ColorValueV1(colorValue), comment)
+                                case OntologyConstants.KnoraBase.ColorValue =>
+                                    val colorValue = InputValidation.toColor(givenValue.color_value.get, () => throw BadRequestException(s"Invalid color value: ${givenValue.color_value.get}"))
+                                    CreateValueV1WithComment(ColorValueV1(colorValue), givenValue.comment)
 
-                                case CreateResourceValueV1(_, _, _, _, _, _, _, _, Some(geomStr: String), _, _, _, comment) =>
-                                    val geometryValue = InputValidation.toGeometryString(geomStr, () => throw BadRequestException(s"Invalid geometry value: $geomStr"))
-                                    CreateValueV1WithComment(GeomValueV1(geometryValue), comment)
+                                case OntologyConstants.KnoraBase.GeomValue =>
+                                    val geometryValue = InputValidation.toGeometryString(givenValue.geom_value.get, () => throw BadRequestException(s"Invalid geometry value: ${givenValue.geom_value.get}"))
+                                    CreateValueV1WithComment(GeomValueV1(geometryValue), givenValue.comment)
 
-                                case CreateResourceValueV1(_, _, _, _, _, _, _, _, _, Some(hlistValue: IRI), _, _, comment) =>
-                                    val listNodeIri = InputValidation.toIri(hlistValue, () => throw BadRequestException(s"Invalid value IRI: $hlistValue"))
-                                    CreateValueV1WithComment(HierarchicalListValueV1(listNodeIri), comment)
+                                case OntologyConstants.KnoraBase.ListValue =>
+                                    val listNodeIri = InputValidation.toIri(givenValue.hlist_value.get, () => throw BadRequestException(s"Invalid value IRI: ${givenValue.hlist_value.get}"))
+                                    CreateValueV1WithComment(HierarchicalListValueV1(listNodeIri), givenValue.comment)
 
-                                case CreateResourceValueV1(_, _, _, _, _, _, _, _, _, _, Some(Seq(timeval1: BigDecimal, timeval2: BigDecimal)), _, comment) =>
-                                    CreateValueV1WithComment(IntervalValueV1(timeval1, timeval2), comment)
+                                case OntologyConstants.KnoraBase.IntervalValue =>
+                                    val timeVals: Seq[BigDecimal] = givenValue.interval_value.get
 
-                                case CreateResourceValueV1(_, _, _, _, _, _, _, _, _, _, _, Some(geonameStr: String), comment) =>
-                                    CreateValueV1WithComment(GeonameValueV1(geonameStr), comment)
+                                    if (timeVals.length != 2) throw BadRequestException("parameters for interval_value invalid")
+
+                                    CreateValueV1WithComment(IntervalValueV1(timeVals(0), timeVals(1)), givenValue.comment)
+
+                                case OntologyConstants.KnoraBase.GeonameValue =>
+                                    CreateValueV1WithComment(GeonameValueV1(givenValue.geoname_value.get), givenValue.comment)
 
                                 case _ => throw BadRequestException(s"No value submitted")
 
