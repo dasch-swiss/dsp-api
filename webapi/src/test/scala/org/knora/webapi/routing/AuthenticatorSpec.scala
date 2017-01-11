@@ -57,6 +57,8 @@ class AuthenticatorSpec extends CoreSpec("AuthenticationTestSystem") with Implic
     implicit val timeout: Timeout = Duration(5, SECONDS)
 
     val rootUserProfileV1 = SharedAdminTestData.rootUser
+    val rootUserEmail = rootUserProfileV1.userData.email.get
+    val rootUserPassword = "test"
 
     val mockUsersActor = actor(RESPONDER_MANAGER_ACTOR_NAME)(new Act {
         become {
@@ -70,35 +72,35 @@ class AuthenticatorSpec extends CoreSpec("AuthenticationTestSystem") with Implic
         }
     })
 
-    val getUserProfileByUsername = PrivateMethod[Try[UserProfileV1]]('getUserProfileByUsername)
+    val getUserProfileByEmail = PrivateMethod[Try[UserProfileV1]]('getUserProfileByEmail)
     val authenticateCredentials = PrivateMethod[Try[String]]('authenticateCredentials)
 
-    "During Authentication " when {
+    "During Authentication" when {
         "called, the 'getUserProfile' method " should {
-            "succeed with the correct 'username' " in {
-                Authenticator invokePrivate getUserProfileByUsername("root", system, timeout, executionContext) should be(rootUserProfileV1)
+            "succeed with the correct 'email' " in {
+                Authenticator invokePrivate getUserProfileByEmail(rootUserEmail, system, timeout, executionContext) should be(rootUserProfileV1)
             }
 
             /* TODO: Find out how to mock correctly */
-            "fail with the wrong 'username' " ignore {
+            "fail with the wrong 'email' " ignore {
                 an [BadCredentialsException] should be thrownBy {
-                    Authenticator invokePrivate getUserProfileByUsername("wronguser", system, timeout, executionContext)
+                    Authenticator invokePrivate getUserProfileByEmail("wronguser@example.com", system, timeout, executionContext)
                 }
             }
 
-            "fail when not providing a username " in {
+            "fail when not providing a email " in {
                 an [BadCredentialsException] should be thrownBy {
-                    Authenticator invokePrivate getUserProfileByUsername("", system, timeout, executionContext)
+                    Authenticator invokePrivate getUserProfileByEmail("", system, timeout, executionContext)
                 }
             }
         }
         "called, the 'authenticateCredentials' method " should {
-            "succeed with the correct 'username' / correct 'password' " in {
-                Authenticator invokePrivate authenticateCredentials("root", "test", false, system, executionContext) should be("0")
+            "succeed with the correct 'email' / correct 'password' " in {
+                Authenticator invokePrivate authenticateCredentials(rootUserEmail, rootUserPassword, false, system, executionContext) should be("0")
             }
-            "fail with correct 'username' / wrong 'password' " in {
+            "fail with correct 'email' / wrong 'password' " in {
                 an [BadCredentialsException] should be thrownBy {
-                    Authenticator invokePrivate authenticateCredentials("root", "wrongpass", false, system, executionContext)
+                    Authenticator invokePrivate authenticateCredentials(rootUserEmail, "wrongpass", false, system, executionContext)
                 }
             }
         }

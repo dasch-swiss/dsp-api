@@ -61,11 +61,15 @@ case class CreateUserApiRequestV1(email: String,
   * @param email      the new email address. Needs to be unique on the server.
   * @param givenName  the new given name.
   * @param familyName the new family name.
+  * @param password   the new password.
+  * @param status     the new status.
   * @param lang       the new ISO 639-1 code of the new preferred language.
   */
 case class UpdateUserApiRequestV1(email: Option[String] = None,
                                   givenName: Option[String] = None,
                                   familyName: Option[String] = None,
+                                  password: Option[String] = None,
+                                  status: Option[Boolean] = None,
                                   lang: Option[String] = None) {
 
     def toJsValue = UserV1JsonProtocol.updateUserApiRequestV1Format.write(this)

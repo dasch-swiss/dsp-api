@@ -54,6 +54,8 @@ class UsersResponderV1 extends ResponderV1 {
         case UserProfileByEmailGetRequestV1(username, profileType) => future2Message(sender(), getUserProfileByEmailV1(username, profileType), log)
         case UserCreateRequestV1(createRequest, userProfile, apiRequestID) => future2Message(sender(), createNewUserV1(createRequest, userProfile, apiRequestID), log)
         case UserUpdateRequestV1(userIri, changeUserData, userProfile, apiRequestID) => future2Message(sender(), updateUserDataV1(userIri, changeUserData, userProfile, apiRequestID), log)
+        case UserChangePasswordRequestV1(userIri, changePasswordRequest, userProfile, apiRequestID) => future2Message(sender(),)
+        case UserChangeStatusRequestV1(userIri, changeUserStatusApiRequestV, userProfile, apiRequestID) => future2Message(sender(),)
         case other => handleUnexpectedMessage(sender(), other, log)
     }
 
@@ -91,7 +93,6 @@ class UsersResponderV1 extends ResponderV1 {
       * @return a [[UserProfileV1]] describing the user.
       */
     private def getUserProfileByEmailV1(email: String, profileType: UserProfileType.Value): Future[UserProfileV1] = {
-        // TODO: add caching of user profiles that was removed from [[Authenticator]]
         log.debug(s"getUserProfileByEmailV1: username = '$email', type = '$profileType'")
         for {
             sparqlQueryString <- Future(queries.sparql.v1.txt.getUserByEmail(
@@ -134,15 +135,15 @@ class UsersResponderV1 extends ResponderV1 {
             // check if the supplied email for the new user is unique, i.e. not already registered
             sparqlQueryString = queries.sparql.v1.txt.getUserByEmail(
                 triplestore = settings.triplestoreType,
-                email = SparqlUtil.string2SparqlLiteral(createRequest.email)
+                email = createRequest.email
             ).toString()
-            //_ = log.debug(s"createNewUser - check duplicate name: $sparqlQueryString")
+            _ = log.debug(s"createNewUser - check duplicate email: $sparqlQueryString")
             userDataQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResponse]
 
             //_ = log.debug(MessageUtil.toSource(userDataQueryResponse))
 
             _ = if (userDataQueryResponse.results.bindings.nonEmpty) {
-                throw DuplicateValueException(s"User with the username: '${createRequest.email}' already exists")
+                throw DuplicateValueException(s"User with the email: '${createRequest.email}' already exists")
             }
 
             userIri = knoraIdUtil.makeRandomPersonIri
@@ -186,10 +187,99 @@ class UsersResponderV1 extends ResponderV1 {
 
     }
 
+    /**
+      * Updates an existing user. Only basic user data information (email, givenName, familyName, lang)
+      * can be changed. For changing the password or user status, use the separate methods.
+      *
+      * @param userIri              the IRI of the existing user that we want to update.
+      * @param updateUserRequest the updated information.
+      * @param userProfile          the user profile of the requesting user.
+      * @param apiRequestID         the unique api request ID.
+      * @return a [[UserOperationResponseV1]]
+      */
+    private def updateBasicUserDataV1(userIri: IRI, updateUserRequest: UpdateUserApiRequestV1, userProfile: UserProfileV1, apiRequestID: UUID): Future[UserOperationResponseV1] = {
+
+        // check if the requesting user is allowed to perform updates
+        if (!userProfile.userData.user_id.contains(userIri) && !userProfile.permissionData.isSystemAdmin) {
+            // not the user and not a system admin
+            throw ForbiddenException("User information can only be changed by the user itself or a system administrator")
+        }
+
+        // check if necessary information is present
+        if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty")
+
+        // check that we don't want to change the password or status
+        if (updateUserRequest.password.isDefined) throw BadRequestException("The password cannot be changed by this method.")
+        if (updateUserRequest.status.isDefined) throw BadRequestException("The status cannot be changed by this method.")
+
+        // run the user update with an IRI lock
+        for {
+            taskResult <- IriLocker.runWithIriLock(
+                apiRequestID,
+                userIri,
+                () => updateUserDataV1(userIri, updateUserRequest, userProfile, apiRequestID)
+            )
+        } yield taskResult
+    }
+
+
+    private def changePasswordV1(userIri: IRI, changePasswordRequest: ChangeUserPasswordApiRequestV1, userProfile: UserProfileV1, apiRequestID: UUID): Future[UserOperationResponseV1] = {
+
+        // check if necessary information is present
+        if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty")
+
+        // check if the requesting user is allowed to perform updates
+        if (!userProfile.userData.user_id.contains(userIri) && !userProfile.permissionData.isSystemAdmin) {
+            // not the user and not a system admin
+            throw ForbiddenException("User information can only be changed by the user itself or a system administrator")
+        }
+
+        def checkIfOldPasswordMatches(userIri: IRI, oldPassword: String): Future[Boolean] = ???
+
+        for {
+            // check if old password matches with an IRI lock
+            checkResult <- IriLocker.runWithIriLock(
+                apiRequestID,
+                userIri,
+                () => checkIfOldPasswordMatches(userIri, oldPassword = changePasswordRequest.oldPassword)
+            )
+            _ = if (!checkResult) throw BadRequestException("The supplied old password does not match current users password.")
+
+            updateUserRequest = UpdateUserApiRequestV1(password = Some(changePasswordRequest.newPassword))
+            // run the user update with an IRI lock
+            taskResult <- IriLocker.runWithIriLock(
+                apiRequestID,
+                userIri,
+                () => updateUserDataV1(userIri, updateUserRequest, userProfile, apiRequestID)
+            )
+        } yield taskResult
+    }
+
+    private def updateBasicUserDataV1(userIri: IRI, updateUserApiRequest: UpdateUserApiRequestV1, userProfile: UserProfileV1, apiRequestID: UUID): Future[UserOperationResponseV1] = {
+
+        // check if necessary information is present
+        if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty")
+
+        // check if the requesting user is allowed to perform updates
+        if (!userProfile.userData.user_id.contains(userIri) && !userProfile.permissionData.isSystemAdmin) {
+            // not the user and not a system admin
+            throw ForbiddenException("User information can only be changed by the user itself or a system administrator")
+        }
+
+        // run the user update with an IRI lock
+        for {
+            taskResult <- IriLocker.runWithIriLock(
+                apiRequestID,
+                userIri,
+                () => updateUserDataV1(userIri, updateUserApiRequest, userProfile, apiRequestID)
+            )
+        } yield taskResult
+    }
+
+
     // TODO: Refactor method so it doesn't use Any or asInstanceOf (issue #371)
     /**
-      * Updates an existing user. Only basic user data information (username, givenName, familyName, email, lang)
-      * can be changed. For changing the password or user status, use the separate methods.
+      *
       *
       * @param userIri          the IRI of the existing user that we want to update.
       * @param apiUpdateRequest the updated information.
@@ -199,25 +289,12 @@ class UsersResponderV1 extends ResponderV1 {
       */
     private def updateUserDataV1(userIri: IRI, apiUpdateRequest: UpdateUserApiRequestV1, userProfile: UserProfileV1, apiRequestID: UUID): Future[UserOperationResponseV1] = {
 
-        /**
-          * Execute the update with an IRI lock.
-          */
-        def makeTaskFuture(userIri: IRI, apiUpdateRequest: UpdateUserApiRequestV1, userProfileV1: UserProfileV1, apiRequestID: UUID): Future[UserOperationResponseV1] = for {
-
-        // check if necessary information is present
-            _ <- Future(if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty"))
-
-            // check if the requesting user is allowed to perform updates
-            _ = if (!userProfile.userData.user_id.contains(userIri) && !userProfile.permissionData.isSystemAdmin) {
-                // not the user and not a system admin
-                throw ForbiddenException("User information can only be changed by the user itself or a system administrator")
-            }
-
+        for {
             // get current value.
-            sparqlQueryString = queries.sparql.v1.txt.getUserByIri(
+            sparqlQueryString <- Future(queries.sparql.v1.txt.getUserByIri(
                 triplestore = settings.triplestoreType,
                 userIri = userIri
-            ).toString()
+            ).toString())
             userDataQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResponse]
 
             // Update the user
@@ -277,16 +354,6 @@ class UsersResponderV1 extends ResponderV1 {
                 UserOperationResponseV1(updatedUserProfile.ofType(UserProfileType.RESTRICTED), userProfile.userData)
             }
         } yield userOperationResponseV1
-
-
-        for {
-        // run the user update with an IRI lock
-            taskResult <- IriLocker.runWithIriLock(
-                apiRequestID,
-                userIri,
-                () => makeTaskFuture(userIri, apiUpdateRequest, userProfile, apiRequestID)
-            )
-        } yield taskResult
     }
 
 

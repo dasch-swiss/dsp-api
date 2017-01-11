@@ -188,7 +188,7 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
                 expectMsg(Failure(BadRequestException("Password cannot be empty")))
             }
         }
-        "asked to update a user " should {
+        "asked to update a user" should {
 
             "update the user" in {
 
@@ -282,9 +282,9 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
                 )
                 expectMsgPF(timeout) {
                     case UserOperationResponseV1(updatedUserProfile, requestingUserData) => {
-                        // cant check if passord was changed, since it will not be returned. but if no error message
+                        // cant check if password was changed, since it will not be returned. but if no error message
                         // is returned, then I can assume that the password was successfully changed, as this check is
-                        // perfomed in the responder itself.
+                        // performed in the responder itself.
 
                         // check if the correct userdata is returned
                         assert(requestingUserData.user_id.contains(SharedAdminTestData.normalUser.userData.user_id.get))
