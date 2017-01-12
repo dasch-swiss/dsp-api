@@ -43,11 +43,7 @@ SELECT ?s ?p ?o
 }
 WHERE {
     ?s rdf:type knora-base:UserGroup .
-    ?s knora-base:groupName @name .
-
-    @if(projectIri.nonEmpty) {
-        ?s knora-base:belongsToProject <@projectIri> .
-    }
-
+    ?s knora-base:groupName "@name"^^xsd:string .
+    ?s knora-base:belongsToProject <@projectIri> .
     ?s ?p ?o .
 }

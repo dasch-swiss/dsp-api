@@ -77,7 +77,7 @@ class AuthenticationV1R2RSpec extends R2RSpec with SessionJsonProtocol {
 
         "succeed with authentication and correct username / correct password " in {
             /* Correct username and password */
-            Get("/v1/authenticate?username=root&password=test") ~> authenticatePath ~> check {
+            Get("/v1/authenticate?username=root%40example.com&password=test") ~> authenticatePath ~> check {
                 //log.debug("==>> " + responseAs[String])
                 status should equal(StatusCodes.OK)
             }
@@ -85,7 +85,7 @@ class AuthenticationV1R2RSpec extends R2RSpec with SessionJsonProtocol {
 
         "fail with authentication and correct username / wrong password " in {
             /* Correct username / wrong password */
-            Get("/v1/authenticate?username=root&password=wrong") ~> authenticatePath ~> check {
+            Get("/v1/authenticate?username=root%40example.com&password=wrong") ~> authenticatePath ~> check {
                 //log.debug("==>> " + responseAs[String])
                 status should equal(StatusCodes.Unauthorized)
             }
@@ -94,7 +94,7 @@ class AuthenticationV1R2RSpec extends R2RSpec with SessionJsonProtocol {
         /* not supported in this branch */
         "fail with authentication if the user is set as 'not active' " in {
             /* User not active */
-            Get("/v1/authenticate?username=inactiveuser&password=test") ~> authenticatePath ~> check {
+            Get("/v1/authenticate?username=inactive.user%40example.com&password=test") ~> authenticatePath ~> check {
                 //log.debug("==>> " + responseAs[String])
                 status should equal(StatusCodes.Unauthorized)
             }
@@ -104,7 +104,7 @@ class AuthenticationV1R2RSpec extends R2RSpec with SessionJsonProtocol {
 
         "succeed with authentication and correct username / correct password " in {
             /* Correct username / correct password */
-            Get("/v1/authenticate") ~> addCredentials(BasicHttpCredentials("root", "test")) ~> authenticatePath ~> check {
+            Get("/v1/authenticate") ~> addCredentials(BasicHttpCredentials("root@example.com", "test")) ~> authenticatePath ~> check {
                 //log.debug("==>> " + responseAs[String])
                 status should equal (StatusCodes.OK)
             }
@@ -112,7 +112,7 @@ class AuthenticationV1R2RSpec extends R2RSpec with SessionJsonProtocol {
 
         "fail with authentication and correct username / wrong password " in {
             /* Correct username / wrong password */
-            Get("/v1/authenticate") ~> addCredentials(BasicHttpCredentials("root", "wrong")) ~> authenticatePath ~> check {
+            Get("/v1/authenticate") ~> addCredentials(BasicHttpCredentials("root@example.com", "wrong")) ~> authenticatePath ~> check {
                 //log.debug("==>> " + responseAs[String])
                 status should equal(StatusCodes.Unauthorized)
             }
@@ -124,7 +124,7 @@ class AuthenticationV1R2RSpec extends R2RSpec with SessionJsonProtocol {
 
         "succeed with 'login' and correct username / correct password " in {
             /* Correct username and correct password */
-            Get("/v1/session?login&username=root&password=test") ~> authenticatePath ~> check {
+            Get("/v1/session?login&username=root@example.com&password=test") ~> authenticatePath ~> check {
                 //log.debug("==>> " + responseAs[String])
                 status should equal(StatusCodes.OK)
                 /* store session */
@@ -159,7 +159,7 @@ class AuthenticationV1R2RSpec extends R2RSpec with SessionJsonProtocol {
 
         "fail with 'login' and correct username / wrong password " in {
             /* Correct username and wrong password */
-            Get("/v1/session?login&username=root&password=wrong") ~> authenticatePath ~> check {
+            Get("/v1/session?login&username=root@example.com&password=wrong") ~> authenticatePath ~> check {
                 //log.debug("==>> " + responseAs[String])
                 status should equal(StatusCodes.Unauthorized)
             }
@@ -187,7 +187,7 @@ class AuthenticationV1R2RSpec extends R2RSpec with SessionJsonProtocol {
 
         "succeed with 'login' and correct username / correct password " in {
             /* Correct username and correct password */
-            Get("/v1/session?login") ~> addCredentials(BasicHttpCredentials("root", "test")) ~> authenticatePath ~> check {
+            Get("/v1/session?login") ~> addCredentials(BasicHttpCredentials("root@example.com", "test")) ~> authenticatePath ~> check {
                 //log.debug("==>> " + responseAs[String])
                 status should equal(StatusCodes.OK)
             }
@@ -195,7 +195,7 @@ class AuthenticationV1R2RSpec extends R2RSpec with SessionJsonProtocol {
 
         "fail with 'login' and correct username / wrong password " in {
             /* Correct username and wrong password */
-            Get("/v1/session?login") ~> addCredentials(BasicHttpCredentials("root", "wrong")) ~> authenticatePath ~> check {
+            Get("/v1/session?login") ~> addCredentials(BasicHttpCredentials("root@example.com", "wrong")) ~> authenticatePath ~> check {
                 //log.debug("==>> " + responseAs[String])
                 status should equal(StatusCodes.Unauthorized)
             }
@@ -203,7 +203,7 @@ class AuthenticationV1R2RSpec extends R2RSpec with SessionJsonProtocol {
 
         "fail with 'login' and wrong username " in {
             /* wrong username */
-            Get("/v1/session?logint") ~> addCredentials(BasicHttpCredentials("root", "test")) ~> authenticatePath ~> check {
+            Get("/v1/session?logint") ~> addCredentials(BasicHttpCredentials("root@example.com", "test")) ~> authenticatePath ~> check {
                 //log.debug("==>> " + responseAs[String])
                 status should equal(StatusCodes.Unauthorized)
             }
@@ -215,7 +215,7 @@ class AuthenticationV1R2RSpec extends R2RSpec with SessionJsonProtocol {
 
         "succeed with authentication using URL parameters and correct username / correct password " in {
             /* Correct username / correct password */
-            Get("/v1/resources/http%3A%2F%2Fdata.knora.org%2Fc5058f3a?username=root&password=test") ~> resourcesPath ~> check {
+            Get("/v1/resources/http%3A%2F%2Fdata.knora.org%2Fc5058f3a?username=root@example.com&password=test") ~> resourcesPath ~> check {
                 //log.debug("==>> " + responseAs[String])
                 status should equal(StatusCodes.OK)
             }
@@ -223,7 +223,7 @@ class AuthenticationV1R2RSpec extends R2RSpec with SessionJsonProtocol {
 
         "fail with authentication using URL parameters and correct username / wrong password " in {
             /* Correct username / wrong password */
-            Get("/v1/resources/http%3A%2F%2Fdata.knora.org%2Fc5058f3a?username=root&password=wrong") ~> resourcesPath ~> check {
+            Get("/v1/resources/http%3A%2F%2Fdata.knora.org%2Fc5058f3a?username=root@example.com&password=wrong") ~> resourcesPath ~> check {
                 //log.debug("==>> " + responseAs[String])
                 status should equal(StatusCodes.Unauthorized)
             }
@@ -231,7 +231,7 @@ class AuthenticationV1R2RSpec extends R2RSpec with SessionJsonProtocol {
 
         "succeed with authentication using HTTP Basic Auth headers and correct username / correct password " in {
             /* Correct username / correct password */
-            Get("/v1/resources/http%3A%2F%2Fdata.knora.org%2Fc5058f3a") ~> addCredentials(BasicHttpCredentials("root", "test")) ~> resourcesPath ~> check {
+            Get("/v1/resources/http%3A%2F%2Fdata.knora.org%2Fc5058f3a") ~> addCredentials(BasicHttpCredentials("root@example.com", "test")) ~> resourcesPath ~> check {
                 //log.debug("==>> " + responseAs[String])
                 status should equal(StatusCodes.OK)
             }
@@ -239,14 +239,14 @@ class AuthenticationV1R2RSpec extends R2RSpec with SessionJsonProtocol {
 
         "fail with authentication using HTTP Basic Auth headers and correct username / wrong password " in {
             /* Correct username / wrong password */
-            Get("/v1/resources/http%3A%2F%2Fdata.knora.org%2Fc5058f3a") ~> addCredentials(BasicHttpCredentials("root", "wrong")) ~> resourcesPath ~> check {
+            Get("/v1/resources/http%3A%2F%2Fdata.knora.org%2Fc5058f3a") ~> addCredentials(BasicHttpCredentials("root@example.com", "wrong")) ~> resourcesPath ~> check {
                 //log.debug("==>> " + responseAs[String])
                 status should equal(StatusCodes.Unauthorized)
             }
         }
 
         "not return sensitive information (token, password) in the response " in {
-            Get("/v1/resources/http%3A%2F%2Fdata.knora.org%2Fc5058f3a?username=root&password=test") ~> resourcesPath ~> check {
+            Get("/v1/resources/http%3A%2F%2Fdata.knora.org%2Fc5058f3a?username=root@example.com&password=test") ~> resourcesPath ~> check {
                 //log.debug("==>> " + responseAs[String])
                 // assert(status === StatusCodes.OK)
                 assert(responseAs[String] contains "\"password\":null")

@@ -45,13 +45,13 @@
   projectIri: IRI,
   projectClassIri: IRI,
   shortname: String,
-  longname: String,
-  description: String,
-  keywords: String,
-  logo: String,
+  maybeLongname: Option[String],
+  maybeDescription: Option[String],
+  maybeKeywords: Option[String],
+  maybeLogo: Option[String],
   basepath: String,
-  isActiveProject: String,
-  hasSelfJoinEnabled: String,
+  status: Boolean,
+  hasSelfJoinEnabled: Boolean,
   projectOntologyGraph: String,
   projectDataGraph: String)
 
@@ -66,33 +66,33 @@ INSERT {
     GRAPH ?adminNamedGraphIri {
         ?projectIri rdf:type ?projectClassIri ;
 
-            knora-base:projectShortname @shortname ;
+            knora-base:projectShortname "@shortname"^^xsd:string ;
 
-            knora-base:projectLongname @longname ;
-
-            knora-base:projectDescription @description ;
-
-            @if(keywords.nonEmpty) {
-                knora-base:keywords @keywords ;
+            @if(maybeLongname.nonEmpty) {
+                knora-base:projectLongname "@maybeLongname.get"^^xsd:string ;
             }
 
-            @if(logo.nonEmpty) {
-                knora-base:logo @logo ;
+            @if(maybeDescription.nonEmpty) {
+                knora-base:projectDescription "@maybeDescription.get"^^xsd:string ;
             }
 
-            knora-base:projectBasepath @basepath ;
-
-            @if(isActiveProject.nonEmpty) {
-                knora-base:isActiveProject @isActiveProject ;
+            @if(maybeKeywords.nonEmpty) {
+                knora-base:keywords "@maybeKeywords.get"^^xsd:string ;
             }
 
-            @if(hasSelfJoinEnabled.nonEmpty) {
-                knora-base:hasSelfJoinEnabled @hasSelfJoinEnabled ;
+            @if(maybeLogo.nonEmpty) {
+                knora-base:logo "@maybeLogo.get"^^xsd:string ;
             }
 
-            knora-base:projectOntologyGraph @projectOntologyGraph ;
+            knora-base:projectBasepath "@basepath"^^xsd:string ;
 
-            knora-base:projectDataGraph @projectDataGraph .
+            knora-base:status "@status"^^xsd:boolean ;
+
+            knora-base:hasSelfJoinEnabled "@hasSelfJoinEnabled"^^xsd:boolean ;
+
+            knora-base:projectOntologyGraph "@projectOntologyGraph"^^xsd:string ;
+
+            knora-base:projectDataGraph "@projectDataGraph"^^xsd:string .
     }
 }
 @*

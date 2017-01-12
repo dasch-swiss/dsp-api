@@ -20,6 +20,7 @@ import java.util.UUID
 
 import akka.actor.Status
 import akka.pattern._
+import org.apache.jena.sparql.function.library.leviathan.log
 import org.knora.webapi
 import org.knora.webapi.messages.v1.responder.groupmessages._
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectsResponderRequestV1
@@ -52,7 +53,7 @@ class GroupsResponderV1 extends ResponderV1 {
         case GroupsGetRequestV1(userProfile) => future2Message(sender(), getGroupsResponseV1(userProfile), log)
         case GroupInfoByIRIGetRequest(iri, userProfile) => future2Message(sender(), getGroupInfoByIRIGetRequest(iri, userProfile), log)
         case GroupInfoByNameGetRequest(projectIri, groupName, userProfile) => future2Message(sender(), getGroupInfoByNameGetRequest(projectIri, groupName, userProfile), log)
-        case GroupCreateRequestV1(newGroupInfo, userProfile, apiRequestID) => future2Message(sender(), createGroupV1(newGroupInfo, userProfile, apiRequestID), log)
+        case GroupCreateRequestV1(newGroupInfo, userProfile, apiRequestID) => future2Message(sender(), createGroupV1(newGroupInfo, userProfile), log)
         case other => handleUnexpectedMessage(sender(), other, log)
     }
 
@@ -80,7 +81,14 @@ class GroupsResponderV1 extends ResponderV1 {
             groups = groupsWithProperties.map {
                 case (groupIri: IRI, propsMap: Map[String, String]) =>
 
-                    GroupInfoV1(id = groupIri, name = propsMap.getOrElse(OntologyConstants.KnoraBase.GroupName, throw InconsistentTriplestoreDataException(s"Group $groupIri has no name attached")), description = propsMap.get(OntologyConstants.KnoraBase.GroupDescription), belongsToProject = propsMap.getOrElse(OntologyConstants.KnoraBase.BelongsToProject, throw InconsistentTriplestoreDataException(s"Group $groupIri has no project attached")))
+                    GroupInfoV1(
+                        id = groupIri,
+                        name = propsMap.getOrElse(OntologyConstants.KnoraBase.GroupName, throw InconsistentTriplestoreDataException(s"Group $groupIri has no name attached")),
+                        description = propsMap.get(OntologyConstants.KnoraBase.GroupDescription),
+                        belongsToProject = propsMap.getOrElse(OntologyConstants.KnoraBase.BelongsToProject, throw InconsistentTriplestoreDataException(s"Group $groupIri has no project attached")),
+                        status = propsMap(OntologyConstants.KnoraBase.Status).toBoolean,
+                        hasSelfJoinEnabled = propsMap(OntologyConstants.KnoraBase.HasSelfJoinEnabled).toBoolean
+                    )
             }.toVector
         } yield GroupsResponseV1(
             groups = groups,
@@ -133,7 +141,7 @@ class GroupsResponderV1 extends ResponderV1 {
       */
     private def getGroupInfoByNameGetRequest(projectIRI: IRI, groupName: String, userProfile: Option[UserProfileV1]): Future[GroupInfoResponseV1] = {
 
-        /* FIXME: Check to see if it is a built-in implicit group and skip sparql query */
+        /* Check to see if it is a built-in implicit group and skip sparql query */
 
         groupName match {
             case PROJECT_MEMBER => getGroupInfoForProjectMemberGroup(projectIRI, userProfile)
@@ -144,7 +152,13 @@ class GroupsResponderV1 extends ResponderV1 {
 
     private def getGroupInfoForProjectMemberGroup(projectIRI: IRI, userProfile: Option[UserProfileV1]): Future[GroupInfoResponseV1] = {
 
-        val groupInfo = GroupInfoV1(id = "-", name = "ProjectMember", description = Some("Default Project Member Group"), belongsToProject = projectIRI, isActiveGroup = true, hasSelfJoinEnabled = false)
+        val groupInfo = GroupInfoV1(
+            id = "-",
+            name = "ProjectMember",
+            description = Some("Default Project Member Group"),
+            belongsToProject = projectIRI,
+            status = true,
+            hasSelfJoinEnabled = false)
 
         val groupInfoResponse = GroupInfoResponseV1(
             group_info = groupInfo,
@@ -159,7 +173,13 @@ class GroupsResponderV1 extends ResponderV1 {
 
     private def getGroupInfoForProjectAdminGroup(projectIRI: IRI, userProfile: Option[UserProfileV1]): Future[GroupInfoResponseV1] = {
 
-        val groupInfo = GroupInfoV1(id = "-", name = "ProjectAdmin", description = Some("Default Project Admin Group"), belongsToProject = projectIRI, isActiveGroup = true, hasSelfJoinEnabled = false)
+        val groupInfo = GroupInfoV1(
+            id = "-",
+            name = "ProjectAdmin",
+            description = Some("Default Project Admin Group"),
+            belongsToProject = projectIRI,
+            status = true,
+            hasSelfJoinEnabled = false)
 
         val groupInfoResponse = GroupInfoResponseV1(
             group_info = groupInfo,
@@ -176,7 +196,7 @@ class GroupsResponderV1 extends ResponderV1 {
         for {
             sparqlQuery <- Future(queries.sparql.v1.txt.getGroupByName(
                 triplestore = settings.triplestoreType,
-                name = SparqlUtil.any2SparqlLiteral(groupName),
+                name = groupName,
                 projectIri = projectIRI
             ).toString())
             _ = log.debug(s"getGroupInfoByNameGetRequest - getGroupByName: $sparqlQuery")
@@ -208,20 +228,17 @@ class GroupsResponderV1 extends ResponderV1 {
         } yield groupInfoResponse
     }
 
-    private def createGroupV1(newGroupInfo: NewGroupInfoV1, userProfile: UserProfileV1, apiRequestID: UUID): Future[GroupOperationResponseV1] = {
-
+    private def createGroupV1(createRequest: CreateGroupApiRequestV1, userProfile: UserProfileV1): Future[GroupOperationResponseV1] = {
         for {
-            a <- Future("")
-
             /* check if username or password are not empty */
-            _ = if (newGroupInfo.name.isEmpty) throw BadRequestException("Group name cannot be empty")
-            _ = if (newGroupInfo.belongsToProject.isEmpty) throw BadRequestException("Project IRI cannot be empty")
+            _ <- Future(if (createRequest.name.isEmpty) throw BadRequestException("Group name cannot be empty"))
+            _ = if (createRequest.belongsToProject.isEmpty) throw BadRequestException("Project IRI cannot be empty")
 
             /* check if the supplied group name is unique inside the project, i.e. not already registered */
             sparqlQueryString = queries.sparql.v1.txt.getGroupByName(
                 triplestore = settings.triplestoreType,
-                name = SparqlUtil.any2SparqlLiteral(newGroupInfo.name),
-                projectIri = newGroupInfo.belongsToProject
+                name = createRequest.name,
+                projectIri = createRequest.belongsToProject
             ).toString()
             _ = log.debug(s"createGroupV1 - check duplicate name: $sparqlQueryString")
             groupQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResponse]
@@ -229,7 +246,7 @@ class GroupsResponderV1 extends ResponderV1 {
             //_ = log.debug(MessageUtil.toSource(userDataQueryResponse))
 
             _ = if (groupQueryResponse.results.bindings.nonEmpty) {
-                throw DuplicateValueException(s"Group with the name: '${newGroupInfo.name}' already exists")
+                throw DuplicateValueException(s"Group with the name: '${createRequest.name}' already exists")
             }
 
             /* generate a new random group IRI */
@@ -241,11 +258,11 @@ class GroupsResponderV1 extends ResponderV1 {
                 triplestore = settings.triplestoreType,
                 groupIri = groupIRI,
                 groupClassIri = OntologyConstants.KnoraBase.UserGroup,
-                name = SparqlUtil.any2SparqlLiteral(newGroupInfo.name),
-                description = SparqlUtil.any2SparqlLiteral(newGroupInfo.description.getOrElse("")),
-                projectIri = newGroupInfo.belongsToProject,
-                isActiveGroup = SparqlUtil.any2SparqlLiteral(newGroupInfo.isActiveGroup),
-                hasSelfJoinEnabled = SparqlUtil.any2SparqlLiteral(newGroupInfo.hasSelfJoinEnabled)
+                name = createRequest.name,
+                maybeDescription = createRequest.description,
+                projectIri = createRequest.belongsToProject,
+                status = createRequest.status,
+                hasSelfJoinEnabled = createRequest.hasSelfJoinEnabled
             ).toString
             _ = log.debug(s"createGroupV1 - createNewGroup: $createNewGroupSparqlString")
             createGroupResponse <- (storeManager ? SparqlUpdateRequest(createNewGroupSparqlString)).mapTo[SparqlUpdateResponse]
@@ -306,7 +323,13 @@ class GroupsResponderV1 extends ResponderV1 {
 
         log.debug(s"group properties: ${groupProperties.toString}")
 
-        GroupInfoV1(id = groupIri, name = groupProperties.getOrElse(OntologyConstants.KnoraBase.GroupName, throw InconsistentTriplestoreDataException(s"Group $groupIri has no groupName attached")), description = groupProperties.get(OntologyConstants.KnoraBase.GroupDescription), belongsToProject = groupProperties.getOrElse(OntologyConstants.KnoraBase.BelongsToProject, throw InconsistentTriplestoreDataException(s"Group $groupIri has no project attached")), isActiveGroup = groupProperties(OntologyConstants.KnoraBase.IsActiveGroup).toBoolean, hasSelfJoinEnabled = groupProperties(OntologyConstants.KnoraBase.HasSelfJoinEnabled).toBoolean)
+        GroupInfoV1(
+            id = groupIri,
+            name = groupProperties.getOrElse(OntologyConstants.KnoraBase.GroupName, throw InconsistentTriplestoreDataException(s"Group $groupIri has no groupName attached")),
+            description = groupProperties.get(OntologyConstants.KnoraBase.GroupDescription),
+            belongsToProject = groupProperties.getOrElse(OntologyConstants.KnoraBase.BelongsToProject, throw InconsistentTriplestoreDataException(s"Group $groupIri has no project attached")),
+            status = groupProperties(OntologyConstants.KnoraBase.Status).toBoolean,
+            hasSelfJoinEnabled = groupProperties(OntologyConstants.KnoraBase.HasSelfJoinEnabled).toBoolean)
     }
 
 

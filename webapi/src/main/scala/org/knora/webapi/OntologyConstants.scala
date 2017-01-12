@@ -201,7 +201,7 @@ object OntologyConstants {
         val FamilyName = KnoraBasePrefixExpansion             + "familyName"
         val Password = KnoraBasePrefixExpansion               + "password"
         val UsersActiveProject = KnoraBasePrefixExpansion     + "currentproject"
-        val IsActiveUser = KnoraBasePrefixExpansion           + "isActiveUser"
+        val Status = KnoraBasePrefixExpansion                 + "status"
         val PreferredLanguage = KnoraBasePrefixExpansion      + "preferredLanguage"
         val IsInProject = KnoraBasePrefixExpansion            + "isInProject"
         val IsInGroup = KnoraBasePrefixExpansion              + "isInGroup"
@@ -218,7 +218,6 @@ object OntologyConstants {
         val ProjectLogo = KnoraBasePrefixExpansion            + "projectLogo"
         val ProjectOntologyGraph = KnoraBasePrefixExpansion   + "projectOntologyGraph"
         val ProjectDataGraph = KnoraBasePrefixExpansion       + "projectDataGraph"
-        val IsActiveProject = KnoraBasePrefixExpansion        + "isActiveProject"
         val HasSelfJoinEnabled = KnoraBasePrefixExpansion     + "hasSelfJoinEnabled"
         val HasProjectAdmin = KnoraBasePrefixExpansion        + "hasProjectAdmin"
 
@@ -227,7 +226,6 @@ object OntologyConstants {
         val GroupName = KnoraBasePrefixExpansion              + "groupName"
         val GroupDescription = KnoraBasePrefixExpansion       + "groupDescription"
         val BelongsToProject = KnoraBasePrefixExpansion       + "belongsToProject"
-        val IsActiveGroup = KnoraBasePrefixExpansion          + "isActiveGroup"
 
         /* Built-In Groups */
         val UnknownUser = KnoraBasePrefixExpansion            + "UnknownUser"

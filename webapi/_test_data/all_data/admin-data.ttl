@@ -28,7 +28,7 @@
 
                                    knora-base:preferredLanguage "de"^^xsd:string ;
 
-                                   knora-base:isActiveUser "true"^^xsd:boolean ;
+                                   knora-base:status "true"^^xsd:boolean ;
 
                                    knora-base:isInSystemAdminGroup "true"^^xsd:boolean .
 
@@ -47,7 +47,7 @@
 
                                         knora-base:preferredLanguage "de"^^xsd:string ;
 
-                                        knora-base:isActiveUser "true"^^xsd:boolean ;
+                                        knora-base:status "true"^^xsd:boolean ;
 
                                         knora-base:isInSystemAdminGroup "true"^^xsd:boolean .
 
@@ -66,7 +66,7 @@
 
                                          knora-base:preferredLanguage "de"^^xsd:string ;
 
-                                         knora-base:isActiveUser "true"^^xsd:boolean ;
+                                         knora-base:status "true"^^xsd:boolean ;
 
                                          knora-base:isInSystemAdminGroup "false"^^xsd:boolean .
 
@@ -85,7 +85,7 @@
 
                                            knora-base:preferredLanguage "de"^^xsd:string ;
 
-                                           knora-base:isActiveUser "false"^^xsd:boolean ;
+                                           knora-base:status "false"^^xsd:boolean ;
 
                                            knora-base:isInSystemAdminGroup "false"^^xsd:boolean .
 
@@ -113,7 +113,7 @@
 
                                         knora-base:projectBasepath "/imldata/SALSAH-TEST-01/images"^^xsd:string ;
 
-                                        knora-base:isActiveProject "true"^^xsd:boolean ;
+                                        knora-base:status "true"^^xsd:boolean ;
 
                                         knora-base:hasSelfJoinEnabled "false"^^xsd:boolean .
 
@@ -133,7 +133,7 @@
 
                                          knora-base:preferredLanguage "de"^^xsd:string ;
 
-                                         knora-base:isActiveUser "true"^^xsd:boolean ;
+                                         knora-base:status "true"^^xsd:boolean ;
 
                                          knora-base:isInProject <http://data.knora.org/projects/images> ;
 
@@ -157,7 +157,7 @@
 
                                          knora-base:preferredLanguage "de"^^xsd:string ;
 
-                                         knora-base:isActiveUser "true"^^xsd:boolean ;
+                                         knora-base:status "true"^^xsd:boolean ;
 
                                          knora-base:isInProject <http://data.knora.org/projects/images> ;
 
@@ -173,7 +173,7 @@
 
                                                knora-base:belongsToProject <http://data.knora.org/projects/images> ;
 
-                                               knora-base:isActiveGroup "true"^^xsd:boolean ;
+                                               knora-base:status "true"^^xsd:boolean ;
 
                                                knora-base:hasSelfJoinEnabled "false"^^xsd:boolean .
 
@@ -213,7 +213,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 
                                           knora-base:projectBasepath "/imldata/SALSAH-TEST-01/Incunabula"^^xsd:string ;
 
-                                          knora-base:isActiveProject "true"^^xsd:boolean ;
+                                          knora-base:status "true"^^xsd:boolean ;
 
                                           knora-base:hasSelfJoinEnabled "false"^^xsd:boolean .
 
@@ -234,7 +234,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 
                                          knora-base:preferredLanguage "de"^^xsd:string ;
 
-                                         knora-base:isActiveUser "true"^^xsd:boolean ;
+                                         knora-base:status "true"^^xsd:boolean ;
 
                                          knora-base:isInProject <http://data.knora.org/projects/77275339> ;
 
@@ -260,7 +260,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 
                                          knora-base:preferredLanguage "de"^^xsd:string ;
 
-                                         knora-base:isActiveUser "true"^^xsd:boolean ;
+                                         knora-base:status "true"^^xsd:boolean ;
 
                                          knora-base:isInProject <http://data.knora.org/projects/77275339> ;
 
@@ -284,7 +284,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 
                                          knora-base:preferredLanguage "de"^^xsd:string ;
 
-                                         knora-base:isActiveUser "true"^^xsd:boolean ;
+                                         knora-base:status "true"^^xsd:boolean ;
 
                                          knora-base:isInProject <http://data.knora.org/projects/77275339> ;
 
@@ -308,7 +308,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 
                                         knora-base:projectBasepath "/imldata/testproject"^^xsd:string ;
 
-                                        knora-base:isActiveProject "true"^^xsd:boolean ;
+                                        knora-base:status "true"^^xsd:boolean ;
 
                                         knora-base:hasSelfJoinEnabled "false"^^xsd:boolean .
 
@@ -333,7 +333,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 
                                         knora-base:preferredLanguage "de"^^xsd:string ;
 
-                                        knora-base:isActiveUser "true"^^xsd:boolean ;
+                                        knora-base:status "true"^^xsd:boolean ;
 
                                         knora-base:isInProject <http://data.knora.org/projects/77275339> ,
                                                                <http://data.knora.org/projects/images>,
@@ -361,7 +361,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 	knora-base:projectOntologyGraph "http://www.knora.org/ontology/anything"^^xsd:string ;
   knora-base:projectDataGraph "http://www.knora.org/data/anything"^^xsd:string ;
   knora-base:projectBasepath "/foo/bar/baz"^^xsd:string ;
-  knora-base:isActiveProject "true"^^xsd:boolean ;
+  knora-base:status "true"^^xsd:boolean ;
   knora-base:hasSelfJoinEnabled "false"^^xsd:boolean .
 
 <http://data.knora.org/users/9XBCrDV3SRa7kS1WwynB4Q> a knora-base:User ;
@@ -371,7 +371,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 	knora-base:password "$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"^^xsd:string ;
 	knora-base:email "anything.user01@example.org"^^xsd:string ;
 	knora-base:preferredLanguage "de"^^xsd:string ;
-	knora-base:isActiveUser "true"^^xsd:boolean ;
+	knora-base:status "true"^^xsd:boolean ;
 	knora-base:isInProject <http://data.knora.org/projects/anything> ;
 	knora-base:isInSystemAdminGroup "false"^^xsd:boolean .
 
@@ -382,7 +382,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 	knora-base:password "$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW" ;
 	knora-base:email "anything.user02@example.org" ;
 	knora-base:preferredLanguage "de"^^xsd:string ;
-	knora-base:isActiveUser "true"^^xsd:boolean ;
+	knora-base:status "true"^^xsd:boolean ;
 	knora-base:isInProject <http://data.knora.org/projects/anything> ;
 	knora-base:isInSystemAdminGroup "false"^^xsd:boolean .
 
@@ -397,7 +397,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 	knora-base:projectOntologyGraph "http://www.knora.org/ontology/dokubib"^^xsd:string ;
   knora-base:projectDataGraph "http://www.knora.org/data/dokubib"^^xsd:string ;
   knora-base:projectBasepath "/foo/bar/baz"^^xsd:string ;
-  knora-base:isActiveProject "false"^^xsd:boolean ;
+  knora-base:status "false"^^xsd:boolean ;
   knora-base:hasSelfJoinEnabled "false"^^xsd:boolean .
 
 
@@ -412,7 +412,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 	knora-base:projectOntologyGraph "http://www.knora.org/ontology/beol"^^xsd:string ;
   knora-base:projectDataGraph "http://www.knora.org/data/beol"^^xsd:string ;
   knora-base:projectBasepath "/foo/bar/baz"^^xsd:string ;
-  knora-base:isActiveProject "true"^^xsd:boolean ;
+  knora-base:status "true"^^xsd:boolean ;
   knora-base:hasSelfJoinEnabled "false"^^xsd:boolean .
 
 
@@ -423,6 +423,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 	knora-base:password "a94a8fe5ccb19ba61c4c0873d391e987982fbbd3"^^xsd:string ;
 	knora-base:email "t.schweizer@unibas.ch"^^xsd:string ;
 	knora-base:preferredLanguage "de"^^xsd:string ;
+	knora-base:status "true"^^xsd:boolean ;
 	knora-base:isInProject <http://data.knora.org/projects/yTerZGyxjZVqFMNNKXCDPF> ;
 	knora-base:isInSystemAdminGroup "false"^^xsd:boolean .
 
@@ -439,7 +440,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 	knora-base:projectOntologyGraph "http://www.knora.org/ontology/biblio"^^xsd:string ;
   knora-base:projectDataGraph "http://www.knora.org/data/biblio"^^xsd:string ;
   knora-base:projectBasepath "/foo/bar/baz"^^xsd:string ;
-  knora-base:isActiveProject "true"^^xsd:boolean ;
+  knora-base:status "true"^^xsd:boolean ;
   knora-base:hasSelfJoinEnabled "false"^^xsd:boolean .
 
 
@@ -450,5 +451,6 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 	knora-base:password "biblio"^^xsd:string ;
 	knora-base:email "sepideh.alassi@unibas.ch"^^xsd:string ;
 	knora-base:preferredLanguage "de"^^xsd:string ;
+	knora-base:status "true"^^xsd:boolean ;
 	knora-base:isInProject <http://data.knora.org/projects/DczxPs-sR6aZN91qV92ZmQ> ;
 	knora-base:isInSystemAdminGroup "false"^^xsd:boolean .

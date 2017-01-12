@@ -38,19 +38,21 @@ import spray.json._
 /**
   * Represents an API request payload that asks the Knora API server to create a new user.
   *
-  * @param email      the email of the user to be created (unique).
-  * @param givenName  the given name of the user to be created.
-  * @param familyName the family name of the user to be created
-  * @param password   the password of the user to be created.
-  * @param isActive   the status of the user to be created (default = true).
-  * @param lang       the default language of the user to be created (default = "en").
+  * @param email       the email of the user to be created (unique).
+  * @param givenName   the given name of the user to be created.
+  * @param familyName  the family name of the user to be created
+  * @param password    the password of the user to be created.
+  * @param status      the status of the user to be created (active = true, inactive = false) (default = true).
+  * @param lang        the default language of the user to be created (default = "en").
+  * @param systemAdmin the system admin membership (default = false).
   */
 case class CreateUserApiRequestV1(email: String,
-                                  givenName: Option[String] = None,
-                                  familyName: Option[String] = None,
+                                  givenName: String,
+                                  familyName: String,
                                   password: String,
-                                  isActive: Boolean = true,
-                                  lang: String = "en") {
+                                  status: Boolean = true,
+                                  lang: String = "en",
+                                  systemAdmin: Boolean = false) {
 
     def toJsValue = UserV1JsonProtocol.createUserApiRequestV1Format.write(this)
 }
@@ -58,19 +60,21 @@ case class CreateUserApiRequestV1(email: String,
 /**
   * Represents an API request payload that asks the Knora API server to update an existing user.
   *
-  * @param email      the new email address. Needs to be unique on the server.
-  * @param givenName  the new given name.
-  * @param familyName the new family name.
-  * @param password   the new password.
-  * @param status     the new status.
-  * @param lang       the new ISO 639-1 code of the new preferred language.
+  * @param email       the new email address. Needs to be unique on the server.
+  * @param givenName   the new given name.
+  * @param familyName  the new family name.
+  * @param password    the new password.
+  * @param status      the new status.
+  * @param lang        the new ISO 639-1 code of the new preferred language.
+  * @param systemAdmin the new system admin membership status.
   */
 case class UpdateUserApiRequestV1(email: Option[String] = None,
                                   givenName: Option[String] = None,
                                   familyName: Option[String] = None,
                                   password: Option[String] = None,
                                   status: Option[Boolean] = None,
-                                  lang: Option[String] = None) {
+                                  lang: Option[String] = None,
+                                  systemAdmin: Option[Boolean] = None) {
 
     def toJsValue = UserV1JsonProtocol.updateUserApiRequestV1Format.write(this)
 }
@@ -332,21 +336,21 @@ case class UserProfileV1(userData: UserDataV1 = UserDataV1(lang = "en"),
   *
   * @param lang         The ISO 639-1 code of the user's preferred language.
   * @param user_id      The user's IRI.
+  * @param email        The user's email address.
+  * @param password     The user's hashed password.
   * @param token        The API token. Can be used instead of email/password for authentication.
   * @param firstname    The user's given name.
   * @param lastname     The user's surname.
-  * @param email        The user's email address.
-  * @param password     The user's hashed password.
   * @param isActiveUser The user's status.
   * @param active_project
   */
 case class UserDataV1(lang: String,
                       user_id: Option[IRI] = None,
+                      email: Option[String] = None,
+                      password: Option[String] = None,
                       token: Option[String] = None,
                       firstname: Option[String] = None,
                       lastname: Option[String] = None,
-                      email: Option[String] = None,
-                      password: Option[String] = None,
                       isActiveUser: Option[Boolean] = None,
                       active_project: Option[IRI] = None) {
 
@@ -409,8 +413,8 @@ object UserV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
 
     implicit val userDataV1Format: JsonFormat[UserDataV1] = lazyFormat(jsonFormat9(UserDataV1))
     implicit val userProfileV1Format: JsonFormat[UserProfileV1] = jsonFormat6(UserProfileV1)
-    implicit val createUserApiRequestV1Format: RootJsonFormat[CreateUserApiRequestV1] = jsonFormat6(CreateUserApiRequestV1)
-    implicit val updateUserApiRequestV1Format: RootJsonFormat[UpdateUserApiRequestV1] = jsonFormat4(UpdateUserApiRequestV1)
+    implicit val createUserApiRequestV1Format: RootJsonFormat[CreateUserApiRequestV1] = jsonFormat7(CreateUserApiRequestV1)
+    implicit val updateUserApiRequestV1Format: RootJsonFormat[UpdateUserApiRequestV1] = jsonFormat7(UpdateUserApiRequestV1)
     implicit val changeUserPasswordApiRequestV1Format: RootJsonFormat[ChangeUserPasswordApiRequestV1] = jsonFormat2(ChangeUserPasswordApiRequestV1)
     implicit val changeUserStatusApiRequestV1Format: RootJsonFormat[ChangeUserStatusApiRequestV1] = jsonFormat1(ChangeUserStatusApiRequestV1)
     implicit val userOperationResponseV1Format: RootJsonFormat[UserOperationResponseV1] = jsonFormat2(UserOperationResponseV1)

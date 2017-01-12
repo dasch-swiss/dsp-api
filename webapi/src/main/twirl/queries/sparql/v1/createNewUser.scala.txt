@@ -27,13 +27,13 @@
                       results from the WHERE clause of the update.
  * @param userIri the Iri of the new user
  * @param userClassIri the IRI of the OWL class that the new user should belong to.
- * @param username the new user's username.
+ * @param email the new user's email address.
  * @param password the new user's password.
- * @param passwordSalt the new user's password salt used for hashing. Is unique per user.
  * @param givenName the new user's given name.
  * @param familyName the new user's family name.
- * @param email the new user's email address.
+ * @param status the new user's status (active = true, inactive = false)
  * @param preferredLanguage the new user's preferred language.
+ * @param systemAdmin the new user's system admin group membership.
  *
  *@
 @(adminNamedGraphIri: IRI,
@@ -42,9 +42,11 @@
   userClassIri: IRI,
   email: String,
   password: String,
-  maybeGivenName: Option[String],
-  maybeFamilyName: Option[String],
-  preferredLanguage: String)
+  givenName: String,
+  familyName: String,
+  status: Boolean,
+  preferredLanguage: String,
+  systemAdmin: Boolean)
 
 prefix xsd: <http://www.w3.org/2001/XMLSchema#>
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -60,17 +62,15 @@ INSERT {
 
         ?userIri knora-base:password "@password"^^xsd:string .
 
-        @if(maybeGivenName.nonEmpty) {
-            ?userIri knora-base:givenName "@maybeGivenName.get"^^xsd:string .
-        }
+        ?userIri knora-base:givenName "@givenName"^^xsd:string .
 
-        @if(maybeFamilyName.nonEmpty) {
-            ?userIri knora-base:familyName "@maybeFamilyName.get"^^xsd:string .
-        }
+        ?userIri knora-base:familyName "@familyName"^^xsd:string .
+
+        ?userIri knora-base:status "@status"^^xsd:boolean .
 
         ?userIri knora-base:preferredLanguage "@preferredLanguage"^^xsd:string .
 
-        ?userIri knora-base:isInSystemAdminGroup "false"^^xsd:boolean .
+        ?userIri knora-base:isInSystemAdminGroup "@systemAdmin"^^xsd:boolean .
     }
 }
 @*

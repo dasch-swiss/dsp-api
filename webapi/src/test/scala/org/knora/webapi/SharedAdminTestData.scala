@@ -41,10 +41,10 @@ object SharedAdminTestData {
     def rootUser = UserProfileV1(
         UserDataV1(
             user_id = Some("http://data.knora.org/users/root"),
-            firstname = Some("System"),
-            lastname = Some("Administrator"),
             email = Some("root@example.com"),
             password = Some("$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"), // -> "test"
+            firstname = Some("System"),
+            lastname = Some("Administrator"),
             token = None,
             isActiveUser = Some(true),
             lang = "de"
@@ -173,14 +173,15 @@ object SharedAdminTestData {
     def systemProjectInfo = ProjectInfoV1(
         id = SYSTEM_PROJECT_IRI,
         shortname = "SystemProject",
-        longname = "Knora System Project",
-        description = "Knora System Project",
+        longname = Some("Knora System Project"),
+        description = Some("Knora System Project"),
+        keywords = None,
         logo = None,
         belongsToInstitution = None,
         ontologyNamedGraph = "http://www.knora.org/ontology/knora-base",
         dataNamedGraph = "-",
         basepath = "-",
-        isActiveProject = true,
+        status = true,
         hasSelfJoinEnabled = false
     )
 
@@ -252,14 +253,15 @@ object SharedAdminTestData {
     def imagesProjectInfo = ProjectInfoV1(
         id = "http://data.knora.org/projects/images",
         shortname = "images",
-        longname = "Image Collection Demo",
-        description = "A demo project of a collection of images",
+        longname = Some("Image Collection Demo"),
+        description = Some("A demo project of a collection of images"),
         keywords = Some("images, collection"),
+        logo = None,
+        belongsToInstitution = None,
         ontologyNamedGraph = "http://www.knora.org/ontology/images",
         dataNamedGraph = "http://www.knora.org/data/images",
-        logo = None,
         basepath = "/imldata/SALSAH-TEST-01/images",
-        isActiveProject = true,
+        status = true,
         hasSelfJoinEnabled = false
     )
 
@@ -269,7 +271,7 @@ object SharedAdminTestData {
         name = "ProjectAdmin",
         description = Some("Default Project Admin Group"),
         belongsToProject = "http://data.knora.org/projects/images",
-        isActiveGroup = true,
+        status = true,
         hasSelfJoinEnabled = false
     )
 
@@ -279,7 +281,7 @@ object SharedAdminTestData {
         name = "ProjectMember",
         description = Some("Default Project Member Group"),
         belongsToProject = "http://data.knora.org/projects/images",
-        isActiveGroup = true,
+        status = true,
         hasSelfJoinEnabled = false
     )
 
@@ -289,7 +291,7 @@ object SharedAdminTestData {
         name = "Image reviewer",
         description = Some("A group for image reviewers."),
         belongsToProject = "http://data.knora.org/projects/images",
-        isActiveGroup = true,
+        status = true,
         hasSelfJoinEnabled = false
     )
 
@@ -412,14 +414,15 @@ object SharedAdminTestData {
     def incunabulaProjectInfo = ProjectInfoV1(
         id = INCUNABULA_PROJECT_IRI,
         shortname = "incunabula",
-        longname = "Bilderfolgen Basler Frühdrucke",
-        description = "<p>Das interdisziplinäre Forschungsprojekt \"<b><em>Die Bilderfolgen der Basler Frühdrucke: Spätmittelalterliche Didaxe als Bild-Text-Lektüre</em></b>\" verbindet eine umfassende kunstwissenschaftliche Analyse der Bezüge zwischen den Bildern und Texten in den illustrierten Basler Inkunabeln mit der Digitalisierung der Bestände der Universitätsbibliothek und der Entwicklung einer elektronischen Edition in der Form einer neuartigen Web-0.2-Applikation.\n</p>\n<p>Das Projekt wird durchgeführt vom <a href=\"http://kunsthist.unibas.ch\">Kunsthistorischen Seminar</a> der Universität Basel (Prof. B. Schellewald) und dem <a href=\"http://www.dhlab.unibas.ch\">Digital Humanities Lab</a> der Universität Basel (PD Dr. L. Rosenthaler).\n</p>\n<p>\nDas Kernstück der digitalen Edition besteht aus rund zwanzig reich bebilderten Frühdrucken aus vier verschiedenen Basler Offizinen. Viele davon sind bereits vor 1500 in mehreren Ausgaben erschienen, einige fast gleichzeitig auf Deutsch und Lateinisch. Es handelt sich um eine ausserordentlich vielfältige Produktion; neben dem Heilsspiegel finden sich ein Roman, die Melusine,  die Reisebeschreibungen des Jean de Mandeville, einige Gebets- und Erbauungsbüchlein, theologische Schriften, Fastenpredigten, die Leben der Heiligen Fridolin und Meinrad, das berühmte Narrenschiff  sowie die Exempelsammlung des Ritters vom Thurn.\n</p>\nDie Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durch die Möglichkeiten nichtlinearer Verknüpfung und Kommentierung der Bilder und Texte, für die wissenschaftliche Edition sowie für die Erforschung der Bilder und Texte nutzbar machen. Auch können bereits bestehende und entstehende Online-Editionen damit verknüpft  werden , wodurch die Nutzung von Datenbanken anderer Institutionen im Hinblick auf unser Corpus optimiert wird.\n</p>",
+        longname = Some("Bilderfolgen Basler Frühdrucke"),
+        description = Some("<p>Das interdisziplinäre Forschungsprojekt \"<b><em>Die Bilderfolgen der Basler Frühdrucke: Spätmittelalterliche Didaxe als Bild-Text-Lektüre</em></b>\" verbindet eine umfassende kunstwissenschaftliche Analyse der Bezüge zwischen den Bildern und Texten in den illustrierten Basler Inkunabeln mit der Digitalisierung der Bestände der Universitätsbibliothek und der Entwicklung einer elektronischen Edition in der Form einer neuartigen Web-0.2-Applikation.\n</p>\n<p>Das Projekt wird durchgeführt vom <a href=\"http://kunsthist.unibas.ch\">Kunsthistorischen Seminar</a> der Universität Basel (Prof. B. Schellewald) und dem <a href=\"http://www.dhlab.unibas.ch\">Digital Humanities Lab</a> der Universität Basel (PD Dr. L. Rosenthaler).\n</p>\n<p>\nDas Kernstück der digitalen Edition besteht aus rund zwanzig reich bebilderten Frühdrucken aus vier verschiedenen Basler Offizinen. Viele davon sind bereits vor 1500 in mehreren Ausgaben erschienen, einige fast gleichzeitig auf Deutsch und Lateinisch. Es handelt sich um eine ausserordentlich vielfältige Produktion; neben dem Heilsspiegel finden sich ein Roman, die Melusine,  die Reisebeschreibungen des Jean de Mandeville, einige Gebets- und Erbauungsbüchlein, theologische Schriften, Fastenpredigten, die Leben der Heiligen Fridolin und Meinrad, das berühmte Narrenschiff  sowie die Exempelsammlung des Ritters vom Thurn.\n</p>\nDie Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durch die Möglichkeiten nichtlinearer Verknüpfung und Kommentierung der Bilder und Texte, für die wissenschaftliche Edition sowie für die Erforschung der Bilder und Texte nutzbar machen. Auch können bereits bestehende und entstehende Online-Editionen damit verknüpft  werden , wodurch die Nutzung von Datenbanken anderer Institutionen im Hinblick auf unser Corpus optimiert wird.\n</p>"),
         keywords = Some("Basler Frühdrucke, Inkunabel, Narrenschiff, Wiegendrucke, Sebastian Brant, Bilderfolgen, early print, incunabula, ship of fools, Kunsthistorischs Seminar Universität Basel, Late Middle Ages, Letterpress Printing, Basel, Contectualisation of images"),
+        logo = Some("incunabula_logo.png"),
+        belongsToInstitution = None,
         ontologyNamedGraph = "http://www.knora.org/ontology/incunabula",
         dataNamedGraph = "http://www.knora.org/data/incunabula",
-        logo = Some("incunabula_logo.png"),
         basepath = "/imldata/SALSAH-TEST-01/Incunabula",
-        isActiveProject = true,
+        status = true,
         hasSelfJoinEnabled = false
     )
 
@@ -434,14 +437,15 @@ object SharedAdminTestData {
     def triplesixProjectInfo = ProjectInfoV1(
         id = TRIPLESIX_PROJECT_IRI,
         shortname = "testproject",
-        longname = "Test Project",
-        description = "A test project",
+        longname = Some("Test Project"),
+        description = Some("A test project"),
         keywords = None,
+        belongsToInstitution = None,
         ontologyNamedGraph = "http://www.knora.org/ontology/testproject",
         dataNamedGraph = "http://www.knora.org/data/testproject",
         logo = None,
         basepath = "/imldata/testproject",
-        isActiveProject = true,
+        status = true,
         hasSelfJoinEnabled = false
     )
 
@@ -524,12 +528,15 @@ object SharedAdminTestData {
     def anythingProjectInfo = ProjectInfoV1(
         id = ANYTHING_PROJECT_IRI,
         shortname = "anything",
-        longname = "Anything Project",
-        description = "Anything Project",
+        longname = Some("Anything Project"),
+        description = Some("Anything Project"),
+        keywords = None,
+        logo = None,
+        belongsToInstitution = None,
         ontologyNamedGraph = "http://www.knora.org/ontology/anything",
         dataNamedGraph = "http://www.knora.org/data/anything",
         basepath = "/foo/bar/baz",
-        isActiveProject = true,
+        status = true,
         hasSelfJoinEnabled = false
     )
 
@@ -543,12 +550,15 @@ object SharedAdminTestData {
     def beolProjectInfo = ProjectInfoV1(
         id = BEOL_PROJECT_IRI,
         shortname = "beol",
-        longname = "Bernoulli-Euler Online",
-        description = "Bernoulli-Euler Online",
+        longname = Some("Bernoulli-Euler Online"),
+        description = Some("Bernoulli-Euler Online"),
+        keywords = None,
+        logo = None,
+        belongsToInstitution = None,
         ontologyNamedGraph = "http://www.knora.org/ontology/beol",
         dataNamedGraph = "http://www.knora.org/data/beol",
         basepath = "/foo/bar/baz",
-        isActiveProject = true,
+        status = true,
         hasSelfJoinEnabled = false
     )
 
@@ -562,12 +572,15 @@ object SharedAdminTestData {
     def biblioProjectInfo = ProjectInfoV1(
         id = BIBLIO_PROJECT_IRI,
         shortname = "biblio",
-        longname = "Bibliography",
-        description = "Bibliography",
+        longname = Some("Bibliography"),
+        description = Some("Bibliography"),
+        keywords = None,
+        logo = None,
+        belongsToInstitution = None,
         ontologyNamedGraph = "http://www.knora.org/ontology/biblio",
         dataNamedGraph = "http://www.knora.org/data/biblio",
         basepath = "/foo/bar/baz",
-        isActiveProject = true,
+        status = true,
         hasSelfJoinEnabled = false
     )
 
@@ -581,12 +594,15 @@ object SharedAdminTestData {
     def dokubibProjectInfo = ProjectInfoV1(
         id = DOKUBIB_PROJECT_IRI,
         shortname = "dokubib",
-        longname = "Dokubib",
-        description = "Dokubib",
+        longname = Some("Dokubib"),
+        description = Some("Dokubib"),
+        keywords = None,
+        logo = None,
+        belongsToInstitution = None,
         ontologyNamedGraph = "http://www.knora.org/ontology/dokubib",
         dataNamedGraph = "http://www.knora.org/data/dokubib",
         basepath = "/foo/bar/baz",
-        isActiveProject = false,
+        status = false,
         hasSelfJoinEnabled = false
     )
 

@@ -39,10 +39,10 @@
   groupIri: IRI,
   groupClassIri: IRI,
   name: String,
-  description: String,
+  maybeDescription: Option[String],
   projectIri: IRI,
-  isActiveGroup: String,
-  hasSelfJoinEnabled: String)
+  status: Boolean,
+  hasSelfJoinEnabled: Boolean)
 
 prefix xsd: <http://www.w3.org/2001/XMLSchema#>
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -55,19 +55,17 @@ INSERT {
     GRAPH ?adminNamedGraphIri {
         ?groupIri rdf:type ?groupClassIri ;
 
-            knora-base:groupName @name ;
+            knora-base:groupName "@name"^^xsd:string ;
 
-            @if(description.nonEmpty) {
-                knora-base:groupDescription @description ;
+            @if(maybeDescription.nonEmpty) {
+                knora-base:groupDescription "@maybeDescription.get"^^xsd:string ;
             }
 
             knora-base:belongsToProject ?projectIri ;
 
-            @if(isActiveGroup.nonEmpty) {
-                knora-base:isActiveGroup @isActiveGroup ;
-            }
+            knora-base:status "@status"^^xsd:boolean ;
 
-            knora-base:hasSelfJoinEnabled @hasSelfJoinEnabled .
+            knora-base:hasSelfJoinEnabled "@hasSelfJoinEnabled"^^xsd:boolean.
     }
 }
 @*

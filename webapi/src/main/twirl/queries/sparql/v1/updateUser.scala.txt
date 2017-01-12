@@ -37,7 +37,10 @@
   maybeEmail: Option[String],
   maybeGivenName: Option[String],
   maybeFamilyName: Option[String],
-  maybeLang: Option[String])
+  maybePassword: Option[String],
+  maybeStatus: Option[Boolean],
+  maybeLang: Option[String],
+  maybeSystemAdmin: Option[Boolean])
 
 prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -61,8 +64,20 @@ DELETE {
         ?user knora-base:familyName ?currentFamilyName .
     }
 
+    @if(maybePassword.nonEmpty) {
+        ?user knora-base:password ?currentPassword .
+    }
+
+    @if(maybeStatus.nonEmpty) {
+        ?user knora-base:status ?currentStatus .
+    }
+
     @if(maybeLang.nonEmpty) {
         ?user knora-base:preferredLanguage ?currentPreferredLanguage .
+    }
+
+    @if(maybeSystemAdmin.nonEmpty) {
+        ?user knora-base:isInSystemAdminGroup ?currentIsInSystemAdminGroup .
     }
 
 } INSERT {
@@ -81,8 +96,20 @@ DELETE {
         ?user knora-base:familyName "@maybeFamilyName.get"^^xsd:string .
     }
 
+    @if(maybePassword.nonEmpty) {
+        ?user knora-base:password "@maybePassword.get"^^xsd:string .
+    }
+
+    @if(maybeStatus.nonEmpty) {
+        ?user knora-base:status "@maybeStatus.get"^^xsd:boolean .
+    }
+
     @if(maybeLang.nonEmpty) {
         ?user knora-base:preferredLanguage "@maybeLang.get"^^xsd:string .
+    }
+
+    @if(maybeSystemAdmin.nonEmpty) {
+        ?user knora-base:isInSystemAdminGroup "@maybeSystemAdmin.get"^^xsd:boolean .
     }
 
 }
@@ -110,13 +137,15 @@ WHERE {
 
     ?user knora-base:email ?currentEmail .
 
-    OPTIONAL {
-        ?user knora-base:givenName ?currentGivenName .
-    }
+    ?user knora-base:givenName ?currentGivenName .
 
-    OPTIONAL {
-        ?user knora-base:familyName ?currentFamilyName .
-    }
+    ?user knora-base:familyName ?currentFamilyName .
+
+    ?user knora-base:password ?currentPassword .
+
+    ?user knora-base:status ?currentStatus .
 
     ?user knora-base:preferredLanguage ?currentPreferredLanguage .
+
+    ?user knora-base:isInSystemAdminGroup ?currentIsInSystemAdminGroup .
 }

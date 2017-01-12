@@ -97,7 +97,7 @@ class GroupsResponderV1Spec extends CoreSpec(GroupsResponderV1Spec.config) with 
         "asked to create a new group " should {
             "create the group and return the group's info if the supplied group name is unique " in {
                 actorUnderTest ! GroupCreateRequestV1(
-                    NewGroupInfoV1("NewGroup", Some("NewGroupDescription"), "http://data.knora.org/projects/images", true, false),
+                    CreateGroupApiRequestV1("NewGroup", Some("NewGroupDescription"), "http://data.knora.org/projects/images", true, false),
                     SharedAdminTestData.imagesUser01,
                     UUID.randomUUID
                 )
@@ -106,14 +106,14 @@ class GroupsResponderV1Spec extends CoreSpec(GroupsResponderV1Spec.config) with 
                         newGroupInfo.name should equal ("NewGroup")
                         newGroupInfo.description should equal (Some("NewGroupDescription"))
                         newGroupInfo.belongsToProject should equal ("http://data.knora.org/projects/images")
-                        newGroupInfo.isActiveGroup should equal (true)
+                        newGroupInfo.status should equal (true)
                         newGroupInfo.hasSelfJoinEnabled should equal (false)
                     }
                 }
             }
             "return a 'DuplicateValueException' if the supplied group name is not unique " in {
                 actorUnderTest ! GroupCreateRequestV1(
-                    NewGroupInfoV1("NewGroup", Some("NewGroupDescription"), "http://data.knora.org/projects/images", true, false),
+                    CreateGroupApiRequestV1("NewGroup", Some("NewGroupDescription"), "http://data.knora.org/projects/images", true, false),
                     SharedAdminTestData.imagesUser01,
                     UUID.randomUUID
                 )
@@ -123,7 +123,7 @@ class GroupsResponderV1Spec extends CoreSpec(GroupsResponderV1Spec.config) with 
 
                 /* missing group name */
                 actorUnderTest ! GroupCreateRequestV1(
-                    NewGroupInfoV1("", Some("NoNameGroupDescription"), "http://data.knora.org/projects/images", true, false),
+                    CreateGroupApiRequestV1("", Some("NoNameGroupDescription"), "http://data.knora.org/projects/images", true, false),
                     SharedAdminTestData.imagesUser01,
                     UUID.randomUUID
                 )
@@ -131,7 +131,7 @@ class GroupsResponderV1Spec extends CoreSpec(GroupsResponderV1Spec.config) with 
 
                 /* missing project */
                 actorUnderTest ! GroupCreateRequestV1(
-                    NewGroupInfoV1("OtherNewGroup", Some("OtherNewGroupDescription"), "", true, false),
+                    CreateGroupApiRequestV1("OtherNewGroup", Some("OtherNewGroupDescription"), "", true, false),
                     SharedAdminTestData.imagesUser01,
                     UUID.randomUUID
                 )

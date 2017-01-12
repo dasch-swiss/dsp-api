@@ -120,10 +120,10 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
                 actorUnderTest ! UserCreateRequestV1(
                     createRequest = CreateUserApiRequestV1(
                         email = "donald.duck@example.com",
-                        givenName = Some("Donald"),
-                        familyName = Some("Duck"),
+                        givenName = "Donald",
+                        familyName = "Duck",
                         password ="test",
-                        isActive = true,
+                        status = true,
                         lang = "en"
                     ),
                     userProfile = SharedAdminTestData.anonymousUser,
@@ -143,10 +143,10 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
                 actorUnderTest ! UserCreateRequestV1(
                     createRequest = CreateUserApiRequestV1(
                         email = "root@example.com",
-                        givenName = None,
-                        familyName = None,
+                        givenName = "Donal",
+                        familyName = "Duck",
                         password ="test",
-                        isActive = true,
+                        status = true,
                         lang = "en"
                     ),
                     SharedAdminTestData.anonymousUser,
@@ -155,16 +155,16 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
                 expectMsg(Failure(DuplicateValueException(s"User with the email: 'root@example.com' already exists")))
             }
 
-            "return 'BadRequestException' if 'email' or 'password' are missing" in {
+            "return 'BadRequestException' if 'email' or 'password' or 'givenName' or 'familyName' are missing" in {
 
                 /* missing email */
                 actorUnderTest ! UserCreateRequestV1(
                     createRequest = CreateUserApiRequestV1(
                         email = "",
-                        givenName = None,
-                        familyName = None,
-                        password ="test",
-                        isActive = true,
+                        givenName = "Donald",
+                        familyName = "Duck",
+                        password = "test",
+                        status = true,
                         lang = "en"
                     ),
                     SharedAdminTestData.anonymousUser,
@@ -176,16 +176,46 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
                 actorUnderTest ! UserCreateRequestV1(
                     createRequest = CreateUserApiRequestV1(
                         email = "donald.duck@example.com",
-                        givenName = None,
-                        familyName = None,
+                        givenName = "Donald",
+                        familyName = "Duck",
                         password = "",
-                        isActive = true,
+                        status = true,
                         lang = "en"
                     ),
                     SharedAdminTestData.anonymousUser,
                     UUID.randomUUID
                 )
                 expectMsg(Failure(BadRequestException("Password cannot be empty")))
+
+                /* missing givenName */
+                actorUnderTest ! UserCreateRequestV1(
+                    createRequest = CreateUserApiRequestV1(
+                        email = "donald.duck@example.com",
+                        givenName = "",
+                        familyName = "Duck",
+                        password = "test",
+                        status = true,
+                        lang = "en"
+                    ),
+                    SharedAdminTestData.anonymousUser,
+                    UUID.randomUUID
+                )
+                expectMsg(Failure(BadRequestException("Given name cannot be empty")))
+
+                /* missing familyName */
+                actorUnderTest ! UserCreateRequestV1(
+                    createRequest = CreateUserApiRequestV1(
+                        email = "donald.duck@example.com",
+                        givenName = "Donald",
+                        familyName = "",
+                        password = "test",
+                        status = true,
+                        lang = "en"
+                    ),
+                    SharedAdminTestData.anonymousUser,
+                    UUID.randomUUID
+                )
+                expectMsg(Failure(BadRequestException("Family name cannot be empty")))
             }
         }
         "asked to update a user" should {

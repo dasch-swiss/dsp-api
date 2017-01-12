@@ -20,6 +20,8 @@
 
 package org.knora.webapi.responders.v1
 
+import java.util.UUID
+
 import akka.actor.Status
 import akka.pattern._
 import org.knora.webapi._
@@ -52,7 +54,7 @@ class ProjectsResponderV1 extends ResponderV1 {
         case ProjectInfoByIRIGetRequestV1(iri, userProfile) => future2Message(sender(), projectInfoByIRIGetRequestV1(iri, userProfile), log)
         case ProjectInfoByIRIGetV1(iri, userProfile) => future2Message(sender(), projectInfoByIRIGetV1(iri, userProfile), log)
         case ProjectInfoByShortnameGetRequestV1(shortname, userProfile) => future2Message(sender(), projectInfoByShortnameGetRequestV1(shortname, userProfile), log)
-        case ProjectCreateRequestV1(newProjectDataV1: NewProjectDataV1, userProfileV1) => future2Message(sender(), projectCreateRequestV1(newProjectDataV1, userProfileV1), log)
+        case ProjectCreateRequestV1(createRequest: CreateProjectApiRequestV1, userProfileV1, apiRequestID) => future2Message(sender(), projectCreateRequestV1(createRequest, userProfileV1, apiRequestID), log)
         case other => handleUnexpectedMessage(sender(), other, log)
     }
 
@@ -114,15 +116,15 @@ class ProjectsResponderV1 extends ResponderV1 {
                     ProjectInfoV1(
                         id = projectIri,
                         shortname = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectShortname, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no shortname defined.")),
-                        longname = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectLongname, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no longname defined.")),
-                        description = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectDescription, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no description defined.")),
+                        longname = propsMap.get(OntologyConstants.KnoraBase.ProjectLongname),
+                        description = propsMap.get(OntologyConstants.KnoraBase.ProjectDescription),
                         keywords = propsMap.get(OntologyConstants.KnoraBase.ProjectKeywords),
                         logo = propsMap.get(OntologyConstants.KnoraBase.ProjectLogo),
                         belongsToInstitution = propsMap.get(OntologyConstants.KnoraBase.BelongsToProject),
                         basepath = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectBasepath, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no basepath defined.")),
                         ontologyNamedGraph = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectOntologyGraph, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no projectOntologyGraph defined.")),
                         dataNamedGraph = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectDataGraph, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no projectDataGraph defined.")),
-                        isActiveProject = propsMap.getOrElse(OntologyConstants.KnoraBase.IsActiveProject, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no isActiveProject defined.")).toBoolean,
+                        status = propsMap.getOrElse(OntologyConstants.KnoraBase.Status, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no status defined.")).toBoolean,
                         hasSelfJoinEnabled = propsMap.getOrElse(OntologyConstants.KnoraBase.HasSelfJoinEnabled, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no hasSelfJoinEnabled defined.")).toBoolean
                     )
             }.toVector
@@ -168,7 +170,7 @@ class ProjectsResponderV1 extends ResponderV1 {
                         description = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectDescription, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no description defined.")),
                         project_id = projectIri,
                         uri = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectOntologyGraph, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no projectOntologyGraph defined.")),
-                        active = propsMap.getOrElse(OntologyConstants.KnoraBase.IsActiveProject, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no isActiveProject defined.")).toBoolean
+                        active = propsMap.getOrElse(OntologyConstants.KnoraBase.Status, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no status defined.")).toBoolean
                     )
             }.toSeq
         } yield namedGraphs
@@ -236,7 +238,7 @@ class ProjectsResponderV1 extends ResponderV1 {
         for {
             sparqlQueryString <- Future(queries.sparql.v1.txt.getProjectByShortname(
                 triplestore = settings.triplestoreType,
-                shortname = SparqlUtil.any2SparqlLiteral(shortName)
+                shortname = shortName
             ).toString())
             //_ = log.debug(s"getProjectInfoByShortnameGetRequest - query: $sparqlQueryString")
 
@@ -262,18 +264,16 @@ class ProjectsResponderV1 extends ResponderV1 {
         )
     }
 
-    private def projectCreateRequestV1(newProjectDataV1: NewProjectDataV1, userProfileV1: UserProfileV1): Future[ProjectOperationResponseV1] = {
+    private def projectCreateRequestV1(createRequest: CreateProjectApiRequestV1, userProfileV1: UserProfileV1, apiRequestID: UUID): Future[ProjectOperationResponseV1] = {
 
         for {
-            a <- Future("")
-
             // check if required properties are not empty
-            _ = if (newProjectDataV1.shortname.isEmpty) throw BadRequestException("'Shortname' cannot be empty")
+            _ <- Future(if (createRequest.shortname.isEmpty) throw BadRequestException("'Shortname' cannot be empty"))
 
             // check if the supplied 'shortname' for the new project is unique, i.e. not already registered
             sparqlQueryString = queries.sparql.v1.txt.getProjectByShortname(
                 triplestore = settings.triplestoreType,
-                shortname = SparqlUtil.any2SparqlLiteral(newProjectDataV1.shortname)
+                shortname = createRequest.shortname
             ).toString()
             //_ = log.debug(s"createNewProjectV1 - check duplicate shortname query: $sparqlQueryString")
 
@@ -282,29 +282,29 @@ class ProjectsResponderV1 extends ResponderV1 {
             //_ = log.debug(s"createNewProjectV1 - check duplicate shortname response:  ${MessageUtil.toSource(projectInfoQueryResponse)}")
 
             _ = if (projectResponse.nonEmpty) {
-                throw DuplicateValueException(s"Project with the shortname: '${newProjectDataV1.shortname}' already exists")
+                throw DuplicateValueException(s"Project with the shortname: '${createRequest.shortname}' already exists")
             }
 
-            projectIRI = knoraIdUtil.makeRandomProjectIri
-            projectOntologyGraphString = "http://www.knora.org/ontology/" + newProjectDataV1.shortname
-            projectDataGraphString = "http://www.knora.org/data/" + newProjectDataV1.shortname
+            newProjectIRI = knoraIdUtil.makeRandomProjectIri
+            projectOntologyGraphString = "http://www.knora.org/ontology/" + createRequest.shortname
+            projectDataGraphString = "http://www.knora.org/data/" + createRequest.shortname
 
             // Create the new project.
             createNewProjectSparqlString = queries.sparql.v1.txt.createNewProject(
                 adminNamedGraphIri = "http://www.knora.org/data/admin",
                 triplestore = settings.triplestoreType,
-                projectIri = projectIRI,
+                projectIri = newProjectIRI,
                 projectClassIri = OntologyConstants.KnoraBase.KnoraProject,
-                shortname = SparqlUtil.any2SparqlLiteral(newProjectDataV1.shortname),
-                longname = SparqlUtil.any2SparqlLiteral(newProjectDataV1.longname),
-                description = SparqlUtil.any2SparqlLiteral(newProjectDataV1.description),
-                keywords = SparqlUtil.any2SparqlLiteral(newProjectDataV1.keywords),
-                logo = SparqlUtil.any2SparqlLiteral(newProjectDataV1.logo),
-                basepath = SparqlUtil.any2SparqlLiteral(newProjectDataV1.basepath),
-                isActiveProject = SparqlUtil.any2SparqlLiteral(newProjectDataV1.isActiveProject),
-                hasSelfJoinEnabled = SparqlUtil.any2SparqlLiteral(newProjectDataV1.hasSelfJoinEnabled),
-                projectOntologyGraph = SparqlUtil.any2SparqlLiteral(projectOntologyGraphString),
-                projectDataGraph = SparqlUtil.any2SparqlLiteral(projectDataGraphString)
+                shortname = createRequest.shortname,
+                maybeLongname = createRequest.longname,
+                maybeDescription = createRequest.description,
+                maybeKeywords = createRequest.keywords,
+                maybeLogo = createRequest.logo,
+                basepath = createRequest.basepath,
+                status = createRequest.status,
+                hasSelfJoinEnabled = createRequest.hasSelfJoinEnabled,
+                projectOntologyGraph = projectOntologyGraphString,
+                projectDataGraph = projectDataGraphString
             ).toString
             //_ = log.debug(s"createNewProjectV1 - update query: $createNewProjectSparqlString")
 
@@ -314,18 +314,18 @@ class ProjectsResponderV1 extends ResponderV1 {
             // Verify that the project was created.
             sparqlQuery = queries.sparql.v1.txt.getProjectByIri(
                 triplestore = settings.triplestoreType,
-                projectIri = projectIRI
+                projectIri = newProjectIRI
             ).toString
             projectInfoQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
             projectResponse = projectInfoQueryResponse.results.bindings
             //_ = log.debug(s"createNewProjectV1 - verify query response: ${MessageUtil.toSource(projectResponse)}")
 
             _ = if (projectResponse.isEmpty) {
-                throw UpdateNotPerformedException(s"Project $projectIRI was not created. Please report this as a possible bug.")
+                throw UpdateNotPerformedException(s"Project $newProjectIRI was not created. Please report this as a possible bug.")
             }
 
             // create the project info
-            newProjectInfo = createProjectInfoV1(projectResponse, projectIRI, Some(userProfileV1))
+            newProjectInfo = createProjectInfoV1(projectResponse, newProjectIRI, Some(userProfileV1))
 
             // create the project operation response
             projectOperationResponseV1 = ProjectOperationResponseV1(newProjectInfo, userProfileV1.userData)
@@ -369,15 +369,15 @@ class ProjectsResponderV1 extends ResponderV1 {
             ProjectInfoV1(
                 id = projectIri,
                 shortname = projectProperties.getOrElse(OntologyConstants.KnoraBase.ProjectShortname, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no shortname defined.")),
-                longname = projectProperties.getOrElse(OntologyConstants.KnoraBase.ProjectLongname, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no longname defined.")),
-                description = projectProperties.getOrElse(OntologyConstants.KnoraBase.ProjectDescription, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no description defined.")),
+                longname = projectProperties.get(OntologyConstants.KnoraBase.ProjectLongname),
+                description = projectProperties.get(OntologyConstants.KnoraBase.ProjectDescription),
                 keywords = projectProperties.get(OntologyConstants.KnoraBase.ProjectKeywords),
                 logo = projectProperties.get(OntologyConstants.KnoraBase.ProjectLogo),
                 belongsToInstitution = projectProperties.get(OntologyConstants.KnoraBase.BelongsToProject),
                 basepath = projectProperties.getOrElse(OntologyConstants.KnoraBase.ProjectBasepath, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no basepath defined.")),
                 ontologyNamedGraph = projectProperties.getOrElse(OntologyConstants.KnoraBase.ProjectOntologyGraph, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no projectOntologyGraph defined.")),
                 dataNamedGraph = projectProperties.getOrElse(OntologyConstants.KnoraBase.ProjectDataGraph, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no projectDataGraph defined.")),
-                isActiveProject = projectProperties.getOrElse(OntologyConstants.KnoraBase.IsActiveProject, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no isActiveProject defined.")).toBoolean,
+                status = projectProperties.getOrElse(OntologyConstants.KnoraBase.Status, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no status defined.")).toBoolean,
                 hasSelfJoinEnabled = projectProperties.getOrElse(OntologyConstants.KnoraBase.HasSelfJoinEnabled, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no hasSelfJoinEnabled defined.")).toBoolean
             )
 

@@ -20,6 +20,8 @@
   */
 package org.knora.webapi.responders.v1
 
+import java.util.UUID
+
 import akka.actor.Props
 import akka.actor.Status.Failure
 import akka.testkit.{ImplicitSender, TestActorRef}
@@ -142,24 +144,25 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
 
             "create the project with using a permissions template, and return the 'full' project info if the supplied shortname is unique " in {
                 actorUnderTest ! ProjectCreateRequestV1(
-                    NewProjectDataV1(
+                    CreateProjectApiRequestV1(
                         shortname = "newproject",
-                        longname = "project longname",
-                        description = "project description",
-                        keywords = "keywords",
-                        logo = "/fu/bar/baz.jpg",
+                        longname = Some("project longname"),
+                        description = Some("project description"),
+                        keywords = Some("keywords"),
+                        logo = Some("/fu/bar/baz.jpg"),
                         basepath = "/fu/bar",
-                        isActiveProject = true,
+                        status = true,
                         hasSelfJoinEnabled = false
                     ),
-                    SharedAdminTestData.rootUser
+                    SharedAdminTestData.rootUser,
+                    UUID.randomUUID()
                 )
                 expectMsgPF(timeout) {
                     case ProjectOperationResponseV1(newProjectInfo, requestingUserData) => {
                         //println(newProjectInfo)
                         assert(newProjectInfo.shortname.equals("newproject"))
-                        assert(newProjectInfo.longname.equals("project longname"))
-                        assert(newProjectInfo.description.equals("project description"))
+                        assert(newProjectInfo.longname.contains("project longname"))
+                        assert(newProjectInfo.description.contains("project description"))
                         assert(newProjectInfo.ontologyNamedGraph.equals("http://www.knora.org/ontology/newproject"))
                         assert(newProjectInfo.dataNamedGraph.equals("http://www.knora.org/data/newproject"))
                     }
@@ -168,17 +171,18 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
 
             "return a 'DuplicateValueException' if the supplied project shortname is not unique " in {
                 actorUnderTest ! ProjectCreateRequestV1(
-                    NewProjectDataV1(
+                    CreateProjectApiRequestV1(
                         shortname = "newproject",
-                        longname = "project longname",
-                        description = "project description",
-                        keywords = "keywords",
-                        logo = "/fu/bar/baz.jpg",
+                        longname = Some("project longname"),
+                        description = Some("project description"),
+                        keywords = Some("keywords"),
+                        logo = Some("/fu/bar/baz.jpg"),
                         basepath = "/fu/bar",
-                        isActiveProject = true,
+                        status = true,
                         hasSelfJoinEnabled = false
                     ),
-                    SharedAdminTestData.rootUser
+                    SharedAdminTestData.rootUser,
+                    UUID.randomUUID()
                 )
                 expectMsg(Failure(DuplicateValueException(s"Project with the shortname: 'newproject' already exists")))
             }
@@ -186,17 +190,18 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
             "return 'BadRequestException' if 'shortname' is missing" in {
 
                 actorUnderTest ! ProjectCreateRequestV1(
-                    NewProjectDataV1(
+                    CreateProjectApiRequestV1(
                         shortname = "",
-                        longname = "project longname",
-                        description = "project description",
-                        keywords = "keywords",
-                        logo = "/fu/bar/baz.jpg",
+                        longname = Some("project longname"),
+                        description = Some("project description"),
+                        keywords = Some("keywords"),
+                        logo = Some("/fu/bar/baz.jpg"),
                         basepath = "/fu/bar",
-                        isActiveProject = true,
+                        status = true,
                         hasSelfJoinEnabled = false
                     ),
-                    SharedAdminTestData.rootUser
+                    SharedAdminTestData.rootUser,
+                    UUID.randomUUID()
                 )
                 expectMsg(Failure(BadRequestException("'Shortname' cannot be empty")))
             }

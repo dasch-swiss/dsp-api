@@ -42,7 +42,7 @@ SELECT ?s ?p ?o
 WHERE {
 
     ?s rdf:type knora-base:knoraProject .
-    ?s knora-base:projectShortname @shortname .
+    ?s knora-base:projectShortname "@shortname"^^xsd:string .
     ?s ?p ?o .
 
 }

@@ -25,7 +25,6 @@ import akka.actor.Props
 import akka.testkit._
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.ontologymessages._
-import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
 import org.knora.webapi.messages.v1.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent, ResetTriplestoreContentACK}
 import org.knora.webapi.responders._
 import org.knora.webapi.store._
@@ -627,8 +626,8 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                 active = true,
                 uri = SharedAdminTestData.systemProjectInfo.ontologyNamedGraph,
                 project_id = SharedAdminTestData.systemProjectInfo.id,
-                description = SharedAdminTestData.systemProjectInfo.description,
-                longname = SharedAdminTestData.systemProjectInfo.longname,
+                description = SharedAdminTestData.systemProjectInfo.description.get,
+                longname = SharedAdminTestData.systemProjectInfo.longname.get,
                 shortname = SharedAdminTestData.systemProjectInfo.shortname,
                 id = SharedAdminTestData.systemProjectInfo.ontologyNamedGraph
             ),
@@ -636,8 +635,8 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                 active = true,
                 uri = SharedAdminTestData.incunabulaProjectInfo.ontologyNamedGraph,
                 project_id = SharedAdminTestData.incunabulaProjectInfo.id,
-                description = SharedAdminTestData.incunabulaProjectInfo.description,
-                longname = SharedAdminTestData.incunabulaProjectInfo.longname,
+                description = SharedAdminTestData.incunabulaProjectInfo.description.get,
+                longname = SharedAdminTestData.incunabulaProjectInfo.longname.get,
                 shortname = SharedAdminTestData.incunabulaProjectInfo.shortname,
                 id = SharedAdminTestData.incunabulaProjectInfo.ontologyNamedGraph
             ),
@@ -645,8 +644,8 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                 active = true,
                 uri = SharedAdminTestData.beolProjectInfo.ontologyNamedGraph,
                 project_id = SharedAdminTestData.beolProjectInfo.id,
-                description = SharedAdminTestData.beolProjectInfo.description,
-                longname = SharedAdminTestData.beolProjectInfo.longname,
+                description = SharedAdminTestData.beolProjectInfo.description.get,
+                longname = SharedAdminTestData.beolProjectInfo.longname.get,
                 shortname = SharedAdminTestData.beolProjectInfo.shortname,
                 id = SharedAdminTestData.beolProjectInfo.ontologyNamedGraph
             ),
@@ -654,8 +653,8 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                 active = true,
                 uri = SharedAdminTestData.biblioProjectInfo.ontologyNamedGraph,
                 project_id = SharedAdminTestData.biblioProjectInfo.id,
-                description = SharedAdminTestData.biblioProjectInfo.description,
-                longname = SharedAdminTestData.biblioProjectInfo.longname,
+                description = SharedAdminTestData.biblioProjectInfo.description.get,
+                longname = SharedAdminTestData.biblioProjectInfo.longname.get,
                 shortname = SharedAdminTestData.biblioProjectInfo.shortname,
                 id = SharedAdminTestData.biblioProjectInfo.ontologyNamedGraph
             ),
@@ -663,8 +662,8 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                 active = true,
                 uri = SharedAdminTestData.imagesProjectInfo.ontologyNamedGraph,
                 project_id = SharedAdminTestData.imagesProjectInfo.id,
-                description = SharedAdminTestData.imagesProjectInfo.description,
-                longname = SharedAdminTestData.imagesProjectInfo.longname,
+                description = SharedAdminTestData.imagesProjectInfo.description.get,
+                longname = SharedAdminTestData.imagesProjectInfo.longname.get,
                 shortname = SharedAdminTestData.imagesProjectInfo.shortname,
                 id = SharedAdminTestData.imagesProjectInfo.ontologyNamedGraph
             ),
@@ -672,8 +671,8 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                 active = true,
                 uri = SharedAdminTestData.anythingProjectInfo.ontologyNamedGraph,
                 project_id = SharedAdminTestData.anythingProjectInfo.id,
-                description = SharedAdminTestData.anythingProjectInfo.description,
-                longname = SharedAdminTestData.anythingProjectInfo.longname,
+                description = SharedAdminTestData.anythingProjectInfo.description.get,
+                longname = SharedAdminTestData.anythingProjectInfo.longname.get,
                 shortname = SharedAdminTestData.anythingProjectInfo.shortname,
                 id = SharedAdminTestData.anythingProjectInfo.ontologyNamedGraph
             ),
@@ -681,8 +680,8 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                 active = false,
                 uri = SharedAdminTestData.dokubibProjectInfo.ontologyNamedGraph,
                 project_id = SharedAdminTestData.dokubibProjectInfo.id,
-                description = SharedAdminTestData.dokubibProjectInfo.description,
-                longname = SharedAdminTestData.dokubibProjectInfo.longname,
+                description = SharedAdminTestData.dokubibProjectInfo.description.get,
+                longname = SharedAdminTestData.dokubibProjectInfo.longname.get,
                 shortname = SharedAdminTestData.dokubibProjectInfo.shortname,
                 id = SharedAdminTestData.dokubibProjectInfo.ontologyNamedGraph
             ),
@@ -690,8 +689,8 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                 active = true,
                 uri = SharedAdminTestData.triplesixProjectInfo.ontologyNamedGraph,
                 project_id = SharedAdminTestData.triplesixProjectInfo.id,
-                description = SharedAdminTestData.triplesixProjectInfo.description,
-                longname = SharedAdminTestData.triplesixProjectInfo.longname,
+                description = SharedAdminTestData.triplesixProjectInfo.description.get,
+                longname = SharedAdminTestData.triplesixProjectInfo.longname.get,
                 shortname = SharedAdminTestData.triplesixProjectInfo.shortname,
                 id = SharedAdminTestData.triplesixProjectInfo.ontologyNamedGraph
             )

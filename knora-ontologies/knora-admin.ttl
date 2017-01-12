@@ -252,48 +252,6 @@
 
 
 
-###  http://www.knora.org/ontology/knora-base#isActiveProject
-
-:isActiveGroup rdf:type owl:DatatypeProperty ;
-
-          rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
-
-          rdfs:comment "Exists and is false if the group has been deactivated (deleted)"@en ;
-
-          :subjectDatatypeConstraint :UserGroup ;
-
-          :objectDatatypeConstraint xsd:boolean .
-
-
-
-###  http://www.knora.org/ontology/knora-base#isActiveProject
-
-:isActiveProject rdf:type owl:DatatypeProperty ;
-
-            rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
-
-            rdfs:comment "Exists and is false if the project has been deactivated (deleted)"@en ;
-
-            :subjectDatatypeConstraint :knoraProject ;
-
-            :objectDatatypeConstraint xsd:boolean .
-
-
-
-###  http://www.knora.org/ontology/knora-base#isActiveUser
-
-:isActiveUser rdf:type owl:DatatypeProperty ;
-
-              rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
-
-              rdfs:comment "Exists and is false if the user has been deactivated (deleted)"@en ;
-
-              :subjectClassConstraint :User ;
-
-              :objectDatatypeConstraint xsd:boolean .
-
-
-
 ###  http://www.knora.org/ontology/knora-base#isActiveUser
 
 :isInSystemAdminGroup rdf:type owl:DatatypeProperty ;
@@ -478,6 +436,18 @@
 
 
 
+###  http://www.knora.org/ontology/knora-base#status
+
+:status rdf:type owl:DatatypeProperty ;
+
+          rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
+
+          rdfs:comment "The status of the user / group / project. It is false if the entity has been deactivated (deleted)"@en ;
+
+          :objectDatatypeConstraint xsd:boolean .
+
+
+
 #################################################################
 #
 #    Classes
@@ -546,8 +516,8 @@
                         owl:cardinality "1"^^xsd:nonNegativeInteger
                       ] ,
                       [ rdf:type owl:Restriction ;
-                        owl:onProperty :isActiveUser ;
-                        owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                        owl:onProperty :status ;
+                        owl:cardinality "1"^^xsd:nonNegativeInteger
                       ] ,
                       [ rdf:type owl:Restriction ;
                         owl:onProperty :isInProject ;
@@ -572,16 +542,20 @@
 
            rdfs:subClassOf foaf:Group ,
                            [ rdf:type owl:Restriction ;
-                           owl:onProperty :groupName ;
-                           owl:cardinality "1"^^xsd:nonNegativeInteger
+                             owl:onProperty :groupName ;
+                             owl:cardinality "1"^^xsd:nonNegativeInteger
                            ] ,
                            [ rdf:type owl:Restriction ;
-                           owl:onProperty :groupDescription ;
-                           owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                             owl:onProperty :groupDescription ;
+                             owl:maxCardinality "1"^^xsd:nonNegativeInteger
                            ] ,
                            [ rdf:type owl:Restriction ;
-                           owl:onProperty :belongsToProject ;
-                           owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                             owl:onProperty :status ;
+                             owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                           ] ,
+                           [ rdf:type owl:Restriction ;
+                             owl:onProperty :belongsToProject ;
+                             owl:maxCardinality "1"^^xsd:nonNegativeInteger
                            ];
 
            rdfs:comment "A group of Knora users"@en .
@@ -600,11 +574,11 @@
                               ] ,
                               [ rdf:type owl:Restriction ;
                                 owl:onProperty :projectLongname ;
-                                owl:cardinality "1"^^xsd:nonNegativeInteger
+                                owl:maxCardinality "1"^^xsd:nonNegativeInteger
                               ] ,
                               [ rdf:type owl:Restriction ;
                                 owl:onProperty :projectDescription ;
-                                owl:cardinality "1"^^xsd:nonNegativeInteger
+                                owl:maxCardinality "1"^^xsd:nonNegativeInteger
                               ] ,
                               [ rdf:type owl:Restriction ;
                                 owl:onProperty :projectLogo ;
@@ -627,12 +601,12 @@
                                 owl:cardinality "1"^^xsd:nonNegativeInteger
                               ] ,
                               [ rdf:type owl:Restriction ;
-                                owl:onProperty :isActiveProject ;
+                                owl:onProperty :status ;
                                 owl:cardinality "1"^^xsd:nonNegativeInteger
                               ] ,
                               [ rdf:type owl:Restriction ;
                                 owl:onProperty :hasSelfJoinEnabled ;
-                                owl:Cardinality "1"^^xsd:nonNegativeInteger
+                                owl:cardinality "1"^^xsd:nonNegativeInteger
                               ] ,
                               [ rdf:type owl:Restriction ;
                                 owl:onProperty :belongsToInstitution ;
@@ -652,25 +626,29 @@
 
 ###  http://www.knora.org/ontology/knora-base#KnownUser
 :KnownUser rdf:type :UserGroup ;
-           :groupName "known user" .
+           :groupName "known user" ;
+           :status "true"^^xsd:boolean .
 
 ###  http://www.knora.org/ontology/knora-base#Creator
 :Creator rdf:type :UserGroup ;
-         :groupName  "creator" .
+         :groupName  "creator" ;
+         :status "true"^^xsd:boolean .
 
 ###  http://www.knora.org/ontology/knora-base#ProjectMember
 :ProjectMember rdf:type :UserGroup ;
-               :groupName "project member" .
+               :groupName "project member" ;
+               :status "true"^^xsd:boolean .
 
 ###  http://www.knora.org/ontology/knora-base#UnknownUser
 :UnknownUser rdf:type :UserGroup ;
-             :groupName "unknown user" .
+             :groupName "unknown user" ;
+             :status "true"^^xsd:boolean .
 
 ###  http://www.knora.org/ontology/knora-base#SystemAdmin
 :SystemAdmin rdf:type :UserGroup ;
              :groupName "system admin" ;
              :belongsToProject <http://www.knora.org/ontology/knora-base#SystemProject> ;
-             :isActiveGroup "true"^^xsd:boolean ;
+             :status "true"^^xsd:boolean ;
              :hasSelfJoinEnabled "false"^^xsd:boolean .
 
 ###  http://www.knora.org/ontology/knora-base#SystemUser
@@ -680,6 +658,7 @@
             :givenName "Knora" ;
             :familyName "System" ;
             :password "-" ;
+            :status "true"^^xsd:boolean ;
             :preferredLanguage "en" ;
             :isInSystemAdminGroup "false"^^xsd:boolean .
 
@@ -692,7 +671,7 @@
             :projectOntologyGraph "http://www.knora.org/ontology/knora-base" ;
             :projectDataGraph "-" ;
             :projectBasepath "-"^^xsd:string ;
-            :isActiveProject "true"^^xsd:boolean ;
+            :status "true"^^xsd:boolean ;
             :hasSelfJoinEnabled "false"^^xsd:boolean .
 
 #

@@ -20,6 +20,8 @@
 
 package org.knora.webapi.messages.v1.responder.projectmessages
 
+import java.util.UUID
+
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1, UserV1JsonProtocol}
@@ -32,17 +34,20 @@ import spray.json.{DefaultJsonProtocol, JsonFormat, NullOptions, RootJsonFormat}
 /**
   * Represents an API request payload that asks the Knora API server to create a new project.
   *
-  * @param shortName           the shortname of the project to be created (unique).
-  * @param longName            the longname of the project to be created.
-  * @param basePath            the basepath of the project to be created.
-  * @param isActiveProject     the status of the project to be created.
-  * @param hasSelfJoinEnabled  the status of self-join of the project to be created.
+  * @param shortname          the shortname of the project to be created (unique).
+  * @param longname           the longname of the project to be created.
+  * @param basepath           the basepath of the project to be created.
+  * @param status             the status of the project to be created.
+  * @param hasSelfJoinEnabled the status of self-join of the project to be created.
   */
-case class CreateProjectApiRequestV1(shortName: String,
-                                     longName: String,
-                                     basePath: String,
-                                     isActiveProject: Boolean,
-                                     hasSelfJoinEnabled: Boolean
+case class CreateProjectApiRequestV1(shortname: String,
+                                     longname: Option[String],
+                                     description: Option[String],
+                                     keywords: Option[String],
+                                     logo: Option[String],
+                                     basepath: String,
+                                     status: Boolean = true,
+                                     hasSelfJoinEnabled: Boolean = false
                                     ) extends ProjectV1JsonProtocol {
     def toJsValue = createProjectApiRequestV1Format.write(this)
 }
@@ -50,8 +55,8 @@ case class CreateProjectApiRequestV1(shortName: String,
 /**
   * Represents an API request payload that asks the Knora API server to update one property of an existing project.
   *
-  * @param propertyIri  the property of the project to be updated.
-  * @param newValue     the new value for the property of the project to be updated.
+  * @param propertyIri the property of the project to be updated.
+  * @param newValue    the new value for the property of the project to be updated.
   */
 case class UpdateProjectApiRequestV1(propertyIri: String,
                                      newValue: String) extends ProjectV1JsonProtocol {
@@ -86,15 +91,15 @@ case class ProjectsNamedGraphGetV1(userProfile: UserProfileV1) extends ProjectsR
 /**
   * Get info about a single project identified through it's IRI. The response is in form of [[ProjectInfoResponseV1]].
   *
-  * @param iri the IRI of the project.
+  * @param iri           the IRI of the project.
   * @param userProfileV1 the profile of the user making the request (optional).
   */
 case class ProjectInfoByIRIGetRequestV1(iri: IRI, userProfileV1: Option[UserProfileV1]) extends ProjectsResponderRequestV1
 
 /**
-  *Get info about a single project identified through it's IRI. The response is in form of [[ProjectInfoV1]].
+  * Get info about a single project identified through it's IRI. The response is in form of [[ProjectInfoV1]].
   *
-  * @param iri the IRI of the project.
+  * @param iri           the IRI of the project.
   * @param userProfileV1 the profile of the user making the request (optional).
   */
 case class ProjectInfoByIRIGetV1(iri: IRI, userProfileV1: Option[UserProfileV1]) extends ProjectsResponderRequestV1
@@ -103,7 +108,7 @@ case class ProjectInfoByIRIGetV1(iri: IRI, userProfileV1: Option[UserProfileV1])
 /**
   * Find everything about a single project identified through it's shortname.
   *
-  * @param shortname of the project.
+  * @param shortname     of the project.
   * @param userProfileV1 the profile of the user making the request.
   */
 case class ProjectInfoByShortnameGetRequestV1(shortname: String, userProfileV1: Option[UserProfileV1]) extends ProjectsResponderRequestV1
@@ -111,18 +116,20 @@ case class ProjectInfoByShortnameGetRequestV1(shortname: String, userProfileV1: 
 /**
   * Requests the cration of a new project.
   *
-  * @param newProjectDataV1 the [[NewProjectDataV1]] information for creation a new project.
+  * @param createRequest the [[CreateProjectApiRequestV1]] information for creation a new project.
   * @param userProfileV1 the user profile of the user creating the new project.
+  * @param apiRequestID  the ID of the API request.
   */
-case class ProjectCreateRequestV1(newProjectDataV1: NewProjectDataV1,
-                                  userProfileV1: UserProfileV1) extends ProjectsResponderRequestV1
+case class ProjectCreateRequestV1(createRequest: CreateProjectApiRequestV1,
+                                  userProfileV1: UserProfileV1,
+                                  apiRequestID: UUID) extends ProjectsResponderRequestV1
 
 /**
   * Requests updating an existing project
   *
-  * @param projectIri the IRI of the project to be updated.
-  * @param propertyIri the IRI of the property to be updated.
-  * @param newValue the new value for the property.
+  * @param projectIri    the IRI of the project to be updated.
+  * @param propertyIri   the IRI of the property to be updated.
+  * @param newValue      the new value for the property.
   * @param userProfileV1 the user profile of the user requesting the update.
   */
 case class ProjectUpdateRequestV1(projectIri: IRI,
@@ -153,39 +160,30 @@ case class ProjectInfoResponseV1(project_info: ProjectInfoV1, userdata: Option[U
 
 /**
   * Represents an answer to a project creating/modifying operation.
+  *
   * @param project_info the new project info of the created/modified project.
   * @param userData     information about the user that made the request.
   */
 case class ProjectOperationResponseV1(project_info: ProjectInfoV1, userData: UserDataV1) extends KnoraResponseV1 with ProjectV1JsonProtocol {
     def toJsValue = projectOperationResponseV1Format.write(this)
 }
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Components of messages
 
 case class ProjectInfoV1(id: IRI,
                          shortname: String,
-                         longname: String,
-                         description: String,
-                         keywords: Option[String] = None,
-                         logo: Option[String] = None,
-                         belongsToInstitution: Option[IRI] = None,
+                         longname: Option[String],
+                         description: Option[String],
+                         keywords: Option[String],
+                         logo: Option[String],
+                         belongsToInstitution: Option[IRI],
                          basepath: String,
                          ontologyNamedGraph: IRI,
                          dataNamedGraph: IRI,
-                         isActiveProject: Boolean,
+                         status: Boolean,
                          hasSelfJoinEnabled: Boolean
                         )
-
-case class NewProjectDataV1(shortname: String,
-                            longname: String,
-                            description: String,
-                            keywords: String,
-                            logo: String,
-                            basepath: String,
-                            isActiveProject: Boolean,
-                            hasSelfJoinEnabled: Boolean
-                           )
-
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -205,7 +203,7 @@ trait ProjectV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol wi
     // https://github.com/spray/spray-json#jsonformats-for-recursive-types
     implicit val projectsResponseV1Format: RootJsonFormat[ProjectsResponseV1] = rootFormat(lazyFormat(jsonFormat2(ProjectsResponseV1)))
     implicit val projectInfoResponseV1Format: RootJsonFormat[ProjectInfoResponseV1] = rootFormat(lazyFormat(jsonFormat2(ProjectInfoResponseV1)))
-    implicit val createProjectApiRequestV1Format: RootJsonFormat[CreateProjectApiRequestV1] = rootFormat(lazyFormat(jsonFormat5(CreateProjectApiRequestV1)))
+    implicit val createProjectApiRequestV1Format: RootJsonFormat[CreateProjectApiRequestV1] = rootFormat(lazyFormat(jsonFormat8(CreateProjectApiRequestV1)))
     implicit val updateProjectApiRequestV1Format: RootJsonFormat[UpdateProjectApiRequestV1] = rootFormat(lazyFormat(jsonFormat2(UpdateProjectApiRequestV1)))
     implicit val projectOperationResponseV1Format: RootJsonFormat[ProjectOperationResponseV1] = rootFormat(lazyFormat(jsonFormat2(ProjectOperationResponseV1)))
 }

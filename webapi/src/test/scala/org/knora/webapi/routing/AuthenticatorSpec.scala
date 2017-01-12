@@ -62,11 +62,11 @@ class AuthenticatorSpec extends CoreSpec("AuthenticationTestSystem") with Implic
 
     val mockUsersActor = actor(RESPONDER_MANAGER_ACTOR_NAME)(new Act {
         become {
-            case UserProfileByEmailGetRequestV1(submittedUsername, userProfileType) => {
-                if (submittedUsername == "root") {
+            case UserProfileByEmailGetRequestV1(submittedEmail, userProfileType) => {
+                if (submittedEmail == "root@example.com") {
                     ActorUtil.future2Message(sender, Future(rootUserProfileV1), logger)
                 } else {
-                    ActorUtil.future2Message(sender, Future.failed(throw NotFoundException(s"User '$submittedUsername' not found")), logger)
+                    ActorUtil.future2Message(sender, Future.failed(throw NotFoundException(s"User '$submittedEmail' not found")), logger)
                 }
             }
         }

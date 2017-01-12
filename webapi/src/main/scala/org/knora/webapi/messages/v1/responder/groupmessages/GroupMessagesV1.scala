@@ -35,25 +35,25 @@ import spray.json.{DefaultJsonProtocol, JsonFormat, NullOptions, RootJsonFormat}
   * @param name               the name of the group to be created (unique).
   * @param description        the description of the group to be created.
   * @param belongsToProject   the project inside which the group will be created.
-  * @param isActiveGroup      the status of the group to be created.
+  * @param status             the status of the group to be created.
   * @param hasSelfJoinEnabled the status of self-join of the group to be created.
   */
 case class CreateGroupApiRequestV1(name: String,
-                                   description: String,
-                                   belongsToProject: Option[IRI],
-                                   isActiveGroup: Boolean,
-                                   hasSelfJoinEnabled: Boolean) {
+                                   description: Option[String],
+                                   belongsToProject: IRI,
+                                   status: Boolean = true,
+                                   hasSelfJoinEnabled: Boolean = false) {
     def toJsValue = GroupV1JsonProtocol.createGroupApiRequestV1Format.write(this)
 }
 
 /**
   * Represents an API request payload that asks the Knora API server to update one property of an existing group.
   *
-  * @param propertyIri  the property of the group to be updated.
-  * @param newValue     the new value for the property of the group to be updated.
+  * @param propertyIri the property of the group to be updated.
+  * @param newValue    the new value for the property of the group to be updated.
   */
 case class UpdateGroupApiRequestV1(propertyIri: String,
-                                     newValue: String) {
+                                   newValue: String) {
     def toJsValue = GroupV1JsonProtocol.updateGroupApiRequestV1Format.write(this)
 }
 
@@ -77,7 +77,7 @@ case class GroupsGetRequestV1(userProfile: Option[UserProfileV1]) extends Groups
 /**
   * Get everything about a single group identified through it's IRI.
   *
-  * @param iri Iri of the group.
+  * @param iri           Iri of the group.
   * @param userProfileV1 the profile of the user making the request.
   */
 case class GroupInfoByIRIGetRequest(iri: IRI, userProfileV1: Option[UserProfileV1]) extends GroupsResponderRequestV1
@@ -87,8 +87,8 @@ case class GroupInfoByIRIGetRequest(iri: IRI, userProfileV1: Option[UserProfileV
   * Find everything about a single group identified through it's shortname. Because it is only required to have unique
   * names inside a project, it is required to supply the name of the project.
   *
-  * @param projectIri the IRI of the project the group is part of.
-  * @param groupName the name of the group.
+  * @param projectIri    the IRI of the project the group is part of.
+  * @param groupName     the name of the group.
   * @param userProfileV1 the profile of the user making the request.
   */
 case class GroupInfoByNameGetRequest(projectIri: IRI, groupName: String, userProfileV1: Option[UserProfileV1]) extends GroupsResponderRequestV1
@@ -97,21 +97,21 @@ case class GroupInfoByNameGetRequest(projectIri: IRI, groupName: String, userPro
 /**
   * Requests the creation of a new group.
   *
-  * @param newGroupInfo the [[NewGroupInfoV1]] information for creating the new group.
-  * @param userProfile the user profile of the user creating the new group.
-  * @param apiRequestID the ID of the API request.
+  * @param createRequest the [[CreateGroupApiRequestV1]] information for creating the new group.
+  * @param userProfile   the user profile of the user creating the new group.
+  * @param apiRequestID  the ID of the API request.
   */
-case class GroupCreateRequestV1(newGroupInfo: NewGroupInfoV1,
+case class GroupCreateRequestV1(createRequest: CreateGroupApiRequestV1,
                                 userProfile: UserProfileV1,
                                 apiRequestID: UUID) extends GroupsResponderRequestV1
 
 /**
   * Request updating of an existing group.
   *
-  * @param groupIri the IRI of the group to be updated.
-  * @param propertyIri the IRI of the property to be updated.
-  * @param newValue the new value for the property.
-  * @param userProfile the user profile of the user requesting the update.
+  * @param groupIri     the IRI of the group to be updated.
+  * @param propertyIri  the IRI of the property to be updated.
+  * @param newValue     the new value for the property.
+  * @param userProfile  the user profile of the user requesting the update.
   * @param apiRequestID the ID of the API request.
   */
 case class GroupInfoUpdateRequestV1(groupIri: webapi.IRI,
@@ -123,7 +123,7 @@ case class GroupInfoUpdateRequestV1(groupIri: webapi.IRI,
 /**
   * Request updating the group's permissions.
   *
-  * @param userProfile the user profile of the user requesting the update.
+  * @param userProfile  the user profile of the user requesting the update.
   * @param apiRequestID the ID of the API request.
   */
 case class GroupPermissionUpdateRequest(userProfile: UserProfileV1,
@@ -134,7 +134,7 @@ case class GroupPermissionUpdateRequest(userProfile: UserProfileV1,
 /**
   * Represents the Knora API v1 JSON response to a request for information about all groups.
   *
-  * @param groups information about all existing groups.
+  * @param groups   information about all existing groups.
   * @param userdata information about the user that made the request.
   */
 case class GroupsResponseV1(groups: Seq[GroupInfoV1], userdata: Option[UserDataV1]) extends KnoraResponseV1 {
@@ -145,7 +145,7 @@ case class GroupsResponseV1(groups: Seq[GroupInfoV1], userdata: Option[UserDataV
   * Represents the Knora API v1 JSON response to a request for information about a single group.
   *
   * @param group_info all information about the group.
-  * @param userdata information about the user that made the request.
+  * @param userdata   information about the user that made the request.
   */
 case class GroupInfoResponseV1(group_info: GroupInfoV1, userdata: Option[UserDataV1]) extends KnoraResponseV1 {
     def toJsValue = GroupV1JsonProtocol.groupInfoResponseV1Format.write(this)
@@ -160,17 +160,18 @@ case class GroupInfoResponseV1(group_info: GroupInfoV1, userdata: Option[UserDat
 case class GroupOperationResponseV1(group_info: GroupInfoV1, userdata: UserDataV1) extends KnoraResponseV1 {
     def toJsValue = GroupV1JsonProtocol.groupOperationResponseV1Format.write(this)
 }
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Components of messages
 
 /**
   * The information describing a group.
   *
-  * @param id the IRI if the group.
-  * @param name the name of the group.
-  * @param description the description of the group.
-  * @param belongsToProject the project this group belongs to.
-  * @param isActiveGroup the group's status.
+  * @param id                 the IRI if the group.
+  * @param name               the name of the group.
+  * @param description        the description of the group.
+  * @param belongsToProject   the project this group belongs to.
+  * @param status             the group's status.
   * @param hasSelfJoinEnabled the group's self-join status.
   *
   */
@@ -178,24 +179,9 @@ case class GroupInfoV1(id: IRI,
                        name: String,
                        description: Option[String] = None,
                        belongsToProject: IRI,
-                       isActiveGroup: Boolean = false,
-                       hasSelfJoinEnabled: Boolean = false
+                       status: Boolean,
+                       hasSelfJoinEnabled: Boolean
                       )
-
-/**
-  * Represents basic information about the group which need to be supplied during group creation.
-  *
-  * @param name the name of the group.
-  * @param description the optional description of the group
-  * @param belongsToProject the project this group belongs to.
-  * @param isActiveGroup the group's status.
-  * @param hasSelfJoinEnabled the group's self-join status.
-  */
-case class NewGroupInfoV1(name: String,
-                          description: Option[String] = None,
-                          belongsToProject: IRI,
-                          isActiveGroup: Boolean = true,
-                          hasSelfJoinEnabled: Boolean = false)
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // JSON formating

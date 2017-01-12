@@ -113,7 +113,7 @@ class CkanResponderV1 extends ResponderV1 {
         val ckanPInfo =
             CkanProjectInfoV1(
                 shortname = pinfo.shortname,
-                longname = pinfo.longname,
+                longname = pinfo.longname.getOrElse(pinfo.shortname),
                 ckan_tags = Vector("Kulturanthropologie"),
                 ckan_license_id = "CC-BY-NC-SA-4.0")
 
@@ -205,7 +205,7 @@ class CkanResponderV1 extends ResponderV1 {
         val ckanPInfo =
             CkanProjectInfoV1(
                 shortname = pinfo.shortname,
-                longname = pinfo.longname,
+                longname = pinfo.longname.getOrElse(pinfo.shortname),
                 ckan_tags = Vector("Kunstgeschichte"),
                 ckan_license_id = "CC-BY-4.0")
 
