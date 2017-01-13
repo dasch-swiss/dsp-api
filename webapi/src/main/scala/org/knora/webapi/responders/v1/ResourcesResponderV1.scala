@@ -522,7 +522,7 @@ class ResourcesResponderV1 extends ResponderV1 {
 
                                                 // Convert the resulting ValueProps into a LinkValueV1 so we can check its rdf:predicate.
 
-                                                val apiValueV1 = valueUtilV1.makeValueV1(valuePropsWithProject)
+                                                val apiValueV1 = valueUtilV1.makeValueV1(valuePropsWithProject, responderManager, userProfile)
 
                                                 val linkValueV1: LinkValueV1 = apiValueV1 match {
                                                     case linkValueV1: LinkValueV1 => linkValueV1
@@ -1852,7 +1852,7 @@ class ResourcesResponderV1 extends ResponderV1 {
             // Convert the ValueProps objects into FileValueV1 objects
             val fileValues: Seq[FileValueV1] = valuePropsForFileValues.map {
                 case (fileValueIri, fileValueProps) =>
-                    valueUtilV1.makeValueV1(fileValueProps) match {
+                    valueUtilV1.makeValueV1(fileValueProps, responderManager, userProfile) match {
                         case fileValueV1: FileValueV1 => fileValueV1
                         case otherValueV1 => throw InconsistentTriplestoreDataException(s"Value $fileValueIri is not a knora-base:FileValue, it is an instance of ${otherValueV1.valueTypeIri}")
                     }
@@ -2046,7 +2046,7 @@ class ResourcesResponderV1 extends ResponderV1 {
 
                         // Convert the SPARQL query results to a ValueV1.
                         // Attach information about standoff data type classes and all standoff properties.
-                        val valueV1 = valueUtilV1.makeValueV1(valueProps.copy(standoffClassesWithDataType = standoffDataTypeEntityInfoMap, standoffAllPropertyEntities = standoffAllPropertyEntities))
+                        val valueV1 = valueUtilV1.makeValueV1(valueProps.copy(standoffClassesWithDataType = standoffDataTypeEntityInfoMap, standoffAllPropertyEntities = standoffAllPropertyEntities), responderManager, userProfile)
 
                         val valPermission = PermissionUtilV1.getUserPermissionV1WithValueProps(valObjIri, valueProps, userProfile)
                         val predicates = valueProps.literalData
@@ -2143,7 +2143,7 @@ class ResourcesResponderV1 extends ResponderV1 {
                             case _ => 0 // order statement is missing, set it to zero
                         }
 
-                        val apiValueV1ForLinkValue = valueUtilV1.makeValueV1(linkValueProps)
+                        val apiValueV1ForLinkValue = valueUtilV1.makeValueV1(linkValueProps, responderManager, userProfile)
 
                         val linkValueV1: LinkValueV1 = apiValueV1ForLinkValue match {
                             case linkValueV1: LinkValueV1 => linkValueV1

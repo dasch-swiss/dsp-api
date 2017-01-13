@@ -293,7 +293,7 @@ class ValuesResponderV1 extends ResponderV1 {
                 // The 'collect' method builds a new list by applying a partial function to all elements of the list
                 // on which the function is defined.
                 resourceReferencesForAllTextValues: Iterable[Set[IRI]] = allValuesToCreate.collect {
-                    case CreateValueV1WithComment(textValueV1: TextValueV1, _) =>
+                    case CreateValueV1WithComment(textValueV1: TextValueV1WithStandoff, _) =>
                         // check that resource references are consistent in `resource_reference` and linking standoff tags
                         checkTextValueResourceRefs(textValueV1)
 
@@ -1037,7 +1037,7 @@ class ValuesResponderV1 extends ResponderV1 {
                     // If it's a TextValue, make SparqlTemplateLinkUpdates for updating LinkValues representing
                     // links in standoff markup.
                     val linkUpdatesFuture: Future[Seq[SparqlTemplateLinkUpdate]] = other match {
-                        case textValue: TextValueV1 =>
+                        case textValue: TextValueV1WithStandoff =>
                             val linkUpdateFutures = textValue.resource_reference.map {
                                 targetResourceIri => decrementLinkValue(
                                     sourceResourceIri = findResourceWithValueResult.resourceIri,
@@ -1426,7 +1426,7 @@ class ValuesResponderV1 extends ResponderV1 {
             // Convert the query results to a ApiValueV1.
             val valueProps = valueUtilV1.createValueProps(valueIri, rows)
             // attach the ontology information for data type standoff classes and all standoff properties.
-            val value = valueUtilV1.makeValueV1(valueProps.copy(standoffClassesWithDataType = standoffDataTypeEntityInfoMap, standoffAllPropertyEntities = standoffAllPropertyEntities))
+            val value = valueUtilV1.makeValueV1(valueProps.copy(standoffClassesWithDataType = standoffDataTypeEntityInfoMap, standoffAllPropertyEntities = standoffAllPropertyEntities), responderManager, userProfile)
 
             // Get the IRI of the value's owner.
             val ownerIri = getValuePredicateObject(predicateIri = OntologyConstants.KnoraBase.AttachedToUser, rows = rows).getOrElse(throw InconsistentTriplestoreDataException(s"Value $valueIri has no owner"))
@@ -1483,7 +1483,7 @@ class ValuesResponderV1 extends ResponderV1 {
 
             // Convert the query results into a LinkValueV1.
             val valueProps = valueUtilV1.createValueProps(linkValueIri, rows)
-            val linkValueV1: LinkValueV1 = valueUtilV1.makeValueV1(valueProps) match {
+            val linkValueV1: LinkValueV1 = valueUtilV1.makeValueV1(valueProps, responderManager, userProfile) match {
                 case linkValue: LinkValueV1 => linkValue
                 case other => throw InconsistentTriplestoreDataException(s"Expected value $linkValueIri to be of type ${OntologyConstants.KnoraBase.LinkValue}, but it was read with type ${other.valueTypeIri}")
             }
@@ -1855,7 +1855,7 @@ class ValuesResponderV1 extends ResponderV1 {
         for {
         // If we're creating a text value, update direct links and LinkValues for any resource references in standoff.
             standoffLinkUpdates: Seq[SparqlTemplateLinkUpdate] <- value match {
-                case textValueV1: TextValueV1 =>
+                case textValueV1: TextValueV1WithStandoff =>
                     // Make sure the text value's list of resource references is correct.
                     checkTextValueResourceRefs(textValueV1)
 
@@ -2030,7 +2030,7 @@ class ValuesResponderV1 extends ResponderV1 {
         for {
         // If we're adding a text value, update direct links and LinkValues for any resource references in Standoff.
             standoffLinkUpdates: Seq[SparqlTemplateLinkUpdate] <- (currentValueV1, updateValueV1) match {
-                case (currentTextValue: TextValueV1, newTextValue: TextValueV1) =>
+                case (currentTextValue: TextValueV1WithStandoff, newTextValue: TextValueV1WithStandoff) =>
                     // Make sure the new text value's list of resource references is correct.
                     checkTextValueResourceRefs(newTextValue)
 
@@ -2284,7 +2284,7 @@ class ValuesResponderV1 extends ResponderV1 {
       * @param textValue the [[TextValueV1]] to be checked.
       */
     @throws(classOf[BadRequestException])
-    private def checkTextValueResourceRefs(textValue: TextValueV1): Unit = {
+    private def checkTextValueResourceRefs(textValue: TextValueV1WithStandoff): Unit = {
 
         // please note that the function `InputValidation.getResourceIrisFromStandoffTags` is not used here
         // because we want a double check (the function has already been called in the route or in standoff responder)

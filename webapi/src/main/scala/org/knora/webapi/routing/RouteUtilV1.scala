@@ -181,12 +181,34 @@ object RouteUtilV1 {
         requestContext.complete(httpResponse)
     }
 
+    /**
+      * Represents a text with standoff markup.
+      *
+      * @param text             the text as a mere sequence of characters.
+      * @param standoffTagV1    the text's standoff markup.
+      */
+    case class TextWithStandoffTagV1(text: String, standoffTagV1: Seq[StandoffTagV1], mapping: GetMappingResponseV1)
+
+    /**
+      *
+      * Converts XML to a [[TextWithStandoffTagV1]], representing the text and its standoff markup.
+      *
+      * @param xml                  the given XML to be converted to standoff.
+      * @param mappingIri           the mapping to be used to convert the XML to standoff.
+      * @param userProfile          the user making the request.
+      * @param settings             the application's settings.
+      * @param responderManager     a reference to the responder manager.
+      * @param log                  a logging adapter.
+      * @param timeout              a timeout for `ask` messages.
+      * @param executionContext     an execution context for futures.
+      * @return a [[TextWithStandoffTagV1]].
+      */
     def convertXMLtoStandoffTagV1(xml: String,
                                   mappingIri: IRI,
                                   userProfile: UserProfileV1,
                                   settings: SettingsImpl,
                                   responderManager: ActorSelection,
-                                  log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[Seq[StandoffTagV1]] = {
+                                  log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[TextWithStandoffTagV1] = {
 
         for {
 
@@ -196,24 +218,27 @@ object RouteUtilV1 {
             // get information about the standoff entities used in the mapping
             standoffEntities: GetStandoffEntitiesFromMappingResponseV1  <- (responderManager ? GetStandoffEntitiesFromMappingRequestV1(mapping = mappingResponse.mapping, userProfile = userProfile)).mapTo[GetStandoffEntitiesFromMappingResponseV1]
 
-            standoffUtil = new XMLToStandoffUtil()
+            xmlStandoffUtil = new XMLToStandoffUtil()
 
-            // FIXME: if the XML is not well formed, the error is not handled correctly
-
+            // FIXME: if the XML is not well formed, the error is not handled correctly in XMLToStandoffUtil
             textWithStandoff: TextWithStandoff = try {
-                standoffUtil.xml2TextWithStandoff(xml)
+                xmlStandoffUtil.xml2TextWithStandoff(xml)
             } catch {
                 case e: org.xml.sax.SAXParseException => throw BadRequestException(s"there was a problem parsing the provided XML: ${e.getMessage}")
 
                 case other: Exception => throw BadRequestException(s"there was a problem processing the provided XML: ${other.getMessage}")
             }
 
-            standoffTagV1: Seq[StandoffTagV1] = StandoffTagUtilV1.convertStandoffUtilStandoffTagToStandoffTagV1(
+            standoffTagV1: Seq[StandoffTagV1] = StandoffTagUtilV1.convertXMLToStandoffUtilStandoffTagToStandoffTagV1(
                 textWithStandoff = textWithStandoff,
                 mappingXMLtoStandoff = mappingResponse.mapping,
                 standoffEntities = standoffEntities.entities
             )
 
-        } yield standoffTagV1
+        } yield TextWithStandoffTagV1(
+            text = textWithStandoff.text,
+            standoffTagV1 = standoffTagV1,
+            mapping = mappingResponse
+        )
     }
 }

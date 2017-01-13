@@ -29,9 +29,9 @@ import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
 import org.knora.webapi.util.{DateUtilV1, ErrorHandlingMap, KnoraIdUtil}
 import org.knora.webapi.{BadRequestException, _}
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import org.knora.webapi.messages.v1.responder.standoffmessages.StandoffDataTypeClasses
+import org.knora.webapi.messages.v1.responder.standoffmessages.{GetMappingResponseV1, StandoffDataTypeClasses}
 import org.knora.webapi.twirl.StandoffTagV1
-import org.knora.webapi.util.InputValidation.TextattrV1
+import org.knora.webapi.util.standoff.StandoffTagUtilV1
 import spray.json._
 
 
@@ -73,13 +73,13 @@ case class CreateValueApiRequestV1(project_id: IRI,
 /**
   * Represents a richtext object consisting of text, text attributes and resource references.
   *
-  * @param utf8str            the mere string representation.
-  * @param textattr           the attributes of the text as standoff (still a String to be parsed into an object itself).
-  * @param resource_reference references to Knora resources out of the text.
+  * @param utf8str       a mere string in case of a text without any markup.
+  * @param xml           xml in case of a text with markup.
+  * @param mapping_id    Iri of the mapping used to transform XML to standoff.
   */
-case class CreateRichtextV1(utf8str: String,
-                            textattr: Option[String], // textattr is a String that can be parsed into another JsObject
-                            resource_reference: Option[Seq[IRI]]) {
+case class CreateRichtextV1(utf8str: Option[String] = None,
+                            xml: Option[String] = None,
+                            mapping_id: Option[IRI] = None) {
 
     def toJsValue = ApiValueV1JsonProtocol.createRichtextV1Format.write(this)
 }
@@ -590,20 +590,24 @@ case class StandoffPositionV1(start: Int,
   */
 case class CreateStandoffPositionV1InTriplestore(standoffNode: StandoffTagV1, standoffTagInstanceIri: IRI)
 
+sealed trait TextValueV1 {
+
+    def utf8str: String
+
+}
+
 /**
   * Represents a textual value with additional information in standoff format.
   *
   * @param utf8str            text in mere utf8 representation (including newlines and carriage returns).
   * @param textattr           attributes of the text in standoff format. For each attribute, several ranges may be given (a list of [[StandoffPositionV1]]).
   * @param resource_reference referred Knora resources.
-  * @param xml                the original XML if the text value was created from XML
-  * @param mappingIri         the IRI of the mapping resource if the text value was created from XML
+  * @param mapping         the mapping used to create standoff from another format.
   */
-case class TextValueV1(utf8str: String,
-                       textattr: Seq[StandoffTagV1] = Seq.empty[StandoffTagV1],
+case class TextValueV1WithStandoff(utf8str: String,
+                       textattr: Seq[StandoffTagV1],
                        resource_reference: Set[IRI] = Set.empty[IRI],
-                       xml: Option[String] = None,
-                       mappingIri: Option[IRI] = None) extends UpdateValueV1 with ApiValueV1 { // TODO: for the GUI case we should use a default mapping. As a consequence, each TextValue needs a mapping (make mappingIri a required member of TextValueV1)
+                       mapping: GetMappingResponseV1) extends TextValueV1 with UpdateValueV1 with ApiValueV1 { // TODO: for the GUI case we should use a default mapping. As a consequence, each TextValue needs a mapping (make mappingIri a required member of TextValueV1)
 
     import ApiValueV1JsonProtocol._
 
@@ -621,7 +625,7 @@ case class TextValueV1(utf8str: String,
         // TODO: we have to prevent users from creating new version of text values created directly from XML using the JSON v1 format because they would possibly lose annotations (those that have been filtered out).
 
         // TODO: if the text value contains non JSON v1 format information, display all the supported standoff tags and make it read only in the GUI
-        val textattrV1 = textattr.filter(standoffTag => TextattrV1.IriToEnumValue.keySet.contains(standoffTag.standoffTagClassIri))
+        /*val textattrV1 = textattr.filter(standoffTag => TextattrV1.IriToEnumValue.keySet.contains(standoffTag.standoffTagClassIri))
 
         // Group by JSON format attribute name and not by Iri because _link used both for resource references and hyperlinks.
         val standoffTagsGroupedByClassIri: Map[IRI, Seq[StandoffTagV1]] = textattrV1.groupBy((row: StandoffTagV1) => TextattrV1.IriToEnumValue(row.standoffTagClassIri).toString)
@@ -651,12 +655,15 @@ case class TextValueV1(utf8str: String,
                             href = href
                         ).toJsValue
                 }.toVector))
-        })
+        })*/
+
+        // TODO: depending on the given mapping, decide how serialize the text with standoff markup
+
+        val xml = StandoffTagUtilV1.convertStandoffTagV1ToXML(utf8str, textattr, mapping)
+
 
         JsObject(
-            "utf8str" -> JsString(utf8str),
-            "textattr" -> JsString(textattrAsJsValue.compactPrint), // textattr is expected to be a stringified JSON
-            "resource_reference" -> resource_reference.toJson
+            "xml" -> JsString(xml)
         )
     }
 
@@ -688,7 +695,7 @@ case class TextValueV1(utf8str: String,
       */
     override def isDuplicateOfOtherValue(other: ApiValueV1): Boolean = {
         other match {
-            case TextValueV1(otherUtf8str, _, _, _, _) => utf8str == otherUtf8str // FIXME: this does not work properly at the moment because $otherUtf8Str contains unescaped newlines while $utf8str does not
+            case otherText: TextValueV1 => otherText.utf8str == utf8str
             case otherValue => throw InconsistentTriplestoreDataException(s"Cannot compare a $valueTypeIri to a ${otherValue.valueTypeIri}")
         }
     }
@@ -708,9 +715,49 @@ case class TextValueV1(utf8str: String,
         }
     }
 
-
 }
 
+case class TextValueV1Simple(utf8str: String) extends TextValueV1 with UpdateValueV1 with ApiValueV1 {
+
+    def valueTypeIri = OntologyConstants.KnoraBase.TextValue
+
+    def toJsValue = {
+        JsObject(
+            "utf8str" -> JsString(utf8str)
+        )
+    }
+
+    /**
+      * Returns `true` if the specified object is a [[TextValueV1]] and has the same `utf8str` as this one. We
+      * assume that it doesn't make sense for a resource to have two different text values associated with the
+      * same property, containing the same text but different markup.
+      *
+      * @param other another [[ValueV1]].
+      * @return `true` if `other` is a duplicate of `this`.
+      */
+    override def isDuplicateOfOtherValue(other: ApiValueV1): Boolean = {
+        other match {
+            case otherText: TextValueV1 => otherText.utf8str == utf8str
+            case otherValue => throw InconsistentTriplestoreDataException(s"Cannot compare a $valueTypeIri to a ${otherValue.valueTypeIri}")
+        }
+    }
+
+    override def toString = utf8str
+
+    /**
+      * It's OK to add a new version of a text value as long as something has been changed in it, even if it's only the markup.
+      *
+      * @param currentVersion the current version of the value.
+      * @return `true` if this [[UpdateValueV1]] is redundant given `currentVersion`.
+      */
+    override def isRedundant(currentVersion: ApiValueV1): Boolean = {
+        currentVersion match {
+            case textValueV1: TextValueV1 => textValueV1 == this
+            case other => throw InconsistentTriplestoreDataException(s"Cannot compare a $valueTypeIri to a ${other.valueTypeIri}")
+        }
+    }
+
+}
 
 /**
   * Represents a direct link from one resource to another.

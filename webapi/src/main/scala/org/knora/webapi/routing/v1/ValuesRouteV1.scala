@@ -38,7 +38,6 @@ import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.responder.valuemessages.ApiValueV1JsonProtocol._
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
-import org.knora.webapi.util.InputValidation.RichtextComponents
 import org.knora.webapi.util.{DateUtilV1, InputValidation}
 import org.knora.webapi.{BadRequestException, FileUploadException, IRI, SettingsImpl}
 import org.slf4j.LoggerFactory
@@ -95,11 +94,9 @@ object ValuesRouteV1 extends Authenticator {
         val (value: UpdateValueV1, commentStr: Option[String]) = apiRequest match {
 
             case CreateValueApiRequestV1(_, _, _, Some(richtext: CreateRichtextV1), _, _, _, _, _, _, _, _, _, _, _, comment) =>
-                val richtextComponents: RichtextComponents = InputValidation.handleRichtext(richtext)
+                //val richtextComponents: RichtextComponents = InputValidation.handleRichtext(richtext)
 
-                (TextValueV1(InputValidation.toSparqlEncodedString(richtext.utf8str, () => throw BadRequestException(s"Invalid text: '${richtext.utf8str}'")),
-                    textattr = richtextComponents.textattr,
-                    resource_reference = richtextComponents.resource_reference),
+                (TextValueV1Simple(InputValidation.toSparqlEncodedString(richtext.utf8str.get, () => throw BadRequestException(s"Invalid text: '${richtext.utf8str.get}'"))),
                     comment)
 
             case CreateValueApiRequestV1(_, _, _, _, Some(intValue: Int), _, _, _, _, _, _, _, _, _, _, comment) => (IntegerValueV1(intValue), comment)
@@ -158,11 +155,9 @@ object ValuesRouteV1 extends Authenticator {
         // TODO: Support the rest of the value types.
         val (value: UpdateValueV1, commentStr: Option[String]) = apiRequest match {
             case ChangeValueApiRequestV1(_, Some(richtext: CreateRichtextV1), _, _, _, _, _, _, _, _, _, _, _, comment) =>
-                val richtextComponents: RichtextComponents = InputValidation.handleRichtext(richtext)
+                //val richtextComponents: RichtextComponents = InputValidation.handleRichtext(richtext)
 
-                (TextValueV1(InputValidation.toSparqlEncodedString(richtext.utf8str, () => throw BadRequestException(s"Invalid text: '${richtext.utf8str}'")),
-                    textattr = richtextComponents.textattr,
-                    resource_reference = richtextComponents.resource_reference),
+                (TextValueV1Simple(InputValidation.toSparqlEncodedString(richtext.utf8str.get, () => throw BadRequestException(s"Invalid text: '${richtext.utf8str.get}'"))),
                     comment)
 
             case ChangeValueApiRequestV1(_, _, Some(intValue: Int), _, _, _, _, _, _, _, _, _, _, comment) => (IntegerValueV1(intValue), comment)

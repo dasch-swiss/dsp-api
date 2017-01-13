@@ -64,7 +64,7 @@ case class CreateMappingResponseV1(mappingIri: IRI, userdata: UserDataV1) extend
   * @param mappingIri  the IRI of the mapping.
   * @param userProfile the profile of the user making the request.
   */
-case class GetMappingRequestV1(mappingIri: IRI, userProfile: UserProfileV1)
+case class GetMappingRequestV1(mappingIri: IRI, userProfile: UserProfileV1) extends StandoffResponderRequestV1
 
 /**
   * Represents a response to a [[GetMappingRequestV1]].
@@ -75,7 +75,7 @@ case class GetMappingRequestV1(mappingIri: IRI, userProfile: UserProfileV1)
   */
 case class GetMappingResponseV1(mappingIri: IRI, mapping: MappingXMLtoStandoff, userdata: UserDataV1)
 
-case class GetStandoffEntitiesFromMappingRequestV1(mapping: MappingXMLtoStandoff, userProfile: UserProfileV1)
+case class GetStandoffEntitiesFromMappingRequestV1(mapping: MappingXMLtoStandoff, userProfile: UserProfileV1) extends StandoffResponderRequestV1
 
 case class GetStandoffEntitiesFromMappingResponseV1(entities: StandoffEntityInfoGetResponseV1)
 

@@ -24,7 +24,8 @@ import java.util.UUID
 
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.ontologymessages.{Cardinality, StandoffEntityInfoGetResponseV1, StandoffPropertyEntityInfoV1}
-import org.knora.webapi.messages.v1.responder.standoffmessages.{MappingXMLtoStandoff, StandoffDataTypeClasses, StandoffProperties, XMLTagToStandoffClass}
+import org.knora.webapi.messages.v1.responder.standoffmessages._
+import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.twirl._
 import org.knora.webapi.util.{DateUtilV1, InputValidation}
 
@@ -199,7 +200,7 @@ object StandoffTagUtilV1 {
       * @param standoffEntities     the standoff entities (classes and properties) to be used.
       * @return a sequence of [[StandoffTagV1]].
       */
-    def convertStandoffUtilStandoffTagToStandoffTagV1(textWithStandoff: TextWithStandoff, mappingXMLtoStandoff: MappingXMLtoStandoff, standoffEntities: StandoffEntityInfoGetResponseV1): Seq[StandoffTagV1] = {
+    def convertXMLToStandoffUtilStandoffTagToStandoffTagV1(textWithStandoff: TextWithStandoff, mappingXMLtoStandoff: MappingXMLtoStandoff, standoffEntities: StandoffEntityInfoGetResponseV1): Seq[StandoffTagV1] = {
 
         textWithStandoff.standoff.map {
             case (standoffNodeFromXML: StandoffTag) =>
@@ -498,6 +499,259 @@ object StandoffTagUtilV1 {
 
                 }
         }
+    }
+
+    // maps a standoff class to an XML tag with attributes
+    case class XMLTagItem(namespace: String, tagname: String, classname: String, tagItem: XMLTag, attributes: Map[IRI, XMLAttrItem])
+
+    // maps a standoff property to XML attributes
+    case class XMLAttrItem(namespace: String, attrname: String)
+
+    /**
+      * Inverts a [[MappingXMLtoStandoff]] and makes standoff class Iris keys.
+      * This is makes it easier to map standoff classes back to XML tags (recreating XML from standoff).
+      *
+      * This method also checks for duplicate usage of standoff classes and properties in the attribute mapping of a tag.
+      *
+      * @param mappingXMLtoStandoff mapping from XML to standoff.
+      * @return a Map standoff class Iris to [[XMLTagItem]].
+      */
+    private def invertXMLToStandoffMapping(mappingXMLtoStandoff: MappingXMLtoStandoff): Map[IRI, XMLTagItem] = {
+
+        // check for duplicate standoff class Iris
+        val classIris: Iterable[IRI] = mappingXMLtoStandoff.namespace.values.flatten.flatMap {
+            case (tagname: String, tagItem: Map[String, XMLTag]) =>
+                tagItem.values.map(_.mapping.standoffClassIri)
+        }
+
+        // check for duplicate standoff class Iris
+        if (classIris.size != classIris.toSet.size) {
+            throw BadRequestException("the same standoff class Iri is used more than once in the mapping")
+        }
+
+        mappingXMLtoStandoff.namespace.flatMap {
+            case (tagNamespace: String, tagMapping: Map[String, Map[String, XMLTag]]) =>
+
+                tagMapping.flatMap {
+                    case (tagname: String, classnameMapping: Map[String, XMLTag]) =>
+
+                        classnameMapping.map {
+                            case (classname: String, tagItem: XMLTag) =>
+
+                                // collect all the property Iris defined in the attributes for the current tag
+                                // over all namespaces
+                                val propIris: Iterable[IRI] = tagItem.mapping.attributesToProps.values.flatten.map {
+                                    case (attrName, propIri) =>
+                                        propIri
+                                }
+
+                                // check for duplicate property Iris
+                                if (propIris.size != propIris.toSet.size) {
+                                    throw BadRequestException(s"the same property Iri is used more than once for the attributes mapping for tag $tagname")
+                                }
+
+                                // inverts the mapping and makes standoff property Iris keys (for attributes)
+                                // this is makes it easier to map standoff properties back to XML attributes
+                                val attrItems: Map[IRI, XMLAttrItem] = tagItem.mapping.attributesToProps.flatMap {
+                                    case (attrNamespace: String, attrMappings: Map[String, IRI]) =>
+
+                                        attrMappings.map {
+                                            case (attrName, propIri) =>
+                                                propIri -> XMLAttrItem(attrNamespace, attrName)
+                                        }
+                                }
+
+                                // standoff class Iri -> XMLTagItem(... attributes -> attrItems)
+                                tagItem.mapping.standoffClassIri -> XMLTagItem(namespace = tagNamespace, tagname = tagname, classname = classname, tagItem = tagItem, attributes = attrItems)
+                        }
+
+                }
+
+        }
+
+    }
+
+    // converts a sequence of `StandoffTagAttributeV1` to a sequence of `StandoffTagAttribute`
+    private def convertStandoffAttributeTags(mapping: Map[IRI, XMLAttrItem], attributes: Seq[StandoffTagAttributeV1]): Seq[StandoffTagAttribute] = {
+        attributes.map {
+            attr =>
+
+                val attrItem: XMLAttrItem = mapping.getOrElse(attr.standoffPropertyIri, throw NotFoundException(s"property Iri ${attr.standoffPropertyIri} could not be found in mapping"))
+
+                StandoffTagAttribute(
+                    key = attrItem.attrname,
+                    xmlNamespace = attrItem.namespace match {
+                        case `noNamespace` => None
+                        case namespace => Some(namespace)
+                    },
+                    value = attr.stringValue()
+                )
+        }
+    }
+
+    def convertStandoffTagV1ToXML(utf8str: String, standoff: Seq[StandoffTagV1] , mappingXMLtoStandoff: GetMappingResponseV1): String = {
+
+
+        // inverts the mapping and makes standoff class Iris keys (for tags)
+        val mappingStandoffToXML: Map[IRI, XMLTagItem] = invertXMLToStandoffMapping(mappingXMLtoStandoff.mapping)
+
+        val standoffUtil = new XMLToStandoffUtil(writeUuidsToXml = false)
+
+        val standoffTags: Seq[StandoffTag] = standoff.map {
+            (standoffTagV1: StandoffTagV1) =>
+
+                val xmlItemForStandoffClass: XMLTagItem = mappingStandoffToXML.getOrElse(standoffTagV1.standoffTagClassIri, throw NotFoundException(s"standoff class Iri ${standoffTagV1.standoffTagClassIri} not found in mapping"))
+
+                // recreate data type specific attributes (optional)
+                val attributes: Seq[StandoffTagAttribute] = standoffTagV1.dataType match {
+
+                    case Some(StandoffDataTypeClasses.StandoffLinkTag) =>
+                        val dataTypeAttrName = xmlItemForStandoffClass.tagItem.mapping.dataType.getOrElse(throw NotFoundException(s"data type attribute not found in mapping for ${xmlItemForStandoffClass.tagname}")).dataTypeXMLAttribute
+
+                        val linkIri = standoffTagV1.attributes.find(_.standoffPropertyIri == OntologyConstants.KnoraBase.StandoffTagHasLink).get.stringValue()
+
+                        val conventionalAttributes = standoffTagV1.attributes.filterNot(attr => StandoffProperties.linkProperties.contains(attr.standoffPropertyIri))
+
+                        convertStandoffAttributeTags(xmlItemForStandoffClass.attributes, conventionalAttributes) :+ StandoffTagAttribute(key = dataTypeAttrName, value = linkIri, xmlNamespace = None)
+
+                    case Some(StandoffDataTypeClasses.StandoffColorTag) =>
+                        val dataTypeAttrName = xmlItemForStandoffClass.tagItem.mapping.dataType.getOrElse(throw NotFoundException(s"data type attribute not found in mapping for ${xmlItemForStandoffClass.tagname}")).dataTypeXMLAttribute
+
+                        val colorString = standoffTagV1.attributes.find(_.standoffPropertyIri == OntologyConstants.KnoraBase.ValueHasColor).get.stringValue()
+
+                        val conventionalAttributes = standoffTagV1.attributes.filterNot(attr => StandoffProperties.colorProperties.contains(attr.standoffPropertyIri))
+
+                        convertStandoffAttributeTags(xmlItemForStandoffClass.attributes, conventionalAttributes) :+ StandoffTagAttribute(key = dataTypeAttrName, value = colorString, xmlNamespace = None)
+
+                    case Some(StandoffDataTypeClasses.StandoffUriTag) =>
+                        val dataTypeAttrName = xmlItemForStandoffClass.tagItem.mapping.dataType.getOrElse(throw NotFoundException(s"data type attribute not found in mapping for ${xmlItemForStandoffClass.tagname}")).dataTypeXMLAttribute
+
+                        val uriRef = standoffTagV1.attributes.find(_.standoffPropertyIri == OntologyConstants.KnoraBase.ValueHasUri).get.stringValue()
+
+                        val conventionalAttributes = standoffTagV1.attributes.filterNot(attr => StandoffProperties.uriProperties.contains(attr.standoffPropertyIri))
+
+                        convertStandoffAttributeTags(xmlItemForStandoffClass.attributes, conventionalAttributes) :+ StandoffTagAttribute(key = dataTypeAttrName, value = uriRef, xmlNamespace = None)
+
+                    case Some(StandoffDataTypeClasses.StandoffIntegerTag) =>
+                        val dataTypeAttrName = xmlItemForStandoffClass.tagItem.mapping.dataType.getOrElse(throw NotFoundException(s"data type attribute not found in mapping for ${xmlItemForStandoffClass.tagname}")).dataTypeXMLAttribute
+
+                        val integerString = standoffTagV1.attributes.find(_.standoffPropertyIri == OntologyConstants.KnoraBase.ValueHasInteger).get.stringValue()
+
+                        val conventionalAttributes = standoffTagV1.attributes.filterNot(attr => StandoffProperties.integerProperties.contains(attr.standoffPropertyIri))
+
+                        convertStandoffAttributeTags(xmlItemForStandoffClass.attributes, conventionalAttributes) :+ StandoffTagAttribute(key = dataTypeAttrName, value = integerString, xmlNamespace = None)
+
+                    case Some(StandoffDataTypeClasses.StandoffDecimalTag) =>
+                        val dataTypeAttrName = xmlItemForStandoffClass.tagItem.mapping.dataType.getOrElse(throw NotFoundException(s"data type attribute not found in mapping for ${xmlItemForStandoffClass.tagname}")).dataTypeXMLAttribute
+
+                        val decimalString = standoffTagV1.attributes.find(_.standoffPropertyIri == OntologyConstants.KnoraBase.ValueHasDecimal).get.stringValue()
+
+                        val conventionalAttributes = standoffTagV1.attributes.filterNot(attr => StandoffProperties.decimalProperties.contains(attr.standoffPropertyIri))
+
+                        convertStandoffAttributeTags(xmlItemForStandoffClass.attributes, conventionalAttributes) :+ StandoffTagAttribute(key = dataTypeAttrName, value = decimalString, xmlNamespace = None)
+
+                    case Some(StandoffDataTypeClasses.StandoffBooleanTag) =>
+                        val dataTypeAttrName = xmlItemForStandoffClass.tagItem.mapping.dataType.getOrElse(throw NotFoundException(s"data type attribute not found in mapping for ${xmlItemForStandoffClass.tagname}")).dataTypeXMLAttribute
+
+                        val booleanString = standoffTagV1.attributes.find(_.standoffPropertyIri == OntologyConstants.KnoraBase.ValueHasBoolean).get.stringValue()
+
+                        val conventionalAttributes = standoffTagV1.attributes.filterNot(attr => StandoffProperties.booleanProperties.contains(attr.standoffPropertyIri))
+
+                        convertStandoffAttributeTags(xmlItemForStandoffClass.attributes, conventionalAttributes) :+ StandoffTagAttribute(key = dataTypeAttrName, value = booleanString, xmlNamespace = None)
+
+                    case Some(StandoffDataTypeClasses.StandoffIntervalTag) =>
+                        val dataTypeAttrName = xmlItemForStandoffClass.tagItem.mapping.dataType.getOrElse(throw NotFoundException(s"data type attribute not found in mapping for ${xmlItemForStandoffClass.tagname}")).dataTypeXMLAttribute
+
+                        val intervalString = Vector(standoffTagV1.attributes.find(_.standoffPropertyIri == OntologyConstants.KnoraBase.ValueHasIntervalStart).get.stringValue(), standoffTagV1.attributes.find(_.standoffPropertyIri == OntologyConstants.KnoraBase.ValueHasIntervalEnd).get.stringValue()).mkString(",")
+
+                        val conventionalAttributes = standoffTagV1.attributes.filterNot(attr => StandoffProperties.intervalProperties.contains(attr.standoffPropertyIri))
+
+                        convertStandoffAttributeTags(xmlItemForStandoffClass.attributes, conventionalAttributes) :+ StandoffTagAttribute(key = dataTypeAttrName, value = intervalString, xmlNamespace = None)
+
+                    case Some(StandoffDataTypeClasses.StandoffDateTag) =>
+                        // create one attribute from date properties
+                        val dataTypeAttrName = xmlItemForStandoffClass.tagItem.mapping.dataType.getOrElse(throw NotFoundException(s"data type attribute not found in mapping for ${xmlItemForStandoffClass.tagname}")).dataTypeXMLAttribute
+
+                        val calendar = KnoraCalendarV1.lookup(standoffTagV1.attributes.find(_.standoffPropertyIri == OntologyConstants.KnoraBase.ValueHasCalendar).get.stringValue())
+
+                        val julianDayCountValueV1: UpdateValueV1 = JulianDayNumberValueV1(
+                            dateval1 = standoffTagV1.attributes.find(_.standoffPropertyIri == OntologyConstants.KnoraBase.ValueHasStartJDN).get.stringValue().toInt,
+                            dateval2 = standoffTagV1.attributes.find(_.standoffPropertyIri == OntologyConstants.KnoraBase.ValueHasEndJDN).get.stringValue().toInt,
+                            dateprecision1 = KnoraPrecisionV1.lookup(standoffTagV1.attributes.find(_.standoffPropertyIri == OntologyConstants.KnoraBase.ValueHasStartPrecision).get.stringValue()),
+                            dateprecision2 = KnoraPrecisionV1.lookup(standoffTagV1.attributes.find(_.standoffPropertyIri == OntologyConstants.KnoraBase.ValueHasEndPrecision).get.stringValue()),
+                            calendar = calendar
+                        )
+
+                        val conventionalAttributes = standoffTagV1.attributes.filterNot(attr => StandoffProperties.dateProperties.contains(attr.standoffPropertyIri))
+
+                        convertStandoffAttributeTags(xmlItemForStandoffClass.attributes, conventionalAttributes) :+ StandoffTagAttribute(key = dataTypeAttrName, value = Vector(calendar.toString, julianDayCountValueV1.toString).mkString(":"), xmlNamespace = None)
+
+                    case None => convertStandoffAttributeTags(xmlItemForStandoffClass.attributes, standoffTagV1.attributes)
+
+                    case unknownDataType => throw InconsistentTriplestoreDataException(s"the triplestore returned an unknown data type for ${standoffTagV1.standoffTagClassIri} that could not be handled")
+                }
+
+
+                // check in mapping if the XML element has an attribute class to be recreated
+                val classAttributeFromMapping = xmlItemForStandoffClass.classname match {
+                    case `noClass` => Seq.empty[StandoffTagAttribute]
+                    case classname => Vector(
+                        StandoffTagAttribute(
+                            key = "class",
+                            value = classname,
+                            xmlNamespace = None
+                        )
+                    )
+                }
+
+                val attributesWithClass = attributes ++ classAttributeFromMapping
+
+                if (standoffTagV1.endIndex.isDefined) {
+                    // it is a free standoff tag
+                    FreeStandoffTag(
+                        originalID = standoffTagV1.originalXMLID,
+                        tagName = xmlItemForStandoffClass.tagname,
+                        xmlNamespace = xmlItemForStandoffClass.namespace match {
+                            case `noNamespace` => None
+                            case namespace => Some(namespace)
+                        },
+                        uuid = UUID.fromString(standoffTagV1.uuid),
+                        startPosition = standoffTagV1.startPosition,
+                        endPosition = standoffTagV1.endPosition,
+                        startIndex = standoffTagV1.startIndex.getOrElse(throw InconsistentTriplestoreDataException(s"start index is missing for a free standoff tag")),
+                        endIndex = standoffTagV1.endIndex.getOrElse(throw InconsistentTriplestoreDataException(s"end index is missing for a free standoff tag")),
+                        startParentIndex = standoffTagV1.startParentIndex,
+                        endParentIndex = standoffTagV1.endParentIndex,
+                        attributes = attributesWithClass.toSet
+                    )
+                } else {
+                    // it is a hierarchical standoff tag
+                    HierarchicalStandoffTag(
+                        originalID = standoffTagV1.originalXMLID,
+                        tagName = xmlItemForStandoffClass.tagname,
+                        xmlNamespace = xmlItemForStandoffClass.namespace match {
+                            case `noNamespace` => None
+                            case namespace => Some(namespace)
+                        },
+                        uuid = UUID.fromString(standoffTagV1.uuid),
+                        startPosition = standoffTagV1.startPosition,
+                        endPosition = standoffTagV1.endPosition,
+                        index = standoffTagV1.startIndex.getOrElse(throw InconsistentTriplestoreDataException(s"start index is missing for a hierarchical standoff tag")),
+                        parentIndex = standoffTagV1.startParentIndex,
+                        attributes = attributesWithClass.toSet
+                    )
+                }
+
+        }
+
+
+        // TODO: Does the string need to be unescaped?
+        val textWithStandoff = TextWithStandoff(text = utf8str, standoff = standoffTags)
+
+        val xml = standoffUtil.textWithStandoff2Xml(textWithStandoff)
+
+        xml
+
     }
 
 }

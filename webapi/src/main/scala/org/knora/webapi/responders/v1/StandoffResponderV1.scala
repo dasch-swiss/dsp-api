@@ -1067,12 +1067,11 @@ class StandoffResponderV1 extends ResponderV1 {
                 projectIri = projectIri,
                 resourceIri = resourceIri,
                 propertyIri = propertyIRI,
-                value = TextValueV1(
+                value = TextValueV1WithStandoff(
                     utf8str = InputValidation.toSparqlEncodedString(textWithStandoff.text, () => throw InconsistentTriplestoreDataException("utf8str for for TextValue contains invalid characters")),
                     resource_reference = resourceReferences,
                     textattr = standoffNodesToCreate,
-                    xml = Some(xml),
-                    mappingIri = Some(mappingIri)),
+                    mapping = mappingXMLtoStandoff),
                 userProfile = userProfile,
                 apiRequestID = apiRequestID)).mapTo[CreateValueResponseV1]
 
@@ -1114,12 +1113,11 @@ class StandoffResponderV1 extends ResponderV1 {
 
             changeValueResponse: ChangeValueResponseV1 <- (responderManager ? ChangeValueRequestV1(
                 valueIri = valueIri,
-                value = TextValueV1(
+                value = TextValueV1WithStandoff(
                     utf8str = InputValidation.toSparqlEncodedString(textWithStandoff.text, () => throw InconsistentTriplestoreDataException("utf8str for for TextValue contains invalid characters")),
                     resource_reference = resourceReferences,
                     textattr = standoffNodesToCreate,
-                    xml = Some(xml),
-                    mappingIri = Some(mappingIri)),
+                    mapping = mappingXMLtoStandoff),
                 userProfile = userProfile,
                 apiRequestID = apiRequestID
             )).mapTo[ChangeValueResponseV1]
@@ -1196,7 +1194,6 @@ class StandoffResponderV1 extends ResponderV1 {
 
         }
 
-
     }
 
     /**
@@ -1246,15 +1243,15 @@ class StandoffResponderV1 extends ResponderV1 {
             }
 
             // create XML from the text value
-            textValue: TextValueV1 = value.value match {
-                case textValue: TextValueV1 => textValue
+            textValue: TextValueV1WithStandoff = value.value match {
+                case textValue: TextValueV1WithStandoff => textValue
                 case _ => throw BadRequestException(s"value could not be interpreted as a TextValueV1")
             }
 
             _ = println("ask for mapping " + (java.lang.System.currentTimeMillis() - enterMillis))
 
             // get the mapping that was used when creating the standoff values
-            mappingXMLtoStandoff: GetMappingResponseV1 <- getMappingV1(textValue.mappingIri.getOrElse(throw BadRequestException(s"the requested text value was created without a mapping")), userProfile)
+            mappingXMLtoStandoff: GetMappingResponseV1 <- getMappingV1(textValue.mapping.mappingIri, userProfile)
 
             _ = println("got mapping " + (java.lang.System.currentTimeMillis() - enterMillis))
 

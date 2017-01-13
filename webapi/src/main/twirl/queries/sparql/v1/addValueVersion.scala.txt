@@ -92,14 +92,18 @@ DELETE {
             knora-base:valueHasString """@value.toString""" .
 
         @value match {
-            case textValue: TextValueV1 => {
+            case textValueSimple: TextValueV1Simple => {
+                @* nothing to do *@
+            }
+
+            case textValueWithStandoff: TextValueV1WithStandoff => {
 
                 @* Create a Standoff node for each StandoffPositionV1. *@
 
-                @for((createStandoff, standoffNodeIndex) <- textValue.prepareForSparqlInsert(newValueIri).zipWithIndex) {
+                @for((createStandoff, standoffNodeIndex) <- textValueWithStandoff.prepareForSparqlInsert(newValueIri).zipWithIndex) {
 
-                    @if(textValue.mappingIri.isDefined && standoffNodeIndex == 0) {
-                        ?newValue knora-base:valueHasMapping <@textValue.mappingIri.get> .
+                    @if(standoffNodeIndex == 0) {
+                        ?newValue knora-base:valueHasMapping <@textValueWithStandoff.mapping.mappingIri> .
                     }
 
                     ?newValue knora-base:valueHasStandoff <@createStandoff.standoffTagInstanceIri> .
