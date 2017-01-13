@@ -184,37 +184,6 @@ object SharedPermissionsTestData {
                 ))
         )
 
-
-
-    /************************************/
-    /** 666 Project Permissions        **/
-    /************************************/
-
-    val perm004_a1: ap =
-        ap(
-            iri = "http://data.knora.org/permissions/004-a1",
-            p = AdministrativePermissionV1(iri = "http://data.knora.org/permissions/004-a1", forProject = SharedAdminTestData.TRIPLESIX_PROJECT_IRI, forGroup = OntologyConstants.KnoraBase.ProjectMember, hasPermissions = Set(PermissionV1.ProjectResourceCreateAllPermission))
-        )
-
-    val perm004_a2: ap =
-        ap(
-            iri = "http://data.knora.org/permissions/004-a2",
-            p = AdministrativePermissionV1(iri = "http://data.knora.org/permissions/004-a2", forProject = SharedAdminTestData.TRIPLESIX_PROJECT_IRI, forGroup = OntologyConstants.KnoraBase.ProjectAdmin, hasPermissions = Set(
-                                PermissionV1.ProjectResourceCreateAllPermission,
-                                PermissionV1.ProjectAdminAllPermission
-                            ))
-        )
-
-    val perm004_d1: doap =
-        doap(
-            iri = "http://data.knora.org/permissions/004-d1",
-            p = DefaultObjectAccessPermissionV1(iri = "http://data.knora.org/permissions/004-d1", forProject = SharedAdminTestData.TRIPLESIX_PROJECT_IRI, forGroup = Some(OntologyConstants.KnoraBase.ProjectMember), forResourceClass = None, forProperty = None, hasPermissions = Set(
-                                PermissionV1.ChangeRightsPermission(OntologyConstants.KnoraBase.Creator),
-                                PermissionV1.ModifyPermission(OntologyConstants.KnoraBase.ProjectMember),
-                                PermissionV1.ViewPermission(OntologyConstants.KnoraBase.KnownUser)
-                            ))
-        )
-
     /************************************/
     /** Anything Project Permissions   **/
     /************************************/

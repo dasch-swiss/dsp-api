@@ -81,9 +81,7 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
                     case ProjectsResponseV1(projects, userdata) => {
                         //println(projects)
                         assert(projects.contains(SharedAdminTestData.imagesProjectInfo))
-                        //Todo: make it work with icunabula
-                        //assert(projects.contains(incunabulaPI))
-                        assert(projects.contains(SharedAdminTestData.triplesixProjectInfo))
+                        assert(projects.contains(SharedAdminTestData.incunabulaProjectInfo))
                     }
                 }
 

@@ -285,27 +285,6 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
                                          knora-base:isInSystemAdminGroup "false"^^xsd:boolean .
 
 
-###################################
-# TEST PROJECT                    #
-###################################
-<http://data.knora.org/projects/666>	  rdf:type knora-base:knoraProject ;
-
-                                        knora-base:projectShortname "testproject"^^xsd:string ;
-
-                                        knora-base:projectLongname "Test Project"^^xsd:string ;
-
-                                        knora-base:projectDescription "A test project"^^xsd:string ;
-
-                                        knora-base:projectOntologyGraph "http://www.knora.org/ontology/testproject"^^xsd:string ;
-
-                                        knora-base:projectDataGraph "http://www.knora.org/data/testproject"^^xsd:string ;
-
-                                        knora-base:projectBasepath "/imldata/testproject"^^xsd:string ;
-
-                                        knora-base:status "true"^^xsd:boolean ;
-
-                                        knora-base:hasSelfJoinEnabled "false"^^xsd:boolean .
-
 
 ###################################
 # MULTI-PROJECT / GROUPS USER     #
@@ -330,14 +309,12 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
                                         knora-base:status "true"^^xsd:boolean ;
 
                                         knora-base:isInProject <http://data.knora.org/projects/77275339> ,
-                                                               <http://data.knora.org/projects/images>,
-                                                               <http://data.knora.org/projects/666> ;
+                                                               <http://data.knora.org/projects/images>;
 
                                         knora-base:isInSystemAdminGroup "false"^^xsd:boolean ;
 
                                         knora-base:isInProjectAdminGroup <http://data.knora.org/projects/77275339> ,
-                                                                         <http://data.knora.org/projects/images>,
-                                                                         <http://data.knora.org/projects/666> ;
+                                                                         <http://data.knora.org/projects/images>;
 
                                         knora-base:isInGroup <http://data.knora.org/groups/images-reviewer> .
 

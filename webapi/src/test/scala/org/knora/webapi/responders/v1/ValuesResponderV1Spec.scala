@@ -275,7 +275,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             }
         }
 
-        "query a text value containing Standoff (disabled because of issue 17)" ignore {
+        "query a text value containing Standoff" in {
             actorUnderTest ! ValueGetRequestV1(
                 valueIri = "http://data.knora.org/e41ab5695c/values/d3398239089e04",
                 userProfile = incunabulaUser
@@ -284,6 +284,17 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             expectMsgPF(timeout) {
                 case msg: ValueGetResponseV1 =>
                     checkValueGetResponseWithStandoff(msg)
+            }
+        }
+
+        "query a standoff link as an ordinary value" in {
+            actorUnderTest ! ValueGetRequestV1(
+                valueIri = "http://data.knora.org/a-thing-with-text-values/values/0",
+                userProfile = incunabulaUser
+            )
+
+            expectMsgPF(timeout) {
+                case msg: ValueGetResponseV1 => msg.rights should ===(2)
             }
         }
 

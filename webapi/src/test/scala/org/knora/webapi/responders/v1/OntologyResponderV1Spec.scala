@@ -60,7 +60,13 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
     private val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
 
     val rdfDataObjects = List(
-        RdfDataObject(path = "_test_data/ontologies/incunabula-onto.ttl", name = "http://www.knora.org/ontology/incunabula")
+        RdfDataObject(path = "_test_data/ontologies/incunabula-onto.ttl", name = "http://www.knora.org/ontology/incunabula"),
+        RdfDataObject(path = "_test_data/ontologies/images-demo-onto.ttl", name = "http://www.knora.org/ontology/images"),
+        RdfDataObject(path = "_test_data/ontologies/anything-onto.ttl", name = "http://www.knora.org/ontology/anything"),
+        RdfDataObject(path = "_test_data/ontologies/beol-onto.ttl", name = "http://www.knora.org/ontology/beol"),
+        RdfDataObject(path = "_test_data/ontologies/biblio-onto.ttl", name = "http://www.knora.org/ontology/biblio"),
+        RdfDataObject(path = "_test_data/ontologies/dokubib-onto.ttl", name = "http://www.knora.org/ontology/dokubib")
+
     )
 
     // The default timeout for receiving reply messages from actors.
@@ -684,15 +690,6 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                 longname = SharedAdminTestData.dokubibProjectInfo.longname.get,
                 shortname = SharedAdminTestData.dokubibProjectInfo.shortname,
                 id = SharedAdminTestData.dokubibProjectInfo.ontologyNamedGraph
-            ),
-            NamedGraphV1( // Testproject / 666
-                active = true,
-                uri = SharedAdminTestData.triplesixProjectInfo.ontologyNamedGraph,
-                project_id = SharedAdminTestData.triplesixProjectInfo.id,
-                description = SharedAdminTestData.triplesixProjectInfo.description.get,
-                longname = SharedAdminTestData.triplesixProjectInfo.longname.get,
-                shortname = SharedAdminTestData.triplesixProjectInfo.shortname,
-                id = SharedAdminTestData.triplesixProjectInfo.ontologyNamedGraph
             )
         )
     )
@@ -1108,6 +1105,19 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
             expectMsgPF(timeout) {
                 case msg: PropertyTypesForNamedGraphResponseV1 =>
                     checkPropertyTypesForNamedGraphIncunabula(received = msg, expected = propertyTypesForNamedGraphIncunabula)
+            }
+        }
+
+        "get all the properties for all vocabularies" in {
+            actorUnderTest ! PropertyTypesForNamedGraphGetRequestV1(
+                namedGraph = None,
+                userProfile = OntologyResponderV1Spec.userProfileWithEnglish
+            )
+
+            expectMsgPF(timeout) {
+                case msg: PropertyTypesForNamedGraphResponseV1 =>
+                    // simply checks that no error occurred when getting the property definitions for all vocabularies
+                    ()
             }
         }
     }

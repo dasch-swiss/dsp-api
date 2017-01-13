@@ -144,13 +144,12 @@ object SharedAdminTestData {
             lang = "de"
         ),
         groups = List("http://data.knora.org/groups/images-reviewer"),
-        projects = List(INCUNABULA_PROJECT_IRI, IMAGES_PROJECT_IRI, TRIPLESIX_PROJECT_IRI),
+        projects = List(INCUNABULA_PROJECT_IRI, IMAGES_PROJECT_IRI),
         sessionId = None,
         permissionData = PermissionDataV1(
             groupsPerProject = Map(
                 INCUNABULA_PROJECT_IRI -> List(s"${OntologyConstants.KnoraBase.ProjectMember}", s"${OntologyConstants.KnoraBase.ProjectAdmin}"),
-                IMAGES_PROJECT_IRI -> List("http://data.knora.org/groups/images-reviewer", s"${OntologyConstants.KnoraBase.ProjectMember}", s"${OntologyConstants.KnoraBase.ProjectAdmin}"),
-                TRIPLESIX_PROJECT_IRI -> List(s"${OntologyConstants.KnoraBase.ProjectMember}", s"${OntologyConstants.KnoraBase.ProjectAdmin}")
+                IMAGES_PROJECT_IRI -> List("http://data.knora.org/groups/images-reviewer", s"${OntologyConstants.KnoraBase.ProjectMember}", s"${OntologyConstants.KnoraBase.ProjectAdmin}")
             ),
             administrativePermissionsPerProject = Map(
                 INCUNABULA_PROJECT_IRI -> Set(
@@ -158,10 +157,6 @@ object SharedAdminTestData {
                     PermissionV1.ProjectAdminAllPermission
                 ),
                 IMAGES_PROJECT_IRI -> Set(
-                    PermissionV1.ProjectResourceCreateAllPermission,
-                    PermissionV1.ProjectAdminAllPermission
-                ),
-                TRIPLESIX_PROJECT_IRI -> Set(
                     PermissionV1.ProjectResourceCreateAllPermission,
                     PermissionV1.ProjectAdminAllPermission
                 )
@@ -174,11 +169,6 @@ object SharedAdminTestData {
                     PermissionV1.ChangeRightsPermission("http://www.knora.org/ontology/knora-base#Creator")
                 ),
                 IMAGES_PROJECT_IRI -> Set(
-                    PermissionV1.ViewPermission("http://www.knora.org/ontology/knora-base#KnownUser"),
-                    PermissionV1.ModifyPermission("http://www.knora.org/ontology/knora-base#ProjectMember"),
-                    PermissionV1.ChangeRightsPermission("http://www.knora.org/ontology/knora-base#Creator")
-                ),
-                TRIPLESIX_PROJECT_IRI -> Set(
                     PermissionV1.ViewPermission("http://www.knora.org/ontology/knora-base#KnownUser"),
                     PermissionV1.ModifyPermission("http://www.knora.org/ontology/knora-base#ProjectMember"),
                     PermissionV1.ChangeRightsPermission("http://www.knora.org/ontology/knora-base#Creator")
@@ -443,30 +433,6 @@ object SharedAdminTestData {
         status = true,
         hasSelfJoinEnabled = false
     )
-
-
-    /************************************/
-    /** 666 Admin Data                 **/
-    /************************************/
-
-    val TRIPLESIX_PROJECT_IRI = "http://data.knora.org/projects/666"
-
-    /* represents the ProjectInfoV1of the testproject (666) */
-    def triplesixProjectInfo = ProjectInfoV1(
-        id = TRIPLESIX_PROJECT_IRI,
-        shortname = "testproject",
-        longname = Some("Test Project"),
-        description = Some("A test project"),
-        keywords = None,
-        belongsToInstitution = None,
-        ontologyNamedGraph = "http://www.knora.org/ontology/testproject",
-        dataNamedGraph = "http://www.knora.org/data/testproject",
-        logo = None,
-        basepath = "/imldata/testproject",
-        status = true,
-        hasSelfJoinEnabled = false
-    )
-
 
     /************************************/
     /** Anything Admin Data            **/
