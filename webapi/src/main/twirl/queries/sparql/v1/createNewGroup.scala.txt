@@ -87,4 +87,6 @@ WHERE {
     BIND(IRI("@groupIri") AS ?groupIri)
     BIND(IRI("@groupClassIri") AS ?groupClassIri)
     BIND(IRI("@projectIri") AS ?projectIri)
+
+    FILTER NOT EXISTS { ?s knora-base:groupName "@name"^^xsd:string . }
 }

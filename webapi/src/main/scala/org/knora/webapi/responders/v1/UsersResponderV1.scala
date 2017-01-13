@@ -44,6 +44,9 @@ class UsersResponderV1 extends ResponderV1 {
     // Creates IRIs for new Knora user objects.
     val knoraIdUtil = new KnoraIdUtil
 
+    // The IRI used to lock user creation and update
+    val USERS_GLOBAL_LOCK_IRI = "http://data.knora.org/users"
+
     /**
       * Receives a message extending [[org.knora.webapi.messages.v1.responder.usermessages.UsersResponderRequestV1]], and returns a message of type [[UserProfileV1]]
       * [[Status.Failure]]. If a serious error occurs (i.e. an error that isn't the client's fault), this
@@ -128,7 +131,7 @@ class UsersResponderV1 extends ResponderV1 {
       */
     private def createNewUserV1(createRequest: CreateUserApiRequestV1, userProfile: UserProfileV1, apiRequestID: UUID): Future[UserOperationResponseV1] = {
 
-        for {
+        def createNewUserTask(createRequest: CreateUserApiRequestV1, userProfile: UserProfileV1, apiRequestID: UUID) = for {
             // check if required information is supplied
             _ <- Future(if (createRequest.email.isEmpty) throw BadRequestException("Email cannot be empty"))
             _ = if (createRequest.password.isEmpty) throw BadRequestException("Password cannot be empty")
@@ -191,6 +194,14 @@ class UsersResponderV1 extends ResponderV1 {
 
         } yield userOperationResponseV1
 
+        for {
+            // run user creation with an global IRI lock
+            taskResult <- IriLocker.runWithIriLock(
+                apiRequestID,
+                USERS_GLOBAL_LOCK_IRI,
+                () => createNewUserTask(createRequest, userProfile, apiRequestID)
+            )
+        } yield taskResult
     }
 
     /**
@@ -205,7 +216,7 @@ class UsersResponderV1 extends ResponderV1 {
       */
     private def updateBasicUserDataV1(userIri: IRI, updateUserRequest: UpdateUserApiRequestV1, userProfile: UserProfileV1, apiRequestID: UUID): Future[UserOperationResponseV1] = for {
 
-    // check if the requesting user is allowed to perform updates
+        // check if the requesting user is allowed to perform updates
         _ <- Future(
             if (!userProfile.userData.user_id.contains(userIri) && !userProfile.permissionData.isSystemAdmin) {
                 // not the user and not a system admin
@@ -221,10 +232,10 @@ class UsersResponderV1 extends ResponderV1 {
         _ = if (updateUserRequest.status.isDefined) throw BadRequestException("The status cannot be changed by this method.")
         _ = if (updateUserRequest.systemAdmin.isDefined) throw BadRequestException("The system admin group membership cannot be changed by this method.")
 
-        // run the user update with an IRI lock
+        // run the user update with an global IRI lock
         taskResult <- IriLocker.runWithIriLock(
             apiRequestID,
-            userIri,
+            USERS_GLOBAL_LOCK_IRI,
             () => updateUserDataV1(userIri, updateUserRequest, userProfile, apiRequestID)
         )
     } yield taskResult
@@ -300,7 +311,7 @@ class UsersResponderV1 extends ResponderV1 {
         val updateUserRequest = UpdateUserApiRequestV1(status = Some(changeStatusRequest.newStatus))
 
         for {
-        // run the change status task with an IRI lock
+            // run the change status task with an IRI lock
             taskResult <- IriLocker.runWithIriLock(
                 apiRequestID,
                 userIri,
@@ -323,7 +334,7 @@ class UsersResponderV1 extends ResponderV1 {
     private def updateUserDataV1(userIri: IRI, apiUpdateRequest: UpdateUserApiRequestV1, userProfile: UserProfileV1, apiRequestID: UUID): Future[UserOperationResponseV1] = {
 
         for {
-        /* Update the user */
+            /* Update the user */
             updateUserSparqlString <- Future(queries.sparql.v1.txt.updateUser(
                 adminNamedGraphIri = "http://www.knora.org/data/admin",
                 triplestore = settings.triplestoreType,

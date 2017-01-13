@@ -20,14 +20,14 @@ import java.util.UUID
 
 import akka.actor.Status
 import akka.pattern._
-import org.apache.jena.sparql.function.library.leviathan.log
 import org.knora.webapi
 import org.knora.webapi.messages.v1.responder.groupmessages._
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectsResponderRequestV1
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.store.triplestoremessages._
+import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.util.ActorUtil._
-import org.knora.webapi.util.{KnoraIdUtil, SparqlUtil}
+import org.knora.webapi.util.KnoraIdUtil
 import org.knora.webapi.{DuplicateValueException, _}
 
 import scala.concurrent.Future
@@ -41,6 +41,9 @@ class GroupsResponderV1 extends ResponderV1 {
     // Creates IRIs for new Knora user objects.
     val knoraIdUtil = new KnoraIdUtil
 
+    // Global lock IRI used for group creation and updating
+    val GROUPS_GLOBAL_LOCK_IRI = "http://data.knora.org/users"
+
     val PROJECT_MEMBER = "ProjectMember"
     val PROJECT_ADMIN = "ProjectAdmin"
 
@@ -53,7 +56,7 @@ class GroupsResponderV1 extends ResponderV1 {
         case GroupsGetRequestV1(userProfile) => future2Message(sender(), getGroupsResponseV1(userProfile), log)
         case GroupInfoByIRIGetRequest(iri, userProfile) => future2Message(sender(), getGroupInfoByIRIGetRequest(iri, userProfile), log)
         case GroupInfoByNameGetRequest(projectIri, groupName, userProfile) => future2Message(sender(), getGroupInfoByNameGetRequest(projectIri, groupName, userProfile), log)
-        case GroupCreateRequestV1(newGroupInfo, userProfile, apiRequestID) => future2Message(sender(), createGroupV1(newGroupInfo, userProfile), log)
+        case GroupCreateRequestV1(newGroupInfo, userProfile, apiRequestID) => future2Message(sender(), createGroupV1(newGroupInfo, userProfile, apiRequestID), log)
         case other => handleUnexpectedMessage(sender(), other, log)
     }
 
@@ -228,8 +231,9 @@ class GroupsResponderV1 extends ResponderV1 {
         } yield groupInfoResponse
     }
 
-    private def createGroupV1(createRequest: CreateGroupApiRequestV1, userProfile: UserProfileV1): Future[GroupOperationResponseV1] = {
-        for {
+    private def createGroupV1(createRequest: CreateGroupApiRequestV1, userProfile: UserProfileV1, apiRequestID: UUID): Future[GroupOperationResponseV1] = {
+
+        def createGroupTask(createRequest: CreateGroupApiRequestV1, userProfile: UserProfileV1, apiRequestID: UUID): Future[GroupOperationResponseV1] = for {
             /* check if username or password are not empty */
             _ <- Future(if (createRequest.name.isEmpty) throw BadRequestException("Group name cannot be empty"))
             _ = if (createRequest.belongsToProject.isEmpty) throw BadRequestException("Project IRI cannot be empty")
@@ -290,6 +294,15 @@ class GroupsResponderV1 extends ResponderV1 {
             groupOperationResponseV1 = GroupOperationResponseV1(groupInfo, userProfile.userData)
 
         } yield groupOperationResponseV1
+
+        for {
+            // run user creation with an global IRI lock
+            taskResult <- IriLocker.runWithIriLock(
+                apiRequestID,
+                GROUPS_GLOBAL_LOCK_IRI,
+                () => createGroupTask(createRequest, userProfile, apiRequestID)
+            )
+        } yield taskResult
     }
 
 

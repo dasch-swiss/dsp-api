@@ -113,4 +113,6 @@ WHERE {
     BIND(IRI("@adminNamedGraphIri") AS ?adminNamedGraphIri)
     BIND(IRI("@projectIri") AS ?projectIri)
     BIND(IRI("@projectClassIri") AS ?projectClassIri)
+
+    FILTER NOT EXISTS { ?s knora-base:projectShortname "@shortname"^^xsd:string . }
 }

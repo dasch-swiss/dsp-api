@@ -29,11 +29,11 @@ import org.knora.webapi.messages.v1.responder.ontologymessages.NamedGraphV1
 import org.knora.webapi.messages.v1.responder.projectmessages._
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.store.triplestoremessages._
+import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.util.ActorUtil._
-import org.knora.webapi.util.{KnoraIdUtil, MessageUtil, PermissionUtilV1, SparqlUtil}
+import org.knora.webapi.util.{KnoraIdUtil, MessageUtil, PermissionUtilV1}
 
 import scala.concurrent.Future
-
 
 /**
   * Returns information about Knora projects.
@@ -43,8 +43,11 @@ class ProjectsResponderV1 extends ResponderV1 {
     // Creates IRIs for new Knora user objects.
     val knoraIdUtil = new KnoraIdUtil
 
+    // Global lock IRI used for project creation and update
+    val PROJECTS_GLOBAL_LOCK_IRI = "http://data.knora.org/projects"
+
     /**
-      * Receives a message extending [[ProjectsResponderRequestV1]], and returns an appropriate response message, or
+      * Receives a message extending [[org.knora.webapi.messages.v1.responder.projectmessages.ProjectsResponderRequestV1]], and returns an appropriate response message, or
       * [[Status.Failure]]. If a serious error occurs (i.e. an error that isn't the client's fault), this
       * method first returns `Failure` to the sender, then throws an exception.
       */
@@ -264,9 +267,9 @@ class ProjectsResponderV1 extends ResponderV1 {
         )
     }
 
-    private def projectCreateRequestV1(createRequest: CreateProjectApiRequestV1, userProfileV1: UserProfileV1, apiRequestID: UUID): Future[ProjectOperationResponseV1] = {
+    private def projectCreateRequestV1(createRequest: CreateProjectApiRequestV1, userProfile: UserProfileV1, apiRequestID: UUID): Future[ProjectOperationResponseV1] = {
 
-        for {
+        def projectCreateTask(createRequest: CreateProjectApiRequestV1, userProfile: UserProfileV1, apiRequestID: UUID): Future[ProjectOperationResponseV1] = for {
             // check if required properties are not empty
             _ <- Future(if (createRequest.shortname.isEmpty) throw BadRequestException("'Shortname' cannot be empty"))
 
@@ -325,12 +328,21 @@ class ProjectsResponderV1 extends ResponderV1 {
             }
 
             // create the project info
-            newProjectInfo = createProjectInfoV1(projectResponse, newProjectIRI, Some(userProfileV1))
+            newProjectInfo = createProjectInfoV1(projectResponse, newProjectIRI, Some(userProfile))
 
             // create the project operation response
-            projectOperationResponseV1 = ProjectOperationResponseV1(newProjectInfo, userProfileV1.userData)
+            projectOperationResponseV1 = ProjectOperationResponseV1(newProjectInfo, userProfile.userData)
 
         } yield projectOperationResponseV1
+
+        for {
+        // run user creation with an global IRI lock
+            taskResult <- IriLocker.runWithIriLock(
+                apiRequestID,
+                PROJECTS_GLOBAL_LOCK_IRI,
+                () => projectCreateTask(createRequest, userProfile, apiRequestID)
+            )
+        } yield taskResult
     }
 
     private def projectUpdateRequestV1(userProfileV1: UserProfileV1): Future[ProjectInfoResponseV1] = ???

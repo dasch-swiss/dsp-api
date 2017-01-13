@@ -91,4 +91,6 @@ WHERE {
     BIND(IRI("@adminNamedGraphIri") AS ?adminNamedGraphIri)
     BIND(IRI("@userIri") AS ?userIri)
     BIND(IRI("@userClassIri") AS ?userClassIri)
+
+    FILTER NOT EXISTS { ?s knora-base:email "@email"^^xsd:string . }
 }

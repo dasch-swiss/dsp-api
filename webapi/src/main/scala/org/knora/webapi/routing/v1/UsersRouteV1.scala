@@ -38,7 +38,7 @@ object UsersRouteV1 extends Authenticator {
 
     private val schemes = Array("http", "https")
     private val urlValidator = new UrlValidator(schemes)
-    
+
     def rapierPath(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter): Route = {
 
 
@@ -83,7 +83,7 @@ object UsersRouteV1 extends Authenticator {
                     val requestMessage = UserCreateRequestV1(
                         createRequest = apiRequest,
                         userProfile,
-                        apiRequestID = UUID.randomUUID
+                        apiRequestID = UUID.randomUUID()
                     )
 
                     RouteUtilV1.runJsonRoute(
@@ -108,7 +108,7 @@ object UsersRouteV1 extends Authenticator {
                         userIri = userIri,
                         updateRequest = apiRequest,
                         userProfile,
-                        apiRequestID = UUID.randomUUID
+                        apiRequestID = UUID.randomUUID()
                     )
                     RouteUtilV1.runJsonRoute(
                         requestMessage,
