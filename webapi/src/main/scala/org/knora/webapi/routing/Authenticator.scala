@@ -466,10 +466,15 @@ object Authenticator {
                     val userProfileV1Future = for {
                         userProfileV1 <- (responderManager ? UserProfileByEmailGetRequestV1(email, UserProfileType.FULL)).mapTo[UserProfileV1]
                         _ = CacheUtil.put(AUTHENTICATION_CACHE_NAME, email, userProfileV1)
+                        _ = log.debug(s"getUserProfileByEmail - from triplestore: $userProfileV1")
                     } yield userProfileV1
 
                     userProfileV1Future.recover {
-                        case nfe: NotFoundException => throw BadCredentialsException(s"$BAD_CRED_USER_NOT_FOUND: ${nfe.message}")
+                        case nfe: NotFoundException => {
+                            log.debug(s"getUserProfileByEmail - supplied email not found - throwing exception")
+                            // FIXME: This does not work as expected (#372).
+                            throw BadCredentialsException(s"$BAD_CRED_USER_NOT_FOUND: ${nfe.message}")
+                        }
                     }
 
                     Await.result(userProfileV1Future, Duration(3, SECONDS))

@@ -101,6 +101,24 @@ object SharedAdminTestData {
         permissionData = PermissionDataV1()
     )
 
+    /* represents the user profile of 'inactive user' as found in admin-data.ttl */
+    def inactiveUser = UserProfileV1(
+        UserDataV1(
+            user_id = Some("http://data.knora.org/users/inactiveuser"),
+            firstname = Some("Inactive"),
+            lastname = Some("User"),
+            email = Some("inactive.user@example.com"),
+            password = Some("$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"), // -> "test"
+            token = None,
+            isActiveUser = Some(false),
+            lang = "de"
+        ),
+        groups = Vector.empty[IRI],
+        projects = Vector.empty[IRI],
+        sessionId = None,
+        permissionData = PermissionDataV1()
+    )
+
     /* represents an anonymous user */
     def anonymousUser = UserProfileV1(
         UserDataV1(
@@ -346,7 +364,7 @@ object SharedAdminTestData {
             user_id = Some("http://data.knora.org/users/91e19f1e01"),
             firstname = Some("Administrator-alt"),
             lastname = Some("Admin-alt"),
-            email = Some("old.admin@example.com"),
+            email = Some("root-alt@example.com"),
             password = Some("$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"), // -> "test"
             token = None,
             isActiveUser = Some(true),

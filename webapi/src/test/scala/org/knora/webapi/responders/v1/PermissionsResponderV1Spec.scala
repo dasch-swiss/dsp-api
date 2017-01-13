@@ -333,7 +333,7 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
                 actorUnderTest ! TemplatePermissionsCreateRequestV1(
                     projectIri = IMAGES_PROJECT_IRI,
                     permissionsTemplate = PermissionsTemplate.OPEN,
-                    rootUser
+                    rootEmailEnc
                 )
                 expectMsg(TemplatePermissionsCreateResponseV1(
                     success = true,

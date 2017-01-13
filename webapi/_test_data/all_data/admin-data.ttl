@@ -222,8 +222,6 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 ## Project Admin
 <http://data.knora.org/users/b83acc5f05> rdf:type knora-base:User ;
 
-                                         knora-base:userid "testuser"^^xsd:string ;
-
                                          knora-base:givenName "User"^^xsd:string ;
 
                                          knora-base:familyName "Test"^^xsd:string ;
@@ -246,15 +244,13 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 ## Project Creator and Member
 <http://data.knora.org/users/91e19f1e01> rdf:type knora-base:User ;
 
-                                         knora-base:userid "root-alt"^^xsd:string ;
-
                                          knora-base:familyName "Admin-alt"^^xsd:string ;
 
                                          knora-base:givenName "Administrator-alt"^^xsd:string ;
 
                                          knora-base:password "$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"^^xsd:string ;
 
-                                         knora-base:email "test@test.ch"^^xsd:string ;
+                                         knora-base:email "root-alt@example.com"^^xsd:string ;
 
                                          knora-base:phone "123456"^^xsd:string ;
 
@@ -269,8 +265,6 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 
 ## Project Member
 <http://data.knora.org/users/incunabulaMemberUser> rdf:type knora-base:User ;
-
-                                         knora-base:userid "incunabula2"^^xsd:string ;
 
                                          knora-base:familyName "User2"^^xsd:string ;
 
