@@ -24,7 +24,6 @@ import java.util.UUID
 
 import akka.actor.Status
 import akka.pattern._
-import org.apache.jena.sparql.function.library.leviathan.log
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.permissionmessages._
 import org.knora.webapi.messages.v1.responder.usermessages._
@@ -32,7 +31,7 @@ import org.knora.webapi.messages.v1.store.triplestoremessages.{SparqlSelectReque
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.util.ActorUtil._
-import org.knora.webapi.util.{CacheUtil, KnoraIdUtil, SparqlUtil}
+import org.knora.webapi.util.{CacheUtil, KnoraIdUtil}
 import org.mindrot.jbcrypt.BCrypt
 
 import scala.concurrent.Future
