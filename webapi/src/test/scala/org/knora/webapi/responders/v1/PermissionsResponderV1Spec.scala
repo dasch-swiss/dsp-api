@@ -97,7 +97,7 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
                 actorUnderTest ! PermissionDataGetV1(
                     projectIris = SharedAdminTestData.multiuserUser.projects,
                     groupIris = SharedAdminTestData.multiuserUser.groups,
-                    isInProjectAdminGroups = Seq("http://data.knora.org/projects/77275339", "http://data.knora.org/projects/images", "http://data.knora.org/projects/666"),
+                    isInProjectAdminGroups = Seq("http://data.knora.org/projects/77275339", "http://data.knora.org/projects/images"),
                     isInSystemAdminGroup = false
                 )
                 expectMsg(SharedAdminTestData.multiuserUser.permissionData)
