@@ -35,6 +35,7 @@ import org.knora.webapi.twirl.StandoffTagV1
 import org.knora.webapi.util.MessageUtil
 import org.knora.webapi.util.standoff.{StandoffTagUtilV1, XMLToStandoffUtil, TextWithStandoff}
 import spray.json.{JsNumber, JsObject}
+import org.knora.webapi.util.standoff.StandoffTagUtilV1.TextWithStandoffTagV1
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.reflect.ClassTag
@@ -182,14 +183,6 @@ object RouteUtilV1 {
     }
 
     /**
-      * Represents a text with standoff markup.
-      *
-      * @param text             the text as a mere sequence of characters.
-      * @param standoffTagV1    the text's standoff markup.
-      */
-    case class TextWithStandoffTagV1(text: String, standoffTagV1: Seq[StandoffTagV1], mapping: GetMappingResponseV1)
-
-    /**
       *
       * Converts XML to a [[TextWithStandoffTagV1]], representing the text and its standoff markup.
       *
@@ -218,27 +211,16 @@ object RouteUtilV1 {
             // get information about the standoff entities used in the mapping
             standoffEntities: GetStandoffEntitiesFromMappingResponseV1  <- (responderManager ? GetStandoffEntitiesFromMappingRequestV1(mapping = mappingResponse.mapping, userProfile = userProfile)).mapTo[GetStandoffEntitiesFromMappingResponseV1]
 
-            xmlStandoffUtil = new XMLToStandoffUtil()
-
-            // FIXME: if the XML is not well formed, the error is not handled correctly in XMLToStandoffUtil
-            textWithStandoff: TextWithStandoff = try {
-                xmlStandoffUtil.xml2TextWithStandoff(xml)
-            } catch {
-                case e: org.xml.sax.SAXParseException => throw BadRequestException(s"there was a problem parsing the provided XML: ${e.getMessage}")
-
-                case other: Exception => throw BadRequestException(s"there was a problem processing the provided XML: ${other.getMessage}")
-            }
-
-            standoffTagV1: Seq[StandoffTagV1] = StandoffTagUtilV1.convertXMLToStandoffUtilStandoffTagToStandoffTagV1(
-                textWithStandoff = textWithStandoff,
-                mappingXMLtoStandoff = mappingResponse.mapping,
+            textWithStandoffTagV1 = StandoffTagUtilV1.convertXMLtoStandoffTagV1(
+                xml = xml,
+                mapping = mappingResponse,
                 standoffEntities = standoffEntities.entities
             )
 
         } yield TextWithStandoffTagV1(
-            text = textWithStandoff.text,
-            standoffTagV1 = standoffTagV1,
-            mapping = mappingResponse
+            text = textWithStandoffTagV1.text,
+            standoffTagV1 = textWithStandoffTagV1.standoffTagV1,
+            mapping = textWithStandoffTagV1.mapping
         )
     }
 }

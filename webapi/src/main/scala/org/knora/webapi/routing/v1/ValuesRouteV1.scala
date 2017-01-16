@@ -40,7 +40,7 @@ import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
 import org.knora.webapi.util.{DateUtilV1, InputValidation}
 import org.knora.webapi._
-import org.knora.webapi.routing.RouteUtilV1.TextWithStandoffTagV1
+import org.knora.webapi.util.standoff.StandoffTagUtilV1.TextWithStandoffTagV1
 import org.slf4j.LoggerFactory
 
 import scala.concurrent.Future

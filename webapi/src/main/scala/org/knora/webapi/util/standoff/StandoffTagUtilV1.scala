@@ -191,6 +191,49 @@ object StandoffTagUtilV1 {
     }
 
     /**
+      * Represents a text with standoff markup including the mapping.
+      *
+      * @param text             the text as a mere sequence of characters.
+      * @param standoffTagV1    the text's standoff markup.
+      */
+    case class TextWithStandoffTagV1(text: String, standoffTagV1: Seq[StandoffTagV1], mapping: GetMappingResponseV1)
+
+    /**
+      * Converts XML to a [[TextWithStandoffTagV1]].
+      *
+      * @param xml                the XML representing text with markup.
+      * @param mapping            the mapping used to convert XML to standoff.
+      * @param standoffEntities   the standoff entities used in the mapping.
+      * @return                   a [[TextWithStandoffTagV1]].
+      */
+    def convertXMLtoStandoffTagV1(xml: String, mapping: GetMappingResponseV1, standoffEntities: StandoffEntityInfoGetResponseV1) = {
+
+        val xmlStandoffUtil = new XMLToStandoffUtil()
+
+        // FIXME: if the XML is not well formed, the error is not handled correctly in XMLToStandoffUtil
+        val textWithStandoff: TextWithStandoff = try {
+            xmlStandoffUtil.xml2TextWithStandoff(xml)
+        } catch {
+            case e: org.xml.sax.SAXParseException => throw BadRequestException(s"there was a problem parsing the provided XML: ${e.getMessage}")
+
+            case other: Exception => throw BadRequestException(s"there was a problem processing the provided XML: ${other.getMessage}")
+        }
+
+        val standoffTagsV1: Seq[StandoffTagV1] = StandoffTagUtilV1.convertXMLToStandoffUtilStandoffTagToStandoffTagV1(
+            textWithStandoff = textWithStandoff,
+            mappingXMLtoStandoff = mapping.mapping,
+            standoffEntities = standoffEntities
+        )
+
+        TextWithStandoffTagV1(
+            text = textWithStandoff.text,
+            standoffTagV1 = standoffTagsV1,
+            mapping = mapping
+        )
+
+    }
+
+    /**
       *
       * Turns a sequence of [[StandoffTag]] returned by [[XMLToStandoffUtil.xml2TextWithStandoff]] into a sequence of [[StandoffTagV1]].
       * This method handles the creation of data type specific properties (e.g. for a date value) on the basis of the provided mapping.
@@ -200,7 +243,7 @@ object StandoffTagUtilV1 {
       * @param standoffEntities     the standoff entities (classes and properties) to be used.
       * @return a sequence of [[StandoffTagV1]].
       */
-    def convertXMLToStandoffUtilStandoffTagToStandoffTagV1(textWithStandoff: TextWithStandoff, mappingXMLtoStandoff: MappingXMLtoStandoff, standoffEntities: StandoffEntityInfoGetResponseV1): Seq[StandoffTagV1] = {
+    private def convertXMLToStandoffUtilStandoffTagToStandoffTagV1(textWithStandoff: TextWithStandoff, mappingXMLtoStandoff: MappingXMLtoStandoff, standoffEntities: StandoffEntityInfoGetResponseV1): Seq[StandoffTagV1] = {
 
         textWithStandoff.standoff.map {
             case (standoffNodeFromXML: StandoffTag) =>
