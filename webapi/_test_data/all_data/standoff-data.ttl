@@ -77,7 +77,7 @@
                                                                                                    knora-base:mappingHasXMLTagname	"strike"^^xsd:string .
 
 <http://data.knora.org/projects/standoff/mappings/StandardMapping/elements/9f0iFk1JTu-gsMHtyUZqcg> a knora-base:MappingElement ;
-                                                                                                   knora-base:mappingHasStandoffClass standoff:StandoffUriTag   ;
+                                                                                                   knora-base:mappingHasStandoffClass knora-base:StandoffUriTag   ;
                                                                                                    knora-base:mappingHasXMLClass  "noClass"^^xsd:string ;
                                                                                                    knora-base:mappingHasXMLNamespace "noNamespace"^^xsd:string ;
                                                                                                    knora-base:mappingHasXMLTagname	"a"^^xsd:string ;
@@ -88,7 +88,7 @@
                                                                                                    knora-base:mappingHasXMLAttributename "href"^^xsd:string .
 
 <http://data.knora.org/projects/standoff/mappings/StandardMapping/elements/ODwo82ZLRsiWBVXvipRk1w> a knora-base:MappingElement ;
-                                                                                                   knora-base:mappingHasStandoffClass standoff:StandoffLinkTag   ;
+                                                                                                   knora-base:mappingHasStandoffClass knora-base:StandoffLinkTag   ;
                                                                                                    knora-base:mappingHasXMLClass  "salsah-link"^^xsd:string ;
                                                                                                    knora-base:mappingHasXMLNamespace "noNamespace"^^xsd:string ;
                                                                                                    knora-base:mappingHasXMLTagname	"a"^^xsd:string ;

@@ -107,7 +107,7 @@ object ValuesRouteV1 extends Authenticator {
                         // check if text has markup
                         if (richtext.utf8str.nonEmpty && richtext.xml.isEmpty && richtext.mapping_id.isEmpty) {
                             // simple text
-                            Future((TextValueV1Simple(InputValidation.toSparqlEncodedString(richtext.utf8str.get, () => throw BadRequestException(s"Invalid text: '${richtext.utf8str.get}'"))),
+                            Future((TextValueSimpleV1(InputValidation.toSparqlEncodedString(richtext.utf8str.get, () => throw BadRequestException(s"Invalid text: '${richtext.utf8str.get}'"))),
                                 apiRequest.comment))
                         } else if (richtext.xml.nonEmpty && richtext.mapping_id.nonEmpty) {
                             // XML: text with markup
@@ -128,11 +128,12 @@ object ValuesRouteV1 extends Authenticator {
                                 // collect the resource references from the linking standoff nodes
                                 resourceReferences: Set[IRI] = InputValidation.getResourceIrisFromStandoffTags(textWithStandoffTags.standoffTagV1)
 
-                            } yield (TextValueV1WithStandoff(
+                            } yield (TextValueWithStandoffV1(
                                 utf8str = InputValidation.toSparqlEncodedString(textWithStandoffTags.text, () => throw InconsistentTriplestoreDataException("utf8str for for TextValue contains invalid characters")),
                                 resource_reference = resourceReferences,
-                                textattr = textWithStandoffTags.standoffTagV1,
-                                mapping = textWithStandoffTags.mapping
+                                standoff = textWithStandoffTags.standoffTagV1,
+                                mappingIri = textWithStandoffTags.mapping.mappingIri,
+                                mapping = textWithStandoffTags.mapping.mapping
                             ), apiRequest.comment)
 
                         }
@@ -208,7 +209,7 @@ object ValuesRouteV1 extends Authenticator {
                         // check if text has markup
                         if (richtext.utf8str.nonEmpty && richtext.xml.isEmpty && richtext.mapping_id.isEmpty) {
                             // simple text
-                            Future((TextValueV1Simple(InputValidation.toSparqlEncodedString(richtext.utf8str.get, () => throw BadRequestException(s"Invalid text: '${richtext.utf8str.get}'"))),
+                            Future((TextValueSimpleV1(InputValidation.toSparqlEncodedString(richtext.utf8str.get, () => throw BadRequestException(s"Invalid text: '${richtext.utf8str.get}'"))),
                                 apiRequest.comment))
                         } else if (richtext.xml.nonEmpty && richtext.mapping_id.nonEmpty) {
                             // XML: text with markup
@@ -229,11 +230,12 @@ object ValuesRouteV1 extends Authenticator {
                                 // collect the resource references from the linking standoff nodes
                                 resourceReferences: Set[IRI] = InputValidation.getResourceIrisFromStandoffTags(textWithStandoffTags.standoffTagV1)
 
-                            } yield (TextValueV1WithStandoff(
+                            } yield (TextValueWithStandoffV1(
                                 utf8str = InputValidation.toSparqlEncodedString(textWithStandoffTags.text, () => throw InconsistentTriplestoreDataException("utf8str for for TextValue contains invalid characters")),
                                 resource_reference = resourceReferences,
-                                textattr = textWithStandoffTags.standoffTagV1,
-                                mapping = textWithStandoffTags.mapping
+                                standoff = textWithStandoffTags.standoffTagV1,
+                                mappingIri = textWithStandoffTags.mapping.mappingIri,
+                                mapping = textWithStandoffTags.mapping.mapping
                             ), apiRequest.comment)
 
                         }

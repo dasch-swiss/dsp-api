@@ -120,7 +120,7 @@ object ResourcesRouteV1 extends Authenticator {
                                     // check if text has markup
                                     if (richtext.utf8str.nonEmpty && richtext.xml.isEmpty && richtext.mapping_id.isEmpty) {
                                         // simple text
-                                        Future(CreateValueV1WithComment(TextValueV1Simple(InputValidation.toSparqlEncodedString(richtext.utf8str.get, () => throw BadRequestException(s"Invalid text: '${richtext.utf8str.get}'"))),
+                                        Future(CreateValueV1WithComment(TextValueSimpleV1(InputValidation.toSparqlEncodedString(richtext.utf8str.get, () => throw BadRequestException(s"Invalid text: '${richtext.utf8str.get}'"))),
                                             givenValue.comment))
                                     } else if (richtext.xml.nonEmpty && richtext.mapping_id.nonEmpty) {
                                         // XML: text with markup
@@ -141,11 +141,12 @@ object ResourcesRouteV1 extends Authenticator {
                                             // collect the resource references from the linking standoff nodes
                                             resourceReferences: Set[IRI] = InputValidation.getResourceIrisFromStandoffTags(textWithStandoffTags.standoffTagV1)
 
-                                        } yield CreateValueV1WithComment(TextValueV1WithStandoff(
+                                        } yield CreateValueV1WithComment(TextValueWithStandoffV1(
                                             utf8str = InputValidation.toSparqlEncodedString(textWithStandoffTags.text, () => throw InconsistentTriplestoreDataException("utf8str for for TextValue contains invalid characters")),
                                             resource_reference = resourceReferences,
-                                            textattr = textWithStandoffTags.standoffTagV1,
-                                            mapping = textWithStandoffTags.mapping
+                                            standoff = textWithStandoffTags.standoffTagV1,
+                                            mappingIri = textWithStandoffTags.mapping.mappingIri,
+                                            mapping = textWithStandoffTags.mapping.mapping
                                         ), givenValue.comment)
 
                                     }

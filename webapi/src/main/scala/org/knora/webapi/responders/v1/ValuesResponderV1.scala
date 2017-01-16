@@ -293,7 +293,7 @@ class ValuesResponderV1 extends ResponderV1 {
                 // The 'collect' method builds a new list by applying a partial function to all elements of the list
                 // on which the function is defined.
                 resourceReferencesForAllTextValues: Iterable[Set[IRI]] = allValuesToCreate.collect {
-                    case CreateValueV1WithComment(textValueV1: TextValueV1WithStandoff, _) =>
+                    case CreateValueV1WithComment(textValueV1: TextValueWithStandoffV1, _) =>
                         // check that resource references are consistent in `resource_reference` and linking standoff tags
                         checkTextValueResourceRefs(textValueV1)
 
@@ -1037,7 +1037,7 @@ class ValuesResponderV1 extends ResponderV1 {
                     // If it's a TextValue, make SparqlTemplateLinkUpdates for updating LinkValues representing
                     // links in standoff markup.
                     val linkUpdatesFuture: Future[Seq[SparqlTemplateLinkUpdate]] = other match {
-                        case textValue: TextValueV1WithStandoff =>
+                        case textValue: TextValueWithStandoffV1 =>
                             val linkUpdateFutures = textValue.resource_reference.map {
                                 targetResourceIri => decrementLinkValue(
                                     sourceResourceIri = findResourceWithValueResult.resourceIri,
@@ -1855,7 +1855,7 @@ class ValuesResponderV1 extends ResponderV1 {
         for {
         // If we're creating a text value, update direct links and LinkValues for any resource references in standoff.
             standoffLinkUpdates: Seq[SparqlTemplateLinkUpdate] <- value match {
-                case textValueV1: TextValueV1WithStandoff =>
+                case textValueV1: TextValueWithStandoffV1 =>
                     // Make sure the text value's list of resource references is correct.
                     checkTextValueResourceRefs(textValueV1)
 
@@ -2030,7 +2030,7 @@ class ValuesResponderV1 extends ResponderV1 {
         for {
         // If we're adding a text value, update direct links and LinkValues for any resource references in Standoff.
             standoffLinkUpdates: Seq[SparqlTemplateLinkUpdate] <- (currentValueV1, updateValueV1) match {
-                case (currentTextValue: TextValueV1WithStandoff, newTextValue: TextValueV1WithStandoff) =>
+                case (currentTextValue: TextValueWithStandoffV1, newTextValue: TextValueWithStandoffV1) =>
                     // Make sure the new text value's list of resource references is correct.
                     checkTextValueResourceRefs(newTextValue)
 
@@ -2284,11 +2284,11 @@ class ValuesResponderV1 extends ResponderV1 {
       * @param textValue the [[TextValueV1]] to be checked.
       */
     @throws(classOf[BadRequestException])
-    private def checkTextValueResourceRefs(textValue: TextValueV1WithStandoff): Unit = {
+    private def checkTextValueResourceRefs(textValue: TextValueWithStandoffV1): Unit = {
 
         // please note that the function `InputValidation.getResourceIrisFromStandoffTags` is not used here
         // because we want a double check (the function has already been called in the route or in standoff responder)
-        val resourceRefsInStandoff: Set[IRI] = textValue.textattr.foldLeft(Set.empty[IRI]) {
+        val resourceRefsInStandoff: Set[IRI] = textValue.standoff.foldLeft(Set.empty[IRI]) {
             case (acc: Set[IRI], standoffNode: StandoffTagV1) =>
 
                 standoffNode match {

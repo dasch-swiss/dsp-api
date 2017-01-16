@@ -568,16 +568,17 @@ class ValueUtilV1(private val settings: SettingsImpl) {
             // FIXME: remove blocking code!!!!!!!
             val mappingResponse = Await.result(mappingResponseFuture, 2.seconds)
 
-            TextValueV1WithStandoff(
+            TextValueWithStandoffV1(
                 utf8str = valueHasString,
-                textattr = standoffTags,
-                mapping = mappingResponse
+                standoff = standoffTags,
+                mappingIri = mappingIri,
+                mapping = mappingResponse.mapping
             )
 
         } else {
             // there is no standoff markup
 
-            TextValueV1Simple(
+            TextValueSimpleV1(
                 utf8str = valueHasString
             )
         }

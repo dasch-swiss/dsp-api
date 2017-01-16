@@ -631,10 +631,10 @@ object StandoffTagUtilV1 {
         }
     }
 
-    def convertStandoffTagV1ToXML(utf8str: String, standoff: Seq[StandoffTagV1], mappingXMLtoStandoff: GetMappingResponseV1): String = {
+    def convertStandoffTagV1ToXML(utf8str: String, standoff: Seq[StandoffTagV1], mappingXMLtoStandoff: MappingXMLtoStandoff): String = {
 
         // inverts the mapping and makes standoff class Iris keys (for tags)
-        val mappingStandoffToXML: Map[IRI, XMLTagItem] = invertXMLToStandoffMapping(mappingXMLtoStandoff.mapping)
+        val mappingStandoffToXML: Map[IRI, XMLTagItem] = invertXMLToStandoffMapping(mappingXMLtoStandoff)
 
         val standoffUtil = new XMLToStandoffUtil(writeUuidsToXml = false)
 

@@ -29,7 +29,8 @@ import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
 import org.knora.webapi.util.{DateUtilV1, ErrorHandlingMap, KnoraIdUtil}
 import org.knora.webapi.{BadRequestException, _}
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import org.knora.webapi.messages.v1.responder.standoffmessages.{GetMappingResponseV1, StandoffDataTypeClasses}
+import org.knora.webapi.messages.v1.responder.ontologymessages.StandoffEntityInfoGetResponseV1
+import org.knora.webapi.messages.v1.responder.standoffmessages.{GetMappingResponseV1, MappingXMLtoStandoff, StandoffDataTypeClasses}
 import org.knora.webapi.twirl.StandoffTagV1
 import org.knora.webapi.util.standoff.StandoffTagUtilV1
 import spray.json._
@@ -651,14 +652,15 @@ sealed trait TextValueV1 {
   * Represents a textual value with additional information in standoff format.
   *
   * @param utf8str            text in mere utf8 representation (including newlines and carriage returns).
-  * @param textattr           attributes of the text in standoff format. For each attribute, several ranges may be given (a list of [[StandoffPositionV1]]).
+  * @param standoff           attributes of the text in standoff format. For each attribute, several ranges may be given (a list of [[StandoffPositionV1]]).
   * @param resource_reference referred Knora resources.
   * @param mapping         the mapping used to create standoff from another format.
   */
-case class TextValueV1WithStandoff(utf8str: String,
-                       textattr: Seq[StandoffTagV1],
-                       resource_reference: Set[IRI] = Set.empty[IRI],
-                       mapping: GetMappingResponseV1) extends TextValueV1 with UpdateValueV1 with ApiValueV1 { // TODO: for the GUI case we should use a default mapping. As a consequence, each TextValue needs a mapping (make mappingIri a required member of TextValueV1)
+case class TextValueWithStandoffV1(utf8str: String,
+                                   standoff: Seq[StandoffTagV1],
+                                   resource_reference: Set[IRI] = Set.empty[IRI],
+                                   mappingIri: IRI,
+                                   mapping: MappingXMLtoStandoff) extends TextValueV1 with UpdateValueV1 with ApiValueV1 { // TODO: for the GUI case we should use a default mapping. As a consequence, each TextValue needs a mapping (make mappingIri a required member of TextValueV1)
 
     import ApiValueV1JsonProtocol._
 
@@ -710,7 +712,7 @@ case class TextValueV1WithStandoff(utf8str: String,
 
         // TODO: depending on the given mapping, decide how serialize the text with standoff markup
 
-        val xml = StandoffTagUtilV1.convertStandoffTagV1ToXML(utf8str, textattr, mapping)
+        val xml = StandoffTagUtilV1.convertStandoffTagV1ToXML(utf8str, standoff, mapping)
 
 
         JsObject(
@@ -727,7 +729,7 @@ case class TextValueV1WithStandoff(utf8str: String,
       */
     def prepareForSparqlInsert(valueIri: IRI): Seq[CreateStandoffPositionV1InTriplestore] = {
 
-        textattr.map {
+        standoff.map {
             case (standoffNode: StandoffTagV1) =>
                 CreateStandoffPositionV1InTriplestore(
                     standoffNode = standoffNode,
@@ -768,7 +770,7 @@ case class TextValueV1WithStandoff(utf8str: String,
 
 }
 
-case class TextValueV1Simple(utf8str: String) extends TextValueV1 with UpdateValueV1 with ApiValueV1 {
+case class TextValueSimpleV1(utf8str: String) extends TextValueV1 with UpdateValueV1 with ApiValueV1 {
 
     def valueTypeIri = OntologyConstants.KnoraBase.TextValue
 
