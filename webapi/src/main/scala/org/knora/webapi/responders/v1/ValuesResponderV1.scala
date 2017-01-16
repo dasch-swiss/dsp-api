@@ -2030,14 +2030,30 @@ class ValuesResponderV1 extends ResponderV1 {
         for {
         // If we're adding a text value, update direct links and LinkValues for any resource references in Standoff.
             standoffLinkUpdates: Seq[SparqlTemplateLinkUpdate] <- (currentValueV1, updateValueV1) match {
-                case (currentTextValue: TextValueWithStandoffV1, newTextValue: TextValueWithStandoffV1) =>
+                case (currentTextValue: TextValueV1, newTextValue: TextValueV1) =>
                     // Make sure the new text value's list of resource references is correct.
-                    checkTextValueResourceRefs(newTextValue)
+
+                    newTextValue match {
+                        case newTextWithStandoff: TextValueWithStandoffV1 =>
+                            checkTextValueResourceRefs(newTextWithStandoff)
+                        case textValueSimple: TextValueSimpleV1 => ()
+                    }
+
+
 
                     // Identify the resource references that have been added or removed in the new version of
                     // the value.
-                    val currentResourceRefs = currentTextValue.resource_reference
-                    val newResourceRefs = newTextValue.resource_reference
+                    val currentResourceRefs = currentTextValue match {
+                        case textValueWithStandoff: TextValueWithStandoffV1 =>
+                            textValueWithStandoff.resource_reference
+                        case textValueSimple: TextValueSimpleV1 => Set.empty[IRI]
+                    }
+
+                    val newResourceRefs = newTextValue match {
+                        case textValueWithStandoff: TextValueWithStandoffV1 =>
+                            textValueWithStandoff.resource_reference
+                        case textValueSimple: TextValueSimpleV1 => Set.empty[IRI]
+                    }
                     val addedResourceRefs = newResourceRefs -- currentResourceRefs
                     val removedResourceRefs = currentResourceRefs -- newResourceRefs
 

@@ -572,7 +572,8 @@ class ValueUtilV1(private val settings: SettingsImpl) {
                 utf8str = valueHasString,
                 standoff = standoffTags,
                 mappingIri = mappingIri,
-                mapping = mappingResponse.mapping
+                mapping = mappingResponse.mapping,
+                resource_reference = InputValidation.getResourceIrisFromStandoffTags(standoffTags)
             )
 
         } else {
