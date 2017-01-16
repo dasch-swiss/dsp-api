@@ -195,60 +195,96 @@ object ValuesRouteV1 extends Authenticator {
                 )
         }
 
-        def makeAddValueVersionRequestMessage(valueIriStr: IRI, apiRequest: ChangeValueApiRequestV1, userProfile: UserProfileV1): ChangeValueRequestV1 = {
+        def makeAddValueVersionRequestMessage(valueIriStr: IRI, apiRequest: ChangeValueApiRequestV1, userProfile: UserProfileV1): Future[ChangeValueRequestV1] = {
             val projectIri = InputValidation.toIri(apiRequest.project_id, () => throw BadRequestException(s"Invalid project IRI: ${apiRequest.project_id}"))
             val valueIri = InputValidation.toIri(valueIriStr, () => throw BadRequestException(s"Invalid value IRI: $valueIriStr"))
 
-            // TODO: These match-case statements with lots of underlines are ugly and confusing.
+            for {
+                (value: UpdateValueV1, commentStr: Option[String]) <- apiRequest.getValueClassIri match {
 
-            // TODO: Support the rest of the value types.
-            val (value: UpdateValueV1, commentStr: Option[String]) = apiRequest match {
-                case ChangeValueApiRequestV1(_, Some(richtext: CreateRichtextV1), _, _, _, _, _, _, _, _, _, _, _, comment) =>
-                    //val richtextComponents: RichtextComponents = InputValidation.handleRichtext(richtext)
+                    case OntologyConstants.KnoraBase.TextValue =>
+                        val richtext: CreateRichtextV1 = apiRequest.richtext_value.get
 
-                    (TextValueV1Simple(InputValidation.toSparqlEncodedString(richtext.utf8str.get, () => throw BadRequestException(s"Invalid text: '${richtext.utf8str.get}'"))),
-                        comment)
+                        // check if text has markup
+                        if (richtext.utf8str.nonEmpty && richtext.xml.isEmpty && richtext.mapping_id.isEmpty) {
+                            // simple text
+                            Future((TextValueV1Simple(InputValidation.toSparqlEncodedString(richtext.utf8str.get, () => throw BadRequestException(s"Invalid text: '${richtext.utf8str.get}'"))),
+                                apiRequest.comment))
+                        } else if (richtext.xml.nonEmpty && richtext.mapping_id.nonEmpty) {
+                            // XML: text with markup
 
-                case ChangeValueApiRequestV1(_, _, Some(intValue: Int), _, _, _, _, _, _, _, _, _, _, comment) => (IntegerValueV1(intValue), comment)
+                            val mappingIri = InputValidation.toIri(richtext.mapping_id.get, () => throw BadRequestException(s"mapping_id ${richtext.mapping_id.get} is invalid"))
 
-                case ChangeValueApiRequestV1(_, _, _, Some(decimalValue: BigDecimal), _, _, _, _, _, _, _, _, _, comment) => (DecimalValueV1(decimalValue), comment)
+                            for {
 
-                case ChangeValueApiRequestV1(_, _, _, _, Some(booleanValue: Boolean), _, _, _, _, _, _, _, _, comment) => (BooleanValueV1(booleanValue), comment)
+                                textWithStandoffTags: TextWithStandoffTagV1 <- RouteUtilV1.convertXMLtoStandoffTagV1(
+                                    xml = richtext.xml.get,
+                                    mappingIri = mappingIri,
+                                    userProfile = userProfile,
+                                    settings = settings,
+                                    responderManager = responderManager,
+                                    log = loggingAdapter
+                                )
 
-                case ChangeValueApiRequestV1(_, _, _, _, _, Some(uriValue: String), _, _, _, _, _, _, _, comment) => (UriValueV1(InputValidation.toIri(uriValue, () => throw BadRequestException(s"Invalid URI: $uriValue"))), comment)
+                                // collect the resource references from the linking standoff nodes
+                                resourceReferences: Set[IRI] = InputValidation.getResourceIrisFromStandoffTags(textWithStandoffTags.standoffTagV1)
 
-                case ChangeValueApiRequestV1(_, _, _, _, _, _, Some(dateStr: String), _, _, _, _, _, _, comment) =>
-                    (DateUtilV1.createJDNValueV1FromDateString(dateStr), comment)
+                            } yield (TextValueV1WithStandoff(
+                                utf8str = InputValidation.toSparqlEncodedString(textWithStandoffTags.text, () => throw InconsistentTriplestoreDataException("utf8str for for TextValue contains invalid characters")),
+                                resource_reference = resourceReferences,
+                                textattr = textWithStandoffTags.standoffTagV1,
+                                mapping = textWithStandoffTags.mapping
+                            ), apiRequest.comment)
 
-                case ChangeValueApiRequestV1(_, _, _, _, _, _, _, Some(colorStr: String), _, _, _, _, _, comment) =>
-                    val colorValue = InputValidation.toColor(colorStr, () => throw BadRequestException(s"Invalid color value: $colorStr"))
-                    (ColorValueV1(colorValue), comment)
+                        }
+                        else {
+                            throw BadRequestException("invalid parameters given for TextValueV1")
+                        }
 
-                case ChangeValueApiRequestV1(_, _, _, _, _, _, _, _, Some(geomStr: String), _, _, _, _, comment) =>
-                    val geometryValue = InputValidation.toGeometryString(geomStr, () => throw BadRequestException(s"Invalid geometry value: $geomStr"))
-                    (GeomValueV1(geometryValue), comment)
+                    case OntologyConstants.KnoraBase.LinkValue =>
+                        val resourceIRI = InputValidation.toIri(apiRequest.link_value.get, () => throw BadRequestException(s"Invalid resource IRI: ${apiRequest.link_value.get}"))
+                        Future(LinkUpdateV1(targetResourceIri = resourceIRI), apiRequest.comment)
 
-                case ChangeValueApiRequestV1(_, _, _, _, _, _, _, _, _, Some(linkValue: IRI), _, _, _, comment) =>
-                    val resourceIri = InputValidation.toIri(linkValue, () => throw BadRequestException(s"Invalid value IRI: $linkValue"))
-                    (LinkUpdateV1(targetResourceIri = resourceIri), comment)
+                    case OntologyConstants.KnoraBase.IntValue =>
+                        Future((IntegerValueV1(apiRequest.int_value.get), apiRequest.comment))
 
-                case ChangeValueApiRequestV1(_, _, _, _, _, _, _, _, _, _, Some(hlistValue: IRI), _, _, comment) =>
-                    val listNodeIri = InputValidation.toIri(hlistValue, () => throw BadRequestException(s"Invalid value IRI: $hlistValue"))
-                    (HierarchicalListValueV1(listNodeIri), comment)
+                    case OntologyConstants.KnoraBase.DecimalValue =>
+                        Future((DecimalValueV1(apiRequest.decimal_value.get), apiRequest.comment))
 
-                case ChangeValueApiRequestV1(_, _, _, _, _, _, _, _, _, _, _, Some(Seq(timeval1: BigDecimal, timeval2: BigDecimal)), _, comment) =>
-                    (IntervalValueV1(timeval1, timeval2), comment)
+                    case OntologyConstants.KnoraBase.BooleanValue =>
+                        Future(BooleanValueV1(apiRequest.boolean_value.get), apiRequest.comment)
 
-                case ChangeValueApiRequestV1(_, _, _, _, _, _, _, _, _, _, _, _, Some(geonameStr: String), comment) =>
-                    (GeonameValueV1(geonameStr), comment)
+                    case OntologyConstants.KnoraBase.UriValue =>
+                        Future((UriValueV1(InputValidation.toIri(apiRequest.uri_value.get, () => throw BadRequestException(s"Invalid URI: ${apiRequest.uri_value.get}"))), apiRequest.comment))
 
-                case ChangeValueApiRequestV1(_, _, _, _, _, _, _, _, _, _, _, _, _, Some(comment)) =>
-                    throw BadRequestException(s"No value was submitted")
+                    case OntologyConstants.KnoraBase.DateValue =>
+                        Future(DateUtilV1.createJDNValueV1FromDateString(apiRequest.date_value.get), apiRequest.comment)
 
-                case _ => throw BadRequestException(s"No value or comment was submitted")
-            }
+                    case OntologyConstants.KnoraBase.ColorValue =>
+                        val colorValue = InputValidation.toColor(apiRequest.color_value.get, () => throw BadRequestException(s"Invalid color value: ${apiRequest.color_value.get}"))
+                        Future(ColorValueV1(colorValue), apiRequest.comment)
 
-            ChangeValueRequestV1(
+                    case OntologyConstants.KnoraBase.GeomValue =>
+                        val geometryValue = InputValidation.toGeometryString(apiRequest.geom_value.get, () => throw BadRequestException(s"Invalid geometry value: ${apiRequest.geom_value.get}"))
+                        Future(GeomValueV1(geometryValue), apiRequest.comment)
+
+                    case OntologyConstants.KnoraBase.ListValue =>
+                        val listNodeIri = InputValidation.toIri(apiRequest.hlist_value.get, () => throw BadRequestException(s"Invalid value IRI: ${apiRequest.hlist_value.get}"))
+                        Future(HierarchicalListValueV1(listNodeIri), apiRequest.comment)
+
+                    case OntologyConstants.KnoraBase.IntervalValue =>
+                        val timeVals: Seq[BigDecimal] = apiRequest.interval_value.get
+
+                        if (timeVals.length != 2) throw BadRequestException("parameters for interval_value invalid")
+
+                        Future(IntervalValueV1(timeVals(0), timeVals(1)), apiRequest.comment)
+
+                    case OntologyConstants.KnoraBase.GeonameValue =>
+                        Future(GeonameValueV1(apiRequest.geom_value.get), apiRequest.comment)
+
+                    case _ => throw BadRequestException(s"No value submitted")
+                }
+            } yield ChangeValueRequestV1(
                 valueIri = valueIri,
                 value = value,
                 comment = commentStr.map(str => InputValidation.toSparqlEncodedString(str, () => throw BadRequestException(s"Invalid comment: '$str'"))),
@@ -369,13 +405,13 @@ object ValuesRouteV1 extends Authenticator {
 
                         // In API v1, you cannot change a value and its comment in a single request. So we know that here,
                         // we are getting a request to change either the value or the comment, but not both.
-                        val requestMessage = apiRequest match {
-                            case ChangeValueApiRequestV1(_, _, _, _, _, _, _, _, _, _, _, _, _, Some(comment)) => makeChangeCommentRequestMessage(valueIriStr = valueIriStr, comment = Some(comment), userProfile = userProfile)
+                        val requestMessageFuture = apiRequest match {
+                            case ChangeValueApiRequestV1(_, _, _, _, _, _, _, _, _, _, _, _, _, Some(comment)) => Future(makeChangeCommentRequestMessage(valueIriStr = valueIriStr, comment = Some(comment), userProfile = userProfile))
                             case _ => makeAddValueVersionRequestMessage(valueIriStr = valueIriStr, apiRequest = apiRequest, userProfile = userProfile)
                         }
 
-                        RouteUtilV1.runJsonRoute(
-                            requestMessage,
+                        RouteUtilV1.runJsonRouteWithFuture(
+                            requestMessageFuture,
                             requestContext,
                             settings,
                             responderManager,

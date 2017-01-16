@@ -155,6 +155,7 @@ case class CreateFileQualityLevelV1(path: String,
   */
 case class ChangeValueApiRequestV1(project_id: IRI,
                                    richtext_value: Option[CreateRichtextV1] = None,
+                                   link_value: Option[IRI] = None,
                                    int_value: Option[Int] = None,
                                    decimal_value: Option[BigDecimal] = None,
                                    boolean_value: Option[Boolean] = None,
@@ -162,11 +163,36 @@ case class ChangeValueApiRequestV1(project_id: IRI,
                                    date_value: Option[String] = None,
                                    color_value: Option[String] = None,
                                    geom_value: Option[String] = None,
-                                   link_value: Option[IRI] = None,
                                    hlist_value: Option[IRI] = None,
                                    interval_value: Option[Seq[BigDecimal]] = None,
                                    geoname_value: Option[String] = None,
-                                   comment: Option[String] = None)
+                                   comment: Option[String] = None) {
+
+    /**
+      * Returns the type of the given value.
+      *
+      * TODO: make sure that only one value is given.
+      *
+      * @return a value type IRI.
+      */
+    def getValueClassIri: IRI = {
+        if (richtext_value.nonEmpty) OntologyConstants.KnoraBase.TextValue
+        else if (link_value.nonEmpty) OntologyConstants.KnoraBase.LinkValue
+        else if (int_value.nonEmpty) OntologyConstants.KnoraBase.IntValue
+        else if (decimal_value.nonEmpty) OntologyConstants.KnoraBase.DecimalValue
+        else if (boolean_value.nonEmpty) OntologyConstants.KnoraBase.BooleanValue
+        else if (uri_value.nonEmpty) OntologyConstants.KnoraBase.UriValue
+        else if (date_value.nonEmpty) OntologyConstants.KnoraBase.DateValue
+        else if (color_value.nonEmpty) OntologyConstants.KnoraBase.ColorValue
+        else if (geom_value.nonEmpty) OntologyConstants.KnoraBase.GeomValue
+        else if (hlist_value.nonEmpty) OntologyConstants.KnoraBase.ListValue
+        else if (interval_value.nonEmpty) OntologyConstants.KnoraBase.IntervalValue
+        else if (geoname_value.nonEmpty) OntologyConstants.KnoraBase.GeonameValue
+        else throw BadRequestException("No value specified")
+    }
+
+
+}
 
 /**
   * Represents an API request payload that asks the Knora API server to change the file attached to a resource
