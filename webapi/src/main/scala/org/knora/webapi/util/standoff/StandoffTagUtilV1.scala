@@ -193,20 +193,19 @@ object StandoffTagUtilV1 {
     /**
       * Represents a text with standoff markup including the mapping.
       *
-      * @param text             the text as a mere sequence of characters.
-      * @param standoffTagV1    the text's standoff markup.
+      * @param text          the text as a mere sequence of characters.
+      * @param standoffTagV1 the text's standoff markup.
       */
     case class TextWithStandoffTagV1(text: String, standoffTagV1: Seq[StandoffTagV1], mapping: GetMappingResponseV1)
 
     /**
       * Converts XML to a [[TextWithStandoffTagV1]].
       *
-      * @param xml                the XML representing text with markup.
-      * @param mapping            the mapping used to convert XML to standoff.
-      * @param standoffEntities   the standoff entities used in the mapping.
-      * @return                   a [[TextWithStandoffTagV1]].
+      * @param xml     the XML representing text with markup.
+      * @param mapping the mapping used to convert XML to standoff.
+      * @return a [[TextWithStandoffTagV1]].
       */
-    def convertXMLtoStandoffTagV1(xml: String, mapping: GetMappingResponseV1, standoffEntities: StandoffEntityInfoGetResponseV1) = {
+    def convertXMLtoStandoffTagV1(xml: String, mapping: GetMappingResponseV1) = {
 
         val xmlStandoffUtil = new XMLToStandoffUtil()
 
@@ -222,7 +221,7 @@ object StandoffTagUtilV1 {
         val standoffTagsV1: Seq[StandoffTagV1] = StandoffTagUtilV1.convertXMLToStandoffUtilStandoffTagToStandoffTagV1(
             textWithStandoff = textWithStandoff,
             mappingXMLtoStandoff = mapping.mapping,
-            standoffEntities = standoffEntities
+            standoffEntities = mapping.standoffEntities
         )
 
         TextWithStandoffTagV1(
@@ -559,7 +558,7 @@ object StandoffTagUtilV1 {
       * @param mappingXMLtoStandoff mapping from XML to standoff.
       * @return a Map standoff class Iris to [[XMLTagItem]].
       */
-    private def invertXMLToStandoffMapping(mappingXMLtoStandoff: MappingXMLtoStandoff): Map[IRI, XMLTagItem] = {
+    def invertXMLToStandoffMapping(mappingXMLtoStandoff: MappingXMLtoStandoff): Map[IRI, XMLTagItem] = {
 
         // check for duplicate standoff class Iris
         val classIris: Iterable[IRI] = mappingXMLtoStandoff.namespace.values.flatten.flatMap {
@@ -632,8 +631,7 @@ object StandoffTagUtilV1 {
         }
     }
 
-    def convertStandoffTagV1ToXML(utf8str: String, standoff: Seq[StandoffTagV1] , mappingXMLtoStandoff: GetMappingResponseV1): String = {
-
+    def convertStandoffTagV1ToXML(utf8str: String, standoff: Seq[StandoffTagV1], mappingXMLtoStandoff: GetMappingResponseV1): String = {
 
         // inverts the mapping and makes standoff class Iris keys (for tags)
         val mappingStandoffToXML: Map[IRI, XMLTagItem] = invertXMLToStandoffMapping(mappingXMLtoStandoff.mapping)

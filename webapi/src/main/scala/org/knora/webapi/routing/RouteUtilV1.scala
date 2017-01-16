@@ -27,15 +27,13 @@ import akka.http.scaladsl.server.{RequestContext, RouteResult}
 import akka.pattern._
 import akka.util.Timeout
 import org.knora.webapi._
-import org.knora.webapi.messages.v1.responder.ontologymessages.StandoffEntityInfoGetResponseV1
-import org.knora.webapi.messages.v1.responder.standoffmessages.{GetMappingRequestV1, GetMappingResponseV1, GetStandoffEntitiesFromMappingRequestV1, GetStandoffEntitiesFromMappingResponseV1}
+import org.knora.webapi.messages.v1.responder.standoffmessages.{GetMappingRequestV1, GetMappingResponseV1}
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.responder.{ApiStatusCodesV1, KnoraRequestV1, KnoraResponseV1}
-import org.knora.webapi.twirl.StandoffTagV1
 import org.knora.webapi.util.MessageUtil
-import org.knora.webapi.util.standoff.{StandoffTagUtilV1, XMLToStandoffUtil, TextWithStandoff}
-import spray.json.{JsNumber, JsObject}
+import org.knora.webapi.util.standoff.StandoffTagUtilV1
 import org.knora.webapi.util.standoff.StandoffTagUtilV1.TextWithStandoffTagV1
+import spray.json.{JsNumber, JsObject}
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.reflect.ClassTag
@@ -208,19 +206,11 @@ object RouteUtilV1 {
             // get the mapping
             mappingResponse: GetMappingResponseV1 <- (responderManager ? GetMappingRequestV1(mappingIri = mappingIri, userProfile = userProfile)).mapTo[GetMappingResponseV1]
 
-            // get information about the standoff entities used in the mapping
-            standoffEntities: GetStandoffEntitiesFromMappingResponseV1  <- (responderManager ? GetStandoffEntitiesFromMappingRequestV1(mapping = mappingResponse.mapping, userProfile = userProfile)).mapTo[GetStandoffEntitiesFromMappingResponseV1]
-
             textWithStandoffTagV1 = StandoffTagUtilV1.convertXMLtoStandoffTagV1(
                 xml = xml,
-                mapping = mappingResponse,
-                standoffEntities = standoffEntities.entities
+                mapping = mappingResponse
             )
 
-        } yield TextWithStandoffTagV1(
-            text = textWithStandoffTagV1.text,
-            standoffTagV1 = textWithStandoffTagV1.standoffTagV1,
-            mapping = textWithStandoffTagV1.mapping
-        )
+        } yield textWithStandoffTagV1
     }
 }

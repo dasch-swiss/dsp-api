@@ -73,11 +73,7 @@ case class GetMappingRequestV1(mappingIri: IRI, userProfile: UserProfileV1) exte
   * @param mapping    the requested mapping.
   * @param userdata   information about the user that made the request.
   */
-case class GetMappingResponseV1(mappingIri: IRI, mapping: MappingXMLtoStandoff, userdata: UserDataV1)
-
-case class GetStandoffEntitiesFromMappingRequestV1(mapping: MappingXMLtoStandoff, userProfile: UserProfileV1) extends StandoffResponderRequestV1
-
-case class GetStandoffEntitiesFromMappingResponseV1(entities: StandoffEntityInfoGetResponseV1)
+case class GetMappingResponseV1(mappingIri: IRI, mapping: MappingXMLtoStandoff, standoffEntities: StandoffEntityInfoGetResponseV1, userdata: UserDataV1)
 
 /**
   * Represents a mapping between XML tags and standoff entities (classes and properties).

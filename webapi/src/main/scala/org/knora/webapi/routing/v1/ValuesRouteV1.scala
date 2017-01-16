@@ -33,14 +33,14 @@ import akka.http.scaladsl.server.directives.FileInfo
 import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.FileIO
 import com.typesafe.scalalogging.Logger
+import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.sipimessages.{SipiResponderConversionFileRequestV1, SipiResponderConversionPathRequestV1}
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.responder.valuemessages.ApiValueV1JsonProtocol._
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
-import org.knora.webapi.util.{DateUtilV1, InputValidation}
-import org.knora.webapi._
 import org.knora.webapi.util.standoff.StandoffTagUtilV1.TextWithStandoffTagV1
+import org.knora.webapi.util.{DateUtilV1, InputValidation}
 import org.slf4j.LoggerFactory
 
 import scala.concurrent.Future
