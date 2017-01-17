@@ -344,6 +344,7 @@
 <http://data.knora.org/a-thing-with-text-values/values/1/standoff/HNhqZ6fdQP26Tgmt7MTeQg> a knora-base:StandoffLinkTag ;
 	knora-base:standoffTagHasStart 14 ;
 	knora-base:standoffTagHasEnd 19 ;
+	knora-base:standoffTagHasStartIndex "0"^^xsd:integer ;
 	knora-base:standoffTagHasLink <http://data.knora.org/a-thing> ;
 	knora-base:standoffTagHasUUID "37360f98-5e7d-4581-9e94-52f4f7a4f834" .
 
@@ -360,6 +361,7 @@
 <http://data.knora.org/a-thing-with-text-values/values/2/standoff/Ht76B6DqTDCWHo_WICC1Xg> a knora-base:StandoffLinkTag ;
 	knora-base:standoffTagHasStart 11 ;
 	knora-base:standoffTagHasEnd 16 ;
+	knora-base:standoffTagHasStartIndex "0"^^xsd:integer ;
 	knora-base:standoffTagHasLink <http://data.knora.org/a-thing> ;
 	knora-base:standoffTagHasUUID "b5dfe367-96bd-4c18-96e2-366a29cc1c60" .
 
@@ -650,6 +652,7 @@
 <http://data.knora.org/project-thing-1/values/2/standoff/NEDbEA85RgO1L1qkDXOVwg> a knora-base:StandoffLinkTag ;
 	knora-base:standoffTagHasStart 10 ;
 	knora-base:standoffTagHasEnd 23 ;
+	knora-base:standoffTagHasStartIndex "0"^^xsd:integer ;
 	knora-base:standoffTagHasLink <http://data.knora.org/project-thing-2> ;
 	knora-base:standoffTagHasUUID "1b189bfd-eac9-47ae-89bd-17b387501008" .
 
