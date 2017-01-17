@@ -96,7 +96,7 @@ class StandoffV1R2RSpec extends R2RSpec {
         RdfDataObject(path = "../knora-ontologies/knora-dc.ttl", name = "http://www.knora.org/ontology/dc"),
         RdfDataObject(path = "../knora-ontologies/salsah-gui.ttl", name = "http://www.knora.org/ontology/salsah-gui"),
         RdfDataObject(path = "_test_data/ontologies/incunabula-onto.ttl", name = "http://www.knora.org/ontology/incunabula"),
-        RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/incunabula"),
+        //RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/incunabula"),
         RdfDataObject(path = "_test_data/ontologies/images-demo-onto.ttl", name = "http://www.knora.org/ontology/images"),
         RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/images"),
         RdfDataObject(path = "_test_data/ontologies/anything-onto.ttl", name = "http://www.knora.org/ontology/anything"),
@@ -222,7 +222,7 @@ class StandoffV1R2RSpec extends R2RSpec {
 
         }
 
-        "create a TextValue from a simple XML representing a letter" in {
+        /*"create a TextValue from a simple XML representing a letter" in {
 
             val xmlFileToSend = new File(RequestParams.pathToLetterXML)
 
@@ -363,7 +363,7 @@ class StandoffV1R2RSpec extends R2RSpec {
             }
 
         }
-
+*/
         "create a mapping resource for standoff conversion for HTML" in {
 
             val mappingFileToSend = new File(RequestParams.pathToHTMLMapping)
@@ -394,7 +394,7 @@ class StandoffV1R2RSpec extends R2RSpec {
             }
 
         }
-
+/*
         "create a TextValue from XML representing HTML (in strict XML notation)" in {
 
             val xmlFileToSend = new File(RequestParams.pathToHTML)
@@ -441,7 +441,7 @@ class StandoffV1R2RSpec extends R2RSpec {
             }
 
         }
-
+*/
 
     }
 }

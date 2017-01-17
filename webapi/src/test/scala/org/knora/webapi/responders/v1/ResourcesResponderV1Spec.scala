@@ -35,7 +35,6 @@ import org.knora.webapi.messages.v1.store.triplestoremessages._
 import org.knora.webapi.responders._
 import org.knora.webapi.store._
 import org.knora.webapi.twirl.{StandoffTagIriAttributeV1, StandoffTagV1}
-import org.knora.webapi.util.InputValidation.TextattrV1
 import org.knora.webapi.util._
 
 import scala.concurrent.duration._
@@ -129,7 +128,7 @@ object ResourcesResponderV1Spec {
                             None,
                             None,
                             "Siehe Seite c5v",
-                            TextValueV1("Siehe Seite c5v"),
+                            TextValueSimpleV1("Siehe Seite c5v"),
                             "http://data.knora.org/021ec18f1735/values/8a96c303338201",
                             None,
                             None))),
@@ -677,6 +676,7 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
     val rdfDataObjects = List(
         RdfDataObject(path = "../knora-ontologies/knora-base.ttl", name = "http://www.knora.org/ontology/knora-base"),
         RdfDataObject(path = "_test_data/ontologies/standoff-onto.ttl", name = "http://www.knora.org/ontology/standoff"),
+        RdfDataObject(path = "_test_data/all_data/standoff-data.ttl", name = "http://www.knora.org/data/standoff"),
         RdfDataObject(path = "../knora-ontologies/knora-dc.ttl", name = "http://www.knora.org/ontology/dc"),
         RdfDataObject(path = "../knora-ontologies/salsah-gui.ttl", name = "http://www.knora.org/ontology/salsah-gui"),
         RdfDataObject(path = "_test_data/ontologies/incunabula-onto.ttl", name = "http://www.knora.org/ontology/incunabula"),
@@ -1086,7 +1086,7 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
             // Title and publoc are required but missing
 
             val author = Vector(
-                CreateValueV1WithComment(TextValueV1(utf8str = "Franciscus de Retza"), None)
+                CreateValueV1WithComment(TextValueSimpleV1(utf8str = "Franciscus de Retza"), None)
             )
 
             val pubdate = Vector(
@@ -1120,12 +1120,12 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
 
         "create a new resource of type incunabula:book with values" in {
 
-            val title1 = TextValueV1("A beautiful book")
+            val title1 = TextValueSimpleV1("A beautiful book")
 
-            val citation1 = TextValueV1("ein Zitat")
-            val citation2 = TextValueV1(
+            val citation1 = TextValueSimpleV1("ein Zitat")
+            val citation2 = TextValueWithStandoffV1(
                 utf8str = "This citation refers to another resource",
-                textattr = Vector(
+                standoff = Vector(
                     StandoffTagV1(
                         standoffTagClassIri = OntologyConstants.Standoff.StandoffBoldTag,
                         startPosition = 5,
@@ -1143,12 +1143,14 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
                         originalXMLID = None
                     )
                 ),
+                mapping = ResourcesResponderV1SpecFullData.dummyMapping,
+                mappingIri = "http://data.knora.org/projects/standoff/mappings/StandardMapping",
                 resource_reference = Set("http://data.knora.org/c5058f3a")
             )
-            val citation3 = TextValueV1("und noch eines")
-            val citation4 = TextValueV1("noch ein letztes")
+            val citation3 = TextValueSimpleV1("und noch eines")
+            val citation4 = TextValueSimpleV1("noch ein letztes")
 
-            val publoc = TextValueV1("Entenhausen")
+            val publoc = TextValueSimpleV1("Entenhausen")
 
             val pubdateRequest = DateUtilV1.createJDNValueV1FromDateString("GREGORIAN:2015-12-03")
             val pubdateResponse = DateValueV1(dateval1 = "2015-12-03", dateval2 = "2015-12-03", calendar = KnoraCalendarV1.GREGORIAN)
@@ -1201,8 +1203,8 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
         }
 
         "create an incunabula:page with a resource pointer" in {
-            val recto = TextValueV1("recto")
-            val origname = TextValueV1("Blatt")
+            val recto = TextValueSimpleV1("recto")
+            val origname = TextValueSimpleV1("Blatt")
             val seqnum = IntegerValueV1(1)
 
             val fileValueFull = StillImageFileValueV1(

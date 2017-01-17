@@ -40,9 +40,12 @@ import org.knora.webapi.routing.v1.{ResourcesRouteV1, ValuesRouteV1}
 import org.knora.webapi.store._
 import org.knora.webapi.util.{AkkaHttpUtils, MutableTestIri}
 import spray.json._
+import org.xmlunit.builder.{DiffBuilder, Input}
+import org.xmlunit.diff.Diff
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
+import scala.xml.{Node, NodeSeq, XML}
 
 
 /**
@@ -90,6 +93,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
     private val rdfDataObjects = List(
         RdfDataObject(path = "../knora-ontologies/knora-base.ttl", name = "http://www.knora.org/ontology/knora-base"),
         RdfDataObject(path = "_test_data/ontologies/standoff-onto.ttl", name = "http://www.knora.org/ontology/standoff"),
+        RdfDataObject(path = "_test_data/all_data/standoff-data.ttl", name = "http://www.knora.org/data/standoff"),
         RdfDataObject(path = "../knora-ontologies/knora-dc.ttl", name = "http://www.knora.org/ontology/dc"),
         RdfDataObject(path = "../knora-ontologies/salsah-gui.ttl", name = "http://www.knora.org/ontology/salsah-gui"),
         RdfDataObject(path = "_test_data/ontologies/incunabula-onto.ttl", name = "http://www.knora.org/ontology/incunabula"),
@@ -114,11 +118,37 @@ class ResourcesV1R2RSpec extends R2RSpec {
     private val sixthThingIri = new MutableTestIri
     private val seventhThingIri = new MutableTestIri
 
-    private val incunabulaBookBiechlin = "http://data.knora.org/9935159f67" // incunabula book with title "Eyn biechlin ..."
+    private val incunabulaBookBiechlin = "http://data.knora.org/9935159f67"
+    // incunabula book with title "Eyn biechlin ..."
     private val incunabulaBookQuadra = "http://data.knora.org/861b5644b302" // incunabula book with title Quadragesimale
 
     private val notTheMostBoringComment = "This is not the most boring comment I have seen."
 
+    private val mappingIri = "http://data.knora.org/projects/standoff/mappings/StandardMapping"
+
+    private val xml1 =
+        """<?xml version="1.0" encoding="UTF-8"?>
+           <text><strong>Test</strong> text</text>
+        """
+
+    private val xml2 =
+        """<?xml version="1.0" encoding="UTF-8"?>
+           <text>a <strong>new</strong> value</text>
+        """
+
+    private val xml3 =
+        s"""<?xml version="1.0" encoding="UTF-8"?>
+           <text>
+                This text links to <a href="http://www.google.ch">Google</a> and a Knora <a class="salsah-link" href="$incunabulaBookBiechlin">resource</a>.
+           </text>
+        """
+
+    private val xml4 =
+        s"""<?xml version="1.0" encoding="UTF-8"?>
+           <text>
+                This text links to <a href="http://www.google.ch">Google</a> and a Knora <a class="salsah-link" href="$incunabulaBookBiechlin">resource</a> and another Knora resource <a class="salsah-link" href="$incunabulaBookQuadra">resource</a>.
+           </text>
+        """
 
     /**
       * Gets the field `res_id` from a JSON response to resource creation.
@@ -133,7 +163,6 @@ class ResourcesV1R2RSpec extends R2RSpec {
             case None => throw InvalidApiJsonException(s"The response does not contain a field called 'res_id'")
             case other => throw InvalidApiJsonException(s"The response does not contain a res_id of type JsString, but ${other}")
         }
-
 
 
     }
@@ -158,7 +187,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
       * Gets the given property's values from a resource full response.
       *
       * @param response the response to a resource full request.
-      * @param prop the given property IRI.
+      * @param prop     the given property IRI.
       * @return the property's values.
       */
     private def getValuesForProp(response: HttpResponse, prop: IRI): JsValue = {
@@ -172,7 +201,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
       * Gets the given property's comments from a resource full response.
       *
       * @param response the response to a resource full request.
-      * @param prop the given property IRI.
+      * @param prop     the given property IRI.
       * @return the property's comments.
       */
     private def getCommentsForProp(response: HttpResponse, prop: IRI): JsValue = {
@@ -226,7 +255,6 @@ class ResourcesV1R2RSpec extends R2RSpec {
         """
 
     }
-
 
 
     "The Resources Endpoint" should {
@@ -313,38 +341,28 @@ class ResourcesV1R2RSpec extends R2RSpec {
 
         "create a first resource of type anything:Thing" in {
 
-            val textattrStringified =
-                """
-                  {
-                      "bold": [{
-                          "start": 0,
-                          "end": 4
-                      }]
-                  }
-                """.toJson.compactPrint
-
             val params =
                 s"""
-                  |{
-                  |    "restype_id": "http://www.knora.org/ontology/anything#Thing",
-                  |    "label": "A thing",
-                  |    "project_id": "http://data.knora.org/projects/anything",
-                  |    "properties": {
-                  |        "http://www.knora.org/ontology/anything#hasText": [{"richtext_value":{"textattr": $textattrStringified ,"resource_reference" :[],"utf8str":"Test text"}}],
-                  |        "http://www.knora.org/ontology/anything#hasInteger": [{"int_value":12345}],
-                  |        "http://www.knora.org/ontology/anything#hasDecimal": [{"decimal_value":5.6}],
-                  |        "http://www.knora.org/ontology/anything#hasUri": [{"uri_value":"http://dhlab.unibas.ch"}],
-                  |        "http://www.knora.org/ontology/anything#hasDate": [{"date_value":"JULIAN:1291-08-01:1291-08-01"}],
-                  |        "http://www.knora.org/ontology/anything#hasColor": [{"color_value":"#4169E1"}],
-                  |        "http://www.knora.org/ontology/anything#hasListItem": [{"hlist_value":"http://data.knora.org/anything/treeList10"}],
-                  |        "http://www.knora.org/ontology/anything#hasInterval": [{"interval_value": [1000000000000000.0000000000000001, 1000000000000000.0000000000000002]}]
-                  |    }
-                  |}
+                   |{
+                   |    "restype_id": "http://www.knora.org/ontology/anything#Thing",
+                   |    "label": "A thing",
+                   |    "project_id": "http://data.knora.org/projects/anything",
+                   |    "properties": {
+                   |        "http://www.knora.org/ontology/anything#hasText": [{"richtext_value":{"xml": ${xml1.toJson.compactPrint}, "mapping_id": "$mappingIri"}}],
+                   |        "http://www.knora.org/ontology/anything#hasInteger": [{"int_value":12345}],
+                   |        "http://www.knora.org/ontology/anything#hasDecimal": [{"decimal_value":5.6}],
+                   |        "http://www.knora.org/ontology/anything#hasUri": [{"uri_value":"http://dhlab.unibas.ch"}],
+                   |        "http://www.knora.org/ontology/anything#hasDate": [{"date_value":"JULIAN:1291-08-01:1291-08-01"}],
+                   |        "http://www.knora.org/ontology/anything#hasColor": [{"color_value":"#4169E1"}],
+                   |        "http://www.knora.org/ontology/anything#hasListItem": [{"hlist_value":"http://data.knora.org/anything/treeList10"}],
+                   |        "http://www.knora.org/ontology/anything#hasInterval": [{"interval_value": [1000000000000000.0000000000000001, 1000000000000000.0000000000000002]}],
+                   |        "http://www.knora.org/ontology/anything#hasBoolean": [{"boolean_value":true}]
+                   |    }
+                   |}
                 """.stripMargin
 
             // TODO: these properties have been commented out in the thing test ontology because of compatibility with the GUI
             // "http://www.knora.org/ontology/anything#hasGeoname": [{"geoname_value": "2661602"}]
-            //  "http://www.knora.org/ontology/anything#hasBoolean": [{"boolean_value":true}],
             // "http://www.knora.org/ontology/anything#hasGeometry": [{"geom_value":"{\"status\":\"active\",\"lineColor\":\"#ff3333\",\"lineWidth\":2,\"points\":[{\"x\":0.5516074450084602,\"y\":0.4444444444444444},{\"x\":0.2791878172588832,\"y\":0.5}],\"type\":\"rectangle\",\"original_index\":0}"}],
 
             Post("/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> resourcesPath ~> check {
@@ -363,18 +381,22 @@ class ResourcesV1R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val standoff: JsValue = getValuesForProp(response, "http://www.knora.org/ontology/anything#hasText")
+                val text: JsValue = getValuesForProp(response, "http://www.knora.org/ontology/anything#hasText")
 
-                val textattr: JsValue = standoff match {
+                val xml: String = text match {
                     case vals: JsArray =>
-                        vals.elements.head.asJsObject.fields("textattr")
+                        vals.elements.head.asJsObject.fields("xml") match {
+                            case JsString(xml: String) => xml
+                            case _ => throw new InvalidApiJsonException("member 'xml' not given")
+                        }
                     case _ =>
                         throw new InvalidApiJsonException("values is not an array")
                 }
 
-                val expectedTextattr: JsValue = "{\"bold\":[{\"start\":0,\"end\":4}]}".toJson
+                // Compare the original XML with the regenerated XML.
+                val xmlDiff: Diff = DiffBuilder.compare(Input.fromString(xml1)).withTest(Input.fromString(xml)).build()
 
-                assert(textattr == expectedTextattr)
+                xmlDiff.hasDifferences should be(false)
 
 
             }
@@ -383,32 +405,35 @@ class ResourcesV1R2RSpec extends R2RSpec {
 
         "create a new text value for the first thing resource" in {
 
-            val textattr =
-                """
-                  {
-                    "bold": [{
-                        "start": 2,
-                        "end": 5
-                    }]
-                  }
-                """.toJson.compactPrint
-
             val newValueParams =
                 s"""
-                {
-                  "project_id": "http://data.knora.org/projects/anything",
-                  "res_id": "${firstThingIri.get}",
-                  "prop": "http://www.knora.org/ontology/anything#hasText",
-                  "richtext_value": {
-                        "utf8str": "a new value",
-                        "textattr": $textattr
-                  }
-                }
-                """
+                        {
+                          "project_id": "http://data.knora.org/projects/anything",
+                          "res_id": "${firstThingIri.get}",
+                          "prop": "http://www.knora.org/ontology/anything#hasText",
+                          "richtext_value": {
+                                "xml": ${xml2.toJson.compactPrint},
+                                "mapping_id": "$mappingIri"
+                          }
+                        }
+                        """
 
             Post("/v1/values", HttpEntity(ContentTypes.`application/json`, newValueParams)) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> valuesPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
+
+                val xml = AkkaHttpUtils.httpResponseToJson(response).fields.get("value") match {
+                    case Some(value: JsObject) => value.fields.get("xml") match {
+                        case Some(JsString(xml: String)) => xml
+                        case _ => throw new InvalidApiJsonException("member 'xml' not given")
+                    }
+                    case _ => throw new InvalidApiJsonException("member 'value' not given")
+                }
+
+                // Compare the original XML with the regenerated XML.
+                val xmlDiff: Diff = DiffBuilder.compare(Input.fromString(xml2)).withTest(Input.fromString(xml)).build()
+
+                xmlDiff.hasDifferences should be(false)
 
                 val resId = getNewValueIriFromJsonResponse(response)
 
@@ -421,32 +446,20 @@ class ResourcesV1R2RSpec extends R2RSpec {
 
         "change the created text value above for the first thing resource so it has a standoff link to incunabulaBookBiechlin" in {
 
-            val textattr =
-                s"""
-                  {
-                    "underline": [{
-                        "start": 2,
-                        "end": 5
-                    }],
-                  "_link": [{
-                        "start": 10,
-                        "end": 15,
-                        "resid": "$incunabulaBookBiechlin",
-                        "href": "$incunabulaBookBiechlin"
-                    }]
-                  }
-                """.toJson.compactPrint
+            val xml =
+                s"""<?xml version="1.0" encoding="UTF-8"?>
+                   <text>a <u>new</u> value with a standoff <a class="salsah-link" href="$incunabulaBookBiechlin">link</a></text>
+                """
 
             val newValueParams =
                 s"""
-                {
-                  "project_id": "http://data.knora.org/projects/anything",
-                  "richtext_value": {
-                        "utf8str": "a new value",
-                        "textattr": $textattr,
-                        "resource_reference": ["$incunabulaBookBiechlin"]
-                  }
-                }
+                    {
+                      "project_id": "http://data.knora.org/projects/anything",
+                      "richtext_value": {
+                            "xml": ${xml.toJson.compactPrint},
+                            "mapping_id": "$mappingIri"
+                      }
+                    }
                 """
 
             Put("/v1/values/" + URLEncoder.encode(firstTextValueIRI.get, "UTF-8"), HttpEntity(ContentTypes.`application/json`, newValueParams)) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> valuesPath ~> check {
@@ -460,7 +473,6 @@ class ResourcesV1R2RSpec extends R2RSpec {
             }
 
         }
-
 
         "make sure that the first thing resource contains a direct standoff link to incunabulaBookBiechlin now" in {
 
@@ -507,26 +519,19 @@ class ResourcesV1R2RSpec extends R2RSpec {
 
         "create a second resource of type anything:Thing linking to the first thing via standoff" in {
 
-            val textattrStringified =
-                s"""
-                  {
-                      "_link": [{
-                          "start": 10,
-                          "end": 15,
-                          "resid": "${firstThingIri.get}",
-                          "href": "${firstThingIri.get}"
-                      }]
-                  }
-                """.toJson.compactPrint
+            val xml =
+                s"""<?xml version="1.0" encoding="UTF-8"?>
+                  <text>This text <a class="salsah-link" href="${firstThingIri.get}">links</a> to a thing</text>
+                """
 
             val params =
                 s"""
-              {
-              	"restype_id": "http://www.knora.org/ontology/anything#Thing",
-              	"label": "A second thing",
-              	"project_id": "http://data.knora.org/projects/anything",
-              	"properties": {
-              		"http://www.knora.org/ontology/anything#hasText": [{"richtext_value":{"textattr":$textattrStringified,"resource_reference" :["${firstThingIri.get}"],"utf8str":"This text links to a thing"}}],
+                {
+                  "restype_id": "http://www.knora.org/ontology/anything#Thing",
+                  "label": "A second thing",
+                  "project_id": "http://data.knora.org/projects/anything",
+                  "properties": {
+                      "http://www.knora.org/ontology/anything#hasText": [{"richtext_value":{"xml":${xml.toJson.compactPrint},"mapping_id" :"$mappingIri"}}],
                     "http://www.knora.org/ontology/anything#hasInteger": [{"int_value":12345}],
                     "http://www.knora.org/ontology/anything#hasDecimal": [{"decimal_value":5.6}],
                     "http://www.knora.org/ontology/anything#hasUri": [{"uri_value":"http://dhlab.unibas.ch"}],
@@ -534,9 +539,9 @@ class ResourcesV1R2RSpec extends R2RSpec {
                     "http://www.knora.org/ontology/anything#hasColor": [{"color_value":"#4169E1"}],
                     "http://www.knora.org/ontology/anything#hasListItem": [{"hlist_value":"http://data.knora.org/anything/treeList10"}],
                     "http://www.knora.org/ontology/anything#hasInterval": [{"interval_value": [1000000000000000.0000000000000001, 1000000000000000.0000000000000002]}]
-              	}
-              }
-                """
+                  }
+                }
+              """
 
             Post("/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(incunabulaUsername, password)) ~> resourcesPath ~> check {
 
@@ -554,18 +559,29 @@ class ResourcesV1R2RSpec extends R2RSpec {
             Get("/v1/resources/" + URLEncoder.encode(secondThingIri.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(incunabulaUsername, password)) ~> resourcesPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)
 
-                val textValues = getValuesForProp(response, "http://www.knora.org/ontology/anything#hasText").asInstanceOf[JsArray].elements
-                val firstTextValue = textValues.head.asJsObject.fields
-                val textattr = JsonParser(firstTextValue("textattr").asInstanceOf[JsString].value).asJsObject.fields
-                val links = textattr("_link").asInstanceOf[JsArray].elements
-                val link = links.head.asJsObject.fields
+                val text: JsValue = getValuesForProp(response, "http://www.knora.org/ontology/anything#hasText")
 
-                assert(
-                    link("start").asInstanceOf[JsNumber].value.toInt == 10 &&
-                        link("end").asInstanceOf[JsNumber].value.toInt == 15 &&
-                        link("resid").asInstanceOf[JsString].value == firstThingIri.get &&
-                        link("href").asInstanceOf[JsString].value == firstThingIri.get
-                )
+                val xmlString: String = text match {
+                    case vals: JsArray =>
+                        vals.elements.head.asJsObject.fields("xml") match {
+                            case JsString(xml: String) => xml
+                            case _ => throw new InvalidApiJsonException("member 'xml' not given")
+                        }
+                    case _ =>
+                        throw new InvalidApiJsonException("values is not an array")
+                }
+
+                // make sure that the xml contains a link to "firstThingIri"
+                val xml = XML.loadString(xmlString)
+
+                val link: NodeSeq = xml \ "a"
+
+                assert(link.nonEmpty)
+
+                val target: Seq[Node] = link.head.attributes("href")
+
+                assert(target.nonEmpty && target.head.text == firstThingIri.get)
+
             }
         }
 
@@ -619,327 +635,110 @@ class ResourcesV1R2RSpec extends R2RSpec {
 
         "attempt to create a resource of type thing with an invalid standoff tag name" in {
 
-            // use invalid standoff tag name
-            val textattrStringified =
-            """
-                  {
-                      "old": [{
-                          "start": 0,
-                          "end": 4
-                      }]
-                  }
-            """.toJson.compactPrint
+            // use a tag name that is not defined in the standard mapping ("trong" instead of "strong")
+            val xml =
+                """<?xml version="1.0" encoding="UTF-8"?>
+                  <text>This <trong>text</trong></text>
+                """
 
             val params =
                 s"""
-              {
-              	"restype_id": "http://www.knora.org/ontology/anything#Thing",
-              	"label": "A second thing",
-              	"project_id": "http://data.knora.org/projects/anything",
-              	"properties": {
-              		"http://www.knora.org/ontology/anything#hasText": [{"richtext_value":{"textattr":$textattrStringified,"resource_reference" :[],"utf8str":"This text links to a thing"}}],
-                    "http://www.knora.org/ontology/anything#hasInteger": [{"int_value":12345}],
-                    "http://www.knora.org/ontology/anything#hasDecimal": [{"decimal_value":5.6}],
-                    "http://www.knora.org/ontology/anything#hasUri": [{"uri_value":"http://dhlab.unibas.ch"}],
-                    "http://www.knora.org/ontology/anything#hasDate": [{"date_value":"JULIAN:1291-08-01:1291-08-01"}],
-                    "http://www.knora.org/ontology/anything#hasColor": [{"color_value":"#4169E1"}],
-                    "http://www.knora.org/ontology/anything#hasListItem": [{"hlist_value":"http://data.knora.org/anything/treeList10"}],
-                    "http://www.knora.org/ontology/anything#hasInterval": [{"interval_value": [1000000000000000.0000000000000001, 1000000000000000.0000000000000002]}]
-              	}
-              }
+                  {
+                      "restype_id": "http://www.knora.org/ontology/anything#Thing",
+                      "label": "A second thing",
+                      "project_id": "http://data.knora.org/projects/anything",
+                      "properties": {
+                          "http://www.knora.org/ontology/anything#hasText": [{"richtext_value":{"xml":${xml.toJson.compactPrint}, "mapping_id": "$mappingIri"}}],
+                        "http://www.knora.org/ontology/anything#hasInteger": [{"int_value":12345}],
+                        "http://www.knora.org/ontology/anything#hasDecimal": [{"decimal_value":5.6}],
+                        "http://www.knora.org/ontology/anything#hasUri": [{"uri_value":"http://dhlab.unibas.ch"}],
+                        "http://www.knora.org/ontology/anything#hasDate": [{"date_value":"JULIAN:1291-08-01:1291-08-01"}],
+                        "http://www.knora.org/ontology/anything#hasColor": [{"color_value":"#4169E1"}],
+                        "http://www.knora.org/ontology/anything#hasListItem": [{"hlist_value":"http://data.knora.org/anything/treeList10"}],
+                        "http://www.knora.org/ontology/anything#hasInterval": [{"interval_value": [1000000000000000.0000000000000001, 1000000000000000.0000000000000002]}]
+                      }
+                  }
                 """
 
             Post("/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(incunabulaUsername, password)) ~> resourcesPath ~> check {
 
-                // the route should reject the request because `old` is not a valid standoff tag name
+                // the route should reject the request because `trong` is not a tag name supported by the standard mapping
                 assert(status == StatusCodes.BadRequest, response.toString)
 
             }
 
         }
 
-        "create a resource of type thing with several standoff tags" in {
+        /*"attempt to create a resource of type thing submitting a wrong standoff link" in {
 
-            val textattrStringified =
-                s"""
-                  {
-                      "bold": [{
-                          "start": 0,
-                          "end": 4
-                      }],
-                      "underline": [
-                          {
-                            "start": 0,
-                            "end": 4
-                          },
-                          {
-                            "start": 5,
-                            "end": 9
-                          }
-                      ],
-                      "_link": [
-                        {
-                            "start": 10,
-                            "end": 15,
-                            "href": "$incunabulaBookQuadra",
-                            "resid": "$incunabulaBookQuadra"
-                        },
-                        {
-                            "start": 16,
-                            "end": 18,
-                            "href": "$incunabulaBookBiechlin",
-                            "resid": "$incunabulaBookBiechlin"
-                        }
-                      ]
-                  }
-                """.toJson.compactPrint
+            val xml =
+                s"""<?xml version="1.0" encoding="UTF-8"?>
+                   <text><u><strong>This</strong></u> <u>text</u> <a class="salsah-link" href="$incunabulaBookQuadra">links</a> to <a class="salsah-link" href="http://data.knora.org/9935159f">two</a> things</text>
+                """.stripMargin
 
             val params =
                 s"""
-              {
-              	"restype_id": "http://www.knora.org/ontology/anything#Thing",
-              	"label": "A second thing",
-              	"project_id": "http://data.knora.org/projects/anything",
-              	"properties": {
-              		"http://www.knora.org/ontology/anything#hasText": [{"richtext_value":{"textattr":$textattrStringified,"resource_reference" :["$incunabulaBookQuadra", "$incunabulaBookBiechlin"],"utf8str":"This text links to a thing"}}],
-                    "http://www.knora.org/ontology/anything#hasInteger": [{"int_value":12345}],
-                    "http://www.knora.org/ontology/anything#hasDecimal": [{"decimal_value":5.6}],
-                    "http://www.knora.org/ontology/anything#hasUri": [{"uri_value":"http://dhlab.unibas.ch"}],
-                    "http://www.knora.org/ontology/anything#hasDate": [{"date_value":"JULIAN:1291-08-01:1291-08-01"}],
-                    "http://www.knora.org/ontology/anything#hasColor": [{"color_value":"#4169E1"}],
-                    "http://www.knora.org/ontology/anything#hasListItem": [{"hlist_value":"http://data.knora.org/anything/treeList10"}],
-                    "http://www.knora.org/ontology/anything#hasInterval": [{"interval_value": [1000000000000000.0000000000000001, 1000000000000000.0000000000000002]}]
-              	}
-              }
+                  {
+                      "restype_id": "http://www.knora.org/ontology/anything#Thing",
+                      "label": "A second thing",
+                      "project_id": "http://data.knora.org/projects/anything",
+                      "properties": {
+                          "http://www.knora.org/ontology/anything#hasText": [{"richtext_value":{"xml":${xml.toJson.compactPrint},"mapping_id": "$mappingIri"}}],
+                        "http://www.knora.org/ontology/anything#hasInteger": [{"int_value":12345}],
+                        "http://www.knora.org/ontology/anything#hasDecimal": [{"decimal_value":5.6}],
+                        "http://www.knora.org/ontology/anything#hasUri": [{"uri_value":"http://dhlab.unibas.ch"}],
+                        "http://www.knora.org/ontology/anything#hasDate": [{"date_value":"JULIAN:1291-08-01:1291-08-01"}],
+                        "http://www.knora.org/ontology/anything#hasColor": [{"color_value":"#4169E1"}],
+                        "http://www.knora.org/ontology/anything#hasListItem": [{"hlist_value":"http://data.knora.org/anything/treeList10"}],
+                        "http://www.knora.org/ontology/anything#hasInterval": [{"interval_value": [1000000000000000.0000000000000001, 1000000000000000.0000000000000002]}]
+                      }
+                  }
                 """
 
             Post("/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(incunabulaUsername, password)) ~> resourcesPath ~> check {
 
-                assert(status == StatusCodes.OK, response.toString)
+                //println(response)
 
-            }
-
-        }
-
-        "create a resource of type thing with several standoff tags with a missing IRI in resource_reference" in {
-
-            val textattrStringified =
-                s"""
-                  {
-                      "bold": [{
-                          "start": 0,
-                          "end": 4
-                      }],
-                      "underline": [
-                          {
-                            "start": 0,
-                            "end": 4
-                          },
-                          {
-                            "start": 5,
-                            "end": 9
-                          }
-                      ],
-                      "_link": [
-                        {
-                            "start": 10,
-                            "end": 15,
-                            "href": "$incunabulaBookQuadra",
-                            "resid": "$incunabulaBookQuadra"
-                        },
-                        {
-                            "start": 16,
-                            "end": 18,
-                            "href": "$incunabulaBookBiechlin",
-                            "resid": "$incunabulaBookBiechlin"
-                        }
-                      ]
-                  }
-                """.toJson.compactPrint
-
-            // IRI incunabulaBookQuadra is missing in resource_reference
-            val params =
-            s"""
-              {
-              	"restype_id": "http://www.knora.org/ontology/anything#Thing",
-              	"label": "A second thing",
-              	"project_id": "http://data.knora.org/projects/anything",
-              	"properties": {
-              		"http://www.knora.org/ontology/anything#hasText": [{"richtext_value":{"textattr":$textattrStringified,"resource_reference" :["$incunabulaBookBiechlin"],"utf8str":"This text links to a thing"}}],
-                    "http://www.knora.org/ontology/anything#hasInteger": [{"int_value":12345}],
-                    "http://www.knora.org/ontology/anything#hasDecimal": [{"decimal_value":5.6}],
-                    "http://www.knora.org/ontology/anything#hasUri": [{"uri_value":"http://dhlab.unibas.ch"}],
-                    "http://www.knora.org/ontology/anything#hasDate": [{"date_value":"JULIAN:1291-08-01:1291-08-01"}],
-                    "http://www.knora.org/ontology/anything#hasColor": [{"color_value":"#4169E1"}],
-                    "http://www.knora.org/ontology/anything#hasListItem": [{"hlist_value":"http://data.knora.org/anything/treeList10"}],
-                    "http://www.knora.org/ontology/anything#hasInterval": [{"interval_value": [1000000000000000.0000000000000001, 1000000000000000.0000000000000002]}]
-              	}
-              }
-                """
-
-            Post("/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(incunabulaUsername, password)) ~> resourcesPath ~> check {
-
-                // the route should reject the request because an IRI is missing in resource_reference
+                // the route should reject the request because an IRI is wrong (formally valid though)
                 assert(status == StatusCodes.BadRequest, response.toString)
 
-            }
 
-        }
-
-        "create a resource of type thing with several standoff tags with an IRI given in resource_reference but not given in the standoff link tags" in {
-
-            // IRI http://data.knora.org/9935159f67 (incunabulaBookBiechlin) is missing in standoff link tag
-            val textattrStringified =
-            s"""
-                  {
-                      "bold": [{
-                          "start": 0,
-                          "end": 4
-                      }],
-                      "underline": [
-                          {
-                            "start": 0,
-                            "end": 4
-                          },
-                          {
-                            "start": 5,
-                            "end": 9
-                          }
-                      ],
-                      "_link": [
-                        {
-                            "start": 10,
-                            "end": 15,
-                            "href": "$incunabulaBookQuadra",
-                            "resid": "$incunabulaBookQuadra"
-                        },
-                        {
-                            "start": 16,
-                            "end": 18,
-                            "href": "$incunabulaBookBiechlin"
-                        }
-                      ]
-                  }
-                """.toJson.compactPrint
-
-            val params =
-                s"""
-              {
-              	"restype_id": "http://www.knora.org/ontology/anything#Thing",
-              	"label": "A second thing",
-              	"project_id": "http://data.knora.org/projects/anything",
-              	"properties": {
-              		"http://www.knora.org/ontology/anything#hasText": [{"richtext_value":{"textattr":$textattrStringified,"resource_reference" :["$incunabulaBookBiechlin", "$incunabulaBookQuadra"],"utf8str":"This text links to a thing"}}],
-                    "http://www.knora.org/ontology/anything#hasInteger": [{"int_value":12345}],
-                    "http://www.knora.org/ontology/anything#hasDecimal": [{"decimal_value":5.6}],
-                    "http://www.knora.org/ontology/anything#hasUri": [{"uri_value":"http://dhlab.unibas.ch"}],
-                    "http://www.knora.org/ontology/anything#hasDate": [{"date_value":"JULIAN:1291-08-01:1291-08-01"}],
-                    "http://www.knora.org/ontology/anything#hasColor": [{"color_value":"#4169E1"}],
-                    "http://www.knora.org/ontology/anything#hasListItem": [{"hlist_value":"http://data.knora.org/anything/treeList10"}],
-                    "http://www.knora.org/ontology/anything#hasInterval": [{"interval_value": [1000000000000000.0000000000000001, 1000000000000000.0000000000000002]}]
-              	}
-              }
-                """
-
-            Post("/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(incunabulaUsername, password)) ~> resourcesPath ~> check {
-
-                // the route should reject the request because an IRI is missing in standoff link tags
-                assert(status == StatusCodes.BadRequest, response.toString)
 
             }
 
-        }
+        }*/
+
 
 
         "create a third resource of type thing with two standoff links to the same resource and a standoff link to another one" in {
 
-            val textattrStringified1 =
-                s"""
-                  {
-                      "bold": [{
-                          "start": 0,
-                          "end": 4
-                      }],
-                      "underline": [
-                          {
-                            "start": 0,
-                            "end": 4
-                          },
-                          {
-                            "start": 5,
-                            "end": 9
-                          }
-                      ],
-                      "_link": [
-                        {
-                            "start": 10,
-                            "end": 15,
-                            "href": "$incunabulaBookQuadra",
-                            "resid": "$incunabulaBookQuadra"
-                        }
-                      ]
-                  }
-                """.toJson.compactPrint
+            val firstXML =
+                s"""<?xml version="1.0" encoding="UTF-8"?>
+                    <text><u><strong>This</strong></u> <u>text</u> <a class="salsah-link" href="$incunabulaBookQuadra">links</a> to a thing</text>
+                """.stripMargin
 
-
-            val textattrStringified2 =
-                s"""
-                  {
-                      "bold": [{
-                          "start": 0,
-                          "end": 4
-                      }],
-                      "underline": [
-                          {
-                            "start": 0,
-                            "end": 4
-                          },
-                          {
-                            "start": 5,
-                            "end": 9
-                          }
-                      ],
-                      "_link": [
-                        {
-                            "start": 10,
-                            "end": 15,
-                            "href": "$incunabulaBookQuadra",
-                            "resid": "$incunabulaBookQuadra"
-                        },
-                        {
-                           "start": 10,
-                           "end": 15,
-                           "href": "$incunabulaBookBiechlin",
-                           "resid": "$incunabulaBookBiechlin"
-                        },
-                        {
-                           "start": 10,
-                           "end": 15,
-                           "href": "$incunabulaBookBiechlin",
-                           "resid": "$incunabulaBookBiechlin"
-                        }
-                      ]
-                  }
-                """.toJson.compactPrint
-
+            val secondXML =
+                s"""<?xml version="1.0" encoding="UTF-8"?>
+                   <text><u><strong>This</strong></u> <u>text</u> <a class="salsah-link" href="$incunabulaBookBiechlin">links</a> to the same thing <a class="salsah-link" href="$incunabulaBookBiechlin">twice</a> and to another <a class="salsah-link" href="$incunabulaBookQuadra">thing</a></text>
+                """.stripMargin
 
             val params =
                 s"""
-              {
-              	"restype_id": "http://www.knora.org/ontology/anything#Thing",
-              	"label": "A second thing",
-              	"project_id": "http://data.knora.org/projects/anything",
-              	"properties": {
-              		"http://www.knora.org/ontology/anything#hasText": [{"richtext_value":{"textattr":$textattrStringified1,"resource_reference" :["$incunabulaBookQuadra"],"utf8str":"This text links to a thing"}}, {"richtext_value":{"textattr":$textattrStringified2,"resource_reference" :["$incunabulaBookQuadra", "$incunabulaBookBiechlin"],"utf8str":"This text links to a thing"}}],
-                    "http://www.knora.org/ontology/anything#hasInteger": [{"int_value":12345}],
-                    "http://www.knora.org/ontology/anything#hasDecimal": [{"decimal_value":5.6}],
-                    "http://www.knora.org/ontology/anything#hasUri": [{"uri_value":"http://dhlab.unibas.ch"}],
-                    "http://www.knora.org/ontology/anything#hasDate": [{"date_value":"JULIAN:1291-08-01:1291-08-01"}],
-                    "http://www.knora.org/ontology/anything#hasColor": [{"color_value":"#4169E1"}],
-                    "http://www.knora.org/ontology/anything#hasListItem": [{"hlist_value":"http://data.knora.org/anything/treeList10"}],
-                    "http://www.knora.org/ontology/anything#hasInterval": [{"interval_value": [1000000000000000.0000000000000001, 1000000000000000.0000000000000002]}]
-              	}
-              }
+                  {
+                      "restype_id": "http://www.knora.org/ontology/anything#Thing",
+                      "label": "A second thing",
+                      "project_id": "http://data.knora.org/projects/anything",
+                      "properties": {
+                          "http://www.knora.org/ontology/anything#hasText": [{"richtext_value":{"xml":${firstXML.toJson.compactPrint},"mapping_id": "$mappingIri"}}, {"richtext_value":{"xml":${secondXML.toJson.compactPrint},"mapping_id": "$mappingIri"}}],
+                        "http://www.knora.org/ontology/anything#hasInteger": [{"int_value":12345}],
+                        "http://www.knora.org/ontology/anything#hasDecimal": [{"decimal_value":5.6}],
+                        "http://www.knora.org/ontology/anything#hasUri": [{"uri_value":"http://dhlab.unibas.ch"}],
+                        "http://www.knora.org/ontology/anything#hasDate": [{"date_value":"JULIAN:1291-08-01:1291-08-01"}],
+                        "http://www.knora.org/ontology/anything#hasColor": [{"color_value":"#4169E1"}],
+                        "http://www.knora.org/ontology/anything#hasListItem": [{"hlist_value":"http://data.knora.org/anything/treeList10"}],
+                        "http://www.knora.org/ontology/anything#hasInterval": [{"interval_value": [1000000000000000.0000000000000001, 1000000000000000.0000000000000002]}]
+                      }
+                  }
                 """
 
             Post("/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> resourcesPath ~> check {
@@ -1021,34 +820,30 @@ class ResourcesV1R2RSpec extends R2RSpec {
 
         "create a fourth resource of type anything:Thing with a hyperlink in standoff" in {
 
-            val textattrStringified =
-                s"""
-                  {
-                      "_link": [{
-                          "start": 10,
-                          "end": 15,
-                          "href": "http://www.google.ch"
-                      }]
-                  }
-                """.toJson.compactPrint
+            val xml =
+                """<?xml version="1.0" encoding="UTF-8"?>
+                   <text>
+                        This text links to <a href="http://www.google.ch">Google</a>.
+                   </text>
+                """
 
             val params =
                 s"""
-              {
-              	"restype_id": "http://www.knora.org/ontology/anything#Thing",
-              	"label": "A second thing",
-              	"project_id": "http://data.knora.org/projects/anything",
-              	"properties": {
-              		"http://www.knora.org/ontology/anything#hasText": [{"richtext_value":{"textattr":$textattrStringified,"utf8str":"This text links to a thing"}}],
-                    "http://www.knora.org/ontology/anything#hasInteger": [{"int_value":12345}],
-                    "http://www.knora.org/ontology/anything#hasDecimal": [{"decimal_value":5.6}],
-                    "http://www.knora.org/ontology/anything#hasUri": [{"uri_value":"http://dhlab.unibas.ch"}],
-                    "http://www.knora.org/ontology/anything#hasDate": [{"date_value":"JULIAN:1291-08-01:1291-08-01"}],
-                    "http://www.knora.org/ontology/anything#hasColor": [{"color_value":"#4169E1"}],
-                    "http://www.knora.org/ontology/anything#hasListItem": [{"hlist_value":"http://data.knora.org/anything/treeList10"}],
-                    "http://www.knora.org/ontology/anything#hasInterval": [{"interval_value": [1000000000000000.0000000000000001, 1000000000000000.0000000000000002]}]
-              	}
-              }
+                  {
+                      "restype_id": "http://www.knora.org/ontology/anything#Thing",
+                      "label": "A second thing",
+                      "project_id": "http://data.knora.org/projects/anything",
+                      "properties": {
+                          "http://www.knora.org/ontology/anything#hasText": [{"richtext_value":{"xml":${xml.toJson.compactPrint},"mapping_id":"$mappingIri"}}],
+                        "http://www.knora.org/ontology/anything#hasInteger": [{"int_value":12345}],
+                        "http://www.knora.org/ontology/anything#hasDecimal": [{"decimal_value":5.6}],
+                        "http://www.knora.org/ontology/anything#hasUri": [{"uri_value":"http://dhlab.unibas.ch"}],
+                        "http://www.knora.org/ontology/anything#hasDate": [{"date_value":"JULIAN:1291-08-01:1291-08-01"}],
+                        "http://www.knora.org/ontology/anything#hasColor": [{"color_value":"#4169E1"}],
+                        "http://www.knora.org/ontology/anything#hasListItem": [{"hlist_value":"http://data.knora.org/anything/treeList10"}],
+                        "http://www.knora.org/ontology/anything#hasInterval": [{"interval_value": [1000000000000000.0000000000000001, 1000000000000000.0000000000000002]}]
+                      }
+                  }
                 """
 
             Post("/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(incunabulaUsername, password)) ~> resourcesPath ~> check {
@@ -1067,58 +862,46 @@ class ResourcesV1R2RSpec extends R2RSpec {
             Get("/v1/resources/" + URLEncoder.encode(fourthThingIri.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(incunabulaUsername, password)) ~> resourcesPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)
 
-                val textValues = getValuesForProp(response, "http://www.knora.org/ontology/anything#hasText").asInstanceOf[JsArray].elements
-                val firstTextValue = textValues.head.asJsObject.fields
-                val textattr = JsonParser(firstTextValue("textattr").asInstanceOf[JsString].value).asJsObject.fields
-                val links = textattr("_link").asInstanceOf[JsArray].elements
-                val link = links.head.asJsObject.fields
+                val text: JsValue = getValuesForProp(response, "http://www.knora.org/ontology/anything#hasText")
 
-                assert(
-                    link("start").asInstanceOf[JsNumber].value.toInt == 10 &&
-                        link("end").asInstanceOf[JsNumber].value.toInt == 15 &&
-                        link("href").asInstanceOf[JsString].value == "http://www.google.ch"
-                )
+                val xmlString: String = text match {
+                    case vals: JsArray =>
+                        vals.elements.head.asJsObject.fields("xml") match {
+                            case JsString(xml: String) => xml
+                            case _ => throw new InvalidApiJsonException("member 'xml' not given")
+                        }
+                    case _ =>
+                        throw new InvalidApiJsonException("values is not an array")
+                }
+
+                // make sure that the xml contains a link to http://www.google.ch
+                val xml = XML.loadString(xmlString)
+
+                val link: NodeSeq = xml \ "a"
+
+                assert(link.nonEmpty)
+
+                val target: Seq[Node] = link.head.attributes("href")
+
+                assert(target.nonEmpty && target.head.text == "http://www.google.ch")
+
+
             }
         }
 
 
         "create a fifth resource of type anything:Thing with various standoff markup including internal links and hyperlinks" in {
 
-            val textattrStringified =
-                s"""
-                  {
-                      "bold": [{
-                          "start": 0,
-                          "end": 4
-                      }],
-                      "underline": [{
-                          "start": 0,
-                          "end": 4},
-                          {"start": 5,
-                            "end": 9
-                      }],
-                      "_link": [{
-                          "start": 10,
-                          "end": 15,
-                          "href": "http://www.google.ch"
-                      },
-                      {
-                          "start": 0,
-                          "end": 4,
-                          "href": "$incunabulaBookBiechlin",
-                          "resid": "$incunabulaBookBiechlin"
-                      }]
-                  }
-                """.toJson.compactPrint
+            // xml3 contains a link to google.ch and to incunabulaBookBiechlin
 
             val params =
                 s"""
               {
-              	"restype_id": "http://www.knora.org/ontology/anything#Thing",
-              	"label": "A second thing",
-              	"project_id": "http://data.knora.org/projects/anything",
-              	"properties": {
-              		"http://www.knora.org/ontology/anything#hasText": [{"richtext_value":{"textattr":$textattrStringified,"resource_reference" :["$incunabulaBookBiechlin"], "utf8str":"This text links to a thing"}}],
+                  "restype_id": "http://www.knora.org/ontology/anything#Thing",
+                  "label": "A second thing",
+                  "project_id": "http://data.knora.org/projects/anything",
+                  "properties": {
+                      "http://www.knora.org/ontology/anything#hasText": [{"richtext_value":{"xml":${xml3.toJson.compactPrint}, "mapping_id": "$mappingIri"}}],
                     "http://www.knora.org/ontology/anything#hasInteger": [{"int_value":12345}],
                     "http://www.knora.org/ontology/anything#hasDecimal": [{"decimal_value":5.6}],
                     "http://www.knora.org/ontology/anything#hasUri": [{"uri_value":"http://dhlab.unibas.ch"}],
@@ -1126,9 +909,9 @@ class ResourcesV1R2RSpec extends R2RSpec {
                     "http://www.knora.org/ontology/anything#hasColor": [{"color_value":"#4169E1"}],
                     "http://www.knora.org/ontology/anything#hasListItem": [{"hlist_value":"http://data.knora.org/anything/treeList10"}],
                     "http://www.knora.org/ontology/anything#hasInterval": [{"interval_value": [1000000000000000.0000000000000001, 1000000000000000.0000000000000002]}]
-              	}
+                  }
               }
-                """
+            """
 
             Post("/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(incunabulaUsername, password)) ~> resourcesPath ~> check {
 
@@ -1146,140 +929,65 @@ class ResourcesV1R2RSpec extends R2RSpec {
             Get("/v1/resources/" + URLEncoder.encode(fifthThingIri.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(incunabulaUsername, password)) ~> resourcesPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)
 
-                val textValues = getValuesForProp(response, "http://www.knora.org/ontology/anything#hasText").asInstanceOf[JsArray].elements
-                val firstTextValue = textValues.head.asJsObject.fields
+                val text: JsValue = getValuesForProp(response, "http://www.knora.org/ontology/anything#hasText")
 
-                val resourceReference = firstTextValue("resource_reference").asInstanceOf[JsArray].elements
-
-                val textattr = JsonParser(firstTextValue("textattr").asInstanceOf[JsString].value).asJsObject.fields
-
-                val links: Vector[JsValue] = textattr("_link").asInstanceOf[JsArray].elements
-
-                val boldElements = textattr("bold").asInstanceOf[JsArray].elements
-
-                val hyperref: Boolean = links.exists {
-                    (link: JsValue) =>
-
-                        val linkFields = link.asJsObject.fields
-
-                        linkFields("start").asInstanceOf[JsNumber].value.toInt == 10 &&
-                            linkFields("end").asInstanceOf[JsNumber].value.toInt == 15 &&
-                            linkFields("href").asInstanceOf[JsString].value == "http://www.google.ch" &&
-                            linkFields.get("resid").isEmpty
+                val xmlString: String = text match {
+                    case vals: JsArray =>
+                        vals.elements.head.asJsObject.fields("xml") match {
+                            case JsString(xml: String) => xml
+                            case _ => throw new InvalidApiJsonException("member 'xml' not given")
+                        }
+                    case _ =>
+                        throw new InvalidApiJsonException("values is not an array")
                 }
 
-                val standoff: Boolean = links.exists {
-                    (link: JsValue) =>
+                // make sure that the correct standoff links and references
+                // xml3 contains a link to google.ch and to incunabulaBookBiechlin
+                val xml = XML.loadString(xmlString)
 
-                        val linkFields = link.asJsObject.fields
+                val links: NodeSeq = xml \ "a"
 
-                        linkFields("start").asInstanceOf[JsNumber].value.toInt == 0 &&
-                            linkFields("end").asInstanceOf[JsNumber].value.toInt == 4 &&
-                            linkFields("href").asInstanceOf[JsString].value == incunabulaBookBiechlin &&
-                            linkFields("resid").asInstanceOf[JsString].value == incunabulaBookBiechlin
-                }
+                // there should be two links
+                assert(links.length == 2)
 
-                val boldField = boldElements.head.asJsObject.fields
+                val linkToGoogle: Seq[Node] = links.head.attributes("href")
 
-                val underlineElements = textattr("underline").asInstanceOf[JsArray].elements
+                assert(linkToGoogle.nonEmpty && linkToGoogle.head.text == "http://www.google.ch")
 
-                val underline1: Boolean = underlineElements.exists {
-                    (currentUnderline: JsValue) =>
+                val linkKnoraResource: Seq[Node] = links(1).attributes("href")
 
-                        val underlineField = currentUnderline.asJsObject.fields
+                assert(linkKnoraResource.nonEmpty && linkKnoraResource.head.text == incunabulaBookBiechlin)
 
-                        underlineField("start").asInstanceOf[JsNumber].value.toInt == 0 &&
-                            underlineField("end").asInstanceOf[JsNumber].value.toInt == 4
+                // Compare the original XML with the regenerated XML.
+                val xmlDiff: Diff = DiffBuilder.compare(Input.fromString(xmlString)).withTest(Input.fromString(xml3)).build()
 
-                }
-
-                val underline2: Boolean = underlineElements.exists {
-                    (currentUnderline: JsValue) =>
-
-                        val underlineField = currentUnderline.asJsObject.fields
-
-                            underlineField("start").asInstanceOf[JsNumber].value.toInt == 5 &&
-                                underlineField("end").asInstanceOf[JsNumber].value.toInt == 9
-
-                }
-
-
-                assert(resourceReference.length == 1 && resourceReference.head.asInstanceOf[JsString].value == incunabulaBookBiechlin, "resource_reference is wrong")
-
-                assert(links.length == 2, "there should be two elements for _link returned")
-
-                assert(hyperref, "hyperlink is not returned correctly")
-
-                assert(standoff, "standoff is not returned correctly")
-
-                assert(boldElements.length == 1 && boldField("start").asInstanceOf[JsNumber].value.toInt == 0 &&
-                    boldField("end").asInstanceOf[JsNumber].value.toInt == 4, "bold is not returned correctly")
-
-                assert(underlineElements.length == 2 && underline1 && underline2, "underline is not returned correctly")
-
+                xmlDiff.hasDifferences should be(false)
 
             }
         }
 
         "create a sixth resource of type anything:Thing with internal links to two different resources" in {
 
-            val textattrStringified =
-                s"""
-                  {
-                      "bold": [{
-                          "start": 0,
-                          "end": 4
-                      }],
-                      "underline": [{
-                          "start": 0,
-                          "end": 4},
-                          {"start": 5,
-                            "end": 9
-                      }],
-                      "_link": [{
-                          "start": 10,
-                          "end": 15,
-                          "href": "$incunabulaBookQuadra",
-                          "resid": "$incunabulaBookQuadra"
-                      },
-                      {
-                         "start": 5,
-                         "end": 9,
-                         "href": "$incunabulaBookQuadra",
-                         "resid": "$incunabulaBookQuadra"
-                      },
-                      {
-                          "start": 10,
-                          "end": 15,
-                          "href": "http://www.google.ch"
-                      },
-                      {
-                          "start": 0,
-                          "end": 4,
-                          "href": "$incunabulaBookBiechlin",
-                          "resid": "$incunabulaBookBiechlin"
-                      }]
-                  }
-                """.toJson.compactPrint
+            // xml4 contains a link to google.ch, to incunabulaBookBiechlin and to incunabulaBookQuadra
 
             val params =
                 s"""
-              {
-              	"restype_id": "http://www.knora.org/ontology/anything#Thing",
-              	"label": "A second thing",
-              	"project_id": "http://data.knora.org/projects/anything",
-              	"properties": {
-              		"http://www.knora.org/ontology/anything#hasText": [{"richtext_value":{"textattr":$textattrStringified,"resource_reference" :["$incunabulaBookBiechlin", "$incunabulaBookQuadra"], "utf8str":"This text links to a thing"}}],
-                    "http://www.knora.org/ontology/anything#hasInteger": [{"int_value":12345}],
-                    "http://www.knora.org/ontology/anything#hasDecimal": [{"decimal_value":5.6}],
-                    "http://www.knora.org/ontology/anything#hasUri": [{"uri_value":"http://dhlab.unibas.ch"}],
-                    "http://www.knora.org/ontology/anything#hasDate": [{"date_value":"JULIAN:1291-08-01:1291-08-01"}],
-                    "http://www.knora.org/ontology/anything#hasColor": [{"color_value":"#4169E1"}],
-                    "http://www.knora.org/ontology/anything#hasListItem": [{"hlist_value":"http://data.knora.org/anything/treeList10"}],
-                    "http://www.knora.org/ontology/anything#hasInterval": [{"interval_value": [1000000000000000.0000000000000001, 1000000000000000.0000000000000002]}]
-              	}
-              }
-                """
+                  {
+                      "restype_id": "http://www.knora.org/ontology/anything#Thing",
+                      "label": "A second thing",
+                      "project_id": "http://data.knora.org/projects/anything",
+                      "properties": {
+                          "http://www.knora.org/ontology/anything#hasText": [{"richtext_value":{"xml": ${xml4.toJson.compactPrint},"mapping_id": "$mappingIri"}}],
+                        "http://www.knora.org/ontology/anything#hasInteger": [{"int_value":12345}],
+                        "http://www.knora.org/ontology/anything#hasDecimal": [{"decimal_value":5.6}],
+                        "http://www.knora.org/ontology/anything#hasUri": [{"uri_value":"http://dhlab.unibas.ch"}],
+                        "http://www.knora.org/ontology/anything#hasDate": [{"date_value":"JULIAN:1291-08-01:1291-08-01"}],
+                        "http://www.knora.org/ontology/anything#hasColor": [{"color_value":"#4169E1"}],
+                        "http://www.knora.org/ontology/anything#hasListItem": [{"hlist_value":"http://data.knora.org/anything/treeList10"}],
+                        "http://www.knora.org/ontology/anything#hasInterval": [{"interval_value": [1000000000000000.0000000000000001, 1000000000000000.0000000000000002]}]
+                      }
+                  }
+                    """
 
             Post("/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(incunabulaUsername, password)) ~> resourcesPath ~> check {
 
@@ -1297,17 +1005,44 @@ class ResourcesV1R2RSpec extends R2RSpec {
             Get("/v1/resources/" + URLEncoder.encode(sixthThingIri.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(incunabulaUsername, password)) ~> resourcesPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)
 
-                val textValues = getValuesForProp(response, "http://www.knora.org/ontology/anything#hasText").asInstanceOf[JsArray].elements
-                val firstTextValue = textValues.head.asJsObject.fields
 
-                val resourceReference: Vector[JsValue] = firstTextValue("resource_reference").asInstanceOf[JsArray].elements
+                val text: JsValue = getValuesForProp(response, "http://www.knora.org/ontology/anything#hasText")
 
-                assert(resourceReference.length == 2, "resource_reference's length is wrong")
+                val xmlString: String = text match {
+                    case vals: JsArray =>
+                        vals.elements.head.asJsObject.fields("xml") match {
+                            case JsString(xml: String) => xml
+                            case _ => throw new InvalidApiJsonException("member 'xml' not given")
+                        }
+                    case _ =>
+                        throw new InvalidApiJsonException("values is not an array")
+                }
 
-                assert(
-                    resourceReference.map(_.asInstanceOf[JsString].value).sorted == Vector(incunabulaBookBiechlin, incunabulaBookQuadra).sorted,
-                    "IRIs in resource_reference do not correspond"
-                )
+                // make sure that the correct standoff links and references
+                // xml4 contains a link to google.ch, to incunabulaBookBiechlin and to incunabulaBookQuadra
+                val xml = XML.loadString(xmlString)
+
+                val links: NodeSeq = xml \ "a"
+
+                // there should be three links
+                assert(links.length == 3)
+
+                val linkToGoogle: Seq[Node] = links.head.attributes("href")
+
+                assert(linkToGoogle.nonEmpty && linkToGoogle.head.text == "http://www.google.ch")
+
+                val linkKnoraResource: Seq[Node] = links(1).attributes("href")
+
+                assert(linkKnoraResource.nonEmpty && linkKnoraResource.head.text == incunabulaBookBiechlin)
+
+                val linkKnoraResource2: Seq[Node] = links(2).attributes("href")
+
+                assert(linkKnoraResource2.nonEmpty && linkKnoraResource2.head.text == incunabulaBookQuadra)
+
+                // Compare the original XML with the regenerated XML.
+                val xmlDiff: Diff = DiffBuilder.compare(Input.fromString(xmlString)).withTest(Input.fromString(xml4)).build()
+
+                xmlDiff.hasDifferences should be(false)
 
             }
         }
@@ -1323,7 +1058,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
                   }
                 """.stripMargin
 
-            Put("/v1/resources/label/" + URLEncoder.encode("http://data.knora.org/c5058f3a", "UTF-8"),HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(incunabulaUsername, password)) ~> resourcesPath ~> check {
+            Put("/v1/resources/label/" + URLEncoder.encode("http://data.knora.org/c5058f3a", "UTF-8"), HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(incunabulaUsername, password)) ~> resourcesPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)
 
                 val label = AkkaHttpUtils.httpResponseToJson(response).fields.get("label") match {
@@ -1349,7 +1084,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    |    "properties": {
                    |        "http://www.knora.org/ontology/anything#hasOtherThing": [{"link_value":"${sixthThingIri.get}", "comment":"$notTheMostBoringComment"}]
                    |    }
-                   |}
+                   }
                 """.stripMargin
 
             Post("/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> resourcesPath ~> check {

@@ -337,6 +337,7 @@
 	knora-base:valueHasString "Ich liebe die Dinge, sie sind alles für mich." ;
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueHasStandoff <http://data.knora.org/a-thing-with-text-values/values/1/standoff/HNhqZ6fdQP26Tgmt7MTeQg> ;
+	knora-base:valueHasMapping <http://data.knora.org/projects/standoff/mappings/StandardMapping> ;
 	knora-base:valueCreationDate "2016-03-02T15:05:54Z"^^xsd:dateTimeStamp ;
 	knora-base:hasPermissions "V knora-base:Owner" .
 
@@ -352,6 +353,7 @@
 	knora-base:valueHasString "Na ja, die Dinge sind OK." ;
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueHasStandoff <http://data.knora.org/a-thing-with-text-values/values/2/standoff/Ht76B6DqTDCWHo_WICC1Xg> ;
+	knora-base:valueHasMapping <http://data.knora.org/projects/standoff/mappings/StandardMapping> ;
 	knora-base:valueCreationDate "2016-03-02T15:05:54Z"^^xsd:dateTimeStamp ;
 	knora-base:hasPermissions "V knora-base:Owner" .
 
@@ -641,6 +643,7 @@
 	knora-base:valueHasString "This is a standoff link." ;
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueHasStandoff <http://data.knora.org/project-thing-1/values/2/standoff/NEDbEA85RgO1L1qkDXOVwg> ;
+	knora-base:valueHasMapping <http://data.knora.org/projects/standoff/mappings/StandardMapping> ;
 	knora-base:valueCreationDate "2016-03-02T15:05:54Z"^^xsd:dateTimeStamp ;
 	knora-base:hasPermissions "V knora-base:Owner" .
 

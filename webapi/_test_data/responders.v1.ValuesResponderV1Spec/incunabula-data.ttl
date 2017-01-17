@@ -1014,6 +1014,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 	knora-base:valueHasString """Zusammengebunden mit zwei weiteren Drucken von Johann Amerbach
 """ ;
 	knora-base:valueHasStandoff <http://data.knora.org/e41ab5695c/values/d3398239089e04/standoff/mX6z2vBPQ3OuUjQkfYEZRg> ;
+	knora-base:valueHasMapping <http://data.knora.org/projects/standoff/mappings/StandardMapping> ;
 	knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
 	knora-base:hasPermissions "V knora-base:KnownUser,knora-base:UnknownUser|M knora-base:ProjectMember|D knora-base:Owner" .
 
