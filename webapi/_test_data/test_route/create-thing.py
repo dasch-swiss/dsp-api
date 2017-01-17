@@ -30,12 +30,18 @@ try:
         }]
     }
 
+    xml = """<?xml version="1.0" encoding="UTF-8"?>
+       <text>
+            <u><strong>This</strong></u> <u>text</u> <a class="salsah-link" href="http://data.knora.org/9935159f67">links</a> to a thing
+       </text>
+    """
+
     params = {
        "restype_id": "http://www.knora.org/ontology/anything#Thing",
        "label": "A thing to test with",
        "project_id": "http://data.knora.org/projects/anything",
        "properties": {
-            "http://www.knora.org/ontology/anything#hasText": [{"richtext_value":{"textattr":json.dumps(params),"resource_reference" :["http://data.knora.org/9935159f67"],"utf8str":"This is a text to test with"}}],
+            "http://www.knora.org/ontology/anything#hasText": [{"richtext_value":{"xml": xml, "mapping_id": "http://data.knora.org/projects/standoff/mappings/StandardMapping"}}],
             "http://www.knora.org/ontology/anything#hasInteger": [{"int_value":12345}]
        }
     }

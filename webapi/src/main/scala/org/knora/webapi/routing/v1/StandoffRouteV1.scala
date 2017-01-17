@@ -57,7 +57,7 @@ object StandoffRouteV1 extends Authenticator {
 
         val log = Logger(LoggerFactory.getLogger(this.getClass))
 
-        path("v1" / "standoff") {
+        /*path("v1" / "standoff") {
             post {
                 entity(as[Multipart.FormData]) { formdata: Multipart.FormData =>
                     requestContext =>
@@ -216,7 +216,7 @@ object StandoffRouteV1 extends Authenticator {
                         loggingAdapter)
                 }
             }
-        } ~ path("v1" / "mapping") {
+        } ~*/ path("v1" / "mapping") {
             post {
                 entity(as[Multipart.FormData]) { formdata: Multipart.FormData =>
                     requestContext =>

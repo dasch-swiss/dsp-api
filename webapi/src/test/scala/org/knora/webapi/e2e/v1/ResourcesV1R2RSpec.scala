@@ -1082,6 +1082,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    |    "label": "A thing with a link value that has a comment",
                    |    "project_id": "http://data.knora.org/projects/anything",
                    |    "properties": {
+                   |        "http://www.knora.org/ontology/anything#hasText": [{"richtext_value": {"utf8str": "simple text"}}],
                    |        "http://www.knora.org/ontology/anything#hasOtherThing": [{"link_value":"${sixthThingIri.get}", "comment":"$notTheMostBoringComment"}]
                    |    }
                    }
@@ -1120,6 +1121,41 @@ class ResourcesV1R2RSpec extends R2RSpec {
 
                 assert(linkValueComment == notTheMostBoringComment)
             }
+        }
+
+        "add a simple TextValue to the seventh resource" in {
+
+            val newValueParams =
+                s"""
+                        {
+                          "project_id": "http://data.knora.org/projects/anything",
+                          "res_id": "${seventhThingIri.get}",
+                          "prop": "http://www.knora.org/ontology/anything#hasText",
+                          "richtext_value": {
+                                "utf8str": "another simple text"
+                          }
+                        }
+                        """
+
+            Post("/v1/values", HttpEntity(ContentTypes.`application/json`, newValueParams)) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> valuesPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val utf8str = AkkaHttpUtils.httpResponseToJson(response).fields.get("value") match {
+                    case Some(value: JsObject) => value.fields.get("utf8str") match {
+                        case Some(JsString(xml: String)) => xml
+                        case _ => throw new InvalidApiJsonException("member 'utf8str' not given")
+                    }
+                    case _ => throw new InvalidApiJsonException("member 'value' not given")
+                }
+
+                assert(utf8str == "another simple text")
+
+
+            }
+
+
+
         }
     }
 }

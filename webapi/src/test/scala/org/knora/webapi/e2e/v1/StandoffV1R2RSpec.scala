@@ -24,7 +24,7 @@ import java.io.File
 import java.net.URLEncoder
 
 import akka.actor.{ActorSystem, Props}
-import akka.http.scaladsl.model._
+import akka.http.scaladsl.model.{HttpEntity, _}
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import akka.pattern._
@@ -35,9 +35,9 @@ import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProf
 import org.knora.webapi.messages.v1.store.triplestoremessages._
 import org.knora.webapi.responders._
 import org.knora.webapi.responders.v1.ResponderManagerV1
-import org.knora.webapi.routing.v1.StandoffRouteV1
+import org.knora.webapi.routing.v1.{ResourcesRouteV1, StandoffRouteV1, ValuesRouteV1}
 import org.knora.webapi.store._
-import org.knora.webapi.util.MutableTestIri
+import org.knora.webapi.util.{AkkaHttpUtils, MutableTestIri}
 import org.xmlunit.builder.{DiffBuilder, Input}
 import org.xmlunit.diff.Diff
 import spray.json._
@@ -47,7 +47,6 @@ import scala.concurrent.{Await, Future}
 import scala.io.{Codec, Source}
 
 
-// TODO: These tests should be integrated in the tests for the resources and values endpoint once these routes support XML
 
 /**
   * End-to-end test specification for the standoff endpoint. This specification uses the Spray Testkit as documented
@@ -65,6 +64,8 @@ class StandoffV1R2RSpec extends R2RSpec {
     private val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
 
     private val standoffPath = StandoffRouteV1.knoraApiPath(system, settings, log)
+    private val resourcesPath = ResourcesRouteV1.knoraApiPath(system, settings, log)
+    private val valuesPath = ValuesRouteV1.knoraApiPath(system, settings, log)
 
     private val anythingUsername = "anything-user"
     private val anythingProjectIri = "http://data.knora.org/projects/anything"
@@ -96,7 +97,7 @@ class StandoffV1R2RSpec extends R2RSpec {
         RdfDataObject(path = "../knora-ontologies/knora-dc.ttl", name = "http://www.knora.org/ontology/dc"),
         RdfDataObject(path = "../knora-ontologies/salsah-gui.ttl", name = "http://www.knora.org/ontology/salsah-gui"),
         RdfDataObject(path = "_test_data/ontologies/incunabula-onto.ttl", name = "http://www.knora.org/ontology/incunabula"),
-        //RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/incunabula"),
+        RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/incunabula"),
         RdfDataObject(path = "_test_data/ontologies/images-demo-onto.ttl", name = "http://www.knora.org/ontology/images"),
         RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/images"),
         RdfDataObject(path = "_test_data/ontologies/anything-onto.ttl", name = "http://www.knora.org/ontology/anything"),
@@ -147,7 +148,7 @@ class StandoffV1R2RSpec extends R2RSpec {
                |}
              """.stripMargin
 
-        def paramsCreateTextValueFromXML(mappingIri: IRI): String =
+        /*def paramsCreateTextValueFromXML(mappingIri: IRI): String =
             s"""
                 {
                     "resource_id": "http://data.knora.org/a-thing",
@@ -163,7 +164,7 @@ class StandoffV1R2RSpec extends R2RSpec {
                     "value_id": "$value_id",
                     "mapping_id": "$mappingIri"
                 }
-            """
+            """*/
 
         val pathToLetterMapping = "_test_data/test_route/texts/mappingForLetter.xml"
 
@@ -222,11 +223,11 @@ class StandoffV1R2RSpec extends R2RSpec {
 
         }
 
-        /*"create a TextValue from a simple XML representing a letter" in {
+        "create a TextValue from an XML representing a letter" in {
 
             val xmlFileToSend = new File(RequestParams.pathToLetterXML)
 
-            val formDataStandoff = Multipart.FormData(
+            /*val formDataStandoff = Multipart.FormData(
                 Multipart.FormData.BodyPart(
                     "json",
                     HttpEntity(ContentTypes.`application/json`, RequestParams.paramsCreateTextValueFromXML(anythingProjectIri + "/mappings/LetterMapping"))
@@ -236,10 +237,24 @@ class StandoffV1R2RSpec extends R2RSpec {
                     HttpEntity.fromPath(ContentTypes.`text/xml(UTF-8)`, xmlFileToSend.toPath),
                     Map("filename" -> xmlFileToSend.getName)
                 )
-            )
+            )*/
+
+
+            val newValueParams =
+                s"""
+                        {
+                          "project_id": "http://data.knora.org/projects/anything",
+                          "res_id": "http://data.knora.org/a-thing",
+                          "prop": "http://www.knora.org/ontology/anything#hasText",
+                          "richtext_value": {
+                                "xml": ${JsString(Source.fromFile(xmlFileToSend).mkString)},
+                                "mapping_id": "${anythingProjectIri}/mappings/LetterMapping"
+                          }
+                        }
+                        """
 
             // create standoff from XML
-            val standoffCreationRequest = Post("/v1/standoff", formDataStandoff) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> standoffPath ~> check {
+            Post("/v1/values", HttpEntity(ContentTypes.`application/json`, newValueParams)) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> valuesPath ~> check {
 
                 assert(status == StatusCodes.OK, "creation of a TextValue from XML returned a non successful HTTP status code: " + responseAs[String])
 
@@ -251,18 +266,24 @@ class StandoffV1R2RSpec extends R2RSpec {
 
         }
 
-        "read the simple TextValue back to XML and compare it to the XML that was originally sent" in {
+        "read the XML TextValue back to XML and compare it to the XML that was originally sent" in {
 
             val xmlFile = new File(RequestParams.pathToLetterXML)
 
-            Get("/v1/standoff/" + URLEncoder.encode(firstTextValueIri.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> standoffPath ~> check {
+            Get("/v1/values/" + URLEncoder.encode(firstTextValueIri.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> valuesPath ~> check {
 
                 assert(response.status == StatusCodes.OK, "reading back text value to XML failed")
 
-                val XMLString = ResponseUtils.getStringMemberFromResponse(response, "xml")
+                val xml = AkkaHttpUtils.httpResponseToJson(response).fields.get("value") match {
+                    case Some(value: JsObject) => value.fields.get("xml") match {
+                        case Some(JsString(xml: String)) => xml
+                        case _ => throw new InvalidApiJsonException("member 'xml' not given")
+                    }
+                    case _ => throw new InvalidApiJsonException("member 'value' not given")
+                }
 
                 // Compare the original XML with the regenerated XML.
-                val xmlDiff: Diff = DiffBuilder.compare(Input.fromString(Source.fromFile(xmlFile)(Codec.UTF8).mkString)).withTest(Input.fromString(XMLString)).build()
+                val xmlDiff: Diff = DiffBuilder.compare(Input.fromString(Source.fromFile(xmlFile)(Codec.UTF8).mkString)).withTest(Input.fromString(xml)).build()
 
                 xmlDiff.hasDifferences should be(false)
 
@@ -274,7 +295,7 @@ class StandoffV1R2RSpec extends R2RSpec {
 
             val xmlFileToSend = new File(RequestParams.pathToLetter2XML)
 
-            val formData = Multipart.FormData(
+            /*val formData = Multipart.FormData(
                 Multipart.FormData.BodyPart(
                     "json",
                     HttpEntity(ContentTypes.`application/json`, RequestParams.paramsChangeLetterFromXML(value_id = firstTextValueIri.get, mappingIri = anythingProjectIri + "/mappings/LetterMapping"))
@@ -284,10 +305,21 @@ class StandoffV1R2RSpec extends R2RSpec {
                     HttpEntity.fromPath(ContentTypes.`text/xml(UTF-8)`, xmlFileToSend.toPath),
                     Map("filename" -> xmlFileToSend.getName)
                 )
-            )
+            )*/
+
+            val newValueParams =
+                s"""
+                    {
+                      "project_id": "http://data.knora.org/projects/anything",
+                      "richtext_value": {
+                            "xml": ${JsString(Source.fromFile(xmlFileToSend).mkString)},
+                            "mapping_id": "${anythingProjectIri}/mappings/LetterMapping"
+                      }
+                    }
+                """
 
             // change standoff from XML
-            Put("/v1/standoff", formData) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> standoffPath ~> check {
+            Put("/v1/values/" + URLEncoder.encode(firstTextValueIri.get, "UTF-8"), HttpEntity(ContentTypes.`application/json`, newValueParams)) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> valuesPath ~> check {
 
                 assert(status == StatusCodes.OK, "standoff creation route returned a non successful HTTP status code: " + responseAs[String])
 
@@ -301,14 +333,21 @@ class StandoffV1R2RSpec extends R2RSpec {
 
             val xmlFile = new File(RequestParams.pathToLetter2XML)
 
-            Get("/v1/standoff/" + URLEncoder.encode(firstTextValueIri.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> standoffPath ~> check {
+            Get("/v1/values/" + URLEncoder.encode(firstTextValueIri.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> valuesPath ~> check {
 
                 assert(response.status == StatusCodes.OK, "reading back text value to XML failed")
 
-                val XMLString = ResponseUtils.getStringMemberFromResponse(response, "xml")
+                val xml = AkkaHttpUtils.httpResponseToJson(response).fields.get("value") match {
+                    case Some(value: JsObject) => value.fields.get("xml") match {
+                        case Some(JsString(xml: String)) => xml
+                        case _ => throw new InvalidApiJsonException("member 'xml' not given")
+                    }
+                    case _ => throw new InvalidApiJsonException("member 'value' not given")
+                }
+
 
                 // Compare the original XML with the regenerated XML.
-                val xmlDiff: Diff = DiffBuilder.compare(Input.fromString(Source.fromFile(xmlFile)(Codec.UTF8).mkString)).withTest(Input.fromString(XMLString)).build()
+                val xmlDiff: Diff = DiffBuilder.compare(Input.fromString(Source.fromFile(xmlFile)(Codec.UTF8).mkString)).withTest(Input.fromString(xml)).build()
 
                 xmlDiff.hasDifferences should be(false)
 
@@ -320,7 +359,7 @@ class StandoffV1R2RSpec extends R2RSpec {
 
             val xmlFileToSend = new File(RequestParams.pathToLetter3XML)
 
-            val formDataStandoff = Multipart.FormData(
+            /*val formDataStandoff = Multipart.FormData(
                 Multipart.FormData.BodyPart(
                     "json",
                     HttpEntity(ContentTypes.`application/json`, RequestParams.paramsCreateTextValueFromXML(anythingProjectIri + "/mappings/LetterMapping"))
@@ -330,10 +369,23 @@ class StandoffV1R2RSpec extends R2RSpec {
                     HttpEntity.fromPath(ContentTypes.`text/xml(UTF-8)`, xmlFileToSend.toPath),
                     Map("filename" -> xmlFileToSend.getName)
                 )
-            )
+            )*/
+
+            val newValueParams =
+                s"""
+                {
+                  "project_id": "http://data.knora.org/projects/anything",
+                  "res_id": "http://data.knora.org/a-thing",
+                  "prop": "http://www.knora.org/ontology/anything#hasText",
+                  "richtext_value": {
+                        "xml": ${JsString(Source.fromFile(xmlFileToSend).mkString)},
+                        "mapping_id": "${anythingProjectIri}/mappings/LetterMapping"
+                  }
+                }
+                """
 
             // create standoff from XML
-            val standoffCreationRequest = Post("/v1/standoff", formDataStandoff) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> standoffPath ~> check {
+            Post("/v1/values", HttpEntity(ContentTypes.`application/json`, newValueParams)) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> valuesPath ~> check {
 
                 assert(status == StatusCodes.OK, "creation of a TextValue from XML returned a non successful HTTP status code: " + responseAs[String])
 
@@ -349,21 +401,28 @@ class StandoffV1R2RSpec extends R2RSpec {
 
             val xmlFile = new File(RequestParams.pathToLetter3XML)
 
-            Get("/v1/standoff/" + URLEncoder.encode(secondTextValueIri.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> standoffPath ~> check {
+            Get("/v1/values/" + URLEncoder.encode(secondTextValueIri.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> valuesPath ~> check {
 
                 assert(response.status == StatusCodes.OK, "reading back text value to XML failed")
 
-                val XMLString = ResponseUtils.getStringMemberFromResponse(response, "xml")
+                val xml = AkkaHttpUtils.httpResponseToJson(response).fields.get("value") match {
+                    case Some(value: JsObject) => value.fields.get("xml") match {
+                        case Some(JsString(xml: String)) => xml
+                        case _ => throw new InvalidApiJsonException("member 'xml' not given")
+                    }
+                    case _ => throw new InvalidApiJsonException("member 'value' not given")
+                }
+
 
                 // Compare the original XML with the regenerated XML.
-                val xmlDiff: Diff = DiffBuilder.compare(Input.fromString(Source.fromFile(xmlFile)(Codec.UTF8).mkString)).withTest(Input.fromString(XMLString)).build()
+                val xmlDiff: Diff = DiffBuilder.compare(Input.fromString(Source.fromFile(xmlFile)(Codec.UTF8).mkString)).withTest(Input.fromString(xml)).build()
 
                 xmlDiff.hasDifferences should be(false)
 
             }
 
         }
-*/
+
         "create a mapping resource for standoff conversion for HTML" in {
 
             val mappingFileToSend = new File(RequestParams.pathToHTMLMapping)
@@ -394,12 +453,12 @@ class StandoffV1R2RSpec extends R2RSpec {
             }
 
         }
-/*
+
         "create a TextValue from XML representing HTML (in strict XML notation)" in {
 
             val xmlFileToSend = new File(RequestParams.pathToHTML)
 
-            val formDataStandoff = Multipart.FormData(
+            /*val formDataStandoff = Multipart.FormData(
                 Multipart.FormData.BodyPart(
                     "json",
                     HttpEntity(ContentTypes.`application/json`, RequestParams.paramsCreateTextValueFromXML(anythingProjectIri + "/mappings/HTMLMapping"))
@@ -409,10 +468,23 @@ class StandoffV1R2RSpec extends R2RSpec {
                     HttpEntity.fromPath(ContentTypes.`text/xml(UTF-8)`, xmlFileToSend.toPath),
                     Map("filename" -> xmlFileToSend.getName)
                 )
-            )
+            )*/
+
+            val newValueParams =
+                s"""
+                {
+                  "project_id": "http://data.knora.org/projects/anything",
+                  "res_id": "http://data.knora.org/a-thing",
+                  "prop": "http://www.knora.org/ontology/anything#hasText",
+                  "richtext_value": {
+                        "xml": ${JsString(Source.fromFile(xmlFileToSend).mkString)},
+                        "mapping_id": "${anythingProjectIri}/mappings/HTMLMapping"
+                  }
+                }
+                """
 
             // create standoff from XML
-            val standoffCreationRequest = Post("/v1/standoff", formDataStandoff) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> standoffPath ~> check {
+            Post("/v1/values", HttpEntity(ContentTypes.`application/json`, newValueParams)) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> valuesPath ~> check {
 
                 assert(status == StatusCodes.OK, "creation of a TextValue from XML returned a non successful HTTP status code: " + responseAs[String])
 
@@ -427,21 +499,27 @@ class StandoffV1R2RSpec extends R2RSpec {
 
             val htmlFile = new File(RequestParams.pathToHTML)
 
-            Get("/v1/standoff/" + URLEncoder.encode(thirdTextValueIri.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> standoffPath ~> check {
+            Get("/v1/values/" + URLEncoder.encode(thirdTextValueIri.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> valuesPath ~> check {
 
                 assert(response.status == StatusCodes.OK, "reading back text value to XML failed")
 
-                val XMLString = ResponseUtils.getStringMemberFromResponse(response, "xml")
+                val xml = AkkaHttpUtils.httpResponseToJson(response).fields.get("value") match {
+                    case Some(value: JsObject) => value.fields.get("xml") match {
+                        case Some(JsString(xml: String)) => xml
+                        case _ => throw new InvalidApiJsonException("member 'xml' not given")
+                    }
+                    case _ => throw new InvalidApiJsonException("member 'value' not given")
+                }
 
                 // Compare the original XML with the regenerated XML.
-                val xmlDiff: Diff = DiffBuilder.compare(Input.fromString(Source.fromFile(htmlFile)(Codec.UTF8).mkString)).withTest(Input.fromString(XMLString)).build()
+                val xmlDiff: Diff = DiffBuilder.compare(Input.fromString(Source.fromFile(htmlFile)(Codec.UTF8).mkString)).withTest(Input.fromString(xml)).build()
 
                 xmlDiff.hasDifferences should be(false)
 
             }
 
         }
-*/
+
 
     }
 }
