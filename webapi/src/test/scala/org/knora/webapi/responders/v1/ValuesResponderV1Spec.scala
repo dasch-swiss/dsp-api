@@ -165,18 +165,21 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
         assert(response.rights == 6, "rights was not 6")
         assert(response.value.asInstanceOf[TextValueWithStandoffV1].utf8str == "Zusammengebunden mit zwei weiteren Drucken von Johann Amerbach\n", "comment utf8str value did not match")
 
+        // get uuid from response since it was created automatically
+        val uuid: String = response.value.asInstanceOf[TextValueWithStandoffV1].standoff.head.uuid
+
         // expected Standoff information for <http://data.knora.org/e41ab5695c/values/d3398239089e04> in incunabula-data.ttl
         val standoff = Vector(
             StandoffTagV1(
                 standoffTagClassIri = OntologyConstants.Standoff.StandoffBoldTag,
                 startPosition = 21,
                 endPosition = 25,
-                uuid = UUID.randomUUID().toString,
+                uuid = uuid,
                 originalXMLID = None
             )
         )
 
-        assert(response.value.asInstanceOf[TextValueWithStandoffV1].standoff.sortBy(standoffTag => (standoffTag.standoffTagClassIri, standoffTag.startPosition)) == standoff.sortBy(standoffTag => (standoffTag.standoffTagClassIri, standoffTag.startPosition)), "standoff did not match")
+        assert(response.value.asInstanceOf[TextValueWithStandoffV1].standoff == standoff, "standoff did not match")
     }
 
     private def checkComment1bResponse(response: ChangeValueResponseV1, utf8str: String, standoff: Seq[StandoffTagV1] = Seq.empty[StandoffTagV1]): Unit = {
@@ -316,7 +319,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
             }
         }
 
-        "query a text value containing Standoff (disabled because of issue 17)" ignore {
+        "query a text value containing Standoff" in {
             actorUnderTest ! ValueGetRequestV1(
                 valueIri = "http://data.knora.org/e41ab5695c/values/d3398239089e04",
                 userProfile = incunabulaUser
@@ -325,6 +328,17 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
             expectMsgPF(timeout) {
                 case msg: ValueGetResponseV1 =>
                     checkValueGetResponseWithStandoff(msg)
+            }
+        }
+
+        "query a standoff link as an ordinary value" in {
+            actorUnderTest ! ValueGetRequestV1(
+                valueIri = "http://data.knora.org/a-thing-with-text-values/values/0",
+                userProfile = incunabulaUser
+            )
+
+            expectMsgPF(timeout) {
+                case msg: ValueGetResponseV1 => msg.rights should ===(2)
             }
         }
 

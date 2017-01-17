@@ -1231,7 +1231,7 @@ class ValuesResponderV1 extends ResponderV1 {
     @throws(classOf[NotFoundException])
     private def getLinkValue(subjectIri: IRI, predicateIri: IRI, objectIri: IRI, userProfile: UserProfileV1): Future[ValueGetResponseV1] = {
         for {
-            maybeValueQueryResult <- findLinkValueByObject(
+            maybeValueQueryResult <- findLinkValueByLinkTriple(
                 subjectIri = subjectIri,
                 predicateIri = predicateIri,
                 objectIri = objectIri,
@@ -1321,6 +1321,7 @@ class ValuesResponderV1 extends ResponderV1 {
       * @param targetResourceClass          if a direct link exists, contains the OWL class of the target resource.
       */
     case class LinkValueQueryResult(value: LinkValueV1,
+                                    linkValueIri: IRI,
                                     ownerIri: IRI,
                                     creationDate: String,
                                     projectIri: IRI,
@@ -1343,6 +1344,7 @@ class ValuesResponderV1 extends ResponderV1 {
                 triplestore = settings.triplestoreType,
                 valueIri = valueIri
             ).toString())
+
             response <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
             rows: Seq[VariableResultsRow] = response.results.bindings
 
@@ -1352,7 +1354,66 @@ class ValuesResponderV1 extends ResponderV1 {
             // gets information about all standoff properties
             standoffAllPropertyEntities: StandoffAllPropertyEntitiesGetResponseV1 <- (responderManager ? StandoffAllPropertyEntitiesGetRequestV1(userProfile = userProfile)).mapTo[StandoffAllPropertyEntitiesGetResponseV1]
 
-        } yield sparqlQueryResults2ValueQueryResult(valueIri, rows, standoffDataTypeClassEntities.standoffClassEntityInfoMap, standoffAllPropertyEntities.standoffAllPropertiesEntityInfoMap, userProfile)
+            maybeValueQueryResult = sparqlQueryResults2ValueQueryResult(valueIri, rows, standoffDataTypeClassEntities.standoffClassEntityInfoMap, standoffAllPropertyEntities.standoffAllPropertiesEntityInfoMap, userProfile)
+
+            // If it's a link value, check that the user has permission to see the source and target resources.
+            _ = maybeValueQueryResult match {
+                case Some(valueQueryResult) =>
+                    valueQueryResult.value match {
+                        case _: LinkValueV1 => checkLinkValueSubjectAndObjectPermissions(valueIri, userProfile)
+                        case _ => ()
+                    }
+
+
+                case None => ()
+            }
+        } yield maybeValueQueryResult
+    }
+
+    /**
+      * Checks that the user has permission to see the source and target resources of a link value.
+      *
+      * @param linkValueIri the IRI of the link value.
+      * @param userProfile the profile of the user making the request.
+      * @return () if the user has the required permission, or an exception otherwise.
+      */
+    private def checkLinkValueSubjectAndObjectPermissions(linkValueIri: IRI, userProfile: UserProfileV1): Future[Unit] = {
+        for {
+            sparqlQuery <- Future(queries.sparql.v1.txt.getLinkSourceAndTargetPermissions(
+                triplestore = settings.triplestoreType,
+                linkValueIri = linkValueIri
+            ).toString())
+
+            response <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
+            rows = response.results.bindings
+
+            _ = if (rows.isEmpty) {
+                throw NotFoundException(s"Link value $linkValueIri, or its source or target resource, was not found.")
+            }
+
+            rowMap = rows.head.rowMap
+            userIri = userProfile.userData.user_id.getOrElse(OntologyConstants.KnoraBase.UnknownUser)
+
+            maybeSourcePermissionCode = PermissionUtilV1.getUserPermissionV1(
+                subjectIri = rowMap("source"),
+                subjectOwner = rowMap("sourceOwner"),
+                subjectProject = rowMap("sourceProject"),
+                subjectPermissionLiteral = rowMap.get("sourcePermissions"),
+                userProfile = userProfile
+            )
+
+            maybeTargetPermissionCode = PermissionUtilV1.getUserPermissionV1(
+                subjectIri = rowMap("target"),
+                subjectOwner = rowMap("targetOwner"),
+                subjectProject = rowMap("targetProject"),
+                subjectPermissionLiteral = rowMap.get("targetPermissions"),
+                userProfile = userProfile
+            )
+
+            _ = if (maybeSourcePermissionCode.isEmpty || maybeTargetPermissionCode.isEmpty) {
+                throw ForbiddenException(s"User $userIri does not have permission to view link value $linkValueIri")
+            }
+        } yield ()
     }
 
     /**
@@ -1380,7 +1441,13 @@ class ValuesResponderV1 extends ResponderV1 {
 
             response <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
             rows: Seq[VariableResultsRow] = response.results.bindings
-        } yield sparqlQueryResults2LinkValueQueryResult(rows, userProfile)
+            maybeLinkValueQueryResult = sparqlQueryResults2LinkValueQueryResult(rows, userProfile)
+
+            // Check that the user has permission to see the source and target resources.
+            _ = if (maybeLinkValueQueryResult.nonEmpty) {
+               checkLinkValueSubjectAndObjectPermissions(linkValueIri, userProfile)
+            }
+        } yield maybeLinkValueQueryResult
     }
 
     /**
@@ -1394,7 +1461,7 @@ class ValuesResponderV1 extends ResponderV1 {
       * @param userProfile  the profile of the user making the request.
       * @return an optional [[ValueGetResponseV1]] containing a [[LinkValueV1]].
       */
-    private def findLinkValueByObject(subjectIri: IRI, predicateIri: IRI, objectIri: IRI, userProfile: UserProfileV1): Future[Option[LinkValueQueryResult]] = {
+    private def findLinkValueByLinkTriple(subjectIri: IRI, predicateIri: IRI, objectIri: IRI, userProfile: UserProfileV1): Future[Option[LinkValueQueryResult]] = {
         for {
             sparqlQuery <- Future {
                 queries.sparql.v1.txt.findLinkValueByObject(
@@ -1407,11 +1474,20 @@ class ValuesResponderV1 extends ResponderV1 {
 
             response <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
             rows: Seq[VariableResultsRow] = response.results.bindings
-        } yield sparqlQueryResults2LinkValueQueryResult(rows, userProfile)
+            maybeLinkValueQueryResult = sparqlQueryResults2LinkValueQueryResult(rows, userProfile)
+
+            // Check that the user has permission to see the source and target resources.
+            _ = maybeLinkValueQueryResult match {
+                case Some(linkValueQueryResult) => checkLinkValueSubjectAndObjectPermissions(linkValueQueryResult.linkValueIri, userProfile)
+                case _ => ()
+            }
+        } yield maybeLinkValueQueryResult
     }
 
     /**
-      * Converts SPARQL query results into a [[ValueQueryResult]].
+      * Converts SPARQL query results into a [[ValueQueryResult]]. Checks that the user has permission to view the value object.
+      * If the value is a link value, the caller of this method is responsible for ensuring that the user has permission to
+      * view the source and target resources.
       *
       * @param valueIri    the IRI of the value that was queried.
       * @param rows        the query result rows.
@@ -1427,6 +1503,9 @@ class ValuesResponderV1 extends ResponderV1 {
             val valueProps = valueUtilV1.createValueProps(valueIri, rows)
             // attach the ontology information for data type standoff classes and all standoff properties.
             val value = valueUtilV1.makeValueV1(valueProps.copy(standoffClassesWithDataType = standoffDataTypeEntityInfoMap, standoffAllPropertyEntities = standoffAllPropertyEntities), responderManager, userProfile)
+
+            // Get the value's class IRI.
+            val valueClassIri = getValuePredicateObject(predicateIri = OntologyConstants.Rdf.Type, rows = rows).getOrElse(throw InconsistentTriplestoreDataException(s"Value $valueIri has no rdf:type"))
 
             // Get the IRI of the value's owner.
             val ownerIri = getValuePredicateObject(predicateIri = OntologyConstants.KnoraBase.AttachedToUser, rows = rows).getOrElse(throw InconsistentTriplestoreDataException(s"Value $valueIri has no owner"))
@@ -1444,11 +1523,31 @@ class ValuesResponderV1 extends ResponderV1 {
             val assertions = PermissionUtilV1.filterPermissionRelevantAssertionsFromValueProps(valueProps)
 
             // Get the permission code representing the user's permissions on the value.
-            val permissionCode = PermissionUtilV1.getUserPermissionV1FromAssertions(
-                subjectIri = valueIri,
-                assertions = assertions,
-                userProfile = userProfile
-            ).getOrElse {
+            //
+            // Link values created automatically for resource references in standoff
+            // are automatically visible to all users, as long as they have permission
+            // to see the source and target resources. The caller of this method is responsible
+            // for checking the permissions on the source and target resources.
+
+            val maybePermissionCode = valueClassIri match {
+                case OntologyConstants.KnoraBase.LinkValue =>
+                    val linkPredicateIri = getValuePredicateObject(predicateIri = OntologyConstants.Rdf.Predicate, rows = rows).getOrElse(throw InconsistentTriplestoreDataException(s"Link value $valueIri has no rdf:predicate"))
+
+                    PermissionUtilV1.getUserPermissionOnLinkValueV1WithValueProps(
+                        linkValueIri = valueIri,
+                        predicateIri = linkPredicateIri,
+                        valueProps = valueProps,
+                        userProfile = userProfile
+                    )
+
+                case _ => PermissionUtilV1.getUserPermissionV1FromAssertions(
+                    subjectIri = valueIri,
+                    assertions = assertions,
+                    userProfile = userProfile
+                )
+            }
+
+            val permissionCode = maybePermissionCode.getOrElse {
                 val userIri = userProfile.userData.user_id.getOrElse(OntologyConstants.KnoraBase.UnknownUser)
                 throw ForbiddenException(s"User $userIri does not have permission to see value $valueIri")
             }
@@ -1520,6 +1619,7 @@ class ValuesResponderV1 extends ResponderV1 {
             Some(
                 LinkValueQueryResult(
                     value = linkValueV1,
+                    linkValueIri = linkValueIri,
                     ownerIri = ownerIri,
                     creationDate = creationDate,
                     comment = comment,
@@ -2164,7 +2264,7 @@ class ValuesResponderV1 extends ResponderV1 {
                                    userProfile: UserProfileV1): Future[SparqlTemplateLinkUpdate] = {
         for {
         // Check whether a LinkValue already exists for this link.
-            maybeLinkValueQueryResult <- findLinkValueByObject(
+            maybeLinkValueQueryResult <- findLinkValueByLinkTriple(
                 subjectIri = sourceResourceIri,
                 predicateIri = linkPropertyIri,
                 objectIri = targetResourceIri,
@@ -2248,7 +2348,7 @@ class ValuesResponderV1 extends ResponderV1 {
                                    userProfile: UserProfileV1): Future[SparqlTemplateLinkUpdate] = {
         for {
         // Query the LinkValue to ensure that it exists and to get its contents.
-            maybeLinkValueQueryResult <- findLinkValueByObject(
+            maybeLinkValueQueryResult <- findLinkValueByLinkTriple(
                 subjectIri = sourceResourceIri,
                 predicateIri = linkPropertyIri,
                 objectIri = targetResourceIri,
