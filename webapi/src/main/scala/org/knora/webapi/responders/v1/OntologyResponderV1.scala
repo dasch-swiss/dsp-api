@@ -468,8 +468,8 @@ class OntologyResponderV1 extends ResponderV1 {
         for {
             cacheData <- getCacheData
             response = EntityInfoGetResponseV1(
-                resourceEntityInfoMap = cacheData.resourceClassDefs.filterKeys(resourceIris),
-                propertyEntityInfoMap = cacheData.propertyDefs.filterKeys(propertyIris)
+                resourceEntityInfoMap = new ErrorHandlingMap(cacheData.resourceClassDefs.filterKeys(resourceIris), { key => s"Resource class $key not found" }),
+                propertyEntityInfoMap = new ErrorHandlingMap(cacheData.propertyDefs.filterKeys(propertyIris), { key => s"Property $key not found" })
             )
         } yield response
     }
