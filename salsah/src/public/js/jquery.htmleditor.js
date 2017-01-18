@@ -56,6 +56,8 @@
      */
 	var addXMLWrapper = function(htmlstr) {
 
+		// TODO: if htmlstr is empty, return false
+
 		var xmlstr = xmlDoctype + rootTagOpen + htmlstr + rootTagClose;
 
 		return xmlstr;

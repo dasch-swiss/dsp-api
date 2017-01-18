@@ -175,7 +175,8 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
                 startPosition = 21,
                 endPosition = 25,
                 uuid = uuid,
-                originalXMLID = None
+                originalXMLID = None,
+                startIndex = 0
             )
         )
 
@@ -252,14 +253,16 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
             startPosition = 0,
             endPosition = 7,
             uuid = UUID.randomUUID().toString,
-            originalXMLID = None
+            originalXMLID = None,
+            startIndex = 0
         ),
         StandoffTagV1(
             standoffTagClassIri = OntologyConstants.Standoff.StandoffParagraphTag,
             startPosition = 0,
             endPosition = 10,
             uuid = UUID.randomUUID().toString,
-            originalXMLID = None
+            originalXMLID = None,
+            startIndex = 0
         )
     )
 
@@ -757,7 +760,8 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
                         endPosition = 39,
                         attributes = Vector(StandoffTagIriAttributeV1(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink, value = zeitglöckleinIri)),
                         uuid = UUID.randomUUID().toString,
-                        originalXMLID = None
+                        originalXMLID = None,
+                        startIndex = 0
                     )
                 ),
                 resource_reference = Set(zeitglöckleinIri),
@@ -835,7 +839,8 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
                             endPosition = 47,
                             attributes = Vector(StandoffTagIriAttributeV1(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink, value = zeitglöckleinIri)),
                             uuid = UUID.randomUUID().toString,
-                            originalXMLID = None
+                            originalXMLID = None,
+                            startIndex = 0
                         ),
                         StandoffTagV1(
                             dataType = Some(StandoffDataTypeClasses.StandoffLinkTag),
@@ -844,7 +849,8 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
                             endPosition = 4,
                             attributes = Vector(StandoffTagIriAttributeV1(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink, value = zeitglöckleinIri)),
                             uuid = UUID.randomUUID().toString,
-                            originalXMLID = None
+                            originalXMLID = None,
+                            startIndex = 0
                         )
                 ),
                 resource_reference = Set(zeitglöckleinIri),
@@ -918,7 +924,8 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
                         endPosition = 38,
                         attributes = Vector(StandoffTagIriAttributeV1(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink, value = zeitglöckleinIri)),
                         uuid = UUID.randomUUID().toString,
-                        originalXMLID = None
+                        originalXMLID = None,
+                        startIndex = 0
                     )
                 ),
                 resource_reference = Set(zeitglöckleinIri),
@@ -1118,7 +1125,8 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
                         endPosition = 53,
                         attributes = Vector(StandoffTagIriAttributeV1(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink, value = zeitglöckleinIri)),
                         uuid = UUID.randomUUID().toString,
-                        originalXMLID = None
+                        originalXMLID = None,
+                        startIndex = 0
                     )
                 ),
                 resource_reference = Set(zeitglöckleinIri),
@@ -1939,5 +1947,43 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
                     rows.head.rowMap.get("directLinkExists").exists(_.toBoolean) should ===(false)
             }
         }
+
+        "not add a text value containing a standoff reference to a nonexistent resource" in {
+            val nonexistentIri = "http://data.knora.org/nonexistent"
+
+            val textValueWithResourceRef = TextValueWithStandoffV1(
+                utf8str = "This comment refers to another resource",
+                standoff = Vector(
+                    StandoffTagV1(
+                        standoffTagClassIri = OntologyConstants.KnoraBase.StandoffLinkTag,
+                        dataType = Some(StandoffDataTypeClasses.StandoffLinkTag),
+                        startPosition = 31,
+                        endPosition = 39,
+                        startIndex = 0,
+                        attributes = Vector(StandoffTagIriAttributeV1(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink, value = nonexistentIri)),
+                        uuid = UUID.randomUUID().toString,
+                        originalXMLID = None
+                    )
+                ),
+                resource_reference = Set(nonexistentIri),
+                mapping = ResourcesResponderV1SpecFullData.dummyMapping,
+                mappingIri = "http://data.knora.org/projects/standoff/mappings/StandardMapping"
+            )
+
+            actorUnderTest ! CreateValueRequestV1(
+                projectIri = "http://data.knora.org/projects/77275339",
+                resourceIri = zeitglöckleinIri,
+                propertyIri = "http://www.knora.org/ontology/incunabula#book_comment",
+                value = textValueWithResourceRef,
+                userProfile = incunabulaUser,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure =>
+                    msg.cause.isInstanceOf[NotFoundException] should ===(true)
+            }
+        }
+
     }
 }

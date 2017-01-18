@@ -85,9 +85,6 @@
                             Check for optional standoff properties
 
                             *@
-                            @if(createStandoff.standoffNode.startIndex.isDefined) {
-                                knora-base:standoffTagHasStartIndex @createStandoff.standoffNode.startIndex.get ;
-                            }
 
                             @if(createStandoff.standoffNode.endIndex.isDefined) {
                                 knora-base:standoffTagHasEndIndex @createStandoff.standoffNode.endIndex.get ;
@@ -125,6 +122,7 @@
 
                             }
 
+                            knora-base:standoffTagHasStartIndex @createStandoff.standoffNode.startIndex ;
                             knora-base:standoffTagHasUUID """@createStandoff.standoffNode.uuid""" ;
                             knora-base:standoffTagHasStart @createStandoff.standoffNode.startPosition ;
                             knora-base:standoffTagHasEnd @createStandoff.standoffNode.endPosition ;

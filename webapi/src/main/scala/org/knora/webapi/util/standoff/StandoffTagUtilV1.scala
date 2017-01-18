@@ -205,7 +205,7 @@ object StandoffTagUtilV1 {
       * @param mapping the mapping used to convert XML to standoff.
       * @return a [[TextWithStandoffTagV1]].
       */
-    def convertXMLtoStandoffTagV1(xml: String, mapping: GetMappingResponseV1) = {
+    def convertXMLtoStandoffTagV1(xml: String, mapping: GetMappingResponseV1): TextWithStandoffTagV1 = {
 
         val xmlStandoffUtil = new XMLToStandoffUtil()
 
@@ -218,7 +218,7 @@ object StandoffTagUtilV1 {
             case other: Exception => throw BadRequestException(s"there was a problem processing the provided XML: ${other.getMessage}")
         }
 
-        val standoffTagsV1: Seq[StandoffTagV1] = StandoffTagUtilV1.convertXMLToStandoffUtilStandoffTagToStandoffTagV1(
+        val standoffTagsV1: Seq[StandoffTagV1] = convertXMLToStandoffUtilStandoffTagToStandoffTagV1(
             textWithStandoff = textWithStandoff,
             mappingXMLtoStandoff = mapping.mapping,
             standoffEntities = mapping.standoffEntities
@@ -268,6 +268,7 @@ object StandoffTagUtilV1 {
                 // get the cardinalities of the current standoff class
                 val cardinalities: Map[IRI, Cardinality.Value] = standoffEntities.standoffClassEntityInfoMap.getOrElse(standoffClassIri, throw NotFoundException(s"information about standoff class $standoffClassIri was not found in ontology")).cardinalities
 
+                // TODO: resolve thhese references when the IRIs for the standoff nodes have been created
                 val IDsToUUIDs: Map[IRI, UUID] = textWithStandoff.standoff.filter((standoffTag: StandoffTag) => standoffTag.originalID.isDefined).map {
                     standoffTagWithID =>
                         (standoffTagWithID.originalID.get, standoffTagWithID.uuid)
@@ -285,7 +286,7 @@ object StandoffTagUtilV1 {
                                 case Some(id: String) => Some(InputValidation.toSparqlEncodedString(id, () => throw BadRequestException(s"XML id $id cannot be converted to a Sparql conform string")))
                                 case None => None
                             },
-                            startIndex = Some(hierarchicalStandoffTag.index),
+                            startIndex = hierarchicalStandoffTag.index,
                             endIndex = None,
                             startParentIndex = hierarchicalStandoffTag.parentIndex,
                             endParentIndex = None,
@@ -301,7 +302,7 @@ object StandoffTagUtilV1 {
                                 case Some(id: String) => Some(InputValidation.toSparqlEncodedString(id, () => throw BadRequestException(s"XML id $id cannot be converted to a Sparql conform string")))
                                 case None => None
                             },
-                            startIndex = Some(freeStandoffTag.startIndex),
+                            startIndex = freeStandoffTag.startIndex,
                             endIndex = Some(freeStandoffTag.endIndex),
                             startParentIndex = freeStandoffTag.startParentIndex,
                             endParentIndex = freeStandoffTag.endParentIndex,
@@ -759,7 +760,7 @@ object StandoffTagUtilV1 {
                         uuid = UUID.fromString(standoffTagV1.uuid),
                         startPosition = standoffTagV1.startPosition,
                         endPosition = standoffTagV1.endPosition,
-                        startIndex = standoffTagV1.startIndex.getOrElse(throw InconsistentTriplestoreDataException(s"start index is missing for a free standoff tag")),
+                        startIndex = standoffTagV1.startIndex,
                         endIndex = standoffTagV1.endIndex.getOrElse(throw InconsistentTriplestoreDataException(s"end index is missing for a free standoff tag")),
                         startParentIndex = standoffTagV1.startParentIndex,
                         endParentIndex = standoffTagV1.endParentIndex,
@@ -777,7 +778,7 @@ object StandoffTagUtilV1 {
                         uuid = UUID.fromString(standoffTagV1.uuid),
                         startPosition = standoffTagV1.startPosition,
                         endPosition = standoffTagV1.endPosition,
-                        index = standoffTagV1.startIndex.getOrElse(throw InconsistentTriplestoreDataException(s"start index is missing for a hierarchical standoff tag")),
+                        index = standoffTagV1.startIndex,
                         parentIndex = standoffTagV1.startParentIndex,
                         attributes = attributesWithClass.toSet
                     )

@@ -534,10 +534,7 @@ class ValueUtilV1(private val settings: SettingsImpl) {
 
                             case None => None
                         },
-                        startIndex = standoffInfo.get(OntologyConstants.KnoraBase.StandoffTagHasStartIndex) match {
-                            case Some(startIndex: String) => Some(startIndex.toInt)
-                            case None => None
-                        },
+                        startIndex = standoffInfo(OntologyConstants.KnoraBase.StandoffTagHasStartIndex).toInt,
                         endIndex = standoffInfo.get(OntologyConstants.KnoraBase.StandoffTagHasEndIndex) match {
                             case Some(endIndex: String) => Some(endIndex.toInt)
                             case None => None

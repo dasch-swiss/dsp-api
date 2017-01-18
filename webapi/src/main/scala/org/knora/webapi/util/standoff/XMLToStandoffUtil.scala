@@ -326,6 +326,8 @@ class XMLToStandoffUtil(xmlNamespaces: Map[String, IRI] = Map.empty[IRI, String]
         val nodes: Elem = XML.withSAXParser(saxParser).loadString(xmlStr)
 
         // TODO: ensure that text nodes are not concatenated to one another (e.g. <p> tags)
+        // TODO: handle <br> and other line breaking tags
+
 
         val finishedConversionState = xmlNodes2Standoff(
             nodes = nodes,

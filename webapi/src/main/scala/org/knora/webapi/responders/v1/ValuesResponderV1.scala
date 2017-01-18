@@ -315,6 +315,9 @@ class ValuesResponderV1 extends ResponderV1 {
                 // standoff references to that IRI.
                 targetIris: Map[IRI, Int] = allResourceReferencesGrouped.mapValues(_.size)
 
+                // Check that each target IRI actually exists and is a knora-base:Resource.
+                targetIriCheckResult <- checkStandoffResourceReferenceTargets(targetIris = targetIris.keySet, userProfile = createMultipleValuesRequest.userProfile)
+
                 // For each target IRI, construct a SparqlTemplateLinkUpdate to create one link, as well as one LinkValue
                 // with associated count as its initial reference count.
                 standoffLinkUpdates: Seq[SparqlTemplateLinkUpdate] = targetIris.toSeq.map {
@@ -1039,15 +1042,16 @@ class ValuesResponderV1 extends ResponderV1 {
                     val linkUpdatesFuture: Future[Seq[SparqlTemplateLinkUpdate]] = other match {
                         case textValue: TextValueWithStandoffV1 =>
                             val linkUpdateFutures = textValue.resource_reference.map {
-                                targetResourceIri => decrementLinkValue(
-                                    sourceResourceIri = findResourceWithValueResult.resourceIri,
-                                    linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
-                                    targetResourceIri = targetResourceIri,
-                                    valueOwner = OntologyConstants.KnoraBase.SystemUser,
-                                    valueProject = None,
-                                    valuePermissions = None,
-                                    userProfile = deleteValueRequest.userProfile
-                                )
+                                targetResourceIri =>
+                                    decrementLinkValue(
+                                        sourceResourceIri = findResourceWithValueResult.resourceIri,
+                                        linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
+                                        targetResourceIri = targetResourceIri,
+                                        valueOwner = OntologyConstants.KnoraBase.SystemUser,
+                                        valueProject = None,
+                                        valuePermissions = None,
+                                        userProfile = deleteValueRequest.userProfile
+                                    )
                             }.toVector
 
                             Future.sequence(linkUpdateFutures)
@@ -1317,8 +1321,8 @@ class ValuesResponderV1 extends ResponderV1 {
     /**
       * Represents the result of querying a link.
       *
-      * @param directLinkExists             `true` if a direct link exists between the two resources.
-      * @param targetResourceClass          if a direct link exists, contains the OWL class of the target resource.
+      * @param directLinkExists    `true` if a direct link exists between the two resources.
+      * @param targetResourceClass if a direct link exists, contains the OWL class of the target resource.
       */
     case class LinkValueQueryResult(value: LinkValueV1,
                                     linkValueIri: IRI,
@@ -1374,7 +1378,7 @@ class ValuesResponderV1 extends ResponderV1 {
       * Checks that the user has permission to see the source and target resources of a link value.
       *
       * @param linkValueIri the IRI of the link value.
-      * @param userProfile the profile of the user making the request.
+      * @param userProfile  the profile of the user making the request.
       * @return () if the user has the required permission, or an exception otherwise.
       */
     private def checkLinkValueSubjectAndObjectPermissions(linkValueIri: IRI, userProfile: UserProfileV1): Future[Unit] = {
@@ -1445,7 +1449,7 @@ class ValuesResponderV1 extends ResponderV1 {
 
             // Check that the user has permission to see the source and target resources.
             _ = if (maybeLinkValueQueryResult.nonEmpty) {
-               checkLinkValueSubjectAndObjectPermissions(linkValueIri, userProfile)
+                checkLinkValueSubjectAndObjectPermissions(linkValueIri, userProfile)
             }
         } yield maybeLinkValueQueryResult
     }
@@ -1489,11 +1493,11 @@ class ValuesResponderV1 extends ResponderV1 {
       * If the value is a link value, the caller of this method is responsible for ensuring that the user has permission to
       * view the source and target resources.
       *
-      * @param valueIri    the IRI of the value that was queried.
-      * @param rows        the query result rows.
+      * @param valueIri                      the IRI of the value that was queried.
+      * @param rows                          the query result rows.
       * @param standoffDataTypeEntityInfoMap a [[Map]] of standoff class Iris to StandoffClassEntityInfoV1 containing all the data type standoff classes.
-      * @param standoffAllPropertyEntities a [[Map]] of standoff property Iris to StandoffPropertyEntityInfoV1 containing all the standoff properties.
-      * @param userProfile the profile of the user making the request.
+      * @param standoffAllPropertyEntities   a [[Map]] of standoff property Iris to StandoffPropertyEntityInfoV1 containing all the standoff properties.
+      * @param userProfile                   the profile of the user making the request.
       * @return a [[ValueQueryResult]].
       */
     @throws(classOf[ForbiddenException])
@@ -1771,7 +1775,7 @@ class ValuesResponderV1 extends ResponderV1 {
       * Finds the object of the specified predicate in SPARQL query results describing a value.
       *
       * @param predicateIri the IRI of the predicate.
-      * @param rows the SPARQL query results that describe the value.
+      * @param rows         the SPARQL query results that describe the value.
       * @return the predicate's object.
       */
     private def getValuePredicateObject(predicateIri: IRI, rows: Seq[VariableResultsRow]): Option[IRI] = {
@@ -1961,17 +1965,18 @@ class ValuesResponderV1 extends ResponderV1 {
 
                     // Construct a SparqlTemplateLinkUpdate for each reference that was added.
                     val standoffLinkUpdatesForAddedResourceRefs: Seq[Future[SparqlTemplateLinkUpdate]] =
-                    textValueV1.resource_reference.map {
-                        targetResourceIri => incrementLinkValue(
-                            sourceResourceIri = resourceIri,
-                            linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
-                            targetResourceIri = targetResourceIri,
-                            valueOwner = OntologyConstants.KnoraBase.SystemUser,
-                            valueProject = None,
-                            valuePermissions = None,
-                            userProfile = userProfile
-                        )
-                    }.toVector
+                        textValueV1.resource_reference.map {
+                            targetResourceIri =>
+                                incrementLinkValue(
+                                    sourceResourceIri = resourceIri,
+                                    linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
+                                    targetResourceIri = targetResourceIri,
+                                    valueOwner = OntologyConstants.KnoraBase.SystemUser,
+                                    valueProject = None,
+                                    valuePermissions = None,
+                                    userProfile = userProfile
+                                )
+                        }.toVector
 
                     Future.sequence(standoffLinkUpdatesForAddedResourceRefs)
 
@@ -2140,7 +2145,6 @@ class ValuesResponderV1 extends ResponderV1 {
                     }
 
 
-
                     // Identify the resource references that have been added or removed in the new version of
                     // the value.
                     val currentResourceRefs = currentTextValue match {
@@ -2270,6 +2274,9 @@ class ValuesResponderV1 extends ResponderV1 {
                 objectIri = targetResourceIri,
                 userProfile = userProfile
             )
+
+            // Check that the target resource actually exists and is a knora-base:Resource.
+            targetIriCheckResult <- checkStandoffResourceReferenceTargets(targetIris = Set(targetResourceIri), userProfile = userProfile)
 
             // Generate an IRI for the new LinkValue.
             newLinkValueIri = knoraIdUtil.makeRandomValueIri(sourceResourceIri)
@@ -2418,6 +2425,37 @@ class ValuesResponderV1 extends ResponderV1 {
 
         if (resourceRefsInStandoff != textValue.resource_reference) {
             throw BadRequestException(s"The list of resource references in this text value does not match the resource references in its Standoff markup: $textValue")
+        }
+    }
+
+    /**
+      * Given a set of IRIs of standoff resource reference targets, checks that each one actually refers to a `knora-base:Resource`.
+      *
+      * @param targetIris  the IRIs to check.
+      * @param userProfile the profile of the user making the request.
+      * @return a `Future[Unit]` on success, otherwise a `Future` containing an exception ([[NotFoundException]] if the target resource is not found,
+      *         or [[BadRequestException]] if the target IRI isn't a `knora-base:Resource`).
+      */
+    private def checkStandoffResourceReferenceTargets(targetIris: Set[IRI], userProfile: UserProfileV1): Future[Unit] = {
+        if (targetIris.isEmpty) {
+            Future(())
+        } else {
+            val targetIriCheckFutures: Set[Future[Unit]] = targetIris.map {
+                targetIri =>
+                    for {
+                        checkTargetClassResponse <- (responderManager ? ResourceCheckClassRequestV1(
+                            resourceIri = targetIri,
+                            owlClass = OntologyConstants.KnoraBase.Resource,
+                            userProfile = userProfile
+                        )).mapTo[ResourceCheckClassResponseV1]
+
+                        _ = if (!checkTargetClassResponse.isInClass) throw BadRequestException(s"$targetIri cannot be the object of a standoff resource reference, because it is not a knora-base:Resource")
+                    } yield ()
+            }
+
+            for {
+                targetIriChecks: Set[Unit] <- Future.sequence(targetIriCheckFutures)
+            } yield targetIriChecks.head
         }
     }
 

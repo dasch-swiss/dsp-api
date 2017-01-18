@@ -1427,7 +1427,7 @@ class ResourcesResponderV1 extends ResponderV1 {
                     insertStatementsForValues = generateSparqlForValuesResponse.insertSparql
                 ).toString()
 
-                // _ = println(createNewResourceSparql)
+                //_ = println(createNewResourceSparql)
 
                 // Do the update.
                 createResourceResponse <- (storeManager ? SparqlUpdateRequest(createNewResourceSparql)).mapTo[SparqlUpdateResponse]

@@ -1006,7 +1006,8 @@ object ResourcesResponderV1SpecFullData {
                             endPosition = 94,
                             startPosition = 0,
                             uuid = UUID.randomUUID().toString,
-                            originalXMLID = None
+                            originalXMLID = None,
+                            startIndex = 0
                         ),
                         StandoffTagV1(
                             standoffTagClassIri = OntologyConstants.KnoraBase.StandoffLinkTag,
@@ -1015,7 +1016,8 @@ object ResourcesResponderV1SpecFullData {
                             startPosition = 36,
                             attributes = Vector(StandoffTagIriAttributeV1(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink, value = "http://data.knora.org/047db418ae06/values/2428fc96-1383-4457-9704-077b37256103")),
                             uuid = UUID.randomUUID().toString,
-                            originalXMLID = None
+                            originalXMLID = None,
+                            startIndex = 0
                         )
                     ),
                     utf8str = "Derselbe Holzschnitt wird auf Seite c7r der lateinischen Ausgabe des Narrenschiffs verwendet.\r",

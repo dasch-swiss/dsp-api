@@ -664,6 +664,7 @@ object ResourcesResponderV1Spec {
   * Tests [[ResourcesResponderV1]].
   */
 class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
+
     import ResourcesResponderV1Spec._
 
     // Construct the actors needed for this test.
@@ -932,7 +933,7 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
 
             expectMsgPF(timeout) {
                 case response: ResourceFullResponseV1 =>
-                    // compareResourceFullResponses(received = response, expected = ResourcesResponderV1SpecFullData.expectedRegionFullResource)
+                // compareResourceFullResponses(received = response, expected = ResourcesResponderV1SpecFullData.expectedRegionFullResource)
             }
         }
 
@@ -1118,6 +1119,58 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
             }
         }
 
+        "not create a resource containing a text value with a standoff reference to a nonexistent resource" in {
+            val nonexistentIri = "http://data.knora.org/nonexistent"
+
+            val title1 = TextValueSimpleV1("A beautiful book")
+
+            val citation1 = TextValueWithStandoffV1(
+                utf8str = "This comment refers to another resource",
+                standoff = Vector(
+                    StandoffTagV1(
+                        standoffTagClassIri = OntologyConstants.KnoraBase.StandoffLinkTag,
+                        dataType = Some(StandoffDataTypeClasses.StandoffLinkTag),
+                        startPosition = 31,
+                        endPosition = 39,
+                        startIndex = 0,
+                        attributes = Vector(StandoffTagIriAttributeV1(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink, value = nonexistentIri)),
+                        uuid = UUID.randomUUID().toString,
+                        originalXMLID = None
+                    )
+                ),
+                resource_reference = Set(nonexistentIri),
+                mapping = ResourcesResponderV1SpecFullData.dummyMapping,
+                mappingIri = "http://data.knora.org/projects/standoff/mappings/StandardMapping"
+            )
+
+            val publoc = TextValueSimpleV1("Entenhausen")
+
+            val pubdate = DateUtilV1.createJDNValueV1FromDateString("GREGORIAN:2015-12-03")
+
+            val valuesToBeCreated: Map[IRI, Seq[CreateValueV1WithComment]] = Map(
+                "http://www.knora.org/ontology/incunabula#title" -> Vector(CreateValueV1WithComment(title1)),
+                "http://www.knora.org/ontology/incunabula#pubdate" -> Vector(CreateValueV1WithComment(pubdate)),
+                "http://www.knora.org/ontology/incunabula#citation" -> Vector(
+                    CreateValueV1WithComment(citation1, None)
+                ),
+                "http://www.knora.org/ontology/incunabula#publoc" -> Vector(CreateValueV1WithComment(publoc))
+            )
+
+
+            actorUnderTest ! ResourceCreateRequestV1(
+                resourceTypeIri = "http://www.knora.org/ontology/incunabula#book",
+                label = "Book with reference to nonexistent resource",
+                projectIri = "http://data.knora.org/projects/77275339",
+                values = valuesToBeCreated,
+                userProfile = incunabulaUser,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => println(msg.toString); msg.cause.isInstanceOf[NotFoundException] should ===(true)
+            }
+        }
+
         "create a new resource of type incunabula:book with values" in {
 
             val title1 = TextValueSimpleV1("A beautiful book")
@@ -1131,7 +1184,8 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
                         startPosition = 5,
                         endPosition = 13,
                         uuid = UUID.randomUUID().toString,
-                        originalXMLID = None
+                        originalXMLID = None,
+                        startIndex = 0
                     ),
                     StandoffTagV1(
                         standoffTagClassIri = OntologyConstants.KnoraBase.StandoffLinkTag,
@@ -1140,7 +1194,8 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
                         endPosition = 40,
                         attributes = Vector(StandoffTagIriAttributeV1(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink, value = "http://data.knora.org/c5058f3a")),
                         uuid = UUID.randomUUID().toString,
-                        originalXMLID = None
+                        originalXMLID = None,
+                        startIndex = 0
                     )
                 ),
                 mapping = ResourcesResponderV1SpecFullData.dummyMapping,
@@ -1515,7 +1570,7 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case response: GraphDataGetResponseV1 => response should===(graphWithStandoffLink)
+                case response: GraphDataGetResponseV1 => response should ===(graphWithStandoffLink)
             }
         }
 
@@ -1527,7 +1582,7 @@ class ResourcesResponderV1Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case response: GraphDataGetResponseV1 => response should===(graphWithOneNode)
+                case response: GraphDataGetResponseV1 => response should ===(graphWithOneNode)
             }
         }
     }

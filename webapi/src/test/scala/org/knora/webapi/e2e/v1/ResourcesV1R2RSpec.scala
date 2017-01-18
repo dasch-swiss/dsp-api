@@ -669,7 +669,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
 
         }
 
-        /*"attempt to create a resource of type thing submitting a wrong standoff link" in {
+        "attempt to create a resource of type thing submitting a wrong standoff link" in {
 
             val xml =
                 s"""<?xml version="1.0" encoding="UTF-8"?>
@@ -700,13 +700,13 @@ class ResourcesV1R2RSpec extends R2RSpec {
                 //println(response)
 
                 // the route should reject the request because an IRI is wrong (formally valid though)
-                assert(status == StatusCodes.BadRequest, response.toString)
+                assert(status == StatusCodes.NotFound, response.toString)
 
 
 
             }
 
-        }*/
+        }
 
 
 
