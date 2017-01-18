@@ -22,17 +22,9 @@ package org.knora.salsah.browser
 
 import akka.actor.ActorSystem
 import akka.util.Timeout
-import com.typesafe.config.ConfigFactory
-import org.knora.salsah.SettingsImpl
 import org.openqa.selenium.{By, WebElement}
-import org.scalatest._
 import org.scalatest.concurrent.Eventually._
-import spray.client.pipelining._
-import spray.http.MediaTypes._
-import spray.http.{HttpRequest, HttpResponse, _}
 
-import scala.collection.JavaConversions._
-import scala.concurrent.{Await, Future}
 import scala.concurrent.duration._
 
 /**
@@ -81,7 +73,7 @@ class SearchAndEditSpec extends SalsahSpec {
     // In order to run these tests, start `webapi` using the option `allowResetTriplestoreContentOperationOverHTTP`
 
 
-    def doZeitgloeckleinSearch() = {
+    def doZeitgloeckleinSearch(): Unit = {
 
         val searchField: WebElement = page.getSimpleSearchField
         searchField.clear()
@@ -184,7 +176,7 @@ class SearchAndEditSpec extends SalsahSpec {
 
             page.getValueField(1).sendKeys("Zeitglöcklein")
 
-            page.submitExtendedSearch
+            page.submitExtendedSearch()
 
             val rows = page.getExtendedSearchResultRows
 
@@ -201,7 +193,7 @@ class SearchAndEditSpec extends SalsahSpec {
 
             page.selectRestype("http://www.knora.org/ontology/knora-base#Region")
 
-            page.submitExtendedSearch
+            page.submitExtendedSearch()
 
             val rows = page.getExtendedSearchResultRows
 
@@ -240,7 +232,7 @@ class SearchAndEditSpec extends SalsahSpec {
 
             page.chooseElementFromSearchbox(1)
 
-            page.submitExtendedSearch
+            page.submitExtendedSearch()
 
             val rows = page.getExtendedSearchResultRows
 
@@ -277,7 +269,7 @@ class SearchAndEditSpec extends SalsahSpec {
 
             secondSel.selectByValue(listNodeFliegen)
 
-            page.submitExtendedSearch
+            page.submitExtendedSearch()
 
             val rows = page.getExtendedSearchResultRows
 
@@ -302,20 +294,20 @@ class SearchAndEditSpec extends SalsahSpec {
 
             calsel.selectByValue("JULIAN")
 
-            val monthsel = page.getMonthSelectionInExtendedSearchForm(dateForm)
+            val monthsel = page.getMonthSelectionInExtendedSearchForm(dateForm, 1)
 
             monthsel.selectByValue("8")
 
-            val days = page.getDaysInExtendedSearchForm(dateForm = dateForm)
+            val days = page.getDaysInExtendedSearchForm(dateForm = dateForm, 1)
 
             days.head.click()
 
-            val yearsel = page.getYearFieldInExtendedSearchForm(dateForm)
+            val yearsel = page.getYearFieldInExtendedSearchForm(dateForm, 1)
 
             yearsel.clear()
             yearsel.sendKeys("1497")
 
-            page.submitExtendedSearch
+            page.submitExtendedSearch()
 
             val rows = page.getExtendedSearchResultRows
 
@@ -380,7 +372,7 @@ class SearchAndEditSpec extends SalsahSpec {
             yearsel2.clear()
             yearsel2.sendKeys("1495")
 
-            page.submitExtendedSearch
+            page.submitExtendedSearch()
 
             val rows = page.getExtendedSearchResultRows
 
@@ -396,7 +388,7 @@ class SearchAndEditSpec extends SalsahSpec {
 
             page.selectRestype("http://www.knora.org/ontology/incunabula#book")
 
-            page.submitExtendedSearch
+            page.submitExtendedSearch()
 
             val rows = page.getExtendedSearchResultRows
 
@@ -543,7 +535,7 @@ class SearchAndEditSpec extends SalsahSpec {
             val editFields = page.getEditingFieldsFromMetadataSection(metadataSection)
 
             // get the field representing the seqnum of the page
-            val creatorField = editFields(0)
+            val creatorField = editFields.head
 
             page.clickAddButton(creatorField)
 
@@ -654,7 +646,7 @@ class SearchAndEditSpec extends SalsahSpec {
 
             page.selectRestype("http://www.knora.org/ontology/images#bild")
 
-            page.submitExtendedSearch
+            page.submitExtendedSearch()
 
             val rows = page.getExtendedSearchResultRows
 
@@ -697,7 +689,7 @@ class SearchAndEditSpec extends SalsahSpec {
 
             page.selectRestype("http://www.knora.org/ontology/images#bild")
 
-            page.submitExtendedSearch
+            page.submitExtendedSearch()
 
             val rows = page.getExtendedSearchResultRows
 
@@ -734,12 +726,27 @@ class SearchAndEditSpec extends SalsahSpec {
 
         }
 
+        "display a compound resource without images" in {
 
-        // Uncomment this if you want the browser to close after the test completes.
+            page.load()
+            val searchField: WebElement = page.getSimpleSearchField
+            searchField.clear()
+            searchField.sendKeys("excluded alpha\n")
+            val header = page.getSearchResultHeader
+            assert(header.contains("Total of 1 hits"))
+            val rows = page.getExtendedSearchResultRows
+            val row1Text = page.getSearchResultRowText(rows.head)
+            assert(row1Text.contains("excluded Alpha"))
+            rows.head.click()
+            val window = page.getWindow(1)
+            val metadataSection: WebElement = page.getMetadataSection(window)
 
-        /*"close the browser" in {
+        }
+
+
+        "close the browser" in {
             page.quit()
-        }*/
+        }
 
     }
 }
