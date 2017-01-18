@@ -38,20 +38,34 @@ PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 
 SELECT ?referringResource ?linkProp ?prop ?obj ?isLinkValue ?objPred ?objObj
 WHERE {
-    BIND(IRI("@resourceIri") as ?resource)
 
-    ?resource knora-base:isDeleted false .
+    @*
 
-    @* Find incoming links that are subproperties of knora-base:hasLinkTo but not knora-base:isPartOf. *@
+    Find incoming links that are subproperties of knora-base:hasLinkTo but not knora-base:isPartOf.
 
-    ?linkProp rdfs:subPropertyOf* knora-base:hasLinkTo .
+    Makes use of a subquery in order to limit the number of referring resources.
 
-    FILTER NOT EXISTS {
-        ?linkProp rdfs:subPropertyOf* knora-base:isPartOf .
+    *@
+
+    {
+        SELECT ?resource ?referringResource ?linkProp
+        WHERE {
+
+            BIND(IRI("@resourceIri") as ?resource)
+
+            ?resource knora-base:isDeleted false .
+
+            ?linkProp rdfs:subPropertyOf* knora-base:hasLinkTo .
+
+            FILTER NOT EXISTS {
+                ?linkProp rdfs:subPropertyOf* knora-base:isPartOf .
+            }
+
+            ?referringResource ?linkProp ?resource ;
+                knora-base:isDeleted false .
+
+        } LIMIT 50
     }
-
-    ?referringResource ?linkProp ?resource ;
-        knora-base:isDeleted false .
 
     {
         @* Get basic information about the source of each link. *@

@@ -76,7 +76,11 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
         RdfDataObject(path = "../knora-ontologies/knora-base.ttl", name = "http://www.knora.org/ontology/knora-base"),
         RdfDataObject(path = "../knora-ontologies/knora-dc.ttl", name = "http://www.knora.org/ontology/dc"),
         RdfDataObject(path = "../knora-ontologies/salsah-gui.ttl", name = "http://www.knora.org/ontology/salsah-gui"),
-        RdfDataObject(path = "_test_data/ontologies/incunabula-onto.ttl", name = "http://www.knora.org/ontology/incunabula")
+        RdfDataObject(path = "_test_data/ontologies/incunabula-onto.ttl", name = "http://www.knora.org/ontology/incunabula"),
+        RdfDataObject(path = "_test_data/ontologies/images-demo-onto.ttl", name = "http://www.knora.org/ontology/images"),
+        RdfDataObject(path = "_test_data/ontologies/anything-onto.ttl", name = "http://www.knora.org/ontology/anything"),
+        RdfDataObject(path = "_test_data/ontologies/beol-onto.ttl", name = "http://www.knora.org/ontology/beol"),
+        RdfDataObject(path = "_test_data/ontologies/biblio-onto.ttl", name = "http://www.knora.org/ontology/biblio")
     )
 
     // The default timeout for receiving reply messages from actors.
@@ -1140,6 +1144,19 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
             }
         }
 
+        "return an appropriate error message if a resource class is not found" in {
+            // http://localhost:3333/v1/resourcetypes/http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23image
+
+            actorUnderTest ! ResourceTypeGetRequestV1(
+                userProfile = OntologyResponderV1Spec.userProfileWithGerman,
+                resourceTypeIri = "http://www.knora.org/ontology/incunabula#image"
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[NotFoundException] should ===(true)
+            }
+        }
+
         "return labels in the user's preferred language" in {
             actorUnderTest ! EntityInfoGetRequestV1(
                 propertyIris = Set("http://www.knora.org/ontology/incunabula#title"),
@@ -1188,6 +1205,19 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
             expectMsgPF(timeout) {
                 case msg: PropertyTypesForNamedGraphResponseV1 =>
                     checkPropertyTypesForNamedGraphIncunabula(received = msg, expected = propertyTypesForNamedGraphIncunabula)
+            }
+        }
+
+        "get all the properties for all vocabularies" in {
+            actorUnderTest ! PropertyTypesForNamedGraphGetRequestV1(
+                namedGraph = None,
+                userProfile = OntologyResponderV1Spec.userProfileWithEnglish
+            )
+
+            expectMsgPF(timeout) {
+                case msg: PropertyTypesForNamedGraphResponseV1 =>
+                    // simply checks that no error occurred when getting the property definitions for all vocabularies
+                    ()
             }
         }
     }

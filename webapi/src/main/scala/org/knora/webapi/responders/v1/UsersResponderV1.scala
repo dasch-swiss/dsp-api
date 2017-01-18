@@ -43,7 +43,7 @@ class UsersResponderV1 extends ResponderV1 {
     def receive = {
         case UserProfileGetRequestV1(userIri) => future2Message(sender(), getUserProfileV1(userIri), log)
         case UserProfileByUsernameGetRequestV1(username) => future2Message(sender(), getUserProfileByUsernameV1(username), log)
-        case other => sender ! Status.Failure(UnexpectedMessageException(s"Unexpected message $other of type ${other.getClass.getCanonicalName}"))
+        case other => handleUnexpectedMessage(sender(), other, log)
     }
 
     /**

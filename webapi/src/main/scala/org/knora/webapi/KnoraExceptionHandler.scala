@@ -20,24 +20,13 @@ object KnoraExceptionHandler {
 
         /* TODO: Find out which response format should be generated, by looking at what the client is requesting / accepting (issue #292) */
 
-        case rre: RequestRejectedException =>
-            extractUri { uri =>
-                complete(exceptionToJsonHttpResponse(rre, settingsImpl))
-            }
-
-        case ise: InternalServerException =>
-            extractUri { uri =>
-                log.error(ise, s"Unable to run route $uri")
-                complete(exceptionToJsonHttpResponse(ise, settingsImpl))
-            }
+        case rre: RequestRejectedException => complete(exceptionToJsonHttpResponse(rre, settingsImpl))
 
         case other =>
             extractUri { uri =>
                 log.error(other, s"Unable to run route $uri")
                 complete(exceptionToJsonHttpResponse(other, settingsImpl))
             }
-
-
     }
 
     /**

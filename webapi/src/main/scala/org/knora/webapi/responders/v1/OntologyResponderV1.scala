@@ -88,7 +88,7 @@ class OntologyResponderV1 extends ResponderV1 {
         case ResourceTypesForNamedGraphGetRequestV1(namedGraphIri, userProfile) => future2Message(sender(), getResourceTypesForNamedGraph(namedGraphIri, userProfile), log)
         case PropertyTypesForNamedGraphGetRequestV1(namedGraphIri, userProfile) => future2Message(sender(), getPropertyTypesForNamedGraph(namedGraphIri, userProfile), log)
         case PropertyTypesForResourceTypeGetRequestV1(restypeId, userProfile) => future2Message(sender(), getPropertyTypesForResourceType(restypeId, userProfile), log)
-        case other => sender ! Status.Failure(UnexpectedMessageException(s"Unexpected message $other of type ${other.getClass.getCanonicalName}"))
+        case other => handleUnexpectedMessage(sender(), other, log)
     }
 
     /**
@@ -224,8 +224,8 @@ class OntologyResponderV1 extends ResponderV1 {
             resourceDefsGrouped: Map[IRI, Seq[VariableResultsRow]] = resourceDefsRows.groupBy(_.rowMap("resourceClass"))
             resourceClassIris = resourceDefsGrouped.keySet
 
-            // Group the rows representing property definitions by property IRI. Exclude knora-base:hasValue, which is never used directly.
-            propertyDefsGrouped: Map[IRI, Seq[VariableResultsRow]] = propertyDefsRows.groupBy(_.rowMap("prop")) - OntologyConstants.KnoraBase.HasValue
+            // Group the rows representing property definitions by property IRI. Exclude knora-base:resourceProperty and knora-base:hasValue, which is never used directly.
+            propertyDefsGrouped: Map[IRI, Seq[VariableResultsRow]] = propertyDefsRows.groupBy(_.rowMap("prop")) - OntologyConstants.KnoraBase.ResourceProperty - OntologyConstants.KnoraBase.HasValue
             propertyIris = propertyDefsGrouped.keySet
 
             // Group the rows representing value class relations by value class IRI.
@@ -468,8 +468,8 @@ class OntologyResponderV1 extends ResponderV1 {
         for {
             cacheData <- getCacheData
             response = EntityInfoGetResponseV1(
-                resourceEntityInfoMap = cacheData.resourceClassDefs.filterKeys(resourceIris),
-                propertyEntityInfoMap = cacheData.propertyDefs.filterKeys(propertyIris)
+                resourceEntityInfoMap = new ErrorHandlingMap(cacheData.resourceClassDefs.filterKeys(resourceIris), { key => s"Resource class $key not found" }),
+                propertyEntityInfoMap = new ErrorHandlingMap(cacheData.propertyDefs.filterKeys(propertyIris), { key => s"Property $key not found" })
             )
         } yield response
     }
@@ -487,7 +487,7 @@ class OntologyResponderV1 extends ResponderV1 {
         for {
         // Get all information about the resource type, including its property cardinalities.
             resourceClassInfoResponse: EntityInfoGetResponseV1 <- getEntityInfoResponseV1(resourceIris = Set(resourceTypeIri), userProfile = userProfile)
-            resourceClassInfo: ResourceEntityInfoV1 = resourceClassInfoResponse.resourceEntityInfoMap(resourceTypeIri)
+            resourceClassInfo: ResourceEntityInfoV1 = resourceClassInfoResponse.resourceEntityInfoMap.getOrElse(resourceTypeIri, throw NotFoundException(s"Resource class $resourceTypeIri not found"))
 
             // Get all information about those properties.
             propertyInfo: EntityInfoGetResponseV1 <- getEntityInfoResponseV1(propertyIris = resourceClassInfo.cardinalities.keySet, userProfile = userProfile)

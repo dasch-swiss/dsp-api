@@ -277,7 +277,7 @@ object RepresentationV1JsonProtocol extends DefaultJsonProtocol with NullOptions
             val fields = Map(
                 "originalFilename" -> request.originalFilename.toJson,
                 "originalMimeType" -> request.originalMimeType.toJson,
-                "source" -> request.toString.toJson
+                "source" -> request.source.toString.toJson
             )
 
             JsObject(fields)

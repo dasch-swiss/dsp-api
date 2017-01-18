@@ -67,11 +67,23 @@ class ResourcesResponderV1 extends ResponderV1 {
         case PropertiesGetRequestV1(resourceIri: IRI, userProfile: UserProfileV1) => future2Message(sender(), getPropertiesV1(resourceIri = resourceIri, userProfile = userProfile), log)
         case resourceDeleteRequest: ResourceDeleteRequestV1 => future2Message(sender(), deleteResourceV1(resourceDeleteRequest), log)
         case ChangeResourceLabelRequestV1(resourceIri, label, userProfile, apiRequestID) => future2Message(sender(), changeResourceLabelV1(resourceIri, label, apiRequestID, userProfile), log)
-        case other => sender ! Status.Failure(UnexpectedMessageException(s"Unexpected message $other of type ${other.getClass.getCanonicalName}"))
+        case UnexpectedMessageRequest() => future2Message(sender(), makeFutureOfUnit, log)
+        case InternalServerExceptionMessageRequest() => future2Message(sender, makeInternalServerException, log)
+        case other => handleUnexpectedMessage(sender(), other, log)
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Methods for generating complete API responses.
+
+    // TODO: move this to a test responder in the test package.
+    private def makeInternalServerException: Future[String] = {
+        Future.failed(UpdateNotPerformedException("thrown inside the ResourcesResponder"))
+    }
+
+    // TODO: move this to a test responder in the test package.
+    private def makeFutureOfUnit: Future[Unit] = {
+        Future(())
+    }
 
     /**
       * Gets a graph of resources that are reachable via links to or from a given resource.
