@@ -82,19 +82,9 @@ class PermissionsResponderV1 extends ResponderV1 {
     def permissionsDataGetV1(projectIris: Seq[IRI], groupIris: Seq[IRI], isInProjectAdminGroups: Seq[IRI], isInSystemAdminGroup: Boolean): Future[PermissionDataV1] = {
 
         for {
-            a <- Future("")
-
-            /* If the user is member of the SystemAdmin group, then we also need to return the SystemProject ProjectInfo */
-            extendedProjectIris: Seq[IRI] = if (isInSystemAdminGroup) {
-                projectIris.toList ::: List(OntologyConstants.KnoraBase.SystemProject)
-            } else {
-                projectIris
-            }
-            //_ = log.debug(s"permissionsProfileGetV1 - extendedProjectIris: $extendedProjectIris")
-
             // find out to which project each group belongs to
             //_ = log.debug("getPermissionsProfileV1 - find out to which project each group belongs to")
-            groups: List[(IRI, IRI)] = if (groupIris.nonEmpty) {
+            groups: List[(IRI, IRI)] <- Future(if (groupIris.nonEmpty) {
                 groupIris.map {
                     groupIri => {
                         val resFuture = for {
@@ -106,7 +96,7 @@ class PermissionsResponderV1 extends ResponderV1 {
                 }.toList
             } else {
                 List.empty[(IRI, IRI)]
-            }
+            })
             //_ = log.debug(s"permissionsProfileGetV1 - groups: ${MessageUtil.toSource(groups)}")
 
 
@@ -363,10 +353,8 @@ class PermissionsResponderV1 extends ResponderV1 {
       */
     private def administrativePermissionForProjectGroupGetV1(projectIRI: IRI, groupIRI: IRI): Future[Option[AdministrativePermissionV1]] = {
         for {
-            a <- Future("")
-
             // check if necessary field are not empty.
-            _ = if (projectIRI.isEmpty) throw BadRequestException("Project cannot be empty")
+            _ <- Future(if (projectIRI.isEmpty) throw BadRequestException("Project cannot be empty"))
             _ = if (groupIRI.isEmpty) throw BadRequestException("Group cannot be empty")
 
             sparqlQueryString <- Future(queries.sparql.v1.txt.getAdministrativePermissionForProjectAndGroup(
@@ -654,10 +642,8 @@ class PermissionsResponderV1 extends ResponderV1 {
       */
     def defaultObjectAccessPermissionGetV1(projectIRI: IRI, groupIRI: Option[IRI], resourceClassIRI: Option[IRI], propertyIRI: Option[IRI]): Future[Option[DefaultObjectAccessPermissionV1]] = {
         for {
-            a <- Future("")
-
             // check if necessary field are not empty.
-            _ = if (projectIRI.isEmpty) throw BadRequestException("Project cannot be empty")
+            _ <- Future(if (projectIRI.isEmpty) throw BadRequestException("Project cannot be empty"))
 
             // check supplied parameters.
             parametersSupplied = List(groupIRI, resourceClassIRI, propertyIRI).flatten.size
@@ -752,10 +738,8 @@ class PermissionsResponderV1 extends ResponderV1 {
 
         //log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - projectIRI: $projectIRI, resourceClassIRI: $resourceClassIRI, propertyIRI: $propertyIRI, permissionData:$permissionData")
         for {
-            a <- Future("")
-
             // check if necessary field are defined.
-            _ = if (projectIRI.isEmpty) throw BadRequestException("Project cannot be empty")
+            _ <- Future(if (projectIRI.isEmpty) throw BadRequestException("Project cannot be empty"))
             _ = if (resourceClassIRI.isEmpty && propertyIRI.isEmpty) throw BadRequestException("Either resourceClassIri or propertyTypeIri need to be supplied")
             _ = if (resourceClassIRI.isDefined && propertyIRI.isDefined) throw BadRequestException("Not allowed to supply both resourceClassIri and propertyTypeIri")
 
