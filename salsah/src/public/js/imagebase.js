@@ -388,51 +388,55 @@ $(function() {
 	 */
 	var resource_label = function(data) {
 		var rights;
-		switch (data.resdata.rights) {
-			case Rights.RESOURCE_ACCESS_NONE: {
-				rights = Rights.VALUE_ACCESS_NONE;
-				break;
-			}
-			case Rights.RESOURCE_ACCESS_VIEW_RESTRICTED:
-			case Rights.RESOURCE_ACCESS_VIEW: {
-				rights = Rights.VALUE_ACCESS_VIEW;
-				break;
-			}
-			case Rights.RESOURCE_ACCESS_ANNOTATE:
-			case Rights.RESOURCE_ACCESS_EXTEND:
-			case Rights.RESOURCE_ACCESS_OVERRIDE: {
-				rights = Rights.VALUE_ACCESS_ANNOTATE;
-				break;
-			}
-			case Rights.RESOURCE_ACCESS_MODIFY:
-			case Rights.VALUE_ACCESS_DELETE:
-			case Rights.RESOURCE_ACCESS_RIGHTS: {
-				rights = Rights.VALUE_ACCESS_MODIFY
-				break;
-			}
-			default: {
-				rights = Rights.VALUE_ACCESS_NONE;
-			}
-		}
-		data.props.__label__ = {
-			attributes: "size=64;maxlength=64",
-			comments: [],
-			guielement: "text",
-			guiorder: 0,
-			is_annotation: 0,
-			label: "Label",
-			occurrence: "1",
-			pid: "http://www.w3.org/2000/01/rdf-schema#label",
-			regular_property: 1,
-			value_firstprops: [null],
-			value_iconsrcs: [null],
-			value_ids: [null],
-			value_restype: [null],
-			value_rights: [rights],
-			values: [data.resinfo.firstproperty],
-			valuetype_id: 'LABEL'
-		};
-	}
+
+		if (data.resdata !== undefined) {
+
+            switch (data.resdata.rights) {
+                case Rights.RESOURCE_ACCESS_NONE: {
+                    rights = Rights.VALUE_ACCESS_NONE;
+                    break;
+                }
+                case Rights.RESOURCE_ACCESS_VIEW_RESTRICTED:
+                case Rights.RESOURCE_ACCESS_VIEW: {
+                    rights = Rights.VALUE_ACCESS_VIEW;
+                    break;
+                }
+                case Rights.RESOURCE_ACCESS_ANNOTATE:
+                case Rights.RESOURCE_ACCESS_EXTEND:
+                case Rights.RESOURCE_ACCESS_OVERRIDE: {
+                    rights = Rights.VALUE_ACCESS_ANNOTATE;
+                    break;
+                }
+                case Rights.RESOURCE_ACCESS_MODIFY:
+                case Rights.VALUE_ACCESS_DELETE:
+                case Rights.RESOURCE_ACCESS_RIGHTS: {
+                    rights = Rights.VALUE_ACCESS_MODIFY;
+                    break;
+                }
+                default: {
+                    rights = Rights.VALUE_ACCESS_NONE;
+                }
+            }
+            data.props.__label__ = {
+                attributes: "size=64;maxlength=64",
+                comments: [],
+                guielement: "text",
+                guiorder: 0,
+                is_annotation: 0,
+                label: "Label",
+                occurrence: "1",
+                pid: "http://www.w3.org/2000/01/rdf-schema#label",
+                regular_property: 1,
+                value_firstprops: [null],
+                value_iconsrcs: [null],
+                value_ids: [null],
+                value_restype: [null],
+                value_rights: [rights],
+                values: [data.resinfo.firstproperty],
+                valuetype_id: 'LABEL'
+            };
+        }
+	};
 
 	/**
 	* This function fills the Metadata area with the image specific information including regions
@@ -1573,6 +1577,13 @@ $(function() {
 
 		var window_content = window_html.win('contentElement');
 		window_content.addClass('propedit_frame');
+
+		var description = "Label: ";
+		var label = $("<input>", {"class": "__label", "type": "text"}).val("Description of the link ");
+
+        window_content.append(description);
+		window_content.append(label);
+
 		window_content.append(strings._drop_here); // Translations !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 		var link_dropbox;
 		window_content.append(
@@ -1590,7 +1601,7 @@ $(function() {
 							reqtype: 'info'
 						}, function(data) {
 							if (data.status == ApiErrors.OK) {
-								resource_label(data);
+								//resource_label(data);
 								var resinfo = data.resource_info;
 								var linkitem = $('<div>', {title: 'remove on click', 'data-resid': dropdata.resid});
 								linkitem.append($('<img>', {src: resinfo.restype_iconsrc})).append(' ');
@@ -1633,19 +1644,7 @@ $(function() {
 			function(event) {
 				//var commentField = window_content.find('textarea').val();
 
-				var rtdata = rt_txt.htmleditor('value');
-
-				var rt_props = {};
-				rt_props['utf8str'] = rtdata.utf8str;
-				rt_props['textattr'] = JSON.stringify(rtdata.textattr);
-				rt_props['resource_reference'] = [];
-				if (rtdata.textattr['_link'] !== undefined) {
-					for (var link_index in rtdata.textattr['_link']) {
-						if (rtdata.textattr['_link'][link_index].resid !== undefined && rt_props['resource_reference'].indexOf(rtdata.textattr['_link'][link_index].resid) == -1) {
-							rt_props['resource_reference'].push(rtdata.textattr['_link'][link_index].resid);
-						}
-					}
-				}
+				var rt_props = rt_txt.htmleditor('value');
 
 				var resIdsArr = [];
 				window_content.find('.links div').each(
@@ -1660,7 +1659,7 @@ $(function() {
 
 					SALSAH.ApiPost('resources', { // use resources route because it is a knora-base_linkObject resource that is to be created
 						restype_id: "http://www.knora.org/ontology/knora-base#LinkObj",
-						label: "testlink",
+						label: window_content.find(".__label").val(),
 						project_id: SALSAH.userdata.projects[0],
 						properties: {
 							"http://www.knora.org/ontology/knora-base#hasLinkTo": resIdsArr,
