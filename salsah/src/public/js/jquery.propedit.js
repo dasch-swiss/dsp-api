@@ -657,15 +657,19 @@
 					data.project_id = project_id;
 					SALSAH.ApiPost('values', data, function(data) {
 						if (data.status == ApiErrors.OK) {
-							// data.value has the following members:
-							//   data.value.utf8str
-							//   data.value.textattr
-							//   data.value.resource_reference
-							//
-							var tmpobj = {};
-							tmpobj.utf8str = data.value.utf8str;
-							tmpobj.textattr = data.value.textattr;
-							tmpobj.resource_reference = data.value.resource_reference;
+							// if the text has no standoff, 'utf8str' us given
+							// if the text has markup, 'xml' is given
+
+                            var tmpobj = {};
+							if (data.value.utf8str !== undefined) {
+							 	// simple text
+                                tmpobj.utf8str = data.value.utf8str;
+							} else if (data.value.xml !== undefined){
+							 	// xml
+                                tmpobj.xml = data.value.xml;
+							} else {
+								alert("no text value given for text property (propedit.js)")
+							}
 
 							init_value_structure();
 							propinfo[active.prop].values[active.value_index] = tmpobj;
@@ -1471,10 +1475,9 @@
 							postdata[propinfo[prop].valuetype_id](value_container, prop, value_index, value_container.find('input').val(), is_new_value);
 						} else {
 
+							// simple text without standoff
 							var richtext_value = {
-								utf8str: value_container.find('input').val(),
-								textattr: JSON.stringify({}),
-								resource_reference: []
+								utf8str: value_container.find('input').val()
 							};
 							postdata[propinfo[prop].valuetype_id](value_container, prop, value_index, richtext_value, is_new_value);
 						}
@@ -1494,62 +1497,43 @@
 					value_container.append(tmpele);
 					tmpele.focus();
 					value_container.append($('<img>', {src: save_icon.src, title: strings._save, 'class': 'propedit'}).click(function(event) {
+                        // simple text without standoff
 						var richtext_value = {
-							utf8str: value_container.find('textarea').val(),
-							textattr: JSON.stringify({}),
-							resource_reference: []
+							utf8str: value_container.find('textarea').val()
 						};
 						postdata[propinfo[prop].valuetype_id](value_container, prop, value_index, richtext_value, is_new_value);
 					}).css({cursor: 'pointer'}));
 					break;
 				}
 				case 'richtext': {
-					
-					var rtopts = {};
-					
-					//
-					// textattr contains the matching between tagnames and offset names
-					// 
-					if (textattr !== undefined) {
-						//console.log(extattr);
-						
-						var matching = {};
-						for (var i in textattr) {
-							var cur_attr = textattr[i].split('=');
-							matching[cur_attr[0]] = cur_attr[1];
-						}
-						
-						rtopts.matching = matching;
-						
-					}
 
 					var tmpele = $('<div>', {'class': 'htmleditor'});
-					
-										
+
+                    var textobj = {};
 					if (!is_new_value) {
-						rtopts.utf8str = propinfo[prop].values[value_index]['utf8str'];
-						rtopts.textattr = $.parseJSON(propinfo[prop].values[value_index]['textattr']);
+						// an existing value is edited, check if it is a simple text without standoff ('utf8str')
+						// or a text with standoff markup ('xml')
+
+                        if (propinfo[prop].values[value_index]['utf8str'] !== undefined) {
+                            // simple text
+                            textobj.utf8str = propinfo[prop].values[value_index]['utf8str'];
+                        } else if (propinfo[prop].values[value_index]['xml'] !== undefined){
+                            // xml
+                            textobj.xml = propinfo[prop].values[value_index]['xml'];
+                        } else {
+                            alert("no text value given for text property")
+                        }
 					}
 					
 					value_container.append(tmpele);
 					// lock focus to prevent problems with iframe
 					var win = tmpele.parents('.win');
 					win.win('setFocusLock', true);
-					tmpele.htmleditor('edit', rtopts);
+					tmpele.htmleditor('edit', textobj);
 					
 					value_container.append($('<img>', {src: save_icon.src, title: strings._save, 'class': 'propedit'}).click(function(event){
-						var rtdata = tmpele.htmleditor('value');
-						var props = {};
-						props['utf8str'] = rtdata.utf8str;
-						props['textattr'] = JSON.stringify(rtdata.textattr);
-						props['resource_reference'] = [];
-						if (rtdata.textattr['_link'] !== undefined) {
-							for (var link_index in rtdata.textattr['_link']) {
-								if (rtdata.textattr['_link'][link_index].resid !== undefined && props['resource_reference'].indexOf(rtdata.textattr['_link'][link_index].resid) == -1) {
-									props['resource_reference'].push(rtdata.textattr['_link'][link_index].resid);
-								}
-							}
-						}
+                        var props = tmpele.htmleditor('value');
+
 						postdata[propinfo[prop].valuetype_id](value_container, prop, value_index, props, is_new_value);
 						
 						win.win('setFocusLock', false);

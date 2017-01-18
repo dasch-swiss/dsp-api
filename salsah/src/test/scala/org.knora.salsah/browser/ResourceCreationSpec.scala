@@ -56,6 +56,8 @@ class ResourceCreationSpec extends SalsahSpec {
         """
             [
                 {"path": "../knora-ontologies/knora-base.ttl", "name": "http://www.knora.org/ontology/knora-base"},
+                {"path": "_test_data/ontologies/standoff-onto.ttl", "name": "http://www.knora.org/ontology/standoff"},
+                {"path": "_test_data/all_data/standoff-data.ttl", "name": "http://www.knora.org/data/standoff"},
                 {"path": "../knora-ontologies/knora-dc.ttl", "name": "http://www.knora.org/ontology/dc"},
                 {"path": "../knora-ontologies/salsah-gui.ttl", "name": "http://www.knora.org/ontology/salsah-gui"},
                 {"path": "_test_data/ontologies/incunabula-onto.ttl", "name": "http://www.knora.org/ontology/incunabula"},
