@@ -1144,6 +1144,19 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
             }
         }
 
+        "return an appropriate error message if a resource class is not found" in {
+            // http://localhost:3333/v1/resourcetypes/http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23image
+
+            actorUnderTest ! ResourceTypeGetRequestV1(
+                userProfile = OntologyResponderV1Spec.userProfileWithGerman,
+                resourceTypeIri = "http://www.knora.org/ontology/incunabula#image"
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[NotFoundException] should ===(true)
+            }
+        }
+
         "return labels in the user's preferred language" in {
             actorUnderTest ! EntityInfoGetRequestV1(
                 propertyIris = Set("http://www.knora.org/ontology/incunabula#title"),
