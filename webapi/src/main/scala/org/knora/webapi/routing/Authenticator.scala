@@ -6,7 +6,7 @@
  *
  * Knora is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
- * by the Free Software Foundation, either version 3 of the License, or
+ * by the Free Software Foundation, either version 3 of the License, orr
  * (at your option) any later version.
  *
  * Knora is distributed in the hope that it will be useful,
@@ -27,8 +27,9 @@ import akka.http.scaladsl.server.RequestContext
 import akka.pattern._
 import akka.util.{ByteString, Timeout}
 import com.typesafe.scalalogging.Logger
+import org.knora.webapi
 import org.knora.webapi._
-import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileByUsernameGetRequestV1, UserProfileGetRequestV1, UserProfileV1}
+import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_PATH
 import org.knora.webapi.util.CacheUtil
 import org.slf4j.LoggerFactory
@@ -177,7 +178,7 @@ trait Authenticator {
         cookies.find(_.name == "KnoraAuthentication") match {
             case Some(authCookie) =>
                 // maybe the value is in the cache or maybe it expired in the meantime.
-                CacheUtil.remove(cacheName, authCookie.value)
+                CacheUtil.remove(AUTHENTICATION_CACHE_NAME, authCookie.value)
             case None => // no cookie, so I can't do anything really
         }
         HttpResponse(
@@ -199,7 +200,7 @@ trait Authenticator {
 
     /**
       * Returns a [[UserProfileV1]] matching the credentials found in the [[RequestContext]].
-      * The credentials can be username/password as parameters, auth headers, or username in a cookie if the profile is
+      * The credentials can be email/password as parameters, auth headers, or email in a cookie if the profile is
       * found in the cache. If no credentials are found, then a default [[UserProfileV1]] is returned. If the credentials
       * not correct, then the corresponding error is returned.
       *
@@ -210,7 +211,7 @@ trait Authenticator {
     def getUserProfileV1(requestContext: RequestContext)(implicit system: ActorSystem, executionContext: ExecutionContext): UserProfileV1 = {
         val settings = Settings(system)
         if (settings.skipAuthentication) {
-            UserProfileV1(UserDataV1(settings.fallbackLanguage)).getCleanUserProfileV1
+            UserProfileV1(UserDataV1(settings.fallbackLanguage)).ofType(UserProfileType.RESTRICTED)
         }
         else {
             // let us first try to get the user profile through the session id from the cookie
@@ -218,26 +219,26 @@ trait Authenticator {
                 case Some(userProfile) =>
                     log.debug(s"Got this UserProfileV1 through the session id: '${userProfile.toString}'")
                     /* we return the userProfileV1 without sensitive information */
-                    userProfile.getCleanUserProfileV1
-
-                case None =>
+                    userProfile.ofType(UserProfileType.RESTRICTED)
+                case None => {
                     log.debug("No cookie or valid session id, so let's look for supplied credentials")
                     extractCredentials(requestContext) match {
-                        case Some((u, p)) =>
-                            log.debug(s"found some credentials '$u', '$p', lets try to authenticate them first")
+                        case Some((e, p)) =>
+                            log.debug(s"found some credentials '$e', '$p', lets try to authenticate them first")
 
-                            authenticateCredentials(u, p, session = false)
+                            authenticateCredentials(e, p, session = false)
                             log.debug("Supplied credentials pass authentication, get the UserProfileV1")
 
-                            val userProfileV1 = getUserProfileByUsername(u)
+                            val userProfileV1 = getUserProfileByEmail(e)
                             log.debug (s"I got a UserProfileV1 '${userProfileV1.toString}', which means that the password is a match")
                             /* we return the userProfileV1 without sensitive information */
-                            userProfileV1.getCleanUserProfileV1
+                            userProfileV1.ofType(UserProfileType.RESTRICTED)
 
                         case None =>
                             log.debug("No credentials found, returning default UserProfileV1!")
                             UserProfileV1(UserDataV1(settings.fallbackLanguage))
                     }
+                }
             }
         }
     }
@@ -252,16 +253,18 @@ object Authenticator {
 
     val BAD_CRED_PASSWORD_MISMATCH = "bad credentials: user found, but password did not match"
     val BAD_CRED_USER_NOT_FOUND = "bad credentials: user not found"
-    val BAD_CRED_USERNAME_NOT_SUPPLIED = "bad credentials: no username supplied"
+    val BAD_CRED_USERNAME_NOT_SUPPLIED = "bad credentials: no email supplied"
     val BAD_CRED_USERNAME_PASSWORD_NOT_EXTRACTABLE = "bad credentials: none found"
+    val BAD_CRED_USER_INACTIVE = "bad credentials: user inactive"
 
     val KNORA_AUTHENTICATION_COOKIE_NAME = "KnoraAuthentication"
+    val AUTHENTICATION_CACHE_NAME = "authenticationCache"
 
     val sessionStore: scala.collection.mutable.Map[String, UserProfileV1] = scala.collection.mutable.Map()
     implicit val timeout: Timeout = Duration(5, SECONDS)
     val log = Logger(LoggerFactory.getLogger(this.getClass))
 
-    private val cacheName = "authenticationCache"
+
 
     /**
       * Tries to extract and then authenticate the credentials.
@@ -285,27 +288,37 @@ object Authenticator {
       * password matches. Caches the user profile after successful authentication under a generated session id if 'session=true', and
       * returns that said session id (or 0 if no session is needed).
       *
-      * @param username the username of the user
+      * @param email the email of the user
       * @param password the password of th user
       * @param session  a [[Boolean]] if set true then a session id will be created and the user profile cached
       * @param system   the current [[ActorSystem]]
       * @return a [[Try[String]] which is the session id under which the profile is stored if authentication was successful.
       */
-    private def authenticateCredentials(username: String, password: String, session: Boolean)(implicit system: ActorSystem, executionContext: ExecutionContext): String = {
-        val userProfileV1 = getUserProfileByUsername(username)
+    private def authenticateCredentials(email: String, password: String, session: Boolean)(implicit system: ActorSystem, executionContext: ExecutionContext): String = {
+        val userProfileV1 = getUserProfileByEmail(email)
+        //log.debug(s"authenticateCredentials - userProfileV1: $userProfileV1")
 
+        /* check if the user is active, if not, then no need to check the password */
+        val isActiveUser = if (userProfileV1.userData.isActiveUser.get) {
+            true
+        } else {
+            log.debug("authenticateCredentials - user is not active")
+            throw BadCredentialsException(BAD_CRED_USER_INACTIVE)
+        }
+
+        /* check the password and if session is started, store it in the cache */
         if (userProfileV1.passwordMatch(password)) {
             // create session id and cache user profile under this id
-            log.debug("password matched")
+            log.debug("authenticateCredentials - password matched")
             if (session) {
                 val sId = System.currentTimeMillis().toString
-                CacheUtil.put(cacheName, sId, userProfileV1)
+                CacheUtil.put(AUTHENTICATION_CACHE_NAME, sId, userProfileV1)
                 sId
             } else {
                 "0"
             }
         } else {
-            log.debug("password did not match")
+            log.debug(s"authenticateCredentials - password did not match")
             throw BadCredentialsException(BAD_CRED_PASSWORD_MISMATCH)
         }
     }
@@ -320,7 +333,7 @@ object Authenticator {
         val cookies: Seq[HttpCookiePair] = requestContext.request.cookies
         cookies.find(_.name == "KnoraAuthentication") match {
             case Some(authCookie) =>
-                val value = CacheUtil.get[UserProfileV1](cacheName, authCookie.value)
+                val value = CacheUtil.get[UserProfileV1](AUTHENTICATION_CACHE_NAME, authCookie.value)
                 log.debug(s"Found this session id: ${authCookie.value} leading to this content in the cache: $value")
                 value
             case None =>
@@ -337,7 +350,7 @@ object Authenticator {
       * Tries to extract the credentials from the requestContext (parameters, auth headers)
       *
       * @param requestContext a [[RequestContext]] containing the http request
-      * @return a [[Option[(String, String)]] either a [[Some]] containing a tuple with the username and password, or a [[None]]
+      * @return a [[Option[(String, String)]] either a [[Some]] containing a tuple with the email and password, or a [[None]]
       *         if no credentials could be found.
       */
     private def extractCredentials(requestContext: RequestContext): Option[(String, String)] = {
@@ -346,8 +359,8 @@ object Authenticator {
         val headers: Seq[HttpHeader] = requestContext.request.headers
 
 
-        // extract username / password from parameters
-        val usernameFromParams: String = params get "username" match {
+        // extract email / password from parameters
+        val usernameFromParams: String = params get "email" match {
             case Some(value) => value.head
             case None => ""
         }
@@ -364,7 +377,7 @@ object Authenticator {
             log.debug("no credentials sent as parameters")
         }
 
-        // extract username / password from the auth header
+        // extract email / password from the auth header
         val authHeaderList = headers filter (httpHeader => httpHeader.lowercaseName.equals("authorization"))
         val authHeaderEncoded = if (authHeaderList.nonEmpty) {
             authHeaderList.head.value.substring(6)
@@ -420,7 +433,7 @@ object Authenticator {
       */
     private def getUserProfileByIri(iri: IRI)(implicit system: ActorSystem, timeout: Timeout, executionContext: ExecutionContext): UserProfileV1 = {
         val responderManager = system.actorSelection(RESPONDER_MANAGER_ACTOR_PATH)
-        val userProfileV1Future = (responderManager ? UserProfileGetRequestV1(iri)).mapTo[UserProfileV1]
+        val userProfileV1Future = (responderManager ? UserProfileByIRIGetRequestV1(iri, UserProfileType.FULL)).mapTo[UserProfileV1]
 
         userProfileV1Future.recover {
             case nfe: NotFoundException => throw BadCredentialsException(s"$BAD_CRED_USER_NOT_FOUND: ${nfe.message}")
@@ -430,32 +443,38 @@ object Authenticator {
     }
 
     /**
-      * Tries to get a [[UserProfileV1]] from the cache or from the triple store matching the username.
+      * Tries to get a [[UserProfileV1]] from the cache or from the triple store matching the email.
       *
-      * @param username         the username of the user to be queried
+      * @param email            the email of the user to be queried
       * @param system           the current akka actor system
       * @param timeout          the timeout of the query
       * @param executionContext the current execution context
       * @return a [[Success(UserProfileV1)]]
       */
-    private def getUserProfileByUsername(username: String)(implicit system: ActorSystem, timeout: Timeout, executionContext: ExecutionContext): UserProfileV1 = {
+    private def getUserProfileByEmail(email: String)(implicit system: ActorSystem, timeout: Timeout, executionContext: ExecutionContext): UserProfileV1 = {
         val responderManager = system.actorSelection(RESPONDER_MANAGER_ACTOR_PATH)
 
-        if (username.nonEmpty) {
+        if (email.nonEmpty) {
             // try to get it from the cache
-            CacheUtil.get[UserProfileV1](cacheName, username) match {
-                case Some(userProfileV1) =>
+            CacheUtil.get[UserProfileV1](AUTHENTICATION_CACHE_NAME, email) match {
+                case Some(userProfile) =>
                     // found a user profile in the cache
-                    userProfileV1
+                    log.debug(s"getUserProfileByEmail - cache hit: $userProfile")
+                    userProfile
                 case None =>
                     // didn't found one, so I will try to get it from the triple store
                     val userProfileV1Future = for {
-                        userProfileV1 <- (responderManager ? UserProfileByUsernameGetRequestV1(username)).mapTo[UserProfileV1]
-                        _ = CacheUtil.put(cacheName, username, userProfileV1)
+                        userProfileV1 <- (responderManager ? UserProfileByEmailGetRequestV1(email, UserProfileType.FULL)).mapTo[UserProfileV1]
+                        _ = CacheUtil.put(AUTHENTICATION_CACHE_NAME, email, userProfileV1)
+                        _ = log.debug(s"getUserProfileByEmail - from triplestore: $userProfileV1")
                     } yield userProfileV1
 
                     userProfileV1Future.recover {
-                        case nfe: NotFoundException => throw BadCredentialsException(s"$BAD_CRED_USER_NOT_FOUND: ${nfe.message}")
+                        case nfe: NotFoundException => {
+                            log.debug(s"getUserProfileByEmail - supplied email not found - throwing exception")
+                            // FIXME: This does not work as expected (#372).
+                            throw BadCredentialsException(s"$BAD_CRED_USER_NOT_FOUND: ${nfe.message}")
+                        }
                     }
 
                     Await.result(userProfileV1Future, Duration(3, SECONDS))

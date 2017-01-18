@@ -1,0 +1,151 @@
+@*
+ * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
+ * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ *
+ * This file is part of Knora.
+ *
+ * Knora is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Knora is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public
+ * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ *@
+
+@import org.knora.webapi.IRI
+
+@**
+ * Updates an existing user with the provided values.
+ *
+ * @param dataNamedGraph the named graph to update.
+ * @param triplestore the name of the triplestore being used. The template uses this value to exclude inferred
+                      results from the WHERE clause of the update.
+ * @param userIri the IRI of the user we want to update.
+ * @param propertyIri the IRI of the property that points from the user to the value.
+ * @param currentValue the current value.
+ * @param newValueIri the new value.
+ *@
+@(adminNamedGraphIri: IRI,
+  triplestore: String,
+  userIri: IRI,
+  maybeEmail: Option[String],
+  maybeGivenName: Option[String],
+  maybeFamilyName: Option[String],
+  maybePassword: Option[String],
+  maybeStatus: Option[Boolean],
+  maybeLang: Option[String],
+  maybeSystemAdmin: Option[Boolean])
+
+prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+prefix xsd: <http://www.w3.org/2001/XMLSchema#>
+prefix knora-base: <http://www.knora.org/ontology/knora-base#>
+
+WITH <@adminNamedGraphIri>
+DELETE {
+
+    @* Delete current values, for which we have a new one. *@
+
+    @if(maybeEmail.nonEmpty) {
+        ?user knora-base:email ?currentEmail .
+    }
+
+    @if(maybeGivenName.nonEmpty) {
+        ?user knora-base:givenName ?currentGivenName .
+    }
+
+    @if(maybeFamilyName.nonEmpty) {
+        ?user knora-base:familyName ?currentFamilyName .
+    }
+
+    @if(maybePassword.nonEmpty) {
+        ?user knora-base:password ?currentPassword .
+    }
+
+    @if(maybeStatus.nonEmpty) {
+        ?user knora-base:status ?currentStatus .
+    }
+
+    @if(maybeLang.nonEmpty) {
+        ?user knora-base:preferredLanguage ?currentPreferredLanguage .
+    }
+
+    @if(maybeSystemAdmin.nonEmpty) {
+        ?user knora-base:isInSystemAdminGroup ?currentIsInSystemAdminGroup .
+    }
+
+} INSERT {
+
+    @* Add the new values. *@
+
+    @if(maybeEmail.nonEmpty) {
+        ?user knora-base:email "@maybeEmail.get"^^xsd:string .
+    }
+
+    @if(maybeGivenName.nonEmpty) {
+        ?user knora-base:givenName "@maybeGivenName.get"^^xsd:string .
+    }
+
+    @if(maybeFamilyName.nonEmpty) {
+        ?user knora-base:familyName "@maybeFamilyName.get"^^xsd:string .
+    }
+
+    @if(maybePassword.nonEmpty) {
+        ?user knora-base:password "@maybePassword.get"^^xsd:string .
+    }
+
+    @if(maybeStatus.nonEmpty) {
+        ?user knora-base:status "@maybeStatus.get"^^xsd:boolean .
+    }
+
+    @if(maybeLang.nonEmpty) {
+        ?user knora-base:preferredLanguage "@maybeLang.get"^^xsd:string .
+    }
+
+    @if(maybeSystemAdmin.nonEmpty) {
+        ?user knora-base:isInSystemAdminGroup "@maybeSystemAdmin.get"^^xsd:boolean .
+    }
+
+}
+
+@*
+
+GraphDB's consistency checking requires reasoning, but reasoning interferes with certain things
+in the WHERE clauses of our SPARQL updates, so we set a GraphDB-specific flag to return only
+explicit statements in the WHERE clause here.
+
+*@
+
+@triplestore match {
+    case "graphdb" | "graphdb-free" => {
+        USING <http://www.ontotext.com/explicit>
+    }
+
+    case other => {}
+}
+
+WHERE {
+    BIND(IRI("@userIri") AS ?user)
+
+    @* Get all current defined values. *@
+
+    ?user knora-base:email ?currentEmail .
+
+    ?user knora-base:givenName ?currentGivenName .
+
+    ?user knora-base:familyName ?currentFamilyName .
+
+    ?user knora-base:password ?currentPassword .
+
+    ?user knora-base:status ?currentStatus .
+
+    ?user knora-base:preferredLanguage ?currentPreferredLanguage .
+
+    ?user knora-base:isInSystemAdminGroup ?currentIsInSystemAdminGroup .
+}

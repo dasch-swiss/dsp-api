@@ -63,23 +63,19 @@ class ResourcesV1R2RSpec extends R2RSpec {
     private val resourcesPath = ResourcesRouteV1.knoraApiPath(system, settings, log)
     private val valuesPath = ValuesRouteV1.knoraApiPath(system, settings, log)
 
-    private val incunabulaUsername = "root"
-    private val anythingUsername = "anything-user"
-    private val password = "test"
+    private val imagesUser = SharedAdminTestData.imagesUser01
+    private val imagesUserEmail = imagesUser.userData.email.get
 
-    private val incunabulaUser = UserProfileV1(
-        projects = Vector("http://data.knora.org/projects/77275339"),
-        groups = Nil,
-        userData = UserDataV1(
-            email = Some("test@test.ch"),
-            lastname = Some("Test"),
-            firstname = Some("User"),
-            username = Some("testuser"),
-            token = None,
-            user_id = Some("http://data.knora.org/users/b83acc5f05"),
-            lang = "de"
-        )
-    )
+    private val incunabulaUser = SharedAdminTestData.incunabulaProjectAdminUser
+    private val incunabulaUserEmail = incunabulaUser.userData.email.get
+
+    private val incunabulaUser2 = SharedAdminTestData.incunabulaCreatorUser
+    private val incunabulaUserEmail2 = incunabulaUser2.userData.email.get
+
+    private val anythingUser = SharedAdminTestData.anythingUser1
+    private val anythingUserEmail = anythingUser.userData.email.get
+
+    private val password = "test"
 
     implicit private val timeout: Timeout = settings.defaultRestoreTimeout
 
@@ -88,9 +84,6 @@ class ResourcesV1R2RSpec extends R2RSpec {
     implicit val ec = system.dispatcher
 
     private val rdfDataObjects = List(
-        RdfDataObject(path = "../knora-ontologies/knora-base.ttl", name = "http://www.knora.org/ontology/knora-base"),
-        RdfDataObject(path = "../knora-ontologies/knora-dc.ttl", name = "http://www.knora.org/ontology/dc"),
-        RdfDataObject(path = "../knora-ontologies/salsah-gui.ttl", name = "http://www.knora.org/ontology/salsah-gui"),
         RdfDataObject(path = "_test_data/ontologies/incunabula-onto.ttl", name = "http://www.knora.org/ontology/incunabula"),
         RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/incunabula"),
         RdfDataObject(path = "_test_data/ontologies/images-demo-onto.ttl", name = "http://www.knora.org/ontology/images"),
@@ -101,7 +94,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
 
     "Load test data" in {
         Await.result(storeManager ? ResetTriplestoreContent(rdfDataObjects), 360.seconds)
-        Await.result(responderManager ? LoadOntologiesRequest(incunabulaUser), 10.seconds)
+        Await.result(responderManager ? LoadOntologiesRequest(SharedAdminTestData.rootUser), 10.seconds)
     }
 
     private val firstThingIri = new MutableTestIri
@@ -289,7 +282,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
             }
         }
 
-        "create a resource of type images:person" in {
+        "create a resource of type 'images:person' in 'images' project" in {
 
             val params =
                 """
@@ -304,7 +297,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
                   |}
                 """.stripMargin
 
-            Post("/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(incunabulaUsername, password)) ~> resourcesPath ~> check {
+            Post("/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(imagesUserEmail, password)) ~> resourcesPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)
             }
 
@@ -346,7 +339,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
             //  "http://www.knora.org/ontology/anything#hasBoolean": [{"boolean_value":true}],
             // "http://www.knora.org/ontology/anything#hasGeometry": [{"geom_value":"{\"status\":\"active\",\"lineColor\":\"#ff3333\",\"lineWidth\":2,\"points\":[{\"x\":0.5516074450084602,\"y\":0.4444444444444444},{\"x\":0.2791878172588832,\"y\":0.5}],\"type\":\"rectangle\",\"original_index\":0}"}],
 
-            Post("/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> resourcesPath ~> check {
+            Post("/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)
 
                 val resId = getResIriFromJsonResponse(response)
@@ -358,7 +351,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
 
         "get the created resource and check its standoff in the response" in {
 
-            Get("/v1/resources/" + URLEncoder.encode(firstThingIri.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> resourcesPath ~> check {
+            Get("/v1/resources/" + URLEncoder.encode(firstThingIri.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -405,7 +398,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
                 }
                 """
 
-            Post("/v1/values", HttpEntity(ContentTypes.`application/json`, newValueParams)) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> valuesPath ~> check {
+            Post("/v1/values", HttpEntity(ContentTypes.`application/json`, newValueParams)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> valuesPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -448,7 +441,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
                 }
                 """
 
-            Put("/v1/values/" + URLEncoder.encode(firstTextValueIRI.get, "UTF-8"), HttpEntity(ContentTypes.`application/json`, newValueParams)) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> valuesPath ~> check {
+            Put("/v1/values/" + URLEncoder.encode(firstTextValueIRI.get, "UTF-8"), HttpEntity(ContentTypes.`application/json`, newValueParams)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> valuesPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -537,7 +530,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
               }
                 """
 
-            Post("/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(incunabulaUsername, password)) ~> resourcesPath ~> check {
+            Post("/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -550,7 +543,8 @@ class ResourcesV1R2RSpec extends R2RSpec {
         }
 
         "get the second resource of type anything:Thing, containing the correct standoff link" in {
-            Get("/v1/resources/" + URLEncoder.encode(secondThingIri.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(incunabulaUsername, password)) ~> resourcesPath ~> check {
+
+            Get("/v1/resources/" + URLEncoder.encode(secondThingIri.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)
 
                 val textValues = getValuesForProp(response, "http://www.knora.org/ontology/anything#hasText").asInstanceOf[JsArray].elements
@@ -570,7 +564,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
 
         "get the first thing resource that is referred to by the second thing resource" in {
 
-            Get("/v1/resources/" + URLEncoder.encode(firstThingIri.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(incunabulaUsername, password)) ~> resourcesPath ~> check {
+            Get("/v1/resources/" + URLEncoder.encode(firstThingIri.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -648,7 +642,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
               }
                 """
 
-            Post("/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(incunabulaUsername, password)) ~> resourcesPath ~> check {
+            Post("/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPath ~> check {
 
                 // the route should reject the request because `old` is not a valid standoff tag name
                 assert(status == StatusCodes.BadRequest, response.toString)
@@ -712,7 +706,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
               }
                 """
 
-            Post("/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(incunabulaUsername, password)) ~> resourcesPath ~> check {
+            Post("/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -776,7 +770,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
               }
                 """
 
-            Post("/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(incunabulaUsername, password)) ~> resourcesPath ~> check {
+            Post("/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPath ~> check {
 
                 // the route should reject the request because an IRI is missing in resource_reference
                 assert(status == StatusCodes.BadRequest, response.toString)
@@ -840,7 +834,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
               }
                 """
 
-            Post("/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(incunabulaUsername, password)) ~> resourcesPath ~> check {
+            Post("/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPath ~> check {
 
                 // the route should reject the request because an IRI is missing in standoff link tags
                 assert(status == StatusCodes.BadRequest, response.toString)
@@ -941,7 +935,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
               }
                 """
 
-            Post("/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> resourcesPath ~> check {
+            Post("/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -1012,9 +1006,11 @@ class ResourcesV1R2RSpec extends R2RSpec {
         }
 
         "mark a resource as deleted" in {
-            Delete("/v1/resources/http%3A%2F%2Fdata.knora.org%2F9d626dc76c03?deleteComment=deleted%20for%20testing") ~> addCredentials(BasicHttpCredentials(incunabulaUsername, password)) ~> resourcesPath ~> check {
+
+            Delete("/v1/resources/http%3A%2F%2Fdata.knora.org%2F9d626dc76c03?deleteComment=deleted%20for%20testing") ~> addCredentials(BasicHttpCredentials(incunabulaUserEmail2, password)) ~> resourcesPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)
             }
+
         }
 
 
@@ -1050,7 +1046,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
               }
                 """
 
-            Post("/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(incunabulaUsername, password)) ~> resourcesPath ~> check {
+            Post("/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -1063,7 +1059,8 @@ class ResourcesV1R2RSpec extends R2RSpec {
         }
 
         "get the fourth resource of type anything:Thing, containing the hyperlink in standoff" in {
-            Get("/v1/resources/" + URLEncoder.encode(fourthThingIri.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(incunabulaUsername, password)) ~> resourcesPath ~> check {
+
+            Get("/v1/resources/" + URLEncoder.encode(fourthThingIri.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)
 
                 val textValues = getValuesForProp(response, "http://www.knora.org/ontology/anything#hasText").asInstanceOf[JsArray].elements
@@ -1129,7 +1126,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
               }
                 """
 
-            Post("/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(incunabulaUsername, password)) ~> resourcesPath ~> check {
+            Post("/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -1142,7 +1139,8 @@ class ResourcesV1R2RSpec extends R2RSpec {
         }
 
         "get the fifth resource of type anything:Thing, containing various standoff markup" in {
-            Get("/v1/resources/" + URLEncoder.encode(fifthThingIri.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(incunabulaUsername, password)) ~> resourcesPath ~> check {
+
+            Get("/v1/resources/" + URLEncoder.encode(fifthThingIri.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)
 
                 val textValues = getValuesForProp(response, "http://www.knora.org/ontology/anything#hasText").asInstanceOf[JsArray].elements
@@ -1280,7 +1278,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
               }
                 """
 
-            Post("/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(incunabulaUsername, password)) ~> resourcesPath ~> check {
+            Post("/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -1293,7 +1291,8 @@ class ResourcesV1R2RSpec extends R2RSpec {
         }
 
         "get the sixth resource of type anything:Thing with internal links to two different resources" in {
-            Get("/v1/resources/" + URLEncoder.encode(sixthThingIri.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(incunabulaUsername, password)) ~> resourcesPath ~> check {
+
+            Get("/v1/resources/" + URLEncoder.encode(sixthThingIri.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)
 
                 val textValues = getValuesForProp(response, "http://www.knora.org/ontology/anything#hasText").asInstanceOf[JsArray].elements
@@ -1322,7 +1321,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
                   }
                 """.stripMargin
 
-            Put("/v1/resources/label/" + URLEncoder.encode("http://data.knora.org/c5058f3a", "UTF-8"),HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(incunabulaUsername, password)) ~> resourcesPath ~> check {
+            Put("/v1/resources/label/" + URLEncoder.encode("http://data.knora.org/c5058f3a", "UTF-8"),HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(incunabulaUserEmail, password)) ~> resourcesPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)
 
                 val label = AkkaHttpUtils.httpResponseToJson(response).fields.get("label") match {
@@ -1351,7 +1350,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    |}
                 """.stripMargin
 
-            Post("/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> resourcesPath ~> check {
+            Post("/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)
 
                 val resId = getResIriFromJsonResponse(response)
@@ -1362,7 +1361,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
 
         "get the created resource and check the comment on the link value" in {
 
-            Get("/v1/resources/" + URLEncoder.encode(seventhThingIri.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> resourcesPath ~> check {
+            Get("/v1/resources/" + URLEncoder.encode(seventhThingIri.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 

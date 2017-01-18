@@ -247,6 +247,16 @@ class KnoraIdUtil {
     }
 
     /**
+      * Creates a new group IRI based on a UUID.
+      *
+      * @return a new group IRI.
+      */
+    def makeRandomGroupIri: String = {
+        val knoraGroupID = makeRandomBase64EncodedUuid
+        s"http:://data.knora.org/groups/$knoraGroupID"
+    }
+
+    /**
       * Converts a SALSAH person ID into a Knora person IRI.
       *
       * @param salsahPersonID the SALSAH person ID.
@@ -332,6 +342,18 @@ class KnoraIdUtil {
         }
     }
 
+    /**
+      * Creates a ned permission IRI based on a UUID
+      * @return the IRI of the permission object
+      */
+    def makeRandomPermissionIri: IRI = {
+        val knoraPermissionID = makeRandomBase64EncodedUuid
+        s"http://data.knora.org/permissions/$knoraPermissionID"
+    }
+
+    ////////////////////////////////////////////////
+    // Helper methods
+    ////////////////////////////////////////////////
     /**
       * Implements an algorithm for generating Knora IDs from SALSAH IDs. Based on the PHP implementation in SALSAH, in
       * `scripts/RDF-Export/rdf-uuid-from.php`.

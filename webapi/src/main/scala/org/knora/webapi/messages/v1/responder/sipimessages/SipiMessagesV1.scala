@@ -24,7 +24,7 @@ import java.io.File
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi._
-import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
+import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1, UserV1JsonProtocol}
 import org.knora.webapi.messages.v1.responder.valuemessages.FileValueV1
 import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
 import spray.json._
@@ -253,9 +253,9 @@ case class SipiFileInfoGetResponseV1(permissionCode: Option[Int],
 /**
   * A spray-json protocol for generating Knora API v1 JSON providing data about representations of a resource.
   */
-object RepresentationV1JsonProtocol extends DefaultJsonProtocol with NullOptions with SprayJsonSupport {
+object RepresentationV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with NullOptions {
 
-    import org.knora.webapi.messages.v1.responder.usermessages.UserDataV1JsonProtocol._
+    import UserV1JsonProtocol.userDataV1Format
 
     /**
       * Converts between [[SipiResponderConversionPathRequestV1]] objects and [[JsValue]] objects.

@@ -20,8 +20,9 @@
 
 package org.knora.webapi.messages.v1.responder.searchmessages
 
+import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi._
-import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
+import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1, UserV1JsonProtocol}
 import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
 import spray.json._
 
@@ -169,9 +170,9 @@ case class SearchResultPage(current: Boolean, start_at: Int, show_nrows: Int)
 /**
   * A spray-json protocol for generating Knora API v1 JSON providing data about representations of a resource.
   */
-object SearchV1JsonProtocol extends DefaultJsonProtocol with NullOptions {
+object SearchV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with NullOptions {
 
-    import org.knora.webapi.messages.v1.responder.usermessages.UserDataV1JsonProtocol._
+    import UserV1JsonProtocol.userDataV1Format
 
     implicit val searchResultPageV1Format: JsonFormat[SearchResultPage] = jsonFormat3(SearchResultPage)
     implicit val searchPreviewDimensionsV1Format: JsonFormat[SearchPreviewDimensionsV1] = jsonFormat2(SearchPreviewDimensionsV1)

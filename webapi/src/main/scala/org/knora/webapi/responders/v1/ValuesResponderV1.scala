@@ -24,19 +24,22 @@ import akka.actor.Status
 import akka.pattern._
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.ontologymessages.{Cardinality, EntityInfoGetRequestV1, EntityInfoGetResponseV1}
+import org.knora.webapi.messages.v1.responder.permissionmessages.DefaultObjectAccessPermissionsStringForPropertyGetV1
+import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoByIRIGetV1, ProjectInfoV1}
 import org.knora.webapi.messages.v1.responder.resourcemessages._
 import org.knora.webapi.messages.v1.responder.sipimessages.{SipiConstants, SipiResponderConversionPathRequestV1, SipiResponderConversionRequestV1, SipiResponderConversionResponseV1}
-import org.knora.webapi.messages.v1.responder.usermessages.{UserProfileGetRequestV1, UserProfileV1}
+import org.knora.webapi.messages.v1.responder.usermessages.{UserProfileByIRIGetRequestV1, UserProfileType, UserProfileV1}
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v1.store.triplestoremessages._
-import org.knora.webapi.responders.ResourceLocker
+import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.twirl.SparqlTemplateLinkUpdate
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util._
 
 import scala.annotation.tailrec
 import scala.collection.breakOut
-import scala.concurrent.Future
+import scala.concurrent.{Await, Future}
+import scala.concurrent.duration._
 
 /**
   * Updates Knora values.
@@ -84,12 +87,12 @@ class ValuesResponderV1 extends ResponderV1 {
             response <- maybeValueQueryResult match {
                 case Some(valueQueryResult) =>
                     for {
-                        valueOwnerProfile <- (responderManager ? UserProfileGetRequestV1(valueQueryResult.ownerIri)).mapTo[UserProfileV1]
+                        valueOwnerProfile <- (responderManager ? UserProfileByIRIGetRequestV1(valueQueryResult.ownerIri, UserProfileType.RESTRICTED)).mapTo[UserProfileV1]
                     } yield ValueGetResponseV1(
                         valuetype = valueQueryResult.value.valueTypeIri,
                         rights = valueQueryResult.permissionCode,
                         value = valueQueryResult.value,
-                        valuecreator = valueOwnerProfile.userData.username.get,
+                        valuecreator = valueOwnerProfile.userData.email.get,
                         valuecreatorname = valueOwnerProfile.userData.fullname.get,
                         valuecreationdate = valueQueryResult.creationDate,
                         comment = valueQueryResult.comment,
@@ -111,7 +114,7 @@ class ValuesResponderV1 extends ResponderV1 {
     private def createValueV1(createValueRequest: CreateValueRequestV1): Future[CreateValueResponseV1] = {
         /**
           * Creates a [[Future]] that does pre-update checks and performs the update. This function will be
-          * called by [[ResourceLocker]] once it has acquired an update lock on the resource.
+          * called by [[IriLocker]] once it has acquired an update lock on the resource.
           *
           * @param userIri the IRI of the user making the request.
           * @return a [[Future]] that does pre-update checks and performs the update.
@@ -179,8 +182,14 @@ class ValuesResponderV1 extends ResponderV1 {
 
             // Everything seems OK, so we can create the value.
 
+            // FIXME: Query the PermissionsResponder for Property DOAP
+            defaultObjectAccessPermissions <- {
+                responderManager ? DefaultObjectAccessPermissionsStringForPropertyGetV1(projectIri = createValueRequest.projectIri, propertyIri = createValueRequest.propertyIri, createValueRequest.userProfile.permissionData)
+            }.mapTo[Option[String]]
+            _ = log.debug(s"createValueV1 - defaultObjectAccessPermissions: $defaultObjectAccessPermissions")
+
             // Construct its permissions from the default permissions of the resource property.
-            permissionsFromDefaults: Option[String] = PermissionUtilV1.makePermissionsFromEntityDefaults(propertyInfo)
+            //permissionsFromDefaults: Option[String] = PermissionUtilV1.makePermissionsFromEntityDefaults(propertyInfo)
 
             // Create the new value.
             unverifiedValue <- createValueV1AfterChecks(
@@ -191,7 +200,7 @@ class ValuesResponderV1 extends ResponderV1 {
                 comment = createValueRequest.comment,
                 valueOwner = userIri, // Make the requesting user the owner.
                 valueProject = resourceFullResponse.resinfo.get.project_id, // Give the new value the same project as the containing resource
-                valuePermissions = permissionsFromDefaults,
+                valuePermissions = defaultObjectAccessPermissions,
                 updateResourceLastModificationDate = true,
                 userProfile = createValueRequest.userProfile)
 
@@ -212,7 +221,7 @@ class ValuesResponderV1 extends ResponderV1 {
             }
 
             // Do the remaining pre-update checks and the update while holding an update lock on the resource.
-            taskResult <- ResourceLocker.runWithResourceLock(
+            taskResult <- IriLocker.runWithIriLock(
                 createValueRequest.apiRequestID,
                 createValueRequest.resourceIri,
                 () => makeTaskFuture(userIri)
@@ -235,7 +244,7 @@ class ValuesResponderV1 extends ResponderV1 {
       */
     private def createMultipleValuesV1(createMultipleValuesRequest: GenerateSparqlToCreateMultipleValuesRequestV1): Future[GenerateSparqlToCreateMultipleValuesResponseV1] = {
         /**
-          * Creates a [[Future]] that performs the update. This function will be called by [[ResourceLocker]] once it
+          * Creates a [[Future]] that performs the update. This function will be called by [[IriLocker]] once it
           * has acquired an update lock on the resource.
           *
           * @param userIri the IRI of the user making the request.
@@ -375,7 +384,18 @@ class ValuesResponderV1 extends ResponderV1 {
                         // i.e. the values' owner and project plus their permissions. Use the property's default
                         // permissions to make permissions for the new values.
                         val propertyInfo = entityInfoResponse.propertyEntityInfoMap(propertyIri)
-                        val permissionsFromDefaults: Option[String] = PermissionUtilV1.makePermissionsFromEntityDefaults(propertyInfo)
+
+                        // FIXME: Query the PermissionsResponder for Property DOAP
+                        //val permissionsFromDefaults: Option[String] = PermissionUtilV1.makePermissionsFromEntityDefaults(propertyInfo)
+                        val defaultObjectAccessPermissionsF = {
+                            responderManager ? DefaultObjectAccessPermissionsStringForPropertyGetV1(
+                                projectIri = createMultipleValuesRequest.projectIri,
+                                propertyIri = propertyIri,
+                                createMultipleValuesRequest.userProfile.permissionData)
+                        }.mapTo[Option[String]]
+
+                        val defaultObjectAccessPermissions = Await.result(defaultObjectAccessPermissionsF, 1.second)
+                        log.debug(s"createValueV1 - defaultObjectAccessPermissions: $defaultObjectAccessPermissions")
 
                         // For each property, construct a SparqlGenerationResultForProperty containing WHERE clause statements, INSERT clause statements, and UnverifiedValueV1s.
                         val sparqlGenerationResultForProperty: SparqlGenerationResultForProperty = valuesToCreate.foldLeft(SparqlGenerationResultForProperty()) {
@@ -402,7 +422,7 @@ class ValuesResponderV1 extends ResponderV1 {
                                             newReferenceCount = 1,
                                             newLinkValueOwner = userIri,
                                             newLinkValueProject = Some(createMultipleValuesRequest.projectIri),
-                                            newLinkValuePermissions = permissionsFromDefaults
+                                            newLinkValuePermissions = defaultObjectAccessPermissions
                                         )
 
                                         // Generate WHERE clause statements for the link.
@@ -446,7 +466,7 @@ class ValuesResponderV1 extends ResponderV1 {
                                             maybeComment = valueToCreate.createValueV1WithComment.comment,
                                             valueOwner = userIri,
                                             valueProject = createMultipleValuesRequest.projectIri,
-                                            maybeValuePermissions = permissionsFromDefaults
+                                            maybeValuePermissions = defaultObjectAccessPermissions
                                         ).toString()
 
                                         //println(insertSparql)
@@ -496,7 +516,7 @@ class ValuesResponderV1 extends ResponderV1 {
             }
 
             // Do the remaining pre-update checks and the update while holding an update lock on the resource.
-            taskResult <- ResourceLocker.runWithResourceLock(
+            taskResult <- IriLocker.runWithIriLock(
                 createMultipleValuesRequest.apiRequestID,
                 createMultipleValuesRequest.resourceIri,
                 () => makeTaskFuture(userIri)
@@ -688,7 +708,7 @@ class ValuesResponderV1 extends ResponderV1 {
         // Using the lock, we make sure that these are still up to date when `changeValueV1` is being called.
         //
         // The method `changeValueV1` will be called using the same lock.
-            taskResult <- ResourceLocker.runWithResourceLock(
+            taskResult <- IriLocker.runWithIriLock(
                 changeFileValueRequest.apiRequestID,
                 changeFileValueRequest.resourceIri,
                 () => makeTaskFuture(changeFileValueRequest)
@@ -706,7 +726,7 @@ class ValuesResponderV1 extends ResponderV1 {
     private def changeValueV1(changeValueRequest: ChangeValueRequestV1): Future[ChangeValueResponseV1] = {
         /**
           * Creates a [[Future]] that does pre-update checks and performs the update. This function will be
-          * called by [[ResourceLocker]] once it has acquired an update lock on the resource.
+          * called by [[IriLocker]] once it has acquired an update lock on the resource.
           *
           * @param userIri                     the IRI of the user making the request.
           * @param findResourceWithValueResult a [[FindResourceWithValueResult]] indicating which resource contains the value
@@ -813,6 +833,14 @@ class ValuesResponderV1 extends ResponderV1 {
 
                 }
 
+                defaultObjectAccessPermissions <- {
+                    responderManager ? DefaultObjectAccessPermissionsStringForPropertyGetV1(
+                        projectIri = findResourceWithValueResult.projectIri,
+                        propertyIri = findResourceWithValueResult.propertyIri,
+                        permissionData = changeValueRequest.userProfile.permissionData)
+                }.mapTo[Option[String]]
+                _ = log.debug(s"changeValueV1 - defaultObjectAccessPermissions: $defaultObjectAccessPermissions")
+
                 // The rest of the preparation for the update depends on whether we're changing a link or an ordinary value.
                 apiResponse <- (changeValueRequest.value, currentValueQueryResult) match {
                     case (linkUpdateV1: LinkUpdateV1, currentLinkValueQueryResult: LinkValueQueryResult) =>
@@ -825,7 +853,8 @@ class ValuesResponderV1 extends ResponderV1 {
 
                         // We'll need to create a new LinkValue. Use the property's default permissions to make permissions
                         // for it.
-                        val permissionsFromDefaults: Option[String] = PermissionUtilV1.makePermissionsFromEntityDefaults(propertyInfo)
+                        // FIXME: Query the PermissionsResponder for Property DOAP
+                        //val permissionsFromDefaults: Option[String] = PermissionUtilV1.makePermissionsFromEntityDefaults(propertyInfo)
 
                         changeLinkValueV1AfterChecks(projectIri = currentValueQueryResult.projectIri,
                             resourceIri = findResourceWithValueResult.resourceIri,
@@ -835,7 +864,7 @@ class ValuesResponderV1 extends ResponderV1 {
                             comment = changeValueRequest.comment,
                             valueOwner = userIri, // Make the requesting user the owner.
                             valueProject = resourceFullResponse.resinfo.get.project_id, // Give it the same project as the containing resource.
-                            valuePermissions = permissionsFromDefaults,
+                            valuePermissions = defaultObjectAccessPermissions,
                             userProfile = changeValueRequest.userProfile)
 
                     case _ =>
@@ -880,7 +909,7 @@ class ValuesResponderV1 extends ResponderV1 {
             findResourceWithValueResult <- findResourceWithValue(changeValueRequest.valueIri)
 
             // Do the remaining pre-update checks and the update while holding an update lock on the resource.
-            taskResult <- ResourceLocker.runWithResourceLock(
+            taskResult <- IriLocker.runWithIriLock(
                 changeValueRequest.apiRequestID,
                 findResourceWithValueResult.resourceIri,
                 () => makeTaskFuture(userIri, findResourceWithValueResult)
@@ -891,7 +920,7 @@ class ValuesResponderV1 extends ResponderV1 {
     private def changeCommentV1(changeCommentRequest: ChangeCommentRequestV1): Future[ChangeValueResponseV1] = {
         /**
           * Creates a [[Future]] that does pre-update checks and performs the update. This function will be
-          * called by [[ResourceLocker]] once it has acquired an update lock on the resource.
+          * called by [[IriLocker]] once it has acquired an update lock on the resource.
           *
           * @param userIri the IRI of the user making the request.
           * @return a [[Future]] that does pre-update checks and performs the update.
@@ -916,9 +945,18 @@ class ValuesResponderV1 extends ResponderV1 {
                 // Generate an IRI for the new value.
                 newValueIri = knoraIdUtil.makeRandomValueIri(findResourceWithValueResult.resourceIri)
 
+                // Get project info
+                projectInfo <- {
+                    responderManager ? ProjectInfoByIRIGetV1(
+                        findResourceWithValueResult.projectIri,
+                        None
+                    )
+                }.mapTo[ProjectInfoV1]
+
+
                 // Generate a SPARQL update.
                 sparqlUpdate = queries.sparql.v1.txt.changeComment(
-                    dataNamedGraph = settings.projectNamedGraphs(findResourceWithValueResult.projectIri).data,
+                    dataNamedGraph = projectInfo.dataNamedGraph,
                     triplestore = settings.triplestoreType,
                     resourceIri = findResourceWithValueResult.resourceIri,
                     propertyIri = findResourceWithValueResult.propertyIri,
@@ -957,7 +995,7 @@ class ValuesResponderV1 extends ResponderV1 {
             findResourceWithValueResult <- findResourceWithValue(changeCommentRequest.valueIri)
 
             // Do the remaining pre-update checks and the update while holding an update lock on the resource.
-            taskResult <- ResourceLocker.runWithResourceLock(
+            taskResult <- IriLocker.runWithIriLock(
                 changeCommentRequest.apiRequestID,
                 findResourceWithValueResult.resourceIri,
                 () => makeTaskFuture(userIri, findResourceWithValueResult)
@@ -975,7 +1013,7 @@ class ValuesResponderV1 extends ResponderV1 {
     private def deleteValueV1(deleteValueRequest: DeleteValueRequestV1): Future[DeleteValueResponseV1] = {
         /**
           * Creates a [[Future]] that does pre-update checks and performs the update. This function will be
-          * called by [[ResourceLocker]] once it has acquired an update lock on the resource.
+          * called by [[IriLocker]] once it has acquired an update lock on the resource.
           *
           * @param userIri                     the IRI of the user making the request.
           * @param findResourceWithValueResult a [[FindResourceWithValueResult]] indicating which resource contains the value
@@ -1011,6 +1049,15 @@ class ValuesResponderV1 extends ResponderV1 {
                     val linkPropertyIri = knoraIdUtil.linkValuePropertyIri2LinkPropertyIri(findResourceWithValueResult.propertyIri)
 
                     for {
+                        // Get project info
+                        projectInfo <- {
+                            responderManager ? ProjectInfoByIRIGetV1(
+                                findResourceWithValueResult.projectIri,
+                                None
+                            )
+                        }.mapTo[ProjectInfoV1]
+
+
                         sparqlTemplateLinkUpdate <- decrementLinkValue(
                             sourceResourceIri = findResourceWithValueResult.resourceIri,
                             linkPropertyIri = linkPropertyIri,
@@ -1022,7 +1069,7 @@ class ValuesResponderV1 extends ResponderV1 {
                         )
 
                         sparqlUpdate = queries.sparql.v1.txt.deleteLink(
-                            dataNamedGraph = settings.projectNamedGraphs(findResourceWithValueResult.projectIri).data,
+                            dataNamedGraph = projectInfo.dataNamedGraph,
                             triplestore = settings.triplestoreType,
                             linkSourceIri = findResourceWithValueResult.resourceIri,
                             linkUpdate = sparqlTemplateLinkUpdate,
@@ -1057,8 +1104,16 @@ class ValuesResponderV1 extends ResponderV1 {
                     for {
                         linkUpdates <- linkUpdatesFuture
 
+                        // Get project info
+                        projectInfo <- {
+                            responderManager ? ProjectInfoByIRIGetV1(
+                                findResourceWithValueResult.projectIri,
+                                None
+                            )
+                        }.mapTo[ProjectInfoV1]
+
                         sparqlUpdate = queries.sparql.v1.txt.deleteValue(
-                            dataNamedGraph = settings.projectNamedGraphs(findResourceWithValueResult.projectIri).data,
+                            dataNamedGraph = projectInfo.dataNamedGraph,
                             triplestore = settings.triplestoreType,
                             resourceIri = findResourceWithValueResult.resourceIri,
                             propertyIri = findResourceWithValueResult.propertyIri,
@@ -1099,7 +1154,7 @@ class ValuesResponderV1 extends ResponderV1 {
             findResourceWithValueResult <- findResourceWithValue(deleteValueRequest.valueIri)
 
             // Do the remaining pre-update checks and the update while holding an update lock on the resource.
-            taskResult <- ResourceLocker.runWithResourceLock(
+            taskResult <- IriLocker.runWithIriLock(
                 deleteValueRequest.apiRequestID,
                 findResourceWithValueResult.resourceIri,
                 () => makeTaskFuture(userIri, findResourceWithValueResult)
@@ -1183,13 +1238,7 @@ class ValuesResponderV1 extends ResponderV1 {
                         )
                     } else {
                         // It's not a LinkValue.
-                        PermissionUtilV1.getUserPermissionV1(
-                            subjectIri = valueIri,
-                            subjectOwner = valueOwner,
-                            subjectProject = project,
-                            subjectPermissionLiteral = valuePermissions,
-                            userProfile = versionHistoryRequest.userProfile
-                        )
+                        PermissionUtilV1.getUserPermissionV1(subjectIri = valueIri, subjectCreator = valueOwner, subjectProject = project, subjectPermissionLiteral = valuePermissions, userProfile = versionHistoryRequest.userProfile)
                     }
 
                     valuePermissionCode.nonEmpty
@@ -1240,12 +1289,12 @@ class ValuesResponderV1 extends ResponderV1 {
             linkValueResponse <- maybeValueQueryResult match {
                 case Some(valueQueryResult) =>
                     for {
-                        valueOwnerProfile <- (responderManager ? UserProfileGetRequestV1(valueQueryResult.ownerIri)).mapTo[UserProfileV1]
+                        valueOwnerProfile <- (responderManager ? UserProfileByIRIGetRequestV1(valueQueryResult.ownerIri, UserProfileType.RESTRICTED)).mapTo[UserProfileV1]
                     } yield ValueGetResponseV1(
                         valuetype = valueQueryResult.value.valueTypeIri,
                         rights = valueQueryResult.permissionCode,
                         value = valueQueryResult.value,
-                        valuecreator = valueOwnerProfile.userData.username.get,
+                        valuecreator = valueOwnerProfile.userData.email.get,
                         valuecreatorname = valueOwnerProfile.userData.fullname.get,
                         valuecreationdate = valueQueryResult.creationDate,
                         comment = valueQueryResult.comment,
@@ -1388,7 +1437,7 @@ class ValuesResponderV1 extends ResponderV1 {
 
             maybeSourcePermissionCode = PermissionUtilV1.getUserPermissionV1(
                 subjectIri = rowMap("source"),
-                subjectOwner = rowMap("sourceOwner"),
+                subjectCreator = rowMap("sourceOwner"),
                 subjectProject = rowMap("sourceProject"),
                 subjectPermissionLiteral = rowMap.get("sourcePermissions"),
                 userProfile = userProfile
@@ -1396,7 +1445,7 @@ class ValuesResponderV1 extends ResponderV1 {
 
             maybeTargetPermissionCode = PermissionUtilV1.getUserPermissionV1(
                 subjectIri = rowMap("target"),
-                subjectOwner = rowMap("targetOwner"),
+                subjectCreator = rowMap("targetOwner"),
                 subjectProject = rowMap("targetProject"),
                 subjectPermissionLiteral = rowMap.get("targetPermissions"),
                 userProfile = userProfile
@@ -1886,9 +1935,17 @@ class ValuesResponderV1 extends ResponderV1 {
                 userProfile = userProfile
             )
 
+            // Get project info
+            projectInfo <- {
+                responderManager ? ProjectInfoByIRIGetV1(
+                    valueProject,
+                    None
+                )
+            }.mapTo[ProjectInfoV1]
+
             // Generate a SPARQL update string.
             sparqlUpdate = queries.sparql.v1.txt.createLink(
-                dataNamedGraph = settings.projectNamedGraphs(valueProject).data,
+                dataNamedGraph = projectInfo.dataNamedGraph,
                 triplestore = settings.triplestoreType,
                 resourceIri = resourceIri,
                 linkUpdate = sparqlTemplateLinkUpdate,
@@ -1960,9 +2017,17 @@ class ValuesResponderV1 extends ResponderV1 {
                 case _ => Future(Vector.empty[SparqlTemplateLinkUpdate])
             }
 
+            // Get project info
+            projectInfo <- {
+                responderManager ? ProjectInfoByIRIGetV1(
+                    valueProject,
+                    None
+                )
+            }.mapTo[ProjectInfoV1]
+
             // Generate a SPARQL update string.
             sparqlUpdate = queries.sparql.v1.txt.createValue(
-                dataNamedGraph = settings.projectNamedGraphs(valueProject).data,
+                dataNamedGraph = projectInfo.dataNamedGraph,
                 triplestore = settings.triplestoreType,
                 resourceIri = resourceIri,
                 propertyIri = propertyIri,
@@ -2016,7 +2081,7 @@ class ValuesResponderV1 extends ResponderV1 {
                                              valuePermissions: Option[String],
                                              userProfile: UserProfileV1): Future[ChangeValueResponseV1] = {
         for {
-        // Delete the existing link and decrement its LinkValue's reference count.
+            // Delete the existing link and decrement its LinkValue's reference count.
             sparqlTemplateLinkUpdateForCurrentLink <- decrementLinkValue(
                 sourceResourceIri = resourceIri,
                 linkPropertyIri = propertyIri,
@@ -2038,9 +2103,17 @@ class ValuesResponderV1 extends ResponderV1 {
                 userProfile = userProfile
             )
 
+            // Get project info
+            projectInfo <- {
+                responderManager ? ProjectInfoByIRIGetV1(
+                    projectIri,
+                    None
+                )
+            }.mapTo[ProjectInfoV1]
+
             // Generate a SPARQL update string.
             sparqlUpdate = queries.sparql.v1.txt.changeLink(
-                dataNamedGraph = settings.projectNamedGraphs(projectIri).data,
+                dataNamedGraph = projectInfo.dataNamedGraph,
                 triplestore = settings.triplestoreType,
                 linkSourceIri = resourceIri,
                 linkUpdateForCurrentLink = sparqlTemplateLinkUpdateForCurrentLink,
@@ -2156,9 +2229,17 @@ class ValuesResponderV1 extends ResponderV1 {
                 case _ => Future(Vector.empty[SparqlTemplateLinkUpdate])
             }
 
+            // Get project info
+            projectInfo <- {
+                responderManager ? ProjectInfoByIRIGetV1(
+                    projectIri,
+                    None
+                )
+            }.mapTo[ProjectInfoV1]
+
             // Generate a SPARQL update.
             sparqlUpdate = queries.sparql.v1.txt.addValueVersion(
-                dataNamedGraph = settings.projectNamedGraphs(projectIri).data,
+                dataNamedGraph = projectInfo.dataNamedGraph,
                 triplestore = settings.triplestoreType,
                 resourceIri = resourceIri,
                 propertyIri = propertyIri,
