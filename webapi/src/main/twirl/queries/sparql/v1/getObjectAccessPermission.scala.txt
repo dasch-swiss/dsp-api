@@ -1,0 +1,73 @@
+@*
+ * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
+ * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ *
+ * This file is part of Knora.
+ *
+ * Knora is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Knora is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public
+ * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ *@
+
+@import org.knora.webapi.IRI
+
+@**
+ * Gets the object access permissions attached to a resource or value.
+ *
+ * @param triplestore the name of the triplestore being used.
+ * @param resourceIri the resource's IRI.
+ * @param valueIri the value's IRI.
+ *@
+@(triplestore: String,
+  resourceIri: Option[IRI],
+  valueIri: Option[IRI]
+  )
+
+prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+prefix knora-base: <http://www.knora.org/ontology/knora-base#>
+
+SELECT ?s ?p ?o
+
+@* Ensure that inference is not used in this query. *@
+@if(triplestore.startsWith("graphdb")) {
+    FROM <http://www.ontotext.com/explicit>
+}
+
+WHERE {
+
+    @if(resourceIri.nonEmpty) {
+        BIND(IRI("@resourceIri.get") AS ?s)
+
+        ?s rdf:type ?resourceClass ;
+           knora-base:isDeleted false .
+
+        ?resourceClass rdfs:subClassOf+ knora-base:Resource .
+
+        ?s knora-base:hasPermissions ?o .
+
+        ?s ?p ?o .
+    }
+
+    @if(valueIri.nonEmpty) {
+        BIND(IRI("@valueIri.get") AS ?s)
+
+        ?s rdf:type ?valueClass ;
+           knora-base:isDeleted false .
+
+        ?valueClass rdfs:subClassOf+ knora-base:Value .
+
+        ?s knora-base:hasPermissions ?o .
+
+        ?s ?p ?o .
+    }
+}

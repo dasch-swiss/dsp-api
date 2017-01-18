@@ -25,7 +25,6 @@ import akka.testkit._
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse}
 import org.knora.webapi.messages.v1.responder.searchmessages._
-import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
 import org.knora.webapi.messages.v1.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent, ResetTriplestoreContentACK}
 import org.knora.webapi.responders._
 import org.knora.webapi.store._
@@ -37,37 +36,11 @@ import scala.concurrent.duration._
   */
 object SearchResponderV1Spec {
 
-    private val incunabulaUser = UserProfileV1(
-        projects = Vector("http://data.knora.org/projects/77275339"),
-        groups = Nil,
-        userData = UserDataV1(
-            email = Some("test@test.ch"),
-            lastname = Some("Test"),
-            firstname = Some("User"),
-            username = Some("testuser"),
-            token = None,
-            user_id = Some("http://data.knora.org/users/b83acc5f05"),
-            lang = "de"
-        )
-    )
+    private val incunabulaUser = SharedAdminTestData.incunabulaMemberUser
 
-    private val anythingUser1 = UserProfileV1(
-        projects = Vector("http://data.knora.org/projects/anything"),
-        groups = Nil,
-        userData = UserDataV1(
-            user_id = Some("http://data.knora.org/users/9XBCrDV3SRa7kS1WwynB4Q"),
-            lang = "de"
-        )
-    )
+    private val anythingUser1 = SharedAdminTestData.anythingUser1
 
-    private val anythingUser2 = UserProfileV1(
-        projects = Vector("http://data.knora.org/projects/anything"),
-        groups = Nil,
-        userData = UserDataV1(
-            user_id = Some("http://data.knora.org/users/BhkfBc3hTeS_IDo-JgXRbQ"),
-            lang = "de"
-        )
-    )
+    private val anythingUser2 = SharedAdminTestData.anythingUser2
 
     private val fulltextThingResultsForUser1 = Vector(SearchResultRowV1(
         rights = Some(8),
@@ -217,9 +190,6 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
     private val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
 
     val rdfDataObjects = List(
-        RdfDataObject(path = "../knora-ontologies/knora-base.ttl", name = "http://www.knora.org/ontology/knora-base"),
-        RdfDataObject(path = "../knora-ontologies/knora-dc.ttl", name = "http://www.knora.org/ontology/dc"),
-        RdfDataObject(path = "../knora-ontologies/salsah-gui.ttl", name = "http://www.knora.org/ontology/salsah-gui"),
         RdfDataObject(path = "_test_data/ontologies/incunabula-onto.ttl", name = "http://www.knora.org/ontology/incunabula"),
         RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/incunabula"),
         RdfDataObject(path = "_test_data/ontologies/images-demo-onto.ttl", name = "http://www.knora.org/ontology/images"),
@@ -331,7 +301,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         storeManager ! ResetTriplestoreContent(rdfDataObjects)
         expectMsg(300.seconds, ResetTriplestoreContentACK())
 
-        responderManager ! LoadOntologiesRequest(incunabulaUser)
+        responderManager ! LoadOntologiesRequest(SharedAdminTestData.rootUser)
         expectMsg(10.seconds, LoadOntologiesResponse())
     }
 

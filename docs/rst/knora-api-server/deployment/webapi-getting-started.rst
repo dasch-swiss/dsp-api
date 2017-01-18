@@ -101,7 +101,13 @@ includes a command-line program that works on RDF data files in Turtle_ format. 
   [info]                            multiple permission statements into single permission
   [info]                            statements), 'strings' (adds missing valueHasString),
   [info]                            'standoff' (transforms old-style standoff into
-  [info]                            new-style standoff), 'all' (all of the above)
+  [info]                            new-style standoff), 'creator' (transforms existing
+  [info]                            'knora-base:Owner' group inside permissions to
+  [info]                            'knora-base:Creator'), 'owner' (gives
+  [info]                            'knora-base:Creator' CR permissions to correspond to
+  [info]                            the previous behaviour for owners - use with care as
+  [info]                            it will add permissions that where not there before),
+  [info]                            'all' (all of the above minus 'owner')
   [info]       --help               Show help message
   [info] 
   [info]  trailing arguments:
@@ -125,6 +131,13 @@ strings
 standoff
   Transforms old-style standoff markup (containing tag names as strings) to new-style standoff markup
   (using different OWL class names for different tags).
+
+creator
+  Transforms existing ``knora-base:Owner`` group inside permissions to ``knora-base:Creator``.
+
+owner
+  Gives ``knora-base:Creator`` **CR permissions** to correspond to the previous behaviour for owners.
+  Use with care as it will add permissions that where not there before.
 
 all
   Runs all of the above transformations.

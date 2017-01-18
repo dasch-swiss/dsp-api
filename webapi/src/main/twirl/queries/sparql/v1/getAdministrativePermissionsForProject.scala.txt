@@ -21,21 +21,26 @@
 @import org.knora.webapi.IRI
 
 @**
- * Gets all information about a user, given the user's IRI.
+ * Gets the IRIs of administrative permissions defined inside a project.
  *
  * @param triplestore the name of the triplestore being used.
- * @param userIri the user's IRI.
+ * @param projectIri the project's IRI.
  *@
 @(triplestore: String,
-  userIri: IRI)
+  projectIri: IRI)
 
-SELECT ?p ?o
+prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+prefix knora-base: <http://www.knora.org/ontology/knora-base#>
+
+SELECT ?s ?p ?o
+
 @* Ensure that inference is not used in this query. *@
 @if(triplestore.startsWith("graphdb")) {
     FROM <http://www.ontotext.com/explicit>
 }
-WHERE {
-    BIND(IRI("@userIri") as ?user)
 
-    ?user ?p ?o .
+WHERE {
+    ?s rdf:type knora-base:AdministrativePermission .
+    ?s knora-base:forProject <@projectIri> .
+    ?s ?p ?o .
 }

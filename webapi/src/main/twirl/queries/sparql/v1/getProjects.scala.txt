@@ -38,6 +38,7 @@ SELECT ?s ?p ?o
 WHERE {
 
     ?s rdf:type knora-base:knoraProject .
+    FILTER (?s != <http://www.knora.org/ontology/knora-base#AllProjects>) .
     ?s ?p ?o .
 
 }
