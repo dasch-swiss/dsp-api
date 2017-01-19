@@ -25,7 +25,6 @@ import akka.actor.Props
 import akka.testkit._
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.ontologymessages._
-import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
 import org.knora.webapi.messages.v1.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent, ResetTriplestoreContentACK}
 import org.knora.webapi.responders._
 import org.knora.webapi.store._
@@ -39,19 +38,7 @@ import scala.concurrent.duration._
 object OntologyResponderV1Spec {
 
     // A test user that prefers responses in German.
-    private val userProfileWithGerman = UserProfileV1(
-        projects = Vector("http://data.knora.org/projects/77275339"),
-        groups = Nil,
-        userData = UserDataV1(
-            email = Some("test@test.ch"),
-            lastname = Some("Test"),
-            firstname = Some("User"),
-            username = Some("testuser"),
-            token = None,
-            user_id = Some("http://data.knora.org/users/b83acc5f05"),
-            lang = "de"
-        )
-    )
+    private val userProfileWithGerman = SharedAdminTestData.incunabulaProjectAdminUser
 
     // A test user that prefers responses in French.
     private val userProfileWithFrench = userProfileWithGerman.copy(userData = userProfileWithGerman.userData.copy(lang = "fr"))
@@ -73,29 +60,20 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
     private val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
 
     val rdfDataObjects = List(
-        RdfDataObject(path = "../knora-ontologies/knora-base.ttl", name = "http://www.knora.org/ontology/knora-base"),
-        RdfDataObject(path = "../knora-ontologies/knora-dc.ttl", name = "http://www.knora.org/ontology/dc"),
-        RdfDataObject(path = "../knora-ontologies/salsah-gui.ttl", name = "http://www.knora.org/ontology/salsah-gui"),
-        RdfDataObject(path = "_test_data/ontologies/incunabula-onto.ttl", name = "http://www.knora.org/ontology/incunabula")
+        RdfDataObject(path = "_test_data/ontologies/incunabula-onto.ttl", name = "http://www.knora.org/ontology/incunabula"),
+        RdfDataObject(path = "_test_data/ontologies/images-demo-onto.ttl", name = "http://www.knora.org/ontology/images"),
+        RdfDataObject(path = "_test_data/ontologies/anything-onto.ttl", name = "http://www.knora.org/ontology/anything"),
+        RdfDataObject(path = "_test_data/ontologies/beol-onto.ttl", name = "http://www.knora.org/ontology/beol"),
+        RdfDataObject(path = "_test_data/ontologies/biblio-onto.ttl", name = "http://www.knora.org/ontology/biblio"),
+        RdfDataObject(path = "_test_data/ontologies/dokubib-onto.ttl", name = "http://www.knora.org/ontology/dokubib")
+
     )
 
     // The default timeout for receiving reply messages from actors.
     private val timeout = 10.seconds
 
     private val page = ResourceTypeResponseV1(
-        userdata = UserDataV1(
-            projects_info = Nil,
-            projects = None,
-            active_project = None,
-            password = None,
-            email = Some("test@test.ch"),
-            lastname = Some("Test"),
-            firstname = Some("User"),
-            username = Some("testuser"),
-            token = None,
-            user_id = Some("http://data.knora.org/users/b83acc5f05"),
-            lang = "de"
-        ),
+        userdata = SharedAdminTestData.incunabulaProjectAdminUser.userData,
         restype_info = ResTypeInfoV1(
             properties = Vector(
                 PropertyDefinitionV1(
@@ -239,19 +217,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
     )
 
     private val book = ResourceTypeResponseV1(
-        userdata = UserDataV1(
-            projects_info = Nil,
-            projects = None,
-            active_project = None,
-            password = None,
-            email = Some("test@test.ch"),
-            lastname = Some("Test"),
-            firstname = Some("User"),
-            username = Some("testuser"),
-            token = None,
-            user_id = Some("http://data.knora.org/users/b83acc5f05"),
-            lang = "de"
-        ),
+        userdata = SharedAdminTestData.incunabulaProjectAdminUser.userData,
         restype_info = ResTypeInfoV1(
             properties = Vector(
                 PropertyDefinitionV1(
@@ -407,19 +373,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
     )
 
     private val region = ResourceTypeResponseV1(
-        userdata = UserDataV1(
-            projects_info = Nil,
-            projects = None,
-            active_project = None,
-            password = None,
-            email = Some("test@test.ch"),
-            lastname = Some("Test"),
-            firstname = Some("User"),
-            username = Some("testuser"),
-            token = None,
-            user_id = Some("http://data.knora.org/users/b83acc5f05"),
-            lang = "de"
-        ),
+        userdata = SharedAdminTestData.incunabulaProjectAdminUser.userData,
         restype_info = ResTypeInfoV1(
             properties = Vector(
                 PropertyDefinitionV1(
@@ -479,19 +433,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
     )
 
     private val linkObject = ResourceTypeResponseV1(
-        userdata = UserDataV1(
-            projects_info = Nil,
-            projects = None,
-            active_project = None,
-            password = None,
-            email = Some("test@test.ch"),
-            lastname = Some("Test"),
-            firstname = Some("User"),
-            username = Some("testuser"),
-            token = None,
-            user_id = Some("http://data.knora.org/users/b83acc5f05"),
-            lang = "de"
-        ),
+        userdata = SharedAdminTestData.incunabulaProjectAdminUser.userData,
         restype_info = ResTypeInfoV1(
             properties = Vector(
                 PropertyDefinitionV1(
@@ -540,19 +482,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
     }
 
     private val resourceTypesForNamedGraphIncunabula = ResourceTypesForNamedGraphResponseV1(
-        userdata = UserDataV1(
-            projects_info = Nil,
-            projects = None,
-            active_project = None,
-            password = None,
-            email = Some("test@test.ch"),
-            lastname = Some("Test"),
-            firstname = Some("User"),
-            username = Some("testuser"),
-            token = None,
-            user_id = Some("http://data.knora.org/users/b83acc5f05"),
-            lang = "en"
-        ),
+        userdata = SharedAdminTestData.incunabulaProjectAdminUser.userData,
         resourcetypes = Vector(
             ResourceTypeV1(
                 properties = Vector(
@@ -696,91 +626,76 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
     )
 
     private val vocabulariesResponseV1 = NamedGraphsResponseV1(
-        userdata = UserDataV1(
-            projects_info = Nil,
-            projects = None,
-            active_project = None,
-            password = None,
-            email = Some("test@test.ch"),
-            lastname = Some("Test"),
-            firstname = Some("User"),
-            username = Some("testuser"),
-            token = None,
-            user_id = Some("http://data.knora.org/users/b83acc5f05"),
-            lang = "en"
-        ),
+        userdata = OntologyResponderV1Spec.userProfileWithEnglish.userData,
         vocabularies = Vector(
-            NamedGraphV1(
-                active = false,
-                uri = "http://www.knora.org/ontology/knora-base",
-                project_id = "http://data.knora.org/projects/knora-base",
-                description = "Knora-Base",
-                longname = "Knora-Base",
-                shortname = "Knora-Base",
-                id = "http://www.knora.org/ontology/knora-base"
+            NamedGraphV1( // SystemProject
+                active = true,
+                uri = SharedAdminTestData.systemProjectInfo.ontologyNamedGraph,
+                project_id = SharedAdminTestData.systemProjectInfo.id,
+                description = SharedAdminTestData.systemProjectInfo.description.get,
+                longname = SharedAdminTestData.systemProjectInfo.longname.get,
+                shortname = SharedAdminTestData.systemProjectInfo.shortname,
+                id = SharedAdminTestData.systemProjectInfo.ontologyNamedGraph
             ),
-            NamedGraphV1(
-                active = false,
-                uri = "http://www.knora.org/ontology/incunabula",
-                project_id = "http://data.knora.org/projects/77275339",
-                description = "Incunabula",
-                longname = "Incunabula",
-                shortname = "Incunabula",
-                id = "http://www.knora.org/ontology/incunabula"
+            NamedGraphV1( // Incunabula
+                active = true,
+                uri = SharedAdminTestData.incunabulaProjectInfo.ontologyNamedGraph,
+                project_id = SharedAdminTestData.incunabulaProjectInfo.id,
+                description = SharedAdminTestData.incunabulaProjectInfo.description.get,
+                longname = SharedAdminTestData.incunabulaProjectInfo.longname.get,
+                shortname = SharedAdminTestData.incunabulaProjectInfo.shortname,
+                id = SharedAdminTestData.incunabulaProjectInfo.ontologyNamedGraph
             ),
-            NamedGraphV1(
-                active = false,
-                uri = "http://www.knora.org/ontology/beol",
-                project_id = "http://data.knora.org/projects/yTerZGyxjZVqFMNNKXCDPF",
-                description = "Bernoulli-Euler Online",
-                longname = "Bernoulli-Euler Online",
-                shortname = "Bernoulli-Euler Online",
-                id = "http://www.knora.org/ontology/beol"
+            NamedGraphV1( // BEOL
+                active = true,
+                uri = SharedAdminTestData.beolProjectInfo.ontologyNamedGraph,
+                project_id = SharedAdminTestData.beolProjectInfo.id,
+                description = SharedAdminTestData.beolProjectInfo.description.get,
+                longname = SharedAdminTestData.beolProjectInfo.longname.get,
+                shortname = SharedAdminTestData.beolProjectInfo.shortname,
+                id = SharedAdminTestData.beolProjectInfo.ontologyNamedGraph
             ),
-            NamedGraphV1(
-                active = false,
-                uri = "http://www.knora.org/ontology/biblio",
-                project_id = "http://data.knora.org/projects/DczxPs-sR6aZN91qV92ZmQ",
-                description = "Bibliography",
-                longname = "Bibliography",
-                shortname = "Bibliography",
-                id = "http://www.knora.org/ontology/biblio"
+            NamedGraphV1( // BIBLIO
+                active = true,
+                uri = SharedAdminTestData.biblioProjectInfo.ontologyNamedGraph,
+                project_id = SharedAdminTestData.biblioProjectInfo.id,
+                description = SharedAdminTestData.biblioProjectInfo.description.get,
+                longname = SharedAdminTestData.biblioProjectInfo.longname.get,
+                shortname = SharedAdminTestData.biblioProjectInfo.shortname,
+                id = SharedAdminTestData.biblioProjectInfo.ontologyNamedGraph
             ),
-            NamedGraphV1(
-                active = false,
-                uri = "http://www.knora.org/ontology/images",
-                project_id = "http://data.knora.org/projects/images",
-                description = "Images Test Project",
-                longname = "Images Test Project",
-                shortname = "Images Test Project",
-                id = "http://www.knora.org/ontology/images"
+            NamedGraphV1( // Images
+                active = true,
+                uri = SharedAdminTestData.imagesProjectInfo.ontologyNamedGraph,
+                project_id = SharedAdminTestData.imagesProjectInfo.id,
+                description = SharedAdminTestData.imagesProjectInfo.description.get,
+                longname = SharedAdminTestData.imagesProjectInfo.longname.get,
+                shortname = SharedAdminTestData.imagesProjectInfo.shortname,
+                id = SharedAdminTestData.imagesProjectInfo.ontologyNamedGraph
             ),
-            NamedGraphV1(
+            NamedGraphV1( // Anything
+                active = true,
+                uri = SharedAdminTestData.anythingProjectInfo.ontologyNamedGraph,
+                project_id = SharedAdminTestData.anythingProjectInfo.id,
+                description = SharedAdminTestData.anythingProjectInfo.description.get,
+                longname = SharedAdminTestData.anythingProjectInfo.longname.get,
+                shortname = SharedAdminTestData.anythingProjectInfo.shortname,
+                id = SharedAdminTestData.anythingProjectInfo.ontologyNamedGraph
+            ),
+            NamedGraphV1( // Dokubib
                 active = false,
-                uri = "http://www.knora.org/ontology/anything",
-                project_id = "http://data.knora.org/projects/anything",
-                description = "Anything Test Project",
-                longname = "Anything Test Project",
-                shortname = "Anything Test Project",
-                id = "http://www.knora.org/ontology/anything"
+                uri = SharedAdminTestData.dokubibProjectInfo.ontologyNamedGraph,
+                project_id = SharedAdminTestData.dokubibProjectInfo.id,
+                description = SharedAdminTestData.dokubibProjectInfo.description.get,
+                longname = SharedAdminTestData.dokubibProjectInfo.longname.get,
+                shortname = SharedAdminTestData.dokubibProjectInfo.shortname,
+                id = SharedAdminTestData.dokubibProjectInfo.ontologyNamedGraph
             )
         )
     )
 
     private val propertyTypesForNamedGraphIncunabula = PropertyTypesForNamedGraphResponseV1(
-        userdata = UserDataV1(
-            projects_info = Nil,
-            projects = None,
-            active_project = None,
-            password = None,
-            email = Some("test@test.ch"),
-            lastname = Some("Test"),
-            firstname = Some("User"),
-            username = Some("testuser"),
-            token = None,
-            user_id = Some("http://data.knora.org/users/b83acc5f05"),
-            lang = "en"
-        ),
+        userdata = SharedAdminTestData.incunabulaProjectAdminUser.userData,
         properties = Vector(
             PropertyDefinitionInNamedGraphV1(
                 gui_name = Some("text"),
@@ -1140,6 +1055,19 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
             }
         }
 
+        "return an appropriate error message if a resource class is not found" in {
+            // http://localhost:3333/v1/resourcetypes/http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23image
+
+            actorUnderTest ! ResourceTypeGetRequestV1(
+                userProfile = OntologyResponderV1Spec.userProfileWithGerman,
+                resourceTypeIri = "http://www.knora.org/ontology/incunabula#image"
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[NotFoundException] should ===(true)
+            }
+        }
+
         "return labels in the user's preferred language" in {
             actorUnderTest ! EntityInfoGetRequestV1(
                 propertyIris = Set("http://www.knora.org/ontology/incunabula#title"),
@@ -1159,9 +1087,11 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case msg: NamedGraphsResponseV1 =>
-                    checkVocabularies(received = msg, expected = vocabulariesResponseV1)
-
+                case receivedMsg: NamedGraphsResponseV1 => {
+                    checkVocabularies(received = receivedMsg, expected = vocabulariesResponseV1)
+                    receivedMsg.userdata should equal(vocabulariesResponseV1.userdata)
+                    receivedMsg.vocabularies should contain allElementsOf(vocabulariesResponseV1.vocabularies)
+                }
             }
 
         }
@@ -1188,6 +1118,19 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
             expectMsgPF(timeout) {
                 case msg: PropertyTypesForNamedGraphResponseV1 =>
                     checkPropertyTypesForNamedGraphIncunabula(received = msg, expected = propertyTypesForNamedGraphIncunabula)
+            }
+        }
+
+        "get all the properties for all vocabularies" in {
+            actorUnderTest ! PropertyTypesForNamedGraphGetRequestV1(
+                namedGraph = None,
+                userProfile = OntologyResponderV1Spec.userProfileWithEnglish
+            )
+
+            expectMsgPF(timeout) {
+                case msg: PropertyTypesForNamedGraphResponseV1 =>
+                    // simply checks that no error occurred when getting the property definitions for all vocabularies
+                    ()
             }
         }
     }

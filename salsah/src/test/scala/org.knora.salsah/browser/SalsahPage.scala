@@ -248,7 +248,7 @@ class SalsahPage {
       * @param index    1 indicates start date, 2 end date in case of a period.
       * @return a [[Select]] representing the month.
       */
-    def getMonthSelectionInExtendedSearchForm(dateForm: WebElement, index: Int = 1): Select = {
+    def getMonthSelectionInExtendedSearchForm(dateForm: WebElement, index: Int): Select = {
         eventually {
             new Select(dateForm.findElement(By.xpath(s"span[$index]/select[contains(@class,'monthsel')]")))
         }
@@ -261,7 +261,7 @@ class SalsahPage {
       * @param index    1 indicates start date, 2 end date in case of a period.
       * @return a list of `td` representing the days.
       */
-    def getDaysInExtendedSearchForm(dateForm: WebElement, index: Int = 1): List[WebElement] = {
+    def getDaysInExtendedSearchForm(dateForm: WebElement, index: Int): List[WebElement] = {
         eventually {
             val daysel = dateForm.findElement(By.xpath(s"span[$index]/input[contains(@class,'daysel')]"))
 
@@ -282,7 +282,7 @@ class SalsahPage {
       * @param index    1 indicates start date, 2 end date in case of a period.
       * @return a `input` representing the year entry field.
       */
-    def getYearFieldInExtendedSearchForm(dateForm: WebElement, index: Int = 1): WebElement = {
+    def getYearFieldInExtendedSearchForm(dateForm: WebElement, index: Int): WebElement = {
         eventually {
             dateForm.findElement(By.xpath(s"span[$index]/input[contains(@class,'yearsel')]"))
         }
@@ -507,7 +507,7 @@ class SalsahPage {
       * @param index    1 indicates start date, 2 end date in case of a period.
       * @return a `input` representing the year entry field.
       */
-    def getYearField(dateForm: WebElement, index: Int = 1): WebElement = {
+    def getYearField(dateForm: WebElement, index: Int): WebElement = {
         eventually {
             dateForm.findElement(By.xpath(s"//span[@class='propedit']/span[$index]/input[contains(@class,'yearsel')]"))
         }
@@ -520,7 +520,7 @@ class SalsahPage {
       * @param index    1 indicates start date, 2 end date in case of a period.
       * @return a [[Select]] representing the month.
       */
-    def getMonthSelection(dateForm: WebElement, index: Int = 1): Select = {
+    def getMonthSelection(dateForm: WebElement, index: Int): Select = {
         eventually {
             new Select(dateForm.findElement(By.xpath(s"//span[@class='propedit']/span[$index]/select[contains(@class,'monthsel')]")))
         }
@@ -533,7 +533,7 @@ class SalsahPage {
       * @param index    1 indicates start date, 2 end date in case of a period.
       * @return a list of `td` representing the days.
       */
-    def getDays(dateForm: WebElement, index: Int = 1): List[WebElement] = {
+    def getDays(dateForm: WebElement, index: Int): List[WebElement] = {
         eventually {
             val daysel = dateForm.findElement(By.xpath(s"//span[@class='propedit']/span[$index]/input[contains(@class,'daysel')]"))
 

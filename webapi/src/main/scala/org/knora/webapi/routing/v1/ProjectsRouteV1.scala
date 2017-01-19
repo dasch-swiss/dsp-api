@@ -25,12 +25,16 @@ import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
-import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoByIRIGetRequest, ProjectInfoType, ProjectsGetRequestV1}
+import org.apache.commons.validator.routines.UrlValidator
+import org.knora.webapi.{BadRequestException, SettingsImpl}
+import org.knora.webapi.messages.v1.responder.projectmessages._
 import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
 import org.knora.webapi.util.InputValidation
-import org.knora.webapi.{BadRequestException, SettingsImpl}
 
 object ProjectsRouteV1 extends Authenticator {
+
+    private val schemes = Array("http", "https")
+    private val urlValidator = new UrlValidator(schemes)
 
     def knoraApiPath(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter): Route = {
 
@@ -43,8 +47,8 @@ object ProjectsRouteV1 extends Authenticator {
             get {
                 requestContext =>
                     val userProfile = getUserProfileV1(requestContext)
+                    val params = requestContext.request.uri.query().toMap
                     val requestMessage = ProjectsGetRequestV1(Some(userProfile))
-
                     RouteUtilV1.runJsonRoute(
                         requestMessage,
                         requestContext,
@@ -53,26 +57,37 @@ object ProjectsRouteV1 extends Authenticator {
                         log
                     )
             }
-        } ~
-            path("v1" / "projects" / Segment) { iri =>
-                get {
-                    // TODO: here, we should differentiate between a given project Iri and a project shortname
-                    parameters("reqtype".?) { reqtypeParam =>
-                        requestContext =>
-                            val userProfile = getUserProfileV1(requestContext)
-                            val requestType = reqtypeParam.getOrElse(ProjectInfoType.SHORT.toString)
-                            val resIri = InputValidation.toIri(iri, () => throw BadRequestException(s"Invalid param resource IRI: $iri"))
-                            val requestMessage = ProjectInfoByIRIGetRequest(resIri, ProjectInfoType.lookup(requestType), Some(userProfile))
-
-                            RouteUtilV1.runJsonRoute(
-                                requestMessage,
-                                requestContext,
-                                settings,
-                                responderManager,
-                                log
-                            )
-                    }
+        } ~ path("v1" / "projects" / "iri" / Segment) { value =>
+            get {
+                parameters("reqtype".?) { reqtypeParam => requestContext =>
+                    val projectIri = InputValidation.toIri(value, () => throw BadRequestException(s"Invalid user IRI $value"))
+                    val userProfile = getUserProfileV1(requestContext)
+                    val params = requestContext.request.uri.query().toMap
+                    val requestMessage = ProjectInfoByIRIGetRequestV1(projectIri, Some(userProfile))
+                    RouteUtilV1.runJsonRoute(
+                        requestMessage,
+                        requestContext,
+                        settings,
+                        responderManager,
+                        log
+                    )
                 }
             }
+        } ~ path("v1" / "projects" / "shortname" / Segment) { value =>
+            get {
+                parameters("reqtype".?) { reqtypeParam => requestContext =>
+                    val userProfile = getUserProfileV1(requestContext)
+                    val params = requestContext.request.uri.query().toMap
+                    val requestMessage = ProjectInfoByShortnameGetRequestV1(value, Some(userProfile))
+                    RouteUtilV1.runJsonRoute(
+                        requestMessage,
+                        requestContext,
+                        settings,
+                        responderManager,
+                        log
+                    )
+                }
+            }
+        }
     }
 }

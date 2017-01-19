@@ -35,11 +35,13 @@ import org.eclipse.rdf4j.rio.turtle._
 import org.knora.webapi.SettingsConstants._
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.store.triplestoremessages._
+import org.knora.webapi.store.triplestore.RdfDataObjectFactory
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.FakeTriplestore
 import org.knora.webapi.util.SparqlResultProtocol._
 import spray.json._
 
+import scala.collection.JavaConverters._
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
 import scala.util.{Failure, Success, Try}
@@ -286,9 +288,16 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
         try {
             log.debug("==>> Loading Data Start")
 
-            for (elem <- rdfDataObjects) {
+            val defaultRdfDataList = settings.tripleStoreConfig.getConfigList("default-rdf-data")
+            val defaultRdfDataObjectList = defaultRdfDataList.asScala.map {
+                config => RdfDataObjectFactory(config)
+            }
 
-                GraphProtocolAccessor.put(elem.name, elem.path)
+            val completeRdfDataObjectList = defaultRdfDataObjectList ++ rdfDataObjects
+
+            for (elem <- completeRdfDataObjectList) {
+
+                GraphProtocolAccessor.post(elem.name, elem.path)
 
                 if (triplestoreType == HTTP_GRAPH_DB_TS_TYPE || triplestoreType == HTTP_GRAPH_DB_FREE_TS_TYPE) {
                     /* need to update the lucene index */

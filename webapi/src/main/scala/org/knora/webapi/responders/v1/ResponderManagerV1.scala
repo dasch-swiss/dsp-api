@@ -25,8 +25,10 @@ import akka.event.LoggingReceive
 import akka.routing.FromConfig
 import org.knora.webapi.ActorMaker
 import org.knora.webapi.messages.v1.responder.ckanmessages.CkanResponderRequestV1
+import org.knora.webapi.messages.v1.responder.groupmessages.GroupsResponderRequestV1
 import org.knora.webapi.messages.v1.responder.listmessages.ListsResponderRequestV1
 import org.knora.webapi.messages.v1.responder.ontologymessages.OntologyResponderRequestV1
+import org.knora.webapi.messages.v1.responder.permissionmessages.PermissionsResponderRequestV1
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectsResponderRequestV1
 import org.knora.webapi.messages.v1.responder.resourcemessages.ResourcesResponderRequestV1
 import org.knora.webapi.messages.v1.responder.searchmessages.SearchResponderRequestV1
@@ -167,6 +169,28 @@ class ResponderManagerV1 extends Actor with ActorLogging {
       */
     protected val storeRouter = makeDefaultStoreRouter
 
+    /**
+      * Constructs the default Akka routing actor that routes messages to [[PermissionsResponderV1]].
+      */
+    protected final def makeDefaultPermissionsRouter = makeActor(FromConfig.props(Props[PermissionsResponderV1]), PERMISSIONS_ROUTER_ACTOR_NAME)
+
+    /**
+      * The Akka routing actor that should receive messages addressed to the Permissions responder. Subclasses can override this
+      * member to substitute a custom actor instead of the default Store responder.
+      */
+    protected val permissionsRouter = makeDefaultPermissionsRouter
+
+    /**
+      * Constructs the default Akka routing actor that routes messages to [[GroupsResponderV1]].
+      */
+    protected final def makeDefaultGroupsRouter = makeActor(FromConfig.props(Props[GroupsResponderV1]), GROUPS_ROUTER_ACTOR_NAME)
+
+    /**
+      * The Akka routing actor that should receive messages addressed to the Permissions responder. Subclasses can override this
+      * member to substitute a custom actor instead of the default Store responder.
+      */
+    protected val groupsRouter = makeDefaultGroupsRouter
+
     def receive = LoggingReceive {
         case resourcesResponderRequestV1: ResourcesResponderRequestV1 => resourcesRouter.forward(resourcesResponderRequestV1)
         case valuesResponderRequest: ValuesResponderRequestV1 => valuesRouter.forward(valuesResponderRequest)
@@ -178,6 +202,8 @@ class ResponderManagerV1 extends Actor with ActorLogging {
         case projectsResponderRequest: ProjectsResponderRequestV1 => projectsRouter.forward(projectsResponderRequest)
         case ckanResponderRequest: CkanResponderRequestV1 => ckanRouter.forward(ckanResponderRequest)
         case storeResponderRequest: StoreResponderRequestV1 => storeRouter.forward(storeResponderRequest)
+		case permissionsResponderRequest: PermissionsResponderRequestV1 => permissionsRouter forward permissionsResponderRequest
+        case groupsResponderRequest: GroupsResponderRequestV1 => groupsRouter forward groupsResponderRequest
         case other => handleUnexpectedMessage(sender(), other, log)
     }
 }
