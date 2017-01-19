@@ -1352,13 +1352,7 @@ class ValuesResponderV1 extends ResponderV1 {
             response <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
             rows: Seq[VariableResultsRow] = response.results.bindings
 
-            // get ontology information about data type standoff classes
-            // this information is needed to handle text values with standoff
-            standoffDataTypeClassEntities: StandoffClassesWithDataTypeGetResponseV1 <- (responderManager ? StandoffClassesWithDataTypeGetRequestV1(userProfile = userProfile)).mapTo[StandoffClassesWithDataTypeGetResponseV1]
-            // gets information about all standoff properties
-            standoffAllPropertyEntities: StandoffAllPropertyEntitiesGetResponseV1 <- (responderManager ? StandoffAllPropertyEntitiesGetRequestV1(userProfile = userProfile)).mapTo[StandoffAllPropertyEntitiesGetResponseV1]
-
-            maybeValueQueryResult = sparqlQueryResults2ValueQueryResult(valueIri, rows, standoffDataTypeClassEntities.standoffClassEntityInfoMap, standoffAllPropertyEntities.standoffAllPropertiesEntityInfoMap, userProfile)
+            maybeValueQueryResult = sparqlQueryResults2ValueQueryResult(valueIri, rows, userProfile)
 
             // If it's a link value, check that the user has permission to see the source and target resources.
             _ = maybeValueQueryResult match {
@@ -1495,18 +1489,15 @@ class ValuesResponderV1 extends ResponderV1 {
       *
       * @param valueIri                      the IRI of the value that was queried.
       * @param rows                          the query result rows.
-      * @param standoffDataTypeEntityInfoMap a [[Map]] of standoff class Iris to StandoffClassEntityInfoV1 containing all the data type standoff classes.
-      * @param standoffAllPropertyEntities   a [[Map]] of standoff property Iris to StandoffPropertyEntityInfoV1 containing all the standoff properties.
       * @param userProfile                   the profile of the user making the request.
       * @return a [[ValueQueryResult]].
       */
     @throws(classOf[ForbiddenException])
-    private def sparqlQueryResults2ValueQueryResult(valueIri: IRI, rows: Seq[VariableResultsRow], standoffDataTypeEntityInfoMap: Map[IRI, StandoffClassEntityInfoV1], standoffAllPropertyEntities: Map[IRI, StandoffPropertyEntityInfoV1], userProfile: UserProfileV1): Option[ValueQueryResult] = {
+    private def sparqlQueryResults2ValueQueryResult(valueIri: IRI, rows: Seq[VariableResultsRow], userProfile: UserProfileV1): Option[ValueQueryResult] = {
         if (rows.nonEmpty) {
             // Convert the query results to a ApiValueV1.
             val valueProps = valueUtilV1.createValueProps(valueIri, rows)
-            // attach the ontology information for data type standoff classes and all standoff properties.
-            val value = valueUtilV1.makeValueV1(valueProps.copy(standoffClassesWithDataType = standoffDataTypeEntityInfoMap, standoffAllPropertyEntities = standoffAllPropertyEntities), responderManager, userProfile)
+            val value = valueUtilV1.makeValueV1(valueProps, responderManager, userProfile)
 
             // Get the value's class IRI.
             val valueClassIri = getValuePredicateObject(predicateIri = OntologyConstants.Rdf.Type, rows = rows).getOrElse(throw InconsistentTriplestoreDataException(s"Value $valueIri has no rdf:type"))
@@ -1724,13 +1715,7 @@ class ValuesResponderV1 extends ResponderV1 {
             updateVerificationResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
             rows = updateVerificationResponse.results.bindings
 
-            // get ontology information about data type standoff classes
-            // this information is needed to handle text values with standoff
-            standoffDataTypeClassEntities: StandoffClassesWithDataTypeGetResponseV1 <- (responderManager ? StandoffClassesWithDataTypeGetRequestV1(userProfile = userProfile)).mapTo[StandoffClassesWithDataTypeGetResponseV1]
-            // gets information about all standoff properties
-            standoffAllPropertyEntities: StandoffAllPropertyEntitiesGetResponseV1 <- (responderManager ? StandoffAllPropertyEntitiesGetRequestV1(userProfile = userProfile)).mapTo[StandoffAllPropertyEntitiesGetResponseV1]
-
-            result: ValueQueryResult = sparqlQueryResults2ValueQueryResult(valueIri = searchValueIri, rows = rows, standoffDataTypeEntityInfoMap = standoffDataTypeClassEntities.standoffClassEntityInfoMap, standoffAllPropertyEntities = standoffAllPropertyEntities.standoffAllPropertiesEntityInfoMap, userProfile = userProfile).getOrElse(throw UpdateNotPerformedException(s"The update to value $searchValueIri for property $propertyIri in resource $resourceIri was not performed. Please report this as a possible bug."))
+            result: ValueQueryResult = sparqlQueryResults2ValueQueryResult(valueIri = searchValueIri, rows = rows, userProfile = userProfile).getOrElse(throw UpdateNotPerformedException(s"The update to value $searchValueIri for property $propertyIri in resource $resourceIri was not performed. Please report this as a possible bug."))
         } yield result
     }
 

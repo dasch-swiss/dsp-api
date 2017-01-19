@@ -640,12 +640,6 @@ class ResourcesResponderV1 extends ResponderV1 {
                     resourceTypeEntityInfo.linkValueProperties(propertyIri) || resourceTypeEntityInfo.fileValueProperties(propertyIri)
             }
 
-            // get ontology information about data type standoff classes
-            // this information is needed to handle text values with standoff
-            standoffDataTypeClassEntities: StandoffClassesWithDataTypeGetResponseV1 <- (responderManager ? StandoffClassesWithDataTypeGetRequestV1(userProfile = userProfile)).mapTo[StandoffClassesWithDataTypeGetResponseV1]
-            // gets information about standoff properties
-            standoffAllPropertyEntities: StandoffAllPropertyEntitiesGetResponseV1 <- (responderManager ? StandoffAllPropertyEntitiesGetRequestV1(userProfile = userProfile)).mapTo[StandoffAllPropertyEntitiesGetResponseV1]
-
             // Construct PropertyV1 objects for the properties that have data for this resource.
             propertiesWithData = queryResults2PropertyV1s(
                 containingResourceIri = resourceIri,
@@ -653,8 +647,6 @@ class ResourcesResponderV1 extends ResponderV1 {
                 propertyEntityInfoMap = entityInfoResponse.propertyEntityInfoMap,
                 resourceEntityInfoMap = entityInfoResponse.resourceEntityInfoMap,
                 propsAndCardinalities = propsAndCardinalities,
-                standoffDataTypeEntityInfoMap = standoffDataTypeClassEntities.standoffClassEntityInfoMap,
-                standoffAllPropertyEntities = standoffAllPropertyEntities.standoffAllPropertiesEntityInfoMap,
                 userProfile = userProfile
             )
 
@@ -1780,12 +1772,6 @@ class ResourcesResponderV1 extends ResponderV1 {
 
             groupedPropsByType: GroupedPropertiesByType <- getGroupedProperties(resourceIri)
 
-            // get ontology information about data type standoff classes
-            // this information is needed to handle text values with standoff
-            standoffDataTypeClassEntities: StandoffClassesWithDataTypeGetResponseV1 <- (responderManager ? StandoffClassesWithDataTypeGetRequestV1(userProfile = userProfile)).mapTo[StandoffClassesWithDataTypeGetResponseV1]
-            // gets information about all standoff properties
-            standoffAllPropertyEntities: StandoffAllPropertyEntitiesGetResponseV1 <- (responderManager ? StandoffAllPropertyEntitiesGetRequestV1(userProfile = userProfile)).mapTo[StandoffAllPropertyEntitiesGetResponseV1]
-
             // TODO: Should we get rid of the tuple and replace it by a case class?
             (propertyEntityInfoMap: Map[IRI, PropertyEntityInfoV1], resourceEntityInfoMap: Map[IRI, ResourceEntityInfoV1], propsAndCardinalities: Map[IRI, Cardinality.Value]) <- maybeResourceTypeIri match {
                 case Some(resourceTypeIri) =>
@@ -1815,8 +1801,6 @@ class ResourcesResponderV1 extends ResponderV1 {
             propertyEntityInfoMap = propertyEntityInfoMap,
             resourceEntityInfoMap = resourceEntityInfoMap,
             propsAndCardinalities = propsAndCardinalities,
-            standoffDataTypeEntityInfoMap = standoffDataTypeClassEntities.standoffClassEntityInfoMap,
-            standoffAllPropertyEntities = standoffAllPropertyEntities.standoffAllPropertiesEntityInfoMap,
             userProfile = userProfile
         )
     }
@@ -1963,8 +1947,6 @@ class ResourcesResponderV1 extends ResponderV1 {
       *                                ontology-based information for linking properties in the returned [[PropertyV1]] objects.
       * @param propsAndCardinalities   a [[Map]] of property IRIs to their cardinalities in the class of the queried resource. If this [[Map]] is not
       *                                empty, it will be used to include cardinalities in the returned [[PropertyV1]] objects.
-      * @param standoffDataTypeEntityInfoMap a [[Map]] of standoff class Iris to StandoffClassEntityInfoV1 containing all the data type standoff classes.
-      * @param standoffAllPropertyEntities a [[Map]] of standoff property Iris to StandoffPropertyEntityInfoV1 containing all the standoff properties.
       * @param userProfile             the profile of the user making the request.
       * @return a [[Seq]] of [[PropertyV1]] objects.
       */
@@ -1973,8 +1955,6 @@ class ResourcesResponderV1 extends ResponderV1 {
                                          propertyEntityInfoMap: Map[IRI, PropertyEntityInfoV1],
                                          resourceEntityInfoMap: Map[IRI, ResourceEntityInfoV1],
                                          propsAndCardinalities: Map[IRI, Cardinality.Value],
-                                         standoffDataTypeEntityInfoMap: Map[IRI, StandoffClassEntityInfoV1],
-                                         standoffAllPropertyEntities: Map[IRI, StandoffPropertyEntityInfoV1],
                                          userProfile: UserProfileV1): Seq[PropertyV1] = {
         /**
           * Constructs a [[PropertyV1]].
@@ -2045,8 +2025,7 @@ class ResourcesResponderV1 extends ResponderV1 {
                         valueProps.literalData.getOrElse(OntologyConstants.Rdf.Type, throw InconsistentTriplestoreDataException(s"$valObjIri has no rdf:type"))
 
                         // Convert the SPARQL query results to a ValueV1.
-                        // Attach information about standoff data type classes and all standoff properties.
-                        val valueV1 = valueUtilV1.makeValueV1(valueProps.copy(standoffClassesWithDataType = standoffDataTypeEntityInfoMap, standoffAllPropertyEntities = standoffAllPropertyEntities), responderManager, userProfile)
+                        val valueV1 = valueUtilV1.makeValueV1(valueProps, responderManager, userProfile)
 
                         val valPermission = PermissionUtilV1.getUserPermissionV1WithValueProps(valObjIri, valueProps, userProfile)
                         val predicates = valueProps.literalData

@@ -69,9 +69,10 @@ case class GetMappingRequestV1(mappingIri: IRI, userProfile: UserProfileV1) exte
 /**
   * Represents a response to a [[GetMappingRequestV1]].
   *
-  * @param mappingIri the Iri of the requested mapping.
-  * @param mapping    the requested mapping.
-  * @param userdata   information about the user that made the request.
+  * @param mappingIri       the Iri of the requested mapping.
+  * @param mapping          the requested mapping.
+  * @param standoffEntities the standoff entities referred to in the mapping.
+  * @param userdata         information about the user that made the request.
   */
 case class GetMappingResponseV1(mappingIri: IRI, mapping: MappingXMLtoStandoff, standoffEntities: StandoffEntityInfoGetResponseV1, userdata: UserDataV1)
 
