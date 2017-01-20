@@ -208,6 +208,36 @@ case class StandoffDiffDelete(baseStartPosition: Int,
                               derivedStartPosition: Int) extends StandoffDiff
 
 /**
+  * Represents an XML element that requires a separator to be inserted at its end.
+  * This is necessary because the markup is going to be represented in standoff (separated from the text).
+  *
+  * @param namespace the namespace the element belongs to, if any.
+  * @param tagname the name of the element.
+  * @param classname the class of the element, if any.
+  */
+case class XMLTagSeparatorRequired(namespace: Option[String], tagname: String, classname: Option[String]) {
+
+    // generate an XPath expression to match this element
+    def toXPath = {
+
+        val prefix: String = namespace match {
+            case Some(namespace) => namespace + ":"
+            case None => ""
+        }
+
+        val classSelector: String = classname match {
+            case Some(classSel) => s"""[@class=\"$classSel\"]"""
+            case None => ""
+        }
+
+        // the XPath expression matching this element
+        s"$prefix$tagname$classSelector"
+
+    }
+
+}
+
+/**
   * Standoff-related constants.
   */
 object XMLToStandoffUtil {
@@ -261,7 +291,7 @@ object XMLToStandoffUtil {
   * - UUIDs are written in Base64 encoding if `writeBase64Ids` is `true` (the default), otherwise in canonical form.
   *
   * @param xmlNamespaces       A map of prefixes to XML namespaces, to be used when converting standoff to XML.
-  * @param writeUuidsToXml         If `true` (the default), adds the ID of every standoff tag as an attribute when writing
+  * @param writeUuidsToXml     If `true` (the default), adds the ID of every standoff tag as an attribute when writing
   *                            XML. Otherwise, only the IDs of CLIX milestones and elements that originally had an id in XML are included.
   * @param writeBase64IDs      If `true`, writes UUIDs in Base64 encoding; otherwise, writes UUIDs in canonical form.
   * @param documentSpecificIDs An optional mapping between document-specific IDs and UUIDs. When reading XML,
@@ -318,10 +348,12 @@ class XMLToStandoffUtil(xmlNamespaces: Map[String, IRI] = Map.empty[IRI, String]
     /**
       * Converts an XML document to an equivalent [[TextWithStandoff]].
       *
-      * @param xmlStr the XML document to be converted.
+      * @param xmlStr            the XML document to be converted.
+      * @param tagsWithSeparator a Seq with the tags that require a separator
+      *                          in the string representation (`valueHasString`) once markup is converted to standoff.
       * @return a [[TextWithStandoff]].
       */
-    def xml2TextWithStandoff(xmlStr: String): TextWithStandoff = {
+    def xml2TextWithStandoff(xmlStr: String, tagsWithSeparator: Seq[XMLTagSeparatorRequired] = Seq.empty[XMLTagSeparatorRequired]): TextWithStandoff = {
         val saxParser = saxParserFactory.newSAXParser()
         val nodes: Elem = XML.withSAXParser(saxParser).loadString(xmlStr)
 
@@ -331,6 +363,10 @@ class XMLToStandoffUtil(xmlNamespaces: Map[String, IRI] = Map.empty[IRI, String]
 
         //FormatConstants.INFORMATION_SEPARATOR_TWO
 
+        /*tagsWithSeparator.foreach {
+            tag =>
+                println(tag.toXPath)
+        }*/
 
         val finishedConversionState = xmlNodes2Standoff(
             nodes = nodes,
@@ -803,7 +839,7 @@ class XMLToStandoffUtil(xmlNamespaces: Map[String, IRI] = Map.empty[IRI, String]
                             Some(XmlClixEndIdAttrName, id)
                         }
 
-                        // write the original XML id back, if any
+                    // write the original XML id back, if any
                     case _ => tag.originalID match {
                         case Some(originalId) => Some(XmlHierarchicalIdAttrName, originalId)
                         case None => None

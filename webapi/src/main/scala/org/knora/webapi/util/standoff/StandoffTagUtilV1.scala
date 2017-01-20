@@ -219,11 +219,38 @@ object StandoffTagUtilV1 {
       */
     def convertXMLtoStandoffTagV1(xml: String, mapping: GetMappingResponseV1): TextWithStandoffTagV1 = {
 
+        // collect all the `XMLTag` from the given mapping (Map[String, Map[String, Map[String, XMLTag]]])
+        // that require a separator and create a `XMLTagSeparatorRequired` for each of them
+        val elementsSeparatorRequired: Vector[XMLTagSeparatorRequired] = mapping.mapping.namespace.flatMap {
+            case (namespace: String, elesForNamespace: Map[String, Map[String, XMLTag]]) =>
+                elesForNamespace.flatMap {
+                    case (classname: String, tagsForClass: Map[String, XMLTag]) =>
+                        // filter out all `XMLTag` that require a separator
+                        val tagsWithSeparator = tagsForClass.values.filter(_.separatorRequired)
+
+                        // for each `XMLTag`, create a `XMLTagSeparatorRequired`
+                        tagsWithSeparator.map {
+                            (xmlTag: XMLTag) =>
+                                XMLTagSeparatorRequired(
+                                    namespace = namespace match {
+                                        case `noNamespace` => None
+                                        case nspace: String => Some(nspace)
+                                    },
+                                    tagname = xmlTag.name,
+                                    classname = classname match {
+                                        case `noClass` => None
+                                        case clname: String => Some(clname)
+                                    }
+                                )
+                        }
+                }
+        }.toVector
+
         val xmlStandoffUtil = new XMLToStandoffUtil()
 
         // FIXME: if the XML is not well formed, the error is not handled correctly in XMLToStandoffUtil
         val textWithStandoff: TextWithStandoff = try {
-            xmlStandoffUtil.xml2TextWithStandoff(xml)
+            xmlStandoffUtil.xml2TextWithStandoff(xml, elementsSeparatorRequired)
         } catch {
             case e: org.xml.sax.SAXParseException => throw BadRequestException(s"there was a problem parsing the provided XML: ${e.getMessage}")
 

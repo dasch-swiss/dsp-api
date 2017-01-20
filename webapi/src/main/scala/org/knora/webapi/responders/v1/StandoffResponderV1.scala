@@ -365,7 +365,7 @@ class StandoffResponderV1 extends ResponderV1 {
                             case Some(existingClassname) => throw BadRequestException("Duplicate tag and classname combination in the same namespace")
                             case None =>
                                 // create the definition for the current element
-                                val xmlElementDef = XMLTag(name = tagname, mapping = XMLTagToStandoffClass(standoffClassIri = standoffClassIri, attributesToProps = attributes, dataType = dataTypeOption))
+                                val xmlElementDef = XMLTag(name = tagname, mapping = XMLTagToStandoffClass(standoffClassIri = standoffClassIri, attributesToProps = attributes, dataType = dataTypeOption), separatorRequired = curEle.separatorRequired)
 
                                 // combine the definition for the this classname with the existing definitions beloning to the same element
                                 val combinedClassDef: Map[String, XMLTag] = namespaceMap(tagname) + (classname -> xmlElementDef)
@@ -375,7 +375,7 @@ class StandoffResponderV1 extends ResponderV1 {
 
                         }
                     case None =>
-                        namespaceMap + (tagname -> Map(classname -> XMLTag(name = tagname, mapping = XMLTagToStandoffClass(standoffClassIri = standoffClassIri, attributesToProps = attributes, dataType = dataTypeOption))))
+                        namespaceMap + (tagname -> Map(classname -> XMLTag(name = tagname, mapping = XMLTagToStandoffClass(standoffClassIri = standoffClassIri, attributesToProps = attributes, dataType = dataTypeOption), separatorRequired = curEle.separatorRequired)))
                 }
 
                 // recreate the whole structure for all namespaces

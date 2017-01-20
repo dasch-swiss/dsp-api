@@ -94,8 +94,9 @@ case class MappingXMLtoStandoff(namespace: Map[String, Map[String, Map[String, X
   *
   * @param name the tag name.
   * @param mapping the corresponding standoff entities.
+  * @param separatorRequired indicates if the element requires a separator in the text once the markup has been converted to standoff.
   */
-case class XMLTag(name: String, mapping: XMLTagToStandoffClass)
+case class XMLTag(name: String, mapping: XMLTagToStandoffClass, separatorRequired: Boolean)
 
 /**
   * Represents standoff entities referred to in the mapping.
