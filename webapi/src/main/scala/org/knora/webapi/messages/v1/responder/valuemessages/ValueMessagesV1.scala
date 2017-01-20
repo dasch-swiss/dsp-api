@@ -31,7 +31,7 @@ import org.knora.webapi.{BadRequestException, _}
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi.messages.v1.responder.ontologymessages.StandoffEntityInfoGetResponseV1
 import org.knora.webapi.messages.v1.responder.standoffmessages.{GetMappingResponseV1, MappingXMLtoStandoff, StandoffDataTypeClasses}
-import org.knora.webapi.twirl.StandoffTagV1
+import org.knora.webapi.twirl.{StandoffTagAttributeV1, StandoffTagInternalReferenceAttributeV1, StandoffTagV1}
 import org.knora.webapi.util.standoff.StandoffTagUtilV1
 import spray.json._
 
@@ -99,9 +99,9 @@ case class CreateValueApiRequestV1(project_id: IRI,
 /**
   * Represents a richtext object consisting of text, text attributes and resource references.
   *
-  * @param utf8str       a mere string in case of a text without any markup.
-  * @param xml           xml in case of a text with markup.
-  * @param mapping_id    Iri of the mapping used to transform XML to standoff.
+  * @param utf8str    a mere string in case of a text without any markup.
+  * @param xml        xml in case of a text with markup.
+  * @param mapping_id Iri of the mapping used to transform XML to standoff.
   */
 case class CreateRichtextV1(utf8str: Option[String] = None,
                             xml: Option[String] = None,
@@ -608,39 +608,14 @@ object KnoraPrecisionV1 extends Enumeration {
     }
 }
 
-
-
-/**
-  * Representation of a range with start and end an attribute applies to.
-  * If the attribute is a link to another Knora resource, its IRI is given.
-  *
-  * @param start the start position of the range.
-  * @param end   the end position of the range.
-  * @param resid the IRI of of a Knora resource that this [[StandoffPositionV1]] refers to.
-  * @param href  the IRI of a web resource that this [[StandoffPositionV1]] refers to. In Knora API v1, if `resid`
-  *              is non-empty, `href` is the URL of an API operation for querying the same resource.
-  */
-case class StandoffPositionV1(start: Int,
-                              end: Int,
-                              resid: Option[IRI] = None,
-                              href: Option[IRI] = None) extends Jsonable {
-    def toJsValue = JsObject(
-        Map(
-            "start" -> JsNumber(start),
-            "end" -> JsNumber(end)
-        ) ++ resid.map(iri => "resid" -> JsString(iri)) ++
-            href.map(iri => "href" -> JsString(iri))
-    )
-}
-
 /**
   *
-  * Represents a [[StandoffPositionV1]] for a standoff tag of a certain type (standoff tag class) that is about to be created in the triplestore.
+  * Represents a [[StandoffTagV1]] for a standoff tag of a certain type (standoff tag class) that is about to be created in the triplestore.
   *
-  * @param standoffNode    the standoff node to be created.
-  * @param standoffTagInstanceIri      the standoff node's Iri.
+  * @param standoffNode           the standoff node to be created.
+  * @param standoffTagInstanceIri the standoff node's Iri.
   */
-case class CreateStandoffPositionV1InTriplestore(standoffNode: StandoffTagV1, standoffTagInstanceIri: IRI)
+case class CreateStandoffTagV1InTriplestore(standoffNode: StandoffTagV1, standoffTagInstanceIri: IRI)
 
 sealed trait TextValueV1 {
 
@@ -652,15 +627,15 @@ sealed trait TextValueV1 {
   * Represents a textual value with additional information in standoff format.
   *
   * @param utf8str            text in mere utf8 representation (including newlines and carriage returns).
-  * @param standoff           attributes of the text in standoff format. For each attribute, several ranges may be given (a list of [[StandoffPositionV1]]).
+  * @param standoff           attributes of the text in standoff format. For each attribute, several ranges may be given (a list of [[StandoffTagV1]]).
   * @param resource_reference referred Knora resources.
-  * @param mapping         the mapping used to create standoff from another format.
+  * @param mapping            the mapping used to create standoff from another format.
   */
 case class TextValueWithStandoffV1(utf8str: String,
                                    standoff: Seq[StandoffTagV1],
                                    resource_reference: Set[IRI] = Set.empty[IRI],
                                    mappingIri: IRI,
-                                   mapping: MappingXMLtoStandoff) extends TextValueV1 with UpdateValueV1 with ApiValueV1 { // TODO: for the GUI case we should use a default mapping. As a consequence, each TextValue needs a mapping (make mappingIri a required member of TextValueV1)
+                                   mapping: MappingXMLtoStandoff) extends TextValueV1 with UpdateValueV1 with ApiValueV1 {
 
     import ApiValueV1JsonProtocol._
 
@@ -669,73 +644,70 @@ case class TextValueWithStandoffV1(utf8str: String,
     def valueTypeIri = OntologyConstants.KnoraBase.TextValue
 
     def toJsValue = {
-        // Convert textattr to JSON by mapping over it rather than using spray-json's built-in support for collections,
-        // because otherwise StandoffPositionV1JsonFormat is not necessarily compiled before this class, and spray-json
-        // says it can't find a formatter for StandoffPositionV1.
-
-        // filter out all standoff tags that are not supported by the JSON v1 format.
-        // otherwise an error would be thrown
-        // TODO: we have to prevent users from creating new version of text values created directly from XML using the JSON v1 format because they would possibly lose annotations (those that have been filtered out).
-
-        // TODO: if the text value contains non JSON v1 format information, display all the supported standoff tags and make it read only in the GUI
-        /*val textattrV1 = textattr.filter(standoffTag => TextattrV1.IriToEnumValue.keySet.contains(standoffTag.standoffTagClassIri))
-
-        // Group by JSON format attribute name and not by Iri because _link used both for resource references and hyperlinks.
-        val standoffTagsGroupedByClassIri: Map[IRI, Seq[StandoffTagV1]] = textattrV1.groupBy((row: StandoffTagV1) => TextattrV1.IriToEnumValue(row.standoffTagClassIri).toString)
-
-        val textattrAsJsValue = JsObject(standoffTagsGroupedByClassIri.map {
-            case (attrName, standoffTags: Seq[StandoffTagV1]) =>
-                (attrName, JsArray(standoffTags.map {
-                    standoffTag =>
-
-                        val (resid, href) = if (standoffTag.dataType.isDefined && standoffTag.dataType.get == StandoffDataTypeClasses.StandoffLinkTag) {
-                            // It is a reference to a Knora resource, resid and href contain its Iri
-                            val resRef = Some(standoffTag.attributes.find(_.standoffPropertyIri == OntologyConstants.KnoraBase.StandoffTagHasLink).getOrElse(throw NotFoundException(s"${OntologyConstants.KnoraBase.StandoffTagHasLink} was not found in $standoffTag")).stringValue())
-                            (resRef, resRef)
-                        } else if (standoffTag.dataType.isDefined && standoffTag.dataType.get == StandoffDataTypeClasses.StandoffUriTag) {
-                            // it is a hyperlink, only href is given
-                            val urlRef = Some(standoffTag.attributes.find(_.standoffPropertyIri == OntologyConstants.KnoraBase.ValueHasUri).getOrElse(throw NotFoundException(s"${OntologyConstants.KnoraBase.ValueHasUri} was not found in $standoffTag")).stringValue())
-                            (None, urlRef)
-                        } else {
-                            // it is not a link
-                            (None, None)
-                        }
-
-                        StandoffPositionV1(
-                            start = standoffTag.startPosition,
-                            end = standoffTag.endPosition,
-                            resid = resid,
-                            href = href
-                        ).toJsValue
-                }.toVector))
-        })*/
 
         // TODO: depending on the given mapping, decide how serialize the text with standoff markup
 
         val xml = StandoffTagUtilV1.convertStandoffTagV1ToXML(utf8str, standoff, mapping)
 
-
         JsObject(
-            "xml" -> JsString(xml)
+            "xml" -> JsString(xml),
+            "mapping_id" -> JsString(mappingIri)
         )
     }
 
     /**
-      * A convenience method that returns a flattened representation of `textattr`, in the form of a list of
-      * [[CreateStandoffPositionV1InTriplestore]].
+      * A convenience method that creates an IRI for each [[StandoffTagV1]] and resolves internal references to standoff node Iris.
       *
-      * @return a list of [[CreateStandoffPositionV1InTriplestore]] each representing a [[StandoffTagV1]] object
+      * @return a list of [[CreateStandoffTagV1InTriplestore]] each representing a [[StandoffTagV1]] object
       *         along with is standoff tag class and IRI that is going to identify it in the triplestore.
       */
-    def prepareForSparqlInsert(valueIri: IRI): Seq[CreateStandoffPositionV1InTriplestore] = {
+    def prepareForSparqlInsert(valueIri: IRI): Seq[CreateStandoffTagV1InTriplestore] = {
 
-        standoff.map {
+        // create an Iri for each standoff tag
+        // internal references to XML ids are not resolved yet
+        val standoffTagsWithOriginalXMLIDs: Seq[CreateStandoffTagV1InTriplestore] = standoff.map {
             case (standoffNode: StandoffTagV1) =>
-                CreateStandoffPositionV1InTriplestore(
+                CreateStandoffTagV1InTriplestore(
                     standoffNode = standoffNode,
-                    standoffTagInstanceIri = knoraIdUtil.makePredictableStandoffTagIri(valueIri, UUID.fromString(standoffNode.uuid)) // generate IRI for new standoff node
+                    standoffTagInstanceIri = knoraIdUtil.makeRandomStandoffTagIri(valueIri) // generate IRI for new standoff node
                 )
         }
+
+        // collect all the standoff tags that contain XML ids and
+        // map the XML ids to standoff node Iris
+        val IDsToStandoffNodeIris: Map[IRI, IRI] = standoffTagsWithOriginalXMLIDs.filter {
+            (standoffTag: CreateStandoffTagV1InTriplestore) =>
+                // filter those tags out that have an XML id
+                standoffTag.standoffNode.originalXMLID.isDefined
+        }.map {
+            (standoffTagWithID: CreateStandoffTagV1InTriplestore) =>
+                // return the XML id as a key and the standoff Iri as the value
+                standoffTagWithID.standoffNode.originalXMLID.get -> standoffTagWithID.standoffTagInstanceIri
+        }.toMap
+
+        // resolve the original XML ids to standoff Iris every the `StandoffTagInternalReferenceAttributeV1`
+        val standoffTagsWithNodeReferences: Seq[CreateStandoffTagV1InTriplestore] = standoffTagsWithOriginalXMLIDs.map {
+            (standoffTag: CreateStandoffTagV1InTriplestore) =>
+
+                // resolve original XML ids to standoff node Iris for `StandoffTagInternalReferenceAttributeV1`
+                val attributesWithStandoffNodeIriReferences: Seq[StandoffTagAttributeV1] = standoffTag.standoffNode.attributes.map {
+                    (attributeWithOriginalXMLID: StandoffTagAttributeV1) =>
+                        attributeWithOriginalXMLID match {
+                            case refAttr: StandoffTagInternalReferenceAttributeV1 =>
+                                // resolve the XML id to the corresponding standoff node Iri
+                                refAttr.copy(value = IDsToStandoffNodeIris(refAttr.value))
+                            case attr => attr
+                        }
+                }
+
+                // return standoff tag with updated attributes
+                standoffTag.copy(
+                    standoffNode = standoffTag.standoffNode.copy(attributes = attributesWithStandoffNodeIriReferences)
+                )
+
+        }
+
+        standoffTagsWithNodeReferences
     }
 
     /**
@@ -1506,49 +1478,6 @@ object ApiValueV1JsonProtocol extends DefaultJsonProtocol with NullOptions with 
 
     import org.knora.webapi.messages.v1.responder.resourcemessages.ResourceV1JsonProtocol._
     import org.knora.webapi.messages.v1.responder.usermessages.UserDataV1JsonProtocol._
-
-    /**
-      * Converts between [[StandoffPositionV1]] objects and [[JsValue]] objects.
-      */
-    implicit object StandoffPositionV1JsonFormat extends JsonFormat[StandoffPositionV1] {
-        def read(jsonVal: JsValue) = {
-            jsonVal match {
-                case JsObject(fields) =>
-                    val (start, end) = (fields.get("start"), fields.get("end")) match {
-                        case (Some(JsNumber(startVal)), Some(JsNumber(endVal))) => (startVal.toInt, endVal.toInt)
-                        case _ => throw BadRequestException(s"Invalid standoff position in JSON: $jsonVal")
-                    }
-
-                    val maybeResId = fields.get("resid")
-
-                    val resid: Option[String] = maybeResId match {
-                        case Some(residJsStr: JsString) => Some(residJsStr.value)
-                        case Some(other) => throw BadRequestException(s"Invalid resid in JSON: $other")
-                        case None => None
-                    }
-
-                    val maybeHref = fields.get("href")
-
-                    val href: Option[String] = maybeHref match {
-                        case Some(hrefJsStr: JsString) => Some(hrefJsStr.value)
-                        case Some(other) => throw BadRequestException(s"Invalid href in JSON: $other")
-                        case None => None
-                    }
-
-                    StandoffPositionV1(
-                        start = start,
-                        end = end,
-                        resid = resid,
-                        href = href
-                    )
-
-                case _ => throw BadRequestException(s"Invalid standoff position in JSON: $jsonVal")
-            }
-        }
-
-        def write(standoffPositionV1: StandoffPositionV1) = standoffPositionV1.toJsValue
-    }
-
 
     /**
       * Converts between [[KnoraCalendarV1]] objects and [[JsValue]] objects.

@@ -22,19 +22,18 @@ package org.knora.webapi.util
 
 import java.io.File
 import java.nio.file.{Files, Paths}
-import java.util.UUID
 
 import akka.event.LoggingAdapter
+import com.google.gwt.safehtml.shared.UriUtils._
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.validator.routines.UrlValidator
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.standoffmessages.StandoffDataTypeClasses
-import org.knora.webapi.messages.v1.responder.valuemessages.{CreateRichtextV1, StandoffPositionV1, TextValueV1}
-import org.knora.webapi.twirl.{StandoffTagIriAttributeV1, StandoffTagStringAttributeV1, StandoffTagV1}
+import org.knora.webapi.messages.v1.responder.valuemessages.{CreateRichtextV1, TextValueV1}
+import org.knora.webapi.twirl.StandoffTagV1
 import spray.json.JsonParser
-import com.google.gwt.safehtml.shared.UriUtils._
 
 
 /**
@@ -441,7 +440,7 @@ object InputValidation {
                 standoffNode match {
 
                     case node: StandoffTagV1 if node.dataType.isDefined && node.dataType.get == StandoffDataTypeClasses.StandoffLinkTag =>
-                        acc + node.attributes.find(_.standoffPropertyIri == OntologyConstants.KnoraBase.StandoffTagHasLink).getOrElse(throw NotFoundException(s"${OntologyConstants.KnoraBase.StandoffTagHasLink} was not found in $node")).stringValue()
+                        acc + node.attributes.find(_.standoffPropertyIri == OntologyConstants.KnoraBase.StandoffTagHasLink).getOrElse(throw NotFoundException(s"${OntologyConstants.KnoraBase.StandoffTagHasLink} was not found in $node")).stringValue
 
                     case _ => acc
                 }

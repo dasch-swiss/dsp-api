@@ -459,7 +459,7 @@ class ValueUtilV1(private val settings: SettingsImpl) {
             // get the Iri of the mapping
             val mappingIri = valueProps.literalData.getOrElse(OntologyConstants.KnoraBase.ValueHasMapping, throw InconsistentTriplestoreDataException("no mapping Iri associated with standoff")).literals.head
 
-            // get the mapping and the realted standoff entities
+            // get the mapping and the related standoff entities
             val mappingResponseFuture: Future[GetMappingResponseV1] = (responderManager ? GetMappingRequestV1(mappingIri = mappingIri, userProfile = userProfile)).mapTo[GetMappingResponseV1]
 
             // TODO: very very very bad

@@ -109,16 +109,7 @@
                             *@
                             @for(createProperty <- createStandoff.standoffNode.attributes) {
 
-                                @createProperty match {
-
-                                    case internalRefProp: StandoffTagInternalReferenceAttributeV1 => {
-                                        <@internalRefProp.standoffPropertyIri> @internalRefProp.rdfValue(Some(newValueIri)) ;
-                                    }
-
-                                    case otherProp => {
-                                        <@otherProp.standoffPropertyIri> @otherProp.rdfValue() ;
-                                    }
-                                }
+                                <@createProperty.standoffPropertyIri> @createProperty.rdfValue ;
 
                             }
 

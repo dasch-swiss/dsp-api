@@ -339,8 +339,8 @@ class KnoraIdUtil {
       * @param valueIri the IRI of the text value containing the standoff tag.
       * @return a standoff tag IRI.
       */
-    def makePredictableStandoffTagIri(valueIri: IRI, standoffTagUUID: UUID): IRI = {
-        val standoffTagID = base64EncodeUuid(standoffTagUUID)
+    def makeRandomStandoffTagIri(valueIri: IRI): IRI = {
+        val standoffTagID = makeRandomBase64EncodedUuid
         s"$valueIri/standoff/$standoffTagID"
     }
 
