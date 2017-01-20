@@ -342,6 +342,38 @@ class XMLToStandoffUtil(xmlNamespaces: Map[String, IRI] = Map.empty[IRI, String]
                                         parentIndex: Option[Int] = None,
                                         isStartTag: Boolean) extends IndexedStandoffTag
 
+    /**
+      * Creates XSLT that inserts a separator after each element matching the XPath expression.
+      *
+      * @param xpath        the XPath expression used to match elements.
+      * @param separator    the separator to be inserted.
+      * @return             an XSLT stylesheet as a [[String]].
+      */
+    private def insertSeparatorsXSLT(xpath: String, separator: Char) =
+        s"""<?xml version="1.0" encoding="UTF-8"?>
+          |
+          |<xsl:transform xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="2.0">
+          |
+          |    <xsl:output indent="yes" encoding="UTF-8"/>
+          |
+          |    <xsl:template match="@*|node()" mode="#all">
+          |        <xsl:copy>
+          |            <xsl:apply-templates select="@*|node()" mode="#current"/>
+          |        </xsl:copy>
+          |    </xsl:template>
+          |
+          |    <xsl:template match="${xpath}">
+          |        <xsl:variable name="ele" select="name()"/>
+          |
+          |        <xsl:element name="{$$ele}">
+          |            <xsl:apply-templates/>
+          |        </xsl:element>
+          |        <xsl:text>$separator</xsl:text>
+          |    </xsl:template>
+          |
+          |</xsl:transform>
+        """.stripMargin
+
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Public methods
 
@@ -359,14 +391,17 @@ class XMLToStandoffUtil(xmlNamespaces: Map[String, IRI] = Map.empty[IRI, String]
 
         // TODO: ensure that text nodes are not concatenated to one another (e.g. <p> tags)
         // TODO: handle <br> and other line breaking tags
-        // FormatConstants.INFORMATION_SEPARATOR_TWO
+        // FormatConstants.INFORMATION_SEPARATOR_TWO -> this seems to be an invalid XML character
 
-        //FormatConstants.INFORMATION_SEPARATOR_TWO
 
-        /*tagsWithSeparator.foreach {
-            tag =>
-                println(tag.toXPath)
-        }*/
+
+        val xPAthExpression = tagsWithSeparator.map(_.toXPath).mkString("|")
+
+
+
+        //println(insertSeparatorsXSLT(xPAthExpression, FormatConstants.INFORMATION_SEPARATOR_TWO))
+
+        //println(xPAthExpression)
 
         val finishedConversionState = xmlNodes2Standoff(
             nodes = nodes,
