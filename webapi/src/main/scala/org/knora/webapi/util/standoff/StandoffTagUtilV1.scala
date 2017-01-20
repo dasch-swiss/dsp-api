@@ -219,30 +219,39 @@ object StandoffTagUtilV1 {
       */
     def convertXMLtoStandoffTagV1(xml: String, mapping: GetMappingResponseV1): TextWithStandoffTagV1 = {
 
-        // collect all the `XMLTag` from the given mapping (Map[String, Map[String, Map[String, XMLTag]]])
-        // that require a separator and create a `XMLTagSeparatorRequired` for each of them
+        // collect all the `XMLTag` from the given mapping that require a separator
+        // and create a `XMLTagSeparatorRequired` for each of them
+        //
+        // namespace = Map("myXMLNamespace" -> Map("myXMLTagName" -> Map("myXMLClassname" -> XMLTag(...))))
         val elementsSeparatorRequired: Vector[XMLTagSeparatorRequired] = mapping.mapping.namespace.flatMap {
             case (namespace: String, elesForNamespace: Map[String, Map[String, XMLTag]]) =>
                 elesForNamespace.flatMap {
-                    case (classname: String, tagsForClass: Map[String, XMLTag]) =>
-                        // filter out all `XMLTag` that require a separator
-                        val tagsWithSeparator = tagsForClass.values.filter(_.separatorRequired)
+                    case (tagname: String, classWithTag: Map[String, XMLTag]) =>
 
-                        // for each `XMLTag`, create a `XMLTagSeparatorRequired`
-                        tagsWithSeparator.map {
-                            (xmlTag: XMLTag) =>
+                        val tagsWithSeparator: Iterable[XMLTagSeparatorRequired] = classWithTag.filter {
+                            // filter out all `XMLTag` that require a separator
+                            case (classname: String, tag: XMLTag) =>
+                                tag.separatorRequired
+                        }.map {
+                            case (classname: String, tag: XMLTag) =>
+
+                                // create a `XMLTagSeparatorRequired` with the current's element
+                                // namespace and class, if any
                                 XMLTagSeparatorRequired(
                                     namespace = namespace match {
+                                        // check for namespace
                                         case `noNamespace` => None
                                         case nspace: String => Some(nspace)
                                     },
-                                    tagname = xmlTag.name,
+                                    tagname = tag.name,
                                     classname = classname match {
+                                        // check for classname
                                         case `noClass` => None
                                         case clname: String => Some(clname)
                                     }
                                 )
                         }
+                        tagsWithSeparator
                 }
         }.toVector
 
