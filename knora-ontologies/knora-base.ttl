@@ -1102,6 +1102,22 @@
 
                :objectClassConstraint :MappingStandoffDataTypeClass .
 
+
+###  http://www.knora.org/ontology/knora-base#mappingElementRequiresSeparator
+
+:mappingElementRequiresSeparator rdf:type owl:ObjectProperty ;
+
+               rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
+
+               rdfs:label "indicates if the element requires a separator in the text"@en ;
+
+               rdfs:comment """indicates if the element requires a separator in the text"""@en ;
+
+               :subjectClassConstraint :MappingElement ;
+
+               :objectClassConstraint xsd:boolean .
+
+
 #################################################################
 #
 #    Datatype properties
@@ -2838,6 +2854,10 @@
                 [ rdf:type owl:Restriction ;
                   owl:onProperty :mappingHasStandoffDataTypeClass ;
                   owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                ],
+                [ rdf:type owl:Restriction ;
+                  owl:onProperty :mappingElementRequiresSeparator ;
+                  owl:cardinality "1"^^xsd:nonNegativeInteger
                 ];
 
                 rdfs:label "Mapping from XML to standoff entities"@en ;

@@ -59,6 +59,12 @@
                         </xs:restriction>
                     </xs:simpleType>
                 </xs:element>
+                <!-- indicates if an element requires a separator in the string when converted to standoff-->
+                <xs:element name="separator">
+                    <xs:simpleType>
+                        <xs:restriction base="xs:boolean"/>
+                    </xs:simpleType>
+                </xs:element>
             </xs:sequence>
         </xs:complexType>
     </xs:element>

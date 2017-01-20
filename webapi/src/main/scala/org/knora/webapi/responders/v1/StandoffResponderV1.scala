@@ -118,6 +118,11 @@ class StandoffResponderV1 extends ResponderV1 {
                         // get the class the tag is combined with
                         val className = (curMappingEle \ "tag" \ "class").headOption.getOrElse(throw BadRequestException(s"no '<classname>' given for node $curMappingEle")).text
 
+                        // get the boolean indicating if the element requires a separator in the text once it is converted to standoff
+                        val separatorBooleanAsString = (curMappingEle \ "tag" \ "separator").headOption.getOrElse(throw BadRequestException(s"no '<separator>' given for node $curMappingEle")).text
+
+                        val separatorRequired: Boolean = InputValidation.toBoolean(separatorBooleanAsString, () => throw BadRequestException(s"separator could not be converted to Boolean: $separatorBooleanAsString"))
+
                         // get the standoff class Iri
                         val standoffClassIri = (curMappingEle \ "standoffClass" \ "classIri").headOption.getOrElse(throw BadRequestException(s"no '<classIri>' given for node $curMappingEle")).text
 
@@ -171,7 +176,8 @@ class StandoffResponderV1 extends ResponderV1 {
                             standoffClass = InputValidation.toIri(standoffClassIri, () => throw BadRequestException(s"standoff class IRI $standoffClassIri is not a valid IRI")),
                             attributes = attributes,
                             standoffDataTypeClass = standoffDataTypeOption,
-                            mappingElementIri = knoraIdUtil.makeRandomMappingElementIri(mappingIri)
+                            mappingElementIri = knoraIdUtil.makeRandomMappingElementIri(mappingIri),
+                            separatorRequired = separatorRequired
                         )
 
 
@@ -503,7 +509,8 @@ class StandoffResponderV1 extends ResponderV1 {
                                 ))
                             case None => None
                         },
-                        attributes = attributes
+                        attributes = attributes,
+                        separatorRequired = assertionsAsMap(OntologyConstants.KnoraBase.mappingElementRequiresSeparator).toBoolean
                     )
 
             }.toSeq

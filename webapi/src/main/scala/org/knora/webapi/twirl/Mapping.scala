@@ -32,4 +32,4 @@ case class MappingXMLAttribute(attributeName: String, namespace: String, standof
   * @param standoffDataTypeClass the standoff data type class of the xml tag.
   * @param mappingElementIri the Iri of the mapping element (to be used to create the element in the triplestore).
   */
-case class MappingElement(tagName: String, namespace: String, className: String, standoffClass: IRI, attributes: Seq[MappingXMLAttribute] = Seq.empty[MappingXMLAttribute], standoffDataTypeClass: Option[MappingStandoffDatatypeClass] = None, mappingElementIri: IRI)
+case class MappingElement(tagName: String, namespace: String, className: String, standoffClass: IRI, attributes: Seq[MappingXMLAttribute] = Seq.empty[MappingXMLAttribute], standoffDataTypeClass: Option[MappingStandoffDatatypeClass] = None, mappingElementIri: IRI, separatorRequired: Boolean)

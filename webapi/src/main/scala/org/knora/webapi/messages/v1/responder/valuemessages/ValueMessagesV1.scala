@@ -637,8 +637,6 @@ case class TextValueWithStandoffV1(utf8str: String,
                                    mappingIri: IRI,
                                    mapping: MappingXMLtoStandoff) extends TextValueV1 with UpdateValueV1 with ApiValueV1 {
 
-    import ApiValueV1JsonProtocol._
-
     val knoraIdUtil = new KnoraIdUtil
 
     def valueTypeIri = OntologyConstants.KnoraBase.TextValue

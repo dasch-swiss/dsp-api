@@ -6,6 +6,7 @@
             <name>text</name>
             <class>noClass</class>
             <namespace>noNamespace</namespace>
+            <separator>false</separator>
         </tag>
         <standoffClass>
             <classIri>http://www.knora.org/ontology/standoff#StandoffRootTag</classIri>
@@ -18,12 +19,13 @@
             </attributes>
         </standoffClass>
     </mappingElement>
-
+    
     <mappingElement>
         <tag>
             <name>p</name>
             <class>noClass</class>
             <namespace>noNamespace</namespace>
+            <separator>true</separator>
         </tag>
         <standoffClass>
             <classIri>http://www.knora.org/ontology/standoff#StandoffParagraphTag</classIri>
@@ -35,6 +37,7 @@
             <name>i</name>
             <class>noClass</class>
             <namespace>noNamespace</namespace>
+            <separator>false</separator>
         </tag>
         <standoffClass>
             <classIri>http://www.knora.org/ontology/standoff#StandoffItalicTag</classIri>
@@ -46,6 +49,7 @@
             <name>b</name>
             <class>noClass</class>
             <namespace>noNamespace</namespace>
+            <separator>false</separator>
         </tag>
         <standoffClass>
             <classIri>http://www.knora.org/ontology/standoff#StandoffBoldTag</classIri>
@@ -57,6 +61,7 @@
             <name>facsimile</name>
             <class>noClass</class>
             <namespace>noNamespace</namespace>
+            <separator>false</separator>
         </tag>
         <standoffClass>
             <classIri>http://www.knora.org/ontology/beol#StandoffFacsimileTag</classIri>
@@ -72,6 +77,7 @@
             <name>math</name>
             <class>noClass</class>
             <namespace>noNamespace</namespace>
+            <separator>false</separator>
         </tag>
         <standoffClass>
             <classIri>http://www.knora.org/ontology/beol#StandoffMathTag</classIri>
@@ -83,6 +89,7 @@
             <name>ref</name>
             <class>noClass</class>
             <namespace>noNamespace</namespace>
+            <separator>false</separator>
         </tag>
         <standoffClass>
             <classIri>http://www.knora.org/ontology/beol#StandoffReferenceTag</classIri>
@@ -101,6 +108,7 @@
             <name>sub</name>
             <class>noClass</class>
             <namespace>noNamespace</namespace>
+            <separator>false</separator>
         </tag>
         <standoffClass>
             <classIri>http://www.knora.org/ontology/standoff#StandoffSubscriptTag</classIri>
@@ -112,6 +120,7 @@
             <name>sup</name>
             <class>noClass</class>
             <namespace>noNamespace</namespace>
+            <separator>false</separator>
         </tag>
         <standoffClass>
             <classIri>http://www.knora.org/ontology/standoff#StandoffSuperscriptTag</classIri>
@@ -123,6 +132,7 @@
             <name>nowiki</name>
             <class>noClass</class>
             <namespace>noNamespace</namespace>
+            <separator>false</separator>
         </tag>
         <standoffClass>
             <classIri>http://www.knora.org/ontology/beol#StandoffNoWikiTag</classIri>
@@ -134,6 +144,7 @@
             <name>a</name>
             <class>noClass</class>
             <namespace>noNamespace</namespace>
+            <separator>false</separator>
         </tag>
         <standoffClass>
             <classIri>http://www.knora.org/ontology/knora-base#StandoffUriTag</classIri>

@@ -53,7 +53,8 @@ INSERT {
                                             knora-base:mappingHasXMLTagname """@mappingEle.tagName""" ;
                                             knora-base:mappingHasXMLNamespace """@mappingEle.namespace""" ;
                                             knora-base:mappingHasXMLClass """@mappingEle.className""" ;
-                                            knora-base:mappingHasStandoffClass <@mappingEle.standoffClass> .
+                                            knora-base:mappingHasStandoffClass <@mappingEle.standoffClass> ;
+                                            knora-base:mappingElementRequiresSeparator @mappingEle.separatorRequired .
 
             @for(attr <- mappingEle.attributes) {
 

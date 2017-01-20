@@ -93,6 +93,7 @@ object OntologyConstants {
         val mappingHasXMLAttribute = "http://www.knora.org/ontology/knora-base#mappingHasXMLAttribute"
         val mappingHasXMLAttributename = "http://www.knora.org/ontology/knora-base#mappingHasXMLAttributename"
         val mappingHasStandoffDataTypeClass = "http://www.knora.org/ontology/knora-base#mappingHasStandoffDataTypeClass"
+        val mappingElementRequiresSeparator = "http://www.knora.org/ontology/knora-base#mappingElementRequiresSeparator"
 
 
         val AbstractResourceClasses = Set(

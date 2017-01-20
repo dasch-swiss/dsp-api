@@ -27,7 +27,7 @@ import com.sksamuel.diffpatch.DiffMatchPatch
 import com.sksamuel.diffpatch.DiffMatchPatch._
 import org.apache.commons.lang3.StringEscapeUtils
 import org.knora.webapi._
-import org.knora.webapi.util.{ErrorHandlingMap, KnoraIdUtil}
+import org.knora.webapi.util.{ErrorHandlingMap, FormatConstants, KnoraIdUtil}
 
 import scala.xml._
 
@@ -327,6 +327,9 @@ class XMLToStandoffUtil(xmlNamespaces: Map[String, IRI] = Map.empty[IRI, String]
 
         // TODO: ensure that text nodes are not concatenated to one another (e.g. <p> tags)
         // TODO: handle <br> and other line breaking tags
+        // FormatConstants.INFORMATION_SEPARATOR_TWO
+
+        //FormatConstants.INFORMATION_SEPARATOR_TWO
 
 
         val finishedConversionState = xmlNodes2Standoff(
@@ -416,6 +419,8 @@ class XMLToStandoffUtil(xmlNamespaces: Map[String, IRI] = Map.empty[IRI, String]
             case None =>
                 throw InvalidStandoffException("The standoff cannot be serialised to XML because there is no root element")
         }
+
+        // TODO: make sure that the XML is well formed!
 
         stringBuilder.toString
     }

@@ -43,6 +43,7 @@ CONSTRUCT {
     ?mappingElement knora-base:mappingHasXMLNamespace ?tagNamespace .
     ?mappingElement knora-base:mappingHasXMLClass ?tagClass .
     ?mappingElement knora-base:mappingHasStandoffClass ?standoffClass .
+    ?mappingElement knora-base:mappingElementRequiresSeparator ?separatorRequired .
 
     ?mappingElement knora-base:mappingHasXMLAttribute ?attribute .
     ?attribute rdf:type ?attributeType .
@@ -69,7 +70,7 @@ CONSTRUCT {
     ?mappingElement knora-base:mappingHasXMLNamespace ?tagNamespace .
     ?mappingElement knora-base:mappingHasXMLClass ?tagClass .
     ?mappingElement knora-base:mappingHasStandoffClass ?standoffClass .
-
+    ?mappingElement knora-base:mappingElementRequiresSeparator ?separatorRequired .
 
     OPTIONAL {
 

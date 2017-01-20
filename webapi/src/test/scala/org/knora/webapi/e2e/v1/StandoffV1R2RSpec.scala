@@ -94,6 +94,7 @@ class StandoffV1R2RSpec extends R2RSpec {
     private val rdfDataObjects = List(
         RdfDataObject(path = "../knora-ontologies/knora-base.ttl", name = "http://www.knora.org/ontology/knora-base"),
         RdfDataObject(path = "_test_data/ontologies/standoff-onto.ttl", name = "http://www.knora.org/ontology/standoff"),
+        RdfDataObject(path = "_test_data/all_data/standoff-data.ttl", name = "http://www.knora.org/data/standoff"),
         RdfDataObject(path = "../knora-ontologies/knora-dc.ttl", name = "http://www.knora.org/ontology/dc"),
         RdfDataObject(path = "../knora-ontologies/salsah-gui.ttl", name = "http://www.knora.org/ontology/salsah-gui"),
         RdfDataObject(path = "_test_data/ontologies/incunabula-onto.ttl", name = "http://www.knora.org/ontology/incunabula"),
@@ -227,19 +228,6 @@ class StandoffV1R2RSpec extends R2RSpec {
 
             val xmlFileToSend = new File(RequestParams.pathToLetterXML)
 
-            /*val formDataStandoff = Multipart.FormData(
-                Multipart.FormData.BodyPart(
-                    "json",
-                    HttpEntity(ContentTypes.`application/json`, RequestParams.paramsCreateTextValueFromXML(anythingProjectIri + "/mappings/LetterMapping"))
-                ),
-                Multipart.FormData.BodyPart(
-                    "xml",
-                    HttpEntity.fromPath(ContentTypes.`text/xml(UTF-8)`, xmlFileToSend.toPath),
-                    Map("filename" -> xmlFileToSend.getName)
-                )
-            )*/
-
-
             val newValueParams =
                 s"""
                         {
@@ -295,18 +283,6 @@ class StandoffV1R2RSpec extends R2RSpec {
 
             val xmlFileToSend = new File(RequestParams.pathToLetter2XML)
 
-            /*val formData = Multipart.FormData(
-                Multipart.FormData.BodyPart(
-                    "json",
-                    HttpEntity(ContentTypes.`application/json`, RequestParams.paramsChangeLetterFromXML(value_id = firstTextValueIri.get, mappingIri = anythingProjectIri + "/mappings/LetterMapping"))
-                ),
-                Multipart.FormData.BodyPart(
-                    "xml",
-                    HttpEntity.fromPath(ContentTypes.`text/xml(UTF-8)`, xmlFileToSend.toPath),
-                    Map("filename" -> xmlFileToSend.getName)
-                )
-            )*/
-
             val newValueParams =
                 s"""
                     {
@@ -358,18 +334,6 @@ class StandoffV1R2RSpec extends R2RSpec {
         "create a TextValue from complex XML representing a letter" in {
 
             val xmlFileToSend = new File(RequestParams.pathToLetter3XML)
-
-            /*val formDataStandoff = Multipart.FormData(
-                Multipart.FormData.BodyPart(
-                    "json",
-                    HttpEntity(ContentTypes.`application/json`, RequestParams.paramsCreateTextValueFromXML(anythingProjectIri + "/mappings/LetterMapping"))
-                ),
-                Multipart.FormData.BodyPart(
-                    "xml",
-                    HttpEntity.fromPath(ContentTypes.`text/xml(UTF-8)`, xmlFileToSend.toPath),
-                    Map("filename" -> xmlFileToSend.getName)
-                )
-            )*/
 
             val newValueParams =
                 s"""
@@ -457,18 +421,6 @@ class StandoffV1R2RSpec extends R2RSpec {
         "create a TextValue from XML representing HTML (in strict XML notation)" in {
 
             val xmlFileToSend = new File(RequestParams.pathToHTML)
-
-            /*val formDataStandoff = Multipart.FormData(
-                Multipart.FormData.BodyPart(
-                    "json",
-                    HttpEntity(ContentTypes.`application/json`, RequestParams.paramsCreateTextValueFromXML(anythingProjectIri + "/mappings/HTMLMapping"))
-                ),
-                Multipart.FormData.BodyPart(
-                    "xml",
-                    HttpEntity.fromPath(ContentTypes.`text/xml(UTF-8)`, xmlFileToSend.toPath),
-                    Map("filename" -> xmlFileToSend.getName)
-                )
-            )*/
 
             val newValueParams =
                 s"""
