@@ -395,31 +395,35 @@ class XMLToStandoffUtil(xmlNamespaces: Map[String, IRI] = Map.empty[IRI, String]
         // check that the original XML does not contain the separator character
         if (xmlStr.contains(FormatConstants.SEPARATOR_FOR_XML)) throw BadRequestException("XML contains special separator character, this is not allowed")
 
-        // build an XSLT to add separators to the XML
-        val xPAthExpression: String = tagsWithSeparator.map(_.toXPath).mkString("|")
-        val XSLT = insertSeparatorsXSLT(xPAthExpression, FormatConstants.SEPARATOR_FOR_XML)
+        val xmlStrWithSeparator = if (tagsWithSeparator.nonEmpty) {
+            // build an XSLT to add separators to the XML
+            val xPAthExpression: String = tagsWithSeparator.map(_.toXPath).mkString("|")
+            val XSLT = insertSeparatorsXSLT(xPAthExpression, FormatConstants.SEPARATOR_FOR_XML)
 
-        // apply XSLT to XML
-        // preprocess XML to separate structures
-        val proc = new net.sf.saxon.s9api.Processor(false)
-        val comp = proc.newXsltCompiler()
+            // apply XSLT to XML
+            // preprocess XML to separate structures
+            val proc = new net.sf.saxon.s9api.Processor(false)
+            val comp = proc.newXsltCompiler()
 
-        val exp = comp.compile(new StreamSource(new StringReader(XSLT)))
-        val source = proc.newDocumentBuilder().build(new StreamSource(new StringReader(xmlStr)))
+            val exp = comp.compile(new StreamSource(new StringReader(XSLT)))
+            val source = proc.newDocumentBuilder().build(new StreamSource(new StringReader(xmlStr)))
 
-        val xmlStrWithSeparator: StringWriter = new StringWriter()
+            val xmlStrWithSep: StringWriter = new StringWriter()
 
-        val out = proc.newSerializer(xmlStrWithSeparator)
-        //out.setOutputProperty(net.sf.saxon.s9api.Serializer.Property.METHOD, "xml")
-        //out.setOutputProperty(net.sf.saxon.s9api.Serializer.Property.INDENT, "no")
+            val out = proc.newSerializer(xmlStrWithSep)
+            //out.setOutputProperty(net.sf.saxon.s9api.Serializer.Property.METHOD, "xml")
+            //out.setOutputProperty(net.sf.saxon.s9api.Serializer.Property.INDENT, "no")
 
-        val trans = exp.load()
-        trans.setInitialContextNode(source)
-        trans.setDestination(out)
-        trans.transform()
+            val trans = exp.load()
+            trans.setInitialContextNode(source)
+            trans.setDestination(out)
+            trans.transform()
 
-        //println(xmlStr)
-        //println(xmlStrWithSeparator.toString)
+            xmlStrWithSep.toString
+            
+        } else {
+            xmlStr
+        }
 
         // TODO: use only on XML processor, i.e. Saxon-HE
         val saxParser = saxParserFactory.newSAXParser()
