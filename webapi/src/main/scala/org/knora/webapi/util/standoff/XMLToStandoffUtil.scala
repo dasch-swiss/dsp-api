@@ -392,6 +392,9 @@ class XMLToStandoffUtil(xmlNamespaces: Map[String, IRI] = Map.empty[IRI, String]
       */
     def xml2TextWithStandoff(xmlStr: String, tagsWithSeparator: Seq[XMLTagSeparatorRequired] = Seq.empty[XMLTagSeparatorRequired]): TextWithStandoff = {
 
+        // check that the original XML does not contain the separator character
+        if (xmlStr.contains(FormatConstants.SEPARATOR_FOR_XML)) throw BadRequestException("XML contains special separator character, this is not allowed")
+
         // build an XSLT to add separators to the XML
         val xPAthExpression: String = tagsWithSeparator.map(_.toXPath).mkString("|")
         val XSLT = insertSeparatorsXSLT(xPAthExpression, FormatConstants.SEPARATOR_FOR_XML)
@@ -407,8 +410,8 @@ class XMLToStandoffUtil(xmlNamespaces: Map[String, IRI] = Map.empty[IRI, String]
         val xmlStrWithSeparator: StringWriter = new StringWriter()
 
         val out = proc.newSerializer(xmlStrWithSeparator)
-        out.setOutputProperty(net.sf.saxon.s9api.Serializer.Property.METHOD, "xml")
-        out.setOutputProperty(net.sf.saxon.s9api.Serializer.Property.INDENT, "no")
+        //out.setOutputProperty(net.sf.saxon.s9api.Serializer.Property.METHOD, "xml")
+        //out.setOutputProperty(net.sf.saxon.s9api.Serializer.Property.INDENT, "no")
 
         val trans = exp.load()
         trans.setInitialContextNode(source)
