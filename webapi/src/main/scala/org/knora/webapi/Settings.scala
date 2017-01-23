@@ -132,24 +132,6 @@ class SettingsImpl(config: Config) extends Extension {
     val skipAuthentication: Boolean = config.getBoolean("app.skip-authentication")
 
     val fallbackLanguage: String = config.getString("user.default-language")
-
-    // Project specific named graphs stored in a map
-    // http://deploymentzone.com/2013/07/25/typesafe-config-and-maps-in-scala/
-    lazy val projectNamedGraphs: Map[IRI, ProjectNamedGraphs] = {
-        config.getConfigList("app.project-named-graphs").asScala.map(new ProjectNamedGraphs(_)).map(elem => (elem.project, elem)).toMap
-    }
-
-    lazy val namedGraphs: Vector[ProjectNamedGraphs] = {
-        config.getConfigList("app.project-named-graphs").asScala.map(new ProjectNamedGraphs(_)).toVector
-    }
-}
-
-class ProjectNamedGraphs(params: Config) {
-    val project: String = params.getString("project")
-    val ontology: IRI = params.getString("ontology")
-    val data: IRI = params.getString("data")
-    val name: String = params.getString("name")
-    val visibleInGUI: Boolean = params.getBoolean("visibleInGUI")
 }
 
 object Settings extends ExtensionId[SettingsImpl] with ExtensionIdProvider {

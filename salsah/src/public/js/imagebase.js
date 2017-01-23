@@ -3130,6 +3130,37 @@ $(function() {
 
 		viewer_settings.imgctrl_area = true; // must be "true" to be a ImageCollectionView!!
 
+		// SALSAH assumes that a compound object has images. If any such images are missing,
+		// add a default "no image" image.
+
+		for (i in res_context_data.preview) {
+			if (res_context_data.preview[i] == null) {
+				res_context_data.preview[i] = {
+					duration: 0,
+					nx: 95,
+					nx: 128,
+					path: "icons/noimage.png",
+					format_name: "JPEG",
+					origname: "NO IMAGE",
+					protocol: "file"
+				}
+			}
+		}
+		for (i in res_context_data.locations) {
+			if (res_context_data.locations[i] == null) {
+				res_context_data.locations[i] = [{
+					duration: 0,
+					nx: 95,
+					nx: 128,
+					path: "icons/noimage.png",
+					format_name: "JPEG",
+					origname: "NO IMAGE",
+					protocol: "file"
+				}]
+			}
+		}
+
+
 		var pics_res_ids = [];
 		var pics = [];
 		var previews = [];
@@ -3206,6 +3237,7 @@ $(function() {
 			previews = data.preview;
 			preview_labels = data.firstprop;
 
+
 			//
 			// set the window title
 			//
@@ -3258,6 +3290,7 @@ $(function() {
 					}
 				}
 			}
+
 			if (viewer_settings.q_index == -1) { // we didn't find a quality -> let's take the best....
 				viewer_settings.q_index = pic.length - 1
 			}
@@ -4311,7 +4344,6 @@ $(function() {
 							break;
 						}
 						default: {
-                            console.log("3. default case in create_viewer in imagebase.js: not compound, have locations")
 							viewer = RESVIEW.ObjectViewer(RESVIEW.winclass, window_settings, viewer_settings);
 						}
 					}

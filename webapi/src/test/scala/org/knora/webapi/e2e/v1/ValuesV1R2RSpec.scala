@@ -24,16 +24,14 @@ import akka.http.scaladsl.model.{ContentTypes, HttpEntity, StatusCodes}
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import akka.pattern._
 import akka.util.Timeout
-import org.knora.webapi.R2RSpec
 import org.knora.webapi.messages.v1.responder.ontologymessages.LoadOntologiesRequest
-import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
 import org.knora.webapi.messages.v1.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent}
 import org.knora.webapi.responders._
 import org.knora.webapi.responders.v1.ResponderManagerV1
 import org.knora.webapi.routing.v1.ValuesRouteV1
 import org.knora.webapi.store._
 import org.knora.webapi.util.{AkkaHttpUtils, MutableTestIri}
-import org.knora.webapi.{IRI, LiveActorMaker}
+import org.knora.webapi.{IRI, LiveActorMaker, R2RSpec, SharedAdminTestData}
 import spray.json._
 
 import scala.concurrent.Await
@@ -55,19 +53,7 @@ class ValuesV1R2RSpec extends R2RSpec {
 
     private val valuesPath = ValuesRouteV1.knoraApiPath(system, settings, log)
 
-    private val incunabulaUser = UserProfileV1(
-        projects = Vector("http://data.knora.org/projects/77275339"),
-        groups = Nil,
-        userData = UserDataV1(
-            email = Some("test@test.ch"),
-            lastname = Some("Test"),
-            firstname = Some("User"),
-            username = Some("testuser"),
-            token = None,
-            user_id = Some("http://data.knora.org/users/b83acc5f05"),
-            lang = "de"
-        )
-    )
+    private val incunabulaUser = SharedAdminTestData.incunabulaProjectAdminUser
 
     implicit val timeout: Timeout = settings.defaultRestoreTimeout
 
@@ -80,13 +66,13 @@ class ValuesV1R2RSpec extends R2RSpec {
     private val boringComment = "This is a boring comment."
 
     private val rdfDataObjects = List(
-        RdfDataObject(path = "../knora-ontologies/knora-base.ttl", name = "http://www.knora.org/ontology/knora-base"),
-        RdfDataObject(path = "_test_data/ontologies/standoff-onto.ttl", name = "http://www.knora.org/ontology/standoff"),
-        RdfDataObject(path = "../knora-ontologies/knora-dc.ttl", name = "http://www.knora.org/ontology/dc"),
-        RdfDataObject(path = "../knora-ontologies/salsah-gui.ttl", name = "http://www.knora.org/ontology/salsah-gui"),
         RdfDataObject(path = "_test_data/ontologies/anything-onto.ttl", name = "http://www.knora.org/ontology/anything"),
         RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/anything")
     )
+
+    private val anythingUser = SharedAdminTestData.anythingUser1
+    private val anythingUserEmail = anythingUser.userData.email.get
+    private val testPass = "test"
 
     "Load test data" in {
         Await.result(storeManager ? ResetTriplestoreContent(rdfDataObjects), 300.seconds)
@@ -105,7 +91,7 @@ class ValuesV1R2RSpec extends R2RSpec {
                   |}
                 """.stripMargin
 
-            Post("/v1/values", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials("anything-user", "test")) ~> valuesPath ~> check {
+            Post("/v1/values", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, testPass)) ~> valuesPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)
                 val responseJson: Map[String, JsValue] = responseAs[String].parseJson.asJsObject.fields
                 val valueIri: IRI = responseJson("id").asInstanceOf[JsString].value
@@ -124,7 +110,7 @@ class ValuesV1R2RSpec extends R2RSpec {
                   |}
                 """.stripMargin
 
-            Put(s"/v1/values/${URLEncoder.encode(integerValueIri.get, "UTF-8")}", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials("anything-user", "test")) ~> valuesPath ~> check {
+            Put(s"/v1/values/${URLEncoder.encode(integerValueIri.get, "UTF-8")}", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, testPass)) ~> valuesPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)
                 val responseJson: Map[String, JsValue] = responseAs[String].parseJson.asJsObject.fields
                 val valueIri: IRI = responseJson("id").asInstanceOf[JsString].value
@@ -133,14 +119,14 @@ class ValuesV1R2RSpec extends R2RSpec {
         }
 
         "mark an integer value as deleted" in {
-            Delete(s"/v1/values/${URLEncoder.encode(integerValueIri.get, "UTF-8")}?deleteComment=deleted%20for%20testing") ~> addCredentials(BasicHttpCredentials("anything-user", "test")) ~> valuesPath ~> check {
+            Delete(s"/v1/values/${URLEncoder.encode(integerValueIri.get, "UTF-8")}?deleteComment=deleted%20for%20testing") ~> addCredentials(BasicHttpCredentials(anythingUserEmail, testPass)) ~> valuesPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)
             }
         }
 
 
         "get a link value" in {
-            Get(s"/v1/links/${URLEncoder.encode("http://data.knora.org/contained-thing-1", "UTF-8")}/${URLEncoder.encode("http://www.knora.org/ontology/anything#isPartOfOtherThing", "UTF-8")}/${URLEncoder.encode("http://data.knora.org/containing-thing", "UTF-8")}") ~> addCredentials(BasicHttpCredentials("anything-user", "test")) ~> valuesPath ~> check {
+            Get(s"/v1/links/${URLEncoder.encode("http://data.knora.org/contained-thing-1", "UTF-8")}/${URLEncoder.encode("http://www.knora.org/ontology/anything#isPartOfOtherThing", "UTF-8")}/${URLEncoder.encode("http://data.knora.org/containing-thing", "UTF-8")}") ~> addCredentials(BasicHttpCredentials(anythingUserEmail, testPass)) ~> valuesPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)
 
                 val linkValue = AkkaHttpUtils.httpResponseToJson(response).fields("value").asJsObject.fields
@@ -165,7 +151,7 @@ class ValuesV1R2RSpec extends R2RSpec {
                   |}
                 """.stripMargin
 
-            Post("/v1/values", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials("anything-user", "test")) ~> valuesPath ~> check {
+            Post("/v1/values", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, testPass)) ~> valuesPath ~> check {
                 assert(status == StatusCodes.BadRequest, response.toString)
             }
         }
@@ -181,7 +167,7 @@ class ValuesV1R2RSpec extends R2RSpec {
                   |}
                 """.stripMargin
 
-            Post("/v1/values", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials("anything-user", "test")) ~> valuesPath ~> check {
+            Post("/v1/values", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, testPass)) ~> valuesPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)
                 val responseJson: Map[String, JsValue] = responseAs[String].parseJson.asJsObject.fields
                 val valueIri: IRI = responseJson("id").asInstanceOf[JsString].value
@@ -200,7 +186,7 @@ class ValuesV1R2RSpec extends R2RSpec {
                   |}
                 """.stripMargin
 
-            Put(s"/v1/values/${URLEncoder.encode(textValueIri.get, "UTF-8")}", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials("anything-user", "test")) ~> valuesPath ~> check {
+            Put(s"/v1/values/${URLEncoder.encode(textValueIri.get, "UTF-8")}", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, testPass)) ~> valuesPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)
                 val responseJson: Map[String, JsValue] = responseAs[String].parseJson.asJsObject.fields
                 val valueIri: IRI = responseJson("id").asInstanceOf[JsString].value
@@ -209,7 +195,7 @@ class ValuesV1R2RSpec extends R2RSpec {
         }
 
         "get the version history of a value" in {
-            Get(s"/v1/values/history/${URLEncoder.encode("http://data.knora.org/a-thing", "UTF-8")}/${URLEncoder.encode("http://www.knora.org/ontology/anything#hasText", "UTF-8")}/${URLEncoder.encode(textValueIri.get, "UTF-8")}") ~> addCredentials(BasicHttpCredentials("anything-user", "test")) ~> valuesPath ~> check {
+            Get(s"/v1/values/history/${URLEncoder.encode("http://data.knora.org/a-thing", "UTF-8")}/${URLEncoder.encode("http://www.knora.org/ontology/anything#hasText", "UTF-8")}/${URLEncoder.encode(textValueIri.get, "UTF-8")}") ~> addCredentials(BasicHttpCredentials(anythingUserEmail, testPass)) ~> valuesPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)
 
                 val versionHistory: JsValue = AkkaHttpUtils.httpResponseToJson(response).fields("valueVersions")
@@ -224,7 +210,7 @@ class ValuesV1R2RSpec extends R2RSpec {
         }
 
         "mark as deleted a text value containing a standoff reference to another resource" in {
-            Delete(s"/v1/values/${URLEncoder.encode(textValueIri.get, "UTF-8")}?deleteComment=deleted%20for%20testing") ~> addCredentials(BasicHttpCredentials("anything-user", "test")) ~> valuesPath ~> check {
+            Delete(s"/v1/values/${URLEncoder.encode(textValueIri.get, "UTF-8")}?deleteComment=deleted%20for%20testing") ~> addCredentials(BasicHttpCredentials(anythingUserEmail, testPass)) ~> valuesPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)
             }
         }
@@ -240,7 +226,7 @@ class ValuesV1R2RSpec extends R2RSpec {
                   |}
                 """.stripMargin
 
-            Post("/v1/values", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials("anything-user", "test")) ~> valuesPath ~> check {
+            Post("/v1/values", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, testPass)) ~> valuesPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)
                 val responseJson: Map[String, JsValue] = responseAs[String].parseJson.asJsObject.fields
                 val valueIri: IRI = responseJson("id").asInstanceOf[JsString].value
@@ -249,7 +235,7 @@ class ValuesV1R2RSpec extends R2RSpec {
         }
 
         "mark a link value as deleted" in {
-            Delete(s"/v1/values/${URLEncoder.encode(linkValueIri.get, "UTF-8")}?deleteComment=deleted%20for%20testing") ~> addCredentials(BasicHttpCredentials("anything-user", "test")) ~> valuesPath ~> check {
+            Delete(s"/v1/values/${URLEncoder.encode(linkValueIri.get, "UTF-8")}?deleteComment=deleted%20for%20testing") ~> addCredentials(BasicHttpCredentials(anythingUserEmail, testPass)) ~> valuesPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)
             }
         }
@@ -266,7 +252,7 @@ class ValuesV1R2RSpec extends R2RSpec {
                   |}
                 """.stripMargin
 
-            Post("/v1/values", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials("anything-user", "test")) ~> valuesPath ~> check {
+            Post("/v1/values", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, testPass)) ~> valuesPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)
                 val responseJson: Map[String, JsValue] = responseAs[String].parseJson.asJsObject.fields
                 val valueIri: IRI = responseJson("id").asInstanceOf[JsString].value
@@ -275,7 +261,7 @@ class ValuesV1R2RSpec extends R2RSpec {
         }
 
         "get a link value with a comment" in {
-            Get(s"/v1/links/${URLEncoder.encode("http://data.knora.org/a-thing", "UTF-8")}/${URLEncoder.encode("http://www.knora.org/ontology/anything#hasOtherThing", "UTF-8")}/${URLEncoder.encode("http://data.knora.org/another-thing", "UTF-8")}") ~> addCredentials(BasicHttpCredentials("anything-user", "test")) ~> valuesPath ~> check {
+            Get(s"/v1/links/${URLEncoder.encode("http://data.knora.org/a-thing", "UTF-8")}/${URLEncoder.encode("http://www.knora.org/ontology/anything#hasOtherThing", "UTF-8")}/${URLEncoder.encode("http://data.knora.org/another-thing", "UTF-8")}") ~> addCredentials(BasicHttpCredentials(anythingUserEmail, testPass)) ~> valuesPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)
 
                 val responseObj = AkkaHttpUtils.httpResponseToJson(response).fields

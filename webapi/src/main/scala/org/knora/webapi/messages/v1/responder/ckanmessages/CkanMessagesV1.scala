@@ -20,7 +20,8 @@
 
 package org.knora.webapi.messages.v1.responder.ckanmessages
 
-import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
+import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
+import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1, UserV1JsonProtocol}
 import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
 import spray.json._
 
@@ -66,7 +67,7 @@ case class CkanResponseV1(projects: Seq[CkanProjectV1],
   */
 case class CkanProjectV1(project_info: CkanProjectInfoV1, project_datasets: Option[Seq[CkanProjectDatasetV1]] = None)
 
-case class CkanProjectInfoV1(shortname: String, longname: Option[String] = None, ckan_tags: Seq[String], ckan_license_id: String)
+case class CkanProjectInfoV1(shortname: String, longname: String, ckan_tags: Seq[String], ckan_license_id: String)
 
 case class CkanProjectDatasetV1(ckan_title: String,
                                 ckan_tags: Seq[String],
@@ -186,9 +187,9 @@ case class IncunabulaCkanProjectDatasetFileV1(resid: String,
 /**
   * A spray-json protocol for generating Knora API v1 JSON for Ckan.
   */
-object CkanV1JsonProtocol extends DefaultJsonProtocol {
+object CkanV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol {
 
-    import org.knora.webapi.messages.v1.responder.usermessages.UserDataV1JsonProtocol._
+    import UserV1JsonProtocol.userDataV1Format
 
     implicit val ckanProjectDatasetFileV1Format: JsonFormat[CkanProjectDatasetFileV1] = jsonFormat7(CkanProjectDatasetFileV1)
     implicit val ckanProjectDatasetV1Format: JsonFormat[CkanProjectDatasetV1] = jsonFormat4(CkanProjectDatasetV1)

@@ -67,23 +67,11 @@ class StandoffV1R2RSpec extends R2RSpec {
     private val resourcesPath = ResourcesRouteV1.knoraApiPath(system, settings, log)
     private val valuesPath = ValuesRouteV1.knoraApiPath(system, settings, log)
 
-    private val anythingUsername = "anything-user"
+    private val anythingUser = SharedAdminTestData.anythingUser1
+    private val anythingUserEmail = anythingUser.userData.email.get
     private val anythingProjectIri = "http://data.knora.org/projects/anything"
-    private val password = "test"
 
-    private val incunabulaUser = UserProfileV1(
-        projects = Vector("http://data.knora.org/projects/77275339"),
-        groups = Nil,
-        userData = UserDataV1(
-            email = Some("test@test.ch"),
-            lastname = Some("Test"),
-            firstname = Some("User"),
-            username = Some("testuser"),
-            token = None,
-            user_id = Some("http://data.knora.org/users/b83acc5f05"),
-            lang = "de"
-        )
-    )
+    private val password = "test"
 
     implicit private val timeout: Timeout = settings.defaultRestoreTimeout
 
@@ -92,11 +80,6 @@ class StandoffV1R2RSpec extends R2RSpec {
     implicit val ec = system.dispatcher
 
     private val rdfDataObjects = List(
-        RdfDataObject(path = "../knora-ontologies/knora-base.ttl", name = "http://www.knora.org/ontology/knora-base"),
-        RdfDataObject(path = "_test_data/ontologies/standoff-onto.ttl", name = "http://www.knora.org/ontology/standoff"),
-        RdfDataObject(path = "_test_data/all_data/standoff-data.ttl", name = "http://www.knora.org/data/standoff"),
-        RdfDataObject(path = "../knora-ontologies/knora-dc.ttl", name = "http://www.knora.org/ontology/dc"),
-        RdfDataObject(path = "../knora-ontologies/salsah-gui.ttl", name = "http://www.knora.org/ontology/salsah-gui"),
         RdfDataObject(path = "_test_data/ontologies/incunabula-onto.ttl", name = "http://www.knora.org/ontology/incunabula"),
         RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/incunabula"),
         RdfDataObject(path = "_test_data/ontologies/images-demo-onto.ttl", name = "http://www.knora.org/ontology/images"),
@@ -109,7 +92,7 @@ class StandoffV1R2RSpec extends R2RSpec {
 
     "Load test data" in {
         Await.result(storeManager ? ResetTriplestoreContent(rdfDataObjects), 360.seconds)
-        Await.result(responderManager ? LoadOntologiesRequest(incunabulaUser), 10.seconds)
+        Await.result(responderManager ? LoadOntologiesRequest(SharedAdminTestData.rootUser), 10.seconds)
     }
 
     private val firstTextValueIri = new MutableTestIri
@@ -210,7 +193,7 @@ class StandoffV1R2RSpec extends R2RSpec {
             )
 
             // send mapping xml to route
-            Post("/v1/mapping", formDataMapping) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> standoffPath ~> check {
+            Post("/v1/mapping", formDataMapping) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> standoffPath ~> check {
 
                 assert(status == StatusCodes.OK, "standoff mapping creation route returned a non successful HTTP status code: " + responseAs[String])
 
@@ -242,7 +225,7 @@ class StandoffV1R2RSpec extends R2RSpec {
                         """
 
             // create standoff from XML
-            Post("/v1/values", HttpEntity(ContentTypes.`application/json`, newValueParams)) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> valuesPath ~> check {
+            Post("/v1/values", HttpEntity(ContentTypes.`application/json`, newValueParams)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> valuesPath ~> check {
 
                 assert(status == StatusCodes.OK, "creation of a TextValue from XML returned a non successful HTTP status code: " + responseAs[String])
 
@@ -258,7 +241,7 @@ class StandoffV1R2RSpec extends R2RSpec {
 
             val xmlFile = new File(RequestParams.pathToLetterXML)
 
-            Get("/v1/values/" + URLEncoder.encode(firstTextValueIri.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> valuesPath ~> check {
+            Get("/v1/values/" + URLEncoder.encode(firstTextValueIri.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> valuesPath ~> check {
 
                 assert(response.status == StatusCodes.OK, "reading back text value to XML failed")
 
@@ -295,7 +278,7 @@ class StandoffV1R2RSpec extends R2RSpec {
                 """
 
             // change standoff from XML
-            Put("/v1/values/" + URLEncoder.encode(firstTextValueIri.get, "UTF-8"), HttpEntity(ContentTypes.`application/json`, newValueParams)) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> valuesPath ~> check {
+            Put("/v1/values/" + URLEncoder.encode(firstTextValueIri.get, "UTF-8"), HttpEntity(ContentTypes.`application/json`, newValueParams)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> valuesPath ~> check {
 
                 assert(status == StatusCodes.OK, "standoff creation route returned a non successful HTTP status code: " + responseAs[String])
 
@@ -309,7 +292,7 @@ class StandoffV1R2RSpec extends R2RSpec {
 
             val xmlFile = new File(RequestParams.pathToLetter2XML)
 
-            Get("/v1/values/" + URLEncoder.encode(firstTextValueIri.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> valuesPath ~> check {
+            Get("/v1/values/" + URLEncoder.encode(firstTextValueIri.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> valuesPath ~> check {
 
                 assert(response.status == StatusCodes.OK, "reading back text value to XML failed")
 
@@ -349,7 +332,7 @@ class StandoffV1R2RSpec extends R2RSpec {
                 """
 
             // create standoff from XML
-            Post("/v1/values", HttpEntity(ContentTypes.`application/json`, newValueParams)) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> valuesPath ~> check {
+            Post("/v1/values", HttpEntity(ContentTypes.`application/json`, newValueParams)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> valuesPath ~> check {
 
                 assert(status == StatusCodes.OK, "creation of a TextValue from XML returned a non successful HTTP status code: " + responseAs[String])
 
@@ -365,7 +348,7 @@ class StandoffV1R2RSpec extends R2RSpec {
 
             val xmlFile = new File(RequestParams.pathToLetter3XML)
 
-            Get("/v1/values/" + URLEncoder.encode(secondTextValueIri.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> valuesPath ~> check {
+            Get("/v1/values/" + URLEncoder.encode(secondTextValueIri.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> valuesPath ~> check {
 
                 assert(response.status == StatusCodes.OK, "reading back text value to XML failed")
 
@@ -404,7 +387,7 @@ class StandoffV1R2RSpec extends R2RSpec {
             )
 
             // send mapping xml to route
-            Post("/v1/mapping", formDataMapping) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> standoffPath ~> check {
+            Post("/v1/mapping", formDataMapping) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> standoffPath ~> check {
 
                 assert(status == StatusCodes.OK, "standoff mapping creation route returned a non successful HTTP status code: " + responseAs[String])
 
@@ -436,7 +419,7 @@ class StandoffV1R2RSpec extends R2RSpec {
                 """
 
             // create standoff from XML
-            Post("/v1/values", HttpEntity(ContentTypes.`application/json`, newValueParams)) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> valuesPath ~> check {
+            Post("/v1/values", HttpEntity(ContentTypes.`application/json`, newValueParams)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> valuesPath ~> check {
 
                 assert(status == StatusCodes.OK, "creation of a TextValue from XML returned a non successful HTTP status code: " + responseAs[String])
 
@@ -451,7 +434,7 @@ class StandoffV1R2RSpec extends R2RSpec {
 
             val htmlFile = new File(RequestParams.pathToHTML)
 
-            Get("/v1/values/" + URLEncoder.encode(thirdTextValueIri.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> valuesPath ~> check {
+            Get("/v1/values/" + URLEncoder.encode(thirdTextValueIri.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> valuesPath ~> check {
 
                 assert(response.status == StatusCodes.OK, "reading back text value to XML failed")
 

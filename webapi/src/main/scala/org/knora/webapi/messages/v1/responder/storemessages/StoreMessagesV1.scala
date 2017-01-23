@@ -55,5 +55,5 @@ case class ResetTriplestoreContentResponseV1(message: String) extends KnoraRespo
 trait StoreV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with NullOptions with TriplestoreJsonProtocol {
 
     /* Very strange construct at the end is needed, but I don't really understand why and what it means */
-    implicit val resetTriplestoreContentResponseV1Format: RootJsonFormat[ResetTriplestoreContentResponseV1] = jsonFormat(ResetTriplestoreContentResponseV1.apply _, "message")
+    implicit val resetTriplestoreContentResponseV1Format: RootJsonFormat[ResetTriplestoreContentResponseV1] = jsonFormat[String, ResetTriplestoreContentResponseV1](ResetTriplestoreContentResponseV1, "message")
 }

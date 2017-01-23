@@ -10,25 +10,6 @@
 @prefix salsah-gui: <http://www.knora.org/ontology/salsah-gui#> .
 @prefix beol: <http://www.knora.org/ontology/beol#> .
 
-# ## ###########################################
-# ## <http://data.knora.org/projects/yTerZGyxjZVqFMNNKXCDPF>
-
-<http://data.knora.org/projects/yTerZGyxjZVqFMNNKXCDPF> a knora-base:knoraProject ;
-	knora-base:projectBasepath "/imldata/SALSAH-TEST-01/BEOL" ;
-	knora-base:projectLongname "BEOL" ;
-	knora-base:projectShortname "beol" ;
-	knora-base:projectDescription "BEOL" ;
-	knora-base:projectKeyword "BEOL" ;
-	knora-base:projectLogo "beol_logo.png" .
-	
-# ## ###########################################
-# ## <http://data.knora.org/users/PSGbemdjZi4kQ6GHJVkLGF>
-
-<http://data.knora.org/users/PSGbemdjZi4kQ6GHJVkLGF> a knora-base:User ;
-	knora-base:userid "beol" ;
-	knora-base:familyName "BEOL" ;
-	knora-base:givenName "BEOL" ;
-	knora-base:password "a94a8fe5ccb19ba61c4c0873d391e987982fbbd3" ;
-	knora-base:email "t.schweizer@unibas.ch" ;
-	knora-base:preferredLanguage "de" ;
-	knora-base:isInProject <http://data.knora.org/projects/yTerZGyxjZVqFMNNKXCDPF> .
+###
+### project and user moved to admin-data.ttl
+###

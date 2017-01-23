@@ -154,13 +154,6 @@ object InternalServerException {
 }
 
 /**
-  * An exception indication that the message trying to be sent is empty.
-  *
-  * @param message a description of the error.
-  */
-case class MessageEmptyException(message: String = "Trying to send an empty message to an actor. Probably not what you have intended!") extends InternalServerException(message)
-
-/**
   * An exception indicating that during file upload there was an error.
   *
   * @param message a description of the error.

@@ -20,13 +20,19 @@
 
 package org.knora.webapi.responders.v1
 
+import java.util.UUID
+
 import akka.actor.Status
 import akka.pattern._
 import org.knora.webapi._
-import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoByIRIGetRequest, ProjectInfoResponseV1, ProjectInfoType, ProjectInfoV1}
-import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileByUsernameGetRequestV1, UserProfileGetRequestV1, UserProfileV1}
-import org.knora.webapi.messages.v1.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse}
+import org.knora.webapi.messages.v1.responder.permissionmessages._
+import org.knora.webapi.messages.v1.responder.usermessages._
+import org.knora.webapi.messages.v1.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, SparqlUpdateRequest, SparqlUpdateResponse}
+import org.knora.webapi.responders.IriLocker
+import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.util.ActorUtil._
+import org.knora.webapi.util.{CacheUtil, KnoraIdUtil}
+import org.mindrot.jbcrypt.BCrypt
 
 import scala.concurrent.Future
 
@@ -35,123 +41,442 @@ import scala.concurrent.Future
   */
 class UsersResponderV1 extends ResponderV1 {
 
+    // Creates IRIs for new Knora user objects.
+    val knoraIdUtil = new KnoraIdUtil
+
+    // The IRI used to lock user creation and update
+    val USERS_GLOBAL_LOCK_IRI = "http://data.knora.org/users"
+
     /**
       * Receives a message extending [[org.knora.webapi.messages.v1.responder.usermessages.UsersResponderRequestV1]], and returns a message of type [[UserProfileV1]]
       * [[Status.Failure]]. If a serious error occurs (i.e. an error that isn't the client's fault), this
       * method first returns `Failure` to the sender, then throws an exception.
       */
     def receive = {
-        case UserProfileGetRequestV1(userIri) => future2Message(sender(), getUserProfileV1(userIri), log)
-        case UserProfileByUsernameGetRequestV1(username) => future2Message(sender(), getUserProfileByUsernameV1(username), log)
+        case UserProfileByIRIGetRequestV1(userIri, profileType) => future2Message(sender(), getUserProfileByIRIV1(userIri, profileType), log)
+        case UserProfileByEmailGetRequestV1(username, profileType) => future2Message(sender(), getUserProfileByEmailV1(username, profileType), log)
+        case UserCreateRequestV1(createRequest, userProfile, apiRequestID) => future2Message(sender(), createNewUserV1(createRequest, userProfile, apiRequestID), log)
+        case UserUpdateRequestV1(userIri, changeUserData, userProfile, apiRequestID) => future2Message(sender(), updateBasicUserDataV1(userIri, changeUserData, userProfile, apiRequestID), log)
+        case UserChangePasswordRequestV1(userIri, changePasswordRequest, userProfile, apiRequestID) => future2Message(sender(), changePasswordV1(userIri, changePasswordRequest, userProfile, apiRequestID), log)
+        case UserChangeStatusRequestV1(userIri, changeStatusRequest, userProfile, apiRequestID) => future2Message(sender(), changeUserStatusV1(userIri, changeStatusRequest, userProfile, apiRequestID), log)
         case other => handleUnexpectedMessage(sender(), other, log)
     }
 
     /**
       * Gets information about a Knora user, and returns it in a [[UserProfileV1]].
       *
-      * @param userIri the IRI of the user.
+      * @param userIRI the IRI of the user.
       * @return a [[UserProfileV1]] describing the user.
       */
-    private def getUserProfileV1(userIri: IRI): Future[UserProfileV1] = {
+    private def getUserProfileByIRIV1(userIRI: IRI, profileType: UserProfileType.Value): Future[UserProfileV1] = {
+        //log.debug(s"getUserProfileByIRIV1: userIri = $userIRI', clean = '$profileType'")
         for {
-            sparqlQuery <- Future(queries.sparql.v1.txt.getUser(
+            sparqlQueryString <- Future(queries.sparql.v1.txt.getUserByIri(
                 triplestore = settings.triplestoreType,
-                userIri = userIri
+                userIri = userIRI
             ).toString())
-            userDataQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
+
+            //_ = log.debug(s"getUserProfileByIRIV1 - sparqlQueryString: $sparqlQueryString")
+
+            userDataQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResponse]
 
             _ = if (userDataQueryResponse.results.bindings.isEmpty) {
-                throw NotFoundException(s"User $userIri not found")
+                throw NotFoundException(s"User '$userIRI' not found")
             }
 
-            groupedUserData: Map[String, Seq[String]] = userDataQueryResponse.results.bindings.groupBy(_.rowMap("p")).map {
-                case (predicate, rows) => predicate -> rows.map(_.rowMap("o"))
-            }
+            userProfileV1 <- userDataQueryResponse2UserProfile(userDataQueryResponse, profileType)
 
-            userDataV1 = UserDataV1(
-                lang = groupedUserData.get(OntologyConstants.KnoraBase.PreferredLanguage) match {
-                    case Some(langList) => langList.head
-                    case None => settings.fallbackLanguage
-                },
-                user_id = Some(userIri),
-                username = groupedUserData.get(OntologyConstants.KnoraBase.Username).map(_.head),
-                firstname = groupedUserData.get(OntologyConstants.KnoraBase.GivenName).map(_.head),
-                lastname = groupedUserData.get(OntologyConstants.KnoraBase.FamilyName).map(_.head),
-                email = groupedUserData.get(OntologyConstants.KnoraBase.Email).map(_.head),
-                password = groupedUserData.get(OntologyConstants.KnoraBase.Password).map(_.head),
-                active_project = groupedUserData.get(OntologyConstants.KnoraBase.UsersActiveProject).map(_.head)
-            )
-
-            groupIris = groupedUserData.get(OntologyConstants.KnoraBase.IsInGroup) match {
-                case Some(groups) => groups
-                case None => Vector.empty[IRI]
-            }
-
-            projectIris = groupedUserData.get(OntologyConstants.KnoraBase.IsInProject) match {
-                case Some(projects) => projects
-                case None => Vector.empty[IRI]
-            }
-
-        } yield UserProfileV1(userDataV1, groupIris, projectIris)
+        } yield userProfileV1 // UserProfileV1(userDataV1, groupIris, projectIris)
     }
 
     /**
       * Gets information about a Knora user, and returns it in a [[UserProfileV1]].
       *
-      * @param username the username of the user.
+      * @param email the username of the user.
       * @return a [[UserProfileV1]] describing the user.
       */
-    private def getUserProfileByUsernameV1(username: String): Future[UserProfileV1] = {
+    private def getUserProfileByEmailV1(email: String, profileType: UserProfileType.Value): Future[UserProfileV1] = {
+        //log.debug(s"getUserProfileByEmailV1: username = '$email', type = '$profileType'")
         for {
-            sparqlQuery <- Future(queries.sparql.v1.txt.getUserByUsername(
+            sparqlQueryString <- Future(queries.sparql.v1.txt.getUserByEmail(
                 triplestore = settings.triplestoreType,
-                username = username
+                email = email
             ).toString())
-            userDataQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
+            //_ = log.debug(s"getUserProfileByEmailV1 - sparqlQueryString: $sparqlQueryString")
 
-            //_ = println(MessageUtil.toSource(userDataQueryResponse))
+            userDataQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResponse]
+
+            //_ = log.debug(MessageUtil.toSource(userDataQueryResponse))
 
             _ = if (userDataQueryResponse.results.bindings.isEmpty) {
-                throw NotFoundException(s"User $username not found")
+                throw NotFoundException(s"User '$email' not found")
             }
 
-            userIri = userDataQueryResponse.getFirstRow.rowMap("s")
+            userProfileV1 <- userDataQueryResponse2UserProfile(userDataQueryResponse, profileType)
 
-            groupedUserData: Map[String, Seq[String]] = userDataQueryResponse.results.bindings.groupBy(_.rowMap("p")).map {
-                case (predicate, rows) => predicate -> rows.map(_.rowMap("o"))
-            }
-
-            groupIris = groupedUserData.get(OntologyConstants.KnoraBase.IsInGroup) match {
-                case Some(groups) => groups
-                case None => Nil
-            }
-
-            projectIris: Seq[String] = groupedUserData.get(OntologyConstants.KnoraBase.IsInProject) match {
-                case Some(projects) => projects
-                case None => Nil
-            }
-
-            projectInfoFutures: Seq[Future[ProjectInfoV1]] = projectIris.map {
-                projectIri => (responderManager ? ProjectInfoByIRIGetRequest(projectIri, ProjectInfoType.SHORT, None)).mapTo[ProjectInfoResponseV1] map (_.project_info)
-            }
-
-            projectInfos <- Future.sequence(projectInfoFutures)
-
-            userDataV1 = UserDataV1(
-                lang = groupedUserData.get(OntologyConstants.KnoraBase.PreferredLanguage) match {
-                    case Some(langList) => langList.head
-                    case None => settings.fallbackLanguage
-                },
-                user_id = Some(userIri),
-                username = groupedUserData.get(OntologyConstants.KnoraBase.Username).map(_.head),
-                firstname = groupedUserData.get(OntologyConstants.KnoraBase.GivenName).map(_.head),
-                lastname = groupedUserData.get(OntologyConstants.KnoraBase.FamilyName).map(_.head),
-                email = groupedUserData.get(OntologyConstants.KnoraBase.Email).map(_.head),
-                password = groupedUserData.get(OntologyConstants.KnoraBase.Password).map(_.head),
-                active_project = groupedUserData.get(OntologyConstants.KnoraBase.UsersActiveProject).map(_.head),
-                projects = if (projectIris.nonEmpty) Some(projectIris) else None,
-                projects_info = projectInfos
-            )
-        } yield UserProfileV1(userDataV1, groupIris, projectIris)
+        } yield userProfileV1 // UserProfileV1(userDataV1, groupIris, projectIris)
     }
+
+    /**
+      * Creates a new user. Self-registration is allowed, so even the default user, i.e. with no credentials supplied,
+      * is allowed to create a new user.
+      *
+      * Referenced Websites:
+      *                     - https://crackstation.net/hashing-security.htm
+      *                     - http://blog.ircmaxell.com/2012/12/seven-ways-to-screw-up-bcrypt.html
+      *
+      * @param createRequest a [[CreateUserApiRequestV1]] object containing information about the new user to be created.
+      * @param userProfile   a [[UserProfileV1]] object containing information about the requesting user.
+      * @return a future containing the [[UserOperationResponseV1]].
+      */
+    private def createNewUserV1(createRequest: CreateUserApiRequestV1, userProfile: UserProfileV1, apiRequestID: UUID): Future[UserOperationResponseV1] = {
+
+        def createNewUserTask(createRequest: CreateUserApiRequestV1, userProfile: UserProfileV1, apiRequestID: UUID) = for {
+            // check if required information is supplied
+            _ <- Future(if (createRequest.email.isEmpty) throw BadRequestException("Email cannot be empty"))
+            _ = if (createRequest.password.isEmpty) throw BadRequestException("Password cannot be empty")
+            _ = if (createRequest.givenName.isEmpty) throw BadRequestException("Given name cannot be empty")
+            _ = if (createRequest.familyName.isEmpty) throw BadRequestException("Family name cannot be empty")
+
+
+            // check if the supplied email for the new user is unique, i.e. not already registered
+            sparqlQueryString <- Future(queries.sparql.v1.txt.getUserByEmail(
+                triplestore = settings.triplestoreType,
+                email = createRequest.email
+            ).toString())
+            //_ = log.debug(s"createNewUser - check duplicate email: $sparqlQueryString")
+            userDataQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResponse]
+
+            //_ = log.debug(MessageUtil.toSource(userDataQueryResponse))
+
+            _ = if (userDataQueryResponse.results.bindings.nonEmpty) {
+                throw DuplicateValueException(s"User with the email: '${createRequest.email}' already exists")
+            }
+
+            userIri = knoraIdUtil.makeRandomPersonIri
+
+            hashedPassword = BCrypt.hashpw(createRequest.password, BCrypt.gensalt())
+
+            // Create the new user.
+            createNewUserSparqlString = queries.sparql.v1.txt.createNewUser(
+                adminNamedGraphIri = "http://www.knora.org/data/admin",
+                triplestore = settings.triplestoreType,
+                userIri = userIri,
+                userClassIri = OntologyConstants.KnoraBase.User,
+                email = createRequest.email,
+                password = hashedPassword,
+                givenName = createRequest.givenName,
+                familyName = createRequest.familyName,
+                status = createRequest.status,
+                preferredLanguage = createRequest.lang,
+                systemAdmin = createRequest.systemAdmin
+            ).toString
+            //_ = log.debug(s"createNewUser: $createNewUserSparqlString")
+            createResourceResponse <- (storeManager ? SparqlUpdateRequest(createNewUserSparqlString)).mapTo[SparqlUpdateResponse]
+
+
+            // Verify that the user was created.
+            sparqlQuery = queries.sparql.v1.txt.getUserByIri(
+                triplestore = settings.triplestoreType,
+                userIri = userIri
+            ).toString()
+            userDataQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
+
+            _ = if (userDataQueryResponse.results.bindings.isEmpty) {
+                throw UpdateNotPerformedException(s"User $userIri was not created. Please report this as a possible bug.")
+            }
+
+            // create the user profile
+            newUserProfile <- userDataQueryResponse2UserProfile(userDataQueryResponse, UserProfileType.RESTRICTED)
+
+            // create the user operation response
+            userOperationResponseV1 = UserOperationResponseV1(newUserProfile, userProfile.userData)
+
+        } yield userOperationResponseV1
+
+        for {
+            // run user creation with an global IRI lock
+            taskResult <- IriLocker.runWithIriLock(
+                apiRequestID,
+                USERS_GLOBAL_LOCK_IRI,
+                () => createNewUserTask(createRequest, userProfile, apiRequestID)
+            )
+        } yield taskResult
+    }
+
+    /**
+      * Updates an existing user. Only basic user data information (email, givenName, familyName, lang)
+      * can be changed. For changing the password or user status, use the separate methods.
+      *
+      * @param userIri           the IRI of the existing user that we want to update.
+      * @param updateUserRequest the updated information.
+      * @param userProfile       the user profile of the requesting user.
+      * @param apiRequestID      the unique api request ID.
+      * @return a [[UserOperationResponseV1]]
+      */
+    private def updateBasicUserDataV1(userIri: IRI, updateUserRequest: UpdateUserApiRequestV1, userProfile: UserProfileV1, apiRequestID: UUID): Future[UserOperationResponseV1] = for {
+
+        // check if the requesting user is allowed to perform updates
+        _ <- Future(
+            if (!userProfile.userData.user_id.contains(userIri) && !userProfile.permissionData.isSystemAdmin) {
+                // not the user and not a system admin
+                throw ForbiddenException("User information can only be changed by the user itself or a system administrator")
+            }
+        )
+
+        // check if necessary information is present
+        _ = if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty")
+
+        // check that we don't want to change the password / status / system admin group membership
+        _ = if (updateUserRequest.password.isDefined) throw BadRequestException("The password cannot be changed by this method.")
+        _ = if (updateUserRequest.status.isDefined) throw BadRequestException("The status cannot be changed by this method.")
+        _ = if (updateUserRequest.systemAdmin.isDefined) throw BadRequestException("The system admin group membership cannot be changed by this method.")
+
+        // run the user update with an global IRI lock
+        taskResult <- IriLocker.runWithIriLock(
+            apiRequestID,
+            USERS_GLOBAL_LOCK_IRI,
+            () => updateUserDataV1(userIri, updateUserRequest, userProfile, apiRequestID)
+        )
+    } yield taskResult
+
+
+    /**
+      * Change the users password. The old password needs to be supplied for security purposes.
+      *
+      * @param userIri               the IRI of the existing user that we want to update.
+      * @param changePasswordRequest the old and new password.
+      * @param userProfile           the user profile of the requesting user.
+      * @param apiRequestID          the unique api request ID.
+      * @return
+      */
+    private def changePasswordV1(userIri: IRI, changePasswordRequest: ChangeUserPasswordApiRequestV1, userProfile: UserProfileV1, apiRequestID: UUID): Future[UserOperationResponseV1] = {
+
+        /**
+          * The actual change password task run with an IRI lock.
+          */
+        def changePaswordTask(userIri: IRI, changePasswordRequest: ChangeUserPasswordApiRequestV1, userProfile: UserProfileV1, apiRequestID: UUID): Future[UserOperationResponseV1] = for {
+
+        // check if old password matches current user password
+            userProfile <- getUserProfileByIRIV1(userIri, UserProfileType.FULL)
+            _ = if (!userProfile.passwordMatch(changePasswordRequest.oldPassword)) throw BadRequestException("The supplied old password does not match the current users password.")
+
+            // create the update request
+            updateUserRequest = UpdateUserApiRequestV1(password = Some(changePasswordRequest.newPassword))
+
+            // update the users password
+            result <- updateUserDataV1(userIri, updateUserRequest, userProfile, apiRequestID)
+
+        } yield result
+
+        for {
+        // check if necessary information is present
+            _ <- Future(if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty"))
+
+            // check if the requesting user is allowed to perform updates
+            _ = if (!userProfile.userData.user_id.contains(userIri) && !userProfile.permissionData.isSystemAdmin) {
+                // not the user and not a system admin
+                throw ForbiddenException("User information can only be changed by the user itself or a system administrator")
+            }
+
+            // run the change password task with an IRI lock
+            taskResult <- IriLocker.runWithIriLock(
+                apiRequestID,
+                userIri,
+                () => changePaswordTask(userIri, changePasswordRequest, userProfile, apiRequestID)
+            )
+        } yield taskResult
+    }
+
+    /**
+      * Change the user's status (active / inactive).
+      * @param userIri the IRI of the existing user that we want to update.
+      * @param changeStatusRequest the new status.
+      * @param userProfile the user profile of the requesting user.
+      * @param apiRequestID the unique api request ID.
+      * @return
+      */
+    private def changeUserStatusV1(userIri: IRI, changeStatusRequest: ChangeUserStatusApiRequestV1, userProfile: UserProfileV1, apiRequestID: UUID): Future[UserOperationResponseV1] = {
+
+        // check if necessary information is present
+        if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty")
+
+        // check if the requesting user is allowed to perform updates
+        if (!userProfile.userData.user_id.contains(userIri) && !userProfile.permissionData.isSystemAdmin) {
+            // not the user and not a system admin
+            throw ForbiddenException("User information can only be changed by the user itself or a system administrator")
+        }
+
+        // create the update user request
+        val updateUserRequest = UpdateUserApiRequestV1(status = Some(changeStatusRequest.newStatus))
+
+        for {
+            // run the change status task with an IRI lock
+            taskResult <- IriLocker.runWithIriLock(
+                apiRequestID,
+                userIri,
+                () => updateUserDataV1(userIri, updateUserRequest, userProfile, apiRequestID)
+            )
+        } yield taskResult
+    }
+
+    private def changeUserSystemAdminMembershipStatusV1(user: IRI, userProfile: UserProfileV1, apiRequestID: UUID): Future[UserOperationResponseV1] = ???
+
+    /**
+      * Updates an existing user. Should not be directly used from the receive method.
+      *
+      * @param userIri          the IRI of the existing user that we want to update.
+      * @param apiUpdateRequest the updated information.
+      * @param userProfile      the user profile of the requesting user.
+      * @param apiRequestID     the unique api request ID.
+      * @return a [[UserOperationResponseV1]]
+      */
+    private def updateUserDataV1(userIri: IRI, apiUpdateRequest: UpdateUserApiRequestV1, userProfile: UserProfileV1, apiRequestID: UUID): Future[UserOperationResponseV1] = {
+
+        for {
+            /* Update the user */
+            updateUserSparqlString <- Future(queries.sparql.v1.txt.updateUser(
+                adminNamedGraphIri = "http://www.knora.org/data/admin",
+                triplestore = settings.triplestoreType,
+                userIri = userIri,
+                maybeEmail = apiUpdateRequest.email,
+                maybeGivenName = apiUpdateRequest.givenName,
+                maybeFamilyName = apiUpdateRequest.familyName,
+                maybePassword = apiUpdateRequest.password,
+                maybeStatus = apiUpdateRequest.status,
+                maybeLang = apiUpdateRequest.lang,
+                maybeSystemAdmin = apiUpdateRequest.systemAdmin
+            ).toString)
+            //_ = log.debug(s"updateUserDataV1 - query: $updateUserSparqlString")
+            createResourceResponse <- (storeManager ? SparqlUpdateRequest(updateUserSparqlString)).mapTo[SparqlUpdateResponse]
+
+            /* Verify that the user was updated. */
+            updatedUserProfile <- getUserProfileByIRIV1(userIri, UserProfileType.FULL)
+            updatedUserData = updatedUserProfile.userData
+
+            //_ = log.debug(s"apiUpdateRequest: $apiUpdateRequest /  updatedUserdata: $updatedUserData")
+
+            _ = if (apiUpdateRequest.email.isDefined) {
+                if (updatedUserData.email != apiUpdateRequest.email) throw UpdateNotPerformedException("User's 'email' was not updated. Please report this as a possible bug.")
+            }
+
+            _ = if (apiUpdateRequest.givenName.isDefined) {
+                if (updatedUserData.firstname != apiUpdateRequest.givenName) throw UpdateNotPerformedException("User's 'givenName' was not updated. Please report this as a possible bug.")
+            }
+
+            _ = if (apiUpdateRequest.familyName.isDefined) {
+                if (updatedUserData.lastname != apiUpdateRequest.familyName) throw UpdateNotPerformedException("User's 'familyName' was not updated. Please report this as a possible bug.")
+            }
+
+            _ = if (apiUpdateRequest.password.isDefined) {
+                if (updatedUserData.password != apiUpdateRequest.password) throw UpdateNotPerformedException("User's 'password' was not updated. Please report this as a possible bug.")
+            }
+
+            _ = if (apiUpdateRequest.status.isDefined) {
+                if (updatedUserData.isActiveUser != apiUpdateRequest.status) throw UpdateNotPerformedException("User's 'status' was not updated. Please report this as a possible bug.")
+            }
+
+            _ = if (apiUpdateRequest.lang.isDefined) {
+                if (updatedUserData.lang != apiUpdateRequest.lang.get) throw UpdateNotPerformedException("User's 'lang' was not updated. Please report this as a possible bug.")
+            }
+
+            _ = if (apiUpdateRequest.systemAdmin.isDefined) {
+                if (updatedUserData.isActiveUser != apiUpdateRequest.systemAdmin) throw UpdateNotPerformedException("User's 'isInSystemAdminGroup' status was not updated. Please report this as a possible bug.")
+            }
+
+            // create the user operation response
+            userOperationResponseV1 = if (userIri == userProfile.userData.user_id.get) {
+                // the user is updating itself
+
+                // update cache if session id is available
+                userProfile.sessionId match {
+                    case Some(sessionId) => CacheUtil.put[UserProfileV1](Authenticator.AUTHENTICATION_CACHE_NAME, sessionId, updatedUserProfile.setSessionId(sessionId))
+                    case None => // user has not session id, so no cache to update
+                }
+
+                UserOperationResponseV1(updatedUserProfile.ofType(UserProfileType.RESTRICTED), updatedUserProfile.ofType(UserProfileType.RESTRICTED).userData)
+            } else {
+                UserOperationResponseV1(updatedUserProfile.ofType(UserProfileType.RESTRICTED), userProfile.userData)
+            }
+        } yield userOperationResponseV1
+    }
+
+
+    ////////////////////
+    // Helper Methods //
+    ////////////////////
+
+    /**
+      * Helper method used to create a [[UserProfileV1]] from the [[SparqlSelectResponse]] containing user data.
+      *
+      * @param userDataQueryResponse a [[SparqlSelectResponse]] containing user data.
+      * @param userProfileType       a flag denoting if sensitive information should be stripped from the returned [[UserProfileV1]]
+      * @return a [[UserProfileV1]] containing the user's data.
+      */
+    private def userDataQueryResponse2UserProfile(userDataQueryResponse: SparqlSelectResponse, userProfileType: UserProfileType.Value): Future[UserProfileV1] = {
+
+        //log.debug("userDataQueryResponse2UserProfile - " + MessageUtil.toSource(userDataQueryResponse))
+
+        val returnedUserIri = userDataQueryResponse.getFirstRow.rowMap("s")
+
+        val groupedUserData: Map[String, Seq[String]] = userDataQueryResponse.results.bindings.groupBy(_.rowMap("p")).map {
+            case (predicate, rows) => predicate -> rows.map(_.rowMap("o"))
+        }
+
+        //_ = log.debug(s"userDataQueryResponse2UserProfile - groupedUserData: ${MessageUtil.toSource(groupedUserData)}")
+
+        val userDataV1 = UserDataV1(
+            lang = groupedUserData.get(OntologyConstants.KnoraBase.PreferredLanguage) match {
+                case Some(langList) => langList.head
+                case None => settings.fallbackLanguage
+            },
+            user_id = Some(returnedUserIri),
+            email = groupedUserData.get(OntologyConstants.KnoraBase.Email).map(_.head),
+            firstname = groupedUserData.get(OntologyConstants.KnoraBase.GivenName).map(_.head),
+            lastname = groupedUserData.get(OntologyConstants.KnoraBase.FamilyName).map(_.head),
+            password = groupedUserData.get(OntologyConstants.KnoraBase.Password).map(_.head),
+            isActiveUser = groupedUserData.get(OntologyConstants.KnoraBase.Status).map(_.head.toBoolean),
+            active_project = groupedUserData.get(OntologyConstants.KnoraBase.UsersActiveProject).map(_.head)
+        )
+        //_ = log.debug(s"userDataQueryResponse2UserProfile - userDataV1: ${MessageUtil.toSource(userDataV1)}")
+
+
+        /* the projects the user is member of */
+        val projectIris = groupedUserData.get(OntologyConstants.KnoraBase.IsInProject) match {
+            case Some(projects) => projects
+            case None => Vector.empty[IRI]
+        }
+        //_ = log.debug(s"userDataQueryResponse2UserProfile - projectIris: ${MessageUtil.toSource(projectIris)}")
+
+        /* the groups the user is member of (only explicit groups) */
+        val groupIris = groupedUserData.get(OntologyConstants.KnoraBase.IsInGroup) match {
+            case Some(groups) => groups
+            case None => Vector.empty[IRI]
+        }
+        //_ = log.debug(s"userDataQueryResponse2UserProfile - groupIris: ${MessageUtil.toSource(groupIris)}")
+
+        /* the projects for which the user is implicitly considered a member of the 'http://www.knora.org/ontology/knora-base#ProjectAdmin' group */
+        val isInProjectAdminGroups = groupedUserData.getOrElse(OntologyConstants.KnoraBase.IsInProjectAdminGroup, Vector.empty[IRI])
+
+        /* is the user implicitly considered a member of the 'http://www.knora.org/ontology/knora-base#SystemAdmin' group */
+        val isInSystemAdminGroup = groupedUserData.get(OntologyConstants.KnoraBase.IsInSystemAdminGroup).exists(p => p.head.toBoolean)
+
+        for {
+        /* get the user's permission profile from the permissions responder */
+            permissionData <- (responderManager ? PermissionDataGetV1(projectIris = projectIris, groupIris = groupIris, isInProjectAdminGroups = isInProjectAdminGroups, isInSystemAdminGroup = isInSystemAdminGroup)).mapTo[PermissionDataV1]
+
+            /* construct the user profile from the different parts */
+            up = UserProfileV1(
+                userData = userDataV1,
+                groups = groupIris,
+                projects = projectIris,
+                sessionId = None,
+                permissionData = permissionData
+            )
+            //_ = log.debug(s"Retrieved UserProfileV1: ${up.toString}")
+
+            result = up.ofType(userProfileType)
+        } yield result
+    }
+
 }

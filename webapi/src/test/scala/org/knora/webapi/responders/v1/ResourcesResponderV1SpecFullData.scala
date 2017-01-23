@@ -23,13 +23,12 @@ package org.knora.webapi.responders.v1
 import java.util.UUID
 
 import akka.actor.ActorSystem
-import org.knora.webapi.messages.v1.responder.ontologymessages.{StandoffClassEntityInfoV1, StandoffEntityInfoGetResponseV1, StandoffPropertyEntityInfoV1}
 import org.knora.webapi.messages.v1.responder.resourcemessages._
-import org.knora.webapi.messages.v1.responder.standoffmessages.{GetMappingResponseV1, MappingXMLtoStandoff, StandoffDataTypeClasses, XMLTag}
-import org.knora.webapi.messages.v1.responder.usermessages.UserDataV1
+import org.knora.webapi.messages.v1.responder.standoffmessages.{MappingXMLtoStandoff, StandoffDataTypeClasses, XMLTag}
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.twirl.{StandoffTagIriAttributeV1, StandoffTagV1}
-import org.knora.webapi.{IRI, OntologyConstants, Settings}
+import org.knora.webapi.{OntologyConstants, Settings, SharedAdminTestData}
+
 
 object ResourcesResponderV1SpecFullData {
 
@@ -39,16 +38,7 @@ object ResourcesResponderV1SpecFullData {
 
     // The expected response to a "full" resource request for a book.
     val expectedBookResourceFullResponse = ResourceFullResponseV1(
-        userdata = UserDataV1(
-            password = None,
-            email = Some("test@test.ch"),
-            lastname = Some("Test"),
-            firstname = Some("User"),
-            username = Some("testuser"),
-            token = None,
-            user_id = Some("http://data.knora.org/users/b83acc5f05"),
-            lang = "de"
-        ),
+        userdata = SharedAdminTestData.incunabulaMemberUser.userData,
         access = "OK",
         incoming = Vector(
             IncomingV1(
@@ -430,19 +420,7 @@ object ResourcesResponderV1SpecFullData {
 
     // The expected response to a "full" resource request for a page.
     val expectedPageResourceFullResponse = ResourceFullResponseV1(
-        userdata = UserDataV1(
-            projects_info = Nil,
-            projects = None,
-            active_project = None,
-            password = None,
-            email = Some("test@test.ch"),
-            lastname = Some("Test"),
-            firstname = Some("User"),
-            username = Some("testuser"),
-            token = None,
-            user_id = Some("http://data.knora.org/users/b83acc5f05"),
-            lang = "de"
-        ),
+        userdata = SharedAdminTestData.incunabulaMemberUser.userData,
         access = "OK",
         incoming = Nil,
         props = Some(PropsV1(properties = Vector(
@@ -559,7 +537,7 @@ object ResourcesResponderV1SpecFullData {
             ),
             PropertyV1(
                 locations = Nil,
-                value_rights = Vector(Some(8)),
+                value_rights = Vector(Some(6)),
                 value_firstprops = Vector(None),
                 value_iconsrcs = Vector(None),
                 value_restype = Vector(None),
@@ -580,7 +558,7 @@ object ResourcesResponderV1SpecFullData {
             ),
             PropertyV1(
                 locations = Nil,
-                value_rights = Vector(Some(8)),
+                value_rights = Vector(Some(7)),
                 value_firstprops = Vector(None),
                 value_iconsrcs = Vector(None),
                 value_restype = Vector(None),
@@ -880,16 +858,7 @@ object ResourcesResponderV1SpecFullData {
         )
 
     val expectedRegionFullResource = ResourceFullResponseV1(
-        userdata = UserDataV1(
-            password = None,
-            email = Some("test@test.ch"),
-            lastname = Some("Test"),
-            firstname = Some("User"),
-            username = Some("testuser"),
-            token = None,
-            user_id = Some("http://data.knora.org/users/b83acc5f05"),
-            lang = "de"
-        ),
+        userdata = SharedAdminTestData.incunabulaMemberUser.userData,
         access = "OK",
         incoming = Vector(
             IncomingV1(

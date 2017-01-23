@@ -20,9 +20,10 @@
 
 package org.knora.webapi.messages.v1.responder.ontologymessages
 
+import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.standoffmessages.StandoffDataTypeClasses
-import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
+import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1, UserV1JsonProtocol}
 import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
 import spray.json._
 
@@ -175,7 +176,7 @@ case class NamedGraphsGetRequestV1(userProfile: UserProfileV1) extends OntologyR
   * @param vocabularies all the existing named graphs.
   * @param userdata     information about the user that made the request.
   */
-case class NamedGraphsResponseV1(vocabularies: Vector[NamedGraphV1], userdata: UserDataV1) extends KnoraResponseV1 {
+case class NamedGraphsResponseV1(vocabularies: Seq[NamedGraphV1], userdata: UserDataV1) extends KnoraResponseV1 {
     def toJsValue = ResourceTypeV1JsonProtocol.namedGraphsResponseV1Format.write(this)
 }
 
@@ -194,7 +195,7 @@ case class ResourceTypesForNamedGraphGetRequestV1(namedGraph: Option[IRI], userP
   * @param resourcetypes the resource classes for the queried named graph.
   * @param userdata      information about the user that made the request.
   */
-case class ResourceTypesForNamedGraphResponseV1(resourcetypes: Vector[ResourceTypeV1], userdata: UserDataV1) extends KnoraResponseV1 {
+case class ResourceTypesForNamedGraphResponseV1(resourcetypes: Seq[ResourceTypeV1], userdata: UserDataV1) extends KnoraResponseV1 {
     def toJsValue = ResourceTypeV1JsonProtocol.resourceTypesForNamedGraphResponseV1Format.write(this)
 }
 
@@ -214,7 +215,7 @@ case class PropertyTypesForNamedGraphGetRequestV1(namedGraph: Option[IRI], userP
   * @param properties the property types for the requested named graph.
   * @param userdata   information about the user that made the request.
   */
-case class PropertyTypesForNamedGraphResponseV1(properties: Vector[PropertyDefinitionInNamedGraphV1], userdata: UserDataV1) extends KnoraResponseV1 {
+case class PropertyTypesForNamedGraphResponseV1(properties: Seq[PropertyDefinitionInNamedGraphV1], userdata: UserDataV1) extends KnoraResponseV1 {
     def toJsValue = ResourceTypeV1JsonProtocol.propertyTypesForNamedGraphResponseV1Format.write(this)
 }
 
@@ -613,9 +614,9 @@ case class PropertyTypeV1(id: IRI, label: String) {
 /**
   * A spray-json protocol for generating Knora API v1 JSON providing data about resources and their properties.
   */
-object ResourceTypeV1JsonProtocol extends DefaultJsonProtocol with NullOptions {
+object ResourceTypeV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with NullOptions {
 
-    import org.knora.webapi.messages.v1.responder.usermessages.UserDataV1JsonProtocol._
+    import UserV1JsonProtocol.userDataV1Format
 
     implicit val propertyDefinitionV1Format: JsonFormat[PropertyDefinitionV1] = jsonFormat10(PropertyDefinitionV1)
     implicit val propertyDefinitionInNamedGraphV1Format: JsonFormat[PropertyDefinitionInNamedGraphV1] = jsonFormat8(PropertyDefinitionInNamedGraphV1)

@@ -40,7 +40,7 @@ import org.knora.webapi.responders._
 import org.knora.webapi.responders.v1._
 import org.knora.webapi.routing.v1.{ResourcesRouteV1, ValuesRouteV1}
 import org.knora.webapi.store._
-import org.knora.webapi.{FileWriteException, LiveActorMaker, R2RSpec}
+import org.knora.webapi.{FileWriteException, LiveActorMaker, R2RSpec, SharedAdminTestData}
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
@@ -69,30 +69,14 @@ class SipiV1R2RSpec extends R2RSpec {
 
     implicit private val timeout: Timeout = settings.defaultRestoreTimeout
 
-    private val incunabulaUser = UserProfileV1(
-        projects = Vector("http://data.knora.org/projects/77275339"),
-        groups = Nil,
-        userData = UserDataV1(
-            email = Some("test@test.ch"),
-            lastname = Some("Test"),
-            firstname = Some("User"),
-            username = Some("testuser"),
-            token = None,
-            user_id = Some("http://data.knora.org/users/b83acc5f05"),
-            lang = "de"
-        )
-    )
+    private val incunabulaUser = SharedAdminTestData.incunabulaProjectAdminUser
 
     implicit def default(implicit system: ActorSystem) = RouteTestTimeout(new DurationInt(15).second)
 
-    private val username = "root"
-    private val password = "test"
+    private val rootEmail = SharedAdminTestData.rootUser.userData.email.get
+    private val testPass = "test"
 
     val rdfDataObjects = List(
-        RdfDataObject(path = "../knora-ontologies/knora-base.ttl", name = "http://www.knora.org/ontology/knora-base"),
-        RdfDataObject(path = "_test_data/ontologies/standoff-onto.ttl", name = "http://www.knora.org/ontology/standoff"),
-        RdfDataObject(path = "../knora-ontologies/knora-dc.ttl", name = "http://www.knora.org/ontology/dc"),
-        RdfDataObject(path = "../knora-ontologies/salsah-gui.ttl", name = "http://www.knora.org/ontology/salsah-gui"),
         RdfDataObject(path = "_test_data/ontologies/incunabula-onto.ttl", name = "http://www.knora.org/ontology/incunabula"),
         RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/incunabula"),
         RdfDataObject(path = "_test_data/ontologies/images-demo-onto.ttl", name = "http://www.knora.org/ontology/images"),
@@ -101,7 +85,7 @@ class SipiV1R2RSpec extends R2RSpec {
 
     "Load test data" in {
         Await.result(storeManager ? ResetTriplestoreContent(rdfDataObjects), 300.seconds)
-        Await.result(responderManager ? LoadOntologiesRequest(incunabulaUser), 10.seconds)
+        Await.result(responderManager ? LoadOntologiesRequest(SharedAdminTestData.rootUser), 10.seconds)
     }
 
     object RequestParams {
@@ -168,7 +152,7 @@ class SipiV1R2RSpec extends R2RSpec {
 
             RequestParams.createTmpFileDir()
 
-            Post("/v1/resources", formData) ~> addCredentials(BasicHttpCredentials(username, password)) ~> resourcesPath ~> check {
+            Post("/v1/resources", formData) ~> addCredentials(BasicHttpCredentials(rootEmail, testPass)) ~> resourcesPath ~> check {
 
                 val tmpFile = SourcePath.getSourcePath()
 
@@ -199,7 +183,7 @@ class SipiV1R2RSpec extends R2RSpec {
 
             RequestParams.createTmpFileDir()
 
-            Post("/v1/resources", formData) ~> addCredentials(BasicHttpCredentials(username, password)) ~> Route.seal(resourcesPath) ~> check {
+            Post("/v1/resources", formData) ~> addCredentials(BasicHttpCredentials(rootEmail, testPass)) ~> Route.seal(resourcesPath) ~> check {
 
                 val tmpFile = SourcePath.getSourcePath()
 
@@ -222,7 +206,7 @@ class SipiV1R2RSpec extends R2RSpec {
                 ))
             )
 
-            Post("/v1/resources", HttpEntity(MediaTypes.`application/json`, params.toJsValue.compactPrint)) ~> addCredentials(BasicHttpCredentials(username, password)) ~> resourcesPath ~> check {
+            Post("/v1/resources", HttpEntity(MediaTypes.`application/json`, params.toJsValue.compactPrint)) ~> addCredentials(BasicHttpCredentials(rootEmail, testPass)) ~> resourcesPath ~> check {
                 assert(status == StatusCodes.OK, "Status code is not set to OK, Knora says:\n" + responseAs[String])
             }
         }
@@ -249,7 +233,7 @@ class SipiV1R2RSpec extends R2RSpec {
 
             val resIri = URLEncoder.encode("http://data.knora.org/8a0b1e75", "UTF-8")
 
-            Put("/v1/filevalue/" + resIri, formData) ~> addCredentials(BasicHttpCredentials(username, password)) ~> valuesPath ~> check {
+            Put("/v1/filevalue/" + resIri, formData) ~> addCredentials(BasicHttpCredentials(rootEmail, testPass)) ~> valuesPath ~> check {
 
                 val tmpFile = SourcePath.getSourcePath()
 
@@ -278,7 +262,7 @@ class SipiV1R2RSpec extends R2RSpec {
 
             val resIri = URLEncoder.encode("http://data.knora.org/8a0b1e75", "UTF-8")
 
-            Put("/v1/filevalue/" + resIri, formData) ~> addCredentials(BasicHttpCredentials(username, password)) ~> valuesPath ~> check {
+            Put("/v1/filevalue/" + resIri, formData) ~> addCredentials(BasicHttpCredentials(rootEmail, testPass)) ~> valuesPath ~> check {
 
                 val tmpFile = SourcePath.getSourcePath()
 
@@ -305,7 +289,7 @@ class SipiV1R2RSpec extends R2RSpec {
 
             val resIri = URLEncoder.encode("http://data.knora.org/8a0b1e75", "UTF-8")
 
-            Put("/v1/filevalue/" + resIri, HttpEntity(MediaTypes.`application/json`, params.toJsValue.compactPrint)) ~> addCredentials(BasicHttpCredentials(username, password)) ~> valuesPath ~> check {
+            Put("/v1/filevalue/" + resIri, HttpEntity(MediaTypes.`application/json`, params.toJsValue.compactPrint)) ~> addCredentials(BasicHttpCredentials(rootEmail, testPass)) ~> valuesPath ~> check {
                 assert(status == StatusCodes.OK, "Status code is not set to OK, Knora says:\n" + responseAs[String])
             }
 

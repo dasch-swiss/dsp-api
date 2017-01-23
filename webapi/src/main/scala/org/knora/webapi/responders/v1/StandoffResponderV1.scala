@@ -29,8 +29,9 @@ import javax.xml.validation.{Schema, SchemaFactory, Validator => JValidator}
 import akka.actor.Status
 import akka.pattern._
 import akka.stream.ActorMaterializer
+import arq.iri
 import org.knora.webapi.messages.v1.responder.ontologymessages._
-import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoByIRIGetRequest, ProjectInfoResponseV1, ProjectInfoType}
+import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoByIRIGetRequestV1, ProjectInfoResponseV1}
 import org.knora.webapi.messages.v1.responder.standoffmessages._
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.responder.valuemessages._
@@ -246,9 +247,8 @@ class StandoffResponderV1 extends ResponderV1 {
             }
 
             // check if the given project Iri represents an actual project
-            projectInfo: ProjectInfoResponseV1 <- (responderManager ? ProjectInfoByIRIGetRequest(
+            projectInfo: ProjectInfoResponseV1 <- (responderManager ? ProjectInfoByIRIGetRequestV1(
                 iri = projectIri,
-                requestType = ProjectInfoType.SHORT,
                 Some(userProfile)
             )).mapTo[ProjectInfoResponseV1]
 
@@ -259,8 +259,8 @@ class StandoffResponderV1 extends ResponderV1 {
             // create the mapping Iri from the project Iri and the name provided by the user
             mappingIri = knoraIdUtil.makeProjectMappingIri(projectIri, mappingName)
 
-            // TODO: check where to put the mapping
-            namedGraph = settings.projectNamedGraphs(projectIri).data
+            // put the mapping into the named graph of the project
+            namedGraph = projectInfo.project_info.dataNamedGraph
 
             result: CreateMappingResponseV1 <- IriLocker.runWithIriLock(
                 apiRequestID,

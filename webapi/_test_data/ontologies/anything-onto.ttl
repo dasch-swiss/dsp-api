@@ -31,11 +31,7 @@
 
        salsah-gui:guiElement salsah-gui:List ;
 
-       salsah-gui:guiAttribute "hlist=<http://data.knora.org/anything/treeList>" ;
-
-       knora-base:hasDefaultViewPermission knora-base:UnknownUser ;
-
-       knora-base:hasDefaultModifyPermission knora-base:ProjectMember .
+       salsah-gui:guiAttribute "hlist=<http://data.knora.org/anything/treeList>" .
 
 
 
@@ -54,11 +50,9 @@
 
                salsah-gui:guiOrder "1"^^xsd:integer ;
 
-               salsah-gui:guiElement salsah-gui:Searchbox ;
+               salsah-gui:guiElement salsah-gui:Searchbox .
 
-               knora-base:hasDefaultViewPermission knora-base:UnknownUser ;
 
-               knora-base:hasDefaultModifyPermission knora-base:ProjectMember .
 
 
 :hasOtherThingValue rdf:type owl:ObjectProperty ;
@@ -76,11 +70,7 @@
 
                salsah-gui:guiOrder "1"^^xsd:integer ;
 
-               salsah-gui:guiElement salsah-gui:Searchbox ;
-
-               knora-base:hasDefaultViewPermission knora-base:UnknownUser ;
-
-               knora-base:hasDefaultModifyPermission knora-base:ProjectMember .
+               salsah-gui:guiElement salsah-gui:Searchbox .
 
 
 :hasText rdf:type owl:ObjectProperty ;
@@ -101,11 +91,7 @@
        salsah-gui:guiElement salsah-gui:SimpleText ;
 
        salsah-gui:guiAttribute "size=80" ,
-                               "maxlength=255" ;
-
-       knora-base:hasDefaultViewPermission knora-base:UnknownUser ;
-
-       knora-base:hasDefaultModifyPermission knora-base:ProjectMember .
+                               "maxlength=255" .
 
 
 
@@ -127,11 +113,7 @@
        salsah-gui:guiElement salsah-gui:Date ;
 
        salsah-gui:guiAttribute "size=16" ,
-                               "maxlength=32" ;
-
-       knora-base:hasDefaultViewPermission knora-base:UnknownUser ;
-
-       knora-base:hasDefaultModifyPermission knora-base:ProjectMember .
+                               "maxlength=32" .
 
 
 
@@ -153,11 +135,7 @@
        salsah-gui:guiElement salsah-gui:Spinbox ;
 
        salsah-gui:guiAttribute "min=0" ,
-                                "max=-1" ;
-
-       knora-base:hasDefaultViewPermission knora-base:UnknownUser ;
-
-       knora-base:hasDefaultModifyPermission knora-base:ProjectMember .
+                                "max=-1" .
 
 
 
@@ -179,11 +157,7 @@
        salsah-gui:guiElement salsah-gui:SimpleText ;
 
        salsah-gui:guiAttribute "size=80" ,
-                               "maxlength=255" ;
-
-       knora-base:hasDefaultViewPermission knora-base:UnknownUser ;
-
-       knora-base:hasDefaultModifyPermission knora-base:ProjectMember .
+                               "maxlength=255" .
 
 
 
@@ -202,11 +176,7 @@
 
        salsah-gui:guiOrder "6"^^xsd:integer ;
 
-       salsah-gui:guiElement salsah-gui:Checkbox ;
-
-       knora-base:hasDefaultViewPermission knora-base:UnknownUser ;
-
-       knora-base:hasDefaultModifyPermission knora-base:ProjectMember .
+       salsah-gui:guiElement salsah-gui:Checkbox .
 
 
 
@@ -228,11 +198,8 @@
        salsah-gui:guiElement salsah-gui:SimpleText ;
 
        salsah-gui:guiAttribute "size=80" ,
-                               "maxlength=255" ;
+                               "maxlength=255" .
 
-       knora-base:hasDefaultViewPermission knora-base:UnknownUser ;
-
-       knora-base:hasDefaultModifyPermission knora-base:ProjectMember .
 
 :hasInterval rdf:type owl:ObjectProperty ;
 
@@ -249,11 +216,7 @@
 
        salsah-gui:guiOrder "9"^^xsd:integer ;
 
-       salsah-gui:guiElement salsah-gui:Interval ;
-
-       knora-base:hasDefaultViewPermission knora-base:UnknownUser ;
-
-       knora-base:hasDefaultModifyPermission knora-base:ProjectMember .
+       salsah-gui:guiElement salsah-gui:Interval .
 
 
 
@@ -272,11 +235,7 @@
 
        salsah-gui:guiOrder "10"^^xsd:integer ;
 
-       salsah-gui:guiElement salsah-gui:Colorpicker ;
-
-       knora-base:hasDefaultViewPermission knora-base:UnknownUser ;
-
-       knora-base:hasDefaultModifyPermission knora-base:ProjectMember .
+       salsah-gui:guiElement salsah-gui:Colorpicker .
 
 
 
@@ -295,11 +254,7 @@
 
        salsah-gui:guiOrder "11"^^xsd:integer ;
 
-       salsah-gui:guiElement salsah-gui:Geometry ;
-
-       knora-base:hasDefaultViewPermission knora-base:UnknownUser ;
-
-       knora-base:hasDefaultModifyPermission knora-base:ProjectMember .
+       salsah-gui:guiElement salsah-gui:Geometry .
 
 
 
@@ -318,11 +273,7 @@
 
        salsah-gui:guiOrder "12"^^xsd:integer ;
 
-       salsah-gui:guiElement salsah-gui:Geonames ;
-
-       knora-base:hasDefaultViewPermission knora-base:UnknownUser ;
-
-       knora-base:hasDefaultModifyPermission knora-base:ProjectMember .
+       salsah-gui:guiElement salsah-gui:Geonames .
 
 
 
@@ -341,11 +292,7 @@
 
     salsah-gui:guiOrder "13"^^xsd:integer ;
 
-    salsah-gui:guiElement salsah-gui:Searchbox ;
-
-    knora-base:hasDefaultViewPermission knora-base:UnknownUser ;
-
-    knora-base:hasDefaultModifyPermission knora-base:ProjectMember .
+    salsah-gui:guiElement salsah-gui:Searchbox .
 
 
 
@@ -364,11 +311,7 @@
 
     salsah-gui:guiOrder "14"^^xsd:integer ;
 
-    salsah-gui:guiElement salsah-gui:Searchbox ;
-
-    knora-base:hasDefaultViewPermission knora-base:UnknownUser ;
-
-    knora-base:hasDefaultModifyPermission knora-base:ProjectMember .
+    salsah-gui:guiElement salsah-gui:Searchbox .
 
 
 
@@ -387,11 +330,7 @@
 
                salsah-gui:guiOrder "15"^^xsd:integer ;
 
-               salsah-gui:guiElement salsah-gui:Searchbox ;
-
-               knora-base:hasDefaultViewPermission knora-base:UnknownUser ;
-
-               knora-base:hasDefaultModifyPermission knora-base:ProjectMember .
+               salsah-gui:guiElement salsah-gui:Searchbox .
 
 
 
@@ -410,11 +349,9 @@
 
                salsah-gui:guiOrder "15"^^xsd:integer ;
 
-               salsah-gui:guiElement salsah-gui:Searchbox ;
+               salsah-gui:guiElement salsah-gui:Searchbox .
 
-               knora-base:hasDefaultViewPermission knora-base:UnknownUser ;
 
-               knora-base:hasDefaultModifyPermission knora-base:ProjectMember .
 
 
 
@@ -433,11 +370,7 @@
 
                salsah-gui:guiElement salsah-gui:Searchbox ;
 
-               salsah-gui:guiOrder "16"^^xsd:integer ;
-               
-               knora-base:hasDefaultViewPermission knora-base:UnknownUser ;
-
-               knora-base:hasDefaultModifyPermission knora-base:ProjectMember .
+               salsah-gui:guiOrder "16"^^xsd:integer .
 
 
 :hasBlueThingValue rdf:type owl:ObjectProperty ;
@@ -448,11 +381,7 @@
 
                knora-base:objectClassConstraint knora-base:LinkValue ;
 
-               salsah-gui:guiOrder "16"^^xsd:integer ;
-               
-               knora-base:hasDefaultViewPermission knora-base:UnknownUser ;
-
-               knora-base:hasDefaultModifyPermission knora-base:ProjectMember .
+               salsah-gui:guiOrder "16"^^xsd:integer .
 
 #################################################################
 #
@@ -576,11 +505,9 @@
                  "Cosa"@it ,
                  "Thing"@en ;
 
-      rdfs:comment """'The whole world is full of things, which means there's a real need for someone to go searching for them. And that's exactly what a thing-searcher does.' --Pippi Longstocking"""@de ;
+      rdfs:comment """'The whole world is full of things, which means there's a real need for someone to go searching for them. And that's exactly what a thing-searcher does.' --Pippi Longstocking"""@de .
 
-      knora-base:hasDefaultViewPermission knora-base:UnknownUser ;
 
-      knora-base:hasDefaultModifyPermission knora-base:ProjectMember .
 
 
 :BlueThing rdf:type owl:Class ;
@@ -611,11 +538,7 @@
        salsah-gui:guiElement salsah-gui:SimpleText ;
 
        salsah-gui:guiAttribute "size=80" ,
-                               "maxlength=255" ;
-
-       knora-base:hasDefaultViewPermission knora-base:UnknownUser ;
-
-       knora-base:hasDefaultModifyPermission knora-base:ProjectMember .
+                               "maxlength=255" .
 
 
 
@@ -635,11 +558,7 @@
                "Immagine di una cosa"@it ,
                "Picture of a thing"@en ;
 
-    rdfs:comment """Diese Resource-Klasse beschreibt ein Bild eines Dinges"""@de ;
-
-    knora-base:hasDefaultViewPermission knora-base:UnknownUser ;
-
-    knora-base:hasDefaultModifyPermission knora-base:ProjectMember .
+    rdfs:comment """Diese Resource-Klasse beschreibt ein Bild eines Dinges"""@de .
 
 
 #################################################################
