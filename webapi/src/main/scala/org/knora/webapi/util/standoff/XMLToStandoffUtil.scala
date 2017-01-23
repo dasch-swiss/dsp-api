@@ -20,14 +20,18 @@
 
 package org.knora.webapi.util.standoff
 
+import java.io.{StringReader, StringWriter}
 import java.util.UUID
+import javax.annotation.processing.Processor
 import javax.xml.parsers.SAXParserFactory
+import javax.xml.transform.stream.StreamSource
 
 import com.sksamuel.diffpatch.DiffMatchPatch
 import com.sksamuel.diffpatch.DiffMatchPatch._
 import org.apache.commons.lang3.StringEscapeUtils
 import org.knora.webapi._
 import org.knora.webapi.util.{ErrorHandlingMap, FormatConstants, KnoraIdUtil}
+//import net.sf.saxon.s9api.{Processor, Serializer}
 
 import scala.xml._
 
@@ -354,11 +358,11 @@ class XMLToStandoffUtil(xmlNamespaces: Map[String, IRI] = Map.empty[IRI, String]
           |
           |<xsl:transform xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="2.0">
           |
-          |    <xsl:output indent="yes" encoding="UTF-8"/>
+          |    <xsl:output indent="no" encoding="UTF-8"/>
           |
-          |    <xsl:template match="@*|node()" mode="#all">
+          |    <xsl:template match="@*|node()">
           |        <xsl:copy>
-          |            <xsl:apply-templates select="@*|node()" mode="#current"/>
+          |            <xsl:apply-templates select="@*|node()"/>
           |        </xsl:copy>
           |    </xsl:template>
           |
@@ -366,6 +370,7 @@ class XMLToStandoffUtil(xmlNamespaces: Map[String, IRI] = Map.empty[IRI, String]
           |        <xsl:variable name="ele" select="name()"/>
           |
           |        <xsl:element name="{$$ele}">
+          |        <xsl:copy-of select="@*"/>
           |            <xsl:apply-templates/>
           |        </xsl:element>
           |        <xsl:text>$separator</xsl:text>
@@ -386,22 +391,36 @@ class XMLToStandoffUtil(xmlNamespaces: Map[String, IRI] = Map.empty[IRI, String]
       * @return a [[TextWithStandoff]].
       */
     def xml2TextWithStandoff(xmlStr: String, tagsWithSeparator: Seq[XMLTagSeparatorRequired] = Seq.empty[XMLTagSeparatorRequired]): TextWithStandoff = {
+
+        // build an XSLT to add separators to the XML
+        val xPAthExpression: String = tagsWithSeparator.map(_.toXPath).mkString("|")
+        val XSLT = insertSeparatorsXSLT(xPAthExpression, FormatConstants.SEPARATOR_FOR_XML)
+
+        // apply XSLT to XML
+        // preprocess XML to separate structures
+        val proc = new net.sf.saxon.s9api.Processor(false)
+        val comp = proc.newXsltCompiler()
+
+        val exp = comp.compile(new StreamSource(new StringReader(XSLT)))
+        val source = proc.newDocumentBuilder().build(new StreamSource(new StringReader(xmlStr)))
+
+        val xmlStrWithSeparator: StringWriter = new StringWriter()
+
+        val out = proc.newSerializer(xmlStrWithSeparator)
+        out.setOutputProperty(net.sf.saxon.s9api.Serializer.Property.METHOD, "xml")
+        out.setOutputProperty(net.sf.saxon.s9api.Serializer.Property.INDENT, "no")
+
+        val trans = exp.load()
+        trans.setInitialContextNode(source)
+        trans.setDestination(out)
+        trans.transform()
+
+        //println(xmlStr)
+        //println(xmlStrWithSeparator.toString)
+
+        // TODO: use only on XML processor, i.e. Saxon-HE
         val saxParser = saxParserFactory.newSAXParser()
-        val nodes: Elem = XML.withSAXParser(saxParser).loadString(xmlStr)
-
-        // TODO: ensure that text nodes are not concatenated to one another (e.g. <p> tags)
-        // TODO: handle <br> and other line breaking tags
-        // FormatConstants.INFORMATION_SEPARATOR_TWO -> this seems to be an invalid XML character
-
-
-
-        val xPAthExpression = tagsWithSeparator.map(_.toXPath).mkString("|")
-
-
-
-        //println(insertSeparatorsXSLT(xPAthExpression, FormatConstants.INFORMATION_SEPARATOR_TWO))
-
-        //println(xPAthExpression)
+        val nodes: Elem = XML.withSAXParser(saxParser).loadString(xmlStrWithSeparator.toString)
 
         val finishedConversionState = xmlNodes2Standoff(
             nodes = nodes,
@@ -493,7 +512,8 @@ class XMLToStandoffUtil(xmlNamespaces: Map[String, IRI] = Map.empty[IRI, String]
 
         // TODO: make sure that the XML is well formed!
 
-        stringBuilder.toString
+        // get rid of separator in XML before sending the XML back
+        stringBuilder.toString.replace(FormatConstants.SEPARATOR_FOR_XML.toString, "")
     }
 
     /**
