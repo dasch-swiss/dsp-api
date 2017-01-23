@@ -682,18 +682,6 @@
         rdfs:comment "Indicates the position of a resource within a sequence"@en .
 
 
-
-###  http://www.knora.org/ontology/knora-base#standoffHasLink
-
-:standoffHasLink rdf:type owl:ObjectProperty ;
-
-                 rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
-
-                 :objectClassConstraint :Resource ;
-
-                 :subjectClassConstraint :StandoffLink .
-
-
 ###  http://www.knora.org/ontology/knora-base#standoffTagHasOriginalXMLID
 
 :standoffTagHasOriginalXMLID rdf:type owl:ObjectProperty ;
