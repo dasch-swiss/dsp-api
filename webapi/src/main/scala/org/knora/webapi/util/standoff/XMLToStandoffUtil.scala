@@ -392,13 +392,13 @@ class XMLToStandoffUtil(xmlNamespaces: Map[String, IRI] = Map.empty[IRI, String]
       */
     def xml2TextWithStandoff(xmlStr: String, tagsWithSeparator: Seq[XMLTagSeparatorRequired] = Seq.empty[XMLTagSeparatorRequired]): TextWithStandoff = {
 
-        // check that the original XML does not contain the separator character
-        if (xmlStr.contains(FormatConstants.SEPARATOR_FOR_XML)) throw BadRequestException("XML contains special separator character, this is not allowed")
+        // check that the original XML does not contain the separator character temporarily used in XML
+        if (xmlStr.contains(FormatConstants.PARAGRAPH_SEPARATOR)) throw BadRequestException("XML contains special separator character PARAGRAPH_SEPARATOR '\\u2029'")
 
         val xmlStrWithSeparator = if (tagsWithSeparator.nonEmpty) {
             // build an XSLT to add separators to the XML
-            val xPAthExpression: String = tagsWithSeparator.map(_.toXPath).mkString("|")
-            val XSLT = insertSeparatorsXSLT(xPAthExpression, FormatConstants.SEPARATOR_FOR_XML)
+            val xPAthExpression: String = tagsWithSeparator.map(_.toXPath).mkString("|") // build a union the the collected elements's expressions
+            val XSLT = insertSeparatorsXSLT(xPAthExpression, FormatConstants.PARAGRAPH_SEPARATOR) // use paragraph separator as a temporary character for separating nodes
 
             // apply XSLT to XML
             // preprocess XML to separate structures
@@ -443,7 +443,7 @@ class XMLToStandoffUtil(xmlNamespaces: Map[String, IRI] = Map.empty[IRI, String]
         }
 
         TextWithStandoff(
-            text = nodes.text,
+            text = nodes.text.replace(FormatConstants.PARAGRAPH_SEPARATOR.toString, FormatConstants.INFORMATION_SEPARATOR_TWO.toString), // replace paragraph separator with information separator that is going to be stored in the triplestore
             standoff = finishedConversionState.standoffTags
         )
     }
@@ -502,7 +502,7 @@ class XMLToStandoffUtil(xmlNamespaces: Map[String, IRI] = Map.empty[IRI, String]
         groupedTags.get(None) match {
             case Some(children) if children.size == 1 =>
                 standoffTags2XmlString(
-                    text = textWithStandoff.text,
+                    text = textWithStandoff.text.replace(FormatConstants.INFORMATION_SEPARATOR_TWO.toString, FormatConstants.PARAGRAPH_SEPARATOR.toString), // replace information separator (which is an invalid XML character) with paragraph separator
                     groupedTags = groupedTags,
                     posBeforeSiblings = 0,
                     siblings = children,
@@ -517,10 +517,15 @@ class XMLToStandoffUtil(xmlNamespaces: Map[String, IRI] = Map.empty[IRI, String]
                 throw InvalidStandoffException("The standoff cannot be serialised to XML because there is no root element")
         }
 
-        // TODO: make sure that the XML is well formed!
-
         // get rid of separator in XML before sending the XML back
-        stringBuilder.toString.replace(FormatConstants.SEPARATOR_FOR_XML.toString, "")
+        val xmlStr: String = stringBuilder.toString.replace(FormatConstants.PARAGRAPH_SEPARATOR.toString, "")
+
+        // make sure that the XML is well formed
+        // TODO: catch parse errors
+        val saxParser = saxParserFactory.newSAXParser()
+        val nodes: Elem = XML.withSAXParser(saxParser).loadString(xmlStr)
+
+        xmlStr
     }
 
     /**

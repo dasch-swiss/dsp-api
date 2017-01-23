@@ -30,23 +30,23 @@ import org.xmlunit.diff.Diff
 /**
   * Tests [[XMLToStandoffUtil]].
   */
-class StandoffUtilSpec extends WordSpec with Matchers {
+class XMLToStandoffUtilSpec extends WordSpec with Matchers {
 
     val knoraIdUtil = new KnoraIdUtil
 
-    "The standoff utility" should {
+    "The XML to standoff utility" should {
 
         "convert an XML document to text with standoff, then back to an equivalent XML document" in {
             val standoffUtil = new XMLToStandoffUtil(writeUuidsToXml = false)
 
             // Convert the XML document to text with standoff.
-            val textWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(StandoffUtilSpec.simpleXmlDoc)
+            val textWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(XMLToStandoffUtilSpec.simpleXmlDoc)
 
             // Convert the text with standoff back to XML.
             val backToXml: String = standoffUtil.textWithStandoff2Xml(textWithStandoff)
 
             // Compare the original XML with the regenerated XML.
-            val xmlDiff: Diff = DiffBuilder.compare(Input.fromString(StandoffUtilSpec.simpleXmlDoc)).withTest(Input.fromString(backToXml)).build()
+            val xmlDiff: Diff = DiffBuilder.compare(Input.fromString(XMLToStandoffUtilSpec.simpleXmlDoc)).withTest(Input.fromString(backToXml)).build()
             xmlDiff.hasDifferences should be(false)
         }
 
@@ -65,13 +65,13 @@ class StandoffUtilSpec extends WordSpec with Matchers {
             )
 
             // Convert the XML document to text with standoff.
-            val textWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(StandoffUtilSpec.xmlDocWithClix)
+            val textWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(XMLToStandoffUtilSpec.xmlDocWithClix)
 
             // Convert the text with standoff back to XML.
             val backToXml = standoffUtil.textWithStandoff2Xml(textWithStandoff)
 
             // Compare the original XML with the regenerated XML.
-            val xmlDiff: Diff = DiffBuilder.compare(Input.fromString(StandoffUtilSpec.xmlDocWithClix)).withTest(Input.fromString(backToXml)).build()
+            val xmlDiff: Diff = DiffBuilder.compare(Input.fromString(XMLToStandoffUtilSpec.xmlDocWithClix)).withTest(Input.fromString(backToXml)).build()
             xmlDiff.hasDifferences should be(false)
         }
 
@@ -505,7 +505,7 @@ class StandoffUtilSpec extends WordSpec with Matchers {
     }
 }
 
-object StandoffUtilSpec {
+object XMLToStandoffUtilSpec {
 
     val simpleXmlDoc =
         """<?xml version="1.0" encoding="UTF-8"?>
