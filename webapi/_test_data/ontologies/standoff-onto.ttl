@@ -194,6 +194,16 @@
                 rdfs:comment "Represents a cell in a table"@en .
 
 
+###  http://www.knora.org/ontology/standoff#StandoffBrTag
+
+:StandoffBrTag rdf:type owl:Class ;
+
+                rdfs:subClassOf :StandoffStructuralTag ;
+
+                rdfs:comment "Represents a linebreak"@en .
+
+
+
 ###  http://www.knora.org/ontology/standoff#StandoffItalicTag
 
 :StandoffItalicTag rdf:type owl:Class ;

@@ -119,7 +119,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
 
     private val xml1 =
         """<?xml version="1.0" encoding="UTF-8"?>
-           <text><strong>Test</strong> text</text>
+           <text><strong>Test</strong><br/>text</text>
         """
 
     private val xml2 =
