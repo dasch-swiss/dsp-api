@@ -55,9 +55,6 @@ class SearchAndEditSpec extends SalsahSpec {
     private val rdfDataObjectsJsonList: String =
         """
             [
-                {"path": "../knora-ontologies/knora-base.ttl", "name": "http://www.knora.org/ontology/knora-base"},
-                {"path": "../knora-ontologies/knora-dc.ttl", "name": "http://www.knora.org/ontology/dc"},
-                {"path": "../knora-ontologies/salsah-gui.ttl", "name": "http://www.knora.org/ontology/salsah-gui"},
                 {"path": "_test_data/ontologies/incunabula-onto.ttl", "name": "http://www.knora.org/ontology/incunabula"},
                 {"path": "_test_data/all_data/incunabula-data.ttl", "name": "http://www.knora.org/data/incunabula"},
                 {"path": "_test_data/ontologies/images-demo-onto.ttl", "name": "http://www.knora.org/ontology/images"},
@@ -69,6 +66,9 @@ class SearchAndEditSpec extends SalsahSpec {
                 {"path": "_test_data/ontologies/biblio-onto.ttl", "name": "http://www.knora.org/ontology/biblio"}
             ]
         """
+
+    val rootEmail = "root@example.com"
+    val rootEmailEnc = java.net.URLEncoder.encode(rootEmail, "utf-8")
 
     // In order to run these tests, start `webapi` using the option `allowResetTriplestoreContentOperationOverHTTP`
 
@@ -106,7 +106,7 @@ class SearchAndEditSpec extends SalsahSpec {
 
             page.load()
 
-            page.doLogin("root", "test")
+            page.doLogin(rootEmail, "test")
 
             eventually {
                 // check if login has succeeded

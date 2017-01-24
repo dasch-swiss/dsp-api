@@ -34,9 +34,6 @@ class InternationalizationSpec extends SalsahSpec {
     private val rdfDataObjectsJsonList: String =
         """
             [
-                {"path": "../knora-ontologies/knora-base.ttl", "name": "http://www.knora.org/ontology/knora-base"},
-                {"path": "../knora-ontologies/knora-dc.ttl", "name": "http://www.knora.org/ontology/dc"},
-                {"path": "../knora-ontologies/salsah-gui.ttl", "name": "http://www.knora.org/ontology/salsah-gui"},
                 {"path": "_test_data/ontologies/anything-onto.ttl", "name": "http://www.knora.org/ontology/anything"},
                 {"path": "_test_data/all_data/anything-data.ttl", "name": "http://www.knora.org/data/anything"}
             ]

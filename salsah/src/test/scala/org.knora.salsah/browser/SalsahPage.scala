@@ -96,7 +96,10 @@ class SalsahPage {
         val passwordInput = driver.findElement(By.id("password"))
         val sendCredentials = driver.findElement(By.id("login_button"))
 
-        userInput.sendKeys("root")
+        val rootEmail = "root@example.com"
+        val rootEmailEnc = java.net.URLEncoder.encode(rootEmail, "utf-8")
+
+        userInput.sendKeys(rootEmail)
         passwordInput.sendKeys("test")
         sendCredentials.click()
 
