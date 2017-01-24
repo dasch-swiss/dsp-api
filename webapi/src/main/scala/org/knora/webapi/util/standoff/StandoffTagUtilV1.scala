@@ -22,6 +22,7 @@ package org.knora.webapi.util.standoff
 
 import java.util.UUID
 
+import akka.event.LoggingAdapter
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.ontologymessages.{Cardinality, StandoffEntityInfoGetResponseV1, StandoffPropertyEntityInfoV1}
 import org.knora.webapi.messages.v1.responder.standoffmessages._
@@ -217,7 +218,7 @@ object StandoffTagUtilV1 {
       * @param mapping the mapping used to convert XML to standoff.
       * @return a [[TextWithStandoffTagV1]].
       */
-    def convertXMLtoStandoffTagV1(xml: String, mapping: GetMappingResponseV1): TextWithStandoffTagV1 = {
+    def convertXMLtoStandoffTagV1(xml: String, mapping: GetMappingResponseV1, log: LoggingAdapter): TextWithStandoffTagV1 = {
 
         // collect all the `XMLTag` from the given mapping that require a separator
         // and create a `XMLTagSeparatorRequired` for each of them
@@ -238,13 +239,13 @@ object StandoffTagUtilV1 {
                                 // create a `XMLTagSeparatorRequired` with the current's element
                                 // namespace and class, if any
                                 XMLTagSeparatorRequired(
-                                    namespace = namespace match {
+                                    maybeNamespace = namespace match {
                                         // check for namespace
                                         case `noNamespace` => None
                                         case nspace: String => Some(nspace)
                                     },
                                     tagname = tag.name,
-                                    classname = classname match {
+                                    maybeClassname = classname match {
                                         // check for classname
                                         case `noClass` => None
                                         case clname: String => Some(clname)
@@ -256,15 +257,7 @@ object StandoffTagUtilV1 {
         }.toVector
 
         val xmlStandoffUtil = new XMLToStandoffUtil()
-
-        // FIXME: if the XML is not well formed, the error is not handled correctly in XMLToStandoffUtil
-        val textWithStandoff: TextWithStandoff = try {
-            xmlStandoffUtil.xml2TextWithStandoff(xml, elementsSeparatorRequired)
-        } catch {
-            case e: org.xml.sax.SAXParseException => throw BadRequestException(s"there was a problem parsing the provided XML: ${e.getMessage}")
-
-            case other: Exception => throw BadRequestException(s"there was a problem processing the provided XML: ${other.getMessage}")
-        }
+        val textWithStandoff: TextWithStandoff = xmlStandoffUtil.xml2TextWithStandoff(xml, elementsSeparatorRequired, log)
 
         val standoffTagsV1: Seq[StandoffTagV1] = convertXMLToStandoffUtilStandoffTagToStandoffTagV1(
             textWithStandoff = textWithStandoff,
@@ -277,7 +270,6 @@ object StandoffTagUtilV1 {
             standoffTagV1 = standoffTagsV1,
             mapping = mapping
         )
-
     }
 
     /**
@@ -836,13 +828,9 @@ object StandoffTagUtilV1 {
         }
 
 
-        // TODO: Does the string need to be unescaped?
+
         val textWithStandoff = TextWithStandoff(text = utf8str, standoff = standoffTags)
-
-        val xml = standoffUtil.textWithStandoff2Xml(textWithStandoff)
-
-        xml
-
+        standoffUtil.textWithStandoff2Xml(textWithStandoff)
     }
 
 }

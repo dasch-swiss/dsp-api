@@ -22,15 +22,15 @@ package org.knora.webapi.util.standoff
 
 import java.util.UUID
 
+import org.knora.webapi.CoreSpec
 import org.knora.webapi.util.KnoraIdUtil
-import org.scalatest.{Matchers, WordSpec}
 import org.xmlunit.builder.{DiffBuilder, Input}
 import org.xmlunit.diff.Diff
 
 /**
   * Tests [[XMLToStandoffUtil]].
   */
-class XMLToStandoffUtilSpec extends WordSpec with Matchers {
+class XMLToStandoffUtilSpec extends CoreSpec {
 
     val knoraIdUtil = new KnoraIdUtil
 
@@ -40,7 +40,7 @@ class XMLToStandoffUtilSpec extends WordSpec with Matchers {
             val standoffUtil = new XMLToStandoffUtil(writeUuidsToXml = false)
 
             // Convert the XML document to text with standoff.
-            val textWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(XMLToStandoffUtilSpec.simpleXmlDoc)
+            val textWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(XMLToStandoffUtilSpec.simpleXmlDoc, log = logger)
 
             // Convert the text with standoff back to XML.
             val backToXml: String = standoffUtil.textWithStandoff2Xml(textWithStandoff)
@@ -65,7 +65,7 @@ class XMLToStandoffUtilSpec extends WordSpec with Matchers {
             )
 
             // Convert the XML document to text with standoff.
-            val textWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(XMLToStandoffUtilSpec.xmlDocWithClix)
+            val textWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(XMLToStandoffUtilSpec.xmlDocWithClix, log = logger)
 
             // Convert the text with standoff back to XML.
             val backToXml = standoffUtil.textWithStandoff2Xml(textWithStandoff)
@@ -106,8 +106,8 @@ class XMLToStandoffUtilSpec extends WordSpec with Matchers {
                   |</region>
                 """.stripMargin
 
-            val diploTextWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(diplomaticTranscription)
-            val criticalTextWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(criticalText)
+            val diploTextWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(diplomaticTranscription, log = logger)
+            val criticalTextWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(criticalText, log = logger)
 
             val criticalTextDiffs: Seq[StandoffDiff] = standoffUtil.makeStandoffDiffs(
                 baseText = diploTextWithStandoff.text,
@@ -175,8 +175,8 @@ class XMLToStandoffUtilSpec extends WordSpec with Matchers {
                 """.stripMargin
 
 
-            val diploTextWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(diplomaticTranscription)
-            val criticalTextWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(criticalText)
+            val diploTextWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(diplomaticTranscription, log = logger)
+            val criticalTextWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(criticalText, log = logger)
 
             val criticalTextDiffs: Seq[StandoffDiff] = standoffUtil.makeStandoffDiffs(
                 baseText = diploTextWithStandoff.text,
@@ -238,7 +238,7 @@ class XMLToStandoffUtilSpec extends WordSpec with Matchers {
 
             // Convert the markup in the transcription to standoff and back again to check that it's correct.
 
-            val diplo1TextWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(diplomaticTranscription1)
+            val diplo1TextWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(diplomaticTranscription1, log = logger)
 
             val diplo1TextBackTtoXml: String = standoffUtil.textWithStandoff2Xml(diplo1TextWithStandoff)
 
@@ -252,7 +252,7 @@ class XMLToStandoffUtilSpec extends WordSpec with Matchers {
                   |<paragraph id="1">Ich habe den Bus genommen, weil ich verspätet war.</paragraph>
                 """.stripMargin
 
-            val edito1TextWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(editorialText1)
+            val edito1TextWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(editorialText1, log = logger)
 
             // Find the differences between the version 1 of the transcription and version 1 of the editorial text,
             // so they can be linked together.
@@ -289,7 +289,7 @@ class XMLToStandoffUtilSpec extends WordSpec with Matchers {
             // The editor now rebases the editorial text against the revised transcription, by making new diffs.
             // Find the differences between the version 2 of the transcription and version 1 of the editorial text.
 
-            val diplo2TextWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(diplomaticTranscription2)
+            val diplo2TextWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(diplomaticTranscription2, log = logger)
             val blueTag = diplo2TextWithStandoff.standoff.find(_.uuid == blueID).getOrElse("<blue> tag not in standoff")
 
             val editorialStandoffDiffs2: Seq[StandoffDiff] = standoffUtil.makeStandoffDiffs(
@@ -331,7 +331,7 @@ class XMLToStandoffUtilSpec extends WordSpec with Matchers {
                   |<paragraph id="1">Ich habe die Bahn genommen, weil ich <blue id="3">verspätet</blue> war.</paragraph>
                 """.stripMargin
 
-            val edito2TextWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(editorialText2)
+            val edito2TextWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(editorialText2, log = logger)
 
             // We now rebase the revised editorial text against the revised transcription, so they can be linked
             // together.
@@ -389,8 +389,8 @@ class XMLToStandoffUtilSpec extends WordSpec with Matchers {
                 |</region>
                 """.stripMargin
 
-            val diploTextWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(diplomaticTranscription)
-            val criticalTextWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(criticalText)
+            val diploTextWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(diplomaticTranscription, log = logger)
+            val criticalTextWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(criticalText, log = logger)
 
             val criticalTextDiffs: Seq[StandoffDiff] = standoffUtil.makeStandoffDiffs(
                 baseText = diploTextWithStandoff.text,
@@ -447,8 +447,8 @@ class XMLToStandoffUtilSpec extends WordSpec with Matchers {
                    |</region>
                 """.stripMargin
 
-            val diploTextWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(diplomaticTranscription)
-            val criticalTextWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(criticalText)
+            val diploTextWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(diplomaticTranscription, log = logger)
+            val criticalTextWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(criticalText, log = logger)
 
             val criticalTextDiffs: Seq[StandoffDiff] = standoffUtil.makeStandoffDiffs(
                 baseText = diploTextWithStandoff.text,
@@ -490,17 +490,12 @@ class XMLToStandoffUtilSpec extends WordSpec with Matchers {
 
             val standoffUtil = new XMLToStandoffUtil()
 
-            val textWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(BEBBXML)
+            val textWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(BEBBXML, log = logger)
 
             val root = textWithStandoff.standoff.filter((standoffTag: StandoffTag) => standoffTag match {
                 case tag: HierarchicalStandoffTag => tag.parentIndex.isEmpty
                 case _ => false
             })
-
-            //println(textWithStandoff.text)
-
-            //println(ScalaPrettyPrinter.prettyPrint(textWithStandoff))
-
         }
     }
 }

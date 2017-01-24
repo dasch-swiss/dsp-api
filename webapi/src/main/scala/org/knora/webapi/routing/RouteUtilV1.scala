@@ -208,7 +208,8 @@ object RouteUtilV1 {
 
             textWithStandoffTagV1 = StandoffTagUtilV1.convertXMLtoStandoffTagV1(
                 xml = xml,
-                mapping = mappingResponse
+                mapping = mappingResponse,
+                log = log
             )
 
         } yield textWithStandoffTagV1

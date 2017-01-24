@@ -22,16 +22,15 @@ package org.knora.webapi.util.standoff
 
 import java.io.{StringReader, StringWriter}
 import java.util.UUID
-import javax.annotation.processing.Processor
 import javax.xml.parsers.SAXParserFactory
 import javax.xml.transform.stream.StreamSource
 
+import akka.event.LoggingAdapter
 import com.sksamuel.diffpatch.DiffMatchPatch
 import com.sksamuel.diffpatch.DiffMatchPatch._
 import org.apache.commons.lang3.StringEscapeUtils
 import org.knora.webapi._
 import org.knora.webapi.util.{ErrorHandlingMap, FormatConstants, KnoraIdUtil}
-//import net.sf.saxon.s9api.{Processor, Serializer}
 
 import scala.xml._
 
@@ -215,30 +214,28 @@ case class StandoffDiffDelete(baseStartPosition: Int,
   * Represents an XML element that requires a separator to be inserted at its end.
   * This is necessary because the markup is going to be represented in standoff (separated from the text).
   *
-  * @param namespace the namespace the element belongs to, if any.
-  * @param tagname the name of the element.
-  * @param classname the class of the element, if any.
+  * @param maybeNamespace the namespace the element belongs to, if any.
+  * @param tagname        the name of the element.
+  * @param maybeClassname the class of the element, if any.
   */
-case class XMLTagSeparatorRequired(namespace: Option[String], tagname: String, classname: Option[String]) {
+case class XMLTagSeparatorRequired(maybeNamespace: Option[String], tagname: String, maybeClassname: Option[String]) {
 
     // generate an XPath expression to match this element
     def toXPath = {
 
-        val prefix: String = namespace match {
+        val prefix: String = maybeNamespace match {
             case Some(namespace) => namespace + ":"
             case None => ""
         }
 
-        val classSelector: String = classname match {
+        val classSelector: String = maybeClassname match {
             case Some(classSel) => s"""[@class=\"$classSel\"]"""
             case None => ""
         }
 
         // the XPath expression matching this element
         s"$prefix$tagname$classSelector"
-
     }
-
 }
 
 /**
@@ -349,33 +346,33 @@ class XMLToStandoffUtil(xmlNamespaces: Map[String, IRI] = Map.empty[IRI, String]
     /**
       * Creates XSLT that inserts a separator after each element matching the XPath expression.
       *
-      * @param xpath        the XPath expression used to match elements.
-      * @param separator    the separator to be inserted.
-      * @return             an XSLT stylesheet as a [[String]].
+      * @param xpath     the XPath expression used to match elements.
+      * @param separator the separator to be inserted.
+      * @return an XSLT stylesheet as a [[String]].
       */
     private def insertSeparatorsXSLT(xpath: String, separator: Char) =
         s"""<?xml version="1.0" encoding="UTF-8"?>
-          |
+           |
           |<xsl:transform xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="2.0">
-          |
+           |
           |    <xsl:output indent="no" encoding="UTF-8"/>
-          |
+           |
           |    <xsl:template match="@*|node()">
-          |        <xsl:copy>
-          |            <xsl:apply-templates select="@*|node()"/>
-          |        </xsl:copy>
-          |    </xsl:template>
-          |
-          |    <xsl:template match="${xpath}">
-          |        <xsl:variable name="ele" select="name()"/>
-          |
+           |        <xsl:copy>
+           |            <xsl:apply-templates select="@*|node()"/>
+           |        </xsl:copy>
+           |    </xsl:template>
+           |
+          |    <xsl:template match="$xpath">
+           |        <xsl:variable name="ele" select="name()"/>
+           |
           |        <xsl:element name="{$$ele}">
-          |        <xsl:copy-of select="@*"/>
-          |            <xsl:apply-templates/>
-          |        </xsl:element>
-          |        <xsl:text>$separator</xsl:text>
-          |    </xsl:template>
-          |
+           |        <xsl:copy-of select="@*"/>
+           |            <xsl:apply-templates/>
+           |        </xsl:element>
+           |        <xsl:text>$separator</xsl:text>
+           |    </xsl:template>
+           |
           |</xsl:transform>
         """.stripMargin
 
@@ -390,15 +387,21 @@ class XMLToStandoffUtil(xmlNamespaces: Map[String, IRI] = Map.empty[IRI, String]
       *                          in the string representation (`valueHasString`) once markup is converted to standoff.
       * @return a [[TextWithStandoff]].
       */
-    def xml2TextWithStandoff(xmlStr: String, tagsWithSeparator: Seq[XMLTagSeparatorRequired] = Seq.empty[XMLTagSeparatorRequired]): TextWithStandoff = {
+    def xml2TextWithStandoff(xmlStr: String, tagsWithSeparator: Seq[XMLTagSeparatorRequired] = Seq.empty[XMLTagSeparatorRequired], log: LoggingAdapter): TextWithStandoff = {
 
-        // check that the original XML does not contain the separator character temporarily used in XML
+        // Knora uses Unicode INFORMATION SEPARATOR TWO (U+001E) to indicate word breaks where a tag implicitly separates words. But
+        // INFORMATION SEPARATOR TWO is not a valid XML 1.0 character. Therefore, we temporarily insert PARAGRAPH SEPARATOR (U+2029)
+        // into the XML, at the positions where such a word break is needed, before converting the XML to standoff. Below, we will
+        // replace PARAGRAPH SEPARATOR with INFORMATION SEPARATOR TWO.
+
+        // check that the original XML does not already contain PARAGRAPH SEPARATOR.
         if (xmlStr.contains(FormatConstants.PARAGRAPH_SEPARATOR)) throw BadRequestException("XML contains special separator character PARAGRAPH_SEPARATOR '\\u2029'")
 
         val xmlStrWithSeparator = if (tagsWithSeparator.nonEmpty) {
             // build an XSLT to add separators to the XML
-            val xPAthExpression: String = tagsWithSeparator.map(_.toXPath).mkString("|") // build a union the the collected elements's expressions
-            val XSLT = insertSeparatorsXSLT(xPAthExpression, FormatConstants.PARAGRAPH_SEPARATOR) // use paragraph separator as a temporary character for separating nodes
+            val xPAthExpression: String = tagsWithSeparator.map(_.toXPath).mkString("|") // build a union of the collected elements' expressions
+
+            val XSLT = insertSeparatorsXSLT(xPAthExpression, FormatConstants.PARAGRAPH_SEPARATOR)
 
             // apply XSLT to XML
             // preprocess XML to separate structures
@@ -406,13 +409,14 @@ class XMLToStandoffUtil(xmlNamespaces: Map[String, IRI] = Map.empty[IRI, String]
             val comp = proc.newXsltCompiler()
 
             val exp = comp.compile(new StreamSource(new StringReader(XSLT)))
-            val source = proc.newDocumentBuilder().build(new StreamSource(new StringReader(xmlStr)))
+            val source = try {
+                proc.newDocumentBuilder().build(new StreamSource(new StringReader(xmlStr)))
+            } catch {
+                case e: Exception => throw StandoffConversionException(s"The provided XML could not be parsed: ${e.getMessage}")
+            }
 
             val xmlStrWithSep: StringWriter = new StringWriter()
-
             val out = proc.newSerializer(xmlStrWithSep)
-            //out.setOutputProperty(net.sf.saxon.s9api.Serializer.Property.METHOD, "xml")
-            //out.setOutputProperty(net.sf.saxon.s9api.Serializer.Property.INDENT, "no")
 
             val trans = exp.load()
             trans.setInitialContextNode(source)
@@ -420,14 +424,17 @@ class XMLToStandoffUtil(xmlNamespaces: Map[String, IRI] = Map.empty[IRI, String]
             trans.transform()
 
             xmlStrWithSep.toString
-            
         } else {
             xmlStr
         }
 
-        // TODO: use only on XML processor, i.e. Saxon-HE
         val saxParser = saxParserFactory.newSAXParser()
-        val nodes: Elem = XML.withSAXParser(saxParser).loadString(xmlStrWithSeparator.toString)
+
+        val nodes: Elem = try {
+            XML.withSAXParser(saxParser).loadString(xmlStrWithSeparator.toString)
+        } catch {
+            case e: Exception => throw StandoffInternalException(s"XML processing error: ${e.getMessage}", e, log)
+        }
 
         val finishedConversionState = xmlNodes2Standoff(
             nodes = nodes,
@@ -442,8 +449,11 @@ class XMLToStandoffUtil(xmlNamespaces: Map[String, IRI] = Map.empty[IRI, String]
             throw InvalidStandoffException(s"One or more CLIX milestones were not closed: $missingEndTags")
         }
 
+        // Replace PARAGRAPH SEPARATOR with INFORMATION SEPARATOR TWO.
+        val textWithInformationSeparatorTwo = nodes.text.replace(FormatConstants.PARAGRAPH_SEPARATOR.toString, FormatConstants.INFORMATION_SEPARATOR_TWO.toString)
+
         TextWithStandoff(
-            text = nodes.text.replace(FormatConstants.PARAGRAPH_SEPARATOR.toString, FormatConstants.INFORMATION_SEPARATOR_TWO.toString), // replace paragraph separator with information separator that is going to be stored in the triplestore
+            text = textWithInformationSeparatorTwo,
             standoff = finishedConversionState.standoffTags
         )
     }
@@ -521,9 +531,13 @@ class XMLToStandoffUtil(xmlNamespaces: Map[String, IRI] = Map.empty[IRI, String]
         val xmlStr: String = stringBuilder.toString.replace(FormatConstants.PARAGRAPH_SEPARATOR.toString, "")
 
         // make sure that the XML is well formed
-        // TODO: catch parse errors
         val saxParser = saxParserFactory.newSAXParser()
-        val nodes: Elem = XML.withSAXParser(saxParser).loadString(xmlStr)
+
+        try {
+            XML.withSAXParser(saxParser).loadString(xmlStr)
+        } catch {
+            case e: Exception => throw StandoffConversionException(s"The standoff markup could not be converted to valid XML: ${e.getMessage}")
+        }
 
         xmlStr
     }

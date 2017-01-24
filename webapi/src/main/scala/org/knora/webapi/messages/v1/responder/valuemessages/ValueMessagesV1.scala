@@ -614,8 +614,10 @@ object KnoraPrecisionV1 extends Enumeration {
   *
   * @param standoffNode           the standoff node to be created.
   * @param standoffTagInstanceIri the standoff node's Iri.
+  * @param startParentIri         the IRI of the parent of the start tag.
+  * @param endParentIri           the IRI of the parent of the end tag, if any.
   */
-case class CreateStandoffTagV1InTriplestore(standoffNode: StandoffTagV1, standoffTagInstanceIri: IRI)
+case class CreateStandoffTagV1InTriplestore(standoffNode: StandoffTagV1, standoffTagInstanceIri: IRI, startParentIri: Option[IRI] = None, endParentIri: Option[IRI] = None)
 
 sealed trait TextValueV1 {
 
@@ -673,7 +675,7 @@ case class TextValueWithStandoffV1(utf8str: String,
 
         // collect all the standoff tags that contain XML ids and
         // map the XML ids to standoff node Iris
-        val IDsToStandoffNodeIris: Map[IRI, IRI] = standoffTagsWithOriginalXMLIDs.filter {
+        val iDsToStandoffNodeIris: Map[IRI, IRI] = standoffTagsWithOriginalXMLIDs.filter {
             (standoffTag: CreateStandoffTagV1InTriplestore) =>
                 // filter those tags out that have an XML id
                 standoffTag.standoffNode.originalXMLID.isDefined
@@ -681,6 +683,13 @@ case class TextValueWithStandoffV1(utf8str: String,
             (standoffTagWithID: CreateStandoffTagV1InTriplestore) =>
                 // return the XML id as a key and the standoff Iri as the value
                 standoffTagWithID.standoffNode.originalXMLID.get -> standoffTagWithID.standoffTagInstanceIri
+        }.toMap
+
+        // Map the start index of each tag to its IRI, so we can resolve references to parent tags as references to
+        // tag IRIs. We only care about start indexes here, because only hierarchical tags can be parents, and
+        // hierarchical tags don't have end indexes.
+        val startIndexesToStandoffNodeIris: Map[Int, IRI] = standoffTagsWithOriginalXMLIDs.map {
+            tagWithIndex => tagWithIndex.standoffNode.startIndex -> tagWithIndex.standoffTagInstanceIri
         }.toMap
 
         // resolve the original XML ids to standoff Iris every the `StandoffTagInternalReferenceAttributeV1`
@@ -693,16 +702,20 @@ case class TextValueWithStandoffV1(utf8str: String,
                         attributeWithOriginalXMLID match {
                             case refAttr: StandoffTagInternalReferenceAttributeV1 =>
                                 // resolve the XML id to the corresponding standoff node Iri
-                                refAttr.copy(value = IDsToStandoffNodeIris(refAttr.value))
+                                refAttr.copy(value = iDsToStandoffNodeIris(refAttr.value))
                             case attr => attr
                         }
                 }
 
+                val startParentIndex: Option[Int] = standoffTag.standoffNode.startParentIndex
+                val endParentIndex: Option[Int] = standoffTag.standoffNode.endParentIndex
+
                 // return standoff tag with updated attributes
                 standoffTag.copy(
-                    standoffNode = standoffTag.standoffNode.copy(attributes = attributesWithStandoffNodeIriReferences)
+                    standoffNode = standoffTag.standoffNode.copy(attributes = attributesWithStandoffNodeIriReferences),
+                    startParentIri = startParentIndex.map(parentIndex => startIndexesToStandoffNodeIris(parentIndex)), // If there's a start parent index, get its IRI, otherwise None
+                    endParentIri = endParentIndex.map(parentIndex => startIndexesToStandoffNodeIris(parentIndex)) // If there's an end parent index, get its IRI, otherwise None
                 )
-
         }
 
         standoffTagsWithNodeReferences
