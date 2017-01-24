@@ -536,12 +536,12 @@ class ValueUtilV1(private val settings: SettingsImpl) {
                         },
                         uuid = standoffInfo(OntologyConstants.KnoraBase.StandoffTagHasUUID),
                         originalXMLID = standoffInfo.get(OntologyConstants.KnoraBase.StandoffTagHasOriginalXMLID),
-                        startParentIndex = standoffInfo.get(OntologyConstants.KnoraBase.StandoffTagHasStartParentIndex) match {
-                            case Some(startParentIndex: String) => Some(startParentIndex.toInt)
+                        startParentIndex = standoffInfo.get(OntologyConstants.KnoraBase.StandoffTagHasStartParent) match { // translate standoff node IRI to index
+                            case Some(startParentIri: IRI) => Some(valueProps.standoff(startParentIri)(OntologyConstants.KnoraBase.StandoffTagHasStartIndex).toInt)
                             case None => None
                         },
-                        endParentIndex = standoffInfo.get(OntologyConstants.KnoraBase.StandoffTagHasEndParentIndex) match {
-                            case Some(endParentIndex: String) => Some(endParentIndex.toInt)
+                        endParentIndex = standoffInfo.get(OntologyConstants.KnoraBase.StandoffTagHasEndParent) match { // translate standoff node IRI to index
+                            case Some(endParentIri: IRI) => Some(valueProps.standoff(endParentIri)(OntologyConstants.KnoraBase.StandoffTagHasStartIndex).toInt)
                             case None => None
                         },
                         attributes = attributes

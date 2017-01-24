@@ -274,8 +274,8 @@ object StandoffProperties {
         OntologyConstants.KnoraBase.StandoffTagHasEnd,
         OntologyConstants.KnoraBase.StandoffTagHasStartIndex,
         OntologyConstants.KnoraBase.StandoffTagHasEndIndex,
-        OntologyConstants.KnoraBase.StandoffTagHasStartParentIndex,
-        OntologyConstants.KnoraBase.StandoffTagHasEndParentIndex,
+        OntologyConstants.KnoraBase.StandoffTagHasStartParent,
+        OntologyConstants.KnoraBase.StandoffTagHasEndParent,
         OntologyConstants.KnoraBase.StandoffTagHasUUID,
         OntologyConstants.KnoraBase.StandoffTagHasOriginalXMLID
     )

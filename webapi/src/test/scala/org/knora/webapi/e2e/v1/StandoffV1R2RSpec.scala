@@ -132,24 +132,6 @@ class StandoffV1R2RSpec extends R2RSpec {
                |}
              """.stripMargin
 
-        /*def paramsCreateTextValueFromXML(mappingIri: IRI): String =
-            s"""
-                {
-                    "resource_id": "http://data.knora.org/a-thing",
-                    "property_id": "http://www.knora.org/ontology/anything#hasText",
-                    "project_id": "$anythingProjectIri",
-                    "mapping_id": "$mappingIri"
-                }
-            """
-
-        def paramsChangeLetterFromXML(value_id: IRI, mappingIri: IRI): String =
-            s"""
-                {
-                    "value_id": "$value_id",
-                    "mapping_id": "$mappingIri"
-                }
-            """*/
-
         val pathToLetterMapping = "_test_data/test_route/texts/mappingForLetter.xml"
 
         val pathToLetterXML = "_test_data/test_route/texts/letter.xml"

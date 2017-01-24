@@ -120,12 +120,12 @@ DELETE {
                             knora-base:standoffTagHasEndIndex @createStandoff.standoffNode.endIndex.get ;
                         }
 
-                        @if(createStandoff.standoffNode.startParentIndex.isDefined) {
-                            knora-base:standoffTagHasStartParentIndex @createStandoff.standoffNode.startParentIndex.get ;
+                        @if(createStandoff.startParentIri.isDefined) {
+                            knora-base:standoffTagHasStartParent <@createStandoff.startParentIri.get> ;
                         }
 
-                        @if(createStandoff.standoffNode.endParentIndex.isDefined) {
-                            knora-base:standoffTagHasEndParentIndex @createStandoff.standoffNode.endParentIndex.get ;
+                        @if(createStandoff.endParentIri.isDefined) {
+                            knora-base:standoffTagHasEndParent <@createStandoff.endParentIri.get> ;
                         }
 
                         @if(createStandoff.standoffNode.originalXMLID.isDefined) {

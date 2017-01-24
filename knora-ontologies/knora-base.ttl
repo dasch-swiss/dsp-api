@@ -505,7 +505,7 @@
 
 ### http://www.knora.org/ontology/knora-base#standoffTagHasStartParent
 
-:standoffTagHasStartParentIndex rdf:type owl:ObjectProperty ;
+:standoffTagHasStartParent rdf:type owl:ObjectProperty ;
 
                   rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
@@ -516,7 +516,7 @@
 
 ### http://www.knora.org/ontology/knora-base#standoffTagHasEndParent
 
-:standoffTagHasEndParent rdf:type owl:DatatypeProperty ;
+:standoffTagHasEndParent rdf:type owl:ObjectProperty ;
 
                   rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
