@@ -471,8 +471,7 @@ class UsersResponderV1 extends ResponderV1 {
             firstname = groupedUserData.get(OntologyConstants.KnoraBase.GivenName).map(_.head),
             lastname = groupedUserData.get(OntologyConstants.KnoraBase.FamilyName).map(_.head),
             password = groupedUserData.get(OntologyConstants.KnoraBase.Password).map(_.head),
-            isActiveUser = groupedUserData.get(OntologyConstants.KnoraBase.Status).map(_.head.toBoolean),
-            active_project = groupedUserData.get(OntologyConstants.KnoraBase.UsersActiveProject).map(_.head)
+            isActiveUser = groupedUserData.get(OntologyConstants.KnoraBase.Status).map(_.head.toBoolean)
         )
         //_ = log.debug(s"userDataQueryResponse2UserProfile - userDataV1: ${MessageUtil.toSource(userDataV1)}")
 

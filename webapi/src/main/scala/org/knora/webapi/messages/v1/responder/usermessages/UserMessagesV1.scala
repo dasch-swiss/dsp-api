@@ -124,7 +124,7 @@ case class UserProfileByIRIGetV1(userIri: IRI,
   *
   * @param email           the email of the user to be queried.
   * @param userProfileType the extent of the information returned.
-  * @param userProfile the requesting user's profile.
+  * @param userProfile     the requesting user's profile.
   */
 case class UserProfileByEmailGetRequestV1(email: String,
                                           userProfileType: UserProfileType,
@@ -197,7 +197,7 @@ case class UserChangeStatusRequestV1(userIri: IRI,
   * Represents an answer to an user profile request.
   *
   * @param userProfile the user's profile of the requested type.
-  * @param userData information about the user that made the request.
+  * @param userData    information about the user that made the request.
   */
 case class UserProfileResponseV1(userProfile: UserProfileV1, userData: UserDataV1) extends KnoraResponseV1 {
     def toJsValue = UserV1JsonProtocol.userProfileResponseV1Format.write(this)
@@ -300,8 +300,7 @@ case class UserProfileV1(userData: UserDataV1 = UserDataV1(lang = "en"),
                     lastname = olduserdata.lastname,
                     email = olduserdata.email,
                     password = None, // remove password
-                    isActiveUser = olduserdata.isActiveUser,
-                    active_project = olduserdata.active_project
+                    isActiveUser = olduserdata.isActiveUser
                 )
 
                 UserProfileV1(
@@ -374,7 +373,6 @@ case class UserProfileV1(userData: UserDataV1 = UserDataV1(lang = "en"),
   * @param firstname    The user's given name.
   * @param lastname     The user's surname.
   * @param isActiveUser The user's status.
-  * @param active_project
   */
 case class UserDataV1(lang: String,
                       user_id: Option[IRI] = None,
@@ -383,8 +381,7 @@ case class UserDataV1(lang: String,
                       token: Option[String] = None,
                       firstname: Option[String] = None,
                       lastname: Option[String] = None,
-                      isActiveUser: Option[Boolean] = None,
-                      active_project: Option[IRI] = None) {
+                      isActiveUser: Option[Boolean] = None) {
 
     def fullname: Option[String] = {
         (firstname, lastname) match {
@@ -443,7 +440,7 @@ object UserProfileType extends Enumeration {
   */
 object UserV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with NullOptions with ProjectV1JsonProtocol with PermissionV1JsonProtocol {
 
-    implicit val userDataV1Format: JsonFormat[UserDataV1] = lazyFormat(jsonFormat9(UserDataV1))
+    implicit val userDataV1Format: JsonFormat[UserDataV1] = lazyFormat(jsonFormat8(UserDataV1))
     implicit val userProfileV1Format: JsonFormat[UserProfileV1] = jsonFormat6(UserProfileV1)
     implicit val createUserApiRequestV1Format: RootJsonFormat[CreateUserApiRequestV1] = jsonFormat7(CreateUserApiRequestV1)
     implicit val updateUserApiRequestV1Format: RootJsonFormat[UpdateUserApiRequestV1] = jsonFormat7(UpdateUserApiRequestV1)
