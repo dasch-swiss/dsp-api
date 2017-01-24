@@ -519,7 +519,7 @@ class ResourcesResponderV1 extends ResponderV1 {
                                                 } else {
                                                     val projectTuple = (OntologyConstants.KnoraBase.AttachedToProject, ValueLiterals(Seq(incomingResInfo.project_id)))
                                                     val valueLiteralsWithProject = originalValueProps.literalData + projectTuple
-                                                    ValueProps(literalData = valueLiteralsWithProject)
+                                                    ValueProps(linkValueIri, literalData = valueLiteralsWithProject)
                                                 }
 
                                                 // Convert the resulting ValueProps into a LinkValueV1 so we can check its rdf:predicate.

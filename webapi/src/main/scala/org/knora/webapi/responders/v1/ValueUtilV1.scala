@@ -32,10 +32,9 @@ import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v1.store.triplestoremessages.VariableResultsRow
 import org.knora.webapi.responders.v1.GroupedProps._
 import org.knora.webapi.twirl._
-import org.knora.webapi.util.{DateUtilV1, ErrorHandlingMap, InputValidation, KnoraIdUtil}
+import org.knora.webapi.util.{DateUtilV1, ErrorHandlingMap, InputValidation}
 
-import scala.concurrent.duration._
-import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.concurrent.{ExecutionContext, Future}
 
 
 /**
@@ -195,12 +194,9 @@ class ValueUtilV1(private val settings: SettingsImpl) {
       */
     def createValueProps(valueIri: IRI, objRows: Seq[VariableResultsRow]): ValueProps = {
 
-        val valuesAndStandoffAsTuple = groupKnoraValueObjectPredicateRows(objRows.map(_.rowMap))
+        val groupedValueObject = groupKnoraValueObjectPredicateRows(objRows.map(_.rowMap))
 
-        val values: Map[String, ValueLiterals] = valuesAndStandoffAsTuple._1
-        val standoff: Map[IRI, Map[IRI, String]] = valuesAndStandoffAsTuple._2
-
-        ValueProps(new ErrorHandlingMap(values, { key: IRI => s"Predicate $key not found in value $valueIri" }), standoff)
+        ValueProps(valueIri, new ErrorHandlingMap(groupedValueObject.valuesLiterals, { key: IRI => s"Predicate $key not found in value $valueIri" }), groupedValueObject.standoff)
     }
 
     /**
@@ -265,33 +261,44 @@ class ValueUtilV1(private val settings: SettingsImpl) {
       *
       * It expects the members documented in [[createValueProps]].
       *
-      * @param objRows the value object with its predicates
-      * @return a tuple containing (1) the values (literal or linking) and (2) standoff nodes if given
+      * @param objRows a value object's predicates.
+      * @return a [[GroupedValueObject]] containing the values (literal or linking) and standoff nodes if given.
       */
-    private def groupKnoraValueObjectPredicateRows(objRows: Seq[Map[String, String]]): (Map[String, ValueLiterals], Map[IRI, Map[IRI, String]]) = {
+    private def groupKnoraValueObjectPredicateRows(objRows: Seq[Map[String, String]]): GroupedValueObject = {
 
-        objRows.map(_ - "obj").filter(_.get("objObj").nonEmpty).groupBy(_ ("objPred")).foldLeft((Map.empty[String, ValueLiterals], Map.empty[IRI, Map[IRI, String]])) {
-            // grouped by value object predicate (e.g. hasString)
-            case (acc: (Map[String, ValueLiterals], Map[IRI, Map[IRI, String]]), (objPredIri: IRI, values: Seq[Map[String, String]])) =>
+
+        // get rid of the value object Iri `obj` and group by predicate Iri `objPred` (e.g. `valueHasString`)
+        val valuesGroupedByPredicate = objRows.map(_ - "obj").groupBy(_ ("objPred"))
+
+        valuesGroupedByPredicate.foldLeft(GroupedValueObject(valuesLiterals = Map.empty[String, ValueLiterals], standoff = Map.empty[IRI, Map[IRI, String]])) {
+            case (acc: GroupedValueObject, (objPredIri: IRI, values: Seq[Map[String, String]])) =>
 
                 if (objPredIri == OntologyConstants.KnoraBase.ValueHasStandoff) {
                     // standoff information
 
-                    val groupByNode: Map[String, Map[String, String]] = values.groupBy(_ ("objObj")).map {
+                    val groupedByStandoffNodeIri: Map[IRI, Seq[Map[String, String]]] = values.groupBy(_ ("objObj"))
+
+                    val standoffNodeAssertions: Map[IRI, Map[String, String]] = groupedByStandoffNodeIri.map {
                         case (standoffNodeIri: IRI, values: Seq[Map[String, String]]) =>
+
                             val valuesMap: Map[String, String] = values.map {
                                 // make a Map with the standoffPred as the key and the objStandoff as the value
                                 value: Map[String, String] => Map(value("predStandoff") -> value("objStandoff"))
                             }.foldLeft(Map.empty[String, String]) {
                                 // for each standoff node, we want to have just one Map
-                                case (node: Map[String, String], (value: Map[String, String])) => node ++ value
+                                // this foldLeft turns a Sequence of Maps into one Map (a predicate can only occur once)
+                                case (nodeValues: Map[String, String], (value: Map[String, String])) =>
+                                    nodeValues ++ value
                             }
 
                             standoffNodeIri -> valuesMap
 
                     }
 
-                    (acc._1, acc._2 ++ groupByNode) // the accumulator is a 2 tuple, add standoff to the second part
+                    acc.copy(
+                        standoff = acc.standoff ++ standoffNodeAssertions
+                    )
+
                 } else {
                     // non standoff value
 
@@ -299,9 +306,14 @@ class ValueUtilV1(private val settings: SettingsImpl) {
                         value: Map[String, String] => value("objObj")
                     }))
 
-                    (acc._1 + value, acc._2) // the accumulator is a 2 tuple, add ValueData to the first part
+                    acc.copy(
+                        valuesLiterals = acc.valuesLiterals + value
+                    )
+
                 }
+
         }
+
     }
 
     /**
@@ -335,11 +347,12 @@ class ValueUtilV1(private val settings: SettingsImpl) {
                 val vo = (resProp, rows.map(_.rowMap - "prop").groupBy(_ ("obj")).map {
                     // grouped by value object IRI
                     case (objIri: IRI, objRows: Seq[Map[String, String]]) =>
-                        val (literals: Map[String, ValueLiterals], standoff: Map[IRI, Map[IRI, String]]) = groupKnoraValueObjectPredicateRows(objRows)
+                        val groupedValueObject = groupKnoraValueObjectPredicateRows(objRows)
 
                         val vp: ValueProps = ValueProps(
-                            new ErrorHandlingMap(literals, { key: IRI => s"Predicate $key not found for property object $objIri" }),
-                            standoff
+                            valueIri = objIri,
+                            new ErrorHandlingMap(groupedValueObject.valuesLiterals, { key: IRI => s"Predicate $key not found for property object $objIri" }),
+                            groupedValueObject.standoff
                         )
 
                         (objIri, vp)
@@ -435,6 +448,130 @@ class ValueUtilV1(private val settings: SettingsImpl) {
     }
 
     /**
+      * Creates a [[TextValueWithStandoffV1]] from the given string and the standoff nodes.
+      *
+      * @param utf8str          the string representation.
+      * @param valueProps       the properties of the TextValue with standoff.
+      * @param responderManager the responder manager.
+      * @param userProfile      the client that is making the request.
+      * @return a [[TextValueWithStandoffV1]].
+      */
+    private def makeTextValueWithStandoff(utf8str: String, valueProps: ValueProps, responderManager: ActorSelection, userProfile: UserProfileV1)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[TextValueWithStandoffV1] = {
+
+        // get the Iri of the mapping
+        val mappingIri = valueProps.literalData.getOrElse(OntologyConstants.KnoraBase.ValueHasMapping, throw InconsistentTriplestoreDataException(s"no mapping Iri associated with standoff belonging to textValue ${valueProps.valueIri}")).literals.head
+
+        for {
+
+        // get the mapping and the related standoff entities
+            mappingResponse: GetMappingResponseV1 <- (responderManager ? GetMappingRequestV1(mappingIri = mappingIri, userProfile = userProfile)).mapTo[GetMappingResponseV1]
+
+            standoffTags: Seq[StandoffTagV1] = valueProps.standoff.values.map {
+
+                (standoffInfo: Map[IRI, String]) =>
+
+                    // create a sequence of `StandoffTagAttributeV1` from the given attributes
+                    val attributes: Seq[StandoffTagAttributeV1] = (standoffInfo -- StandoffProperties.systemProperties - OntologyConstants.Rdf.Type).map {
+                        case (propIri, value) =>
+
+                            // check if the given property has an object type constraint (linking property) or an object data type constraint
+                            if (mappingResponse.standoffEntities.standoffPropertyEntityInfoMap(propIri).predicates.get(OntologyConstants.KnoraBase.ObjectClassConstraint).isDefined) {
+
+                                // it is a linking property
+                                // check if it refers to a resource or a standoff node
+
+                                if (mappingResponse.standoffEntities.standoffPropertyEntityInfoMap(propIri).isSubPropertyOf.contains(OntologyConstants.KnoraBase.StandoffTagHasInternalReference)) {
+                                    // it refers to a standoff node, recreate the original id
+
+                                    // value points to another standoff node
+                                    // get this standoff node and access its original id
+                                    val originalId: String = valueProps.standoff(value).getOrElse(OntologyConstants.KnoraBase.StandoffTagHasOriginalXMLID, throw InconsistentTriplestoreDataException(s"referred standoff $value node has no original XML id"))
+
+                                    // recreate the original id reference
+                                    StandoffTagStringAttributeV1(standoffPropertyIri = propIri, value = "#" + originalId)
+                                } else {
+                                    // it refers to a knora resource
+                                    StandoffTagIriAttributeV1(standoffPropertyIri = propIri, value = value)
+                                }
+                            } else if (mappingResponse.standoffEntities.standoffPropertyEntityInfoMap(propIri).predicates.get(OntologyConstants.KnoraBase.ObjectDatatypeConstraint).isDefined) {
+
+                                // it is a data type property (literal)
+                                val propDataType = mappingResponse.standoffEntities.standoffPropertyEntityInfoMap(propIri).predicates(OntologyConstants.KnoraBase.ObjectDatatypeConstraint)
+
+                                propDataType.objects.headOption match {
+                                    case Some(OntologyConstants.Xsd.String) =>
+                                        StandoffTagStringAttributeV1(standoffPropertyIri = propIri, value = value)
+
+                                    case Some(OntologyConstants.Xsd.Integer) =>
+                                        StandoffTagIntegerAttributeV1(standoffPropertyIri = propIri, value = value.toInt)
+
+                                    case Some(OntologyConstants.Xsd.Decimal) =>
+                                        StandoffTagDecimalAttributeV1(standoffPropertyIri = propIri, value = BigDecimal(value))
+
+                                    case Some(OntologyConstants.Xsd.Boolean) =>
+                                        StandoffTagBooleanAttributeV1(standoffPropertyIri = propIri, value = value.toBoolean)
+
+                                    case Some(OntologyConstants.Xsd.Uri) => StandoffTagIriAttributeV1(standoffPropertyIri = propIri, value = value)
+
+                                    case None => throw InconsistentTriplestoreDataException(s"did not find ${OntologyConstants.KnoraBase.ObjectDatatypeConstraint} for $propIri")
+
+                                    case other => throw InconsistentTriplestoreDataException(s"triplestore returned unknown ${OntologyConstants.KnoraBase.ObjectDatatypeConstraint} '$other' for $propIri")
+
+                                }
+                            } else {
+                                throw InconsistentTriplestoreDataException(s"no object class or data type constraint found for property '$propIri'")
+                            }
+
+                    }.toVector
+
+                    StandoffTagV1(
+                        standoffTagClassIri = standoffInfo(OntologyConstants.Rdf.Type),
+                        startPosition = standoffInfo(OntologyConstants.KnoraBase.StandoffTagHasStart).toInt,
+                        endPosition = standoffInfo(OntologyConstants.KnoraBase.StandoffTagHasEnd).toInt,
+                        dataType = mappingResponse.standoffEntities.standoffClassEntityInfoMap(standoffInfo(OntologyConstants.Rdf.Type)).dataType,
+                        startIndex = standoffInfo(OntologyConstants.KnoraBase.StandoffTagHasStartIndex).toInt,
+                        endIndex = standoffInfo.get(OntologyConstants.KnoraBase.StandoffTagHasEndIndex) match {
+                            case Some(endIndex: String) => Some(endIndex.toInt)
+                            case None => None
+                        },
+                        uuid = standoffInfo(OntologyConstants.KnoraBase.StandoffTagHasUUID),
+                        originalXMLID = standoffInfo.get(OntologyConstants.KnoraBase.StandoffTagHasOriginalXMLID),
+                        startParentIndex = standoffInfo.get(OntologyConstants.KnoraBase.StandoffTagHasStartParentIndex) match {
+                            case Some(startParentIndex: String) => Some(startParentIndex.toInt)
+                            case None => None
+                        },
+                        endParentIndex = standoffInfo.get(OntologyConstants.KnoraBase.StandoffTagHasEndParentIndex) match {
+                            case Some(endParentIndex: String) => Some(endParentIndex.toInt)
+                            case None => None
+                        },
+                        attributes = attributes
+                    )
+
+            }.toVector
+
+        } yield TextValueWithStandoffV1(
+            utf8str = utf8str,
+            standoff = standoffTags,
+            mappingIri = mappingIri,
+            mapping = mappingResponse.mapping,
+            resource_reference = InputValidation.getResourceIrisFromStandoffTags(standoffTags)
+        )
+
+    }
+
+    /**
+      * Creates a [[TextValueSimpleV1]] from the given string.
+      *
+      * @param utf8str the string representation of the TextValue.
+      * @return a [[TextValueSimpleV1]].
+      */
+    private def makeTextValueSimple(utf8str: String)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[TextValueSimpleV1] = {
+        Future(TextValueSimpleV1(
+            utf8str = utf8str
+        ))
+    }
+
+    /**
       * Converts a [[ValueProps]] into a [[TextValueV1]].
       *
       * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
@@ -442,120 +579,17 @@ class ValueUtilV1(private val settings: SettingsImpl) {
       */
     private def makeTextValue(valueProps: ValueProps, responderManager: ActorSelection, userProfile: UserProfileV1)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ApiValueV1] = {
 
-        // TODO: change ValueProps so we have the value IRI here, so we can include it in the error message.
-        val valueHasString = valueProps.literalData.get(OntologyConstants.KnoraBase.ValueHasString).map(_.literals.head).getOrElse(throw InconsistentTriplestoreDataException("Value has no knora-base:valueHasString"))
+
+        val valueHasString = valueProps.literalData.get(OntologyConstants.KnoraBase.ValueHasString).map(_.literals.head).getOrElse(throw InconsistentTriplestoreDataException(s"Value ${valueProps.valueIri} has no knora-base:valueHasString"))
 
         if (valueProps.standoff.nonEmpty) {
             // there is standoff markup
-
-            // get the Iri of the mapping
-            val mappingIri = valueProps.literalData.getOrElse(OntologyConstants.KnoraBase.ValueHasMapping, throw InconsistentTriplestoreDataException("no mapping Iri associated with standoff")).literals.head
-
-
-            for {
-
-            // get the mapping and the related standoff entities
-                mappingResponse: GetMappingResponseV1 <- (responderManager ? GetMappingRequestV1(mappingIri = mappingIri, userProfile = userProfile)).mapTo[GetMappingResponseV1]
-
-                knoraIdUtil = new KnoraIdUtil
-
-                standoffTags: Seq[StandoffTagV1] = valueProps.standoff.values.map {
-
-                    (standoffInfo: Map[IRI, String]) =>
-
-                        // create a sequence of `StandoffTagAttributeV1` from the given attributes
-                        val attributes: Seq[StandoffTagAttributeV1] = (standoffInfo -- StandoffProperties.systemProperties - OntologyConstants.Rdf.Type).map {
-                            case (propIri, value) =>
-
-                                // check if the given property has an object type constraint (linking property) or an object data type constraint
-                                if (mappingResponse.standoffEntities.standoffPropertyEntityInfoMap(propIri).predicates.get(OntologyConstants.KnoraBase.ObjectClassConstraint).isDefined) {
-
-                                    // it is a linking property
-                                    // check if it refers to a resource or a standoff node
-
-                                    if (mappingResponse.standoffEntities.standoffPropertyEntityInfoMap(propIri).isSubPropertyOf.contains(OntologyConstants.KnoraBase.StandoffTagHasInternalReference)) {
-                                        // it refers to a standoff node, recreate the original id
-
-                                        // value points to another standoff node
-                                        // get this standoff node and access its original id
-                                        val originalId: String = valueProps.standoff(value).getOrElse(OntologyConstants.KnoraBase.StandoffTagHasOriginalXMLID, throw InconsistentTriplestoreDataException(s"referred standoff $value node has no original XML id"))
-
-                                        // recreate the original id reference
-                                        StandoffTagStringAttributeV1(standoffPropertyIri = propIri, value = "#" + originalId)
-                                    } else {
-                                        // it refers to a knora resource
-                                        StandoffTagIriAttributeV1(standoffPropertyIri = propIri, value = value)
-                                    }
-                                } else if (mappingResponse.standoffEntities.standoffPropertyEntityInfoMap(propIri).predicates.get(OntologyConstants.KnoraBase.ObjectDatatypeConstraint).isDefined) {
-
-                                    // it is a data type property (literal)
-                                    val propDataType = mappingResponse.standoffEntities.standoffPropertyEntityInfoMap(propIri).predicates(OntologyConstants.KnoraBase.ObjectDatatypeConstraint)
-
-                                    propDataType.objects.headOption match {
-                                        case Some(OntologyConstants.Xsd.String) =>
-                                            StandoffTagStringAttributeV1(standoffPropertyIri = propIri, value = value)
-
-                                        case Some(OntologyConstants.Xsd.Integer) =>
-                                            StandoffTagIntegerAttributeV1(standoffPropertyIri = propIri, value = value.toInt)
-
-                                        case Some(OntologyConstants.Xsd.Decimal) =>
-                                            StandoffTagDecimalAttributeV1(standoffPropertyIri = propIri, value = BigDecimal(value))
-
-                                        case Some(OntologyConstants.Xsd.Boolean) =>
-                                            StandoffTagBooleanAttributeV1(standoffPropertyIri = propIri, value = value.toBoolean)
-
-                                        case Some(OntologyConstants.Xsd.Uri) => StandoffTagIriAttributeV1(standoffPropertyIri = propIri, value = value)
-
-                                        case None => throw InconsistentTriplestoreDataException(s"did not find ${OntologyConstants.KnoraBase.ObjectDatatypeConstraint} for $propIri")
-
-                                        case other => throw InconsistentTriplestoreDataException(s"triplestore returned unknown ${OntologyConstants.KnoraBase.ObjectDatatypeConstraint} '$other' for $propIri")
-
-                                    }
-                                } else {
-                                    throw InconsistentTriplestoreDataException(s"no object class or data type constraint found for property '$propIri'")
-                                }
-
-                        }.toVector
-
-                        StandoffTagV1(
-                            standoffTagClassIri = standoffInfo(OntologyConstants.Rdf.Type),
-                            startPosition = standoffInfo(OntologyConstants.KnoraBase.StandoffTagHasStart).toInt,
-                            endPosition = standoffInfo(OntologyConstants.KnoraBase.StandoffTagHasEnd).toInt,
-                            dataType = mappingResponse.standoffEntities.standoffClassEntityInfoMap(standoffInfo(OntologyConstants.Rdf.Type)).dataType,
-                            startIndex = standoffInfo(OntologyConstants.KnoraBase.StandoffTagHasStartIndex).toInt,
-                            endIndex = standoffInfo.get(OntologyConstants.KnoraBase.StandoffTagHasEndIndex) match {
-                                case Some(endIndex: String) => Some(endIndex.toInt)
-                                case None => None
-                            },
-                            uuid = standoffInfo(OntologyConstants.KnoraBase.StandoffTagHasUUID),
-                            originalXMLID = standoffInfo.get(OntologyConstants.KnoraBase.StandoffTagHasOriginalXMLID),
-                            startParentIndex = standoffInfo.get(OntologyConstants.KnoraBase.StandoffTagHasStartParentIndex) match {
-                                case Some(startParentIndex: String) => Some(startParentIndex.toInt)
-                                case None => None
-                            },
-                            endParentIndex = standoffInfo.get(OntologyConstants.KnoraBase.StandoffTagHasEndParentIndex) match {
-                                case Some(endParentIndex: String) => Some(endParentIndex.toInt)
-                                case None => None
-                            },
-                            attributes = attributes
-                        )
-
-                }.toVector
-
-            } yield TextValueWithStandoffV1(
-                utf8str = valueHasString,
-                standoff = standoffTags,
-                mappingIri = mappingIri,
-                mapping = mappingResponse.mapping,
-                resource_reference = InputValidation.getResourceIrisFromStandoffTags(standoffTags)
-            )
+            makeTextValueWithStandoff(valueHasString, valueProps, responderManager, userProfile)
 
         } else {
             // there is no standoff markup
+            makeTextValueSimple(valueHasString)
 
-            Future(TextValueSimpleV1(
-                utf8str = valueHasString
-            ))
         }
     }
 
@@ -716,12 +750,21 @@ object GroupedProps {
     case class ValueObjects(valueObjects: Map[IRI, ValueProps])
 
     /**
+      * Represents the grouped values of a value object.
+      *
+      * @param valuesLiterals the values (literal or linking).
+      * @param standoff       standoff nodes, if any.
+      */
+    case class GroupedValueObject(valuesLiterals: Map[String, ValueLiterals], standoff: Map[IRI, Map[IRI, String]])
+
+    /**
       * Represents the object properties belonging to a value object
       *
-      * @param literalData The value properties: The Map's keys (IRI) consist of value object properties (e.g. http://www.knora.org/ontology/knora-base#valueHasString).
-      * @param standoff    The keys of the first Map are the standoff node Iris, the second Map contains all the predicates and objects related to one standoff node.
+      * @param valueIri    the IRI of the value object.
+      * @param literalData the value properties: The Map's keys (IRI) consist of value object properties (e.g. http://www.knora.org/ontology/knora-base#String).
+      * @param standoff    the keys of the first Map are the standoff node Iris, the second Map contains all the predicates and objects related to one standoff node.
       */
-    case class ValueProps(literalData: Map[IRI, ValueLiterals], standoff: Map[IRI, Map[IRI, String]] = Map.empty[IRI, Map[IRI, String]])
+    case class ValueProps(valueIri: IRI, literalData: Map[IRI, ValueLiterals], standoff: Map[IRI, Map[IRI, String]] = Map.empty[IRI, Map[IRI, String]])
 
     /**
       * Represents the literal values of a property (e.g. a number or a string)
