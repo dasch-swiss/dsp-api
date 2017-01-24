@@ -1053,7 +1053,7 @@ class ValuesResponderV1 extends ResponderV1 {
                     val linkPropertyIri = knoraIdUtil.linkValuePropertyIri2LinkPropertyIri(findResourceWithValueResult.propertyIri)
 
                     for {
-                        // Get project info
+                    // Get project info
                         projectInfo <- {
                             responderManager ? ProjectInfoByIRIGetV1(
                                 findResourceWithValueResult.projectIri,
@@ -1401,7 +1401,7 @@ class ValuesResponderV1 extends ResponderV1 {
             response <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
             rows: Seq[VariableResultsRow] = response.results.bindings
 
-            maybeValueQueryResult = sparqlQueryResults2ValueQueryResult(valueIri, rows, userProfile)
+            maybeValueQueryResult <- sparqlQueryResults2ValueQueryResult(valueIri, rows, userProfile)
 
             // If it's a link value, check that the user has permission to see the source and target resources.
             _ = maybeValueQueryResult match {
@@ -1488,7 +1488,7 @@ class ValuesResponderV1 extends ResponderV1 {
 
             response <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
             rows: Seq[VariableResultsRow] = response.results.bindings
-            maybeLinkValueQueryResult = sparqlQueryResults2LinkValueQueryResult(rows, userProfile)
+            maybeLinkValueQueryResult <- sparqlQueryResults2LinkValueQueryResult(rows, userProfile)
 
             // Check that the user has permission to see the source and target resources.
             _ = if (maybeLinkValueQueryResult.nonEmpty) {
@@ -1521,7 +1521,7 @@ class ValuesResponderV1 extends ResponderV1 {
 
             response <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
             rows: Seq[VariableResultsRow] = response.results.bindings
-            maybeLinkValueQueryResult = sparqlQueryResults2LinkValueQueryResult(rows, userProfile)
+            maybeLinkValueQueryResult <- sparqlQueryResults2LinkValueQueryResult(rows, userProfile)
 
             // Check that the user has permission to see the source and target resources.
             _ = maybeLinkValueQueryResult match {
@@ -1536,67 +1536,69 @@ class ValuesResponderV1 extends ResponderV1 {
       * If the value is a link value, the caller of this method is responsible for ensuring that the user has permission to
       * view the source and target resources.
       *
-      * @param valueIri                      the IRI of the value that was queried.
-      * @param rows                          the query result rows.
-      * @param userProfile                   the profile of the user making the request.
+      * @param valueIri    the IRI of the value that was queried.
+      * @param rows        the query result rows.
+      * @param userProfile the profile of the user making the request.
       * @return a [[ValueQueryResult]].
       */
     @throws(classOf[ForbiddenException])
-    private def sparqlQueryResults2ValueQueryResult(valueIri: IRI, rows: Seq[VariableResultsRow], userProfile: UserProfileV1): Option[ValueQueryResult] = {
+    private def sparqlQueryResults2ValueQueryResult(valueIri: IRI, rows: Seq[VariableResultsRow], userProfile: UserProfileV1): Future[Option[BasicValueQueryResult]] = {
         if (rows.nonEmpty) {
             // Convert the query results to a ApiValueV1.
             val valueProps = valueUtilV1.createValueProps(valueIri, rows)
-            val value = valueUtilV1.makeValueV1(valueProps, responderManager, userProfile)
 
-            // Get the value's class IRI.
-            val valueClassIri = getValuePredicateObject(predicateIri = OntologyConstants.Rdf.Type, rows = rows).getOrElse(throw InconsistentTriplestoreDataException(s"Value $valueIri has no rdf:type"))
+            for {
+                value <- valueUtilV1.makeValueV1(valueProps, responderManager, userProfile)
 
-            // Get the IRI of the value's owner.
-            val ownerIri = getValuePredicateObject(predicateIri = OntologyConstants.KnoraBase.AttachedToUser, rows = rows).getOrElse(throw InconsistentTriplestoreDataException(s"Value $valueIri has no owner"))
+                // Get the value's class IRI.
+                valueClassIri = getValuePredicateObject(predicateIri = OntologyConstants.Rdf.Type, rows = rows).getOrElse(throw InconsistentTriplestoreDataException(s"Value $valueIri has no rdf:type"))
 
-            // Get the value's project IRI.
-            val projectIri = getValuePredicateObject(predicateIri = OntologyConstants.KnoraBase.AttachedToProject, rows = rows).getOrElse(throw InconsistentTriplestoreDataException(s"Value $valueIri has no project"))
+                // Get the IRI of the value's owner.
+                ownerIri = getValuePredicateObject(predicateIri = OntologyConstants.KnoraBase.AttachedToUser, rows = rows).getOrElse(throw InconsistentTriplestoreDataException(s"Value $valueIri has no owner"))
 
-            // Get the value's creation date.
-            val creationDate = getValuePredicateObject(predicateIri = OntologyConstants.KnoraBase.ValueCreationDate, rows = rows).getOrElse(throw InconsistentTriplestoreDataException(s"Value $valueIri has no valueCreationDate"))
+                // Get the value's project IRI.
+                projectIri = getValuePredicateObject(predicateIri = OntologyConstants.KnoraBase.AttachedToProject, rows = rows).getOrElse(throw InconsistentTriplestoreDataException(s"Value $valueIri has no project"))
 
-            // Get the optional comment on the value.
-            val comment = getValuePredicateObject(predicateIri = OntologyConstants.KnoraBase.ValueHasComment, rows = rows)
+                // Get the value's creation date.
+                creationDate = getValuePredicateObject(predicateIri = OntologyConstants.KnoraBase.ValueCreationDate, rows = rows).getOrElse(throw InconsistentTriplestoreDataException(s"Value $valueIri has no valueCreationDate"))
 
-            // Get the value's permission-relevant assertions.
-            val assertions = PermissionUtilV1.filterPermissionRelevantAssertionsFromValueProps(valueProps)
+                // Get the optional comment on the value.
+                comment = getValuePredicateObject(predicateIri = OntologyConstants.KnoraBase.ValueHasComment, rows = rows)
 
-            // Get the permission code representing the user's permissions on the value.
-            //
-            // Link values created automatically for resource references in standoff
-            // are automatically visible to all users, as long as they have permission
-            // to see the source and target resources. The caller of this method is responsible
-            // for checking the permissions on the source and target resources.
+                // Get the value's permission-relevant assertions.
+                assertions = PermissionUtilV1.filterPermissionRelevantAssertionsFromValueProps(valueProps)
 
-            val maybePermissionCode = valueClassIri match {
-                case OntologyConstants.KnoraBase.LinkValue =>
-                    val linkPredicateIri = getValuePredicateObject(predicateIri = OntologyConstants.Rdf.Predicate, rows = rows).getOrElse(throw InconsistentTriplestoreDataException(s"Link value $valueIri has no rdf:predicate"))
+                // Get the permission code representing the user's permissions on the value.
+                //
+                // Link values created automatically for resource references in standoff
+                // are automatically visible to all users, as long as they have permission
+                // to see the source and target resources. The caller of this method is responsible
+                // for checking the permissions on the source and target resources.
 
-                    PermissionUtilV1.getUserPermissionOnLinkValueV1WithValueProps(
-                        linkValueIri = valueIri,
-                        predicateIri = linkPredicateIri,
-                        valueProps = valueProps,
+                maybePermissionCode = valueClassIri match {
+                    case OntologyConstants.KnoraBase.LinkValue =>
+                        val linkPredicateIri = getValuePredicateObject(predicateIri = OntologyConstants.Rdf.Predicate, rows = rows).getOrElse(throw InconsistentTriplestoreDataException(s"Link value $valueIri has no rdf:predicate"))
+
+                        PermissionUtilV1.getUserPermissionOnLinkValueV1WithValueProps(
+                            linkValueIri = valueIri,
+                            predicateIri = linkPredicateIri,
+                            valueProps = valueProps,
+                            userProfile = userProfile
+                        )
+
+                    case _ => PermissionUtilV1.getUserPermissionV1FromAssertions(
+                        subjectIri = valueIri,
+                        assertions = assertions,
                         userProfile = userProfile
                     )
+                }
 
-                case _ => PermissionUtilV1.getUserPermissionV1FromAssertions(
-                    subjectIri = valueIri,
-                    assertions = assertions,
-                    userProfile = userProfile
-                )
-            }
+                permissionCode = maybePermissionCode.getOrElse {
+                    val userIri = userProfile.userData.user_id.getOrElse(OntologyConstants.KnoraBase.UnknownUser)
+                    throw ForbiddenException(s"User $userIri does not have permission to see value $valueIri")
+                }
 
-            val permissionCode = maybePermissionCode.getOrElse {
-                val userIri = userProfile.userData.user_id.getOrElse(OntologyConstants.KnoraBase.UnknownUser)
-                throw ForbiddenException(s"User $userIri does not have permission to see value $valueIri")
-            }
-
-            Some(
+            } yield Some(
                 BasicValueQueryResult(
                     value = value,
                     ownerIri = ownerIri,
@@ -1608,7 +1610,7 @@ class ValuesResponderV1 extends ResponderV1 {
                 )
             )
         } else {
-            None
+            Future(None)
         }
     }
 
@@ -1619,48 +1621,52 @@ class ValuesResponderV1 extends ResponderV1 {
       * @param userProfile the profile of the user making the request.
       * @return a [[LinkValueQueryResult]].
       */
-    private def sparqlQueryResults2LinkValueQueryResult(rows: Seq[VariableResultsRow], userProfile: UserProfileV1): Option[LinkValueQueryResult] = {
+    private def sparqlQueryResults2LinkValueQueryResult(rows: Seq[VariableResultsRow], userProfile: UserProfileV1): Future[Option[LinkValueQueryResult]] = {
         if (rows.nonEmpty) {
             val firstRowMap = rows.head.rowMap
             val linkValueIri = firstRowMap("linkValue")
 
             // Convert the query results into a LinkValueV1.
             val valueProps = valueUtilV1.createValueProps(linkValueIri, rows)
-            val linkValueV1: LinkValueV1 = valueUtilV1.makeValueV1(valueProps, responderManager, userProfile) match {
-                case linkValue: LinkValueV1 => linkValue
-                case other => throw InconsistentTriplestoreDataException(s"Expected value $linkValueIri to be of type ${OntologyConstants.KnoraBase.LinkValue}, but it was read with type ${other.valueTypeIri}")
-            }
 
-            // Get the IRI of the value's owner.
-            val ownerIri = getValuePredicateObject(predicateIri = OntologyConstants.KnoraBase.AttachedToUser, rows = rows).getOrElse(throw InconsistentTriplestoreDataException(s"Value $linkValueIri has no owner"))
+            for {
+                linkValueMaybe <- valueUtilV1.makeValueV1(valueProps, responderManager, userProfile)
 
-            // Get the value's project IRI.
-            val projectIri = getValuePredicateObject(predicateIri = OntologyConstants.KnoraBase.AttachedToProject, rows = rows).getOrElse(throw InconsistentTriplestoreDataException(s"Value $linkValueIri has no project"))
+                linkValueV1: LinkValueV1 = linkValueMaybe match {
+                    case linkValue: LinkValueV1 => linkValue
+                    case other => throw InconsistentTriplestoreDataException(s"Expected value $linkValueIri to be of type ${OntologyConstants.KnoraBase.LinkValue}, but it was read with type ${other.valueTypeIri}")
+                }
 
-            // Get the value's creation date.
-            val creationDate = getValuePredicateObject(predicateIri = OntologyConstants.KnoraBase.ValueCreationDate, rows = rows).getOrElse(throw InconsistentTriplestoreDataException(s"Value $linkValueIri has no valueCreationDate"))
+                // Get the IRI of the value's owner.
+                ownerIri = getValuePredicateObject(predicateIri = OntologyConstants.KnoraBase.AttachedToUser, rows = rows).getOrElse(throw InconsistentTriplestoreDataException(s"Value $linkValueIri has no owner"))
 
-            // Get the optional comment on the value.
-            val comment = getValuePredicateObject(predicateIri = OntologyConstants.KnoraBase.ValueHasComment, rows = rows)
+                // Get the value's project IRI.
+                projectIri = getValuePredicateObject(predicateIri = OntologyConstants.KnoraBase.AttachedToProject, rows = rows).getOrElse(throw InconsistentTriplestoreDataException(s"Value $linkValueIri has no project"))
 
-            // Get the value's permission-relevant assertions.
-            val permissionRelevantAssertions = PermissionUtilV1.filterPermissionRelevantAssertionsFromValueProps(valueProps)
+                // Get the value's creation date.
+                creationDate = getValuePredicateObject(predicateIri = OntologyConstants.KnoraBase.ValueCreationDate, rows = rows).getOrElse(throw InconsistentTriplestoreDataException(s"Value $linkValueIri has no valueCreationDate"))
 
-            // Get the permission code representing the user's permissions on the value.
-            val permissionCode = PermissionUtilV1.getUserPermissionOnLinkValueV1WithValueProps(
-                linkValueIri = linkValueIri,
-                predicateIri = linkValueV1.predicateIri,
-                valueProps = valueProps,
-                userProfile = userProfile
-            ).getOrElse {
-                val userIri = userProfile.userData.user_id.getOrElse(OntologyConstants.KnoraBase.UnknownUser)
-                throw ForbiddenException(s"User $userIri does not have permission to see value $linkValueIri")
-            }
+                // Get the optional comment on the value.
+                comment = getValuePredicateObject(predicateIri = OntologyConstants.KnoraBase.ValueHasComment, rows = rows)
 
-            val directLinkExists = firstRowMap.get("directLinkExists").exists(_.toBoolean)
-            val targetResourceClass = firstRowMap.get("targetResourceClass")
+                // Get the value's permission-relevant assertions.
+                permissionRelevantAssertions = PermissionUtilV1.filterPermissionRelevantAssertionsFromValueProps(valueProps)
 
-            Some(
+                // Get the permission code representing the user's permissions on the value.
+                permissionCode = PermissionUtilV1.getUserPermissionOnLinkValueV1WithValueProps(
+                    linkValueIri = linkValueIri,
+                    predicateIri = linkValueV1.predicateIri,
+                    valueProps = valueProps,
+                    userProfile = userProfile
+                ).getOrElse {
+                    val userIri = userProfile.userData.user_id.getOrElse(OntologyConstants.KnoraBase.UnknownUser)
+                    throw ForbiddenException(s"User $userIri does not have permission to see value $linkValueIri")
+                }
+
+                directLinkExists = firstRowMap.get("directLinkExists").exists(_.toBoolean)
+                targetResourceClass = firstRowMap.get("targetResourceClass")
+
+            } yield Some(
                 LinkValueQueryResult(
                     value = linkValueV1,
                     linkValueIri = linkValueIri,
@@ -1675,7 +1681,7 @@ class ValuesResponderV1 extends ResponderV1 {
                 )
             )
         } else {
-            None
+            Future(None)
         }
     }
 
@@ -1764,8 +1770,9 @@ class ValuesResponderV1 extends ResponderV1 {
             updateVerificationResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
             rows = updateVerificationResponse.results.bindings
 
-            result: ValueQueryResult = sparqlQueryResults2ValueQueryResult(valueIri = searchValueIri, rows = rows, userProfile = userProfile).getOrElse(throw UpdateNotPerformedException(s"The update to value $searchValueIri for property $propertyIri in resource $resourceIri was not performed. Please report this as a possible bug."))
-        } yield result
+            resultOption <- sparqlQueryResults2ValueQueryResult(valueIri = searchValueIri, rows = rows, userProfile = userProfile)
+
+        } yield resultOption.getOrElse(throw UpdateNotPerformedException(s"The update to value $searchValueIri for property $propertyIri in resource $resourceIri was not performed. Please report this as a possible bug."))
     }
 
     /**
@@ -2089,7 +2096,7 @@ class ValuesResponderV1 extends ResponderV1 {
                                              valuePermissions: Option[String],
                                              userProfile: UserProfileV1): Future[ChangeValueResponseV1] = {
         for {
-            // Delete the existing link and decrement its LinkValue's reference count.
+        // Delete the existing link and decrement its LinkValue's reference count.
             sparqlTemplateLinkUpdateForCurrentLink <- decrementLinkValue(
                 sourceResourceIri = resourceIri,
                 linkPropertyIri = propertyIri,

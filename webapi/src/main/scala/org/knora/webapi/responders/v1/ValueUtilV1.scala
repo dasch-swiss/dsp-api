@@ -50,7 +50,7 @@ class ValueUtilV1(private val settings: SettingsImpl) {
       *                   and the values are lists of the objects of each predicate.
       * @return a [[ApiValueV1]] representing the `Value`.
       */
-    def makeValueV1(valueProps: ValueProps, responderManager: ActorSelection, userProfile: UserProfileV1)(implicit timeout: Timeout, executionContext: ExecutionContext): ApiValueV1 = {
+    def makeValueV1(valueProps: ValueProps, responderManager: ActorSelection, userProfile: UserProfileV1)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ApiValueV1] = {
         val valueTypeIri = valueProps.literalData(OntologyConstants.Rdf.Type).literals.head
 
         valueTypeIri match {
@@ -357,10 +357,10 @@ class ValueUtilV1(private val settings: SettingsImpl) {
       * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
       * @return an [[IntegerValueV1]].
       */
-    private def makeIntValue(valueProps: ValueProps, responderManager: ActorSelection, userProfile: UserProfileV1)(implicit timeout: Timeout, executionContext: ExecutionContext): ApiValueV1 = {
+    private def makeIntValue(valueProps: ValueProps, responderManager: ActorSelection, userProfile: UserProfileV1)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ApiValueV1] = {
         val predicates = valueProps.literalData
 
-        IntegerValueV1(predicates(OntologyConstants.KnoraBase.ValueHasInteger).literals.head.toInt)
+        Future(IntegerValueV1(predicates(OntologyConstants.KnoraBase.ValueHasInteger).literals.head.toInt))
     }
 
     /**
@@ -369,10 +369,10 @@ class ValueUtilV1(private val settings: SettingsImpl) {
       * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
       * @return a [[DecimalValueV1]].
       */
-    private def makeDecimalValue(valueProps: ValueProps, responderManager: ActorSelection, userProfile: UserProfileV1)(implicit timeout: Timeout, executionContext: ExecutionContext): ApiValueV1 = {
+    private def makeDecimalValue(valueProps: ValueProps, responderManager: ActorSelection, userProfile: UserProfileV1)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ApiValueV1] = {
         val predicates = valueProps.literalData
 
-        DecimalValueV1(BigDecimal(predicates(OntologyConstants.KnoraBase.ValueHasDecimal).literals.head))
+        Future(DecimalValueV1(BigDecimal(predicates(OntologyConstants.KnoraBase.ValueHasDecimal).literals.head)))
     }
 
     /**
@@ -381,10 +381,10 @@ class ValueUtilV1(private val settings: SettingsImpl) {
       * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
       * @return a [[BooleanValueV1]].
       */
-    private def makeBooleanValue(valueProps: ValueProps, responderManager: ActorSelection, userProfile: UserProfileV1)(implicit timeout: Timeout, executionContext: ExecutionContext): ApiValueV1 = {
+    private def makeBooleanValue(valueProps: ValueProps, responderManager: ActorSelection, userProfile: UserProfileV1)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ApiValueV1] = {
         val predicates = valueProps.literalData
 
-        BooleanValueV1(predicates(OntologyConstants.KnoraBase.ValueHasBoolean).literals.head.toBoolean)
+        Future(BooleanValueV1(predicates(OntologyConstants.KnoraBase.ValueHasBoolean).literals.head.toBoolean))
     }
 
     /**
@@ -393,10 +393,10 @@ class ValueUtilV1(private val settings: SettingsImpl) {
       * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
       * @return a [[UriValueV1]].
       */
-    private def makeUriValue(valueProps: ValueProps, responderManager: ActorSelection, userProfile: UserProfileV1)(implicit timeout: Timeout, executionContext: ExecutionContext): ApiValueV1 = {
+    private def makeUriValue(valueProps: ValueProps, responderManager: ActorSelection, userProfile: UserProfileV1)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ApiValueV1] = {
         val predicates = valueProps.literalData
 
-        UriValueV1(predicates(OntologyConstants.KnoraBase.ValueHasUri).literals.head)
+        Future(UriValueV1(predicates(OntologyConstants.KnoraBase.ValueHasUri).literals.head))
     }
 
     /**
@@ -405,7 +405,7 @@ class ValueUtilV1(private val settings: SettingsImpl) {
       * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
       * @return a [[DateValueV1]].
       */
-    private def makeDateValue(valueProps: ValueProps, responderManager: ActorSelection, userProfile: UserProfileV1)(implicit timeout: Timeout, executionContext: ExecutionContext): ApiValueV1 = {
+    private def makeDateValue(valueProps: ValueProps, responderManager: ActorSelection, userProfile: UserProfileV1)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ApiValueV1] = {
         val predicates = valueProps.literalData
 
         val julianDayNumberValueV1 = JulianDayNumberValueV1(
@@ -416,7 +416,7 @@ class ValueUtilV1(private val settings: SettingsImpl) {
             calendar = KnoraCalendarV1.lookup(predicates(OntologyConstants.KnoraBase.ValueHasCalendar).literals.head)
         )
 
-        DateUtilV1.julianDayNumberValueV1ToDateValueV1(julianDayNumberValueV1)
+        Future(DateUtilV1.julianDayNumberValueV1ToDateValueV1(julianDayNumberValueV1))
     }
 
     /**
@@ -425,13 +425,13 @@ class ValueUtilV1(private val settings: SettingsImpl) {
       * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
       * @return a [[IntervalValueV1]].
       */
-    private def makeIntervalValue(valueProps: ValueProps, responderManager: ActorSelection, userProfile: UserProfileV1)(implicit timeout: Timeout, executionContext: ExecutionContext): ApiValueV1 = {
+    private def makeIntervalValue(valueProps: ValueProps, responderManager: ActorSelection, userProfile: UserProfileV1)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ApiValueV1] = {
         val predicates = valueProps.literalData
 
-        IntervalValueV1(
+        Future(IntervalValueV1(
             timeval1 = BigDecimal(predicates(OntologyConstants.KnoraBase.ValueHasIntervalStart).literals.head),
             timeval2 = BigDecimal(predicates(OntologyConstants.KnoraBase.ValueHasIntervalEnd).literals.head)
-        )
+        ))
     }
 
     /**
@@ -440,7 +440,7 @@ class ValueUtilV1(private val settings: SettingsImpl) {
       * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
       * @return a [[TextValueV1]].
       */
-    private def makeTextValue(valueProps: ValueProps, responderManager: ActorSelection, userProfile: UserProfileV1)(implicit timeout: Timeout, executionContext: ExecutionContext): ApiValueV1 = {
+    private def makeTextValue(valueProps: ValueProps, responderManager: ActorSelection, userProfile: UserProfileV1)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ApiValueV1] = {
 
         // TODO: change ValueProps so we have the value IRI here, so we can include it in the error message.
         val valueHasString = valueProps.literalData.get(OntologyConstants.KnoraBase.ValueHasString).map(_.literals.head).getOrElse(throw InconsistentTriplestoreDataException("Value has no knora-base:valueHasString"))
@@ -451,99 +451,98 @@ class ValueUtilV1(private val settings: SettingsImpl) {
             // get the Iri of the mapping
             val mappingIri = valueProps.literalData.getOrElse(OntologyConstants.KnoraBase.ValueHasMapping, throw InconsistentTriplestoreDataException("no mapping Iri associated with standoff")).literals.head
 
+
+            for {
+
             // get the mapping and the related standoff entities
-            val mappingResponseFuture: Future[GetMappingResponseV1] = (responderManager ? GetMappingRequestV1(mappingIri = mappingIri, userProfile = userProfile)).mapTo[GetMappingResponseV1]
+                mappingResponse: GetMappingResponseV1 <- (responderManager ? GetMappingRequestV1(mappingIri = mappingIri, userProfile = userProfile)).mapTo[GetMappingResponseV1]
 
-            // TODO: very very very bad
-            // FIXME: remove blocking code and return a Future instead!!!!!!!
-            val mappingResponse = Await.result(mappingResponseFuture, 2.seconds)
+                knoraIdUtil = new KnoraIdUtil
 
-            val knoraIdUtil = new KnoraIdUtil
+                standoffTags: Seq[StandoffTagV1] = valueProps.standoff.values.map {
 
-            val standoffTags: Seq[StandoffTagV1] = valueProps.standoff.values.map {
+                    (standoffInfo: Map[IRI, String]) =>
 
-                (standoffInfo: Map[IRI, String]) =>
+                        // create a sequence of `StandoffTagAttributeV1` from the given attributes
+                        val attributes: Seq[StandoffTagAttributeV1] = (standoffInfo -- StandoffProperties.systemProperties - OntologyConstants.Rdf.Type).map {
+                            case (propIri, value) =>
 
-                    // create a sequence of `StandoffTagAttributeV1` from the given attributes
-                    val attributes: Seq[StandoffTagAttributeV1] = (standoffInfo -- StandoffProperties.systemProperties - OntologyConstants.Rdf.Type).map {
-                        case (propIri, value) =>
+                                // check if the given property has an object type constraint (linking property) or an object data type constraint
+                                if (mappingResponse.standoffEntities.standoffPropertyEntityInfoMap(propIri).predicates.get(OntologyConstants.KnoraBase.ObjectClassConstraint).isDefined) {
 
-                            // check if the given property has an object type constraint (linking property) or an object data type constraint
-                            if (mappingResponse.standoffEntities.standoffPropertyEntityInfoMap(propIri).predicates.get(OntologyConstants.KnoraBase.ObjectClassConstraint).isDefined) {
+                                    // it is a linking property
+                                    // check if it refers to a resource or a standoff node
 
-                                // it is a linking property
-                                // check if it refers to a resource or a standoff node
+                                    if (mappingResponse.standoffEntities.standoffPropertyEntityInfoMap(propIri).isSubPropertyOf.contains(OntologyConstants.KnoraBase.StandoffTagHasInternalReference)) {
+                                        // it refers to a standoff node, recreate the original id
 
-                                if (mappingResponse.standoffEntities.standoffPropertyEntityInfoMap(propIri).isSubPropertyOf.contains(OntologyConstants.KnoraBase.StandoffTagHasInternalReference)) {
-                                    // it refers to a standoff node, recreate the original id
+                                        // value points to another standoff node
+                                        // get this standoff node and access its original id
+                                        val originalId: String = valueProps.standoff(value).getOrElse(OntologyConstants.KnoraBase.StandoffTagHasOriginalXMLID, throw InconsistentTriplestoreDataException(s"referred standoff $value node has no original XML id"))
 
-                                    // value points to another standoff node
-                                    // get this standoff node and access its original id
-                                    val originalId: String = valueProps.standoff(value).getOrElse(OntologyConstants.KnoraBase.StandoffTagHasOriginalXMLID, throw InconsistentTriplestoreDataException(s"referred standoff $value node has no original XML id"))
+                                        // recreate the original id reference
+                                        StandoffTagStringAttributeV1(standoffPropertyIri = propIri, value = "#" + originalId)
+                                    } else {
+                                        // it refers to a knora resource
+                                        StandoffTagIriAttributeV1(standoffPropertyIri = propIri, value = value)
+                                    }
+                                } else if (mappingResponse.standoffEntities.standoffPropertyEntityInfoMap(propIri).predicates.get(OntologyConstants.KnoraBase.ObjectDatatypeConstraint).isDefined) {
 
-                                    // recreate the original id reference
-                                    StandoffTagStringAttributeV1(standoffPropertyIri = propIri, value = "#" + originalId)
+                                    // it is a data type property (literal)
+                                    val propDataType = mappingResponse.standoffEntities.standoffPropertyEntityInfoMap(propIri).predicates(OntologyConstants.KnoraBase.ObjectDatatypeConstraint)
+
+                                    propDataType.objects.headOption match {
+                                        case Some(OntologyConstants.Xsd.String) =>
+                                            StandoffTagStringAttributeV1(standoffPropertyIri = propIri, value = value)
+
+                                        case Some(OntologyConstants.Xsd.Integer) =>
+                                            StandoffTagIntegerAttributeV1(standoffPropertyIri = propIri, value = value.toInt)
+
+                                        case Some(OntologyConstants.Xsd.Decimal) =>
+                                            StandoffTagDecimalAttributeV1(standoffPropertyIri = propIri, value = BigDecimal(value))
+
+                                        case Some(OntologyConstants.Xsd.Boolean) =>
+                                            StandoffTagBooleanAttributeV1(standoffPropertyIri = propIri, value = value.toBoolean)
+
+                                        case Some(OntologyConstants.Xsd.Uri) => StandoffTagIriAttributeV1(standoffPropertyIri = propIri, value = value)
+
+                                        case None => throw InconsistentTriplestoreDataException(s"did not find ${OntologyConstants.KnoraBase.ObjectDatatypeConstraint} for $propIri")
+
+                                        case other => throw InconsistentTriplestoreDataException(s"triplestore returned unknown ${OntologyConstants.KnoraBase.ObjectDatatypeConstraint} '$other' for $propIri")
+
+                                    }
                                 } else {
-                                    // it refers to a knora resource
-                                    StandoffTagIriAttributeV1(standoffPropertyIri = propIri, value = value)
+                                    throw InconsistentTriplestoreDataException(s"no object class or data type constraint found for property '$propIri'")
                                 }
-                            } else if (mappingResponse.standoffEntities.standoffPropertyEntityInfoMap(propIri).predicates.get(OntologyConstants.KnoraBase.ObjectDatatypeConstraint).isDefined) {
 
-                                // it is a data type property (literal)
-                                val propDataType = mappingResponse.standoffEntities.standoffPropertyEntityInfoMap(propIri).predicates(OntologyConstants.KnoraBase.ObjectDatatypeConstraint)
+                        }.toVector
 
-                                propDataType.objects.headOption match {
-                                    case Some(OntologyConstants.Xsd.String) =>
-                                        StandoffTagStringAttributeV1(standoffPropertyIri = propIri, value = value)
+                        StandoffTagV1(
+                            standoffTagClassIri = standoffInfo(OntologyConstants.Rdf.Type),
+                            startPosition = standoffInfo(OntologyConstants.KnoraBase.StandoffTagHasStart).toInt,
+                            endPosition = standoffInfo(OntologyConstants.KnoraBase.StandoffTagHasEnd).toInt,
+                            dataType = mappingResponse.standoffEntities.standoffClassEntityInfoMap(standoffInfo(OntologyConstants.Rdf.Type)).dataType,
+                            startIndex = standoffInfo(OntologyConstants.KnoraBase.StandoffTagHasStartIndex).toInt,
+                            endIndex = standoffInfo.get(OntologyConstants.KnoraBase.StandoffTagHasEndIndex) match {
+                                case Some(endIndex: String) => Some(endIndex.toInt)
+                                case None => None
+                            },
+                            uuid = standoffInfo(OntologyConstants.KnoraBase.StandoffTagHasUUID),
+                            originalXMLID = standoffInfo.get(OntologyConstants.KnoraBase.StandoffTagHasOriginalXMLID),
+                            startParentIndex = standoffInfo.get(OntologyConstants.KnoraBase.StandoffTagHasStartParentIndex) match {
+                                case Some(startParentIndex: String) => Some(startParentIndex.toInt)
+                                case None => None
+                            },
+                            endParentIndex = standoffInfo.get(OntologyConstants.KnoraBase.StandoffTagHasEndParentIndex) match {
+                                case Some(endParentIndex: String) => Some(endParentIndex.toInt)
+                                case None => None
+                            },
+                            attributes = attributes
+                        )
 
-                                    case Some(OntologyConstants.Xsd.Integer) =>
-                                        StandoffTagIntegerAttributeV1(standoffPropertyIri = propIri, value = value.toInt)
+                }.toVector
 
-                                    case Some(OntologyConstants.Xsd.Decimal) =>
-                                        StandoffTagDecimalAttributeV1(standoffPropertyIri = propIri, value = BigDecimal(value))
-
-                                    case Some(OntologyConstants.Xsd.Boolean) =>
-                                        StandoffTagBooleanAttributeV1(standoffPropertyIri = propIri, value = value.toBoolean)
-
-                                    case Some(OntologyConstants.Xsd.Uri) => StandoffTagIriAttributeV1(standoffPropertyIri = propIri, value = value)
-
-                                    case None => throw InconsistentTriplestoreDataException(s"did not find ${OntologyConstants.KnoraBase.ObjectDatatypeConstraint} for $propIri")
-
-                                    case other => throw InconsistentTriplestoreDataException(s"triplestore returned unknown ${OntologyConstants.KnoraBase.ObjectDatatypeConstraint} '$other' for $propIri")
-
-                                }
-                            } else {
-                                throw InconsistentTriplestoreDataException(s"no object class or data type constraint found for property '$propIri'")
-                            }
-
-                    }.toVector
-
-                    StandoffTagV1(
-                        standoffTagClassIri = standoffInfo(OntologyConstants.Rdf.Type),
-                        startPosition = standoffInfo(OntologyConstants.KnoraBase.StandoffTagHasStart).toInt,
-                        endPosition = standoffInfo(OntologyConstants.KnoraBase.StandoffTagHasEnd).toInt,
-                        dataType = mappingResponse.standoffEntities.standoffClassEntityInfoMap(standoffInfo(OntologyConstants.Rdf.Type)).dataType,
-                        startIndex = standoffInfo(OntologyConstants.KnoraBase.StandoffTagHasStartIndex).toInt,
-                        endIndex = standoffInfo.get(OntologyConstants.KnoraBase.StandoffTagHasEndIndex) match {
-                            case Some(endIndex: String) => Some(endIndex.toInt)
-                            case None => None
-                        },
-                        uuid = standoffInfo(OntologyConstants.KnoraBase.StandoffTagHasUUID),
-                        originalXMLID = standoffInfo.get(OntologyConstants.KnoraBase.StandoffTagHasOriginalXMLID),
-                        startParentIndex = standoffInfo.get(OntologyConstants.KnoraBase.StandoffTagHasStartParentIndex) match {
-                            case Some(startParentIndex: String) => Some(startParentIndex.toInt)
-                            case None => None
-                        },
-                        endParentIndex = standoffInfo.get(OntologyConstants.KnoraBase.StandoffTagHasEndParentIndex) match {
-                            case Some(endParentIndex: String) => Some(endParentIndex.toInt)
-                            case None => None
-                        },
-                        attributes = attributes
-                    )
-
-            }.toVector
-
-            TextValueWithStandoffV1(
+            } yield TextValueWithStandoffV1(
                 utf8str = valueHasString,
                 standoff = standoffTags,
                 mappingIri = mappingIri,
@@ -554,9 +553,9 @@ class ValueUtilV1(private val settings: SettingsImpl) {
         } else {
             // there is no standoff markup
 
-            TextValueSimpleV1(
+            Future(TextValueSimpleV1(
                 utf8str = valueHasString
-            )
+            ))
         }
     }
 
@@ -566,10 +565,10 @@ class ValueUtilV1(private val settings: SettingsImpl) {
       * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
       * @return a [[ColorValueV1]].
       */
-    private def makeColorValue(valueProps: ValueProps, responderManager: ActorSelection, userProfile: UserProfileV1)(implicit timeout: Timeout, executionContext: ExecutionContext): ApiValueV1 = {
+    private def makeColorValue(valueProps: ValueProps, responderManager: ActorSelection, userProfile: UserProfileV1)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ApiValueV1] = {
         val predicates = valueProps.literalData
 
-        ColorValueV1(predicates(OntologyConstants.KnoraBase.ValueHasColor).literals.head)
+        Future(ColorValueV1(predicates(OntologyConstants.KnoraBase.ValueHasColor).literals.head))
     }
 
     /**
@@ -578,10 +577,10 @@ class ValueUtilV1(private val settings: SettingsImpl) {
       * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
       * @return a [[GeomValueV1]].
       */
-    private def makeGeomValue(valueProps: ValueProps, responderManager: ActorSelection, userProfile: UserProfileV1)(implicit timeout: Timeout, executionContext: ExecutionContext): ApiValueV1 = {
+    private def makeGeomValue(valueProps: ValueProps, responderManager: ActorSelection, userProfile: UserProfileV1)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ApiValueV1] = {
         val predicates = valueProps.literalData
 
-        GeomValueV1(predicates(OntologyConstants.KnoraBase.ValueHasGeometry).literals.head)
+        Future(GeomValueV1(predicates(OntologyConstants.KnoraBase.ValueHasGeometry).literals.head))
     }
 
     /**
@@ -590,10 +589,10 @@ class ValueUtilV1(private val settings: SettingsImpl) {
       * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
       * @return a [[HierarchicalListValueV1]].
       */
-    private def makeListValue(valueProps: ValueProps, responderManager: ActorSelection, userProfile: UserProfileV1)(implicit timeout: Timeout, executionContext: ExecutionContext): ApiValueV1 = {
+    private def makeListValue(valueProps: ValueProps, responderManager: ActorSelection, userProfile: UserProfileV1)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ApiValueV1] = {
         val predicates = valueProps.literalData
 
-        HierarchicalListValueV1(predicates(OntologyConstants.KnoraBase.ValueHasListNode).literals.head)
+        Future(HierarchicalListValueV1(predicates(OntologyConstants.KnoraBase.ValueHasListNode).literals.head))
     }
 
     /**
@@ -602,10 +601,10 @@ class ValueUtilV1(private val settings: SettingsImpl) {
       * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
       * @return a [[StillImageFileValueV1]].
       */
-    private def makeStillImageValue(valueProps: ValueProps, responderManager: ActorSelection, userProfile: UserProfileV1)(implicit timeout: Timeout, executionContext: ExecutionContext): ApiValueV1 = {
+    private def makeStillImageValue(valueProps: ValueProps, responderManager: ActorSelection, userProfile: UserProfileV1)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ApiValueV1] = {
         val predicates = valueProps.literalData
 
-        StillImageFileValueV1(
+        Future(StillImageFileValueV1(
             internalMimeType = predicates(OntologyConstants.KnoraBase.InternalMimeType).literals.head,
             internalFilename = predicates(OntologyConstants.KnoraBase.InternalFilename).literals.head,
             originalFilename = predicates(OntologyConstants.KnoraBase.OriginalFilename).literals.head,
@@ -613,7 +612,7 @@ class ValueUtilV1(private val settings: SettingsImpl) {
             dimY = predicates(OntologyConstants.KnoraBase.DimY).literals.head.toInt,
             qualityLevel = predicates(OntologyConstants.KnoraBase.QualityLevel).literals.head.toInt,
             isPreview = InputValidation.optionStringToBoolean(predicates.get(OntologyConstants.KnoraBase.IsPreview).flatMap(_.literals.headOption))
-        )
+        ))
     }
 
     /**
@@ -622,14 +621,14 @@ class ValueUtilV1(private val settings: SettingsImpl) {
       * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
       * @return a [[TextFileValueV1]].
       */
-    private def makeTextFileValue(valueProps: ValueProps, responderManager: ActorSelection, userProfile: UserProfileV1)(implicit timeout: Timeout, executionContext: ExecutionContext): ApiValueV1 = {
+    private def makeTextFileValue(valueProps: ValueProps, responderManager: ActorSelection, userProfile: UserProfileV1)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ApiValueV1] = {
         val predicates = valueProps.literalData
 
-        TextFileValueV1(
+        Future(TextFileValueV1(
             internalMimeType = predicates(OntologyConstants.KnoraBase.InternalMimeType).literals.head,
             internalFilename = predicates(OntologyConstants.KnoraBase.InternalFilename).literals.head,
             originalFilename = predicates(OntologyConstants.KnoraBase.OriginalFilename).literals.head
-        )
+        ))
     }
 
     /**
@@ -638,15 +637,15 @@ class ValueUtilV1(private val settings: SettingsImpl) {
       * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
       * @return a [[LinkValueV1]].
       */
-    private def makeLinkValue(valueProps: ValueProps, responderManager: ActorSelection, userProfile: UserProfileV1)(implicit timeout: Timeout, executionContext: ExecutionContext): ApiValueV1 = {
+    private def makeLinkValue(valueProps: ValueProps, responderManager: ActorSelection, userProfile: UserProfileV1)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ApiValueV1] = {
         val predicates = valueProps.literalData
 
-        LinkValueV1(
+        Future(LinkValueV1(
             subjectIri = predicates(OntologyConstants.Rdf.Subject).literals.head,
             predicateIri = predicates(OntologyConstants.Rdf.Predicate).literals.head,
             objectIri = predicates(OntologyConstants.Rdf.Object).literals.head,
             referenceCount = predicates(OntologyConstants.KnoraBase.ValueHasRefCount).literals.head.toInt
-        )
+        ))
     }
 
     /**
@@ -655,10 +654,10 @@ class ValueUtilV1(private val settings: SettingsImpl) {
       * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
       * @return a [[GeonameValueV1]].
       */
-    private def makeGeonameValue(valueProps: ValueProps, responderManager: ActorSelection, userProfile: UserProfileV1)(implicit timeout: Timeout, executionContext: ExecutionContext): ApiValueV1 = {
+    private def makeGeonameValue(valueProps: ValueProps, responderManager: ActorSelection, userProfile: UserProfileV1)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ApiValueV1] = {
         val predicates = valueProps.literalData
 
-        GeonameValueV1(predicates(OntologyConstants.KnoraBase.ValueHasGeonameCode).literals.head)
+        Future(GeonameValueV1(predicates(OntologyConstants.KnoraBase.ValueHasGeonameCode).literals.head))
     }
 
     /** Creates an attribute segment for the Salsah GUI from the given resource class.
