@@ -39,7 +39,7 @@ object UsersRouteV1 extends Authenticator {
     private val schemes = Array("http", "https")
     private val urlValidator = new UrlValidator(schemes)
 
-    def rapierPath(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter): Route = {
+    def knoraApiPath(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter): Route = {
 
 
         implicit val system: ActorSystem = _system
@@ -50,8 +50,9 @@ object UsersRouteV1 extends Authenticator {
         path("v1" / "users" / "iri" / Segment) {value =>
             get {
                 requestContext =>
+                    val userProfile = getUserProfileV1(requestContext)
                     val userIri = InputValidation.toIri(value, () => throw BadRequestException(s"Invalid user IRI $value"))
-                    val requestMessage = UserProfileByIRIGetRequestV1(userIri, UserProfileType.RESTRICTED)
+                    val requestMessage = UserProfileByIRIGetRequestV1(userIri, UserProfileType.RESTRICTED, userProfile)
                     RouteUtilV1.runJsonRoute(
                         requestMessage,
                         requestContext,
@@ -61,10 +62,11 @@ object UsersRouteV1 extends Authenticator {
                     )
             }
         } ~
-        path("v1" / "users" / "username" / Segment) {value =>
+        path("v1" / "users" / "email" / Segment) {value =>
             get {
                 requestContext =>
-                    val requestMessage = UserProfileByEmailGetRequestV1(value, UserProfileType.RESTRICTED)
+                    val userProfile = getUserProfileV1(requestContext)
+                    val requestMessage = UserProfileByEmailGetRequestV1(value, UserProfileType.RESTRICTED, userProfile)
                     RouteUtilV1.runJsonRoute(
                         requestMessage,
                         requestContext,

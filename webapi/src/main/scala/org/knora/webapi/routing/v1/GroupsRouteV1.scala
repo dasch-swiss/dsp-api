@@ -31,7 +31,7 @@ object GroupsRouteV1 extends Authenticator {
     private val schemes = Array("http", "https")
     private val urlValidator = new UrlValidator(schemes)
 
-    def rapierPath(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter): Route = {
+    def knoraApiPath(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter): Route = {
 
         implicit val system: ActorSystem = _system
         implicit val executionContext = system.dispatcher
@@ -57,9 +57,6 @@ object GroupsRouteV1 extends Authenticator {
                 requestContext =>
                     val groupIri = InputValidation.toIri(value, () => throw BadRequestException(s"Invalid group IRI $value"))
                     val userProfile = getUserProfileV1(requestContext)
-                    val params = requestContext.request.uri.query().toMap
-                    val projectIriValue = params.getOrElse("projectIri", "")
-                    val projectIri = InputValidation.toIri(projectIriValue, () => throw BadRequestException(s"Invalid project IRI supplied: $projectIriValue"))
                     val requestMessage = GroupInfoByIRIGetRequest(value, Some(userProfile))
 
                     RouteUtilV1.runJsonRoute(

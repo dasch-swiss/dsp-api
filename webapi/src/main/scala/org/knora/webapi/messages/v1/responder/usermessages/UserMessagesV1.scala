@@ -100,23 +100,45 @@ case class ChangeUserStatusApiRequestV1(newStatus: Boolean) {
 sealed trait UsersResponderRequestV1 extends KnoraRequestV1
 
 /**
-  * A message that requests a user's profile. A successful response will be a [[UserProfileV1]].
+  * A message that requests a user's profile. A successful response will be a [[UserProfileResponseV1]].
   *
   * @param userIri         the IRI of the user to be queried.
   * @param userProfileType the extent of the information returned.
   */
 case class UserProfileByIRIGetRequestV1(userIri: IRI,
-                                        userProfileType: UserProfileType) extends UsersResponderRequestV1
+                                        userProfileType: UserProfileType,
+                                        userProfile: UserProfileV1) extends UsersResponderRequestV1
+
 
 /**
   * A message that requests a user's profile. A successful response will be a [[UserProfileV1]].
   *
-  * @param email           the username of the user to be queried.
+  * @param userIri         the IRI of the user to be queried.
   * @param userProfileType the extent of the information returned.
   */
-case class UserProfileByEmailGetRequestV1(email: String,
-                                          userProfileType: UserProfileType) extends UsersResponderRequestV1
+case class UserProfileByIRIGetV1(userIri: IRI,
+                                 userProfileType: UserProfileType) extends UsersResponderRequestV1
 
+/**
+  * A message that requests a user's profile. A successful response will be a [[UserProfileResponseV1]].
+  *
+  * @param email           the email of the user to be queried.
+  * @param userProfileType the extent of the information returned.
+  * @param userProfile the requesting user's profile.
+  */
+case class UserProfileByEmailGetRequestV1(email: String,
+                                          userProfileType: UserProfileType,
+                                          userProfile: UserProfileV1) extends UsersResponderRequestV1
+
+
+/**
+  * A message that requests a user's profile. A successful response will be a [[UserProfileV1]].
+  *
+  * @param email           the email of the user to be queried.
+  * @param userProfileType the extent of the information returned.
+  */
+case class UserProfileByEmailGetV1(email: String,
+                                   userProfileType: UserProfileType) extends UsersResponderRequestV1
 
 /**
   * Requests the creation of a new user.
@@ -170,6 +192,16 @@ case class UserChangeStatusRequestV1(userIri: IRI,
 
 
 // Responses
+
+/**
+  * Represents an answer to an user profile request.
+  *
+  * @param userProfile the user's profile of the requested type.
+  * @param userData information about the user that made the request.
+  */
+case class UserProfileResponseV1(userProfile: UserProfileV1, userData: UserDataV1) extends KnoraResponseV1 {
+    def toJsValue = UserV1JsonProtocol.userProfileResponseV1Format.write(this)
+}
 
 /**
   * Represents an answer to an user creating/modifying operation.
@@ -417,5 +449,6 @@ object UserV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
     implicit val updateUserApiRequestV1Format: RootJsonFormat[UpdateUserApiRequestV1] = jsonFormat7(UpdateUserApiRequestV1)
     implicit val changeUserPasswordApiRequestV1Format: RootJsonFormat[ChangeUserPasswordApiRequestV1] = jsonFormat2(ChangeUserPasswordApiRequestV1)
     implicit val changeUserStatusApiRequestV1Format: RootJsonFormat[ChangeUserStatusApiRequestV1] = jsonFormat1(ChangeUserStatusApiRequestV1)
+    implicit val userProfileResponseV1Format: RootJsonFormat[UserProfileResponseV1] = jsonFormat2(UserProfileResponseV1)
     implicit val userOperationResponseV1Format: RootJsonFormat[UserOperationResponseV1] = jsonFormat2(UserOperationResponseV1)
 }
