@@ -43,14 +43,7 @@
        salsah-gui:guiElement salsah-gui:SimpleText ;
 
        salsah-gui:guiAttribute "size=80" ,
-                               "maxlength=255" ;
-
-       knora-base:hasDefaultViewPermission knora-base:KnownUser ,
-                                           knora-base:UnknownUser ;
-
-       knora-base:hasDefaultModifyPermission knora-base:ProjectMember ;
-
-       knora-base:hasDefaultDeletePermission knora-base:Owner .
+                               "maxlength=255" .
 
 ### ###########################################
 ### beol:creationDate
@@ -72,14 +65,7 @@
               salsah-gui:guiAttribute "size=16" ,
                                     "maxlength=32" ;
 
-              rdfs:comment """Datum der Entstehung"""@de ;
-
-              knora-base:hasDefaultViewPermission knora-base:KnownUser ,
-                                                knora-base:UnknownUser ;
-
-              knora-base:hasDefaultModifyPermission knora-base:ProjectMember ;
-
-              knora-base:hasDefaultDeletePermission knora-base:Owner .
+              rdfs:comment """Datum der Entstehung"""@de .
 
 ### ###########################################
 ### beol:hasAuthor
@@ -101,14 +87,7 @@
            salsah-gui:guiElement salsah-gui:SimpleText ;
 
            salsah-gui:guiAttribute "size=60" ,
-                                   "maxlength=255" ;
-
-           knora-base:hasDefaultViewPermission knora-base:KnownUser ,
-                                               knora-base:UnknownUser ;
-
-           knora-base:hasDefaultModifyPermission knora-base:ProjectMember ;
-
-           knora-base:hasDefaultDeletePermission knora-base:Owner .
+                                   "maxlength=255" .
 
 
    ### ###########################################
@@ -135,13 +114,7 @@
 
              salsah-gui:guiAttribute "cols=60" ,
                                      "rows=4" ,
-                                     "wrap=soft" ;
-
-             knora-base:hasDefaultViewPermission knora-base:KnownUser ,
-                                                 knora-base:UnknownUser ;
-
-             knora-base:hasDefaultDeletePermission knora-base:ProjectMember ,
-                                                   knora-base:Owner .
+                                     "wrap=soft" .
 
    ### ###########################################
    ### beol:partOfValue
@@ -186,13 +159,7 @@
 
            salsah-gui:guiOrder "2"^^xsd:integer ;
 
-           salsah-gui:guiElement salsah-gui:Searchbox ;
-
-           knora-base:hasDefaultViewPermission knora-base:KnownUser ,
-                                               knora-base:UnknownUser ,
-                                               knora-base:ProjectMember ;
-
-           knora-base:hasDefaultDeletePermission knora-base:Owner .
+           salsah-gui:guiElement salsah-gui:Searchbox .
 
    ### ###########################################
    ### beol:seqnum
@@ -219,13 +186,7 @@
            salsah-gui:guiElement salsah-gui:Spinbox ;
 
            salsah-gui:guiAttribute "min=0" ,
-                                   "max=-1" ;
-
-           knora-base:hasDefaultViewPermission knora-base:KnownUser ,
-                                               knora-base:UnknownUser ,
-                                               knora-base:ProjectMember ;
-
-           knora-base:hasDefaultModifyPermission knora-base:Owner .
+                                   "max=-1" .
 
     ### ###########################################
     ### beol:pagenum
@@ -250,14 +211,7 @@
             salsah-gui:guiElement salsah-gui:SimpleText ;
 
             salsah-gui:guiAttribute "min=4" ,
-                                    "max=8" ;
-
-            knora-base:hasDefaultViewPermission knora-base:UnknownUser ,
-                                                knora-base:KnownUser ;
-
-            knora-base:hasDefaultModifyPermission knora-base:ProjectMember ;
-
-            knora-base:hasDefaultDeletePermission knora-base:Owner .
+                                    "max=8" .
 
 
 
@@ -281,14 +235,7 @@
 
                   salsah-gui:guiOrder "5"^^xsd:integer ;
 
-                  salsah-gui:guiElement salsah-gui:SimpleText  ;
-
-                  knora-base:hasDefaultViewPermission knora-base:UnknownUser ,
-                                                      knora-base:KnownUser ;
-
-                  knora-base:hasDefaultModifyPermission knora-base:ProjectMember ;
-
-                  knora-base:hasDefaultDeletePermission knora-base:Owner .
+                  salsah-gui:guiElement salsah-gui:SimpleText .
 
     ### ###########################################
     ### beol:hasSon
@@ -310,14 +257,7 @@
 
                       salsah-gui:guiOrder "5"^^xsd:integer ;
 
-                      salsah-gui:guiElement salsah-gui:Searchbox ;
-
-                      knora-base:hasDefaultViewPermission knora-base:UnknownUser ,
-                                                          knora-base:KnownUser ;
-
-                      knora-base:hasDefaultModifyPermission knora-base:ProjectMember ;
-
-                      knora-base:hasDefaultDeletePermission knora-base:Owner .
+                      salsah-gui:guiElement salsah-gui:Searchbox .
 
     ### ###########################################
     ### beol:hasSonValue
@@ -485,14 +425,7 @@
                      "Manoscritto"@it ,
                      "Manuscript"@en ;
 
-          rdfs:comment """Diese Resource-Klasse beschreibt ein Manuskript"""@de ;
-
-          knora-base:hasDefaultRestrictedViewPermission knora-base:UnknownUser ;
-
-          knora-base:hasDefaultViewPermission knora-base:KnownUser ;
-
-          knora-base:hasDefaultModifyPermission knora-base:ProjectMember ,
-                                                knora-base:Owner .
+          rdfs:comment """Diese Resource-Klasse beschreibt ein Manuskript"""@de .
 
     ### ###########################################
     ### beol:page
@@ -530,14 +463,7 @@
 
           rdfs:comment """Eine Seite ist ein Teil eines Konvoluts"""@de ,
                        """Une page est une partie d'un convoluté"""@fr ,
-                       """A page is a part of a convolute"""@en ;
-
-          knora-base:hasDefaultRestrictedViewPermission knora-base:UnknownUser ;
-
-          knora-base:hasDefaultViewPermission knora-base:KnownUser ;
-
-          knora-base:hasDefaultModifyPermission knora-base:ProjectMember ,
-                                                knora-base:Owner .
+                       """A page is a part of a convolute"""@en .
 
     ### ###########################################
     ### beol:Person
@@ -585,11 +511,4 @@
                     "Personne"@fr ,
                     "Person"@en ;
 
-        rdfs:comment "A resource representing a person"@en ;
-
-        knora-base:hasDefaultRestrictedViewPermission knora-base:UnknownUser ;
-
-        knora-base:hasDefaultViewPermission knora-base:KnownUser ;
-
-        knora-base:hasDefaultModifyPermission knora-base:ProjectMember ,
-                                          knora-base:Owner .
+        rdfs:comment "A resource representing a person"@en .
