@@ -116,7 +116,7 @@ class SearchResponderV1 extends ResponderV1 {
     def receive = {
         case searchGetRequest: FulltextSearchGetRequestV1 => future2Message(sender(), fulltextSearchV1(searchGetRequest), log)
         case searchGetRequest: ExtendedSearchGetRequestV1 => future2Message(sender(), extendedSearchV1(searchGetRequest), log)
-        case other => sender ! Status.Failure(UnexpectedMessageException(s"Unexpected message $other of type ${other.getClass.getCanonicalName}"))
+        case other => handleUnexpectedMessage(sender(), other, log)
     }
 
     /**
@@ -179,13 +179,7 @@ class SearchResponderV1 extends ResponderV1 {
                     val resourceProject = firstRowMap("resourceProject")
                     val resourcePermissions = firstRowMap.get("resourcePermissions")
 
-                    val resourcePermissionCode: Option[Int] = PermissionUtilV1.getUserPermissionV1(
-                        subjectIri = resourceIri,
-                        subjectOwner = resourceOwner,
-                        subjectProject = resourceProject,
-                        subjectPermissionLiteral = resourcePermissions,
-                        userProfile = searchGetRequest.userProfile
-                    )
+                    val resourcePermissionCode: Option[Int] = PermissionUtilV1.getUserPermissionV1(subjectIri = resourceIri, subjectCreator = resourceOwner, subjectProject = resourceProject, subjectPermissionLiteral = resourcePermissions, userProfile = searchGetRequest.userProfile)
 
                     if (resourcePermissionCode.nonEmpty) {
                         // Yes. Get more information about the resource.
@@ -205,13 +199,7 @@ class SearchResponderV1 extends ResponderV1 {
                                 val valueOwner = row.rowMap(s"valueOwner")
                                 val valueProject = row.rowMap.getOrElse(s"valueProject", resourceProject) // If the value doesn't specify a project, it's implicitly in the resource's project.
                             val valuePermissionsLiteral = row.rowMap.get(s"valuePermissions")
-                                val valuePermissionCode = PermissionUtilV1.getUserPermissionV1(
-                                    subjectIri = valueIri,
-                                    subjectOwner = valueOwner,
-                                    subjectProject = valueProject,
-                                    subjectPermissionLiteral = valuePermissionsLiteral,
-                                    userProfile = searchGetRequest.userProfile
-                                )
+                                val valuePermissionCode = PermissionUtilV1.getUserPermissionV1(subjectIri = valueIri, subjectCreator = valueOwner, subjectProject = valueProject, subjectPermissionLiteral = valuePermissionsLiteral, userProfile = searchGetRequest.userProfile)
 
                                 val value: Option[(IRI, MatchingValue)] = valuePermissionCode.map {
                                     permissionCode =>
@@ -500,13 +488,7 @@ class SearchResponderV1 extends ResponderV1 {
                     val resourceProject = firstRowMap("resourceProject")
                     val resourcePermissions = firstRowMap.get("resourcePermissions")
 
-                    val resourcePermissionCode: Option[Int] = PermissionUtilV1.getUserPermissionV1(
-                        subjectIri = resourceIri,
-                        subjectOwner = resourceOwner,
-                        subjectProject = resourceProject,
-                        subjectPermissionLiteral = resourcePermissions,
-                        userProfile = searchGetRequest.userProfile
-                    )
+                    val resourcePermissionCode: Option[Int] = PermissionUtilV1.getUserPermissionV1(subjectIri = resourceIri, subjectCreator = resourceOwner, subjectProject = resourceProject, subjectPermissionLiteral = resourcePermissions, userProfile = searchGetRequest.userProfile)
 
                     if (resourcePermissionCode.nonEmpty) {
                         // Yes. Get more information about the resource.
@@ -551,25 +533,13 @@ class SearchResponderV1 extends ResponderV1 {
                                                 val targetResourceProject = row.rowMap(s"targetResourceProject$index")
                                                 val targetResourcePermissionLiteral = row.rowMap.get(s"targetResourcePermissions$index")
 
-                                                val targetResourcePermissionCode = PermissionUtilV1.getUserPermissionV1(
-                                                    subjectIri = targetResourceIri,
-                                                    subjectOwner = targetResourceOwner,
-                                                    subjectProject = targetResourceProject,
-                                                    subjectPermissionLiteral = targetResourcePermissionLiteral,
-                                                    userProfile = searchGetRequest.userProfile
-                                                )
+                                                val targetResourcePermissionCode = PermissionUtilV1.getUserPermissionV1(subjectIri = targetResourceIri, subjectCreator = targetResourceOwner, subjectProject = targetResourceProject, subjectPermissionLiteral = targetResourcePermissionLiteral, userProfile = searchGetRequest.userProfile)
 
                                                 // Only allow the user to see the match if they have view permission on both the link value and the target resource.
                                                 Seq(linkValuePermissionCode, targetResourcePermissionCode).min
                                             } else {
                                                 // The matching object is an ordinary value, not a LinkValue.
-                                                PermissionUtilV1.getUserPermissionV1(
-                                                    subjectIri = valueIri,
-                                                    subjectOwner = valueOwner,
-                                                    subjectProject = valueProject,
-                                                    subjectPermissionLiteral = valuePermissionLiteral,
-                                                    userProfile = searchGetRequest.userProfile
-                                                )
+                                                PermissionUtilV1.getUserPermissionV1(subjectIri = valueIri, subjectCreator = valueOwner, subjectProject = valueProject, subjectPermissionLiteral = valuePermissionLiteral, userProfile = searchGetRequest.userProfile)
                                             }
 
                                             val propertyIri = searchCriterion.propertyIri

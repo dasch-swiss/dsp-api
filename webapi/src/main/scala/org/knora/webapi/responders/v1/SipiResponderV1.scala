@@ -60,7 +60,7 @@ class SipiResponderV1 extends ResponderV1 {
         case SipiFileInfoGetRequestV1(fileValueIri, userProfile) => future2Message(sender(), getFileInfoForSipiV1(fileValueIri, userProfile), log)
         case convertPathRequest: SipiResponderConversionPathRequestV1 => future2Message(sender(), convertPathV1(convertPathRequest), log)
         case convertFileRequest: SipiResponderConversionFileRequestV1 => future2Message(sender(), convertFileV1(convertFileRequest), log)
-        case other => sender ! Status.Failure(UnexpectedMessageException(s"Unexpected message $other of type ${other.getClass.getCanonicalName}"))
+        case other => handleUnexpectedMessage(sender(), other, log)
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -81,7 +81,7 @@ class SipiResponderV1 extends ResponderV1 {
             queryResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
             rows = queryResponse.results.bindings
             // check if rows were found for the given filename
-            _ = if (rows.size == 0) throw BadRequestException(s"No file value was found for filename $filename")
+            _ = if (rows.isEmpty) throw BadRequestException(s"No file value was found for filename $filename")
             valueProps = valueUtilV1.createValueProps(filename, rows)
             valueV1: ApiValueV1 = valueUtilV1.makeValueV1(valueProps)
             path = valueV1 match {
@@ -110,15 +110,13 @@ class SipiResponderV1 extends ResponderV1 {
     private def callSipiConvertRoute(url: String, conversionRequest: SipiResponderConversionRequestV1): Future[SipiResponderConversionResponseV1] = {
 
         val conversionResultFuture: Future[HttpResponse] = for {
-            request <- Marshal(conversionRequest.toFormData()).to[RequestEntity]
+            request <- Marshal(FormData(conversionRequest.toFormData())).to[RequestEntity]
+
             response <- Http().singleRequest(
                 HttpRequest(
                     method = HttpMethods.POST,
                     uri = url,
-                    entity = HttpEntity(
-                        MediaTypes.`application/json`,
-                        conversionRequest.toJsValue.compactPrint
-                    )
+                    entity = request
                 )
             )
         } yield response
@@ -142,10 +140,12 @@ class SipiResponderV1 extends ResponderV1 {
             httpStatusCode: StatusCode = conversionResultResponse.status
             statusInt: Int = httpStatusCode.intValue / 100
 
-            _ = statusInt match {
+            /* get json from response body */
+            responseAsJson: JsValue <- statusInt match {
+                case 2 => conversionResultResponse.entity.toStrict(5.seconds).map(_.data.decodeString("UTF-8").parseJson) // returns a Future(Map(...))
                 case 4 =>
                     // Bad Request: it is the user's responsibility
-                    val errMsg = try {
+                    val errMessage: Future[SipiErrorConversionResponse] = try {
                         // parse answer as a Sipi error message
                         val sef: Future[SipiErrorConversionResponse] = conversionResultResponse.entity.toStrict(5.seconds).map(_.data.decodeString("UTF-8").parseJson.convertTo[SipiErrorConversionResponse])
                         sef
@@ -154,26 +154,16 @@ class SipiResponderV1 extends ResponderV1 {
                         case e: DeserializationException => throw SipiException(message = "JSON error response returned by Sipi is invalid, it cannot be turned into a SipiErrorConversionResponse", e = e, log = log)
                     }
                     // most probably the user sent invalid data which caused a Sipi error
-                    throw BadRequestException(s"Sipi returned a non successful HTTP status code $httpStatusCode: $errMsg")
-
+                    errMessage.map(errMsg => throw BadRequestException(s"Sipi returned a non successful HTTP status code $httpStatusCode: $errMsg"))
                 case 5 =>
                     // Internal Server Error: not the user's fault
-                    val sf: Future[String] = conversionResultResponse.entity.toStrict(5.seconds).map(_.data.decodeString("UTF-8"))
-                    throw SipiException(s"Sipi reported an internal server error $httpStatusCode - $sf")
+                    val errString: Future[String] = conversionResultResponse.entity.toStrict(5.seconds).map(_.data.decodeString("UTF-8"))
+                    errString.map(errStr => throw SipiException(s"Sipi reported an internal server error $httpStatusCode - $errStr"))
+                case other => throw SipiException(s"Sipi returned $other!")
             }
 
             // get file type from Sipi response
-            responseAsMap: Map[String, JsValue] = conversionResultResponse.entity.toString.parseJson.asJsObject.fields.toMap
-
-            statusCode: Int = responseAsMap.getOrElse("status", throw SipiException(message = "Sipi did not return a status code")) match {
-                case JsNumber(ftype: BigDecimal) => ftype.toInt
-                case other => throw SipiException(message = s"Sipi did not return a correct status code, but ${other.toString()}")
-            }
-
-            // check if Sipi returned a status code != 0
-            _ = if (statusCode != 0) throw BadRequestException(s"Sipi returned a HTTP 200 status code, but an unsuccessful status code ${statusCode}")
-
-            fileType: String = responseAsMap.getOrElse("file_type", throw SipiException(message = "Sipi did not return a file type")) match {
+            fileType: String = responseAsJson.asJsObject.fields.getOrElse("file_type", throw SipiException(message = "Sipi did not return a file type")) match {
                 case JsString(ftype: String) => ftype
                 case other => throw SipiException(message = s"Sipi did not return a correct file type, but: ${other}")
             }
@@ -186,7 +176,7 @@ class SipiResponderV1 extends ResponderV1 {
                 case SipiConstants.FileType.IMAGE =>
                     // parse response as a [[SipiImageConversionResponse]]
                     val imageConversionResult = try {
-                        conversionResultResponse.entity.toString.parseJson.convertTo[SipiImageConversionResponse]
+                        responseAsJson.convertTo[SipiImageConversionResponse]
                     } catch {
                         case e: DeserializationException => throw SipiException(message = "JSON response returned by Sipi is invalid, it cannot be turned into a SipiImageConversionResponse", e = e, log = log)
                     }

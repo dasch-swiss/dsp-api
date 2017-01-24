@@ -29,7 +29,7 @@ import org.knora.webapi
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.ckanmessages._
 import org.knora.webapi.messages.v1.responder.listmessages.{NodePathGetRequestV1, NodePathGetResponseV1}
-import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoByShortnameGetRequest, ProjectInfoResponseV1, ProjectInfoType, ProjectInfoV1}
+import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoByShortnameGetRequestV1, ProjectInfoResponseV1, ProjectInfoV1}
 import org.knora.webapi.messages.v1.responder.resourcemessages._
 import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
 import org.knora.webapi.messages.v1.responder.valuemessages.{DateValueV1, HierarchicalListValueV1, LinkV1, TextValueV1}
@@ -48,7 +48,7 @@ class CkanResponderV1 extends ResponderV1 {
 
     def receive = {
         case CkanRequestV1(projects, limit, info, userProfile) => future2Message(sender(), getCkanResponseV1(projects, limit, info, userProfile), log)
-        case other => sender ! Status.Failure(UnexpectedMessageException(s"Unexpected message $other of type ${other.getClass.getCanonicalName}"))
+        case other => handleUnexpectedMessage(sender(), other, log)
     }
 
     private def getCkanResponseV1(project: Option[Seq[String]], limit: Option[Int], info: Boolean, userProfile: UserProfileV1): Future[CkanResponseV1] = {
@@ -113,7 +113,7 @@ class CkanResponderV1 extends ResponderV1 {
         val ckanPInfo =
             CkanProjectInfoV1(
                 shortname = pinfo.shortname,
-                longname = pinfo.longname,
+                longname = pinfo.longname.getOrElse(pinfo.shortname),
                 ckan_tags = Vector("Kulturanthropologie"),
                 ckan_license_id = "CC-BY-NC-SA-4.0")
 
@@ -205,7 +205,7 @@ class CkanResponderV1 extends ResponderV1 {
         val ckanPInfo =
             CkanProjectInfoV1(
                 shortname = pinfo.shortname,
-                longname = pinfo.longname,
+                longname = pinfo.longname.getOrElse(pinfo.shortname),
                 ckan_tags = Vector("Kunstgeschichte"),
                 ckan_license_id = "CC-BY-4.0")
 
@@ -301,7 +301,7 @@ class CkanResponderV1 extends ResponderV1 {
         Future.sequence {
             for {
                 pName <- projectNames
-                projectInfoResponseFuture = (responderManager ? ProjectInfoByShortnameGetRequest(pName, ProjectInfoType.SHORT, Some(userProfile))).mapTo[ProjectInfoResponseV1]
+                projectInfoResponseFuture = (responderManager ? ProjectInfoByShortnameGetRequestV1(pName, Some(userProfile))).mapTo[ProjectInfoResponseV1]
                 result = projectInfoResponseFuture.map(_.project_info) map {
                     case pInfo => (pName, pInfo)
                 }

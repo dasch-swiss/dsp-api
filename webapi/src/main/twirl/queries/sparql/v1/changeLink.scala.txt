@@ -187,7 +187,7 @@ WHERE {
     @* Do nothing if the link source isn't a knora-base:Resource. *@
 
     ?linkSource rdf:type ?linkSourceClass .
-    ?linkSourceClass rdfs:subClassOf+ knora-base:Resource .
+    ?linkSourceClass rdfs:subClassOf* knora-base:Resource .
 
     @* Do nothing if the link source is marked as deleted. *@
 
@@ -261,7 +261,7 @@ WHERE {
     @if(linkUpdateForNewLink.insertDirectLink) {
         ?linkTargetForNewLink rdf:type ?linkTargetClass ;
             knora-base:isDeleted false .
-        ?linkTargetClass rdfs:subClassOf+ knora-base:Resource .
+        ?linkTargetClass rdfs:subClassOf* knora-base:Resource .
         ?linkProperty knora-base:objectClassConstraint ?expectedTargetClass .
         ?linkTargetClass rdfs:subClassOf* ?expectedTargetClass .
     } else {

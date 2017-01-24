@@ -158,7 +158,7 @@ WHERE {
     ?resource ?property ?value .
     ?value rdf:type ?valueClass ;
         knora-base:isDeleted false .
-    ?valueClass rdfs:subClassOf+ knora-base:Value .
+    ?valueClass rdfs:subClassOf* knora-base:Value .
 
     @*
 

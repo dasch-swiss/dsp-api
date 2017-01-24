@@ -1,0 +1,101 @@
+@*
+ * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
+ * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ *
+ * This file is part of Knora.
+ *
+ * Knora is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Knora is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public
+ * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ *@
+
+@import org.knora.webapi.IRI
+
+@**
+ * Gets information about the incoming references to a resource, as well as about the referring resources.
+ *
+ * This template is used only by getIncomingReferences.scala.txt.
+ *
+ * Since the triplestore type is GraphDB, we assume that inference is enabled, and we use it to optimise the generated
+ * SPARQL. Specifically, we use inference to return search results matching subproperties of Knora base properties
+ * such as knora-base:hasLinkTo. This requires us to use GraphDB's GRAPH <http://www.ontotext.com/explicit>
+ * whenever we need to get explicit (non-inferred) statements.
+ *
+ * @param resourceIri the IRI of the resource.
+ *@
+@(resourceIri: IRI)
+
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+
+SELECT ?referringResource ?linkProp ?prop ?obj ?isLinkValue ?objPred ?objObj
+WHERE {
+
+    @*
+
+        Find incoming links that are subproperties of knora-base:hasLinkTo but not knora-base:isPartOf.
+
+        Makes use of a subquery in order to limit the number of referring resources.
+
+    *@
+
+    {
+        SELECT ?resource ?referringResource ?linkProp
+        WHERE {
+            BIND(IRI("@resourceIri") as ?resource)
+
+            ?resource a knora-base:Resource ;
+                knora-base:isDeleted false .
+
+            @* Find incoming links that are subproperties of knora-base:hasLinkTo but not knora-base:isPartOf. *@
+
+            ?referringResource knora-base:hasLinkTo ?resource ;
+                knora-base:isDeleted false .
+
+            FILTER NOT EXISTS {
+                ?referringResource knora-base:isPartOf ?resource .
+            }
+
+            GRAPH <http://www.ontotext.com/explicit> {
+                ?referringResource ?linkProp ?resource .
+            }
+        } LIMIT 50
+    }
+
+    {
+        @* Get basic information about the source of each link. *@
+
+        GRAPH <http://www.ontotext.com/explicit> {
+            ?referringResource ?prop ?obj .
+        }
+
+        FILTER NOT EXISTS {
+            ?referringResource knora-base:resourceProperty ?obj .
+        }
+    }
+    UNION
+    {
+        @* Get the LinkValue for each link from ?referringResource to ?resource, so its permissions can be checked. *@
+
+        ?referringResource knora-base:hasLinkToValue ?obj .
+
+        GRAPH <http://www.ontotext.com/explicit> {
+            ?obj rdf:predicate ?linkProp ;
+                rdf:object ?resource ;
+                knora-base:isDeleted false ;
+                ?objPred ?objObj .
+        }
+
+        BIND(true as ?isLinkValue)
+    }
+}

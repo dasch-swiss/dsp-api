@@ -183,11 +183,9 @@ class ResourceCreationSpec extends SalsahSpec {
 
         }
 
-        // Uncomment this if you want the browser to close after the test completes.
-
-        /*"close the browser" in {
+        "close the browser" in {
             page.quit()
-        }*/
+        }
 
     }
 }

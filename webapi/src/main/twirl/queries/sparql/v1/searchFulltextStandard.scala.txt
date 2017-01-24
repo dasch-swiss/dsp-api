@@ -1,0 +1,187 @@
+@*
+ * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
+ * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ *
+ * This file is part of Knora.
+ *
+ * Knora is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Knora is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public
+ * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ *@
+
+@import org.knora.webapi.IRI
+@import org.knora.webapi.SparqlGenerationException
+
+@*
+ * Performs a simple full-text search using standard SPARQL (except for the interface to Lucene, which is
+ * triplestore-specific), and without inference.
+ *
+ * The number of rows returned per matching resource is equal to the number of values that matched in the resource,
+ * plus one if the resource's label matched.
+ *
+ * This template is used only by searchFulltext.scala.txt.
+ *
+ * @param triplestore the name of the triplestore being used.
+ * @param searchTerms search terms to be combined with AND in Lucene full-text search syntax.
+ * @param preferredLanguage the language code of the user's preferred language.
+ * @param fallbackLanguage the language code of the application's default language.
+ * @param projectIriOption if filtering by project is desired, the IRI of the project to search.
+ * @param restypeIriOption if given, searches only for resources of this class and its subclasses.
+ *@
+@(triplestore: String,
+  searchTerms: Seq[String],
+  preferredLanguage: String,
+  fallbackLanguage: String,
+  projectIriOption: Option[IRI],
+  restypeIriOption: Option[IRI])
+
+prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+prefix knora-base: <http://www.knora.org/ontology/knora-base#>
+
+SELECT DISTINCT
+    ?resource
+    ?resourceLabel @* The label of a matching resource. This is called "firstprop" in the v1 API. *@
+    ?resourceClass
+    ?previewPath
+    ?previewDimX
+    ?previewDimY
+    ?resourceOwner
+    ?resourceProject
+    ?resourcePermissions
+    ?resourceProperty
+    ?valueObject
+    ?valueObjectType
+    ?valueOwner
+    ?valueProject
+    ?valuePermissions
+    ?literal
+WHERE {
+    BIND(STR("@preferredLanguage") AS ?preferredLanguage)
+    BIND(STR("@fallbackLanguage") AS ?fallbackLanguage)
+
+    @*
+
+    Lucene Search Syntax: Combine single terms with Boolean operator AND.
+    By default, Lucene would make an OR.
+
+    Loop over the search terms and prepend an AND when processing the second or any latter search term:
+
+    '@for((searchTerm, index) <- searchTerms.zipWithIndex) {@if(index > 0){ AND }@searchTerm}'
+
+    *@
+
+    @triplestore match {
+        case "embedded-jena-tdb" | "fuseki" => {
+
+            ?matchingSubject <http://jena.apache.org/text#query> '@for((searchTerm, index) <- searchTerms.zipWithIndex) {@if(index > 0){ AND }@searchTerm}' .
+
+        }
+
+        case other => {
+            @{throw SparqlGenerationException(s"Triplestore type $other is not supported in this SPARQL template"); ()}
+        }
+    }
+
+    ?matchingSubject knora-base:isDeleted false .
+
+    # ?matchingSubject could be a resource (whose rdfs:label matched) or a value object
+
+    OPTIONAL {
+        # If this clause is executed, it is a value object. We set ?containingResource to the resource that contains the matching value object.
+
+        ?matchingSubject a ?valueObjectType .
+        ?valueObjectType rdfs:subClassOf* knora-base:Value .
+        ?containingResource ?resourceProperty ?matchingSubject .
+        ?resourceProperty rdfs:subPropertyOf* knora-base:hasValue .
+
+        FILTER(?valueObjectType != knora-base:LinkValue)
+        ?containingResource knora-base:isDeleted false .
+
+        BIND(?matchingSubject AS ?valueObject)
+
+        ?valueObject knora-base:attachedToUser ?valueOwner .
+
+        OPTIONAL {
+            ?valueObject knora-base:attachedToProject ?valueProject .
+        }
+
+        OPTIONAL {
+            ?valueObject knora-base:hasPermissions ?valuePermissions .
+        }
+
+
+        @if(triplestore == "embedded-jena-tdb" || triplestore == "fuseki") {
+            ?valueObject knora-base:valueHasString ?literal .
+        }
+
+    }
+
+    # If the previous OPTIONAL clause executed, ?matchingSubject is a value, and ?containingResource will be set. Otherwise, ?matchingSubject is a resource.
+    BIND(COALESCE(?containingResource, ?matchingSubject) AS ?resource)
+
+    @projectIriOption match {
+        case Some(projectIri) => {
+
+            # filter by projectIri
+            ?resource knora-base:attachedToProject <@projectIri> .
+
+        }
+
+        case None => {}
+    }
+
+    ?resource a ?resourceClass .
+
+    @restypeIriOption match {
+
+        case Some(restypeIri) => {
+
+            # Filter by resource class.
+
+            ?resClass rdfs:subClassOf* <@restypeIri> .
+            ?resource a ?resClass .
+
+        }
+
+        case None => {
+
+            @* Ensure that each matching resource is a knora-base:Resource. *@
+
+            ?resClass rdfs:subClassOf* knora-base:Resource .
+            ?resource a ?resClass .
+
+        }
+    }
+
+    ?resource rdfs:label ?resourceLabel .
+
+    OPTIONAL {
+       ?resource knora-base:hasStillImageFileValue ?fileValue .
+       ?fileValue a knora-base:StillImageFileValue .
+       ?fileValue knora-base:isPreview true .
+       ?fileValue knora-base:internalFilename ?previewPath .
+
+        OPTIONAL {
+            ?fileValue knora-base:dimX ?previewDimX .
+            ?fileValue knora-base:dimY ?previewDimY .
+        }
+    }
+
+    ?resource knora-base:attachedToUser ?resourceOwner .
+    ?resource knora-base:attachedToProject ?resourceProject .
+
+    OPTIONAL {
+        ?resource knora-base:hasPermissions ?resourcePermissions .
+    }
+}
+LIMIT 500

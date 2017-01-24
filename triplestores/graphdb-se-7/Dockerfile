@@ -32,4 +32,7 @@ COPY ./KnoraRules.pie /graphdb
 
 EXPOSE 7200
 
+# Set GraphDB Max and Min Heap size
+ENV GDB_HEAP_SIZE="2g"
+
 CMD ["/graphdb/bin/graphdb", "-Dgraphdb.license.file=/graphdb/GRAPHDB_SE.license"]

@@ -33,4 +33,5 @@ Knora API Server Design Documentation
    triplestore-updates
    consistency-checking
    authentication
+   administration
    plans-for-api-v2

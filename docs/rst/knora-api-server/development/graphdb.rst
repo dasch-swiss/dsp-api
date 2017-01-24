@@ -19,7 +19,7 @@
 .. _starting-graphdb-se-7:
 
 Starting GraphDB-SE 7
-======================
+=====================
 
 Inside the Knora API server git repository, there is a folder called ``/triplestores/graphdb-se-7`` containing the
 GraphDB-SE-7 distribution archive and the dockerfile we will use to build the docker image. This docker image will then

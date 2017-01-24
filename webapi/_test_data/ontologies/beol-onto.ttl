@@ -13,102 +13,81 @@
 
 <http://www.knora.org/ontology/beol> rdf:type owl:Ontology .
 
-##########################################################
-#
-# PROPERTIES
-#
-##########################################################
+    ##########################################################
+    #
+    # PROPERTIES
+    #
+    ##########################################################
 
 
-### ###########################################
-### beol:title
+    ### ###########################################
+    ### beol:title
 
-:title rdf:type owl:ObjectProperty ;
+    :title rdf:type owl:ObjectProperty ;
 
-       rdfs:subPropertyOf dc:title ;
+           rdfs:subPropertyOf dc:title ;
 
-       rdfs:label "Titel"@de ,
-                  "Titre"@fr ,
-                  "Titolo"@it ,
-                  "Title"@en ;
+           rdfs:label "Titel"@de ,
+                      "Titre"@fr ,
+                      "Titolo"@it ,
+                      "Title"@en ;
 
-       rdfs:comment """Titel"""@de ;
-
-       knora-base:subjectClassConstraint :manuscript ;
-
-       knora-base:objectClassConstraint knora-base:TextValue ;
-
-       salsah-gui:guiOrder "1"^^xsd:integer ;
-
-       salsah-gui:guiElement salsah-gui:SimpleText ;
-
-       salsah-gui:guiAttribute "size=80" ,
-                               "maxlength=255" ;
-
-       knora-base:hasDefaultViewPermission knora-base:KnownUser ,
-                                           knora-base:UnknownUser ;
-
-       knora-base:hasDefaultModifyPermission knora-base:ProjectMember ;
-
-       knora-base:hasDefaultDeletePermission knora-base:Owner .
-
-### ###########################################
-### beol:creationDate
-
-:creationDate rdf:type owl:ObjectProperty ;
-
-              rdfs:subPropertyOf dc:date ;
-
-              rdfs:label "Datum der Entstehung"@de ;
-
-              knora-base:subjectClassConstraint :manuscript ;
-
-              knora-base:objectClassConstraint knora-base:DateValue ;
-
-              salsah-gui:guiOrder "3"^^xsd:integer ;
-
-              salsah-gui:guiElement salsah-gui:Date ;
-
-              salsah-gui:guiAttribute "size=16" ,
-                                    "maxlength=32" ;
-
-              rdfs:comment """Datum der Entstehung"""@de ;
-
-              knora-base:hasDefaultViewPermission knora-base:KnownUser ,
-                                                knora-base:UnknownUser ;
-
-              knora-base:hasDefaultModifyPermission knora-base:ProjectMember ;
-
-              knora-base:hasDefaultDeletePermission knora-base:Owner .
-
-### ###########################################
-### beol:hasAuthor
-
-:hasAuthor rdf:type owl:ObjectProperty ;
-
-           rdfs:subPropertyOf dc:creator ;
-
-           rdfs:label "Creator"@de ;
-
-           rdfs:comment """Erzeuger/Autor"""@de ;
+           rdfs:comment """Titel"""@de ;
 
            knora-base:subjectClassConstraint :manuscript ;
 
            knora-base:objectClassConstraint knora-base:TextValue ;
 
-           salsah-gui:guiOrder "2"^^xsd:integer ;
+           salsah-gui:guiOrder "1"^^xsd:integer ;
 
            salsah-gui:guiElement salsah-gui:SimpleText ;
 
-           salsah-gui:guiAttribute "size=60" ,
-                                   "maxlength=255" ;
+           salsah-gui:guiAttribute "size=80" ,
+                                   "maxlength=255" .
 
-           knora-base:hasDefaultViewPermission knora-base:KnownUser ,
-                                               knora-base:UnknownUser ;
+    ### ###########################################
+    ### beol:creationDate
 
-           knora-base:hasDefaultModifyPermission knora-base:ProjectMember ;
+    :creationDate rdf:type owl:ObjectProperty ;
 
-           knora-base:hasDefaultDeletePermission knora-base:Owner .
+                  rdfs:subPropertyOf dc:date ;
+
+                  rdfs:label "Datum der Entstehung"@de ;
+
+                  knora-base:subjectClassConstraint :manuscript ;
+
+                  knora-base:objectClassConstraint knora-base:DateValue ;
+
+                  salsah-gui:guiOrder "3"^^xsd:integer ;
+
+                  salsah-gui:guiElement salsah-gui:Date ;
+
+                  salsah-gui:guiAttribute "size=16" ,
+                                        "maxlength=32" ;
+
+                  rdfs:comment """Datum der Entstehung"""@de .
+
+    ### ###########################################
+    ### beol:hasAuthor
+
+    :hasAuthor rdf:type owl:ObjectProperty ;
+
+               rdfs:subPropertyOf dc:creator ;
+
+               rdfs:label "Creator"@de ;
+
+               rdfs:comment """Erzeuger/Autor"""@de ;
+
+               knora-base:subjectClassConstraint :manuscript ;
+
+               knora-base:objectClassConstraint knora-base:TextValue ;
+
+               salsah-gui:guiOrder "2"^^xsd:integer ;
+
+               salsah-gui:guiElement salsah-gui:SimpleText ;
+
+               salsah-gui:guiAttribute "size=60" ,
+                                       "maxlength=255" .
 
 
    ### ###########################################
@@ -135,13 +114,7 @@
 
              salsah-gui:guiAttribute "cols=60" ,
                                      "rows=4" ,
-                                     "wrap=soft" ;
-
-             knora-base:hasDefaultViewPermission knora-base:KnownUser ,
-                                                 knora-base:UnknownUser ;
-
-             knora-base:hasDefaultDeletePermission knora-base:ProjectMember ,
-                                                   knora-base:Owner .
+                                     "wrap=soft" .
 
    ### ###########################################
    ### beol:partOfValue
@@ -186,13 +159,7 @@
 
            salsah-gui:guiOrder "2"^^xsd:integer ;
 
-           salsah-gui:guiElement salsah-gui:Searchbox ;
-
-           knora-base:hasDefaultViewPermission knora-base:KnownUser ,
-                                               knora-base:UnknownUser ,
-                                               knora-base:ProjectMember ;
-
-           knora-base:hasDefaultDeletePermission knora-base:Owner .
+           salsah-gui:guiElement salsah-gui:Searchbox .
 
    ### ###########################################
    ### beol:seqnum
@@ -219,13 +186,7 @@
            salsah-gui:guiElement salsah-gui:Spinbox ;
 
            salsah-gui:guiAttribute "min=0" ,
-                                   "max=-1" ;
-
-           knora-base:hasDefaultViewPermission knora-base:KnownUser ,
-                                               knora-base:UnknownUser ,
-                                               knora-base:ProjectMember ;
-
-           knora-base:hasDefaultModifyPermission knora-base:Owner .
+                                   "max=-1" .
 
     ### ###########################################
     ### beol:pagenum
@@ -250,14 +211,7 @@
             salsah-gui:guiElement salsah-gui:SimpleText ;
 
             salsah-gui:guiAttribute "min=4" ,
-                                    "max=8" ;
-
-            knora-base:hasDefaultViewPermission knora-base:UnknownUser ,
-                                                knora-base:KnownUser ;
-
-            knora-base:hasDefaultModifyPermission knora-base:ProjectMember ;
-
-            knora-base:hasDefaultDeletePermission knora-base:Owner .
+                                    "max=8" .
 
 
 
@@ -281,14 +235,8 @@
 
                   salsah-gui:guiOrder "5"^^xsd:integer ;
 
-                  salsah-gui:guiElement salsah-gui:Richtext ;
 
-                  knora-base:hasDefaultViewPermission knora-base:UnknownUser ,
-                                                      knora-base:KnownUser ;
-
-                  knora-base:hasDefaultModifyPermission knora-base:ProjectMember ;
-
-                  knora-base:hasDefaultDeletePermission knora-base:Owner .
+                  salsah-gui:guiElement salsah-gui:SimpleText .
 
     ### ###########################################
     ### beol:hasSon
@@ -310,14 +258,7 @@
 
                       salsah-gui:guiOrder "5"^^xsd:integer ;
 
-                      salsah-gui:guiElement salsah-gui:Searchbox ;
-
-                      knora-base:hasDefaultViewPermission knora-base:UnknownUser ,
-                                                          knora-base:KnownUser ;
-
-                      knora-base:hasDefaultModifyPermission knora-base:ProjectMember ;
-
-                      knora-base:hasDefaultDeletePermission knora-base:Owner .
+                      salsah-gui:guiElement salsah-gui:Searchbox .
 
     ### ###########################################
     ### beol:hasSonValue
@@ -340,6 +281,107 @@
                     salsah-gui:guiOrder "5"^^xsd:integer ;
 
                     salsah-gui:guiElement salsah-gui:Searchbox .
+
+
+    ### ###########################################
+    ### beol:hasGivenName
+
+    :hasGivenName rdf:type owl:ObjectProperty ;
+
+                  rdfs:label "Vorname"@de ,
+                            "given name"@en ,
+                            "prénom"@fr ,
+                            "nome di battesimo"@it ;
+
+                  rdfs:comment """Represents a Given name."""@en ;
+
+                  knora-base:objectClassConstraint knora-base:TextValue ;
+
+                  salsah-gui:guiElement salsah-gui:SimpleText ;
+
+                  knora-base:subjectClassConstraint :Person ;
+
+                  rdfs:subPropertyOf knora-base:hasValue .
+
+    ### ###########################################
+    ### beol:hasFamilyName
+
+    :hasFamilyName rdf:type owl:ObjectProperty ;
+
+                   rdfs:label "Nachname"@de ,
+                            "family name"@en ,
+                            "nom de famille"@fr ,
+                            "nome di famiglia"@it ;
+
+                   rdfs:comment """Represents a family name."""@en ;
+
+                   knora-base:objectClassConstraint knora-base:TextValue ;
+
+                   salsah-gui:guiElement salsah-gui:SimpleText ;
+
+                   knora-base:subjectClassConstraint :Person ;
+
+                   rdfs:subPropertyOf knora-base:hasValue .
+
+    ### ###########################################
+    ### beol:hasIAFIdentifier
+
+    :hasIAFIdentifier rdf:type owl:ObjectProperty ;
+
+                      rdfs:label "Gemeinsame Normdatei (GND)"@de ,
+                                 "Integrated Authority File"@en ;
+
+                      rdfs:comment """Repräsentiert eine GND-Nummer."""@de,
+                                   """Represents an IAF identifier."""@en ;
+
+                      knora-base:objectClassConstraint knora-base:TextValue ;
+
+                      salsah-gui:guiElement salsah-gui:SimpleText ;
+
+                      knora-base:subjectClassConstraint :Person ;
+
+                      rdfs:subPropertyOf knora-base:hasValue .
+
+
+    ### ###########################################
+    ### beol:hasBirthDate
+
+    :hasBirthDate rdf:type owl:ObjectProperty ;
+
+                  rdfs:label "Geburtsdatum"@de ,
+                             "date of birth"@en ;
+
+                  rdfs:comment """Repräsentiert ein Geburtsdatum."""@de,
+                               """Represents a date of birth."""@en ;
+
+                  knora-base:objectClassConstraint knora-base:DateValue ;
+
+                  salsah-gui:guiElement salsah-gui:Date ;
+
+                  knora-base:subjectClassConstraint :Person ;
+
+                  rdfs:subPropertyOf knora-base:hasValue .
+
+
+    ### ###########################################
+    ### beol:hasDeathDate
+
+    :hasDeathDate rdf:type owl:ObjectProperty ;
+
+                  rdfs:label "Sterbedatum"@de ,
+                             "date of death"@en ;
+
+                  rdfs:comment """Repräsentiert ein Sterbedatum."""@de,
+                               """Represents a date of death."""@en ;
+
+                  knora-base:objectClassConstraint knora-base:DateValue ;
+
+                  salsah-gui:guiElement salsah-gui:Date ;
+
+                  knora-base:subjectClassConstraint :Person ;
+
+                  rdfs:subPropertyOf knora-base:hasValue .
+
 
 
     ##########################################################
@@ -384,14 +426,7 @@
                      "Manoscritto"@it ,
                      "Manuscript"@en ;
 
-          rdfs:comment """Diese Resource-Klasse beschreibt ein Manuskript"""@de ;
-
-          knora-base:hasDefaultRestrictedViewPermission knora-base:UnknownUser ;
-
-          knora-base:hasDefaultViewPermission knora-base:KnownUser ;
-
-          knora-base:hasDefaultModifyPermission knora-base:ProjectMember ,
-                                                knora-base:Owner .
+          rdfs:comment """Diese Resource-Klasse beschreibt ein Manuskript"""@de .
 
     ### ###########################################
     ### beol:page
@@ -429,41 +464,53 @@
 
           rdfs:comment """Eine Seite ist ein Teil eines Konvoluts"""@de ,
                        """Une page est une partie d'un convoluté"""@fr ,
-                       """A page is a part of a convolute"""@en ;
-
-          knora-base:hasDefaultRestrictedViewPermission knora-base:UnknownUser ;
-
-          knora-base:hasDefaultViewPermission knora-base:KnownUser ;
-
-          knora-base:hasDefaultModifyPermission knora-base:ProjectMember ,
-                                                knora-base:Owner .
+                       """A page is a part of a convolute"""@en .
 
     ### ###########################################
     ### beol:Person
 
     :Person rdf:type owl:Class ;
 
-    rdfs:subClassOf knora-base:Person ,
-                    [
-                        rdf:type owl:Restriction ;
-                        owl:onProperty :hasSonValue ;
-                        owl:minCardinality "0"^^xsd:nonNegativeInteger
-                    ],
-                    [
-                        rdf:type owl:Restriction ;
-                        owl:onProperty :hasSon ;
-                        owl:minCardinality "0"^^xsd:nonNegativeInteger
-                    ] ;
+        rdfs:subClassOf knora-base:Resource, foaf:Person,
+                                [ rdf:type owl:Restriction ;
+                                  owl:onProperty :hasFamilyName ;
+                                  owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                                ],
+                                [ rdf:type owl:Restriction ;
+                                  owl:onProperty :hasGivenName ;
+                                  owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                                ],
+                                [ rdf:type owl:Restriction ;
+                                  owl:onProperty :hasIAFIdentifier ;
+                                  owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                                ],
+                                [ rdf:type owl:Restriction ;
+                                  owl:onProperty :hasBirthDate ;
+                                  owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                                ],
+                                [ rdf:type owl:Restriction ;
+                                  owl:onProperty :hasDeathDate ;
+                                  owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                                ],
+                                [
+                                    rdf:type owl:Restriction ;
+                                    owl:onProperty :hasSonValue ;
+                                    owl:minCardinality "0"^^xsd:nonNegativeInteger
+                                ],
+                                [
+                                    rdf:type owl:Restriction ;
+                                    owl:onProperty :hasSon ;
+                                    owl:minCardinality "0"^^xsd:nonNegativeInteger
+                                ],
+                                [
+                                    rdf:type owl:Restriction ;
+                                    owl:onProperty :comment ;
+                                    owl:minCardinality "0"^^xsd:nonNegativeInteger
+                                ];
 
-    rdfs:label "Person"@de ,
-               "Personne"@fr ,
-               "Person"@en ;
+        rdfs:label  "Person"@de ,
+                    "Personne"@fr ,
+                    "Person"@en ;
 
-    rdfs:comment "A resource representing a person"@en ;
+        rdfs:comment "A resource representing a person"@en .
 
-    knora-base:hasDefaultRestrictedViewPermission knora-base:UnknownUser ;
-
-    knora-base:hasDefaultViewPermission knora-base:KnownUser ;
-
-    knora-base:hasDefaultModifyPermission knora-base:ProjectMember ,
-                                          knora-base:Owner .

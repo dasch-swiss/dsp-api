@@ -25,7 +25,7 @@ import java.util.UUID
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.sipimessages.SipiResponderConversionRequestV1
-import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
+import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1, UserV1JsonProtocol}
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
 import spray.json._
@@ -341,6 +341,15 @@ case class GraphDataGetResponseV1(nodes: Seq[GraphNodeV1], edges: Seq[GraphEdgeV
     def toJsValue = ResourceV1JsonProtocol.graphDataGetResponseV1Format.write(this)
 }
 
+/**
+  * Causes the resources responder to return an invalid response message.
+  */
+case class UnexpectedMessageRequest() extends ResourcesResponderRequestV1
+
+/**
+  * Causes the resources responder to return a response message containing an internal servers exception.
+  */
+case class InternalServerExceptionMessageRequest() extends ResourcesResponderRequestV1
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Components of messages
@@ -787,10 +796,10 @@ case class GraphEdgeV1(source: IRI, target: IRI, propertyIri: IRI, propertyLabel
 /**
   * A spray-json protocol for generating Knora API v1 JSON providing data about resources and their properties.
   */
-object ResourceV1JsonProtocol extends DefaultJsonProtocol with NullOptions with SprayJsonSupport {
+object ResourceV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with NullOptions {
 
+    import UserV1JsonProtocol.userDataV1Format
     import LiteralValueType.LiteralValueTypeV1Protocol._
-    import org.knora.webapi.messages.v1.responder.usermessages.UserDataV1JsonProtocol._
     import org.knora.webapi.messages.v1.responder.valuemessages.ApiValueV1JsonProtocol._
 
     implicit val locationFormat: JsonFormat[LocationV1] = jsonFormat8(LocationV1)
@@ -1056,11 +1065,11 @@ object ResourceV1JsonProtocol extends DefaultJsonProtocol with NullOptions with 
 /**
   * A spray-json protocol for generating resource context information in Knora API v1 JSON format.
   */
-object ResourceContextV1JsonProtocol extends DefaultJsonProtocol {
+object ResourceContextV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol{
 
+    import UserV1JsonProtocol.userDataV1Format
     import ResourceContextCodeV1.ResourceContextCodeV1Protocol._
     import ResourceV1JsonProtocol._
-    import org.knora.webapi.messages.v1.responder.usermessages.UserDataV1JsonProtocol._
 
     implicit val resourceContextV1Format: JsonFormat[ResourceContextV1] = jsonFormat11(ResourceContextV1)
     implicit val resourceContextResponseV1Format: RootJsonFormat[ResourceContextResponseV1] = jsonFormat2(ResourceContextResponseV1)

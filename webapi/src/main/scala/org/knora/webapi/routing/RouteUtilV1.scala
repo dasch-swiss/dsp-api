@@ -49,14 +49,14 @@ object RouteUtilV1 {
       * @param log              a logging adapter.
       * @param timeout          a timeout for `ask` messages.
       * @param executionContext an execution context for futures.
+      * @return a [[Future]] containing a [[RouteResult]].
       */
-    def runJsonRoute[RequestMessageT <: KnoraRequestV1](requestMessage: RequestMessageT,
-                                                        requestContext: RequestContext,
-                                                        settings: SettingsImpl,
-                                                        responderManager: ActorSelection,
-                                                        log: LoggingAdapter)
-                                                       (implicit timeout: Timeout, executionContext: ExecutionContext): Future[RouteResult] = {
-
+    def runJsonRoute(requestMessage: KnoraRequestV1,
+                     requestContext: RequestContext,
+                     settings: SettingsImpl,
+                     responderManager: ActorSelection,
+                     log: LoggingAdapter)
+                    (implicit timeout: Timeout, executionContext: ExecutionContext): Future[RouteResult] = {
         // Optionally log the request message. TODO: move this to the testing framework.
         if (settings.dumpMessages) {
             log.debug(MessageUtil.toSource(requestMessage))
@@ -90,6 +90,35 @@ object RouteUtilV1 {
         )
 
         requestContext.complete(httpResponse)
+    }
+
+    /**
+      * Sends a message (resulting from a [[Future]]) to a responder and completes the HTTP request by returning the response as JSON.
+      * @param requestMessageF  a [[Future]] containing a [[KnoraRequestV1]] message that should be sent to the responder manager.
+      * @param requestContext   the akka-http [[RequestContext]].
+      * @param settings         the application's settings.
+      * @param responderManager a reference to the responder manager.
+      * @param log              a logging adapter.
+      * @param timeout          a timeout for `ask` messages.
+      * @param executionContext an execution context for futures.
+      * @return a [[Future]] containing a [[RouteResult]].
+      */
+    def runJsonRouteWithFuture[RequestMessageT <: KnoraRequestV1](requestMessageF: Future[RequestMessageT],
+                                                                  requestContext: RequestContext,
+                                                                  settings: SettingsImpl,
+                                                                  responderManager: ActorSelection,
+                                                                  log: LoggingAdapter)
+                                                                 (implicit timeout: Timeout, executionContext: ExecutionContext): Future[RouteResult] = {
+        for {
+            requestMessage <- requestMessageF
+            routeResult <- runJsonRoute(
+                requestMessage = requestMessage,
+                requestContext = requestContext,
+                settings = settings,
+                responderManager = responderManager,
+                log = log
+            )
+        } yield routeResult
     }
 
     /**

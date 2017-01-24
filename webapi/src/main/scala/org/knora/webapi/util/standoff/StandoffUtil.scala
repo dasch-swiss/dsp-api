@@ -27,7 +27,7 @@ import com.sksamuel.diffpatch.DiffMatchPatch
 import com.sksamuel.diffpatch.DiffMatchPatch._
 import org.apache.commons.lang3.StringEscapeUtils
 import org.knora.webapi.util.{ErrorHandlingMap, KnoraIdUtil}
-import org.knora.webapi.{IRI, InvalidStandoffException}
+import org.knora.webapi.{AssertionException, IRI, InvalidStandoffException}
 
 import scala.xml._
 
@@ -375,10 +375,10 @@ class StandoffUtil(xmlNamespaces: Map[String, IRI] = Map.empty[IRI, String],
                 acc :+ hierarchicalTag
 
             // It seems as if the following line should work, but it doesn't. See https://issues.scala-lang.org/browse/SI-10100
-            // case (_, clixTag: ClixMilestoneTag) => throw InvalidStandoffException(s"CLIX tag $clixTag cannot be in TextWithStandoff") // This should never happen
+            // case (_, clixTag: ClixMilestoneTag) => throw AssertionException(s"CLIX tag $clixTag cannot be in TextWithStandoff") // This should never happen
 
             // Workaround:
-            case (_, other) => throw InvalidStandoffException(s"Tag $other cannot be in TextWithStandoff") // This should never happen
+            case (_, other) => throw AssertionException(s"Tag $other cannot be in TextWithStandoff") // This should never happen
         }
 
         val groupedTags: Map[Option[Int], Seq[IndexedStandoffTag]] = tags.groupBy(_.parentIndex)

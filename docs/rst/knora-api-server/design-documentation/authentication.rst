@@ -74,7 +74,7 @@ a cookie is sent. On subsequent access to all the other routes, the
 ''sid'' is used to retrieve the cached user profile. If successful, the
 user is deemed authenticated.
 
-**Username wrong:**
+**Email wrong:**
 
 ::
 
@@ -115,7 +115,7 @@ Submitting Credentials in the URL or in the HTTP Authentication Header
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 As an alternative to creating a session, the client may also submit the credentials:
- - in the URL (when doing a HTTP-GET request) submitting the parameters ``username`` and ``password`` (e.g. http://knora-host/resources/resIri?username=user&password=pw)
+ - in the URL (when doing a HTTP-GET request) submitting the parameters ``email`` and ``password`` (e.g. http://knora-host/resources/resIri?email=userUrlEncodedEmail&password=pw)
  - in the HTTP header (`HTTP basic authentication`_) when doing a HTTP request to the API (all methods). When using Python's module ``requests``,
    the credentials can simply be submitted as a tuple with each request using the param ``auth`` (`python requests`_).
 
@@ -123,14 +123,14 @@ Workflow
 ^^^^^^^^^^
 
 1. The login form on the client can use */v1/authentication* to check if
-   the username/password combination provided by the user is correct. The
-   username and password can be provided as URL parameters (see above).
+   the email/password combination provided by the user is correct. The
+   email and password can be provided as URL parameters (see above).
 
 2. on the server, this gets checked and a corresponding result as
    described will be returned
 
 3. all subsequent calls can then send these credentials as
-   authentication header or URL parameters (username / password), and in
+   authentication header or URL parameters (email / password), and in
    the case of a web client just the cookie.
 
 Step 1 and 2 are optional, and can be skipped, if prior checking of the
@@ -163,9 +163,9 @@ filter the result based on the users permissions.
 Improving Security
 ^^^^^^^^^^^^^^^^^^^^
 
-In the first iteration, the username/password would be sent in clear
+In the first iteration, the email/password would be sent in clear
 text. Since we will use HTTPS this shouldn't be a problem. The second
-iteration, could encrypt the username/password.
+iteration, could encrypt the email/password.
 
 .. _HTTP basic authentication: https://en.wikipedia.org/wiki/Basic_access_authentication
 .. _python requests: http://docs.python-requests.org/en/master/user/authentication/#basic-authentication

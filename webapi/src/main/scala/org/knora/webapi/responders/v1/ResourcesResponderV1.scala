@@ -26,13 +26,14 @@ import akka.actor.Status
 import akka.pattern._
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.ontologymessages._
-import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoByIRIGetRequest, ProjectInfoResponseV1, ProjectInfoType}
+import org.knora.webapi.messages.v1.responder.permissionmessages.{DefaultObjectAccessPermissionsStringForResourceClassGetV1, ResourceCreateOperation}
+import org.knora.webapi.messages.v1.responder.projectmessages._
 import org.knora.webapi.messages.v1.responder.resourcemessages._
 import org.knora.webapi.messages.v1.responder.sipimessages._
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v1.store.triplestoremessages._
-import org.knora.webapi.responders.ResourceLocker
+import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.v1.GroupedProps._
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util._
@@ -67,11 +68,23 @@ class ResourcesResponderV1 extends ResponderV1 {
         case PropertiesGetRequestV1(resourceIri: IRI, userProfile: UserProfileV1) => future2Message(sender(), getPropertiesV1(resourceIri = resourceIri, userProfile = userProfile), log)
         case resourceDeleteRequest: ResourceDeleteRequestV1 => future2Message(sender(), deleteResourceV1(resourceDeleteRequest), log)
         case ChangeResourceLabelRequestV1(resourceIri, label, userProfile, apiRequestID) => future2Message(sender(), changeResourceLabelV1(resourceIri, label, apiRequestID, userProfile), log)
-        case other => sender ! Status.Failure(UnexpectedMessageException(s"Unexpected message $other of type ${other.getClass.getCanonicalName}"))
+        case UnexpectedMessageRequest() => future2Message(sender(), makeFutureOfUnit, log)
+        case InternalServerExceptionMessageRequest() => future2Message(sender, makeInternalServerException, log)
+        case other => handleUnexpectedMessage(sender(), other, log)
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Methods for generating complete API responses.
+
+    // TODO: move this to a test responder in the test package.
+    private def makeInternalServerException: Future[String] = {
+        Future.failed(UpdateNotPerformedException("thrown inside the ResourcesResponder"))
+    }
+
+    // TODO: move this to a test responder in the test package.
+    private def makeFutureOfUnit: Future[Unit] = {
+        Future(())
+    }
 
     /**
       * Gets a graph of resources that are reachable via links to or from a given resource.
@@ -131,9 +144,10 @@ class ResourcesResponderV1 extends ResponderV1 {
           *                  to see this node.
           * @param outbound `true` to get outbound links, `false` to get inbound links.
           * @param depth the maximum depth of the query.
+          * @param traversedEdges edges that have already been traversed.
           * @return a [[GraphQueryResults]].
           */
-        def traverseGraph(startNode: QueryResultNode, outbound: Boolean, depth: Int): Future[GraphQueryResults] = {
+        def traverseGraph(startNode: QueryResultNode, outbound: Boolean, depth: Int, traversedEdges: Set[QueryResultEdge] = Set.empty[QueryResultEdge]): Future[GraphQueryResults] = {
             if (depth < 1) Future.failed(AssertionException("Depth must be at least 1"))
 
             for {
@@ -173,7 +187,7 @@ class ResourcesResponderV1 extends ResponderV1 {
                                 // Filter out the nodes that the user doesn't have permission to see.
                                 PermissionUtilV1.getUserPermissionV1(
                                     subjectIri = node.nodeIri,
-                                    subjectOwner = node.nodeOwner,
+                                    subjectCreator = node.nodeOwner,
                                     subjectProject = node.nodeProject,
                                     subjectPermissionLiteral = node.nodePermissions,
                                     userProfile = graphDataGetRequest.userProfile
@@ -184,7 +198,7 @@ class ResourcesResponderV1 extends ResponderV1 {
                         val visibleNodeIris = otherNodes.map(_.nodeIri).toSet + startNode.nodeIri
 
                         // Get the edges from the query results.
-                        val edges: Seq[QueryResultEdge] = rows.map {
+                        val edges: Set[QueryResultEdge] = rows.map {
                             row =>
                                 val rowMap = row.rowMap
                                 val nodeIri = rowMap("node")
@@ -211,7 +225,7 @@ class ResourcesResponderV1 extends ResponderV1 {
                                 // Filter out the edges that the user doesn't have permission to see. To see an edge,
                                 // the user must have some permission on the link value and on the source and target
                                 // nodes.
-                                visibleNodeIris.contains(edge.sourceNodeIri) && visibleNodeIris.contains(edge.targetNodeIri) &&
+                                val hasPermission = visibleNodeIris.contains(edge.sourceNodeIri) && visibleNodeIris.contains(edge.targetNodeIri) &&
                                     PermissionUtilV1.getUserPermissionOnLinkValueV1(
                                         linkValueIri = edge.linkValueIri,
                                         predicateIri = edge.linkProp,
@@ -220,16 +234,22 @@ class ResourcesResponderV1 extends ResponderV1 {
                                         linkValuePermissionLiteral = edge.linkValuePermissions,
                                         userProfile = graphDataGetRequest.userProfile
                                     ).nonEmpty
-                        }
 
-                        // Filter out the nodes that are reachable only via edges that the user doesn't have permission
-                        // to see.
-                        val visibleNodeIrisFromEdges = edges.map(_.sourceNodeIri).toSet ++ edges.map(_.targetNodeIri).toSet
+                                // Filter out edges we've already traversed.
+                                val isRedundant = traversedEdges.contains(edge)
+                                // if (isRedundant) println(s"filtering out edge from ${edge.sourceNodeIri} to ${edge.targetNodeIri}")
+
+                                hasPermission && !isRedundant
+                        }.toSet
+
+                        // Include only nodes that are reachable via edges that we're going to traverse (i.e. the user
+                        // has permission to see those edges, and we haven't already traversed them).
+                        val visibleNodeIrisFromEdges = edges.map(_.sourceNodeIri) ++ edges.map(_.targetNodeIri)
                         val filteredOtherNodes = otherNodes.filter(node => visibleNodeIrisFromEdges.contains(node.nodeIri))
 
                         // Make a GraphQueryResults containing the resulting nodes and edges, including the start
                         // node.
-                        val results = GraphQueryResults(nodes = filteredOtherNodes.toSet + startNode, edges = edges.toSet)
+                        val results = GraphQueryResults(nodes = filteredOtherNodes.toSet + startNode, edges = edges)
 
                         // Have we reached the maximum depth?
                         if (depth == 1) {
@@ -242,7 +262,8 @@ class ResourcesResponderV1 extends ResponderV1 {
                                 node => traverseGraph(
                                     startNode = node,
                                     outbound = outbound,
-                                    depth = depth - 1
+                                    depth = depth - 1,
+                                    traversedEdges = traversedEdges ++ edges
                                 )
                             }
 
@@ -295,7 +316,7 @@ class ResourcesResponderV1 extends ResponderV1 {
             // Make sure the user has permission to see the start node.
             _ = if (PermissionUtilV1.getUserPermissionV1(
                 subjectIri = startNode.nodeIri,
-                subjectOwner = startNode.nodeOwner,
+                subjectCreator = startNode.nodeOwner,
                 subjectProject = startNode.nodeProject,
                 subjectPermissionLiteral = startNode.nodePermissions,
                 userProfile = graphDataGetRequest.userProfile
@@ -764,13 +785,7 @@ class ResourcesResponderV1 extends ResponderV1 {
             // The row may or may not contain a file value IRI.
             row.rowMap.get("fileValue") match {
                 case Some(fileValueIri) =>
-                    val fileValuePermission = PermissionUtilV1.getUserPermissionV1(
-                        subjectIri = fileValueIri,
-                        subjectOwner = row.rowMap("fileValueAttachedToUser"),
-                        subjectProject = fileValueProject,
-                        subjectPermissionLiteral = row.rowMap.get("fileValuePermissions"),
-                        userProfile = userProfile
-                    )
+                    val fileValuePermission = PermissionUtilV1.getUserPermissionV1(subjectIri = fileValueIri, subjectCreator = row.rowMap("fileValueAttachedToUser"), subjectProject = fileValueProject, subjectPermissionLiteral = row.rowMap.get("fileValuePermissions"), userProfile = userProfile)
 
                     Some(StillImageFileValue(
                         id = fileValueIri,
@@ -802,13 +817,7 @@ class ResourcesResponderV1 extends ResponderV1 {
             val sourceObjectProject = row.rowMap("sourceObjectAttachedToProject")
             val sourceObjectLiteral = row.rowMap.get("sourceObjectPermissions")
 
-            val sourceObjectPermissionCode = PermissionUtilV1.getUserPermissionV1(
-                subjectIri = sourceObjectIri,
-                subjectOwner = sourceObjectOwner,
-                subjectProject = sourceObjectProject,
-                subjectPermissionLiteral = sourceObjectLiteral,
-                userProfile = userProfile
-            )
+            val sourceObjectPermissionCode = PermissionUtilV1.getUserPermissionV1(subjectIri = sourceObjectIri, subjectCreator = sourceObjectOwner, subjectProject = sourceObjectProject, subjectPermissionLiteral = sourceObjectLiteral, userProfile = userProfile)
 
             val linkValueIri = row.rowMap("linkValue")
             val linkValueOwner = row.rowMap("linkValueOwner")
@@ -818,13 +827,7 @@ class ResourcesResponderV1 extends ResponderV1 {
             // The link can't be a standoff link, because we know the link property is a subproperty of knora-base:isPartOf,
             // so we don't have to treat it as a special case here.
 
-            val linkValuePermissionCode = PermissionUtilV1.getUserPermissionV1(
-                subjectIri = linkValueIri,
-                subjectOwner = linkValueOwner,
-                subjectProject = linkValueProject,
-                subjectPermissionLiteral = linkValuePermissions,
-                userProfile = userProfile
-            )
+            val linkValuePermissionCode = PermissionUtilV1.getUserPermissionV1(subjectIri = linkValueIri, subjectCreator = linkValueOwner, subjectProject = linkValueProject, subjectPermissionLiteral = linkValuePermissions, userProfile = userProfile)
 
             // Allow the user to see the link only if they have permission to see both the source object and the link value.
             val permissionCode = Seq(sourceObjectPermissionCode, linkValuePermissionCode).min
@@ -879,13 +882,7 @@ class ResourcesResponderV1 extends ResponderV1 {
                         // The link can't be a standoff link, because we know the link property is a subproperty of knora-base:isPartOf,
                         // so we don't have to treat it as a special case here.
 
-                        linkValuePermissionCode = PermissionUtilV1.getUserPermissionV1(
-                            subjectIri = linkValueIri,
-                            subjectOwner = linkValueOwner,
-                            subjectProject = linkValueProject,
-                            subjectPermissionLiteral = linkValuePermissions,
-                            userProfile = userProfile
-                        )
+                        linkValuePermissionCode = PermissionUtilV1.getUserPermissionV1(subjectIri = linkValueIri, subjectCreator = linkValueOwner, subjectProject = linkValueProject, subjectPermissionLiteral = linkValuePermissions, userProfile = userProfile)
 
                         // Allow the user to see the link only if they have permission to see both the containing resource and the link value.
                         permissionCode = Seq(containingResourcePermissionCode, linkValuePermissionCode).min
@@ -986,13 +983,7 @@ class ResourcesResponderV1 extends ResponderV1 {
 
                     regionPropertiesSequencedFutures: Seq[Future[PropsGetForRegionV1]] = regionRows.filter {
                         regionRow =>
-                            val permissionCodeForRegion = PermissionUtilV1.getUserPermissionV1(
-                                subjectIri = regionRow.rowMap("region"),
-                                subjectOwner = regionRow.rowMap("owner"),
-                                subjectProject = regionRow.rowMap("project"),
-                                subjectPermissionLiteral = regionRow.rowMap.get("regionObjectPermissions"),
-                                userProfile = userProfile
-                            )
+                            val permissionCodeForRegion = PermissionUtilV1.getUserPermissionV1(subjectIri = regionRow.rowMap("region"), subjectCreator = regionRow.rowMap("owner"), subjectProject = regionRow.rowMap("project"), subjectPermissionLiteral = regionRow.rowMap.get("regionObjectPermissions"), userProfile = userProfile)
 
                             // ignore regions the user has no permissions on
                             permissionCodeForRegion.nonEmpty
@@ -1163,13 +1154,7 @@ class ResourcesResponderV1 extends ResponderV1 {
                     val attachedToProject = row.rowMap("attachedToProject")
                     val resourcePermissions = row.rowMap.get("resourcePermissions")
 
-                    val permissionCode = PermissionUtilV1.getUserPermissionV1(
-                        subjectIri = resourceIri,
-                        subjectOwner = attachedToUser,
-                        subjectProject = attachedToProject,
-                        subjectPermissionLiteral = resourcePermissions,
-                        userProfile = userProfile
-                    )
+                    val permissionCode = PermissionUtilV1.getUserPermissionV1(subjectIri = resourceIri, subjectCreator = attachedToUser, subjectProject = attachedToProject, subjectPermissionLiteral = resourcePermissions, userProfile = userProfile)
 
                     if (numberOfProps > 1) {
                         // The client requested more than one property per resource that was found.
@@ -1266,7 +1251,7 @@ class ResourcesResponderV1 extends ResponderV1 {
 
         /**
           * Does pre-update checks, creates an empty resource, and asks the values responder to create the resource's
-          * values. This function is called by [[ResourceLocker]] once it has acquired an update lock on the resource.
+          * values. This function is called by [[IriLocker]] once it has acquired an update lock on the resource.
           *
           * @param resourceIri  the Iri of the resource to be created.
           * @param values       the values to be attached to the resource.
@@ -1444,7 +1429,8 @@ class ResourcesResponderV1 extends ResponderV1 {
         }
 
         val resultFuture = for {
-        // Don't allow anonymous users to create resources.
+
+            // Get user's IRI and don't allow anonymous users to create resources.
             userIri: IRI <- Future {
                 userProfile.userData.user_id match {
                     case Some(iri) => iri
@@ -1456,26 +1442,25 @@ class ResourcesResponderV1 extends ResponderV1 {
                 throw BadRequestException(s"Instances of knora-base:Resource cannot be created, only instances of subclasses")
             }
 
-            namedGraph = settings.projectNamedGraphs(projectIri).data
+            projectInfo <- {
+                responderManager ? ProjectInfoByIRIGetRequestV1(
+                    projectIri,
+                    Some(userProfile)
+                )
+            }.mapTo[ProjectInfoResponseV1]
+
+            //namedGraph = settings.projectNamedGraphs(projectIri).data
+            namedGraph = projectInfo.project_info.dataNamedGraph
             resourceIri: IRI = knoraIdUtil.makeRandomResourceIri
 
-            // check if the user has the permissions to create a new resource in the given project
-            // get project info that includes the permissions the current user has on the project
-            projectInfo: ProjectInfoResponseV1 <- (responderManager ? ProjectInfoByIRIGetRequest(
-                iri = projectIri,
-                requestType = ProjectInfoType.SHORT,
-                Some(userProfile)
-            )).mapTo[ProjectInfoResponseV1]
-
-            // TODO: projects rights can not be queried yet because the permissions are missing in the data
-            // if the rights returned by projects responder are set to None
-            // or if they are below the level of modify permissions, the user's request is refused.
-            /*_ = if (!projectInfo.project_info.rights.exists(permissionCode =>
-                PermissionUtil.impliesV1(userHasPermissionCode = permissionCode, userNeedsPermissionIri = OntologyConstants.KnoraBase.HasModifyPermission))) {
+            // Check user's PermissionProfile (part of UserProfileV1) to see if the user has the permission to
+            // create a new resource in the given project.
+            _ = if (!userProfile.permissionData.hasPermissionFor(ResourceCreateOperation(resourceClassIri), projectIri, None)) {
                 throw ForbiddenException(s"User $userIri does not have permissions to create a resource in project $projectIri")
-            }*/
+            }
 
             // get default permissions for given resource type
+            /*
             entityInfoResponse <- {
                 responderManager ? EntityInfoGetRequestV1(
                     resourceClassIris = Set(resourceClassIri),
@@ -1483,18 +1468,22 @@ class ResourcesResponderV1 extends ResponderV1 {
                 )
             }.mapTo[EntityInfoGetResponseV1]
 
-            // represents the permissions as a List of 2-tuples:
-            // e.g. (http://www.knora.org/ontology/knora-base#hasViewPermission,http://www.knora.org/ontology/knora-base#KnownUser)
             permissions: Option[String] = PermissionUtilV1.makePermissionsFromEntityDefaults(entityInfoResponse.resourceEntityInfoMap(resourceClassIri))
+            */
 
-            result: ResourceCreateResponseV1 <- ResourceLocker.runWithResourceLock(
+            defaultObjectAccessPermissions <- {
+                responderManager ? DefaultObjectAccessPermissionsStringForResourceClassGetV1(projectIri = projectIri, resourceClassIri = resourceClassIri, userProfile.permissionData)
+            }.mapTo[Option[String]]
+            _ = log.debug(s"createNewResource - defaultObjectAccessPermissions: $defaultObjectAccessPermissions")
+
+            result: ResourceCreateResponseV1 <- IriLocker.runWithIriLock(
                 apiRequestID,
                 resourceIri,
                 () => createResourceAndCheck(
                     resourceIri = resourceIri,
                     values = values,
                     sipiConversionRequest = sipiConversionRequest,
-                    permissions = permissions,
+                    permissions = defaultObjectAccessPermissions,
                     namedGraph = namedGraph,
                     ownerIri = userIri,
                     apiRequestID = apiRequestID
@@ -1528,15 +1517,23 @@ class ResourcesResponderV1 extends ResponderV1 {
 
         def makeTaskFuture(userIri: IRI): Future[ResourceDeleteResponseV1] = {
             for {
-            // Check that the user has permission to delete the resource.
+                // Check that the user has permission to delete the resource.
                 (permissionCode, resourceInfo) <- getResourceInfoV1(resourceIri = resourceDeleteRequest.resourceIri, userProfile = resourceDeleteRequest.userProfile, queryOntology = false)
 
                 _ = if (!PermissionUtilV1.impliesV1(userHasPermissionCode = permissionCode, userNeedsPermission = OntologyConstants.KnoraBase.DeletePermission)) {
                     throw ForbiddenException(s"User $userIri does not have permission to mark resource ${resourceDeleteRequest.resourceIri} as deleted")
                 }
 
+                projectInfo <- {
+                    responderManager ? ProjectInfoByIRIGetV1(
+                        resourceInfo.project_id,
+                        None
+                    )
+                }.mapTo[ProjectInfoV1]
+
+                // Create update sparql string
                 sparqlUpdate = queries.sparql.v1.txt.deleteResource(
-                    dataNamedGraph = settings.projectNamedGraphs(resourceInfo.project_id).data,
+                    dataNamedGraph = projectInfo.dataNamedGraph,
                     triplestore = settings.triplestoreType,
                     resourceIri = resourceDeleteRequest.resourceIri,
                     maybeDeleteComment = resourceDeleteRequest.deleteComment
@@ -1570,7 +1567,7 @@ class ResourcesResponderV1 extends ResponderV1 {
             }
 
             // Do the remaining pre-update checks and the update while holding an update lock on the resource.
-            taskResult <- ResourceLocker.runWithResourceLock(
+            taskResult <- IriLocker.runWithIriLock(
                 resourceDeleteRequest.apiRequestID,
                 resourceDeleteRequest.resourceIri,
                 () => makeTaskFuture(userIri)
@@ -1627,8 +1624,15 @@ class ResourcesResponderV1 extends ResponderV1 {
                     throw ForbiddenException(s"User $userIri does not have permission to change the label of resource $resourceIri")
                 }
 
+                projectInfo <- {
+                    responderManager ? ProjectInfoByIRIGetV1(
+                        resourceInfo.project_id,
+                        None
+                    )
+                }.mapTo[ProjectInfoV1]
+
                 // get the named graph the resource is contained in by the resource's project
-                namedGraph = settings.projectNamedGraphs(resourceInfo.project_id).data
+                namedGraph = projectInfo.dataNamedGraph
 
                 // the user has sufficient permissions to change the resource's label
                 sparqlUpdate = queries.sparql.v1.txt.changeResourceLabel(
@@ -1669,7 +1673,7 @@ class ResourcesResponderV1 extends ResponderV1 {
             }
 
             // Do the remaining pre-update checks and the update while holding an update lock on the resource.
-            taskResult <- ResourceLocker.runWithResourceLock(
+            taskResult <- IriLocker.runWithIriLock(
                 apiRequestID,
                 resourceIri,
                 () => makeTaskFuture(userIri)

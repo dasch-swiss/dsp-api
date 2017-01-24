@@ -55,5 +55,10 @@ class InternationalizationSpec extends SalsahSpec {
             page.changeLanguage("fr")
             page.getSimpleSearchField.getAttribute("value") should be("Recherche")
         }
+
+        "close the browser" in {
+            page.quit()
+        }
+
     }
 }

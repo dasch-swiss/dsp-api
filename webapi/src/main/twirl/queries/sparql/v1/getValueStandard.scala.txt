@@ -1,0 +1,71 @@
+@*
+ * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
+ * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ *
+ * This file is part of Knora.
+ *
+ * Knora is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Knora is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public
+ * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ *@
+
+@import org.knora.webapi.IRI
+
+@**
+ * Queries a knora-base:Value using standard SPARQL, without inference.
+ *
+ * This template is used only by getValue.scala.txt.
+ *
+ * @param triplestore the name of the triplestore being used.
+ * @param iri the IRI of the Value.
+ *@
+@(triplestore: String,
+  valueIri: IRI)
+
+prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+prefix knora-base: <http://www.knora.org/ontology/knora-base#>
+
+SELECT ?objPred ?objObj ?predStandoff ?objStandoff
+WHERE {
+    BIND(IRI("@valueIri") AS ?obj)
+
+    ?resourceProp rdfs:subPropertyOf* knora-base:hasValue .
+
+    {
+        ?resource ?resourceProp ?obj .
+        ?obj knora-base:isDeleted false .
+        ?obj ?objPred ?objObj .
+
+        FILTER(?objPred != knora-base:attachedToProject)
+
+        OPTIONAL {
+            FILTER(?objPred = knora-base:valueHasStandoff)
+            ?objObj ?predStandoff ?objStandoff .
+        }
+    }
+    UNION
+    {
+        @* Return the value's project if it has one, otherwise return the project of the resource that contains the value. *@
+
+        ?resource ?resourceProp ?obj .
+        ?obj knora-base:isDeleted false .
+        ?resource knora-base:attachedToProject ?resourceProject .
+
+        OPTIONAL {
+            ?obj knora-base:attachedToProject ?valueProject .
+        }
+
+        BIND(knora-base:attachedToProject AS ?objPred)
+        BIND(COALESCE(?valueProject, ?resourceProject) AS ?objObj)
+    }
+}

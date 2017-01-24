@@ -51,6 +51,7 @@
 	// private method to convert the slider position to a pixel value (integer)
 	//
 	var position_to_px = function(localdata, pos) {
+		if ((localdata.settings.max - localdata.settings.min) == 0) return 0;
 		return parseInt((pos - localdata.settings.min)*localdata.slider_length / (localdata.settings.max - localdata.settings.min));
 	};
 	/*===========================================================================*/
@@ -60,6 +61,7 @@
 	// private method to convert a pixel value to a slider position
 	//
 	var px_to_position = function(localdata, pos) {
+		if (localdata.slider_length == 0) return localdata.settings.min;
 		return pos*(localdata.settings.max - localdata.settings.min)/localdata.slider_length + localdata.settings.min;
 	};
 	/*===========================================================================*/
@@ -77,7 +79,12 @@
 		}
 		else {
 			// we need pixel position as float value...
-			newpos = (pos - localdata.settings.min)*localdata.slider_length / (localdata.settings.max - localdata.settings.min);
+			if ((localdata.settings.max - localdata.settings.min) == 0) {
+				newpos = localdata.settings.min;
+			}
+			else {
+				newpos = (pos - localdata.settings.min)*localdata.slider_length / (localdata.settings.max - localdata.settings.min);
+			}
 		}
 		if (localdata.settings.horizontal) {
 			if (newpos < 0) newpos = 0;

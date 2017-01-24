@@ -42,6 +42,6 @@ WHERE {
     BIND(IRI("@valueIri") AS ?value)
 
     ?value rdf:type ?valueClass .
-    ?valueClass rdfs:subClassOf+ knora-base:Value .
+    ?valueClass rdfs:subClassOf* knora-base:Value .
     ?value knora-base:isDeleted ?isDeleted .
 }

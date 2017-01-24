@@ -24,6 +24,7 @@ import java.util.UUID
 
 import akka.actor.Props
 import akka.testkit.{ImplicitSender, TestActorRef}
+import com.typesafe.config.ConfigFactory
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse}
 import org.knora.webapi.messages.v1.responder.resourcemessages.{LocationV1, ResourceFullGetRequestV1, ResourceFullResponseV1}
@@ -41,44 +42,25 @@ import scala.concurrent.duration._
   * Static data for testing [[ValuesResponderV1]].
   */
 object ValuesResponderV1Spec {
-    private val incunabulaProjectIri = "http://data.knora.org/projects/77275339"
-    private val anythingProjectIri = "http://data.knora.org/projects/anything"
+
+    val config = ConfigFactory.parseString(
+        """
+         akka.loglevel = "DEBUG"
+         akka.stdout-loglevel = "DEBUG"
+        """.stripMargin)
+
+    private val incunabulaProjectIri = SharedAdminTestData.INCUNABULA_PROJECT_IRI
+    private val anythingProjectIri = SharedAdminTestData.ANYTHING_PROJECT_IRI
 
     private val zeitglöckleinIri = "http://data.knora.org/c5058f3a"
     private val miscResourceIri = "http://data.knora.org/miscResource"
     private val aThingIri = "http://data.knora.org/a-thing"
 
-    private val incunabulaUser = UserProfileV1(
-        projects = Vector("http://data.knora.org/projects/77275339"),
-        groups = Nil,
-        userData = UserDataV1(
-            email = Some("test@test.ch"),
-            lastname = Some("Test"),
-            firstname = Some("User"),
-            username = Some("testuser"),
-            token = None,
-            user_id = Some("http://data.knora.org/users/b83acc5f05"),
-            lang = "de"
-        )
-    )
+    private val incunabulaUser = SharedAdminTestData.incunabulaMemberUser
 
-    private val imagesUser = UserProfileV1(
-        projects = Vector("http://data.knora.org/projects/images"),
-        groups = Nil,
-        userData = UserDataV1(
-            user_id = Some("http://data.knora.org/users/91e19f1e01"),
-            lang = "de"
-        )
-    )
+    private val imagesUser = SharedAdminTestData.imagesUser01
 
-    private val anythingUser = UserProfileV1(
-        projects = Vector("http://data.knora.org/projects/anything"),
-        groups = Nil,
-        userData = UserDataV1(
-            user_id = Some("http://data.knora.org/users/9XBCrDV3SRa7kS1WwynB4Q"),
-            lang = "de"
-        )
-    )
+    private val anythingUser = SharedAdminTestData.anythingUser1
 
     private val versionHistoryWithHiddenVersion = ValueVersionHistoryGetResponseV1(
         userdata = incunabulaUser.userData,
@@ -100,7 +82,7 @@ object ValuesResponderV1Spec {
 /**
   * Tests [[ValuesResponderV1]].
   */
-class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
+class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with ImplicitSender {
 
     import ValuesResponderV1Spec._
 
@@ -111,9 +93,6 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
     private val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
 
     val rdfDataObjects = Vector(
-        RdfDataObject(path = "../knora-ontologies/knora-base.ttl", name = "http://www.knora.org/ontology/knora-base"),
-        RdfDataObject(path = "../knora-ontologies/knora-dc.ttl", name = "http://www.knora.org/ontology/dc"),
-        RdfDataObject(path = "../knora-ontologies/salsah-gui.ttl", name = "http://www.knora.org/ontology/salsah-gui"),
         RdfDataObject(path = "_test_data/ontologies/incunabula-onto.ttl", name = "http://www.knora.org/ontology/incunabula"),
         RdfDataObject(path = "_test_data/responders.v1.ValuesResponderV1Spec/incunabula-data.ttl", name = "http://www.knora.org/data/incunabula"),
         RdfDataObject(path = "_test_data/ontologies/images-demo-onto.ttl", name = "http://www.knora.org/ontology/images"),
@@ -257,7 +236,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
         storeManager ! ResetTriplestoreContent(rdfDataObjects)
         expectMsg(300.seconds, ResetTriplestoreContentACK())
 
-        responderManager ! LoadOntologiesRequest(incunabulaUser)
+        responderManager ! LoadOntologiesRequest(SharedAdminTestData.rootUser)
         expectMsg(10.seconds, LoadOntologiesResponse())
     }
 
@@ -296,7 +275,7 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
             }
         }
 
-        "query a text value containing Standoff (disabled because of issue 17)" ignore {
+        "query a text value containing Standoff" in {
             actorUnderTest ! ValueGetRequestV1(
                 valueIri = "http://data.knora.org/e41ab5695c/values/d3398239089e04",
                 userProfile = incunabulaUser
@@ -305,6 +284,17 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
             expectMsgPF(timeout) {
                 case msg: ValueGetResponseV1 =>
                     checkValueGetResponseWithStandoff(msg)
+            }
+        }
+
+        "query a standoff link as an ordinary value" in {
+            actorUnderTest ! ValueGetRequestV1(
+                valueIri = "http://data.knora.org/a-thing-with-text-values/values/0",
+                userProfile = incunabulaUser
+            )
+
+            expectMsgPF(timeout) {
+                case msg: ValueGetResponseV1 => msg.rights should ===(2)
             }
         }
 
@@ -1396,23 +1386,12 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
         }
 
         "change the partOf property of a page" in {
-            // A test UserDataV1.
-            val userData = UserDataV1(
-                email = Some("test@test.ch"),
-                lastname = Some("Test"),
-                firstname = Some("User"),
-                username = Some("testuser"),
-                token = None,
-                user_id = Some("http://data.knora.org/users/91e19f1e01"),
-                lang = "de"
-            )
 
             // A test UserProfileV1.
-            val userProfile = UserProfileV1(
-                projects = Vector("http://data.knora.org/projects/77275339"),
-                groups = Nil,
-                userData = userData
-            )
+            val userProfile = SharedAdminTestData.incunabulaCreatorUser
+
+            // A test UserDataV1.
+            val userData = userProfile.userData
 
             val linkTargetIri = "http://data.knora.org/e41ab5695c"
 
@@ -1439,23 +1418,12 @@ class ValuesResponderV1Spec extends CoreSpec() with ImplicitSender {
         }
 
         "try to change the partOf property of a page, but submit the current target Iri" in {
-            // A test UserDataV1.
-            val userData = UserDataV1(
-                email = Some("test@test.ch"),
-                lastname = Some("Test"),
-                firstname = Some("User"),
-                username = Some("testuser"),
-                token = None,
-                user_id = Some("http://data.knora.org/users/91e19f1e01"),
-                lang = "de"
-            )
 
             // A test UserProfileV1.
-            val userProfile = UserProfileV1(
-                projects = Vector("http://data.knora.org/projects/77275339"),
-                groups = Nil,
-                userData = userData
-            )
+            val userProfile = SharedAdminTestData.incunabulaProjectAdminUser
+
+            // A test UserDataV1.
+            val userData = userProfile.userData
 
             val linkTargetIri = "http://data.knora.org/e41ab5695c"
 

@@ -20,12 +20,15 @@
 
 package org.knora.webapi.responders.v1
 
-import akka.actor.{Actor, ActorLogging, Props, Status}
+import akka.actor.{Actor, ActorLogging, Props}
 import akka.event.LoggingReceive
 import akka.routing.FromConfig
+import org.knora.webapi.ActorMaker
 import org.knora.webapi.messages.v1.responder.ckanmessages.CkanResponderRequestV1
+import org.knora.webapi.messages.v1.responder.groupmessages.GroupsResponderRequestV1
 import org.knora.webapi.messages.v1.responder.listmessages.ListsResponderRequestV1
 import org.knora.webapi.messages.v1.responder.ontologymessages.OntologyResponderRequestV1
+import org.knora.webapi.messages.v1.responder.permissionmessages.PermissionsResponderRequestV1
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectsResponderRequestV1
 import org.knora.webapi.messages.v1.responder.resourcemessages.ResourcesResponderRequestV1
 import org.knora.webapi.messages.v1.responder.searchmessages.SearchResponderRequestV1
@@ -34,13 +37,23 @@ import org.knora.webapi.messages.v1.responder.storemessages.StoreResponderReques
 import org.knora.webapi.messages.v1.responder.usermessages.UsersResponderRequestV1
 import org.knora.webapi.messages.v1.responder.valuemessages.ValuesResponderRequestV1
 import org.knora.webapi.responders._
-import org.knora.webapi.{ActorMaker, UnexpectedMessageException}
+import org.knora.webapi.util.ActorUtil.handleUnexpectedMessage
 
 /**
   * This actor receives messages representing client requests, and forwards them to pools specialised actors that it supervises.
   */
 class ResponderManagerV1 extends Actor with ActorLogging {
     this: ActorMaker =>
+
+    /**
+      * The responder's Akka actor system.
+      */
+    protected implicit val system = context.system
+
+    /**
+      * The Akka actor system's execution context for futures.
+      */
+    protected implicit val executionContext = system.dispatcher
 
     // A subclass can replace the standard responders with custom responders, e.g. for testing. To do this, it must
     // override one or more of the protected val members below representing actors that route requests to particular
@@ -156,6 +169,28 @@ class ResponderManagerV1 extends Actor with ActorLogging {
       */
     protected val storeRouter = makeDefaultStoreRouter
 
+    /**
+      * Constructs the default Akka routing actor that routes messages to [[PermissionsResponderV1]].
+      */
+    protected final def makeDefaultPermissionsRouter = makeActor(FromConfig.props(Props[PermissionsResponderV1]), PERMISSIONS_ROUTER_ACTOR_NAME)
+
+    /**
+      * The Akka routing actor that should receive messages addressed to the Permissions responder. Subclasses can override this
+      * member to substitute a custom actor instead of the default Store responder.
+      */
+    protected val permissionsRouter = makeDefaultPermissionsRouter
+
+    /**
+      * Constructs the default Akka routing actor that routes messages to [[GroupsResponderV1]].
+      */
+    protected final def makeDefaultGroupsRouter = makeActor(FromConfig.props(Props[GroupsResponderV1]), GROUPS_ROUTER_ACTOR_NAME)
+
+    /**
+      * The Akka routing actor that should receive messages addressed to the Permissions responder. Subclasses can override this
+      * member to substitute a custom actor instead of the default Store responder.
+      */
+    protected val groupsRouter = makeDefaultGroupsRouter
+
     def receive = LoggingReceive {
         case resourcesResponderRequestV1: ResourcesResponderRequestV1 => resourcesRouter.forward(resourcesResponderRequestV1)
         case valuesResponderRequest: ValuesResponderRequestV1 => valuesRouter.forward(valuesResponderRequest)
@@ -167,6 +202,8 @@ class ResponderManagerV1 extends Actor with ActorLogging {
         case projectsResponderRequest: ProjectsResponderRequestV1 => projectsRouter.forward(projectsResponderRequest)
         case ckanResponderRequest: CkanResponderRequestV1 => ckanRouter.forward(ckanResponderRequest)
         case storeResponderRequest: StoreResponderRequestV1 => storeRouter.forward(storeResponderRequest)
-        case other => sender ! Status.Failure(UnexpectedMessageException(s"Unexpected message $other of type ${other.getClass.getCanonicalName}"))
+		case permissionsResponderRequest: PermissionsResponderRequestV1 => permissionsRouter forward permissionsResponderRequest
+        case groupsResponderRequest: GroupsResponderRequestV1 => groupsRouter forward groupsResponderRequest
+        case other => handleUnexpectedMessage(sender(), other, log)
     }
 }

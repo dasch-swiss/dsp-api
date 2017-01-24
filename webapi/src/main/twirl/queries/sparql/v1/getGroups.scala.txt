@@ -18,17 +18,16 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  *@
 
-@import org.knora.webapi.IRI
+@import org.knora.webapi._
 
 @**
- * Gets all information about a user, given the user's knora-base:userid.
+ * Gets information about all projects.
  *
  * @param triplestore the name of the triplestore being used.
- * @param username the user's `knora-base:userid`.
  *@
-@(triplestore: String,
-  username: String)
+@(triplestore: String)
 
+prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 prefix knora-base: <http://www.knora.org/ontology/knora-base#>
 
 SELECT ?s ?p ?o
@@ -37,8 +36,9 @@ SELECT ?s ?p ?o
     FROM <http://www.ontotext.com/explicit>
 }
 WHERE {
-    BIND("@username" as ?username)
 
-    ?s knora-base:userid ?username .
+    ?s rdf:type knora-base:UserGroup .
+    FILTER (?s != <http://www.knora.org/ontology/knora-base#AllGroups>) .
     ?s ?p ?o .
+
 }

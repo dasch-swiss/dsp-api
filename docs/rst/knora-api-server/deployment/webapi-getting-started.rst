@@ -38,20 +38,36 @@ work out of the box with the following triplestores:
 See the chapters on :ref:`starting-fuseki-2` and :ref:`starting-graphdb-se-7` for more details.
 
 
-Load Test Data
-^^^^^^^^^^^^^^
+Creating Repositories and Loading Test Data
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-In order to load the test data, go to ``webapi/scripts`` and run the script for the triplestore you have chosen. In case of Fuseki, run ``fuseki-load-test-data.sh``,
-in case of GraphDB ``graphdb-se-load-test-data.sh``
+To create a test repository called ``knora-test`` and load test data into it,
+go to ``webapi/scripts`` and run the script for the triplestore you have
+chosen.
 
-When working with GraphDB, you may encounter an error when loading the test data that says that there are multiple IDs for the same repository ``knora-test``.
-In that case something went wrong when dropping and recreating the repository. Please delete all the data and start over:
+* For Fuseki, run ``fuseki-load-test-data.sh``.
+* For GraphDB:
+    * If you are running GraphDB directly from its installation directory (using its ``graphdb`` script), run ``graphdb-se-local-load-test-data.sh``.
+    * If you are running GraphDB from a Docker image, run ``graphdb-se-docker-load-test-data.sh``.
 
-* shutdown Tomcat: ``$CATALINA_HOME/bin/shutdown.sh``
+You can create your own scripts based on these scripts, to create new
+repositories and optionally to load existing Knora-compliant RDF data into
+them.
 
-* go to `<http://localhost:8080/openrdf-sesame/system/overview.view>`_ and look for the field ``Data directory`` which indicates the location of the directory ``.aduna``.
+If you are using GraphDB, you must create your repository using a repository
+configuration file that specifies the file ``KnoraRules.pie`` as its
+``owlim:ruleset``. This enables RDFS inference and Knora-specific consistency
+rules. When using GraphDB, the Knora API server uses RDFS inference to improve
+query performance. The Knora-specific consistency rules help ensure that your
+data is internally consistent and conforms to the Knora ontologies.
 
-* Then remove this directory an restart tomcat. Now you should be able to load the test data correctly.
+When testing with GraphDB, you may sometimes get an error when loading the
+test data that says that there are multiple IDs for the same repository
+``knora-test``. In that case, something went wrong when dropping and
+recreating the repository. You can solve this by deleting the repository
+manually and starting over. **Make sure you don't delete important data.** To
+delete the repository, stop GraphDB, delete the ``data`` directory in your
+GraphDB installation, and restart GraphDB.
 
 
 Creating a Test Installation
@@ -85,7 +101,13 @@ includes a command-line program that works on RDF data files in Turtle_ format. 
   [info]                            multiple permission statements into single permission
   [info]                            statements), 'strings' (adds missing valueHasString),
   [info]                            'standoff' (transforms old-style standoff into
-  [info]                            new-style standoff), 'all' (all of the above)
+  [info]                            new-style standoff), 'creator' (transforms existing
+  [info]                            'knora-base:Owner' group inside permissions to
+  [info]                            'knora-base:Creator'), 'owner' (gives
+  [info]                            'knora-base:Creator' CR permissions to correspond to
+  [info]                            the previous behaviour for owners - use with care as
+  [info]                            it will add permissions that where not there before),
+  [info]                            'all' (all of the above minus 'owner')
   [info]       --help               Show help message
   [info] 
   [info]  trailing arguments:
@@ -110,10 +132,17 @@ standoff
   Transforms old-style standoff markup (containing tag names as strings) to new-style standoff markup
   (using different OWL class names for different tags).
 
+creator
+  Transforms existing ``knora-base:Owner`` group inside permissions to ``knora-base:Creator``.
+
+owner
+  Gives ``knora-base:Creator`` **CR permissions** to correspond to the previous behaviour for owners.
+  Use with care as it will add permissions that where not there before.
+
 all
   Runs all of the above transformations.
 
-Transformations that are not needed have no effect.
+Transformations that are not needed have no effect, so it is safe to use ``-t all``.
 
 The program uses the Turtle parsing and formatting library from RDF4J_. Additional transformations can
 be implemented as subclasses of ``org.eclipse.rdf4j.rio.RDFHandler``.
