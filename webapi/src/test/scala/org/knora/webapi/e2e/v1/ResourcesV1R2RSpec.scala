@@ -280,6 +280,8 @@ class ResourcesV1R2RSpec extends R2RSpec {
 
             Get("/v1/resources/http%3A%2F%2Fdata.knora.org%2F9d626dc76c03?resinfo=true&reqtype=context") ~> resourcesPath ~> check {
 
+                assert(status == StatusCodes.OK, response.toString)
+
                 val responseJson: Map[String, JsValue] = responseAs[String].parseJson.asJsObject.fields
                 val resourceContext: Map[String, JsValue] = responseJson("resource_context").asJsObject.fields
                 val resinfo: Map[String, JsValue] = resourceContext("resinfo").asJsObject.fields
@@ -305,7 +307,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
 
                 }
 
-                assert(status == StatusCodes.OK, response.toString)
+
             }
         }
 
@@ -326,6 +328,103 @@ class ResourcesV1R2RSpec extends R2RSpec {
 
             Post("/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(imagesUserEmail, password)) ~> resourcesPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)
+            }
+
+        }
+
+        "get a resource of type 'knora-base:Resource' with text with standoff" in {
+
+            val expectedXML =
+                """<?xml version="1.0" encoding="UTF-8"?>
+                  |<text><p>Derselbe Holzschnitt wird auf Seite <a href="http://data.knora.org/c9824353ae06" class="salsah-link">c7r</a> der lateinischen Ausgabe des Narrenschiffs verwendet.</p></text>
+                  |
+                """.stripMargin
+
+            Get("/v1/resources/http%3A%2F%2Fdata.knora.org%2F047db418ae06") ~> resourcesPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val text: JsValue = getValuesForProp(response, "http://www.knora.org/ontology/knora-base#hasComment")
+
+                val xml: String = text match {
+                    case vals: JsArray =>
+                        vals.elements.head.asJsObject.fields("xml") match {
+                            case JsString(xml: String) => xml
+                            case _ => throw new InvalidApiJsonException("member 'xml' not given")
+                        }
+                    case _ =>
+                        throw new InvalidApiJsonException("values is not an array")
+                }
+
+                // Compare the original XML with the regenerated XML.
+                val xmlDiff: Diff = DiffBuilder.compare(Input.fromString(expectedXML)).withTest(Input.fromString(xml)).build()
+
+                xmlDiff.hasDifferences should be(false)
+
+            }
+
+
+        }
+
+        "get a resource of type 'anything:thing' with two text with standoff" in {
+
+            val expectedXML1 =
+                """<?xml version="1.0" encoding="UTF-8"?>
+                  |<text>Na ja, die <a href="http://data.knora.org/a-thing" class="salsah-link">Dinge</a> sind OK.</text>
+                  |
+                """.stripMargin
+
+            val expectedXML2 =
+                """<?xml version="1.0" encoding="UTF-8"?>
+                  |<text>Ich liebe die <a href="http://data.knora.org/a-thing" class="salsah-link">Dinge</a>, sie sind alles für mich.</text>
+                  |
+                """.stripMargin
+
+
+            Get("/v1/resources/http%3A%2F%2Fdata.knora.org%2Fa-thing-with-text-values") ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val text: JsValue = getValuesForProp(response, "http://www.knora.org/ontology/anything#hasText")
+
+                val textValues: Seq[JsValue] = text match {
+                    case vals: JsArray =>
+                        vals.elements
+                    case _ =>
+                        throw new InvalidApiJsonException("values is not an array")
+                }
+
+                val xmlStrings: Seq[String] = textValues.map {
+                    (textVal: JsValue) =>
+                        textVal.asJsObject.fields("xml") match {
+                            case JsString(xml: String) => xml
+                            case _ => throw new InvalidApiJsonException("member 'xml' not given")
+                        }
+                }
+
+                assert(xmlStrings.length == 2)
+
+                // determine the index of the first and the second expected text value
+                val (dingeOk: Int, allesFuerMich: Int) = if (xmlStrings.head.contains("sind OK")) {
+
+                    // expectedXML1 comes first, expectedXML2 comes second
+                    (0,1)
+
+                } else {
+
+                    // expectedXML1 comes second, expectedXML2 comes first
+                    (1,0)
+                }
+
+                // Compare the original XML with the regenerated XML.
+                val xmlDiff1: Diff = DiffBuilder.compare(Input.fromString(expectedXML1)).withTest(Input.fromString(xmlStrings(dingeOk))).build()
+
+                val xmlDiff2: Diff = DiffBuilder.compare(Input.fromString(expectedXML2)).withTest(Input.fromString(xmlStrings(allesFuerMich))).build()
+
+                xmlDiff1.hasDifferences should be(false)
+
+                xmlDiff2.hasDifferences should be(false)
+
             }
 
         }
