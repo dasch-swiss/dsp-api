@@ -110,7 +110,7 @@ trait Authenticator {
                         JsObject(
                             "status" -> JsNumber(0),
                             "message" -> JsString("session credentials are OK"),
-                            "userdata" -> userProfile.userData.toJsValue
+                            "userdata" -> userProfile.ofType(UserProfileType.RESTRICTED).userData.toJsValue
                         ).compactPrint
                     )
                 )
@@ -333,7 +333,7 @@ object Authenticator {
         val cookies: Seq[HttpCookiePair] = requestContext.request.cookies
         cookies.find(_.name == "KnoraAuthentication") match {
             case Some(authCookie) =>
-                val value = CacheUtil.get[UserProfileV1](AUTHENTICATION_CACHE_NAME, authCookie.value)
+                val value: Option[UserProfileV1] = CacheUtil.get[UserProfileV1](AUTHENTICATION_CACHE_NAME, authCookie.value)
                 log.debug(s"Found this session id: ${authCookie.value} leading to this content in the cache: $value")
                 value
             case None =>

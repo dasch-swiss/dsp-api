@@ -121,12 +121,29 @@ class AuthenticationV1E2ESpec extends E2ESpec(AuthenticationV1E2ESpec.config) wi
             val response: HttpResponse = singleAwaitingRequest(request)
             assert(response.status == StatusCodes.OK)
 
-            log.debug(response.toString)
+            //println(response.toString)
 
             val sr: SessionResponse = Await.result(Unmarshal(response.entity).to[SessionResponse], 1.seconds)
             sid = sr.sid
 
             assert(response.headers.contains(`Set-Cookie`(HttpCookie(KNORA_AUTHENTICATION_COOKIE_NAME, value = sid))))
+
+            /* check for sensitive information leakage */
+            val body: String = Await.result(Unmarshal(response.entity).to[String], 1.seconds)
+            assert(body contains "\"password\":null")
+            assert(body contains "\"token\":null")
+        }
+
+        "not return sensitive information (token, password) in the response when checking session" in {
+            val request = Get(baseApiUrl + s"/v1/session") ~> Cookie(KNORA_AUTHENTICATION_COOKIE_NAME, sid)
+            val response = singleAwaitingRequest(request)
+            assert(response.status === StatusCodes.OK)
+
+            //println(response.toString)
+
+            val body: String = Await.result(Unmarshal(response.entity).to[String], 1.seconds)
+            assert(body contains "\"password\":null")
+            assert(body contains "\"token\":null")
         }
 
         "succeed with authentication when using correct session id in cookie" in {
@@ -180,21 +197,44 @@ class AuthenticationV1E2ESpec extends E2ESpec(AuthenticationV1E2ESpec.config) wi
     }
 
     "The Session Route ('v1/session') with credentials supplied via Basic Auth" should {
+        var sid = ""
         "succeed with 'login' and correct email / correct password" in {
             /* Correct username and correct password */
             val request = Get(baseApiUrl + "/v1/session?login") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
             val response = singleAwaitingRequest(request)
             //log.debug("==>> " + responseAs[String])
             assert(response.status === StatusCodes.OK)
+
+            val sr: SessionResponse = Await.result(Unmarshal(response.entity).to[SessionResponse], 1.seconds)
+            sid = sr.sid
+
+            assert(response.headers.contains(`Set-Cookie`(HttpCookie(KNORA_AUTHENTICATION_COOKIE_NAME, value = sid))))
+
+            /* check for sensitive information leakage */
+            val body: String = Await.result(Unmarshal(response.entity).to[String], 1.seconds)
+            assert(body contains "\"password\":null")
+            assert(body contains "\"token\":null")
         }
 
-       "fail with 'login' and correct email / wrong password " in {
-           /* Correct username and wrong password */
-           val request = Get(baseApiUrl + "/v1/session?login") ~> addCredentials(BasicHttpCredentials(rootEmail, wrongPass))
-           val response = singleAwaitingRequest(request)
-           //log.debug("==>> " + responseAs[String])
-           assert(response.status === StatusCodes.Unauthorized)
-       }
+        "not return sensitive information (token, password) in the response when checking session" in {
+            val request = Get(baseApiUrl + s"/v1/session") ~> Cookie(KNORA_AUTHENTICATION_COOKIE_NAME, sid)
+            val response = singleAwaitingRequest(request)
+            assert(response.status === StatusCodes.OK)
+
+            //println(response.toString)
+
+            val body: String = Await.result(Unmarshal(response.entity).to[String], 1.seconds)
+            assert(body contains "\"password\":null")
+            assert(body contains "\"token\":null")
+        }
+
+        "fail with 'login' and correct email / wrong password " in {
+            /* Correct username and wrong password */
+            val request = Get(baseApiUrl + "/v1/session?login") ~> addCredentials(BasicHttpCredentials(rootEmail, wrongPass))
+            val response = singleAwaitingRequest(request)
+            //log.debug("==>> " + responseAs[String])
+            assert(response.status === StatusCodes.Unauthorized)
+        }
 
         "fail with 'login' and wrong email " in {
             /* wrong username */
@@ -206,48 +246,48 @@ class AuthenticationV1E2ESpec extends E2ESpec(AuthenticationV1E2ESpec.config) wi
         }
     }
 
-   "The Resources Route using the Authenticator trait " should {
-       "succeed with authentication using URL parameters and correct email / correct password " in {
-           /* Correct email / correct password */
-           val request = Get(baseApiUrl + s"/v1/resources/http%3A%2F%2Fdata.knora.org%2Fc5058f3a?email=$rootEmailEnc&password=$testPass")
-               val response = singleAwaitingRequest(request)
-               //log.debug("==>> " + responseAs[String])
-               assert(response.status === StatusCodes.OK)
-       }
+    "The Resources Route using the Authenticator trait " should {
+        "succeed with authentication using URL parameters and correct email / correct password " in {
+            /* Correct email / correct password */
+            val request = Get(baseApiUrl + s"/v1/resources/http%3A%2F%2Fdata.knora.org%2Fc5058f3a?email=$rootEmailEnc&password=$testPass")
+            val response = singleAwaitingRequest(request)
+            //log.debug("==>> " + responseAs[String])
+            assert(response.status === StatusCodes.OK)
+        }
 
-       "fail with authentication using URL parameters and correct email / wrong password " in {
-           /* Correct email / wrong password */
-           val request = Get(baseApiUrl + s"/v1/resources/http%3A%2F%2Fdata.knora.org%2Fc5058f3a?email=$rootEmailEnc&password=$wrongPass")
+        "fail with authentication using URL parameters and correct email / wrong password " in {
+            /* Correct email / wrong password */
+            val request = Get(baseApiUrl + s"/v1/resources/http%3A%2F%2Fdata.knora.org%2Fc5058f3a?email=$rootEmailEnc&password=$wrongPass")
 
-               val response = singleAwaitingRequest(request)
-               //log.debug("==>> " + responseAs[String])
-               assert(response.status === StatusCodes.Unauthorized)
-       }
+            val response = singleAwaitingRequest(request)
+            //log.debug("==>> " + responseAs[String])
+            assert(response.status === StatusCodes.Unauthorized)
+        }
 
-       "succeed with authentication using HTTP Basic Auth headers and correct username / correct password " in {
-           /* Correct email / correct password */
-           val request = Get(baseApiUrl + "/v1/resources/http%3A%2F%2Fdata.knora.org%2Fc5058f3a") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
-               val response = singleAwaitingRequest(request)
-               //log.debug("==>> " + responseAs[String])
-               assert(response.status === StatusCodes.OK)
-       }
+        "succeed with authentication using HTTP Basic Auth headers and correct username / correct password " in {
+            /* Correct email / correct password */
+            val request = Get(baseApiUrl + "/v1/resources/http%3A%2F%2Fdata.knora.org%2Fc5058f3a") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
+            val response = singleAwaitingRequest(request)
+            //log.debug("==>> " + responseAs[String])
+            assert(response.status === StatusCodes.OK)
+        }
 
-       "fail with authentication using HTTP Basic Auth headers and correct username / wrong password " in {
-           /* Correct email / wrong password */
-           val request = Get(baseApiUrl + "/v1/resources/http%3A%2F%2Fdata.knora.org%2Fc5058f3a") ~> addCredentials(BasicHttpCredentials(rootEmail, wrongPass))
-               val response = singleAwaitingRequest(request)
-               //log.debug("==>> " + responseAs[String])
-               assert(response.status === StatusCodes.Unauthorized)
-       }
+        "fail with authentication using HTTP Basic Auth headers and correct username / wrong password " in {
+            /* Correct email / wrong password */
+            val request = Get(baseApiUrl + "/v1/resources/http%3A%2F%2Fdata.knora.org%2Fc5058f3a") ~> addCredentials(BasicHttpCredentials(rootEmail, wrongPass))
+            val response = singleAwaitingRequest(request)
+            //log.debug("==>> " + responseAs[String])
+            assert(response.status === StatusCodes.Unauthorized)
+        }
 
-       "not return sensitive information (token, password) in the response " in {
-           val request = Get(baseApiUrl + s"/v1/resources/http%3A%2F%2Fdata.knora.org%2Fc5058f3a?email=$rootEmailEnc&password=$testPass")
-               val response = singleAwaitingRequest(request)
-               //log.debug("==>> " + responseAs[String])
-               // assert(status === StatusCodes.OK)
-               val body: String = Await.result(Unmarshal(response.entity).to[String], 1.seconds)
-               assert(body contains "\"password\":null")
-               assert(body contains "\"token\":null")
-       }
+        "not return sensitive information (token, password) in the response " in {
+            val request = Get(baseApiUrl + s"/v1/resources/http%3A%2F%2Fdata.knora.org%2Fc5058f3a?email=$rootEmailEnc&password=$testPass")
+            val response = singleAwaitingRequest(request)
+            //log.debug("==>> " + responseAs[String])
+            // assert(status === StatusCodes.OK)
+            val body: String = Await.result(Unmarshal(response.entity).to[String], 1.seconds)
+            assert(body contains "\"password\":null")
+            assert(body contains "\"token\":null")
+        }
     }
 }
