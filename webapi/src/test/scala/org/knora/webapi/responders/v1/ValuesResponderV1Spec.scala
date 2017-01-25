@@ -35,7 +35,7 @@ import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v1.store.triplestoremessages._
 import org.knora.webapi.responders._
 import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
-import org.knora.webapi.twirl.{StandoffTagIriAttributeV1, StandoffTagV1}
+import org.knora.webapi.twirl.{StandoffTagAttributeV1, StandoffTagIriAttributeV1, StandoffTagV1}
 import org.knora.webapi.util.MutableTestIri
 
 import scala.concurrent.duration._
@@ -140,24 +140,31 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
     private def checkValueGetResponseWithStandoff(response: ValueGetResponseV1): Unit = {
         assert(response.rights == 6, "rights was not 6")
-        assert(response.value.asInstanceOf[TextValueWithStandoffV1].utf8str == "Zusammengebunden mit zwei weiteren Drucken von Johann Amerbach\n", "comment utf8str value did not match")
+        assert(response.value.asInstanceOf[TextValueWithStandoffV1].utf8str == "Zusammengebunden mit zwei weiteren Drucken von Johann Amerbach", "comment utf8str value did not match")
 
-        // get uuid from response since it was created automatically
-        val uuid: String = response.value.asInstanceOf[TextValueWithStandoffV1].standoff.head.uuid
+
 
         // expected Standoff information for <http://data.knora.org/e41ab5695c/values/d3398239089e04> in incunabula-data.ttl
         val standoff = Vector(
             StandoffTagV1(
+                standoffTagClassIri = OntologyConstants.Standoff.StandoffRootTag,
+                startPosition = 0,
+                endPosition = 62,
+                uuid = "4800e53e-3835-498e-b658-6cc4f93ab894",
+                originalXMLID = None,
+                startIndex = 0
+            ), StandoffTagV1(
                 standoffTagClassIri = OntologyConstants.Standoff.StandoffBoldTag,
                 startPosition = 21,
                 endPosition = 25,
-                uuid = uuid,
+                uuid = "4bc24696-5dde-4ced-9687-6f8e4519efe8",
                 originalXMLID = None,
-                startIndex = 0
+                startIndex = 1,
+                startParentIndex = Some(0)
             )
         )
 
-        assert(response.value.asInstanceOf[TextValueWithStandoffV1].standoff == standoff, "standoff did not match")
+        assert(response.value.asInstanceOf[TextValueWithStandoffV1].standoff.sortBy(_.standoffTagClassIri) == standoff.sortBy(_.standoffTagClassIri), "standoff did not match")
     }
 
     private def checkComment1bResponse(response: ChangeValueResponseV1, utf8str: String, standoff: Seq[StandoffTagV1] = Seq.empty[StandoffTagV1]): Unit = {

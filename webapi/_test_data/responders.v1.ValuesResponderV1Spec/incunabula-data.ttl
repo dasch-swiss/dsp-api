@@ -1012,17 +1012,23 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" ;
 	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
 	knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
 	knora-base:valueHasOrder 0 ;
-	knora-base:valueHasString """Zusammengebunden mit zwei weiteren Drucken von Johann Amerbach
-""" ;
-	knora-base:valueHasStandoff <http://data.knora.org/e41ab5695c/values/d3398239089e04/standoff/mX6z2vBPQ3OuUjQkfYEZRg> ;
+	knora-base:valueHasString """Zusammengebunden mit zwei weiteren Drucken von Johann Amerbach""" ;
+	knora-base:valueHasStandoff <http://data.knora.org/e41ab5695c/values/d3398239089e04/standoff/mX6z2vBPQ3OuUjQkfYEZRg> , <http://data.knora.org/e41ab5695c/values/d3398239089e04/standoff/cfPKbQw3QPqs9tIDnVrKsg> ;
 	knora-base:valueHasMapping <http://data.knora.org/projects/standoff/mappings/StandardMapping> ;
 	knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser" .
 
+<http://data.knora.org/e41ab5695c/values/d3398239089e04/standoff/cfPKbQw3QPqs9tIDnVrKsg> a standoff:StandoffRootTag ;
+    knora-base:standoffTagHasStart "0"^^xsd:int ;
+    knora-base:standoffTagHasEnd "62"^^xsd:int ;
+    knora-base:standoffTagHasStartIndex "0"^^xsd:integer ;
+    knora-base:standoffTagHasUUID "4800e53e-3835-498e-b658-6cc4f93ab894"^^xsd:string .
+
 <http://data.knora.org/e41ab5695c/values/d3398239089e04/standoff/mX6z2vBPQ3OuUjQkfYEZRg> a standoff:StandoffBoldTag ;
 	knora-base:standoffTagHasStart "21"^^xsd:int ;
 	knora-base:standoffTagHasEnd "25"^^xsd:int ;
-	knora-base:standoffTagHasStartIndex "0"^^xsd:int ;
+	knora-base:standoffTagHasStartIndex "1"^^xsd:int ;
+	knora-base:standoffTagHasStartParent <http://data.knora.org/e41ab5695c/values/d3398239089e04/standoff/cfPKbQw3QPqs9tIDnVrKsg> ;
 	knora-base:standoffTagHasUUID "4bc24696-5dde-4ced-9687-6f8e4519efe8" .
 
 <http://data.knora.org/e41ab5695c/values/fc4544c26a01> a knora-base:TextValue ;
