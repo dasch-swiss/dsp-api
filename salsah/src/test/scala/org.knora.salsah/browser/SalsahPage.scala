@@ -25,7 +25,7 @@ import java.io.{File, FileNotFoundException}
 import org.openqa.selenium.chrome.ChromeDriver
 import org.openqa.selenium.interactions.Actions
 import org.openqa.selenium.support.ui.Select
-import org.openqa.selenium.{By, WebDriver, WebElement}
+import org.openqa.selenium.{By, JavascriptExecutor, WebDriver, WebElement}
 import org.scalatest.concurrent.Eventually._
 
 import scala.collection.JavaConversions._
@@ -96,13 +96,26 @@ class SalsahPage {
         val passwordInput = driver.findElement(By.id("password"))
         val sendCredentials = driver.findElement(By.id("login_button"))
 
-        val rootEmail = "root@example.com"
-        val rootEmailEnc = java.net.URLEncoder.encode(rootEmail, "utf-8")
-
-        userInput.sendKeys(rootEmail)
+        userInput.sendKeys(user)
         passwordInput.sendKeys("test")
         sendCredentials.click()
 
+
+
+    }
+
+    /**
+      * Checks that SALSAH.userdata contains the necessary data (assigned after successful login)
+      */
+    def checkForUserProject = {
+        driver match {
+            case jsExe: JavascriptExecutor =>
+                val projectIris: String = jsExe.executeScript("return window.SALSAH.userdata;").toString
+
+                if (projectIris == "{lang=en}") throw new Exception("expected userdata is not there yet")
+
+            case _ => throw new Exception("cannot execute javascript")
+        }
     }
 
     /*

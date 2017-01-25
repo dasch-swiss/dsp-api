@@ -70,6 +70,9 @@ class ResourceCreationSpec extends SalsahSpec {
     val rootEmail = "root@example.com"
     val rootEmailEnc = java.net.URLEncoder.encode(rootEmail, "utf-8")
 
+    val anythingUserEmail = "anything.user01@example.org"
+    val anythingUserEmailEnc = java.net.URLEncoder.encode(anythingUserEmail, "utf-8")
+
     // In order to run these tests, start `webapi` using the option `allowResetTriplestoreContentOperationOverHTTP`
 
     "The SALSAH home page" should {
@@ -84,16 +87,19 @@ class ResourceCreationSpec extends SalsahSpec {
 
         }
 
-        "log in as root" in {
+
+        "log in as anything user" in {
 
             page.load()
 
-            page.doLogin(rootEmail, "test")
+            page.doLogin(anythingUserEmail, "test")
 
             eventually {
                 // check if login has succeeded
-                // search for element with id 'dologout'
-                page.driver.findElement(By.id("dologout"))
+
+                page.checkForUserProject
+
+
             }
         }
 
@@ -183,9 +189,9 @@ class ResourceCreationSpec extends SalsahSpec {
 
         }
 
-        "close the browser" in {
+        /*"close the browser" in {
             page.quit()
-        }
+        }*/
 
     }
 }
