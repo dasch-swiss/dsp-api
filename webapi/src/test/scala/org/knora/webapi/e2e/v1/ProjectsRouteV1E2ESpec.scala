@@ -61,6 +61,14 @@ class ProjectsRouteV1E2ESpec extends E2ESpec(ProjectsRouteV1E2ESpec.config) with
 
     "The Projects Route ('v1/projects') with credentials supplied via Basic Auth" should {
 
+        "return all project's information" in {
+            /* Correct username and password */
+            val request = Get(baseApiUrl + s"/v1/projects") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
+            val response: HttpResponse = singleAwaitingRequest(request)
+            println(s"response: ${response.toString}")
+            assert(response.status === StatusCodes.OK)
+        }
+
         "return the project's information" in {
             /* Correct username and password */
             val request = Get(baseApiUrl + s"/v1/projects/shortname/$projectShortnameEnc") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
