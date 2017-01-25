@@ -78,6 +78,7 @@ The basic idea is that parts of a text can be marked up in a way that allows usi
 
 The following simple mapping illustrates this principle::
 
+    <?xml version="1.0" encoding="UTF-8"?>
     <mapping>
          <mappingElement>
             <tag>
@@ -117,15 +118,118 @@ Please note that the absence of an XML namespace and a class have to be explicit
 
 Once the mapping has been created, an XML like the following could be sent to Knora and converted to standoff::
 
+    <?xml version="1.0" encoding="UTF-8"?>
     <text>
         We had a party on <mydate knoraDate="GREGORIAN:2016-12-31">New Year's Eve</mydate>. It was a lot of fun.
     </text>
 
-
+The attribute holds the date in the format of a Knora date string (the format is documented in the typescript type alias ``dateString`` in module ``basicMessageComponents``).
 
 ------------------------------------------
 Predefined Standoff Classes and Properties
 ------------------------------------------
+
+The standoff ontology ``standoff-onto.ttl`` offers a set of predefined standoff classes that can be used in a custom mapping like the following::
+
+    <?xml version="1.0" encoding="UTF-8"?>
+    <mapping>
+        <mappingElement>
+            <tag>
+                <name>myDoc</name>
+                <class>noClass</class>
+                <namespace>noNamespace</namespace>
+                <separator>false</separator>
+            </tag>
+            <standoffClass>
+                <classIri>http://www.knora.org/ontology/standoff#StandoffRootTag</classIri>
+                <attributes>
+                    <attribute>
+                        <attributeName>documentType</attributeName>
+                        <namespace>noNamespace</namespace>
+                        <propertyIri>http://www.knora.org/ontology/standoff#standoffRootTagHasDocumentType</propertyIri>
+                    </attribute>
+                </attributes>
+            </standoffClass>
+        </mappingElement>
+
+        <mappingElement>
+            <tag>
+                <name>p</name>
+                <class>noClass</class>
+                <namespace>noNamespace</namespace>
+                <separator>true</separator>
+            </tag>
+            <standoffClass>
+                <classIri>http://www.knora.org/ontology/standoff#StandoffParagraphTag</classIri>
+            </standoffClass>
+        </mappingElement>
+
+        <mappingElement>
+            <tag>
+                <name>i</name>
+                <class>noClass</class>
+                <namespace>noNamespace</namespace>
+                <separator>false</separator>
+            </tag>
+            <standoffClass>
+                <classIri>http://www.knora.org/ontology/standoff#StandoffItalicTag</classIri>
+            </standoffClass>
+        </mappingElement>
+    <mapping>
+
+Predefined standoff classes may be used by various projects, each providing a custom mapping to be able to recreate the original XML from RDF.
+Predefined standoff classes may also be inherited and extended in project specific ontologies.
+
+XML attributes can be mapped to standoff properties in ``<attributes>`` that belongs to ``<standoffClass>``. Each ``<attribute>`` maps an XML attribute to a standoff property
+(Please note that also here the absence of an XML namespace has to be explicitly stated with the keyword ``noNamespace``).
+The combinations of standoff classes and properties must respect the cardinality defined in the ontology.
+
+The mapping above allows for an XML like this::
+
+        <?xml version="1.0" encoding="UTF-8"?>
+        <myDoc documentType="letter">
+            <p>
+                This my text that is <i>very</i> interesting.
+            </p>
+            <p>
+                And here it goes on.
+            </p>
+        </myDoc>
+
+--------------------------------------------
+Validating a Mapping and sending it to Knora
+--------------------------------------------
+
+A mapping can be validated before sending it to Knora with the following XML Schema file: ``webapi/src/resources/mappingXMLToStandoff.xsd``.
+Any mapping that does not conform to this XML Schema file will be rejected by Knora.
+
+The mapping has to be sent as a multipart request to the standoff route using the path segment ``mapping``::
+
+    HTTP POST http://host/v1/mapping
+
+The multipart request consists of two named parts:
+
+- "json" ->::
+
+    {
+      "project_id": "projectIRI",
+      "label": "my mapping",
+      "mappingName": "MappingNameSegment"
+    }
+- "xml" ->::
+
+    <?xml version="1.0" encoding="UTF-8"?>
+    <mapping>
+        ...
+    </mapping>
+
+
+A successful response returns the Iri of the mapping. However, the Iri of a mapping is predictable: it consists of the project Iri followed by ``/mappings/`` and the ``mappingName`` submitted in the JSON.
+Once created, a mapping can be used to create TextValues in Knora.
+
+
+
+
 
 .. [1] CKeditor offers the possibility to define filter rules (CKEditor_). They should reflect the elements supported by the mapping (see ``jquery.htmleditor.js``).
 
