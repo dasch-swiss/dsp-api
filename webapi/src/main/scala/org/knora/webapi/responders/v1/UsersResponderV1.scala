@@ -467,6 +467,8 @@ class UsersResponderV1 extends ResponderV1 {
             case None => Vector.empty[IRI]
         }
 
+        //println(projectIris)
+
         val userDataV1 = UserDataV1(
             lang = groupedUserData.get(OntologyConstants.KnoraBase.PreferredLanguage) match {
                 case Some(langList) => langList.head

@@ -300,7 +300,8 @@ case class UserProfileV1(userData: UserDataV1 = UserDataV1(lang = "en"),
                     lastname = olduserdata.lastname,
                     email = olduserdata.email,
                     password = None, // remove password
-                    isActiveUser = olduserdata.isActiveUser
+                    isActiveUser = olduserdata.isActiveUser,
+                    projects = olduserdata.projects
                 )
 
                 UserProfileV1(
