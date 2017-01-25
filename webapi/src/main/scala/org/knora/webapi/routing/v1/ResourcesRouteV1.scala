@@ -93,26 +93,9 @@ object ResourcesRouteV1 extends Authenticator {
             ResourceSearchGetRequestV1(searchString = searchString, resourceTypeIri = resourceTypeIri, numberOfProps = numberOfProps, limitOfResults = limitOfResults, userProfile = userProfile)
         }
 
-        def makeCreateResourceRequestMessage(apiRequest: CreateResourceApiRequestV1, multipartConversionRequest: Option[SipiResponderConversionPathRequestV1] = None, userProfile: UserProfileV1): ResourceCreateRequestV1 = {
+        def valuesToCreate(properties : Map[IRI, Seq[CreateResourceValueV1]]): Map[IRI, Seq[CreateValueV1WithComment]] = {
 
-            val projectIri = InputValidation.toIri(apiRequest.project_id, () => throw BadRequestException(s"Invalid project IRI: ${apiRequest.project_id}"))
-            val resourceTypeIri = InputValidation.toIri(apiRequest.restype_id, () => throw BadRequestException(s"Invalid resource IRI: ${apiRequest.restype_id}"))
-            val label = InputValidation.toSparqlEncodedString(apiRequest.label, () => throw BadRequestException(s"Invalid label: '${apiRequest.label}'"))
-
-            // for GUI-case:
-            // file has already been stored by Sipi.
-            // TODO: in the old SALSAH, the file params were sent as a property salsah:__location__ -> the GUI has to be adapated
-            val paramConversionRequest: Option[SipiResponderConversionFileRequestV1] = apiRequest.file match {
-                case Some(createFile: CreateFileV1) => Some(SipiResponderConversionFileRequestV1(
-                    originalFilename = InputValidation.toSparqlEncodedString(createFile.originalFilename, () => throw BadRequestException(s"The original filename is invalid: '${createFile.originalFilename}'")),
-                    originalMimeType = InputValidation.toSparqlEncodedString(createFile.originalMimeType, () => throw BadRequestException(s"The original MIME type is invalid: '${createFile.originalMimeType}'")),
-                    filename = InputValidation.toSparqlEncodedString(createFile.filename, () => throw BadRequestException(s"Invalid filename: '${createFile.filename}'")),
-                    userProfile = userProfile
-                ))
-                case None => None
-            }
-
-            val valuesToBeCreated: Map[IRI, Seq[CreateValueV1WithComment]] = apiRequest.properties.map {
+            properties.map {
                 case (propIri: IRI, values: Seq[CreateResourceValueV1]) =>
                     (InputValidation.toIri(propIri, () => throw BadRequestException(s"Invalid property IRI $propIri")), values.map {
                         case (givenValue: CreateResourceValueV1) =>
@@ -173,6 +156,29 @@ object ResourcesRouteV1 extends Authenticator {
                     })
             }
 
+        }
+
+        def makeCreateResourceRequestMessage(apiRequest: CreateResourceApiRequestV1, multipartConversionRequest: Option[SipiResponderConversionPathRequestV1] = None, userProfile: UserProfileV1): ResourceCreateRequestV1 = {
+
+            val projectIri = InputValidation.toIri(apiRequest.project_id, () => throw BadRequestException(s"Invalid project IRI: ${apiRequest.project_id}"))
+            val resourceTypeIri = InputValidation.toIri(apiRequest.restype_id, () => throw BadRequestException(s"Invalid resource IRI: ${apiRequest.restype_id}"))
+            val label = InputValidation.toSparqlEncodedString(apiRequest.label, () => throw BadRequestException(s"Invalid label: '${apiRequest.label}'"))
+
+            // for GUI-case:
+            // file has already been stored by Sipi.
+            // TODO: in the old SALSAH, the file params were sent as a property salsah:__location__ -> the GUI has to be adapated
+            val paramConversionRequest: Option[SipiResponderConversionFileRequestV1] = apiRequest.file match {
+                case Some(createFile: CreateFileV1) => Some(SipiResponderConversionFileRequestV1(
+                    originalFilename = InputValidation.toSparqlEncodedString(createFile.originalFilename, () => throw BadRequestException(s"The original filename is invalid: '${createFile.originalFilename}'")),
+                    originalMimeType = InputValidation.toSparqlEncodedString(createFile.originalMimeType, () => throw BadRequestException(s"The original MIME type is invalid: '${createFile.originalMimeType}'")),
+                    filename = InputValidation.toSparqlEncodedString(createFile.filename, () => throw BadRequestException(s"Invalid filename: '${createFile.filename}'")),
+                    userProfile = userProfile
+                ))
+                case None => None
+            }
+
+            val valuesToBeCreated: Map[IRI, Seq[CreateValueV1WithComment]] = valuesToCreate(apiRequest.properties)
+
             // since this function `makeCreateResourceRequestMessage` is called by the POST multipart route receiving the binaries (non GUI-case)
             // and by the other POST route, either multipartConversionRequest or paramConversionRequest is set if a file should be attached to the resource, but not both.
             if (multipartConversionRequest.nonEmpty && paramConversionRequest.nonEmpty) throw BadRequestException("Binaries sent and file params set to route. This is illegal.")
@@ -190,6 +196,18 @@ object ResourcesRouteV1 extends Authenticator {
                 userProfile = userProfile,
                 apiRequestID = UUID.randomUUID
             )
+        }
+        def formOneResourceRequest(resourceRequest: CreateResourceRequestV1): OneOfMultipleResourceCreateRequestV1 = {
+
+            val values= valuesToCreate(resourceRequest.properties)
+            OneOfMultipleResourceCreateRequestV1(resourceRequest.restype_id, resourceRequest.label, values)
+        }
+        def makeMultiResourcesRequestMessage(resourceRequest: Seq[CreateResourceRequestV1], projectId: IRI,  apiRequestID: UUID, userProfile: UserProfileV1): MultipleResourceCreateRequestV1= {
+            val resourcesToCreate : Seq[OneOfMultipleResourceCreateRequestV1] =
+                resourceRequest.map(x => formOneResourceRequest(x))
+
+            MultipleResourceCreateRequestV1(resourcesToCreate, projectId, userProfile, apiRequestID)
+
         }
 
         def makeGetPropertiesRequestMessage(resIri: IRI, userProfile: UserProfileV1) = {
@@ -493,14 +511,16 @@ object ResourcesRouteV1 extends Authenticator {
 
         } ~  path("v1" / "resources" / "xml" ) {
                 post {
-                        entity(as[NodeSeq]) { xml =>
-//                                val knoraIdUtil = new KnoraIdUtil
-//                                val projectId = knoraIdUtil.makeRandomProjectIri
-                                val projectId = "http://data.knora.org/projects/DczxPs-sR6aZN91qV92ZmQ"
-                                val root = xml.head
-
+                        entity(as[NodeSeq]) { xml => //requestContext =>
+                            //val userProfile = getUserProfileV1(requestContext)
                             val userProfile = UserProfileV1(UserDataV1("en"))
-                            val createResources = root.child
+
+                            //                                val knoraIdUtil = new KnoraIdUtil
+//                                val projectId = knoraIdUtil.makeRandomProjectIri
+                            val projectId = "http://data.knora.org/projects/DczxPs-sR6aZN91qV92ZmQ"
+                            val root = xml.head
+                            val apiRequestID = UUID.fromString("26106dcd-865a-4c81-b0e8-914e46939e70")
+                            val resourcesToCreate = root.child
                                     .filter(node => node.label != "#PCDATA")
                                     .map( node => {
                                         val entityType = node.label
@@ -514,18 +534,14 @@ object ResourcesRouteV1 extends Authenticator {
                                                 ( child.getNamespace(child.prefix) + "#" + child.label
                                                      -> List(CreateResourceValueV1(Some(CreateRichtextV1(child.text)))))
                                             ).toMap
-
-                                        val apiRequest = CreateResourceApiRequestV1(restype_id ,
-                                                resLabel,
-                                                properties,
-                                                None,
-                                                projectId)
-                                        makeCreateResourceRequestMessage(apiRequest , None, userProfile)
+                                        val values = valuesToCreate(properties)
+                                        CreateResourceRequestV1(restype_id , resLabel, properties)
 
                                     }
-                                    )
 
-                            complete(createResources.head.label.toString)
+                                    )
+                            val request1 = makeMultiResourcesRequestMessage(resourcesToCreate, projectId, apiRequestID, userProfile)
+                            complete(request1.resourcesToCreate.head.resourceTypeIri.toString)
                             }
                     }
 

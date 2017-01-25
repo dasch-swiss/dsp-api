@@ -55,6 +55,9 @@ case class CreateResourceApiRequestV1(restype_id: IRI,
 
 }
 
+case class CreateResourceRequestV1(restype_id: IRI,
+                                      label: String,
+                                      properties: Map[IRI, Seq[CreateResourceValueV1]])
 /**
   * Represents a property value to be created.
   *
@@ -153,6 +156,29 @@ case class ResourceCreateRequestV1(resourceTypeIri: IRI,
                                    projectIri: IRI,
                                    userProfile: UserProfileV1,
                                    apiRequestID: UUID) extends ResourcesResponderRequestV1
+
+case class OneOfMultipleResourceCreateRequestV1(resourceTypeIri: IRI,
+                                                 label: String,
+                                                 values: Map[IRI, Seq[CreateValueV1WithComment]])
+
+case class MultipleResourceCreateRequestV1(resourcesToCreate: Seq[OneOfMultipleResourceCreateRequestV1],
+                                           projectIri : IRI,
+                                           userProfile: UserProfileV1,
+                                           apiRequestID: UUID) extends ResourcesResponderRequestV1
+
+
+/**
+  * describes the answer to creation of multiple resources
+  *
+  * @param iris IRIs of the created resources
+  * @param userdata information about the user that made the request.
+  */
+case class MultipleResourceCreateResponseV1(iris:  Seq[IRI],
+                                          userdata: UserDataV1) extends KnoraResponseV1 {
+
+    def toJsValue = ResourceV1JsonProtocol.multipleResourceCreateResponseV1Format.write(this)
+
+}
 
 /**
   * Checks whether a resource belongs to a certain OWL class or to a subclass of that class. This message is used
@@ -277,6 +303,7 @@ case class ResourceCreateResponseV1(res_id: IRI,
                                     userdata: UserDataV1) extends KnoraResponseV1 {
     def toJsValue = ResourceV1JsonProtocol.resourceCreateResponseV1Format.write(this)
 }
+
 
 /**
   * Requests the properties of a given resource.
@@ -1055,6 +1082,7 @@ object ResourceV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
     implicit val resourceCreateValueObjectResponseV1Format: RootJsonFormat[ResourceCreateValueObjectResponseV1] = jsonFormat14(ResourceCreateValueObjectResponseV1)
     implicit val resourceCreateValueResponseV1Format: RootJsonFormat[ResourceCreateValueResponseV1] = jsonFormat2(ResourceCreateValueResponseV1)
     implicit val resourceCreateResponseV1Format: RootJsonFormat[ResourceCreateResponseV1] = jsonFormat3(ResourceCreateResponseV1)
+    implicit val multipleResourceCreateResponseV1Format: RootJsonFormat[MultipleResourceCreateResponseV1] = jsonFormat2(MultipleResourceCreateResponseV1)
     implicit val resourceDeleteResponseV1Format: RootJsonFormat[ResourceDeleteResponseV1] = jsonFormat2(ResourceDeleteResponseV1)
     implicit val changeResourceLabelResponseV1Format: RootJsonFormat[ChangeResourceLabelResponseV1] = jsonFormat3(ChangeResourceLabelResponseV1)
     implicit val graphNodeV1Format: JsonFormat[GraphNodeV1] = jsonFormat4(GraphNodeV1)
