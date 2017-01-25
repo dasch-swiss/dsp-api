@@ -381,7 +381,8 @@ case class UserDataV1(lang: String,
                       token: Option[String] = None,
                       firstname: Option[String] = None,
                       lastname: Option[String] = None,
-                      isActiveUser: Option[Boolean] = None) {
+                      isActiveUser: Option[Boolean] = None,
+                      projects: Vector[IRI] = Vector.empty[IRI]) {
 
     def fullname: Option[String] = {
         (firstname, lastname) match {
@@ -440,7 +441,7 @@ object UserProfileType extends Enumeration {
   */
 object UserV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with NullOptions with ProjectV1JsonProtocol with PermissionV1JsonProtocol {
 
-    implicit val userDataV1Format: JsonFormat[UserDataV1] = lazyFormat(jsonFormat8(UserDataV1))
+    implicit val userDataV1Format: JsonFormat[UserDataV1] = lazyFormat(jsonFormat9(UserDataV1))
     implicit val userProfileV1Format: JsonFormat[UserProfileV1] = jsonFormat6(UserProfileV1)
     implicit val createUserApiRequestV1Format: RootJsonFormat[CreateUserApiRequestV1] = jsonFormat7(CreateUserApiRequestV1)
     implicit val updateUserApiRequestV1Format: RootJsonFormat[UpdateUserApiRequestV1] = jsonFormat7(UpdateUserApiRequestV1)

@@ -461,6 +461,12 @@ class UsersResponderV1 extends ResponderV1 {
 
         //_ = log.debug(s"userDataQueryResponse2UserProfile - groupedUserData: ${MessageUtil.toSource(groupedUserData)}")
 
+        /* the projects the user is member of */
+        val projectIris: Vector[IRI] = groupedUserData.get(OntologyConstants.KnoraBase.IsInProject) match {
+            case Some(projects) => projects.toVector
+            case None => Vector.empty[IRI]
+        }
+
         val userDataV1 = UserDataV1(
             lang = groupedUserData.get(OntologyConstants.KnoraBase.PreferredLanguage) match {
                 case Some(langList) => langList.head
@@ -471,16 +477,13 @@ class UsersResponderV1 extends ResponderV1 {
             firstname = groupedUserData.get(OntologyConstants.KnoraBase.GivenName).map(_.head),
             lastname = groupedUserData.get(OntologyConstants.KnoraBase.FamilyName).map(_.head),
             password = groupedUserData.get(OntologyConstants.KnoraBase.Password).map(_.head),
-            isActiveUser = groupedUserData.get(OntologyConstants.KnoraBase.Status).map(_.head.toBoolean)
+            isActiveUser = groupedUserData.get(OntologyConstants.KnoraBase.Status).map(_.head.toBoolean),
+            projects = projectIris
         )
         //_ = log.debug(s"userDataQueryResponse2UserProfile - userDataV1: ${MessageUtil.toSource(userDataV1)}")
 
 
-        /* the projects the user is member of */
-        val projectIris = groupedUserData.get(OntologyConstants.KnoraBase.IsInProject) match {
-            case Some(projects) => projects
-            case None => Vector.empty[IRI]
-        }
+
         //_ = log.debug(s"userDataQueryResponse2UserProfile - projectIris: ${MessageUtil.toSource(projectIris)}")
 
         /* the groups the user is member of (only explicit groups) */
