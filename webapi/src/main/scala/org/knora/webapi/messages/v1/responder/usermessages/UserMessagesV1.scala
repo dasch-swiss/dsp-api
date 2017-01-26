@@ -383,7 +383,7 @@ case class UserDataV1(lang: String,
                       firstname: Option[String] = None,
                       lastname: Option[String] = None,
                       isActiveUser: Option[Boolean] = None,
-                      projects: Vector[IRI] = Vector.empty[IRI]) {
+                      projects: Seq[IRI] = Seq.empty[IRI]) {
 
     def fullname: Option[String] = {
         (firstname, lastname) match {

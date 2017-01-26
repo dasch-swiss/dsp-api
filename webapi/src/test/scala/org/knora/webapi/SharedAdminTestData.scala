@@ -47,7 +47,8 @@ object SharedAdminTestData {
             lastname = Some("Administrator"),
             token = None,
             isActiveUser = Some(true),
-            lang = "de"
+            lang = "de",
+            projects =  Vector.empty[IRI]
         ),
         groups = Vector.empty[IRI],
         projects =  Vector.empty[IRI],
@@ -71,7 +72,8 @@ object SharedAdminTestData {
             password = Some("$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"), // -> "test"
             token = None,
             isActiveUser = Some(true),
-            lang = "de"
+            lang = "de",
+            projects =  Vector.empty[IRI]
         ),
         groups = Vector.empty[IRI],
         projects = Vector.empty[IRI],
@@ -93,7 +95,8 @@ object SharedAdminTestData {
             password = Some("$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"), // -> "test"
             token = None,
             isActiveUser = Some(true),
-            lang = "de"
+            lang = "de",
+            projects =  Vector.empty[IRI]
         ),
         groups = Vector.empty[IRI],
         projects = Vector.empty[IRI],
@@ -111,7 +114,8 @@ object SharedAdminTestData {
             password = Some("$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"), // -> "test"
             token = None,
             isActiveUser = Some(false),
-            lang = "de"
+            lang = "de",
+            projects =  Vector.empty[IRI]
         ),
         groups = Vector.empty[IRI],
         projects = Vector.empty[IRI],
@@ -141,7 +145,8 @@ object SharedAdminTestData {
             password = Some("$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"), // -> "test"
             token = None,
             isActiveUser = Some(true),
-            lang = "de"
+            lang = "de",
+            projects =  List(INCUNABULA_PROJECT_IRI, IMAGES_PROJECT_IRI)
         ),
         groups = List("http://data.knora.org/groups/images-reviewer"),
         projects = List(INCUNABULA_PROJECT_IRI, IMAGES_PROJECT_IRI),
@@ -210,7 +215,8 @@ object SharedAdminTestData {
             password = Some("$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"), // -> "test"
             token = None,
             isActiveUser = Some(true),
-            lang = "de"
+            lang = "de",
+            projects = List("http://data.knora.org/projects/images")
         ),
         groups = List("http://data.knora.org/groups/images-reviewer"),
         projects = List("http://data.knora.org/projects/images"),
@@ -245,7 +251,8 @@ object SharedAdminTestData {
             password = Some("$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"), // -> "test"
             token = None,
             isActiveUser = Some(true),
-            lang = "de"
+            lang = "de",
+            projects = List("http://data.knora.org/projects/images")
         ),
         groups = List("http://data.knora.org/groups/images-reviewer"),
         projects = List("http://data.knora.org/projects/images"),
@@ -322,7 +329,8 @@ object SharedAdminTestData {
             password = Some("$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"), // -> "test"
             token = None,
             isActiveUser = Some(true),
-            lang = "de"
+            lang = "de",
+            projects = List(INCUNABULA_PROJECT_IRI)
         ),
         groups = Vector.empty[IRI],
         projects = List(INCUNABULA_PROJECT_IRI),
@@ -358,7 +366,8 @@ object SharedAdminTestData {
             password = Some("$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"), // -> "test"
             token = None,
             isActiveUser = Some(true),
-            lang = "de"
+            lang = "de",
+            projects = List("http://data.knora.org/projects/77275339")
         ),
         groups = Vector.empty[IRI],
         projects = List("http://data.knora.org/projects/77275339"),
@@ -393,7 +402,8 @@ object SharedAdminTestData {
             password = Some("$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"), // -> "test"
             token = None,
             isActiveUser = Some(true),
-            lang = "de"
+            lang = "de",
+            projects = List("http://data.knora.org/projects/77275339")
         ),
         groups = Vector.empty[IRI],
         projects = List("http://data.knora.org/projects/77275339"),
@@ -449,7 +459,8 @@ object SharedAdminTestData {
             password = Some("$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"), // -> "test"
             token = None,
             isActiveUser = Some(true),
-            lang = "de"
+            lang = "de",
+            projects = Seq(ANYTHING_PROJECT_IRI)
         ),
         groups = Seq.empty[IRI],
         projects = Seq(ANYTHING_PROJECT_IRI),
@@ -484,9 +495,10 @@ object SharedAdminTestData {
             password = Some("$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"), // -> "test"
             token = None,
             isActiveUser = Some(true),
-            lang = "de"
+            lang = "de",
+            projects = Vector(ANYTHING_PROJECT_IRI)
         ),
-        groups = Vector.empty[IRI],
+        groups = Seq.empty[IRI],
         projects = Vector(ANYTHING_PROJECT_IRI),
         sessionId = None,
         permissionData = PermissionDataV1(

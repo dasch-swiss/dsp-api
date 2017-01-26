@@ -462,9 +462,9 @@ class UsersResponderV1 extends ResponderV1 {
         //_ = log.debug(s"userDataQueryResponse2UserProfile - groupedUserData: ${MessageUtil.toSource(groupedUserData)}")
 
         /* the projects the user is member of */
-        val projectIris: Vector[IRI] = groupedUserData.get(OntologyConstants.KnoraBase.IsInProject) match {
-            case Some(projects) => projects.toVector
-            case None => Vector.empty[IRI]
+        val projectIris: Seq[IRI] = groupedUserData.get(OntologyConstants.KnoraBase.IsInProject) match {
+            case Some(projects) => projects
+            case None => Seq.empty[IRI]
         }
 
         //println(projectIris)
