@@ -1186,8 +1186,52 @@ A mapping allows for the conversion of an XML document to RDF-standoff
 and back. A mapping defines one-to-one relations between XML elements (with or without a class) and attributes
 and standoff classes and properties (see :ref:`XML-to-standoff-mapping`).
 
+A mapping is represented by a ``kb:XMLToStandoffMapping`` which contains one or more ``kb:MappingElement``.
+A ``kb:MappingElement`` maps an XML element (including attributes) to a standoff class and standoff properties.
+It has the following properties:
+
+``mappingHasXMLTagname`` (1)
+    The name of the XML element that
+    is mapped to a standoff class.
+
+``mappingHasXMLNamespace`` (1)
+    The XML namespace of the XML element that
+    is mapped to a standoff class. If no namespace is given, ``noNamespace`` is used.
+
+``mappingHasXMLClass`` (1)
+    The name of the class of the XML element. If it has no class,
+    ``noClass`` is used.
+
+``mappingHasStandoffClass`` (1)
+    The standoff class the XML element is mapped to.
+
+``mappingHasXMLAttribute`` (0-n)
+    Maps XML attributes to standoff properties using ``MappingXMLAttribute``. See below.
+
+``mappingHasStandoffDataTypeClass`` (0-1)
+    Indicates the standoff data type class
+    of the standoff class the XML element is mapped to.
+
+``mappingElementRequiresSeparator`` (1)
+    Indicates if there should be a separator inserted
+    after the XML element in the RDF-standoff representation. Once the markup is stripped, text segments that
+    belonged to different elements may be concatenated.
+
+A ``MappingXMLAttribute`` has the following properties:
+
+``mappingHasXMLAttributename``
+    The name of the XML attribute that is mapped to a standoff property.
+
+``mappingHasXMLNamespace``
+    The namespace of the XML attribute that is mapped to a standoff property.
+    If no namespace is given, ``noNamespace`` is used.
+
+``mappingHasStandoffProperty``
+    The standoff property the XML attribute is mapped to.
 
 
+Knora includes a standard mapping used by the SALSAH GUI. It has the IRI ``http://data.knora.org/projects/standoff/mappings/StandardMapping`` and defines
+mappings for a few elements used to write texts with simple markup (see :ref:`XML-to-standoff-mapping`).
 
 Standoff in Digital Editions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
