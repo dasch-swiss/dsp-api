@@ -1,7 +1,7 @@
 import sbt._
 import sbt.Keys._
 import spray.revolver.RevolverPlugin._
-import com.typesafe.sbt.SbtNativePackager.autoImport._
+import NativePackagerHelper._
 
 connectInput in run := true
 
@@ -69,15 +69,6 @@ lazy val webapi = (project in file(".")).
             )
         ): _*).
         settings(
-            //javaOptions in FusekiTest ++= javaFusekiTestOptions,
-            //javaOptions in FusekiTomcatTest ++= javaFusekiTomcatTestOptions,
-            //javaOptions in GraphDBTest ++= javaGraphDBTestOptions,
-            //javaOptions in EmbeddedJenaTDBTest ++= javaEmbeddedJenaTDBTestOptions,
-            //fork in FusekiTest := true,
-            //parallelExecution in FusekiTest := false,
-            //testOptions in FusekiTest += Tests.Argument("-oDF")
-        ).
-        settings(
             libraryDependencies ++= webApiLibs,
             scalacOptions ++= Seq("-feature", "-unchecked", "-deprecation", "-Yresolve-term-conflict:package"),
             logLevel := Level.Info,
@@ -90,6 +81,20 @@ lazy val webapi = (project in file(".")).
             javaOptions in Test ++= javaTestOptions,
             parallelExecution in Test := false
         ).
+        settings( // deployment settings
+          mappings in Universal ++= {
+            // copy the scripts folder
+            directory("scripts") ++
+            // copy configuration files to config directory
+            contentOf("src/main/resources").toMap.mapValues("config/" + _)
+          },
+          // add 'config' directory first in the classpath of the start script,
+          scriptClasspath := Seq("../config/") ++ scriptClasspath.value,
+          // add license
+          licenses := Seq(("GNU AGPL", url("https://www.gnu.org/licenses/agpl-3.0"))),
+          // need this here, but why?
+          mainClass in Compile := Some("org.knora.webapi.Main")
+        ).
         settings(Revolver.settings: _*).
         enablePlugins(SbtTwirl). // Enable the SbtTwirl plugin
         enablePlugins(JavaAppPackaging) // Enable the sbt-native-packager docker plugin
@@ -97,7 +102,7 @@ lazy val webapi = (project in file(".")).
 lazy val webApiCommonSettings = Seq(
     organization := "org.knora",
     name := "webapi",
-    version := "0.1.0",
+    version := "0.1.0-beta",
     ivyScala := ivyScala.value map { _.copy(overrideScalaVersion = true) },
     scalaVersion := "2.12.1"
 )
