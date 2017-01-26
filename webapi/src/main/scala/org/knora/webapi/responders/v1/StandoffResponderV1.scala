@@ -39,6 +39,7 @@ import org.knora.webapi.messages.v1.store.triplestoremessages._
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.twirl.{MappingElement, MappingStandoffDatatypeClass, MappingXMLAttribute}
 import org.knora.webapi.util.ActorUtil._
+import org.knora.webapi.util.standoff.StandoffTagUtilV1.XMLTagItem
 import org.knora.webapi.util.standoff._
 import org.knora.webapi.util.{CacheUtil, InputValidation, KnoraIdUtil}
 import org.knora.webapi.{BadRequestException, _}
@@ -186,7 +187,14 @@ class StandoffResponderV1 extends ResponderV1 {
 
                 // transform mappingElements to the structure that is used internally to convert to or from standoff
                 // in order to check for duplicates (checks are done during transformation)
-                _ = transformMappingElementsToMappingXMLtoStandoff(mappingElements)
+                mappingXMLToStandoff: MappingXMLtoStandoff = transformMappingElementsToMappingXMLtoStandoff(mappingElements)
+
+                // get the standoff entities used in the mapping
+                // checks if the standoff classes exist in the ontology
+                // checks if the standoff properties exist in the ontology
+                // checks if the attributes defined for XML elements have cardinalities for the standoff properties defined on the standoff class
+                _ <- getStandoffEntitiesFromMappingV1(mappingXMLToStandoff, userProfile)
+
 
                 // check if the mapping Iri already exists
                 getExistingMappingSparql = queries.sparql.v1.txt.getMapping(
@@ -533,32 +541,74 @@ class StandoffResponderV1 extends ResponderV1 {
       */
     private def getStandoffEntitiesFromMappingV1(mappingXMLtoStandoff: MappingXMLtoStandoff, userProfile: UserProfileV1): Future[StandoffEntityInfoGetResponseV1] = {
 
-        // collect standoff classes Iris from mapping
-        val standoffTagIris: Set[IRI] = mappingXMLtoStandoff.namespace.flatMap {
-            case (namespace: String, elementMapping: Map[String, Map[String, XMLTag]]) =>
-                elementMapping.flatMap {
-                    case (elementName, classnameMapping) =>
-                        classnameMapping.map {
-                            case (classname: String, tagItem: XMLTag) =>
-                                tagItem.mapping.standoffClassIri
-                        }
-                }
-        }.toSet
+        // invert the mapping so standoff class Iris become keys
+        val mappingStandoffToXML: Map[IRI, XMLTagItem] = StandoffTagUtilV1.invertXMLToStandoffMapping(mappingXMLtoStandoff)
+
+        // collect standoff class Iris from the mapping
+        val standoffTagIrisFromMapping = mappingStandoffToXML.keySet
+
+        // collect all the standoff property Iris from the mapping
+        val standoffPropertyIrisFromMapping = mappingStandoffToXML.values.foldLeft(Set.empty[IRI]) {
+            (acc: Set[IRI], xmlTag: XMLTagItem) =>
+                acc ++ xmlTag.attributes.keySet
+        }
 
         for {
 
         // request information about standoff classes that should be created
-            standoffClassEntities: StandoffEntityInfoGetResponseV1 <- (responderManager ? StandoffEntityInfoGetRequestV1(standoffClassIris = standoffTagIris, userProfile = userProfile)).mapTo[StandoffEntityInfoGetResponseV1]
+            standoffClassEntities: StandoffEntityInfoGetResponseV1 <- (responderManager ? StandoffEntityInfoGetRequestV1(standoffClassIris = standoffTagIrisFromMapping, userProfile = userProfile)).mapTo[StandoffEntityInfoGetResponseV1]
+
+            // check that the ontology responder returned the information for all the standoff classes it was asked for
+            // if the ontology responder does not return a standoff class it was asked for, then this standoff class does not exist
+            _ = if (standoffTagIrisFromMapping != standoffClassEntities.standoffClassEntityInfoMap.keySet) {
+                throw NotFoundException(s"the ontology responder could not find information about these standoff classes: ${(standoffTagIrisFromMapping -- standoffClassEntities.standoffClassEntityInfoMap.keySet).mkString(", ")}")
+            }
 
             // get the property Iris that are defined on the standoff classes returned by the ontology responder
-            standoffPropertyIris = standoffClassEntities.standoffClassEntityInfoMap.foldLeft(Set.empty[IRI]) {
+            standoffPropertyIrisFromOntologyResponder = standoffClassEntities.standoffClassEntityInfoMap.foldLeft(Set.empty[IRI]) {
                 case (acc, (standoffClassIri, standoffClassEntity)) =>
                     val props = standoffClassEntity.cardinalities.keySet
                     acc ++ props
             }
 
             // request information about the standoff properties
-            standoffPropertyEntities: StandoffEntityInfoGetResponseV1 <- (responderManager ? StandoffEntityInfoGetRequestV1(standoffPropertyIris = standoffPropertyIris, userProfile = userProfile)).mapTo[StandoffEntityInfoGetResponseV1]
+            standoffPropertyEntities: StandoffEntityInfoGetResponseV1 <- (responderManager ? StandoffEntityInfoGetRequestV1(standoffPropertyIris = standoffPropertyIrisFromOntologyResponder, userProfile = userProfile)).mapTo[StandoffEntityInfoGetResponseV1]
+
+            // check that the ontology responder returned the information for all the standoff properties it was asked for
+            // if the ontology responder does not return a standoff property it was asked for, then this standoff property does not exist
+            propertyDefinitionsFromMappingFoundInOntology: Set[IRI] = standoffPropertyEntities.standoffPropertyEntityInfoMap.keySet.intersect(standoffPropertyIrisFromMapping)
+
+            _ = if (standoffPropertyIrisFromMapping != propertyDefinitionsFromMappingFoundInOntology) {
+                throw NotFoundException(s"the ontology responder could not find information about these standoff properties: " +
+                    s"${(standoffPropertyIrisFromMapping -- propertyDefinitionsFromMappingFoundInOntology).mkString(", ")}")
+            }
+
+            // check that for each standoff property defined in the mapping element for a standoff class, a corresponding cardinality exists in the ontology
+            _ = mappingStandoffToXML.foreach {
+                case (standoffClass: IRI, xmlTag: XMLTagItem) =>
+                    // collect all the standoff properties defined for this standoff class
+                    val standoffPropertiesForStandoffClass: Set[IRI] = xmlTag.attributes.keySet
+
+                    // check that the current standoff class has cardinalities for all the properties defined
+                    val cardinalitiesFound = standoffClassEntities.standoffClassEntityInfoMap(standoffClass).cardinalities.keySet.intersect(standoffPropertiesForStandoffClass)
+
+                    if (standoffPropertiesForStandoffClass != cardinalitiesFound) {
+                        throw NotFoundException(s"the following standoff properties have no cardinality for $standoffClass: ${(standoffPropertiesForStandoffClass -- cardinalitiesFound).mkString(", ")}")
+                    }
+
+                    // collect the required standoff properties for the standoff class
+                    val requiredPropsForClass = standoffClassEntities.standoffClassEntityInfoMap(standoffClass).cardinalities.filter {
+                        case (property: IRI, card: Cardinality.Value) =>
+                            card == Cardinality.MustHaveOne || card == Cardinality.MustHaveSome
+                    }.keySet -- StandoffProperties.systemProperties -- StandoffProperties.dataTypeProperties
+
+                    // check that all the required standoff properties exist in the mapping
+                    if (standoffPropertiesForStandoffClass.intersect(requiredPropsForClass) != requiredPropsForClass) {
+                        throw NotFoundException(s"the following required standoff properties are not defined for the standoff class $standoffClass: ${(requiredPropsForClass -- standoffPropertiesForStandoffClass).mkString(", ")}")
+                    }
+
+            }
+
 
         } yield StandoffEntityInfoGetResponseV1(
             standoffClassEntityInfoMap = standoffClassEntities.standoffClassEntityInfoMap,

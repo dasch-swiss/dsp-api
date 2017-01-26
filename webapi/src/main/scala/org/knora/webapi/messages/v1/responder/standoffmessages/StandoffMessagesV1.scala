@@ -312,6 +312,8 @@ object StandoffProperties {
 
     // represents the standoff properties defined on the link standoff tag
     val linkProperties = Set(OntologyConstants.KnoraBase.StandoffTagHasLink)
+
+    val dataTypeProperties: Set[IRI] = dateProperties ++ intervalProperties ++ booleanProperties ++ decimalProperties ++ integerProperties ++ uriProperties ++ colorProperties ++ linkProperties
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////

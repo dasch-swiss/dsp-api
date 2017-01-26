@@ -158,6 +158,263 @@ class StandoffV1R2RSpec extends R2RSpec {
 
     "The Standoff Endpoint" should {
 
+        "attempt to create a mapping with an invalid standoff class IRI http://www.knora.org/ontology/standoff#StandoffRot" in {
+
+            val brokenMapping = """<?xml version="1.0" encoding="UTF-8"?>
+                              |<mapping>
+                              |    <mappingElement>
+                              |        <tag>
+                              |            <name>text</name>
+                              |            <class>noClass</class>
+                              |            <namespace>noNamespace</namespace>
+                              |            <separator>false</separator>
+                              |        </tag>
+                              |        <standoffClass>
+                              |            <classIri>http://www.knora.org/ontology/standoff#StandoffRot</classIri>
+                              |            <attributes>
+                              |                <attribute>
+                              |                    <attributeName>documentType</attributeName>
+                              |                    <namespace>noNamespace</namespace>
+                              |                    <propertyIri>http://www.knora.org/ontology/standoff#standoffRootTagHasDocumentType</propertyIri>
+                              |                </attribute>
+                              |            </attributes>
+                              |        </standoffClass>
+                              |    </mappingElement>
+                              |
+                              |    <mappingElement>
+                              |        <tag>
+                              |            <name>p</name>
+                              |            <class>noClass</class>
+                              |            <namespace>noNamespace</namespace>
+                              |            <separator>true</separator>
+                              |        </tag>
+                              |        <standoffClass>
+                              |            <classIri>http://www.knora.org/ontology/standoff#StandoffParagraphTag</classIri>
+                              |        </standoffClass>
+                              |    </mappingElement>
+                              |</mapping>
+                              |    """.stripMargin
+
+
+            val formDataMapping = Multipart.FormData(
+                Multipart.FormData.BodyPart(
+                    "json",
+                    HttpEntity(ContentTypes.`application/json`, RequestParams.paramsCreateLetterMappingFromXML)
+                ),
+                Multipart.FormData.BodyPart(
+                    "xml",
+                    HttpEntity(ContentTypes.`text/xml(UTF-8)`, brokenMapping),
+                    Map("filename" -> "brokenMapping.xml")
+                )
+            )
+
+            // send mapping xml to route
+            Post("/v1/mapping", formDataMapping) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> standoffPath ~> check {
+
+                assert(status == StatusCodes.BadRequest, response.toString)
+
+                // make sure the user gets informed about the non existing standoff class
+                assert(responseAs[String].contains("http://www.knora.org/ontology/standoff#StandoffRot"))
+
+
+            }
+        }
+
+        "attempt to create a mapping with an invalid property class IRI http://www.knora.org/ontology/standoff#standoffRootTagHasDoc" in {
+
+            val brokenMapping = """<?xml version="1.0" encoding="UTF-8"?>
+                                  |<mapping>
+                                  |    <mappingElement>
+                                  |        <tag>
+                                  |            <name>text</name>
+                                  |            <class>noClass</class>
+                                  |            <namespace>noNamespace</namespace>
+                                  |            <separator>false</separator>
+                                  |        </tag>
+                                  |        <standoffClass>
+                                  |            <classIri>http://www.knora.org/ontology/standoff#StandoffRootTag</classIri>
+                                  |            <attributes>
+                                  |                <attribute>
+                                  |                    <attributeName>documentType</attributeName>
+                                  |                    <namespace>noNamespace</namespace>
+                                  |                    <propertyIri>http://www.knora.org/ontology/standoff#standoffRootTagHasDoc</propertyIri>
+                                  |                </attribute>
+                                  |            </attributes>
+                                  |        </standoffClass>
+                                  |    </mappingElement>
+                                  |
+                                  |    <mappingElement>
+                                  |        <tag>
+                                  |            <name>p</name>
+                                  |            <class>noClass</class>
+                                  |            <namespace>noNamespace</namespace>
+                                  |            <separator>true</separator>
+                                  |        </tag>
+                                  |        <standoffClass>
+                                  |            <classIri>http://www.knora.org/ontology/standoff#StandoffParagraphTag</classIri>
+                                  |        </standoffClass>
+                                  |    </mappingElement>
+                                  |</mapping>
+                                  |    """.stripMargin
+
+
+            val formDataMapping = Multipart.FormData(
+                Multipart.FormData.BodyPart(
+                    "json",
+                    HttpEntity(ContentTypes.`application/json`, RequestParams.paramsCreateLetterMappingFromXML)
+                ),
+                Multipart.FormData.BodyPart(
+                    "xml",
+                    HttpEntity(ContentTypes.`text/xml(UTF-8)`, brokenMapping),
+                    Map("filename" -> "brokenMapping.xml")
+                )
+            )
+
+            // send mapping xml to route
+            Post("/v1/mapping", formDataMapping) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> standoffPath ~> check {
+
+                assert(status == StatusCodes.BadRequest, response.toString)
+
+                // make sure the user gets informed about the non existing standoff property
+                assert(responseAs[String].contains("http://www.knora.org/ontology/standoff#standoffRootTagHasDoc"))
+
+
+            }
+        }
+
+        "attempt to create a mapping assigning a property class IRI to a standoff class that does not have a cardinality for that property" in {
+
+            val brokenMapping = """<?xml version="1.0" encoding="UTF-8"?>
+                                  |<mapping>
+                                  |    <mappingElement>
+                                  |        <tag>
+                                  |            <name>text</name>
+                                  |            <class>noClass</class>
+                                  |            <namespace>noNamespace</namespace>
+                                  |            <separator>false</separator>
+                                  |        </tag>
+                                  |        <standoffClass>
+                                  |            <classIri>http://www.knora.org/ontology/standoff#StandoffRootTag</classIri>
+                                  |            <attributes>
+                                  |                <attribute>
+                                  |                    <attributeName>documentType</attributeName>
+                                  |                    <namespace>noNamespace</namespace>
+                                  |                    <propertyIri>http://www.knora.org/ontology/standoff#standoffRootTagHasDocumentType</propertyIri>
+                                  |                </attribute>
+                                  |            </attributes>
+                                  |        </standoffClass>
+                                  |    </mappingElement>
+                                  |
+                                  |    <mappingElement>
+                                  |        <tag>
+                                  |            <name>p</name>
+                                  |            <class>noClass</class>
+                                  |            <namespace>noNamespace</namespace>
+                                  |            <separator>true</separator>
+                                  |        </tag>
+                                  |        <standoffClass>
+                                  |            <classIri>http://www.knora.org/ontology/standoff#StandoffParagraphTag</classIri>
+                                  |            <attributes>
+                                  |                <attribute>
+                                  |                    <attributeName>documentType</attributeName>
+                                  |                    <namespace>noNamespace</namespace>
+                                  |                    <propertyIri>http://www.knora.org/ontology/standoff#standoffRootTagHasDocumentType</propertyIri>
+                                  |                </attribute>
+                                  |            </attributes>
+                                  |        </standoffClass>
+                                  |    </mappingElement>
+                                  |</mapping>
+                                  |    """.stripMargin
+
+
+            val formDataMapping = Multipart.FormData(
+                Multipart.FormData.BodyPart(
+                    "json",
+                    HttpEntity(ContentTypes.`application/json`, RequestParams.paramsCreateLetterMappingFromXML)
+                ),
+                Multipart.FormData.BodyPart(
+                    "xml",
+                    HttpEntity(ContentTypes.`text/xml(UTF-8)`, brokenMapping),
+                    Map("filename" -> "brokenMapping.xml")
+                )
+            )
+
+            // send mapping xml to route
+            Post("/v1/mapping", formDataMapping) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> standoffPath ~> check {
+
+                assert(status == StatusCodes.BadRequest, response.toString)
+
+                // make sure the user gets informed about the missing cardinality for StandoffParagraphTag
+                assert(responseAs[String].contains("http://www.knora.org/ontology/standoff#StandoffParagraphTag"))
+                assert(responseAs[String].contains("http://www.knora.org/ontology/standoff#standoffRootTagHasDocumentType"))
+
+            }
+        }
+
+        "attempt to create a mapping not assigning a required property class IRI to a standoff class" in {
+
+            val brokenMapping = """<?xml version="1.0" encoding="UTF-8"?>
+                                  |<mapping>
+                                  |    <mappingElement>
+                                  |        <tag>
+                                  |            <name>text</name>
+                                  |            <class>noClass</class>
+                                  |            <namespace>noNamespace</namespace>
+                                  |            <separator>false</separator>
+                                  |        </tag>
+                                  |        <standoffClass>
+                                  |            <classIri>http://www.knora.org/ontology/standoff#StandoffRootTag</classIri>
+                                  |            <attributes>
+                                  |                <attribute>
+                                  |                    <attributeName>documentType</attributeName>
+                                  |                    <namespace>noNamespace</namespace>
+                                  |                    <propertyIri>http://www.knora.org/ontology/standoff#standoffRootTagHasDocumentType</propertyIri>
+                                  |                </attribute>
+                                  |            </attributes>
+                                  |        </standoffClass>
+                                  |    </mappingElement>
+                                  |
+                                  |    <mappingElement>
+                                  |        <tag>
+                                  |            <name>event</name>
+                                  |            <class>noClass</class>
+                                  |            <namespace>noNamespace</namespace>
+                                  |            <separator>true</separator>
+                                  |        </tag>
+                                  |        <standoffClass>
+                                  |            <classIri>http://www.knora.org/ontology/anything#StandoffEventTag</classIri>
+                                  |            <!-- attribute definition for http://www.knora.org/ontology/anything#standoffEventTagHasDescription missing-->
+                                  |        </standoffClass>
+                                  |    </mappingElement>
+                                  |</mapping>
+                                  |    """.stripMargin
+
+
+            val formDataMapping = Multipart.FormData(
+                Multipart.FormData.BodyPart(
+                    "json",
+                    HttpEntity(ContentTypes.`application/json`, RequestParams.paramsCreateLetterMappingFromXML)
+                ),
+                Multipart.FormData.BodyPart(
+                    "xml",
+                    HttpEntity(ContentTypes.`text/xml(UTF-8)`, brokenMapping),
+                    Map("filename" -> "brokenMapping.xml")
+                )
+            )
+
+            // send mapping xml to route
+            Post("/v1/mapping", formDataMapping) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> standoffPath ~> check {
+
+                assert(status == StatusCodes.BadRequest, response.toString)
+
+                // make sure the user gets informed about the missing required property anything:standoffEventTagHasDescription
+                assert(responseAs[String].contains("http://www.knora.org/ontology/anything#StandoffEventTag"))
+                assert(responseAs[String].contains("http://www.knora.org/ontology/anything#standoffEventTagHasDescription"))
+
+            }
+        }
+
+
         "create a mapping resource for standoff conversion for letters" in {
 
             val mappingFileToSend = new File(RequestParams.pathToLetterMapping)
