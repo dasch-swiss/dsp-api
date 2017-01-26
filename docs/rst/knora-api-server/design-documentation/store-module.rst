@@ -164,7 +164,7 @@ In ``application.conf`` set to use the embedded triplestore:
                 name = "http://www.knora.org/data/incunabula"
             }
             {
-                path = "_test_data/ontologies/images-demo-onto.ttl"
+                path = "_test_data/ontologies/images-onto.ttl"
                 name = "http://www.knora.org/ontology/dokubib"
             }
             {
