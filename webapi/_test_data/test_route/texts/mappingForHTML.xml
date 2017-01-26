@@ -8,7 +8,11 @@
         <standoffClass>
             <classIri>http://www.knora.org/ontology/standoff#StandoffRootTag</classIri>
             <attributes>
-                <attribute><attributeName>documentType</attributeName><namespace>noNamespace</namespace><propertyIri>http://www.knora.org/ontology/standoff#standoffRootTagHasDocumentType</propertyIri></attribute>
+                <attribute>
+                    <attributeName>documentType</attributeName>
+                    <namespace>noNamespace</namespace>
+                    <propertyIri>http://www.knora.org/ontology/standoff#standoffRootTagHasDocumentType</propertyIri>
+                </attribute>
             </attributes>
         </standoffClass>
     </mappingElement>

@@ -18,7 +18,7 @@ import {basicMessageComponents} from "./basicMessageComponents"
 
 
 /**
- * This module contains interfaces that represent requests to add a new mapping
+ * This module contains interfaces that represent the request to add a new mapping
  * and the response to such a request.
  */
 export module mappingFormats {

@@ -59,11 +59,74 @@ Basically, a mapping expresses the relations between XML elements and attributes
 The relations expressed in a mapping are one-to-one relations, so the XML can be recreated from the data in RDF. However, since HTML offers a very limited set of elements, Knora mappings support the combination of element names
 and classes. In this way, the same element can be used several times in combination with another classname (please note that ``<a>`` without a class is a mere hyperlink whereas ``<a class="salsah-link">`` is an internal link/standoff link).
 
-------------------
-Standoff Datatypes
-------------------
+----------------------------
+Basic Structure of a Mapping
+----------------------------
 
-Knora allows the use of all its ValueTypes as standoff datatypes (defined in ``knora-base.ttl``):
+The mapping is written in XML itself (for a formal description, see ``webapi/src/resources/mappingXMLToStandoff.xsd``). It has the following structure (the indentation corresponds to the nesting in XML):
+
+- ``<mapping>``: the root element
+    - ``<mappingElement>``: an element of the mapping (at least one)
+       - ``<tag>``: information about the XML element that is mapped to a standoff class
+           - ``<name>``: name of the XML element
+           - ``<class>``: value of the class attribute of the XML element, if any. If the element has no class attribute, the keyword ``noClass`` has to be used.
+           - ``<namespace>``: the namespace the XML element belongs to, if any. If the element does not belong to a namespace, the keyword ``noNamespace`` has to be used.
+           - ``<separator>``: a Boolean value indicating if a separator is required for this element. Once an XML document is converted to RDF-standoff the markup is stripped from the text, possibly leading to continuous text that has been separated by tags before. For structural tags like paragraphs etc., the ``separator`` can be set to ``true`` in which case a special separator is inserted in the the text in the RDF representation. In this way, words stay separated and are represented in the fulltext index as such.
+       - ``<standoffClass>``: information about the standoff class the XML element is mapped to
+           - ``<classIri>``: Iri of the standoff class the XML element is mapped to
+           - ``<attributes>``: XML attributes to be mapped to standoff properties (other than ``id`` or ``class``), if any
+               - ``<attribute>``: an XML attribute to be mapped to a standoff property, may be repeated
+                   - ``<attributeName>``: the name of the XML attribute
+                   - ``<namespace>``: the namespace the attribute belogs to, if any. If the attribute does not belong to a namespace, the keyword ``noNamespace`` has to be used.
+                   - ``<propertyIri>``: the Iri of the standoff property the XML attribute is mapped to.
+           - ``<datatype>``: the data type of the standoff class, if any.
+               - ``<type>``: the Iri of the data type standoff class
+               - ``<attributeName>``: the name of the attribute holding the typed value in the expected Knora standard format
+
+XML structure of a mapping::
+
+    <mapping>
+        <mappingElement>
+            <tag>
+                <name>XML element name</name>
+                <class>XML class name or "noClass"</class>
+                <namespace>XML namespace or "noNamespace"</namespace>
+                <separator>true or false</separator>
+            </tag>
+            <standoffClass>
+                <classIri>standoff class Iri</classIri>
+                <attributes>
+                    <attribute>
+                        <attributeName>XML attribute name</attributeName>
+                        <namespace>XML namespace or "noNamespace"</namespace>
+                        <propertyIri>standoff property Iri</propertyIri>
+                    </attribute>
+                <datatype>
+                    <type>standoff data type class</type>
+                    <attributeName>XML attribute with the typed value</attributeName>
+                </datatype>
+            </standoffClass>
+        </mappingElement>
+        <mappingElement>
+           ...
+        </mappingElement>
+    </mapping>
+
+Please note that the absence of an XML namespace and/or a class have to be explicitly stated using the keywords ``noNamespace`` and ``noClass`` [2]_.
+
+-------------------------------
+``id`` and ``class`` Attributes
+-------------------------------
+
+The ``id`` and ``class`` attributes are supported by default and do not have to be included in the mapping like other attributes.
+The ``id`` attribute identifies an element and must be unique in the document.
+The ``class`` attribute allows for the reuse of an element in the mapping, i.e. the same element can be combined with different class names and mapped to different standoff classes (mapping element ``<class>`` in ``<tag>``).
+
+-------------------
+Standoff Data Types
+-------------------
+
+Knora allows the use of all its value types as standoff data types (defined in ``knora-base.ttl``):
 
 - ``knora-base::StandoffLinkTag``: Represents a reference to a Knora resource
 - ``knora-base::StandoffUriTag``: Represents a reference to a URI.
@@ -100,7 +163,14 @@ The following simple mapping illustrates this principle::
                 <separator>false</separator>
             </tag>
             <standoffClass>
-                <classIri>http://www.knora.org/ontology/knora-base#StandoffDateTag</classIri>
+                <classIri>http://www.knora.org/ontology/anything#StandoffEventTag</classIri>
+                <attributes>
+                    <attribute>
+                        <attributeName>description</attributeName>
+                        <namespace>noNamespace</namespace>
+                        <propertyIri>http://www.knora.org/ontology/anything#standoffEventTagHasDescription</propertyIri>
+                    </attribute>
+                </attributes>
                 <datatype>
                     <type>http://www.knora.org/ontology/knora-base#StandoffDateTag</type>
                     <attributeName>knoraDate</attributeName>
@@ -109,21 +179,44 @@ The following simple mapping illustrates this principle::
         </mappingElement>
     <mapping>
 
-``<tag>`` indicates the name of the XML element that is mapped to a standoff class. Here, it does neither have a namespace nor a class.
-Please note that the absence of an XML namespace and a class have to be explicitly stated using the keywords ``noNamespace`` and ``noClass`` [2]_.
+``<datatype>`` **must** hold the Iri of a standoff data type class (see list above). The ``<classIri>`` must be a subclass of this type or this type itself (the latter is probably not recommendable since semantics are missing: what is the meaning of the date?).
+In the example above, the standoff class is ``anything:StandoffEventTag`` which has the following definition in the ontology `anything-onto.ttl``::
 
-``<standoffClass>`` indicates the IRI of the standoff class the XML element is mapped to.
-``<type>`` in ```<datatype>`` indicates the data type of the standoff class the XML element is mapped to (if given).
-``<attributeName>`` in ``<datatype>`` is the XML attribute holding the typed value in a standardized way.
+
+    anything:StandoffEventTag rdf:type owl:Class ;
+
+        rdfs:subClassOf knora-base:StandoffDateTag,
+                       [
+                          rdf:type owl:Restriction ;
+                          owl:onProperty :standoffEventTagHasDescription ;
+                          owl:cardinality "1"^^xsd:nonNegativeInteger
+                       ] ;
+
+        rdfs:label "Represents an event in a TextValue"@en ;
+
+        rdfs:comment """Represents an event in a TextValue"""@en .
+
+
+``anything:StandoffEventTag`` is a subclass of ``knora-base:StandoffDateTag`` and therefore has the data type date.
+It also requires the standoff property ``anything:standoffEventTagHasDescription`` which is defined as an attribute in the mapping.
 
 Once the mapping has been created, an XML like the following could be sent to Knora and converted to standoff::
 
     <?xml version="1.0" encoding="UTF-8"?>
     <text>
-        We had a party on <mydate knoraDate="GREGORIAN:2016-12-31">New Year's Eve</mydate>. It was a lot of fun.
+        We had a party on <mydate description="new year" knoraDate="GREGORIAN:2016-12-31">New Year's Eve</mydate>. It was a lot of fun.
     </text>
 
-The attribute holds the date in the format of a Knora date string (the format is documented in the typescript type alias ``dateString`` in module ``basicMessageComponents``).
+
+The attribute holds the date in the format of a Knora date string (the format is documented in the typescript type alias ``dateString`` in module ``basicMessageComponents``. There you will also find documentation about the other types like color etc.).
+
+You will find a sample mapping with all the data types and a sample XML file in the the test data: ``webapi/_test_data/test_route/texts/mappingForHTML.xml`` and ``webapi/_test_data/test_route/texts/HTML.xml``.
+
+-------------------
+Standoff Properties
+-------------------
+
+When mapping XML attributes to standoff properties, attention has to be paid to the properties object constraints. Standoff properties are literals with the exception of internal references.
 
 ------------------------------------------
 Predefined Standoff Classes and Properties
@@ -180,10 +273,6 @@ The standoff ontology ``standoff-onto.ttl`` offers a set of predefined standoff 
 Predefined standoff classes may be used by various projects, each providing a custom mapping to be able to recreate the original XML from RDF.
 Predefined standoff classes may also be inherited and extended in project specific ontologies.
 
-XML attributes can be mapped to standoff properties in ``<attributes>`` that belongs to ``<standoffClass>``. Each ``<attribute>`` maps an XML attribute to a standoff property
-(Please note that also here the absence of an XML namespace has to be explicitly stated with the keyword ``noNamespace``).
-The combinations of standoff classes and properties must respect the cardinality defined in the ontology.
-
 The mapping above allows for an XML like this::
 
         <?xml version="1.0" encoding="UTF-8"?>
@@ -225,7 +314,7 @@ The multipart request consists of two named parts:
 
 
 A successful response returns the Iri of the mapping. However, the Iri of a mapping is predictable: it consists of the project Iri followed by ``/mappings/`` and the ``mappingName`` submitted in the JSON.
-Once created, a mapping can be used to create TextValues in Knora.
+Once created, a mapping can be used to create TextValues in Knora. The formats are documented in the typescript interfaces ``addMappingRequest`` and ``addMappingResponse`` in module ``mappingFormats``
 
 
 
