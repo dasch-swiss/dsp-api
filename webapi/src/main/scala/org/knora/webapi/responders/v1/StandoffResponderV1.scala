@@ -607,6 +607,20 @@ class StandoffResponderV1 extends ResponderV1 {
                         throw NotFoundException(s"the following required standoff properties are not defined for the standoff class $standoffClass: ${(requiredPropsForClass -- standoffPropertiesForStandoffClass).mkString(", ")}")
                     }
 
+                    // check if the standoff class's data type is correct i the mapping
+                    standoffClassEntities.standoffClassEntityInfoMap(standoffClass).dataType match {
+                        case Some(dataType: StandoffDataTypeClasses.Value) =>
+                            // check if this corresponds to the datatype in the mapping
+                            val dataTypeFromMapping: XMLStandoffDataTypeClass = xmlTag.tagItem.mapping.dataType.getOrElse(throw InvalidStandoffException(s"no data type provided for $standoffClass, but $dataType required"))
+                            if (dataTypeFromMapping.standoffDataTypeClass != dataType) {
+                                throw InvalidStandoffException(s"wrong data type ${dataTypeFromMapping.standoffDataTypeClass} provided for $standoffClass, but $dataType required")
+                            }
+                        case None =>
+                            if (xmlTag.tagItem.mapping.dataType.nonEmpty) {
+                                throw InvalidStandoffException(s"no data type expected for $standoffClass, but ${xmlTag.tagItem.mapping.dataType.get.standoffDataTypeClass} given")
+                            }
+                    }
+
             }
 
 

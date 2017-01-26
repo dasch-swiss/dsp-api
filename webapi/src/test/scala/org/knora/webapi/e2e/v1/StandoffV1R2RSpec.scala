@@ -384,6 +384,10 @@ class StandoffV1R2RSpec extends R2RSpec {
                                   |        <standoffClass>
                                   |            <classIri>http://www.knora.org/ontology/anything#StandoffEventTag</classIri>
                                   |            <!-- attribute definition for http://www.knora.org/ontology/anything#standoffEventTagHasDescription missing-->
+                                  |            <datatype>
+                                  |                <type>http://www.knora.org/ontology/knora-base#StandoffDateTag</type>
+                                  |                <attributeName>src</attributeName>
+                                  |            </datatype>
                                   |        </standoffClass>
                                   |    </mappingElement>
                                   |</mapping>
@@ -410,6 +414,226 @@ class StandoffV1R2RSpec extends R2RSpec {
                 // make sure the user gets informed about the missing required property anything:standoffEventTagHasDescription
                 assert(responseAs[String].contains("http://www.knora.org/ontology/anything#StandoffEventTag"))
                 assert(responseAs[String].contains("http://www.knora.org/ontology/anything#standoffEventTagHasDescription"))
+
+            }
+        }
+
+        "attempt to create a mapping not assigning a data type to a standoff class that has a data type" in {
+
+            val brokenMapping = """<?xml version="1.0" encoding="UTF-8"?>
+                                  |<mapping>
+                                  |    <mappingElement>
+                                  |        <tag>
+                                  |            <name>text</name>
+                                  |            <class>noClass</class>
+                                  |            <namespace>noNamespace</namespace>
+                                  |            <separator>false</separator>
+                                  |        </tag>
+                                  |        <standoffClass>
+                                  |            <classIri>http://www.knora.org/ontology/standoff#StandoffRootTag</classIri>
+                                  |            <attributes>
+                                  |                <attribute>
+                                  |                    <attributeName>documentType</attributeName>
+                                  |                    <namespace>noNamespace</namespace>
+                                  |                    <propertyIri>http://www.knora.org/ontology/standoff#standoffRootTagHasDocumentType</propertyIri>
+                                  |                </attribute>
+                                  |            </attributes>
+                                  |        </standoffClass>
+                                  |    </mappingElement>
+                                  |
+                                  |    <mappingElement>
+                                  |        <tag>
+                                  |            <name>event</name>
+                                  |            <class>noClass</class>
+                                  |            <namespace>noNamespace</namespace>
+                                  |            <separator>true</separator>
+                                  |        </tag>
+                                  |        <standoffClass>
+                                  |            <classIri>http://www.knora.org/ontology/anything#StandoffEventTag</classIri>
+                                  |             <attributes>
+                                  |                <attribute>
+                                  |                    <attributeName>desc</attributeName>
+                                  |                    <namespace>noNamespace</namespace>
+                                  |                    <propertyIri>http://www.knora.org/ontology/anything#standoffEventTagHasDescription</propertyIri>
+                                  |                </attribute>
+                                  |            </attributes>
+                                  |            <!-- no data type provided, but required -->
+                                  |        </standoffClass>
+                                  |    </mappingElement>
+                                  |</mapping>
+                                  |    """.stripMargin
+
+
+            val formDataMapping = Multipart.FormData(
+                Multipart.FormData.BodyPart(
+                    "json",
+                    HttpEntity(ContentTypes.`application/json`, RequestParams.paramsCreateLetterMappingFromXML)
+                ),
+                Multipart.FormData.BodyPart(
+                    "xml",
+                    HttpEntity(ContentTypes.`text/xml(UTF-8)`, brokenMapping),
+                    Map("filename" -> "brokenMapping.xml")
+                )
+            )
+
+            // send mapping xml to route
+            Post("/v1/mapping", formDataMapping) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> standoffPath ~> check {
+
+                assert(status == StatusCodes.BadRequest, response.toString)
+
+                // make sure the user gets informed about the missing data type http://www.knora.org/ontology/knora-base#StandoffDateTag
+                assert(responseAs[String].contains("http://www.knora.org/ontology/anything#StandoffEventTag"))
+                assert(responseAs[String].contains("http://www.knora.org/ontology/knora-base#StandoffDateTag"))
+
+            }
+        }
+
+        "attempt to create a mapping assigning a wrong data type to a standoff class that has a data type" in {
+
+            val brokenMapping = """<?xml version="1.0" encoding="UTF-8"?>
+                                  |<mapping>
+                                  |    <mappingElement>
+                                  |        <tag>
+                                  |            <name>text</name>
+                                  |            <class>noClass</class>
+                                  |            <namespace>noNamespace</namespace>
+                                  |            <separator>false</separator>
+                                  |        </tag>
+                                  |        <standoffClass>
+                                  |            <classIri>http://www.knora.org/ontology/standoff#StandoffRootTag</classIri>
+                                  |            <attributes>
+                                  |                <attribute>
+                                  |                    <attributeName>documentType</attributeName>
+                                  |                    <namespace>noNamespace</namespace>
+                                  |                    <propertyIri>http://www.knora.org/ontology/standoff#standoffRootTagHasDocumentType</propertyIri>
+                                  |                </attribute>
+                                  |            </attributes>
+                                  |        </standoffClass>
+                                  |    </mappingElement>
+                                  |
+                                  |    <mappingElement>
+                                  |        <tag>
+                                  |            <name>event</name>
+                                  |            <class>noClass</class>
+                                  |            <namespace>noNamespace</namespace>
+                                  |            <separator>true</separator>
+                                  |        </tag>
+                                  |        <standoffClass>
+                                  |            <classIri>http://www.knora.org/ontology/anything#StandoffEventTag</classIri>
+                                  |             <attributes>
+                                  |                <attribute>
+                                  |                    <attributeName>desc</attributeName>
+                                  |                    <namespace>noNamespace</namespace>
+                                  |                    <propertyIri>http://www.knora.org/ontology/anything#standoffEventTagHasDescription</propertyIri>
+                                  |                </attribute>
+                                  |            </attributes>
+                                  |            <datatype>
+                                  |                <type>http://www.knora.org/ontology/knora-base#StandoffUriTag</type>
+                                  |                <attributeName>src</attributeName>
+                                  |            </datatype>
+                                  |        </standoffClass>
+                                  |    </mappingElement>
+                                  |</mapping>
+                                  |    """.stripMargin
+
+
+            val formDataMapping = Multipart.FormData(
+                Multipart.FormData.BodyPart(
+                    "json",
+                    HttpEntity(ContentTypes.`application/json`, RequestParams.paramsCreateLetterMappingFromXML)
+                ),
+                Multipart.FormData.BodyPart(
+                    "xml",
+                    HttpEntity(ContentTypes.`text/xml(UTF-8)`, brokenMapping),
+                    Map("filename" -> "brokenMapping.xml")
+                )
+            )
+
+            // send mapping xml to route
+            Post("/v1/mapping", formDataMapping) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> standoffPath ~> check {
+
+                assert(status == StatusCodes.BadRequest, response.toString)
+
+                // make sure the user gets informed about the wrong data type http://www.knora.org/ontology/knora-base#StandoffUriTag
+                assert(responseAs[String].contains("http://www.knora.org/ontology/knora-base#StandoffUriTag"))
+                assert(responseAs[String].contains("http://www.knora.org/ontology/knora-base#StandoffDateTag"))
+
+            }
+        }
+
+        "attempt to create a mapping assigning a data type to a standoff class that does not have a data type" in {
+
+            val brokenMapping = """<?xml version="1.0" encoding="UTF-8"?>
+                                  |<mapping>
+                                  |    <mappingElement>
+                                  |        <tag>
+                                  |            <name>text</name>
+                                  |            <class>noClass</class>
+                                  |            <namespace>noNamespace</namespace>
+                                  |            <separator>false</separator>
+                                  |        </tag>
+                                  |        <standoffClass>
+                                  |            <classIri>http://www.knora.org/ontology/standoff#StandoffRootTag</classIri>
+                                  |            <attributes>
+                                  |                <attribute>
+                                  |                    <attributeName>documentType</attributeName>
+                                  |                    <namespace>noNamespace</namespace>
+                                  |                    <propertyIri>http://www.knora.org/ontology/standoff#standoffRootTagHasDocumentType</propertyIri>
+                                  |                </attribute>
+                                  |            </attributes>
+                                  |            <datatype>
+                                  |                <type>http://www.knora.org/ontology/knora-base#StandoffDateTag</type>
+                                  |                <attributeName>src</attributeName>
+                                  |            </datatype>
+                                  |        </standoffClass>
+                                  |    </mappingElement>
+                                  |
+                                  |    <mappingElement>
+                                  |        <tag>
+                                  |            <name>event</name>
+                                  |            <class>noClass</class>
+                                  |            <namespace>noNamespace</namespace>
+                                  |            <separator>true</separator>
+                                  |        </tag>
+                                  |        <standoffClass>
+                                  |            <classIri>http://www.knora.org/ontology/anything#StandoffEventTag</classIri>
+                                  |             <attributes>
+                                  |                <attribute>
+                                  |                    <attributeName>desc</attributeName>
+                                  |                    <namespace>noNamespace</namespace>
+                                  |                    <propertyIri>http://www.knora.org/ontology/anything#standoffEventTagHasDescription</propertyIri>
+                                  |                </attribute>
+                                  |            </attributes>
+                                  |            <datatype>
+                                  |                <type>http://www.knora.org/ontology/knora-base#StandoffDateTag</type>
+                                  |                <attributeName>src</attributeName>
+                                  |            </datatype>
+                                  |        </standoffClass>
+                                  |    </mappingElement>
+                                  |</mapping>
+                                  |    """.stripMargin
+
+
+            val formDataMapping = Multipart.FormData(
+                Multipart.FormData.BodyPart(
+                    "json",
+                    HttpEntity(ContentTypes.`application/json`, RequestParams.paramsCreateLetterMappingFromXML)
+                ),
+                Multipart.FormData.BodyPart(
+                    "xml",
+                    HttpEntity(ContentTypes.`text/xml(UTF-8)`, brokenMapping),
+                    Map("filename" -> "brokenMapping.xml")
+                )
+            )
+
+            // send mapping xml to route
+            Post("/v1/mapping", formDataMapping) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> standoffPath ~> check {
+
+                assert(status == StatusCodes.BadRequest, response.toString)
+
+                // make sure the user gets informed about the data type for http://www.knora.org/ontology/standoff#StandoffRootTag that has no data type
+                assert(responseAs[String].contains("http://www.knora.org/ontology/standoff#StandoffRootTag"))
+                assert(responseAs[String].contains("http://www.knora.org/ontology/knora-base#StandoffDateTag"))
 
             }
         }
