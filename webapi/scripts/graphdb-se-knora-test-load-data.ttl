@@ -7,7 +7,7 @@ load ../_test_data/all_data/admin-data.ttl into http://www.knora.org/data/admin 
 load ../_test_data/all_data/permissions-data.ttl into http://www.knora.org/data/permissions .
 load ../_test_data/ontologies/incunabula-onto.ttl into http://www.knora.org/ontology/incunabula .
 load ../_test_data/all_data/incunabula-data.ttl into http://www.knora.org/data/incunabula .
-load ../_test_data/ontologies/images-demo-onto.ttl into http://www.knora.org/ontology/images .
+load ../_test_data/ontologies/images-onto.ttl into http://www.knora.org/ontology/images .
 load ../_test_data/demo_data/images-demo-data.ttl into http://www.knora.org/data/images .
 load ../_test_data/ontologies/anything-onto.ttl into http://www.knora.org/ontology/anything .
 load ../_test_data/all_data/anything-data.ttl into http://www.knora.org/data/anything .

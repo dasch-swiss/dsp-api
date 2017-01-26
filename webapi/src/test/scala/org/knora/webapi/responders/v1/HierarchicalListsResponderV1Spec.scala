@@ -55,7 +55,6 @@ class HierarchicalListsResponderV1Spec extends CoreSpec() with ImplicitSender {
     private val timeout = 10.seconds
 
     val rdfDataObjects = List(
-        RdfDataObject(path = "_test_data/ontologies/dokubib-onto.ttl", name = "http://www.knora.org/ontology/dokubib"),
         RdfDataObject(path = "_test_data/responders.v1.HierarchicalListsResponderV1Spec/dokubib-data.ttl", name = "http://www.knora.org/data/dokubib")
     )
 

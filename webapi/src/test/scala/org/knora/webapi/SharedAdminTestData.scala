@@ -498,7 +498,7 @@ object SharedAdminTestData {
             lang = "de",
             projects = Vector(ANYTHING_PROJECT_IRI)
         ),
-        groups = Seq.empty[IRI],
+        groups = Vector.empty[IRI],
         projects = Vector(ANYTHING_PROJECT_IRI),
         sessionId = None,
         permissionData = PermissionDataV1(

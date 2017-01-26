@@ -44,12 +44,7 @@ class UsersRouteV1E2ESpec extends E2ESpec(UsersRouteV1E2ESpec.config) with Sessi
 
     implicit def default(implicit system: ActorSystem) = RouteTestTimeout(5.seconds)
 
-    private val rdfDataObjects = List(
-        RdfDataObject(path = "_test_data/ontologies/incunabula-onto.ttl", name = "http://www.knora.org/ontology/incunabula"),
-        RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/incunabula"),
-        RdfDataObject(path = "_test_data/ontologies/images-demo-onto.ttl", name = "http://www.knora.org/ontology/images"),
-        RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/images")
-    )
+    private val rdfDataObjects = List.empty[RdfDataObject]
 
     val rootEmail = SharedAdminTestData.rootUser.userData.email.get
     val rootEmailEnc = java.net.URLEncoder.encode(rootEmail, "utf-8")
