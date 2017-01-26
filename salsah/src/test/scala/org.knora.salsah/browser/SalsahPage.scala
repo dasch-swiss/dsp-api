@@ -163,6 +163,18 @@ class SalsahPage {
     }
 
     /**
+      * Select a vocabulary to limit search.
+      *
+      * @param vocabulary the vocabulary to be selected.
+      */
+    def selectVocabulary(vocabulary: String): Unit = {
+        eventually {
+            val restypeSelect = driver.findElement(By.name("vocabulary"))
+            new Select(restypeSelect).selectByValue(vocabulary)
+        }
+    }
+
+    /**
       * Select a restype to search for.
       *
       * @param restype the restype to be selected.
