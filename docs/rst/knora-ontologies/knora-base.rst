@@ -482,6 +482,10 @@ Markup is stored using this property:
 ``valueHasStandoff`` (0-n)
     Points to a standoff markup tag. See :ref:`knora-base-standoff`.
 
+``valueHasMapping`` (0-1)
+    Points to the mapping used to create the standoff markup
+    and to convert it back to the original XML. See :ref:`knora-base-mapping`.
+
 DateValue
 ~~~~~~~~~
 
@@ -975,69 +979,72 @@ classes, has these properties:
     The index of the last character in the text that has the attribute,
     plus 1.
 
+``standoffTagHasUUID`` (1)
+    A UUID identifying this instance and those corresponding to it
+    in later versions of the ``TextValue`` it belongs to. The UUID is a means
+    to maintain a reference to a particular range of a text also when new versions
+    are made and standoff tag IRIs change.
+
+``standoffTagHasOriginalXMLID`` (0-1)
+    The original id of the XML element that the standoff tag represents, if any.
+
+``standoffTagHasStartIndex`` (1)
+    The start index of the standoff tag. Start indexes are numbered from 0 within the context of a
+    particular text. When several standoff tags share the same start position,
+    they can be nested correctly with this information when transforming them to XML.
+
+``standoffTagHasEndIndex`` (1)
+    The end index of the standoff tag. Start indexes are numbered from 0 within the context of a
+    particular text. When several standoff tags share the same end position,
+    they can be nested correctly with this information when transforming them to XML.
+
+``standoffTagHasStartParent`` (0-1)
+    Points to the parent standoff tag. This corresponds to the original nesting of tags in XML.
+    If a standoff tag has no parent, it represents the XML root element.
+    If the original XML element is a CLIX tag, it represents the end
+    of a virtual (non syntactical) hierarchy.
+
+``standoffTagHasEndParent`` (0-1)
+    Points to the parent standoff tag if the original XML element is a CLIX tag and represents the end
+    of a virtual (non syntactical) hierarchy.
+
 The ``StandoffTag`` class is not used directly in RDF data; instead, its
-subclasses are used. A few subclasses are currently provided, and more
-will be added to support TEI semantics. In a future version of the Knora
-API server, a project will be able to define its own custom standoff tag
-classes.
+subclasses are used. A few subclasses are currently provided in ``standoff-onto.ttl``, and more
+will be added to support TEI semantics. Projects are able to define their own custom standoff tag
+classes (direct subclasses of ``StandoffTag`` or one of the standoff data type classes or subclasses
+of one of the standoff classes defined in ``standoff-onto.ttl``).
 
 Subclasses of StandoffTag
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-StandoffVisualTag
-~~~~~~~~~~~~~~~~~
+Standoff Data Type Tags
+~~~~~~~~~~~~~~~~~~~~~~~
 
-Represents a typographical style. Subclasses:
+Associates data in some Knora value type with a substring in a text. Standoff data type
+tags are subclasses of ``ValueBase`` classes.
 
--  ``StandoffItalicTag``
-
--  ``StandoffBoldTag``
-
--  ``StandoffUnderlineTag``
-
--  ``StandoffStrikethroughTag``
-
--  ``StandoffSuperscriptTag``
-
--  ``StandoffSubscriptTag``
-
-StandoffStructuralTag
-~~~~~~~~~~~~~~~~~~~~~
-
-Represents an element of the structure of a text. Subclasses:
-
--  ``StandoffParagraphTag``
-
--  ``StandoffHeader1Tag``
-
--  ``StandoffHeader2Tag``
-
--  ``StandoffHeader3Tag``
-
--  ``StandoffHeader4Tag``
-
--  ``StandoffHeader5Tag``
-
--  ``StandoffHeader6Tag``
-
--  ``StandoffOrderedListTag``
-
--  ``StandoffUnorderedListTag``
-
--  ``StandoffListElementTag``
-
-StandoffDataTypeTag
-~~~~~~~~~~~~~~~~~~~
-
-Associates data in some Knora value type with a substring in a text.
-Subclasses:
+-  ``StandoffLinkTag`` see knora-base-standoff-link_
 
 -  ``StandoffUriTag`` Indicates that a substring is associated with a
-   URI.
+     URI, which is stored in the same form that is used for ``kb:UriValue``.
 
--  ``StandoffDateValueTag`` Indicates that a substring represents a
-   date, which is stored in the same form that is used for
-   ``kb:DateValue``.
+-  ``StandoffDateTag`` Indicates that a substring represents a
+    date, which is stored in the same form that is used for ``kb:DateValue``.
+
+- ``StandoffColorTag`` Indicates that a substring represents a color,
+    which is stored in the same form that is used for ``kb:ColorValue``.
+
+- ``StandoffIntegerTag`` Indicates that a substring represents an integer,
+    which is stored in the same form that is used for ``kb:IntegerValue``.
+
+- ``StandoffDecimalTag`` Indicates that a substring represents a number with fractions,
+    which is stored in the same form that is used for ``kb:DecimalValue``.
+
+- ``StandoffIntervalTag`` Indicates that a substring represents an interval,
+    which is stored in the same form that is used for ``kb:IntervalValue``.
+
+- ``StandoffBooleanTag`` Indicates that a substring represents a Boolean,
+    which is stored in the same form that is used for ``kb:BooleanValue``.
 
 .. _knora-base-standoff-link:
 
@@ -1169,6 +1176,19 @@ are automatically visible to all users, as long as they have permission
 to see the source and target resources. The owner of these link values
 is always ``kb:SystemUser`` (see :ref:`knora-base-users-and-groups`).
 
+
+.. _knora-base-mapping:
+
+Mapping to Create Standoff From XML
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+A mapping allows for the conversion of an XML document to RDF-standoff
+and back. A mapping defines one-to-one relations between XML elements (with or without a class) and attributes
+and standoff classes and properties (see :ref:`XML-to-standoff-mapping`).
+
+
+
+
 Standoff in Digital Editions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -1210,11 +1230,11 @@ properties:
 ``standoffTagHasEndIndex`` (0-1)
     The index of the end position, if this is a non-hierarchical tag.
 
-``standoffTagHasStartParentIndex`` (0-1)
-    The index of the tag, if any, that contains the start position.
+``standoffTagHasStartParent`` (0-1)
+    The IRI of the tag, if any, that contains the start position.
 
-``standoffTagHasEndParentIndex`` (0-1)
-    The index of the tag, if any, that contains the end position, if
+``standoffTagHasEndParent`` (0-1)
+    The IRI of the tag, if any, that contains the end position, if
     this is a non-hierarchical tag.
 
 ``standoffTagHasUUID`` (0-1)

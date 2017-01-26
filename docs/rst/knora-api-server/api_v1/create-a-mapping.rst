@@ -216,7 +216,38 @@ You will find a sample mapping with all the data types and a sample XML file in 
 Standoff Properties
 -------------------
 
-When mapping XML attributes to standoff properties, attention has to be paid to the properties object constraints. Standoff properties are literals with the exception of internal references.
+When mapping XML attributes to standoff properties, attention has to be paid to the properties' object constraints. Standoff properties are literals with the exception of internal references that are pointers to standoff nodes.
+
+In the ontology, standoff property literals may have one of the following ``knora-base:objectDatatypeConstraint``:
+
+- ``xsd:string``
+- ``xsd:integer``
+- ``xsd:boolean``
+- ``xsd:decimal``
+- ``xsd:anyURI``
+
+In XML, all attribute values are submitted as strings. However, these string representations need to be convertible to the types defined in the ontology.
+If they are not, the request will be rejected. It is recommended to enforce types on attributes by applying XML Schema validations (restrictions).
+
+Internal references inside an XML document can be represented with the standoff property ``knora-base:standoffTagHasInternalReference`` or a subclass of it.
+This standoff property has an ``knora-base:objectClassConstraint`` and points to a standoff node when converted to RDF.
+
+The following example shows the definition of a mapping element for an internal reference (for reasons of simplicity, only the attribute definition is depicted)::
+
+    <attribute>
+        <attributeName>internalRef</attributeName>
+        <namespace>noNamespace</namespace>
+        <propertyIri>http://www.knora.org/ontology/knora-base:standoffTagHasInternalReference</propertyIri>
+    </attribute>
+
+Now, an internal reference to an element in the same document can be made that is being converted to a pointer in RDF::
+
+    <?xml version="1.0" encoding="UTF-8"?>
+    <text>
+        This is an <sample id="1">element</sample> and here is a reference to <ref internalRef="#1">it</ref>.
+    </text>
+
+An internal reference in XML has to start with a ``#`` followed by the value of the ``id`` attribute of the element referred to.
 
 ------------------------------------------
 Predefined Standoff Classes and Properties
