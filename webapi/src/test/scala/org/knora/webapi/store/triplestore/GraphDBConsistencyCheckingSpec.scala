@@ -20,8 +20,6 @@ class GraphDBConsistencyCheckingSpec extends CoreSpec(GraphDBConsistencyChecking
     private val timeout = 30.seconds
 
     val rdfDataObjects = List(
-        RdfDataObject(path = "_test_data/ontologies/incunabula-onto.ttl", name = "http://www.knora.org/ontology/incunabula"),
-        RdfDataObject(path = "_test_data/ontologies/anything-onto.ttl", name = "http://www.knora.org/ontology/anything"),
         RdfDataObject(path = "_test_data/store.triplestore.GraphDBConsistencyCheckingSpec/incunabula-data.ttl", name = "http://www.knora.org/data/incunabula")
     )
 

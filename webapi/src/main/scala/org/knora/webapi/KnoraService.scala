@@ -106,9 +106,11 @@ trait KnoraService {
             SearchRouteV1.knoraApiPath(system, settings, log) ~
             AuthenticateRouteV1.knoraApiPath(system, settings, log) ~
             AssetsRouteV1.knoraApiPath(system, settings, log) ~
-            ProjectsRouteV1.knoraApiPath(system, settings, log) ~
             CkanRouteV1.knoraApiPath(system, settings, log) ~
             StoreRouteV1.knoraApiPath(system, settings, log) ~
+            UsersRouteV1.knoraApiPath(system, settings, log) ~
+            ProjectsRouteV1.knoraApiPath(system, settings, log) ~
+            GroupsRouteV1.knoraApiPath(system, settings, log) ~
 			PermissionsRouteV1.knoraApiPath(system, settings, log),
         settings,
         log

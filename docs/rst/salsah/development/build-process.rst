@@ -51,6 +51,13 @@ Then go back to the webapi root directory and use SBT to start the API server:
     > compile
     > re-start allowResetTriplestoreContentOperationOverHTTP
 
+Then in another terminal, go to the SIPI project root directory and start the server:
+
+::
+
+    $ ./local/bin/sipi --config=config/sipi.knora-config.lua (for production)
+    $ ./local/bin/sipi --config=config/sipi.knora-test-config.lua (for running tests)
+
 Then in another terminal, go to the SALSAH root directory and start the server:
 
 ::

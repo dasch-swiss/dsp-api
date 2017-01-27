@@ -44,19 +44,14 @@ class StoreRouteV1E2ESpec extends E2ESpec(StoreRouteV1E2ESpec.config) with Tripl
       * The Json which spray generates looks like this:
       *
       *  [
-      *     {"path": "_test_data/ontologies/incunabula-onto.ttl", "name": "http://www.knora.org/ontology/incunabula"},
       *     {"path": "_test_data/all_data/incunabula-data.ttl", "name": "http://www.knora.org/data/incunabula"},
-      *     {"path": "_test_data/ontologies/images-demo-onto.ttl", "name": "http://www.knora.org/ontology/images"},
       *     {"path": "_test_data/demo_data/images-demo-data.ttl", "name": "http://www.knora.org/data/images"}
-      *
       *  ]
       *
       * and could have been supplied to the post request instead of the scala object.
       */
     private val rdfDataObjects: List[RdfDataObject] = List(
-        RdfDataObject(path = "_test_data/ontologies/incunabula-onto.ttl", name = "http://www.knora.org/ontology/incunabula"),
         RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/incunabula"),
-        RdfDataObject(path = "_test_data/ontologies/images-demo-onto.ttl", name = "http://www.knora.org/ontology/images"),
         RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/images")
     )
 
