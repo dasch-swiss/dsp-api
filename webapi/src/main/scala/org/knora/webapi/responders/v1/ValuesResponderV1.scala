@@ -29,7 +29,7 @@ import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoByIRIG
 import org.knora.webapi.messages.v1.responder.resourcemessages._
 import org.knora.webapi.messages.v1.responder.sipimessages.{SipiConstants, SipiResponderConversionPathRequestV1, SipiResponderConversionRequestV1, SipiResponderConversionResponseV1}
 import org.knora.webapi.messages.v1.responder.standoffmessages.StandoffDataTypeClasses
-import org.knora.webapi.messages.v1.responder.usermessages.{UserProfileByIRIGetRequestV1, UserProfileType, UserProfileV1}
+import org.knora.webapi.messages.v1.responder.usermessages.{UserProfileByIRIGetV1, UserProfileType, UserProfileV1}
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v1.store.triplestoremessages._
 import org.knora.webapi.responders.IriLocker
@@ -88,7 +88,7 @@ class ValuesResponderV1 extends ResponderV1 {
             response <- maybeValueQueryResult match {
                 case Some(valueQueryResult) =>
                     for {
-                        valueOwnerProfile <- (responderManager ? UserProfileByIRIGetRequestV1(valueQueryResult.ownerIri, UserProfileType.RESTRICTED)).mapTo[UserProfileV1]
+                        valueOwnerProfile <- (responderManager ? UserProfileByIRIGetV1(valueQueryResult.ownerIri, UserProfileType.RESTRICTED)).mapTo[UserProfileV1]
                     } yield ValueGetResponseV1(
                         valuetype = valueQueryResult.value.valueTypeIri,
                         rights = valueQueryResult.permissionCode,
@@ -1294,7 +1294,7 @@ class ValuesResponderV1 extends ResponderV1 {
             linkValueResponse <- maybeValueQueryResult match {
                 case Some(valueQueryResult) =>
                     for {
-                        valueOwnerProfile <- (responderManager ? UserProfileByIRIGetRequestV1(valueQueryResult.ownerIri, UserProfileType.RESTRICTED)).mapTo[UserProfileV1]
+                        valueOwnerProfile <- (responderManager ? UserProfileByIRIGetV1(valueQueryResult.ownerIri, UserProfileType.RESTRICTED)).mapTo[UserProfileV1]
                     } yield ValueGetResponseV1(
                         valuetype = valueQueryResult.value.valueTypeIri,
                         rights = valueQueryResult.permissionCode,
@@ -2474,7 +2474,7 @@ class ValuesResponderV1 extends ResponderV1 {
     }
 
     /**
-      * Checks a [[TextValueV1]] to make sure that the resource references in its [[StandoffPositionV1]] objects match
+      * Checks a [[TextValueV1]] to make sure that the resource references in its [[StandoffTagV1]] objects match
       * the list of resource IRIs in its `resource_reference` member variable.
       *
       * @param textValue the [[TextValueV1]] to be checked.

@@ -55,22 +55,15 @@ class SearchAndEditSpec extends SalsahSpec {
     private val rdfDataObjectsJsonList: String =
         """
             [
-                {"path": "../knora-ontologies/knora-base.ttl", "name": "http://www.knora.org/ontology/knora-base"},
-                {"path": "_test_data/ontologies/standoff-onto.ttl", "name": "http://www.knora.org/ontology/standoff"},
-                {"path": "_test_data/all_data/standoff-data.ttl", "name": "http://www.knora.org/data/standoff"},
-                {"path": "../knora-ontologies/knora-dc.ttl", "name": "http://www.knora.org/ontology/dc"},
-                {"path": "../knora-ontologies/salsah-gui.ttl", "name": "http://www.knora.org/ontology/salsah-gui"},
-                {"path": "_test_data/ontologies/incunabula-onto.ttl", "name": "http://www.knora.org/ontology/incunabula"},
                 {"path": "_test_data/all_data/incunabula-data.ttl", "name": "http://www.knora.org/data/incunabula"},
-                {"path": "_test_data/ontologies/images-demo-onto.ttl", "name": "http://www.knora.org/ontology/images"},
                 {"path": "_test_data/demo_data/images-demo-data.ttl", "name": "http://www.knora.org/data/images"},
-                {"path": "_test_data/ontologies/beol-onto.ttl", "name": "http://www.knora.org/ontology/beol"},
-                {"path": "_test_data/ontologies/anything-onto.ttl", "name": "http://www.knora.org/ontology/anything"},
                 {"path": "_test_data/all_data/anything-data.ttl", "name": "http://www.knora.org/data/anything"},
-                {"path": "_test_data/all_data/biblio-data.ttl", "name": "http://www.knora.org/data/biblio"},
-                {"path": "_test_data/ontologies/biblio-onto.ttl", "name": "http://www.knora.org/ontology/biblio"}
+                {"path": "_test_data/all_data/biblio-data.ttl", "name": "http://www.knora.org/data/biblio"}
             ]
         """
+
+    val rootEmail = "root@example.com"
+    val rootEmailEnc = java.net.URLEncoder.encode(rootEmail, "utf-8")
 
     // In order to run these tests, start `webapi` using the option `allowResetTriplestoreContentOperationOverHTTP`
 
@@ -108,7 +101,7 @@ class SearchAndEditSpec extends SalsahSpec {
 
             page.load()
 
-            page.doLogin("root", "test")
+            page.doLogin(rootEmail, "test")
 
             eventually {
                 // check if login has succeeded
@@ -170,6 +163,8 @@ class SearchAndEditSpec extends SalsahSpec {
 
             page.clickExtendedSearchButton()
 
+            page.selectVocabulary("0") // select all
+
             page.selectRestype("http://www.knora.org/ontology/incunabula#book")
 
             page.getExtendedSearchSelectionByName(1, "selprop").selectByValue("http://www.knora.org/ontology/incunabula#title")
@@ -193,6 +188,8 @@ class SearchAndEditSpec extends SalsahSpec {
 
             page.clickExtendedSearchButton()
 
+            page.selectVocabulary("0") // select all
+
             page.selectRestype("http://www.knora.org/ontology/knora-base#Region")
 
             page.submitExtendedSearch()
@@ -215,6 +212,8 @@ class SearchAndEditSpec extends SalsahSpec {
             page.load()
 
             page.clickExtendedSearchButton()
+
+            page.selectVocabulary("0") // select all
 
             page.selectRestype("http://www.knora.org/ontology/incunabula#page")
 
@@ -247,6 +246,8 @@ class SearchAndEditSpec extends SalsahSpec {
             page.load()
 
             page.clickExtendedSearchButton()
+
+            page.selectVocabulary("0") // select all
 
             page.selectRestype("http://www.knora.org/ontology/images#bild")
 
@@ -283,6 +284,8 @@ class SearchAndEditSpec extends SalsahSpec {
             page.load()
 
             page.clickExtendedSearchButton()
+
+            page.selectVocabulary("0") // select all
 
             page.selectRestype("http://www.knora.org/ontology/incunabula#book")
 
@@ -323,6 +326,8 @@ class SearchAndEditSpec extends SalsahSpec {
             page.load()
 
             page.clickExtendedSearchButton()
+
+            page.selectVocabulary("0") // select all
 
             page.selectRestype("http://www.knora.org/ontology/incunabula#book")
 
@@ -387,6 +392,8 @@ class SearchAndEditSpec extends SalsahSpec {
             page.load()
 
             page.clickExtendedSearchButton()
+
+            page.selectVocabulary("0") // select all
 
             page.selectRestype("http://www.knora.org/ontology/incunabula#book")
 
@@ -646,6 +653,8 @@ class SearchAndEditSpec extends SalsahSpec {
 
             page.clickExtendedSearchButton()
 
+            page.selectVocabulary("0") // select all
+
             page.selectRestype("http://www.knora.org/ontology/images#bild")
 
             page.submitExtendedSearch()
@@ -688,6 +697,8 @@ class SearchAndEditSpec extends SalsahSpec {
             page.load()
 
             page.clickExtendedSearchButton()
+
+            page.selectVocabulary("0") // select all
 
             page.selectRestype("http://www.knora.org/ontology/images#bild")
 

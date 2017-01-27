@@ -55,22 +55,18 @@ class ResourceCreationSpec extends SalsahSpec {
     private val rdfDataObjectsJsonList: String =
         """
             [
-                {"path": "../knora-ontologies/knora-base.ttl", "name": "http://www.knora.org/ontology/knora-base"},
-                {"path": "_test_data/ontologies/standoff-onto.ttl", "name": "http://www.knora.org/ontology/standoff"},
-                {"path": "_test_data/all_data/standoff-data.ttl", "name": "http://www.knora.org/data/standoff"},
-                {"path": "../knora-ontologies/knora-dc.ttl", "name": "http://www.knora.org/ontology/dc"},
-                {"path": "../knora-ontologies/salsah-gui.ttl", "name": "http://www.knora.org/ontology/salsah-gui"},
-                {"path": "_test_data/ontologies/incunabula-onto.ttl", "name": "http://www.knora.org/ontology/incunabula"},
                 {"path": "_test_data/all_data/incunabula-data.ttl", "name": "http://www.knora.org/data/incunabula"},
-                {"path": "_test_data/ontologies/images-demo-onto.ttl", "name": "http://www.knora.org/ontology/images"},
                 {"path": "_test_data/demo_data/images-demo-data.ttl", "name": "http://www.knora.org/data/images"},
-                {"path": "_test_data/ontologies/beol-onto.ttl", "name": "http://www.knora.org/ontology/beol"},
-                {"path": "_test_data/ontologies/anything-onto.ttl", "name": "http://www.knora.org/ontology/anything"},
                 {"path": "_test_data/all_data/anything-data.ttl", "name": "http://www.knora.org/data/anything"},
-                {"path": "_test_data/all_data/biblio-data.ttl", "name": "http://www.knora.org/data/biblio"},
-                {"path": "_test_data/ontologies/biblio-onto.ttl", "name": "http://www.knora.org/ontology/biblio"}
+                {"path": "_test_data/all_data/biblio-data.ttl", "name": "http://www.knora.org/data/biblio"}
             ]
         """
+
+    val rootEmail = "root@example.com"
+    val rootEmailEnc = java.net.URLEncoder.encode(rootEmail, "utf-8")
+
+    val anythingUserEmail = "anything.user01@example.org"
+    val anythingUserEmailEnc = java.net.URLEncoder.encode(anythingUserEmail, "utf-8")
 
     // In order to run these tests, start `webapi` using the option `allowResetTriplestoreContentOperationOverHTTP`
 
@@ -86,16 +82,19 @@ class ResourceCreationSpec extends SalsahSpec {
 
         }
 
-        "log in as root" in {
+
+        "log in as anything user" in {
 
             page.load()
 
-            page.doLogin("root", "test")
+            page.doLogin(anythingUserEmail, "test")
 
             eventually {
                 // check if login has succeeded
-                // search for element with id 'dologout'
-                page.driver.findElement(By.id("dologout"))
+
+                page.checkForUserdata
+
+
             }
         }
 
@@ -137,6 +136,8 @@ class ResourceCreationSpec extends SalsahSpec {
 
             page.clickAddResourceButton()
 
+            page.selectVocabulary("0") // select all
+
             val restypes = page.selectRestype("http://www.knora.org/ontology/anything#Thing")
 
             val label: WebElement = page.getFormFieldByName("__LABEL__")
@@ -163,6 +164,8 @@ class ResourceCreationSpec extends SalsahSpec {
             page.load()
 
             page.clickAddResourceButton()
+
+            page.selectVocabulary("0") // select all
 
             val restypes = page.selectRestype("http://www.knora.org/ontology/anything#Thing")
 
