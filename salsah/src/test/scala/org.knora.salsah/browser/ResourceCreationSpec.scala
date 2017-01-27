@@ -92,7 +92,7 @@ class ResourceCreationSpec extends SalsahSpec {
             eventually {
                 // check if login has succeeded
 
-                page.checkForUserProject
+                page.checkForUserdata
 
 
             }
@@ -188,9 +188,9 @@ class ResourceCreationSpec extends SalsahSpec {
 
         }
 
-        /*"close the browser" in {
+        "close the browser" in {
             page.quit()
-        }*/
+        }
 
     }
 }
