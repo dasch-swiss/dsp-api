@@ -60,7 +60,7 @@
                     </xs:simpleType>
                 </xs:element>
                 <!-- indicates if an element requires a separator in the string when converted to standoff-->
-                <xs:element name="separator">
+                <xs:element name="separatesWords">
                     <xs:simpleType>
                         <xs:restriction base="xs:boolean"/>
                     </xs:simpleType>

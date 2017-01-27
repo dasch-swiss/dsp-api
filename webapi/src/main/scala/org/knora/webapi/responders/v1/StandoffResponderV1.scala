@@ -121,9 +121,9 @@ class StandoffResponderV1 extends ResponderV1 {
                         val className = (curMappingEle \ "tag" \ "class").headOption.getOrElse(throw BadRequestException(s"no '<classname>' given for node $curMappingEle")).text
 
                         // get the boolean indicating if the element requires a separator in the text once it is converted to standoff
-                        val separatorBooleanAsString = (curMappingEle \ "tag" \ "separator").headOption.getOrElse(throw BadRequestException(s"no '<separator>' given for node $curMappingEle")).text
+                        val separatorBooleanAsString = (curMappingEle \ "tag" \ "separatesWords").headOption.getOrElse(throw BadRequestException(s"no '<separatesWords>' given for node $curMappingEle")).text
 
-                        val separatorRequired: Boolean = InputValidation.toBoolean(separatorBooleanAsString, () => throw BadRequestException(s"separator could not be converted to Boolean: $separatorBooleanAsString"))
+                        val separatorRequired: Boolean = InputValidation.toBoolean(separatorBooleanAsString, () => throw BadRequestException(s"<separatesWords> could not be converted to Boolean: $separatorBooleanAsString"))
 
                         // get the standoff class Iri
                         val standoffClassIri = (curMappingEle \ "standoffClass" \ "classIri").headOption.getOrElse(throw BadRequestException(s"no '<classIri>' given for node $curMappingEle")).text

@@ -27,13 +27,13 @@ XML to Standoff Mapping
 The Knora Standard Mapping
 **************************
 
-A mapping allows for the conversion of XML to standoff representation in RDF and back. In order to create a TextValue with markup, both XML and the IRI of the mapping used to do the conversion to standoff have to be provided.
-However, a mapping is only needed if a TextValue with markup should be created. If a text as no markup, it is submitted as a mere sequence of characters.
+A mapping allows for the conversion of XML to standoff representation in RDF and back. In order to create a TextValue with markup, the text has to be provided in XML format, along with the IRI of the mapping that will be used to convert the markup to standoff.
+However, a mapping is only needed if a TextValue with markup should be created. If a text has no markup, it is submitted as a mere sequence of characters.
 
 The two cases are described in the TypeScript interfaces ``simpletext`` and ``richtext`` in module ``basicMessageComponents``.
 
 Knora offers a standard mapping with the IRI ``http://data.knora.org/projects/standoff/mappings/StandardMapping``. The standard mapping covers the HTML elements and attributes supported by the GUI's text editor CKEditor [1]_
-(please note that the HTML as to be encoded in strict XML syntax). The standard mapping contains the following elements and attributes that are mapped to standoff classes and properties defined in the ontology:
+(please note that the HTML has to be encoded in strict XML syntax). The standard mapping contains the following elements and attributes that are mapped to standoff classes and properties defined in the ontology:
 
  - ``<text>`` -> ``standoff:StandoffRootTag``
  - ``<p>`` -> ``standoff:StandoffParagraphTag``
@@ -71,7 +71,7 @@ The mapping is written in XML itself (for a formal description, see ``webapi/src
            - ``<name>``: name of the XML element
            - ``<class>``: value of the class attribute of the XML element, if any. If the element has no class attribute, the keyword ``noClass`` has to be used.
            - ``<namespace>``: the namespace the XML element belongs to, if any. If the element does not belong to a namespace, the keyword ``noNamespace`` has to be used.
-           - ``<separator>``: a Boolean value indicating if a separator is required for this element. Once an XML document is converted to RDF-standoff the markup is stripped from the text, possibly leading to continuous text that has been separated by tags before. For structural tags like paragraphs etc., ``<separator>`` can be set to ``true`` in which case a special separator is inserted in the the text in the RDF representation. In this way, words stay separated and are represented in the fulltext index as such.
+           - ``<separatesWords>``: a Boolean value indicating whether this tag separates words in the text. Once an XML document is converted to RDF-standoff the markup is stripped from the text, possibly leading to continuous text that has been separated by tags before. For structural tags like paragraphs etc., ``<separatesWords>`` can be set to ``true`` in which case a special separator is inserted in the the text in the RDF representation. In this way, words stay separated and are represented in the fulltext index as such.
        - ``<standoffClass>``: information about the standoff class the XML element is mapped to
            - ``<classIri>``: Iri of the standoff class the XML element is mapped to
            - ``<attributes>``: XML attributes to be mapped to standoff properties (other than ``id`` or ``class``), if any
@@ -91,7 +91,7 @@ XML structure of a mapping::
                 <name>XML element name</name>
                 <class>XML class name or "noClass"</class>
                 <namespace>XML namespace or "noNamespace"</namespace>
-                <separator>true or false</separator>
+                <separatesWords>true or false</separatesWords>
             </tag>
             <standoffClass>
                 <classIri>standoff class Iri</classIri>
@@ -148,7 +148,7 @@ The following simple mapping illustrates this principle::
                 <name>text</name>
                 <class>noClass</class>
                 <namespace>noNamespace</namespace>
-                <separator>false</separator>
+                <separatesWords>false</separatesWords>
             </tag>
             <standoffClass>
                 <classIri>http://www.knora.org/ontology/standoff#StandoffRootTag</classIri>
@@ -160,7 +160,7 @@ The following simple mapping illustrates this principle::
                 <name>mydate</name>
                 <class>noClass</class>
                 <namespace>noNamespace</namespace>
-                <separator>false</separator>
+                <separatesWords>false</separatesWords>
             </tag>
             <standoffClass>
                 <classIri>http://www.knora.org/ontology/anything#StandoffEventTag</classIri>
@@ -264,7 +264,7 @@ The standoff ontology ``standoff-onto.ttl`` offers a set of predefined standoff 
                 <name>myDoc</name>
                 <class>noClass</class>
                 <namespace>noNamespace</namespace>
-                <separator>false</separator>
+                <separatesWords>false</separatesWords>
             </tag>
             <standoffClass>
                 <classIri>http://www.knora.org/ontology/standoff#StandoffRootTag</classIri>
@@ -283,7 +283,7 @@ The standoff ontology ``standoff-onto.ttl`` offers a set of predefined standoff 
                 <name>p</name>
                 <class>noClass</class>
                 <namespace>noNamespace</namespace>
-                <separator>true</separator>
+                <separatesWords>true</separatesWords>
             </tag>
             <standoffClass>
                 <classIri>http://www.knora.org/ontology/standoff#StandoffParagraphTag</classIri>
@@ -295,7 +295,7 @@ The standoff ontology ``standoff-onto.ttl`` offers a set of predefined standoff 
                 <name>i</name>
                 <class>noClass</class>
                 <namespace>noNamespace</namespace>
-                <separator>false</separator>
+                <separatesWords>false</separatesWords>
             </tag>
             <standoffClass>
                 <classIri>http://www.knora.org/ontology/standoff#StandoffItalicTag</classIri>

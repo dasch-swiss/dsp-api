@@ -4,7 +4,7 @@
         <tag><name>text</name>
             <class>noClass</class>
             <namespace>noNamespace</namespace>
-            <separator>false</separator></tag>
+            <separatesWords>false</separatesWords></tag>
         <standoffClass>
             <classIri>http://www.knora.org/ontology/standoff#StandoffRootTag</classIri>
             <attributes>
@@ -22,7 +22,7 @@
             <name>p</name>
             <class>noClass</class>
             <namespace>noNamespace</namespace>
-            <separator>true</separator>
+            <separatesWords>true</separatesWords>
         </tag>
         <standoffClass>
             <classIri>http://www.knora.org/ontology/standoff#StandoffParagraphTag</classIri>
@@ -34,7 +34,7 @@
             <name>em</name>
             <class>noClass</class>
             <namespace>noNamespace</namespace>
-            <separator>false</separator>
+            <separatesWords>false</separatesWords>
         </tag>
         <standoffClass>
             <classIri>http://www.knora.org/ontology/standoff#StandoffItalicTag</classIri>
@@ -46,7 +46,7 @@
             <name>strong</name>
             <class>noClass</class>
             <namespace>noNamespace</namespace>
-            <separator>false</separator>
+            <separatesWords>false</separatesWords>
         </tag>
         <standoffClass>
             <classIri>http://www.knora.org/ontology/standoff#StandoffBoldTag</classIri>
@@ -58,7 +58,7 @@
             <name>u</name>
             <class>noClass</class>
             <namespace>noNamespace</namespace>
-            <separator>false</separator>
+            <separatesWords>false</separatesWords>
         </tag>
         <standoffClass>
             <classIri>http://www.knora.org/ontology/standoff#StandoffUnderlineTag</classIri>
@@ -70,7 +70,7 @@
             <name>sub</name>
             <class>noClass</class>
             <namespace>noNamespace</namespace>
-            <separator>false</separator>
+            <separatesWords>false</separatesWords>
         </tag>
         <standoffClass>
             <classIri>http://www.knora.org/ontology/standoff#StandoffSubscriptTag</classIri>
@@ -82,7 +82,7 @@
             <name>sup</name>
             <class>noClass</class>
             <namespace>noNamespace</namespace>
-            <separator>false</separator>
+            <separatesWords>false</separatesWords>
         </tag>
         <standoffClass>
             <classIri>http://www.knora.org/ontology/standoff#StandoffSuperscriptTag</classIri>
@@ -94,7 +94,7 @@
             <name>strike</name>
             <class>noClass</class>
             <namespace>noNamespace</namespace>
-            <separator>false</separator>
+            <separatesWords>false</separatesWords>
         </tag>
         <standoffClass>
             <classIri>http://www.knora.org/ontology/standoff#StandoffStrikethroughTag</classIri>
@@ -107,7 +107,7 @@
             <name>a</name>
             <class>noClass</class>
             <namespace>noNamespace</namespace>
-            <separator>false</separator>
+            <separatesWords>false</separatesWords>
         </tag>
         <standoffClass>
             <classIri>http://www.knora.org/ontology/knora-base#StandoffUriTag</classIri>
@@ -124,7 +124,7 @@
             <name>a</name>
             <class>salsah-link</class>
             <namespace>noNamespace</namespace>
-            <separator>false</separator>
+            <separatesWords>false</separatesWords>
         </tag>
         <standoffClass>
             <classIri>http://www.knora.org/ontology/knora-base#StandoffLinkTag</classIri>
@@ -141,7 +141,7 @@
             <name>span</name>
             <class>date</class>
             <namespace>noNamespace</namespace>
-            <separator>false</separator>
+            <separatesWords>false</separatesWords>
         </tag>
         <standoffClass>
             <classIri>http://www.knora.org/ontology/knora-base#StandoffDateTag</classIri>
@@ -158,7 +158,7 @@
             <name>span</name>
             <class>event</class>
             <namespace>noNamespace</namespace>
-            <separator>false</separator>
+            <separatesWords>false</separatesWords>
         </tag>
         <standoffClass>
             <classIri>http://www.knora.org/ontology/anything#StandoffEventTag</classIri>
@@ -178,7 +178,7 @@
             <name>span</name>
             <class>interval</class>
             <namespace>noNamespace</namespace>
-            <separator>false</separator>
+            <separatesWords>false</separatesWords>
         </tag>
         <standoffClass>
             <classIri>http://www.knora.org/ontology/knora-base#StandoffIntervalTag</classIri>
@@ -195,7 +195,7 @@
             <name>span</name>
             <class>color</class>
             <namespace>noNamespace</namespace>
-            <separator>false</separator>
+            <separatesWords>false</separatesWords>
         </tag>
         <standoffClass>
             <classIri>http://www.knora.org/ontology/knora-base#StandoffColorTag</classIri>
@@ -212,7 +212,7 @@
             <name>span</name>
             <class>integer</class>
             <namespace>noNamespace</namespace>
-            <separator>false</separator>
+            <separatesWords>false</separatesWords>
         </tag>
         <standoffClass>
             <classIri>http://www.knora.org/ontology/knora-base#StandoffIntegerTag</classIri>
@@ -229,7 +229,7 @@
             <name>span</name>
             <class>decimal</class>
             <namespace>noNamespace</namespace>
-            <separator>false</separator>
+            <separatesWords>false</separatesWords>
         </tag>
         <standoffClass>
             <classIri>http://www.knora.org/ontology/knora-base#StandoffDecimalTag</classIri>
@@ -246,7 +246,7 @@
             <name>span</name>
             <class>boolean</class>
             <namespace>noNamespace</namespace>
-            <separator>false</separator>
+            <separatesWords>false</separatesWords>
         </tag>
         <standoffClass>
             <classIri>http://www.knora.org/ontology/knora-base#StandoffBooleanTag</classIri>
