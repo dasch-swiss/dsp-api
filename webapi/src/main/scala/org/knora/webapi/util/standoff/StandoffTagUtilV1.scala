@@ -164,7 +164,7 @@ object StandoffTagUtilV1 {
                     attrsGroupedByPropIri.get(propIri) match {
                         case Some(attrs: Seq[StandoffTagAttributeV1]) => ()
 
-                        case None => throw BadRequestException(s"the min cardinalities were not respected for $propIri")
+                        case None => throw BadRequestException(s"the min cardinalities were not respected for the property $propIri (missing attribute for element ${standoffNodeFromXML.tagName})")
                     }
             }
 
@@ -180,7 +180,7 @@ object StandoffTagUtilV1 {
                     attrsGroupedByPropIri.get(propIri) match {
                         case Some(attrs: Seq[StandoffTagAttributeV1]) =>
                             if (attrs.size > 1) {
-                                throw BadRequestException(s"the max cardinalities were not respected for $propIri")
+                                throw BadRequestException(s"the max cardinalities were not respected for $propIri (for element ${standoffNodeFromXML.tagName})")
                             }
                         case None => ()
                     }
@@ -194,7 +194,7 @@ object StandoffTagUtilV1 {
             // check that there no other attributes than datatype attributes and 'class'
             val unsupportedAttributes: Set[String] = standoffNodeFromXML.attributes.filterNot {
                 attr => (XMLtoStandoffMapping.dataType.nonEmpty && XMLtoStandoffMapping.dataType.get.dataTypeXMLAttribute == attr.key) || attr.key == "class"
-            }.map(attr => attr.xmlNamespace.getOrElse("") + ":" + attr.key + "=" + attr.value)
+            }.map(attr => attr.key)
 
             if (unsupportedAttributes.nonEmpty) throw BadRequestException(s"Attributes found that are not defined in the mapping: ${unsupportedAttributes.mkString(", ")}")
 

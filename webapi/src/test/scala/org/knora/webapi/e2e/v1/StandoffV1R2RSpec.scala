@@ -914,6 +914,182 @@ class StandoffV1R2RSpec extends R2RSpec {
 
         }
 
+        "attempt to create a TextValue from XML representing HTML (in strict XML notation) not defining a required attribute" in {
+
+            val wrongXML = """<?xml version="1.0" encoding="UTF-8"?>
+                <text documentType="html">
+                    <p>
+                        This an <span data-date="GREGORIAN:2017-01-27" class="event">event</span> without a description.
+                    </p>
+                </text>""".stripMargin
+
+            val newValueParams =
+                s"""
+                {
+                  "project_id": "http://data.knora.org/projects/anything",
+                  "res_id": "http://data.knora.org/a-thing",
+                  "prop": "http://www.knora.org/ontology/anything#hasText",
+                  "richtext_value": {
+                        "xml": ${JsString(wrongXML)},
+                        "mapping_id": "${anythingProjectIri}/mappings/HTMLMapping"
+                  }
+                }
+                """
+
+            // create standoff from XML
+            Post("/v1/values", HttpEntity(ContentTypes.`application/json`, newValueParams)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> valuesPath ~> check {
+
+                assert(status == StatusCodes.BadRequest, response.toString)
+
+                // the error message should inform the user that the required property http://www.knora.org/ontology/anything#standoffEventTagHasDescription is missing
+                assert(responseAs[String].contains("http://www.knora.org/ontology/anything#standoffEventTagHasDescription"))
+
+
+            }
+
+        }
+
+        "attempt to create a TextValue from XML representing HTML (in strict XML notation) submitting an attribute that is not defined in the mapping (for an element that has an another attribute)" in {
+
+            val wrongXML = """<?xml version="1.0" encoding="UTF-8"?>
+                <text documentType="html">
+                    <p>
+                        This an <span notDefined="true" data-description="an event" data-date="GREGORIAN:2017-01-27" class="event">event</span> without a description.
+                    </p>
+                </text>""".stripMargin
+
+            val newValueParams =
+                s"""
+                {
+                  "project_id": "http://data.knora.org/projects/anything",
+                  "res_id": "http://data.knora.org/a-thing",
+                  "prop": "http://www.knora.org/ontology/anything#hasText",
+                  "richtext_value": {
+                        "xml": ${JsString(wrongXML)},
+                        "mapping_id": "${anythingProjectIri}/mappings/HTMLMapping"
+                  }
+                }
+                """
+
+            // create standoff from XML
+            Post("/v1/values", HttpEntity(ContentTypes.`application/json`, newValueParams)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> valuesPath ~> check {
+
+                assert(status == StatusCodes.BadRequest, response.toString)
+
+                // the error message should inform the user that mapping does not support the attribute "notDefined"
+                assert(responseAs[String].contains("notDefined"))
+
+
+            }
+
+        }
+
+        "attempt to create a TextValue from XML representing HTML (in strict XML notation) submitting an attribute that is not defined in the mapping (for an element that hasn't an another attribute)" in {
+
+            val wrongXML = """<?xml version="1.0" encoding="UTF-8"?>
+                <text documentType="html">
+                    <p notDefined="true">
+                        This is text.
+                    </p>
+                </text>""".stripMargin
+
+            val newValueParams =
+                s"""
+                {
+                  "project_id": "http://data.knora.org/projects/anything",
+                  "res_id": "http://data.knora.org/a-thing",
+                  "prop": "http://www.knora.org/ontology/anything#hasText",
+                  "richtext_value": {
+                        "xml": ${JsString(wrongXML)},
+                        "mapping_id": "${anythingProjectIri}/mappings/HTMLMapping"
+                  }
+                }
+                """
+
+            // create standoff from XML
+            Post("/v1/values", HttpEntity(ContentTypes.`application/json`, newValueParams)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> valuesPath ~> check {
+
+                assert(status == StatusCodes.BadRequest, response.toString)
+
+                // the error message should inform the user that mapping does not support the attribute "notDefined"
+                assert(responseAs[String].contains("notDefined"))
+
+
+            }
+
+        }
+
+        "attempt to create a TextValue from XML representing HTML (in strict XML notation) submitting a date element without the data type attribute" in {
+
+            val wrongXML = """<?xml version="1.0" encoding="UTF-8"?>
+                <text documentType="html">
+                    <p>
+                        This an <span data-description="an event" class="event">event</span> without a date attribute.
+                    </p>
+                </text>""".stripMargin
+
+            val newValueParams =
+                s"""
+                {
+                  "project_id": "http://data.knora.org/projects/anything",
+                  "res_id": "http://data.knora.org/a-thing",
+                  "prop": "http://www.knora.org/ontology/anything#hasText",
+                  "richtext_value": {
+                        "xml": ${JsString(wrongXML)},
+                        "mapping_id": "${anythingProjectIri}/mappings/HTMLMapping"
+                  }
+                }
+                """
+
+            // create standoff from XML
+            Post("/v1/values", HttpEntity(ContentTypes.`application/json`, newValueParams)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> valuesPath ~> check {
+
+                assert(status == StatusCodes.BadRequest, response.toString)
+
+                // the error message should inform the user the attribute "data-date" is missing (data type attribute defined in mapping)
+                // for a standoff class of type http://www.knora.org/ontology/knora-base#StandoffDateTag
+                assert(responseAs[String].contains("data-date"))
+                assert(responseAs[String].contains("http://www.knora.org/ontology/knora-base#StandoffDateTag"))
+
+
+            }
+
+        }
+
+        "attempt to create a TextValue from XML representing HTML (in strict XML notation) submitting a date element with an invalid date (missing calendar)" in {
+
+            val wrongXML = """<?xml version="1.0" encoding="UTF-8"?>
+                <text documentType="html">
+                    <p>
+                        This an <span data-description="an event" data-date="2017" class="event">event</span> without a date attribute.
+                    </p>
+                </text>""".stripMargin
+
+            val newValueParams =
+                s"""
+                {
+                  "project_id": "http://data.knora.org/projects/anything",
+                  "res_id": "http://data.knora.org/a-thing",
+                  "prop": "http://www.knora.org/ontology/anything#hasText",
+                  "richtext_value": {
+                        "xml": ${JsString(wrongXML)},
+                        "mapping_id": "${anythingProjectIri}/mappings/HTMLMapping"
+                  }
+                }
+                """
+
+            // create standoff from XML
+            Post("/v1/values", HttpEntity(ContentTypes.`application/json`, newValueParams)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> valuesPath ~> check {
+
+                assert(status == StatusCodes.BadRequest, response.toString)
+
+                // the error message should inform the user that the format of the date is invalid
+                assert(responseAs[String].contains("2017"))
+
+
+            }
+
+        }
 
     }
 }
