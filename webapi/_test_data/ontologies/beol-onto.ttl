@@ -14,78 +14,78 @@
 
 <http://www.knora.org/ontology/beol> rdf:type owl:Ontology .
 
-##########################################################
-#
-# PROPERTIES
-#
-##########################################################
+    ##########################################################
+    #
+    # PROPERTIES
+    #
+    ##########################################################
 
 
-### ###########################################
-### beol:title
+    ### ###########################################
+    ### beol:title
 
-:title rdf:type owl:ObjectProperty ;
+    :title rdf:type owl:ObjectProperty ;
 
-       rdfs:subPropertyOf dc:title ;
+           rdfs:subPropertyOf dc:title ;
 
-       rdfs:label "Titel"@de ,
-                  "Titre"@fr ,
-                  "Titolo"@it ,
-                  "Title"@en ;
+           rdfs:label "Titel"@de ,
+                      "Titre"@fr ,
+                      "Titolo"@it ,
+                      "Title"@en ;
 
-       rdfs:comment """Titel"""@de ;
+           rdfs:comment """Titel"""@de ;
 
        knora-base:subjectClassConstraint :writtenSource ;
 
-       knora-base:objectClassConstraint knora-base:TextValue ;
+           knora-base:objectClassConstraint knora-base:TextValue ;
 
-       salsah-gui:guiOrder "1"^^xsd:integer ;
+           salsah-gui:guiOrder "1"^^xsd:integer ;
 
-       salsah-gui:guiElement salsah-gui:SimpleText ;
+           salsah-gui:guiElement salsah-gui:SimpleText ;
 
-       salsah-gui:guiAttribute "size=80" ,
-                               "maxlength=255" .
+           salsah-gui:guiAttribute "size=80" ,
+                                   "maxlength=255" .
 
 
 ### ###########################################
 ### beol:creationDate
 
-:creationDate rdf:type owl:ObjectProperty ;
+    :creationDate rdf:type owl:ObjectProperty ;
 
-              rdfs:subPropertyOf dc:date ;
+                  rdfs:subPropertyOf dc:date ;
 
-              rdfs:label "Datum der Entstehung"@de ;
+                  rdfs:label "Datum der Entstehung"@de ;
 
-              knora-base:subjectClassConstraint :manuscript ;
+                  knora-base:subjectClassConstraint :manuscript ;
 
-              knora-base:objectClassConstraint knora-base:DateValue ;
+                  knora-base:objectClassConstraint knora-base:DateValue ;
 
-              salsah-gui:guiOrder "3"^^xsd:integer ;
+                  salsah-gui:guiOrder "3"^^xsd:integer ;
 
-              salsah-gui:guiElement salsah-gui:Date ;
+                  salsah-gui:guiElement salsah-gui:Date ;
 
-              salsah-gui:guiAttribute "size=16" ,
-                                    "maxlength=32" ;
+                  salsah-gui:guiAttribute "size=16" ,
+                                        "maxlength=32" ;
 
-              rdfs:comment """Datum der Entstehung"""@de .
+                  rdfs:comment """Datum der Entstehung"""@de .
 
 
 ### ###########################################
 ### beol:hasAuthor
 
-:hasAuthor rdf:type owl:ObjectProperty ;
+    :hasAuthor rdf:type owl:ObjectProperty ;
 
            rdfs:subPropertyOf knora-base:hasLinkTo ;
 
-           rdfs:label "Creator"@de ;
+               rdfs:label "Creator"@de ;
 
-           rdfs:comment """Erzeuger/Autor"""@de ;
+               rdfs:comment """Erzeuger/Autor"""@de ;
 
            knora-base:subjectClassConstraint :writtenSource ;
 
            knora-base:objectClassConstraint :person ;
 
-           salsah-gui:guiOrder "2"^^xsd:integer ;
+               salsah-gui:guiOrder "2"^^xsd:integer ;
 
            salsah-gui:guiElement salsah-gui:Searchbox .
 
@@ -149,7 +149,7 @@
 
                 knora-base:subjectClassConstraint :letter ;
 
-                knora-base:objectClassConstraint knora-base:Person ;
+                knora-base:objectClassConstraint :person ;
 
                 salsah-gui:guiOrder "5"^^xsd:integer ;
 
@@ -354,7 +354,7 @@
 
                       knora-base:subjectClassConstraint :person ;
 
-                      knora-base:objectClassConstraint knora-base:Person ;
+                      knora-base:objectClassConstraint :person ;
 
                       salsah-gui:guiOrder "5"^^xsd:integer ;
 
@@ -384,11 +384,113 @@
                     salsah-gui:guiElement salsah-gui:Searchbox .
 
 
-##########################################################
-#
-# RESOURCES
-#
-##########################################################
+    ### ###########################################
+    ### beol:hasGivenName
+
+    :hasGivenName rdf:type owl:ObjectProperty ;
+
+                  rdfs:label "Vorname"@de ,
+                            "given name"@en ,
+                            "prénom"@fr ,
+                            "nome di battesimo"@it ;
+
+                  rdfs:comment """Represents a Given name."""@en ;
+
+                  knora-base:objectClassConstraint knora-base:TextValue ;
+
+                  salsah-gui:guiElement salsah-gui:SimpleText ;
+
+                  knora-base:subjectClassConstraint :person ;
+
+                  rdfs:subPropertyOf knora-base:hasValue .
+
+    ### ###########################################
+    ### beol:hasFamilyName
+
+    :hasFamilyName rdf:type owl:ObjectProperty ;
+
+                   rdfs:label "Nachname"@de ,
+                            "family name"@en ,
+                            "nom de famille"@fr ,
+                            "nome di famiglia"@it ;
+
+                   rdfs:comment """Represents a family name."""@en ;
+
+                   knora-base:objectClassConstraint knora-base:TextValue ;
+
+                   salsah-gui:guiElement salsah-gui:SimpleText ;
+
+                   knora-base:subjectClassConstraint :person ;
+
+                   rdfs:subPropertyOf knora-base:hasValue .
+
+    ### ###########################################
+    ### beol:hasIAFIdentifier
+
+    :hasIAFIdentifier rdf:type owl:ObjectProperty ;
+
+                      rdfs:label "Gemeinsame Normdatei (GND)"@de ,
+                                 "Integrated Authority File"@en ;
+
+                      rdfs:comment """Repräsentiert eine GND-Nummer."""@de,
+                                   """Represents an IAF identifier."""@en ;
+
+                      knora-base:objectClassConstraint knora-base:TextValue ;
+
+                      salsah-gui:guiElement salsah-gui:SimpleText ;
+
+                      knora-base:subjectClassConstraint :person ;
+
+                      rdfs:subPropertyOf knora-base:hasValue .
+
+
+    ### ###########################################
+    ### beol:hasBirthDate
+
+    :hasBirthDate rdf:type owl:ObjectProperty ;
+
+                  rdfs:label "Geburtsdatum"@de ,
+                             "date of birth"@en ;
+
+                  rdfs:comment """Repräsentiert ein Geburtsdatum."""@de,
+                               """Represents a date of birth."""@en ;
+
+                  knora-base:objectClassConstraint knora-base:DateValue ;
+
+                  salsah-gui:guiElement salsah-gui:Date ;
+
+                  knora-base:subjectClassConstraint :person ;
+
+                  rdfs:subPropertyOf knora-base:hasValue .
+
+
+    ### ###########################################
+    ### beol:hasDeathDate
+
+    :hasDeathDate rdf:type owl:ObjectProperty ;
+
+                  rdfs:label "Sterbedatum"@de ,
+                             "date of death"@en ;
+
+                  rdfs:comment """Repräsentiert ein Sterbedatum."""@de,
+                               """Represents a date of death."""@en ;
+
+                  knora-base:objectClassConstraint knora-base:DateValue ;
+
+                  salsah-gui:guiElement salsah-gui:Date ;
+
+                  knora-base:subjectClassConstraint :person ;
+
+                  rdfs:subPropertyOf knora-base:hasValue .
+
+
+
+    ##########################################################
+    #
+    # RESOURCES
+    #
+    ##########################################################
+
 
 
 ### ###########################################
@@ -532,16 +634,38 @@
 
 :person rdf:type owl:Class ;
 
-    rdfs:subClassOf knora-base:Person ,
-                    [
-                        rdf:type owl:Restriction ;
-                        owl:onProperty :hasSonValue ;
-                        owl:minCardinality "0"^^xsd:nonNegativeInteger
+    rdfs:subClassOf knora-base:Resource, foaf:Person ,
+    					[ rdf:type owl:Restriction ;
+                      owl:onProperty :hasFamilyName ;
+                      owl:maxCardinality "1"^^xsd:nonNegativeInteger
                     ],
-                    [
-                        rdf:type owl:Restriction ;
-                        owl:onProperty :hasSon ;
-                        owl:minCardinality "0"^^xsd:nonNegativeInteger
+                    [ rdf:type owl:Restriction ;
+                      owl:onProperty :hasGivenName ;
+                      owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                    ],
+                    [ rdf:type owl:Restriction ;
+                      owl:onProperty :hasIAFIdentifier ;
+                      owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                    ],
+                    [ rdf:type owl:Restriction ;
+                      owl:onProperty :hasBirthDate ;
+                      owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                    ],
+                    [ rdf:type owl:Restriction ;
+                      owl:onProperty :hasDeathDate ;
+                      owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                    ],
+                    [ rdf:type owl:Restriction ;
+                      owl:onProperty :hasSonValue ;
+                      owl:minCardinality "0"^^xsd:nonNegativeInteger
+                    ],
+                    [ rdf:type owl:Restriction ;
+                      owl:onProperty :hasSon ;
+                      owl:minCardinality "0"^^xsd:nonNegativeInteger
+                    ] ,
+                    [ rdf:type owl:Restriction ;
+                      owl:onProperty :comment ;
+                      owl:minCardinality "0"^^xsd:nonNegativeInteger
                     ] ;
 
     rdfs:label "Person"@de ,
@@ -659,3 +783,4 @@
             rdfs:subClassOf knora-base:StandoffTag ;
 
             rdfs:comment "represents a HTML tag in MediaWiki"@en .
+

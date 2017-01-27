@@ -244,8 +244,6 @@
 
             rdfs:comment "The URL of a web site"@en ;
 
-            rdfs:subPropertyOf :systemProperty ;
-
             :subjectClassConstraint :Institution ;
 
             :objectDatatypeConstraint xsd:anyURI .
