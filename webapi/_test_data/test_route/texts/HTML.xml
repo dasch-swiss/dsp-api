@@ -2,7 +2,7 @@
 <text documentType="html">
     <p>
         This is very boring text that as boring markup as well: <strong>strong</strong>, <strike>struck</strike>, <em>emphasized</em>, <u>underlined</u>,
-        <sub>subtext</sub>m <sup>supertext</sup>, <a href="http://www.knora.org">KNORA</a>, <a class="salsah-link" href="http://data.knora.org/7uuGcnFcQJq08dMOralyCQ">internal link</a>, <span class="date" data-date="GREGORIAN:2016-12-24">Christmas 2016</span>,
+        <sub>subtext</sub>m <sup>supertext</sup>, <a href="http://www.knora.org">KNORA</a>, <a class="salsah-link" href="http://data.knora.org/7uuGcnFcQJq08dMOralyCQ">internal link</a>, <em><span class="date" data-date="GREGORIAN:2016-12-24">Christmas 2016</span></em>,
         and an interval <span class="interval" data-interval="1.7,3.6">one to three</span>.
     </p>
 
