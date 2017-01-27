@@ -1176,6 +1176,17 @@ are automatically visible to all users, as long as they have permission
 to see the source and target resources. The owner of these link values
 is always ``kb:SystemUser`` (see :ref:`knora-base-users-and-groups`).
 
+Internal Links in a TextValue
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Internal links in a TextValue can be represented using the following property:
+
+``standoffTagHasInternalReference``
+    Points to a StandoffTag that belongs to the same TextValue.
+    It has an ``objectClassConstraint`` of ``StandoffTag``.
+
+Any standoff class that defines a cardinality for this property may point to another StandoffTag of the same TextValue.
+For links to a ``kb:Resource``, see knora-base-standoff-link_.
 
 .. _knora-base-mapping:
 

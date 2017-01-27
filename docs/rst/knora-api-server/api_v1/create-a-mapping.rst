@@ -119,8 +119,20 @@ Please note that the absence of an XML namespace and/or a class have to be expli
 -------------------------------
 
 The ``id`` and ``class`` attributes are supported by default and do not have to be included in the mapping like other attributes.
-The ``id`` attribute identifies an element and must be unique in the document.
+The ``id`` attribute identifies an element and must be unique in the document. ``id`` is an optional attribute.
 The ``class`` attribute allows for the reuse of an element in the mapping, i.e. the same element can be combined with different class names and mapped to different standoff classes (mapping element ``<class>`` in ``<tag>``).
+
+------------------------
+Respecting Cardinalities
+------------------------
+
+A mapping from XML elements and attributes to standoff classes and standoff properties must respect the cardinalities defined in the ontology for those very standoff classes.
+If an XML element is mapped to a certain standoff class and this class requires a standoff property, an attribute must be defined for the XML element mapping to that very standoff property.
+Equally, all mappings for attributes of an XML element must have corresponding cardinalities for standoff properties defined for the standoff class the XML element maps to.
+
+However, since an XML attribute may occur once at maximum, it makes sense to make the corresponding standoff property required (``owl:cardinality`` of one) in the ontology or optional (``owl:maxCardinality`` of one),
+but not allowing it more than once.
+
 
 -------------------
 Standoff Data Types
@@ -137,7 +149,11 @@ Knora allows the use of all its value types as standoff data types (defined in `
 - ``knora-base::StandoffIntervalTag``: Represents an interval (two decimal numbers separated with a comma must be submitted in the data type attribute, e.g. ``1.1,2.2``).
 - ``knora-base::StandoffBooleanTag``: Represents a Boolean value (``true`` or ``false`` must be submitted in the data type attribute).
 
-The basic idea is that parts of a text can be marked up in a way that allows using Knora's built-in data types. In order to do so, the typed values have to be provided in a standardized way.
+The basic idea is that parts of a text can be marked up in a way that allows using Knora's built-in data types. In order to do so, the typed values have to be provided in a standardized way in an attribute that has to be defined in the mapping.
+
+Data type standoff classes are standoff classes with predefined properties (e.g., a ``knora-base:StandoffLinkTag`` has a ``knora-base:standoffTagHasLink`` and a ``knora-base:StandoffIntegerTag`` has a ``knora-base:valueHasInteger``).
+Please note the data type standoff classes can not be combined, i.e. a standoff class can only be the subclass of **one** data type standoff class.
+However, standoff data type classes can be subclassed and extended further by assigning properties to them (see below).
 
 The following simple mapping illustrates this principle::
 
@@ -180,7 +196,7 @@ The following simple mapping illustrates this principle::
     <mapping>
 
 ``<datatype>`` **must** hold the Iri of a standoff data type class (see list above). The ``<classIri>`` must be a subclass of this type or this type itself (the latter is probably not recommendable since semantics are missing: what is the meaning of the date?).
-In the example above, the standoff class is ``anything:StandoffEventTag`` which has the following definition in the ontology `anything-onto.ttl``::
+In the example above, the standoff class is ``anything:StandoffEventTag`` which has the following definition in the ontology ``anything-onto.ttl``::
 
 
     anything:StandoffEventTag rdf:type owl:Class ;
@@ -214,24 +230,11 @@ Intervals are submitted as one attribute in the following format: ``interval-att
 
 You will find a sample mapping with all the data types and a sample XML file in the the test data: ``webapi/_test_data/test_route/texts/mappingForHTML.xml`` and ``webapi/_test_data/test_route/texts/HTML.xml``.
 
--------------------
-Standoff Properties
--------------------
+--------------------------------------
+Internal References in an XML Document
+--------------------------------------
 
-When mapping XML attributes to standoff properties, attention has to be paid to the properties' object constraints. Standoff properties are literals with the exception of internal references that are pointers to standoff nodes.
-
-In the ontology, standoff property literals may have one of the following ``knora-base:objectDatatypeConstraint``:
-
-- ``xsd:string``
-- ``xsd:integer``
-- ``xsd:boolean``
-- ``xsd:decimal``
-- ``xsd:anyURI``
-
-In XML, all attribute values are submitted as strings. However, these string representations need to be convertible to the types defined in the ontology.
-If they are not, the request will be rejected. It is recommended to enforce types on attributes by applying XML Schema validations (restrictions).
-
-Internal references inside an XML document can be represented with the standoff property ``knora-base:standoffTagHasInternalReference`` or a subclass of it.
+Internal references inside an XML document can be represented using the predefined the standoff property ``knora-base:standoffTagHasInternalReference`` or a subclass of it.
 This standoff property has an ``knora-base:objectClassConstraint`` and points to a standoff node when converted to RDF.
 
 The following example shows the definition of a mapping element for an internal reference (for reasons of simplicity, only the attribute definition is depicted)::
@@ -317,6 +320,25 @@ The mapping above allows for an XML like this::
                 And here it goes on.
             </p>
         </myDoc>
+
+-------------------------
+Respecting Property Types
+-------------------------
+
+When mapping XML attributes to standoff properties, attention has to be paid to the properties' object constraints.
+
+In the ontology, standoff property literals may have one of the following ``knora-base:objectDatatypeConstraint``:
+
+- ``xsd:string``
+- ``xsd:integer``
+- ``xsd:boolean``
+- ``xsd:decimal``
+- ``xsd:anyURI``
+
+In XML, all attribute values are submitted as strings. However, these string representations need to be convertible to the types defined in the ontology.
+If they are not, the request will be rejected. It is recommended to enforce types on attributes by applying XML Schema validations (restrictions).
+
+Links (object property) to a ``knora-base:Resource`` can be represented using data type standoff class ``knora-base::StandoffLinkTag``, internal links using the object property ``knora-base:standoffTagHasInternalReference``.
 
 --------------------------------------------
 Validating a Mapping and sending it to Knora
