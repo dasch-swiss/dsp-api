@@ -128,14 +128,14 @@ Standoff Data Types
 
 Knora allows the use of all its value types as standoff data types (defined in ``knora-base.ttl``):
 
-- ``knora-base::StandoffLinkTag``: Represents a reference to a Knora resource
-- ``knora-base::StandoffUriTag``: Represents a reference to a URI.
-- ``knora-base::StandoffDateTag``: Represents a date.
-- ``knora-base::StandoffColorTag``: Represents a color.
-- ``knora-base::StandoffIntegerTag``: Represents an integer.
-- ``knora-base::StandoffDecimalTag``: Represents a number with fractions.
-- ``knora-base::StandoffIntervalTag``: Represents an interval.
-- ``knora-base::StandoffBooleanTag``: Represents a Boolean value.
+- ``knora-base::StandoffLinkTag``: Represents a reference to a Knora resource (the IRI of the target resource must be submitted in the data type attribute).
+- ``knora-base::StandoffUriTag``: Represents a reference to a URI (the URI of the target resource must be submitted in the data type attribute).
+- ``knora-base::StandoffDateTag``: Represents a date (a Knora date string must be submitted in the data type attribute, e.g. ``GREGORIAN:2017-01-27``).
+- ``knora-base::StandoffColorTag``: Represents a color (a hexadecimal RGB color string must be submitted in the data type attribute, e.g. ``#0000FF``).
+- ``knora-base::StandoffIntegerTag``: Represents an integer (the integer must be submitted in the data type attribute).
+- ``knora-base::StandoffDecimalTag``: Represents a number with fractions (the decimal number must be submitted in the data type attribute, e.g. ``1.1``).
+- ``knora-base::StandoffIntervalTag``: Represents an interval (two decimal numbers separated with a comma must be submitted in the data type attribute, e.g. ``1.1,2.2``).
+- ``knora-base::StandoffBooleanTag``: Represents a Boolean value (``true`` or ``false`` must be submitted in the data type attribute).
 
 The basic idea is that parts of a text can be marked up in a way that allows using Knora's built-in data types. In order to do so, the typed values have to be provided in a standardized way.
 
@@ -208,7 +208,9 @@ Once the mapping has been created, an XML like the following could be sent to Kn
     </text>
 
 
-The attribute holds the date in the format of a Knora date string (the format is documented in the typescript type alias ``dateString`` in module ``basicMessageComponents``. There you will also find documentation about the other types like color etc.).
+The attribute holds the date in the format of a Knora date string (the format is also documented in the typescript type alias ``dateString`` in module ``basicMessageComponents``. There you will also find documentation about the other types like color etc.).
+Knora date strings have this format: ``GREGORIAN|JULIAN):YYYY[-MM[-DD]][:YYYY[-MM[-DD]]]``. This allows for different formats as well as for imprecision and periods.
+Intervals are submitted as one attribute in the following format: ``interval-attribute="1.0,2.0"`` (two decimal numbers separated with a comma).
 
 You will find a sample mapping with all the data types and a sample XML file in the the test data: ``webapi/_test_data/test_route/texts/mappingForHTML.xml`` and ``webapi/_test_data/test_route/texts/HTML.xml``.
 
