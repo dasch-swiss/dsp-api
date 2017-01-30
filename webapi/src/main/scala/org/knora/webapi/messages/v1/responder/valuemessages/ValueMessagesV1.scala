@@ -317,14 +317,17 @@ case class CreateValueV1WithComment(updateValueV1: UpdateValueV1, comment: Optio
   * @param resourceClassIri the IRI of the resource's OWL class.
   * @param values           the values to be added, with optional comments.
   * @param userProfile      the user that is creating the values.
-  * @param apiRequestID     the ID of this API request.
   */
+
+//TODO: apiRequestID should be removed and resource index should be added
 case class GenerateSparqlToCreateMultipleValuesRequestV1(projectIri: IRI,
                                                          resourceIri: IRI,
                                                          resourceClassIri: IRI,
+                                                         resourceIndex: Int,
                                                          values: Map[IRI, Seq[CreateValueV1WithComment]],
-                                                         userProfile: UserProfileV1,
+                                                         userProfile: UserProfileV1 ,
                                                          apiRequestID: UUID) extends ValuesResponderRequestV1
+
 
 /**
   * Represents a response to a [[GenerateSparqlToCreateMultipleValuesRequestV1]], providing strings that can be included

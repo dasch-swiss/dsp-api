@@ -427,6 +427,7 @@ class ValuesResponderV1 extends ResponderV1 {
 
                                         // Generate WHERE clause statements for the link.
                                         val whereSparql = queries.sparql.v1.txt.generateWhereStatementsForCreateLink(
+
                                             valueIndex = valueToCreate.valueIndex,
                                             resourceIri = createMultipleValuesRequest.resourceIri,
                                             linkUpdate = sparqlTemplateLinkUpdate,
@@ -447,6 +448,7 @@ class ValuesResponderV1 extends ResponderV1 {
 
                                         // Generate WHERE clause statements for the value.
                                         val whereSparql = queries.sparql.v1.txt.generateWhereStatementsForCreateValue(
+//                                            resourceIndex = createMultipleValuesRequest.resourceIndex,
                                             valueIndex = valueToCreate.valueIndex,
                                             resourceIri = createMultipleValuesRequest.resourceIri,
                                             propertyIri = propertyIri,

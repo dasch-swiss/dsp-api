@@ -198,16 +198,15 @@ object ResourcesRouteV1 extends Authenticator {
             )
         }
         def formOneResourceRequest(resourceRequest: CreateResourceRequestV1): OneOfMultipleResourceCreateRequestV1 = {
-
             val values= valuesToCreate(resourceRequest.properties)
             OneOfMultipleResourceCreateRequestV1(resourceRequest.restype_id, resourceRequest.label, values)
         }
+
         def makeMultiResourcesRequestMessage(resourceRequest: Seq[CreateResourceRequestV1], projectId: IRI,  apiRequestID: UUID, userProfile: UserProfileV1): MultipleResourceCreateRequestV1= {
             val resourcesToCreate : Seq[OneOfMultipleResourceCreateRequestV1] =
                 resourceRequest.map(x => formOneResourceRequest(x))
 
             MultipleResourceCreateRequestV1(resourcesToCreate, projectId, userProfile, apiRequestID)
-
         }
 
         def makeGetPropertiesRequestMessage(resIri: IRI, userProfile: UserProfileV1) = {
@@ -510,41 +509,43 @@ object ResourcesRouteV1 extends Authenticator {
             }
 
         } ~  path("v1" / "resources" / "xml" ) {
-                post {
-                        entity(as[NodeSeq]) { xml => //requestContext =>
-                            //val userProfile = getUserProfileV1(requestContext)
-                            val userProfile = UserProfileV1(UserDataV1("en"))
+            post {
+                entity(as[NodeSeq]) {
+                    xml => requestContext =>
+                    val userProfile = getUserProfileV1(requestContext)
 
-                            //                                val knoraIdUtil = new KnoraIdUtil
-//                                val projectId = knoraIdUtil.makeRandomProjectIri
-                            val projectId = "http://data.knora.org/projects/DczxPs-sR6aZN91qV92ZmQ"
-                            val root = xml.head
-                            val apiRequestID = UUID.fromString("26106dcd-865a-4c81-b0e8-914e46939e70")
-                            val resourcesToCreate = root.child
-                                    .filter(node => node.label != "#PCDATA")
-                                    .map( node => {
-                                        val entityType = node.label
-                                        val resLabel = (node \"@id").toString
+                    val projectId = "http://data.knora.org/projects/DczxPs-sR6aZN91qV92ZmQ"
+                    val root = xml.head
+                    val apiRequestID = UUID.fromString("26106dcd-865a-4c81-b0e8-914e46939e70")
+                    val resourcesToCreate = root.child
+                            .filter(node => node.label != "#PCDATA")
+                            .map( node => {
+                                val entityType = node.label
+                                val resLabel = (node \"@id").toString
 
-                                        val elemNS = node.getNamespace(node.prefix)
-                                        val restype_id = elemNS + "#" + entityType
-                                        val properties = node.child
-                                            .filter(child => child.label != "#PCDATA")
-                                            .map( child =>
-                                                ( child.getNamespace(child.prefix) + "#" + child.label
-                                                     -> List(CreateResourceValueV1(Some(CreateRichtextV1(child.text)))))
-                                            ).toMap
-                                        val values = valuesToCreate(properties)
-                                        CreateResourceRequestV1(restype_id , resLabel, properties)
+                                val elemNS = node.getNamespace(node.prefix)
+                                val restype_id = elemNS + "#" + entityType
+                                val properties = node.child
+                                    .filter(child => child.label != "#PCDATA")
+                                    .map( child =>
+                                        ( child.getNamespace(child.prefix) + "#" + child.label
+                                             -> List(CreateResourceValueV1(Some(CreateRichtextV1(child.text)))))
+                                    ).toMap
+                                CreateResourceRequestV1(restype_id , resLabel, properties)
+                            })
+                    val request1 = makeMultiResourcesRequestMessage(resourcesToCreate, projectId, apiRequestID, userProfile)
+//                   complete(request1.resourcesToCreate.head.resourceTypeIri.toString)
 
-                                    }
+                    RouteUtilV1.runJsonRoute(
+                        request1,
+                        requestContext,
+                        settings,
+                        responderManager,
+                        loggingAdapter
+                    )
+                }
 
-                                    )
-                            val request1 = makeMultiResourcesRequestMessage(resourcesToCreate, projectId, apiRequestID, userProfile)
-                            complete(request1.resourcesToCreate.head.resourceTypeIri.toString)
-                            }
-                    }
-
+            }
         }
     }
 }

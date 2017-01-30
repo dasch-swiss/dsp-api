@@ -27,6 +27,7 @@
  * property (as opposed to a new version of an existing value). This template is used in two contexts: when creating a
  * single value in an existing resource, and when creating a new resource with its initial values.
  *
+ * @param resourceIndex the index of the resource
  * @param valueIndex the index of the value in the sequence of values that are being created in the transaction (can
  *                   be 0 if only one value is being created). This index will be used to make SPARQL variable names
  *                   specific to the value being created.
@@ -42,7 +43,9 @@
  *
  * The SPARQL variables `?resource` and `?resourceClass` must already be bound.
  *@
-@(valueIndex: Int,
+@(
+  *resourceIndex: Int,
+  valueIndex: Int,
   resourceIri: IRI,
   propertyIri: IRI,
   newValueIri: IRI,
@@ -59,7 +62,7 @@
 
     @* Do nothing if the submitted value has the wrong type. *@
 
-    ?property@valueIndex knora-base:objectClassConstraint ?propertyRange@valueIndex .
+    ?property{@resourceIndex}_{@valueIndex} knora-base:objectClassConstraint ?propertyRange@valueIndex .
     ?valueType@valueIndex rdfs:subClassOf* ?propertyRange@valueIndex .
 
     @* Do nothing if neither the resource class nor any of its superclasses has a cardinality for this property. *@
