@@ -57,8 +57,6 @@ object ValuesRouteV1 extends Authenticator {
         implicit val timeout = settings.defaultTimeout
         val responderManager = system.actorSelection("/user/responderManager")
 
-        val log = Logger(LoggerFactory.getLogger(this.getClass))
-
         def makeVersionHistoryRequestMessage(iris: Seq[IRI], userProfile: UserProfileV1): ValueVersionHistoryGetRequestV1 = {
             if (iris.length != 3) throw BadRequestException("Version history request requires resource IRI, property IRI, and current value IRI")
 
@@ -486,7 +484,7 @@ object ValuesRouteV1 extends Authenticator {
                 entity(as[Multipart.FormData]) { formdata =>
                     requestContext =>
 
-                        log.debug("/v1/filevalue - PUT - Multipart.FormData - Route")
+                        loggingAdapter.debug("/v1/filevalue - PUT - Multipart.FormData - Route")
 
                         val userProfile = getUserProfileV1(requestContext)
 
@@ -507,12 +505,12 @@ object ValuesRouteV1 extends Authenticator {
                         // collect all parts of the multipart as it arrives into a map
                         val allPartsFuture: Future[Map[Name, Any]] = formdata.parts.mapAsync[(Name, Any)](1) {
                             case b: BodyPart if b.name == FILE_PART => {
-                                log.debug(s"inside allPartsFuture - processing $FILE_PART")
+                                loggingAdapter.debug(s"inside allPartsFuture - processing $FILE_PART")
                                 val filename = b.filename.getOrElse(throw BadRequestException(s"Filename is not given"))
                                 val tmpFile = InputValidation.createTempFile(settings)
                                 val written = b.entity.dataBytes.runWith(FileIO.toPath(tmpFile.toPath))
                                 written.map { written =>
-                                    log.debug(s"written result: ${written.wasSuccessful}, ${b.filename.get}, ${tmpFile.getAbsolutePath}")
+                                    loggingAdapter.debug(s"written result: ${written.wasSuccessful}, ${b.filename.get}, ${tmpFile.getAbsolutePath}")
                                     receivedFile = Some(tmpFile)
                                     (b.name, FileInfo(b.name, filename, b.entity.contentType))
                                 }

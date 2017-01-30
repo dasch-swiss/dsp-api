@@ -29,13 +29,11 @@ import akka.http.scaladsl.model.Multipart.BodyPart
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.stream.ActorMaterializer
-import com.typesafe.scalalogging.Logger
 import org.knora.webapi.messages.v1.responder.standoffmessages.RepresentationV1JsonProtocol.createMappingApiRequestV1Format
 import org.knora.webapi.messages.v1.responder.standoffmessages._
 import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
 import org.knora.webapi.util.InputValidation
 import org.knora.webapi.{BadRequestException, SettingsImpl}
-import org.slf4j.LoggerFactory
 import spray.json._
 
 import scala.concurrent.Future
@@ -55,8 +53,6 @@ object StandoffRouteV1 extends Authenticator {
 
         val responderManager = system.actorSelection("/user/responderManager")
 
-        val log = Logger(LoggerFactory.getLogger(this.getClass))
-
         path("v1" / "mapping") {
             post {
                 entity(as[Multipart.FormData]) { formdata: Multipart.FormData =>
@@ -74,19 +70,19 @@ object StandoffRouteV1 extends Authenticator {
                         // collect all parts of the multipart as it arrives into a map
                         val allPartsFuture: Future[Map[Name, String]] = formdata.parts.mapAsync[(Name, String)](1) {
                             case b: BodyPart if b.name == JSON_PART => {
-                                //log.debug(s"inside allPartsFuture - processing $JSON_PART")
+                                //loggingAdapter.debug(s"inside allPartsFuture - processing $JSON_PART")
                                 b.toStrict(2.seconds).map { strict =>
-                                    //log.debug(strict.entity.data.utf8String)
+                                    //loggingAdapter.debug(strict.entity.data.utf8String)
                                     (b.name, strict.entity.data.utf8String)
                                 }
 
                             }
                             case b: BodyPart if b.name == XML_PART => {
-                                //log.debug(s"inside allPartsFuture - processing $XML_PART")
+                                //loggingAdapter.debug(s"inside allPartsFuture - processing $XML_PART")
 
                                 b.toStrict(2.seconds).map {
                                     strict =>
-                                        //log.debug(strict.entity.data.utf8String)
+                                        //loggingAdapter.debug(strict.entity.data.utf8String)
                                         (b.name, strict.entity.data.utf8String)
                                 }
 

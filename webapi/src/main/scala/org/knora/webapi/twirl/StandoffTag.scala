@@ -51,7 +51,7 @@ trait StandoffTagAttributeV1 {
   * Represents a standoff tag attribute of type Iri.
   *
   * @param standoffPropertyIri the Iri of the standoff property
-  * @param value the value of the standoff property.
+  * @param value               the value of the standoff property.
   */
 case class StandoffTagIriAttributeV1(standoffPropertyIri: IRI, value: IRI) extends StandoffTagAttributeV1 {
 
@@ -65,7 +65,7 @@ case class StandoffTagIriAttributeV1(standoffPropertyIri: IRI, value: IRI) exten
   * Represents a standoff tag attribute that refers to another standoff node.
   *
   * @param standoffPropertyIri the Iri of the standoff property
-  * @param value the value of the standoff property.
+  * @param value               the value of the standoff property.
   */
 case class StandoffTagInternalReferenceAttributeV1(standoffPropertyIri: IRI, value: String) extends StandoffTagAttributeV1 {
 
@@ -79,7 +79,7 @@ case class StandoffTagInternalReferenceAttributeV1(standoffPropertyIri: IRI, val
   * Represents a standoff tag attribute of type string.
   *
   * @param standoffPropertyIri the Iri of the standoff property
-  * @param value the value of the standoff property.
+  * @param value               the value of the standoff property.
   */
 case class StandoffTagStringAttributeV1(standoffPropertyIri: IRI, value: String) extends StandoffTagAttributeV1 {
 
@@ -93,7 +93,7 @@ case class StandoffTagStringAttributeV1(standoffPropertyIri: IRI, value: String)
   * Represents a standoff tag attribute of type integer.
   *
   * @param standoffPropertyIri the Iri of the standoff property
-  * @param value the value of the standoff property.
+  * @param value               the value of the standoff property.
   */
 case class StandoffTagIntegerAttributeV1(standoffPropertyIri: IRI, value: Int) extends StandoffTagAttributeV1 {
 
@@ -107,7 +107,7 @@ case class StandoffTagIntegerAttributeV1(standoffPropertyIri: IRI, value: Int) e
   * Represents a standoff tag attribute of type decimal.
   *
   * @param standoffPropertyIri the Iri of the standoff property
-  * @param value the value of the standoff property.
+  * @param value               the value of the standoff property.
   */
 case class StandoffTagDecimalAttributeV1(standoffPropertyIri: IRI, value: BigDecimal) extends StandoffTagAttributeV1 {
 
@@ -121,7 +121,7 @@ case class StandoffTagDecimalAttributeV1(standoffPropertyIri: IRI, value: BigDec
   * Represents a standoff tag attribute of type boolean.
   *
   * @param standoffPropertyIri the Iri of the standoff property
-  * @param value the value of the standoff property.
+  * @param value               the value of the standoff property.
   */
 case class StandoffTagBooleanAttributeV1(standoffPropertyIri: IRI, value: Boolean) extends StandoffTagAttributeV1 {
 
@@ -132,20 +132,20 @@ case class StandoffTagBooleanAttributeV1(standoffPropertyIri: IRI, value: Boolea
 }
 
 /**
-  * Represents a `knora-base:StandoffTag` or any subclass of it
-  * that is not a subclass of a data type standoff tag (e.g. `knora-base:StandoffDateTag`).
+  * Represents any subclass of a `knora-base:StandoffTag`.
   *
-  * @param standoffTagClassIri             the IRI of the standoff class to be created.
-  * @param uuid             a [[UUID]] representing this tag and any other tags that
-  *                         point to semantically equivalent content in other versions of the same text.
-  * @param startPosition    the start position of the range of characters marked up with this tag.
-  * @param endPosition      the end position of the range of characters marked up with this tag.
-  * @param startIndex       the index of this tag (start index in case of a virtual hierarchy tag that has two parents). Indexes are numbered from 0 within the context of a particular text,
-  *                         and make it possible to order tags that share the same position.
-  * @param endIndex         the index of the end position (only in case of a virtual hierarchy tag).
-  * @param startParentIndex the index of the parent node (start index in case of a virtual hierarchy tag that has two parents), if any, that contains the start position.
-  * @param endParentIndex   the index of the the parent node (only in case of a virtual hierarchy tag), if any, that contains the end position.
-  * @param attributes       the attributes attached to this tag.
+  * @param standoffTagClassIri the IRI of the standoff class to be created.
+  * @param dataType            the data type of the standoff class, if any.
+  * @param uuid                a [[UUID]] representing this tag and any other tags that
+  *                            point to semantically equivalent ranges in other versions of the same text.
+  * @param startPosition       the start position of the range of characters marked up with this tag.
+  * @param endPosition         the end position of the range of characters marked up with this tag.
+  * @param startIndex          the index of this tag (start index in case of a virtual hierarchy tag that has two parents). Indexes are numbered from 0 within the context of a particular text,
+  *                            and make it possible to order tags that share the same position.
+  * @param endIndex            the index of the end position (only in case of a virtual hierarchy tag).
+  * @param startParentIndex    the index of the parent node (start index in case of a virtual hierarchy tag that has two parents), if any, that contains the start position.
+  * @param endParentIndex      the index of the the parent node (only in case of a virtual hierarchy tag), if any, that contains the end position.
+  * @param attributes          the attributes attached to this tag.
   */
 case class StandoffTagV1(standoffTagClassIri: IRI,
                          dataType: Option[StandoffDataTypeClasses.Value] = None,
