@@ -195,6 +195,28 @@ object TransformData extends App {
     private val Owner = "knora-base:Owner"
     private val Creator = "knora-base:Creator"
 
+    // A Map of old standoff class IRIs to new ones
+    private val standoffClassMap = Map(
+        "http://www.knora.org/ontology/knora-base#StandoffRootTag" -> OntologyConstants.Standoff.StandoffRootTag,
+        "http://www.knora.org/ontology/knora-base#StandoffParagraphTag" -> OntologyConstants.Standoff.StandoffParagraphTag,
+        "http://www.knora.org/ontology/knora-base#StandoffItalicTag" -> OntologyConstants.Standoff.StandoffItalicTag,
+        "http://www.knora.org/ontology/knora-base#StandoffBoldTag" -> OntologyConstants.Standoff.StandoffBoldTag,
+        "http://www.knora.org/ontology/knora-base#StandoffUnderlineTag" -> OntologyConstants.Standoff.StandoffUnderlineTag,
+        "http://www.knora.org/ontology/knora-base#StandoffStrikethroughTag" -> OntologyConstants.Standoff.StandoffStrikethroughTag,
+        "http://www.knora.org/ontology/knora-base#StandoffHeader1Tag" -> OntologyConstants.Standoff.StandoffHeader1Tag,
+        "http://www.knora.org/ontology/knora-base#StandoffHeader2Tag" -> OntologyConstants.Standoff.StandoffHeader2Tag,
+        "http://www.knora.org/ontology/knora-base#StandoffHeader3Tag" -> OntologyConstants.Standoff.StandoffHeader3Tag,
+        "http://www.knora.org/ontology/knora-base#StandoffHeader4Tag" -> OntologyConstants.Standoff.StandoffHeader4Tag,
+        "http://www.knora.org/ontology/knora-base#StandoffHeader5Tag" -> OntologyConstants.Standoff.StandoffHeader5Tag,
+        "http://www.knora.org/ontology/knora-base#StandoffHeader6Tag" -> OntologyConstants.Standoff.StandoffHeader6Tag,
+        "http://www.knora.org/ontology/knora-base#StandoffSuperscriptTag" -> OntologyConstants.Standoff.StandoffSuperscriptTag,
+        "http://www.knora.org/ontology/knora-base#StandoffSubscriptTag" -> OntologyConstants.Standoff.StandoffSubscriptTag,
+        "http://www.knora.org/ontology/knora-base#StandoffOrderedListTag" -> OntologyConstants.Standoff.StandoffOrderedListTag,
+        "http://www.knora.org/ontology/knora-base#StandoffUnorderedListTag" -> OntologyConstants.Standoff.StandoffUnorderedListTag,
+        "http://www.knora.org/ontology/knora-base#StandoffListElementTag" -> OntologyConstants.Standoff.StandoffListElementTag,
+        "http://www.knora.org/ontology/knora-base#StandoffStyleTag" -> OntologyConstants.Standoff.StandoffStyleElementTag
+    )
+
     val conf = new Conf(args)
     val transformationOption = conf.transform()
     val inputFile = new File(conf.input())
@@ -859,8 +881,175 @@ object TransformData extends App {
             // Recombine the transformed standoff tags with the rest of the statements in the data.
             val allTransformedStatements = transformedStandoff ++ transformedNonStandoffStatements
 
+            val groupedBySubject: Map[IRI, Vector[Statement]] = allTransformedStatements.groupBy(st => st.getSubject.stringValue())
+
+            val textValues: Map[IRI, Vector[Statement]] = groupedBySubject.filter {
+                case (subjectIri: IRI, statements: Seq[Statement]) =>
+                    statements.exists {
+                        (statement: Statement) =>
+                            statement.getPredicate.stringValue == OntologyConstants.Rdf.Type &&
+                                statement.getObject.stringValue == OntologyConstants.KnoraBase.TextValue
+                    }
+            }
+
+            val textValuesAndStandoff: Map[IRI, Map[IRI, Vector[Statement]]] = textValues.map {
+                case (textValueIri: IRI, statements: Seq[Statement]) =>
+                    val standoffIris: Seq[IRI] = statements.filter(_.getPredicate.stringValue == OntologyConstants.KnoraBase.ValueHasStandoff).map(_.getObject.stringValue)
+
+                    val standoffNodes: Map[IRI, Vector[Statement]] = standoffIris.map {
+                        nodeIri => (nodeIri, groupedBySubject(nodeIri))
+                    }.toMap
+
+                    (textValueIri, standoffNodes)
+            }
+
+            val allStandoff: Map[IRI, Vector[Statement]] = textValuesAndStandoff.values.flatten.toMap
+
+            val transformedEverything: Vector[Statement] = groupedBySubject.flatMap {
+                case (subjectIri: IRI, statements: Vector[Statement]) =>
+                    if (allStandoff.contains(subjectIri)) {
+                        // Ignore standoff because we're going to regenerate it
+                        Vector.empty[Statement]
+                    } else if (textValues.contains(subjectIri)) {
+                        // Generate transformed text value and standoff
+
+                        val textValueStandoff: Map[IRI, Vector[Statement]] = textValuesAndStandoff(subjectIri)
+
+                        // If the text value has no standoff, leave it as is
+                        if (textValueStandoff.isEmpty) {
+                            statements
+                        } else {
+                            val mappingToAdd: Option[Statement] = if (!statements.exists(_.getPredicate.stringValue == OntologyConstants.KnoraBase.ValueHasMapping)) {
+                                Some(
+                                    valueFactory.createStatement(
+                                        valueFactory.createIRI(subjectIri),
+                                        valueFactory.createIRI(OntologyConstants.KnoraBase.ValueHasMapping),
+                                        valueFactory.createIRI(OntologyConstants.KnoraBase.StandardMapping)
+                                    )
+                                )
+                            } else {
+                                None
+                            }
+
+                            val tagStatementsWithNewClasses: Map[IRI, Vector[Statement]] = textValueStandoff.map {
+                                case (standoffNodeIri, standoffNodeStatements) =>
+                                    val statementsWithNewClasses = standoffNodeStatements.map {
+                                        statement =>
+                                            if (statement.getPredicate.stringValue == OntologyConstants.Rdf.Type) {
+                                                standoffClassMap.get(statement.getObject.stringValue) match {
+                                                    case Some(newClassIri) =>
+                                                        valueFactory.createStatement(
+                                                            statement.getSubject,
+                                                            statement.getPredicate,
+                                                            valueFactory.createIRI(newClassIri)
+                                                        )
+
+                                                    case None => statement
+                                                }
+                                            } else {
+                                                statement
+                                            }
+                                    }
+
+                                    (standoffNodeIri, statementsWithNewClasses)
+                            }
+
+                            val hasRootTag = tagStatementsWithNewClasses.exists {
+                                case (_, standoffNodeStatements) =>
+                                    standoffNodeStatements.exists {
+                                        statement =>
+                                            statement.getPredicate.stringValue == OntologyConstants.Rdf.Type &&
+                                                statement.getObject.stringValue == OntologyConstants.Standoff.StandoffRootTag
+                                    }
+                            }
+
+                            val standoffWithRootTag: Vector[Statement] = if (hasRootTag) {
+                                tagStatementsWithNewClasses.values.flatten.toVector
+                            } else {
+                                val rootTagIri = knoraIdUtil.makeRandomStandoffTagIri(subjectIri)
+                                val textLength = getObject(statements, OntologyConstants.KnoraBase.ValueHasString).getOrElse(throw InconsistentTriplestoreDataException(s"Text value $subjectIri has no knora-base:valueHasString")).length
+
+                                val rootTag = Vector(
+                                    valueFactory.createStatement(
+                                        valueFactory.createIRI(subjectIri),
+                                        valueFactory.createIRI(OntologyConstants.KnoraBase.ValueHasStandoff),
+                                        valueFactory.createIRI(rootTagIri)
+                                    ),
+                                    valueFactory.createStatement(
+                                        valueFactory.createIRI(rootTagIri),
+                                        valueFactory.createIRI(OntologyConstants.Rdf.Type),
+                                        valueFactory.createIRI(OntologyConstants.Standoff.StandoffRootTag)
+                                    ),
+                                    valueFactory.createStatement(
+                                        valueFactory.createIRI(rootTagIri),
+                                        valueFactory.createIRI(OntologyConstants.KnoraBase.StandoffTagHasStart),
+                                        valueFactory.createLiteral(0)
+                                    ),
+                                    valueFactory.createStatement(
+                                        valueFactory.createIRI(rootTagIri),
+                                        valueFactory.createIRI(OntologyConstants.KnoraBase.StandoffTagHasEnd),
+                                        valueFactory.createLiteral(textLength)
+                                    ),
+                                    valueFactory.createStatement(
+                                        valueFactory.createIRI(rootTagIri),
+                                        valueFactory.createIRI(OntologyConstants.KnoraBase.StandoffTagHasUUID),
+                                        valueFactory.createLiteral(UUID.randomUUID.toString)
+                                    ),
+                                    valueFactory.createStatement(
+                                        valueFactory.createIRI(rootTagIri),
+                                        valueFactory.createIRI(OntologyConstants.KnoraBase.StandoffTagHasStartIndex),
+                                        valueFactory.createLiteral(0)
+                                    )
+                                )
+
+                                val otherTags: Vector[Statement] = tagStatementsWithNewClasses.flatMap {
+                                    case (tagIri, tagStatements) =>
+                                        val parentToAdd = if (!tagStatements.exists(_.getPredicate.stringValue == OntologyConstants.KnoraBase.StandoffTagHasStartParent)) {
+                                            Some(
+                                                valueFactory.createStatement(
+                                                    valueFactory.createIRI(tagIri),
+                                                    valueFactory.createIRI(OntologyConstants.KnoraBase.StandoffTagHasStartParent),
+                                                    valueFactory.createIRI(rootTagIri)
+                                                )
+                                            )
+                                        } else {
+                                            None
+                                        }
+
+                                        val indexStatement = getObject(tagStatements, OntologyConstants.KnoraBase.StandoffTagHasStartIndex) match {
+                                            case Some(existingIndex) =>
+                                                valueFactory.createStatement(
+                                                    valueFactory.createIRI(tagIri),
+                                                    valueFactory.createIRI(OntologyConstants.KnoraBase.StandoffTagHasStartIndex),
+                                                    valueFactory.createLiteral(existingIndex.toInt + 1)
+                                                )
+
+                                            case None =>
+                                                valueFactory.createStatement(
+                                                    valueFactory.createIRI(tagIri),
+                                                    valueFactory.createIRI(OntologyConstants.KnoraBase.StandoffTagHasStartIndex),
+                                                    valueFactory.createLiteral(1)
+                                                )
+                                        }
+
+                                        val tagStatementsWithCorrectIndexes = tagStatements.filterNot(_.getPredicate.stringValue == OntologyConstants.KnoraBase.StandoffTagHasStartIndex)
+
+                                        tagStatementsWithCorrectIndexes ++ parentToAdd :+ indexStatement
+                                }.toVector
+
+                                otherTags ++ rootTag
+                            }
+
+                            statements ++ standoffWithRootTag ++ mappingToAdd
+                        }
+                    } else {
+                        // Not a text value or standoff, leave as is
+                        statements
+                    }
+            }.toVector
+
             // Sort them by subject IRI.
-            val sortedStatements = allTransformedStatements.sortBy(_.getSubject.stringValue())
+            val sortedStatements = transformedEverything.sortBy(_.getPredicate.stringValue).sortBy(_.getSubject.stringValue())
 
             // Write them to the output file.
             for (statement <- sortedStatements) {
@@ -971,50 +1160,49 @@ object TransformData extends App {
     private class OwnerBehaviourHandler(turtleWriter: RDFWriter) extends StatementCollectingHandler(turtleWriter: RDFWriter) {
         override def endRDF(): Unit = {
 
+            val standoffNodeIris: Set[IRI] = statements.values.flatten.filter(_.getPredicate.stringValue == OntologyConstants.KnoraBase.ValueHasStandoff).map(_.getObject.stringValue).toSet
+
             statements.foreach {
                 case (subjectIri: IRI, subjectStatements: Vector[Statement]) =>
 
-                    subjectStatements.foreach {
-                        statement =>
-                            // If this statement has the 'hasPermissions' predicate, remove any existing permissions
-                            // for 'knora-base:Creator' and in any case add 'CR knora-base:Creator'.
-                            if (statement.getPredicate.stringValue == OntologyConstants.KnoraBase.HasPermissions) {
-
-                                //log.debug(s"CreatorHandler - ${ScalaPrettyPrinter.prettyPrint(statement)}")
-
-                                /* get the permissions literal */
-                                val permissionsLiteral: String = statement.getObject.stringValue()
-
+                    if (standoffNodeIris.contains(subjectIri)) {
+                        subjectStatements.foreach {
+                            statement => turtleWriter.handleStatement(statement)
+                        }
+                    } else {
+                        val currentPermissions: Set[PermissionV1] = getObject(subjectStatements, OntologyConstants.KnoraBase.HasPermissions) match {
+                            case Some(permissionsLiteral) =>
                                 /* parse literal */
                                 val parsedPermissions: Set[PermissionV1] = PermissionUtilV1.parsePermissions(Some(permissionsLiteral), PermissionType.OAP)
 
                                 /* remove ony permissions referencing the creator */
-                                val permissionsWithoutCreator = parsedPermissions.filter(perm => perm.additionalInformation.get != OntologyConstants.KnoraBase.Creator)
+                                parsedPermissions.filter(perm => perm.additionalInformation.get != OntologyConstants.KnoraBase.Creator)
 
-                                /* add CR for Creator */
-                                val permissionsWithCreator = permissionsWithoutCreator ++ Set(PermissionV1.ChangeRightsPermission(OntologyConstants.KnoraBase.Creator))
+                            case None => Set.empty[PermissionV1]
+                        }
 
-                                /* transform back to literal */
-                                val changedPermissionsLiteral: String = PermissionUtilV1.formatPermissions(permissionsWithCreator, PermissionType.OAP) match {
-                                    case Some(literal) => literal
-                                    case None => throw InconsistentTriplestoreDataException(s"We really shouldn't be here. There seem to be no permissions that we can write!")
-                                }
+                        /* add CR for Creator */
+                        val permissionsWithCreator = Set(PermissionV1.ChangeRightsPermission(OntologyConstants.KnoraBase.Creator)) ++ currentPermissions
 
-                                /* create statement with new literal */
-                                val newHasPermissionsStatement = valueFactory.createStatement(
-                                    statement.getSubject,
-                                    statement.getPredicate,
-                                    valueFactory.createLiteral(changedPermissionsLiteral)
-                                )
+                        /* transform back to literal */
+                        val changedPermissionsLiteral: String = PermissionUtilV1.formatPermissions(permissionsWithCreator, PermissionType.OAP) match {
+                            case Some(literal) => literal
+                            case None => throw InconsistentTriplestoreDataException(s"We really shouldn't be here. There seem to be no permissions that we can write!")
+                        }
 
-                                /* write statement */
-                                turtleWriter.handleStatement(newHasPermissionsStatement)
-                            } else {
-                                /* not an 'hasPermissions' statement */
-                                turtleWriter.handleStatement(statement)
-                            }
+                        /* create statement with new literal */
+                        val newHasPermissionsStatement = valueFactory.createStatement(
+                            valueFactory.createIRI(subjectIri),
+                            valueFactory.createIRI(OntologyConstants.KnoraBase.HasPermissions),
+                            valueFactory.createLiteral(changedPermissionsLiteral)
+                        )
+
+                        val subjectStatementsWithChangedPermissions = subjectStatements.filterNot(_.getPredicate.stringValue == OntologyConstants.KnoraBase.HasPermissions) :+ newHasPermissionsStatement
+
+                        subjectStatementsWithChangedPermissions.foreach {
+                            statement => turtleWriter.handleStatement(statement)
+                        }
                     }
-
             }
 
             turtleWriter.endRDF()

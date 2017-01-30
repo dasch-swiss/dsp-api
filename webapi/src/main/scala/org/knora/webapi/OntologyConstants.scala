@@ -314,6 +314,8 @@ object OntologyConstants {
         val StandoffLinkTag = "http://www.knora.org/ontology/knora-base#StandoffLinkTag"
         val StandoffUriTag = "http://www.knora.org/ontology/knora-base#StandoffUriTag"
 
+        val StandardMapping = "http://data.knora.org/projects/standoff/mappings/StandardMapping"
+
         val AdministrativePermission = KnoraBasePrefixExpansion       + "AdministrativePermission"
         val DefaultObjectAccessPermission = KnoraBasePrefixExpansion  + "DefaultObjectAccessPermission"
         val ForProject = KnoraBasePrefixExpansion                     + "forProject"
