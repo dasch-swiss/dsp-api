@@ -132,7 +132,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
     private def checkValueGetResponse(response: ValueGetResponseV1): Unit = {
         assert(response.rights == 8, "rights was not 8")
-        assert(response.value.asInstanceOf[TextValueV1].utf8str == "Comment 1a\r", "comment value did not match")
+        assert(response.value.asInstanceOf[TextValueV1].utf8str == "Comment 1a", "comment value did not match")
     }
 
     private def checkValueGetResponseWithStandoff(response: ValueGetResponseV1): Unit = {
@@ -227,8 +227,8 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         }
     }
 
-    // a sample set of text attributes
-    private val sampleTextattr: Vector[StandoffTagV1] = Vector(
+    // a sample set of standoff tags
+    private val sampleStandoff: Vector[StandoffTagV1] = Vector(
         StandoffTagV1(
             standoffTagClassIri = OntologyConstants.Standoff.StandoffBoldTag,
             startPosition = 0,
@@ -272,7 +272,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         "add a new text value without Standoff" in {
             val lastModBeforeUpdate = getLastModificationDate(zeitglöckleinIri)
 
-            val utf8str = "Comment 1a\r"
+            val utf8str = "Comment 1a"
 
             actorUnderTest ! CreateValueRequestV1(
                 projectIri = incunabulaProjectIri,
@@ -290,6 +290,26 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             // Check that the resource's last modification date got updated.
             val lastModAfterUpdate = getLastModificationDate(zeitglöckleinIri)
             lastModBeforeUpdate != lastModAfterUpdate should ===(true)
+        }
+
+        "attempt to add a duplicate text value without standoff" in {
+
+            val utf8str = "Comment 1a"
+
+            actorUnderTest ! CreateValueRequestV1(
+                projectIri = incunabulaProjectIri,
+                resourceIri = zeitglöckleinIri,
+                propertyIri = "http://www.knora.org/ontology/incunabula#book_comment",
+                value = TextValueSimpleV1(utf8str = utf8str),
+                userProfile = incunabulaUser,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[DuplicateValueException] should ===(true)
+            }
+
+
         }
 
         "query a text value without Standoff" in {
@@ -698,36 +718,72 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
         "add a new text value with Standoff" in {
 
-            val utf8str = "Comment 1aa\r"
+            val utf8str = "Comment 1aa"
 
             actorUnderTest ! CreateValueRequestV1(
                 projectIri = "http://data.knora.org/projects/77275339",
                 resourceIri = zeitglöckleinIri,
                 propertyIri = "http://www.knora.org/ontology/incunabula#book_comment",
-                value = TextValueWithStandoffV1(utf8str = utf8str, standoff = sampleTextattr, mapping = dummyMapping, mappingIri = "http://data.knora.org/projects/standoff/mappings/StandardMapping"),
+                value = TextValueWithStandoffV1(utf8str = utf8str, standoff = sampleStandoff, mapping = dummyMapping, mappingIri = "http://data.knora.org/projects/standoff/mappings/StandardMapping"),
                 userProfile = incunabulaUser,
                 apiRequestID = UUID.randomUUID
             )
 
             expectMsgPF(timeout) {
-                case msg: CreateValueResponseV1 => checkComment1aResponse(msg, utf8str, sampleTextattr)
+                case msg: CreateValueResponseV1 => checkComment1aResponse(msg, utf8str, sampleStandoff)
             }
+        }
+
+        "attempt to add a duplicate text value with standoff" in {
+
+            val utf8str = "Comment 1aa"
+
+            actorUnderTest ! CreateValueRequestV1(
+                projectIri = "http://data.knora.org/projects/77275339",
+                resourceIri = zeitglöckleinIri,
+                propertyIri = "http://www.knora.org/ontology/incunabula#book_comment",
+                value = TextValueWithStandoffV1(utf8str = utf8str, standoff = sampleStandoff, mapping = dummyMapping, mappingIri = "http://data.knora.org/projects/standoff/mappings/StandardMapping"),
+                userProfile = incunabulaUser,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[DuplicateValueException] should ===(true)
+            }
+
         }
 
         "add a new version of a text value with Standoff" in {
 
-            val utf8str = "Comment 1bb\r"
+            val utf8str = "Comment 1bb"
 
             actorUnderTest ! ChangeValueRequestV1(
                 valueIri = commentIri.get,
-                value = TextValueWithStandoffV1(utf8str = utf8str, standoff = sampleTextattr, mapping = dummyMapping, mappingIri = "http://data.knora.org/projects/standoff/mappings/StandardMapping"),
+                value = TextValueWithStandoffV1(utf8str = utf8str, standoff = sampleStandoff, mapping = dummyMapping, mappingIri = "http://data.knora.org/projects/standoff/mappings/StandardMapping"),
                 userProfile = incunabulaUser,
                 apiRequestID = UUID.randomUUID
             )
 
             expectMsgPF(timeout) {
-                case msg: ChangeValueResponseV1 => checkComment1bResponse(msg, utf8str, sampleTextattr)
+                case msg: ChangeValueResponseV1 => checkComment1bResponse(msg, utf8str, sampleStandoff)
             }
+        }
+
+        "attempt to add a redundant version of a text value with standoff" in {
+
+            val utf8str = "Comment 1bb"
+
+            actorUnderTest ! ChangeValueRequestV1(
+                valueIri = commentIri.get,
+                value = TextValueWithStandoffV1(utf8str = utf8str, standoff = sampleStandoff, mapping = dummyMapping, mappingIri = "http://data.knora.org/projects/standoff/mappings/StandardMapping"),
+                userProfile = incunabulaUser,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[DuplicateValueException] should ===(true)
+            }
+
         }
 
         "add a new text value containing a Standoff resource reference, and create a hasStandoffLinkTo direct link and a corresponding LinkValue" in {

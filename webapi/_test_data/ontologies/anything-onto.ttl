@@ -94,6 +94,26 @@
                                "maxlength=255" .
 
 
+:hasRichtext rdf:type owl:ObjectProperty ;
+
+       rdfs:subPropertyOf knora-base:hasValue ;
+
+       rdfs:label "Text"@de ,
+                  "Texte"@fr ,
+                  "Testo"@it ,
+                  "Text"@en ;
+
+       knora-base:subjectClassConstraint :Thing ;
+
+       knora-base:objectClassConstraint knora-base:TextValue ;
+
+       salsah-gui:guiOrder "2"^^xsd:integer ;
+
+       salsah-gui:guiElement salsah-gui:Richtext ;
+
+       salsah-gui:guiAttribute "size=80" ,
+                               "maxlength=255" .
+
 
 :hasDate rdf:type owl:ObjectProperty ;
 
@@ -440,6 +460,11 @@
                       [
                          rdf:type owl:Restriction ;
                          owl:onProperty :hasText ;
+                         owl:minCardinality "0"^^xsd:nonNegativeInteger
+                      ] ,
+                      [
+                         rdf:type owl:Restriction ;
+                         owl:onProperty :hasRichtext ;
                          owl:minCardinality "0"^^xsd:nonNegativeInteger
                       ] ,
                       [

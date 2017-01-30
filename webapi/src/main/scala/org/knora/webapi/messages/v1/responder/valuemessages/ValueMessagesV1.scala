@@ -26,7 +26,7 @@ import org.knora.webapi.messages.v1.responder.resourcemessages.LocationV1
 import org.knora.webapi.messages.v1.responder.sipimessages.SipiResponderConversionRequestV1
 import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1, UserV1JsonProtocol}
 import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
-import org.knora.webapi.util.{DateUtilV1, ErrorHandlingMap, KnoraIdUtil}
+import org.knora.webapi.util.{DateUtilV1, ErrorHandlingMap, InputValidation, KnoraIdUtil}
 import org.knora.webapi.{BadRequestException, _}
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi.messages.v1.responder.ontologymessages.StandoffEntityInfoGetResponseV1
@@ -745,8 +745,12 @@ case class TextValueWithStandoffV1(utf8str: String,
       * @return `true` if `other` is a duplicate of `this`.
       */
     override def isDuplicateOfOtherValue(other: ApiValueV1): Boolean = {
+
         other match {
-            case otherText: TextValueV1 => otherText.utf8str == utf8str
+            case otherText: TextValueV1 =>
+
+                // unescape utf8str since it contains escaped sequences while the string returned by the triplestore does not
+                otherText.utf8str == InputValidation.toSparqlEncodedString(utf8str, () => throw InvalidStandoffException(s"Could not unescape utf8str $utf8str"), true)
             case otherValue => throw InconsistentTriplestoreDataException(s"Cannot compare a $valueTypeIri to a ${otherValue.valueTypeIri}")
         }
     }
@@ -760,8 +764,21 @@ case class TextValueWithStandoffV1(utf8str: String,
       * @return `true` if this [[UpdateValueV1]] is redundant given `currentVersion`.
       */
     override def isRedundant(currentVersion: ApiValueV1): Boolean = {
+
         currentVersion match {
-            case textValueV1: TextValueV1 => textValueV1 == this
+            case textValueSimpleV1: TextValueSimpleV1 => false
+            case textValueWithStandoffV1: TextValueWithStandoffV1 =>
+
+                // compare utf8str (unescape utf8str since it contains escaped sequences while the string returned by the triplestore does not)
+                val utf8strIdentical: Boolean = textValueWithStandoffV1.utf8str == InputValidation.toSparqlEncodedString(utf8str, () => throw InvalidStandoffException(s"Could not unescape utf8str $utf8str"), true)
+
+                // compare standoff nodes (sort them first, since the order does not make any difference )
+                val standoffIdentical: Boolean = textValueWithStandoffV1.standoff.sortBy(standoffNode => (standoffNode.standoffTagClassIri, standoffNode.startPosition)) == this.standoff.sortBy(standoffNode => (standoffNode.standoffTagClassIri, standoffNode.startPosition))
+
+                // TODO: at the moment, the UUID is created randomly for every new standoff tag. This means that this method always returns false.
+
+                utf8strIdentical && standoffIdentical && textValueWithStandoffV1.mappingIri == this.mappingIri
+
             case other => throw InconsistentTriplestoreDataException(s"Cannot compare a $valueTypeIri to a ${other.valueTypeIri}")
         }
     }
@@ -803,7 +820,8 @@ case class TextValueSimpleV1(utf8str: String) extends TextValueV1 with UpdateVal
       */
     override def isRedundant(currentVersion: ApiValueV1): Boolean = {
         currentVersion match {
-            case textValueV1: TextValueV1 => textValueV1 == this
+            case textValueSimpleV1: TextValueSimpleV1 => textValueSimpleV1 == this
+            case textValueWithStandoffV1: TextValueWithStandoffV1 => false
             case other => throw InconsistentTriplestoreDataException(s"Cannot compare a $valueTypeIri to a ${other.valueTypeIri}")
         }
     }
