@@ -27,12 +27,12 @@ RUN unzip /graphdb-se-7.1.0-dist.zip && \
 
 # Add and set license
 # Notice: License needs to be acquired separately and supplied before build
-COPY ./GRAPHDB_SE.license /graphdb
-COPY ./KnoraRules.pie /graphdb
+COPY ./graphdb.license /localdata/graphdb/conf
+COPY ./KnoraRules.pie /localdata/graphdb
 
 EXPOSE 7200
 
 # Set GraphDB Max and Min Heap size
 ENV GDB_HEAP_SIZE="2g"
 
-CMD ["/graphdb/bin/graphdb", "-Dgraphdb.license.file=/graphdb/GRAPHDB_SE.license"]
+CMD ["/graphdb/bin/graphdb", "-Dgraphdb.home=/localdata/graphdb"]
