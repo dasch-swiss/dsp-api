@@ -75,10 +75,25 @@ case class CreateResourceValueV1(richtext_value: Option[CreateRichtextV1] = None
                                  geoname_value: Option[String] = None,
                                  comment: Option[String] = None) {
 
+    // Make sure only one value is given.
+    if (List(
+        richtext_value,
+        link_value,
+        int_value,
+        decimal_value,
+        boolean_value,
+        uri_value,
+        date_value,
+        color_value,
+        geom_value,
+        hlist_value,
+        interval_value,
+        geoname_value).flatten.size > 1) {
+        throw BadRequestException(s"Different value types were submitted for the same property")
+    }
+
     /**
       * Returns the type of the given value.
-      *
-      * TODO: make sure that only one value is given.
       *
       * @return a value type IRI.
       */
