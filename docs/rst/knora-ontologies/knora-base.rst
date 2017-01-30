@@ -486,6 +486,8 @@ Markup is stored using this property:
     Points to the mapping used to create the standoff markup
     and to convert it back to the original XML. See :ref:`knora-base-mapping`.
 
+.. _knora-base-date-value:
+
 DateValue
 ~~~~~~~~~
 
@@ -514,6 +516,8 @@ regardless of the calendar in which they were entered. Properties:
 ``valueHasEndPrecision`` (1)
     The precision of the end of the period.
 
+.. _knora-base-int-value:
+
 IntValue
 ~~~~~~~~
 
@@ -521,6 +525,16 @@ Represents an integer. Property:
 
 ``valueHasInteger`` (1)
     An ``xsd:integer``.
+
+.. _knora-base-color-value:
+
+ColorValue
+~~~~~~~~~~
+
+``valueHasColor`` (1)
+    A string representing a color. The string encodes a color as hexadecimal RGB values, e.g. "#FF0000".
+
+.. _knora-base-decimal-value:
 
 DecimalValue
 ~~~~~~~~~~~~
@@ -530,6 +544,8 @@ Represents an arbitrary-precision decimal number. Property:
 ``valueHasDecimal`` (1)
     An ``xsd:decimal``.
 
+.. _knora-base-uri-value:
+
 UriValue
 ~~~~~~~~
 
@@ -538,6 +554,8 @@ Represents a non-Knora URI. Property:
 ``valueHasUri`` (1)
     An ``xsd:anyURI``.
 
+.. _knora-base-boolean-value:
+
 BooleanValue
 ~~~~~~~~~~~~
 
@@ -545,6 +563,8 @@ Represents a boolean value. Property:
 
 ``valueHasBoolean`` (1)
     An ``xsd:boolean``.
+
+.. _knora-base-geom-value:
 
 GeomValue
 ~~~~~~~~~
@@ -555,6 +575,8 @@ coordinates. Property:
 ``valueHasGeometry`` (1)
     A JSON string.
 
+.. _knora-base-geoname-value:
+
 GeonameValue
 ~~~~~~~~~~~~
 
@@ -564,6 +586,8 @@ GeoNames_. Property:
 ``valueHasGeonameCode`` (1)
     the identifier of a geographical feature from
     GeoNames_, represented as an ``xsd:string``.
+
+.. _knora-base-interval-value:
 
 IntervalValue
 ~~~~~~~~~~~~~
@@ -578,6 +602,8 @@ Properties:
 
 ``valueHasIntervalEnd`` (1)
     An ``xsd:decimal`` representing the end of the interval in seconds.
+
+.. _knora-base-list-value:
 
 ListValue
 ~~~~~~~~~
@@ -1023,28 +1049,28 @@ Standoff Data Type Tags
 Associates data in some Knora value type with a substring in a text. Standoff data type
 tags are subclasses of ``ValueBase`` classes.
 
--  ``StandoffLinkTag`` see knora-base-standoff-link_
+-  ``StandoffLinkTag`` see knora-base-standoff-link_.
 
 -  ``StandoffUriTag`` Indicates that a substring is associated with a
-     URI, which is stored in the same form that is used for ``kb:UriValue``.
+     URI, which is stored in the same form that is used for ``kb:UriValue``, see knora-base-uri-value_.
 
 -  ``StandoffDateTag`` Indicates that a substring represents a
-    date, which is stored in the same form that is used for ``kb:DateValue``.
+    date, which is stored in the same form that is used for ``kb:DateValue``, see knora-base-date-value_.
 
 - ``StandoffColorTag`` Indicates that a substring represents a color,
-    which is stored in the same form that is used for ``kb:ColorValue``.
+    which is stored in the same form that is used for ``kb:ColorValue``, see .. knora-base-color-value_.
 
 - ``StandoffIntegerTag`` Indicates that a substring represents an integer,
-    which is stored in the same form that is used for ``kb:IntegerValue``.
+    which is stored in the same form that is used for ``kb:IntegerValue``, see knora-base-int-value_.
 
 - ``StandoffDecimalTag`` Indicates that a substring represents a number with fractions,
-    which is stored in the same form that is used for ``kb:DecimalValue``.
+    which is stored in the same form that is used for ``kb:DecimalValue``, see .. knora-base-decimal-value_.
 
 - ``StandoffIntervalTag`` Indicates that a substring represents an interval,
-    which is stored in the same form that is used for ``kb:IntervalValue``.
+    which is stored in the same form that is used for ``kb:IntervalValue``, see knora-base-interval-value_.
 
 - ``StandoffBooleanTag`` Indicates that a substring represents a Boolean,
-    which is stored in the same form that is used for ``kb:BooleanValue``.
+    which is stored in the same form that is used for ``kb:BooleanValue``, see knora-base-boolean-value_.
 
 .. _knora-base-standoff-link:
 
@@ -1224,7 +1250,7 @@ It has the following properties:
     of the standoff class the XML element is mapped to.
 
 ``mappingElementRequiresSeparator`` (1)
-    Indicates if there should be a separator inserted
+    Indicates if there should be an invisible word separator inserted
     after the XML element in the RDF-standoff representation. Once the markup is stripped, text segments that
     belonged to different elements may be concatenated.
 

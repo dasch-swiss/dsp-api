@@ -234,7 +234,7 @@ You will find a sample mapping with all the data types and a sample XML file in 
 Internal References in an XML Document
 --------------------------------------
 
-Internal references inside an XML document can be represented using the predefined the standoff property ``knora-base:standoffTagHasInternalReference`` or a subclass of it.
+Internal references inside an XML document can be represented using the predefined the standoff property ``knora-base:standoffTagHasInternalReference`` or a subproperty of it.
 This standoff property has an ``knora-base:objectClassConstraint`` and points to a standoff node when converted to RDF.
 
 The following example shows the definition of a mapping element for an internal reference (for reasons of simplicity, only the attribute definition is depicted)::
@@ -245,7 +245,7 @@ The following example shows the definition of a mapping element for an internal 
         <propertyIri>http://www.knora.org/ontology/knora-base:standoffTagHasInternalReference</propertyIri>
     </attribute>
 
-Now, an internal reference to an element in the same document can be made that is being converted to a pointer in RDF::
+Now, an internal reference to an element in the same document can be made that will be converted to a pointer in RDF::
 
     <?xml version="1.0" encoding="UTF-8"?>
     <text>
@@ -368,7 +368,8 @@ The multipart request consists of two named parts:
     </mapping>
 
 
-A successful response returns the Iri of the mapping. However, the Iri of a mapping is predictable: it consists of the project Iri followed by ``/mappings/`` and the ``mappingName`` submitted in the JSON.
+A successful response returns the Iri of the mapping. However, the Iri of a mapping is predictable: it consists of the project Iri followed by ``/mappings/`` and the ``mappingName`` submitted in the JSON
+(if the name already exists, the request will be rejected).
 Once created, a mapping can be used to create TextValues in Knora. The formats are documented in the typescript interfaces ``addMappingRequest`` and ``addMappingResponse`` in module ``mappingFormats``
 
 
