@@ -40,7 +40,7 @@ import org.knora.webapi.messages.v1.responder.resourcemessages._
 import org.knora.webapi.messages.v1.responder.sipimessages.{SipiResponderConversionFileRequestV1, SipiResponderConversionPathRequestV1}
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.responder.valuemessages._
-import org.knora.webapi.util.standoff.StandoffTagUtilV1.TextWithStandoffTagV1
+import org.knora.webapi.util.standoff.StandoffTagUtilV1.TextWithStandoffTagsV1
 import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
 import org.knora.webapi.util.{DateUtilV1, InputValidation}
 import org.knora.webapi.viewhandlers.ResourceHtmlView
@@ -129,7 +129,7 @@ object ResourcesRouteV1 extends Authenticator {
 
                                         for {
 
-                                            textWithStandoffTags: TextWithStandoffTagV1 <- RouteUtilV1.convertXMLtoStandoffTagV1(
+                                            textWithStandoffTags: TextWithStandoffTagsV1 <- RouteUtilV1.convertXMLtoStandoffTagV1(
                                                 xml = richtext.xml.get,
                                                 mappingIri = mappingIri,
                                                 userProfile = userProfile,

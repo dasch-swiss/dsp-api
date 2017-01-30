@@ -32,7 +32,7 @@ import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.responder.{ApiStatusCodesV1, KnoraRequestV1, KnoraResponseV1}
 import org.knora.webapi.util.MessageUtil
 import org.knora.webapi.util.standoff.StandoffTagUtilV1
-import org.knora.webapi.util.standoff.StandoffTagUtilV1.TextWithStandoffTagV1
+import org.knora.webapi.util.standoff.StandoffTagUtilV1.TextWithStandoffTagsV1
 import spray.json.{JsNumber, JsObject}
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -182,7 +182,7 @@ object RouteUtilV1 {
 
     /**
       *
-      * Converts XML to a [[TextWithStandoffTagV1]], representing the text and its standoff markup.
+      * Converts XML to a [[TextWithStandoffTagsV1]], representing the text and its standoff markup.
       *
       * @param xml                  the given XML to be converted to standoff.
       * @param mappingIri           the mapping to be used to convert the XML to standoff.
@@ -192,14 +192,14 @@ object RouteUtilV1 {
       * @param log                  a logging adapter.
       * @param timeout              a timeout for `ask` messages.
       * @param executionContext     an execution context for futures.
-      * @return a [[TextWithStandoffTagV1]].
+      * @return a [[TextWithStandoffTagsV1]].
       */
     def convertXMLtoStandoffTagV1(xml: String,
                                   mappingIri: IRI,
                                   userProfile: UserProfileV1,
                                   settings: SettingsImpl,
                                   responderManager: ActorSelection,
-                                  log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[TextWithStandoffTagV1] = {
+                                  log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[TextWithStandoffTagsV1] = {
 
         for {
 

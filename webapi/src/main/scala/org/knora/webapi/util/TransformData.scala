@@ -95,7 +95,7 @@ object LegacyTextattrV1 extends Enumeration {
     /**
       * Maps standoff tag IRIs to this enumeration's values.
       */
-    val IriToEnumValue: Map[IRI, LegacyTextattrV1.Value] = new ErrorHandlingMap(Map(
+    val iriToEnumValue: Map[IRI, LegacyTextattrV1.Value] = new ErrorHandlingMap(Map(
         OntologyConstants.Standoff.StandoffParagraphTag -> paragraph,
         OntologyConstants.Standoff.StandoffItalicTag -> italic,
         OntologyConstants.Standoff.StandoffBoldTag -> bold,
@@ -120,7 +120,7 @@ object LegacyTextattrV1 extends Enumeration {
 
     // Maps this enumeration's values to standoff tag IRIs.
 
-    val EnumValueToIri: Map[LegacyTextattrV1.Value, IRI] = new ErrorHandlingMap(IriToEnumValue.map(_.swap), { key => throw InconsistentTriplestoreDataException(s"Invalid standoff tag name: $key") })
+    val enumValueToIri: Map[LegacyTextattrV1.Value, IRI] = new ErrorHandlingMap(iriToEnumValue.map(_.swap), { key => throw InconsistentTriplestoreDataException(s"Invalid standoff tag name: $key") })
 }
 
 /**
@@ -709,7 +709,7 @@ object TransformData extends App {
                                 oldToNewClassIris(oldTagClassIri)
                             } else {
                                 // Otherwise, generate the new class name from the tag name.
-                                LegacyTextattrV1.EnumValueToIri(LegacyTextattrV1.lookup(tagName, () => throw InconsistentTriplestoreDataException(s"Unrecognised standoff tag name $tagName")))
+                                LegacyTextattrV1.enumValueToIri(LegacyTextattrV1.lookup(tagName, () => throw InconsistentTriplestoreDataException(s"Unrecognised standoff tag name $tagName")))
                             }
 
                         case None => oldTagClassIri

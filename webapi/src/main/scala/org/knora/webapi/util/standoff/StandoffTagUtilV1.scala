@@ -67,13 +67,13 @@ object StandoffTagUtilV1 {
     /**
       * Creates a sequence of [[StandoffTagAttributeV1]] for the given standoff node.
       *
-      * @param XMLtoStandoffMapping     the mapping from XML to standoff classes and properties for the given standoff node.
+      * @param xmlToStandoffMapping     the mapping from XML to standoff classes and properties for the given standoff node.
       * @param classSpecificProps       the properties that may or have to be created (cardinalities) for the given standoff node.
       * @param standoffNodeFromXML      the given standoff node.
       * @param standoffPropertyEntities the ontology information about the standoff properties.
       * @return a sequence of [[StandoffTagAttributeV1]]
       */
-    private def createAttributes(XMLtoStandoffMapping: XMLTagToStandoffClass, classSpecificProps: Map[IRI, Cardinality.Value], existingXMLIDs: Seq[String], standoffNodeFromXML: StandoffTag, standoffPropertyEntities: Map[IRI, StandoffPropertyEntityInfoV1]): Seq[StandoffTagAttributeV1] = {
+    private def createAttributes(xmlToStandoffMapping: XMLTagToStandoffClass, classSpecificProps: Map[IRI, Cardinality.Value], existingXMLIDs: Seq[String], standoffNodeFromXML: StandoffTag, standoffPropertyEntities: Map[IRI, StandoffPropertyEntityInfoV1]): Seq[StandoffTagAttributeV1] = {
 
         // assumes that internal references start with a "#"
         def getTargetIDFromInternalReference(internalReference: String) = {
@@ -90,10 +90,10 @@ object StandoffTagUtilV1 {
         }
 
         if (classSpecificProps.nonEmpty) {
-            // additional standoff properties are required
+            // this standoff class requires additional standoff properties to the standoff data type properties (contained in `StandoffProperties.dataTypeProperties`).
 
             // map over all non data type attributes, ignore the "class" attribute ("class" is only used in the mapping to allow for the reuse of the same tag name, not to store actual data).
-            val attrs: Seq[StandoffTagAttributeV1] = standoffNodeFromXML.attributes.filterNot(attr => (XMLtoStandoffMapping.dataType.nonEmpty && XMLtoStandoffMapping.dataType.get.dataTypeXMLAttribute == attr.key) || attr.key == "class").map {
+            val attrs: Seq[StandoffTagAttributeV1] = standoffNodeFromXML.attributes.filterNot(attr => (xmlToStandoffMapping.dataType.nonEmpty && xmlToStandoffMapping.dataType.get.dataTypeXMLAttribute == attr.key) || attr.key == "class").map {
                 attr: StandoffTagAttribute =>
                     // get the standoff property Iri for this XML attribute
 
@@ -102,7 +102,7 @@ object StandoffTagUtilV1 {
                         case Some(namespace) => namespace
                     }
 
-                    val standoffTagPropIri = XMLtoStandoffMapping.attributesToProps.getOrElse(xmlNamespace, throw BadRequestException(s"namespace $xmlNamespace unknown for attribute ${attr.key} in mapping")).getOrElse(attr.key, throw BadRequestException(s"mapping for attr '${attr.key}' not provided"))
+                    val standoffTagPropIri = xmlToStandoffMapping.attributesToProps.getOrElse(xmlNamespace, throw BadRequestException(s"namespace $xmlNamespace unknown for attribute ${attr.key} in mapping")).getOrElse(attr.key, throw BadRequestException(s"mapping for attr '${attr.key}' not provided"))
 
                     // check if a cardinality exists for the current attribute
                     if (classSpecificProps.get(standoffTagPropIri).isEmpty) {
@@ -189,11 +189,11 @@ object StandoffTagUtilV1 {
             attrs
 
         } else {
-            // only system props are required
+            // possibly data type properties are required, but no other standoff properties
 
-            // check that there no other attributes than datatype attributes and 'class'
+            // check that there no other attributes than data type attributes and 'class'
             val unsupportedAttributes: Set[String] = standoffNodeFromXML.attributes.filterNot {
-                attr => (XMLtoStandoffMapping.dataType.nonEmpty && XMLtoStandoffMapping.dataType.get.dataTypeXMLAttribute == attr.key) || attr.key == "class"
+                attr => (xmlToStandoffMapping.dataType.nonEmpty && xmlToStandoffMapping.dataType.get.dataTypeXMLAttribute == attr.key) || attr.key == "class"
             }.map(attr => attr.key)
 
             if (unsupportedAttributes.nonEmpty) throw BadRequestException(s"Attributes found that are not defined in the mapping: ${unsupportedAttributes.mkString(", ")}")
@@ -209,16 +209,16 @@ object StandoffTagUtilV1 {
       * @param text          the text as a mere sequence of characters.
       * @param standoffTagV1 the text's standoff markup.
       */
-    case class TextWithStandoffTagV1(text: String, standoffTagV1: Seq[StandoffTagV1], mapping: GetMappingResponseV1)
+    case class TextWithStandoffTagsV1(text: String, standoffTagV1: Seq[StandoffTagV1], mapping: GetMappingResponseV1)
 
     /**
-      * Converts XML to a [[TextWithStandoffTagV1]].
+      * Converts XML to a [[TextWithStandoffTagsV1]].
       *
       * @param xml     the XML representing text with markup.
       * @param mapping the mapping used to convert XML to standoff.
-      * @return a [[TextWithStandoffTagV1]].
+      * @return a [[TextWithStandoffTagsV1]].
       */
-    def convertXMLtoStandoffTagV1(xml: String, mapping: GetMappingResponseV1, log: LoggingAdapter): TextWithStandoffTagV1 = {
+    def convertXMLtoStandoffTagV1(xml: String, mapping: GetMappingResponseV1, log: LoggingAdapter): TextWithStandoffTagsV1 = {
 
         // collect all the `XMLTag` from the given mapping that require a separator
         // and create a `XMLTagSeparatorRequired` for each of them
@@ -259,13 +259,13 @@ object StandoffTagUtilV1 {
         val xmlStandoffUtil = new XMLToStandoffUtil()
         val textWithStandoff: TextWithStandoff = xmlStandoffUtil.xml2TextWithStandoff(xml, elementsSeparatorRequired, log)
 
-        val standoffTagsV1: Seq[StandoffTagV1] = convertXMLToStandoffUtilStandoffTagToStandoffTagV1(
+        val standoffTagsV1: Seq[StandoffTagV1] = convertXMLStandoffTagToStandoffTagV1(
             textWithStandoff = textWithStandoff,
             mappingXMLtoStandoff = mapping.mapping,
             standoffEntities = mapping.standoffEntities
         )
 
-        TextWithStandoffTagV1(
+        TextWithStandoffTagsV1(
             text = textWithStandoff.text,
             standoffTagV1 = standoffTagsV1,
             mapping = mapping
@@ -282,7 +282,7 @@ object StandoffTagUtilV1 {
       * @param standoffEntities     the standoff entities (classes and properties) to be used.
       * @return a sequence of [[StandoffTagV1]].
       */
-    private def convertXMLToStandoffUtilStandoffTagToStandoffTagV1(textWithStandoff: TextWithStandoff, mappingXMLtoStandoff: MappingXMLtoStandoff, standoffEntities: StandoffEntityInfoGetResponseV1): Seq[StandoffTagV1] = {
+    private def convertXMLStandoffTagToStandoffTagV1(textWithStandoff: TextWithStandoff, mappingXMLtoStandoff: MappingXMLtoStandoff, standoffEntities: StandoffEntityInfoGetResponseV1): Seq[StandoffTagV1] = {
 
         // collect al the existing ids from the standoff tags
         val existingXMLIDs: Seq[String] = textWithStandoff.standoff.filter((standoffTag: StandoffTag) => standoffTag.originalID.isDefined).map {
@@ -655,7 +655,13 @@ object StandoffTagUtilV1 {
 
     }
 
-    // converts a sequence of `StandoffTagAttributeV1` to a sequence of `StandoffTagAttribute`
+    /**
+      * Converts a sequence of [[StandoffTagAttributeV1]] to a sequence of [[StandoffTagAttribute]].
+      *
+      * @param mapping     the mapping used to convert standoff property IRIs to XML attribute names.
+      * @param attributes  the standoff properties to be converted to XML attributes.
+      * @return            a sequence of [[StandoffTagAttribute]].
+      */
     private def convertStandoffAttributeTags(mapping: Map[IRI, XMLAttrItem], attributes: Seq[StandoffTagAttributeV1]): Seq[StandoffTagAttribute] = {
         attributes.map {
             attr =>
@@ -673,6 +679,14 @@ object StandoffTagUtilV1 {
         }
     }
 
+    /**
+      * Converts a text value with standoff to an XML String.
+      *
+      * @param utf8str              the string representation of the text value (`valueHasString`).
+      * @param standoff             the standoff representing the markup.
+      * @param mappingXMLtoStandoff the mapping used to convert standoff to XML markup.
+      * @return                     a String representing an XML document.
+      */
     def convertStandoffTagV1ToXML(utf8str: String, standoff: Seq[StandoffTagV1], mappingXMLtoStandoff: MappingXMLtoStandoff): String = {
 
         // inverts the mapping and makes standoff class Iris keys (for tags)
