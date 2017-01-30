@@ -62,7 +62,7 @@ class AuthenticatorSpec extends CoreSpec("AuthenticationTestSystem") with Implic
 
     val mockUsersActor = actor(RESPONDER_MANAGER_ACTOR_NAME)(new Act {
         become {
-            case UserProfileByEmailGetRequestV1(submittedEmail, userProfileType) => {
+            case UserProfileByEmailGetV1(submittedEmail, userProfileType) => {
                 if (submittedEmail == "root@example.com") {
                     ActorUtil.future2Message(sender, Future(rootUserProfileV1), logger)
                 } else {

@@ -25,7 +25,7 @@ import java.io.{File, FileNotFoundException}
 import org.openqa.selenium.chrome.ChromeDriver
 import org.openqa.selenium.interactions.Actions
 import org.openqa.selenium.support.ui.Select
-import org.openqa.selenium.{By, WebDriver, WebElement}
+import org.openqa.selenium.{By, JavascriptExecutor, WebDriver, WebElement}
 import org.scalatest.concurrent.Eventually._
 
 import scala.collection.JavaConversions._
@@ -96,10 +96,30 @@ class SalsahPage {
         val passwordInput = driver.findElement(By.id("password"))
         val sendCredentials = driver.findElement(By.id("login_button"))
 
-        userInput.sendKeys("root")
+        userInput.sendKeys(user)
         passwordInput.sendKeys("test")
         sendCredentials.click()
 
+
+
+    }
+
+    /**
+      * Checks that SALSAH.userdata contains the necessary data (assigned after successful login)
+      */
+    def checkForUserdata = {
+        driver match {
+            case jsExe: JavascriptExecutor =>
+                // return the global variable SALSAH.userdata from the browser's window object
+                val userdata: String = jsExe.executeScript("return window.SALSAH.userdata;").toString
+
+                // if userdata still contains the default value, the userdata has not been written back yet
+                // async request to v1/session returns JSON with the userdata
+                // userdata contains the user's projects which we need to create new resources
+                if (userdata == "{lang=en}") throw new Exception("expected userdata is not there yet")
+
+            case _ => throw new Exception("cannot execute javascript")
+        }
     }
 
     /*
@@ -144,6 +164,18 @@ class SalsahPage {
       */
     def clickExtendedSearchButton(): Unit = {
         driver.findElement(By.xpath("//div[@id='searchctrl']/img[2][@class='link']")).click()
+    }
+
+    /**
+      * Select a vocabulary to limit search.
+      *
+      * @param vocabulary the vocabulary to be selected.
+      */
+    def selectVocabulary(vocabulary: String): Unit = {
+        eventually {
+            val restypeSelect = driver.findElement(By.name("vocabulary"))
+            new Select(restypeSelect).selectByValue(vocabulary)
+        }
     }
 
     /**
