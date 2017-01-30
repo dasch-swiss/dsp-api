@@ -1027,7 +1027,7 @@ classes, has these properties:
 ``standoffTagHasStartParent`` (0-1)
     Points to the parent standoff tag. This corresponds to the original nesting of tags in XML.
     If a standoff tag has no parent, it represents the XML root element.
-    If the original XML element is a CLIX tag, it represents the end
+    If the original XML element is a CLIX tag, it represents the start
     of a virtual (non syntactical) hierarchy.
 
 ``standoffTagHasEndParent`` (0-1)
