@@ -29,7 +29,6 @@ import javax.xml.validation.{Schema, SchemaFactory, Validator => JValidator}
 import akka.actor.Status
 import akka.pattern._
 import akka.stream.ActorMaterializer
-import arq.iri
 import org.knora.webapi.messages.v1.responder.ontologymessages._
 import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoByIRIGetRequestV1, ProjectInfoResponseV1}
 import org.knora.webapi.messages.v1.responder.standoffmessages._
@@ -50,8 +49,7 @@ import scala.xml.{Node, NodeSeq, XML}
 
 
 /**
-  * Responds to requests for information about binary representations of resources, and returns responses in Knora API
-  * v1 format.
+  * Responds to requests relating to the creation of mappings from XML elements and attributes to standoff classes and properties.
   */
 class StandoffResponderV1 extends ResponderV1 {
 
@@ -68,7 +66,7 @@ class StandoffResponderV1 extends ResponderV1 {
     def receive = {
         case CreateMappingRequestV1(xml, label, projectIri, mappingName, userProfile, uuid) => future2Message(sender(), createMappingV1(xml, label, projectIri, mappingName, userProfile, uuid), log)
         case GetMappingRequestV1(mappingIri, userProfile) => future2Message(sender(), getMappingV1(mappingIri, userProfile), log)
-        case other => sender ! Status.Failure(UnexpectedMessageException(s"Unexpected message $other of type ${other.getClass.getCanonicalName}"))
+        case other => handleUnexpectedMessage(sender(), other, log)
     }
 
 
@@ -415,34 +413,38 @@ class StandoffResponderV1 extends ResponderV1 {
       */
     private def getMappingV1(mappingIri: IRI, userProfile: UserProfileV1): Future[GetMappingResponseV1] = {
 
-        CacheUtil.get[MappingXMLtoStandoff](cacheName = MappingCacheName, key = mappingIri) match {
-            case Some(mapping: MappingXMLtoStandoff) =>
+        for {
 
-                for {
+            mapping: GetMappingResponseV1 <- CacheUtil.get[MappingXMLtoStandoff](cacheName = MappingCacheName, key = mappingIri) match {
+                case Some(mapping: MappingXMLtoStandoff) =>
 
-                    entities: StandoffEntityInfoGetResponseV1 <- getStandoffEntitiesFromMappingV1(mapping, userProfile)
+                    for {
 
-                } yield GetMappingResponseV1(
-                    mappingIri = mappingIri,
-                    mapping = mapping,
-                    standoffEntities = entities,
-                    userdata = userProfile.userData
-                )
+                        entities: StandoffEntityInfoGetResponseV1 <- getStandoffEntitiesFromMappingV1(mapping, userProfile)
 
-            case None =>
+                    } yield GetMappingResponseV1(
+                        mappingIri = mappingIri,
+                        mapping = mapping,
+                        standoffEntities = entities,
+                        userdata = userProfile.userData
+                    )
 
-                for {
-                    mapping: MappingXMLtoStandoff <- getMappingFromTriplestore(mappingIri, userProfile)
+                case None =>
 
-                    entities: StandoffEntityInfoGetResponseV1 <- getStandoffEntitiesFromMappingV1(mapping, userProfile)
+                    for {
+                        mapping: MappingXMLtoStandoff <- getMappingFromTriplestore(mappingIri, userProfile)
 
-                } yield GetMappingResponseV1(
-                    mappingIri = mappingIri,
-                    mapping = mapping,
-                    standoffEntities = entities,
-                    userdata = userProfile.userData
-                )
-        }
+                        entities: StandoffEntityInfoGetResponseV1 <- getStandoffEntitiesFromMappingV1(mapping, userProfile)
+
+                    } yield GetMappingResponseV1(
+                        mappingIri = mappingIri,
+                        mapping = mapping,
+                        standoffEntities = entities,
+                        userdata = userProfile.userData
+                    )
+            }
+
+        } yield mapping
 
     }
 

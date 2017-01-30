@@ -655,12 +655,6 @@ class OntologyResponderV1 extends ResponderV1 {
                     entityInfo.dataType.isDefined
             }
 
-            /*_ = println(ScalaPrettyPrinter.prettyPrint(standoffClassEntityInfos))
-            _ = println("+++++++++")
-            _ = println(ScalaPrettyPrinter.prettyPrint(standoffClassEntityInfosWithDataType))*/
-
-            //_ = println(MessageUtil.toSource(standoffPropertyEntityInfos))
-
             // Cache all the data.
 
             ontologyCacheData: OntologyCacheData = OntologyCacheData(
