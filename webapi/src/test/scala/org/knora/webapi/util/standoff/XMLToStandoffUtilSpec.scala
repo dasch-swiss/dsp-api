@@ -23,7 +23,7 @@ package org.knora.webapi.util.standoff
 import java.util.UUID
 
 import org.knora.webapi.CoreSpec
-import org.knora.webapi.util.KnoraIdUtil
+import org.knora.webapi.util.{FormatConstants, KnoraIdUtil}
 import org.xmlunit.builder.{DiffBuilder, Input}
 import org.xmlunit.diff.Diff
 
@@ -473,7 +473,7 @@ class XMLToStandoffUtilSpec extends CoreSpec {
 
         }
 
-        "convert an XML document to standoff" in {
+        "convert an XML document to a TextWithStandoff and check that information separator two has been inserted in the string" in {
 
             val BEBBXML =
                 """<?xml version="1.0" encoding="UTF-8"?>
@@ -481,8 +481,7 @@ class XMLToStandoffUtilSpec extends CoreSpec {
                   |      <p>
                   |         <facsimile src="http://www.ub.unibas.ch/digi/bez/bernoullibriefe/jpg/bernoulli-jpg/BAU_5_000057165_321.jpg"/> Vir Celeberrime, Fautor et Amice Honoratissime. </p>
                   |      <p>Accepi, post multorum annorum silentium, jam ante aliquot menses gratissimas Litteras Tuas<ref>Johannes Scheuchzer an Johann I Bernoulli von <entity ref="1735-02-11_Scheuchzer_Johannes-Bernoulli_Johann_I">1735.02.11</entity>.</ref> cum tribus exemplis Dissertationis eruditissimae de Tesseris Badensibus,<ref>Scheuchzer, Johannes, <i>Dissertatio philosophica de tesseris Badensibus, disquisitioni publicae exposita a Johanne Scheuchzero, M. D. Philosophiae naturalis Professore publico, Acad. Naturae Curiosorum dicto Philippo. Ac respp. pro consequendo rite examine philosophico Hartmanno Friderico Oerio, Rodolfo Huldrico, Marco Wyssio, Johanne Melchiore Boeschio ...</i>, Tiguri [Zürich] (Heidegger) 1735.</ref> quorum unum mihi servatum perlegi summa cum voluptate, reliqua duo distribui, ut jussisti, Adgnato meo Nicolao meoque Filio Danieli,<ref>Nicolaus I Bernoulli (1687-1759) und Daniel I Bernoulli (1700-1782).</ref> qui ambo gratias mecum Tibi agunt maximas: Perlectio hujus speciminis mihi sustulit scrupulum, ex quorundam<ref>Im Manuskript steht "quorundum".</ref> opinione subnatum, qui credunt tesseras illas esse opus a natura productum, ob ingentem earum jam repertarum multitudinem, sed ratiocinia Tua tam valida tamque certa mihi esse videntur, ut amplius dubitare non possim easdem illas tesseras ab arte humana provenisse, quem autem in usum tanta copia fuerit fabrefacta et tam exili sub forma saltem plerasque quas egomet ipse vidi divinare non possum. Distuli responsum ad litteras Tuas Vir Clarissime, quia scio Te multis negotiis esse obrutum, sicuti et ego sum, hoc praesertim tempore quo mihi de novo impositum est Decanatus in facultate nostra munus annuum humeris meis onerosissimum, tum et silentii mei causa fuit tenuitas mearum litterarum vix portorium merentium, quam ob rationem respondere forsan diutius distulissem commodam expectans mittendi litteras occasionem, nisi me ad scribendum impulisset iterata sollicitatio Clariss. Menckenii Actorum Lips. Editoris, qui impense me urget ut sibi procurem Fratris Tui<ref>Johann Jakob Scheuchzer (1672-1733).</ref> b.m. Vitae Historiam; En ipsa ejus verba "Confido Tua opera fieri posse, ut ab Haeredibus Celeberrimi Scheuchzeri brevem vitae Scheuchzerianae narrationem impetrare possim, quo magno me tibi beneficio obstrinxeris" etc. Memini jam ante annum me eadem de re sollicitatum statim scripsisse ad Cl. Gessnerum Tuum Collegam, sed nihil responsi obtinuisse: Spero nunc Te qui Manes beatissimi Fratris, Viri celeberrimi et de republica litter. longe maxime meriti, etiamnum flagrantissime colis, non commissurum, ut Tanti Viri memoria cum exuviis sepulte maneat; Quare si desiderio Orbis eruditi non minus quam Menckenii satisfacere volueris, rogo ut succinctam Fratris defuncti Biographiam quantocyus ad me mittas, quam porro Lipsiam mittendi occasionem habebo post octo decemve dies aut ad summum in fine hujus mensis. Vale Vir Amicissime et fave T. T. Joh. Bernoulli </p>
-                  |      <p>Basil. a.d. 18. Junj 1735.
-                  |</p>
+                  |      <p>Basil. a.d. 18. Junj 1735.</p>
                   |   </text>
                   |
                 """.stripMargin
@@ -490,12 +489,15 @@ class XMLToStandoffUtilSpec extends CoreSpec {
 
             val standoffUtil = new XMLToStandoffUtil()
 
-            val textWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(BEBBXML, log = logger)
+            // after every paragraph, information separator two should be inserted
+            val textWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(BEBBXML,
+                tagsWithSeparator = List(XMLTagSeparatorRequired(maybeNamespace = None, tagname = "p", maybeClassname = None)),
+                log = logger)
 
-            val root = textWithStandoff.standoff.filter((standoffTag: StandoffTag) => standoffTag match {
-                case tag: HierarchicalStandoffTag => tag.parentIndex.isEmpty
-                case _ => false
-            })
+            // make sure that there are as many information separator two as there are paragraphs (there are three paragraphs)
+            assert(FormatConstants.INFORMATION_SEPARATOR_TWO.toString.r.findAllIn(textWithStandoff.text).length == 3)
+
+
         }
     }
 }
