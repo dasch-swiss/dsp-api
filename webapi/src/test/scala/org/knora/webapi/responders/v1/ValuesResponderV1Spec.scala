@@ -1753,7 +1753,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
                 case CreateValueResponseV1(newGeonameValue: GeonameValueV1, _ , _, _, _) =>
                     newGeonameValue should ===(geonameValue)
             }
-        }
+        }*/
 
         "add a boolean value to an anything:Thing" in {
             val booleanValue = BooleanValueV1(true)
@@ -1771,7 +1771,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
                 case CreateValueResponseV1(newBooleanValue: BooleanValueV1, _ , _, _, _) =>
                     newBooleanValue should ===(booleanValue)
             }
-        }*/
+        }
 
         "add a URI value to an anything:Thing" in {
             val uriValue = UriValueV1("http://dhlab.unibas.ch")
