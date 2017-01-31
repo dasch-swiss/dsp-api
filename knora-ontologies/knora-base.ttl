@@ -832,9 +832,9 @@
 
                rdfs:comment """IRI of the standoff property"""@en ;
 
-               :subjectClassConstraint :MappingElement ;
+               :subjectClassConstraint :MappingXMLAttribute ;
 
-               :objectClassConstraint :MappingXMLAttribute .
+               :objectClassConstraint owl:DatatypeProperty.
 
 
 ###  http://www.knora.org/ontology/knora-base#mappingHasStandoffDataTypeClass
