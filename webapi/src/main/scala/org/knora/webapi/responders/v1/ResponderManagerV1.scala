@@ -36,6 +36,7 @@ import org.knora.webapi.messages.v1.responder.sipimessages.SipiResponderRequestV
 import org.knora.webapi.messages.v1.responder.storemessages.StoreResponderRequestV1
 import org.knora.webapi.messages.v1.responder.usermessages.UsersResponderRequestV1
 import org.knora.webapi.messages.v1.responder.valuemessages.ValuesResponderRequestV1
+import org.knora.webapi.messages.v1.responder.standoffmessages.StandoffResponderRequestV1
 import org.knora.webapi.responders._
 import org.knora.webapi.util.ActorUtil.handleUnexpectedMessage
 
@@ -91,6 +92,17 @@ class ResponderManagerV1 extends Actor with ActorLogging {
       * member to substitute a custom actor instead of the default Sipi responder.
       */
     protected val sipiRouter = makeDefaultSipiRouter
+
+    /**
+      * Constructs the default Akka routing actor that routes messages to [[StandoffResponderV1]].
+      */
+    protected final def makeDefaultStandoffRouter = makeActor(FromConfig.props(Props[StandoffResponderV1]), STANDOFF_ROUTER_ACTOR_NAME)
+
+    /**
+      * The Akka routing actor that should receive messages addressed to the Sipi responder. Subclasses can override this
+      * member to substitute a custom actor instead of the default Sipi responder.
+      */
+    protected val standoffRouter = makeDefaultStandoffRouter
 
     /**
       * Constructs the default Akka routing actor that routes messages to [[UsersResponderV1]].
@@ -202,6 +214,7 @@ class ResponderManagerV1 extends Actor with ActorLogging {
         case projectsResponderRequest: ProjectsResponderRequestV1 => projectsRouter.forward(projectsResponderRequest)
         case ckanResponderRequest: CkanResponderRequestV1 => ckanRouter.forward(ckanResponderRequest)
         case storeResponderRequest: StoreResponderRequestV1 => storeRouter.forward(storeResponderRequest)
+        case standoffResponderRequest: StandoffResponderRequestV1 => standoffRouter forward standoffResponderRequest
 		case permissionsResponderRequest: PermissionsResponderRequestV1 => permissionsRouter forward permissionsResponderRequest
         case groupsResponderRequest: GroupsResponderRequestV1 => groupsRouter forward groupsResponderRequest
         case other => handleUnexpectedMessage(sender(), other, log)

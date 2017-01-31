@@ -65,26 +65,22 @@ SALSAH.showval = function(value_container, prop, value_index, options)
 			break;
 		}
 		case VALTYPE_RICHTEXT: {
-			
-			var textobj = {};
-			if (prop.attributes !== undefined && prop.attributes !== null) {
-				//console.log(prop.attributes);
 
-				var matching = {};
-				var attrs = prop.attributes.split(';');
+            var textobj = {};
 
-				for (var i in attrs) {
-					var cur_attr = attrs[i].split('=');
-					matching[cur_attr[0]] = cur_attr[1];
-				}
-			
-				textobj.matching = matching;
+            // check if it is a simple text without standoff ('utf8str')
+            // or a text with standoff markup ('xml')
+			if (prop.values[value_index]['utf8str'] !== undefined) {
+				// simple text
+				textobj.utf8str = prop.values[value_index]['utf8str'];
+			} else if (prop.values[value_index]['xml'] !== undefined){
+				// xml
+                textobj.xml = prop.values[value_index]['xml'];
+			} else {
+				alert("no text value given for text property (showval.js)")
 			}
 
 
-			textobj.utf8str = prop.values[value_index]['utf8str'];
-			textobj.textattr = (prop.values[value_index]['textattr'] === undefined) ? {} : $.parseJSON(prop.values[value_index]['textattr']); // textattr is a stringified JSON
-			
 			var tmp_ele = $('<div>');
 			value_container.append(tmp_ele.htmleditor(textobj));
 			

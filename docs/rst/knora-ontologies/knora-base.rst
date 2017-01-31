@@ -482,6 +482,12 @@ Markup is stored using this property:
 ``valueHasStandoff`` (0-n)
     Points to a standoff markup tag. See :ref:`knora-base-standoff`.
 
+``valueHasMapping`` (0-1)
+    Points to the mapping used to create the standoff markup
+    and to convert it back to the original XML. See :ref:`knora-base-mapping`.
+
+.. _knora-base-date-value:
+
 DateValue
 ~~~~~~~~~
 
@@ -510,6 +516,8 @@ regardless of the calendar in which they were entered. Properties:
 ``valueHasEndPrecision`` (1)
     The precision of the end of the period.
 
+.. _knora-base-int-value:
+
 IntValue
 ~~~~~~~~
 
@@ -517,6 +525,16 @@ Represents an integer. Property:
 
 ``valueHasInteger`` (1)
     An ``xsd:integer``.
+
+.. _knora-base-color-value:
+
+ColorValue
+~~~~~~~~~~
+
+``valueHasColor`` (1)
+    A string representing a color. The string encodes a color as hexadecimal RGB values, e.g. "#FF0000".
+
+.. _knora-base-decimal-value:
 
 DecimalValue
 ~~~~~~~~~~~~
@@ -526,6 +544,8 @@ Represents an arbitrary-precision decimal number. Property:
 ``valueHasDecimal`` (1)
     An ``xsd:decimal``.
 
+.. _knora-base-uri-value:
+
 UriValue
 ~~~~~~~~
 
@@ -534,6 +554,8 @@ Represents a non-Knora URI. Property:
 ``valueHasUri`` (1)
     An ``xsd:anyURI``.
 
+.. _knora-base-boolean-value:
+
 BooleanValue
 ~~~~~~~~~~~~
 
@@ -541,6 +563,8 @@ Represents a boolean value. Property:
 
 ``valueHasBoolean`` (1)
     An ``xsd:boolean``.
+
+.. _knora-base-geom-value:
 
 GeomValue
 ~~~~~~~~~
@@ -551,6 +575,8 @@ coordinates. Property:
 ``valueHasGeometry`` (1)
     A JSON string.
 
+.. _knora-base-geoname-value:
+
 GeonameValue
 ~~~~~~~~~~~~
 
@@ -560,6 +586,8 @@ GeoNames_. Property:
 ``valueHasGeonameCode`` (1)
     the identifier of a geographical feature from
     GeoNames_, represented as an ``xsd:string``.
+
+.. _knora-base-interval-value:
 
 IntervalValue
 ~~~~~~~~~~~~~
@@ -574,6 +602,8 @@ Properties:
 
 ``valueHasIntervalEnd`` (1)
     An ``xsd:decimal`` representing the end of the interval in seconds.
+
+.. _knora-base-list-value:
 
 ListValue
 ~~~~~~~~~
@@ -975,69 +1005,76 @@ classes, has these properties:
     The index of the last character in the text that has the attribute,
     plus 1.
 
+``standoffTagHasUUID`` (1)
+    A UUID identifying this instance and those corresponding to it
+    in later versions of the ``TextValue`` it belongs to. The UUID is a means
+    to maintain a reference to a particular range of a text also when new versions
+    are made and standoff tag IRIs change.
+
+``standoffTagHasOriginalXMLID`` (0-1)
+    The original id of the XML element that the standoff tag represents, if any.
+
+``standoffTagHasStartIndex`` (1)
+    The start index of the standoff tag. Start indexes are numbered from 0 within the context of a
+    particular text. When several standoff tags share the same start position,
+    they can be nested correctly with this information when transforming them to XML.
+
+``standoffTagHasEndIndex`` (1)
+    The end index of the standoff tag. Start indexes are numbered from 0 within the context of a
+    particular text. When several standoff tags share the same end position,
+    they can be nested correctly with this information when transforming them to XML.
+
+``standoffTagHasStartParent`` (0-1)
+    Points to the parent standoff tag. This corresponds to the original nesting of tags in XML.
+    If a standoff tag has no parent, it represents the XML root element.
+    If the original XML element is a CLIX tag, it represents the start
+    of a virtual (non syntactical) hierarchy.
+
+``standoffTagHasEndParent`` (0-1)
+    Points to the parent standoff tag if the original XML element is a CLIX tag and represents the end
+    of a virtual (non syntactical) hierarchy.
+
 The ``StandoffTag`` class is not used directly in RDF data; instead, its
-subclasses are used. A few subclasses are currently provided, and more
-will be added to support TEI semantics. In a future version of the Knora
-API server, a project will be able to define its own custom standoff tag
-classes.
+subclasses are used. A few subclasses are currently provided in ``standoff-onto.ttl``, and more
+will be added to support TEI semantics. Projects are able to define their own custom standoff tag
+classes (direct subclasses of ``StandoffTag`` or one of the standoff data type classes or subclasses
+of one of the standoff classes defined in ``standoff-onto.ttl``).
 
 Subclasses of StandoffTag
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-StandoffVisualTag
-~~~~~~~~~~~~~~~~~
+Standoff Data Type Tags
+~~~~~~~~~~~~~~~~~~~~~~~
 
-Represents a typographical style. Subclasses:
+Associates data in some Knora value type with a substring in a text. Standoff data type
+tags are subclasses of ``ValueBase`` classes.
 
--  ``StandoffItalicTag``
+- ``StandoffLinkTag`` Indicates that a substring refers to another ``kb:Resource``.
+    See :ref:`knora-base-standoff-link`.
 
--  ``StandoffBoldTag``
+- ``StandoffInternalReferenceTag`` Indicates that a substring refers to another standoff tag in the same text
+    value. See :ref:`knora-base-standoff-internal-reference`.
 
--  ``StandoffUnderlineTag``
+- ``StandoffUriTag`` Indicates that a substring is associated with a
+    URI, which is stored in the same form that is used for ``kb:UriValue``. See :ref:`knora-base-uri-value`.
 
--  ``StandoffStrikethroughTag``
+- ``StandoffDateTag`` Indicates that a substring represents a
+    date, which is stored in the same form that is used for ``kb:DateValue``. See :ref:`knora-base-date-value`.
 
--  ``StandoffSuperscriptTag``
+- ``StandoffColorTag`` Indicates that a substring represents a color,
+    which is stored in the same form that is used for ``kb:ColorValue``. See :ref:`knora-base-color-value`.
 
--  ``StandoffSubscriptTag``
+- ``StandoffIntegerTag`` Indicates that a substring represents an integer,
+    which is stored in the same form that is used for ``kb:IntegerValue``. See :ref:`knora-base-int-value`.
 
-StandoffStructuralTag
-~~~~~~~~~~~~~~~~~~~~~
+- ``StandoffDecimalTag`` Indicates that a substring represents a number with fractions,
+    which is stored in the same form that is used for ``kb:DecimalValue``. See :ref:`knora-base-decimal-value`.
 
-Represents an element of the structure of a text. Subclasses:
+- ``StandoffIntervalTag`` Indicates that a substring represents an interval,
+    which is stored in the same form that is used for ``kb:IntervalValue``. See :ref:`knora-base-interval-value`.
 
--  ``StandoffParagraphTag``
-
--  ``StandoffHeader1Tag``
-
--  ``StandoffHeader2Tag``
-
--  ``StandoffHeader3Tag``
-
--  ``StandoffHeader4Tag``
-
--  ``StandoffHeader5Tag``
-
--  ``StandoffHeader6Tag``
-
--  ``StandoffOrderedListTag``
-
--  ``StandoffUnorderedListTag``
-
--  ``StandoffListElementTag``
-
-StandoffDataTypeTag
-~~~~~~~~~~~~~~~~~~~
-
-Associates data in some Knora value type with a substring in a text.
-Subclasses:
-
--  ``StandoffUriTag`` Indicates that a substring is associated with a
-   URI.
-
--  ``StandoffDateValueTag`` Indicates that a substring represents a
-   date, which is stored in the same form that is used for
-   ``kb:DateValue``.
+- ``StandoffBooleanTag`` Indicates that a substring represents a Boolean,
+    which is stored in the same form that is used for ``kb:BooleanValue``. See :ref:`knora-base-boolean-value`.
 
 .. _knora-base-standoff-link:
 
@@ -1169,6 +1206,76 @@ are automatically visible to all users, as long as they have permission
 to see the source and target resources. The owner of these link values
 is always ``kb:SystemUser`` (see :ref:`knora-base-users-and-groups`).
 
+.. _knora-base-standoff-internal-reference:
+
+Internal Links in a TextValue
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Internal links in a ``TextValue`` can be using the data type standoff class ``StandoffInternalReferenceTag`` or a subclass of it.
+It has the following property:
+
+``standoffTagHasInternalReference`` (1)
+    Points to a ``StandoffTag`` that belongs to the same ``TextValue``.
+    It has an ``objectClassConstraint`` of ``StandoffTag``.
+
+For links to a ``kb:Resource``, see :ref:`knora-base-standoff-link`.
+
+.. _knora-base-mapping:
+
+Mapping to Create Standoff From XML
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+A mapping allows for the conversion of an XML document to RDF-standoff
+and back. A mapping defines one-to-one relations between XML elements (with or without a class) and attributes
+and standoff classes and properties (see :ref:`XML-to-standoff-mapping`).
+
+A mapping is represented by a ``kb:XMLToStandoffMapping`` which contains one or more ``kb:MappingElement``.
+A ``kb:MappingElement`` maps an XML element (including attributes) to a standoff class and standoff properties.
+It has the following properties:
+
+``mappingHasXMLTagname`` (1)
+    The name of the XML element that
+    is mapped to a standoff class.
+
+``mappingHasXMLNamespace`` (1)
+    The XML namespace of the XML element that
+    is mapped to a standoff class. If no namespace is given, ``noNamespace`` is used.
+
+``mappingHasXMLClass`` (1)
+    The name of the class of the XML element. If it has no class,
+    ``noClass`` is used.
+
+``mappingHasStandoffClass`` (1)
+    The standoff class the XML element is mapped to.
+
+``mappingHasXMLAttribute`` (0-n)
+    Maps XML attributes to standoff properties using ``MappingXMLAttribute``. See below.
+
+``mappingHasStandoffDataTypeClass`` (0-1)
+    Indicates the standoff data type class
+    of the standoff class the XML element is mapped to.
+
+``mappingElementRequiresSeparator`` (1)
+    Indicates if there should be an invisible word separator inserted
+    after the XML element in the RDF-standoff representation. Once the markup is stripped, text segments that
+    belonged to different elements may be concatenated.
+
+A ``MappingXMLAttribute`` has the following properties:
+
+``mappingHasXMLAttributename``
+    The name of the XML attribute that is mapped to a standoff property.
+
+``mappingHasXMLNamespace``
+    The namespace of the XML attribute that is mapped to a standoff property.
+    If no namespace is given, ``noNamespace`` is used.
+
+``mappingHasStandoffProperty``
+    The standoff property the XML attribute is mapped to.
+
+
+Knora includes a standard mapping used by the SALSAH GUI. It has the IRI ``http://data.knora.org/projects/standoff/mappings/StandardMapping`` and defines
+mappings for a few elements used to write texts with simple markup (see :ref:`XML-to-standoff-mapping`).
+
 Standoff in Digital Editions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -1210,11 +1317,11 @@ properties:
 ``standoffTagHasEndIndex`` (0-1)
     The index of the end position, if this is a non-hierarchical tag.
 
-``standoffTagHasStartParentIndex`` (0-1)
-    The index of the tag, if any, that contains the start position.
+``standoffTagHasStartParent`` (0-1)
+    The IRI of the tag, if any, that contains the start position.
 
-``standoffTagHasEndParentIndex`` (0-1)
-    The index of the tag, if any, that contains the end position, if
+``standoffTagHasEndParent`` (0-1)
+    The IRI of the tag, if any, that contains the end position, if
     this is a non-hierarchical tag.
 
 ``standoffTagHasUUID`` (0-1)
@@ -1223,6 +1330,36 @@ properties:
     text (such as a diplomatic transcription and an edited critical
     text).
 
+Querying Standoff in SPARQL
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+A future version of the Knora API server will provide an API for querying standoff markup.
+In the meantime, it is possible to query it directly in SPARQL. For example, here is a
+SPARQL query (using RDFS inference) that finds all the text values texts that have a standoff
+date tag referring to Christmas Eve 2016, contained in a ``StandoffItalicTag``:
+
+::
+
+  PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+  PREFIX standoff: <http://www.knora.org/ontology/standoff#>
+
+  select * where { 
+      ?standoffTag a knora-base:StandoffDateTag  .
+      
+      ?standoffTag knora-base:valueHasStartJDN ?dateStart .
+      ?standoffTag knora-base:valueHasEndJDN ?dateEnd .
+      
+      FILTER (2457747  <= ?dateEnd && 2457747  >= ?dateStart)
+      
+      ?standoffTag knora-base:standoffTagHasStartParent ?parent .
+      ?parent a standoff:StandoffItalicTag .
+      
+      ?textValue knora-base:valueHasStandoff ?standoffTag .
+      ?textValue knora-base:valueHasString ?string .
+      
+      ?standoffTag knora-base:standoffTagHasStart ?startPos .
+      ?standoffTag knora-base:standoffTagHasEnd ?endPos .  
+  }
 
 .. _knora-base-authorization:
 
@@ -1459,7 +1596,7 @@ Constraints on the Types of Property Subjects and Objects
 ---------------------------------------------------------
 
 When a project-specific ontology defines a property, it must indicate
-the types that are allowed as subjects and objects of the property. This
+the types that are allowed as objects (and, if possible, as subjects) of the property. This
 is done using the following Knora-specific properties:
 
 ``subjectClassConstraint``

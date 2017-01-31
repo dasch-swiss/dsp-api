@@ -1,0 +1,117 @@
+@prefix xml: <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
+@prefix salsah-gui: <http://www.knora.org/ontology/salsah-gui#> .
+@prefix standoff: <http://www.knora.org/ontology/standoff#> .
+
+<http://data.knora.org/projects/standoff/mappings/StandardMapping> a knora-base:XMLToStandoffMapping ;
+                                                                   rdfs:label "standard mapping" ;
+                                                                   knora-base:hasMappingElement <http://data.knora.org/projects/standoff/mappings/StandardMapping/elements/4b-Cx4qYQOyy9mUswmvW7g> ;
+                                                                   knora-base:hasMappingElement <http://data.knora.org/projects/standoff/mappings/StandardMapping/elements/5NtsUzYWTa6O427LTaORkg> ;
+                                                                   knora-base:hasMappingElement <http://data.knora.org/projects/standoff/mappings/StandardMapping/elements/4XIn2zgbSN-swe5PdPjogg> ;
+                                                                   knora-base:hasMappingElement <http://data.knora.org/projects/standoff/mappings/StandardMapping/elements/pUaXWHPtSPak0Vu30zrTkA> ;
+                                                                   knora-base:hasMappingElement <http://data.knora.org/projects/standoff/mappings/StandardMapping/elements/IveyAwIDSw-Pu-5nSml3hQ> ;
+                                                                   knora-base:hasMappingElement <http://data.knora.org/projects/standoff/mappings/StandardMapping/elements/mVcdUbE3TiijJW9o5AB61A> ;
+                                                                   knora-base:hasMappingElement <http://data.knora.org/projects/standoff/mappings/StandardMapping/elements/562D-BvkTmC4iwicsGyoVw> ;
+                                                                   knora-base:hasMappingElement <http://data.knora.org/projects/standoff/mappings/StandardMapping/elements/wl8QpeAmSrukY1KEdEqN6Q> ;
+                                                                   knora-base:hasMappingElement <http://data.knora.org/projects/standoff/mappings/StandardMapping/elements/9f0iFk1JTu-gsMHtyUZqcg> ;
+                                                                   knora-base:hasMappingElement <http://data.knora.org/projects/standoff/mappings/StandardMapping/elements/ODwo82ZLRsiWBVXvipRk1w> ;
+                                                                   knora-base:hasMappingElement <http://data.knora.org/projects/standoff/mappings/StandardMapping/elements/ktOIwFHSTm-GC1RVF3HZpw> .
+
+
+<http://data.knora.org/projects/standoff/mappings/StandardMapping/elements/4b-Cx4qYQOyy9mUswmvW7g> a knora-base:MappingElement ;
+                                                                                                   knora-base:mappingHasStandoffClass standoff:StandoffRootTag ;
+                                                                                                   knora-base:mappingHasXMLClass  "noClass"^^xsd:string ;
+                                                                                                   knora-base:mappingHasXMLNamespace "noNamespace"^^xsd:string ;
+                                                                                                   knora-base:mappingHasXMLTagname	"text"^^xsd:string ;
+                                                                                                   knora-base:mappingElementRequiresSeparator false ;
+                                                                                                   knora-base:mappingHasXMLAttribute <http://data.knora.org/projects/standoff/mappings/StandardMapping/elements/ewU6KAXfS2-o5JLyMp5AWQ> .
+
+<http://data.knora.org/projects/standoff/mappings/StandardMapping/elements/ewU6KAXfS2-o5JLyMp5AWQ> a knora-base:MappingXMLAttribute ;
+                                                                                                   knora-base:mappingHasStandoffProperty standoff:standoffRootTagHasDocumentType ;
+                                                                                                   knora-base:mappingHasXMLAttributename  "documentType"^^xsd:string ;
+                                                                                                   knora-base:mappingHasXMLNamespace "noNamespace"^^xsd:string .
+
+<http://data.knora.org/projects/standoff/mappings/StandardMapping/elements/5NtsUzYWTa6O427LTaORkg> a knora-base:MappingElement ;
+                                                                                                   knora-base:mappingHasStandoffClass standoff:StandoffParagraphTag  ;
+                                                                                                   knora-base:mappingHasXMLClass  "noClass"^^xsd:string ;
+                                                                                                   knora-base:mappingHasXMLNamespace "noNamespace"^^xsd:string ;
+                                                                                                   knora-base:mappingElementRequiresSeparator true ;
+                                                                                                   knora-base:mappingHasXMLTagname	"p"^^xsd:string .
+
+<http://data.knora.org/projects/standoff/mappings/StandardMapping/elements/4XIn2zgbSN-swe5PdPjogg> a knora-base:MappingElement ;
+                                                                                                   knora-base:mappingHasStandoffClass standoff:StandoffItalicTag  ;
+                                                                                                   knora-base:mappingHasXMLClass  "noClass"^^xsd:string ;
+                                                                                                   knora-base:mappingHasXMLNamespace "noNamespace"^^xsd:string ;
+                                                                                                   knora-base:mappingElementRequiresSeparator false ;
+                                                                                                   knora-base:mappingHasXMLTagname	"em"^^xsd:string .
+
+<http://data.knora.org/projects/standoff/mappings/StandardMapping/elements/pUaXWHPtSPak0Vu30zrTkA> a knora-base:MappingElement ;
+                                                                                                   knora-base:mappingHasStandoffClass standoff:StandoffBoldTag  ;
+                                                                                                   knora-base:mappingHasXMLClass  "noClass"^^xsd:string ;
+                                                                                                   knora-base:mappingHasXMLNamespace "noNamespace"^^xsd:string ;
+                                                                                                   knora-base:mappingElementRequiresSeparator false ;
+                                                                                                   knora-base:mappingHasXMLTagname	"strong"^^xsd:string .
+
+<http://data.knora.org/projects/standoff/mappings/StandardMapping/elements/IveyAwIDSw-Pu-5nSml3hQ> a knora-base:MappingElement ;
+                                                                                                   knora-base:mappingHasStandoffClass standoff:StandoffUnderlineTag  ;
+                                                                                                   knora-base:mappingHasXMLClass  "noClass"^^xsd:string ;
+                                                                                                   knora-base:mappingHasXMLNamespace "noNamespace"^^xsd:string ;
+                                                                                                   knora-base:mappingElementRequiresSeparator false ;
+                                                                                                   knora-base:mappingHasXMLTagname	"u"^^xsd:string .
+
+<http://data.knora.org/projects/standoff/mappings/StandardMapping/elements/mVcdUbE3TiijJW9o5AB61A> a knora-base:MappingElement ;
+                                                                                                   knora-base:mappingHasStandoffClass standoff:StandoffSubscriptTag  ;
+                                                                                                   knora-base:mappingHasXMLClass  "noClass"^^xsd:string ;
+                                                                                                   knora-base:mappingHasXMLNamespace "noNamespace"^^xsd:string ;
+                                                                                                   knora-base:mappingElementRequiresSeparator false ;
+                                                                                                   knora-base:mappingHasXMLTagname	"sub"^^xsd:string .
+
+<http://data.knora.org/projects/standoff/mappings/StandardMapping/elements/562D-BvkTmC4iwicsGyoVw> a knora-base:MappingElement ;
+                                                                                                   knora-base:mappingHasStandoffClass standoff:StandoffSuperscriptTag  ;
+                                                                                                   knora-base:mappingHasXMLClass  "noClass"^^xsd:string ;
+                                                                                                   knora-base:mappingHasXMLNamespace "noNamespace"^^xsd:string ;
+                                                                                                   knora-base:mappingElementRequiresSeparator false ;
+                                                                                                   knora-base:mappingHasXMLTagname	"sup"^^xsd:string .
+
+<http://data.knora.org/projects/standoff/mappings/StandardMapping/elements/wl8QpeAmSrukY1KEdEqN6Q> a knora-base:MappingElement ;
+                                                                                                   knora-base:mappingHasStandoffClass standoff:StandoffStrikethroughTag   ;
+                                                                                                   knora-base:mappingHasXMLClass  "noClass"^^xsd:string ;
+                                                                                                   knora-base:mappingHasXMLNamespace "noNamespace"^^xsd:string ;
+                                                                                                   knora-base:mappingElementRequiresSeparator false ;
+                                                                                                   knora-base:mappingHasXMLTagname	"strike"^^xsd:string .
+
+<http://data.knora.org/projects/standoff/mappings/StandardMapping/elements/9f0iFk1JTu-gsMHtyUZqcg> a knora-base:MappingElement ;
+                                                                                                   knora-base:mappingHasStandoffClass knora-base:StandoffUriTag   ;
+                                                                                                   knora-base:mappingHasXMLClass  "noClass"^^xsd:string ;
+                                                                                                   knora-base:mappingHasXMLNamespace "noNamespace"^^xsd:string ;
+                                                                                                   knora-base:mappingHasXMLTagname	"a"^^xsd:string ;
+                                                                                                   knora-base:mappingElementRequiresSeparator false ;
+                                                                                                   knora-base:mappingHasStandoffDataTypeClass <http://data.knora.org/projects/standoff/mappings/StandardMapping/elements/4bsitijFRVymnUxomS1LTg> .
+
+<http://data.knora.org/projects/standoff/mappings/StandardMapping/elements/4bsitijFRVymnUxomS1LTg> a knora-base:MappingStandoffDataTypeClass ;
+                                                                                                   knora-base:mappingHasStandoffClass knora-base:StandoffUriTag ;
+                                                                                                   knora-base:mappingHasXMLAttributename "href"^^xsd:string .
+
+<http://data.knora.org/projects/standoff/mappings/StandardMapping/elements/ODwo82ZLRsiWBVXvipRk1w> a knora-base:MappingElement ;
+                                                                                                   knora-base:mappingHasStandoffClass knora-base:StandoffLinkTag   ;
+                                                                                                   knora-base:mappingHasXMLClass  "salsah-link"^^xsd:string ;
+                                                                                                   knora-base:mappingHasXMLNamespace "noNamespace"^^xsd:string ;
+                                                                                                   knora-base:mappingHasXMLTagname	"a"^^xsd:string ;
+                                                                                                   knora-base:mappingElementRequiresSeparator false ;
+                                                                                                   knora-base:mappingHasStandoffDataTypeClass <http://data.knora.org/projects/standoff/mappings/StandardMapping/elements/Gs_0yBwLStaj_Em3cs4Erg> .
+
+<http://data.knora.org/projects/standoff/mappings/StandardMapping/elements/Gs_0yBwLStaj_Em3cs4Erg> a knora-base:MappingStandoffDataTypeClass ;
+                                                                                                   knora-base:mappingHasStandoffClass knora-base:StandoffLinkTag ;
+                                                                                                   knora-base:mappingHasXMLAttributename "href"^^xsd:string .
+
+<http://data.knora.org/projects/standoff/mappings/StandardMapping/elements/ktOIwFHSTm-GC1RVF3HZpw> a knora-base:MappingElement ;
+                                                                                                   knora-base:mappingHasStandoffClass standoff:StandoffBrTag   ;
+                                                                                                   knora-base:mappingHasXMLClass  "noClass"^^xsd:string ;
+                                                                                                   knora-base:mappingHasXMLNamespace "noNamespace"^^xsd:string ;
+                                                                                                   knora-base:mappingElementRequiresSeparator true ;
+                                                                                                   knora-base:mappingHasXMLTagname	"br"^^xsd:string .

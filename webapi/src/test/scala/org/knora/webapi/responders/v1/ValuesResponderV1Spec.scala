@@ -26,14 +26,16 @@ import akka.actor.Props
 import akka.testkit.{ImplicitSender, TestActorRef}
 import com.typesafe.config.ConfigFactory
 import org.knora.webapi._
-import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse}
+import org.knora.webapi.messages.v1.responder.ontologymessages._
 import org.knora.webapi.messages.v1.responder.resourcemessages.{LocationV1, ResourceFullGetRequestV1, ResourceFullResponseV1}
 import org.knora.webapi.messages.v1.responder.sipimessages.SipiResponderConversionFileRequestV1
+import org.knora.webapi.messages.v1.responder.standoffmessages.{GetMappingResponseV1, MappingXMLtoStandoff, StandoffDataTypeClasses, XMLTag}
 import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v1.store.triplestoremessages._
 import org.knora.webapi.responders._
 import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
+import org.knora.webapi.twirl.{StandoffTagAttributeV1, StandoffTagIriAttributeV1, StandoffTagV1}
 import org.knora.webapi.util.MutableTestIri
 
 import scala.concurrent.duration._
@@ -113,37 +115,69 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
     private val currentGeomValueIri = new MutableTestIri
     private val partOfLinkValueIri = new MutableTestIri
 
-    private def checkComment1aResponse(response: CreateValueResponseV1, utf8str: String, textattr: Map[StandoffTagV1.Value, Seq[StandoffPositionV1]] = Map.empty[StandoffTagV1.Value, Seq[StandoffPositionV1]]): Unit = {
+    private def checkComment1aResponse(response: CreateValueResponseV1, utf8str: String, standoff: Seq[StandoffTagV1] = Seq.empty[StandoffTagV1]): Unit = {
         assert(response.rights == 8, "rights was not 8")
         assert(response.value.asInstanceOf[TextValueV1].utf8str == utf8str, "comment value did not match")
-        assert(response.value.asInstanceOf[TextValueV1].textattr == textattr, "textattr did not match")
+
+        if (standoff.nonEmpty) {
+            response.value match {
+                case textValueWithStandoff: TextValueWithStandoffV1 =>
+                    assert(textValueWithStandoff.standoff.sortBy(standoffTag => (standoffTag.standoffTagClassIri, standoffTag.startPosition)) == standoff.sortBy(standoffTag => (standoffTag.standoffTagClassIri, standoffTag.startPosition)), "standoff did not match")
+                case _ => assert(false) // response should be of type TextValueWithStandoffV1
+            }
+        }
+
         commentIri.set(response.id)
     }
 
     private def checkValueGetResponse(response: ValueGetResponseV1): Unit = {
         assert(response.rights == 8, "rights was not 8")
-        assert(response.value.asInstanceOf[TextValueV1].utf8str == "Comment 1a\r", "comment value did not match")
+        assert(response.value.asInstanceOf[TextValueV1].utf8str == "Comment 1a", "comment value did not match")
     }
 
     private def checkValueGetResponseWithStandoff(response: ValueGetResponseV1): Unit = {
         assert(response.rights == 6, "rights was not 6")
-        assert(response.value.asInstanceOf[TextValueV1].utf8str == "Zusammengebunden mit zwei weiteren Drucken von Johann Amerbach\n", "comment utf8str value did not match")
+        assert(response.value.asInstanceOf[TextValueWithStandoffV1].utf8str == "Zusammengebunden mit zwei weiteren Drucken von Johann Amerbach", "comment utf8str value did not match")
+
+
 
         // expected Standoff information for <http://data.knora.org/e41ab5695c/values/d3398239089e04> in incunabula-data.ttl
-        val textattr = Map(
-            StandoffTagV1.bold -> Vector(StandoffPositionV1(
-                start = 21,
-                end = 25
-            ))
+        val standoff = Vector(
+            StandoffTagV1(
+                standoffTagClassIri = OntologyConstants.Standoff.StandoffRootTag,
+                startPosition = 0,
+                endPosition = 62,
+                uuid = "4800e53e-3835-498e-b658-6cc4f93ab894",
+                originalXMLID = None,
+                startIndex = 0
+            ), StandoffTagV1(
+                standoffTagClassIri = OntologyConstants.Standoff.StandoffBoldTag,
+                startPosition = 21,
+                endPosition = 25,
+                uuid = "4bc24696-5dde-4ced-9687-6f8e4519efe8",
+                originalXMLID = None,
+                startIndex = 1,
+                startParentIndex = Some(0)
+            )
         )
 
-        assert(response.value.asInstanceOf[TextValueV1].textattr == textattr, "textattr did not match")
+        assert(response.value.asInstanceOf[TextValueWithStandoffV1].standoff.sortBy(_.standoffTagClassIri) == standoff.sortBy(_.standoffTagClassIri), "standoff did not match")
     }
 
-    private def checkComment1bResponse(response: ChangeValueResponseV1, utf8str: String, textattr: Map[StandoffTagV1.Value, Seq[StandoffPositionV1]] = Map.empty[StandoffTagV1.Value, Seq[StandoffPositionV1]]): Unit = {
+    private def checkComment1bResponse(response: ChangeValueResponseV1, utf8str: String, standoff: Seq[StandoffTagV1] = Seq.empty[StandoffTagV1]): Unit = {
         assert(response.rights == 8, "rights was not 8")
+
         assert(response.value.asInstanceOf[TextValueV1].utf8str == utf8str, "comment value did not match")
-        assert(response.value.asInstanceOf[TextValueV1].textattr == textattr, "textattr did not match")
+
+
+        if (standoff.nonEmpty) {
+            response.value match {
+                case textValueWithStandoff: TextValueWithStandoffV1 =>
+                    assert(textValueWithStandoff.standoff.sortBy(standoffTag => (standoffTag.standoffTagClassIri, standoffTag.startPosition)) == standoff.sortBy(standoffTag => (standoffTag.standoffTagClassIri, standoffTag.startPosition)), "standoff did not match")
+                case _ => assert(false) // response should be of type TextValueWithStandoffV1
+            }
+        }
+
         commentIri.set(response.id)
     }
 
@@ -151,41 +185,25 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         val comments = response.props.get.properties.filter(_.pid == "http://www.knora.org/ontology/incunabula#book_comment").head
 
         assert(comments.values == Vector(
-            TextValueV1(utf8str = "Comment 1b"),
-            TextValueV1("Comment 2")
+            TextValueSimpleV1(utf8str = "Comment 1b"),
+            TextValueSimpleV1("Comment 2")
         ), "Values of book_comment did not match")
     }
 
     private def checkTextValue(expected: TextValueV1, received: TextValueV1): Unit = {
-        def orderPositions(left: StandoffPositionV1, right: StandoffPositionV1): Boolean = {
-            if (left.start != right.start) {
-                left.start < right.start
-            } else {
-                left.end < right.end
-            }
-        }
 
         assert(received.utf8str == expected.utf8str)
-        assert(received.resource_reference == expected.resource_reference)
-        assert(received.textattr.keys == expected.textattr.keys)
 
-        for (attribute <- expected.textattr.keys) {
-            val expectedPositions = expected.textattr(attribute).sortWith(orderPositions)
-            val receivedPositions = received.textattr(attribute).sortWith(orderPositions)
+        // if standoff is expected, compare the standoff tags
+        expected match {
 
-            assert(receivedPositions.length == expectedPositions.length)
-
-            for ((receivedPosition, expectedPosition) <- receivedPositions.zip(expectedPositions)) {
-                assert(receivedPosition.start == expectedPosition.start)
-                assert(receivedPosition.end == expectedPosition.end)
-
-                assert(receivedPosition.resid == expectedPosition.resid)
-
-                if (expectedPosition.resid.isEmpty) {
-                    assert(receivedPosition.href == expectedPosition.href)
-                }
-            }
+            case expectedWithStandoff: TextValueWithStandoffV1 =>
+                assert(received.asInstanceOf[TextValueWithStandoffV1].resource_reference == expectedWithStandoff.resource_reference)
+                assert(received.asInstanceOf[TextValueWithStandoffV1].standoff.map(_.standoffTagClassIri).sorted == expectedWithStandoff.standoff.map(_.standoffTagClassIri).sorted)
+                assert(received.asInstanceOf[TextValueWithStandoffV1].standoff.sortBy(standoffTag => (standoffTag.standoffTagClassIri, standoffTag.startPosition)) == expectedWithStandoff.standoff.sortBy(standoffTag => (standoffTag.standoffTagClassIri, standoffTag.startPosition)))
+            case _ =>
         }
+
     }
 
     private def getLastModificationDate(resourceIri: IRI): Option[String] = {
@@ -209,16 +227,24 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         }
     }
 
-    // a sample set of text attributes
-    private val sampleTextattr = Map(
-        StandoffTagV1.bold -> Vector(StandoffPositionV1(
-            start = 0,
-            end = 7
-        )),
-        StandoffTagV1.paragraph -> Vector(StandoffPositionV1(
-            start = 0,
-            end = 10
-        ))
+    // a sample set of standoff tags
+    private val sampleStandoff: Vector[StandoffTagV1] = Vector(
+        StandoffTagV1(
+            standoffTagClassIri = OntologyConstants.Standoff.StandoffBoldTag,
+            startPosition = 0,
+            endPosition = 7,
+            uuid = UUID.randomUUID().toString,
+            originalXMLID = None,
+            startIndex = 0
+        ),
+        StandoffTagV1(
+            standoffTagClassIri = OntologyConstants.Standoff.StandoffParagraphTag,
+            startPosition = 0,
+            endPosition = 10,
+            uuid = UUID.randomUUID().toString,
+            originalXMLID = None,
+            startIndex = 0
+        )
     )
 
     private def checkImageFileValueChange(received: ChangeFileValueResponseV1, request: ChangeFileValueRequestV1): Unit = {
@@ -228,6 +254,11 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             location: LocationV1 => assert(location.origname == request.file.originalFilename, "wrong original file name")
         }
     }
+
+    private val dummyMapping = MappingXMLtoStandoff(
+            namespace = Map.empty[String, Map[String, Map[String, XMLTag]]]
+    )
+
 
     "Load test data" in {
         storeManager ! ResetTriplestoreContent(rdfDataObjects)
@@ -241,13 +272,13 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         "add a new text value without Standoff" in {
             val lastModBeforeUpdate = getLastModificationDate(zeitglöckleinIri)
 
-            val utf8str = "Comment 1a\r"
+            val utf8str = "Comment 1a"
 
             actorUnderTest ! CreateValueRequestV1(
                 projectIri = incunabulaProjectIri,
                 resourceIri = zeitglöckleinIri,
                 propertyIri = "http://www.knora.org/ontology/incunabula#book_comment",
-                value = TextValueV1(utf8str = utf8str),
+                value = TextValueSimpleV1(utf8str = utf8str),
                 userProfile = incunabulaUser,
                 apiRequestID = UUID.randomUUID
             )
@@ -259,6 +290,26 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             // Check that the resource's last modification date got updated.
             val lastModAfterUpdate = getLastModificationDate(zeitglöckleinIri)
             lastModBeforeUpdate != lastModAfterUpdate should ===(true)
+        }
+
+        "attempt to add a duplicate text value without standoff" in {
+
+            val utf8str = "Comment 1a"
+
+            actorUnderTest ! CreateValueRequestV1(
+                projectIri = incunabulaProjectIri,
+                resourceIri = zeitglöckleinIri,
+                propertyIri = "http://www.knora.org/ontology/incunabula#book_comment",
+                value = TextValueSimpleV1(utf8str = utf8str),
+                userProfile = incunabulaUser,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[DuplicateValueException] should ===(true)
+            }
+
+
         }
 
         "query a text value without Standoff" in {
@@ -323,7 +374,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
             actorUnderTest ! ChangeValueRequestV1(
                 valueIri = commentIri.get,
-                value = TextValueV1(utf8str = utf8str),
+                value = TextValueSimpleV1(utf8str = utf8str),
                 userProfile = incunabulaUser,
                 apiRequestID = UUID.randomUUID
             )
@@ -342,7 +393,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
             actorUnderTest ! ChangeValueRequestV1(
                 valueIri = commentIri.get,
-                value = TextValueV1(utf8str = utf8str),
+                value = TextValueSimpleV1(utf8str = utf8str),
                 userProfile = incunabulaUser,
                 apiRequestID = UUID.randomUUID
             )
@@ -359,7 +410,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
                 projectIri = "http://data.knora.org/projects/77275339",
                 resourceIri = zeitglöckleinIri,
                 propertyIri = "http://www.knora.org/ontology/incunabula#book_comment",
-                value = TextValueV1(utf8str = utf8str),
+                value = TextValueSimpleV1(utf8str = utf8str),
                 userProfile = incunabulaUser,
                 apiRequestID = UUID.randomUUID
             )
@@ -374,7 +425,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
             actorUnderTest ! ChangeValueRequestV1(
                 valueIri = "http://data.knora.org/c5058f3a/values/184e99ca01",
-                value = TextValueV1(utf8str = utf8str),
+                value = TextValueSimpleV1(utf8str = utf8str),
                 userProfile = incunabulaUser,
                 apiRequestID = UUID.randomUUID
             )
@@ -389,7 +440,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
                 projectIri = "http://data.knora.org/projects/77275339",
                 resourceIri = zeitglöckleinIri,
                 propertyIri = "http://www.knora.org/ontology/incunabula#book_comment",
-                value = TextValueV1("Comment 2"),
+                value = TextValueSimpleV1("Comment 2"),
                 userProfile = incunabulaUser,
                 apiRequestID = UUID.randomUUID
             )
@@ -453,7 +504,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
                 projectIri = "http://data.knora.org/projects/77275339",
                 resourceIri = "http://data.knora.org/nonexistent",
                 propertyIri = "http://www.knora.org/ontology/incunabula#book_comment",
-                value = TextValueV1("Comment 1"),
+                value = TextValueSimpleV1("Comment 1"),
                 userProfile = incunabulaUser,
                 apiRequestID = UUID.randomUUID
             )
@@ -468,7 +519,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
                 projectIri = "http://data.knora.org/projects/77275339",
                 resourceIri = "http://data.knora.org/9935159f67",
                 propertyIri = "http://www.knora.org/ontology/incunabula#book_comment",
-                value = TextValueV1("Comment 1"),
+                value = TextValueSimpleV1("Comment 1"),
                 userProfile = incunabulaUser,
                 apiRequestID = UUID.randomUUID
             )
@@ -481,7 +532,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         "not add a new version of a deleted value" in {
             actorUnderTest ! ChangeValueRequestV1(
                 valueIri = commentIri.get,
-                value = TextValueV1("Comment 1c"),
+                value = TextValueSimpleV1("Comment 1c"),
                 userProfile = incunabulaUser,
                 apiRequestID = UUID.randomUUID
             )
@@ -496,7 +547,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
                 projectIri = "http://data.knora.org/projects/77275339",
                 resourceIri = "http://data.knora.org/e41ab5695c",
                 propertyIri = "http://www.knora.org/ontology/incunabula#book_comment",
-                value = TextValueV1("Comment 1"),
+                value = TextValueSimpleV1("Comment 1"),
                 userProfile = incunabulaUser,
                 apiRequestID = UUID.randomUUID
             )
@@ -511,7 +562,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
                 projectIri = "http://data.knora.org/projects/77275339",
                 resourceIri = "http://data.knora.org/21abac2162",
                 propertyIri = "http://www.knora.org/ontology/incunabula#pubdate",
-                value = TextValueV1("this is not a date"),
+                value = TextValueSimpleV1("this is not a date"),
                 userProfile = incunabulaUser,
                 apiRequestID = UUID.randomUUID
             )
@@ -524,7 +575,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         "not add a new version to a value that the user doesn't have permission to modify" in {
             actorUnderTest ! ChangeValueRequestV1(
                 valueIri = "http://data.knora.org/c5058f3a/values/c3295339",
-                value = TextValueV1("Zeitglöcklein des Lebens und Leidens Christi modified"),
+                value = TextValueSimpleV1("Zeitglöcklein des Lebens und Leidens Christi modified"),
                 userProfile = incunabulaUser,
                 apiRequestID = UUID.randomUUID
             )
@@ -537,7 +588,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         "not add a new version of a value of the wrong type" in {
             actorUnderTest ! ChangeValueRequestV1(
                 valueIri = "http://data.knora.org/c5058f3a/values/cfd09f1e01",
-                value = TextValueV1("this is not a date"),
+                value = TextValueSimpleV1("this is not a date"),
                 userProfile = incunabulaUser,
                 apiRequestID = UUID.randomUUID
             )
@@ -667,49 +718,92 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
         "add a new text value with Standoff" in {
 
-            val utf8str = "Comment 1aa\r"
+            val utf8str = "Comment 1aa"
 
             actorUnderTest ! CreateValueRequestV1(
                 projectIri = "http://data.knora.org/projects/77275339",
                 resourceIri = zeitglöckleinIri,
                 propertyIri = "http://www.knora.org/ontology/incunabula#book_comment",
-                value = TextValueV1(utf8str = utf8str, textattr = sampleTextattr),
+                value = TextValueWithStandoffV1(utf8str = utf8str, standoff = sampleStandoff, mapping = dummyMapping, mappingIri = "http://data.knora.org/projects/standoff/mappings/StandardMapping"),
                 userProfile = incunabulaUser,
                 apiRequestID = UUID.randomUUID
             )
 
             expectMsgPF(timeout) {
-                case msg: CreateValueResponseV1 => checkComment1aResponse(msg, utf8str, sampleTextattr)
+                case msg: CreateValueResponseV1 => checkComment1aResponse(msg, utf8str, sampleStandoff)
             }
+        }
+
+        "attempt to add a duplicate text value with standoff" in {
+
+            val utf8str = "Comment 1aa"
+
+            actorUnderTest ! CreateValueRequestV1(
+                projectIri = "http://data.knora.org/projects/77275339",
+                resourceIri = zeitglöckleinIri,
+                propertyIri = "http://www.knora.org/ontology/incunabula#book_comment",
+                value = TextValueWithStandoffV1(utf8str = utf8str, standoff = sampleStandoff, mapping = dummyMapping, mappingIri = "http://data.knora.org/projects/standoff/mappings/StandardMapping"),
+                userProfile = incunabulaUser,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[DuplicateValueException] should ===(true)
+            }
+
         }
 
         "add a new version of a text value with Standoff" in {
 
-            val utf8str = "Comment 1bb\r"
+            val utf8str = "Comment 1bb"
 
             actorUnderTest ! ChangeValueRequestV1(
                 valueIri = commentIri.get,
-                value = TextValueV1(utf8str = utf8str, textattr = sampleTextattr),
+                value = TextValueWithStandoffV1(utf8str = utf8str, standoff = sampleStandoff, mapping = dummyMapping, mappingIri = "http://data.knora.org/projects/standoff/mappings/StandardMapping"),
                 userProfile = incunabulaUser,
                 apiRequestID = UUID.randomUUID
             )
 
             expectMsgPF(timeout) {
-                case msg: ChangeValueResponseV1 => checkComment1bResponse(msg, utf8str, sampleTextattr)
+                case msg: ChangeValueResponseV1 => checkComment1bResponse(msg, utf8str, sampleStandoff)
             }
         }
 
+        "attempt to add a redundant version of a text value with standoff" in {
+
+            val utf8str = "Comment 1bb"
+
+            actorUnderTest ! ChangeValueRequestV1(
+                valueIri = commentIri.get,
+                value = TextValueWithStandoffV1(utf8str = utf8str, standoff = sampleStandoff, mapping = dummyMapping, mappingIri = "http://data.knora.org/projects/standoff/mappings/StandardMapping"),
+                userProfile = incunabulaUser,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[DuplicateValueException] should ===(true)
+            }
+
+        }
+
         "add a new text value containing a Standoff resource reference, and create a hasStandoffLinkTo direct link and a corresponding LinkValue" in {
-            val textValueWithResourceRef = TextValueV1(
+            val textValueWithResourceRef = TextValueWithStandoffV1(
                 utf8str = "This comment refers to another resource",
-                textattr = Map(
-                    StandoffTagV1.link -> Vector(StandoffPositionV1(
-                        start = 31,
-                        end = 39,
-                        resid = Some(zeitglöckleinIri)
-                    ))
+                standoff = Vector(
+                    StandoffTagV1(
+                        dataType = Some(StandoffDataTypeClasses.StandoffLinkTag),
+                        standoffTagClassIri = OntologyConstants.KnoraBase.StandoffLinkTag,
+                        startPosition = 31,
+                        endPosition = 39,
+                        attributes = Vector(StandoffTagIriAttributeV1(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink, value = zeitglöckleinIri)),
+                        uuid = UUID.randomUUID().toString,
+                        originalXMLID = None,
+                        startIndex = 0
+                    )
                 ),
-                resource_reference = Set(zeitglöckleinIri)
+                resource_reference = Set(zeitglöckleinIri),
+                mappingIri = "http://data.knora.org/projects/standoff/mappings/StandardMapping",
+                mapping = dummyMapping
             )
 
             actorUnderTest ! CreateValueRequestV1(
@@ -722,7 +816,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             )
 
             expectMsgPF(timeout) {
-                case CreateValueResponseV1(newValue: TextValueV1, _, newValueIri: IRI, _, _) =>
+                case CreateValueResponseV1(newValue: TextValueWithStandoffV1, _, newValueIri: IRI, _, _) =>
                     firstValueIriWithResourceRef.set(newValueIri)
                     checkTextValue(received = newValue, expected = textValueWithResourceRef)
             }
@@ -772,23 +866,33 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
         "add a new version of a text value containing a Standoff resource reference, without needlessly making a new version of the LinkValue" in {
             // The new version contains two references to the same resource.
-            val textValueWithResourceRef = TextValueV1(
+            val textValueWithResourceRef = TextValueWithStandoffV1(
                 utf8str = "This updated comment refers to another resource",
-                textattr = Map(
-                    StandoffTagV1.link -> Vector(
-                        StandoffPositionV1(
-                            start = 39,
-                            end = 47,
-                            resid = Some(zeitglöckleinIri)
+                standoff = Vector(
+                        StandoffTagV1(
+                            dataType = Some(StandoffDataTypeClasses.StandoffLinkTag),
+                            standoffTagClassIri = OntologyConstants.KnoraBase.StandoffLinkTag,
+                            startPosition = 39,
+                            endPosition = 47,
+                            attributes = Vector(StandoffTagIriAttributeV1(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink, value = zeitglöckleinIri)),
+                            uuid = UUID.randomUUID().toString,
+                            originalXMLID = None,
+                            startIndex = 0
                         ),
-                        StandoffPositionV1(
-                            start = 0,
-                            end = 4,
-                            resid = Some(zeitglöckleinIri)
+                        StandoffTagV1(
+                            dataType = Some(StandoffDataTypeClasses.StandoffLinkTag),
+                            standoffTagClassIri = OntologyConstants.KnoraBase.StandoffLinkTag,
+                            startPosition = 0,
+                            endPosition = 4,
+                            attributes = Vector(StandoffTagIriAttributeV1(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink, value = zeitglöckleinIri)),
+                            uuid = UUID.randomUUID().toString,
+                            originalXMLID = None,
+                            startIndex = 0
                         )
-                    )
                 ),
-                resource_reference = Set(zeitglöckleinIri)
+                resource_reference = Set(zeitglöckleinIri),
+                mapping = dummyMapping,
+                mappingIri = "http://data.knora.org/projects/standoff/mappings/StandardMapping"
             )
 
             actorUnderTest ! ChangeValueRequestV1(
@@ -799,7 +903,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             )
 
             expectMsgPF(timeout) {
-                case ChangeValueResponseV1(newValue: TextValueV1, _, newValueIri: IRI, _, _) =>
+                case ChangeValueResponseV1(newValue: TextValueWithStandoffV1, _, newValueIri: IRI, _, _) =>
                     firstValueIriWithResourceRef.set(newValueIri)
                     checkTextValue(received = newValue, expected = textValueWithResourceRef)
             }
@@ -847,16 +951,23 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         }
 
         "add another new text value containing a Standoff resource reference, and make a new version of the LinkValue" in {
-            val textValueWithResourceRef = TextValueV1(
+            val textValueWithResourceRef = TextValueWithStandoffV1(
                 utf8str = "This remark refers to another resource",
-                textattr = Map(
-                    StandoffTagV1.link -> Vector(StandoffPositionV1(
-                        start = 30,
-                        end = 38,
-                        resid = Some(zeitglöckleinIri)
-                    ))
+                standoff = Vector(
+                    StandoffTagV1(
+                        dataType = Some(StandoffDataTypeClasses.StandoffLinkTag),
+                        standoffTagClassIri = OntologyConstants.KnoraBase.StandoffLinkTag,
+                        startPosition = 30,
+                        endPosition = 38,
+                        attributes = Vector(StandoffTagIriAttributeV1(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink, value = zeitglöckleinIri)),
+                        uuid = UUID.randomUUID().toString,
+                        originalXMLID = None,
+                        startIndex = 0
+                    )
                 ),
-                resource_reference = Set(zeitglöckleinIri)
+                resource_reference = Set(zeitglöckleinIri),
+                mapping = dummyMapping,
+                mappingIri = "http://data.knora.org/projects/standoff/mappings/StandardMapping"
             )
 
             actorUnderTest ! CreateValueRequestV1(
@@ -869,7 +980,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             )
 
             expectMsgPF(timeout) {
-                case CreateValueResponseV1(newValue: TextValueV1, _, newValueIri: IRI, _, _) =>
+                case CreateValueResponseV1(newValue: TextValueWithStandoffV1, _, newValueIri: IRI, _, _) =>
                     secondValueIriWithResourceRef.set(newValueIri)
                     checkTextValue(received = newValue, expected = textValueWithResourceRef)
             }
@@ -918,7 +1029,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         }
 
         "add a new version of a text value with the Standoff resource reference removed, and make a new version of the LinkValue" in {
-            val textValue = TextValueV1(utf8str = "No resource reference here")
+            val textValue = TextValueSimpleV1(utf8str = "No resource reference here")
 
             actorUnderTest ! ChangeValueRequestV1(
                 valueIri = firstValueIriWithResourceRef.get,
@@ -928,7 +1039,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             )
 
             expectMsgPF(timeout) {
-                case ChangeValueResponseV1(newValue: TextValueV1, _, newValueIri: IRI, _, _) =>
+                case ChangeValueResponseV1(newValue: TextValueSimpleV1, _, newValueIri: IRI, _, _) =>
                     firstValueIriWithResourceRef.set(newValueIri)
                     checkTextValue(received = textValue, expected = newValue)
             }
@@ -989,7 +1100,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         }
 
         "delete a hasStandoffLinkTo direct link when the reference count of the corresponding LinkValue reaches 0" in {
-            val textValue = TextValueV1(utf8str = "No resource reference here either")
+            val textValue = TextValueSimpleV1(utf8str = "No resource reference here either")
 
             actorUnderTest ! ChangeValueRequestV1(
                 valueIri = secondValueIriWithResourceRef.get,
@@ -999,7 +1110,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             )
 
             expectMsgPF(timeout) {
-                case ChangeValueResponseV1(newValue: TextValueV1, _, newValueIri: IRI, _, _) =>
+                case ChangeValueResponseV1(newValue: TextValueSimpleV1, _, newValueIri: IRI, _, _) =>
                     secondValueIriWithResourceRef.set(newValueIri)
                     checkTextValue(received = newValue, expected = textValue)
             }
@@ -1041,18 +1152,23 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         }
 
         "recreate the hasStandoffLinkTo direct link when a new standoff resource reference is added" in {
-            val textValueWithResourceRef = TextValueV1(
+            val textValueWithResourceRef = TextValueWithStandoffV1(
                 utf8str = "This updated comment refers again to another resource",
-                textattr = Map(
-                    StandoffTagV1.link -> Vector(
-                        StandoffPositionV1(
-                            start = 45,
-                            end = 53,
-                            resid = Some(zeitglöckleinIri)
-                        )
+                standoff = Vector(
+                    StandoffTagV1(
+                        dataType = Some(StandoffDataTypeClasses.StandoffLinkTag),
+                        standoffTagClassIri = OntologyConstants.KnoraBase.StandoffLinkTag,
+                        startPosition = 45,
+                        endPosition = 53,
+                        attributes = Vector(StandoffTagIriAttributeV1(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink, value = zeitglöckleinIri)),
+                        uuid = UUID.randomUUID().toString,
+                        originalXMLID = None,
+                        startIndex = 0
                     )
                 ),
-                resource_reference = Set(zeitglöckleinIri)
+                resource_reference = Set(zeitglöckleinIri),
+                mapping = dummyMapping,
+                mappingIri = "http://data.knora.org/projects/standoff/mappings/StandardMapping"
             )
 
             actorUnderTest ! ChangeValueRequestV1(
@@ -1063,7 +1179,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             )
 
             expectMsgPF(timeout) {
-                case ChangeValueResponseV1(newValue: TextValueV1, _, newValueIri: IRI, _, _) =>
+                case ChangeValueResponseV1(newValue: TextValueWithStandoffV1, _, newValueIri: IRI, _, _) =>
                     firstValueIriWithResourceRef.set(newValueIri)
                     checkTextValue(received = newValue, expected = textValueWithResourceRef)
             }
@@ -1449,7 +1565,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
                 projectIri = "http://data.knora.org/projects/77275339",
                 resourceIri = zeitglöckleinIri,
                 propertyIri = "http://www.knora.org/ontology/incunabula#book_comment",
-                value = TextValueV1(utf8str = comment),
+                value = TextValueSimpleV1(utf8str = comment),
                 comment = Some(metaComment),
                 userProfile = incunabulaUser,
                 apiRequestID = UUID.randomUUID
@@ -1478,7 +1594,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
             expectMsgPF(timeout) {
                 case msg: ChangeValueResponseV1 =>
-                    msg.value should ===(TextValueV1(utf8str = "Berthold, der Bruder"))
+                    msg.value should ===(TextValueSimpleV1(utf8str = "Berthold, der Bruder"))
                     msg.comment should ===(comment)
             }
 
@@ -1637,7 +1753,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
                 case CreateValueResponseV1(newGeonameValue: GeonameValueV1, _ , _, _, _) =>
                     newGeonameValue should ===(geonameValue)
             }
-        }
+        }*/
 
         "add a boolean value to an anything:Thing" in {
             val booleanValue = BooleanValueV1(true)
@@ -1655,7 +1771,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
                 case CreateValueResponseV1(newBooleanValue: BooleanValueV1, _ , _, _, _) =>
                     newBooleanValue should ===(booleanValue)
             }
-        }*/
+        }
 
         "add a URI value to an anything:Thing" in {
             val uriValue = UriValueV1("http://dhlab.unibas.ch")
@@ -1846,5 +1962,43 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
                     rows.head.rowMap.get("directLinkExists").exists(_.toBoolean) should ===(false)
             }
         }
+
+        "not add a text value containing a standoff reference to a nonexistent resource" in {
+            val nonexistentIri = "http://data.knora.org/nonexistent"
+
+            val textValueWithResourceRef = TextValueWithStandoffV1(
+                utf8str = "This comment refers to another resource",
+                standoff = Vector(
+                    StandoffTagV1(
+                        standoffTagClassIri = OntologyConstants.KnoraBase.StandoffLinkTag,
+                        dataType = Some(StandoffDataTypeClasses.StandoffLinkTag),
+                        startPosition = 31,
+                        endPosition = 39,
+                        startIndex = 0,
+                        attributes = Vector(StandoffTagIriAttributeV1(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink, value = nonexistentIri)),
+                        uuid = UUID.randomUUID().toString,
+                        originalXMLID = None
+                    )
+                ),
+                resource_reference = Set(nonexistentIri),
+                mapping = ResourcesResponderV1SpecFullData.dummyMapping,
+                mappingIri = "http://data.knora.org/projects/standoff/mappings/StandardMapping"
+            )
+
+            actorUnderTest ! CreateValueRequestV1(
+                projectIri = "http://data.knora.org/projects/77275339",
+                resourceIri = zeitglöckleinIri,
+                propertyIri = "http://www.knora.org/ontology/incunabula#book_comment",
+                value = textValueWithResourceRef,
+                userProfile = incunabulaUser,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure =>
+                    msg.cause.isInstanceOf[NotFoundException] should ===(true)
+            }
+        }
+
     }
 }

@@ -10,11 +10,38 @@ try:
     base_url = "http://localhost/v1/"
 
     params = {
+        "_link": [{
+            "start": 0,
+            "end": 4,
+            "resid": "http://data.knora.org/9935159f67",
+            "href": "http://data.knora.org/9935159f67"
+        },{
+            "start": 5,
+            "end": 7,
+            "href": "http://www.google.ch"
+        }],
+        "bold": [{
+            "start": 9,
+            "end": 11
+        },
+        {
+            "start": 16,
+            "end": 18
+        }]
+    }
+
+    xml = """<?xml version="1.0" encoding="UTF-8"?>
+       <text>
+            <u><strong>This</strong></u> <u>text</u> <a class="salsah-link" href="http://data.knora.org/9935159f67">links</a> to a thing
+       </text>
+    """
+
+    params = {
        "restype_id": "http://www.knora.org/ontology/anything#Thing",
-       "label": "A thing",
+       "label": "A thing to test with",
        "project_id": "http://data.knora.org/projects/anything",
        "properties": {
-            "http://www.knora.org/ontology/anything#hasText": [{"richtext_value":{"textattr":json.dumps({}),"resource_reference" :[],"utf8str":"Test text"}}],
+            "http://www.knora.org/ontology/anything#hasText": [{"richtext_value":{"xml": xml, "mapping_id": "http://data.knora.org/projects/standoff/mappings/StandardMapping"}}],
             "http://www.knora.org/ontology/anything#hasInteger": [{"int_value":12345}]
        }
     }

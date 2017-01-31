@@ -567,7 +567,7 @@ class SearchAndEditSpec extends SalsahSpec {
 
         }
 
-        "edit the description of a page" in {
+        "edit the description of a page" ignore {
 
             page.load()
 

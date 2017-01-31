@@ -141,6 +141,12 @@ case class OntologyConstraintException(message: String) extends RequestRejectedE
 case class InvalidStandoffException(message: String) extends RequestRejectedException(message)
 
 /**
+  * An exception indicating that an error occurred when converting standoff markup to or from another format.
+  * @param message a description of the error.
+  */
+case class StandoffConversionException(message: String) extends RequestRejectedException(message)
+
+/**
   * An abstract class for exceptions indicating that something went wrong and it's not the client's fault.
   *
   * @param message a description of the error.
@@ -213,6 +219,19 @@ case class TriplestoreInternalException(message: String, cause: Option[Throwable
 object TriplestoreInternalException {
     def apply(message: String, e: Throwable, log: LoggingAdapter): TriplestoreInternalException =
         TriplestoreInternalException(message, Some(ExceptionUtil.logAndWrapIfNotSerializable(e, log)))
+}
+
+/**
+  * Indicates an internal server error in standoff-related processing.
+  *
+  * @param message a description of the error.
+  * @param cause   the original exception representing the cause of the error, if any.
+  */
+case class StandoffInternalException(message: String, cause: Option[Throwable] = None) extends InternalServerException(message, cause)
+
+object StandoffInternalException {
+    def apply(message: String, e: Throwable, log: LoggingAdapter): StandoffInternalException =
+        StandoffInternalException(message, Some(ExceptionUtil.logAndWrapIfNotSerializable(e, log)))
 }
 
 /**

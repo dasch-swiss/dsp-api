@@ -1,0 +1,95 @@
+@*
+ * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
+ * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ *
+ * This file is part of Knora.
+ *
+ * Knora is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Knora is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public
+ * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ *@
+
+@import org.knora.webapi.IRI
+
+@*
+ * Gets an exisitng mapping.
+ *
+ * @param triplestore the name of the triplestore being used.
+ * @param dataNamedGraph the named graph in which the mapping is stored.
+ * @param mappingIri the Iri of the new mapping
+ *@
+@(triplestore: String,
+  mappingIri: IRI)
+
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+
+CONSTRUCT {
+    ?mapping rdfs:label ?label .
+    ?mapping rdf:type ?mappingType .
+
+    ?mappingElement rdf:type ?mappingElementType .
+    ?mappingElement knora-base:mappingHasXMLTagname ?tagName .
+    ?mappingElement knora-base:mappingHasXMLNamespace ?tagNamespace .
+    ?mappingElement knora-base:mappingHasXMLClass ?tagClass .
+    ?mappingElement knora-base:mappingHasStandoffClass ?standoffClass .
+    ?mappingElement knora-base:mappingElementRequiresSeparator ?separatorRequired .
+
+    ?mappingElement knora-base:mappingHasXMLAttribute ?attribute .
+    ?attribute rdf:type ?attributeType .
+    ?attribute knora-base:mappingHasXMLAttributename ?attributeName .
+    ?attribute knora-base:mappingHasXMLNamespace ?attributeNamespace .
+    ?attribute knora-base:mappingHasStandoffProperty ?standoffProperty .
+
+    ?mappingElement knora-base:mappingHasStandoffDataTypeClass ?datatypeClass .
+    ?datatypeClass rdf:type ?datatypeType .
+    ?datatypeClass knora-base:mappingHasXMLAttributename ?datatypeAttributeName .
+    ?datatypeClass knora-base:mappingHasStandoffClass ?datatypeStandoffClass .
+
+
+
+} WHERE {
+    BIND(IRI("@mappingIri") as ?mapping)
+
+    ?mapping rdfs:label ?label .
+
+    ?mapping rdf:type ?mappingType .
+    ?mapping knora-base:hasMappingElement ?mappingElement .
+    ?mappingElement rdf:type ?mappingElementType .
+    ?mappingElement knora-base:mappingHasXMLTagname ?tagName .
+    ?mappingElement knora-base:mappingHasXMLNamespace ?tagNamespace .
+    ?mappingElement knora-base:mappingHasXMLClass ?tagClass .
+    ?mappingElement knora-base:mappingHasStandoffClass ?standoffClass .
+    ?mappingElement knora-base:mappingElementRequiresSeparator ?separatorRequired .
+
+    OPTIONAL {
+
+        ?mappingElement knora-base:mappingHasXMLAttribute ?attribute .
+        ?attribute rdf:type ?attributeType .
+        ?attribute knora-base:mappingHasXMLAttributename ?attributeName .
+        ?attribute knora-base:mappingHasXMLNamespace ?attributeNamespace .
+        ?attribute knora-base:mappingHasStandoffProperty ?standoffProperty .
+    }
+
+    OPTIONAL {
+
+        ?mappingElement knora-base:mappingHasStandoffDataTypeClass ?datatypeClass .
+        ?datatypeClass rdf:type ?datatypeType .
+        ?datatypeClass knora-base:mappingHasXMLAttributename ?datatypeAttributeName .
+        ?datatypeClass knora-base:mappingHasStandoffClass ?datatypeStandoffClass .
+
+    }
+
+
+}
+

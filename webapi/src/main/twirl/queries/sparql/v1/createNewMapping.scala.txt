@@ -1,0 +1,97 @@
+@*
+ * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
+ * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ *
+ * This file is part of Knora.
+ *
+ * Knora is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Knora is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public
+ * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ *@
+
+@import org.knora.webapi.IRI
+@import org.knora.webapi.twirl._
+
+@*
+ * Creates a new mapping.
+ *
+ * @param triplestore the name of the triplestore being used.
+ * @param dataNamedGraph the named graph in which the mapping is stored.
+ * @param mappingIri the Iri of the new mapping
+ * @param mappingElements a sequence of elements to be added to the mapping, each representing an XML tag.
+ *@
+@(triplestore: String,
+  dataNamedGraph: IRI,
+  mappingIri: IRI,
+  label: String,
+  mappingElements: Seq[MappingElement])
+
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+
+INSERT {
+    GRAPH ?dataNamedGraph {
+        ?mapping rdf:type knora-base:XMLToStandoffMapping ;
+        rdfs:label ?label .
+
+        @for(mappingEle <- mappingElements) {
+            ?mapping knora-base:hasMappingElement <@mappingEle.mappingElementIri> .
+
+            <@mappingEle.mappingElementIri> rdf:type knora-base:MappingElement ;
+                                            knora-base:mappingHasXMLTagname """@mappingEle.tagName""" ;
+                                            knora-base:mappingHasXMLNamespace """@mappingEle.namespace""" ;
+                                            knora-base:mappingHasXMLClass """@mappingEle.className""" ;
+                                            knora-base:mappingHasStandoffClass <@mappingEle.standoffClass> ;
+                                            knora-base:mappingElementRequiresSeparator @mappingEle.separatorRequired .
+
+            @for(attr <- mappingEle.attributes) {
+
+                <@mappingEle.mappingElementIri> knora-base:mappingHasXMLAttribute <@attr.mappingXMLAttributeElementIri> .
+
+                <@attr.mappingXMLAttributeElementIri> rdf:type knora-base:MappingXMLAttribute ;
+                                                      knora-base:mappingHasXMLAttributename """@attr.attributeName""" ;
+                                                      knora-base:mappingHasXMLNamespace """@attr.namespace""" ;
+                                                      knora-base:mappingHasStandoffProperty <@attr.standoffProperty> .
+
+            }
+
+            @if(mappingEle.standoffDataTypeClass.nonEmpty) {
+
+                <@mappingEle.mappingElementIri> knora-base:mappingHasStandoffDataTypeClass <@mappingEle.standoffDataTypeClass.get.mappingStandoffDataTypeClassElementIri> .
+
+                <@mappingEle.standoffDataTypeClass.get.mappingStandoffDataTypeClassElementIri> rdf:type knora-base:MappingStandoffDataTypeClass ;
+                                                                                               knora-base:mappingHasXMLAttributename """@mappingEle.standoffDataTypeClass.get.attributeName""" ;
+                                                                                               knora-base:mappingHasStandoffClass <@mappingEle.standoffDataTypeClass.get.datatype> .
+
+            }
+
+        }
+
+    }
+}
+@* Ensure that inference is not used in the WHERE clause of this update. *@
+@if(triplestore.startsWith("graphdb")) {
+    USING <http://www.ontotext.com/explicit>
+}
+WHERE {
+    BIND(IRI("@dataNamedGraph") AS ?dataNamedGraph)
+    BIND(IRI("@mappingIri") AS ?mapping)
+    BIND(str("@label") AS ?label)
+
+    # make sure that the mapping IRI does not exist yet
+    FILTER NOT EXISTS {
+        ?mapping ?p ?o .
+    }
+}

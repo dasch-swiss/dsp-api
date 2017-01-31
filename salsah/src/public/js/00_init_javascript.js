@@ -60,6 +60,8 @@ var searchresult_window_title = "searchresult";
 var extendedsearch_window_title = "Erweiterte Suche";
 var addresource_window_title = "addresource";
 
+var STANDARD_MAPPING = "http://data.knora.org/projects/standoff/mappings/StandardMapping"; // the standard mapping used for text editing in the GUI
+
 var VALTYPE_TEXT = "-"; // obsolete, there is only richtext now
 var VALTYPE_INTEGER = "http://www.knora.org/ontology/knora-base#IntValue";
 var VALTYPE_FLOAT = "http://www.knora.org/ontology/knora-base#DecimalValue";

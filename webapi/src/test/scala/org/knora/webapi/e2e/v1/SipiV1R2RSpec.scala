@@ -93,16 +93,12 @@ class SipiV1R2RSpec extends R2RSpec {
             properties = Map(
                 "http://www.knora.org/ontology/incunabula#pagenum" -> Seq(CreateResourceValueV1(
                     richtext_value = Some(CreateRichtextV1(
-                        utf8str = "test_page",
-                        textattr = None,
-                        resource_reference = None
+                        utf8str = Some("test_page")
                     ))
                 )),
                 "http://www.knora.org/ontology/incunabula#origname" -> Seq(CreateResourceValueV1(
                     richtext_value = Some(CreateRichtextV1(
-                        utf8str = "test",
-                        textattr = None,
-                        resource_reference = None
+                        utf8str = Some("test")
                     ))
                 )),
                 "http://www.knora.org/ontology/incunabula#partOf" -> Seq(CreateResourceValueV1(

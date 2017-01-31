@@ -26,9 +26,13 @@ import org.knora.webapi.messages.v1.responder.resourcemessages.LocationV1
 import org.knora.webapi.messages.v1.responder.sipimessages.SipiResponderConversionRequestV1
 import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1, UserV1JsonProtocol}
 import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
-import org.knora.webapi.util.{DateUtilV1, ErrorHandlingMap, KnoraIdUtil}
+import org.knora.webapi.util.{DateUtilV1, ErrorHandlingMap, InputValidation, KnoraIdUtil}
 import org.knora.webapi.{BadRequestException, _}
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
+import org.knora.webapi.messages.v1.responder.ontologymessages.StandoffEntityInfoGetResponseV1
+import org.knora.webapi.messages.v1.responder.standoffmessages.{GetMappingResponseV1, MappingXMLtoStandoff, StandoffDataTypeClasses}
+import org.knora.webapi.twirl.{StandoffTagAttributeV1, StandoffTagInternalReferenceAttributeV1, StandoffTagV1}
+import org.knora.webapi.util.standoff.StandoffTagUtilV1
 import spray.json._
 
 
@@ -54,6 +58,7 @@ case class CreateValueApiRequestV1(project_id: IRI,
                                    res_id: IRI,
                                    prop: IRI,
                                    richtext_value: Option[CreateRichtextV1] = None,
+                                   link_value: Option[IRI] = None,
                                    int_value: Option[Int] = None,
                                    decimal_value: Option[BigDecimal] = None,
                                    boolean_value: Option[Boolean] = None,
@@ -61,22 +66,61 @@ case class CreateValueApiRequestV1(project_id: IRI,
                                    date_value: Option[String] = None,
                                    color_value: Option[String] = None,
                                    geom_value: Option[String] = None,
-                                   link_value: Option[IRI] = None,
                                    hlist_value: Option[IRI] = None,
                                    interval_value: Option[Seq[BigDecimal]] = None,
                                    geoname_value: Option[String] = None,
-                                   comment: Option[String] = None)
+                                   comment: Option[String] = None) {
+
+    // Make sure only one value is given.
+    if (List(
+        richtext_value,
+        link_value,
+        int_value,
+        decimal_value,
+        boolean_value,
+        uri_value,
+        date_value,
+        color_value,
+        geom_value,
+        hlist_value,
+        interval_value,
+        geoname_value).flatten.size > 1) {
+        throw BadRequestException(s"Different value types were submitted for property $prop")
+    }
+
+    /**
+      * Returns the type of the given value.
+      *
+      * @return a value type IRI.
+      */
+    def getValueClassIri: IRI = {
+        if (richtext_value.nonEmpty) OntologyConstants.KnoraBase.TextValue
+        else if (link_value.nonEmpty) OntologyConstants.KnoraBase.LinkValue
+        else if (int_value.nonEmpty) OntologyConstants.KnoraBase.IntValue
+        else if (decimal_value.nonEmpty) OntologyConstants.KnoraBase.DecimalValue
+        else if (boolean_value.nonEmpty) OntologyConstants.KnoraBase.BooleanValue
+        else if (uri_value.nonEmpty) OntologyConstants.KnoraBase.UriValue
+        else if (date_value.nonEmpty) OntologyConstants.KnoraBase.DateValue
+        else if (color_value.nonEmpty) OntologyConstants.KnoraBase.ColorValue
+        else if (geom_value.nonEmpty) OntologyConstants.KnoraBase.GeomValue
+        else if (hlist_value.nonEmpty) OntologyConstants.KnoraBase.ListValue
+        else if (interval_value.nonEmpty) OntologyConstants.KnoraBase.IntervalValue
+        else if (geoname_value.nonEmpty) OntologyConstants.KnoraBase.GeonameValue
+        else throw BadRequestException("No value specified")
+    }
+
+}
 
 /**
   * Represents a richtext object consisting of text, text attributes and resource references.
   *
-  * @param utf8str            the mere string representation.
-  * @param textattr           the attributes of the text as standoff (still a String to be parsed into an object itself).
-  * @param resource_reference references to Knora resources out of the text.
+  * @param utf8str    a mere string in case of a text without any markup.
+  * @param xml        xml in case of a text with markup.
+  * @param mapping_id Iri of the mapping used to transform XML to standoff.
   */
-case class CreateRichtextV1(utf8str: String,
-                            textattr: Option[String], // textattr is a String that can be parsed into another JsObject
-                            resource_reference: Option[Seq[IRI]]) {
+case class CreateRichtextV1(utf8str: Option[String] = None,
+                            xml: Option[String] = None,
+                            mapping_id: Option[IRI] = None) {
 
     def toJsValue = ApiValueV1JsonProtocol.createRichtextV1Format.write(this)
 }
@@ -127,6 +171,7 @@ case class CreateFileQualityLevelV1(path: String,
   */
 case class ChangeValueApiRequestV1(project_id: IRI,
                                    richtext_value: Option[CreateRichtextV1] = None,
+                                   link_value: Option[IRI] = None,
                                    int_value: Option[Int] = None,
                                    decimal_value: Option[BigDecimal] = None,
                                    boolean_value: Option[Boolean] = None,
@@ -134,11 +179,36 @@ case class ChangeValueApiRequestV1(project_id: IRI,
                                    date_value: Option[String] = None,
                                    color_value: Option[String] = None,
                                    geom_value: Option[String] = None,
-                                   link_value: Option[IRI] = None,
                                    hlist_value: Option[IRI] = None,
                                    interval_value: Option[Seq[BigDecimal]] = None,
                                    geoname_value: Option[String] = None,
-                                   comment: Option[String] = None)
+                                   comment: Option[String] = None) {
+
+    /**
+      * Returns the type of the given value.
+      *
+      * TODO: make sure that only one value is given.
+      *
+      * @return a value type IRI.
+      */
+    def getValueClassIri: IRI = {
+        if (richtext_value.nonEmpty) OntologyConstants.KnoraBase.TextValue
+        else if (link_value.nonEmpty) OntologyConstants.KnoraBase.LinkValue
+        else if (int_value.nonEmpty) OntologyConstants.KnoraBase.IntValue
+        else if (decimal_value.nonEmpty) OntologyConstants.KnoraBase.DecimalValue
+        else if (boolean_value.nonEmpty) OntologyConstants.KnoraBase.BooleanValue
+        else if (uri_value.nonEmpty) OntologyConstants.KnoraBase.UriValue
+        else if (date_value.nonEmpty) OntologyConstants.KnoraBase.DateValue
+        else if (color_value.nonEmpty) OntologyConstants.KnoraBase.ColorValue
+        else if (geom_value.nonEmpty) OntologyConstants.KnoraBase.GeomValue
+        else if (hlist_value.nonEmpty) OntologyConstants.KnoraBase.ListValue
+        else if (interval_value.nonEmpty) OntologyConstants.KnoraBase.IntervalValue
+        else if (geoname_value.nonEmpty) OntologyConstants.KnoraBase.GeonameValue
+        else throw BadRequestException("No value specified")
+    }
+
+
+}
 
 /**
   * Represents an API request payload that asks the Knora API server to change the file attached to a resource
@@ -181,14 +251,14 @@ case class LinkValueGetRequestV1(subjectIri: IRI, predicateIri: IRI, objectIri: 
 /**
   * Provides details of a Knora value. A successful response will be a [[ValueGetResponseV1]].
   *
-  * @param value     the single requested value.
-  * @param valuetype the IRI of the value's type.
-  * @param valuecreator the username of the user who created the value.
-  * @param valuecreatorname the name of the user who created the value.
+  * @param value             the single requested value.
+  * @param valuetype         the IRI of the value's type.
+  * @param valuecreator      the username of the user who created the value.
+  * @param valuecreatorname  the name of the user who created the value.
   * @param valuecreationdate the date when the value was created.
-  * @param comment   the comment on the value, if any.
-  * @param rights    the user's permission on the value.
-  * @param userdata  information about the user that made the request.
+  * @param comment           the comment on the value, if any.
+  * @param rights            the user's permission on the value.
+  * @param userdata          information about the user that made the request.
   */
 case class ValueGetResponseV1(valuetype: IRI,
                               value: ApiValueV1,
@@ -554,180 +624,175 @@ object KnoraPrecisionV1 extends Enumeration {
 }
 
 /**
-  * An enumeration of the possible names of a standoff tag. Note: do not use the `withName` method to get instances
-  * of the values of this enumeration; use `lookup` instead, because it reports errors better.
+  *
+  * Represents a [[StandoffTagV1]] for a standoff tag of a certain type (standoff tag class) that is about to be created in the triplestore.
+  *
+  * @param standoffNode           the standoff node to be created.
+  * @param standoffTagInstanceIri the standoff node's Iri.
+  * @param startParentIri         the IRI of the parent of the start tag.
+  * @param endParentIri           the IRI of the parent of the end tag, if any.
   */
-object StandoffTagV1 extends Enumeration {
+case class CreateStandoffTagV1InTriplestore(standoffNode: StandoffTagV1, standoffTagInstanceIri: IRI, startParentIri: Option[IRI] = None, endParentIri: Option[IRI] = None)
 
-    // internal name / standoff tag name in JSON representation  /  corresponding HTML tag (generated by the GUI)
-    val paragraph = Value("p")
-    // <p>...</p>
-    val italic = Value("italic")
-    // <em>...</em>
-    val bold = Value("bold")
-    // <strong>...</strong>
-    val underline = Value("underline")
-    // <u>...</u>
-    val strikethrough = Value("strikethrough")
-    // <s>...</s>
-    val link = Value("_link")
-    // <a>...</a>
-    val header1 = Value("h1")
-    // <h1>...</h1>
-    val header2 = Value("h2")
-    // <h2>...</h2>
-    val header3 = Value("h3")
-    // <h3>...</h3>
-    val header4 = Value("h4")
-    // <h4>...</h4>
-    val header5 = Value("h5")
-    // <h5>...</h5>
-    val header6 = Value("h6")
-    // <h6>...</h6>
-    val superscript = Value("sup")
-    // <sup>...</sup>
-    val subscript = Value("sub")
-    // <sub>...</sub>
-    val orderedList = Value("ol")
-    // <ol>...</ol>
-    val unorderedList = Value("ul")
-    // <ul>...</ul>
-    val listElement = Value("li")
-    // <li>...</li>
-    val styleElement = Value("style") // <span>...</span>
+sealed trait TextValueV1 {
 
-    val valueMap: Map[String, Value] = values.map(v => (v.toString, v)).toMap
+    def utf8str: String
 
-    /**
-      * Given the name of a value in this enumeration, returns the value. If the value is not found, throws an
-      * [[BadRequestException]].
-      *
-      * @param name     the name of the value.
-      * @param errorFun the function to be called in case of an error.
-      * @return the requested value.
-      */
-    def lookup(name: String, errorFun: () => Nothing): Value = {
-        valueMap.get(name) match {
-            case Some(value) => value
-            case None => errorFun()
-        }
-    }
-
-    /**
-      * Maps standoff tag IRIs to this enumeration's values.
-      */
-    val IriToEnumValue: Map[IRI, StandoffTagV1.Value] = new ErrorHandlingMap(Map(
-        OntologyConstants.KnoraBase.StandoffParagraphTag -> paragraph,
-        OntologyConstants.KnoraBase.StandoffItalicTag -> italic,
-        OntologyConstants.KnoraBase.StandoffBoldTag -> bold,
-        OntologyConstants.KnoraBase.StandoffUnderlineTag -> underline,
-        OntologyConstants.KnoraBase.StandoffStrikethroughTag -> strikethrough,
-        OntologyConstants.KnoraBase.StandoffLinkTag -> link,
-        OntologyConstants.KnoraBase.StandoffUriTag -> link,
-        OntologyConstants.KnoraBase.StandoffHeader1Tag -> header1,
-        OntologyConstants.KnoraBase.StandoffHeader2Tag -> header2,
-        OntologyConstants.KnoraBase.StandoffHeader3Tag -> header3,
-        OntologyConstants.KnoraBase.StandoffHeader4Tag -> header4,
-        OntologyConstants.KnoraBase.StandoffHeader5Tag -> header5,
-        OntologyConstants.KnoraBase.StandoffHeader6Tag -> header6,
-        OntologyConstants.KnoraBase.StandoffSuperscriptTag -> superscript,
-        OntologyConstants.KnoraBase.StandoffSubscriptTag -> subscript,
-        OntologyConstants.KnoraBase.StandoffOrderedListTag -> orderedList,
-        OntologyConstants.KnoraBase.StandoffUnorderedListTag -> unorderedList,
-        OntologyConstants.KnoraBase.StandoffListElementTag -> listElement,
-        OntologyConstants.KnoraBase.StandoffStyleElementTag -> styleElement
-    ), { key => throw InconsistentTriplestoreDataException(s"Invalid standoff tag IRI: $key") })
-
-    /**
-      * Maps this enumeration's values to standoff tag IRIs.
-      */
-    val EnumValueToIri: Map[StandoffTagV1.Value, IRI] = new ErrorHandlingMap(IriToEnumValue.map(_.swap), { key => throw InconsistentTriplestoreDataException(s"Invalid standoff tag name: $key") })
 }
-
-/**
-  * Representation of a range with start and end an attribute applies to.
-  * If the attribute is a link to another Knora resource, its IRI is given.
-  *
-  * @param start the start position of the range.
-  * @param end   the end position of the range.
-  * @param resid the IRI of of a Knora resource that this [[StandoffPositionV1]] refers to.
-  * @param href  the IRI of a web resource that this [[StandoffPositionV1]] refers to. In Knora API v1, if `resid`
-  *              is non-empty, `href` is the URL of an API operation for querying the same resource.
-  */
-case class StandoffPositionV1(start: Int,
-                              end: Int,
-                              resid: Option[IRI] = None,
-                              href: Option[IRI] = None) extends Jsonable {
-    def toJsValue = JsObject(
-        Map(
-            "start" -> JsNumber(start),
-            "end" -> JsNumber(end)
-        ) ++ resid.map(iri => "resid" -> JsString(iri)) ++
-            href.map(iri => "href" -> JsString(iri))
-    )
-}
-
-/**
-  *
-  * Represents a [[StandoffPositionV1]] for a standoff tag of a certain type (standoff tag class) that is about to be created in the triplestore.
-  *
-  * @param standoffTagClassIri the standoff class IRI of the standoff node (its type).
-  * @param standoffPosition    the standoff node's [[StandoffPositionV1]].
-  * @param standoffTagIri      the standoff node's Iri.
-  */
-case class CreateStandoffPositionV1InTriplestore(standoffTagClassIri: IRI, standoffPosition: StandoffPositionV1, standoffTagIri: IRI)
 
 /**
   * Represents a textual value with additional information in standoff format.
   *
   * @param utf8str            text in mere utf8 representation (including newlines and carriage returns).
-  * @param textattr           attributes of the text in standoff format. For each attribute, several ranges may be given (a list of [[StandoffPositionV1]]).
+  * @param standoff           attributes of the text in standoff format. For each attribute, several ranges may be given (a list of [[StandoffTagV1]]).
   * @param resource_reference referred Knora resources.
+  * @param mapping            the mapping used to create standoff from another format.
   */
-case class TextValueV1(utf8str: String,
-                       textattr: Map[StandoffTagV1.Value, Seq[StandoffPositionV1]] = Map.empty[StandoffTagV1.Value, Seq[StandoffPositionV1]],
-                       resource_reference: Set[IRI] = Set.empty[IRI]) extends UpdateValueV1 with ApiValueV1 {
-
-    import ApiValueV1JsonProtocol._
+case class TextValueWithStandoffV1(utf8str: String,
+                                   standoff: Seq[StandoffTagV1],
+                                   resource_reference: Set[IRI] = Set.empty[IRI],
+                                   mappingIri: IRI,
+                                   mapping: MappingXMLtoStandoff) extends TextValueV1 with UpdateValueV1 with ApiValueV1 {
 
     val knoraIdUtil = new KnoraIdUtil
 
     def valueTypeIri = OntologyConstants.KnoraBase.TextValue
 
     def toJsValue = {
-        // Convert textattr to JSON by mapping over it rather than using spray-json's built-in support for collections,
-        // because otherwise StandoffPositionV1JsonFormat is not necessarily compiled before this class, and spray-json
-        // says it can't find a formatter for StandoffPositionV1.
-        val textattrAsJsValue = JsObject(textattr.map {
-            case (attrName, positionList) => (attrName.toString, JsArray(positionList.map(_.toJsValue).toVector))
-        })
+
+        // TODO: depending on the given mapping, decide how serialize the text with standoff markup
+
+        val xml = StandoffTagUtilV1.convertStandoffTagV1ToXML(utf8str, standoff, mapping)
 
         JsObject(
-            "utf8str" -> JsString(utf8str),
-            "textattr" -> JsString(textattrAsJsValue.compactPrint), // textattr is expected to be a stringified JSON
-            "resource_reference" -> resource_reference.toJson
+            "xml" -> JsString(xml),
+            "mapping_id" -> JsString(mappingIri)
         )
     }
 
     /**
-      * A convenience method that returns a flattened representation of `textattr`, in the form of a list of
-      * [[CreateStandoffPositionV1InTriplestore]].
+      * A convenience method that creates an IRI for each [[StandoffTagV1]] and resolves internal references to standoff node Iris.
       *
-      * @return a list of [[CreateStandoffPositionV1InTriplestore]] each representing a [[StandoffPositionV1]] object
+      * @return a list of [[CreateStandoffTagV1InTriplestore]] each representing a [[StandoffTagV1]] object
       *         along with is standoff tag class and IRI that is going to identify it in the triplestore.
       */
-    def prepareForSparqlInsert(valueIri: IRI): Seq[CreateStandoffPositionV1InTriplestore] = {
+    def prepareForSparqlInsert(valueIri: IRI): Seq[CreateStandoffTagV1InTriplestore] = {
 
-        textattr.toSeq.flatMap {
-            case (standoffTagClass: StandoffTagV1.Value, positions: Seq[StandoffPositionV1]) =>
-                // standoffTagClass is an enumeration value
-                // get the IRI of the standoff tag class
-                positions.map((position: StandoffPositionV1) => CreateStandoffPositionV1InTriplestore(
-                    standoffTagClassIri = StandoffTagV1.EnumValueToIri(standoffTagClass),
-                    standoffPosition = position,
-                    standoffTagIri = knoraIdUtil.makeRandomStandoffTagIri(valueIri) // generate IRI for new standoff node
-                ))
+        // create an Iri for each standoff tag
+        // internal references to XML ids are not resolved yet
+        val standoffTagsWithOriginalXMLIDs: Seq[CreateStandoffTagV1InTriplestore] = standoff.map {
+            case (standoffNode: StandoffTagV1) =>
+                CreateStandoffTagV1InTriplestore(
+                    standoffNode = standoffNode,
+                    standoffTagInstanceIri = knoraIdUtil.makeRandomStandoffTagIri(valueIri) // generate IRI for new standoff node
+                )
         }
+
+        // collect all the standoff tags that contain XML ids and
+        // map the XML ids to standoff node Iris
+        val iDsToStandoffNodeIris: Map[IRI, IRI] = standoffTagsWithOriginalXMLIDs.filter {
+            (standoffTag: CreateStandoffTagV1InTriplestore) =>
+                // filter those tags out that have an XML id
+                standoffTag.standoffNode.originalXMLID.isDefined
+        }.map {
+            (standoffTagWithID: CreateStandoffTagV1InTriplestore) =>
+                // return the XML id as a key and the standoff Iri as the value
+                standoffTagWithID.standoffNode.originalXMLID.get -> standoffTagWithID.standoffTagInstanceIri
+        }.toMap
+
+        // Map the start index of each tag to its IRI, so we can resolve references to parent tags as references to
+        // tag IRIs. We only care about start indexes here, because only hierarchical tags can be parents, and
+        // hierarchical tags don't have end indexes.
+        val startIndexesToStandoffNodeIris: Map[Int, IRI] = standoffTagsWithOriginalXMLIDs.map {
+            tagWithIndex => tagWithIndex.standoffNode.startIndex -> tagWithIndex.standoffTagInstanceIri
+        }.toMap
+
+        // resolve the original XML ids to standoff Iris every the `StandoffTagInternalReferenceAttributeV1`
+        val standoffTagsWithNodeReferences: Seq[CreateStandoffTagV1InTriplestore] = standoffTagsWithOriginalXMLIDs.map {
+            (standoffTag: CreateStandoffTagV1InTriplestore) =>
+
+                // resolve original XML ids to standoff node Iris for `StandoffTagInternalReferenceAttributeV1`
+                val attributesWithStandoffNodeIriReferences: Seq[StandoffTagAttributeV1] = standoffTag.standoffNode.attributes.map {
+                    (attributeWithOriginalXMLID: StandoffTagAttributeV1) =>
+                        attributeWithOriginalXMLID match {
+                            case refAttr: StandoffTagInternalReferenceAttributeV1 =>
+                                // resolve the XML id to the corresponding standoff node Iri
+                                refAttr.copy(value = iDsToStandoffNodeIris(refAttr.value))
+                            case attr => attr
+                        }
+                }
+
+                val startParentIndex: Option[Int] = standoffTag.standoffNode.startParentIndex
+                val endParentIndex: Option[Int] = standoffTag.standoffNode.endParentIndex
+
+                // return standoff tag with updated attributes
+                standoffTag.copy(
+                    standoffNode = standoffTag.standoffNode.copy(attributes = attributesWithStandoffNodeIriReferences),
+                    startParentIri = startParentIndex.map(parentIndex => startIndexesToStandoffNodeIris(parentIndex)), // If there's a start parent index, get its IRI, otherwise None
+                    endParentIri = endParentIndex.map(parentIndex => startIndexesToStandoffNodeIris(parentIndex)) // If there's an end parent index, get its IRI, otherwise None
+                )
+        }
+
+        standoffTagsWithNodeReferences
+    }
+
+    /**
+      * Returns `true` if the specified object is a [[TextValueV1]] and has the same `utf8str` as this one. We
+      * assume that it doesn't make sense for a resource to have two different text values associated with the
+      * same property, containing the same text but different markup.
+      *
+      * @param other another [[ValueV1]].
+      * @return `true` if `other` is a duplicate of `this`.
+      */
+    override def isDuplicateOfOtherValue(other: ApiValueV1): Boolean = {
+
+        other match {
+            case otherText: TextValueV1 =>
+
+                // unescape utf8str since it contains escaped sequences while the string returned by the triplestore does not
+                otherText.utf8str == InputValidation.toSparqlEncodedString(utf8str, () => throw InvalidStandoffException(s"Could not unescape utf8str $utf8str"), true)
+            case otherValue => throw InconsistentTriplestoreDataException(s"Cannot compare a $valueTypeIri to a ${otherValue.valueTypeIri}")
+        }
+    }
+
+    override def toString = utf8str
+
+    /**
+      * It's OK to add a new version of a text value as long as something has been changed in it, even if it's only the markup.
+      *
+      * @param currentVersion the current version of the value.
+      * @return `true` if this [[UpdateValueV1]] is redundant given `currentVersion`.
+      */
+    override def isRedundant(currentVersion: ApiValueV1): Boolean = {
+
+        currentVersion match {
+            case textValueSimpleV1: TextValueSimpleV1 => false
+            case textValueWithStandoffV1: TextValueWithStandoffV1 =>
+
+                // compare utf8str (unescape utf8str since it contains escaped sequences while the string returned by the triplestore does not)
+                val utf8strIdentical: Boolean = textValueWithStandoffV1.utf8str == InputValidation.toSparqlEncodedString(utf8str, () => throw InvalidStandoffException(s"Could not unescape utf8str $utf8str"), true)
+
+                // compare standoff nodes (sort them first, since the order does not make any difference )
+                val standoffIdentical: Boolean = textValueWithStandoffV1.standoff.sortBy(standoffNode => (standoffNode.standoffTagClassIri, standoffNode.startPosition)) == this.standoff.sortBy(standoffNode => (standoffNode.standoffTagClassIri, standoffNode.startPosition))
+
+                // TODO: at the moment, the UUID is created randomly for every new standoff tag. This means that this method always returns false.
+
+                utf8strIdentical && standoffIdentical && textValueWithStandoffV1.mappingIri == this.mappingIri
+
+            case other => throw InconsistentTriplestoreDataException(s"Cannot compare a $valueTypeIri to a ${other.valueTypeIri}")
+        }
+    }
+
+}
+
+case class TextValueSimpleV1(utf8str: String) extends TextValueV1 with UpdateValueV1 with ApiValueV1 {
+
+    def valueTypeIri = OntologyConstants.KnoraBase.TextValue
+
+    def toJsValue = {
+        JsObject(
+            "utf8str" -> JsString(utf8str)
+        )
     }
 
     /**
@@ -740,7 +805,7 @@ case class TextValueV1(utf8str: String,
       */
     override def isDuplicateOfOtherValue(other: ApiValueV1): Boolean = {
         other match {
-            case TextValueV1(otherUtf8Str, _, _) => utf8str == otherUtf8Str
+            case otherText: TextValueV1 => otherText.utf8str == utf8str
             case otherValue => throw InconsistentTriplestoreDataException(s"Cannot compare a $valueTypeIri to a ${otherValue.valueTypeIri}")
         }
     }
@@ -755,14 +820,13 @@ case class TextValueV1(utf8str: String,
       */
     override def isRedundant(currentVersion: ApiValueV1): Boolean = {
         currentVersion match {
-            case textValueV1: TextValueV1 => textValueV1 == this
+            case textValueSimpleV1: TextValueSimpleV1 => textValueSimpleV1 == this
+            case textValueWithStandoffV1: TextValueWithStandoffV1 => false
             case other => throw InconsistentTriplestoreDataException(s"Cannot compare a $valueTypeIri to a ${other.valueTypeIri}")
         }
     }
 
-
 }
-
 
 /**
   * Represents a direct link from one resource to another.
@@ -1393,6 +1457,45 @@ case class MovingImageFileValueV1(internalMimeType: String,
 
 }
 
+case class TextFileValueV1(internalMimeType: String,
+                           internalFilename: String,
+                           originalFilename: String,
+                           originalMimeType: Option[String] = None) extends FileValueV1 {
+
+    def valueTypeIri = OntologyConstants.KnoraBase.TextFileValue
+
+    def toJsValue = ApiValueV1JsonProtocol.textFileValueV1Format.write(this)
+
+    override def toString = originalFilename
+
+    /**
+      * Checks if a new text file value would duplicate an existing text file value.
+      *
+      * @param other another [[ValueV1]].
+      * @return `true` if `other` is a duplicate of `this`.
+      */
+    override def isDuplicateOfOtherValue(other: ApiValueV1): Boolean = {
+        other match {
+            case textFileValueV1: TextFileValueV1 => textFileValueV1 == this
+            case otherValue => throw InconsistentTriplestoreDataException(s"Cannot compare a $valueTypeIri to a ${otherValue.valueTypeIri}")
+        }
+    }
+
+    /**
+      * Checks if a new version of a text file value would be redundant given the current version of the value.
+      *
+      * @param currentVersion the current version of the value.
+      * @return `true` if this [[UpdateValueV1]] is redundant given `currentVersion`.
+      */
+    override def isRedundant(currentVersion: ApiValueV1): Boolean = {
+        currentVersion match {
+            case textFileValueV1: TextFileValueV1 => textFileValueV1 == this
+            case other => throw InconsistentTriplestoreDataException(s"Cannot compare a $valueTypeIri to a ${other.valueTypeIri}")
+        }
+    }
+
+}
+
 
 /**
   * Represents information about a version of a value.
@@ -1419,49 +1522,6 @@ object ApiValueV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
 
     import UserV1JsonProtocol.userDataV1Format
     import org.knora.webapi.messages.v1.responder.resourcemessages.ResourceV1JsonProtocol._
-
-    /**
-      * Converts between [[StandoffPositionV1]] objects and [[JsValue]] objects.
-      */
-    implicit object StandoffPositionV1JsonFormat extends JsonFormat[StandoffPositionV1] {
-        def read(jsonVal: JsValue) = {
-            jsonVal match {
-                case JsObject(fields) =>
-                    val (start, end) = (fields.get("start"), fields.get("end")) match {
-                        case (Some(JsNumber(startVal)), Some(JsNumber(endVal))) => (startVal.toInt, endVal.toInt)
-                        case _ => throw BadRequestException(s"Invalid standoff position in JSON: $jsonVal")
-                    }
-
-                    val maybeResId = fields.get("resid")
-
-                    val resid: Option[String] = maybeResId match {
-                        case Some(residJsStr: JsString) => Some(residJsStr.value)
-                        case Some(other) => throw BadRequestException(s"Invalid resid in JSON: $other")
-                        case None => None
-                    }
-
-                    val maybeHref = fields.get("href")
-
-                    val href: Option[String] = maybeHref match {
-                        case Some(hrefJsStr: JsString) => Some(hrefJsStr.value)
-                        case Some(other) => throw BadRequestException(s"Invalid href in JSON: $other")
-                        case None => None
-                    }
-
-                    StandoffPositionV1(
-                        start = start,
-                        end = end,
-                        resid = resid,
-                        href = href
-                    )
-
-                case _ => throw BadRequestException(s"Invalid standoff position in JSON: $jsonVal")
-            }
-        }
-
-        def write(standoffPositionV1: StandoffPositionV1) = standoffPositionV1.toJsValue
-    }
-
 
     /**
       * Converts between [[KnoraCalendarV1]] objects and [[JsValue]] objects.
@@ -1510,6 +1570,7 @@ object ApiValueV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
     implicit val valueGetResponseV1Format: RootJsonFormat[ValueGetResponseV1] = jsonFormat8(ValueGetResponseV1)
     implicit val dateValueV1Format: JsonFormat[DateValueV1] = jsonFormat3(DateValueV1)
     implicit val stillImageFileValueV1Format: JsonFormat[StillImageFileValueV1] = jsonFormat9(StillImageFileValueV1)
+    implicit val textFileValueV1Format: JsonFormat[TextFileValueV1] = jsonFormat4(TextFileValueV1)
     implicit val movingImageFileValueV1Format: JsonFormat[MovingImageFileValueV1] = jsonFormat4(MovingImageFileValueV1)
     implicit val valueVersionV1Format: JsonFormat[ValueVersionV1] = jsonFormat3(ValueVersionV1)
     implicit val linkValueV1Format: JsonFormat[LinkValueV1] = jsonFormat4(LinkValueV1)

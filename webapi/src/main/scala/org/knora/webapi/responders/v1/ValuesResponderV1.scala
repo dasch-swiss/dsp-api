@@ -28,18 +28,19 @@ import org.knora.webapi.messages.v1.responder.permissionmessages.DefaultObjectAc
 import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoByIRIGetV1, ProjectInfoV1}
 import org.knora.webapi.messages.v1.responder.resourcemessages._
 import org.knora.webapi.messages.v1.responder.sipimessages.{SipiConstants, SipiResponderConversionPathRequestV1, SipiResponderConversionRequestV1, SipiResponderConversionResponseV1}
-import org.knora.webapi.messages.v1.responder.usermessages.{UserProfileByIRIGetRequestV1, UserProfileByIRIGetV1, UserProfileType, UserProfileV1}
+import org.knora.webapi.messages.v1.responder.standoffmessages.StandoffDataTypeClasses
+import org.knora.webapi.messages.v1.responder.usermessages.{UserProfileByIRIGetV1, UserProfileType, UserProfileV1}
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v1.store.triplestoremessages._
 import org.knora.webapi.responders.IriLocker
-import org.knora.webapi.twirl.SparqlTemplateLinkUpdate
+import org.knora.webapi.twirl.{SparqlTemplateLinkUpdate, StandoffTagV1}
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util._
 
 import scala.annotation.tailrec
 import scala.collection.breakOut
-import scala.concurrent.{Await, Future}
 import scala.concurrent.duration._
+import scala.concurrent.{Await, Future}
 
 /**
   * Updates Knora values.
@@ -301,7 +302,7 @@ class ValuesResponderV1 extends ResponderV1 {
                 // The 'collect' method builds a new list by applying a partial function to all elements of the list
                 // on which the function is defined.
                 resourceReferencesForAllTextValues: Iterable[Set[IRI]] = allValuesToCreate.collect {
-                    case CreateValueV1WithComment(textValueV1: TextValueV1, _) =>
+                    case CreateValueV1WithComment(textValueV1: TextValueWithStandoffV1, _) =>
                         // check that resource references are consistent in `resource_reference` and linking standoff tags
                         checkTextValueResourceRefs(textValueV1)
 
@@ -322,6 +323,9 @@ class ValuesResponderV1 extends ResponderV1 {
                 // Finally, replace each Iterable[IRI] with its size. That's the number of text values containing
                 // standoff references to that IRI.
                 targetIris: Map[IRI, Int] = allResourceReferencesGrouped.mapValues(_.size)
+
+                // Check that each target IRI actually exists and is a knora-base:Resource.
+                targetIriCheckResult <- checkStandoffResourceReferenceTargets(targetIris = targetIris.keySet, userProfile = createMultipleValuesRequest.userProfile)
 
                 // For each target IRI, construct a SparqlTemplateLinkUpdate to create one link, as well as one LinkValue
                 // with associated count as its initial reference count.
@@ -1049,7 +1053,7 @@ class ValuesResponderV1 extends ResponderV1 {
                     val linkPropertyIri = knoraIdUtil.linkValuePropertyIri2LinkPropertyIri(findResourceWithValueResult.propertyIri)
 
                     for {
-                        // Get project info
+                    // Get project info
                         projectInfo <- {
                             responderManager ? ProjectInfoByIRIGetV1(
                                 findResourceWithValueResult.projectIri,
@@ -1083,17 +1087,18 @@ class ValuesResponderV1 extends ResponderV1 {
                     // If it's a TextValue, make SparqlTemplateLinkUpdates for updating LinkValues representing
                     // links in standoff markup.
                     val linkUpdatesFuture: Future[Seq[SparqlTemplateLinkUpdate]] = other match {
-                        case textValue: TextValueV1 =>
+                        case textValue: TextValueWithStandoffV1 =>
                             val linkUpdateFutures = textValue.resource_reference.map {
-                                targetResourceIri => decrementLinkValue(
-                                    sourceResourceIri = findResourceWithValueResult.resourceIri,
-                                    linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
-                                    targetResourceIri = targetResourceIri,
-                                    valueOwner = OntologyConstants.KnoraBase.SystemUser,
-                                    valueProject = None,
-                                    valuePermissions = None,
-                                    userProfile = deleteValueRequest.userProfile
-                                )
+                                targetResourceIri =>
+                                    decrementLinkValue(
+                                        sourceResourceIri = findResourceWithValueResult.resourceIri,
+                                        linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
+                                        targetResourceIri = targetResourceIri,
+                                        valueOwner = OntologyConstants.KnoraBase.SystemUser,
+                                        valueProject = None,
+                                        valuePermissions = None,
+                                        userProfile = deleteValueRequest.userProfile
+                                    )
                             }.toVector
 
                             Future.sequence(linkUpdateFutures)
@@ -1365,8 +1370,8 @@ class ValuesResponderV1 extends ResponderV1 {
     /**
       * Represents the result of querying a link.
       *
-      * @param directLinkExists             `true` if a direct link exists between the two resources.
-      * @param targetResourceClass          if a direct link exists, contains the OWL class of the target resource.
+      * @param directLinkExists    `true` if a direct link exists between the two resources.
+      * @param targetResourceClass if a direct link exists, contains the OWL class of the target resource.
       */
     case class LinkValueQueryResult(value: LinkValueV1,
                                     linkValueIri: IRI,
@@ -1395,7 +1400,8 @@ class ValuesResponderV1 extends ResponderV1 {
 
             response <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
             rows: Seq[VariableResultsRow] = response.results.bindings
-            maybeValueQueryResult = sparqlQueryResults2ValueQueryResult(valueIri, rows, userProfile)
+
+            maybeValueQueryResult <- sparqlQueryResults2ValueQueryResult(valueIri, rows, userProfile)
 
             // If it's a link value, check that the user has permission to see the source and target resources.
             _ = maybeValueQueryResult match {
@@ -1415,7 +1421,7 @@ class ValuesResponderV1 extends ResponderV1 {
       * Checks that the user has permission to see the source and target resources of a link value.
       *
       * @param linkValueIri the IRI of the link value.
-      * @param userProfile the profile of the user making the request.
+      * @param userProfile  the profile of the user making the request.
       * @return () if the user has the required permission, or an exception otherwise.
       */
     private def checkLinkValueSubjectAndObjectPermissions(linkValueIri: IRI, userProfile: UserProfileV1): Future[Unit] = {
@@ -1482,11 +1488,11 @@ class ValuesResponderV1 extends ResponderV1 {
 
             response <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
             rows: Seq[VariableResultsRow] = response.results.bindings
-            maybeLinkValueQueryResult = sparqlQueryResults2LinkValueQueryResult(rows, userProfile)
+            maybeLinkValueQueryResult <- sparqlQueryResults2LinkValueQueryResult(rows, userProfile)
 
             // Check that the user has permission to see the source and target resources.
             _ = if (maybeLinkValueQueryResult.nonEmpty) {
-               checkLinkValueSubjectAndObjectPermissions(linkValueIri, userProfile)
+                checkLinkValueSubjectAndObjectPermissions(linkValueIri, userProfile)
             }
         } yield maybeLinkValueQueryResult
     }
@@ -1515,7 +1521,7 @@ class ValuesResponderV1 extends ResponderV1 {
 
             response <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
             rows: Seq[VariableResultsRow] = response.results.bindings
-            maybeLinkValueQueryResult = sparqlQueryResults2LinkValueQueryResult(rows, userProfile)
+            maybeLinkValueQueryResult <- sparqlQueryResults2LinkValueQueryResult(rows, userProfile)
 
             // Check that the user has permission to see the source and target resources.
             _ = maybeLinkValueQueryResult match {
@@ -1536,61 +1542,63 @@ class ValuesResponderV1 extends ResponderV1 {
       * @return a [[ValueQueryResult]].
       */
     @throws(classOf[ForbiddenException])
-    private def sparqlQueryResults2ValueQueryResult(valueIri: IRI, rows: Seq[VariableResultsRow], userProfile: UserProfileV1): Option[ValueQueryResult] = {
+    private def sparqlQueryResults2ValueQueryResult(valueIri: IRI, rows: Seq[VariableResultsRow], userProfile: UserProfileV1): Future[Option[BasicValueQueryResult]] = {
         if (rows.nonEmpty) {
             // Convert the query results to a ApiValueV1.
             val valueProps = valueUtilV1.createValueProps(valueIri, rows)
-            val value = valueUtilV1.makeValueV1(valueProps)
 
-            // Get the value's class IRI.
-            val valueClassIri = getValuePredicateObject(predicateIri = OntologyConstants.Rdf.Type, rows = rows).getOrElse(throw InconsistentTriplestoreDataException(s"Value $valueIri has no rdf:type"))
+            for {
+                value <- valueUtilV1.makeValueV1(valueProps, responderManager, userProfile)
 
-            // Get the IRI of the value's owner.
-            val ownerIri = getValuePredicateObject(predicateIri = OntologyConstants.KnoraBase.AttachedToUser, rows = rows).getOrElse(throw InconsistentTriplestoreDataException(s"Value $valueIri has no owner"))
+                // Get the value's class IRI.
+                valueClassIri = getValuePredicateObject(predicateIri = OntologyConstants.Rdf.Type, rows = rows).getOrElse(throw InconsistentTriplestoreDataException(s"Value $valueIri has no rdf:type"))
 
-            // Get the value's project IRI.
-            val projectIri = getValuePredicateObject(predicateIri = OntologyConstants.KnoraBase.AttachedToProject, rows = rows).getOrElse(throw InconsistentTriplestoreDataException(s"Value $valueIri has no project"))
+                // Get the IRI of the value's owner.
+                ownerIri = getValuePredicateObject(predicateIri = OntologyConstants.KnoraBase.AttachedToUser, rows = rows).getOrElse(throw InconsistentTriplestoreDataException(s"Value $valueIri has no owner"))
 
-            // Get the value's creation date.
-            val creationDate = getValuePredicateObject(predicateIri = OntologyConstants.KnoraBase.ValueCreationDate, rows = rows).getOrElse(throw InconsistentTriplestoreDataException(s"Value $valueIri has no valueCreationDate"))
+                // Get the value's project IRI.
+                projectIri = getValuePredicateObject(predicateIri = OntologyConstants.KnoraBase.AttachedToProject, rows = rows).getOrElse(throw InconsistentTriplestoreDataException(s"Value $valueIri has no project"))
 
-            // Get the optional comment on the value.
-            val comment = getValuePredicateObject(predicateIri = OntologyConstants.KnoraBase.ValueHasComment, rows = rows)
+                // Get the value's creation date.
+                creationDate = getValuePredicateObject(predicateIri = OntologyConstants.KnoraBase.ValueCreationDate, rows = rows).getOrElse(throw InconsistentTriplestoreDataException(s"Value $valueIri has no valueCreationDate"))
 
-            // Get the value's permission-relevant assertions.
-            val assertions = PermissionUtilV1.filterPermissionRelevantAssertionsFromValueProps(valueProps)
+                // Get the optional comment on the value.
+                comment = getValuePredicateObject(predicateIri = OntologyConstants.KnoraBase.ValueHasComment, rows = rows)
 
-            // Get the permission code representing the user's permissions on the value.
-            //
-            // Link values created automatically for resource references in standoff
-            // are automatically visible to all users, as long as they have permission
-            // to see the source and target resources. The caller of this method is responsible
-            // for checking the permissions on the source and target resources.
+                // Get the value's permission-relevant assertions.
+                assertions = PermissionUtilV1.filterPermissionRelevantAssertionsFromValueProps(valueProps)
 
-            val maybePermissionCode = valueClassIri match {
-                case OntologyConstants.KnoraBase.LinkValue =>
-                    val linkPredicateIri = getValuePredicateObject(predicateIri = OntologyConstants.Rdf.Predicate, rows = rows).getOrElse(throw InconsistentTriplestoreDataException(s"Link value $valueIri has no rdf:predicate"))
+                // Get the permission code representing the user's permissions on the value.
+                //
+                // Link values created automatically for resource references in standoff
+                // are automatically visible to all users, as long as they have permission
+                // to see the source and target resources. The caller of this method is responsible
+                // for checking the permissions on the source and target resources.
 
-                    PermissionUtilV1.getUserPermissionOnLinkValueV1WithValueProps(
-                        linkValueIri = valueIri,
-                        predicateIri = linkPredicateIri,
-                        valueProps = valueProps,
+                maybePermissionCode = valueClassIri match {
+                    case OntologyConstants.KnoraBase.LinkValue =>
+                        val linkPredicateIri = getValuePredicateObject(predicateIri = OntologyConstants.Rdf.Predicate, rows = rows).getOrElse(throw InconsistentTriplestoreDataException(s"Link value $valueIri has no rdf:predicate"))
+
+                        PermissionUtilV1.getUserPermissionOnLinkValueV1WithValueProps(
+                            linkValueIri = valueIri,
+                            predicateIri = linkPredicateIri,
+                            valueProps = valueProps,
+                            userProfile = userProfile
+                        )
+
+                    case _ => PermissionUtilV1.getUserPermissionV1FromAssertions(
+                        subjectIri = valueIri,
+                        assertions = assertions,
                         userProfile = userProfile
                     )
+                }
 
-                case _ => PermissionUtilV1.getUserPermissionV1FromAssertions(
-                    subjectIri = valueIri,
-                    assertions = assertions,
-                    userProfile = userProfile
-                )
-            }
+                permissionCode = maybePermissionCode.getOrElse {
+                    val userIri = userProfile.userData.user_id.getOrElse(OntologyConstants.KnoraBase.UnknownUser)
+                    throw ForbiddenException(s"User $userIri does not have permission to see value $valueIri")
+                }
 
-            val permissionCode = maybePermissionCode.getOrElse {
-                val userIri = userProfile.userData.user_id.getOrElse(OntologyConstants.KnoraBase.UnknownUser)
-                throw ForbiddenException(s"User $userIri does not have permission to see value $valueIri")
-            }
-
-            Some(
+            } yield Some(
                 BasicValueQueryResult(
                     value = value,
                     ownerIri = ownerIri,
@@ -1602,7 +1610,7 @@ class ValuesResponderV1 extends ResponderV1 {
                 )
             )
         } else {
-            None
+            Future(None)
         }
     }
 
@@ -1613,48 +1621,52 @@ class ValuesResponderV1 extends ResponderV1 {
       * @param userProfile the profile of the user making the request.
       * @return a [[LinkValueQueryResult]].
       */
-    private def sparqlQueryResults2LinkValueQueryResult(rows: Seq[VariableResultsRow], userProfile: UserProfileV1): Option[LinkValueQueryResult] = {
+    private def sparqlQueryResults2LinkValueQueryResult(rows: Seq[VariableResultsRow], userProfile: UserProfileV1): Future[Option[LinkValueQueryResult]] = {
         if (rows.nonEmpty) {
             val firstRowMap = rows.head.rowMap
             val linkValueIri = firstRowMap("linkValue")
 
             // Convert the query results into a LinkValueV1.
             val valueProps = valueUtilV1.createValueProps(linkValueIri, rows)
-            val linkValueV1: LinkValueV1 = valueUtilV1.makeValueV1(valueProps) match {
-                case linkValue: LinkValueV1 => linkValue
-                case other => throw InconsistentTriplestoreDataException(s"Expected value $linkValueIri to be of type ${OntologyConstants.KnoraBase.LinkValue}, but it was read with type ${other.valueTypeIri}")
-            }
 
-            // Get the IRI of the value's owner.
-            val ownerIri = getValuePredicateObject(predicateIri = OntologyConstants.KnoraBase.AttachedToUser, rows = rows).getOrElse(throw InconsistentTriplestoreDataException(s"Value $linkValueIri has no owner"))
+            for {
+                linkValueMaybe <- valueUtilV1.makeValueV1(valueProps, responderManager, userProfile)
 
-            // Get the value's project IRI.
-            val projectIri = getValuePredicateObject(predicateIri = OntologyConstants.KnoraBase.AttachedToProject, rows = rows).getOrElse(throw InconsistentTriplestoreDataException(s"Value $linkValueIri has no project"))
+                linkValueV1: LinkValueV1 = linkValueMaybe match {
+                    case linkValue: LinkValueV1 => linkValue
+                    case other => throw InconsistentTriplestoreDataException(s"Expected value $linkValueIri to be of type ${OntologyConstants.KnoraBase.LinkValue}, but it was read with type ${other.valueTypeIri}")
+                }
 
-            // Get the value's creation date.
-            val creationDate = getValuePredicateObject(predicateIri = OntologyConstants.KnoraBase.ValueCreationDate, rows = rows).getOrElse(throw InconsistentTriplestoreDataException(s"Value $linkValueIri has no valueCreationDate"))
+                // Get the IRI of the value's owner.
+                ownerIri = getValuePredicateObject(predicateIri = OntologyConstants.KnoraBase.AttachedToUser, rows = rows).getOrElse(throw InconsistentTriplestoreDataException(s"Value $linkValueIri has no owner"))
 
-            // Get the optional comment on the value.
-            val comment = getValuePredicateObject(predicateIri = OntologyConstants.KnoraBase.ValueHasComment, rows = rows)
+                // Get the value's project IRI.
+                projectIri = getValuePredicateObject(predicateIri = OntologyConstants.KnoraBase.AttachedToProject, rows = rows).getOrElse(throw InconsistentTriplestoreDataException(s"Value $linkValueIri has no project"))
 
-            // Get the value's permission-relevant assertions.
-            val permissionRelevantAssertions = PermissionUtilV1.filterPermissionRelevantAssertionsFromValueProps(valueProps)
+                // Get the value's creation date.
+                creationDate = getValuePredicateObject(predicateIri = OntologyConstants.KnoraBase.ValueCreationDate, rows = rows).getOrElse(throw InconsistentTriplestoreDataException(s"Value $linkValueIri has no valueCreationDate"))
 
-            // Get the permission code representing the user's permissions on the value.
-            val permissionCode = PermissionUtilV1.getUserPermissionOnLinkValueV1WithValueProps(
-                linkValueIri = linkValueIri,
-                predicateIri = linkValueV1.predicateIri,
-                valueProps = valueProps,
-                userProfile = userProfile
-            ).getOrElse {
-                val userIri = userProfile.userData.user_id.getOrElse(OntologyConstants.KnoraBase.UnknownUser)
-                throw ForbiddenException(s"User $userIri does not have permission to see value $linkValueIri")
-            }
+                // Get the optional comment on the value.
+                comment = getValuePredicateObject(predicateIri = OntologyConstants.KnoraBase.ValueHasComment, rows = rows)
 
-            val directLinkExists = firstRowMap.get("directLinkExists").exists(_.toBoolean)
-            val targetResourceClass = firstRowMap.get("targetResourceClass")
+                // Get the value's permission-relevant assertions.
+                permissionRelevantAssertions = PermissionUtilV1.filterPermissionRelevantAssertionsFromValueProps(valueProps)
 
-            Some(
+                // Get the permission code representing the user's permissions on the value.
+                permissionCode = PermissionUtilV1.getUserPermissionOnLinkValueV1WithValueProps(
+                    linkValueIri = linkValueIri,
+                    predicateIri = linkValueV1.predicateIri,
+                    valueProps = valueProps,
+                    userProfile = userProfile
+                ).getOrElse {
+                    val userIri = userProfile.userData.user_id.getOrElse(OntologyConstants.KnoraBase.UnknownUser)
+                    throw ForbiddenException(s"User $userIri does not have permission to see value $linkValueIri")
+                }
+
+                directLinkExists = firstRowMap.get("directLinkExists").exists(_.toBoolean)
+                targetResourceClass = firstRowMap.get("targetResourceClass")
+
+            } yield Some(
                 LinkValueQueryResult(
                     value = linkValueV1,
                     linkValueIri = linkValueIri,
@@ -1669,7 +1681,7 @@ class ValuesResponderV1 extends ResponderV1 {
                 )
             )
         } else {
-            None
+            Future(None)
         }
     }
 
@@ -1757,8 +1769,10 @@ class ValuesResponderV1 extends ResponderV1 {
 
             updateVerificationResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
             rows = updateVerificationResponse.results.bindings
-            result = sparqlQueryResults2ValueQueryResult(valueIri = searchValueIri, rows = rows, userProfile = userProfile).getOrElse(throw UpdateNotPerformedException(s"The update to value $searchValueIri for property $propertyIri in resource $resourceIri was not performed. Please report this as a possible bug."))
-        } yield result
+
+            resultOption <- sparqlQueryResults2ValueQueryResult(valueIri = searchValueIri, rows = rows, userProfile = userProfile)
+
+        } yield resultOption.getOrElse(throw UpdateNotPerformedException(s"The update to value $searchValueIri for property $propertyIri in resource $resourceIri was not performed. Please report this as a possible bug."))
     }
 
     /**
@@ -1802,7 +1816,7 @@ class ValuesResponderV1 extends ResponderV1 {
       * Finds the object of the specified predicate in SPARQL query results describing a value.
       *
       * @param predicateIri the IRI of the predicate.
-      * @param rows the SPARQL query results that describe the value.
+      * @param rows         the SPARQL query results that describe the value.
       * @return the predicate's object.
       */
     private def getValuePredicateObject(predicateIri: IRI, rows: Seq[VariableResultsRow]): Option[IRI] = {
@@ -1994,23 +2008,24 @@ class ValuesResponderV1 extends ResponderV1 {
         for {
         // If we're creating a text value, update direct links and LinkValues for any resource references in standoff.
             standoffLinkUpdates: Seq[SparqlTemplateLinkUpdate] <- value match {
-                case textValueV1: TextValueV1 =>
+                case textValueV1: TextValueWithStandoffV1 =>
                     // Make sure the text value's list of resource references is correct.
                     checkTextValueResourceRefs(textValueV1)
 
                     // Construct a SparqlTemplateLinkUpdate for each reference that was added.
                     val standoffLinkUpdatesForAddedResourceRefs: Seq[Future[SparqlTemplateLinkUpdate]] =
-                    textValueV1.resource_reference.map {
-                        targetResourceIri => incrementLinkValue(
-                            sourceResourceIri = resourceIri,
-                            linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
-                            targetResourceIri = targetResourceIri,
-                            valueOwner = OntologyConstants.KnoraBase.SystemUser,
-                            valueProject = None,
-                            valuePermissions = None,
-                            userProfile = userProfile
-                        )
-                    }.toVector
+                        textValueV1.resource_reference.map {
+                            targetResourceIri =>
+                                incrementLinkValue(
+                                    sourceResourceIri = resourceIri,
+                                    linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
+                                    targetResourceIri = targetResourceIri,
+                                    valueOwner = OntologyConstants.KnoraBase.SystemUser,
+                                    valueProject = None,
+                                    valuePermissions = None,
+                                    userProfile = userProfile
+                                )
+                        }.toVector
 
                     Future.sequence(standoffLinkUpdatesForAddedResourceRefs)
 
@@ -2081,7 +2096,7 @@ class ValuesResponderV1 extends ResponderV1 {
                                              valuePermissions: Option[String],
                                              userProfile: UserProfileV1): Future[ChangeValueResponseV1] = {
         for {
-            // Delete the existing link and decrement its LinkValue's reference count.
+        // Delete the existing link and decrement its LinkValue's reference count.
             sparqlTemplateLinkUpdateForCurrentLink <- decrementLinkValue(
                 sourceResourceIri = resourceIri,
                 linkPropertyIri = propertyIri,
@@ -2187,12 +2202,27 @@ class ValuesResponderV1 extends ResponderV1 {
             standoffLinkUpdates: Seq[SparqlTemplateLinkUpdate] <- (currentValueV1, updateValueV1) match {
                 case (currentTextValue: TextValueV1, newTextValue: TextValueV1) =>
                     // Make sure the new text value's list of resource references is correct.
-                    checkTextValueResourceRefs(newTextValue)
+
+                    newTextValue match {
+                        case newTextWithStandoff: TextValueWithStandoffV1 =>
+                            checkTextValueResourceRefs(newTextWithStandoff)
+                        case textValueSimple: TextValueSimpleV1 => ()
+                    }
+
 
                     // Identify the resource references that have been added or removed in the new version of
                     // the value.
-                    val currentResourceRefs = currentTextValue.resource_reference
-                    val newResourceRefs = newTextValue.resource_reference
+                    val currentResourceRefs = currentTextValue match {
+                        case textValueWithStandoff: TextValueWithStandoffV1 =>
+                            textValueWithStandoff.resource_reference
+                        case textValueSimple: TextValueSimpleV1 => Set.empty[IRI]
+                    }
+
+                    val newResourceRefs = newTextValue match {
+                        case textValueWithStandoff: TextValueWithStandoffV1 =>
+                            textValueWithStandoff.resource_reference
+                        case textValueSimple: TextValueSimpleV1 => Set.empty[IRI]
+                    }
                     val addedResourceRefs = newResourceRefs -- currentResourceRefs
                     val removedResourceRefs = currentResourceRefs -- newResourceRefs
 
@@ -2318,6 +2348,9 @@ class ValuesResponderV1 extends ResponderV1 {
                 userProfile = userProfile
             )
 
+            // Check that the target resource actually exists and is a knora-base:Resource.
+            targetIriCheckResult <- checkStandoffResourceReferenceTargets(targetIris = Set(targetResourceIri), userProfile = userProfile)
+
             // Generate an IRI for the new LinkValue.
             newLinkValueIri = knoraIdUtil.makeRandomValueIri(sourceResourceIri)
 
@@ -2441,20 +2474,61 @@ class ValuesResponderV1 extends ResponderV1 {
     }
 
     /**
-      * Checks a [[TextValueV1]] to make sure that the resource references in its [[StandoffPositionV1]] objects match
+      * Checks a [[TextValueV1]] to make sure that the resource references in its [[StandoffTagV1]] objects match
       * the list of resource IRIs in its `resource_reference` member variable.
       *
       * @param textValue the [[TextValueV1]] to be checked.
       */
     @throws(classOf[BadRequestException])
-    private def checkTextValueResourceRefs(textValue: TextValueV1): Unit = {
-        val resourceRefsInStandoff: Set[IRI] = textValue.textattr.get(StandoffTagV1.link) match {
-            case Some(positions) => positions.flatMap(_.resid).toSet
-            case None => Set.empty[IRI]
+    private def checkTextValueResourceRefs(textValue: TextValueWithStandoffV1): Unit = {
+
+        // please note that the function `InputValidation.getResourceIrisFromStandoffTags` is not used here
+        // because we want a double check (the function has already been called in the route or in standoff responder)
+        val resourceRefsInStandoff: Set[IRI] = textValue.standoff.foldLeft(Set.empty[IRI]) {
+            case (acc: Set[IRI], standoffNode: StandoffTagV1) =>
+
+                standoffNode match {
+
+                    case node: StandoffTagV1 if node.dataType.isDefined && node.dataType.get == StandoffDataTypeClasses.StandoffLinkTag =>
+                        acc + node.attributes.find(_.standoffPropertyIri == OntologyConstants.KnoraBase.StandoffTagHasLink).getOrElse(throw NotFoundException(s"${OntologyConstants.KnoraBase.StandoffTagHasLink} was not found in $node")).stringValue
+
+                    case _ => acc
+                }
         }
 
         if (resourceRefsInStandoff != textValue.resource_reference) {
             throw BadRequestException(s"The list of resource references in this text value does not match the resource references in its Standoff markup: $textValue")
+        }
+    }
+
+    /**
+      * Given a set of IRIs of standoff resource reference targets, checks that each one actually refers to a `knora-base:Resource`.
+      *
+      * @param targetIris  the IRIs to check.
+      * @param userProfile the profile of the user making the request.
+      * @return a `Future[Unit]` on success, otherwise a `Future` containing an exception ([[NotFoundException]] if the target resource is not found,
+      *         or [[BadRequestException]] if the target IRI isn't a `knora-base:Resource`).
+      */
+    private def checkStandoffResourceReferenceTargets(targetIris: Set[IRI], userProfile: UserProfileV1): Future[Unit] = {
+        if (targetIris.isEmpty) {
+            Future(())
+        } else {
+            val targetIriCheckFutures: Set[Future[Unit]] = targetIris.map {
+                targetIri =>
+                    for {
+                        checkTargetClassResponse <- (responderManager ? ResourceCheckClassRequestV1(
+                            resourceIri = targetIri,
+                            owlClass = OntologyConstants.KnoraBase.Resource,
+                            userProfile = userProfile
+                        )).mapTo[ResourceCheckClassResponseV1]
+
+                        _ = if (!checkTargetClassResponse.isInClass) throw BadRequestException(s"$targetIri cannot be the object of a standoff resource reference, because it is not a knora-base:Resource")
+                    } yield ()
+            }
+
+            for {
+                targetIriChecks: Set[Unit] <- Future.sequence(targetIriCheckFutures)
+            } yield targetIriChecks.head
         }
     }
 

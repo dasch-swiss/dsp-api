@@ -29,6 +29,8 @@ import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
 import org.knora.webapi.util.InputValidation
 import org.knora.webapi.{BadRequestException, SettingsImpl}
 
+import scala.concurrent.Future
+
 /**
   * Provides a spray-routing function for the API routes that Sipi connects to.
   */
