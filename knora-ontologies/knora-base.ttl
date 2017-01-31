@@ -743,7 +743,7 @@
 
                :subjectClassConstraint :MappingElement ;
 
-               :objectClassConstraint xsd:string .
+               :objectDatatypeConstraint xsd:string .
 
 
 ###  http://www.knora.org/ontology/knora-base#mappingHasXMLNamespace
@@ -758,7 +758,7 @@
 
                :subjectClassConstraint :MappingComponent ;
 
-               :objectClassConstraint xsd:string .
+               :objectDatatypeConstraint xsd:string .
 
 
 ###  http://www.knora.org/ontology/knora-base#mappingHasXMLClass
@@ -773,7 +773,7 @@
 
                :subjectClassConstraint :MappingElement ;
 
-               :objectClassConstraint xsd:string .
+               :objectDatatypeConstraint xsd:string .
 
 
 ###  http://www.knora.org/ontology/knora-base#mappingHasStandoffClass
@@ -788,7 +788,7 @@
 
                :subjectClassConstraint :MappingComponent ;
 
-               :objectClassConstraint :StandoffTag .
+               :objectClassConstraint owl:Class .
 
 
 ###  http://www.knora.org/ontology/knora-base#mappingHasXMLAttribute
@@ -818,7 +818,7 @@
 
                :subjectClassConstraint :MappingComponent ;
 
-               :objectClassConstraint xsd:string .
+               :objectDatatypeConstraint xsd:string .
 
 
 
@@ -864,7 +864,7 @@
 
                :subjectClassConstraint :MappingElement ;
 
-               :objectClassConstraint xsd:boolean .
+               :objectDatatypeConstraint xsd:boolean .
 
 
 #################################################################
