@@ -721,6 +721,6 @@
             rdfs:subClassOf :Permission .
 
 ### http://www.knora.org/ontology/knora-base#DefaultObjectAccessPermission
-:DefaultObjectAccessPermissionOnGroup rdf:type owl:Class ;
+:DefaultObjectAccessPermission rdf:type owl:Class ;
             rdfs:comment "Default Object Access Permission class used to create instances for storing default object access permission for a project and either groups, resource classes, or properties."@en ;
             rdfs:subClassOf :Permission .
