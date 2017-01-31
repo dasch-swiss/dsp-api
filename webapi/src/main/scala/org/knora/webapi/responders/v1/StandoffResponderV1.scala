@@ -555,6 +555,11 @@ class StandoffResponderV1 extends ResponderV1 {
                 acc ++ xmlTag.attributes.keySet
         }
 
+        // make sure that the mapping does not contain system or data type standoff properties as attributes
+        // these standoff properties can only be used via the standoff base tag and standoff data type classes
+        val systemOrDatatypePropsAsAttr: Set[IRI] = standoffPropertyIrisFromMapping.intersect(StandoffProperties.systemProperties ++ StandoffProperties.dataTypeProperties)
+        if (systemOrDatatypePropsAsAttr.nonEmpty) throw InvalidStandoffException(s"attempt to define attributes for system or data type properties: ${systemOrDatatypePropsAsAttr.mkString(", ")}")
+
         for {
 
         // request information about standoff classes that should be created
