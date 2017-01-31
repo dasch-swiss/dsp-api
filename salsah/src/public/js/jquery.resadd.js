@@ -1034,17 +1034,21 @@
 
 												var props = rt_txt.htmleditor('value');
 
-												propvals[propname] = [{richtext_value: props}];
+												// htmleditor returns false if there is no content
+												if (props !== false) propvals[propname] = [{richtext_value: props}];
 											} else if (ele.length > 1) {
 												propvals[propname] = [];
 												ele.each(function() {
 													var rt_txt = $(this).find('.htmleditor');
 													var props = rt_txt.htmleditor('value');
 
-													vv = {
-														richtext_value: props
-													};
-													propvals[propname].push(vv);
+                                                    // htmleditor returns false if there is no content
+                                                    if (props !== false) {
+                                                        vv = {
+                                                            richtext_value: props
+                                                        };
+                                                        propvals[propname].push(vv);
+                                                    }
 												});
 											}
 											break;

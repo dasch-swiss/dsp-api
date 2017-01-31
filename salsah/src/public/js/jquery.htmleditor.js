@@ -186,6 +186,9 @@
 			// get html from the editor instance
 			var htmlstr = localdata.editor.getData();
 
+			// return false if there is no content
+			if (htmlstr.length == 0) return false;
+
             // return required params for xml
 			return {
 				xml: addXMLWrapper(htmlstr),

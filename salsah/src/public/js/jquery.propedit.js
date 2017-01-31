@@ -650,6 +650,9 @@
 
 			postdata[VALTYPE_RICHTEXT] = function(value_container, prop, value_index, value, is_new_value) {
 				var data = {};
+
+				// TODO: check for empty text: prop would be false
+
 				if (is_new_value) {
 					data.richtext_value = value;
 					data.res_id = res_id;
