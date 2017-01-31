@@ -92,14 +92,11 @@
             <separatesWords>false</separatesWords>
         </tag>
         <standoffClass>
-            <classIri>http://www.knora.org/ontology/beol#StandoffReferenceTag</classIri>
-            <attributes>
-                <attribute>
-                    <attributeName>href</attributeName>
-                    <namespace>noNamespace</namespace>
-                    <propertyIri>http://www.knora.org/ontology/beol#standoffTagHasInternalReference</propertyIri>
-                </attribute>
-            </attributes>
+            <classIri>http://www.knora.org/ontology/knora-base#StandoffInternalReferenceTag</classIri>
+            <datatype>
+                <type>http://www.knora.org/ontology/knora-base#StandoffInternalReferenceTag</type>
+                <attributeName>href</attributeName>
+            </datatype>
         </standoffClass>
     </mappingElement>
 

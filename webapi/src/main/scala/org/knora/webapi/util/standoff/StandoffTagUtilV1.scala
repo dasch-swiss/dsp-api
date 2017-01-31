@@ -38,6 +38,12 @@ object StandoffTagUtilV1 {
     // string constant used to mark the absence of a classname in the mapping definition of an XML element
     private val noClass = "noClass"
 
+    // name of class attribute (used to combine elements and classes in mappings)
+    private val classAttribute = "class"
+
+    // an internal Link in an XML document begins with this character
+    val internalLinkMarker = '#'
+
     /**
       * Tries to find a data type attribute in the XML attributes of a given standoff node. Throws an appropriate error if information is inconsistent or missing.
       *
@@ -75,25 +81,11 @@ object StandoffTagUtilV1 {
       */
     private def createAttributes(xmlToStandoffMapping: XMLTagToStandoffClass, classSpecificProps: Map[IRI, Cardinality.Value], existingXMLIDs: Seq[String], standoffNodeFromXML: StandoffTag, standoffPropertyEntities: Map[IRI, StandoffPropertyEntityInfoV1]): Seq[StandoffTagAttributeV1] = {
 
-        // assumes that internal references start with a "#"
-        def getTargetIDFromInternalReference(internalReference: String) = {
-            // make sure that the internal reference starts with a '#'
-            if (internalReference.charAt(0) != '#') throw BadRequestException(s"invalid internal reference (should start with a '#'): '$internalReference'")
-
-            val refTarget = internalReference.substring(1)
-
-            // make sure that he target of the reference exists in this context
-            if (!existingXMLIDs.contains(refTarget)) throw BadRequestException(s"invalid internal reference: target '$internalReference' unknown")
-
-            refTarget
-
-        }
-
         if (classSpecificProps.nonEmpty) {
             // this standoff class requires additional standoff properties to the standoff data type properties (contained in `StandoffProperties.dataTypeProperties`).
 
             // map over all non data type attributes, ignore the "class" attribute ("class" is only used in the mapping to allow for the reuse of the same tag name, not to store actual data).
-            val attrs: Seq[StandoffTagAttributeV1] = standoffNodeFromXML.attributes.filterNot(attr => (xmlToStandoffMapping.dataType.nonEmpty && xmlToStandoffMapping.dataType.get.dataTypeXMLAttribute == attr.key) || attr.key == "class").map {
+            val attrs: Seq[StandoffTagAttributeV1] = standoffNodeFromXML.attributes.filterNot(attr => (xmlToStandoffMapping.dataType.nonEmpty && xmlToStandoffMapping.dataType.get.dataTypeXMLAttribute == attr.key) || attr.key == classAttribute).map {
                 attr: StandoffTagAttribute =>
                     // get the standoff property Iri for this XML attribute
 
@@ -110,7 +102,7 @@ object StandoffTagUtilV1 {
                     }
 
                     if (standoffPropertyEntities(standoffTagPropIri).predicates.get(OntologyConstants.KnoraBase.ObjectDatatypeConstraint).isDefined) {
-                        // property is a datatype property
+                        // property is a data type property
 
                         val propDatatypeConstraint = standoffPropertyEntities(standoffTagPropIri).predicates(OntologyConstants.KnoraBase.ObjectDatatypeConstraint)
 
@@ -132,21 +124,10 @@ object StandoffTagUtilV1 {
                             case other => throw InconsistentTriplestoreDataException(s"triplestore returned unknown ${OntologyConstants.KnoraBase.ObjectDatatypeConstraint} '$other' for $standoffTagPropIri")
 
                         }
-                    } else if (standoffPropertyEntities(standoffTagPropIri).predicates.get(OntologyConstants.KnoraBase.ObjectClassConstraint).isDefined) {
-
-                        // property is an object property
-
-                        // we expect a property of type http://www.knora.org/ontology/knora-base#standoffTagHasInternalReference
-                        if (!standoffPropertyEntities(standoffTagPropIri).isSubPropertyOf.contains(OntologyConstants.KnoraBase.StandoffTagHasInternalReference)) {
-                            throw BadRequestException(s"wrong type given for ${standoffTagPropIri}: a standoff object property is expected to be a subproperty of ${OntologyConstants.KnoraBase.StandoffTagHasInternalReference}")
-                        }
-
-                        StandoffTagInternalReferenceAttributeV1(standoffPropertyIri = standoffTagPropIri, value = getTargetIDFromInternalReference(attr.value))
-
                     } else {
-                        throw InconsistentTriplestoreDataException(s"no ${OntologyConstants.KnoraBase.ObjectDatatypeConstraint} or ${OntologyConstants.KnoraBase.ObjectClassConstraint} given for property '$standoffTagPropIri'")
+                        // only properties with a `ObjectDatatypeConstraint` are allowed here (linking properties have to be created via data type standoff classes)
+                        throw InconsistentTriplestoreDataException(s"no ${OntologyConstants.KnoraBase.ObjectDatatypeConstraint} given for property '$standoffTagPropIri'")
                     }
-
 
             }.toList
 
@@ -193,7 +174,7 @@ object StandoffTagUtilV1 {
 
             // check that there no other attributes than data type attributes and 'class'
             val unsupportedAttributes: Set[String] = standoffNodeFromXML.attributes.filterNot {
-                attr => (xmlToStandoffMapping.dataType.nonEmpty && xmlToStandoffMapping.dataType.get.dataTypeXMLAttribute == attr.key) || attr.key == "class"
+                attr => (xmlToStandoffMapping.dataType.nonEmpty && xmlToStandoffMapping.dataType.get.dataTypeXMLAttribute == attr.key) || attr.key == classAttribute
             }.map(attr => attr.key)
 
             if (unsupportedAttributes.nonEmpty) throw BadRequestException(s"Attributes found that are not defined in the mapping: ${unsupportedAttributes.mkString(", ")}")
@@ -290,6 +271,21 @@ object StandoffTagUtilV1 {
                 standoffTagWithID.originalID.get
         }
 
+        // get the id of an XML target element from an internal reference
+        // assumes that an internal references starts with a "#"
+        def getTargetIDFromInternalReference(internalReference: String) = {
+            // make sure that the internal reference starts with a '#'
+            if (internalReference.charAt(0) != internalLinkMarker) throw BadRequestException(s"invalid internal reference (should start with a $internalLinkMarker): '$internalReference'")
+
+            val refTarget = internalReference.substring(1)
+
+            // make sure that he target of the reference exists in this context
+            if (!existingXMLIDs.contains(refTarget)) throw BadRequestException(s"invalid internal reference: target '$internalReference' unknown")
+
+            refTarget
+
+        }
+
         textWithStandoff.standoff.map {
             case (standoffNodeFromXML: StandoffTag) =>
 
@@ -298,7 +294,7 @@ object StandoffTagUtilV1 {
                     case Some(namespace) => namespace
                 }
 
-                val classname: String = standoffNodeFromXML.attributes.find(_.key == "class") match {
+                val classname: String = standoffNodeFromXML.attributes.find(_.key == classAttribute) match {
                     case None => noClass
                     case Some(classAttribute: StandoffTagAttribute) => classAttribute.value
                 }
@@ -379,6 +375,31 @@ object StandoffTagUtilV1 {
                             endParentIndex = standoffBaseTagV1.endParentIndex,
                             attributes = attributesV1 :+ internalLink
                         )
+
+                    case Some(StandoffDataTypeClasses.StandoffInternalReferenceTag) =>
+
+                        val internalReferenceString: String = getDataTypeAttribute(standoffDefFromMapping, StandoffDataTypeClasses.StandoffInternalReferenceTag, standoffNodeFromXML)
+
+                        val internalReference = StandoffTagInternalReferenceAttributeV1(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasInternalReference, value = getTargetIDFromInternalReference(internalReferenceString))
+
+                        val classSpecificProps = cardinalities -- StandoffProperties.systemProperties -- StandoffProperties.internalReferenceProperties
+
+                        val attributesV1 = createAttributes(standoffDefFromMapping, classSpecificProps, existingXMLIDs, standoffNodeFromXML, standoffEntities.standoffPropertyEntityInfoMap)
+
+                        StandoffTagV1(
+                            dataType = Some(StandoffDataTypeClasses.StandoffInternalReferenceTag),
+                            standoffTagClassIri = standoffBaseTagV1.standoffTagClassIri,
+                            startPosition = standoffBaseTagV1.startPosition,
+                            endPosition = standoffBaseTagV1.endPosition,
+                            uuid = standoffBaseTagV1.uuid,
+                            originalXMLID = standoffBaseTagV1.originalXMLID,
+                            startIndex = standoffBaseTagV1.startIndex,
+                            endIndex = standoffBaseTagV1.endIndex,
+                            startParentIndex = standoffBaseTagV1.startParentIndex,
+                            endParentIndex = standoffBaseTagV1.endParentIndex,
+                            attributes = attributesV1 :+ internalReference
+                        )
+
 
                     case Some(StandoffDataTypeClasses.StandoffColorTag) =>
 
@@ -658,9 +679,9 @@ object StandoffTagUtilV1 {
     /**
       * Converts a sequence of [[StandoffTagAttributeV1]] to a sequence of [[StandoffTagAttribute]].
       *
-      * @param mapping     the mapping used to convert standoff property IRIs to XML attribute names.
-      * @param attributes  the standoff properties to be converted to XML attributes.
-      * @return            a sequence of [[StandoffTagAttribute]].
+      * @param mapping    the mapping used to convert standoff property IRIs to XML attribute names.
+      * @param attributes the standoff properties to be converted to XML attributes.
+      * @return a sequence of [[StandoffTagAttribute]].
       */
     private def convertStandoffAttributeTags(mapping: Map[IRI, XMLAttrItem], attributes: Seq[StandoffTagAttributeV1]): Seq[StandoffTagAttribute] = {
         attributes.map {
@@ -685,7 +706,7 @@ object StandoffTagUtilV1 {
       * @param utf8str              the string representation of the text value (`valueHasString`).
       * @param standoff             the standoff representing the markup.
       * @param mappingXMLtoStandoff the mapping used to convert standoff to XML markup.
-      * @return                     a String representing an XML document.
+      * @return a String representing an XML document.
       */
     def convertStandoffTagV1ToXML(utf8str: String, standoff: Seq[StandoffTagV1], mappingXMLtoStandoff: MappingXMLtoStandoff): String = {
 
@@ -710,6 +731,15 @@ object StandoffTagUtilV1 {
                         val conventionalAttributes = standoffTagV1.attributes.filterNot(attr => StandoffProperties.linkProperties.contains(attr.standoffPropertyIri))
 
                         convertStandoffAttributeTags(xmlItemForStandoffClass.attributes, conventionalAttributes) :+ StandoffTagAttribute(key = dataTypeAttrName, value = linkIri, xmlNamespace = None)
+
+                    case Some(StandoffDataTypeClasses.StandoffInternalReferenceTag) =>
+                        val dataTypeAttrName = xmlItemForStandoffClass.tagItem.mapping.dataType.getOrElse(throw NotFoundException(s"data type attribute not found in mapping for ${xmlItemForStandoffClass.tagname}")).dataTypeXMLAttribute
+
+                        val internalRefTarget = standoffTagV1.attributes.find(_.standoffPropertyIri == OntologyConstants.KnoraBase.StandoffTagHasInternalReference).get.stringValue
+
+                        val conventionalAttributes = standoffTagV1.attributes.filterNot(attr => StandoffProperties.internalReferenceProperties.contains(attr.standoffPropertyIri))
+
+                        convertStandoffAttributeTags(xmlItemForStandoffClass.attributes, conventionalAttributes) :+ StandoffTagAttribute(key = dataTypeAttrName, value = internalRefTarget, xmlNamespace = None)
 
                     case Some(StandoffDataTypeClasses.StandoffColorTag) =>
                         val dataTypeAttrName = xmlItemForStandoffClass.tagItem.mapping.dataType.getOrElse(throw NotFoundException(s"data type attribute not found in mapping for ${xmlItemForStandoffClass.tagname}")).dataTypeXMLAttribute
@@ -794,7 +824,7 @@ object StandoffTagUtilV1 {
                     case `noClass` => Seq.empty[StandoffTagAttribute]
                     case classname => Vector(
                         StandoffTagAttribute(
-                            key = "class",
+                            key = classAttribute,
                             value = classname,
                             xmlNamespace = None
                         )
@@ -840,7 +870,6 @@ object StandoffTagUtilV1 {
                 }
 
         }
-
 
 
         val textWithStandoff = TextWithStandoff(text = utf8str, standoff = standoffTags)

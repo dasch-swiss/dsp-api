@@ -141,6 +141,7 @@ Standoff Data Types
 Knora allows the use of all its value types as standoff data types (defined in ``knora-base.ttl``):
 
 - ``knora-base::StandoffLinkTag``: Represents a reference to a Knora resource (the IRI of the target resource must be submitted in the data type attribute).
+- ``knora-base:StandoffInternalReferenceTag``: Represents an internal reference inside a document (the id of the target element inside the same document must be indicated in the data type attribute), see internal_references_.
 - ``knora-base::StandoffUriTag``: Represents a reference to a URI (the URI of the target resource must be submitted in the data type attribute).
 - ``knora-base::StandoffDateTag``: Represents a date (a Knora date string must be submitted in the data type attribute, e.g. ``GREGORIAN:2017-01-27``).
 - ``knora-base::StandoffColorTag``: Represents a color (a hexadecimal RGB color string must be submitted in the data type attribute, e.g. ``#0000FF``).
@@ -230,20 +231,31 @@ Intervals are submitted as one attribute in the following format: ``interval-att
 
 You will find a sample mapping with all the data types and a sample XML file in the the test data: ``webapi/_test_data/test_route/texts/mappingForHTML.xml`` and ``webapi/_test_data/test_route/texts/HTML.xml``.
 
---------------------------------------
+.. _internal_references:
+
 Internal References in an XML Document
---------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Internal references inside an XML document can be represented using the predefined the standoff property ``knora-base:standoffTagHasInternalReference`` or a subproperty of it.
-This standoff property has an ``knora-base:objectClassConstraint`` and points to a standoff node when converted to RDF.
+Internal references inside an XML document can be represented using the data type standoff class ``knora-base:StandoffInternalReferenceTag`` or a subclass of it.
+This class has a standoff property that points to a standoff node representing the target XML element when converted to RDF.
 
-The following example shows the definition of a mapping element for an internal reference (for reasons of simplicity, only the attribute definition is depicted)::
+The following example shows the definition of a mapping element for an internal reference (for reasons of simplicity, only the mapping element for the element is question is depicted)::
 
-    <attribute>
-        <attributeName>internalRef</attributeName>
-        <namespace>noNamespace</namespace>
-        <propertyIri>http://www.knora.org/ontology/knora-base:standoffTagHasInternalReference</propertyIri>
-    </attribute>
+    <mappingElement>
+        <tag>
+            <name>ref</name>
+            <class>noClass</class>
+            <namespace>noNamespace</namespace>
+            <separatesWords>false</separatesWords>
+        </tag>
+        <standoffClass>
+            <classIri>http://www.knora.org/ontology/knora-base#StandoffInternalReferenceTag</classIri>
+            <datatype>
+                <type>http://www.knora.org/ontology/knora-base#StandoffInternalReferenceTag</type>
+                <attributeName>internalRef</attributeName>
+            </datatype>
+        </standoffClass>
+    </mappingElement>
 
 Now, an internal reference to an element in the same document can be made that will be converted to a pointer in RDF::
 
@@ -338,7 +350,7 @@ In the ontology, standoff property literals may have one of the following ``knor
 In XML, all attribute values are submitted as strings. However, these string representations need to be convertible to the types defined in the ontology.
 If they are not, the request will be rejected. It is recommended to enforce types on attributes by applying XML Schema validations (restrictions).
 
-Links (object property) to a ``knora-base:Resource`` can be represented using data type standoff class ``knora-base::StandoffLinkTag``, internal links using the object property ``knora-base:standoffTagHasInternalReference``.
+Links (object property) to a ``knora-base:Resource`` can be represented using the data type standoff class ``knora-base::StandoffLinkTag``, internal links using the data type standoff class ``knora-base:StandoffInternalReferenceTag``.
 
 --------------------------------------------
 Validating a Mapping and sending it to Knora

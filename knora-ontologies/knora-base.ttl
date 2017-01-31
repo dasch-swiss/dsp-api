@@ -456,7 +456,7 @@
 
                  :objectClassConstraint :StandoffTag ;
 
-                 :subjectClassConstraint :StandoffTag .
+                 :subjectClassConstraint :StandoffInternalReferenceTag .
 
 
 ###  http://www.knora.org/ontology/knora-base#standoffTagHasStart
@@ -2255,6 +2255,21 @@
                                         :BooleanBase ;
 
                         rdfs:comment "Represents a boolean in a TextValue"@en .
+
+
+###  http://www.knora.org/ontology/knora-base#StandoffInternalReferenceTag
+
+:StandoffInternalReferenceTag rdf:type owl:Class ;
+
+                        rdfs:subClassOf :StandoffDataTypeTag,
+                                        :ValueBase,
+                                        [ rdf:type owl:Restriction ;
+                                          owl:onProperty :standoffTagHasInternalReference ;
+                                          owl:cardinality "1"^^xsd:nonNegativeInteger
+                                        ] ;
+
+                        rdfs:comment "Represents an internal reference in a TextValue"@en .
+
 
 
 ###  http://www.knora.org/ontology/knora-base#StillImageFileValue

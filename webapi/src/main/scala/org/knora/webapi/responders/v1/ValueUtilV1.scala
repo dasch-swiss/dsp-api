@@ -32,6 +32,7 @@ import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v1.store.triplestoremessages.VariableResultsRow
 import org.knora.webapi.responders.v1.GroupedProps._
 import org.knora.webapi.twirl._
+import org.knora.webapi.util.standoff.StandoffTagUtilV1
 import org.knora.webapi.util.{DateUtilV1, ErrorHandlingMap, InputValidation}
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -488,7 +489,7 @@ class ValueUtilV1(private val settings: SettingsImpl) {
                                     val originalId: String = valueProps.standoff(value).getOrElse(OntologyConstants.KnoraBase.StandoffTagHasOriginalXMLID, throw InconsistentTriplestoreDataException(s"referred standoff $value node has no original XML id"))
 
                                     // recreate the original id reference
-                                    StandoffTagStringAttributeV1(standoffPropertyIri = propIri, value = "#" + originalId)
+                                    StandoffTagStringAttributeV1(standoffPropertyIri = propIri, value = StandoffTagUtilV1.internalLinkMarker + originalId)
                                 } else {
                                     // it refers to a knora resource
                                     StandoffTagIriAttributeV1(standoffPropertyIri = propIri, value = value)

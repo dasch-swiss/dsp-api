@@ -154,6 +154,8 @@ object StandoffDataTypeClasses extends Enumeration {
 
     val StandoffBooleanTag = Value(OntologyConstants.KnoraBase.StandoffBooleanTag)
 
+    val StandoffInternalReferenceTag = Value(OntologyConstants.KnoraBase.StandoffInternalReferenceTag)
+
     val valueMap: Map[String, Value] = values.map(v => (v.toString, v)).toMap
 
     /**
@@ -225,7 +227,10 @@ object StandoffProperties {
     // represents the standoff properties defined on the link standoff tag
     val linkProperties = Set(OntologyConstants.KnoraBase.StandoffTagHasLink)
 
-    val dataTypeProperties: Set[IRI] = dateProperties ++ intervalProperties ++ booleanProperties ++ decimalProperties ++ integerProperties ++ uriProperties ++ colorProperties ++ linkProperties
+    // represents the standoff properties defined on the internal reference standoff tag
+    val internalReferenceProperties = Set(OntologyConstants.KnoraBase.StandoffTagHasInternalReference)
+
+    val dataTypeProperties: Set[IRI] = dateProperties ++ intervalProperties ++ booleanProperties ++ decimalProperties ++ integerProperties ++ uriProperties ++ colorProperties ++ linkProperties ++ internalReferenceProperties
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////

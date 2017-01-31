@@ -677,24 +677,6 @@
 
 ##########################################################
 #
-# Standoff Properties
-#
-##########################################################
-
-###  http://www.knora.org/ontology/beol#standoffTagHasInternalReference
-
-:standoffTagHasInternalReference rdf:type owl:ObjectProperty ;
-
-                 rdfs:subPropertyOf knora-base:standoffTagHasInternalReference ;
-
-                 knora-base:objectClassConstraint :StandoffTag ;
-
-                 knora-base:subjectClassConstraint :StandoffTag .
-
-
-
-##########################################################
-#
 # Standoff Tags
 #
 ##########################################################
@@ -724,20 +706,6 @@
                  rdfs:subClassOf knora-base:StandoffTag ;
 
                  rdfs:comment "mathematical notation encoded in LaTeX"@en .
-
-
-###  http://www.knora.org/ontology/beol#StandoffReferenceTag
-
-:StandoffReferenceTag rdf:type owl:Class ;
-
-                      rdfs:subClassOf standoff:StandoffStructuralTag,
-                                      [
-                                           rdf:type owl:Restriction ;
-                                           owl:onProperty :standoffTagHasInternalReference ;
-                                           owl:maxCardinality "1"^^xsd:nonNegativeInteger
-                                      ] ;
-
-                      rdfs:comment "represents a reference/footnote in the text"@en .
 
 
 ###  http://www.knora.org/ontology/beol#StandoffNoWikiTag

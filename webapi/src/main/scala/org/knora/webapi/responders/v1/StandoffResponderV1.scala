@@ -609,7 +609,7 @@ class StandoffResponderV1 extends ResponderV1 {
                         throw NotFoundException(s"the following required standoff properties are not defined for the standoff class $standoffClass: ${(requiredPropsForClass -- standoffPropertiesForStandoffClass).mkString(", ")}")
                     }
 
-                    // check if the standoff class's data type is correct i the mapping
+                    // check if the standoff class's data type is correct in the mapping
                     standoffClassEntities.standoffClassEntityInfoMap(standoffClass).dataType match {
                         case Some(dataType: StandoffDataTypeClasses.Value) =>
                             // check if this corresponds to the datatype in the mapping
