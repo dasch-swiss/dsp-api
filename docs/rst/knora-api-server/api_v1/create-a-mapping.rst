@@ -141,7 +141,7 @@ Standoff Data Types
 Knora allows the use of all its value types as standoff data types (defined in ``knora-base.ttl``):
 
 - ``knora-base::StandoffLinkTag``: Represents a reference to a Knora resource (the IRI of the target resource must be submitted in the data type attribute).
-- ``knora-base:StandoffInternalReferenceTag``: Represents an internal reference inside a document (the id of the target element inside the same document must be indicated in the data type attribute), see internal_references_.
+- ``knora-base:StandoffInternalReferenceTag``: Represents an internal reference inside a document (the id of the target element inside the same document must be indicated in the data type attribute), see :ref:`internal_references`.
 - ``knora-base::StandoffUriTag``: Represents a reference to a URI (the URI of the target resource must be submitted in the data type attribute).
 - ``knora-base::StandoffDateTag``: Represents a date (a Knora date string must be submitted in the data type attribute, e.g. ``GREGORIAN:2017-01-27``).
 - ``knora-base::StandoffColorTag``: Represents a color (a hexadecimal RGB color string must be submitted in the data type attribute, e.g. ``#0000FF``).

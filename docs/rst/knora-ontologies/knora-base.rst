@@ -1049,28 +1049,32 @@ Standoff Data Type Tags
 Associates data in some Knora value type with a substring in a text. Standoff data type
 tags are subclasses of ``ValueBase`` classes.
 
--  ``StandoffLinkTag`` see knora-base-standoff-link_.
+- ``StandoffLinkTag`` Indicates that a substring refers to another ``kb:Resource``.
+    See :ref:`knora-base-standoff-link`.
 
--  ``StandoffUriTag`` Indicates that a substring is associated with a
-     URI, which is stored in the same form that is used for ``kb:UriValue``, see knora-base-uri-value_.
+- ``StandoffInternalReferenceTag`` Indicates that a substring refers to another standoff tag in the same text
+    value. See :ref:`knora-base-standoff-internal-reference`.
 
--  ``StandoffDateTag`` Indicates that a substring represents a
-    date, which is stored in the same form that is used for ``kb:DateValue``, see knora-base-date-value_.
+- ``StandoffUriTag`` Indicates that a substring is associated with a
+    URI, which is stored in the same form that is used for ``kb:UriValue``. See :ref:`knora-base-uri-value`.
+
+- ``StandoffDateTag`` Indicates that a substring represents a
+    date, which is stored in the same form that is used for ``kb:DateValue``. See :ref:`knora-base-date-value`.
 
 - ``StandoffColorTag`` Indicates that a substring represents a color,
-    which is stored in the same form that is used for ``kb:ColorValue``, see .. knora-base-color-value_.
+    which is stored in the same form that is used for ``kb:ColorValue``. See :ref:`knora-base-color-value`.
 
 - ``StandoffIntegerTag`` Indicates that a substring represents an integer,
-    which is stored in the same form that is used for ``kb:IntegerValue``, see knora-base-int-value_.
+    which is stored in the same form that is used for ``kb:IntegerValue``. See :ref:`knora-base-int-value`.
 
 - ``StandoffDecimalTag`` Indicates that a substring represents a number with fractions,
-    which is stored in the same form that is used for ``kb:DecimalValue``, see .. knora-base-decimal-value_.
+    which is stored in the same form that is used for ``kb:DecimalValue``. See :ref:`knora-base-decimal-value`.
 
 - ``StandoffIntervalTag`` Indicates that a substring represents an interval,
-    which is stored in the same form that is used for ``kb:IntervalValue``, see knora-base-interval-value_.
+    which is stored in the same form that is used for ``kb:IntervalValue``. See :ref:`knora-base-interval-value`.
 
 - ``StandoffBooleanTag`` Indicates that a substring represents a Boolean,
-    which is stored in the same form that is used for ``kb:BooleanValue``, see knora-base-boolean-value_.
+    which is stored in the same form that is used for ``kb:BooleanValue``. See :ref:`knora-base-boolean-value`.
 
 .. _knora-base-standoff-link:
 
@@ -1202,17 +1206,19 @@ are automatically visible to all users, as long as they have permission
 to see the source and target resources. The owner of these link values
 is always ``kb:SystemUser`` (see :ref:`knora-base-users-and-groups`).
 
+.. _knora-base-standoff-internal-reference:
+
 Internal Links in a TextValue
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Internal links in a TextValue can be represented using the following property:
+Internal links in a ``TextValue`` can be using the data type standoff class ``StandoffInternalReferenceTag`` or a subclass of it.
+It has the following property:
 
-``standoffTagHasInternalReference``
-    Points to a StandoffTag that belongs to the same TextValue.
+``standoffTagHasInternalReference`` (1)
+    Points to a ``StandoffTag`` that belongs to the same ``TextValue``.
     It has an ``objectClassConstraint`` of ``StandoffTag``.
 
-Any standoff class that defines a cardinality for this property may point to another StandoffTag of the same TextValue.
-For links to a ``kb:Resource``, see knora-base-standoff-link_.
+For links to a ``kb:Resource``, see :ref:`knora-base-standoff-link`.
 
 .. _knora-base-mapping:
 
@@ -1324,6 +1330,36 @@ properties:
     text (such as a diplomatic transcription and an edited critical
     text).
 
+Querying Standoff in SPARQL
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+A future version of the Knora API server will provide an API for querying standoff markup.
+In the meantime, it is possible to query it directly in SPARQL. For example, here is a
+SPARQL query (using RDFS inference) that finds all the text values texts that have a standoff
+date tag referring to Christmas Eve 2016, contained in a ``StandoffItalicTag``:
+
+::
+
+  PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+  PREFIX standoff: <http://www.knora.org/ontology/standoff#>
+
+  select * where { 
+      ?standoffTag a knora-base:StandoffDateTag  .
+      
+      ?standoffTag knora-base:valueHasStartJDN ?dateStart .
+      ?standoffTag knora-base:valueHasEndJDN ?dateEnd .
+      
+      FILTER (2457747  <= ?dateEnd && 2457747  >= ?dateStart)
+      
+      ?standoffTag knora-base:standoffTagHasStartParent ?parent .
+      ?parent a standoff:StandoffItalicTag .
+      
+      ?textValue knora-base:valueHasStandoff ?standoffTag .
+      ?textValue knora-base:valueHasString ?string .
+      
+      ?standoffTag knora-base:standoffTagHasStart ?startPos .
+      ?standoffTag knora-base:standoffTagHasEnd ?endPos .  
+  }
 
 .. _knora-base-authorization:
 
@@ -1560,7 +1596,7 @@ Constraints on the Types of Property Subjects and Objects
 ---------------------------------------------------------
 
 When a project-specific ontology defines a property, it must indicate
-the types that are allowed as subjects and objects of the property. This
+the types that are allowed as objects (and, if possible, as subjects) of the property. This
 is done using the following Knora-specific properties:
 
 ``subjectClassConstraint``
