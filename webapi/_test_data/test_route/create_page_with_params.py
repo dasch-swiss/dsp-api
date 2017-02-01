@@ -55,11 +55,11 @@ try:
     r = requests.post(base_url + 'resources',
                       data=json.dumps(conversion_params),
                       headers={'content-type': 'application/json; charset=utf8'},
-                      auth=('root', 'test'),
+                      auth=('root@example.com', 'test'),
                       proxies={'http': 'http://localhost:3333'})
 
     r.raise_for_status()
-    print(r.text)
+    print(r.status_code)
 except Exception as e:
     print('Knora API answered with an error:\n')
     print(e)

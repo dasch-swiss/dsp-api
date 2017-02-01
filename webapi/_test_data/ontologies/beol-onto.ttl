@@ -675,6 +675,15 @@
     rdfs:comment "A resource representing a person"@en .
 
 
+:XSLTransformation  rdf:type owl:Class ;
+
+                    rdfs:subClassOf knora-base:TextRepresentation ;
+
+                    rdfs:label "an XSL transformation that turns XML into a HTML view"@en ;
+
+                    rdfs:comment "an XSL transformation that turns XML into a HTML view"@en .
+
+
 ##########################################################
 #
 # Standoff Tags
