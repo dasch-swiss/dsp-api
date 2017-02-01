@@ -418,24 +418,18 @@
 
 											richtextbox.append(rt_txt);
 
-											// in attr, everything is intermingled, separate infos
-
-											var textattr = $.extend({}, attr);
-											delete textattr.class;
-											delete textattr.name;
-
 											var win = formcontainer.parents('.win');
 											win.win('setFocusLock', true);
 
 											//win.win('setFocusLock', true);
-											rt_txt.htmleditor('edit', {
-												matching: textattr
-											});
+											rt_txt.htmleditor('edit');
+
 											/*
 											if ((localdata.settings.defaultvalues !== undefined) && (localdata.settings.defaultvalues[propname])) {
 												timebox.timeobj('setStart', localdata.settings.defaultvalues[propname]);
 											}
 											*/
+
 											return richtextbox;
 										});
 										prop_status[propname].attributes = attributes; // save attributes for later use
@@ -697,13 +691,6 @@
 							var ele;
 							var vv;
 
-							var create_richtext_value_params = function() {
-								return {
-									textattr: JSON.stringify({}),
-									resource_reference: []
-								};
-							};
-
 							for (var pinfo in rtinfo.properties) {
 								//propname = rtinfo.properties[pinfo].vocabulary + ':' + rtinfo.properties[pinfo].name;
 								propname = rtinfo.properties[pinfo].name;
@@ -731,7 +718,7 @@
 													propvals[propname] = [{uri_value: ele.val()}];
 												} else {
 													// it is a text
-													var richtext_value = create_richtext_value_params();
+													var richtext_value = {};
 													richtext_value.utf8str = ele.val();
 													propvals[propname] = [{richtext_value: richtext_value}];
 												}
@@ -755,7 +742,7 @@
 														};
 													} else {
 														// it is a text
-														var richtext_value = create_richtext_value_params();
+														var richtext_value = {};
 														richtext_value.utf8str = $(this).val();
 														vv = {
 															richtext_value: richtext_value
@@ -1044,44 +1031,24 @@
 											ele = form.find('[name="' + propname + '"]');
 											if (ele.length == 1) {
 												var rt_txt = ele.find('.htmleditor');
-												//   data.value.utf8str
-												//   data.value.textattr
-												//   data.value.resource_reference
-												var rtdata = rt_txt.htmleditor('value');
 
-												var props = {};
-												props['utf8str'] = rtdata.utf8str;
-												props['textattr'] = JSON.stringify(rtdata.textattr);
-												props['resource_reference'] = [];
-												if (rtdata.textattr['_link'] !== undefined) {
-													for (var link_index in rtdata.textattr['_link']) {
-														if (rtdata.textattr['_link'][link_index].resid !== undefined && props['resource_reference'].indexOf(rtdata.textattr['_link'][link_index].resid) == -1) {
-															props['resource_reference'].push(rtdata.textattr['_link'][link_index].resid);
-														}
-													}
-												}
-												propvals[propname] = [{richtext_value: props}];
+												var props = rt_txt.htmleditor('value');
+
+												// htmleditor returns false if there is no content
+												if (props !== false) propvals[propname] = [{richtext_value: props}];
 											} else if (ele.length > 1) {
 												propvals[propname] = [];
 												ele.each(function() {
 													var rt_txt = $(this).find('.htmleditor');
-													var rtdata = rt_txt.htmleditor('value');
+													var props = rt_txt.htmleditor('value');
 
-													var props = {};
-													props['utf8str'] = rtdata.utf8str;
-													props['textattr'] = JSON.stringify(rtdata.textattr);
-													props['resource_reference'] = [];
-													if (rtdata.textattr['_link'] !== undefined) {
-														for (var link_index in rtdata.textattr['_link']) {
-															if (rtdata.textattr['_link'][link_index].resid !== undefined && props['resource_reference'].indexOf(rtdata.textattr['_link'][link_index].resid) == -1) {
-																props['resource_reference'].push(rtdata.textattr['_link'][link_index].resid);
-															}
-														}
-													}
-													vv = {
-														richtext_value: props
-													};
-													propvals[propname].push(vv);
+                                                    // htmleditor returns false if there is no content
+                                                    if (props !== false) {
+                                                        vv = {
+                                                            richtext_value: props
+                                                        };
+                                                        propvals[propname].push(vv);
+                                                    }
 												});
 											}
 											break;

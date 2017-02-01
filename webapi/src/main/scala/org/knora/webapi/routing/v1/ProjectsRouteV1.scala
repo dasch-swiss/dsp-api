@@ -31,6 +31,8 @@ import org.knora.webapi.messages.v1.responder.projectmessages._
 import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
 import org.knora.webapi.util.InputValidation
 
+import scala.concurrent.Future
+
 object ProjectsRouteV1 extends Authenticator {
 
     private val schemes = Array("http", "https")

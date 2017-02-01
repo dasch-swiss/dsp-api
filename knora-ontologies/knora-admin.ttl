@@ -621,6 +621,10 @@
 #
 #################################################################
 
+###  http://www.knora.org/ontology/knora-base#UnknownUser
+:UnknownUser rdf:type :UserGroup ;
+             :groupName "unknown user" ;
+             :status "true"^^xsd:boolean .
 
 ###  http://www.knora.org/ontology/knora-base#KnownUser
 :KnownUser rdf:type :UserGroup ;
@@ -637,10 +641,10 @@
                :groupName "project member" ;
                :status "true"^^xsd:boolean .
 
-###  http://www.knora.org/ontology/knora-base#UnknownUser
-:UnknownUser rdf:type :UserGroup ;
-             :groupName "unknown user" ;
-             :status "true"^^xsd:boolean .
+###  http://www.knora.org/ontology/knora-base#ProjectAdmin
+:ProjectAdmin rdf:type :UserGroup ;
+              :groupName "project admin" ;
+              :status "true"^^xsd:boolean .
 
 ###  http://www.knora.org/ontology/knora-base#SystemAdmin
 :SystemAdmin rdf:type :UserGroup ;
@@ -721,6 +725,6 @@
             rdfs:subClassOf :Permission .
 
 ### http://www.knora.org/ontology/knora-base#DefaultObjectAccessPermission
-:DefaultObjectAccessPermissionOnGroup rdf:type owl:Class ;
+:DefaultObjectAccessPermission rdf:type owl:Class ;
             rdfs:comment "Default Object Access Permission class used to create instances for storing default object access permission for a project and either groups, resource classes, or properties."@en ;
             rdfs:subClassOf :Permission .

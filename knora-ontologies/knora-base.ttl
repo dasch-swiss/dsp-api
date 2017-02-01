@@ -448,6 +448,15 @@
                  :subjectClassConstraint :StandoffLinkTag .
 
 
+###  http://www.knora.org/ontology/knora-base#standoffTagHasInternalReference
+
+:standoffTagHasInternalReference rdf:type owl:ObjectProperty ;
+
+                 rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
+
+                 :objectClassConstraint :StandoffTag ;
+
+                 :subjectClassConstraint :StandoffInternalReferenceTag .
 
 
 ###  http://www.knora.org/ontology/knora-base#standoffTagHasStart
@@ -461,7 +470,6 @@
                   :objectDatatypeConstraint xsd:integer .
 
 
-
 ###  http://www.knora.org/ontology/knora-base#standoffTagHasEnd
 
 :standoffTagHasEnd rdf:type owl:DatatypeProperty ;
@@ -471,18 +479,6 @@
                 :subjectClassConstraint :StandoffTag ;
 
                 :objectDatatypeConstraint xsd:integer .
-
-
-
-###  http://www.knora.org/ontology/knora-base#standoffTagHasHref
-
-:standoffTagHasHref rdf:type owl:DatatypeProperty ;
-
-                 rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
-
-                 :subjectClassConstraint :StandoffUriTag ;
-
-                 :objectDatatypeConstraint xsd:anyURI .
 
 
 ### http://www.knora.org/ontology/knora-base#standoffTagHasStartIndex
@@ -507,26 +503,26 @@
                   :objectDatatypeConstraint xsd:integer .
 
 
-### http://www.knora.org/ontology/knora-base#standoffTagHasStartParentIndex
+### http://www.knora.org/ontology/knora-base#standoffTagHasStartParent
 
-:standoffTagHasStartParentIndex rdf:type owl:DatatypeProperty ;
-
-                  rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
-
-                  :subjectClassConstraint :StandoffTag ;
-
-                  :objectDatatypeConstraint xsd:integer .
-
-
-### http://www.knora.org/ontology/knora-base#standoffTagHasEndParentIndex
-
-:standoffTagHasEndParentIndex rdf:type owl:DatatypeProperty ;
+:standoffTagHasStartParent rdf:type owl:ObjectProperty ;
 
                   rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
                   :subjectClassConstraint :StandoffTag ;
 
-                  :objectDatatypeConstraint xsd:integer .
+                  :objectClassConstraint :StandoffTag .
+
+
+### http://www.knora.org/ontology/knora-base#standoffTagHasEndParent
+
+:standoffTagHasEndParent rdf:type owl:ObjectProperty ;
+
+                  rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
+
+                  :subjectClassConstraint :StandoffTag ;
+
+                  :objectClassConstraint :StandoffTag .
 
 
 ### http://www.knora.org/ontology/knora-base#standoffTagHasUUID
@@ -540,8 +536,6 @@
                   :objectDatatypeConstraint xsd:string .
 
 
-
-
 ###  http://www.knora.org/ontology/knora-base#hasSubListNode
 
 :hasSubListNode rdf:type owl:ObjectProperty ;
@@ -553,7 +547,6 @@
                 :objectClassConstraint :ListNode ;
 
                 :subjectClassConstraint :ListNode .
-
 
 
 ###  http://www.knora.org/ontology/knora-base#hasValue
@@ -689,16 +682,15 @@
         rdfs:comment "Indicates the position of a resource within a sequence"@en .
 
 
+###  http://www.knora.org/ontology/knora-base#standoffTagHasOriginalXMLID
 
-###  http://www.knora.org/ontology/knora-base#standoffHasLink
-
-:standoffHasLink rdf:type owl:ObjectProperty ;
+:standoffTagHasOriginalXMLID rdf:type owl:DatatypeProperty ;
 
                  rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
-                 :objectClassConstraint :Resource ;
+                 :objectDatatypeConstraint xsd:string ;
 
-                 :subjectClassConstraint :StandoffLink .
+                 :subjectClassConstraint :StandoffTag .
 
 
 
@@ -711,6 +703,168 @@
                   :objectClassConstraint :StandoffTag ;
 
                   :subjectClassConstraint :TextValue .
+
+
+###  http://www.knora.org/ontology/knora-base#valueHasMapping
+
+:valueHasMapping rdf:type owl:ObjectProperty ;
+
+                  rdfs:subPropertyOf :valueHas ;
+
+                  :objectClassConstraint :XMLToStandoffMapping ;
+
+                  :subjectClassConstraint :TextValue .
+
+
+###  http://www.knora.org/ontology/knora-base#hasMappingElement
+
+:hasMappingElement rdf:type owl:ObjectProperty ;
+
+                   rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
+
+                   rdfs:label "mapping element"@en ;
+
+                   rdfs:comment """Represents an element in a mapping"""@en ;
+
+                   :subjectClassConstraint :XMLToStandoffMapping ;
+
+                   :objectClassConstraint :MappingElement .
+
+
+###  http://www.knora.org/ontology/knora-base#mappingHasXMLTagname
+
+:mappingHasXMLTagname rdf:type owl:DatatypeProperty ;
+
+               rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
+
+               rdfs:label "name of the XML tag"@en ;
+
+               rdfs:comment """name of the XML tag"""@en ;
+
+               :subjectClassConstraint :MappingElement ;
+
+               :objectDatatypeConstraint xsd:string .
+
+
+###  http://www.knora.org/ontology/knora-base#mappingHasXMLNamespace
+
+:mappingHasXMLNamespace rdf:type owl:DatatypeProperty ;
+
+               rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
+
+               rdfs:label "namespace of the XML tag"@en ;
+
+               rdfs:comment """namespace of the XML tag"""@en ;
+
+               :subjectClassConstraint :MappingComponent ;
+
+               :objectDatatypeConstraint xsd:string .
+
+
+###  http://www.knora.org/ontology/knora-base#mappingHasXMLClass
+
+:mappingHasXMLClass rdf:type owl:DatatypeProperty ;
+
+               rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
+
+               rdfs:label "class of the XML tag"@en ;
+
+               rdfs:comment """class of the XML tag"""@en ;
+
+               :subjectClassConstraint :MappingElement ;
+
+               :objectDatatypeConstraint xsd:string .
+
+
+###  http://www.knora.org/ontology/knora-base#mappingHasStandoffClass
+
+:mappingHasStandoffClass rdf:type owl:ObjectProperty ;
+
+               rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
+
+               rdfs:label "IRI of the standoff class"@en ;
+
+               rdfs:comment """IRI of the standoff class"""@en ;
+
+               :subjectClassConstraint :MappingComponent ;
+
+               :objectClassConstraint owl:Class .
+
+
+###  http://www.knora.org/ontology/knora-base#mappingHasXMLAttribute
+
+:mappingHasXMLAttribute rdf:type owl:ObjectProperty ;
+
+                 rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
+
+                 rdfs:label "name of the XML attribute"@en ;
+
+                 rdfs:comment """name of the XML attribute"""@en ;
+
+                 :subjectClassConstraint :MappingElement ;
+
+                 :objectClassConstraint :MappingXMLAttribute .
+
+
+###  http://www.knora.org/ontology/knora-base#mappingHasXMLAttributename
+
+:mappingHasXMLAttributename rdf:type owl:DatatypeProperty ;
+
+               rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
+
+               rdfs:label "name of the XML attribute"@en ;
+
+               rdfs:comment """name of the XML attribute"""@en ;
+
+               :subjectClassConstraint :MappingComponent ;
+
+               :objectDatatypeConstraint xsd:string .
+
+
+
+###  http://www.knora.org/ontology/knora-base#mappingHasStandoffProperty
+
+:mappingHasStandoffProperty rdf:type owl:ObjectProperty ;
+
+               rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
+
+               rdfs:label "IRI of the standoff property"@en ;
+
+               rdfs:comment """IRI of the standoff property"""@en ;
+
+               :subjectClassConstraint :MappingXMLAttribute ;
+
+               :objectClassConstraint owl:DatatypeProperty.
+
+
+###  http://www.knora.org/ontology/knora-base#mappingHasStandoffDataTypeClass
+
+:mappingHasStandoffDataTypeClass rdf:type owl:ObjectProperty ;
+
+               rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
+
+               rdfs:label "datatype of the XML tag"@en ;
+
+               rdfs:comment """datatype of the XML tag"""@en ;
+
+               :subjectClassConstraint :MappingElement ;
+
+               :objectClassConstraint :MappingStandoffDataTypeClass .
+
+
+###  http://www.knora.org/ontology/knora-base#mappingElementRequiresSeparator
+
+:mappingElementRequiresSeparator rdf:type owl:DatatypeProperty ;
+
+               rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
+
+               rdfs:label "indicates if the element requires a separator in the text"@en ;
+
+               rdfs:comment """indicates if the element requires a separator in the text"""@en ;
+
+               :subjectClassConstraint :MappingElement ;
+
+               :objectDatatypeConstraint xsd:boolean .
 
 
 #################################################################
@@ -1949,6 +2103,10 @@
 #
 #################################################################
 
+
+:standoffParentClassConstraint rdf:type owl:ObjectProperty .
+
+
 ###  http://www.knora.org/ontology/knora-base#StandoffTag
 
 :StandoffTag rdf:type owl:Class ;
@@ -1963,22 +2121,30 @@
                           ] ,
                           [ rdf:type owl:Restriction ;
                             owl:onProperty :standoffTagHasUUID ;
-                            owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                            owl:cardinality "1"^^xsd:nonNegativeInteger
                           ],
                           [ rdf:type owl:Restriction ;
-                            owl:onProperty :standoffTagHasStartIndex ;
+                            owl:onProperty :standoffTagHasOriginalXMLID ;
                             owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                          ] ,
+                          [ rdf:type owl:Restriction ;
+                            owl:onProperty :standoffTagHasStartIndex ;
+                            owl:cardinality "1"^^xsd:nonNegativeInteger
                           ],
                           [ rdf:type owl:Restriction ;
                             owl:onProperty :standoffTagHasEndIndex ;
                             owl:maxCardinality "1"^^xsd:nonNegativeInteger
                           ],
                           [ rdf:type owl:Restriction ;
-                            owl:onProperty :standoffTagHasStartParentIndex ;
+                            owl:onProperty :standoffTagHasStartParent ;
                             owl:maxCardinality "1"^^xsd:nonNegativeInteger
                           ] ,
                           [ rdf:type owl:Restriction ;
-                            owl:onProperty :standoffTagHasEndParentIndex ;
+                            owl:onProperty :standoffTagHasEndParent ;
+                            owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                          ] ,
+                          [ rdf:type owl:Restriction ;
+                            owl:onProperty :standoffParentClassConstraint;
                             owl:maxCardinality "1"^^xsd:nonNegativeInteger
                           ] ;
 
@@ -1988,28 +2154,9 @@
 
 #################################################################
 #
-# Intermediate Classes for different Types of Standoff Tags
+# Abstract Standoff Data Type Tag
 #
 #################################################################
-
-###  http://www.knora.org/ontology/knora-base#StandoffVisualTag
-
-:StandoffVisualTag rdf:type owl:Class ;
-
-               rdfs:subClassOf :StandoffTag ;
-
-               rdfs:comment "Represents visual markup information in a TextValue"@en .
-
-
-###  http://www.knora.org/ontology/knora-base#StandoffStructuralTag
-
-:StandoffStructuralTag rdf:type owl:Class ;
-
-               rdfs:subClassOf :StandoffTag ;
-
-               rdfs:comment "Represents structural markup information in a TextValue"@en .
-
-
 
 ###  http://www.knora.org/ontology/knora-base#StandoffDataTypeTag
 
@@ -2022,7 +2169,7 @@
 
 #################################################################
 #
-# Standoff Tags that can be instantiated
+# Standoff Data Type Tags that can be instantiated
 #
 #################################################################
 
@@ -2050,9 +2197,9 @@
               rdfs:comment "Represents an arbitrary URI in a TextValue"@en .
 
 
-###  http://www.knora.org/ontology/knora-base#StandoffDateValueTag
+###  http://www.knora.org/ontology/knora-base#StandoffDateTag
 
-:StandoffDateValueTag rdf:type owl:Class ;
+:StandoffDateTag rdf:type owl:Class ;
 
                         rdfs:subClassOf :StandoffDataTypeTag,
                                         :DateBase ;
@@ -2060,151 +2207,68 @@
                         rdfs:comment "Represents a date in a TextValue"@en .
 
 
-###  http://www.knora.org/ontology/knora-base#StandoffParagraphTag
+###  http://www.knora.org/ontology/knora-base#StandoffColorTag
 
-:StandoffParagraphTag rdf:type owl:Class ;
+:StandoffColorTag rdf:type owl:Class ;
 
-                rdfs:subClassOf :StandoffStructuralTag ;
+                        rdfs:subClassOf :StandoffDataTypeTag,
+                                        :ColorBase ;
 
-                rdfs:comment "Represents a paragraph in a TextValue"@en .
+                        rdfs:comment "Represents a color in a TextValue"@en .
 
 
-###  http://www.knora.org/ontology/knora-base#StandoffHeader1Tag
+###  http://www.knora.org/ontology/knora-base#StandoffIntegerTag
 
-:StandoffHeader1Tag rdf:type owl:Class ;
+:StandoffIntegerTag rdf:type owl:Class ;
 
-                rdfs:subClassOf :StandoffStructuralTag ;
+                        rdfs:subClassOf :StandoffDataTypeTag,
+                                        :IntBase ;
 
-                rdfs:comment "Represents a header of level 1 in a TextValue"@en .
+                        rdfs:comment "Represents an integer value in a TextValue"@en .
 
 
-###  http://www.knora.org/ontology/knora-base#StandoffHeader2Tag
+###  http://www.knora.org/ontology/knora-base#StandoffDecimalTag
 
-:StandoffHeader2Tag rdf:type owl:Class ;
+:StandoffDecimalTag rdf:type owl:Class ;
 
-                rdfs:subClassOf :StandoffStructuralTag ;
+                        rdfs:subClassOf :StandoffDataTypeTag,
+                                        :DecimalBase ;
 
-                rdfs:comment "Represents a header of level 2 in a TextValue"@en .
+                        rdfs:comment "Represents a decimal (floating point) value in a TextValue"@en .
 
 
-###  http://www.knora.org/ontology/knora-base#StandoffHeader3Tag
+###  http://www.knora.org/ontology/knora-base#StandoffIntervalTag
 
-:StandoffHeader3Tag rdf:type owl:Class ;
+:StandoffIntervalTag rdf:type owl:Class ;
 
-                rdfs:subClassOf :StandoffStructuralTag ;
+                        rdfs:subClassOf :StandoffDataTypeTag,
+                                        :IntervalBase ;
 
-                rdfs:comment "Represents a header of level 3 in a TextValue"@en .
+                        rdfs:comment "Represents an interval in a TextValue"@en .
 
 
-###  http://www.knora.org/ontology/knora-base#StandoffHeader4Tag
+###  http://www.knora.org/ontology/knora-base#StandoffBooleanTag
 
-:StandoffHeader4Tag rdf:type owl:Class ;
+:StandoffBooleanTag rdf:type owl:Class ;
 
-                rdfs:subClassOf :StandoffStructuralTag ;
+                        rdfs:subClassOf :StandoffDataTypeTag,
+                                        :BooleanBase ;
 
-                rdfs:comment "Represents a header of level 4 in a TextValue"@en .
+                        rdfs:comment "Represents a boolean in a TextValue"@en .
 
 
-###  http://www.knora.org/ontology/knora-base#StandoffHeader5Tag
+###  http://www.knora.org/ontology/knora-base#StandoffInternalReferenceTag
 
-:StandoffHeader5Tag rdf:type owl:Class ;
+:StandoffInternalReferenceTag rdf:type owl:Class ;
 
-                rdfs:subClassOf :StandoffStructuralTag ;
+                        rdfs:subClassOf :StandoffDataTypeTag,
+                                        :ValueBase,
+                                        [ rdf:type owl:Restriction ;
+                                          owl:onProperty :standoffTagHasInternalReference ;
+                                          owl:cardinality "1"^^xsd:nonNegativeInteger
+                                        ] ;
 
-                rdfs:comment "Represents a header of level 5 in a TextValue"@en .
-
-
-###  http://www.knora.org/ontology/knora-base#StandoffHeader6Tag
-
-:StandoffHeader6Tag rdf:type owl:Class ;
-
-                rdfs:subClassOf :StandoffStructuralTag ;
-
-                rdfs:comment "Represents a header of level 6 in a TextValue"@en .
-
-
-###  http://www.knora.org/ontology/knora-base#StandoffOrderedListTag
-
-:StandoffOrderedListTag rdf:type owl:Class ;
-
-                rdfs:subClassOf :StandoffStructuralTag ;
-
-                rdfs:comment "Represents an ordered list in a TextValue"@en .
-
-
-###  http://www.knora.org/ontology/knora-base#StandoffUnorderedListTag
-
-:StandoffUnorderedListTag rdf:type owl:Class ;
-
-                rdfs:subClassOf :StandoffStructuralTag ;
-
-                rdfs:comment "Represents an unordered list in a TextValue"@en .
-
-
-###  http://www.knora.org/ontology/knora-base#StandoffListElementTag
-
-:StandoffListElementTag rdf:type owl:Class ;
-
-                rdfs:subClassOf :StandoffStructuralTag ;
-
-                rdfs:comment "Represents a list element in a TextValue"@en .
-
-
-
-###  http://www.knora.org/ontology/knora-base#StandoffItalicTag
-
-:StandoffItalicTag rdf:type owl:Class ;
-
-                rdfs:subClassOf :StandoffVisualTag ;
-
-                rdfs:comment "Represents italics in a TextValue"@en .
-
-
-###  http://www.knora.org/ontology/knora-base#StandoffBoldTag
-
-:StandoffBoldTag rdf:type owl:Class ;
-
-                rdfs:subClassOf :StandoffVisualTag ;
-
-                rdfs:comment "Represents bold text in a TextValue"@en .
-
-
-###  http://www.knora.org/ontology/knora-base#StandoffUnderlineTag
-
-:StandoffUnderlineTag rdf:type owl:Class ;
-
-                rdfs:subClassOf :StandoffVisualTag ;
-
-                rdfs:comment "Represents underlined text in a TextValue"@en .
-
-
-###  http://www.knora.org/ontology/knora-base#StandoffStrikethroughTag
-
-:StandoffStrikethroughTag rdf:type owl:Class ;
-
-                rdfs:subClassOf :StandoffVisualTag ;
-
-                rdfs:comment "Represents struck text in a TextValue"@en .
-
-
-###  http://www.knora.org/ontology/knora-base#StandoffSuperscriptTag
-
-:StandoffSuperscriptTag rdf:type owl:Class ;
-
-                rdfs:subClassOf :StandoffVisualTag ;
-
-                rdfs:comment "Represents superscript in a TextValue"@en .
-
-
-###  http://www.knora.org/ontology/knora-base#StandoffSubscriptTag
-
-:StandoffSubscriptTag rdf:type owl:Class ;
-
-                rdfs:subClassOf :StandoffVisualTag ;
-
-                rdfs:comment "Represents subscript in a TextValue"@en .
-
-
+                        rdfs:comment "Represents an internal reference in a TextValue"@en .
 
 
 
@@ -2277,6 +2341,109 @@
                     rdfs:comment "A resource containing text files"@en .
 
 
+### http://www.knora.org/ontology/knora-base#MappingComponent
+
+:MappingComponent rdf:type owl:Class ;
+
+               rdfs:label "Component of a mapping"@en ;
+
+               rdfs:comment "Component of a mapping" .
+
+
+### http://www.knora.org/ontology/knora-base#MappingStandoffDataTypeClass
+
+:MappingStandoffDataTypeClass rdf:type owl:Class ;
+
+                     rdfs:subClassOf :MappingComponent ,
+                     [ rdf:type owl:Restriction ;
+                       owl:onProperty :mappingHasXMLAttributename ;
+                       owl:cardinality "1"^^xsd:nonNegativeInteger
+                     ],
+                     [ rdf:type owl:Restriction ;
+                       owl:onProperty :mappingHasStandoffClass ;
+                       owl:cardinality "1"^^xsd:nonNegativeInteger
+                     ];
+
+                     rdfs:label "Mapping from XML attributes to standoff properties"@en ;
+
+                     rdfs:comment "Mapping from XML attributes to standoff properties" .
+
+
+### http://www.knora.org/ontology/knora-base#MappingXMLAttribute
+
+:MappingXMLAttribute rdf:type owl:Class ;
+
+                     rdfs:subClassOf :MappingComponent ,
+                     [ rdf:type owl:Restriction ;
+                       owl:onProperty :mappingHasXMLAttributename ;
+                       owl:cardinality "1"^^xsd:nonNegativeInteger
+                     ],
+                     [ rdf:type owl:Restriction ;
+                       owl:onProperty :mappingHasXMLNamespace ;
+                       owl:cardinality "1"^^xsd:nonNegativeInteger
+                     ],
+                     [ rdf:type owl:Restriction ;
+                       owl:onProperty :mappingHasStandoffProperty ;
+                       owl:cardinality "1"^^xsd:nonNegativeInteger
+                     ];
+
+                     rdfs:label "Mapping from XML attributes to standoff properties"@en ;
+
+                     rdfs:comment "Mapping from XML attributes to standoff properties" .
+
+
+###  http://www.knora.org/ontology/knora-base#MappingElement
+
+:MappingElement rdf:type owl:Class ;
+
+                rdfs:subClassOf :MappingComponent ,
+                [ rdf:type owl:Restriction ;
+                   owl:onProperty :mappingHasXMLTagname ;
+                   owl:cardinality "1"^^xsd:nonNegativeInteger
+                ],
+                [ rdf:type owl:Restriction ;
+                   owl:onProperty :mappingHasXMLNamespace ;
+                   owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                ],
+                [ rdf:type owl:Restriction ;
+                  owl:onProperty :mappingHasXMLClass ;
+                  owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                ],
+                [ rdf:type owl:Restriction ;
+                  owl:onProperty :mappingHasStandoffClass ;
+                  owl:cardinality "1"^^xsd:nonNegativeInteger
+                ],
+                [ rdf:type owl:Restriction ;
+                  owl:onProperty :mappingHasXMLAttribute ;
+                  owl:minCardinality "0"^^xsd:nonNegativeInteger
+                ],
+                [ rdf:type owl:Restriction ;
+                  owl:onProperty :mappingHasStandoffDataTypeClass ;
+                  owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                ],
+                [ rdf:type owl:Restriction ;
+                  owl:onProperty :mappingElementRequiresSeparator ;
+                  owl:cardinality "1"^^xsd:nonNegativeInteger
+                ];
+
+                rdfs:label "Mapping from XML to standoff entities"@en ;
+
+                rdfs:comment "Mapping from XML to standoff entities" .
+
+###  http://www.knora.org/ontology/knora-base#XMLToStandoffMapping
+
+:XMLToStandoffMapping rdf:type owl:Class ;
+
+                    rdfs:subClassOf
+                    [ rdf:type owl:Restriction ;
+                       owl:onProperty :hasMappingElement ;
+                       owl:minCardinality "1"^^xsd:nonNegativeInteger
+                    ];
+
+                    rdfs:label "Mapping from XML to standoff entities"@en ;
+
+                    rdfs:comment "Mapping from XML to standoff entities" .
+
 ###  http://www.knora.org/ontology/knora-base#TextValue
 
 :TextValue rdf:type owl:Class ;
@@ -2285,6 +2452,10 @@
                            [ rdf:type owl:Restriction ;
                              owl:onProperty :valueHasStandoff ;
                              owl:minCardinality "0"^^xsd:nonNegativeInteger
+                           ],
+                           [ rdf:type owl:Restriction ;
+                             owl:onProperty :valueHasMapping ;
+                             owl:maxCardinality "1"^^xsd:nonNegativeInteger
                            ] .
 
 

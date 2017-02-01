@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+ * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
+ * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ *
+ * This file is part of Knora.
+ *
+ * Knora is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Knora is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public
+ * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+-->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+    <!-- root element that contains all the elements of the mapping -->
+    <xs:element name="mapping">
+        <xs:complexType>
+            <xs:sequence maxOccurs="unbounded">
+                <xs:element ref="mappingElement"/>
+            </xs:sequence>
+        </xs:complexType>
+        <xs:unique name="tagname">
+            <xs:selector xpath="mappingElement/tag"/>
+            <xs:field xpath="name"/>
+            <xs:field xpath="class"/>
+            <xs:field xpath="namespace"/>
+        </xs:unique>
+        <xs:unique name="standoffClass">
+            <xs:selector xpath="mappingElement/standoffClass"/>
+            <xs:field xpath="classIri"/>
+        </xs:unique>
+    </xs:element>
+
+    <!-- an element mapping a tagname to a standoff class -->
+    <xs:element name="mappingElement">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="tag"/>
+                <xs:element ref="standoffClass"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <!-- represents a tagname including a namespace -->
+    <!-- if no namespace is used, "noNamespace" has to be used -->
+    <xs:element name="tag">
+        <xs:complexType>
+            <xs:sequence>
+                <!-- name of the XML element -->
+                <xs:element name="name">
+                    <xs:simpleType>
+                        <xs:restriction base="xs:string">
+                            <xs:minLength value="1"/>
+                        </xs:restriction>
+                    </xs:simpleType>
+                </xs:element>
+                <!-- name of the class to be used in combination with the element -->
+                <xs:element name="class">
+                    <xs:simpleType>
+                        <xs:restriction base="xs:string">
+                            <xs:minLength value="1"/>
+                        </xs:restriction>
+                    </xs:simpleType>
+                </xs:element>
+                <!-- namespace of the XML element -->
+                <xs:element name="namespace">
+                    <xs:simpleType>
+                        <xs:restriction base="xs:string">
+                            <xs:minLength value="1"/>
+                        </xs:restriction>
+                    </xs:simpleType>
+                </xs:element>
+                <!-- indicates if an element requires a separator in the string when converted to standoff-->
+                <xs:element name="separatesWords">
+                    <xs:simpleType>
+                        <xs:restriction base="xs:boolean"/>
+                    </xs:simpleType>
+                </xs:element>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <!-- represents a standoff class optionally including attributes and a data type -->
+    <xs:element name="standoffClass">
+        <xs:complexType>
+            <xs:sequence>
+                <!-- IRI of the corresponding standoff class -->
+                <xs:element name="classIri">
+                    <xs:simpleType>
+                        <xs:restriction base="xs:anyURI">
+                            <xs:minLength value="1"/>
+                        </xs:restriction>
+                    </xs:simpleType>
+                </xs:element>
+                <!-- maps XML attributes to standoff properties -->
+                <xs:element ref="attributes" minOccurs="0"/>
+                <!-- the data type of the standoff class (optional) -->
+                <xs:element ref="datatype" minOccurs="0"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <!-- contains all the attributes that may occur on this element -->
+    <xs:element name="attributes">
+        <xs:complexType>
+            <xs:sequence maxOccurs="unbounded">
+                <xs:element ref="attribute"/>
+            </xs:sequence>
+        </xs:complexType>
+        <xs:unique name="attribute">
+            <xs:selector xpath="attribute"/>
+            <xs:field xpath="attributeName"/>
+            <xs:field xpath="namespace"/>
+        </xs:unique>
+        <xs:unique name="property">
+            <xs:selector xpath="attribute"/>
+            <xs:field xpath="propertyIri"/>
+        </xs:unique>
+    </xs:element>
+
+    <!-- maps an attribute to a property -->
+    <xs:element name="attribute">
+        <xs:complexType >
+            <xs:sequence>
+                <!-- the name of the XML attribute -->
+                <xs:element name="attributeName">
+                    <xs:simpleType>
+                        <xs:restriction base="xs:string">
+                            <xs:minLength value="1"/>
+                        </xs:restriction>
+                    </xs:simpleType>
+                </xs:element>
+                <!-- the namespace of the XML attribute -->
+                <!-- if no namespace is used, "noNamespace" has to be used -->
+                <xs:element name="namespace">
+                    <xs:simpleType>
+                        <xs:restriction base="xs:string">
+                            <xs:minLength value="1"/>
+                        </xs:restriction>
+                    </xs:simpleType>
+                </xs:element>
+                <!-- the IRI of the corresponding standoff property -->
+                <xs:element name="propertyIri">
+                    <xs:simpleType>
+                        <xs:restriction base="xs:anyURI">
+                            <xs:minLength value="1"/>
+                        </xs:restriction>
+                    </xs:simpleType>
+                </xs:element>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <!-- represents a typed standoff class -->
+    <xs:element name="datatype">
+        <xs:complexType>
+            <xs:sequence>
+                <!-- the data type of standoff class -->
+                <xs:element name="type">
+                    <xs:simpleType>
+                        <xs:restriction base="xs:string">
+                            <xs:minLength value="1"/>
+                        </xs:restriction>
+                    </xs:simpleType>
+                </xs:element>
+                <!-- the name of the XML attribute containing the representation of the data type value (e.g. a date string) -->
+                <xs:element name="attributeName">
+                    <xs:simpleType>
+                        <xs:restriction base="xs:string">
+                            <xs:minLength value="1"/>
+                        </xs:restriction>
+                    </xs:simpleType>
+                </xs:element>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+</xs:schema>

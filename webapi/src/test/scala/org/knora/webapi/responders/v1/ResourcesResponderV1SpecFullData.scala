@@ -20,10 +20,15 @@
 
 package org.knora.webapi.responders.v1
 
+import java.util.UUID
+
 import akka.actor.ActorSystem
 import org.knora.webapi.messages.v1.responder.resourcemessages._
+import org.knora.webapi.messages.v1.responder.standoffmessages.{MappingXMLtoStandoff, StandoffDataTypeClasses, XMLTag}
 import org.knora.webapi.messages.v1.responder.valuemessages._
-import org.knora.webapi.{Settings, SharedAdminTestData}
+import org.knora.webapi.twirl.{StandoffTagIriAttributeV1, StandoffTagV1}
+import org.knora.webapi.{OntologyConstants, Settings, SharedAdminTestData}
+
 
 object ResourcesResponderV1SpecFullData {
 
@@ -94,7 +99,7 @@ object ResourcesResponderV1SpecFullData {
                 value_restype = Vector(None),
                 comments = Vector(None),
                 value_ids = Vector("http://data.knora.org/c5058f3a/values/8653a672"),
-                values = Vector(TextValueV1(
+                values = Vector(TextValueSimpleV1(
                     utf8str = "Berthold, der Bruder"
                 )),
                 occurrence = Some("0-n"),
@@ -115,7 +120,7 @@ object ResourcesResponderV1SpecFullData {
                 value_restype = Vector(None),
                 comments = Vector(None),
                 value_ids = Vector("http://data.knora.org/c5058f3a/values/c3295339"),
-                values = Vector(TextValueV1(
+                values = Vector(TextValueSimpleV1(
                     utf8str = "Zeitgl\u00F6cklein des Lebens und Leidens Christi"
                 )),
                 occurrence = Some("1-n"),
@@ -161,13 +166,13 @@ object ResourcesResponderV1SpecFullData {
                     "http://data.knora.org/c5058f3a/values/9ea13f3d02"
                 ),
                 values = Vector(
-                    TextValueV1(
+                    TextValueSimpleV1(
                         utf8str = "Schramm Bd. XXI, S. 27"
                     ),
-                    TextValueV1(
+                    TextValueSimpleV1(
                         utf8str = "GW 4168"
                     ),
-                    TextValueV1(
+                    TextValueSimpleV1(
                         utf8str = "ISTC ib00512000"
                     )
                 ),
@@ -189,7 +194,7 @@ object ResourcesResponderV1SpecFullData {
                 value_restype = Vector(None),
                 comments = Vector(None),
                 value_ids = Vector("http://data.knora.org/c5058f3a/values/92faf25701"),
-                values = Vector(TextValueV1(
+                values = Vector(TextValueSimpleV1(
                     utf8str = "Universit\u00E4ts- und Stadtbibliothek K\u00F6ln, Sign: AD+S167"
                 )),
                 occurrence = Some("0-1"),
@@ -210,7 +215,7 @@ object ResourcesResponderV1SpecFullData {
                 value_restype = Vector(None),
                 comments = Vector(None),
                 value_ids = Vector("http://data.knora.org/c5058f3a/values/10e00c7acc2704"),
-                values = Vector(TextValueV1(
+                values = Vector(TextValueSimpleV1(
                     utf8str = "http://www.ub.uni-koeln.de/cdm/compoundobject/collection/inkunabeln/id/1878/rec/1"
                 )),
                 occurrence = Some("0-1"),
@@ -231,7 +236,7 @@ object ResourcesResponderV1SpecFullData {
                 value_restype = Vector(None),
                 comments = Vector(None),
                 value_ids = Vector("http://data.knora.org/c5058f3a/values/5524469101"),
-                values = Vector(TextValueV1(
+                values = Vector(TextValueSimpleV1(
                     utf8str = "Dimension: 8\u00B0"
                 )),
                 occurrence = Some("0-1"),
@@ -252,7 +257,7 @@ object ResourcesResponderV1SpecFullData {
                 value_restype = Vector(None),
                 comments = Vector(None),
                 value_ids = Vector("http://data.knora.org/c5058f3a/values/0ca74ce5"),
-                values = Vector(TextValueV1(
+                values = Vector(TextValueSimpleV1(
                     utf8str = "Basel"
                 )),
                 occurrence = Some("0-1"),
@@ -296,7 +301,7 @@ object ResourcesResponderV1SpecFullData {
                 value_restype = Vector(None),
                 comments = Vector(None),
                 value_ids = Vector("http://data.knora.org/c5058f3a/values/497df9ab"),
-                values = Vector(TextValueV1(
+                values = Vector(TextValueSimpleV1(
                     utf8str = "Johann Amerbach"
                 )),
                 occurrence = Some("0-n"),
@@ -517,7 +522,7 @@ object ResourcesResponderV1SpecFullData {
                 value_restype = Vector(None),
                 comments = Vector(None),
                 value_ids = Vector("http://data.knora.org/8a0b1e75/values/61cb927602"),
-                values = Vector(TextValueV1(
+                values = Vector(TextValueSimpleV1(
                     utf8str = "a1r, Titelblatt"
                 )),
                 occurrence = Some("0-1"),
@@ -538,7 +543,7 @@ object ResourcesResponderV1SpecFullData {
                 value_restype = Vector(None),
                 comments = Vector(None),
                 value_ids = Vector("http://data.knora.org/8a0b1e75/values/3e3d4dc0e922"),
-                values = Vector(TextValueV1(
+                values = Vector(TextValueSimpleV1(
                     utf8str = "Titel: \"Das andechtig zitglo(e)gglyn | des lebens vnd lide(n)s christi nach | den xxiiij stunden v\u00DFgeteilt.\"\nHolzschnitt: Schlaguhr mit Zifferblatt f\u00FCr 24 Stunden, auf deren oberem Rand zu beiden Seiten einer Glocke die Verk\u00FCndigungsszene mit Maria (links) und dem Engel (rechts) zu sehen ist.\nBord\u00FCre: Ranken mit Fabelwesen, Holzschnitt.\nKolorierung: Rot, Blau, Gr\u00FCn, Gelb, Braun.\nBeschriftung oben Mitte (Graphitstift) \"B 1\"."
                 )),
                 occurrence = Some("0-1"),
@@ -559,7 +564,7 @@ object ResourcesResponderV1SpecFullData {
                 value_restype = Vector(None),
                 comments = Vector(None),
                 value_ids = Vector("http://data.knora.org/8a0b1e75/values/e80b2d895f23"),
-                values = Vector(TextValueV1(
+                values = Vector(TextValueSimpleV1(
                     utf8str = "Schramm, Bd. 21, Abb. 601."
                 )),
                 occurrence = Some("0-n"),
@@ -580,7 +585,7 @@ object ResourcesResponderV1SpecFullData {
                 value_restype = Vector(None),
                 comments = Vector(None),
                 value_ids = Vector("http://data.knora.org/8a0b1e75/values/aa488c2203"),
-                values = Vector(TextValueV1(
+                values = Vector(TextValueSimpleV1(
                     utf8str = "ad+s167_druck1=0001.tif"
                 )),
                 occurrence = Some("1"),
@@ -848,6 +853,10 @@ object ResourcesResponderV1SpecFullData {
         ))
     )
 
+    val dummyMapping = MappingXMLtoStandoff(
+            namespace = Map.empty[String, Map[String, Map[String, XMLTag]]]
+        )
+
     val expectedRegionFullResource = ResourceFullResponseV1(
         userdata = SharedAdminTestData.incunabulaMemberUser.userData,
         access = "OK",
@@ -958,23 +967,31 @@ object ResourcesResponderV1SpecFullData {
                 value_restype = Vector(None),
                 comments = Vector(None),
                 value_ids = Vector("http://data.knora.org/047db418ae06/values/7331b94196a104"),
-                values = Vector(TextValueV1(
+                values = Vector(TextValueWithStandoffV1(
                     resource_reference = Set("http://data.knora.org/047db418ae06/values/2428fc96-1383-4457-9704-077b37256103"), // TODO: Why is this a Value onject IRI?
-                    textattr = Map(
-                        StandoffTagV1.paragraph -> Vector(StandoffPositionV1(
-                            href = None,
-                            resid = None,
-                            end = 94,
-                            start = 0
-                        )),
-                        StandoffTagV1.link -> Vector(StandoffPositionV1(
-                            href = Some("http://localhost:3333/v1/resources/http%3A%2F%2Fdata.knora.org%2F047db418ae06%2Fvalues%2F2428fc96-1383-4457-9704-077b37256103"),
-                            resid = Some("http://data.knora.org/047db418ae06/values/2428fc96-1383-4457-9704-077b37256103"),
-                            end = 39,
-                            start = 36
-                        ))
+                    standoff =
+                        Vector(StandoffTagV1(
+                            standoffTagClassIri = OntologyConstants.Standoff.StandoffParagraphTag,
+                            endPosition = 94,
+                            startPosition = 0,
+                            uuid = UUID.randomUUID().toString,
+                            originalXMLID = None,
+                            startIndex = 0
+                        ),
+                        StandoffTagV1(
+                            standoffTagClassIri = OntologyConstants.KnoraBase.StandoffLinkTag,
+                            dataType = Some(StandoffDataTypeClasses.StandoffLinkTag),
+                            endPosition = 39,
+                            startPosition = 36,
+                            attributes = Vector(StandoffTagIriAttributeV1(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink, value = "http://data.knora.org/047db418ae06/values/2428fc96-1383-4457-9704-077b37256103")),
+                            uuid = UUID.randomUUID().toString,
+                            originalXMLID = None,
+                            startIndex = 0
+                        )
                     ),
-                    utf8str = "Derselbe Holzschnitt wird auf Seite c7r der lateinischen Ausgabe des Narrenschiffs verwendet.\r"
+                    utf8str = "Derselbe Holzschnitt wird auf Seite c7r der lateinischen Ausgabe des Narrenschiffs verwendet.\r",
+                    mapping = dummyMapping,
+                    mappingIri = "http://data.knora.org/projects/standoff/mappings/StandardMapping"
                 )),
                 occurrence = Some("1-n"),
                 attributes = "",

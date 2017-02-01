@@ -101,6 +101,7 @@ trait KnoraService {
         ResourcesRouteV1.knoraApiPath(system, settings, log) ~
             ValuesRouteV1.knoraApiPath(system, settings, log) ~
             SipiRouteV1.knoraApiPath(system, settings, log) ~
+            StandoffRouteV1.knoraApiPath(system, settings, log) ~
             ListsRouteV1.knoraApiPath(system, settings, log) ~
             ResourceTypesRouteV1.knoraApiPath(system, settings, log) ~
             SearchRouteV1.knoraApiPath(system, settings, log) ~

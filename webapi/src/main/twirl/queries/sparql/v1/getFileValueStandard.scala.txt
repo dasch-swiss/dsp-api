@@ -36,7 +36,7 @@ prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 prefix knora-base: <http://www.knora.org/ontology/knora-base#>
 
-SELECT ?objPred ?objObj
+SELECT ?fileValue ?objPred ?objObj
 WHERE {
 
     ?fileValue knora-base:internalFilename "@filename" ;

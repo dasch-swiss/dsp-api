@@ -429,4 +429,14 @@ Consistency: value_prop_cardinality_any
     i <rdf:type> r
     r <owl:onProperty> p
 
+
+/*
+Consistency: standoff_parent
+    i <knora-base:standoffTagHasStartParent> j
+    i <rdf:type> t
+    ------------------------------------
+    t <knora-base:standoffParentClassConstraint> c
+    j <rdf:type> c
+*/
+
 }

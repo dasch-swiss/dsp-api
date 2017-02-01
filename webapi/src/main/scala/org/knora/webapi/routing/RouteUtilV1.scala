@@ -27,8 +27,12 @@ import akka.http.scaladsl.server.{RequestContext, RouteResult}
 import akka.pattern._
 import akka.util.Timeout
 import org.knora.webapi._
+import org.knora.webapi.messages.v1.responder.standoffmessages.{GetMappingRequestV1, GetMappingResponseV1}
+import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.responder.{ApiStatusCodesV1, KnoraRequestV1, KnoraResponseV1}
 import org.knora.webapi.util.MessageUtil
+import org.knora.webapi.util.standoff.StandoffTagUtilV1
+import org.knora.webapi.util.standoff.StandoffTagUtilV1.TextWithStandoffTagsV1
 import spray.json.{JsNumber, JsObject}
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -42,7 +46,7 @@ object RouteUtilV1 {
     /**
       * Sends a message to a responder and completes the HTTP request by returning the response as JSON.
       *
-      * @param requestMessage   a [[KnoraRequestV1]] message that should be sent to the responder manager.
+      * @param requestMessage  a future containing a [[KnoraRequestV1]] message that should be sent to the responder manager.
       * @param requestContext   the akka-http [[RequestContext]].
       * @param settings         the application's settings.
       * @param responderManager a reference to the responder manager.
@@ -63,7 +67,7 @@ object RouteUtilV1 {
         }
 
         val httpResponse: Future[HttpResponse] = for {
-        // Make sure the responder sent a reply of type KnoraResponseV1.
+            // Make sure the responder sent a reply of type KnoraResponseV1.
             knoraResponse <- (responderManager ? requestMessage).map {
                 case replyMessage: KnoraResponseV1 => replyMessage
 
@@ -174,5 +178,40 @@ object RouteUtilV1 {
         )
 
         requestContext.complete(httpResponse)
+    }
+
+    /**
+      *
+      * Converts XML to a [[TextWithStandoffTagsV1]], representing the text and its standoff markup.
+      *
+      * @param xml                  the given XML to be converted to standoff.
+      * @param mappingIri           the mapping to be used to convert the XML to standoff.
+      * @param userProfile          the user making the request.
+      * @param settings             the application's settings.
+      * @param responderManager     a reference to the responder manager.
+      * @param log                  a logging adapter.
+      * @param timeout              a timeout for `ask` messages.
+      * @param executionContext     an execution context for futures.
+      * @return a [[TextWithStandoffTagsV1]].
+      */
+    def convertXMLtoStandoffTagV1(xml: String,
+                                  mappingIri: IRI,
+                                  userProfile: UserProfileV1,
+                                  settings: SettingsImpl,
+                                  responderManager: ActorSelection,
+                                  log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[TextWithStandoffTagsV1] = {
+
+        for {
+
+            // get the mapping
+            mappingResponse: GetMappingResponseV1 <- (responderManager ? GetMappingRequestV1(mappingIri = mappingIri, userProfile = userProfile)).mapTo[GetMappingResponseV1]
+
+            textWithStandoffTagV1 = StandoffTagUtilV1.convertXMLtoStandoffTagV1(
+                xml = xml,
+                mapping = mappingResponse,
+                log = log
+            )
+
+        } yield textWithStandoffTagV1
     }
 }
