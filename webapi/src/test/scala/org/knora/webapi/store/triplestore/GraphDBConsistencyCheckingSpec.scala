@@ -35,7 +35,7 @@ class GraphDBConsistencyCheckingSpec extends CoreSpec(GraphDBConsistencyChecking
             expectMsgPF(timeout) {
                 case akka.actor.Status.Failure(TriplestoreResponseException(msg: String, _)) =>
                     (msg.contains(s"$CONSISTENCY_CHECK_ERROR cardinality_1_not_less_any_object") &&
-                        msg.trim.endsWith("http://data.knora.org/missingPartOf http://www.knora.org/ontology/incunabula#partOfValue *")) should ===(true)
+                        msg.trim.endsWith("http://data.knora.org/missingPartOf http://www.knora.org/ontology/incunabula#partOf *")) should ===(true)
             }
         }
 
@@ -2305,9 +2305,26 @@ object GraphDBConsistencyCheckingSpec {
           |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
           |PREFIX owl: <http://www.w3.org/2002/07/owl#>
           |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+          |PREFIX incunabula: <http://www.knora.org/ontology/incunabula#>
+          |PREFIX salsah-gui: <http://www.knora.org/ontology/salsah-gui#>
           |
           |INSERT {
           |    GRAPH ?dataNamedGraph {
+          |
+          |
+          |        # A property that incunabula:book has no cardinality for.
+          |        incunabula:unused rdf:type owl:ObjectProperty ;
+          |            rdfs:subPropertyOf knora-base:hasValue ;
+          |            rdfs:label "Unused property"@en ;
+          |            rdfs:comment "A property used only in tests"@en ;
+          |            knora-base:subjectClassConstraint incunabula:book ;
+          |            knora-base:objectClassConstraint knora-base:TextValue ;
+          |            salsah-gui:guiOrder "1"^^xsd:integer ;
+          |            salsah-gui:guiElement salsah-gui:SimpleText ;
+          |            salsah-gui:guiAttribute "min=4" ,
+          |                                    "max=8" .
+          |
+          |
           |        ?resource rdf:type ?resourceClass ;
           |            knora-base:isDeleted "false"^^xsd:boolean ;
           |			   knora-base:lastModificationDate ?currentTime ;
@@ -2445,7 +2462,7 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |        # Value 7 (there's no cardinality for it, so it should cause an error)
-          |        # Property: http://www.knora.org/ontology/incunabula#pagenum
+          |        # Property: http://www.knora.org/ontology/incunabula#unused
           |
           |
           |        ?newValue7 rdf:type ?valueType7 ;
@@ -2580,9 +2597,9 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |    # Value 7
-          |    # Property: http://www.knora.org/ontology/incunabula#pagenum
+          |    # Property: http://www.knora.org/ontology/incunabula#unused
           |
-          |    BIND(IRI("http://www.knora.org/ontology/incunabula#pagenum") AS ?property7)
+          |    BIND(IRI("http://www.knora.org/ontology/incunabula#unused") AS ?property7)
           |    BIND(IRI("http://data.knora.org/resourcePropWithNoCardinality/values/nQ3tRObaQWe74WQv2_OdCg") AS ?newValue7)
           |    BIND(IRI("http://www.knora.org/ontology/knora-base#TextValue") AS ?valueType7)
           |
@@ -2706,6 +2723,13 @@ object GraphDBConsistencyCheckingSpec {
           |        # Property: http://www.knora.org/ontology/incunabula#publoc
           |
           |
+          |        # A property that knora-base:TextValue has no cardinality for.
+          |        knora-base:valueHasTest rdf:type owl:DatatypeProperty ;
+          |                 rdfs:subPropertyOf knora-base:valueHas ;
+          |                 knora-base:subjectClassConstraint knora-base:TextValue ;
+          |                 knora-base:objectDatatypeConstraint xsd:integer .
+          |
+          |
           |        ?newValue6 rdf:type ?valueType6 ;
           |            knora-base:isDeleted "false"^^xsd:boolean .
           |
@@ -2713,7 +2737,7 @@ object GraphDBConsistencyCheckingSpec {
           |
           |                ?newValue6 knora-base:valueHasString "Entenhausen" .
           |
-          |                ?newValue6 knora-base:valueHasInteger "3"^^xsd:integer . # No cardinality for this property, so it should cause an error.
+          |                ?newValue6 knora-base:valueHasTest "3"^^xsd:integer . # No cardinality for this property, so it should cause an error.
           |
           |            ?newValue6 <http://www.knora.org/ontology/knora-base#attachedToUser> <http://data.knora.org/users/b83acc5f05> .
           |
