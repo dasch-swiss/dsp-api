@@ -33,6 +33,19 @@
                   knora-base:objectDatatypeConstraint xsd:string .
 
 
+###  http://www.knora.org/ontology/standoff#standoffHyperlinkTagHasTarget
+
+:standoffHyperlinkTagHasTarget rdf:type owl:DatatypeProperty ;
+
+                  rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
+
+                  rdfs:comment "describes the target settings of a hyperlink"@en ;
+
+                  knora-base:subjectClassConstraint :StandoffHyperlinkTag ;
+
+                  knora-base:objectDatatypeConstraint xsd:string .
+
+
 #################################################################
 #
 #    Intermediate Standoff Tags
@@ -75,6 +88,16 @@
                             ] ;
 
             rdfs:comment "Represents the root node if the TextValue has been created from XML"@en .
+
+:StandoffHyperlinkTag rdf:type owl:Class ;
+
+            rdfs:subClassOf knora-base:StandoffUriTag ,
+                           [ rdf:type owl:Restriction ;
+                              owl:onProperty :standoffHyperlinkTagHasTarget ;
+                              owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                           ] ;
+
+                        rdfs:comment "Represents a hyperlink in a text"@en .
 
 
 ###  http://www.knora.org/ontology/standoff#StandoffParagraphTag
