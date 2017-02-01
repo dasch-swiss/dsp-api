@@ -353,27 +353,27 @@ class XMLToStandoffUtil(xmlNamespaces: Map[String, IRI] = Map.empty[IRI, String]
     private def insertSeparatorsXSLT(xpath: String, separator: Char) =
         s"""<?xml version="1.0" encoding="UTF-8"?>
            |
-          |<xsl:transform xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="2.0">
+           |<xsl:transform xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="2.0">
            |
-          |    <xsl:output indent="no" encoding="UTF-8"/>
+           |    <xsl:output indent="no" encoding="UTF-8"/>
            |
-          |    <xsl:template match="@*|node()">
+           |    <xsl:template match="@*|node()">
            |        <xsl:copy>
            |            <xsl:apply-templates select="@*|node()"/>
            |        </xsl:copy>
            |    </xsl:template>
            |
-          |    <xsl:template match="$xpath">
+           |    <xsl:template match="$xpath">
            |        <xsl:variable name="ele" select="name()"/>
            |
-          |        <xsl:element name="{$$ele}">
+           |        <xsl:element name="{$$ele}">
            |        <xsl:copy-of select="@*"/>
            |            <xsl:apply-templates/>
            |        </xsl:element>
            |        <xsl:text>$separator</xsl:text>
            |    </xsl:template>
            |
-          |</xsl:transform>
+           |</xsl:transform>
         """.stripMargin
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -932,7 +932,7 @@ class XMLToStandoffUtil(xmlNamespaces: Map[String, IRI] = Map.empty[IRI, String]
 
             if (allAttributes.nonEmpty) {
                 for ((attrName, attrValue) <- allAttributes) {
-                    xmlString.append(" ").append(attrName).append("=\"").append(attrValue).append("\"")
+                    xmlString.append(" ").append(attrName).append("=\"").append(StringEscapeUtils.escapeXml11(attrValue)).append("\"")
                 }
 
             }
