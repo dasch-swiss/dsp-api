@@ -55,7 +55,6 @@
 	knora-base:isPreview true ;
 	knora-base:isDeleted false ;
 	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
-	knora-base:attachedToProject <http://data.knora.org/projects/666> ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser" .
 
 <http://data.knora.org/8a0b1e75/values/09caf895-37cb-4c21-8a40-814f88278fb6> a knora-base:LinkValue ;
