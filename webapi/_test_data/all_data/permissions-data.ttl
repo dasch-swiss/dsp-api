@@ -162,50 +162,6 @@
                       knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser"^^xsd:string .
 
 
-
-##########################################################
-#
-# 666 Project Permissions
-#
-##########################################################
-
-### Administrative Permissions on ProjectMember
-<http://data.knora.org/permissions/004-a1>
-
-                      rdf:type knora-base:AdministrativePermission ;
-
-                      knora-base:forProject <http://data.knora.org/projects/666> ;
-
-                      knora-base:forGroup knora-base:ProjectMember ;
-
-                      knora-base:hasPermissions "ProjectResourceCreateAllPermission"^^xsd:string .
-
-
-### Administrative Permissions on ProjectAdmin
-<http://data.knora.org/permissions/004-a2>
-
-                      rdf:type knora-base:AdministrativePermission ;
-
-                      knora-base:forProject <http://data.knora.org/projects/666> ;
-
-                      knora-base:forGroup knora-base:ProjectAdmin ;
-
-                      knora-base:hasPermissions "ProjectResourceCreateAllPermission|ProjectAdminAllPermission"^^xsd:string .
-
-
-### Default Object Access Permissions on ProjectMember Group
-<http://data.knora.org/permissions/004-d1>
-
-                      rdf:type knora-base:DefaultObjectAccessPermission ;
-
-                      knora-base:forProject <http://data.knora.org/projects/666> ;
-
-                      knora-base:forGroup knora-base:ProjectMember ;
-
-                      knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser"^^xsd:string .
-
-
-
 ##########################################################
 #
 # Anything Project Permissions

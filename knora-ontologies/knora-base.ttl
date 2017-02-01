@@ -684,11 +684,11 @@
 
 ###  http://www.knora.org/ontology/knora-base#standoffTagHasOriginalXMLID
 
-:standoffTagHasOriginalXMLID rdf:type owl:ObjectProperty ;
+:standoffTagHasOriginalXMLID rdf:type owl:DatatypeProperty ;
 
                  rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
-                 :objectClassConstraint xsd:string ;
+                 :objectDatatypeConstraint xsd:string ;
 
                  :subjectClassConstraint :StandoffTag .
 
@@ -733,7 +733,7 @@
 
 ###  http://www.knora.org/ontology/knora-base#mappingHasXMLTagname
 
-:mappingHasXMLTagname rdf:type owl:DataTypeProperty ;
+:mappingHasXMLTagname rdf:type owl:DatatypeProperty ;
 
                rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
@@ -743,12 +743,12 @@
 
                :subjectClassConstraint :MappingElement ;
 
-               :objectClassConstraint xsd:string .
+               :objectDatatypeConstraint xsd:string .
 
 
 ###  http://www.knora.org/ontology/knora-base#mappingHasXMLNamespace
 
-:mappingHasXMLNamespace rdf:type owl:DataTypeProperty ;
+:mappingHasXMLNamespace rdf:type owl:DatatypeProperty ;
 
                rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
@@ -758,12 +758,12 @@
 
                :subjectClassConstraint :MappingComponent ;
 
-               :objectClassConstraint xsd:string .
+               :objectDatatypeConstraint xsd:string .
 
 
 ###  http://www.knora.org/ontology/knora-base#mappingHasXMLClass
 
-:mappingHasXMLClass rdf:type owl:DataTypeProperty ;
+:mappingHasXMLClass rdf:type owl:DatatypeProperty ;
 
                rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
@@ -773,7 +773,7 @@
 
                :subjectClassConstraint :MappingElement ;
 
-               :objectClassConstraint xsd:string .
+               :objectDatatypeConstraint xsd:string .
 
 
 ###  http://www.knora.org/ontology/knora-base#mappingHasStandoffClass
@@ -788,12 +788,12 @@
 
                :subjectClassConstraint :MappingComponent ;
 
-               :objectClassConstraint :StandoffTag .
+               :objectClassConstraint owl:Class .
 
 
 ###  http://www.knora.org/ontology/knora-base#mappingHasXMLAttribute
 
-:mappingHasXMLAttribute rdf:type owl:DataTypeProperty ;
+:mappingHasXMLAttribute rdf:type owl:ObjectProperty ;
 
                  rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
@@ -808,7 +808,7 @@
 
 ###  http://www.knora.org/ontology/knora-base#mappingHasXMLAttributename
 
-:mappingHasXMLAttributename rdf:type owl:DataTypeProperty ;
+:mappingHasXMLAttributename rdf:type owl:DatatypeProperty ;
 
                rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
@@ -818,7 +818,7 @@
 
                :subjectClassConstraint :MappingComponent ;
 
-               :objectClassConstraint xsd:string .
+               :objectDatatypeConstraint xsd:string .
 
 
 
@@ -832,9 +832,9 @@
 
                rdfs:comment """IRI of the standoff property"""@en ;
 
-               :subjectClassConstraint :MappingElement ;
+               :subjectClassConstraint :MappingXMLAttribute ;
 
-               :objectClassConstraint :MappingXMLAttribute .
+               :objectClassConstraint owl:DatatypeProperty.
 
 
 ###  http://www.knora.org/ontology/knora-base#mappingHasStandoffDataTypeClass
@@ -854,7 +854,7 @@
 
 ###  http://www.knora.org/ontology/knora-base#mappingElementRequiresSeparator
 
-:mappingElementRequiresSeparator rdf:type owl:ObjectProperty ;
+:mappingElementRequiresSeparator rdf:type owl:DatatypeProperty ;
 
                rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
@@ -864,7 +864,7 @@
 
                :subjectClassConstraint :MappingElement ;
 
-               :objectClassConstraint xsd:boolean .
+               :objectDatatypeConstraint xsd:boolean .
 
 
 #################################################################

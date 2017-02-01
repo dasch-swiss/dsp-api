@@ -2,7 +2,7 @@
 <text documentType="letter">
     <p id="first">
         <facsimile src="http://localhost/noFacsimile.jpg"/>
-        Vir Clarissime et Celeberrime Fautor Honoratissime
+        Vir Clarissime et Celeberrime Fautor Honoratissime &amp;
     </p>
     <p>Ecce mitto ut promiseram enodationem difficultatis paulo ante discessum meum a Te motae contra infinitorum
         methodum. Vix posueram pedem in Scapham Hagam<ref href="#first">[Text folgt]</ref> petens cum missis
@@ -79,7 +79,7 @@
         <math>GABCF</math>
         <i>saltem Duplum spatii</i>
         <math>GNEI</math>
-        <i>ac proinde haec duo spatia non possunt esse aequalia, contra prius ratiocinium, quomodo agitur hac
+        <i>ac proinde haec duo spatia non possunt esse aequalia, contra prius ratiocinium, quomodo agitur hac <a href="http://aleph.unibas.ch/F/?local_base=DSV05&amp;con_lng=GER&amp;func=find-b&amp;find_code=SYS&amp;request=000059782">1704.10.15</a>
             concilianda?
         </i>
         hic ni fallor est sensus objectionis Tuae; ad quam ut breviter respondeam, velim consideres, <math>AS</math> nunquam

@@ -56,7 +56,7 @@
 
                   rdfs:label "Datum der Entstehung"@de ;
 
-                  knora-base:subjectClassConstraint :manuscript ;
+                  knora-base:subjectClassConstraint :writtenSource ;
 
                   knora-base:objectClassConstraint knora-base:DateValue ;
 
@@ -181,7 +181,7 @@
 
           rdfs:comment """Der Ort, wo sich das physische Original befindet"""@de ;
 
-          knora-base:subjectClassConstraint :manuscript ;
+          knora-base:subjectClassConstraint :writtenSource ;
 
           knora-base:objectClassConstraint knora-base:TextValue ;
 
@@ -752,3 +752,133 @@
 
             rdfs:comment "represents a HTML tag in MediaWiki"@en .
 
+
+:StandoffReferenceTag  rdf:type owl:Class ;
+
+             rdfs:subClassOf knora-base:StandoffTag ;
+
+             rdfs:comment "represents a footnote (<ref>) tag in MediaWiki"@en .
+
+
+:standoffTableTagHasBorder rdf:type owl:DatatypeProperty ;
+
+             rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
+
+             rdfs:comment "border settings of a table"@en ;
+
+             knora-base:subjectClassConstraint :StandoffTableTag ;
+
+             knora-base:objectDatatypeConstraint xsd:string .
+
+
+:standoffTableTagHasCellPadding rdf:type owl:DatatypeProperty ;
+
+             rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
+
+             rdfs:comment "table cell padding"@en ;
+
+             knora-base:subjectClassConstraint :StandoffTableTag ;
+
+             knora-base:objectDatatypeConstraint xsd:string .
+
+
+:standoffTableCellTagHasWidth rdf:type owl:DatatypeProperty ;
+
+                 rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
+
+                 rdfs:comment "settings for the wifth of a table cell"@en ;
+
+                 knora-base:subjectClassConstraint :StandoffTableCellTag ;
+
+                 knora-base:objectDatatypeConstraint xsd:string .
+
+
+:standoffTableCellTagHasWidth rdf:type owl:DatatypeProperty ;
+
+                 rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
+
+                 rdfs:comment "settings for the width of a table cell"@en ;
+
+                 knora-base:subjectClassConstraint :StandoffTableCellTag ;
+
+                 knora-base:objectDatatypeConstraint xsd:string .
+
+
+:standoffTableCellTagHasAlignment rdf:type owl:DatatypeProperty ;
+
+                 rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
+
+                 rdfs:comment "settings for the alignment of a table cell"@en ;
+
+                 knora-base:subjectClassConstraint :StandoffTableCellTag ;
+
+                 knora-base:objectDatatypeConstraint xsd:string .
+
+
+:standoffTableCellTagHasVerticalAlignment rdf:type owl:DatatypeProperty ;
+
+                 rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
+
+                 rdfs:comment "settings for the vertical alignment of a table cell"@en ;
+
+                 knora-base:subjectClassConstraint :StandoffTableCellTag ;
+
+                 knora-base:objectDatatypeConstraint xsd:string .
+
+
+:standoffTableCellTagHasRowSpan rdf:type owl:DatatypeProperty ;
+
+                 rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
+
+                 rdfs:comment "settings for row span of a table cell"@en ;
+
+                 knora-base:subjectClassConstraint :StandoffTableCellTag ;
+
+                 knora-base:objectDatatypeConstraint xsd:string .
+
+:standoffTableCellTagHasColumnSpan rdf:type owl:DatatypeProperty ;
+
+                 rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
+
+                 rdfs:comment "settings for column span of a table cell"@en ;
+
+                 knora-base:subjectClassConstraint :StandoffTableCellTag ;
+
+                 knora-base:objectDatatypeConstraint xsd:string .
+
+
+:StandoffTableTag rdf:type owl:Class;
+
+             rdfs:subClassOf standoff:StandoffTableTag ,
+             [ rdf:type owl:Restriction ;
+               owl:onProperty :standoffTableTagHasBorder ;
+               owl:maxCardinality "1"^^xsd:nonNegativeInteger
+             ] ,
+             [ rdf:type owl:Restriction ;
+               owl:onProperty :standoffTableTagHasCellPadding ;
+               owl:maxCardinality "1"^^xsd:nonNegativeInteger
+             ] .
+
+ :StandoffTableCellTag rdf:type owl:Class ;
+
+             rdfs:subClassOf standoff:StandoffTableCellTag ,
+             [ rdf:type owl:Restriction ;
+               owl:onProperty :standoffTableCellTagHasWidth ;
+               owl:maxCardinality "1"^^xsd:nonNegativeInteger
+             ] ,
+             [ rdf:type owl:Restriction ;
+               owl:onProperty :standoffTableCellTagHasAlignment ;
+               owl:maxCardinality "1"^^xsd:nonNegativeInteger
+             ],
+             [ rdf:type owl:Restriction ;
+               owl:onProperty :standoffTableCellTagHasVerticalAlignment ;
+               owl:maxCardinality "1"^^xsd:nonNegativeInteger
+             ] ,
+             [ rdf:type owl:Restriction ;
+               owl:onProperty :standoffTableCellTagHasRowSpan ;
+               owl:maxCardinality "1"^^xsd:nonNegativeInteger
+             ] ,
+             [ rdf:type owl:Restriction ;
+               owl:onProperty :standoffTableCellTagHasColumnSpan ;
+               owl:maxCardinality "1"^^xsd:nonNegativeInteger
+             ] .
