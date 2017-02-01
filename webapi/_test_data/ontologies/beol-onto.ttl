@@ -56,7 +56,7 @@
 
                   rdfs:label "Datum der Entstehung"@de ;
 
-                  knora-base:subjectClassConstraint :manuscript ;
+                  knora-base:subjectClassConstraint :writtenSource ;
 
                   knora-base:objectClassConstraint knora-base:DateValue ;
 
@@ -181,7 +181,7 @@
 
           rdfs:comment """Der Ort, wo sich das physische Original befindet"""@de ;
 
-          knora-base:subjectClassConstraint :manuscript ;
+          knora-base:subjectClassConstraint :writtenSource ;
 
           knora-base:objectClassConstraint knora-base:TextValue ;
 
