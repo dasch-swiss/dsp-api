@@ -229,6 +229,7 @@ case class ValueVersionHistoryGetResponseV1(valueVersions: Seq[ValueVersionV1],
   * Represents a request to add a new value of a resource property (as opposed to a new version of an existing value). A
   * successful response will be an [[CreateValueResponseV1]].
   *
+  * @param resourceIndex the index of the resource
   * @param projectIri   the project in which the value is to be added.
   * @param resourceIri  the IRI of the resource to which the value should be added.
   * @param propertyIri  the IRI of the property that should receive the value.
@@ -237,7 +238,8 @@ case class ValueVersionHistoryGetResponseV1(valueVersions: Seq[ValueVersionV1],
   * @param userProfile  the profile of the user making the request.
   * @param apiRequestID the ID of this API request.
   */
-case class CreateValueRequestV1(projectIri: IRI,
+case class CreateValueRequestV1(resourceIndex: Int = 0,
+                                projectIri: IRI,
                                 resourceIri: IRI,
                                 propertyIri: IRI,
                                 value: UpdateValueV1,

@@ -26,7 +26,7 @@
  * Generates statements to be added to the INSERT clause of a SPARQL update when creating a new value of a resource
  * property (as opposed to a new version of an existing value). This template is used in two contexts: when creating a
  * single value in an existing resource, and when creating a new resource with its initial values.
- *
+ * @param resourceIndex the index of the resource
  * @param valueIndex the index of the value in the sequence of values that are being created in the transaction. This
  *                   index will be used to make SPARQL variable names specific to the value being created. If
  *                   a single value is being created in an existing resource, `valueIndex` will be 0.
@@ -52,11 +52,11 @@
   valueProject: IRI,
   maybeValuePermissions: Option[String])
 
-        # Value @valueIndex
+        # Value {@resourceIndex}_{@valueIndex}
         # Property: @propertyIri
 
         @* Construct the value. *@
-        ?newValue@valueIndex rdf:type ?valueType@valueIndex ;
+        ?newValue{@resourceIndex}_{@valueIndex} rdf:type ?valueType{@resourceIndex}_{@valueIndex} ;
             knora-base:isDeleted false  ;
             knora-base:valueHasString """@value.toString""" .
 
@@ -66,7 +66,7 @@
                 @* Create a Standoff node for each StandoffPositionV1. *@
 
                 @for(createStandoff <- textValue.prepareForSparqlInsert(newValueIri)) {
-                    ?newValue@valueIndex knora-base:valueHasStandoff <@createStandoff.standoffTagIri> .
+                    ?newValue{@resourceIndex}_{@valueIndex} knora-base:valueHasStandoff <@createStandoff.standoffTagIri> .
 
                     <@createStandoff.standoffTagIri>
 
@@ -99,31 +99,31 @@
 
             case intValue: IntegerValueV1 => {
 
-                ?newValue@valueIndex knora-base:valueHasInteger @intValue.ival .
+                ?newValue{@resourceIndex}_{@valueIndex} knora-base:valueHasInteger @intValue.ival .
 
             }
 
             case decimalValue: DecimalValueV1 => {
 
-                ?newValue@valueIndex knora-base:valueHasDecimal "@decimalValue.dval"^^xsd:decimal .
+                ?newValue{@resourceIndex}_{@valueIndex} knora-base:valueHasDecimal "@decimalValue.dval"^^xsd:decimal .
 
             }
 
             case booleanValue: BooleanValueV1 => {
 
-                ?newValue@valueIndex knora-base:valueHasBoolean @booleanValue.bval .
+                ?newValue{@resourceIndex}_{@valueIndex} knora-base:valueHasBoolean @booleanValue.bval .
 
             }
 
             case uriValue: UriValueV1 => {
 
-                ?newValue@valueIndex knora-base:valueHasUri """@uriValue.uri""" .
+                ?newValue{@resourceIndex}_{@valueIndex} knora-base:valueHasUri """@uriValue.uri""" .
 
             }
 
             case jdnValue: JulianDayNumberValueV1 => {
 
-                ?newValue@valueIndex knora-base:valueHasStartJDN @jdnValue.dateval1 ;
+                ?newValue{@resourceIndex}_{@valueIndex} knora-base:valueHasStartJDN @jdnValue.dateval1 ;
                                      knora-base:valueHasEndJDN @jdnValue.dateval2 ;
                                      knora-base:valueHasStartPrecision "@jdnValue.dateprecision1" ;
                                      knora-base:valueHasEndPrecision "@jdnValue.dateprecision2" ;
@@ -133,18 +133,18 @@
 
             case colorValue: ColorValueV1 => {
 
-                ?newValue@valueIndex knora-base:valueHasColor """@colorValue.color""" .
+                ?newValue{@resourceIndex}_{@valueIndex} knora-base:valueHasColor """@colorValue.color""" .
 
             }
 
             case geometryValue: GeomValueV1 => {
 
-                ?newValue@valueIndex knora-base:valueHasGeometry """@geometryValue.geom""" .
+                ?newValue{@resourceIndex}_{@valueIndex} knora-base:valueHasGeometry """@geometryValue.geom""" .
 
             }
 
             case stillImageFileValue: StillImageFileValueV1 => {
-                ?newValue@valueIndex knora-base:originalFilename """@stillImageFileValue.originalFilename""" ;
+                ?newValue{@resourceIndex}_{@valueIndex} knora-base:originalFilename """@stillImageFileValue.originalFilename""" ;
                                      knora-base:originalMimeType """@stillImageFileValue.originalMimeType""" ;
                                      knora-base:internalFilename """@stillImageFileValue.internalFilename""" ;
                                      knora-base:internalMimeType """@stillImageFileValue.internalMimeType""" ;
@@ -154,27 +154,27 @@
                                      knora-base:valueHasQname """@stillImageFileValue.qualityName""" .
 
                 @if(stillImageFileValue.isPreview) {
-                    ?newValue@valueIndex knora-base:isPreview true .
+                    ?newValue{@resourceIndex}_{@valueIndex} knora-base:isPreview true .
                 }
 
             }
 
             case listValue: HierarchicalListValueV1 => {
 
-                ?newValue@valueIndex knora-base:valueHasListNode <@listValue.hierarchicalListIri> .
+                ?newValue{@resourceIndex}_{@valueIndex} knora-base:valueHasListNode <@listValue.hierarchicalListIri> .
 
             }
 
             case intervalValue: IntervalValueV1 => {
 
-                ?newValue@valueIndex knora-base:valueHasIntervalStart @intervalValue.timeval1 ;
+                ?newValue{@resourceIndex}_{@valueIndex} knora-base:valueHasIntervalStart @intervalValue.timeval1 ;
                                      knora-base:valueHasIntervalEnd @intervalValue.timeval2 .
 
             }
 
             case geonameValue: GeonameValueV1 => {
 
-                ?newValue@valueIndex knora-base:valueHasGeonameCode """@geonameValue.geonameCode""" .
+                ?newValue{@resourceIndex}_{@valueIndex} knora-base:valueHasGeonameCode """@geonameValue.geonameCode""" .
 
             }
 
@@ -188,27 +188,27 @@
         @* Insert the value's comment, if given. *@
         @maybeComment match {
             case Some(comment) => {
-                ?newValue@valueIndex knora-base:valueHasComment """@comment""" .
+                ?newValue{@resourceIndex}_{@valueIndex} knora-base:valueHasComment """@comment""" .
             }
 
             case None => {}
         }
 
-        ?newValue@valueIndex knora-base:attachedToUser <@valueOwner> ;
+        ?newValue{@resourceIndex}_{@valueIndex} knora-base:attachedToUser <@valueOwner> ;
             knora-base:attachedToProject <@valueProject> .
 
         @maybeValuePermissions match {
 
             case Some(valuePermissions) => {
 
-                ?newValue@valueIndex knora-base:hasPermissions "@valuePermissions" .
+                ?newValue{@resourceIndex}_{@valueIndex} knora-base:hasPermissions "@valuePermissions" .
 
             }
 
             case None => {}
         }
 
-        ?newValue@valueIndex knora-base:valueHasOrder ?nextOrder@valueIndex ;
+        ?newValue{@resourceIndex}_{@valueIndex} knora-base:valueHasOrder ?nextOrder{@resourceIndex}_{@valueIndex} ;
                              knora-base:valueCreationDate ?currentTime .
 
         @* Insert direct links and LinkValues for resource references. *@
@@ -217,4 +217,4 @@
         }
 
         @* Attach the value to the resource. *@
-        ?resource ?property@valueIndex ?newValue@valueIndex .
+        ?resource ?property{@resourceIndex}_{@valueIndex} ?newValue{@resourceIndex}_{@valueIndex} .

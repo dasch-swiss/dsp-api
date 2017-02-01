@@ -102,7 +102,7 @@
 
                     knora-base:subjectClassConstraint :Publication ;
 
-                    rdfs:subPropertyOf knora-base:hasLinkTo , dcterms:publisher.
+                    rdfs:subPropertyOf knora-base:hasLinkTo .
 
 
 

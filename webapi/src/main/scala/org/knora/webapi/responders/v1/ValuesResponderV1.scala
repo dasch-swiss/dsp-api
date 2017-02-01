@@ -280,6 +280,7 @@ class ValuesResponderV1 extends ResponderV1 {
 
             for {
             // Get ontology information about the default permissions on the resource's properties.
+
                 entityInfoResponse: EntityInfoGetResponseV1 <- (responderManager ? EntityInfoGetRequestV1(
                     propertyIris = createMultipleValuesRequest.values.keySet,
                     userProfile = createMultipleValuesRequest.userProfile
@@ -448,7 +449,7 @@ class ValuesResponderV1 extends ResponderV1 {
 
                                         // Generate WHERE clause statements for the value.
                                         val whereSparql = queries.sparql.v1.txt.generateWhereStatementsForCreateValue(
-//                                            resourceIndex = createMultipleValuesRequest.resourceIndex,
+                                            resourceIndex = createMultipleValuesRequest.resourceIndex,
                                             valueIndex = valueToCreate.valueIndex,
                                             resourceIri = createMultipleValuesRequest.resourceIri,
                                             propertyIri = propertyIri,
@@ -460,6 +461,7 @@ class ValuesResponderV1 extends ResponderV1 {
 
                                         // Generate INSERT clause statements for the value.
                                         val insertSparql = queries.sparql.v1.txt.generateInsertStatementsForCreateValue(
+                                            resourceIndex = createMultipleValuesRequest.resourceIndex,
                                             valueIndex = valueToCreate.valueIndex,
                                             propertyIri = propertyIri,
                                             value = updateValueV1,
@@ -2029,6 +2031,7 @@ class ValuesResponderV1 extends ResponderV1 {
 
             // Generate a SPARQL update string.
             sparqlUpdate = queries.sparql.v1.txt.createValue(
+                resourceIndex = 0,
                 dataNamedGraph = projectInfo.dataNamedGraph,
                 triplestore = settings.triplestoreType,
                 resourceIri = resourceIri,

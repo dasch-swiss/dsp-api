@@ -1395,27 +1395,24 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    |    xmlns:Journal="http://www.knora.org/ontology/biblio/Journal"
                    |    xmlns:biblio="http://www.knora.org/ontology/biblio">
                    |    <beol:Person id="abel">
-                   |		<Person:hasGivenName>Niels Henrik</Person:hasGivenName>
-                   |		<Person:hasFamilyName>Abel</Person:hasFamilyName>
+                   |		<beol:hasGivenName>Niels Henrik</beol:hasGivenName>
+                   |		<beol:hasFamilyName>Abel</beol:hasFamilyName>
                    |	</beol:Person>
                    |    <beol:Person id="fooBar">
-                   |		<Person:hasGivenName>foo</Person:hasGivenName>
-                   |		<Person:hasFamilyName>Bar</Person:hasFamilyName>
+                   |		<beol:hasGivenName>foo</beol:hasGivenName>
+                   |		<beol:hasFamilyName>Bar</beol:hasFamilyName>
                    |	</beol:Person>
-                   |    <biblio:Journal id="_Mém._Berlin_">
-                   |		<Journal:hasName><b> Mém. Berlin </b></Journal:hasName>
-                   |	</biblio:Journal>
                    |</xml>""".stripMargin
             Post("/v1/resources/xml", HttpEntity(ContentTypes.`text/xml(UTF-8)`, params)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)
-                def check_richtext(string: String): CreateValueV1WithComment = {
-                    val richtext_value = CreateRichtextV1(string, None, None)
-                    val richtextComponents: RichtextComponents = InputValidation.handleRichtext(richtext_value)
-                    CreateValueV1WithComment(TextValueV1(InputValidation.toSparqlEncodedString(richtext_value.utf8str, () => throw BadRequestException(s"Invalid text: '${richtext_value.utf8str}'")),
-                    textattr = richtextComponents.textattr,
-                    resource_reference = richtextComponents.resource_reference),
-                    None)
-                }
+//                def check_richtext(string: String): CreateValueV1WithComment = {
+//                    val richtext_value = CreateRichtextV1(string, None, None)
+//                    val richtextComponents: RichtextComponents = InputValidation.handleRichtext(richtext_value)
+//                    CreateValueV1WithComment(TextValueV1(InputValidation.toSparqlEncodedString(richtext_value.utf8str, () => throw BadRequestException(s"Invalid text: '${richtext_value.utf8str}'")),
+//                    textattr = richtextComponents.textattr,
+//                    resource_reference = richtextComponents.resource_reference),
+//                    None)
+//                }
 
                 val resourcesToCreate =Seq.empty[OneOfMultipleResourceCreateRequestV1]
                 val responseExpected = MultipleResourceCreateRequestV1( resourcesToCreate,

@@ -1251,6 +1251,7 @@ class ResourcesResponderV1 extends ResponderV1 {
                                            projectIri : IRI,
                                            userProfile: UserProfileV1,
                                            apiRequestID: UUID): Future[Unit] = {
+
             for {
                     // Get user's IRI and don't allow anonymous users to create resources.
                     userIri: IRI <- Future {
@@ -1270,29 +1271,41 @@ class ResourcesResponderV1 extends ResponderV1 {
 
 
                     namedGraph = projectInfo.project_info.dataNamedGraph
+                    sequenceOfFutures: Seq[Future[IRI]] = resourcesToCreate.zipWithIndex.map {
+                        case (resRequest, index) =>
 
-//                    resourcesToCreate.foreach { resRequest =>
+
+                            for {
+                                    defaultObjectAccessPermissions <- {
+                                        responderManager ? DefaultObjectAccessPermissionsStringForResourceClassGetV1(projectIri = projectIri, resourceClassIri = resRequest.resourceTypeIri, userProfile.permissionData)
+                                    }.mapTo[Option[String]]
+                                    _ = log.debug(s"createNewResource - defaultObjectAccessPermissions: $defaultObjectAccessPermissions")
+
+                                    _ = if (resRequest.resourceTypeIri == OntologyConstants.KnoraBase.Resource) {
+                                        throw BadRequestException(s"Instances of knora-base:Resource cannot be created, only instances of subclasses")
+                                    }
+
+
+                                    resourceIri: IRI = knoraIdUtil.makeRandomResourceIri
+
+
+
+                                    generateSparqlForValuesResponse <- createNewSparqlStatement(projectIri, resourceIri, resRequest.resourceTypeIri, index, resRequest.values, None, userProfile, apiRequestID)
+                                    createNewResourceSparql:String =createNewSprql(generateSparqlForValuesResponse, projectIri, resourceIri, resRequest.resourceTypeIri, index, resRequest.label, None, namedGraph, userIri)
+                                    _ = println(createNewResourceSparql)
+                            } yield createNewResourceSparql
+
+                    }
+
+                    sequenceOfSomethings: Seq[IRI] <- Future.sequence(sequenceOfFutures)
+
+//                    // Do the update.
+//                    createResourceResponse <- (storeManager ? SparqlUpdateRequest(createNewResourceSparql)).mapTo[SparqlUpdateResponse]
 //
-//                        _ = if (resRequest.resourceTypeIri == OntologyConstants.KnoraBase.Resource) {
-//                            throw BadRequestException(s"Instances of knora-base:Resource cannot be created, only instances of subclasses")
-//                        }
-//                        val resourceIri: IRI = knoraIdUtil.makeRandomResourceIri
+//                    apiResponse <- verifyResourceCreated(resourceIri, ownerIri, createNewResourceSparql, generateSparqlForValuesResponse, userProfile)
+////                        _ = log.debug(s"createNewResource - defaultObjectAccessPermissions: $defaultObjectAccessPermissions")
 //
-//                        // Check user's PermissionProfile (part of UserProfileV1) to see if the user has the permission to
-//                        // create a new resource in the given project.
-//                        _ = if (!userProfile.permissionData.hasPermissionFor(ResourceCreateOperation(resRequest.resourceTypeIri), projectIri, None)) {
-//                            throw ForbiddenException(s"User $userIri does not have permissions to create a resource in project $projectIri")
-//                        }
-//
-//                        defaultObjectAccessPermissions
-//                        <-
-//                        {
-//                            responderManager ? DefaultObjectAccessPermissionsStringForResourceClassGetV1(projectIri = projectIri, resourceClassIri = resRequest.resourceTypeIri, userProfile.permissionData)
-//                        }.mapTo[Option[String]]
-//                        _ = log.debug(s"createNewResource - defaultObjectAccessPermissions: $defaultObjectAccessPermissions")
-//
-//
-//                    }
+
 
             } yield ()
 
@@ -1408,7 +1421,7 @@ class ResourcesResponderV1 extends ResponderV1 {
         } yield generateSparqlForValuesResponse
     }
 
-    def createNewSprql(generateSparqlForValuesResponse: GenerateSparqlToCreateMultipleValuesResponseV1, projectIri:IRI, resourceIri:IRI, resourceClassIri:IRI
+    def createNewSprql(generateSparqlForValuesResponse: GenerateSparqlToCreateMultipleValuesResponseV1, projectIri:IRI, resourceIri:IRI, resourceClassIri:IRI, resourceIndex:Int
                       , label:String, permissions:Option[String], namedGraph:IRI, ownerIri:IRI): String = {
 
         // Generate SPARQL for creating the resource, and include the SPARQL for creating the values.
@@ -1416,6 +1429,7 @@ class ResourcesResponderV1 extends ResponderV1 {
                   triplestore = settings.triplestoreType,
                   dataNamedGraph = namedGraph,
                   resourceIri = resourceIri,
+                  resourceIndex = resourceIndex  ,
                   label = label,
                   resourceClassIri = resourceClassIri,
                   ownerIri = ownerIri,
@@ -1499,9 +1513,9 @@ class ResourcesResponderV1 extends ResponderV1 {
         for {
             fileValuesV1 <- CheckResource(resourceClassIri, propertyIris, userProfile, values, sipiConversionRequest)
             generateSparqlForValuesResponse <- createNewSparqlStatement(projectIri, resourceIri, resourceClassIri,
-                                                    resourceIndex=1, values, fileValuesV1, userProfile, apiRequestID)
+                                                    resourceIndex=0, values, fileValuesV1, userProfile, apiRequestID)
             createNewResourceSparql = createNewSprql(generateSparqlForValuesResponse, projectIri,
-                                                    resourceIri, resourceClassIri, label, permissions, namedGraph, ownerIri)
+                                                    resourceIri, resourceClassIri, resourceIndex=0, label, permissions, namedGraph, ownerIri)
             // Do the update.
             createResourceResponse <- (storeManager ? SparqlUpdateRequest(createNewResourceSparql)).mapTo[SparqlUpdateResponse]
 

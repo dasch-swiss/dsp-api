@@ -41,7 +41,8 @@
  * The generated WHERE clause does some consistency checks. If these fail, the operation will do nothing.
  * To find out whether the update succeeded, the application must query the property's version history.
  *@
-@(dataNamedGraph: IRI,
+@(resourceIndex : Int,
+  dataNamedGraph: IRI,
   triplestore: String,
   resourceIri: IRI,
   propertyIri: IRI,
@@ -87,7 +88,8 @@ DELETE {
         ?resource knora-base:lastModificationDate ?currentTime .
 
         @{
-            queries.sparql.v1.txt.generateInsertStatementsForCreateValue(valueIndex = 0,
+            queries.sparql.v1.txt.generateInsertStatementsForCreateValue(resourceIndex = resourceIndex,
+                                                                         valueIndex = 0,
                                                                          propertyIri = propertyIri,
                                                                          value = value,
                                                                          newValueIri = newValueIri,
@@ -121,7 +123,8 @@ WHERE {
     }
 
     @{
-        queries.sparql.v1.txt.generateWhereStatementsForCreateValue(valueIndex = 0,
+        queries.sparql.v1.txt.generateWhereStatementsForCreateValue(resourceIndex = resourceIndex,
+                                                                    valueIndex = 0,
                                                                     resourceIri = resourceIri,
                                                                     propertyIri = propertyIri,
                                                                     newValueIri = newValueIri,

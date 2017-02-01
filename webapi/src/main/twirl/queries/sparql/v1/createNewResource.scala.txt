@@ -38,6 +38,7 @@
   dataNamedGraph: IRI,
   resourceIri: IRI,
   resourceClassIri: IRI,
+  resourceIndex : Int,
   label: String,
   projectIri: IRI,
   ownerIri: IRI,
@@ -53,7 +54,7 @@ PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 
 INSERT {
     GRAPH ?dataNamedGraph {
-        ?resource rdf:type ?resourceClass ;
+        ?resource_?index rdf:type ?resourceClass ;
             knora-base:isDeleted false ;
             knora-base:attachedToUser ?ownerIri ;
             knora-base:attachedToProject ?projectIri ;
@@ -82,6 +83,7 @@ INSERT {
 WHERE {
     BIND(IRI("@dataNamedGraph") AS ?dataNamedGraph)
     BIND(IRI("@resourceIri") AS ?resource)
+    BIND(IRI("@resourceIndex") AS ?index)
     BIND(IRI("@resourceClassIri") AS ?resourceClass)
     BIND(IRI("@ownerIri") AS ?ownerIri)
     BIND(IRI("@projectIri") AS ?projectIri)
