@@ -20,7 +20,8 @@ class GraphDBConsistencyCheckingSpec extends CoreSpec(GraphDBConsistencyChecking
     private val timeout = 30.seconds
 
     val rdfDataObjects = List(
-        RdfDataObject(path = "_test_data/store.triplestore.GraphDBConsistencyCheckingSpec/incunabula-data.ttl", name = "http://www.knora.org/data/incunabula")
+        RdfDataObject(path = "_test_data/store.triplestore.GraphDBConsistencyCheckingSpec/incunabula-data.ttl", name = "http://www.knora.org/data/incunabula"),
+        RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/anything")
     )
 
     if (settings.triplestoreType.startsWith("graphdb")) {
@@ -85,9 +86,7 @@ class GraphDBConsistencyCheckingSpec extends CoreSpec(GraphDBConsistencyChecking
             }
         }
 
-        "not create a new resource with a link to a resource of the wrong class" ignore {
-            // Ignored because of a bug in GraphDB 7.1.
-
+        "not create a new resource with a link to a resource of the wrong class" in {
             storeManager ! SparqlUpdateRequest(wrongLinkTargetClass)
 
             expectMsgPF(timeout) {
