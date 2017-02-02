@@ -81,6 +81,7 @@ object OntologyConstants {
         val MovingImageRepresentation = "http://www.knora.org/ontology/knora-base#MovingImageRepresentation"
         val StillImageRepresentation = "http://www.knora.org/ontology/knora-base#StillImageRepresentation"
         val TextRepresentation = "http://www.knora.org/ontology/knora-base#TextRepresentation"
+        val XSLTransformation = "http://www.knora.org/ontology/knora-base#XSLTransformation"
 
         val XMLToStandoffMapping = "http://www.knora.org/ontology/knora-base#XMLToStandoffMapping"
         val MappingElement = "http://www.knora.org/ontology/knora-base#MappingElement"

@@ -132,7 +132,7 @@ class SipiResponderV1 extends ResponderV1 {
                 // this problem is hardly the user's fault. Create a SipiException
                 throw SipiException(message = "Sipi not reachable", e = noResponse, log = log)
 
-            case err =>
+            case err: Exception =>
                 // unknown error
                 throw SipiException(message = s"Unknown error: ${err.toString}", e = err, log = log)
         }
