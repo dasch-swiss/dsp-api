@@ -27,7 +27,7 @@ Scope
 ------
 
 Authentication is the process of making sure that if someone is
-accessing something that then this someone is actually also the someone
+accessing something then this someone is actually also the someone
 he pretends to be. The process of making sure that someone is
 authorized, i.e. has the permission to access something, is handled as
 described in the section on authorization in the Knora base ontology
@@ -115,7 +115,7 @@ Submitting Credentials in the URL or in the HTTP Authentication Header
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 As an alternative to creating a session, the client may also submit the credentials:
- - in the URL (when doing a HTTP-GET request) submitting the parameters ``email`` and ``password`` (e.g. http://knora-host/resources/resIri?email=userUrlEncodedEmail&password=pw)
+ - in the URL (when doing a HTTP-GET request) submitting the parameters ``email`` and ``password`` (e.g. http://knora-host/v1/resources/resIri?email=userUrlEncodedEmail&password=pw)
  - in the HTTP header (`HTTP basic authentication`_) when doing a HTTP request to the API (all methods). When using Python's module ``requests``,
    the credentials can simply be submitted as a tuple with each request using the param ``auth`` (`python requests`_).
 
@@ -154,7 +154,7 @@ but this only works for AJAX requests using ``SALSAH.ApiGet`` (``Put``, etc.).
 Since the medias are embedded as source tags, the browser would get them
 on his own, and doesn't know anything about the needed AuthHeathers.
 With cookies, the browser would send those automatically with every
-request. The media server can the use the credentials of the user
+request. The media server can use the credentials of the user
 requesting something for accessing the RepresentationsRouteV1, i.e. make
 this request in the name of the user so to speak, then the
 RepresentationResponderV1 should have all the information it needs to
