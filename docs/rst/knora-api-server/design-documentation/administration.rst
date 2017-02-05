@@ -598,7 +598,7 @@ Example Data stored in the permissions graph
   <http://data.knora.org/permissions/[UUID]> rdf:type knora-base:AdministrativePermission ;
        knora-base:forProject <http://data.knora.org/projects/images> ;
        knora-base:forGroup knora-base:ProjectMember ;
-       knora-base:hasPermission "ProjectResourceCreateAllPermission"^^xsd:string .
+       knora-base:hasPermissions "ProjectResourceCreateAllPermission"^^xsd:string .
 
 
 **Administrative permission restricting project admin permission on a group:**
@@ -626,7 +626,7 @@ Example Data stored in the permissions graph
        knora-base:forProject <http://data.knora.org/projects/images> ;
        knora-base:forGroup knora-base:ProjectMember ;
        knora-base:hasPermissions "CR knora-base:Creator|
-                                   M <http://data.knora.org/permissions/[UUID]>|
+                                   M <http://data.knora.org/groups/[UUID]>|
                                    V knora-base:KnownUser"^^xsd:string .
 
 
@@ -817,7 +817,7 @@ Example Project Information stored in admin named graph:
         knora-base:projectBasepath "/imldata/SALSAH-TEST-01/images" ;
         knora-base:projectShortname "images" ;
         knora-base:projectLongname "Images Collection Demo" ;
-        knora-base:projectOntolgyGraph "http://www.knora.org/ontology/images" ;
+        knora-base:projectOntologyGraph "http://www.knora.org/ontology/images" ;
         knora-base:projectDataGraph "http://www.knora.org/data/images" ;
         knora-base:isActiveProject "true"^^xsd:boolean ;
         knora-base:hasSelfJoinEnabled "false"^^xsd:boolean .
