@@ -90,10 +90,11 @@ case class GetXSLTransformationRequestV1(textValueIri: IRI, xsltTextRepresentati
 /**
   * Represents a response to a [[GetXSLTransformationRequestV1]].
   *
-  * @param xml       the xml representing the result of the transformation.
+  * @param xml       the XML representing a [[TextValueWithStandoffV1]].
+  * @param xslt      the XSLT to apply to the XML.
   * @param userdata  information about the user that made the request.
   */
-case class GetXSLTransformationResponseV1(xml: String, userdata: UserDataV1) extends KnoraResponseV1 {
+case class GetXSLTransformationResponseV1(xml: String, xslt: String, userdata: UserDataV1) extends KnoraResponseV1 {
     def toJsValue = RepresentationV1JsonProtocol.getXSLTransformationResponseV1Format.write(this)
 }
 
@@ -266,5 +267,5 @@ object RepresentationV1JsonProtocol extends DefaultJsonProtocol with NullOptions
 
     implicit val createMappingApiRequestV1Format: RootJsonFormat[CreateMappingApiRequestV1] = jsonFormat3(CreateMappingApiRequestV1)
     implicit val createMappingResponseV1Format: RootJsonFormat[CreateMappingResponseV1] = jsonFormat2(CreateMappingResponseV1)
-    implicit val getXSLTransformationResponseV1Format: RootJsonFormat[GetXSLTransformationResponseV1] = jsonFormat2(GetXSLTransformationResponseV1)
+    implicit val getXSLTransformationResponseV1Format: RootJsonFormat[GetXSLTransformationResponseV1] = jsonFormat3(GetXSLTransformationResponseV1)
 }

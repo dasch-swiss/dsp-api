@@ -20,7 +20,7 @@
 
 package org.knora.webapi.responders.v1
 
-import java.io.{File, IOException, StringReader, StringWriter}
+import java.io.{File, IOException, StringReader}
 import java.util.UUID
 import javax.xml.XMLConstants
 import javax.xml.transform.stream.StreamSource
@@ -164,28 +164,8 @@ class StandoffResponderV1 extends ResponderV1 {
 
             xmlStr <- xmlStrFuture
 
-            // apply the xslt transformation to xmlStr
-            proc = new net.sf.saxon.s9api.Processor(false)
-            comp = proc.newXsltCompiler()
 
-            exp = comp.compile(new StreamSource(new StringReader(xslt)))
-
-            source = try {
-                proc.newDocumentBuilder().build(new StreamSource(new StringReader(xmlStr)))
-            } catch {
-                case e: Exception => throw StandoffConversionException(s"The provided XML could not be parsed: ${e.getMessage}")
-            }
-
-            xmlTransformedStr: StringWriter = new StringWriter()
-            out = proc.newSerializer(xmlTransformedStr)
-
-            trans = exp.load()
-            _ = trans.setInitialContextNode(source)
-            _ = trans.setDestination(out)
-            _ = trans.transform()
-
-
-        } yield GetXSLTransformationResponseV1(xml = xmlTransformedStr.toString, userProfile.userData)
+        } yield GetXSLTransformationResponseV1(xml = xmlStr, xslt = xslt, userProfile.userData)
 
 
 

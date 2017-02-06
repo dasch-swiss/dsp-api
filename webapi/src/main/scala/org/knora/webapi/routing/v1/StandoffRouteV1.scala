@@ -34,6 +34,7 @@ import org.knora.webapi.messages.v1.responder.standoffmessages._
 import org.knora.webapi.routing.v1.ValuesRouteV1.getUserProfileV1
 import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
 import org.knora.webapi.util.InputValidation
+import org.knora.webapi.viewhandlers.StandoffHtmlView
 import org.knora.webapi.{BadRequestException, SettingsImpl}
 import spray.json._
 
@@ -146,8 +147,9 @@ object StandoffRouteV1 extends Authenticator {
                     val userProfile = getUserProfileV1(requestContext)
                     val requestMessage = GetXSLTransformationRequestV1(textValueIri = textValueIri, xsltTextRepresentationIri = textReprIri, userProfile = userProfile)
 
-                    RouteUtilV1.runJsonRoute(
+                    RouteUtilV1.runHtmlRoute[GetXSLTransformationRequestV1, GetXSLTransformationResponseV1](
                         requestMessage,
+                        StandoffHtmlView.standoffAsHtml,
                         requestContext,
                         settings,
                         responderManager,
