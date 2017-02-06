@@ -21,30 +21,26 @@
 @import org.knora.webapi.IRI
 @import org.knora.webapi.messages.v1.responder.valuemessages._
 
+
 @*
  * Creates a new resource of the given type.
  *
  * @param dataNamedGraph the named graph in which the project stores its data.
  * @param triplestore the name of the triplestore being used.
- * @param resourceIri the Iri of the new resource
- * @param resourceClassIri the IRI of the OWL class that the new resource should belong to.
+ * @param resourcesToCreate the sequence of Resources To be created
  * @param projectIri the project the new resource should belong to.
  * @param ownerIri the owner of the new resource.
  * @param maybePermissions the literal that should be used as the value of the resource's `knora-base:hasPermissions` predicate.
- * @param whereStatementsForValues statements to be included in the WHERE clause for creating the resource's initial values.
- * @param insertStatementsForValues statements to be included in the INSERT clause for creating the resource's initial values.
+
  *@
-@(triplestore: String,
-  dataNamedGraph: IRI,
-  resourceIri: IRI,
-  resourceClassIri: IRI,
-  resourceIndex : Int,
-  label: String,
+
+@(dataNamedGraph: IRI,
+  triplestore: String,
+  resourcesToCreate: Seq[resourceToCreate],
   projectIri: IRI,
   ownerIri: IRI,
-  maybePermissions: Option[String],
-  whereStatementsForValues: String,
-  insertStatementsForValues: String)
+  maybePermissions: Option[String]
+  )
 
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -54,11 +50,12 @@ PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 
 INSERT {
     GRAPH ?dataNamedGraph {
-        ?resource_?index rdf:type ?resourceClass ;
+        @for(res <- resourcesToCreate) {
+        ?resource@res.resourceIndex rdf:type ?resourceClass@res.resourceIndex ;
             knora-base:isDeleted false ;
             knora-base:attachedToUser ?ownerIri ;
             knora-base:attachedToProject ?projectIri ;
-            rdfs:label ?label ;
+            rdfs:label ?label@res.resourceIndex ;
 
             @* Insert permissions. *@
             @maybePermissions match {
@@ -73,7 +70,8 @@ INSERT {
 
             knora-base:creationDate ?currentTime .
 
-        @insertStatementsForValues
+        @res.insertStatementsForValues
+        }
     }
 }
 @* Ensure that inference is not used in the WHERE clause of this update. *@
@@ -82,13 +80,17 @@ INSERT {
 }
 WHERE {
     BIND(IRI("@dataNamedGraph") AS ?dataNamedGraph)
-    BIND(IRI("@resourceIri") AS ?resource)
-    BIND(IRI("@resourceIndex") AS ?index)
-    BIND(IRI("@resourceClassIri") AS ?resourceClass)
     BIND(IRI("@ownerIri") AS ?ownerIri)
     BIND(IRI("@projectIri") AS ?projectIri)
-    BIND(str("@label") AS ?label)
-    BIND(NOW() AS ?currentTime)
 
-    @whereStatementsForValues
+    BIND(NOW() AS ?currentTime)
+    @for(res <- resourcesToCreate) {
+    BIND(IRI("@res.resourceIri") AS ?resource@res.resourceIndex)
+    BIND(IRI("@res.resourceClassIri") AS ?resourceClass@res.resourceIndex)
+    BIND(str("@res.resourceLabel") AS ?label@res.resourceIndex)
+
+
+
+    @res.whereStatementsForValues
+    }
 }

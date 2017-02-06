@@ -52,24 +52,24 @@
   valueTypeIri: IRI,
   linkUpdates: Seq[SparqlTemplateLinkUpdate],
   maybeValueHasOrder: Option[Int])
-
-    # Value {@resourceIndex}_{@valueIndex}
+    @index = {@resourceIndex.toString()_@valueIndex.toString()}
+    # Value @index
     # Property: @propertyIri
 
-    BIND(IRI("@propertyIri") AS ?property{@resourceIndex}_{@valueIndex})
-    BIND(IRI("@newValueIri") AS ?newValue{@resourceIndex}_{@valueIndex})
-    BIND(IRI("@valueTypeIri") AS ?valueType{@resourceIndex}_{@valueIndex})
+    BIND(IRI("@propertyIri") AS ?property@index)
+    BIND(IRI("@newValueIri") AS ?newValue@index)
+    BIND(IRI("@valueTypeIri") AS ?valueType@index)
 
     @* Do nothing if the submitted value has the wrong type. *@
 
-    ?property{@resourceIndex}_{@valueIndex} knora-base:objectClassConstraint ?propertyRange{@resourceIndex}_{@valueIndex} .
-    ?valueType{@resourceIndex}_{@valueIndex} rdfs:subClassOf* ?propertyRange{@resourceIndex}_{@valueIndex} .
+    ?property@index knora-base:objectClassConstraint ?propertyRange@index .
+    ?valueType@index rdfs:subClassOf* ?propertyRange@index .
 
     @* Do nothing if neither the resource class nor any of its superclasses has a cardinality for this property. *@
 
-    ?resourceClass rdfs:subClassOf* ?restriction{@resourceIndex}_{@valueIndex} .
-    ?restriction{@resourceIndex}_{@valueIndex} a owl:Restriction .
-    ?restriction{@resourceIndex}_{@valueIndex} owl:onProperty ?property{@resourceIndex}_{@valueIndex} .
+    ?resourceClass@resourceIndex rdfs:subClassOf* ?restriction@index .
+    ?restriction@index a owl:Restriction .
+    ?restriction@index owl:onProperty ?property@index .
 
     @*
 
@@ -102,11 +102,11 @@
 
         @if(linkUpdate.directLinkExists) {
             @* Make sure the relevant direct link exists between the two resources. *@
-            ?resource <@linkUpdate.linkPropertyIri> <@linkUpdate.linkTargetIri> .
+            ?resource@resourceIndex <@linkUpdate.linkPropertyIri> <@linkUpdate.linkTargetIri> .
         } else {
             @* Make sure there no such direct link. *@
             MINUS {
-                ?resource <@linkUpdate.linkPropertyIri> <@linkUpdate.linkTargetIri> .
+                ?resource@resourceIndex <@linkUpdate.linkPropertyIri> <@linkUpdate.linkTargetIri> .
             }
         }
 
@@ -117,9 +117,9 @@
             between the source and target resources, and has the correct reference count.
 
             *@
-            ?resource <@{linkUpdate.linkPropertyIri}Value> ?linkValue{@resourceIndex}_{@linkValueIndex} .
+            ?resource@resourceIndex <@{linkUpdate.linkPropertyIri}Value> ?linkValue{@resourceIndex}_{@linkValueIndex} .
             ?linkValue{@resourceIndex}_{@linkValueIndex} rdf:type knora-base:LinkValue ;
-                rdf:subject ?resource ;
+                rdf:subject ?resource@resourceIndex ;
                 rdf:predicate <@linkUpdate.linkPropertyIri> ;
                 rdf:object <@linkUpdate.linkTargetIri> ;
                 knora-base:valueHasRefCount @linkUpdate.currentReferenceCount ;
@@ -128,9 +128,9 @@
         } else {
             @* Make sure there is no such knora-base:LinkValue. *@
             MINUS {
-                ?resource <@{linkUpdate.linkPropertyIri}Value> ?linkValue{@resourceIndex}_{@linkValueIndex} .
+                ?resource@resourceIndex <@{linkUpdate.linkPropertyIri}Value> ?linkValue{@resourceIndex}_{@linkValueIndex} .
                 ?linkValue{@resourceIndex}_{@linkValueIndex} rdf:type knora-base:LinkValue ;
-                    rdf:subject ?resource ;
+                    rdf:subject ?resource@resourceIndex ;
                     rdf:predicate <@linkUpdate.linkPropertyIri> ;
                     rdf:object <@linkUpdate.linkTargetIri> ;
                     knora-base:isDeleted false .
@@ -155,17 +155,17 @@
     @maybeValueHasOrder match {
         case Some(valueHasOrder) => {
 
-            BIND(@valueHasOrder AS ?nextOrder{@resourceIndex}_{@valueIndex})
+            BIND(@valueHasOrder AS ?nextOrder@index)
 
         }
 
         case None => {
 
             {
-                SELECT ((MAX(?order{@resourceIndex}_{@valueIndex})) AS ?maxOrder{@resourceIndex}_{@valueIndex}) (IF(BOUND(?maxOrder{@resourceIndex}_{@valueIndex}), ?maxOrder{@resourceIndex}_{@valueIndex} + 1, 0) AS ?nextOrder{@resourceIndex}_{@valueIndex})
+                SELECT ((MAX(?order@index)) AS ?maxOrder@index) (IF(BOUND(?maxOrder@index), ?maxOrder@index + 1, 0) AS ?nextOrder@index)
                 WHERE {
-                    <@resourceIri> <@propertyIri> ?otherValue{@resourceIndex}_{@valueIndex} .
-                    ?otherValue{@resourceIndex}_{@valueIndex} knora-base:valueHasOrder ?order{@resourceIndex}_{@valueIndex} ;
+                    <@resourceIri> <@propertyIri> ?otherValue@index .
+                    ?otherValue@index knora-base:valueHasOrder ?order@index ;
                         knora-base:isDeleted false .
                 }
             }
