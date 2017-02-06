@@ -20,23 +20,13 @@
 
 @import org.knora.webapi.IRI
 @import org.knora.webapi.messages.v1.responder.valuemessages._
+@import org.knora.webapi.responders.v1.ResourceToCreate
 
 
-@*
- * Creates a new resource of the given type.
- *
- * @param dataNamedGraph the named graph in which the project stores its data.
- * @param triplestore the name of the triplestore being used.
- * @param resourcesToCreate the sequence of Resources To be created
- * @param projectIri the project the new resource should belong to.
- * @param ownerIri the owner of the new resource.
- * @param maybePermissions the literal that should be used as the value of the resource's `knora-base:hasPermissions` predicate.
-
- *@
 
 @(dataNamedGraph: IRI,
   triplestore: String,
-  resourcesToCreate: Seq[resourceToCreate],
+  resourcesToCreate: Seq[ResourceToCreate],
   projectIri: IRI,
   ownerIri: IRI,
   maybePermissions: Option[String]
