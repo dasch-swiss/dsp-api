@@ -42,7 +42,7 @@ object StandoffHtmlView {
       */
     def standoffAsHtml(xmlAndXSLT: GetXSLTransformationResponseV1, responderManager: ActorSelection): String = {
 
-        // apply the xslt transformation to xmlStr
+        // apply the XSL transformation to xmlStr
         val proc = new net.sf.saxon.s9api.Processor(false)
         val comp = proc.newXsltCompiler()
 

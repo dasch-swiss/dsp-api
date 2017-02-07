@@ -74,6 +74,8 @@ class StandoffResponderV1 extends ResponderV1 {
         case other => handleUnexpectedMessage(sender(), other, log)
     }
 
+    val xsltCacheName = "xsltCache"
+
     /**
       * Applies an XSL transformation to an XML document created from a [[TextValueWithStandoffV1]] and returns the resulting XML.
       *
@@ -101,7 +103,7 @@ class StandoffResponderV1 extends ResponderV1 {
         } yield xmlStr
 
         val textLocationFuture: Future[LocationV1] = for {
-            // get the `LocationV1` representing XSL transformation
+        // get the `LocationV1` representing XSL transformation
             textRepresentationResponse: ResourceFullResponseV1 <- (responderManager ? ResourceFullGetRequestV1(iri = xsltTextRepresentationIri, userProfile = userProfile, getIncoming = false)).mapTo[ResourceFullResponseV1]
 
             textLocation: LocationV1 = textRepresentationResponse match {
@@ -119,55 +121,69 @@ class StandoffResponderV1 extends ResponderV1 {
             }
         } yield textLocation
 
-        // ask SIPI to return the XSL transformation
-        val sipiResponseFuture: Future[HttpResponse] = for {
-
-            textLocation <- textLocationFuture
-
-            // ask Sipi to return the XSL transformation file
-            response: HttpResponse <- Http().singleRequest(
-                HttpRequest(
-                    method = HttpMethods.GET,
-                    uri = textLocation.path
-                )
-            )
-
-        } yield response
-
-        val sipiResponseFutureRecovered: Future[HttpResponse] = sipiResponseFuture.recoverWith {
-
-            case noResponse: akka.http.impl.engine.HttpConnectionTimeoutException =>
-                // this problem is hardly the user's fault. Create a SipiException
-                throw SipiException(message = "Sipi not reachable", e = noResponse, log = log)
-
-
-            // TODO: what other exceptions have to be handled here?
-            // if Exception is used, also previous errors are caught here
-
-        }
-
-
         for {
-
-            sipiResponseRecovered: HttpResponse <- sipiResponseFutureRecovered
-
-            httpStatusCode: StatusCode = sipiResponseRecovered.status
-
-            messageBody <- sipiResponseRecovered.entity.toStrict(5.seconds)
-
-            _ = if (httpStatusCode != StatusCodes.OK) {
-                throw SipiException(s"Sipi returned status code ${httpStatusCode.intValue} with msg '${messageBody.data.decodeString("UTF-8")}'")
-            }
-
-            // get the XSL transformation
-            xslt: String = messageBody.data.decodeString("UTF-8")
 
             xmlStr <- xmlStrFuture
 
+            // check if the XSL transformation is in the cache
+            textLocation <- textLocationFuture
+
+            xsltMaybe: Option[String] = CacheUtil.get[String](cacheName = xsltCacheName, key = textLocation.path)
+
+            xslt: String <- if (xsltMaybe.nonEmpty) {
+                // XSL transformation is cached
+                Future(xsltMaybe.get)
+            } else {
+                // ask SIPI to return the XSL transformation
+                val sipiResponseFuture: Future[HttpResponse] = for {
+
+                    textLocation <- textLocationFuture
+
+                    // ask Sipi to return the XSL transformation file
+                    response: HttpResponse <- Http().singleRequest(
+                        HttpRequest(
+                            method = HttpMethods.GET,
+                            uri = textLocation.path
+                        )
+                    )
+
+                } yield response
+
+                val sipiResponseFutureRecovered: Future[HttpResponse] = sipiResponseFuture.recoverWith {
+
+                    case noResponse: akka.http.impl.engine.HttpConnectionTimeoutException =>
+                        // this problem is hardly the user's fault. Create a SipiException
+                        throw SipiException(message = "Sipi not reachable", e = noResponse, log = log)
+
+
+                    // TODO: what other exceptions have to be handled here?
+                    // if Exception is used, also previous errors are caught here
+
+                }
+
+                for {
+
+                    sipiResponseRecovered: HttpResponse <- sipiResponseFutureRecovered
+
+                    httpStatusCode: StatusCode = sipiResponseRecovered.status
+
+                    messageBody <- sipiResponseRecovered.entity.toStrict(5.seconds)
+
+                    _ = if (httpStatusCode != StatusCodes.OK) {
+                        throw SipiException(s"Sipi returned status code ${httpStatusCode.intValue} with msg '${messageBody.data.decodeString("UTF-8")}'")
+                    }
+
+                    // get the XSL transformation
+                    xslt: String = messageBody.data.decodeString("UTF-8")
+
+                    textLocation <- textLocationFuture
+
+                    _ = CacheUtil.put(cacheName = xsltCacheName, key = textLocation.path, value = xslt)
+
+                } yield xslt
+            }
 
         } yield GetXSLTransformationResponseV1(xml = xmlStr, xslt = xslt, userProfile.userData)
-
-
 
     }
 
@@ -503,7 +519,7 @@ class StandoffResponderV1 extends ResponderV1 {
     /**
       * The name of the mapping cache.
       */
-    val MappingCacheName = "mappingCache"
+    val mappingCacheName = "mappingCache"
 
     /**
       * Gets a mapping either from the cache or by making a requests to the triplestore.
@@ -516,7 +532,7 @@ class StandoffResponderV1 extends ResponderV1 {
 
         for {
 
-            mapping: GetMappingResponseV1 <- CacheUtil.get[MappingXMLtoStandoff](cacheName = MappingCacheName, key = mappingIri) match {
+            mapping: GetMappingResponseV1 <- CacheUtil.get[MappingXMLtoStandoff](cacheName = mappingCacheName, key = mappingIri) match {
                 case Some(mapping: MappingXMLtoStandoff) =>
 
                     for {
@@ -629,7 +645,7 @@ class StandoffResponderV1 extends ResponderV1 {
             mappingXMLToStandoff = transformMappingElementsToMappingXMLtoStandoff(mappingElements)
 
             // add the mapping to the cache
-            _ = CacheUtil.put(cacheName = MappingCacheName, key = mappingIri, value = mappingXMLToStandoff)
+            _ = CacheUtil.put(cacheName = mappingCacheName, key = mappingIri, value = mappingXMLToStandoff)
 
         } yield mappingXMLToStandoff
 
