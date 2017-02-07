@@ -1296,28 +1296,52 @@ class ResourcesResponderV1 extends ResponderV1 {
 
 
                                     generateSparqlForValuesResponse <- createNewSparqlStatement(projectIri, resourceIri, resRequest.resourceTypeIri, index, resRequest.values, None, userProfile, apiRequestID)
-//                                    createNewResourceSparql:String = createNewSparql(generateSparqlForValuesResponse, projectIri, resourceIri, resRequest.resourceTypeIri, index, resRequest.label, None, namedGraph, userIri)
 
                             } yield  ResourceToCreate(resourceIri, generateSparqlForValuesResponse.insertSparql, generateSparqlForValuesResponse.whereSparql, resRequest.resourceTypeIri, index,  resRequest.label)
-//
+
                     }
 
 
-                    resourcesToCreate: Seq[ResourceToCreate] <- Future.sequence(sequenceOfFutures)
-                    resourceInfo: Map[String, IRI] = resourcesToCreate.map(resInfo => resInfo.resourceLabel -> resInfo.resourceIri  ).toMap
-                    createMultipleResourcesSparql: String = createNewSparql(resourcesToCreate ,projectIri,  None, namedGraph, userIri)
+                    resources: Seq[ResourceToCreate] <- Future.sequence(sequenceOfFutures)
+                    resourceInfo: Map[String, IRI] = resources.map(resInfo => resInfo.resourceLabel -> resInfo.resourceIri  ).toMap
+                    createMultipleResourcesSparql: String = createNewSparql(resources ,projectIri,  None, namedGraph, userIri)
 
-//                    _ = println(createMultipleResourcesSparql)
+
                     _ = println(resourceInfo)
+
+
+
+                    // Do the update.
+                    createResourceResponse <- (storeManager ? SparqlUpdateRequest(createMultipleResourcesSparql)).mapTo[SparqlUpdateResponse]
+
 
                     pw = new PrintWriter(new File("hello.txt" ))
                     _=pw.write(createMultipleResourcesSparql)
                     _=pw.close
+                    _ = resources.map {
+                        case res =>
 
-                    // Do the update.
-//                    createResourceResponse <- (storeManager ? SparqlUpdateRequest(createMultipleResourcesSparql)).mapTo[SparqlUpdateResponse]
+                        for {
 
-//                    apiResponse <- verifyResourceCreated(resourceIri, ownerIri, createNewResourceSparql, generateSparqlForValuesResponse, userProfile)
+                            createdResourcesSparql <- Future(queries.sparql.v1.txt.getCreatedResource(
+                                triplestore = settings.triplestoreType,
+                                resourceIri = res.resourceIri
+                            ).toString())
+                            _=println(createdResourcesSparql)
+                            createdResourceResponse <- (storeManager ? SparqlSelectRequest(createdResourcesSparql)).mapTo[SparqlSelectResponse]
+
+                            _ = if (createdResourceResponse.results.bindings.isEmpty) {
+                                log.error(s"Attempted creation of resource fail")
+                                throw UpdateNotPerformedException(s"Resource $res.resourceIri was not created. Please report this as a possible bug.")
+                            } else {
+
+                                println("resource created =>", res.resourceIri)
+                                println(createdResourceResponse)
+                            }
+                        } yield ()
+                    }
+
+            //                    apiResponse <- verifyResourceCreated(resourceIri, ownerIri, createNewResourceSparql, generateSparqlForValuesResponse, userProfile)
 ////                        _ = log.debug(s"createNewResource - defaultObjectAccessPermissions: $defaultObjectAccessPermissions")
 //
 
