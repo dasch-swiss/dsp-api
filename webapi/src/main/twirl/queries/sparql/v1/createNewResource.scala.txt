@@ -60,7 +60,7 @@ INSERT {
 
             knora-base:creationDate ?currentTime .
 
-        @res.insertStatementsForValues
+        @res.generateSparqlForValuesResponse.insertSparql
         }
     }
 }
@@ -81,6 +81,6 @@ WHERE {
 
 
 
-    @res.whereStatementsForValues
+    @res.generateSparqlForValuesResponse.whereSparql
     }
 }

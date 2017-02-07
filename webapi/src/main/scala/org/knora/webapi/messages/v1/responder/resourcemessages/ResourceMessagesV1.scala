@@ -170,10 +170,10 @@ case class MultipleResourceCreateRequestV1(resourcesToCreate: Seq[OneOfMultipleR
 /**
   * describes the answer to creation of multiple resources
   *
-  * @param iris IRIs of the created resources
+  * @param resources created resources
   * @param userdata information about the user that made the request.
   */
-case class MultipleResourceCreateResponseV1(iris:  Seq[IRI],
+case class MultipleResourceCreateResponseV1(resources: Seq[ResourceCreateResponseV1],
                                           userdata: UserDataV1) extends KnoraResponseV1 {
 
     def toJsValue = ResourceV1JsonProtocol.multipleResourceCreateResponseV1Format.write(this)
