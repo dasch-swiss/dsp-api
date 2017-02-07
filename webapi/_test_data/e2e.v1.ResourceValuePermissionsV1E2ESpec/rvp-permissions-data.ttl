@@ -14,6 +14,11 @@
         knora-base:forGroup knora-base:ProjectMember ;
         knora-base:hasPermissions "CR knora-base:ProjectAdmin|D knora-base:ProjectMember|M knora-base:KnownUser|RV knora-base:UnknownUser"^^xsd:string .
 
+<http://data.knora.org/permissions/parole-religieuse-o2> rdf:type knora-base:DefaultObjectAccessPermission ;
+        knora-base:forProject <http://data.knora.org/projects/parole-religieuse> ;
+        knora-base:forGroup knora-base:KnownUser ;
+        knora-base:hasPermissions "CR knora-base:ProjectAdmin|D knora-base:ProjectMember|M knora-base:KnownUser|RV knora-base:UnknownUser"^^xsd:string .
+
 <http://data.knora.org/permissions/parole-religieuse-a1>
         rdf:type knora-base:AdministrativePermission ;
         knora-base:forProject <http://data.knora.org/projects/parole-religieuse> ;

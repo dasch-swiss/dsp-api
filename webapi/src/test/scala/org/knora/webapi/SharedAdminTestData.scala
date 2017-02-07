@@ -20,7 +20,8 @@
 
 package org.knora.webapi
 
-import org.knora.webapi.messages.v1.responder.groupmessages.{GroupInfoV1}
+import akka.actor.FSM.->
+import org.knora.webapi.messages.v1.responder.groupmessages.GroupInfoV1
 import org.knora.webapi.messages.v1.responder.permissionmessages.{PermissionDataV1, PermissionV1}
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1
 import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
@@ -55,7 +56,13 @@ object SharedAdminTestData {
         sessionId = None,
         permissionData = PermissionDataV1(
             groupsPerProject = Map(
-                SYSTEM_PROJECT_IRI -> List(s"${OntologyConstants.KnoraBase.SystemAdmin}")
+                BIBLIO_PROJECT_IRI -> List(s"${OntologyConstants.KnoraBase.KnownUser}"),
+                BEOL_PROJECT_IRI -> List(s"${OntologyConstants.KnoraBase.KnownUser}"),
+                INCUNABULA_PROJECT_IRI -> List(s"${OntologyConstants.KnoraBase.KnownUser}"),
+                ANYTHING_PROJECT_IRI -> List(s"${OntologyConstants.KnoraBase.KnownUser}"),
+                SYSTEM_PROJECT_IRI -> List("http://www.knora.org/ontology/knora-base#KnownUser", s"${OntologyConstants.KnoraBase.SystemAdmin}"),
+                DOKUBIB_PROJECT_IRI -> List(s"${OntologyConstants.KnoraBase.KnownUser}"),
+                IMAGES_PROJECT_IRI -> List(s"${OntologyConstants.KnoraBase.KnownUser}")
             ),
             administrativePermissionsPerProject = Map.empty[IRI, Set[PermissionV1]],
             defaultObjectAccessPermissionsPerProject =  Map.empty[IRI, Set[PermissionV1]]

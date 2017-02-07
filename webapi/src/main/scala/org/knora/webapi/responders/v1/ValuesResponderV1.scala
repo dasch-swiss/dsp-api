@@ -837,6 +837,7 @@ class ValuesResponderV1 extends ResponderV1 {
 
                 }
 
+                _ = log.debug(s"changeValueV1 - DefaultObjectAccessPermissionsStringForPropertyGetV1 - projectIri ${findResourceWithValueResult.projectIri}, propertyIri: ${findResourceWithValueResult.propertyIri}, permissionData: ${changeValueRequest.userProfile.permissionData} ")
                 defaultObjectAccessPermissions <- {
                     responderManager ? DefaultObjectAccessPermissionsStringForPropertyGetV1(
                         projectIri = findResourceWithValueResult.projectIri,

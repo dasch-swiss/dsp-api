@@ -53,6 +53,7 @@ class ProjectsResponderV1 extends ResponderV1 {
       */
     def receive = {
         case ProjectsGetRequestV1(userProfile) => future2Message(sender(), projectsGetRequestV1(userProfile), log)
+        case ProjectsGetV1(userProfile) => future2Message(sender(), projectsGetV1(userProfile), log)
         case ProjectsNamedGraphGetV1(userProfile) => future2Message(sender(), projectsNamedGraphGetV1(userProfile), log)
         case ProjectInfoByIRIGetRequestV1(iri, userProfile) => future2Message(sender(), projectInfoByIRIGetRequestV1(iri, userProfile), log)
         case ProjectInfoByIRIGetV1(iri, userProfile) => future2Message(sender(), projectInfoByIRIGetV1(iri, userProfile), log)
@@ -93,6 +94,32 @@ class ProjectsResponderV1 extends ResponderV1 {
     private def projectsGetRequestV1(userProfile: Option[UserProfileV1]): Future[ProjectsResponseV1] = {
 
         for {
+            projects <- projectsGetV1(userProfile)
+
+            result = if (projects.nonEmpty) {
+                ProjectsResponseV1(
+                    projects = projects,
+                    userdata = userProfile match {
+                        case Some(profile) => Some(profile.userData)
+                        case None => None
+                    }
+                )
+            } else {
+                throw NotFoundException(s"No projects found")
+            }
+
+        } yield result
+    }
+
+    /**
+      * Gets all the projects and returns them as a sequence containing [[ProjectInfoV1]].
+      *
+      * @param userProfile the profile of the user that is making the request.
+      * @return all the projects as a sequence containing [[ProjectInfoV1]].
+      */
+    private def projectsGetV1(userProfile: Option[UserProfileV1]): Future[Seq[ProjectInfoV1]] = {
+
+        for {
             sparqlQueryString <- Future(queries.sparql.v1.txt.getProjects(
                 triplestore = settings.triplestoreType
             ).toString())
@@ -111,11 +138,6 @@ class ProjectsResponderV1 extends ResponderV1 {
             projects = projectsWithProperties.map {
                 case (projectIri: String, propsMap: Map[String, String]) =>
 
-                    val rightsInProject = userProfile match {
-                        case Some(profile) => getUserPermissionV1ForProject(projectIRI = projectIri, propertiesForProject = propsMap, profile)
-                        case None => None
-                    }
-
                     ProjectInfoV1(
                         id = projectIri,
                         shortname = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectShortname, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no shortname defined.")),
@@ -130,14 +152,9 @@ class ProjectsResponderV1 extends ResponderV1 {
                         status = propsMap.getOrElse(OntologyConstants.KnoraBase.Status, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no status defined.")).toBoolean,
                         hasSelfJoinEnabled = propsMap.getOrElse(OntologyConstants.KnoraBase.HasSelfJoinEnabled, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no hasSelfJoinEnabled defined.")).toBoolean
                     )
-            }.toVector
-        } yield ProjectsResponseV1(
-            projects = projects,
-            userdata = userProfile match {
-                case Some(profile) => Some(profile.userData)
-                case None => None
-            }
-        )
+            }.toSeq
+
+        } yield projects
     }
 
     /**
@@ -370,12 +387,6 @@ class ProjectsResponderV1 extends ResponderV1 {
                     acc + (row.rowMap("p") -> row.rowMap("o"))
             }
             log.debug(s"createProjectInfoV1FromProjectResponse - projectProperties: ${MessageUtil.toSource(projectProperties)}")
-
-
-            val rightsInProject = userProfile match {
-                case Some(profile) => getUserPermissionV1ForProject(projectIRI = projectIri, propertiesForProject = projectProperties, profile)
-                case None => None
-            }
 
             /* create and return the project info */
             ProjectInfoV1(

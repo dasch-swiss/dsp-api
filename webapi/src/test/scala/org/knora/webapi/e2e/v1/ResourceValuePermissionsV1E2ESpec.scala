@@ -62,8 +62,6 @@ class ResourceValuePermissionsV1E2ESpec extends E2ESpec(StoreRouteV1E2ESpec.conf
       *  2a. drawings-gods user changes existing value
       *  2b1. drawings-gods user creates a new value (inside parole-religieuse project)
       *  2b2. drawings-gods user creates a new value (inside drawings-gods project)
-      *  3. the drawings-gods project has no permissions defined. the drawings-gods user has no permission to see
-      *     the value created in 2b.
       */
     "issue: https://github.com/dhlab-basel/Knora/issues/408" should {
 
@@ -162,7 +160,7 @@ class ResourceValuePermissionsV1E2ESpec extends E2ESpec(StoreRouteV1E2ESpec.conf
             log.debug(s"2b1. secondValueIri: ${secondValueIri.get}")
         }
 
-        "2b2. drawings-gods user is not allowed to create a new value inside the drawings-gods project (no permissions for this project are defined)" in {
+        "2b2. drawings-gods user is not allowed to create a new value inside the drawings-gods project (no permissions for this project are defined which would lead to no permissions attached to the value)" in {
             val params =
                 s"""
                    |{
@@ -177,7 +175,7 @@ class ResourceValuePermissionsV1E2ESpec extends E2ESpec(StoreRouteV1E2ESpec.conf
             val request = Post(baseApiUrl + s"/v1/values", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(drawingsOfGodsUserEmail, testPass))
             val response: HttpResponse = singleAwaitingRequest(request)
 
-            assert(response.status === StatusCodes.Forbidden)
+            assert(response.status === StatusCodes.BadRequest)
         }
     }
 }
