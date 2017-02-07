@@ -1254,7 +1254,7 @@ class ResourcesResponderV1 extends ResponderV1 {
     private def createMultipleNewResources(resourcesToCreate: Seq[OneOfMultipleResourceCreateRequestV1],
                                            projectIri : IRI,
                                            userProfile: UserProfileV1,
-                                           apiRequestID: UUID): Future[Unit] = {
+                                           apiRequestID: UUID): Future[MultipleResourceCreateResponseV1] = {
 
             for {
                     // Get user's IRI and don't allow anonymous users to create resources.
@@ -1306,11 +1306,6 @@ class ResourcesResponderV1 extends ResponderV1 {
                     resourceInfo: Map[String, IRI] = resources.map(resInfo => resInfo.resourceLabel -> resInfo.resourceIri  ).toMap
                     createMultipleResourcesSparql: String = createNewSparql(resources ,projectIri,  None, namedGraph, userIri)
 
-
-                    _ = println(resourceInfo)
-
-
-
                     // Do the update.
                     createResourceResponse <- (storeManager ? SparqlUpdateRequest(createMultipleResourcesSparql)).mapTo[SparqlUpdateResponse]
 
@@ -1324,10 +1319,12 @@ class ResourcesResponderV1 extends ResponderV1 {
                         for {
 
                             apiResponse <- verifyResourceCreated(res.resourceIri, userIri, createMultipleResourcesSparql, res.generateSparqlForValuesResponse, userProfile)
+                            _=println(apiResponse)
                         } yield apiResponse
                     }
                     responses: Seq[ResourceCreateResponseV1] <- Future.sequence(apiResponses)
-            } yield ()
+
+            } yield MultipleResourceCreateResponseV1(responses)
 
 
     }
@@ -1478,7 +1475,7 @@ class ResourcesResponderV1 extends ResponderV1 {
 //            }
 
             // Verify that all the requested values were created.
-
+            _=println( generateSparqlForValuesResponse.unverifiedValues)
             verifyCreateValuesRequest = VerifyMultipleValueCreationRequestV1(
                 resourceIri = resourceIri,
                 unverifiedValues = generateSparqlForValuesResponse.unverifiedValues,

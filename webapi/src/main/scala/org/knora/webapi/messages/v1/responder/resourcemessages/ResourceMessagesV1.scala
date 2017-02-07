@@ -170,11 +170,10 @@ case class MultipleResourceCreateRequestV1(resourcesToCreate: Seq[OneOfMultipleR
 /**
   * describes the answer to creation of multiple resources
   *
-  * @param resources created resources
-  * @param userdata information about the user that made the request.
+  * @param createdResources created resources
+
   */
-case class MultipleResourceCreateResponseV1(resources: Seq[ResourceCreateResponseV1],
-                                          userdata: UserDataV1) extends KnoraResponseV1 {
+case class MultipleResourceCreateResponseV1(createdResources: Seq[ResourceCreateResponseV1]) extends KnoraResponseV1 {
 
     def toJsValue = ResourceV1JsonProtocol.multipleResourceCreateResponseV1Format.write(this)
 
@@ -1082,7 +1081,7 @@ object ResourceV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
     implicit val resourceCreateValueObjectResponseV1Format: RootJsonFormat[ResourceCreateValueObjectResponseV1] = jsonFormat14(ResourceCreateValueObjectResponseV1)
     implicit val resourceCreateValueResponseV1Format: RootJsonFormat[ResourceCreateValueResponseV1] = jsonFormat2(ResourceCreateValueResponseV1)
     implicit val resourceCreateResponseV1Format: RootJsonFormat[ResourceCreateResponseV1] = jsonFormat3(ResourceCreateResponseV1)
-    implicit val multipleResourceCreateResponseV1Format: RootJsonFormat[MultipleResourceCreateResponseV1] = jsonFormat2(MultipleResourceCreateResponseV1)
+    implicit val multipleResourceCreateResponseV1Format: RootJsonFormat[MultipleResourceCreateResponseV1] = jsonFormat1(MultipleResourceCreateResponseV1)
     implicit val resourceDeleteResponseV1Format: RootJsonFormat[ResourceDeleteResponseV1] = jsonFormat2(ResourceDeleteResponseV1)
     implicit val changeResourceLabelResponseV1Format: RootJsonFormat[ChangeResourceLabelResponseV1] = jsonFormat3(ChangeResourceLabelResponseV1)
     implicit val graphNodeV1Format: JsonFormat[GraphNodeV1] = jsonFormat4(GraphNodeV1)

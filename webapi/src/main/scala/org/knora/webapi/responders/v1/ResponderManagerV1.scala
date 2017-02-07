@@ -202,7 +202,7 @@ class ResponderManagerV1 extends Actor with ActorLogging {
         case projectsResponderRequest: ProjectsResponderRequestV1 => projectsRouter.forward(projectsResponderRequest)
         case ckanResponderRequest: CkanResponderRequestV1 => ckanRouter.forward(ckanResponderRequest)
         case storeResponderRequest: StoreResponderRequestV1 => storeRouter.forward(storeResponderRequest)
-		case permissionsResponderRequest: PermissionsResponderRequestV1 => permissionsRouter forward permissionsResponderRequest
+		    case permissionsResponderRequest: PermissionsResponderRequestV1 => permissionsRouter forward permissionsResponderRequest
         case groupsResponderRequest: GroupsResponderRequestV1 => groupsRouter forward groupsResponderRequest
         case other => handleUnexpectedMessage(sender(), other, log)
     }
