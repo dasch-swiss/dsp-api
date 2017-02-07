@@ -26,6 +26,7 @@ import com.typesafe.config.ConfigFactory
 import org.knora.webapi.messages.v1.responder.resourcemessages.{CreateResourceApiRequestV1, CreateResourceValueV1}
 import org.knora.webapi.messages.v1.responder.valuemessages.CreateRichtextV1
 import org.knora.webapi.messages.v1.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
+import org.knora.webapi.util.MutableTestIri
 import org.knora.webapi.{FileWriteException, IRI, ITSpec, InvalidApiJsonException}
 import spray.json._
 
@@ -57,7 +58,7 @@ class SipiV1ITSpec extends ITSpec(SipiV1ITSpec.config) with TriplestoreJsonProto
         RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/anything")
     )
 
-    private val username = "root"
+    private val username = "root@example.com"
     private val password = "test"
 
     "Check if SIPI is running" in {
@@ -96,11 +97,8 @@ class SipiV1ITSpec extends ITSpec(SipiV1ITSpec.config) with TriplestoreJsonProto
 
     }
 
-    object RequestParams {
-
-
-        val paramsPageWithBinaries =
-            s"""
+    val paramsPageWithBinaries =
+        s"""
            {
                 "restype_id": "http://www.knora.org/ontology/incunabula#page",
                 "label": "test",
@@ -134,20 +132,20 @@ class SipiV1ITSpec extends ITSpec(SipiV1ITSpec.config) with TriplestoreJsonProto
            }
          """
 
-        val pathToImageFile = "_test_data/test_route/images/Chlaus.jpg"
+    val pathToChlaus = "_test_data/test_route/images/Chlaus.jpg"
+    val pathToMarbles = "_test_data/test_route/images/marbles.tif"
+    val pageIri = new MutableTestIri
 
-        def createTmpFileDir() = {
-            // check if tmp datadir exists and create it if not
-            if (!Files.exists(Paths.get(settings.tmpDataDir))) {
-                try {
-                    val tmpDir = new File(settings.tmpDataDir)
-                    tmpDir.mkdir()
-                } catch {
-                    case e: Throwable => throw FileWriteException(s"Tmp data directory ${settings.tmpDataDir} could not be created: ${e.getMessage}")
-                }
+    def createTmpFileDir(): Unit = {
+        // check if tmp datadir exists and create it if not
+        if (!Files.exists(Paths.get(settings.tmpDataDir))) {
+            try {
+                val tmpDir = new File(settings.tmpDataDir)
+                tmpDir.mkdir()
+            } catch {
+                case e: Throwable => throw FileWriteException(s"Tmp data directory ${settings.tmpDataDir} could not be created: ${e.getMessage}")
             }
         }
-
     }
 
     "The Resources Endpoint" should {
@@ -159,14 +157,14 @@ class SipiV1ITSpec extends ITSpec(SipiV1ITSpec.config) with TriplestoreJsonProto
              * inside webapi folder ./_test_data/test_route/create_page_with_binaries.py
              */
 
-            val fileToSend = new File(RequestParams.pathToImageFile)
+            val fileToSend = new File(pathToChlaus)
             // check if the file exists
-            assert(fileToSend.exists(), s"File ${RequestParams.pathToImageFile} does not exist")
+            assert(fileToSend.exists(), s"File $pathToChlaus does not exist")
 
             val formData = Multipart.FormData(
                 Multipart.FormData.BodyPart(
                     "json",
-                    HttpEntity(ContentTypes.`application/json`, RequestParams.paramsPageWithBinaries)
+                    HttpEntity(ContentTypes.`application/json`, paramsPageWithBinaries)
                 ),
                 Multipart.FormData.BodyPart(
                     "file",
@@ -175,20 +173,20 @@ class SipiV1ITSpec extends ITSpec(SipiV1ITSpec.config) with TriplestoreJsonProto
                 )
             )
 
-            RequestParams.createTmpFileDir()
+            createTmpFileDir()
             val request = Post(baseApiUrl + "/v1/resources", formData) ~> addCredentials(BasicHttpCredentials(username, password))
             val response = singleAwaitingRequest(request, 20.seconds)
 
             assert(response.status === StatusCodes.OK)
 
-            val newResourceIri: String = ResponseUtils.getStringMemberFromResponse(response, "res_id")
+            pageIri.set(ResponseUtils.getStringMemberFromResponse(response, "res_id"))
 
-            val requestNewResource = Get(baseApiUrl + "/v1/resources/" + URLEncoder.encode(newResourceIri, "UTF-8")) ~> addCredentials(BasicHttpCredentials(username, password))
+            val requestNewResource = Get(baseApiUrl + "/v1/resources/" + URLEncoder.encode(pageIri.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(username, password))
             val responseNewResource = singleAwaitingRequest(requestNewResource, 20.seconds)
 
             assert(responseNewResource.status == StatusCodes.OK, responseNewResource.entity.toString)
 
-            val IIIFPathFuture: Future[String] = responseNewResource.entity.toStrict(5.seconds).map {
+            val iiifPathFuture: Future[String] = responseNewResource.entity.toStrict(5.seconds).map {
                 newResponseBody =>
                     val newResBodyAsString = newResponseBody.data.decodeString("UTF-8")
 
@@ -215,7 +213,7 @@ class SipiV1ITSpec extends ITSpec(SipiV1ITSpec.config) with TriplestoreJsonProto
             }
 
             // wait for the Future to complete
-            val IIIFPath = Await.result(IIIFPathFuture, 5.seconds)
+            val iiifPath = Await.result(iiifPathFuture, 5.seconds)
 
             // TODO: now we could try to request the path from Sipi
             // TODO: we should run Sipi in test mode so it does not do run the preflight request
@@ -224,11 +222,86 @@ class SipiV1ITSpec extends ITSpec(SipiV1ITSpec.config) with TriplestoreJsonProto
 
         }
 
-        "change an 'incunabula:page' with binary data" in {}
+        "change an 'incunabula:page' with binary data" in {
+
+            val fileToSend = new File(pathToMarbles)
+            // check if the file exists
+            assert(fileToSend.exists(), s"File $pathToMarbles does not exist")
+
+            val formData = Multipart.FormData(
+                Multipart.FormData.BodyPart(
+                    "file",
+                    HttpEntity.fromPath(MediaTypes.`image/tiff`, fileToSend.toPath),
+                    Map("filename" -> fileToSend.getName)
+                )
+            )
+
+            createTmpFileDir()
+            val request = Put(baseApiUrl + "/v1/filevalue/" + URLEncoder.encode(pageIri.get, "UTF-8"), formData) ~> addCredentials(BasicHttpCredentials(username, password))
+            val response = singleAwaitingRequest(request, 20.seconds)
+
+            assert(response.status === StatusCodes.OK)
+        }
 
         "create an 'incunabula:page' with parameters" in {}
 
-        "change an 'incunabula:page' with parameters" in {}
+        "change an 'incunabula:page' with parameters" ignore {
+            // Blocked by https://github.com/dhlab-basel/Sipi/issues/121
+
+            val fileToSend = new File(pathToChlaus)
+            // check if the file exists
+            assert(fileToSend.exists(), s"File $pathToChlaus does not exist")
+
+            val sipiFormData = Multipart.FormData(
+                Multipart.FormData.BodyPart(
+                    "file",
+                    HttpEntity.fromPath(MediaTypes.`image/jpeg`, fileToSend.toPath, chunkSize = fileToSend.length.toInt),
+                    Map("filename" -> fileToSend.getName)
+                )
+            )
+
+            val sipiRequest = Post(baseSipiUrl + "/make_thumbnail", sipiFormData)
+            val sipiResponse = singleAwaitingRequest(sipiRequest, 20.seconds)
+
+            assert(sipiResponse.status === StatusCodes.OK)
+
+            val paramsFuture: Future[JsObject] = sipiResponse.entity.toStrict(5.seconds).map {
+                sipiResponseBody =>
+                    val sipiResponseBodyStr = sipiResponseBody.data.decodeString("UTF-8")
+                    val jsonFields = sipiResponseBodyStr.parseJson.asJsObject.fields
+
+                    JsObject(
+                        Map(
+                            "file" -> JsObject(
+                                Map(
+                                    "originalFilename" -> jsonFields("original_filename"),
+                                    "originalMimeType" -> jsonFields("original_mimetype"),
+                                    "filename" -> jsonFields("filename")
+                                )
+                            )
+                        )
+                    )
+            }
+
+            val params = Await.result(paramsFuture, 5.seconds)
+
+            val knoraFormData = Multipart.FormData(
+                Multipart.FormData.BodyPart(
+                    "json",
+                    HttpEntity(ContentTypes.`application/json`, params.compactPrint)
+                ),
+                Multipart.FormData.BodyPart(
+                    "file",
+                    HttpEntity.fromPath(MediaTypes.`image/jpeg`, fileToSend.toPath),
+                    Map("filename" -> fileToSend.getName)
+                )
+            )
+
+            val knoraRequest = Put(baseApiUrl + "/v1/filevalue/" + URLEncoder.encode("http://data.knora.org/8a0b1e75", "UTF-8"), knoraFormData) ~> addCredentials(BasicHttpCredentials(username, password))
+            val knoraResponse = singleAwaitingRequest(knoraRequest, 20.seconds)
+
+            assert(knoraResponse.status === StatusCodes.OK)
+        }
 
         "create an 'anything:thing'" in {}
 

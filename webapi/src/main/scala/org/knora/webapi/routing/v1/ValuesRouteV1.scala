@@ -43,7 +43,7 @@ import org.knora.webapi.util.standoff.StandoffTagUtilV1.TextWithStandoffTagsV1
 import org.knora.webapi.util.{DateUtilV1, InputValidation}
 import org.slf4j.LoggerFactory
 
-import scala.concurrent.Future
+import scala.concurrent.{Future, Promise}
 
 /**
   * Provides a spray-routing function for API routes that deal with values.
@@ -492,9 +492,7 @@ object ValuesRouteV1 extends Authenticator {
 
                         type Name = String
 
-                        /* TODO: refactor to remove the need for this var */
-                        /* makes sure that variables updated in another thread return the latest version */
-                        @volatile var receivedFile: Option[File] = None
+                        val receivedFile = Promise[File]
 
                         // this file will be deleted by Knora once it is not needed anymore
                         // TODO: add a script that cleans files in the tmp location that have a certain age
@@ -511,31 +509,28 @@ object ValuesRouteV1 extends Authenticator {
                                 val written = b.entity.dataBytes.runWith(FileIO.toPath(tmpFile.toPath))
                                 written.map { written =>
                                     loggingAdapter.debug(s"written result: ${written.wasSuccessful}, ${b.filename.get}, ${tmpFile.getAbsolutePath}")
-                                    receivedFile = Some(tmpFile)
+                                    receivedFile.success(tmpFile)
                                     (b.name, FileInfo(b.name, filename, b.entity.contentType))
                                 }
                             }
                         }.runFold(Map.empty[Name, Any])((map, tuple) => map + tuple)
 
-                        val requestMessageFuture = allPartsFuture.map { allParts =>
-
-                            /* Check to see if a file was received */
-                            val sourcePath = receivedFile.getOrElse(throw FileUploadException())
-
+                        val requestMessageFuture = for {
+                            allParts <- allPartsFuture
+                            sourcePath <- receivedFile.future
                             // get the file info containing the original filename and content type.
-                            val fileInfo = allParts.getOrElse(FILE_PART, throw BadRequestException(s"MultiPart POST request was sent without required '$FILE_PART' part!")).asInstanceOf[FileInfo]
-                            val originalFilename = fileInfo.fileName
-                            val originalMimeType = fileInfo.contentType.toString
+                            fileInfo = allParts.getOrElse(FILE_PART, throw BadRequestException(s"MultiPart POST request was sent without required '$FILE_PART' part!")).asInstanceOf[FileInfo]
+                            originalFilename = fileInfo.fileName
+                            originalMimeType = fileInfo.contentType.toString
 
-                            val sipiConvertPathRequest = SipiResponderConversionPathRequestV1(
+                            sipiConvertPathRequest = SipiResponderConversionPathRequestV1(
                                 originalFilename = InputValidation.toSparqlEncodedString(originalFilename, () => throw BadRequestException(s"The original filename is invalid: '$originalFilename'")),
                                 originalMimeType = InputValidation.toSparqlEncodedString(originalMimeType, () => throw BadRequestException(s"The original MIME type is invalid: '$originalMimeType'")),
                                 source = sourcePath,
                                 userProfile = userProfile
                             )
 
-                            makeChangeFileValueRequest(resIriStr = resIriStr, apiRequest = None, multipartConversionRequest = Some(sipiConvertPathRequest), userProfile = userProfile)
-                        }
+                        } yield makeChangeFileValueRequest(resIriStr = resIriStr, apiRequest = None, multipartConversionRequest = Some(sipiConvertPathRequest), userProfile = userProfile)
 
                         RouteUtilV1.runJsonRouteWithFuture(
                             requestMessageFuture,
