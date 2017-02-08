@@ -205,8 +205,12 @@ class PermissionsResponderV1 extends ResponderV1 {
 
         /* combines all permissions for each project and removes duplicate permissions inside a project  */
         val result: Future[Map[IRI, Set[PermissionV1]]] = for {
-            allPermission <- allPermissionsFuture
-            result = allPermission.groupBy(_._1).map { case (k, v) =>
+            allPermissions <- allPermissionsFuture
+
+            // remove instances with empty PermissionV1 sets
+            cleanedAllPermissions: Iterable[(IRI, Seq[PermissionV1])] = allPermissions.filter(_._2.nonEmpty)
+
+            result = cleanedAllPermissions.groupBy(_._1).map { case (k, v) =>
 
                 /* Combine permission sequences */
                 val combined = v.foldLeft(Seq.empty[PermissionV1]) { (acc, seq) =>
@@ -230,12 +234,12 @@ class PermissionsResponderV1 extends ResponderV1 {
     def userDefaultObjectAccessPermissionsGetV1(groupsPerProject: Map[IRI, List[IRI]]): Future[Map[IRI, Set[PermissionV1]]] = {
 
         /* Get all default object access permissions per project, combining them from all groups */
-        val ppf = for {
+        val ppf: Iterable[Future[(IRI, Seq[PermissionV1])]] = for {
             (projectIri, groups) <- groupsPerProject
             groupIri <- groups
             _ = log.debug(s"userDefaultObjectAccessPermissionsGetV1 - projectIri: $projectIri, groupIri: $groupIri")
 
-            projectPermission: (IRI, Seq[PermissionV1]) <- defaultObjectAccessPermissionGetV1(projectIRI = projectIri, groupIRI = Some(groupIri), resourceClassIRI = None, propertyIRI = None).map {
+            projectPermission: Future[(IRI, Seq[PermissionV1])] = defaultObjectAccessPermissionGetV1(projectIRI = projectIri, groupIRI = Some(groupIri), resourceClassIRI = None, propertyIRI = None).map {
                 case Some(doap: DefaultObjectAccessPermissionV1) => (projectIri, doap.hasPermissions.toSeq)
                 case None => (projectIri, Seq.empty[PermissionV1])
             }
@@ -246,10 +250,10 @@ class PermissionsResponderV1 extends ResponderV1 {
 
         /* combines all permissions for each project and removes duplicate permissions inside a project  */
         val result: Future[Map[IRI, Set[PermissionV1]]] = for {
-            allPermissions <- allPermissionsFuture
+            allPermissions: Iterable[(IRI, Seq[PermissionV1])] <- allPermissionsFuture
 
             // remove instances with empty PermissionV1 sets
-            cleanedAllPermissions = allPermissions.filter(_._2.nonEmpty)
+            cleanedAllPermissions: Iterable[(IRI, Seq[PermissionV1])] = allPermissions.filter(_._2.nonEmpty)
 
             result = cleanedAllPermissions.groupBy(_._1).map { case (k, v) =>
 
