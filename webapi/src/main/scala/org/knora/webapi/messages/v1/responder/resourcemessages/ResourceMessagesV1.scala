@@ -23,6 +23,7 @@ package org.knora.webapi.messages.v1.responder.resourcemessages
 import java.util.UUID
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
+import com.fasterxml.jackson.annotation.JsonValue
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.sipimessages.SipiResponderConversionRequestV1
 import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1, UserV1JsonProtocol}
@@ -173,7 +174,7 @@ case class MultipleResourceCreateRequestV1(resourcesToCreate: Seq[OneOfMultipleR
   * @param createdResources created resources
 
   */
-case class MultipleResourceCreateResponseV1(createdResources: Seq[ResourceCreateResponseV1]) extends KnoraResponseV1 {
+case class MultipleResourceCreateResponseV1(createdResources: Seq[JsValue]) extends KnoraResponseV1 {
 
     def toJsValue = ResourceV1JsonProtocol.multipleResourceCreateResponseV1Format.write(this)
 

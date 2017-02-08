@@ -550,7 +550,6 @@ class ValuesResponderV1 extends ResponderV1 {
                             userProfile = verifyRequest.userProfile
                         )
                 }
-
                 propertyIri -> Future.sequence(valueVerificationResponsesForProperty)
         }
 
@@ -1722,6 +1721,7 @@ class ValuesResponderV1 extends ResponderV1 {
                         searchValueIri = unverifiedValue.newValueIri,
                         userProfile = userProfile
                     )
+
                 } yield CreateValueResponseV1(
                     value = verifyUpdateResult.value,
                     comment = verifyUpdateResult.comment,
@@ -1757,11 +1757,13 @@ class ValuesResponderV1 extends ResponderV1 {
                 ).toString()
             }
 
-            // _ = println(sparqlQuery)
+
 
             updateVerificationResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
+
             rows = updateVerificationResponse.results.bindings
             result = sparqlQueryResults2ValueQueryResult(valueIri = searchValueIri, rows = rows, userProfile = userProfile).getOrElse(throw UpdateNotPerformedException(s"The update to value $searchValueIri for property $propertyIri in resource $resourceIri was not performed. Please report this as a possible bug."))
+
         } yield result
     }
 

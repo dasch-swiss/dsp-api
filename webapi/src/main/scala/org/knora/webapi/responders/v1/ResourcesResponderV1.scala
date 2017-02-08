@@ -38,11 +38,11 @@ import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.v1.GroupedProps._
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util._
-
+import spray.json._
 import scala.concurrent.Future
 
 
-case class ResourceToCreate(resourceIri:IRI,  generateSparqlForValuesResponse:GenerateSparqlToCreateMultipleValuesResponseV1, resourceClassIri:IRI, resourceIndex:Int
+case class ResourceToCreate(resourceIri:IRI,  permissions:Option[String], generateSparqlForValuesResponse:GenerateSparqlToCreateMultipleValuesResponseV1, resourceClassIri:IRI, resourceIndex:Int
                             , resourceLabel:String)
 
 /**
@@ -1297,34 +1297,32 @@ class ResourcesResponderV1 extends ResponderV1 {
 
                                     generateSparqlForValuesResponse <- createNewSparqlStatement(projectIri, resourceIri, resRequest.resourceTypeIri, index, resRequest.values, None, userProfile, apiRequestID)
 
-                            } yield  ResourceToCreate(resourceIri, generateSparqlForValuesResponse , resRequest.resourceTypeIri, index,  resRequest.label)
+                            } yield  ResourceToCreate(resourceIri,  defaultObjectAccessPermissions, generateSparqlForValuesResponse , resRequest.resourceTypeIri, index,  resRequest.label)
 
                     }
 
 
                     resources: Seq[ResourceToCreate] <- Future.sequence(sequenceOfFutures)
                     resourceInfo: Map[String, IRI] = resources.map(resInfo => resInfo.resourceLabel -> resInfo.resourceIri  ).toMap
-                    createMultipleResourcesSparql: String = createNewSparql(resources ,projectIri,  None, namedGraph, userIri)
+                    createMultipleResourcesSparql: String = createNewSparql(resources ,projectIri, namedGraph, userIri)
 
                     // Do the update.
                     createResourceResponse <- (storeManager ? SparqlUpdateRequest(createMultipleResourcesSparql)).mapTo[SparqlUpdateResponse]
 
-
-//                    pw = new PrintWriter(new File("hello.txt" ))
-//                    _=pw.write(createMultipleResourcesSparql)
-//                    _=pw.close
                     apiResponses: Seq[Future[ResourceCreateResponseV1]] = resources.map {
                         case res =>
 
                         for {
 
                             apiResponse <- verifyResourceCreated(res.resourceIri, userIri, createMultipleResourcesSparql, res.generateSparqlForValuesResponse, userProfile)
-                            _=println(apiResponse)
+
                         } yield apiResponse
                     }
                     responses: Seq[ResourceCreateResponseV1] <- Future.sequence(apiResponses)
-
-            } yield MultipleResourceCreateResponseV1(responses)
+                    responses_js: Seq[JsValue] = responses.map {
+                        res => res.toJsValue
+                    }
+            } yield MultipleResourceCreateResponseV1(responses_js)
 
 
     }
@@ -1438,7 +1436,7 @@ class ResourcesResponderV1 extends ResponderV1 {
         } yield generateSparqlForValuesResponse
     }
 
-    def createNewSparql(resourcesToCreate: Seq[ResourceToCreate], projectIri:IRI, permissions:Option[String], namedGraph:IRI, ownerIri:IRI): String = {
+    def createNewSparql(resourcesToCreate: Seq[ResourceToCreate], projectIri:IRI, namedGraph:IRI, ownerIri:IRI): String = {
 
         // Generate SPARQL for creating the resource, and include the SPARQL for creating the values.
                 val createNewResourceSparql = queries.sparql.v1.txt.createNewResource(
@@ -1446,8 +1444,7 @@ class ResourcesResponderV1 extends ResponderV1 {
                   triplestore = settings.triplestoreType,
                     resourcesToCreate=resourcesToCreate,
                   projectIri = projectIri,
-                    ownerIri = ownerIri,
-                    maybePermissions = permissions
+                    ownerIri = ownerIri
               ).toString()
         createNewResourceSparql
     }
@@ -1461,21 +1458,17 @@ class ResourcesResponderV1 extends ResponderV1 {
                 triplestore = settings.triplestoreType,
                 resourceIri = resourceIri
             ).toString())
-//            _=println(createdResourcesSparql)
+
             createdResourceResponse <- (storeManager ? SparqlSelectRequest(createdResourcesSparql)).mapTo[SparqlSelectResponse]
 
             _ = if (createdResourceResponse.results.bindings.isEmpty) {
                 log.error(s"Attempted a SPARQL update to create a new resource, but it inserted no rows:\n\n$createNewResourceSparql")
                 throw UpdateNotPerformedException(s"Resource $resourceIri was not created. Please report this as a possible bug.")
             }
-//            else {
-//
-//                println("resource created =>", resourceIri)
-//                println(createdResourceResponse)
-//            }
+
 
             // Verify that all the requested values were created.
-            _=println( generateSparqlForValuesResponse.unverifiedValues)
+
             verifyCreateValuesRequest = VerifyMultipleValueCreationRequestV1(
                 resourceIri = resourceIri,
                 unverifiedValues = generateSparqlForValuesResponse.unverifiedValues,
@@ -1531,8 +1524,8 @@ class ResourcesResponderV1 extends ResponderV1 {
             fileValuesV1 <- CheckResource(resourceClassIri, propertyIris, userProfile, values, sipiConversionRequest)
             generateSparqlForValuesResponse <- createNewSparqlStatement(projectIri, resourceIri, resourceClassIri,
                                                     resourceIndex=0, values, fileValuesV1, userProfile, apiRequestID)
-            resourcesToCreate = Seq[ResourceToCreate] (ResourceToCreate(resourceIri, generateSparqlForValuesResponse,resourceClassIri, 0, label ))
-            createNewResourceSparql = createNewSparql( resourcesToCreate, projectIri, permissions, namedGraph, ownerIri)
+            resourcesToCreate = Seq[ResourceToCreate] (ResourceToCreate(resourceIri, permissions, generateSparqlForValuesResponse,resourceClassIri, 0, label ))
+            createNewResourceSparql = createNewSparql( resourcesToCreate, projectIri, namedGraph, ownerIri)
             // Do the update.
             createResourceResponse <- (storeManager ? SparqlUpdateRequest(createNewResourceSparql)).mapTo[SparqlUpdateResponse]
 

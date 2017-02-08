@@ -28,8 +28,7 @@
   triplestore: String,
   resourcesToCreate: Seq[ResourceToCreate],
   projectIri: IRI,
-  ownerIri: IRI,
-  maybePermissions: Option[String]
+  ownerIri: IRI
   )
 
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -48,7 +47,7 @@ INSERT {
             rdfs:label ?label@res.resourceIndex ;
 
             @* Insert permissions. *@
-            @maybePermissions match {
+            @res.permissions match {
                 case Some(permissions) => {
 
                     knora-base:hasPermissions "@permissions" ;

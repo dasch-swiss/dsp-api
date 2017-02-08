@@ -78,6 +78,9 @@ class ResourcesV1R2RSpec extends R2RSpec {
     private val anythingUser = SharedAdminTestData.anythingUser1
     private val anythingUserEmail = anythingUser.userData.email.get
 
+    private val biblioUser = SharedAdminTestData.biblioUser
+    private val biblioUserEmail = biblioUser.userData.email.get
+
     private val password = "test"
 
     implicit private val timeout: Timeout = settings.defaultRestoreTimeout
@@ -1404,7 +1407,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    |		<beol:hasFamilyName>Bar</beol:hasFamilyName>
                    |	</beol:Person>
                    |</xml>""".stripMargin
-            Post("/v1/resources/xml", HttpEntity(ContentTypes.`text/xml(UTF-8)`, params)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPath ~> check {
+            Post("/v1/resources/xml", HttpEntity(ContentTypes.`text/xml(UTF-8)`, params)) ~> addCredentials(BasicHttpCredentials(biblioUserEmail, password)) ~> resourcesPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)
 //                def check_richtext(string: String): CreateValueV1WithComment = {
 //                    val richtext_value = CreateRichtextV1(string, None, None)
@@ -1419,7 +1422,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
                 val responseExpected = MultipleResourceCreateRequestV1( resourcesToCreate,
                     "http://data.knora.org/projects/DczxPs-sR6aZN91qV92ZmQ",
                     apiRequestID = UUID.fromString("26106dcd-865a-4c81-b0e8-914e46939e70"),
-                    userProfile = UserProfileV1(UserDataV1("en"))
+                    userProfile = biblioUser
                     )
 
                 responseAs[String] shouldEqual "http://www.knora.org/ontology/beol#Person"
