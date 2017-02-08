@@ -96,7 +96,8 @@ class ResourcesV1R2RSpec extends R2RSpec {
         RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/images"),
         RdfDataObject(path = "_test_data/ontologies/anything-onto.ttl", name = "http://www.knora.org/ontology/anything"),
         RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/anything"),
-        RdfDataObject(path = "_test_data/ontologies/beol-onto.ttl", name = "http://www.knora.org/ontology/beol")
+        RdfDataObject(path = "_test_data/ontologies/beol-onto.ttl", name = "http://www.knora.org/ontology/beol"),
+        RdfDataObject(path = "_test_data/ontologies/biblio-onto.ttl", name = "http://www.knora.org/ontology/biblio")
     )
 
     "Load test data" in {
@@ -1395,28 +1396,26 @@ class ResourcesV1R2RSpec extends R2RSpec {
 
             val params =
                 s"""<xml xmlns:beol="http://www.knora.org/ontology/beol"
-                   |    xmlns:Person="http://www.knora.org/ontology/beol/Person"
-                   |    xmlns:Journal="http://www.knora.org/ontology/biblio/Journal"
                    |    xmlns:biblio="http://www.knora.org/ontology/biblio">
                    |    <beol:Person id="abel">
                    |		<beol:hasGivenName>Niels Henrik</beol:hasGivenName>
                    |		<beol:hasFamilyName>Abel</beol:hasFamilyName>
                    |	</beol:Person>
-                   |    <beol:Person id="fooBar">
-                   |		<beol:hasGivenName>foo</beol:hasGivenName>
-                   |		<beol:hasFamilyName>Bar</beol:hasFamilyName>
-                   |	</beol:Person>
+                    | <beol:Person id="perron">
+                    |		<beol:hasGivenName>Oskar</beol:hasGivenName>
+                    |		<beol:hasFamilyName>Perron</beol:hasFamilyName>
+                    |	</beol:Person>
+                    | <biblio:Journal id="math_intelligencer_">
+                    |		<biblio:hasName> Math. Intelligencer </biblio:hasName>
+                    |	</biblio:Journal>
+                    | <biblio:Publisher id="windet_londini">
+                    |		<biblio:hasName> Windet</biblio:hasName>
+                    |		<biblio:publisherHasLocation> Londini</biblio:publisherHasLocation>
+                    |	</biblio:Publisher>
                    |</xml>""".stripMargin
             Post("/v1/resources/xml", HttpEntity(ContentTypes.`text/xml(UTF-8)`, params)) ~> addCredentials(BasicHttpCredentials(biblioUserEmail, password)) ~> resourcesPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)
-//                def check_richtext(string: String): CreateValueV1WithComment = {
-//                    val richtext_value = CreateRichtextV1(string, None, None)
-//                    val richtextComponents: RichtextComponents = InputValidation.handleRichtext(richtext_value)
-//                    CreateValueV1WithComment(TextValueV1(InputValidation.toSparqlEncodedString(richtext_value.utf8str, () => throw BadRequestException(s"Invalid text: '${richtext_value.utf8str}'")),
-//                    textattr = richtextComponents.textattr,
-//                    resource_reference = richtextComponents.resource_reference),
-//                    None)
-//                }
+
 
                 val resourcesToCreate =Seq.empty[OneOfMultipleResourceCreateRequestV1]
                 val responseExpected = MultipleResourceCreateRequestV1( resourcesToCreate,
@@ -1425,7 +1424,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
                     userProfile = biblioUser
                     )
 
-                responseAs[String] shouldEqual "http://www.knora.org/ontology/beol#Person"
+                responseAs[String] should include("createdResources")
                 }
             }
     }
