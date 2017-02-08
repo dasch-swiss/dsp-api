@@ -1211,7 +1211,7 @@ is always ``kb:SystemUser`` (see :ref:`knora-base-users-and-groups`).
 Internal Links in a TextValue
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Internal links in a ``TextValue`` can be using the data type standoff class ``StandoffInternalReferenceTag`` or a subclass of it.
+Internal links in a ``TextValue`` can be represented using the data type standoff class ``StandoffInternalReferenceTag`` or a subclass of it.
 It has the following property:
 
 ``standoffTagHasInternalReference`` (1)
