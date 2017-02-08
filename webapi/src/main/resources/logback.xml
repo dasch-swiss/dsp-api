@@ -54,7 +54,7 @@
     <logger name="org.knora.webapi.responders.v1.ValuesResponderV1" level="INFO"/>
     <logger name="org.knora.webapi.responders.v1.StoreResponderV1" level="INFO"/>
     <logger name="org.knora.webapi.viewhandlers.ResourceHtmlView" level="INFO"/>
-    <logger name="org.knora.webapi.e2e.v1.ResourceValuePermissionsV1E2ESpec" level="DEBUG"/>
+    <logger name="org.knora.webapi.*Spec" level="DEBUG"/>
 
 
     <root level="INFO">

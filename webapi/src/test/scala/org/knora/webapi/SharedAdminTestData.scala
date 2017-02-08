@@ -87,7 +87,13 @@ object SharedAdminTestData {
         sessionId = None,
         permissionData = PermissionDataV1(
             groupsPerProject = Map(
-                SYSTEM_PROJECT_IRI -> List(s"${OntologyConstants.KnoraBase.SystemAdmin}")
+                BIBLIO_PROJECT_IRI -> List(s"${OntologyConstants.KnoraBase.KnownUser}"),
+                BEOL_PROJECT_IRI -> List(s"${OntologyConstants.KnoraBase.KnownUser}"),
+                INCUNABULA_PROJECT_IRI -> List(s"${OntologyConstants.KnoraBase.KnownUser}"),
+                ANYTHING_PROJECT_IRI -> List(s"${OntologyConstants.KnoraBase.KnownUser}"),
+                SYSTEM_PROJECT_IRI -> List(s"${OntologyConstants.KnoraBase.KnownUser}", s"${OntologyConstants.KnoraBase.SystemAdmin}"),
+                DOKUBIB_PROJECT_IRI -> List(s"${OntologyConstants.KnoraBase.KnownUser}"),
+                IMAGES_PROJECT_IRI -> List(s"${OntologyConstants.KnoraBase.KnownUser}")
             )
         )
     )
@@ -108,7 +114,24 @@ object SharedAdminTestData {
         groups = Vector.empty[IRI],
         projects = Vector.empty[IRI],
         sessionId = None,
-        permissionData = PermissionDataV1()
+        permissionData = PermissionDataV1(
+            groupsPerProject = Map(
+                BIBLIO_PROJECT_IRI -> List(s"${OntologyConstants.KnoraBase.KnownUser}"),
+                BEOL_PROJECT_IRI -> List(s"${OntologyConstants.KnoraBase.KnownUser}"),
+                INCUNABULA_PROJECT_IRI -> List(s"${OntologyConstants.KnoraBase.KnownUser}"),
+                ANYTHING_PROJECT_IRI -> List(s"${OntologyConstants.KnoraBase.KnownUser}"),
+                SYSTEM_PROJECT_IRI -> List(s"${OntologyConstants.KnoraBase.KnownUser}"),
+                DOKUBIB_PROJECT_IRI -> List(s"${OntologyConstants.KnoraBase.KnownUser}"),
+                IMAGES_PROJECT_IRI -> List(s"${OntologyConstants.KnoraBase.KnownUser}")
+            ),
+            defaultObjectAccessPermissionsPerProject =  Map(
+                IMAGES_PROJECT_IRI -> Set(
+                    PermissionV1.ChangeRightsPermission(OntologyConstants.KnoraBase.Creator),
+                    PermissionV1.ViewPermission(OntologyConstants.KnoraBase.KnownUser),
+                    PermissionV1.ModifyPermission(OntologyConstants.KnoraBase.ProjectMember)
+                )
+            )
+        )
     )
 
     /* represents the user profile of 'inactive user' as found in admin-data.ttl */
@@ -239,7 +262,7 @@ object SharedAdminTestData {
             groupsPerProject = Map(
                 BIBLIO_PROJECT_IRI -> List(s"${OntologyConstants.KnoraBase.KnownUser}"),
                 BEOL_PROJECT_IRI -> List(s"${OntologyConstants.KnoraBase.KnownUser}"),
-                INCUNABULA_PROJECT_IRI -> List(s"${OntologyConstants.KnoraBase.KnownUser}", s"${OntologyConstants.KnoraBase.ProjectMember}", s"${OntologyConstants.KnoraBase.ProjectAdmin}"),
+                INCUNABULA_PROJECT_IRI -> List(s"${OntologyConstants.KnoraBase.KnownUser}"),
                 ANYTHING_PROJECT_IRI -> List(s"${OntologyConstants.KnoraBase.KnownUser}"),
                 SYSTEM_PROJECT_IRI -> List(s"${OntologyConstants.KnoraBase.KnownUser}"),
                 DOKUBIB_PROJECT_IRI -> List(s"${OntologyConstants.KnoraBase.KnownUser}"),
@@ -522,7 +545,13 @@ object SharedAdminTestData {
         sessionId = None,
         permissionData = PermissionDataV1(
             groupsPerProject = Map(
-                ANYTHING_PROJECT_IRI -> List(s"${OntologyConstants.KnoraBase.ProjectMember}")
+                BIBLIO_PROJECT_IRI -> List(s"${OntologyConstants.KnoraBase.KnownUser}"),
+                BEOL_PROJECT_IRI -> List(s"${OntologyConstants.KnoraBase.KnownUser}"),
+                INCUNABULA_PROJECT_IRI -> List(s"${OntologyConstants.KnoraBase.KnownUser}"),
+                ANYTHING_PROJECT_IRI -> List(s"${OntologyConstants.KnoraBase.KnownUser}", s"${OntologyConstants.KnoraBase.ProjectMember}"),
+                SYSTEM_PROJECT_IRI -> List(s"${OntologyConstants.KnoraBase.KnownUser}"),
+                DOKUBIB_PROJECT_IRI -> List(s"${OntologyConstants.KnoraBase.KnownUser}"),
+                IMAGES_PROJECT_IRI -> List(s"${OntologyConstants.KnoraBase.KnownUser}")
             ),
             administrativePermissionsPerProject = Map(
                 ANYTHING_PROJECT_IRI -> Set(
@@ -532,6 +561,11 @@ object SharedAdminTestData {
             defaultObjectAccessPermissionsPerProject =  Map(
                 ANYTHING_PROJECT_IRI -> Set(
                     PermissionV1.RestrictedViewPermission(OntologyConstants.KnoraBase.UnknownUser),
+                    PermissionV1.ChangeRightsPermission(OntologyConstants.KnoraBase.Creator),
+                    PermissionV1.ViewPermission(OntologyConstants.KnoraBase.KnownUser),
+                    PermissionV1.ModifyPermission(OntologyConstants.KnoraBase.ProjectMember)
+                ),
+                IMAGES_PROJECT_IRI -> Set(
                     PermissionV1.ChangeRightsPermission(OntologyConstants.KnoraBase.Creator),
                     PermissionV1.ViewPermission(OntologyConstants.KnoraBase.KnownUser),
                     PermissionV1.ModifyPermission(OntologyConstants.KnoraBase.ProjectMember)
