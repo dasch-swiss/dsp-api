@@ -755,15 +755,13 @@ Example User Information stored in admin graph:
 ::
 
   <http://data.knora.org/users/91e19f1e01> rdf:type knora-base:User ;
-       knora-base:userid "root" ;
-       foaf:familyName "Admin" ;
-       foaf:givenName "Administrator" ;
-       knora-base:password "a94a8fe5ccb19ba61c4c0873d391e987982fbbd3" ;
-       knora-base:passwordSalt "" ;
-       knora-base:email "test@test.ch" ;
+       knora-base:email "test@test.ch"^^xsd:string ;
+       knora-base:givenName "Administrator"^^xsd:string ;
+       knora-base:familyName "Admin"^^xsd:string ;
+       knora-base:password "$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"^^xsd:string ;
        knora-base:phone "123456" ;
-       knora-base:preferredLanguage "de" ;
-       knora-base:isActiveUser "true"^^xsd:boolean ;
+       knora-base:preferredLanguage "de"^^xsd:string ;
+       knora-base:status "true"^^xsd:boolean ;
        knora-base:isInProject <http://data.knora.org/projects/[UUID]> ;
        knora-base:isInSystemAdminGroup "true"^^xsd:boolean ;
        knora-base:isInProjectAdminGroup <http://data.knora.org/projects/[UUID]> ;
@@ -821,25 +819,6 @@ Example Project Information stored in admin named graph:
         knora-base:projectDataGraph "http://www.knora.org/data/images" ;
         knora-base:isActiveProject "true"^^xsd:boolean ;
         knora-base:hasSelfJoinEnabled "false"^^xsd:boolean .
-
-
-   <http://data.knora.org/groups/[UUID]>
-        rdf:type knora-base:UserGroup ;
-        knora-base:groupName "ProjectAdmin" ;
-        knora-base:groupDescription "Default Project Admin Group" ;
-        knora-base:belongsToProject <http://data.knora.org/projects/[UUID]> ;
-        knora-base:hasProjectAllAdminPermission "true"^^xsd:boolean ;
-        knora-base:hasProjectResourceCreateAllPermission "true"^^xsd:boolean .
-
-
-   <http://data.knora.org/groups/[UUID]>
-        rdf:type knora-base:UserGroup ;
-        knora-base:groupName "ProjectMember" ;
-        knora-base:groupDescription "Default Project Member Group" ;
-        knora-base:belongsToProject <http://data.knora.org/projects/[UUID]> ;
-        knora-base:hasProjectResourceCreateAllPermission "true"^^xsd:boolean ;
-        knora-base:hasDefaultChangeRightsPermission knora-base:Creator ;
-        knora-base:hasDefaultViewPermission knora-base:KnownUser .
 
 
 Groups Endpoint
@@ -902,6 +881,7 @@ Example Group Information stored in admin named graph:
         knora-base:groupName "Name of the group" ;
         knora-base:groupDescription "A description of the group" ;
         knora-base:belongsToProject <http://data.knora.org/projects/[UUID]> ;
+        knora-base:status "true"^^xsd:boolean ;
         knora-base:hasSelfJoinEnabled "false"^^xsd:boolean .
 
 
