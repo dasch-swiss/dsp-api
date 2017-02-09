@@ -2080,7 +2080,7 @@
                           ] ,
                           [ rdf:type owl:Restriction ;
                             owl:onProperty :hasPermissions ;
-                            owl:cardinality "1"^^xsd:nonNegativeInteger
+                            owl:maxCardinality "1"^^xsd:nonNegativeInteger
                           ] ,
                           [ rdf:type owl:Restriction ;
                             owl:onProperty :creationDate ;
@@ -2494,7 +2494,7 @@
                        ] ,
                        [ rdf:type owl:Restriction ;
                          owl:onProperty :hasPermissions ;
-                         owl:cardinality "1"^^xsd:nonNegativeInteger
+                         owl:maxCardinality "1"^^xsd:nonNegativeInteger
                        ] ,
                        [ rdf:type owl:Restriction ;
                          owl:onProperty :valueHasOrder ;
