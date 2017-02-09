@@ -20,6 +20,7 @@ import akka.actor.Props
 import akka.actor.Status.Failure
 import akka.testkit.{ImplicitSender, TestActorRef}
 import com.typesafe.config.ConfigFactory
+import org.apache.jena.sparql.function.library.leviathan.log
 import org.knora.webapi.SharedAdminTestData._
 import org.knora.webapi.SharedPermissionsTestData._
 import org.knora.webapi._
@@ -385,6 +386,13 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
                     projectIri = ANYTHING_PROJECT_IRI, propertyIri = "http://www.knora.org/ontology/anything#hasInterval", anythingUser1.permissionData
                 )
                 expectMsg(Some("CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser"))
+            }
+
+            "return the default object access permissions 'string' for the 'anything:Thing' resource class for the root user (system admin and not member of project)" in {
+                actorUnderTest ! DefaultObjectAccessPermissionsStringForResourceClassGetV1(
+                    projectIri = ANYTHING_PROJECT_IRI, resourceClassIri = "http://www.knora.org/ontology/anything#Thing", rootUser.permissionData
+                )
+                expectMsg(Some("CR knora-base:ProjectAdmin|M knora-base:ProjectMember"))
             }
 
         }

@@ -254,9 +254,9 @@ object PermissionUtilV1 {
                     case None => Vector.empty[IRI]
                 }
 
-                // Make the complete list of the user's groups: the user's built-in (e.g., ProjectAdmin, ProjectMember,
-                // KnownUser) and non-built-in groups, possibly creator, and possibly SystemAdmin.
-                otherGroups ++ creatorOption ++ systemAdminOption
+                // Make the complete list of the user's groups: thne KnownUser, the user's built-in (e.g., ProjectAdmin,
+                // ProjectMember, and non-built-in groups, possibly creator, and possibly SystemAdmin.
+                Vector(OntologyConstants.KnoraBase.KnownUser) ++ otherGroups ++ creatorOption ++ systemAdminOption
             case None =>
                 // The user is an unknown user; put them in the "unknownUser" built-in group.
                 Vector(OntologyConstants.KnoraBase.UnknownUser)

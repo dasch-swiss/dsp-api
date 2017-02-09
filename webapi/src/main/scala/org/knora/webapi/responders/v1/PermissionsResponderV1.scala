@@ -17,6 +17,7 @@
 package org.knora.webapi.responders.v1
 
 import akka.pattern._
+import org.apache.jena.sparql.function.library.leviathan.log
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.groupmessages.{GroupInfoByIRIGetRequest, GroupInfoResponseV1}
 import org.knora.webapi.messages.v1.responder.permissionmessages.{AdministrativePermissionForProjectGroupGetResponseV1, AdministrativePermissionV1, DefaultObjectAccessPermissionGetResponseV1, DefaultObjectAccessPermissionV1, PermissionType, _}
@@ -101,6 +102,7 @@ class PermissionsResponderV1 extends ResponderV1 {
 
             /* materialize implicit membership in the 'http://www.knora.org/ontology/knora-base#KnownUser' group for each project defined in the system */
             // get all projects
+            /*
             allProjectInfos: Seq[ProjectInfoV1] <- (responderManager ? ProjectsGetV1(None)).mapTo[Seq[ProjectInfoV1]]
             allProjectIris: Seq[IRI] = allProjectInfos.map(pi => pi.id)
 
@@ -112,6 +114,7 @@ class PermissionsResponderV1 extends ResponderV1 {
             } else {
                 List.empty[(IRI, IRI)]
             }
+            */
 
             /* materialize implicit membership in 'http://www.knora.org/ontology/knora-base#ProjectMember' group for each project */
             projectMembers: List[(IRI, IRI)] = if (projectIris.nonEmpty) {
@@ -145,11 +148,9 @@ class PermissionsResponderV1 extends ResponderV1 {
             }
             //_ = log.debug(s"permissionsProfileGetV1 - systemAdmin: ${MessageUtil.toSource(systemAdmin)}")
 
-
-            //FixMe: Maybe we need to add KnownUser group for all other projects. This would solve issue #408.
-
             /* combine explicit groups with materialized implicit groups */
-            allGroups = groups ::: knownUsers ::: projectMembers ::: projectAdmins ::: systemAdmin
+            /* here we don't add the KnownUser group, as this would inflate the whole thing. we inject the relevant information in defaultObjectAccessPermissionsStringForEntityGetV1 */
+            allGroups = groups ::: projectMembers ::: projectAdmins ::: systemAdmin
             groupsPerProject = allGroups.groupBy(_._1).map { case (k,v) => (k,v.map(_._2))}
             _= log.debug(s"permissionsProfileGetV1 - groupsPerProject: ${MessageUtil.toSource(groupsPerProject)}")
 
@@ -766,9 +767,18 @@ class PermissionsResponderV1 extends ResponderV1 {
             _ = if (resourceClassIRI.isEmpty && propertyIRI.isEmpty) throw BadRequestException("Either resourceClassIri or propertyTypeIri need to be supplied")
             _ = if (resourceClassIRI.isDefined && propertyIRI.isDefined) throw BadRequestException("Not allowed to supply both resourceClassIri and propertyTypeIri")
 
+            /* Get the default object access permissions for the knora-base:KnownUser group */
+            defaultPermissionsOnKnownUserOption: Option[DefaultObjectAccessPermissionV1] <- defaultObjectAccessPermissionGetV1(projectIRI = projectIRI, groupIRI = Some(OntologyConstants.KnoraBase.KnownUser), resourceClassIRI = None, propertyIRI = None)
+
+            defaultPermissionsOnKnownUser: Set[PermissionV1] = defaultPermissionsOnKnownUserOption match {
+                case Some(doap) => doap.hasPermissions
+                case None => Set.empty[PermissionV1]
+            }
+            _ = log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnKnownUser: $defaultPermissionsOnKnownUser")
+
             /* Get the user's max default object access permissions from the user's permission data inside the user's profile */
             defaultPermissionsOnProjectGroups: Set[PermissionV1] = permissionData.defaultObjectAccessPermissionsPerProject.getOrElse(projectIRI, Set.empty[PermissionV1])
-            //_ = log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnProjectGroups: $defaultPermissionsOnProjectGroups")
+            _ = log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnProjectGroups: $defaultPermissionsOnProjectGroups")
 
             /* Get the default object access permissions defined on the resource class for the current project */
             defaultPermissionsOnProjectEntityOption: Option[DefaultObjectAccessPermissionV1] <- defaultObjectAccessPermissionGetV1(projectIRI = projectIRI, groupIRI = None, resourceClassIRI = resourceClassIRI, propertyIRI = propertyIRI)
@@ -777,7 +787,7 @@ class PermissionsResponderV1 extends ResponderV1 {
                 case Some(doap) => doap.hasPermissions
                 case None => Set.empty[PermissionV1]
             }
-            //_ = log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnProjectEntity: $defaultPermissionsOnProjectEntity")
+            _ = log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnProjectEntity: $defaultPermissionsOnProjectEntity")
 
             // Since we also have default object access permissions defined in the SystemProject,
             // we need to check there too, but only in the case that we didn't find anything
@@ -793,10 +803,22 @@ class PermissionsResponderV1 extends ResponderV1 {
                 case Some(doap) => doap.hasPermissions
                 case None => Set.empty[PermissionV1]
             }
-            //_ = log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnSystemEntity: $defaultPermissionsOnSystemEntity")
+            _ = log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnSystemEntity: $defaultPermissionsOnSystemEntity")
 
-            /* Combine all three together and return most permissive */
-            allDefaultPermissions: Seq[PermissionV1] = defaultPermissionsOnProjectGroups.toSeq ++ defaultPermissionsOnProjectEntity.toSeq ++ defaultPermissionsOnSystemEntity.toSeq
+            /* Get the default permissions defined for the SystemAdmin group */
+            defaultPermissionsForSystemAdminOption: Option[DefaultObjectAccessPermissionV1] <- defaultObjectAccessPermissionGetV1(projectIRI = OntologyConstants.KnoraBase.SystemProject, groupIRI = Some(OntologyConstants.KnoraBase.SystemAdmin), resourceClassIRI = None, propertyIRI = None)
+            defaultPermissionsForSystemAdmin = if (permissionData.isSystemAdmin) {
+                defaultPermissionsForSystemAdminOption match {
+                    case Some(doap) => doap.hasPermissions
+                    case None => Set.empty[PermissionV1]
+                }
+            } else {
+                Set.empty[PermissionV1]
+            }
+            _ = log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsForSystemAdmin: $defaultPermissionsForSystemAdmin")
+
+            /* Combine all five together and return most permissive */
+            allDefaultPermissions: Seq[PermissionV1] = defaultPermissionsOnKnownUser.toSeq ++ defaultPermissionsOnProjectGroups.toSeq ++ defaultPermissionsOnProjectEntity.toSeq ++ defaultPermissionsOnSystemEntity.toSeq ++ defaultPermissionsForSystemAdmin.toSeq
             //_ = log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - allDefaultPermissions: $allDefaultPermissions")
 
             deduplicatedDefaultPermissions = PermissionUtilV1.removeDuplicatePermissions(allDefaultPermissions)
