@@ -67,8 +67,8 @@ A user becomes implicitly a member of such a group by satisfying certain conditi
   ``knora-base:isInProjectAdminGroup`` property, which points to the project in question.
 
 **knora-base:SystemAdmin**:
-  The ``root`` user is by default member of this group. Membership is received by setting the property
-  ``knora-base:isInSystemAdminGroup`` to ``true`` on a ``knora-base:User``.
+  Membership is received by setting the property ``knora-base:isInSystemAdminGroup`` to ``true`` on a
+  ``knora-base:User``.
 
 To use these build-in groups as values for properties (Object Access and Default Permissions), the IRI is constructed by
 appending the name of the built-in group to ``knora-base``, e.g., ``knora-base:KnownUser`` where ``knora-base``
@@ -260,6 +260,9 @@ If the user creating a new object is a member of more than one group with such a
 default object access permission are defined on resource classes and/or properties, then the final set of default object
 access permissions that will result is **additive** and **most permissive**.
 
+The default object access permissions defined on the **SystemAdmin** group are additionally used for system admin users,
+and are added to the calculated final set of permissions.
+
 Example default object access permission instance:
 
 ::
@@ -322,9 +325,8 @@ The *CLOSED* template, defined the following permissions:
 
   - The ``knora-base:ProjectMember`` group:
      - receives explicitly *ProjectResourceCreateAllPermission*.
-     - receives explicitly *CR* for the *knora-base:Creator* and *knora-base:ProjectAdmin* group.
+     - receives explicitly *CR* for the *knora-base:ProjectAdmin* group.
      - receives explicitly *M* for the *ProjectMember* group.
-     - receives explicitly *V* for the *knora-base:KnownUser* group.
 
 
 Default Permissions Matrix for new Projects
