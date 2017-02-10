@@ -79,9 +79,11 @@ lazy val webapi = (project in file(".")).
             mainClass in (Compile, run) := Some("org.knora.webapi.Main"),
             fork in Test := true,
             javaOptions in Test ++= javaTestOptions,
-            parallelExecution in Test := false
+            parallelExecution in Test := false,
+            // enable publishing the jar produced by `sbt it:package`
+            publishArtifact in (IntegrationTest, packageBin) := true
         ).
-        settings( // deployment settings
+        settings( // enable deployment staging with `sbt stage`
           mappings in Universal ++= {
             // copy the scripts folder
             directory("scripts") ++
