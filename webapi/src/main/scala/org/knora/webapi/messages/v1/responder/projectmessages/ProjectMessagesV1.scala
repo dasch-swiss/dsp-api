@@ -74,14 +74,16 @@ sealed trait ProjectsResponderRequestV1 extends KnoraRequestV1
 
 // Requests
 /**
-  * Get all information about all projects in form of [[ProjectsResponseV1]]
+  * Get all information about all projects in form of [[ProjectsResponseV1]]. The ProjectsGetRequestV1 returns either
+  * something or a NotFound exception if there are no projects found. Administration permission checking is performed.
   *
   * @param userProfile the profile of the user making the request.
   */
 case class ProjectsGetRequestV1(userProfile: Option[UserProfileV1]) extends ProjectsResponderRequestV1
 
 /**
-  * Get all information about all projects in form of a sequence of [[ProjectInfoV1]].
+  * Get all information about all projects in form of a sequence of [[ProjectInfoV1]]. Returns an empty sequence if
+  * no projects are found. Administration permission checking is skipped.
   *
   * @param userProfile the profile of the user making the request.
   */
