@@ -63,7 +63,7 @@ class PermissionsResponderV1 extends ResponderV1 {
         //case DefaultObjectAccessPermissionCreateRequestV1(newDefaultObjectAccessPermissionV1, userProfileV1) => future2Message(sender(), createDefaultObjectAccessPermissionV1(newDefaultObjectAccessPermissionV1, userProfileV1), log)
         //case DefaultObjectAccessPermissionDeleteRequestV1(defaultObjectAccessPermissionIri, userProfileV1) => future2Message(sender(), deleteDefaultObjectAccessPermissionV1(defaultObjectAccessPermissionIri, userProfileV1), log)
         //case TemplatePermissionsCreateRequestV1(projectIri, permissionsTemplate, userProfileV1) => future2Message(sender(), templatePermissionsCreateRequestV1(projectIri, permissionsTemplate, userProfileV1), log)
-        case other => handleUnexpectedMessage(sender(), other, log)
+        case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }
 
 
@@ -191,20 +191,20 @@ class PermissionsResponderV1 extends ResponderV1 {
 
         /* combines all permissions for each project and removes duplicate permissions inside a project  */
         val result: Future[Map[IRI, Set[PermissionV1]]] = for {
-            allPermissions <- allPermissionsFuture
+            allPermissions: Iterable[(IRI, Seq[PermissionV1])] <- allPermissionsFuture
 
             // remove instances with empty PermissionV1 sets
             cleanedAllPermissions: Iterable[(IRI, Seq[PermissionV1])] = allPermissions.filter(_._2.nonEmpty)
 
-            result = cleanedAllPermissions.groupBy(_._1).map { case (k, v) =>
+            result = cleanedAllPermissions.groupBy(_._1).map { case (projectIri: IRI, projectPermissions: Iterable[(IRI, Seq[PermissionV1])]) =>
 
                 /* Combine permission sequences */
-                val combined = v.foldLeft(Seq.empty[PermissionV1]) { (acc, seq) =>
+                val combined = projectPermissions.foldLeft(Seq.empty[PermissionV1]) { (acc, seq) =>
                     acc ++ seq._2
                 }
                 /* Remove possible duplicate permissions */
                 val squashed: Set[PermissionV1] = PermissionUtilV1.removeDuplicatePermissions(combined)
-                (k, squashed)
+                (projectIri, squashed)
             }
         //_ = log.debug(s"userAdministrativePermissionsGetV1 - result: $result")
         } yield result
@@ -241,15 +241,15 @@ class PermissionsResponderV1 extends ResponderV1 {
             // remove instances with empty PermissionV1 sets
             cleanedAllPermissions: Iterable[(IRI, Seq[PermissionV1])] = allPermissions.filter(_._2.nonEmpty)
 
-            result = cleanedAllPermissions.groupBy(_._1).map { case (k, v) =>
+            result = cleanedAllPermissions.groupBy(_._1).map { case (projectIri: IRI, projectPermissions: Iterable[(IRI, Seq[PermissionV1])]) =>
 
                 /* Combine permission sequences */
-                val combined = v.foldLeft(Seq.empty[PermissionV1]) { (acc, seq) =>
+                val combined = projectPermissions.foldLeft(Seq.empty[PermissionV1]) { (acc, seq) =>
                     acc ++ seq._2
                 }
                 /* Remove possible duplicate permissions */
                 val squashed: Set[PermissionV1] = PermissionUtilV1.removeDuplicatePermissions(combined)
-                (k, squashed)
+                (projectIri, squashed)
             }
         _ = log.debug(s"userDefaultObjectAccessPermissionsGetV1 - result: $result")
         } yield result

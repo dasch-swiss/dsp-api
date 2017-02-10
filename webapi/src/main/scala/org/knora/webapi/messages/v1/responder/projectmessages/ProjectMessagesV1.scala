@@ -74,14 +74,14 @@ sealed trait ProjectsResponderRequestV1 extends KnoraRequestV1
 
 // Requests
 /**
-  * Get all information about all projects. The response is in for of [[ProjectsResponseV1]]
+  * Get all information about all projects in form of [[ProjectsResponseV1]]
   *
   * @param userProfile the profile of the user making the request.
   */
 case class ProjectsGetRequestV1(userProfile: Option[UserProfileV1]) extends ProjectsResponderRequestV1
 
 /**
-  * Get all information about all projects. The response is in form of a sequence of [[ProjectInfoV1]].
+  * Get all information about all projects in form of a sequence of [[ProjectInfoV1]].
   *
   * @param userProfile the profile of the user making the request.
   */

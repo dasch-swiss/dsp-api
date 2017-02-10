@@ -217,6 +217,6 @@ class ResponderManagerV1 extends Actor with ActorLogging {
         case usersResponderRequest: UsersResponderRequestV1 => usersRouter forward usersResponderRequest
         case projectsResponderRequest: ProjectsResponderRequestV1 => projectsRouter forward projectsResponderRequest
         case groupsResponderRequest: GroupsResponderRequestV1 => groupsRouter forward groupsResponderRequest
-        case other => handleUnexpectedMessage(sender(), other, log, "ResponderManagerV1")
+        case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }
 }

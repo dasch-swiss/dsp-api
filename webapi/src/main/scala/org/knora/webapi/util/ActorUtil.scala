@@ -92,7 +92,7 @@ object ActorUtil {
       * @param message the message that was received.
       * @param log    a [[LoggingAdapter]].
       */
-    def handleUnexpectedMessage(sender: ActorRef, message: Any, log: LoggingAdapter, who: String = "")(implicit executionContext: ExecutionContext): Unit = {
+    def handleUnexpectedMessage(sender: ActorRef, message: Any, log: LoggingAdapter, who: String)(implicit executionContext: ExecutionContext): Unit = {
         val unexpectedMessageException = UnexpectedMessageException(s"$who received an unexpected message $message of type ${message.getClass.getCanonicalName}")
         sender ! akka.actor.Status.Failure(unexpectedMessageException)
     }

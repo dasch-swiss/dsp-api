@@ -59,7 +59,7 @@ class ProjectsResponderV1 extends ResponderV1 {
         case ProjectInfoByIRIGetV1(iri, userProfile) => future2Message(sender(), projectInfoByIRIGetV1(iri, userProfile), log)
         case ProjectInfoByShortnameGetRequestV1(shortname, userProfile) => future2Message(sender(), projectInfoByShortnameGetRequestV1(shortname, userProfile), log)
         case ProjectCreateRequestV1(createRequest: CreateProjectApiRequestV1, userProfileV1, apiRequestID) => future2Message(sender(), projectCreateRequestV1(createRequest, userProfileV1, apiRequestID), log)
-        case other => handleUnexpectedMessage(sender(), other, log)
+        case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }
 
     /**
