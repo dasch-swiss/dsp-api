@@ -93,6 +93,16 @@ object SharedPermissionsTestData {
                             ))
         )
 
+    val perm002_d2: doap =
+        doap(
+            iri = "http://data.knora.org/permissions/002-d2",
+            p = DefaultObjectAccessPermissionV1(iri = "http://data.knora.org/permissions/002-d2", forProject = SharedAdminTestData.IMAGES_PROJECT_IRI, forGroup = Some(OntologyConstants.KnoraBase.KnownUser), forResourceClass = None, forProperty = None, hasPermissions = Set(
+                PermissionV1.ChangeRightsPermission(OntologyConstants.KnoraBase.Creator),
+                PermissionV1.ModifyPermission(OntologyConstants.KnoraBase.ProjectMember),
+                PermissionV1.ViewPermission(OntologyConstants.KnoraBase.KnownUser)
+            ))
+        )
+
     /*************************************/
     /** Incunabula Project Permissions  **/
     /*************************************/

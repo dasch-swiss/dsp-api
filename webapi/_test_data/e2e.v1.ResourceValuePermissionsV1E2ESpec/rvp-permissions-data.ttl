@@ -1,0 +1,32 @@
+@prefix xml: <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
+@prefix incunabula: <http://www.knora.org/ontology/incunabula#> .
+
+###
+### parole-religieuse project
+###
+<http://data.knora.org/permissions/parole-religieuse-o1> rdf:type knora-base:DefaultObjectAccessPermission ;
+        knora-base:forProject <http://data.knora.org/projects/parole-religieuse> ;
+        knora-base:forGroup knora-base:ProjectMember ;
+        knora-base:hasPermissions "CR knora-base:ProjectAdmin|D knora-base:ProjectMember|M knora-base:KnownUser|RV knora-base:UnknownUser"^^xsd:string .
+
+<http://data.knora.org/permissions/parole-religieuse-o2> rdf:type knora-base:DefaultObjectAccessPermission ;
+        knora-base:forProject <http://data.knora.org/projects/parole-religieuse> ;
+        knora-base:forGroup knora-base:KnownUser ;
+        knora-base:hasPermissions "CR knora-base:ProjectAdmin|D knora-base:ProjectMember|M knora-base:KnownUser|RV knora-base:UnknownUser"^^xsd:string .
+
+<http://data.knora.org/permissions/parole-religieuse-a1>
+        rdf:type knora-base:AdministrativePermission ;
+        knora-base:forProject <http://data.knora.org/projects/parole-religieuse> ;
+        knora-base:forGroup knora-base:ProjectAdmin ;
+        knora-base:hasPermissions "ProjectResourceCreateAllPermission|ProjectAdminAllPermission"^^xsd:string .
+
+<http://data.knora.org/permissions/parole-religieuse-a3>
+        rdf:type knora-base:AdministrativePermission ;
+        knora-base:forProject <http://data.knora.org/projects/parole-religieuse> ;
+        knora-base:forGroup knora-base:ProjectMember ;
+        knora-base:hasPermissions "ProjectResourceCreateAllPermission"^^xsd:string .
