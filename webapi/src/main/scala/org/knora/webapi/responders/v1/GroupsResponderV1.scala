@@ -57,7 +57,7 @@ class GroupsResponderV1 extends ResponderV1 {
         case GroupInfoByIRIGetRequest(iri, userProfile) => future2Message(sender(), getGroupInfoByIRIGetRequest(iri, userProfile), log)
         case GroupInfoByNameGetRequest(projectIri, groupName, userProfile) => future2Message(sender(), getGroupInfoByNameGetRequest(projectIri, groupName, userProfile), log)
         case GroupCreateRequestV1(newGroupInfo, userProfile, apiRequestID) => future2Message(sender(), createGroupV1(newGroupInfo, userProfile, apiRequestID), log)
-        case other => handleUnexpectedMessage(sender(), other, log)
+        case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }
 
     /**

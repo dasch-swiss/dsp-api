@@ -62,7 +62,7 @@ class UsersResponderV1 extends ResponderV1 {
         case UserUpdateRequestV1(userIri, changeUserData, userProfile, apiRequestID) => future2Message(sender(), updateBasicUserDataV1(userIri, changeUserData, userProfile, apiRequestID), log)
         case UserChangePasswordRequestV1(userIri, changePasswordRequest, userProfile, apiRequestID) => future2Message(sender(), changePasswordV1(userIri, changePasswordRequest, userProfile, apiRequestID), log)
         case UserChangeStatusRequestV1(userIri, changeStatusRequest, userProfile, apiRequestID) => future2Message(sender(), changeUserStatusV1(userIri, changeStatusRequest, userProfile, apiRequestID), log)
-        case other => handleUnexpectedMessage(sender(), other, log)
+        case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }
 
     /**

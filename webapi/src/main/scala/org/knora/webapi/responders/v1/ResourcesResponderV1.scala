@@ -70,7 +70,7 @@ class ResourcesResponderV1 extends ResponderV1 {
         case ChangeResourceLabelRequestV1(resourceIri, label, userProfile, apiRequestID) => future2Message(sender(), changeResourceLabelV1(resourceIri, label, apiRequestID, userProfile), log)
         case UnexpectedMessageRequest() => future2Message(sender(), makeFutureOfUnit, log)
         case InternalServerExceptionMessageRequest() => future2Message(sender, makeInternalServerException, log)
-        case other => handleUnexpectedMessage(sender(), other, log)
+        case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

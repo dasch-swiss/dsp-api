@@ -121,15 +121,13 @@
 ## Project Admin
 <http://data.knora.org/users/c266a56709> rdf:type knora-base:User ;
 
-                                         knora-base:userid "images-user01"^^xsd:string ;
+                                         knora-base:email "user01.user1@example.com"^^xsd:string ;
 
                                          knora-base:givenName "User01"^^xsd:string ;
 
                                          knora-base:familyName "User"^^xsd:string ;
 
                                          knora-base:password "$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"^^xsd:string ;
-
-                                         knora-base:email "user01.user1@example.com"^^xsd:string ;
 
                                          knora-base:preferredLanguage "de"^^xsd:string ;
 
@@ -145,15 +143,13 @@
 ## Project Member
 <http://data.knora.org/users/97cec4000f> rdf:type knora-base:User ;
 
-                                         knora-base:userid "images-user02"^^xsd:string ;
+                                         knora-base:email "user02.user@example.com"^^xsd:string ;
 
                                          knora-base:givenName "User02"^^xsd:string ;
 
                                          knora-base:familyName "User"^^xsd:string ;
 
                                          knora-base:password "$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"^^xsd:string ;
-
-                                         knora-base:email "user02.user@example.com"^^xsd:string ;
 
                                          knora-base:preferredLanguage "de"^^xsd:string ;
 

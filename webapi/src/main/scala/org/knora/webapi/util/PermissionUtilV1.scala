@@ -220,6 +220,7 @@ object PermissionUtilV1 {
             }
 
             if (permissionCodes.nonEmpty) {
+                log.debug(s"getUserPermissionV1 - calculateHighestGrantedPermission - permissionCodes: ${permissionCodes.toString}")
                 // The user has some permissions; return the code of the highest one.
                 Some(permissionCodes.max)
             } else {
@@ -253,16 +254,15 @@ object PermissionUtilV1 {
                     case None => Vector.empty[IRI]
                 }
 
-                // Make the complete list of the user's groups: the built-in "knownUser" group, plus the user's
-                // built-in (e.g., ProjectAdmin, ProjectMember) and non-built-in groups, possibly creator,
-                // and possibly SystemAdmin.
+                // Make the complete list of the user's groups: thne KnownUser, the user's built-in (e.g., ProjectAdmin,
+                // ProjectMember, and non-built-in groups, possibly creator, and possibly SystemAdmin.
                 Vector(OntologyConstants.KnoraBase.KnownUser) ++ otherGroups ++ creatorOption ++ systemAdminOption
             case None =>
                 // The user is an unknown user; put them in the "unknownUser" built-in group.
                 Vector(OntologyConstants.KnoraBase.UnknownUser)
         }
 
-        //log.debug(s"getUserPermissionV1 - userGroups: $userGroups")
+        log.debug(s"getUserPermissionV1 - userGroups: $userGroups")
 
         val permissionCodeOption = if (userProfile.permissionData.isSystemAdmin) {
             // If the user is in the "SystemAdmin" group, just give them the maximum permission.

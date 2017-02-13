@@ -34,7 +34,7 @@ class StoreResponderV1 extends ResponderV1 {
 
     def receive = {
         case ResetTriplestoreContentRequestV1(rdfDataObjects: Seq[RdfDataObject]) => future2Message(sender(), resetTriplestoreContent(rdfDataObjects), log)
-        case other => handleUnexpectedMessage(sender(), other, log)
+        case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }
 
     /**
