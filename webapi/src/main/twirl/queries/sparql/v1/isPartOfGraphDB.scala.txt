@@ -38,7 +38,7 @@ prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 prefix knora-base: <http://www.knora.org/ontology/knora-base#>
 
-SELECT ?containingResource ?containingResourceProject ?linkValue ?linkValueOwner ?linkValueProject ?linkValuePermissions
+SELECT ?containingResource ?containingResourceProject ?linkValue ?linkValueCreator ?linkValuePermissions
 WHERE {
     BIND(IRI("@resourceIri") as ?resource)
 
@@ -61,11 +61,7 @@ WHERE {
         rdf:predicate ?linkingProp ;
         rdf:object ?containingResource ;
         knora-base:isDeleted false ;
-        knora-base:attachedToUser ?linkValueOwner .
-
-    OPTIONAL {
-        ?linkValue knora-base:attachedToProject ?linkValueProject .
-    }
+        knora-base:attachedToUser ?linkValueCreator .
 
     OPTIONAL {
         ?linkValue knora-base:hasPermissions ?linkValuePermissions .

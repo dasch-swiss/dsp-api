@@ -521,8 +521,8 @@ class SearchResponderV1 extends ResponderV1 {
                                                 val linkValuePermissionCode = PermissionUtilV1.getUserPermissionOnLinkValueV1(
                                                     linkValueIri = valueIri,
                                                     predicateIri = searchCriterion.propertyIri,
-                                                    linkValueOwner = valueOwner,
-                                                    linkValueProject = valueProject,
+                                                    linkValueCreator = valueOwner,
+                                                    containingResourceProject = valueProject,
                                                     linkValuePermissionLiteral = valuePermissionLiteral,
                                                     userProfile = searchGetRequest.userProfile
                                                 )
