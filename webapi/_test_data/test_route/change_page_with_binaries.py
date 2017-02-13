@@ -21,7 +21,7 @@ try:
     r = requests.put(base_url + 'filevalue/' + resIri,
                       files=files,
                       headers=None,
-                      auth=('root', 'test'),
+                      auth=('root@example.com', 'test'),
                       proxies={'http': 'http://localhost:3333'})
 
     r.raise_for_status()

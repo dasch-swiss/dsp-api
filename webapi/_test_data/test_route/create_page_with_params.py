@@ -20,22 +20,26 @@ try:
 
     r = requests.post("http://localhost:1024/make_thumbnail", files = files)
 
-    print(r.text)
+    #print(r.text)
 
     thumb_response = r.json()
 
+    print(thumb_response)
+
     # Get the thumbnail
     r = requests.get(thumb_response['preview_path'])
+    r.raise_for_status()
+
     print("Got preview with status code " + str(r.status_code))
 
     conversion_params = {
         'restype_id': 'http://www.knora.org/ontology/incunabula#page',
         'properties': {
             'http://www.knora.org/ontology/incunabula#pagenum': [
-                {'richtext_value': {'utf8str': 'test page', 'textattr': json.dumps({}), 'resource_reference': []}}
+                {'richtext_value': {'utf8str': 'test page'}}
             ],
             'http://www.knora.org/ontology/incunabula#origname': [
-                {'richtext_value': {'utf8str': 'Chlaus', 'textattr': json.dumps({}), 'resource_reference': []}}
+                {'richtext_value': {'utf8str': 'Chlaus'}}
             ],
             'http://www.knora.org/ontology/incunabula#partOf': [
                 {'link_value': 'http://data.knora.org/5e77e98d2603'}
@@ -55,7 +59,7 @@ try:
     r = requests.post(base_url + 'resources',
                       data=json.dumps(conversion_params),
                       headers={'content-type': 'application/json; charset=utf8'},
-                      auth=('root', 'test'),
+                      auth=('root@example.com', 'test'),
                       proxies={'http': 'http://localhost:3333'})
 
     r.raise_for_status()
@@ -63,4 +67,4 @@ try:
 except Exception as e:
     print('Knora API answered with an error:\n')
     print(e)
-    print(r.text)
+    #print(r.text)

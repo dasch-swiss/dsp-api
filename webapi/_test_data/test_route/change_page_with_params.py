@@ -7,7 +7,7 @@ import requests, json, urllib
 #
 
 try:
-    base_url = "http://localhost:3333/v1/"
+    base_url = "http://localhost/v1/"
 
     filename = 'Chlaus.jpg'
     path = 'images/'
@@ -38,11 +38,11 @@ try:
     r = requests.put(base_url + 'filevalue/' + resIri,
                       data=json.dumps(params),
                       headers={'content-type': 'application/json; charset=utf8'},
-                      auth=('root', 'test'),
+                      auth=('root@example.com', 'test'),
                       proxies={'http': 'http://localhost:3333'})
 
     r.raise_for_status()
-    # print(r.text)
+    print(r.text)
 except Exception as e:
     print('Knora API answered with an error:\n')
     print(e)
