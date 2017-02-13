@@ -1265,7 +1265,6 @@ class ResourcesResponderV1 extends ResponderV1 {
                         }
                     }
 
-
                     projectInfo <- {
                         responderManager ? ProjectInfoByIRIGetRequestV1(
                             projectIri,
@@ -1292,10 +1291,11 @@ class ResourcesResponderV1 extends ResponderV1 {
 
 
                                     resourceIri: IRI = knoraIdUtil.makeRandomResourceIri
+                                    propertyIris = resRequest.values.keySet
+                                    fileValuesV1 <- CheckResource(resRequest.resourceTypeIri, propertyIris, userProfile, resRequest.values, None)
 
 
-
-                                    generateSparqlForValuesResponse <- createNewSparqlStatement(projectIri, resourceIri, resRequest.resourceTypeIri, index, resRequest.values, None, userProfile, apiRequestID)
+                                    generateSparqlForValuesResponse <- createNewSparqlStatement(projectIri, resourceIri, resRequest.resourceTypeIri, index, resRequest.values, fileValuesV1, userProfile, apiRequestID)
 
                             } yield  ResourceToCreate(resourceIri,  defaultObjectAccessPermissions, generateSparqlForValuesResponse , resRequest.resourceTypeIri, index,  resRequest.label)
 
@@ -1352,12 +1352,12 @@ class ResourcesResponderV1 extends ResponderV1 {
                     }
 
                     acc ++ valuesWithComments.map {
-                    valueV1WithComment: CreateValueV1WithComment => checkPropertyObjectClassConstraintForValue (
-                    propertyIri = propertyIri,
-                    propertyObjectClassConstraint = propertyObjectClassConstraint,
-                    updateValueV1 = valueV1WithComment.updateValueV1,
-                    userProfile = userProfile
-                    )
+                        valueV1WithComment: CreateValueV1WithComment => checkPropertyObjectClassConstraintForValue (
+                            propertyIri = propertyIri,
+                            propertyObjectClassConstraint = propertyObjectClassConstraint,
+                            updateValueV1 = valueV1WithComment.updateValueV1,
+                            userProfile = userProfile
+                        )
                     }
                 }
             }
