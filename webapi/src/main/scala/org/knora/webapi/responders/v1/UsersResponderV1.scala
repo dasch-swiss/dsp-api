@@ -525,19 +525,22 @@ class UsersResponderV1 extends ResponderV1 {
                 case None => Seq.empty[IRI]
             }
 
-        val userDataV1 = UserDataV1(
-            lang = groupedUserData.get(OntologyConstants.KnoraBase.PreferredLanguage) match {
-                case Some(langList) => langList.head
-                case None => settings.fallbackLanguage
-            },
-            user_id = Some(returnedUserIri),
-            email = groupedUserData.get(OntologyConstants.KnoraBase.Email).map(_.head),
-            firstname = groupedUserData.get(OntologyConstants.KnoraBase.GivenName).map(_.head),
-            lastname = groupedUserData.get(OntologyConstants.KnoraBase.FamilyName).map(_.head),
-            password = groupedUserData.get(OntologyConstants.KnoraBase.Password).map(_.head),
-            isActiveUser = groupedUserData.get(OntologyConstants.KnoraBase.Status).map(_.head.toBoolean)
-        )
-        //_ = log.debug(s"userDataQueryResponse2UserProfile - userDataV1: ${MessageUtil.toSource(userDataV1)}")
+            //println(projectIris)
+
+            val userDataV1 = UserDataV1(
+                lang = groupedUserData.get(OntologyConstants.KnoraBase.PreferredLanguage) match {
+                    case Some(langList) => langList.head
+                    case None => settings.fallbackLanguage
+                },
+                user_id = Some(returnedUserIri),
+                email = groupedUserData.get(OntologyConstants.KnoraBase.Email).map(_.head),
+                firstname = groupedUserData.get(OntologyConstants.KnoraBase.GivenName).map(_.head),
+                lastname = groupedUserData.get(OntologyConstants.KnoraBase.FamilyName).map(_.head),
+                password = groupedUserData.get(OntologyConstants.KnoraBase.Password).map(_.head),
+                isActiveUser = groupedUserData.get(OntologyConstants.KnoraBase.Status).map(_.head.toBoolean),
+                projects = projectIris
+            )
+            //_ = log.debug(s"userDataQueryResponse2UserProfile - userDataV1: ${MessageUtil.toSource(userDataV1)}")
 
         /* the groups the user is member of (only explicit groups) */
         val groupIris = groupedUserData.get(OntologyConstants.KnoraBase.IsInGroup) match {
