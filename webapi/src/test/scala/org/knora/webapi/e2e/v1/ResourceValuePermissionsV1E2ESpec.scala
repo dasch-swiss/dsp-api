@@ -37,11 +37,9 @@ object ResourceValuePermissionsV1E2ESpec {
 }
 
 /**
-  * End-to-End (E2E) test specification for testing the 'v1/permissions' route.
-  *
-  * This spec tests the 'v1/store' route.
+  * End-to-End (E2E) test specification for additional testing of permissions.
   */
-class ResourceValuePermissionsV1E2ESpec extends E2ESpec(StoreRouteV1E2ESpec.config) with TriplestoreJsonProtocol {
+class ResourceValuePermissionsV1E2ESpec extends E2ESpec(ResourceValuePermissionsV1E2ESpec.config) with TriplestoreJsonProtocol {
 
     implicit override val log = akka.event.Logging(system, this.getClass())
 
