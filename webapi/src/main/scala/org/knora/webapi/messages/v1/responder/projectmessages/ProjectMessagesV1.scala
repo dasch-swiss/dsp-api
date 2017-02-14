@@ -121,7 +121,23 @@ case class ProjectInfoByIRIGetV1(iri: IRI, userProfileV1: Option[UserProfileV1])
 case class ProjectInfoByShortnameGetRequestV1(shortname: String, userProfileV1: Option[UserProfileV1]) extends ProjectsResponderRequestV1
 
 /**
-  * Requests the cration of a new project.
+  * Returns all users belonging to a project.
+  *
+  * @param iri           the IRI of the project.
+  * @param userProfileV1 the profile of the user making the request.
+  */
+case class ProjectMembersByIRIGetRequestV1(iri: IRI, userProfileV1: UserProfileV1) extends ProjectsResponderRequestV1
+
+/**
+  * Returns all users belonging to a project.
+  *
+  * @param shortname     of the project
+  * @param userProfileV1 the profile of the user making the request.
+  */
+case class ProjectMembersByShortnameGetRequestV1(shortname: String, userProfileV1: UserProfileV1) extends ProjectsResponderRequestV1
+
+/**
+  * Requests the creation of a new project.
   *
   * @param createRequest the [[CreateProjectApiRequestV1]] information for creation a new project.
   * @param userProfileV1 the user profile of the user creating the new project.
@@ -165,6 +181,18 @@ case class ProjectsResponseV1(projects: Seq[ProjectInfoV1],
 case class ProjectInfoResponseV1(project_info: ProjectInfoV1,
                                  userdata: Option[UserDataV1]) extends KnoraResponseV1 with ProjectV1JsonProtocol {
     def toJsValue = projectInfoResponseV1Format.write(this)
+}
+
+/**
+  * Represents the Knora API v1 JSON response to a request for a list of members inside a single project.
+  *
+  * @param members    a list of members.
+  * @param userDataV1 information about the user that made the request.
+  */
+case class ProjectMembersGetResponseV1(members: Seq[UserDataV1],
+                                       userDataV1: UserDataV1) extends KnoraResponseV1 with ProjectV1JsonProtocol {
+
+    def toJsValue = projectMembersGetRequestV1Format.write(this)
 }
 
 /**
@@ -213,6 +241,7 @@ trait ProjectV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol wi
     // https://github.com/spray/spray-json#jsonformats-for-recursive-types
     implicit val projectsResponseV1Format: RootJsonFormat[ProjectsResponseV1] = rootFormat(lazyFormat(jsonFormat(ProjectsResponseV1, "projects", "userdata")))
     implicit val projectInfoResponseV1Format: RootJsonFormat[ProjectInfoResponseV1] = rootFormat(lazyFormat(jsonFormat(ProjectInfoResponseV1, "project_info", "userdata")))
+    implicit val projectMembersGetRequestV1Format: RootJsonFormat[ProjectMembersGetResponseV1] = rootFormat(lazyFormat(jsonFormat(ProjectMembersGetResponseV1, "members", "userdata")))
     implicit val createProjectApiRequestV1Format: RootJsonFormat[CreateProjectApiRequestV1] = rootFormat(lazyFormat(jsonFormat8(CreateProjectApiRequestV1)))
     implicit val updateProjectApiRequestV1Format: RootJsonFormat[UpdateProjectApiRequestV1] = rootFormat(lazyFormat(jsonFormat2(UpdateProjectApiRequestV1)))
     implicit val projectOperationResponseV1Format: RootJsonFormat[ProjectOperationResponseV1] = rootFormat(lazyFormat(jsonFormat2(ProjectOperationResponseV1)))

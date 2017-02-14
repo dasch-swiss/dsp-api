@@ -58,6 +58,8 @@ class ProjectsResponderV1 extends ResponderV1 {
         case ProjectInfoByIRIGetRequestV1(iri, userProfile) => future2Message(sender(), projectInfoByIRIGetRequestV1(iri, userProfile), log)
         case ProjectInfoByIRIGetV1(iri, userProfile) => future2Message(sender(), projectInfoByIRIGetV1(iri, userProfile), log)
         case ProjectInfoByShortnameGetRequestV1(shortname, userProfile) => future2Message(sender(), projectInfoByShortnameGetRequestV1(shortname, userProfile), log)
+        case ProjectMembersByIRIGetRequestV1(iri, userProfileV1) => future2Message(sender(), projectMembersByIRIGetRequestV1(iri, userProfileV1), log)
+        case ProjectMembersByShortnameGetRequestV1(shortname, userProfileV1) => future2Message(sender(), projectMembersByShortnameGetRequestV1(shortname, userProfileV1), log)
         case ProjectCreateRequestV1(createRequest: CreateProjectApiRequestV1, userProfileV1, apiRequestID) => future2Message(sender(), projectCreateRequestV1(createRequest, userProfileV1, apiRequestID), log)
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }
@@ -283,6 +285,25 @@ class ProjectsResponderV1 extends ResponderV1 {
             }
         )
     }
+
+    /**
+      * Gets the members of a project with the given IRI.
+      *
+      * @param iri the IRI of the project.
+      * @param userProfileV1 the profile of the user that is making the request.
+      * @return the members of a project as a [[ProjectMembersGetResponseV1]]
+      */
+    private def projectMembersByIRIGetRequestV1(iri: IRI, userProfileV1: UserProfileV1): Future[ProjectMembersGetResponseV1] = ???
+
+
+    /**
+      * Gets the members of a project with the given shortname.
+      *
+      * @param shortname the IRI of the project.
+      * @param userProfileV1 the profile of the user that is making the request.
+      * @return the members of a project as a [[ProjectMembersGetResponseV1]]
+      */
+    private def projectMembersByShortnameGetRequestV1(shortname: String, userProfileV1: UserProfileV1): Future[ProjectMembersGetResponseV1] = ???
 
     private def projectCreateRequestV1(createRequest: CreateProjectApiRequestV1, userProfile: UserProfileV1, apiRequestID: UUID): Future[ProjectOperationResponseV1] = {
 
