@@ -175,12 +175,37 @@ object OntologyConstants {
         val GeomValue = "http://www.knora.org/ontology/knora-base#GeomValue"
         val ListValue = "http://www.knora.org/ontology/knora-base#ListValue"
         val IntervalValue = "http://www.knora.org/ontology/knora-base#IntervalValue"
+        val LinkValue = "http://www.knora.org/ontology/knora-base#LinkValue"
+        val GeonameValue = "http://www.knora.org/ontology/knora-base#GeonameValue"
+        val FileValue = "http://www.knora.org/ontology/knora-base#FileValue"
+        val AudioFileValue = "http://www.knora.org/ontology/knora-base#AudioFileValue"
+        val DDDFileValue = "http://www.knora.org/ontology/knora-base#DDDFileValue"
+        val DocumentFileValue = "http://www.knora.org/ontology/knora-base#DocumentFileValue"
         val StillImageFileValue = "http://www.knora.org/ontology/knora-base#StillImageFileValue"
         val MovingImageFileValue = "http://www.knora.org/ontology/knora-base#MovingImageFileValue"
         val TextFileValue = "http://www.knora.org/ontology/knora-base#TextFileValue"
-        val FileValue = "http://www.knora.org/ontology/knora-base#FileValue"
-        val LinkValue = "http://www.knora.org/ontology/knora-base#LinkValue"
-        val GeonameValue = "http://www.knora.org/ontology/knora-base#GeonameValue"
+
+        val ValueClasses: Set[IRI] = Set(
+            TextValue,
+            IntValue,
+            BooleanValue,
+            UriValue,
+            DecimalValue,
+            DateValue,
+            ColorValue,
+            GeomValue,
+            ListValue,
+            IntervalValue,
+            LinkValue,
+            GeonameValue,
+            FileValue,
+            AudioFileValue,
+            DDDFileValue,
+            DocumentFileValue,
+            StillImageFileValue,
+            MovingImageFileValue,
+            TextFileValue
+        )
 
         val ListNode = "http://www.knora.org/ontology/knora-base#ListNode"
 

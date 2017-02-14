@@ -29,6 +29,8 @@ import org.knora.webapi.responders.v1.GroupedProps.{ValueLiterals, ValueProps}
 import org.knora.webapi.{IRI, InconsistentTriplestoreDataException, OntologyConstants}
 import org.slf4j.LoggerFactory
 
+import scala.collection.immutable.Iterable
+
 /**
   * A utility that responder actors use to determine a user's permissions on an RDF subject in the triplestore.
   */
@@ -111,9 +113,27 @@ object PermissionUtilV1 {
                                           valueProps: ValueProps,
                                           subjectProject: Option[IRI],
                                           userProfile: UserProfileV1): Option[Int] = {
+
+        // Either subjectProject must be provided, or there must be a knora-base:attachedToProject in valueProps.
+
+        val valuePropsAssertions: Vector[(IRI, IRI)] = filterPermissionRelevantAssertionsFromValueProps(valueProps)
+        val valuePropsProject: Option[IRI] = valuePropsAssertions.find(_._1 == OntologyConstants.KnoraBase.AttachedToProject).map(_._2)
+        val providedProjects = Vector(valuePropsProject, subjectProject).flatten.distinct
+
+        if (providedProjects.isEmpty) {
+            throw InconsistentTriplestoreDataException(s"No knora-base:attachedToProject was provided for subject $subjectIri")
+        }
+
+        if (providedProjects.size > 1) {
+            throw InconsistentTriplestoreDataException(s"Two different values of knora-base:attachedToProject were provided for subject $subjectIri: ${valuePropsProject.get} and ${subjectProject.get}")
+        }
+
+        val valuePropsAssertionsWithoutProject: Vector[(IRI, IRI)] = valuePropsAssertions.filter(_._1 != OntologyConstants.KnoraBase.AttachedToProject)
+        val projectAssertion: (IRI, IRI) = (OntologyConstants.KnoraBase.AttachedToProject, providedProjects.head)
+
         getUserPermissionV1FromAssertions(
             subjectIri = subjectIri,
-            assertions = filterPermissionRelevantAssertionsFromValueProps(valueProps) ++ subjectProject.map(projectIri => (OntologyConstants.KnoraBase.AttachedToProject, projectIri)),
+            assertions = valuePropsAssertionsWithoutProject :+ projectAssertion,
             userProfile = userProfile
         )
     }
@@ -137,7 +157,7 @@ object PermissionUtilV1 {
       *                   pertaining to the subject. Other predicates will be filtered out.
       * @return a list of permission-relevant predicates and objects.
       */
-    def filterPermissionRelevantAssertions(assertions: Seq[(IRI, IRI)]): Seq[(IRI, IRI)] = {
+    def filterPermissionRelevantAssertions(assertions: Seq[(IRI, IRI)]): Vector[(IRI, IRI)] = {
         assertions.filter {
             case (p, o) => isPermissionRelevant(p)
         }.toVector
@@ -150,7 +170,7 @@ object PermissionUtilV1 {
       * @param valueProps a [[ValueProps]] describing a `knora-base:Value`.
       * @return a list of permission-relevant predicates and objects.
       */
-    def filterPermissionRelevantAssertionsFromValueProps(valueProps: ValueProps): Seq[(IRI, IRI)] = {
+    def filterPermissionRelevantAssertionsFromValueProps(valueProps: ValueProps): Vector[(IRI, IRI)] = {
         valueProps.literalData.foldLeft(Vector.empty[(IRI, IRI)]) {
             case (acc, (predicate: IRI, ValueLiterals(literals))) =>
                 if (isPermissionRelevant(predicate)) {
@@ -159,27 +179,6 @@ object PermissionUtilV1 {
                     acc
                 }
         }
-    }
-
-    /**
-      * Given an [[EntityInfoV1]], gets the entity's default permissions and converts them to permissions that
-      * can be assigned to an instance of the entity. An [[EntityInfoV1]] is either a [[ResourceEntityInfoV1]] or a [[PropertyEntityInfoV1]].
-      *
-      * @param entityInfo an [[EntityInfoV1]] describing an ontology entity.
-      * @return a formatted string literal that can be used as the object of the predicate `knora-base:hasPermissions`.
-      */
-    @deprecated("will be removed", "Knora")
-    def makePermissionsFromEntityDefaults(entityInfo: EntityInfoV1): Option[String] = {
-        // Convert the entity's default permissions to permission abbreviations.
-        val permissions: Map[IRI, Set[String]] = entityInfo.predicates.filterKeys {
-            key => OntologyConstants.KnoraBase.DefaultPermissionProperties(key)
-        }.map {
-            case (predicateIri, predicateInfo) =>
-                (defaultPermissions2Permissions(predicateIri), predicateInfo.objects)
-        }
-
-        // Format them as a string literal.
-        formatPermissions(permissions)
     }
 
     /**
@@ -210,7 +209,7 @@ object PermissionUtilV1 {
             //log.debug(s"getUserPermissionV1 - calculateHighestGrantedPermission - subjectPermissions: ${ScalaPrettyPrinter.prettyPrint(subjectPermissions)}")
 
             // Make a list of the codes for all the permissions the user can obtain for this subject.
-            val permissionCodes = subjectPermissions.flatMap {
+            val permissionCodes: Iterable[Int] = subjectPermissions.flatMap {
                 case (permission, grantedToGroups) =>
                     grantedToGroups.foldLeft(Vector.empty[Int]) {
                         case (acc, grantedToGroup) =>
@@ -239,7 +238,7 @@ object PermissionUtilV1 {
         val userGroups: Seq[IRI] = userProfile.userData.user_id match {
             case Some(userIri) =>
                 // The user is a known user.
-                // If the user owns the subject, put the user in the "creator" built-in group.
+                // If the user is the creator of the subject, put the user in the "creator" built-in group.
                 val creatorOption = if (userIri == subjectCreator) {
                     Some(OntologyConstants.KnoraBase.Creator)
                 } else {
@@ -257,22 +256,22 @@ object PermissionUtilV1 {
                     case None => Vector.empty[IRI]
                 }
 
-                // Make the complete list of the user's groups: thne KnownUser, the user's built-in (e.g., ProjectAdmin,
-                // ProjectMember, and non-built-in groups, possibly creator, and possibly SystemAdmin.
+                // Make the complete list of the user's groups: KnownUser, the user's built-in (e.g., ProjectAdmin,
+                // ProjectMember) and non-built-in groups, possibly creator, and possibly SystemAdmin.
                 Vector(OntologyConstants.KnoraBase.KnownUser) ++ otherGroups ++ creatorOption ++ systemAdminOption
             case None =>
-                // The user is an unknown user; put them in the "unknownUser" built-in group.
+                // The user is an unknown user; put them in the UnknownUser built-in group.
                 Vector(OntologyConstants.KnoraBase.UnknownUser)
         }
 
         log.debug(s"getUserPermissionV1 - userGroups: $userGroups")
 
         val permissionCodeOption = if (userProfile.permissionData.isSystemAdmin) {
-            // If the user is in the "SystemAdmin" group, just give them the maximum permission.
+            // If the user is in the SystemAdmin group, just give them the maximum permission.
             //log.debug("getUserPermissionV1 - is in SystemAdmin group - giving max permission")
             Some(MaxPermissionCode)
         } else if (userProfile.permissionData.hasProjectAdminAllPermissionFor(subjectProject)) {
-            // If the user has the 'ProjectAdminAllPermission', just give them the maximum permission.
+            // If the user has ProjectAdminAllPermission, just give them the maximum permission.
             //log.debug("getUserPermissionV1 - has 'ProjectAdminAllPermission' - giving max permission")
             Some(MaxPermissionCode)
         } else {
@@ -300,9 +299,9 @@ object PermissionUtilV1 {
       * @param subjectIri  the IRI of the subject.
       * @param assertions  a [[Seq]] containing all the permission-relevant predicates and objects
       *                    pertaining to the subject. The predicates must include
-      *                    [[org.knora.webapi.OntologyConstants.KnoraBase.AttachedToUser]], and should include
-      *                    [[org.knora.webapi.OntologyConstants.KnoraBase.AttachedToProject]]
-      *                    and [[org.knora.webapi.OntologyConstants.KnoraBase.HasPermissions]].
+      *                    [[org.knora.webapi.OntologyConstants.KnoraBase.AttachedToUser]] and
+      *                    [[org.knora.webapi.OntologyConstants.KnoraBase.AttachedToProject]], and should include
+      *                    [[org.knora.webapi.OntologyConstants.KnoraBase.HasPermissions]].
       *                    Other predicates may be included, but they will be ignored, so there is no need to filter
       *                    them before passing them to this function.
       * @param userProfile the profile of the user making the request.
@@ -349,7 +348,7 @@ object PermissionUtilV1 {
             getUserPermissionV1WithValueProps(
                 subjectIri = linkValueIri,
                 valueProps = valueProps,
-                subjectProject,
+                subjectProject = subjectProject,
                 userProfile = userProfile
             )
         }
@@ -421,8 +420,6 @@ object PermissionUtilV1 {
 
 
     /**
-      * -> Need this for reading permission literals.
-      *
       * Parses the literal object of the predicate `knora-base:hasPermissions`.
       *
       * @param maybePermissionListStr the literal to parse.
@@ -430,7 +427,7 @@ object PermissionUtilV1 {
       *         [[OntologyConstants.KnoraBase.ObjectAccessPermissionAbbreviations]], and the values are sets of
       *         user group IRIs.
       */
-    def parsePermissions(maybePermissionListStr: Option[String], permissionType: PermissionType): Set[PermissionV1] = {
+    def parsePermissionsWithType(maybePermissionListStr: Option[String], permissionType: PermissionType): Set[PermissionV1] = {
         maybePermissionListStr match {
             case Some(permissionListStr) => {
                 val permissions: Seq[String] = permissionListStr.split(OntologyConstants.KnoraBase.PermissionListDelimiter)

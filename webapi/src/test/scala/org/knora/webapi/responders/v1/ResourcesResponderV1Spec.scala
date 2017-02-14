@@ -1127,7 +1127,6 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
                 "http://www.knora.org/ontology/incunabula#publoc" -> Vector(CreateValueV1WithComment(publoc))
             )
 
-
             actorUnderTest ! ResourceCreateRequestV1(
                 resourceTypeIri = "http://www.knora.org/ontology/incunabula#book",
                 label = "Book with reference to nonexistent resource",
@@ -1138,7 +1137,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
             )
 
             expectMsgPF(timeout) {
-                case msg: akka.actor.Status.Failure => println(msg.toString); msg.cause.isInstanceOf[NotFoundException] should ===(true)
+                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[NotFoundException] should ===(true)
             }
         }
 

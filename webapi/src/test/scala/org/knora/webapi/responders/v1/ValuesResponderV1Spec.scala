@@ -275,7 +275,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             val utf8str = "Comment 1a"
 
             actorUnderTest ! CreateValueRequestV1(
-                projectIri = incunabulaProjectIri,
                 resourceIri = zeitglöckleinIri,
                 propertyIri = "http://www.knora.org/ontology/incunabula#book_comment",
                 value = TextValueSimpleV1(utf8str = utf8str),
@@ -297,7 +296,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             val utf8str = "Comment 1a"
 
             actorUnderTest ! CreateValueRequestV1(
-                projectIri = incunabulaProjectIri,
                 resourceIri = zeitglöckleinIri,
                 propertyIri = "http://www.knora.org/ontology/incunabula#book_comment",
                 value = TextValueSimpleV1(utf8str = utf8str),
@@ -407,7 +405,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             val utf8str = "Comment 1b"
 
             actorUnderTest ! CreateValueRequestV1(
-                projectIri = "http://data.knora.org/projects/77275339",
                 resourceIri = zeitglöckleinIri,
                 propertyIri = "http://www.knora.org/ontology/incunabula#book_comment",
                 value = TextValueSimpleV1(utf8str = utf8str),
@@ -437,7 +434,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
         "insert valueHasOrder correctly for each value" in {
             actorUnderTest ! CreateValueRequestV1(
-                projectIri = "http://data.knora.org/projects/77275339",
                 resourceIri = zeitglöckleinIri,
                 propertyIri = "http://www.knora.org/ontology/incunabula#book_comment",
                 value = TextValueSimpleV1("Comment 2"),
@@ -501,7 +497,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
         "not add a new value to a nonexistent resource" in {
             actorUnderTest ! CreateValueRequestV1(
-                projectIri = "http://data.knora.org/projects/77275339",
                 resourceIri = "http://data.knora.org/nonexistent",
                 propertyIri = "http://www.knora.org/ontology/incunabula#book_comment",
                 value = TextValueSimpleV1("Comment 1"),
@@ -516,7 +511,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
         "not add a new value to a deleted resource" in {
             actorUnderTest ! CreateValueRequestV1(
-                projectIri = "http://data.knora.org/projects/77275339",
                 resourceIri = "http://data.knora.org/9935159f67",
                 propertyIri = "http://www.knora.org/ontology/incunabula#book_comment",
                 value = TextValueSimpleV1("Comment 1"),
@@ -544,7 +538,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
         "not add a new value to a resource that the user doesn't have permission to modify" in {
             actorUnderTest ! CreateValueRequestV1(
-                projectIri = "http://data.knora.org/projects/77275339",
                 resourceIri = "http://data.knora.org/e41ab5695c",
                 propertyIri = "http://www.knora.org/ontology/incunabula#book_comment",
                 value = TextValueSimpleV1("Comment 1"),
@@ -559,7 +552,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
         "not add a new value of the wrong type" in {
             actorUnderTest ! CreateValueRequestV1(
-                projectIri = "http://data.knora.org/projects/77275339",
                 resourceIri = "http://data.knora.org/21abac2162",
                 propertyIri = "http://www.knora.org/ontology/incunabula#pubdate",
                 value = TextValueSimpleV1("this is not a date"),
@@ -602,7 +594,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         "not add a new value that would violate a cardinality restriction" in {
             // The cardinality of incunabula:partOf in incunabula:page is 1, and page http://data.knora.org/4f11adaf is already part of a book.
             actorUnderTest ! CreateValueRequestV1(
-                projectIri = "http://data.knora.org/projects/77275339",
                 resourceIri = "http://data.knora.org/4f11adaf",
                 propertyIri = "http://www.knora.org/ontology/incunabula#partOf",
                 value = LinkUpdateV1(targetResourceIri = "http://data.knora.org/e41ab5695c"),
@@ -616,7 +607,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
             // The cardinality of incunabula:seqnum in incunabula:page is 0-1, and page http://data.knora.org/4f11adaf already has a seqnum.
             actorUnderTest ! CreateValueRequestV1(
-                projectIri = "http://data.knora.org/projects/77275339",
                 resourceIri = "http://data.knora.org/4f11adaf",
                 propertyIri = "http://www.knora.org/ontology/incunabula#seqnum",
                 value = IntegerValueV1(1),
@@ -646,7 +636,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             val color = "#000000"
 
             actorUnderTest ! CreateValueRequestV1(
-                projectIri = "http://data.knora.org/projects/77275339",
                 resourceIri = miscResourceIri,
                 propertyIri = "http://www.knora.org/ontology/incunabula#miscHasColor",
                 value = ColorValueV1(color),
@@ -683,7 +672,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             val geom = "{\"status\":\"active\",\"lineColor\":\"#ff3333\",\"lineWidth\":2,\"points\":[{\"x\":0.5516074450084602,\"y\":0.4444444444444444},{\"x\":0.2791878172588832,\"y\":0.5}],\"type\":\"rectangle\",\"original_index\":0}"
 
             actorUnderTest ! CreateValueRequestV1(
-                projectIri = "http://data.knora.org/projects/77275339",
                 resourceIri = miscResourceIri,
                 propertyIri = "http://www.knora.org/ontology/incunabula#miscHasGeometry",
                 value = GeomValueV1(geom),
@@ -721,7 +709,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             val utf8str = "Comment 1aa"
 
             actorUnderTest ! CreateValueRequestV1(
-                projectIri = "http://data.knora.org/projects/77275339",
                 resourceIri = zeitglöckleinIri,
                 propertyIri = "http://www.knora.org/ontology/incunabula#book_comment",
                 value = TextValueWithStandoffV1(utf8str = utf8str, standoff = sampleStandoff, mapping = dummyMapping, mappingIri = "http://data.knora.org/projects/standoff/mappings/StandardMapping"),
@@ -739,7 +726,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             val utf8str = "Comment 1aa"
 
             actorUnderTest ! CreateValueRequestV1(
-                projectIri = "http://data.knora.org/projects/77275339",
                 resourceIri = zeitglöckleinIri,
                 propertyIri = "http://www.knora.org/ontology/incunabula#book_comment",
                 value = TextValueWithStandoffV1(utf8str = utf8str, standoff = sampleStandoff, mapping = dummyMapping, mappingIri = "http://data.knora.org/projects/standoff/mappings/StandardMapping"),
@@ -807,7 +793,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             )
 
             actorUnderTest ! CreateValueRequestV1(
-                projectIri = "http://data.knora.org/projects/77275339",
                 resourceIri = "http://data.knora.org/21abac2162",
                 propertyIri = "http://www.knora.org/ontology/incunabula#book_comment",
                 value = textValueWithResourceRef,
@@ -971,7 +956,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             )
 
             actorUnderTest ! CreateValueRequestV1(
-                projectIri = "http://data.knora.org/projects/77275339",
                 resourceIri = "http://data.knora.org/21abac2162",
                 propertyIri = "http://www.knora.org/ontology/incunabula#book_comment",
                 value = textValueWithResourceRef,
@@ -1229,7 +1213,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             val seqnum = 4
 
             actorUnderTest ! CreateValueRequestV1(
-                projectIri = "http://data.knora.org/projects/77275339",
                 resourceIri = "http://data.knora.org/8a0b1e75",
                 propertyIri = "http://www.knora.org/ontology/incunabula#seqnum",
                 value = IntegerValueV1(seqnum),
@@ -1266,7 +1249,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             // great resource to verify that expected conversion result from and to JDC is correct:
             // https://www.fourmilab.ch/documents/calendar/
             actorUnderTest ! CreateValueRequestV1(
-                projectIri = "http://data.knora.org/projects/77275339",
                 resourceIri = "http://data.knora.org/21abac2162",
                 propertyIri = "http://www.knora.org/ontology/incunabula#pubdate",
                 value = JulianDayNumberValueV1(
@@ -1312,7 +1294,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
         "create a link between two resources" in {
             val createValueRequest = CreateValueRequestV1(
-                projectIri = "http://data.knora.org/projects/77275339",
                 resourceIri = "http://data.knora.org/cb1a74e3e2f6",
                 propertyIri = OntologyConstants.KnoraBase.HasLinkTo,
                 value = LinkUpdateV1(
@@ -1353,7 +1334,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
         "not create a duplicate link" in {
             val createValueRequest = CreateValueRequestV1(
-                projectIri = "http://data.knora.org/projects/77275339",
                 resourceIri = "http://data.knora.org/cb1a74e3e2f6",
                 propertyIri = OntologyConstants.KnoraBase.HasLinkTo,
                 value = LinkUpdateV1(
@@ -1372,7 +1352,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
         "not create a link that points to a resource of the wrong class" in {
             actorUnderTest ! CreateValueRequestV1(
-                projectIri = "http://data.knora.org/projects/77275339",
                 resourceIri = miscResourceIri,
                 propertyIri = "http://www.knora.org/ontology/incunabula#miscHasBook", // can only point to an incunabula:book
                 value = LinkUpdateV1(
@@ -1562,7 +1541,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             val metaComment = "This is a metacomment"
 
             actorUnderTest ! CreateValueRequestV1(
-                projectIri = "http://data.knora.org/projects/77275339",
                 resourceIri = zeitglöckleinIri,
                 propertyIri = "http://www.knora.org/ontology/incunabula#book_comment",
                 value = TextValueSimpleV1(utf8str = comment),
@@ -1653,7 +1631,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
                 userProfile = imagesUser,
                 propertyIri = "http://www.knora.org/ontology/images#jahreszeit",
                 resourceIri = "http://data.knora.org/691e7e2244d5",
-                projectIri = "http://data.knora.org/projects/images",
                 apiRequestID = UUID.randomUUID
             )
 
@@ -1672,7 +1649,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
                 userProfile = anythingUser,
                 propertyIri = "http://www.knora.org/ontology/anything#hasDecimal",
                 resourceIri = aThingIri,
-                projectIri = anythingProjectIri,
                 apiRequestID = UUID.randomUUID
             )
 
@@ -1690,7 +1666,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
                 userProfile = anythingUser,
                 propertyIri = "http://www.knora.org/ontology/anything#hasInterval",
                 resourceIri = aThingIri,
-                projectIri = anythingProjectIri,
                 apiRequestID = UUID.randomUUID
             )
 
@@ -1708,7 +1683,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
                 userProfile = anythingUser,
                 propertyIri = "http://www.knora.org/ontology/anything#hasColor",
                 resourceIri = aThingIri,
-                projectIri = anythingProjectIri,
                 apiRequestID = UUID.randomUUID
             )
 
@@ -1763,7 +1737,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
                 userProfile = anythingUser,
                 propertyIri = "http://www.knora.org/ontology/anything#hasBoolean",
                 resourceIri = aThingIri,
-                projectIri = anythingProjectIri,
                 apiRequestID = UUID.randomUUID
             )
 
@@ -1781,7 +1754,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
                 userProfile = anythingUser,
                 propertyIri = "http://www.knora.org/ontology/anything#hasUri",
                 resourceIri = aThingIri,
-                projectIri = anythingProjectIri,
                 apiRequestID = UUID.randomUUID
             )
 
@@ -1986,7 +1958,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             )
 
             actorUnderTest ! CreateValueRequestV1(
-                projectIri = "http://data.knora.org/projects/77275339",
                 resourceIri = zeitglöckleinIri,
                 propertyIri = "http://www.knora.org/ontology/incunabula#book_comment",
                 value = textValueWithResourceRef,
@@ -1999,6 +1970,5 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
                     msg.cause.isInstanceOf[NotFoundException] should ===(true)
             }
         }
-
     }
 }

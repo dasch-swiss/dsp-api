@@ -99,14 +99,14 @@ class ResourcesResponderV1 extends ResponderV1 {
           * @param nodeIri         the IRI of the node.
           * @param nodeClass       the IRI of the node's class.
           * @param nodeLabel       the node's label.
-          * @param nodeOwner       the node's owner.
+          * @param nodeCreator     the node's creator.
           * @param nodeProject     the node's project.
           * @param nodePermissions the node's permissions.
           */
         case class QueryResultNode(nodeIri: IRI,
                                    nodeClass: IRI,
                                    nodeLabel: String,
-                                   nodeOwner: IRI,
+                                   nodeCreator: IRI,
                                    nodeProject: IRI,
                                    nodePermissions: Option[String])
 
@@ -117,7 +117,7 @@ class ResourcesResponderV1 extends ResponderV1 {
           * @param sourceNodeIri        the IRI of the source node.
           * @param targetNodeIri        the IRI of the target node.
           * @param linkProp             the IRI of the link property.
-          * @param linkValueOwner       the link value's owner.
+          * @param linkValueCreator     the link value's creator.
           * @param sourceNodeProject    the project of the source node.
           * @param linkValuePermissions the link value's permissions.
           */
@@ -125,7 +125,7 @@ class ResourcesResponderV1 extends ResponderV1 {
                                    sourceNodeIri: IRI,
                                    targetNodeIri: IRI,
                                    linkProp: IRI,
-                                   linkValueOwner: IRI,
+                                   linkValueCreator: IRI,
                                    sourceNodeProject: IRI,
                                    linkValuePermissions: Option[String])
 
@@ -178,7 +178,7 @@ class ResourcesResponderV1 extends ResponderV1 {
                                 nodeIri = rowMap("node"),
                                 nodeClass = rowMap("nodeClass"),
                                 nodeLabel = rowMap("nodeLabel"),
-                                nodeOwner = rowMap("nodeOwner"),
+                                nodeCreator = rowMap("nodeCreator"),
                                 nodeProject = rowMap("nodeProject"),
                                 nodePermissions = rowMap.get("nodePermissions")
                             )
@@ -187,7 +187,7 @@ class ResourcesResponderV1 extends ResponderV1 {
                             // Filter out the nodes that the user doesn't have permission to see.
                             PermissionUtilV1.getUserPermissionV1(
                                 subjectIri = node.nodeIri,
-                                subjectCreator = node.nodeOwner,
+                                subjectCreator = node.nodeCreator,
                                 subjectProject = node.nodeProject,
                                 subjectPermissionLiteral = node.nodePermissions,
                                 userProfile = graphDataGetRequest.userProfile
@@ -216,7 +216,7 @@ class ResourcesResponderV1 extends ResponderV1 {
                                 sourceNodeIri = if (outbound) startNode.nodeIri else nodeIri,
                                 targetNodeIri = if (outbound) nodeIri else startNode.nodeIri,
                                 linkProp = rowMap("linkProp"),
-                                linkValueOwner = rowMap("linkValueOwner"),
+                                linkValueCreator = rowMap("linkValueCreator"),
                                 sourceNodeProject = if (outbound) startNode.nodeProject else rowMap("nodeProject"),
                                 linkValuePermissions = rowMap.get("linkValuePermissions")
                             )
@@ -229,7 +229,7 @@ class ResourcesResponderV1 extends ResponderV1 {
                                 PermissionUtilV1.getUserPermissionOnLinkValueV1(
                                     linkValueIri = edge.linkValueIri,
                                     predicateIri = edge.linkProp,
-                                    linkValueCreator = edge.linkValueOwner,
+                                    linkValueCreator = edge.linkValueCreator,
                                     containingResourceProject = edge.sourceNodeProject,
                                     linkValuePermissionLiteral = edge.linkValuePermissions,
                                     userProfile = graphDataGetRequest.userProfile
@@ -309,7 +309,7 @@ class ResourcesResponderV1 extends ResponderV1 {
                 nodeIri = firstRowMap("node"),
                 nodeClass = firstRowMap("nodeClass"),
                 nodeLabel = firstRowMap("nodeLabel"),
-                nodeOwner = firstRowMap("nodeOwner"),
+                nodeCreator = firstRowMap("nodeCreator"),
                 nodeProject = firstRowMap("nodeProject"),
                 nodePermissions = firstRowMap.get("nodePermissions")
             )
@@ -317,7 +317,7 @@ class ResourcesResponderV1 extends ResponderV1 {
             // Make sure the user has permission to see the start node.
             _ = if (PermissionUtilV1.getUserPermissionV1(
                 subjectIri = startNode.nodeIri,
-                subjectCreator = startNode.nodeOwner,
+                subjectCreator = startNode.nodeCreator,
                 subjectProject = startNode.nodeProject,
                 subjectPermissionLiteral = startNode.nodePermissions,
                 userProfile = graphDataGetRequest.userProfile
@@ -427,8 +427,6 @@ class ResourcesResponderV1 extends ResponderV1 {
       * @return a [[ResourceFullResponseV1]].
       */
     private def getFullResponseV1(resourceIri: IRI, userProfile: UserProfileV1, getIncoming: Boolean = true): Future[ResourceFullResponseV1] = {
-        // TODO: error handling if a required value does not exist
-
         // Query resource info, resource properties, and incoming references in parallel.
         // See http://buransky.com/scala/scala-for-comprehension-with-concurrently-running-futures/
 
@@ -816,13 +814,13 @@ class ResourcesResponderV1 extends ResponderV1 {
             val sourceObjectPermissionCode = PermissionUtilV1.getUserPermissionV1(subjectIri = sourceObjectIri, subjectCreator = sourceObjectOwner, subjectProject = sourceObjectProject, subjectPermissionLiteral = sourceObjectLiteral, userProfile = userProfile)
 
             val linkValueIri = row.rowMap("linkValue")
-            val linkValueOwner = row.rowMap("linkValueOwner")
+            val linkValueCreator = row.rowMap("linkValueCreator")
             val linkValuePermissions = row.rowMap.get("linkValuePermissions")
 
             // The link can't be a standoff link, because we know the link property is a subproperty of knora-base:isPartOf,
             // so we don't have to treat it as a special case here.
 
-            val linkValuePermissionCode = PermissionUtilV1.getUserPermissionV1(subjectIri = linkValueIri, subjectCreator = linkValueOwner, subjectProject = sourceObjectProject, subjectPermissionLiteral = linkValuePermissions, userProfile = userProfile)
+            val linkValuePermissionCode = PermissionUtilV1.getUserPermissionV1(subjectIri = linkValueIri, subjectCreator = linkValueCreator, subjectProject = sourceObjectProject, subjectPermissionLiteral = linkValuePermissions, userProfile = userProfile)
 
             // Allow the user to see the link only if they have permission to see both the source object and the link value.
             val permissionCode = Seq(sourceObjectPermissionCode, linkValuePermissionCode).min
@@ -870,13 +868,13 @@ class ResourcesResponderV1 extends ResponderV1 {
                         )
 
                         linkValueIri = rowMap("linkValue")
-                        linkValueOwner = rowMap("linkValueOwner")
+                        linkValueCreator = rowMap("linkValueCreator")
                         linkValuePermissions = rowMap.get("linkValuePermissions")
 
                         // The link can't be a standoff link, because we know the link property is a subproperty of knora-base:isPartOf,
                         // so we don't have to treat it as a special case here.
 
-                        linkValuePermissionCode = PermissionUtilV1.getUserPermissionV1(subjectIri = linkValueIri, subjectCreator = linkValueOwner, subjectProject = containingResourceProject, subjectPermissionLiteral = linkValuePermissions, userProfile = userProfile)
+                        linkValuePermissionCode = PermissionUtilV1.getUserPermissionV1(subjectIri = linkValueIri, subjectCreator = linkValueCreator, subjectProject = containingResourceProject, subjectPermissionLiteral = linkValuePermissions, userProfile = userProfile)
 
                         // Allow the user to see the link only if they have permission to see both the containing resource and the link value.
                         permissionCode = Seq(containingResourcePermissionCode, linkValuePermissionCode).min
@@ -1805,42 +1803,42 @@ class ResourcesResponderV1 extends ResponderV1 {
             for {
 
             // Extract the permission-relevant assertions from the query results.
-            permissionRelevantAssertions: Seq[(IRI, IRI)] <- Future(PermissionUtilV1.filterPermissionRelevantAssertions(resInfoResponseRows.map(row => (row.rowMap("prop"), row.rowMap("obj")))))
+                permissionRelevantAssertions: Seq[(IRI, IRI)] <- Future(PermissionUtilV1.filterPermissionRelevantAssertions(resInfoResponseRows.map(row => (row.rowMap("prop"), row.rowMap("obj")))))
 
-            maybeResourceProjectStatement: Option[(IRI, IRI)] = permissionRelevantAssertions.find {
-                case (subject, predicate) => subject == OntologyConstants.KnoraBase.AttachedToProject
-            }
+                maybeResourceProjectStatement: Option[(IRI, IRI)] = permissionRelevantAssertions.find {
+                    case (subject, predicate) => subject == OntologyConstants.KnoraBase.AttachedToProject
+                }
 
-            resourceProject = maybeResourceProjectStatement.getOrElse(throw InconsistentTriplestoreDataException(s"Resource $resourceIri has no knora-base:attachedToProject"))._2
+                resourceProject = maybeResourceProjectStatement.getOrElse(throw InconsistentTriplestoreDataException(s"Resource $resourceIri has no knora-base:attachedToProject"))._2
 
-            // Get the rows describing file values from the query results, grouped by file value IRI.
-            fileValueGroupedRows: Seq[(IRI, Seq[VariableResultsRow])] = resInfoResponseRows.filter(row => InputValidation.optionStringToBoolean(row.rowMap.get("isFileValue"))).groupBy(row => row.rowMap("obj")).toVector
+                // Get the rows describing file values from the query results, grouped by file value IRI.
+                fileValueGroupedRows: Seq[(IRI, Seq[VariableResultsRow])] = resInfoResponseRows.filter(row => InputValidation.optionStringToBoolean(row.rowMap.get("isFileValue"))).groupBy(row => row.rowMap("obj")).toVector
 
-            // Convert the file value rows to ValueProps objects, and filter out the ones that the user doesn't have permission to see.
-            valuePropsForFileValues: Seq[(IRI, ValueProps)] = fileValueGroupedRows.map {
-                case (fileValueIri, fileValueRows) => (fileValueIri, valueUtilV1.createValueProps(fileValueIri, fileValueRows))
-            }.filter {
-                case (fileValueIri, fileValueProps) =>
-                    val permissionCode = PermissionUtilV1.getUserPermissionV1WithValueProps(
-                        subjectIri = fileValueIri,
-                        valueProps = fileValueProps,
-                        subjectProject = Some(resourceProject),
-                        userProfile = userProfile
-                    )
-                    PermissionUtilV1.impliesV1(userHasPermissionCode = permissionCode, userNeedsPermission = OntologyConstants.KnoraBase.RestrictedViewPermission)
-            }
+                // Convert the file value rows to ValueProps objects, and filter out the ones that the user doesn't have permission to see.
+                valuePropsForFileValues: Seq[(IRI, ValueProps)] = fileValueGroupedRows.map {
+                    case (fileValueIri, fileValueRows) => (fileValueIri, valueUtilV1.createValueProps(fileValueIri, fileValueRows))
+                }.filter {
+                    case (fileValueIri, fileValueProps) =>
+                        val permissionCode = PermissionUtilV1.getUserPermissionV1WithValueProps(
+                            subjectIri = fileValueIri,
+                            valueProps = fileValueProps,
+                            subjectProject = Some(resourceProject),
+                            userProfile = userProfile
+                        )
+                        PermissionUtilV1.impliesV1(userHasPermissionCode = permissionCode, userNeedsPermission = OntologyConstants.KnoraBase.RestrictedViewPermission)
+                }
 
-            // Convert the ValueProps objects into FileValueV1 objects
-            fileValuesWithFuture: Seq[Future[FileValueV1]] = valuePropsForFileValues.map {
-                case (fileValueIri, fileValueProps) =>
-                    for {
-                        valueV1 <- valueUtilV1.makeValueV1(fileValueProps, responderManager, userProfile)
+                // Convert the ValueProps objects into FileValueV1 objects
+                fileValuesWithFuture: Seq[Future[FileValueV1]] = valuePropsForFileValues.map {
+                    case (fileValueIri, fileValueProps) =>
+                        for {
+                            valueV1 <- valueUtilV1.makeValueV1(fileValueProps, responderManager, userProfile)
 
-                    } yield valueV1 match {
-                        case fileValueV1: FileValueV1 => fileValueV1
-                        case otherValueV1 => throw InconsistentTriplestoreDataException(s"Value $fileValueIri is not a knora-base:FileValue, it is an instance of ${otherValueV1.valueTypeIri}")
-                    }
-            }
+                        } yield valueV1 match {
+                            case fileValueV1: FileValueV1 => fileValueV1
+                            case otherValueV1 => throw InconsistentTriplestoreDataException(s"Value $fileValueIri is not a knora-base:FileValue, it is an instance of ${otherValueV1.valueTypeIri}")
+                        }
+                }
 
                 fileValues: Seq[FileValueV1] <- Future.sequence(fileValuesWithFuture)
 

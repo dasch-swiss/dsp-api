@@ -187,7 +187,7 @@ class PermissionUtilV1Spec extends CoreSpec("PermissionUtilSpec") with ImplicitS
                 PermissionV1.RestrictedViewPermission(OntologyConstants.KnoraBase.UnknownUser)
             )
 
-            PermissionUtilV1.parsePermissions(Some(hasPermissionsString), PermissionType.OAP) should equal(permissionsSet)
+            PermissionUtilV1.parsePermissionsWithType(Some(hasPermissionsString), PermissionType.OAP) should equal(permissionsSet)
         }
 
         "build a 'PermissionV1' object" in {

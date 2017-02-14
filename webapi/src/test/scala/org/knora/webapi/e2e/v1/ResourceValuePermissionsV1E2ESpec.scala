@@ -99,7 +99,6 @@ class ResourceValuePermissionsV1E2ESpec extends E2ESpec(StoreRouteV1E2ESpec.conf
             val params =
                 s"""
                   |{
-                  |    "project_id": "http://data.knora.org/projects/parole-religieuse",
                   |    "res_id": "${thingIri.get}",
                   |    "prop": "http://www.knora.org/ontology/anything#hasInteger",
                   |    "int_value": 1234
@@ -120,7 +119,6 @@ class ResourceValuePermissionsV1E2ESpec extends E2ESpec(StoreRouteV1E2ESpec.conf
             val params =
                 s"""
                   |{
-                  |    "project_id": "http://data.knora.org/projects/parole-religieuse",
                   |    "res_id": "${thingIri.get}",
                   |    "prop": "http://www.knora.org/ontology/anything#hasInteger",
                   |    "int_value": 1111
@@ -142,7 +140,6 @@ class ResourceValuePermissionsV1E2ESpec extends E2ESpec(StoreRouteV1E2ESpec.conf
             val params =
                 s"""
                    |{
-                   |    "project_id": "http://data.knora.org/projects/parole-religieuse",
                    |    "res_id": "${thingIri.get}",
                    |    "prop": "http://www.knora.org/ontology/anything#hasInteger",
                    |    "int_value": 2222
@@ -164,7 +161,6 @@ class ResourceValuePermissionsV1E2ESpec extends E2ESpec(StoreRouteV1E2ESpec.conf
             val params =
                 s"""
                    |{
-                   |    "project_id": "http://data.knora.org/projects/drawings-gods",
                    |    "res_id": "${thingIri.get}",
                    |    "prop": "http://www.knora.org/ontology/anything#hasInteger",
                    |    "int_value": 3333

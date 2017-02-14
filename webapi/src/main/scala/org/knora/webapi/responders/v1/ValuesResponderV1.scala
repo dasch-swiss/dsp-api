@@ -184,7 +184,6 @@ class ValuesResponderV1 extends ResponderV1 {
             // Get the IRI of project of the containing resource.
             projectIri = resourceFullResponse.resinfo.getOrElse(throw InconsistentTriplestoreDataException(s"Did not find resource info for resource ${createValueRequest.resourceIri}")).project_id
 
-            // FIXME: Query the PermissionsResponder for Property DOAP
             defaultObjectAccessPermissions <- {
                 responderManager ? DefaultObjectAccessPermissionsStringForPropertyGetV1(
                     projectIri = projectIri,
@@ -388,7 +387,6 @@ class ValuesResponderV1 extends ResponderV1 {
                 // Make a SparqlGenerationResultForProperty for each property.
                 sparqlGenerationResults: Map[IRI, SparqlGenerationResultForProperty] = groupedNumberedValuesWithValueHasOrder.map {
                     case (propertyIri: IRI, valuesToCreate: Seq[NumberedValueToCreate]) =>
-                        // FIXME: Query the PermissionsResponder for Property DOAP
                         val defaultObjectAccessPermissionsF = {
                             responderManager ? DefaultObjectAccessPermissionsStringForPropertyGetV1(
                                 projectIri = createMultipleValuesRequest.projectIri,
@@ -861,8 +859,6 @@ class ValuesResponderV1 extends ResponderV1 {
                         }
 
                         // We'll need to create a new LinkValue.
-
-                        // FIXME: Query the PermissionsResponder for Property DOAP
 
                         changeLinkValueV1AfterChecks(projectIri = currentValueQueryResult.projectIri,
                             dataNamedGraph = projectInfo.dataNamedGraph,
