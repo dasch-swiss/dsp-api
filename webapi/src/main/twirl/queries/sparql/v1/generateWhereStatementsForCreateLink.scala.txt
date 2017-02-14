@@ -33,38 +33,20 @@
  *
  * The SPARQL variable `?resourceClass` (the OWL class of the link source) must already be bound.
  *@
-@(valueIndex: Int,
+@(resourceIndex: Int,
+  valueIndex: Int,
   resourceIri: IRI,
   linkUpdate: SparqlTemplateLinkUpdate,
   maybeValueHasOrder: Option[Int])
-
-    # Value @valueIndex
+  @index = {@resourceIndex.toString()_@valueIndex.toString()}
+    # Value @index
     # Property: @linkUpdate.linkPropertyIri
 
-    BIND(IRI("@linkUpdate.linkPropertyIri") AS ?linkProperty@valueIndex)
-    BIND(IRI("@{linkUpdate.linkPropertyIri}Value") AS ?linkValueProperty@valueIndex)
-    BIND(IRI("@linkUpdate.newLinkValueIri") AS ?newLinkValue@valueIndex)
-    BIND(IRI("@linkUpdate.linkTargetIri") AS ?linkTarget@valueIndex)
+    BIND(IRI("@linkUpdate.linkPropertyIri") AS ?linkProperty@index)
+    BIND(IRI("@{linkUpdate.linkPropertyIri}Value") AS ?linkValueProperty@index)
+    BIND(IRI("@linkUpdate.newLinkValueIri") AS ?newLinkValue@index)
+    BIND(IRI("@linkUpdate.linkTargetIri") AS ?linkTarget@index)
 
-    @* Make sure the link target is a knora-base:Resource. *@
-
-    ?linkTarget@valueIndex rdf:type ?linkTargetClass@valueIndex .
-    ?linkTargetClass@valueIndex rdfs:subClassOf* knora-base:Resource .
-
-    @* Do nothing if the target resource belongs to the wrong OWL class. *@
-
-    ?linkProperty@valueIndex knora-base:objectClassConstraint ?expectedTargetClass@valueIndex .
-    ?linkTargetClass@valueIndex rdfs:subClassOf* ?expectedTargetClass@valueIndex .
-
-    @* Do nothing if the target resource doesn't exist or is marked as deleted. *@
-
-    ?linkTarget@valueIndex knora-base:isDeleted false .
-
-    @* Do nothing if the source resource's OWL class has no cardinality for the link property. *@
-
-    ?resourceClass rdfs:subClassOf* ?restriction@valueIndex .
-    ?restriction@valueIndex a owl:Restriction .
-    ?restriction@valueIndex owl:onProperty ?linkProperty@valueIndex .
 
     @if(linkUpdate.directLinkExists) {
         @{throw SparqlGenerationException(s"linkUpdate.directLinkExists must be false (for valueIndex $valueIndex) in this SPARQL template"); ()}
@@ -91,17 +73,17 @@
     @maybeValueHasOrder match {
         case Some(valueHasOrder) => {
 
-            BIND(@valueHasOrder AS ?nextOrder@valueIndex)
+            BIND(@valueHasOrder AS ?nextOrder@index)
 
         }
 
         case None => {
 
             {
-                SELECT ((MAX(?order@valueIndex)) AS ?maxOrder@valueIndex) (IF(BOUND(?maxOrder@valueIndex), ?maxOrder@valueIndex + 1, 0) AS ?nextOrder@valueIndex)
+                SELECT ((MAX(?order@index)) AS ?maxOrder@index) (IF(BOUND(?maxOrder@index), ?maxOrder@index + 1, 0) AS ?nextOrder@index)
                 WHERE {
-                    <@resourceIri> <@{linkUpdate.linkPropertyIri}Value> ?otherLinkValue@valueIndex .
-                    ?otherLinkValue@valueIndex knora-base:valueHasOrder ?order@valueIndex ;
+                    <@resourceIri> <@{linkUpdate.linkPropertyIri}Value> ?otherLinkValue@index .
+                    ?otherLinkValue@index knora-base:valueHasOrder ?order@index ;
                         knora-base:isDeleted false .
                 }
             }

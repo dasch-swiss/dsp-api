@@ -76,7 +76,7 @@
 
                     rdfs:comment """Represents a Publication Date."""@en ;
 
-                    knora-base:objectClassConstraint knora-base:DateValue ;
+                    knora-base:objectClassConstraint knora-base:TextValue  ;
 
                     salsah-gui:guiElement salsah-gui:Date ;
 

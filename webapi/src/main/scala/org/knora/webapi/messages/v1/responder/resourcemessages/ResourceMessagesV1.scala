@@ -66,7 +66,7 @@ case class CreateResourceRequestV1(restype_id: IRI,
   * @param int_value      an integer literal to be used in the value.
   */
 case class CreateResourceValueV1(richtext_value: Option[CreateRichtextV1] = None,
-                                 link_value: Option[IRI] = None,
+                                 link_value: Option[IRI]= None,
                                  int_value: Option[Int] = None,
                                  decimal_value: Option[BigDecimal] = None,
                                  boolean_value: Option[Boolean] = None,

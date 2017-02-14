@@ -1398,20 +1398,26 @@ class ResourcesV1R2RSpec extends R2RSpec {
                 s"""<xml xmlns:beol="http://www.knora.org/ontology/beol"
                    |    xmlns:biblio="http://www.knora.org/ontology/biblio">
                    |    <beol:Person id="abel">
-                   |		<beol:hasGivenName>Niels Henrik</beol:hasGivenName>
-                   |		<beol:hasFamilyName>Abel</beol:hasFamilyName>
+                       |		<beol:hasGivenName>Niels Henrik</beol:hasGivenName>
+                       |		<beol:hasFamilyName>Abel</beol:hasFamilyName>
                    |	</beol:Person>
-                    | <beol:Person id="perron">
-                    |		<beol:hasGivenName>Oskar</beol:hasGivenName>
-                    |		<beol:hasFamilyName>Perron</beol:hasFamilyName>
-                    |	</beol:Person>
-                    | <biblio:Journal id="math_intelligencer_">
-                    |		<biblio:hasName> Math. Intelligencer </biblio:hasName>
+                   | <biblio:Journal id="math_intelligencer_">
+                    |		<biblio:hasName>math intelligencer </biblio:hasName>
                     |	</biblio:Journal>
-                    | <biblio:Publisher id="windet_londini">
-                    |		<biblio:hasName> Windet</biblio:hasName>
-                    |		<biblio:publisherHasLocation> Londini</biblio:publisherHasLocation>
-                    |	</biblio:Publisher>
+                   |  <biblio:JournalArticle id="strings_in_the_16th_and_17th_centuries" >
+                    |   <biblio:publicationHasTitle>Strings in the 16th and 17th Centuries</biblio:publicationHasTitle>
+                    |   <biblio:publicationHasAuthor>
+                    |     <beol:Person ref="abel"/>
+                    |   </biblio:publicationHasAuthor>
+                    |   <biblio:isPartOfJournal>
+                    |     <biblio:Journal ref="math_intelligencer_"/>
+                    |  </biblio:isPartOfJournal>
+                    |     <biblio:journalVolume>27</biblio:journalVolume>
+                    |     <biblio:startPage>48</biblio:startPage>
+                    |     <biblio:endPage>73</biblio:endPage>
+                    |   <biblio:publicationHasDate>1974</biblio:publicationHasDate>
+                    | </biblio:JournalArticle>
+
                    |</xml>""".stripMargin
             Post("/v1/resources/xml", HttpEntity(ContentTypes.`text/xml(UTF-8)`, params)) ~> addCredentials(BasicHttpCredentials(biblioUserEmail, password)) ~> resourcesPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)
@@ -1427,5 +1433,37 @@ class ResourcesV1R2RSpec extends R2RSpec {
                 responseAs[String] should include("createdResources")
                 }
             }
+//        "Parse simple xml" in {
+//
+//            val params =
+//                s"""<xml xmlns:beol="http://www.knora.org/ontology/beol"
+//                   |    xmlns:biblio="http://www.knora.org/ontology/biblio">
+//                   |    <beol:Person id="abel">
+//                   |		<beol:hasGivenName>Niels Henrik</beol:hasGivenName>
+//                   |		<beol:hasFamilyName>Abel</beol:hasFamilyName>
+//                   |	</beol:Person>
+//                    |<biblio:JournalArticle id="strings_in_the_16th_and_17th_centuries" >
+//                    |   <biblio:publicationHasTitle>Strings in the 16th and 17th Centuries</biblio:publicationHasTitle>
+//                    |   <biblio:publicationHasAuthor>
+//                    |     <beol:Person ref="abel"/>
+//                    |   </biblio:publicationHasAuthor>
+//                    |   <biblio:isPartOfJournal>
+//                    |     <biblio:Journal ref="math_intelligencer_"/>
+//                    |  </biblio:isPartOfJournal>
+//                    |     <biblio:journalVolume>27</biblio:journalVolume>
+//                    |     <biblio:startPage>48</biblio:startPage>
+//                    |     <biblio:endPage>73</biblio:endPage>
+//                    |   <biblio:publicationHasDate>1974</biblio:publicationHasDate>
+//                    | </biblio:JournalArticle>
+//
+//                   |</xml>""".stripMargin
+//
+//            Post("/v1/resources/xmlParse", HttpEntity(ContentTypes.`text/xml(UTF-8)`, params)) ~> addCredentials(BasicHttpCredentials(biblioUserEmail, password)) ~> resourcesPath ~> check {
+//                assert(status == StatusCodes.OK, response.toString)
+//
+//                responseAs[String] shouldEqual "A Person"
+//            }
+//        }
+
     }
 }

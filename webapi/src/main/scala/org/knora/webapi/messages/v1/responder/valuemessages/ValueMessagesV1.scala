@@ -81,6 +81,8 @@ case class CreateRichtextV1(utf8str: String,
     def toJsValue = ApiValueV1JsonProtocol.createRichtextV1Format.write(this)
 }
 
+case class CreateLinkV1(obj_IRI: Option[Seq[IRI]], obj_id:String)
+
 /**
   * Represents a file value to be added to a Knora resource.
   *

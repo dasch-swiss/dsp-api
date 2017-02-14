@@ -52,7 +52,7 @@ import spray.json._
 import scala.concurrent.duration._
 
 import scala.concurrent.{Await, Future}
-import scala.xml.{Node, NodeSeq}
+import scala.xml.{Node, Text, NodeSeq}
 
 
 
@@ -525,13 +525,35 @@ object ResourcesRouteV1 extends Authenticator {
 
                                 val elemNS = node.getNamespace(node.prefix)
                                 val restype_id = elemNS + "#" + entityType
-                                val properties = node.child
+                                val properties :Seq[(IRI, Seq[CreateResourceValueV1])] = node.child
                                     .filter(child => child.label != "#PCDATA")
-                                    .map( child =>
-                                        ( child.getNamespace(child.prefix) + "#" + child.label
-                                             -> List(CreateResourceValueV1(Some(CreateRichtextV1(child.text)))))
-                                    ).toMap
-                                CreateResourceRequestV1(restype_id , resLabel, properties)
+                                      .map {
+                                          case (child) =>
+                                              val subnodes = scala.xml.Utility.trim(child).descendant
+
+                                              if (child.descendant.size != 1) {
+
+                                                  (child.getNamespace(child.prefix) + "#" + child.label ->
+                                                    subnodes.map {
+                                                      case (subnode) =>
+                                                          val ref_att = subnode.attribute("ref").get
+                                                          if (ref_att!=None) {
+                                                              CreateResourceValueV1(None, Some(subnode.getNamespace(subnode.prefix) + "/" + subnode.label+"#"+ ref_att))
+                                                          } else {
+                                                              CreateResourceValueV1(Some(CreateRichtextV1(subnode.text)))
+                                                          }
+                                                    }
+                                                    )
+
+                                              } else {
+
+                                                  (child.getNamespace(child.prefix) + "#" + child.label
+                                                    -> List(CreateResourceValueV1(Some(CreateRichtextV1(child.text)))))
+
+                                              }
+
+                                      }
+                                CreateResourceRequestV1(restype_id , resLabel, properties.toMap)
                             })
                     val request1 = makeMultiResourcesRequestMessage(resourcesToCreate, projectId, apiRequestID, userProfile)
 //                   complete(request1.resourcesToCreate.head.resourceTypeIri.toString)
@@ -547,5 +569,39 @@ object ResourcesRouteV1 extends Authenticator {
 
             }
         }
+
+    } ~  path("v1" / "resources" / "xmlParse" ) {
+        post {
+            entity(as[NodeSeq]) { xml =>
+                val projectId = "project_id"
+                val createResources = xml.map(
+                    node => {
+                        val entityType = node.label
+                        def hasOnlyTextChild(node:Node) = { println(node.child.size,  node.child.isInstanceOf[Text])
+                            node.child.isInstanceOf[Text]
+                           }
+                        val restypeId = "http://www.knora.org/ontology/beol#" + entityType
+                        val label = "A "+ entityType
+                        val properties = node.child.map(
+                            child => {
+
+                                if (hasOnlyTextChild(child)) {
+                                    println("whatever")
+                                    (child.label
+                                      -> List(CreateResourceValueV1(Some(CreateRichtextV1(child.text)))))
+                                } else {
+                                    println("link")
+                                    (child.label
+                                      -> List(CreateResourceValueV1(Some(CreateRichtextV1(child.text)))))
+                                }
+                            }
+                        ).toMap
+
+                    }
+                )
+                complete("A name")
+            }
+        }
+
     }
 }

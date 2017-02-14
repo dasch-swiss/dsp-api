@@ -428,7 +428,7 @@ class ValuesResponderV1 extends ResponderV1 {
 
                                         // Generate WHERE clause statements for the link.
                                         val whereSparql = queries.sparql.v1.txt.generateWhereStatementsForCreateLink(
-
+                                            resourceIndex = createMultipleValuesRequest.resourceIndex,
                                             valueIndex = valueToCreate.valueIndex,
                                             resourceIri = createMultipleValuesRequest.resourceIri,
                                             linkUpdate = sparqlTemplateLinkUpdate,
@@ -437,6 +437,7 @@ class ValuesResponderV1 extends ResponderV1 {
 
                                         // Generate INSERT clause statements for the link.
                                         val insertSparql = queries.sparql.v1.txt.generateInsertStatementsForCreateLink(
+                                            resourceIndex = createMultipleValuesRequest.resourceIndex,
                                             valueIndex = valueToCreate.valueIndex,
                                             linkUpdate = sparqlTemplateLinkUpdate,
                                             maybeComment = valueToCreate.createValueV1WithComment.comment
@@ -1951,6 +1952,7 @@ class ValuesResponderV1 extends ResponderV1 {
 
             // Generate a SPARQL update string.
             sparqlUpdate = queries.sparql.v1.txt.createLink(
+                resourceIndex = 0,
                 dataNamedGraph = projectInfo.dataNamedGraph,
                 triplestore = settings.triplestoreType,
                 resourceIri = resourceIri,

@@ -33,7 +33,8 @@
  *
  * To find out whether the update succeeded, the application must query the link.
  *@
-@(dataNamedGraph: IRI,
+@(resourceIndex: Int,
+  dataNamedGraph: IRI,
   triplestore: String,
   resourceIri: IRI,
   linkUpdate: SparqlTemplateLinkUpdate,
@@ -48,15 +49,16 @@ PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 DELETE {
     GRAPH ?dataNamedGraph {
         @* Delete the link source's last modification date so we can update it. *@
-        ?resource knora-base:lastModificationDate ?resourceLastModificationDate .
+        ?resource@resourceIndex knora-base:lastModificationDate ?resourceLastModificationDate .
     }
 } INSERT {
     GRAPH ?dataNamedGraph {
         @* Update the link source's last modification date. *@
-        ?resource knora-base:lastModificationDate ?currentTime .
+        ?resource@resourceIndex knora-base:lastModificationDate ?currentTime .
 
         @{
-            queries.sparql.v1.txt.generateInsertStatementsForCreateLink(valueIndex = 0,
+            queries.sparql.v1.txt.generateInsertStatementsForCreateLink(resourceIndex = resourceIndex,
+                                                                        valueIndex = 0,
                                                                         linkUpdate = linkUpdate,
                                                                         maybeComment = maybeComment)
         }
@@ -69,23 +71,24 @@ DELETE {
 }
 WHERE {
     BIND(IRI("@dataNamedGraph") AS ?dataNamedGraph)
-    BIND(IRI("@resourceIri") AS ?resource)
+    BIND(IRI("@resourceIri") AS ?resource@resourceIndex)
     BIND(NOW() AS ?currentTime)
 
     @* Do nothing if the resource doesn't exist, is marked as deleted, or isn't actually a resource. *@
 
-    ?resource rdf:type ?resourceClass ;
+    ?resource@resourceIndex rdf:type ?resourceClass@resourceIndex ;
         knora-base:isDeleted false .
-    ?resourceClass rdfs:subClassOf* knora-base:Resource .
+    ?resourceClass@resourceIndex rdfs:subClassOf* knora-base:Resource .
 
     @* Get the link source's last modification date, if it has one, so we can update it. *@
 
     OPTIONAL {
-        ?resource knora-base:lastModificationDate ?resourceLastModificationDate .
+        ?resource@resourceIndex knora-base:lastModificationDate ?resourceLastModificationDate .
     }
 
     @{
-        queries.sparql.v1.txt.generateWhereStatementsForCreateLink(valueIndex = 0,
+        queries.sparql.v1.txt.generateWhereStatementsForCreateLink(resourceIndex = resourceIndex,
+                                                                   valueIndex = 0,
                                                                    resourceIri = resourceIri,
                                                                    linkUpdate = linkUpdate,
                                                                    maybeValueHasOrder = None)

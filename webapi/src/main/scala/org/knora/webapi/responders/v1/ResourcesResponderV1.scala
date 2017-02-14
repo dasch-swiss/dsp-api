@@ -1244,6 +1244,24 @@ class ResourcesResponderV1 extends ResponderV1 {
         } yield result
     }
 
+    def changeIRILinkValues(valuesToCreate: Seq[CreateValueV1WithComment], resourceInfo: Map[String, IRI]): Seq[CreateValueV1WithComment] = {
+
+        val vals:Seq[CreateValueV1WithComment] = valuesToCreate.map {
+
+            case (valueToCreate) =>
+                if (valueToCreate.updateValueV1.isInstanceOf[LinkUpdateV1]) {
+                    val label=valueToCreate.updateValueV1.toString.split("#")
+                    val resIri = resourceInfo(label(1))
+                   
+                    CreateValueV1WithComment(LinkUpdateV1(resIri))
+
+                } else { valueToCreate }
+
+                }
+
+        vals
+    }
+
     /**
       * Create multiple resources and attach the given values to them.
       *
@@ -1256,7 +1274,9 @@ class ResourcesResponderV1 extends ResponderV1 {
                                            userProfile: UserProfileV1,
                                            apiRequestID: UUID): Future[MultipleResourceCreateResponseV1] = {
 
-            for {
+
+
+        for {
                     // Get user's IRI and don't allow anonymous users to create resources.
                     userIri: IRI <- Future {
                         userProfile.userData.user_id match {
@@ -1274,7 +1294,11 @@ class ResourcesResponderV1 extends ResponderV1 {
 
 
                     namedGraph = projectInfo.project_info.dataNamedGraph
+                    resourceInfo: Map[String, IRI] = resourcesToCreate.map (
+                            resRequest =>
+                                (resRequest.label -> knoraIdUtil.makeRandomResourceIri )
 
+                    ).toMap
                     sequenceOfFutures: Seq[Future[ResourceToCreate]] = resourcesToCreate.zipWithIndex.map {
                         case (resRequest, index) =>
 
@@ -1290,12 +1314,20 @@ class ResourcesResponderV1 extends ResponderV1 {
                                     }
 
 
-                                    resourceIri: IRI = knoraIdUtil.makeRandomResourceIri
+                                    resourceIri = resourceInfo(resRequest.label)
+                                    resValues: Map[IRI, Seq[CreateValueV1WithComment]]= resRequest.values.map {
+                                        case (propertyIri, valuesWithComment) =>
+                                            val vals=changeIRILinkValues(valuesWithComment, resourceInfo)
+                                            (propertyIri -> vals)
+                                    }
+
                                     propertyIris = resRequest.values.keySet
-                                    fileValuesV1 <- CheckResource(resRequest.resourceTypeIri, propertyIris, userProfile, resRequest.values, None)
 
 
-                                    generateSparqlForValuesResponse <- createNewSparqlStatement(projectIri, resourceIri, resRequest.resourceTypeIri, index, resRequest.values, fileValuesV1, userProfile, apiRequestID)
+//                                    fileValuesV1 <- CheckResource(resRequest.resourceTypeIri, propertyIris, userProfile, resValues, None)
+
+
+                                    generateSparqlForValuesResponse <- createNewSparqlStatement(projectIri, resourceIri, resRequest.resourceTypeIri, index, resValues, None, userProfile, apiRequestID)
 
                             } yield  ResourceToCreate(resourceIri,  defaultObjectAccessPermissions, generateSparqlForValuesResponse , resRequest.resourceTypeIri, index,  resRequest.label)
 
@@ -1303,12 +1335,15 @@ class ResourcesResponderV1 extends ResponderV1 {
 
 
                     resources: Seq[ResourceToCreate] <- Future.sequence(sequenceOfFutures)
-                    resourceInfo: Map[String, IRI] = resources.map(resInfo => resInfo.resourceLabel -> resInfo.resourceIri  ).toMap
+
                     createMultipleResourcesSparql: String = createNewSparql(resources ,projectIri, namedGraph, userIri)
+                    pw = new PrintWriter(new File("hello.txt" ))
+                    _=pw.write(createMultipleResourcesSparql)
+                    _=pw.close
 
                     // Do the update.
                     createResourceResponse <- (storeManager ? SparqlUpdateRequest(createMultipleResourcesSparql)).mapTo[SparqlUpdateResponse]
-
+                    _=println(createResourceResponse)
                     apiResponses: Seq[Future[ResourceCreateResponseV1]] = resources.map {
                         case res =>
 
@@ -1464,9 +1499,9 @@ class ResourcesResponderV1 extends ResponderV1 {
             _ = if (createdResourceResponse.results.bindings.isEmpty) {
                 log.error(s"Attempted a SPARQL update to create a new resource, but it inserted no rows:\n\n$createNewResourceSparql")
                 throw UpdateNotPerformedException(s"Resource $resourceIri was not created. Please report this as a possible bug.")
+            } else {
+                println("resources created")
             }
-
-
             // Verify that all the requested values were created.
 
             verifyCreateValuesRequest = VerifyMultipleValueCreationRequestV1(
