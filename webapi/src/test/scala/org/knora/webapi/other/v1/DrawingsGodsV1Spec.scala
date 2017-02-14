@@ -60,7 +60,7 @@ class DrawingsGodsV1Spec extends CoreSpec(DrawingsGodsV1Spec.config) with Triple
         RdfDataObject(path = "_test_data/other.v1.DrawingsGodsV1Spec/drawings-gods_admin_V3-20170208-test.ttl", name = "http://www.knora.org/data/admin"),
         RdfDataObject(path = "_test_data/other.v1.DrawingsGodsV1Spec/drawings-gods_permissions_V3-20170203.ttl", name = "http://www.knora.org/data/permissions"),
         RdfDataObject(path = "_test_data/other.v1.DrawingsGodsV1Spec/drawings-gods_ontology_20170209-uptodate.ttl", name = "http://www.knora.org/ontology/drawings-gods"),
-        RdfDataObject(path = "_test_data/other.v1.DrawingsGodsV1Spec/drawings-gods_permissions_V3-20170203.ttl", name = "http://www.knora.org/data/drawings-gods")
+        RdfDataObject(path = "_test_data/other.v1.DrawingsGodsV1Spec/drawings-gods_data-lists_V4-201700208-uptodate.ttl", name = "http://www.knora.org/data/drawings-gods")
     )
 
     "Load test data" in {
