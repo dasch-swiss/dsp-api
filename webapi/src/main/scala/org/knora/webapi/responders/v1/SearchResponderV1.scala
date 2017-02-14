@@ -193,10 +193,10 @@ class SearchResponderV1 extends ResponderV1 {
                         val mapOfMatchingValues: Map[IRI, MatchingValue] = rows.filter(_.rowMap.get("valueObject").nonEmpty).foldLeft(Map.empty[IRI, MatchingValue]) {
                             case (valuesAcc, row) =>
                                 // Convert the permissions on the matching value object into a ValueProps.
-                                val valueIri = row.rowMap(s"valueObject")
-                                val literal = row.rowMap(s"literal")
-                                val valueCreator = row.rowMap(s"valueCreator")
-                                val valuePermissionsLiteral = row.rowMap.get(s"valuePermissions")
+                                val valueIri = row.rowMap("valueObject")
+                                val literal = row.rowMap("literal")
+                                val valueCreator = row.rowMap("valueCreator")
+                                val valuePermissionsLiteral = row.rowMap.get("valuePermissions")
                                 val valuePermissionCode = PermissionUtilV1.getUserPermissionV1(
                                     subjectIri = valueIri, subjectCreator = valueCreator,
                                     subjectProject = resourceProject,
