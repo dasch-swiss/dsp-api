@@ -72,7 +72,7 @@ class UsersResponderV1 extends ResponderV1 {
       * @param profileType the type of the requested profile (restricted of full).
       * @return a [[UserProfileV1]] describing the user.
       */
-    private def userProfileByIRIGetV1(userIRI: IRI, profileType: UserProfileType): Future[UserProfileV1] = {
+    private def userProfileByIRIGetV1(userIRI: IRI, profileType: UserProfileType): Future[Option[UserProfileV1]] = {
         //log.debug(s"userProfileByIRIGetV1: userIri = $userIRI', clean = '$profileType'")
         for {
             sparqlQueryString <- Future(queries.sparql.v1.txt.getUserByIri(
@@ -84,13 +84,9 @@ class UsersResponderV1 extends ResponderV1 {
 
             userDataQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResponse]
 
-            _ = if (userDataQueryResponse.results.bindings.isEmpty) {
-                throw NotFoundException(s"User '$userIRI' not found")
-            }
+            maybeUserProfileV1 <- userDataQueryResponse2UserProfile(userDataQueryResponse, profileType)
 
-            userProfileV1 <- userDataQueryResponse2UserProfile(userDataQueryResponse, profileType)
-
-        } yield userProfileV1 // UserProfileV1(userDataV1, groupIris, projectIris)
+        } yield maybeUserProfileV1 // UserProfileV1(userDataV1, groupIris, projectIris)
     }
 
     /**
@@ -103,8 +99,11 @@ class UsersResponderV1 extends ResponderV1 {
       */
     private def userProfileByIRIGetRequestV1(userIRI: IRI, profileType: UserProfileType, userProfile: UserProfileV1): Future[UserProfileResponseV1] = {
         for {
-            up <- userProfileByIRIGetV1(userIRI, profileType)
-            result = UserProfileResponseV1(up, userProfile.userData)
+            maybeUP <- userProfileByIRIGetV1(userIRI, profileType)
+            result = maybeUP match {
+                case Some(up) => UserProfileResponseV1(up, userProfile.userData)
+                case None => throw NotFoundException(s"User '$userIRI' not found")
+            }
         } yield result
     }
 
@@ -115,7 +114,7 @@ class UsersResponderV1 extends ResponderV1 {
       * @param profileType the type of the requested profile (restricted or full).
       * @return a [[UserProfileV1]] describing the user.
       */
-    private def userProfileByEmailGetV1(email: String, profileType: UserProfileType): Future[UserProfileV1] = {
+    private def userProfileByEmailGetV1(email: String, profileType: UserProfileType): Future[Option[UserProfileV1]] = {
         //log.debug(s"userProfileByEmailGetV1: username = '$email', type = '$profileType'")
         for {
             sparqlQueryString <- Future(queries.sparql.v1.txt.getUserByEmail(
@@ -127,14 +126,9 @@ class UsersResponderV1 extends ResponderV1 {
             userDataQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResponse]
 
             //_ = log.debug(MessageUtil.toSource(userDataQueryResponse))
+            maybeUserProfileV1 <- userDataQueryResponse2UserProfile(userDataQueryResponse, profileType)
 
-            _ = if (userDataQueryResponse.results.bindings.isEmpty) {
-                throw NotFoundException(s"User '$email' not found")
-            }
-
-            userProfileV1 <- userDataQueryResponse2UserProfile(userDataQueryResponse, profileType)
-
-        } yield userProfileV1 // UserProfileV1(userDataV1, groupIris, projectIris)
+        } yield maybeUserProfileV1 // UserProfileV1(userDataV1, groupIris, projectIris)
     }
 
     /**
@@ -147,8 +141,11 @@ class UsersResponderV1 extends ResponderV1 {
       */
     private def userProfileByEmailGetRequestV1(email: String, profileType: UserProfileType, userProfile: UserProfileV1): Future[UserProfileResponseV1] = {
         for {
-            up <- userProfileByEmailGetV1(email, profileType)
-            result = UserProfileResponseV1(up, userProfile.userData)
+            maybeUserProfileV1 <- userProfileByEmailGetV1(email, profileType)
+            result = maybeUserProfileV1 match {
+                case Some(up: UserProfileV1) => UserProfileResponseV1(up, userProfile.userData)
+                case None => throw NotFoundException(s"User '$email' not found")
+            }
         } yield result
     }
 
@@ -217,12 +214,10 @@ class UsersResponderV1 extends ResponderV1 {
             ).toString()
             userDataQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
 
-            _ = if (userDataQueryResponse.results.bindings.isEmpty) {
-                throw UpdateNotPerformedException(s"User $userIri was not created. Please report this as a possible bug.")
-            }
-
             // create the user profile
-            newUserProfile <- userDataQueryResponse2UserProfile(userDataQueryResponse, UserProfileType.RESTRICTED)
+            maybeNewUserProfile <- userDataQueryResponse2UserProfile(userDataQueryResponse, UserProfileType.RESTRICTED)
+
+            newUserProfile = maybeNewUserProfile.getOrElse(throw UpdateNotPerformedException(s"User $userIri was not created. Please report this as a possible bug."))
 
             // create the user operation response
             userOperationResponseV1 = UserOperationResponseV1(newUserProfile, userProfile.userData)
@@ -293,7 +288,8 @@ class UsersResponderV1 extends ResponderV1 {
         def changePaswordTask(userIri: IRI, changePasswordRequest: ChangeUserPasswordApiRequestV1, userProfile: UserProfileV1, apiRequestID: UUID): Future[UserOperationResponseV1] = for {
 
         // check if old password matches current user password
-            userProfile <- userProfileByIRIGetV1(userIri, UserProfileType.FULL)
+            maybeUserProfile <- userProfileByIRIGetV1(userIri, UserProfileType.FULL)
+            userProfile = maybeUserProfile.getOrElse(throw NotFoundException(s"User '$userIri' not found"))
             _ = if (!userProfile.passwordMatch(changePasswordRequest.oldPassword)) throw BadRequestException("The supplied old password does not match the current users password.")
 
             // create the update request
@@ -387,7 +383,8 @@ class UsersResponderV1 extends ResponderV1 {
             createResourceResponse <- (storeManager ? SparqlUpdateRequest(updateUserSparqlString)).mapTo[SparqlUpdateResponse]
 
             /* Verify that the user was updated. */
-            updatedUserProfile <- userProfileByIRIGetV1(userIri, UserProfileType.FULL)
+            maybeUpdatedUserProfile <- userProfileByIRIGetV1(userIri, UserProfileType.FULL)
+            updatedUserProfile = maybeUpdatedUserProfile.getOrElse(throw UpdateNotPerformedException("User was not updated. Please report this as a possible bug."))
             updatedUserData = updatedUserProfile.userData
 
             //_ = log.debug(s"apiUpdateRequest: $apiUpdateRequest /  updatedUserdata: $updatedUserData")
@@ -449,74 +446,79 @@ class UsersResponderV1 extends ResponderV1 {
       * @param userProfileType       a flag denoting if sensitive information should be stripped from the returned [[UserProfileV1]]
       * @return a [[UserProfileV1]] containing the user's data.
       */
-    private def userDataQueryResponse2UserProfile(userDataQueryResponse: SparqlSelectResponse, userProfileType: UserProfileType.Value): Future[UserProfileV1] = {
+    private def userDataQueryResponse2UserProfile(userDataQueryResponse: SparqlSelectResponse, userProfileType: UserProfileType.Value): Future[Option[UserProfileV1]] = {
 
         //log.debug("userDataQueryResponse2UserProfile - " + MessageUtil.toSource(userDataQueryResponse))
 
-        val returnedUserIri = userDataQueryResponse.getFirstRow.rowMap("s")
+        if (userDataQueryResponse.results.bindings.nonEmpty) {
+            val returnedUserIri = userDataQueryResponse.getFirstRow.rowMap("s")
 
-        val groupedUserData: Map[String, Seq[String]] = userDataQueryResponse.results.bindings.groupBy(_.rowMap("p")).map {
-            case (predicate, rows) => predicate -> rows.map(_.rowMap("o"))
-        }
+            val groupedUserData: Map[String, Seq[String]] = userDataQueryResponse.results.bindings.groupBy(_.rowMap("p")).map {
+                case (predicate, rows) => predicate -> rows.map(_.rowMap("o"))
+            }
 
-        //_ = log.debug(s"userDataQueryResponse2UserProfile - groupedUserData: ${MessageUtil.toSource(groupedUserData)}")
+            //_ = log.debug(s"userDataQueryResponse2UserProfile - groupedUserData: ${MessageUtil.toSource(groupedUserData)}")
 
-        /* the projects the user is member of */
-        val projectIris: Seq[IRI] = groupedUserData.get(OntologyConstants.KnoraBase.IsInProject) match {
-            case Some(projects) => projects
-            case None => Seq.empty[IRI]
-        }
+            /* the projects the user is member of */
+            val projectIris: Seq[IRI] = groupedUserData.get(OntologyConstants.KnoraBase.IsInProject) match {
+                case Some(projects) => projects
+                case None => Seq.empty[IRI]
+            }
 
-        //println(projectIris)
+            //println(projectIris)
 
-        val userDataV1 = UserDataV1(
-            lang = groupedUserData.get(OntologyConstants.KnoraBase.PreferredLanguage) match {
-                case Some(langList) => langList.head
-                case None => settings.fallbackLanguage
-            },
-            user_id = Some(returnedUserIri),
-            email = groupedUserData.get(OntologyConstants.KnoraBase.Email).map(_.head),
-            firstname = groupedUserData.get(OntologyConstants.KnoraBase.GivenName).map(_.head),
-            lastname = groupedUserData.get(OntologyConstants.KnoraBase.FamilyName).map(_.head),
-            password = groupedUserData.get(OntologyConstants.KnoraBase.Password).map(_.head),
-            isActiveUser = groupedUserData.get(OntologyConstants.KnoraBase.Status).map(_.head.toBoolean),
-            projects = projectIris
-        )
-        //_ = log.debug(s"userDataQueryResponse2UserProfile - userDataV1: ${MessageUtil.toSource(userDataV1)}")
-
-
-
-        //_ = log.debug(s"userDataQueryResponse2UserProfile - projectIris: ${MessageUtil.toSource(projectIris)}")
-
-        /* the groups the user is member of (only explicit groups) */
-        val groupIris = groupedUserData.get(OntologyConstants.KnoraBase.IsInGroup) match {
-            case Some(groups) => groups
-            case None => Vector.empty[IRI]
-        }
-        //_ = log.debug(s"userDataQueryResponse2UserProfile - groupIris: ${MessageUtil.toSource(groupIris)}")
-
-        /* the projects for which the user is implicitly considered a member of the 'http://www.knora.org/ontology/knora-base#ProjectAdmin' group */
-        val isInProjectAdminGroups = groupedUserData.getOrElse(OntologyConstants.KnoraBase.IsInProjectAdminGroup, Vector.empty[IRI])
-
-        /* is the user implicitly considered a member of the 'http://www.knora.org/ontology/knora-base#SystemAdmin' group */
-        val isInSystemAdminGroup = groupedUserData.get(OntologyConstants.KnoraBase.IsInSystemAdminGroup).exists(p => p.head.toBoolean)
-
-        for {
-        /* get the user's permission profile from the permissions responder */
-            permissionData <- (responderManager ? PermissionDataGetV1(projectIris = projectIris, groupIris = groupIris, isInProjectAdminGroups = isInProjectAdminGroups, isInSystemAdminGroup = isInSystemAdminGroup)).mapTo[PermissionDataV1]
-
-            /* construct the user profile from the different parts */
-            up = UserProfileV1(
-                userData = userDataV1,
-                groups = groupIris,
-                projects = projectIris,
-                sessionId = None,
-                permissionData = permissionData
+            val userDataV1 = UserDataV1(
+                lang = groupedUserData.get(OntologyConstants.KnoraBase.PreferredLanguage) match {
+                    case Some(langList) => langList.head
+                    case None => settings.fallbackLanguage
+                },
+                user_id = Some(returnedUserIri),
+                email = groupedUserData.get(OntologyConstants.KnoraBase.Email).map(_.head),
+                firstname = groupedUserData.get(OntologyConstants.KnoraBase.GivenName).map(_.head),
+                lastname = groupedUserData.get(OntologyConstants.KnoraBase.FamilyName).map(_.head),
+                password = groupedUserData.get(OntologyConstants.KnoraBase.Password).map(_.head),
+                isActiveUser = groupedUserData.get(OntologyConstants.KnoraBase.Status).map(_.head.toBoolean),
+                projects = projectIris
             )
-            //_ = log.debug(s"Retrieved UserProfileV1: ${up.toString}")
+            //_ = log.debug(s"userDataQueryResponse2UserProfile - userDataV1: ${MessageUtil.toSource(userDataV1)}")
 
-            result = up.ofType(userProfileType)
-        } yield result
+
+
+            //_ = log.debug(s"userDataQueryResponse2UserProfile - projectIris: ${MessageUtil.toSource(projectIris)}")
+
+            /* the groups the user is member of (only explicit groups) */
+            val groupIris = groupedUserData.get(OntologyConstants.KnoraBase.IsInGroup) match {
+                case Some(groups) => groups
+                case None => Vector.empty[IRI]
+            }
+            //_ = log.debug(s"userDataQueryResponse2UserProfile - groupIris: ${MessageUtil.toSource(groupIris)}")
+
+            /* the projects for which the user is implicitly considered a member of the 'http://www.knora.org/ontology/knora-base#ProjectAdmin' group */
+            val isInProjectAdminGroups = groupedUserData.getOrElse(OntologyConstants.KnoraBase.IsInProjectAdminGroup, Vector.empty[IRI])
+
+            /* is the user implicitly considered a member of the 'http://www.knora.org/ontology/knora-base#SystemAdmin' group */
+            val isInSystemAdminGroup = groupedUserData.get(OntologyConstants.KnoraBase.IsInSystemAdminGroup).exists(p => p.head.toBoolean)
+
+            for {
+            /* get the user's permission profile from the permissions responder */
+                permissionData <- (responderManager ? PermissionDataGetV1(projectIris = projectIris, groupIris = groupIris, isInProjectAdminGroups = isInProjectAdminGroups, isInSystemAdminGroup = isInSystemAdminGroup)).mapTo[PermissionDataV1]
+
+                /* construct the user profile from the different parts */
+                up = UserProfileV1(
+                    userData = userDataV1,
+                    groups = groupIris,
+                    projects = projectIris,
+                    sessionId = None,
+                    permissionData = permissionData
+                )
+                //_ = log.debug(s"Retrieved UserProfileV1: ${up.toString}")
+
+                result: Option[UserProfileV1] = Some(up.ofType(userProfileType))
+            } yield result
+
+        } else {
+            Future(None)
+        }
     }
 
 }
