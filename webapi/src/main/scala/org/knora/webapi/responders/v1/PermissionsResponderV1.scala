@@ -125,8 +125,7 @@ class PermissionsResponderV1 extends ResponderV1 {
                 Vector.empty[(IRI, IRI)]
             }
             //_ = log.debug("permissionsProfileGetV1 - projectAdmins: {}", MessageUtil.toSource(projectAdmins))
-
-
+            
             /* materialize implicit membership in 'http://www.knora.org/ontology/knora-base#SystemAdmin' group */
             systemAdmin: Vector[(IRI, IRI)] = if (isInSystemAdminGroup) {
                 Vector((OntologyConstants.KnoraBase.SystemProject, OntologyConstants.KnoraBase.SystemAdmin))
