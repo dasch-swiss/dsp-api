@@ -1211,7 +1211,7 @@ object TransformData extends App {
                         }
 
                         /* add CR for Creator */
-                        val permissionsWithCreator = Set(PermissionV1.ChangeRightsPermission(OntologyConstants.KnoraBase.Creator)) ++ currentPermissions
+                        val permissionsWithCreator = Set(PermissionV1.changeRightsPermission(OntologyConstants.KnoraBase.Creator)) ++ currentPermissions
 
                         /* transform back to literal */
                         val changedPermissionsLiteral: String = PermissionUtilV1.formatPermissions(permissionsWithCreator, PermissionType.OAP) match {

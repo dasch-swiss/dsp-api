@@ -852,10 +852,10 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
     private def checkPermissionsOnResource(resourceIri: IRI): Unit = {
 
         val expected = Set(
-            PermissionV1.ChangeRightsPermission("http://www.knora.org/ontology/knora-base#Creator"),
-            PermissionV1.ModifyPermission("http://www.knora.org/ontology/knora-base#ProjectMember"),
-            PermissionV1.ViewPermission("http://www.knora.org/ontology/knora-base#KnownUser"),
-            PermissionV1.RestrictedViewPermission("http://www.knora.org/ontology/knora-base#UnknownUser")
+            PermissionV1.changeRightsPermission("http://www.knora.org/ontology/knora-base#Creator"),
+            PermissionV1.modifyPermission("http://www.knora.org/ontology/knora-base#ProjectMember"),
+            PermissionV1.viewPermission("http://www.knora.org/ontology/knora-base#KnownUser"),
+            PermissionV1.restrictedViewPermission("http://www.knora.org/ontology/knora-base#UnknownUser")
         )
 
         responderManager ! ObjectAccessPermissionsForResourceGetV1(resourceIri = newBookResourceIri.get)

@@ -26,7 +26,7 @@ import akka.actor.Status
 import akka.pattern._
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.ontologymessages._
-import org.knora.webapi.messages.v1.responder.permissionmessages.{DefaultObjectAccessPermissionsStringForResourceClassGetV1, ResourceCreateOperation}
+import org.knora.webapi.messages.v1.responder.permissionmessages.{DefaultObjectAccessPermissionsStringForResourceClassGetV1, DefaultObjectAccessPermissionsStringResponseV1, ResourceCreateOperation}
 import org.knora.webapi.messages.v1.responder.projectmessages._
 import org.knora.webapi.messages.v1.responder.resourcemessages._
 import org.knora.webapi.messages.v1.responder.sipimessages._
@@ -1466,7 +1466,7 @@ class ResourcesResponderV1 extends ResponderV1 {
 
             defaultObjectAccessPermissions <- {
                 responderManager ? DefaultObjectAccessPermissionsStringForResourceClassGetV1(projectIri = projectIri, resourceClassIri = resourceClassIri, userProfile.permissionData)
-            }.mapTo[Option[String]]
+            }.mapTo[DefaultObjectAccessPermissionsStringResponseV1]
             _ = log.debug(s"createNewResource - defaultObjectAccessPermissions: $defaultObjectAccessPermissions")
 
             result: ResourceCreateResponseV1 <- IriLocker.runWithIriLock(
@@ -1476,7 +1476,7 @@ class ResourcesResponderV1 extends ResponderV1 {
                     resourceIri = resourceIri,
                     values = values,
                     sipiConversionRequest = sipiConversionRequest,
-                    permissions = defaultObjectAccessPermissions,
+                    permissions = Some(defaultObjectAccessPermissions.permissionLiteral),
                     namedGraph = namedGraph,
                     ownerIri = userIri,
                     apiRequestID = apiRequestID

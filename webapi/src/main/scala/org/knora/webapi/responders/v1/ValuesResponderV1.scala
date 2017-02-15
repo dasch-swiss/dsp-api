@@ -24,7 +24,7 @@ import akka.actor.Status
 import akka.pattern._
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.ontologymessages.{Cardinality, EntityInfoGetRequestV1, EntityInfoGetResponseV1}
-import org.knora.webapi.messages.v1.responder.permissionmessages.DefaultObjectAccessPermissionsStringForPropertyGetV1
+import org.knora.webapi.messages.v1.responder.permissionmessages.{DefaultObjectAccessPermissionsStringForPropertyGetV1, DefaultObjectAccessPermissionsStringResponseV1}
 import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoByIRIGetV1, ProjectInfoV1}
 import org.knora.webapi.messages.v1.responder.resourcemessages._
 import org.knora.webapi.messages.v1.responder.sipimessages.{SipiConstants, SipiResponderConversionPathRequestV1, SipiResponderConversionRequestV1, SipiResponderConversionResponseV1}
@@ -190,7 +190,7 @@ class ValuesResponderV1 extends ResponderV1 {
                     propertyIri = createValueRequest.propertyIri,
                     createValueRequest.userProfile.permissionData
                 )
-            }.mapTo[Option[String]]
+            }.mapTo[DefaultObjectAccessPermissionsStringResponseV1]
             _ = log.debug(s"createValueV1 - defaultObjectAccessPermissions: $defaultObjectAccessPermissions")
 
             // Get project info
@@ -211,7 +211,7 @@ class ValuesResponderV1 extends ResponderV1 {
                 value = createValueRequest.value,
                 comment = createValueRequest.comment,
                 valueCreator = userIri,
-                valuePermissions = defaultObjectAccessPermissions,
+                valuePermissions = Some(defaultObjectAccessPermissions.permissionLiteral),
                 updateResourceLastModificationDate = true,
                 userProfile = createValueRequest.userProfile)
 
@@ -392,7 +392,7 @@ class ValuesResponderV1 extends ResponderV1 {
                                 projectIri = createMultipleValuesRequest.projectIri,
                                 propertyIri = propertyIri,
                                 createMultipleValuesRequest.userProfile.permissionData)
-                        }.mapTo[Option[String]]
+                        }.mapTo[DefaultObjectAccessPermissionsStringResponseV1]
 
                         val defaultObjectAccessPermissions = Await.result(defaultObjectAccessPermissionsF, 1.second)
                         log.debug(s"createValueV1 - defaultObjectAccessPermissions: $defaultObjectAccessPermissions")
@@ -421,7 +421,7 @@ class ValuesResponderV1 extends ResponderV1 {
                                             currentReferenceCount = 0,
                                             newReferenceCount = 1,
                                             newLinkValueCreator = userIri,
-                                            newLinkValuePermissions = defaultObjectAccessPermissions
+                                            newLinkValuePermissions = Some(defaultObjectAccessPermissions.permissionLiteral)
                                         )
 
                                         // Generate WHERE clause statements for the link.
@@ -464,7 +464,7 @@ class ValuesResponderV1 extends ResponderV1 {
                                             linkUpdates = Seq.empty[SparqlTemplateLinkUpdate], // This is empty because we have to generate SPARQL for standoff links separately.
                                             maybeComment = valueToCreate.createValueV1WithComment.comment,
                                             valueCreator = userIri,
-                                            maybeValuePermissions = defaultObjectAccessPermissions
+                                            maybeValuePermissions = Some(defaultObjectAccessPermissions.permissionLiteral)
                                         ).toString()
 
                                         //println(insertSparql)
@@ -837,7 +837,7 @@ class ValuesResponderV1 extends ResponderV1 {
                         projectIri = findResourceWithValueResult.projectIri,
                         propertyIri = findResourceWithValueResult.propertyIri,
                         permissionData = changeValueRequest.userProfile.permissionData)
-                }.mapTo[Option[String]]
+                }.mapTo[DefaultObjectAccessPermissionsStringResponseV1]
                 _ = log.debug(s"changeValueV1 - defaultObjectAccessPermissions: $defaultObjectAccessPermissions")
 
                 // Get project info
@@ -868,7 +868,7 @@ class ValuesResponderV1 extends ResponderV1 {
                             linkUpdateV1 = linkUpdateV1,
                             comment = changeValueRequest.comment,
                             valueCreator = userIri,
-                            valuePermissions = defaultObjectAccessPermissions,
+                            valuePermissions = Some(defaultObjectAccessPermissions.permissionLiteral),
                             userProfile = changeValueRequest.userProfile)
 
                     case _ =>

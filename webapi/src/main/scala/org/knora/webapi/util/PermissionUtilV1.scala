@@ -478,7 +478,7 @@ object PermissionUtilV1 {
 
             case OntologyConstants.KnoraBase.ProjectResourceCreateRestrictedPermission =>
                 if (iris.nonEmpty) {
-                    iris.map(iri => PermissionV1.ProjectResourceCreateRestrictedPermission(iri))
+                    iris.map(iri => PermissionV1.projectResourceCreateRestrictedPermission(iri))
                 } else {
                     throw InconsistentTriplestoreDataException(s"Missing additional permission information.")
                 }
@@ -489,7 +489,7 @@ object PermissionUtilV1 {
 
             case OntologyConstants.KnoraBase.ProjectAdminGroupRestrictedPermission =>
                 if (iris.nonEmpty) {
-                    iris.map(iri => PermissionV1.ProjectAdminGroupRestrictedPermission(iri))
+                    iris.map(iri => PermissionV1.projectAdminGroupRestrictedPermission(iri))
                 } else {
                     throw InconsistentTriplestoreDataException(s"Missing additional permission information.")
                 }
@@ -500,35 +500,35 @@ object PermissionUtilV1 {
 
             case OntologyConstants.KnoraBase.ChangeRightsPermission =>
                 if (iris.nonEmpty) {
-                    iris.map(iri => PermissionV1.ChangeRightsPermission(iri))
+                    iris.map(iri => PermissionV1.changeRightsPermission(iri))
                 } else {
                     throw InconsistentTriplestoreDataException(s"Missing additional permission information.")
                 }
 
             case OntologyConstants.KnoraBase.DeletePermission =>
                 if (iris.nonEmpty) {
-                    iris.map(iri => PermissionV1.DeletePermission(iri))
+                    iris.map(iri => PermissionV1.deletePermission(iri))
                 } else {
                     throw InconsistentTriplestoreDataException(s"Missing additional permission information.")
                 }
 
             case OntologyConstants.KnoraBase.ModifyPermission =>
                 if (iris.nonEmpty) {
-                    iris.map(iri => PermissionV1.ModifyPermission(iri))
+                    iris.map(iri => PermissionV1.modifyPermission(iri))
                 } else {
                     throw InconsistentTriplestoreDataException(s"Missing additional permission information.")
                 }
 
             case OntologyConstants.KnoraBase.ViewPermission =>
                 if (iris.nonEmpty) {
-                    iris.map(iri => PermissionV1.ViewPermission(iri))
+                    iris.map(iri => PermissionV1.viewPermission(iri))
                 } else {
                     throw InconsistentTriplestoreDataException(s"Missing additional permission information.")
                 }
 
             case OntologyConstants.KnoraBase.RestrictedViewPermission =>
                 if (iris.nonEmpty) {
-                    iris.map(iri => PermissionV1.RestrictedViewPermission(iri))
+                    iris.map(iri => PermissionV1.restrictedViewPermission(iri))
                 } else {
                     throw InconsistentTriplestoreDataException(s"Missing additional permission information.")
                 }
