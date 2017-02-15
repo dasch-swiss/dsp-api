@@ -432,11 +432,16 @@ object Authenticator {
       */
     private def getUserProfileByIri(iri: IRI)(implicit system: ActorSystem, timeout: Timeout, executionContext: ExecutionContext): UserProfileV1 = {
         val responderManager = system.actorSelection(RESPONDER_MANAGER_ACTOR_PATH)
-        val userProfileV1Future = (responderManager ? UserProfileByIRIGetV1(iri, UserProfileType.FULL)).mapTo[UserProfileV1]
-
-        userProfileV1Future.recover {
-            case nfe: NotFoundException => throw BadCredentialsException(s"$BAD_CRED_USER_NOT_FOUND: ${nfe.message}")
-        }
+        val userProfileV1Future = for {
+            maybeUserProfile <- (responderManager ? UserProfileByIRIGetV1(iri, UserProfileType.FULL)).mapTo[Option[UserProfileV1]]
+            userProfileV1 = maybeUserProfile match {
+                case Some(up) => up
+                case None => {
+                        log.debug(s"getUserProfileByEmail - supplied email not found - throwing exception")
+                        throw BadCredentialsException(s"$BAD_CRED_USER_NOT_FOUND")
+                }
+            }
+        } yield userProfileV1
 
         Await.result(userProfileV1Future, Duration(3, SECONDS))
     }
@@ -463,18 +468,17 @@ object Authenticator {
                 case None =>
                     // didn't found one, so I will try to get it from the triple store
                     val userProfileV1Future = for {
-                        userProfileV1 <- (responderManager ? UserProfileByEmailGetV1(email, UserProfileType.FULL)).mapTo[UserProfileV1]
+                        maybeUserProfileV1 <- (responderManager ? UserProfileByEmailGetV1(email, UserProfileType.FULL)).mapTo[Option[UserProfileV1]]
+                        userProfileV1 = maybeUserProfileV1 match {
+                            case Some(up) => up
+                            case None => {
+                                log.debug(s"getUserProfileByEmail - supplied email not found - throwing exception")
+                                throw BadCredentialsException(s"$BAD_CRED_USER_NOT_FOUND")
+                            }
+                        }
                         _ = CacheUtil.put(AUTHENTICATION_CACHE_NAME, email, userProfileV1)
                         _ = log.debug(s"getUserProfileByEmail - from triplestore: $userProfileV1")
                     } yield userProfileV1
-
-                    userProfileV1Future.recover {
-                        case nfe: NotFoundException => {
-                            log.debug(s"getUserProfileByEmail - supplied email not found - throwing exception")
-                            // FIXME: This does not work as expected (#372).
-                            throw BadCredentialsException(s"$BAD_CRED_USER_NOT_FOUND: ${nfe.message}")
-                        }
-                    }
 
                     Await.result(userProfileV1Future, Duration(3, SECONDS))
             }
