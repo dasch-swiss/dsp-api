@@ -127,7 +127,7 @@ lazy val webApiLibs = Seq(
     // input validation
     "commons-validator" % "commons-validator" % "1.4.1",
     // authentication
-    "com.github.t3hnar" %% "scala-bcrypt" % "3.0",
+    "com.lambdaworks" % "scrypt" % "1.4.0",
     // caching
     "net.sf.ehcache" % "ehcache" % "2.10.0",
     // monitoring - disabled for now
@@ -162,8 +162,8 @@ lazy val webApiLibs = Seq(
 
 lazy val javaRunOptions = Seq(
     // "-showversion",
-    "-Xms2048m",
-    "-Xmx4096m"
+    "-Xms8G",
+    "-Xmx14G"
     // "-verbose:gc",
     //"-XX:+UseG1GC",
     //"-XX:MaxGCPauseMillis=500"
@@ -171,8 +171,8 @@ lazy val javaRunOptions = Seq(
 
 lazy val javaTestOptions = Seq(
     // "-showversion",
-    "-Xms2048m",
-    "-Xmx4096m"
+    "-Xms8G",
+    "-Xmx14G"
     // "-verbose:gc",
     //"-XX:+UseG1GC",
     //"-XX:MaxGCPauseMillis=500",
