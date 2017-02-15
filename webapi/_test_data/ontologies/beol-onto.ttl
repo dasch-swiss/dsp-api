@@ -232,7 +232,7 @@
 
         knora-base:subjectClassConstraint :page ;
 
-        knora-base:objectClassConstraint :manuscript ;
+        knora-base:objectClassConstraint :writtenSource ;
 
         salsah-gui:guiOrder "7"^^xsd:integer ;
 
