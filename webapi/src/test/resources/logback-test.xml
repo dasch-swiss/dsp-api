@@ -73,8 +73,10 @@
     <logger name="org.knora.webapi.responders.v1.ResourcesResponderV1" level="INFO"/>
     <logger name="org.knora.webapi.responders.v1.ValuesResponderV1" level="INFO"/>
     <logger name="org.knora.webapi.responders.v1.StoreResponderV1" level="INFO"/>
+    <logger name="org.knora.webapi.responders.v1.OntologyResponderV1" level="INFO"/>
     <logger name="org.knora.webapi.viewhandlers.ResourceHtmlView" level="INFO"/>
-    <logger name="org.knora.webapi.e2e.v1.ResourceValuePermissionsV1E2ESpec" level="INFO"/>
+    <logger name="org.knora.webapi.other.v1.DrawingsGodsV1Spec" level="INFO"/>
+    <logger name="org.knora.webapi.other.v1.DrawingsGodsV1E2ESpec" level="INFO"/>
 
 
     <root level="INFO">

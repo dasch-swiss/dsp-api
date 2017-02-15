@@ -88,7 +88,11 @@ class ValuesResponderV1 extends ResponderV1 {
             response <- maybeValueQueryResult match {
                 case Some(valueQueryResult) =>
                     for {
-                        valueOwnerProfile <- (responderManager ? UserProfileByIRIGetV1(valueQueryResult.ownerIri, UserProfileType.RESTRICTED)).mapTo[UserProfileV1]
+                        maybeValueOwnerProfile <- (responderManager ? UserProfileByIRIGetV1(valueQueryResult.ownerIri, UserProfileType.RESTRICTED)).mapTo[Option[UserProfileV1]]
+                        valueOwnerProfile = maybeValueOwnerProfile match {
+                            case Some(up) => up
+                            case None => throw NotFoundException(s"User ${valueQueryResult.ownerIri} not found")
+                        }
                     } yield ValueGetResponseV1(
                         valuetype = valueQueryResult.value.valueTypeIri,
                         rights = valueQueryResult.permissionCode,
@@ -1295,7 +1299,11 @@ class ValuesResponderV1 extends ResponderV1 {
             linkValueResponse <- maybeValueQueryResult match {
                 case Some(valueQueryResult) =>
                     for {
-                        valueOwnerProfile <- (responderManager ? UserProfileByIRIGetV1(valueQueryResult.ownerIri, UserProfileType.RESTRICTED)).mapTo[UserProfileV1]
+                        maybeValueOwnerProfile <- (responderManager ? UserProfileByIRIGetV1(valueQueryResult.ownerIri, UserProfileType.RESTRICTED)).mapTo[Option[UserProfileV1]]
+                        valueOwnerProfile = maybeValueOwnerProfile match {
+                            case Some(up) => up
+                            case None => throw NotFoundException(s"User ${valueQueryResult.ownerIri} not found")
+                        }
                     } yield ValueGetResponseV1(
                         valuetype = valueQueryResult.value.valueTypeIri,
                         rights = valueQueryResult.permissionCode,

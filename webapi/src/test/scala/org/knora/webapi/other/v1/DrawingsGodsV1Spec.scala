@@ -16,14 +16,8 @@
 
 package org.knora.webapi.other.v1
 
-import java.net.URLEncoder
-
 import akka.actor.Props
-import akka.http.scaladsl.model.headers.BasicHttpCredentials
-import akka.http.scaladsl.model.{ContentTypes, HttpEntity, HttpResponse, StatusCodes}
 import com.typesafe.config.ConfigFactory
-import org.knora.webapi.messages.v1.responder.groupmessages.{GroupInfoByIRIGetRequest, GroupInfoResponseV1, GroupOperationResponseV1}
-import org.knora.webapi.{CoreSpec, LiveActorMaker, SharedAdminTestData}
 import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse}
 import org.knora.webapi.messages.v1.responder.permissionmessages.DefaultObjectAccessPermissionsStringForResourceClassGetV1
 import org.knora.webapi.messages.v1.responder.usermessages.{UserProfileByIRIGetV1, UserProfileType, UserProfileV1}
@@ -31,8 +25,8 @@ import org.knora.webapi.messages.v1.store.triplestoremessages.{RdfDataObject, Re
 import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_NAME
 import org.knora.webapi.responders.v1.ResponderManagerV1
 import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
-import org.knora.webapi.util.{MutableTestIri, MutableUserProfileV1, ResourceResponseExtractorMethods, ValuesResponseExtractorMethods}
-import spray.json._
+import org.knora.webapi.util.{MutableTestIri, MutableUserProfileV1}
+import org.knora.webapi.{CoreSpec, LiveActorMaker, SharedAdminTestData}
 
 import scala.concurrent.duration._
 
