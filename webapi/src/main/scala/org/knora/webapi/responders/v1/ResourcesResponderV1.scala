@@ -1324,10 +1324,10 @@ class ResourcesResponderV1 extends ResponderV1 {
                                     propertyIris = resRequest.values.keySet
 
 
-//                                    fileValuesV1 <- CheckResource(resRequest.resourceTypeIri, propertyIris, userProfile, resValues, None)
+                                    fileValuesV1 <- CheckResource(resRequest.resourceTypeIri, propertyIris, userProfile, resValues, None,  checkObject=false)
 
 
-                                    generateSparqlForValuesResponse <- createNewSparqlStatement(projectIri, resourceIri, resRequest.resourceTypeIri, index, resValues, None, userProfile, apiRequestID)
+                                    generateSparqlForValuesResponse <- createNewSparqlStatement(projectIri, resourceIri, resRequest.resourceTypeIri, index,checkObj=false, resValues, fileValuesV1 , userProfile, apiRequestID)
 
                             } yield  ResourceToCreate(resourceIri,  defaultObjectAccessPermissions, generateSparqlForValuesResponse , resRequest.resourceTypeIri, index,  resRequest.label)
 
@@ -1337,13 +1337,10 @@ class ResourcesResponderV1 extends ResponderV1 {
                     resources: Seq[ResourceToCreate] <- Future.sequence(sequenceOfFutures)
 
                     createMultipleResourcesSparql: String = createNewSparql(resources ,projectIri, namedGraph, userIri)
-                    pw = new PrintWriter(new File("hello.txt" ))
-                    _=pw.write(createMultipleResourcesSparql)
-                    _=pw.close
 
                     // Do the update.
                     createResourceResponse <- (storeManager ? SparqlUpdateRequest(createMultipleResourcesSparql)).mapTo[SparqlUpdateResponse]
-                    _=println(createResourceResponse)
+
                     apiResponses: Seq[Future[ResourceCreateResponseV1]] = resources.map {
                         case res =>
 
@@ -1365,7 +1362,8 @@ class ResourcesResponderV1 extends ResponderV1 {
 
 
     private def CheckResource(resourceClassIri:IRI, propertyIris:Set[String], userProfile: UserProfileV1, values: Map[IRI, Seq[CreateValueV1WithComment]],
-                      sipiConversionRequest: Option[SipiResponderConversionRequestV1]): Future[Option[(IRI, Vector[CreateValueV1WithComment])]] = {
+                              sipiConversionRequest: Option[SipiResponderConversionRequestV1],  checkObject: Boolean): Future[Option[(IRI, Vector[CreateValueV1WithComment])]] = {
+
         for {
             // Get ontology information about the resource class's cardinalities and about each property's knora-base:objectClassConstraint.
 
@@ -1377,26 +1375,28 @@ class ResourcesResponderV1 extends ResponderV1 {
 
             // Check that each submitted value is consistent with the knora-base:objectClassConstraint of the property that is supposed to
             // point to it.
+            _ = if (checkObject==true) {
+                for {
+                    propertyObjectClassConstraintChecks: Seq[Unit] <- Future.sequence {
+                        values.foldLeft(Vector.empty[Future[Unit]]) {
+                            case (acc, (propertyIri, valuesWithComments)) =>
+                                val propertyInfo = entityInfoResponse.propertyEntityInfoMap(propertyIri)
+                                val propertyObjectClassConstraint = propertyInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint).getOrElse {
+                                    throw InconsistentTriplestoreDataException(s"Property $propertyIri has no knora-base:objectClassConstraint")
+                                }
 
-            propertyObjectClassConstraintChecks: Seq[Unit] <- Future.sequence {
-                values.foldLeft (Vector.empty[Future[Unit]] ) {
-                    case (acc, (propertyIri, valuesWithComments) ) =>
-                    val propertyInfo = entityInfoResponse.propertyEntityInfoMap (propertyIri)
-                    val propertyObjectClassConstraint = propertyInfo.getPredicateObject (OntologyConstants.KnoraBase.ObjectClassConstraint).getOrElse {
-                        throw InconsistentTriplestoreDataException (s"Property $propertyIri has no knora-base:objectClassConstraint")
+                                acc ++ valuesWithComments.map {
+                                    valueV1WithComment: CreateValueV1WithComment => checkPropertyObjectClassConstraintForValue(
+                                        propertyIri = propertyIri,
+                                        propertyObjectClassConstraint = propertyObjectClassConstraint,
+                                        updateValueV1 = valueV1WithComment.updateValueV1,
+                                        userProfile = userProfile
+                                    )
+                                }
+                        }
                     }
-
-                    acc ++ valuesWithComments.map {
-                        valueV1WithComment: CreateValueV1WithComment => checkPropertyObjectClassConstraintForValue (
-                            propertyIri = propertyIri,
-                            propertyObjectClassConstraint = propertyObjectClassConstraint,
-                            updateValueV1 = valueV1WithComment.updateValueV1,
-                            userProfile = userProfile
-                        )
-                    }
-                }
+                    } yield propertyObjectClassConstraintChecks
             }
-
             // Check that the resource class has a suitable cardinality for each submitted value.
             resourceClassInfo = entityInfoResponse.resourceEntityInfoMap (resourceClassIri)
 
@@ -1454,7 +1454,7 @@ class ResourcesResponderV1 extends ResponderV1 {
 
     }
 
-    def createNewSparqlStatement(projectIri:IRI, resourceIri:IRI, resourceClassIri:IRI, resourceIndex:Int,  values: Map[IRI, Seq[CreateValueV1WithComment]],
+    def createNewSparqlStatement(projectIri:IRI, resourceIri:IRI, resourceClassIri:IRI, resourceIndex:Int,  checkObj:Boolean, values: Map[IRI, Seq[CreateValueV1WithComment]],
                                  fileValuesV1: Option[(IRI, Vector[CreateValueV1WithComment])] , userProfile: UserProfileV1, apiRequestID:UUID): Future[GenerateSparqlToCreateMultipleValuesResponseV1] ={
             for{
         // Ask the values responder for the SPARQL statements that are needed to create the values.
@@ -1463,6 +1463,7 @@ class ResourcesResponderV1 extends ResponderV1 {
                                                         resourceIri = resourceIri,
                                                         resourceClassIri = resourceClassIri,
                                                         resourceIndex = resourceIndex,
+                                                        checkObj = checkObj,
                                                         values = values ++ fileValuesV1,
                                                         userProfile = userProfile,
                                                         apiRequestID = apiRequestID
@@ -1499,8 +1500,6 @@ class ResourcesResponderV1 extends ResponderV1 {
             _ = if (createdResourceResponse.results.bindings.isEmpty) {
                 log.error(s"Attempted a SPARQL update to create a new resource, but it inserted no rows:\n\n$createNewResourceSparql")
                 throw UpdateNotPerformedException(s"Resource $resourceIri was not created. Please report this as a possible bug.")
-            } else {
-                println("resources created")
             }
             // Verify that all the requested values were created.
 
@@ -1556,9 +1555,9 @@ class ResourcesResponderV1 extends ResponderV1 {
         // Everything looks OK, so we can create the resource and its values.
 
         for {
-            fileValuesV1 <- CheckResource(resourceClassIri, propertyIris, userProfile, values, sipiConversionRequest)
+            fileValuesV1 <- CheckResource(resourceClassIri, propertyIris, userProfile, values, sipiConversionRequest, checkObject=true)
             generateSparqlForValuesResponse <- createNewSparqlStatement(projectIri, resourceIri, resourceClassIri,
-                                                    resourceIndex=0, values, fileValuesV1, userProfile, apiRequestID)
+                                                    resourceIndex=0, checkObj = true, values, fileValuesV1, userProfile, apiRequestID)
             resourcesToCreate = Seq[ResourceToCreate] (ResourceToCreate(resourceIri, permissions, generateSparqlForValuesResponse,resourceClassIri, 0, label ))
             createNewResourceSparql = createNewSparql( resourcesToCreate, projectIri, namedGraph, ownerIri)
             // Do the update.

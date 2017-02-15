@@ -232,6 +232,7 @@ case class ValueVersionHistoryGetResponseV1(valueVersions: Seq[ValueVersionV1],
   * successful response will be an [[CreateValueResponseV1]].
   *
   * @param resourceIndex the index of the resource
+  * @param checkObj     check the objectClassConstrain of link
   * @param projectIri   the project in which the value is to be added.
   * @param resourceIri  the IRI of the resource to which the value should be added.
   * @param propertyIri  the IRI of the property that should receive the value.
@@ -241,6 +242,7 @@ case class ValueVersionHistoryGetResponseV1(valueVersions: Seq[ValueVersionV1],
   * @param apiRequestID the ID of this API request.
   */
 case class CreateValueRequestV1(resourceIndex: Int = 0,
+                                checkObj: Boolean = true,
                                 projectIri: IRI,
                                 resourceIri: IRI,
                                 propertyIri: IRI,
@@ -319,7 +321,10 @@ case class CreateValueV1WithComment(updateValueV1: UpdateValueV1, comment: Optio
   * @param projectIri       the project the values belong to.
   * @param resourceIri      the resource the values will be attached to.
   * @param resourceClassIri the IRI of the resource's OWL class.
+  * @param resourceIndex      the index of the resource to be created
+  * @param checkObj         the flag for checking the ObjectClassConstraint of the links
   * @param values           the values to be added, with optional comments.
+  *
   * @param userProfile      the user that is creating the values.
   */
 
@@ -328,6 +333,7 @@ case class GenerateSparqlToCreateMultipleValuesRequestV1(projectIri: IRI,
                                                          resourceIri: IRI,
                                                          resourceClassIri: IRI,
                                                          resourceIndex: Int,
+                                                         checkObj:Boolean,
                                                          values: Map[IRI, Seq[CreateValueV1WithComment]],
                                                          userProfile: UserProfileV1 ,
                                                          apiRequestID: UUID) extends ValuesResponderRequestV1

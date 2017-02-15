@@ -38,7 +38,8 @@
   triplestore: String,
   resourceIri: IRI,
   linkUpdate: SparqlTemplateLinkUpdate,
-  maybeComment: Option[String])
+  maybeComment: Option[String],
+  checkObj: Boolean)
 
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -91,6 +92,7 @@ WHERE {
                                                                    valueIndex = 0,
                                                                    resourceIri = resourceIri,
                                                                    linkUpdate = linkUpdate,
-                                                                   maybeValueHasOrder = None)
+                                                                   maybeValueHasOrder = None,
+                                                                   checkObj = checkObj)
     }
 }

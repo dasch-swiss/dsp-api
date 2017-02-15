@@ -432,7 +432,8 @@ class ValuesResponderV1 extends ResponderV1 {
                                             valueIndex = valueToCreate.valueIndex,
                                             resourceIri = createMultipleValuesRequest.resourceIri,
                                             linkUpdate = sparqlTemplateLinkUpdate,
-                                            maybeValueHasOrder = Some(valueToCreate.valueHasOrder)
+                                            maybeValueHasOrder = Some(valueToCreate.valueHasOrder),
+                                            checkObj = createMultipleValuesRequest.checkObj
                                         ).toString()
 
                                         // Generate INSERT clause statements for the link.
@@ -457,7 +458,8 @@ class ValuesResponderV1 extends ResponderV1 {
                                             newValueIri = newValueIri,
                                             valueTypeIri = updateValueV1.valueTypeIri,
                                             linkUpdates = Seq.empty[SparqlTemplateLinkUpdate], // This is empty because we have to generate SPARQL for standoff links separately.
-                                            maybeValueHasOrder = Some(valueToCreate.valueHasOrder)
+                                            maybeValueHasOrder = Some(valueToCreate.valueHasOrder),
+                                            checkObj = createMultipleValuesRequest.checkObj
                                         ).toString()
 
                                         // Generate INSERT clause statements for the value.
@@ -1957,7 +1959,8 @@ class ValuesResponderV1 extends ResponderV1 {
                 triplestore = settings.triplestoreType,
                 resourceIri = resourceIri,
                 linkUpdate = sparqlTemplateLinkUpdate,
-                maybeComment = comment
+                maybeComment = comment,
+                checkObj = false
             ).toString()
 
             /*
@@ -2036,6 +2039,7 @@ class ValuesResponderV1 extends ResponderV1 {
             // Generate a SPARQL update string.
             sparqlUpdate = queries.sparql.v1.txt.createValue(
                 resourceIndex = 0,
+                checkObj=true,
                 dataNamedGraph = projectInfo.dataNamedGraph,
                 triplestore = settings.triplestoreType,
                 resourceIri = resourceIri,

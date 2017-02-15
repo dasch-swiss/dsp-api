@@ -42,6 +42,7 @@
  * To find out whether the update succeeded, the application must query the property's version history.
  *@
 @(resourceIndex : Int,
+  checkObj:Boolean,
   dataNamedGraph: IRI,
   triplestore: String,
   resourceIri: IRI,
@@ -124,6 +125,7 @@ WHERE {
 
     @{
         queries.sparql.v1.txt.generateWhereStatementsForCreateValue(resourceIndex = resourceIndex,
+                                                                    checkObj=checkObj,
                                                                     valueIndex = 0,
                                                                     resourceIri = resourceIri,
                                                                     propertyIri = propertyIri,

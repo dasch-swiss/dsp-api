@@ -37,7 +37,8 @@
   valueIndex: Int,
   resourceIri: IRI,
   linkUpdate: SparqlTemplateLinkUpdate,
-  maybeValueHasOrder: Option[Int])
+  maybeValueHasOrder: Option[Int],
+  checkObj: Boolean)
   @index = {@resourceIndex.toString()_@valueIndex.toString()}
     # Value @index
     # Property: @linkUpdate.linkPropertyIri
@@ -47,6 +48,27 @@
     BIND(IRI("@linkUpdate.newLinkValueIri") AS ?newLinkValue@index)
     BIND(IRI("@linkUpdate.linkTargetIri") AS ?linkTarget@index)
 
+  @if(checkObj) {
+        @* Make sure the link target is a knora-base:Resource. *@
+
+        ?linkTarget@valueIndex rdf:type ?linkTargetClass@valueIndex .
+        ?linkTargetClass@valueIndex rdfs:subClassOf* knora-base:Resource .
+
+        @* Do nothing if the target resource belongs to the wrong OWL class. *@
+
+        ?linkProperty@valueIndex knora-base:objectClassConstraint ?expectedTargetClass@valueIndex .
+        ?linkTargetClass@valueIndex rdfs:subClassOf* ?expectedTargetClass@valueIndex .
+
+        @* Do nothing if the target resource doesn't exist or is marked as deleted. *@
+
+        ?linkTarget@valueIndex knora-base:isDeleted false .
+
+        @* Do nothing if the source resource's OWL class has no cardinality for the link property. *@
+        ?resourceClass rdfs:subClassOf* ?restriction@valueIndex .
+        ?restriction@valueIndex a owl:Restriction .
+        ?restriction@valueIndex owl:onProperty ?linkProperty@valueIndex .
+
+    }
 
     @if(linkUpdate.directLinkExists) {
         @{throw SparqlGenerationException(s"linkUpdate.directLinkExists must be false (for valueIndex $valueIndex) in this SPARQL template"); ()}
