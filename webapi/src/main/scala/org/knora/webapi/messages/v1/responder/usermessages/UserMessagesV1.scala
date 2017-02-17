@@ -234,7 +234,8 @@ case class UserProfileV1(userData: UserDataV1 = UserDataV1(lang = "en"),
                         ) {
 
     /**
-      * Check password using either SHA-1 or BCrypt. The SCrypt password always starts with '$s0$'
+      * Check password using either SHA-1 or SCrypt.
+      * The SCrypt password always starts with '$e0801$' (spring.framework implementation)
       *
       * @param password the password to check.
       * @return true if password matches and false if password doesn't match.
@@ -243,10 +244,11 @@ case class UserProfileV1(userData: UserDataV1 = UserDataV1(lang = "en"),
         userData.password.exists {
             hashedpassword =>
                 hashedpassword match {
-                    case hp if hp.startsWith("$s0$") => {
+                    case hp if hp.startsWith("$e0801$") => {
                         //println(s"UserProfileV1 - passwordMatch - password: $password, hashedpassword: $hashedpassword")
-                        import com.lambdaworks.crypto.SCryptUtil
-                        SCryptUtil.check(password, hp)
+                        import org.springframework.security.crypto.scrypt.SCryptPasswordEncoder
+                        val encoder = new SCryptPasswordEncoder
+                        encoder.matches(password, hp)
                     }
                     case hp => {
                         val md = java.security.MessageDigest.getInstance("SHA-1")
@@ -276,9 +278,9 @@ case class UserProfileV1(userData: UserDataV1 = UserDataV1(lang = "en"),
       * @return true if password matches and false if password doesn't match.
       */
     private def passwordMatchSCrypt(password: String): Boolean = {
-        import com.lambdaworks.crypto.SCryptUtil
+        import org.springframework.security.crypto.scrypt.SCryptPasswordEncoder
         userData.password.exists {
-            hashedPassword => SCryptUtil.check(password, hashedPassword)
+            hashedPassword => new SCryptPasswordEncoder().matches(password, hashedPassword)
         }
     }
 
