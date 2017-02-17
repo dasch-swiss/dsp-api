@@ -91,7 +91,7 @@ class ValuesResponderV1 extends ResponderV1 {
                         maybeValueCreatorProfile <- (responderManager ? UserProfileByIRIGetV1(valueQueryResult.creatorIri, UserProfileType.RESTRICTED)).mapTo[Option[UserProfileV1]]
                         valueCreatorProfile = maybeValueCreatorProfile match {
                             case Some(up) => up
-                            case None => throw NotFoundException(s"User ${valueQueryResult.ownerIri} not found")
+                            case None => throw NotFoundException(s"User ${valueQueryResult.creatorIri} not found")
                         }
                     } yield ValueGetResponseV1(
                         valuetype = valueQueryResult.value.valueTypeIri,
@@ -1288,7 +1288,7 @@ class ValuesResponderV1 extends ResponderV1 {
                         maybeValueCreatorProfile <- (responderManager ? UserProfileByIRIGetV1(valueQueryResult.creatorIri, UserProfileType.RESTRICTED)).mapTo[Option[UserProfileV1]]
                         valueCreatorProfile = maybeValueCreatorProfile match {
                             case Some(up) => up
-                            case None => throw NotFoundException(s"User ${valueQueryResult.ownerIri} not found")
+                            case None => throw NotFoundException(s"User ${valueQueryResult.creatorIri} not found")
                         }
                     } yield ValueGetResponseV1(
                         valuetype = valueQueryResult.value.valueTypeIri,
