@@ -72,7 +72,7 @@ class AuthenticatorSpec extends CoreSpec("AuthenticationTestSystem") with Implic
         }
     })
 
-    val getUserProfileByEmail = PrivateMethod[Try[Option[UserProfileV1]]]('getUserProfileByEmail)
+    val getUserProfileByEmail = PrivateMethod[Try[UserProfileV1]]('getUserProfileByEmail)
     val authenticateCredentials = PrivateMethod[Try[String]]('authenticateCredentials)
 
     "During Authentication" when {
