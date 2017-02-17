@@ -31,10 +31,9 @@
  *@
 @(triplestore: String,
   projectIri: IRI,
-  groupIri: IRI,
-  resourceClassIri: IRI,
-  propertyIri: IRI
-  )
+  maybeGroupIri: Option[IRI],
+  maybeResourceClassIri: Option[IRI],
+  maybePropertyIri: Option[IRI])
 
 prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 prefix knora-base: <http://www.knora.org/ontology/knora-base#>
@@ -50,16 +49,16 @@ WHERE {
     ?s rdf:type knora-base:DefaultObjectAccessPermission .
     ?s knora-base:forProject <@projectIri> .
 
-    @if(groupIri.nonEmpty) {
-        ?s knora-base:forGroup <@groupIri> .
+    @if(maybeGroupIri.nonEmpty) {
+        ?s knora-base:forGroup <@maybeGroupIri.get> .
     }
 
-    @if(resourceClassIri.nonEmpty) {
-        ?s knora-base:forResourceClass <@resourceClassIri> .
+    @if(maybeResourceClassIri.nonEmpty) {
+        ?s knora-base:forResourceClass <@maybeResourceClassIri.get> .
     }
 
-    @if(propertyIri.nonEmpty) {
-        ?s knora-base:forProperty <@propertyIri> .
+    @if(maybePropertyIri.nonEmpty) {
+        ?s knora-base:forProperty <@maybePropertyIri.get> .
     }
 
     ?s ?p ?o .

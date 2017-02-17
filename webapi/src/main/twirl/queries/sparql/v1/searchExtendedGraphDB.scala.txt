@@ -60,16 +60,15 @@ SELECT DISTINCT
     ?previewPath
     ?previewDimX
     ?previewDimY
-    ?resourceOwner
+    ?resourceCreator
     ?resourceProject
     ?resourcePermissions
     @for((searchCriterion, index) <- searchCriteria.zipWithIndex) {
         ?valueObject@index
-        ?valueOwner@index
-        ?valueProject@index
+        ?valueCreator@index
         ?valuePermissions@index
         ?targetResource@index
-        ?targetResourceOwner@index
+        ?targetResourceCreator@index
         ?targetResourceProject@index
         ?targetResourcePermissions@index
         ?literal@index
@@ -156,7 +155,7 @@ WHERE {
 
                         ?targetResource@index rdfs:label ?literal@index ;
                             knora-base:isDeleted false ;
-                            knora-base:attachedToUser ?targetResourceOwner@index ;
+                            knora-base:attachedToUser ?targetResourceCreator@index ;
                             knora-base:attachedToProject ?targetResourceProject@index .
 
                         OPTIONAL {
@@ -229,7 +228,7 @@ WHERE {
 
                         <@searchCriterion.searchValue> rdfs:label ?literal@index ;
                             knora-base:isDeleted false ;
-                            knora-base:attachedToUser ?targetResourceOwner@index ;
+                            knora-base:attachedToUser ?targetResourceCreator@index ;
                             knora-base:attachedToProject ?targetResourceProject@index .
 
                         OPTIONAL {
@@ -482,11 +481,7 @@ WHERE {
         }
 
         ?valueObject@index knora-base:isDeleted false ;
-            knora-base:attachedToUser ?valueOwner@index .
-
-        OPTIONAL {
-            ?valueObject@index knora-base:attachedToProject ?valueProject@index .
-        }
+            knora-base:attachedToUser ?valueCreator@index .
 
         OPTIONAL {
             ?valueObject@index knora-base:hasPermissions ?valuePermissions@index .
@@ -557,7 +552,7 @@ WHERE {
     }
 
     OPTIONAL {
-        ?resource knora-base:attachedToUser ?resourceOwner .
+        ?resource knora-base:attachedToUser ?resourceCreator .
     }
 
     OPTIONAL {

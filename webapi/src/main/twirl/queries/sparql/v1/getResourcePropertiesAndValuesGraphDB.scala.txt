@@ -67,18 +67,12 @@ WHERE {
         }
 
         {
+            @* Get the project of the containing resource. *@
+
             ?obj knora-base:isDeleted false .
-
-            @* Get the value's project if it has one, otherwise use the project of the containing resource. *@
-
             ?resource knora-base:attachedToProject ?resourceProject .
-
-            OPTIONAL {
-                ?obj knora-base:attachedToProject ?valueProject .
-            }
-
             BIND(knora-base:attachedToProject AS ?objPred)
-        	BIND(COALESCE(?valueProject, ?resourceProject) AS ?objObj)
+        	BIND(?resourceProject AS ?objObj)
         }
         UNION
         {
@@ -103,7 +97,7 @@ WHERE {
                 ?obj ?objPred ?objObj .
             }
 
-            FILTER(!(?objPred = knora-base:attachedToProject || ?objPred = knora-base:valueHasStandoff))
+            FILTER(?objPred != knora-base:valueHasStandoff)
         }
     }
     UNION
