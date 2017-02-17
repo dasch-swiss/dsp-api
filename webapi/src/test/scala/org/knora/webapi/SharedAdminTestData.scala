@@ -170,15 +170,15 @@ object SharedAdminTestData {
             ),
             defaultObjectAccessPermissionsPerProject =  Map(
                 INCUNABULA_PROJECT_IRI -> Set(
-                    PermissionV1.RestrictedViewPermission(OntologyConstants.KnoraBase.UnknownUser),
-                    PermissionV1.ChangeRightsPermission(OntologyConstants.KnoraBase.Creator),
-                    PermissionV1.ViewPermission(OntologyConstants.KnoraBase.KnownUser),
-                    PermissionV1.ModifyPermission(OntologyConstants.KnoraBase.ProjectMember)
+                    PermissionV1.restrictedViewPermission(OntologyConstants.KnoraBase.UnknownUser),
+                    PermissionV1.changeRightsPermission(OntologyConstants.KnoraBase.Creator),
+                    PermissionV1.viewPermission(OntologyConstants.KnoraBase.KnownUser),
+                    PermissionV1.modifyPermission(OntologyConstants.KnoraBase.ProjectMember)
                 ),
                 IMAGES_PROJECT_IRI -> Set(
-                    PermissionV1.ChangeRightsPermission(OntologyConstants.KnoraBase.Creator),
-                    PermissionV1.ViewPermission(OntologyConstants.KnoraBase.KnownUser),
-                    PermissionV1.ModifyPermission(OntologyConstants.KnoraBase.ProjectMember)
+                    PermissionV1.changeRightsPermission(OntologyConstants.KnoraBase.Creator),
+                    PermissionV1.viewPermission(OntologyConstants.KnoraBase.KnownUser),
+                    PermissionV1.modifyPermission(OntologyConstants.KnoraBase.ProjectMember)
 
                 )
             )
@@ -236,9 +236,9 @@ object SharedAdminTestData {
             ),
             defaultObjectAccessPermissionsPerProject =  Map(
                 IMAGES_PROJECT_IRI -> Set(
-                    PermissionV1.ChangeRightsPermission(OntologyConstants.KnoraBase.Creator),
-                    PermissionV1.ViewPermission(OntologyConstants.KnoraBase.KnownUser),
-                    PermissionV1.ModifyPermission(OntologyConstants.KnoraBase.ProjectMember)
+                    PermissionV1.changeRightsPermission(OntologyConstants.KnoraBase.Creator),
+                    PermissionV1.viewPermission(OntologyConstants.KnoraBase.KnownUser),
+                    PermissionV1.modifyPermission(OntologyConstants.KnoraBase.ProjectMember)
                 )
             )
         )
@@ -350,10 +350,10 @@ object SharedAdminTestData {
             ),
             defaultObjectAccessPermissionsPerProject =  Map(
                 INCUNABULA_PROJECT_IRI -> Set(
-                    PermissionV1.RestrictedViewPermission(OntologyConstants.KnoraBase.UnknownUser),
-                    PermissionV1.ChangeRightsPermission(OntologyConstants.KnoraBase.Creator),
-                    PermissionV1.ViewPermission(OntologyConstants.KnoraBase.KnownUser),
-                    PermissionV1.ModifyPermission(OntologyConstants.KnoraBase.ProjectMember)
+                    PermissionV1.restrictedViewPermission(OntologyConstants.KnoraBase.UnknownUser),
+                    PermissionV1.changeRightsPermission(OntologyConstants.KnoraBase.Creator),
+                    PermissionV1.viewPermission(OntologyConstants.KnoraBase.KnownUser),
+                    PermissionV1.modifyPermission(OntologyConstants.KnoraBase.ProjectMember)
                 )
             )
         )
@@ -386,10 +386,10 @@ object SharedAdminTestData {
             ),
             defaultObjectAccessPermissionsPerProject =  Map(
                 INCUNABULA_PROJECT_IRI -> Set(
-                    PermissionV1.ChangeRightsPermission(OntologyConstants.KnoraBase.Creator),
-                    PermissionV1.ModifyPermission(OntologyConstants.KnoraBase.ProjectMember),
-                    PermissionV1.ViewPermission(OntologyConstants.KnoraBase.KnownUser),
-                    PermissionV1.RestrictedViewPermission(OntologyConstants.KnoraBase.UnknownUser)
+                    PermissionV1.changeRightsPermission(OntologyConstants.KnoraBase.Creator),
+                    PermissionV1.modifyPermission(OntologyConstants.KnoraBase.ProjectMember),
+                    PermissionV1.viewPermission(OntologyConstants.KnoraBase.KnownUser),
+                    PermissionV1.restrictedViewPermission(OntologyConstants.KnoraBase.UnknownUser)
                 )
             )
         )
@@ -422,10 +422,10 @@ object SharedAdminTestData {
             ),
             defaultObjectAccessPermissionsPerProject =  Map(
                 INCUNABULA_PROJECT_IRI -> Set(
-                    PermissionV1.ChangeRightsPermission(OntologyConstants.KnoraBase.Creator),
-                    PermissionV1.ModifyPermission(OntologyConstants.KnoraBase.ProjectMember),
-                    PermissionV1.ViewPermission(OntologyConstants.KnoraBase.KnownUser),
-                    PermissionV1.RestrictedViewPermission(OntologyConstants.KnoraBase.UnknownUser)
+                    PermissionV1.changeRightsPermission(OntologyConstants.KnoraBase.Creator),
+                    PermissionV1.modifyPermission(OntologyConstants.KnoraBase.ProjectMember),
+                    PermissionV1.viewPermission(OntologyConstants.KnoraBase.KnownUser),
+                    PermissionV1.restrictedViewPermission(OntologyConstants.KnoraBase.UnknownUser)
                 )
             )
         )
@@ -479,10 +479,10 @@ object SharedAdminTestData {
             ),
             defaultObjectAccessPermissionsPerProject =  Map(
                 ANYTHING_PROJECT_IRI -> Set(
-                    PermissionV1.RestrictedViewPermission(OntologyConstants.KnoraBase.UnknownUser),
-                    PermissionV1.ChangeRightsPermission(OntologyConstants.KnoraBase.Creator),
-                    PermissionV1.ViewPermission(OntologyConstants.KnoraBase.KnownUser),
-                    PermissionV1.ModifyPermission(OntologyConstants.KnoraBase.ProjectMember)
+                    PermissionV1.restrictedViewPermission(OntologyConstants.KnoraBase.UnknownUser),
+                    PermissionV1.changeRightsPermission(OntologyConstants.KnoraBase.Creator),
+                    PermissionV1.viewPermission(OntologyConstants.KnoraBase.KnownUser),
+                    PermissionV1.modifyPermission(OntologyConstants.KnoraBase.ProjectMember)
                 )
             )
         )
@@ -515,10 +515,10 @@ object SharedAdminTestData {
             ),
             defaultObjectAccessPermissionsPerProject =  Map(
                 ANYTHING_PROJECT_IRI -> Set(
-                    PermissionV1.RestrictedViewPermission(OntologyConstants.KnoraBase.UnknownUser),
-                    PermissionV1.ChangeRightsPermission(OntologyConstants.KnoraBase.Creator),
-                    PermissionV1.ViewPermission(OntologyConstants.KnoraBase.KnownUser),
-                    PermissionV1.ModifyPermission(OntologyConstants.KnoraBase.ProjectMember)
+                    PermissionV1.restrictedViewPermission(OntologyConstants.KnoraBase.UnknownUser),
+                    PermissionV1.changeRightsPermission(OntologyConstants.KnoraBase.Creator),
+                    PermissionV1.viewPermission(OntologyConstants.KnoraBase.KnownUser),
+                    PermissionV1.modifyPermission(OntologyConstants.KnoraBase.ProjectMember)
                 )
             )
         )

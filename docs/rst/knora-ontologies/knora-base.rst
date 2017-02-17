@@ -149,7 +149,7 @@ The Knora Data Model
 The Knora data model is based on the observation that, in the
 humanities, a value or literal is often itself structured and can be
 highly complex. Moreover, a value may have its own metadata, such as its
-creation date, information about ownership, permissions, and so on.
+creation date, information about permissions, and so on.
 Therefore, the Knora base ontology describes structured value types that
 can store this type of metadata. In the diagram below, a book (``ex:book2``)
 has a title (identified by the predicate ``ex:title``) and a publication
@@ -841,7 +841,7 @@ We must then add a “link value property”, which will point from a
 painting to a ``kb:LinkValue`` (described in
 :ref:`knora-base-linkvalue`), which will contain metadata about the
 link between the property and the collection. In particular, the link
-value specifies the owner of the link, the date when it was created, and
+value specifies the creator of the link, the date when it was created, and
 the permissions that determine who can view or modify it. The name of
 the link value property is constructed using a simple naming convention:
 the word ``Value`` is appended to the name of the link property. In this
@@ -1203,7 +1203,7 @@ The result can be visualized like this:
 
 Link values created automatically for resource references in standoff
 are automatically visible to all users, as long as they have permission
-to see the source and target resources. The owner of these link values
+to see the source and target resources. The creator of these link values
 is always ``kb:SystemUser`` (see :ref:`knora-base-users-and-groups`).
 
 .. _knora-base-standoff-internal-reference:
@@ -1413,22 +1413,21 @@ users). There are four built-in groups:
     automatically assigned to this group if she is a member of the
     project that the object belongs to.
 
-``Owner``
+``Creator``
     When checking a user’s permissions on an object, the user is
-    automatically assigned to this group if he is the owner of the
+    automatically assigned to this group if he is the creator of the
     object.
 
 A project-specific ontology can define additional groups, which must
 belong to the OWL class ``kb:UserGroup``.
 
-There is one built-in ``SystemUser``, which is the owner of link values
+There is one built-in ``SystemUser``, which is the creator of link values
 created automatically for resource references in standoff markup (see
 :ref:`knora-base-standoff-link`).
 
 Permissions
 -----------
 
-The owner of an object is always allowed to perform any operation on it.
 An object can grant the following permissions, which are stored in a
 compact format in a single string, which is the object of the predicate
 ``kb:hasPermissions``:
@@ -1462,12 +1461,9 @@ permissions. A user’s permission level on a particular object is
 calculated in the following way:
 
 #. Make a list of the groups that the user belongs to, including
-   ``Owner`` and/or ``ProjectMember`` if applicable.
+   ``Creator`` and/or ``ProjectMember`` if applicable.
 
-#. If the user is the owner of the object, give her the highest level of
-   permissions.
-
-#. Otherwise, make a list of the permissions that she can obtain on the
+#. Make a list of the permissions that she can obtain on the
    object, by iterating over the permissions that the object grants. For
    each permission, if she is in the specified group, add the specified
    permission to the list of permissions she can obtain.

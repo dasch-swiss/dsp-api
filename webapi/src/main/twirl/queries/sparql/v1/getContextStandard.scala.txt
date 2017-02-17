@@ -43,8 +43,7 @@ SELECT ?sourceObject
        ?sourceObjectPermissions
        ?seqnum
        ?linkValue
-       ?linkValueOwner
-       ?linkValueProject
+       ?linkValueCreator
        ?linkValuePermissions
        ?firstprop
        ?fileValue
@@ -57,7 +56,6 @@ SELECT ?sourceObject
        ?qualityLevel
        ?fileValuePermissions
        ?fileValueAttachedToUser
-       ?fileValueAttachedToProject
 WHERE {
     BIND(IRI("@resourceIri") as ?resource)
 
@@ -96,11 +94,7 @@ WHERE {
         rdf:predicate ?linkingProp ;
         rdf:object ?resource ;
         knora-base:isDeleted false ;
-        knora-base:attachedToUser ?linkValueOwner .
-
-    OPTIONAL {
-        ?linkValue knora-base:attachedToProject ?linkValueProject .
-    }
+        knora-base:attachedToUser ?linkValueCreator .
 
     OPTIONAL {
         ?linkValue knora-base:hasPermissions ?linkValuePermissions .
@@ -125,10 +119,6 @@ WHERE {
                  knora-base:qualityLevel ?qualityLevel .
 
         ?fileValue knora-base:attachedToUser ?fileValueAttachedToUser .
-
-        OPTIONAL {
-            ?fileValue knora-base:attachedToProject ?fileValueAttachedToProject .
-        }
 
         OPTIONAL {
             ?fileValue knora-base:hasPermissions ?fileValuePermissions .

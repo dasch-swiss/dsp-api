@@ -58,8 +58,7 @@ class DrawingsGodsV1E2ESpec extends E2ESpec(DrawingsGodsV1E2ESpec.config) with T
       *  1a. parole-religieuse user creates a resource
       *  1b. parole-religieuse user create a value
       *  2a. drawings-gods user changes existing value
-      *  2b1. drawings-gods user creates a new value (inside parole-religieuse project)
-      *  2b2. drawings-gods user creates a new value (inside drawings-gods project)
+      *  2b. drawings-gods user creates a new value (inside parole-religieuse project)
       */
     "issue: https://github.com/dhlab-basel/Knora/issues/408" should {
 
@@ -70,7 +69,7 @@ class DrawingsGodsV1E2ESpec extends E2ESpec(DrawingsGodsV1E2ESpec.config) with T
         val firstValueIri = new MutableTestIri
         val secondValueIri = new MutableTestIri
 
-        "1a. parole-religieuse user creates a resource" in {
+        "allow parole-religieuse user to create a resource inside his own project (1a)" in {
 
             val params =
                 s"""
@@ -93,11 +92,10 @@ class DrawingsGodsV1E2ESpec extends E2ESpec(DrawingsGodsV1E2ESpec.config) with T
         }
 
 
-        "1b. parole-religieuse user adds an integer value to a resource" in {
+        "allow the parole-religieuse user to add an integer value to a previously created resource (1b)" in {
             val params =
                 s"""
                   |{
-                  |    "project_id": "http://data.knora.org/projects/parole-religieuse",
                   |    "res_id": "${thingIri.get}",
                   |    "prop": "http://www.knora.org/ontology/anything#hasInteger",
                   |    "int_value": 1234
@@ -114,11 +112,10 @@ class DrawingsGodsV1E2ESpec extends E2ESpec(DrawingsGodsV1E2ESpec.config) with T
             log.debug(s"1b. firstValueIri: ${firstValueIri.get}")
         }
 
-        "2a. drawings-gods user changes existing value" in {
+        "allow the drawings-gods user to change the existing value (2a)" in {
             val params =
                 s"""
                   |{
-                  |    "project_id": "http://data.knora.org/projects/parole-religieuse",
                   |    "res_id": "${thingIri.get}",
                   |    "prop": "http://www.knora.org/ontology/anything#hasInteger",
                   |    "int_value": 1111
@@ -136,11 +133,10 @@ class DrawingsGodsV1E2ESpec extends E2ESpec(DrawingsGodsV1E2ESpec.config) with T
             log.debug(s"2a. firstValueIri: ${firstValueIri.get}")
         }
 
-        "2b1. drawings-gods user creates a new value inside the parole-religieuse project" in {
+        "allow the drawings-gods user to create a new value inside the parole-religieuse project (2b)" in {
             val params =
                 s"""
                    |{
-                   |    "project_id": "http://data.knora.org/projects/parole-religieuse",
                    |    "res_id": "${thingIri.get}",
                    |    "prop": "http://www.knora.org/ontology/anything#hasInteger",
                    |    "int_value": 2222
@@ -155,25 +151,7 @@ class DrawingsGodsV1E2ESpec extends E2ESpec(DrawingsGodsV1E2ESpec.config) with T
             val valId = ValuesResponseExtractorMethods.getNewValueIriFromJsonResponse(response)
 
             secondValueIri.set(valId)
-            log.debug(s"2b1. secondValueIri: ${secondValueIri.get}")
-        }
-
-        "2b2. drawings-gods user is not allowed to create a new value inside the drawings-gods project (no permissions for this project are defined which would lead to no permissions attached to the value)" in {
-            val params =
-                s"""
-                   |{
-                   |    "project_id": "http://data.knora.org/projects/drawings-gods",
-                   |    "res_id": "${thingIri.get}",
-                   |    "prop": "http://www.knora.org/ontology/anything#hasInteger",
-                   |    "int_value": 3333
-                   |}
-                """.stripMargin
-
-
-            val request = Post(baseApiUrl + s"/v1/values", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(drawingsOfGodsUserEmail, testPass))
-            val response: HttpResponse = singleAwaitingRequest(request)
-
-            assert(response.status === StatusCodes.BadRequest)
+            log.debug(s"2b. secondValueIri: ${secondValueIri.get}")
         }
     }
 }

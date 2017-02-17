@@ -63,16 +63,12 @@ WHERE {
     }
     UNION
     {
-        @* Return the value's project if it has one, otherwise return the project of the resource that contains the value. *@
+        @* Return the project of the resource that contains the value. *@
 
         ?obj knora-base:isDeleted false .
         ?resource knora-base:attachedToProject ?resourceProject .
 
-        OPTIONAL {
-            ?obj knora-base:attachedToProject ?valueProject .
-        }
-
         BIND(knora-base:attachedToProject AS ?objPred)
-        BIND(COALESCE(?valueProject, ?resourceProject) AS ?objObj)
+        BIND(?resourceProject AS ?objObj)
     }
 }

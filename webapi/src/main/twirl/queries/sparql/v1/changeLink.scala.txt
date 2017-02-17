@@ -85,18 +85,7 @@ INSERT {
                 @{throw SparqlGenerationException(s"linkUpdateForCurrentLink.newReferenceCount must be 0 in this SPARQL template"); ()}
             }
 
-        ?newLinkValueForCurrentLink knora-base:attachedToUser <@linkUpdateForCurrentLink.newLinkValueOwner> .
-
-        @linkUpdateForCurrentLink.newLinkValueProject match {
-
-            case Some(linkValueProject) => {
-
-                ?newLinkValueForCurrentLink knora-base:attachedToProject <@linkValueProject> .
-
-            }
-
-            case None => {}
-        }
+        ?newLinkValueForCurrentLink knora-base:attachedToUser <@linkUpdateForCurrentLink.newLinkValueCreator> .
 
         @linkUpdateForCurrentLink.newLinkValuePermissions match {
 
@@ -134,18 +123,7 @@ INSERT {
             knora-base:isDeleted false ;
             knora-base:valueCreationDate ?currentTime .
 
-        ?newLinkValueForNewLink knora-base:attachedToUser <@linkUpdateForNewLink.newLinkValueOwner> .
-
-        @linkUpdateForNewLink.newLinkValueProject match {
-
-            case Some(linkValueProject) => {
-
-                ?newLinkValueForNewLink knora-base:attachedToProject <@linkValueProject> .
-
-            }
-
-            case None => {}
-        }
+        ?newLinkValueForNewLink knora-base:attachedToUser <@linkUpdateForNewLink.newLinkValueCreator> .
 
         @linkUpdateForNewLink.newLinkValuePermissions match {
 
