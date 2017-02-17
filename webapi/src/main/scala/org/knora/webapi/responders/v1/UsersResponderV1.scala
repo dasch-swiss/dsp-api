@@ -191,7 +191,7 @@ class UsersResponderV1 extends ResponderV1 {
             userIri = knoraIdUtil.makeRandomPersonIri
 
             encoder = new SCryptPasswordEncoder
-            hashedPassword =  encoder.encode(createRequest.password);
+            hashedPassword =  encoder.encode(createRequest.password)
 
             // Create the new user.
             createNewUserSparqlString = queries.sparql.v1.txt.createNewUser(
