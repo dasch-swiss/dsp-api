@@ -31,12 +31,12 @@
  * @param propertyIri the resource property to update.
  * @param newValueIri the new value IRI.
  * @param valueTypeIri the type of the new value.
- * @param permissionRelevantAssertions Permission-relevant assertions, i.e. owner and project plus permissions, in
- *        the form of a list of tuples (predicate, object).
+ * @param value the value to insert.
  * @param linkUpdates a list of [[LinkUpdate]] objects describing links and LinkValues that need to be
  *        updated for resource references in Standoff text values.
  * @param maybeComment an optional comment on the value.
- * @param value the value to insert.
+ * @param valueCreator the IRI of the user who created the value.
+ * @param maybeValuePermissions the permissions that should be attached to the value.
  *
  * The generated WHERE clause does some consistency checks. If these fail, the operation will do nothing.
  * To find out whether the update succeeded, the application must query the property's version history.
@@ -50,8 +50,7 @@
   value: UpdateValueV1,
   linkUpdates: Seq[SparqlTemplateLinkUpdate],
   maybeComment: Option[String],
-  valueOwner: IRI,
-  valueProject: IRI,
+  valueCreator: IRI,
   maybeValuePermissions: Option[String])
 
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -93,8 +92,7 @@ DELETE {
                                                                          newValueIri = newValueIri,
                                                                          linkUpdates = linkUpdates,
                                                                          maybeComment = maybeComment,
-                                                                         valueOwner = valueOwner,
-                                                                         valueProject = valueProject,
+                                                                         valueCreator = valueCreator,
                                                                          maybeValuePermissions = maybeValuePermissions)
         }
     }

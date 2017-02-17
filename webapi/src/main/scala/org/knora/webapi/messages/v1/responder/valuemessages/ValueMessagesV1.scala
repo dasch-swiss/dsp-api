@@ -43,7 +43,6 @@ import spray.json._
   * Represents an API request payload that asks the Knora API server to create a new value of a resource property
   * (as opposed to a new version of an existing value).
   *
-  * @param project_id     the IRI of the project to be updated.
   * @param res_id         the IRI of the resource in which the value is to be added.
   * @param prop           the property that is to receive the value.
   * @param richtext_value a rich-text object to be used in the value.
@@ -54,8 +53,7 @@ import spray.json._
   * @param geom_value     a geometry literal to be used in the value.
   * @param comment        a comment to add to the value.
   */
-case class CreateValueApiRequestV1(project_id: IRI,
-                                   res_id: IRI,
+case class CreateValueApiRequestV1(res_id: IRI,
                                    prop: IRI,
                                    richtext_value: Option[CreateRichtextV1] = None,
                                    link_value: Option[IRI] = None,
@@ -160,7 +158,6 @@ case class CreateFileQualityLevelV1(path: String,
   * Represents an API request payload that asks the Knora API server to change a value of a resource property (i.e. to
   * update its version history).
   *
-  * @param project_id     the IRI of the project to be updated.
   * @param richtext_value a rich-text object to be used in the value.
   * @param int_value      an integer literal to be used in the value.
   * @param decimal_value  a decimal literal to be used in the value.
@@ -169,8 +166,7 @@ case class CreateFileQualityLevelV1(path: String,
   * @param geom_value     a geometry literal to be used in the value.
   * @param comment        a comment to add to the value.
   */
-case class ChangeValueApiRequestV1(project_id: IRI,
-                                   richtext_value: Option[CreateRichtextV1] = None,
+case class ChangeValueApiRequestV1(richtext_value: Option[CreateRichtextV1] = None,
                                    link_value: Option[IRI] = None,
                                    int_value: Option[Int] = None,
                                    decimal_value: Option[BigDecimal] = None,
@@ -299,7 +295,6 @@ case class ValueVersionHistoryGetResponseV1(valueVersions: Seq[ValueVersionV1],
   * Represents a request to add a new value of a resource property (as opposed to a new version of an existing value). A
   * successful response will be an [[CreateValueResponseV1]].
   *
-  * @param projectIri   the project in which the value is to be added.
   * @param resourceIri  the IRI of the resource to which the value should be added.
   * @param propertyIri  the IRI of the property that should receive the value.
   * @param value        the value to be added.
@@ -307,8 +302,7 @@ case class ValueVersionHistoryGetResponseV1(valueVersions: Seq[ValueVersionV1],
   * @param userProfile  the profile of the user making the request.
   * @param apiRequestID the ID of this API request.
   */
-case class CreateValueRequestV1(projectIri: IRI,
-                                resourceIri: IRI,
+case class CreateValueRequestV1(resourceIri: IRI,
                                 propertyIri: IRI,
                                 value: UpdateValueV1,
                                 comment: Option[String] = None,
@@ -1576,9 +1570,9 @@ object ApiValueV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
     implicit val linkValueV1Format: JsonFormat[LinkValueV1] = jsonFormat4(LinkValueV1)
     implicit val valueVersionHistoryGetResponseV1Format: RootJsonFormat[ValueVersionHistoryGetResponseV1] = jsonFormat2(ValueVersionHistoryGetResponseV1)
     implicit val createRichtextV1Format: RootJsonFormat[CreateRichtextV1] = jsonFormat3(CreateRichtextV1)
-    implicit val createValueApiRequestV1Format: RootJsonFormat[CreateValueApiRequestV1] = jsonFormat16(CreateValueApiRequestV1)
+    implicit val createValueApiRequestV1Format: RootJsonFormat[CreateValueApiRequestV1] = jsonFormat15(CreateValueApiRequestV1)
     implicit val createValueResponseV1Format: RootJsonFormat[CreateValueResponseV1] = jsonFormat5(CreateValueResponseV1)
-    implicit val changeValueApiRequestV1Format: RootJsonFormat[ChangeValueApiRequestV1] = jsonFormat14(ChangeValueApiRequestV1)
+    implicit val changeValueApiRequestV1Format: RootJsonFormat[ChangeValueApiRequestV1] = jsonFormat13(ChangeValueApiRequestV1)
     implicit val changeValueResponseV1Format: RootJsonFormat[ChangeValueResponseV1] = jsonFormat5(ChangeValueResponseV1)
     implicit val deleteValueResponseV1Format: RootJsonFormat[DeleteValueResponseV1] = jsonFormat2(DeleteValueResponseV1)
     implicit val changeFileValueApiRequestV1Format: RootJsonFormat[ChangeFileValueApiRequestV1] = jsonFormat1(ChangeFileValueApiRequestV1)

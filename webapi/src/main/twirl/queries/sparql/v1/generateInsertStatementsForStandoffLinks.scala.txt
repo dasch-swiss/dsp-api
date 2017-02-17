@@ -51,18 +51,7 @@
                 knora-base:isDeleted false ;
                 knora-base:valueCreationDate ?currentTime .
 
-            <@linkUpdate.newLinkValueIri> knora-base:attachedToUser <@linkUpdate.newLinkValueOwner> .
-
-            @linkUpdate.newLinkValueProject match {
-
-                case Some(linkValueProject) => {
-
-                    <@linkUpdate.newLinkValueIri> knora-base:attachedToProject <@linkValueProject> .
-
-                }
-
-                case None => {}
-            }
+            <@linkUpdate.newLinkValueIri> knora-base:attachedToUser <@linkUpdate.newLinkValueCreator> .
 
             @linkUpdate.newLinkValuePermissions match {
 

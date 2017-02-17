@@ -40,8 +40,7 @@ import org.knora.webapi.IRI
   *                                `false` and `linkValueExists` is `true`), or (b) there was never a direct link, and
   *                                there is no `LinkValue` (`directLinkExists` and `linkValueExists` will then be `false`).
   * @param newReferenceCount       the new reference count of the `LinkValue`.
-  * @param newLinkValueOwner       the owner of the new `LinkValue`.
-  * @param newLinkValueProject     the project that the new `LinkValue` belongs to.
+  * @param newLinkValueCreator     the creator of the new `LinkValue`.
   * @param newLinkValuePermissions the literal that should be the object of the `hasPermissions` property of
   *                                the new `LinkValue`.
   */
@@ -54,6 +53,5 @@ case class SparqlTemplateLinkUpdate(linkPropertyIri: IRI,
                                     linkTargetIri: IRI,
                                     currentReferenceCount: Int,
                                     newReferenceCount: Int,
-                                    newLinkValueOwner: IRI,
-                                    newLinkValueProject: Option[IRI],
+                                    newLinkValueCreator: IRI,
                                     newLinkValuePermissions: Option[String])
