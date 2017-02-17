@@ -2489,10 +2489,6 @@
                          owl:cardinality "1"^^xsd:nonNegativeInteger
                        ] ,
                        [ rdf:type owl:Restriction ;
-                         owl:onProperty :attachedToProject ;
-                         owl:maxCardinality "1"^^xsd:nonNegativeInteger
-                       ] ,
-                       [ rdf:type owl:Restriction ;
                          owl:onProperty :hasPermissions ;
                          owl:maxCardinality "1"^^xsd:nonNegativeInteger
                        ] ,

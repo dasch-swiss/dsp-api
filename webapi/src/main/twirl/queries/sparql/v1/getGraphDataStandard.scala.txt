@@ -40,15 +40,15 @@ PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 
-SELECT ?node ?nodeClass ?nodeLabel ?nodeOwner ?nodeProject ?nodePermissions
-       ?linkValue ?linkProp ?linkValueOwner ?linkValueProject ?linkValuePermissions
+SELECT ?node ?nodeClass ?nodeLabel ?nodeCreator ?nodeProject ?nodePermissions
+       ?linkValue ?linkProp ?linkValueCreator ?linkValuePermissions
 WHERE {
     @if(startNodeOnly) {
         BIND(IRI("@startNodeIri") AS ?node) .
 
         ?node a ?nodeClass ;
             rdfs:label ?nodeLabel ;
-            knora-base:attachedToUser ?nodeOwner ;
+            knora-base:attachedToUser ?nodeCreator ;
             knora-base:attachedToProject ?nodeProject ;
             knora-base:isDeleted false .
 
@@ -92,21 +92,17 @@ WHERE {
 
         ?node a ?nodeClass ;
             rdfs:label ?nodeLabel ;
-            knora-base:attachedToUser ?nodeOwner ;
+            knora-base:attachedToUser ?nodeCreator ;
             knora-base:attachedToProject ?nodeProject .
 
         OPTIONAL {
             ?node knora-base:hasPermissions ?nodePermissions .
         }
 
-        ?linkValue knora-base:attachedToUser ?linkValueOwner .
+        ?linkValue knora-base:attachedToUser ?linkValueCreator .
 
         OPTIONAL {
             ?linkValue knora-base:hasPermissions ?linkValuePermissions .
-        }
-
-        OPTIONAL {
-            ?linkValue knora-base:attachedToProject ?linkValueProject .
         }
     }
 }

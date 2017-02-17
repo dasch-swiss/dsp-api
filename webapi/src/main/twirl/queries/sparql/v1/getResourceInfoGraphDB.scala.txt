@@ -55,30 +55,12 @@ WHERE {
             ?resource ?prop ?obj .
         }
 
+        ?obj knora-base:isDeleted false .
+
         BIND(true AS ?isFileValue)
 
-        @* Get the file value's project if it has one, otherwise use the resource's project. *@
-
-        {
-            ?obj knora-base:isDeleted false .
-
-            GRAPH <http://www.ontotext.com/explicit> {
-                ?obj ?objPred ?objObj .
-            }
-
-            FILTER(?objPred != knora-base:attachedToProject)
-        }
-        UNION
-        {
-            ?obj knora-base:isDeleted false .
-            ?resource knora-base:attachedToProject ?resourceProject .
-
-            OPTIONAL {
-                ?obj knora-base:attachedToProject ?valueProject .
-            }
-
-            BIND(COALESCE(?valueProject, ?resourceProject) AS ?objObj)
-            BIND(knora-base:attachedToProject AS ?objPred)
+        GRAPH <http://www.ontotext.com/explicit> {
+            ?obj ?objPred ?objObj .
         }
     }
     UNION

@@ -83,7 +83,6 @@ class ValuesV1R2RSpec extends R2RSpec {
             val params =
                 """
                   |{
-                  |    "project_id": "http://data.knora.org/projects/anything",
                   |    "res_id": "http://data.knora.org/a-thing",
                   |    "prop": "http://www.knora.org/ontology/anything#hasInteger",
                   |    "int_value": 1234
@@ -102,7 +101,6 @@ class ValuesV1R2RSpec extends R2RSpec {
             val params =
                 """
                   |{
-                  |    "project_id": "http://data.knora.org/projects/anything",
                   |    "res_id": "http://data.knora.org/a-thing",
                   |    "prop": "http://www.knora.org/ontology/anything#hasInteger",
                   |    "int_value": 4321
@@ -143,7 +141,6 @@ class ValuesV1R2RSpec extends R2RSpec {
             val params =
                 """
                   |{
-                  |    "project_id": "http://data.knora.org/projects/anything",
                   |    "res_id": "http://data.knora.org/a-thing",
                   |    "prop": "http://www.knora.org/ontology/anything#hasText",
                   |    "richtext_value": {"utf8str":""}
@@ -159,7 +156,6 @@ class ValuesV1R2RSpec extends R2RSpec {
             val params =
                 """
                   |{
-                  |    "project_id": "http://data.knora.org/projects/anything",
                   |    "res_id": "http://data.knora.org/a-thing",
                   |    "prop": "http://www.knora.org/ontology/anything#hasText",
                   |    "richtext_value": {"utf8str":"This comment refers to another resource","textattr":"{\"_link\":[{\"start\":31,\"end\":39,\"resid\":\"http://data.knora.org/another-thing\",\"href\":\"http://data.knora.org/another-thing\"}]}","resource_reference":["http://data.knora.org/another-thing"]}
@@ -178,7 +174,6 @@ class ValuesV1R2RSpec extends R2RSpec {
             val params =
                 """
                   |{
-                  |    "project_id": "http://data.knora.org/projects/anything",
                   |    "res_id": "http://data.knora.org/a-thing",
                   |    "prop": "http://www.knora.org/ontology/anything#hasText",
                   |    "richtext_value": {"utf8str":"This remark refers to another resource","textattr":"{\"_link\":[{\"start\":30,\"end\":38,\"resid\":\"http://data.knora.org/another-thing\",\"href\":\"http://data.knora.org/another-thing\"}]}","resource_reference":["http://data.knora.org/another-thing"]}
@@ -218,7 +213,6 @@ class ValuesV1R2RSpec extends R2RSpec {
             val params =
                 """
                   |{
-                  |    "project_id": "http://data.knora.org/projects/anything",
                   |    "res_id": "http://data.knora.org/a-thing",
                   |    "prop": "http://www.knora.org/ontology/anything#hasOtherThing",
                   |    "link_value": "http://data.knora.org/another-thing"
@@ -243,7 +237,6 @@ class ValuesV1R2RSpec extends R2RSpec {
             val params =
                 s"""
                   |{
-                  |    "project_id": "http://data.knora.org/projects/anything",
                   |    "res_id": "http://data.knora.org/a-thing",
                   |    "prop": "http://www.knora.org/ontology/anything#hasOtherThing",
                   |    "link_value": "http://data.knora.org/another-thing",
