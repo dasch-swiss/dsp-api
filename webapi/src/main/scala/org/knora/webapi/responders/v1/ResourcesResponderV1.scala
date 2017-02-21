@@ -322,7 +322,7 @@ class ResourcesResponderV1 extends ResponderV1 {
                 subjectPermissionLiteral = startNode.nodePermissions,
                 userProfile = graphDataGetRequest.userProfile
             ).isEmpty) {
-                val userID = graphDataGetRequest.userProfile.userData.user_id.getOrElse(OntologyConstants.KnoraBase.UnknownUser)
+                val userID = graphDataGetRequest.userProfile.userData.user_id.getOrElse(OntologyConstants.KnoraAdmin.UnknownUser)
                 throw ForbiddenException(s"User $userID does not have permission to view resource ${graphDataGetRequest.resourceIri}")
             }
 
@@ -412,7 +412,7 @@ class ResourcesResponderV1 extends ResponderV1 {
                     userdata = userProfile.userData
                 )
             case None =>
-                val userID = userProfile.userData.user_id.getOrElse(OntologyConstants.KnoraBase.UnknownUser)
+                val userID = userProfile.userData.user_id.getOrElse(OntologyConstants.KnoraAdmin.UnknownUser)
                 throw ForbiddenException(s"User $userID does not have permission to view resource $resourceIri")
         }
     }
@@ -722,7 +722,7 @@ class ResourcesResponderV1 extends ResponderV1 {
                     userdata = userProfile.userData
                 )
             } else {
-                val userID = userProfile.userData.user_id.getOrElse(OntologyConstants.KnoraBase.UnknownUser)
+                val userID = userProfile.userData.user_id.getOrElse(OntologyConstants.KnoraAdmin.UnknownUser)
                 throw ForbiddenException(s"User $userID does not have permission to query resource $resourceIri")
             }
         } yield resFullResponse
@@ -833,7 +833,7 @@ class ResourcesResponderV1 extends ResponderV1 {
             )
         }
 
-        val userIri = userProfile.userData.user_id.getOrElse(OntologyConstants.KnoraBase.UnknownUser)
+        val userIri = userProfile.userData.user_id.getOrElse(OntologyConstants.KnoraAdmin.UnknownUser)
 
         for {
         // Get the resource info even if the user didn't ask for it, so we can check its permissions.
@@ -1582,7 +1582,7 @@ class ResourcesResponderV1 extends ResponderV1 {
             (permissionCode, resourceInfo) <- getResourceInfoV1(resourceIri = resourceIri, userProfile = userProfile, queryOntology = false)
 
             _ = if (!PermissionUtilV1.impliesV1(userHasPermissionCode = permissionCode, userNeedsPermission = OntologyConstants.KnoraBase.RestrictedViewPermission)) {
-                val userIri = userProfile.userData.user_id.getOrElse(OntologyConstants.KnoraBase.UnknownUser)
+                val userIri = userProfile.userData.user_id.getOrElse(OntologyConstants.KnoraAdmin.UnknownUser)
                 throw ForbiddenException(s"User $userIri does not have permission to view resource $resourceIri")
             }
 
@@ -1806,7 +1806,7 @@ class ResourcesResponderV1 extends ResponderV1 {
                 permissionRelevantAssertions: Seq[(IRI, IRI)] <- Future(PermissionUtilV1.filterPermissionRelevantAssertions(resInfoResponseRows.map(row => (row.rowMap("prop"), row.rowMap("obj")))))
 
                 maybeResourceProjectStatement: Option[(IRI, IRI)] = permissionRelevantAssertions.find {
-                    case (subject, predicate) => subject == OntologyConstants.KnoraBase.AttachedToProject
+                    case (subject, predicate) => subject == OntologyConstants.KnoraAdmin.AttachedToProject
                 }
 
                 resourceProject = maybeResourceProjectStatement.getOrElse(throw InconsistentTriplestoreDataException(s"Resource $resourceIri has no knora-base:attachedToProject"))._2
@@ -1893,8 +1893,8 @@ class ResourcesResponderV1 extends ResponderV1 {
                     preview = preview, // The first element of the list, or None if the list is empty
                     locations = if (locations.nonEmpty) Some(locations) else None,
                     locdata = locations.lastOption,
-                    person_id = groupedByPredicate(OntologyConstants.KnoraBase.AttachedToUser).head("obj"),
-                    project_id = groupedByPredicate(OntologyConstants.KnoraBase.AttachedToProject).head("obj"),
+                    person_id = groupedByPredicate(OntologyConstants.KnoraAdmin.AttachedToUser).head("obj"),
+                    project_id = groupedByPredicate(OntologyConstants.KnoraAdmin.AttachedToProject).head("obj"),
                     restype_label = restype_label,
                     restype_name = Some(groupedByPredicate(OntologyConstants.Rdf.Type).head("obj")),
                     restype_description = restype_description,

@@ -197,7 +197,7 @@ class UsersResponderV1 extends ResponderV1 {
                 adminNamedGraphIri = "http://www.knora.org/data/admin",
                 triplestore = settings.triplestoreType,
                 userIri = userIri,
-                userClassIri = OntologyConstants.KnoraBase.User,
+                userClassIri = OntologyConstants.KnoraAdmin.User,
                 email = createRequest.email,
                 password = hashedPassword,
                 givenName = createRequest.givenName,
@@ -462,7 +462,7 @@ class UsersResponderV1 extends ResponderV1 {
         //_ = log.debug(s"userDataQueryResponse2UserProfile - groupedUserData: ${MessageUtil.toSource(groupedUserData)}")
 
         /* the projects the user is member of */
-        val projectIris: Seq[IRI] = groupedUserData.get(OntologyConstants.KnoraBase.IsInProject) match {
+        val projectIris: Seq[IRI] = groupedUserData.get(OntologyConstants.KnoraAdmin.IsInProject) match {
             case Some(projects) => projects
             case None => Seq.empty[IRI]
         }
@@ -470,16 +470,16 @@ class UsersResponderV1 extends ResponderV1 {
         //println(projectIris)
 
         val userDataV1 = UserDataV1(
-            lang = groupedUserData.get(OntologyConstants.KnoraBase.PreferredLanguage) match {
+            lang = groupedUserData.get(OntologyConstants.KnoraAdmin.PreferredLanguage) match {
                 case Some(langList) => langList.head
                 case None => settings.fallbackLanguage
             },
             user_id = Some(returnedUserIri),
-            email = groupedUserData.get(OntologyConstants.KnoraBase.Email).map(_.head),
-            firstname = groupedUserData.get(OntologyConstants.KnoraBase.GivenName).map(_.head),
-            lastname = groupedUserData.get(OntologyConstants.KnoraBase.FamilyName).map(_.head),
-            password = groupedUserData.get(OntologyConstants.KnoraBase.Password).map(_.head),
-            isActiveUser = groupedUserData.get(OntologyConstants.KnoraBase.Status).map(_.head.toBoolean),
+            email = groupedUserData.get(OntologyConstants.KnoraAdmin.Email).map(_.head),
+            firstname = groupedUserData.get(OntologyConstants.KnoraAdmin.GivenName).map(_.head),
+            lastname = groupedUserData.get(OntologyConstants.KnoraAdmin.FamilyName).map(_.head),
+            password = groupedUserData.get(OntologyConstants.KnoraAdmin.Password).map(_.head),
+            isActiveUser = groupedUserData.get(OntologyConstants.KnoraAdmin.Status).map(_.head.toBoolean),
             projects = projectIris
         )
         //_ = log.debug(s"userDataQueryResponse2UserProfile - userDataV1: ${MessageUtil.toSource(userDataV1)}")
@@ -489,17 +489,17 @@ class UsersResponderV1 extends ResponderV1 {
         //_ = log.debug(s"userDataQueryResponse2UserProfile - projectIris: ${MessageUtil.toSource(projectIris)}")
 
         /* the groups the user is member of (only explicit groups) */
-        val groupIris = groupedUserData.get(OntologyConstants.KnoraBase.IsInGroup) match {
+        val groupIris = groupedUserData.get(OntologyConstants.KnoraAdmin.IsInGroup) match {
             case Some(groups) => groups
             case None => Vector.empty[IRI]
         }
         //_ = log.debug(s"userDataQueryResponse2UserProfile - groupIris: ${MessageUtil.toSource(groupIris)}")
 
-        /* the projects for which the user is implicitly considered a member of the 'http://www.knora.org/ontology/knora-base#ProjectAdmin' group */
-        val isInProjectAdminGroups = groupedUserData.getOrElse(OntologyConstants.KnoraBase.IsInProjectAdminGroup, Vector.empty[IRI])
+        /* the projects for which the user is implicitly considered a member of the 'http://www.knora.org/ontology/knora-admin#ProjectAdmin' group */
+        val isInProjectAdminGroups = groupedUserData.getOrElse(OntologyConstants.KnoraAdmin.IsInProjectAdminGroup, Vector.empty[IRI])
 
-        /* is the user implicitly considered a member of the 'http://www.knora.org/ontology/knora-base#SystemAdmin' group */
-        val isInSystemAdminGroup = groupedUserData.get(OntologyConstants.KnoraBase.IsInSystemAdminGroup).exists(p => p.head.toBoolean)
+        /* is the user implicitly considered a member of the 'http://www.knora.org/ontology/knora-admin#SystemAdmin' group */
+        val isInSystemAdminGroup = groupedUserData.get(OntologyConstants.KnoraAdmin.IsInSystemAdminGroup).exists(p => p.head.toBoolean)
 
         for {
         /* get the user's permission profile from the permissions responder */

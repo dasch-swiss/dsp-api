@@ -73,9 +73,9 @@ class ProjectsResponderV1 extends ResponderV1 {
     private def getUserPermissionV1ForProject(projectIRI: IRI, propertiesForProject: Map[IRI, String], userProfile: UserProfileV1): Option[Int] = {
 
         // propertiesForProject must contain an owner for the project (knora-base:attachedToUser).
-        propertiesForProject.get(OntologyConstants.KnoraBase.AttachedToUser) match {
+        propertiesForProject.get(OntologyConstants.KnoraAdmin.AttachedToUser) match {
             case Some(user) => // add statement that `PermissionUtil.getUserPermissionV1` requires but is not present in the data for projects.
-                val assertionsForProject: Seq[(IRI, IRI)] = (OntologyConstants.KnoraBase.AttachedToProject, projectIRI) +: propertiesForProject.toVector
+                val assertionsForProject: Seq[(IRI, IRI)] = (OntologyConstants.KnoraAdmin.AttachedToProject, projectIRI) +: propertiesForProject.toVector
                 PermissionUtilV1.getUserPermissionV1FromAssertions(
                     subjectIri = projectIRI,
                     assertions = assertionsForProject,
@@ -140,17 +140,17 @@ class ProjectsResponderV1 extends ResponderV1 {
 
                     ProjectInfoV1(
                         id = projectIri,
-                        shortname = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectShortname, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no shortname defined.")),
-                        longname = propsMap.get(OntologyConstants.KnoraBase.ProjectLongname),
-                        description = propsMap.get(OntologyConstants.KnoraBase.ProjectDescription),
-                        keywords = propsMap.get(OntologyConstants.KnoraBase.ProjectKeywords),
-                        logo = propsMap.get(OntologyConstants.KnoraBase.ProjectLogo),
-                        belongsToInstitution = propsMap.get(OntologyConstants.KnoraBase.BelongsToProject),
-                        basepath = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectBasepath, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no basepath defined.")),
-                        ontologyNamedGraph = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectOntologyGraph, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no projectOntologyGraph defined.")),
-                        dataNamedGraph = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectDataGraph, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no projectDataGraph defined.")),
-                        status = propsMap.getOrElse(OntologyConstants.KnoraBase.Status, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no status defined.")).toBoolean,
-                        hasSelfJoinEnabled = propsMap.getOrElse(OntologyConstants.KnoraBase.HasSelfJoinEnabled, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no hasSelfJoinEnabled defined.")).toBoolean
+                        shortname = propsMap.getOrElse(OntologyConstants.KnoraAdmin.ProjectShortname, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no shortname defined.")),
+                        longname = propsMap.get(OntologyConstants.KnoraAdmin.ProjectLongname),
+                        description = propsMap.get(OntologyConstants.KnoraAdmin.ProjectDescription),
+                        keywords = propsMap.get(OntologyConstants.KnoraAdmin.ProjectKeywords),
+                        logo = propsMap.get(OntologyConstants.KnoraAdmin.ProjectLogo),
+                        belongsToInstitution = propsMap.get(OntologyConstants.KnoraAdmin.BelongsToProject),
+                        basepath = propsMap.getOrElse(OntologyConstants.KnoraAdmin.ProjectBasepath, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no basepath defined.")),
+                        ontologyNamedGraph = propsMap.getOrElse(OntologyConstants.KnoraAdmin.ProjectOntologyGraph, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no projectOntologyGraph defined.")),
+                        dataNamedGraph = propsMap.getOrElse(OntologyConstants.KnoraAdmin.ProjectDataGraph, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no projectDataGraph defined.")),
+                        status = propsMap.getOrElse(OntologyConstants.KnoraAdmin.Status, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no status defined.")).toBoolean,
+                        hasSelfJoinEnabled = propsMap.getOrElse(OntologyConstants.KnoraAdmin.HasSelfJoinEnabled, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no hasSelfJoinEnabled defined.")).toBoolean
                     )
             }.toSeq
 
@@ -184,13 +184,13 @@ class ProjectsResponderV1 extends ResponderV1 {
                 case (projectIri: String, propsMap: Map[String, String]) =>
 
                     NamedGraphV1(
-                        id = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectOntologyGraph, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no projectOntologyGraph defined.")),
-                        shortname = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectShortname, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no basepath defined.")),
-                        longname = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectLongname, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no longname defined.")),
-                        description = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectDescription, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no description defined.")),
+                        id = propsMap.getOrElse(OntologyConstants.KnoraAdmin.ProjectOntologyGraph, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no projectOntologyGraph defined.")),
+                        shortname = propsMap.getOrElse(OntologyConstants.KnoraAdmin.ProjectShortname, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no basepath defined.")),
+                        longname = propsMap.getOrElse(OntologyConstants.KnoraAdmin.ProjectLongname, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no longname defined.")),
+                        description = propsMap.getOrElse(OntologyConstants.KnoraAdmin.ProjectDescription, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no description defined.")),
                         project_id = projectIri,
-                        uri = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectOntologyGraph, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no projectOntologyGraph defined.")),
-                        active = propsMap.getOrElse(OntologyConstants.KnoraBase.Status, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no status defined.")).toBoolean
+                        uri = propsMap.getOrElse(OntologyConstants.KnoraAdmin.ProjectOntologyGraph, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no projectOntologyGraph defined.")),
+                        active = propsMap.getOrElse(OntologyConstants.KnoraAdmin.Status, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no status defined.")).toBoolean
                     )
             }.toSeq
         } yield namedGraphs
@@ -314,7 +314,7 @@ class ProjectsResponderV1 extends ResponderV1 {
                 adminNamedGraphIri = "http://www.knora.org/data/admin",
                 triplestore = settings.triplestoreType,
                 projectIri = newProjectIRI,
-                projectClassIri = OntologyConstants.KnoraBase.KnoraProject,
+                projectClassIri = OntologyConstants.KnoraAdmin.KnoraProject,
                 shortname = createRequest.shortname,
                 maybeLongname = createRequest.longname,
                 maybeDescription = createRequest.description,
@@ -391,17 +391,17 @@ class ProjectsResponderV1 extends ResponderV1 {
             /* create and return the project info */
             ProjectInfoV1(
                 id = projectIri,
-                shortname = projectProperties.getOrElse(OntologyConstants.KnoraBase.ProjectShortname, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no shortname defined.")),
-                longname = projectProperties.get(OntologyConstants.KnoraBase.ProjectLongname),
-                description = projectProperties.get(OntologyConstants.KnoraBase.ProjectDescription),
-                keywords = projectProperties.get(OntologyConstants.KnoraBase.ProjectKeywords),
-                logo = projectProperties.get(OntologyConstants.KnoraBase.ProjectLogo),
-                belongsToInstitution = projectProperties.get(OntologyConstants.KnoraBase.BelongsToProject),
-                basepath = projectProperties.getOrElse(OntologyConstants.KnoraBase.ProjectBasepath, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no basepath defined.")),
-                ontologyNamedGraph = projectProperties.getOrElse(OntologyConstants.KnoraBase.ProjectOntologyGraph, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no projectOntologyGraph defined.")),
-                dataNamedGraph = projectProperties.getOrElse(OntologyConstants.KnoraBase.ProjectDataGraph, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no projectDataGraph defined.")),
-                status = projectProperties.getOrElse(OntologyConstants.KnoraBase.Status, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no status defined.")).toBoolean,
-                hasSelfJoinEnabled = projectProperties.getOrElse(OntologyConstants.KnoraBase.HasSelfJoinEnabled, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no hasSelfJoinEnabled defined.")).toBoolean
+                shortname = projectProperties.getOrElse(OntologyConstants.KnoraAdmin.ProjectShortname, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no shortname defined.")),
+                longname = projectProperties.get(OntologyConstants.KnoraAdmin.ProjectLongname),
+                description = projectProperties.get(OntologyConstants.KnoraAdmin.ProjectDescription),
+                keywords = projectProperties.get(OntologyConstants.KnoraAdmin.ProjectKeywords),
+                logo = projectProperties.get(OntologyConstants.KnoraAdmin.ProjectLogo),
+                belongsToInstitution = projectProperties.get(OntologyConstants.KnoraAdmin.BelongsToProject),
+                basepath = projectProperties.getOrElse(OntologyConstants.KnoraAdmin.ProjectBasepath, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no basepath defined.")),
+                ontologyNamedGraph = projectProperties.getOrElse(OntologyConstants.KnoraAdmin.ProjectOntologyGraph, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no projectOntologyGraph defined.")),
+                dataNamedGraph = projectProperties.getOrElse(OntologyConstants.KnoraAdmin.ProjectDataGraph, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no projectDataGraph defined.")),
+                status = projectProperties.getOrElse(OntologyConstants.KnoraAdmin.Status, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no status defined.")).toBoolean,
+                hasSelfJoinEnabled = projectProperties.getOrElse(OntologyConstants.KnoraAdmin.HasSelfJoinEnabled, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no hasSelfJoinEnabled defined.")).toBoolean
             )
 
         } else {

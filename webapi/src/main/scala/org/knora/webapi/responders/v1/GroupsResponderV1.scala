@@ -86,11 +86,11 @@ class GroupsResponderV1 extends ResponderV1 {
 
                     GroupInfoV1(
                         id = groupIri,
-                        name = propsMap.getOrElse(OntologyConstants.KnoraBase.GroupName, throw InconsistentTriplestoreDataException(s"Group $groupIri has no name attached")),
-                        description = propsMap.get(OntologyConstants.KnoraBase.GroupDescription),
-                        belongsToProject = propsMap.getOrElse(OntologyConstants.KnoraBase.BelongsToProject, throw InconsistentTriplestoreDataException(s"Group $groupIri has no project attached")),
-                        status = propsMap(OntologyConstants.KnoraBase.Status).toBoolean,
-                        hasSelfJoinEnabled = propsMap(OntologyConstants.KnoraBase.HasSelfJoinEnabled).toBoolean
+                        name = propsMap.getOrElse(OntologyConstants.KnoraAdmin.GroupName, throw InconsistentTriplestoreDataException(s"Group $groupIri has no name attached")),
+                        description = propsMap.get(OntologyConstants.KnoraAdmin.GroupDescription),
+                        belongsToProject = propsMap.getOrElse(OntologyConstants.KnoraAdmin.BelongsToProject, throw InconsistentTriplestoreDataException(s"Group $groupIri has no project attached")),
+                        status = propsMap(OntologyConstants.KnoraAdmin.Status).toBoolean,
+                        hasSelfJoinEnabled = propsMap(OntologyConstants.KnoraAdmin.HasSelfJoinEnabled).toBoolean
                     )
             }.toVector
         } yield GroupsResponseV1(
@@ -261,7 +261,7 @@ class GroupsResponderV1 extends ResponderV1 {
                 adminNamedGraphIri = "http://www.knora.org/data/admin",
                 triplestore = settings.triplestoreType,
                 groupIri = groupIRI,
-                groupClassIri = OntologyConstants.KnoraBase.UserGroup,
+                groupClassIri = OntologyConstants.KnoraAdmin.UserGroup,
                 name = createRequest.name,
                 maybeDescription = createRequest.description,
                 projectIri = createRequest.belongsToProject,
@@ -338,11 +338,11 @@ class GroupsResponderV1 extends ResponderV1 {
 
         GroupInfoV1(
             id = groupIri,
-            name = groupProperties.getOrElse(OntologyConstants.KnoraBase.GroupName, throw InconsistentTriplestoreDataException(s"Group $groupIri has no groupName attached")),
-            description = groupProperties.get(OntologyConstants.KnoraBase.GroupDescription),
-            belongsToProject = groupProperties.getOrElse(OntologyConstants.KnoraBase.BelongsToProject, throw InconsistentTriplestoreDataException(s"Group $groupIri has no project attached")),
-            status = groupProperties(OntologyConstants.KnoraBase.Status).toBoolean,
-            hasSelfJoinEnabled = groupProperties(OntologyConstants.KnoraBase.HasSelfJoinEnabled).toBoolean)
+            name = groupProperties.getOrElse(OntologyConstants.KnoraAdmin.GroupName, throw InconsistentTriplestoreDataException(s"Group $groupIri has no groupName attached")),
+            description = groupProperties.get(OntologyConstants.KnoraAdmin.GroupDescription),
+            belongsToProject = groupProperties.getOrElse(OntologyConstants.KnoraAdmin.BelongsToProject, throw InconsistentTriplestoreDataException(s"Group $groupIri has no project attached")),
+            status = groupProperties(OntologyConstants.KnoraAdmin.Status).toBoolean,
+            hasSelfJoinEnabled = groupProperties(OntologyConstants.KnoraAdmin.HasSelfJoinEnabled).toBoolean)
     }
 
 

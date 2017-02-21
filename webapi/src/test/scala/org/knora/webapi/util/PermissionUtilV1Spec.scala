@@ -57,13 +57,13 @@ object PermissionUtilV1Spec {
 }
 class PermissionUtilV1Spec extends CoreSpec("PermissionUtilSpec") with ImplicitSender with Authenticator {
 
-    val permissionLiteral = "RV knora-base:UnknownUser|V knora-base:KnownUser|M knora-base:ProjectMember|CR knora-base:Creator"
+    val permissionLiteral = "RV knora-admin:UnknownUser|V knora-admin:KnownUser|M knora-admin:ProjectMember|CR knora-admin:Creator"
 
     val parsedPermissionLiteral = Map(
-        "RV" -> Set(OntologyConstants.KnoraBase.UnknownUser),
-        "V" -> Set(OntologyConstants.KnoraBase.KnownUser),
-        "M" -> Set(OntologyConstants.KnoraBase.ProjectMember),
-        "CR" -> Set(OntologyConstants.KnoraBase.Creator)
+        "RV" -> Set(OntologyConstants.KnoraAdmin.UnknownUser),
+        "V" -> Set(OntologyConstants.KnoraAdmin.KnownUser),
+        "M" -> Set(OntologyConstants.KnoraAdmin.ProjectMember),
+        "CR" -> Set(OntologyConstants.KnoraAdmin.Creator)
     )
 
     "PermissionUtil " should {
@@ -130,8 +130,8 @@ class PermissionUtilV1Spec extends CoreSpec("PermissionUtilSpec") with ImplicitS
 
         "return user's max permission from assertions for a specific resource" in {
             val assertions: Seq[(IRI, String)] = Seq(
-                (OntologyConstants.KnoraBase.AttachedToUser, "http://data.knora.org/users/91e19f1e01"),
-                (OntologyConstants.KnoraBase.AttachedToProject, SharedAdminTestData.INCUNABULA_PROJECT_IRI),
+                (OntologyConstants.KnoraAdmin.AttachedToUser, "http://data.knora.org/users/91e19f1e01"),
+                (OntologyConstants.KnoraAdmin.AttachedToProject, SharedAdminTestData.INCUNABULA_PROJECT_IRI),
                 (OntologyConstants.KnoraBase.HasPermissions, permissionLiteral)
             )
             PermissionUtilV1.getUserPermissionV1FromAssertions(
@@ -150,9 +150,9 @@ class PermissionUtilV1Spec extends CoreSpec("PermissionUtilSpec") with ImplicitS
 
         "return user's max permission on link value with value props (2)" ignore {
 
-            /*
+            /* ?OLD?
             "incunabula:partOf"
-            "V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember|D knora-base:Owner"
+            "V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember|D knora-admin:Owner"
             "http://data.knora.org/users/91e19f1e01"
 
 
@@ -177,14 +177,14 @@ class PermissionUtilV1Spec extends CoreSpec("PermissionUtilSpec") with ImplicitS
 
 
         "return parsed permissions string as 'Set[PermissionV1]'" in {
-            val hasPermissionsString = "M knora-base:Creator,knora-base:ProjectMember|V knora-base:KnownUser,http://data.knora.org/groups/customgroup|RV knora-base:UnknownUser"
+            val hasPermissionsString = "M knora-admin:Creator,knora-admin:ProjectMember|V knora-admin:KnownUser,http://data.knora.org/groups/customgroup|RV knora-admin:UnknownUser"
 
             val permissionsSet = Set(
-                PermissionV1.modifyPermission(OntologyConstants.KnoraBase.Creator),
-                PermissionV1.modifyPermission(OntologyConstants.KnoraBase.ProjectMember),
-                PermissionV1.viewPermission(OntologyConstants.KnoraBase.KnownUser),
+                PermissionV1.modifyPermission(OntologyConstants.KnoraAdmin.Creator),
+                PermissionV1.modifyPermission(OntologyConstants.KnoraAdmin.ProjectMember),
+                PermissionV1.viewPermission(OntologyConstants.KnoraAdmin.KnownUser),
                 PermissionV1.viewPermission("http://data.knora.org/groups/customgroup"),
-                PermissionV1.restrictedViewPermission(OntologyConstants.KnoraBase.UnknownUser)
+                PermissionV1.restrictedViewPermission(OntologyConstants.KnoraAdmin.UnknownUser)
             )
 
             PermissionUtilV1.parsePermissionsWithType(Some(hasPermissionsString), PermissionType.OAP) should equal(permissionsSet)
@@ -192,7 +192,7 @@ class PermissionUtilV1Spec extends CoreSpec("PermissionUtilSpec") with ImplicitS
 
         "build a 'PermissionV1' object" in {
             PermissionUtilV1.buildPermissionObject(
-                name = OntologyConstants.KnoraBase.ProjectResourceCreateRestrictedPermission,
+                name = OntologyConstants.KnoraAdmin.ProjectResourceCreateRestrictedPermission,
                 iris = Set("1", "2", "3")
             ) should equal(
                 Set(
@@ -250,12 +250,12 @@ class PermissionUtilV1Spec extends CoreSpec("PermissionUtilSpec") with ImplicitS
             val permissions = Set(
                 PermissionV1.changeRightsPermission("1"),
                 PermissionV1.deletePermission("2"),
-                PermissionV1.changeRightsPermission(OntologyConstants.KnoraBase.Creator),
-                PermissionV1.modifyPermission(OntologyConstants.KnoraBase.ProjectMember),
-                PermissionV1.viewPermission(OntologyConstants.KnoraBase.KnownUser)
+                PermissionV1.changeRightsPermission(OntologyConstants.KnoraAdmin.Creator),
+                PermissionV1.modifyPermission(OntologyConstants.KnoraAdmin.ProjectMember),
+                PermissionV1.viewPermission(OntologyConstants.KnoraAdmin.KnownUser)
             )
 
-            val permissionsString = "CR knora-base:Creator,1|D 2|M knora-base:ProjectMember|V knora-base:KnownUser"
+            val permissionsString = "CR knora-admin:Creator,1|D 2|M knora-admin:ProjectMember|V knora-admin:KnownUser"
 
             val result = PermissionUtilV1.formatPermissions(permissions, PermissionType.OAP)
             result should equal(Some(permissionsString))

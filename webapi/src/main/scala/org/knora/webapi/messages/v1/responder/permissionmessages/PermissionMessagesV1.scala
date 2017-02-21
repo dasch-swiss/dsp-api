@@ -397,7 +397,7 @@ case class PermissionDataV1(groupsPerProject: Map[IRI, List[IRI]] = Map.empty[IR
 
     /* Is the user a member of the SystemAdmin group */
     def isSystemAdmin: Boolean = {
-        groupsPerProject.getOrElse(OntologyConstants.KnoraBase.SystemProject, List.empty[IRI]).contains(OntologyConstants.KnoraBase.SystemAdmin)
+        groupsPerProject.getOrElse(OntologyConstants.KnoraAdmin.SystemProject, List.empty[IRI]).contains(OntologyConstants.KnoraAdmin.SystemAdmin)
     }
 
     /* Does the user have the 'ProjectAllAdmin' permission for the project */
