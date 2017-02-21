@@ -230,7 +230,7 @@ case class UserProfileV1(userData: UserDataV1 = UserDataV1(lang = "en"),
                          projects: Seq[IRI] = Vector.empty[IRI],
                          sessionId: Option[String] = None,
                          isSystemUser: Boolean = false,
-                         permissionData: PermissionDataV1 = PermissionDataV1()
+                         permissionData: PermissionDataV1
                         ) {
 
     /**
@@ -293,7 +293,6 @@ case class UserProfileV1(userData: UserDataV1 = UserDataV1(lang = "en"),
             case UserProfileType.RESTRICTED => {
                 val olduserdata = userData
                 val newuserdata = UserDataV1(
-                    lang = olduserdata.lang,
                     user_id = olduserdata.user_id,
                     token = None, // remove token
                     firstname = olduserdata.firstname,
@@ -301,7 +300,8 @@ case class UserProfileV1(userData: UserDataV1 = UserDataV1(lang = "en"),
                     email = olduserdata.email,
                     password = None, // remove password
                     isActiveUser = olduserdata.isActiveUser,
-                    projects = olduserdata.projects
+                    projects = olduserdata.projects,
+                    lang = olduserdata.lang
                 )
 
                 UserProfileV1(
@@ -366,7 +366,6 @@ case class UserProfileV1(userData: UserDataV1 = UserDataV1(lang = "en"),
 /**
   * Represents basic information about a user.
   *
-  * @param lang         The ISO 639-1 code of the user's preferred language.
   * @param user_id      The user's IRI.
   * @param email        The user's email address.
   * @param password     The user's hashed password.
@@ -374,16 +373,19 @@ case class UserProfileV1(userData: UserDataV1 = UserDataV1(lang = "en"),
   * @param firstname    The user's given name.
   * @param lastname     The user's surname.
   * @param isActiveUser The user's status.
+  * @param projects     The projects the user is member of.
+  * @param lang         The ISO 639-1 code of the user's preferred language.
   */
-case class UserDataV1(lang: String,
-                      user_id: Option[IRI] = None,
+case class UserDataV1(user_id: Option[IRI] = None,
                       email: Option[String] = None,
                       password: Option[String] = None,
                       token: Option[String] = None,
                       firstname: Option[String] = None,
                       lastname: Option[String] = None,
                       isActiveUser: Option[Boolean] = None,
-                      projects: Seq[IRI] = Seq.empty[IRI]) {
+                      projects: Seq[IRI] = Seq.empty[IRI],
+                      lang: String
+                     ) {
 
     def fullname: Option[String] = {
         (firstname, lastname) match {

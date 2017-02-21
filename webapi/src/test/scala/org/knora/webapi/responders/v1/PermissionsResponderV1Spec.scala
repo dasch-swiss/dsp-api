@@ -156,11 +156,6 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
                 val result: Map[IRI, Set[PermissionV1]] = Await.result(underlyingActorUnderTest.userAdministrativePermissionsGetV1(multiuserUserProfileV1.permissionData.groupsPerProject).mapTo[Map[IRI, Set[PermissionV1]]], 1.seconds)
                 result should equal(multiuserUserProfileV1.permissionData.administrativePermissionsPerProject)
             }
-
-            "return user's default object access permissions (helper method used in queries before)" in {
-                val result: Map[IRI, Set[PermissionV1]] = Await.result(underlyingActorUnderTest.userDefaultObjectAccessPermissionsGetV1(multiuserUserProfileV1.permissionData.groupsPerProject), 1.seconds)
-                result should equal(multiuserUserProfileV1.permissionData.defaultObjectAccessPermissionsPerProject)
-            }
         }
 
         "queried about administrative permissions " should {
@@ -350,14 +345,14 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
                 actorUnderTest ! DefaultObjectAccessPermissionsStringForResourceClassGetV1(
                     projectIri = INCUNABULA_PROJECT_IRI, resourceClassIri = OntologyConstants.KnoraBase.LinkObj, incunabulaProjectAdminUser.permissionData
                 )
-                expectMsg(DefaultObjectAccessPermissionsStringResponseV1("CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser"))
+                expectMsg(DefaultObjectAccessPermissionsStringResponseV1("M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser"))
             }
 
             "return the default object access permissions 'string' for the 'knora-base:hasStillImageFileValue' property (system property)" in {
                 actorUnderTest ! DefaultObjectAccessPermissionsStringForPropertyGetV1(
                     projectIri = INCUNABULA_PROJECT_IRI, propertyIri = OntologyConstants.KnoraBase.HasStillImageFileValue, incunabulaProjectAdminUser.permissionData
                 )
-                expectMsg(DefaultObjectAccessPermissionsStringResponseV1("CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser"))
+                expectMsg(DefaultObjectAccessPermissionsStringResponseV1("M knora-base:Creator,knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser"))
             }
 
             "return the default object access permissions 'string' for the 'incunabula:book' resource class (project resource class)" in {
@@ -392,7 +387,18 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
                 actorUnderTest ! DefaultObjectAccessPermissionsStringForResourceClassGetV1(
                     projectIri = ANYTHING_PROJECT_IRI, resourceClassIri = "http://www.knora.org/ontology/anything#Thing", rootUser.permissionData
                 )
-                expectMsg(DefaultObjectAccessPermissionsStringResponseV1("CR knora-base:ProjectAdmin|M knora-base:ProjectMember"))
+                expectMsg(DefaultObjectAccessPermissionsStringResponseV1("CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser"))
+            }
+
+            "return a combined and max set of permissions (default object access permissions) defined on the supplied groups (helper method used in queries before)" in {
+                val groups = List("http://data.knora.org/groups/images-reviewer", s"${OntologyConstants.KnoraBase.ProjectMember}", s"${OntologyConstants.KnoraBase.ProjectAdmin}")
+                val expected = Set(
+                        PermissionV1.changeRightsPermission(OntologyConstants.KnoraBase.Creator),
+                        PermissionV1.viewPermission(OntologyConstants.KnoraBase.KnownUser),
+                        PermissionV1.modifyPermission(OntologyConstants.KnoraBase.ProjectMember)
+                    )
+                val result: Set[PermissionV1] = Await.result(underlyingActorUnderTest.defaultObjectAccessPermissionsForGroupsGetV1(IMAGES_PROJECT_IRI, groups), 1.seconds)
+                result should equal(expected)
             }
 
         }

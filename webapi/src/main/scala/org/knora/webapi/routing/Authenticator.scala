@@ -28,6 +28,7 @@ import akka.pattern._
 import akka.util.{ByteString, Timeout}
 import com.typesafe.scalalogging.Logger
 import org.knora.webapi._
+import org.knora.webapi.messages.v1.responder.permissionmessages.PermissionDataV1
 import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_PATH
 import org.knora.webapi.util.CacheUtil
@@ -210,7 +211,10 @@ trait Authenticator {
     def getUserProfileV1(requestContext: RequestContext)(implicit system: ActorSystem, executionContext: ExecutionContext): UserProfileV1 = {
         val settings = Settings(system)
         if (settings.skipAuthentication) {
-            UserProfileV1(UserDataV1(settings.fallbackLanguage)).ofType(UserProfileType.RESTRICTED)
+            UserProfileV1(
+                userData = UserDataV1(lang = settings.fallbackLanguage),
+                permissionData = PermissionDataV1(anonymousUser = true)
+            ).ofType(UserProfileType.RESTRICTED)
         }
         else {
             // let us first try to get the user profile through the session id from the cookie
@@ -234,8 +238,11 @@ trait Authenticator {
                             userProfileV1.ofType(UserProfileType.RESTRICTED)
 
                         case None =>
-                            log.debug("No credentials found, returning default UserProfileV1!")
-                            UserProfileV1(UserDataV1(settings.fallbackLanguage))
+                            log.debug("No credentials found, returning default UserProfileV1 with 'anonymousUser' inside 'permissionData' set to true!")
+                            UserProfileV1(
+                                userData = UserDataV1(lang = settings.fallbackLanguage),
+                                permissionData = PermissionDataV1(anonymousUser = true)
+                            )
                     }
                 }
             }

@@ -27,7 +27,6 @@ import org.knora.webapi.responders.v1.ResponderManagerV1
 import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
 import org.knora.webapi.util.{MutableTestIri, MutableUserProfileV1}
 import org.knora.webapi.{CoreSpec, LiveActorMaker, SharedAdminTestData}
-import org.rogach.scallop.ArgType.V
 
 import scala.concurrent.duration._
 
@@ -91,7 +90,7 @@ class DrawingsGodsV1Spec extends CoreSpec(DrawingsGodsV1Spec.config) with Triple
         "return correct drawings-gods:QualityData resource permissions string for drawings-gods user" in {
             val qualityDataResourceClass = "http://www.knora.org/ontology/drawings-gods#QualityData"
             responderManager ! DefaultObjectAccessPermissionsStringForResourceClassGetV1(drawingsGodsProjectIri, qualityDataResourceClass, drawingsGodsUserProfile.get.permissionData)
-            expectMsg(DefaultObjectAccessPermissionsStringResponseV1("CR knora-base:ProjectAdmin|D <http://data.knora.org/groups/drawings-gods-snf-team>,knora-base:Creator|M <http://data.knora.org/groups/drawings-gods-meta-annotators>,<http://data.knora.org/groups/drawings-gods-add-drawings>|V knora-base:ProjectMember|RV knora-base:KnownUser,knora-base:UnknownUser"))
+            expectMsg(DefaultObjectAccessPermissionsStringResponseV1("CR knora-base:ProjectAdmin|D knora-base:Creator|M <http://data.knora.org/groups/drawings-gods-meta-annotators>,<http://data.knora.org/groups/drawings-gods-snf-team>,<http://data.knora.org/groups/drawings-gods-add-drawings>|V knora-base:ProjectMember|RV knora-base:KnownUser,knora-base:UnknownUser"))
         }
     }
 }

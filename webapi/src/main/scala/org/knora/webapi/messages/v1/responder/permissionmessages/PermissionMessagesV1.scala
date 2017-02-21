@@ -17,6 +17,7 @@
 package org.knora.webapi.messages.v1.responder.permissionmessages
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
+import net.sf.saxon.functions.ConstantFunction.True
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.permissionmessages.PermissionDataType.PermissionProfileType
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectV1JsonProtocol
@@ -360,11 +361,10 @@ case class DefaultObjectAccessPermissionOperationResponseV1(success: Boolean,
   *
   * @param groupsPerProject                         the groups the user belongs to for each project.
   * @param administrativePermissionsPerProject      the user's administrative permissions for each project.
-  * @param defaultObjectAccessPermissionsPerProject the user's default object access permissions for each project.
   */
 case class PermissionDataV1(groupsPerProject: Map[IRI, List[IRI]] = Map.empty[IRI, List[IRI]],
                             administrativePermissionsPerProject: Map[IRI, Set[PermissionV1]] = Map.empty[IRI, Set[PermissionV1]],
-                            defaultObjectAccessPermissionsPerProject: Map[IRI, Set[PermissionV1]] = Map.empty[IRI, Set[PermissionV1]]
+                            anonymousUser: Boolean
                            ) {
 
     /**
@@ -380,7 +380,7 @@ case class PermissionDataV1(groupsPerProject: Map[IRI, List[IRI]] = Map.empty[IR
                 PermissionDataV1(
                     groupsPerProject = groupsPerProject,
                     administrativePermissionsPerProject = Map.empty[IRI, Set[PermissionV1]], // remove administrative permission information
-                    defaultObjectAccessPermissionsPerProject = Map.empty[IRI, Set[PermissionV1]] // remove default object access permission information
+                    anonymousUser = anonymousUser
                 )
             }
             case PermissionDataType.FULL => {
@@ -388,7 +388,7 @@ case class PermissionDataV1(groupsPerProject: Map[IRI, List[IRI]] = Map.empty[IR
                 PermissionDataV1(
                     groupsPerProject = groupsPerProject,
                     administrativePermissionsPerProject = administrativePermissionsPerProject,
-                    defaultObjectAccessPermissionsPerProject = defaultObjectAccessPermissionsPerProject
+                    anonymousUser = anonymousUser
                 )
             }
             case _ => throw BadRequestException(s"The requested userProfileType: $permissionProfileType is invalid.")
@@ -470,16 +470,7 @@ case class PermissionDataV1(groupsPerProject: Map[IRI, List[IRI]] = Map.empty[IR
                     true
                 }
 
-                val doapppEqual = if (this.defaultObjectAccessPermissionsPerProject.hashCode != that.defaultObjectAccessPermissionsPerProject.hashCode) {
-                    println("defaultObjectAccessPermissionsPerProject not equal")
-                    println(s"this (expected): ${this.defaultObjectAccessPermissionsPerProject}")
-                    println(s"that (found): ${that.defaultObjectAccessPermissionsPerProject}")
-                    false
-                } else {
-                    true
-                }
-
-                gppEqual && apppEqual & doapppEqual
+                gppEqual && apppEqual
             }
             case _ => false
         }
@@ -488,7 +479,6 @@ case class PermissionDataV1(groupsPerProject: Map[IRI, List[IRI]] = Map.empty[IR
         "PermissionDataV1( \n" +
             s"\t groupsPerProject = ${MessageUtil.toSource(groupsPerProject)} \n" +
             s"\t administrativePermissionsPerProject = ${MessageUtil.toSource(administrativePermissionsPerProject)} \n" +
-            s"\t defaultObjectAccessPermissionsPerProject = ${MessageUtil.toSource(defaultObjectAccessPermissionsPerProject)}" + "\n" +
             ")"
     }
 }

@@ -78,10 +78,12 @@ class UserMessagesV1Spec extends WordSpecLike with Matchers {
         "allow checking the password (1)" in {
             val hp = BCrypt.hashpw("123456", BCrypt.gensalt())
             val up = UserProfileV1(
-                UserDataV1(
+                userData = UserDataV1(
                     password = Some(hp),
                     lang = lang
-                ))
+                ),
+                permissionData = PermissionDataV1(anonymousUser = false)
+            )
 
             // test BCrypt
             assert(BCrypt.checkpw("123456", BCrypt.hashpw("123456", BCrypt.gensalt())))
