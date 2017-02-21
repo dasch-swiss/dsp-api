@@ -207,16 +207,16 @@ class ResponderManagerV1 extends Actor with ActorLogging {
         case resourcesResponderRequestV1: ResourcesResponderRequestV1 => resourcesRouter.forward(resourcesResponderRequestV1)
         case valuesResponderRequest: ValuesResponderRequestV1 => valuesRouter.forward(valuesResponderRequest)
         case sipiResponderRequest: SipiResponderRequestV1 => sipiRouter.forward(sipiResponderRequest)
-        case usersResponderRequest: UsersResponderRequestV1 => usersRouter forward usersResponderRequest
         case listsResponderRequest: ListsResponderRequestV1 => listsRouter.forward(listsResponderRequest)
         case searchResponderRequest: SearchResponderRequestV1 => searchRouter.forward(searchResponderRequest)
         case ontologyResponderRequest: OntologyResponderRequestV1 => ontologyRouter.forward(ontologyResponderRequest)
-        case projectsResponderRequest: ProjectsResponderRequestV1 => projectsRouter.forward(projectsResponderRequest)
         case ckanResponderRequest: CkanResponderRequestV1 => ckanRouter.forward(ckanResponderRequest)
         case storeResponderRequest: StoreResponderRequestV1 => storeRouter.forward(storeResponderRequest)
         case standoffResponderRequest: StandoffResponderRequestV1 => standoffRouter forward standoffResponderRequest
 		case permissionsResponderRequest: PermissionsResponderRequestV1 => permissionsRouter forward permissionsResponderRequest
+        case usersResponderRequest: UsersResponderRequestV1 => usersRouter forward usersResponderRequest
+        case projectsResponderRequest: ProjectsResponderRequestV1 => projectsRouter forward projectsResponderRequest
         case groupsResponderRequest: GroupsResponderRequestV1 => groupsRouter forward groupsResponderRequest
-        case other => handleUnexpectedMessage(sender(), other, log)
+        case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }
 }

@@ -67,8 +67,8 @@ A user becomes implicitly a member of such a group by satisfying certain conditi
   ``knora-base:isInProjectAdminGroup`` property, which points to the project in question.
 
 **knora-base:SystemAdmin**:
-  The ``root`` user is by default member of this group. Membership is received by setting the property
-  ``knora-base:isInSystemAdminGroup`` to ``true`` on a ``knora-base:User``.
+  Membership is received by setting the property ``knora-base:isInSystemAdminGroup`` to ``true`` on a
+  ``knora-base:User``.
 
 To use these build-in groups as values for properties (Object Access and Default Permissions), the IRI is constructed by
 appending the name of the built-in group to ``knora-base``, e.g., ``knora-base:KnownUser`` where ``knora-base``
@@ -260,6 +260,9 @@ If the user creating a new object is a member of more than one group with such a
 default object access permission are defined on resource classes and/or properties, then the final set of default object
 access permissions that will result is **additive** and **most permissive**.
 
+The default object access permissions defined on the **SystemAdmin** group are additionally used for system admin users,
+and are added to the calculated final set of permissions.
+
 Example default object access permission instance:
 
 ::
@@ -322,9 +325,8 @@ The *CLOSED* template, defined the following permissions:
 
   - The ``knora-base:ProjectMember`` group:
      - receives explicitly *ProjectResourceCreateAllPermission*.
-     - receives explicitly *CR* for the *knora-base:Creator* and *knora-base:ProjectAdmin* group.
+     - receives explicitly *CR* for the *knora-base:ProjectAdmin* group.
      - receives explicitly *M* for the *ProjectMember* group.
-     - receives explicitly *V* for the *knora-base:KnownUser* group.
 
 
 Default Permissions Matrix for new Projects
@@ -598,7 +600,7 @@ Example Data stored in the permissions graph
   <http://data.knora.org/permissions/[UUID]> rdf:type knora-base:AdministrativePermission ;
        knora-base:forProject <http://data.knora.org/projects/images> ;
        knora-base:forGroup knora-base:ProjectMember ;
-       knora-base:hasPermission "ProjectResourceCreateAllPermission"^^xsd:string .
+       knora-base:hasPermissions "ProjectResourceCreateAllPermission"^^xsd:string .
 
 
 **Administrative permission restricting project admin permission on a group:**
@@ -626,7 +628,7 @@ Example Data stored in the permissions graph
        knora-base:forProject <http://data.knora.org/projects/images> ;
        knora-base:forGroup knora-base:ProjectMember ;
        knora-base:hasPermissions "CR knora-base:Creator|
-                                   M <http://data.knora.org/permissions/[UUID]>|
+                                   M <http://data.knora.org/groups/[UUID]>|
                                    V knora-base:KnownUser"^^xsd:string .
 
 
@@ -755,15 +757,13 @@ Example User Information stored in admin graph:
 ::
 
   <http://data.knora.org/users/91e19f1e01> rdf:type knora-base:User ;
-       knora-base:userid "root" ;
-       foaf:familyName "Admin" ;
-       foaf:givenName "Administrator" ;
-       knora-base:password "a94a8fe5ccb19ba61c4c0873d391e987982fbbd3" ;
-       knora-base:passwordSalt "" ;
-       knora-base:email "test@test.ch" ;
+       knora-base:email "test@test.ch"^^xsd:string ;
+       knora-base:givenName "Administrator"^^xsd:string ;
+       knora-base:familyName "Admin"^^xsd:string ;
+       knora-base:password "$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"^^xsd:string ;
        knora-base:phone "123456" ;
-       knora-base:preferredLanguage "de" ;
-       knora-base:isActiveUser "true"^^xsd:boolean ;
+       knora-base:preferredLanguage "de"^^xsd:string ;
+       knora-base:status "true"^^xsd:boolean ;
        knora-base:isInProject <http://data.knora.org/projects/[UUID]> ;
        knora-base:isInSystemAdminGroup "true"^^xsd:boolean ;
        knora-base:isInProjectAdminGroup <http://data.knora.org/projects/[UUID]> ;
@@ -817,29 +817,10 @@ Example Project Information stored in admin named graph:
         knora-base:projectBasepath "/imldata/SALSAH-TEST-01/images" ;
         knora-base:projectShortname "images" ;
         knora-base:projectLongname "Images Collection Demo" ;
-        knora-base:projectOntolgyGraph "http://www.knora.org/ontology/images" ;
+        knora-base:projectOntologyGraph "http://www.knora.org/ontology/images" ;
         knora-base:projectDataGraph "http://www.knora.org/data/images" ;
         knora-base:isActiveProject "true"^^xsd:boolean ;
         knora-base:hasSelfJoinEnabled "false"^^xsd:boolean .
-
-
-   <http://data.knora.org/groups/[UUID]>
-        rdf:type knora-base:UserGroup ;
-        knora-base:groupName "ProjectAdmin" ;
-        knora-base:groupDescription "Default Project Admin Group" ;
-        knora-base:belongsToProject <http://data.knora.org/projects/[UUID]> ;
-        knora-base:hasProjectAllAdminPermission "true"^^xsd:boolean ;
-        knora-base:hasProjectResourceCreateAllPermission "true"^^xsd:boolean .
-
-
-   <http://data.knora.org/groups/[UUID]>
-        rdf:type knora-base:UserGroup ;
-        knora-base:groupName "ProjectMember" ;
-        knora-base:groupDescription "Default Project Member Group" ;
-        knora-base:belongsToProject <http://data.knora.org/projects/[UUID]> ;
-        knora-base:hasProjectResourceCreateAllPermission "true"^^xsd:boolean ;
-        knora-base:hasDefaultChangeRightsPermission knora-base:Creator ;
-        knora-base:hasDefaultViewPermission knora-base:KnownUser .
 
 
 Groups Endpoint
@@ -902,6 +883,7 @@ Example Group Information stored in admin named graph:
         knora-base:groupName "Name of the group" ;
         knora-base:groupDescription "A description of the group" ;
         knora-base:belongsToProject <http://data.knora.org/projects/[UUID]> ;
+        knora-base:status "true"^^xsd:boolean ;
         knora-base:hasSelfJoinEnabled "false"^^xsd:boolean .
 
 

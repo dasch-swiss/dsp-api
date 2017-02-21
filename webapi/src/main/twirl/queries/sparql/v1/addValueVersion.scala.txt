@@ -52,8 +52,7 @@
   newValueIri: IRI,
   valueTypeIri: IRI,
   value: UpdateValueV1,
-  valueOwner: IRI,
-  valueProject: IRI,
+  valueCreator: IRI,
   maybeValuePermissions: Option[String],
   maybeComment: Option[String],
   linkUpdates: Seq[SparqlTemplateLinkUpdate])
@@ -254,9 +253,8 @@ DELETE {
             case None => {}
         }
 
-        @* Insert the value's permission-relevant assertions (its owner, project, and permissions). *@
-        ?newValue knora-base:attachedToUser <@valueOwner> ;
-            knora-base:attachedToProject <@valueProject> .
+        @* Insert the value's owner and permissions. *@
+        ?newValue knora-base:attachedToUser <@valueCreator> .
 
         @maybeValuePermissions match {
 
@@ -297,18 +295,7 @@ DELETE {
                 }
                 knora-base:valueCreationDate ?currentTime .
 
-            <@linkUpdate.newLinkValueIri> knora-base:attachedToUser <@linkUpdate.newLinkValueOwner> .
-
-            @linkUpdate.newLinkValueProject match {
-
-                case Some(linkValueProject) => {
-
-                    <@linkUpdate.newLinkValueIri> knora-base:attachedToProject <@linkValueProject> .
-
-                }
-
-                case None => {}
-            }
+            <@linkUpdate.newLinkValueIri> knora-base:attachedToUser <@linkUpdate.newLinkValueCreator> .
 
             @linkUpdate.newLinkValuePermissions match {
 

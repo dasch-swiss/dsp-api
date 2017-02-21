@@ -20,6 +20,7 @@ import akka.actor.Props
 import akka.actor.Status.Failure
 import akka.testkit.{ImplicitSender, TestActorRef}
 import com.typesafe.config.ConfigFactory
+import org.apache.jena.sparql.function.library.leviathan.log
 import org.knora.webapi.SharedAdminTestData._
 import org.knora.webapi.SharedPermissionsTestData._
 import org.knora.webapi._
@@ -241,7 +242,7 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
                     SharedAdminTestData.rootUser
                 )
                 expectMsg(DefaultObjectAccessPermissionsForProjectGetResponseV1(
-                    defaultObjectAccessPermissions = Seq(perm002_d1.p)
+                    defaultObjectAccessPermissions = Seq(perm002_d1.p, perm002_d2.p)
                 ))
             }
 
@@ -349,42 +350,49 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
                 actorUnderTest ! DefaultObjectAccessPermissionsStringForResourceClassGetV1(
                     projectIri = INCUNABULA_PROJECT_IRI, resourceClassIri = OntologyConstants.KnoraBase.LinkObj, incunabulaProjectAdminUser.permissionData
                 )
-                expectMsg(Some("CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser"))
+                expectMsg(DefaultObjectAccessPermissionsStringResponseV1("CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser"))
             }
 
             "return the default object access permissions 'string' for the 'knora-base:hasStillImageFileValue' property (system property)" in {
                 actorUnderTest ! DefaultObjectAccessPermissionsStringForPropertyGetV1(
                     projectIri = INCUNABULA_PROJECT_IRI, propertyIri = OntologyConstants.KnoraBase.HasStillImageFileValue, incunabulaProjectAdminUser.permissionData
                 )
-                expectMsg(Some("CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser"))
+                expectMsg(DefaultObjectAccessPermissionsStringResponseV1("CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser"))
             }
 
             "return the default object access permissions 'string' for the 'incunabula:book' resource class (project resource class)" in {
                 actorUnderTest ! DefaultObjectAccessPermissionsStringForResourceClassGetV1(
                     projectIri = INCUNABULA_PROJECT_IRI, resourceClassIri = INCUNABULA_BOOK_RESOURCE_CLASS, incunabulaProjectAdminUser.permissionData
                 )
-                expectMsg(Some("CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser"))
+                expectMsg(DefaultObjectAccessPermissionsStringResponseV1("CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser"))
             }
 
             "return the default object access permissions 'string' for the 'incunabula:page' resource class (project resource class)" in {
                 actorUnderTest ! DefaultObjectAccessPermissionsStringForResourceClassGetV1(
                     projectIri = INCUNABULA_PROJECT_IRI, resourceClassIri = INCUNABULA_PAGE_RESOURCE_CLASS, incunabulaProjectAdminUser.permissionData
                 )
-                expectMsg(Some("CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser"))
+                expectMsg(DefaultObjectAccessPermissionsStringResponseV1("CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser"))
             }
 
             "return the default object access permissions 'string' for the 'images:jahreszeit' property" in {
                 actorUnderTest ! DefaultObjectAccessPermissionsStringForPropertyGetV1(
                     projectIri = IMAGES_PROJECT_IRI, propertyIri = "http://www.knora.org/ontology/images#jahreszeit", imagesUser01.permissionData
                 )
-                expectMsg(Some("CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser"))
+                expectMsg(DefaultObjectAccessPermissionsStringResponseV1("CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser"))
             }
 
             "return the default object access permissions 'string' for the 'anything:hasInterval' property" in {
                 actorUnderTest ! DefaultObjectAccessPermissionsStringForPropertyGetV1(
                     projectIri = ANYTHING_PROJECT_IRI, propertyIri = "http://www.knora.org/ontology/anything#hasInterval", anythingUser1.permissionData
                 )
-                expectMsg(Some("CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser"))
+                expectMsg(DefaultObjectAccessPermissionsStringResponseV1("CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser"))
+            }
+
+            "return the default object access permissions 'string' for the 'anything:Thing' resource class for the root user (system admin and not member of project)" in {
+                actorUnderTest ! DefaultObjectAccessPermissionsStringForResourceClassGetV1(
+                    projectIri = ANYTHING_PROJECT_IRI, resourceClassIri = "http://www.knora.org/ontology/anything#Thing", rootUser.permissionData
+                )
+                expectMsg(DefaultObjectAccessPermissionsStringResponseV1("CR knora-base:ProjectAdmin|M knora-base:ProjectMember"))
             }
 
         }

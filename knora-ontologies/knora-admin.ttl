@@ -42,7 +42,9 @@
 
                    rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
-                   rdfs:comment "Connects a Resource or a Value to a project"@en ;
+                   rdfs:comment "Connects a Resource to a project"@en ;
+
+                   :subjectClassConstraint :Resource ;
 
                    :objectClassConstraint :knoraProject .
 

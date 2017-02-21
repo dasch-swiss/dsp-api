@@ -24,7 +24,6 @@ import java.util.UUID
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi.IRI
-import org.knora.webapi.messages.v1.responder.permissionmessages.AdministrativePermissionV1
 import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1, UserV1JsonProtocol}
 import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
 import spray.json.{DefaultJsonProtocol, JsonFormat, NullOptions, RootJsonFormat}
@@ -75,12 +74,20 @@ sealed trait ProjectsResponderRequestV1 extends KnoraRequestV1
 
 // Requests
 /**
-  * Get all information about all projects.
+  * Get all information about all projects in form of [[ProjectsResponseV1]]. The ProjectsGetRequestV1 returns either
+  * something or a NotFound exception if there are no projects found. Administration permission checking is performed.
   *
   * @param userProfile the profile of the user making the request.
   */
 case class ProjectsGetRequestV1(userProfile: Option[UserProfileV1]) extends ProjectsResponderRequestV1
 
+/**
+  * Get all information about all projects in form of a sequence of [[ProjectInfoV1]]. Returns an empty sequence if
+  * no projects are found. Administration permission checking is skipped.
+  *
+  * @param userProfile the profile of the user making the request.
+  */
+case class ProjectsGetV1(userProfile: Option[UserProfileV1]) extends ProjectsResponderRequestV1
 
 /**
   * Get all the existing named graphs from all projects as a vector of [[org.knora.webapi.messages.v1.responder.ontologymessages.NamedGraphV1]].
@@ -104,7 +111,6 @@ case class ProjectInfoByIRIGetRequestV1(iri: IRI, userProfileV1: Option[UserProf
   * @param userProfileV1 the profile of the user making the request (optional).
   */
 case class ProjectInfoByIRIGetV1(iri: IRI, userProfileV1: Option[UserProfileV1]) extends ProjectsResponderRequestV1
-
 
 /**
   * Find everything about a single project identified through it's shortname.

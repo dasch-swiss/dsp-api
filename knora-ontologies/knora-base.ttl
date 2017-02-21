@@ -1459,6 +1459,16 @@
 
 
 
+###  http://www.knora.org/ontology/knora-base#hasPermissions
+
+:hasPermissions rdf:type owl:DatatypeProperty ;
+
+                rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
+
+                :objectDatatypeConstraint xsd:string .
+
+
+
 #################################################################
 #
 #    Classes
@@ -2477,10 +2487,6 @@
                        [ rdf:type owl:Restriction ;
                          owl:onProperty :attachedToUser ;
                          owl:cardinality "1"^^xsd:nonNegativeInteger
-                       ] ,
-                       [ rdf:type owl:Restriction ;
-                         owl:onProperty :attachedToProject ;
-                         owl:maxCardinality "1"^^xsd:nonNegativeInteger
                        ] ,
                        [ rdf:type owl:Restriction ;
                          owl:onProperty :hasPermissions ;

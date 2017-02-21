@@ -70,13 +70,9 @@ WHERE {
         ?currentValue knora-base:previousValue* ?searchValue ;
             knora-base:isDeleted false .
 
-        @* Return the value's project if it has one, otherwise return the project of the resource that contains the value. *@
-
-        OPTIONAL {
-            ?currentValue knora-base:attachedToProject ?valueProject .
-        }
+        @* Return the project of the resource that contains the value. *@
 
         BIND(knora-base:attachedToProject AS ?objPred)
-        BIND(COALESCE(?valueProject, ?resourceProject) AS ?objObj)
+        BIND(?resourceProject AS ?objObj)
     }
 }

@@ -41,7 +41,7 @@ prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 prefix knora-base: <http://www.knora.org/ontology/knora-base#>
 
-SELECT ?value ?valueCreationDate ?previousValue ?isLinkValue ?linkValuePredicate ?valueOwner ?project ?valuePermissions
+SELECT ?value ?valueCreationDate ?previousValue ?isLinkValue ?linkValuePredicate ?valueCreator ?project ?valuePermissions
 WHERE {
     BIND(IRI("@resourceIri") AS ?resource)
     BIND(IRI("@propertyIri") AS ?prop)
@@ -52,7 +52,7 @@ WHERE {
 
     ?resource ?prop ?currentValue .
     ?prop rdfs:subPropertyOf* knora-base:hasValue .
-    ?resource knora-base:attachedToProject ?resourceProject .
+    ?resource knora-base:attachedToProject ?project .
 
     ?currentValue knora-base:previousValue* ?value .
 
@@ -71,14 +71,8 @@ WHERE {
     }
 
     OPTIONAL {
-        ?value knora-base:attachedToUser ?valueOwner .
+        ?value knora-base:attachedToUser ?valueCreator .
     }
-
-    OPTIONAL {
-        ?value knora-base:attachedToProject ?valueProject .
-    }
-
-    BIND(COALESCE(?valueProject, ?resourceProject) AS ?project)
 
     OPTIONAL {
         ?value knora-base:hasPermissions ?valuePermissions .
