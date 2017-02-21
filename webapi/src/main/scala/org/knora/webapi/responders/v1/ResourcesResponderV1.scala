@@ -1298,7 +1298,7 @@ class ResourcesResponderV1 extends ResponderV1 {
                             for {
                                     defaultObjectAccessPermissions <- {
                                         responderManager ? DefaultObjectAccessPermissionsStringForResourceClassGetV1(projectIri = projectIri, resourceClassIri = resRequest.resourceTypeIri, userProfile.permissionData)
-                                    }.mapTo[Option[String]]
+                                    }.mapTo[DefaultObjectAccessPermissionsStringResponseV1]
                                     _ = log.debug(s"createNewResource - defaultObjectAccessPermissions: $defaultObjectAccessPermissions")
 
                                     _ = if (resRequest.resourceTypeIri == OntologyConstants.KnoraBase.Resource) {
@@ -1321,7 +1321,7 @@ class ResourcesResponderV1 extends ResponderV1 {
 
                                     generateSparqlForValuesResponse <- createNewSparqlStatement(projectIri, resourceIri, resRequest.resourceTypeIri, index,checkObj=false, resValues, fileValuesV1 , userProfile, apiRequestID)
 
-                            } yield  ResourceToCreate(resourceIri,  defaultObjectAccessPermissions, generateSparqlForValuesResponse , resRequest.resourceTypeIri, index,  resRequest.label)
+                            } yield  ResourceToCreate(resourceIri,  Some(defaultObjectAccessPermissions.permissionLiteral), generateSparqlForValuesResponse , resRequest.resourceTypeIri, index,  resRequest.label)
 
                     }
 

@@ -92,9 +92,11 @@ class ResourcesV1R2RSpec extends R2RSpec {
     implicit val ec = system.dispatcher
 
     private val rdfDataObjects = List(
+
         RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/incunabula"),
         RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/images"),
         RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/anything")
+
     )
 
     "Load test data" in {
@@ -1260,17 +1262,17 @@ class ResourcesV1R2RSpec extends R2RSpec {
             val params =
                 s"""<xml xmlns:beol="http://www.knora.org/ontology/beol"
                    |   xmlns:biblio="http://www.knora.org/ontology/biblio">
-                   |   <beol:Person id="abel">
+                   |   <beol:person id="abel">
                    | 	    <beol:hasGivenName>Niels Henrik</beol:hasGivenName>
                    |	      <beol:hasFamilyName>Abel</beol:hasFamilyName>
-                   |	  </beol:Person>
+                   |	  </beol:person>
                    |   <biblio:Journal id="math_intelligencer_">
                    |		    <biblio:hasName>math intelligencer </biblio:hasName>
                    |   </biblio:Journal>
                    |   <biblio:JournalArticle id="strings_in_the_16th_and_17th_centuries" >
                    |       <biblio:publicationHasTitle>Strings in the 16th and 17th Centuries</biblio:publicationHasTitle>
                    |       <biblio:publicationHasAuthor>
-                   |           <beol:Person ref="abel"/>
+                   |           <beol:person ref="abel"/>
                    |       </biblio:publicationHasAuthor>
                    |       <biblio:isPartOfJournal>
                    |           <biblio:Journal ref="math_intelligencer_"/>
