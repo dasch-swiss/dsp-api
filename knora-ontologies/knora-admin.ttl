@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Affero General Public
 # License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
-@prefix : <http://www.knora.org/ontology/knora-base#> .
+@prefix : <http://www.knora.org/ontology/knora-admin#> .
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
@@ -24,7 +24,7 @@
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 @prefix foaf:<http://xmlns.com/foaf/0.1/> .
 @prefix dcterms: <http://purl.org/dc/terms/> .
-@base <http://www.knora.org/ontology/knora-base> .
+@base <http://www.knora.org/ontology/knora-admin> .
 
 <http://www.knora.org/ontology/knora-base> rdf:type owl:Ontology .
 
