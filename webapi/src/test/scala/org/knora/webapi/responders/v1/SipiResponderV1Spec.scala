@@ -45,8 +45,7 @@ object SipiResponderV1Spec {
         This file value has not project Iri attached, it has to be retrieved from the resource.
      */
     private val fileValueResponseFull = SipiFileInfoGetResponseV1(
-        filepath = Some("incunabula_0000000002.jp2"),
-        permissionCode = Some(6),
+        permissionCode = 6,
         userdata = SipiResponderV1Spec.userData
     )
 
@@ -54,8 +53,7 @@ object SipiResponderV1Spec {
         This file value is attached to the test project 666
      */
     private val fileValueResponsePreview = SipiFileInfoGetResponseV1(
-        filepath = Some("incunabula_0000000002.jpg"),
-        permissionCode = Some(2), // the user is not member of the file value's project.
+        permissionCode = 2, // the user is not member of the file value's project.
         userdata = SipiResponderV1Spec.userData
     )
 }
@@ -70,7 +68,6 @@ class SipiResponderV1Spec extends CoreSpec() with ImplicitSender {
     private val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
 
     val rdfDataObjects = List(
-        RdfDataObject(path = "_test_data/ontologies/incunabula-onto.ttl", name = "http://www.knora.org/ontology/incunabula"),
         RdfDataObject(path = "_test_data/responders.v1.SipiResponderV1Spec/incunabula-data.ttl", name = "http://www.knora.org/data/incunabula")
     )
 
@@ -78,7 +75,7 @@ class SipiResponderV1Spec extends CoreSpec() with ImplicitSender {
     private val timeout = 20.seconds
 
 
-    "Load test data " in {
+    "Load test data" in {
         storeManager ! ResetTriplestoreContent(rdfDataObjects)
         expectMsg(300.seconds, ResetTriplestoreContentACK())
 
@@ -87,7 +84,7 @@ class SipiResponderV1Spec extends CoreSpec() with ImplicitSender {
     }
 
     "The Sipi responder" should {
-        "return details of a full quality file value (project IRI has to be retrieved from resource because it is not given for file value)" in {
+        "return details of a full quality file value" in {
             // http://localhost:3333/v1/files/http%3A%2F%2Fdata.knora.org%2F8a0b1e75%2Freps%2F7e4ba672
             actorUnderTest ! SipiFileInfoGetRequestV1(
                 userProfile = SipiResponderV1Spec.userProfile,
@@ -97,18 +94,4 @@ class SipiResponderV1Spec extends CoreSpec() with ImplicitSender {
             expectMsg(timeout, SipiResponderV1Spec.fileValueResponseFull)
         }
     }
-
-    "The Sipi responder" should {
-        "return details of a preview file value (a test project Iri is directly attached to file value: the current user is member of the resource's project, not of the one of the file value)" in {
-            // http://localhost:3333/v1/files/http%3A%2F%2Fdata.knora.org%2F8a0b1e75%2Freps%2Fbf255339
-            actorUnderTest ! SipiFileInfoGetRequestV1(
-                userProfile = SipiResponderV1Spec.userProfile,
-                filename = "incunabula_0000000002.jpg"
-            )
-
-            expectMsg(timeout, SipiResponderV1Spec.fileValueResponsePreview)
-        }
-    }
-
-
 }

@@ -25,6 +25,7 @@ Using API V1
 
    api-general
    reading-and-searching-resources
+   create-a-mapping
    adding-resources
    reading-values
    adding-values

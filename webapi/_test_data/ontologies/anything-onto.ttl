@@ -6,7 +6,7 @@
 @prefix foaf: <http://xmlns.com/foaf/0.1/> .
 @prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
 @prefix salsah-gui: <http://www.knora.org/ontology/salsah-gui#> .
-
+@base <http://www.knora.org/ontology/anything> .
 
 # A trivial ontology, used only for testing Knora.
 
@@ -93,6 +93,26 @@
        salsah-gui:guiAttribute "size=80" ,
                                "maxlength=255" .
 
+
+:hasRichtext rdf:type owl:ObjectProperty ;
+
+       rdfs:subPropertyOf knora-base:hasValue ;
+
+       rdfs:label "Text"@de ,
+                  "Texte"@fr ,
+                  "Testo"@it ,
+                  "Text"@en ;
+
+       knora-base:subjectClassConstraint :Thing ;
+
+       knora-base:objectClassConstraint knora-base:TextValue ;
+
+       salsah-gui:guiOrder "2"^^xsd:integer ;
+
+       salsah-gui:guiElement salsah-gui:Richtext ;
+
+       salsah-gui:guiAttribute "size=80" ,
+                               "maxlength=255" .
 
 
 :hasDate rdf:type owl:ObjectProperty ;
@@ -383,7 +403,22 @@
 
                salsah-gui:guiOrder "16"^^xsd:integer .
 
+#################################################################
+#
+#    Standoff Properties
+#
+#################################################################
 
+
+###  http://www.knora.org/ontology/anything#standoffEventTagHasDescription
+
+:standoffEventTagHasDescription rdf:type owl:DatatypeProperty ;
+
+                  rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
+
+                  knora-base:subjectClassConstraint :StandoffEventTag ;
+
+                  knora-base:objectDatatypeConstraint xsd:string .
 
 :Thing rdf:type owl:Class ;
 
@@ -425,6 +460,11 @@
                       [
                          rdf:type owl:Restriction ;
                          owl:onProperty :hasText ;
+                         owl:minCardinality "0"^^xsd:nonNegativeInteger
+                      ] ,
+                      [
+                         rdf:type owl:Restriction ;
+                         owl:onProperty :hasRichtext ;
                          owl:minCardinality "0"^^xsd:nonNegativeInteger
                       ] ,
                       [
@@ -544,3 +584,23 @@
                "Picture of a thing"@en ;
 
     rdfs:comment """Diese Resource-Klasse beschreibt ein Bild eines Dinges"""@de .
+
+
+#################################################################
+#
+#    Standoff Classes
+#
+#################################################################
+
+:StandoffEventTag rdf:type owl:Class ;
+
+    rdfs:subClassOf knora-base:StandoffDateTag,
+                   [
+                      rdf:type owl:Restriction ;
+                      owl:onProperty :standoffEventTagHasDescription ;
+                      owl:cardinality "1"^^xsd:nonNegativeInteger
+                   ] ;
+
+    rdfs:label "Represents an event in a TextValue"@en ;
+
+    rdfs:comment """Represents an event in a TextValue"""@en .

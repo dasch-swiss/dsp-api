@@ -74,12 +74,20 @@ sealed trait ProjectsResponderRequestV1 extends KnoraRequestV1
 
 // Requests
 /**
-  * Get all information about all projects.
+  * Get all information about all projects in form of [[ProjectsResponseV1]]. The ProjectsGetRequestV1 returns either
+  * something or a NotFound exception if there are no projects found. Administration permission checking is performed.
   *
   * @param userProfile the profile of the user making the request.
   */
 case class ProjectsGetRequestV1(userProfile: Option[UserProfileV1]) extends ProjectsResponderRequestV1
 
+/**
+  * Get all information about all projects in form of a sequence of [[ProjectInfoV1]]. Returns an empty sequence if
+  * no projects are found. Administration permission checking is skipped.
+  *
+  * @param userProfile the profile of the user making the request.
+  */
+case class ProjectsGetV1(userProfile: Option[UserProfileV1]) extends ProjectsResponderRequestV1
 
 /**
   * Get all the existing named graphs from all projects as a vector of [[org.knora.webapi.messages.v1.responder.ontologymessages.NamedGraphV1]].
@@ -103,7 +111,6 @@ case class ProjectInfoByIRIGetRequestV1(iri: IRI, userProfileV1: Option[UserProf
   * @param userProfileV1 the profile of the user making the request (optional).
   */
 case class ProjectInfoByIRIGetV1(iri: IRI, userProfileV1: Option[UserProfileV1]) extends ProjectsResponderRequestV1
-
 
 /**
   * Find everything about a single project identified through it's shortname.
@@ -144,7 +151,8 @@ case class ProjectUpdateRequestV1(projectIri: IRI,
   * @param projects information about all existing projects.
   * @param userdata information about the user that made the request.
   */
-case class ProjectsResponseV1(projects: Seq[ProjectInfoV1], userdata: Option[UserDataV1]) extends KnoraResponseV1 with ProjectV1JsonProtocol {
+case class ProjectsResponseV1(projects: Seq[ProjectInfoV1],
+                              userdata: Option[UserDataV1]) extends KnoraResponseV1 with ProjectV1JsonProtocol {
     def toJsValue = projectsResponseV1Format.write(this)
 }
 
@@ -154,7 +162,8 @@ case class ProjectsResponseV1(projects: Seq[ProjectInfoV1], userdata: Option[Use
   * @param project_info all information about the project.
   * @param userdata     information about the user that made the request.
   */
-case class ProjectInfoResponseV1(project_info: ProjectInfoV1, userdata: Option[UserDataV1]) extends KnoraResponseV1 with ProjectV1JsonProtocol {
+case class ProjectInfoResponseV1(project_info: ProjectInfoV1,
+                                 userdata: Option[UserDataV1]) extends KnoraResponseV1 with ProjectV1JsonProtocol {
     def toJsValue = projectInfoResponseV1Format.write(this)
 }
 
@@ -164,7 +173,8 @@ case class ProjectInfoResponseV1(project_info: ProjectInfoV1, userdata: Option[U
   * @param project_info the new project info of the created/modified project.
   * @param userData     information about the user that made the request.
   */
-case class ProjectOperationResponseV1(project_info: ProjectInfoV1, userData: UserDataV1) extends KnoraResponseV1 with ProjectV1JsonProtocol {
+case class ProjectOperationResponseV1(project_info: ProjectInfoV1,
+                                      userData: UserDataV1) extends KnoraResponseV1 with ProjectV1JsonProtocol {
     def toJsValue = projectOperationResponseV1Format.write(this)
 }
 
@@ -201,8 +211,8 @@ trait ProjectV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol wi
     // this results in recursive import statements
     // rootFormat makes it return the expected type again.
     // https://github.com/spray/spray-json#jsonformats-for-recursive-types
-    implicit val projectsResponseV1Format: RootJsonFormat[ProjectsResponseV1] = rootFormat(lazyFormat(jsonFormat2(ProjectsResponseV1)))
-    implicit val projectInfoResponseV1Format: RootJsonFormat[ProjectInfoResponseV1] = rootFormat(lazyFormat(jsonFormat2(ProjectInfoResponseV1)))
+    implicit val projectsResponseV1Format: RootJsonFormat[ProjectsResponseV1] = rootFormat(lazyFormat(jsonFormat(ProjectsResponseV1, "projects", "userdata")))
+    implicit val projectInfoResponseV1Format: RootJsonFormat[ProjectInfoResponseV1] = rootFormat(lazyFormat(jsonFormat(ProjectInfoResponseV1, "project_info", "userdata")))
     implicit val createProjectApiRequestV1Format: RootJsonFormat[CreateProjectApiRequestV1] = rootFormat(lazyFormat(jsonFormat8(CreateProjectApiRequestV1)))
     implicit val updateProjectApiRequestV1Format: RootJsonFormat[UpdateProjectApiRequestV1] = rootFormat(lazyFormat(jsonFormat2(UpdateProjectApiRequestV1)))
     implicit val projectOperationResponseV1Format: RootJsonFormat[ProjectOperationResponseV1] = rootFormat(lazyFormat(jsonFormat2(ProjectOperationResponseV1)))

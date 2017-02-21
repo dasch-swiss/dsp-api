@@ -27,6 +27,7 @@ import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.ontologymessages._
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectsNamedGraphGetV1
 import org.knora.webapi.messages.v1.responder.resourcemessages.SalsahGuiConversions
+import org.knora.webapi.messages.v1.responder.standoffmessages.StandoffDataTypeClasses
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
 import org.knora.webapi.util.ActorUtil._
@@ -71,7 +72,10 @@ class OntologyResponderV1 extends ResponderV1 {
                                  resourceClassDefs: Map[IRI, ResourceEntityInfoV1],
                                  resourceAndValueSubClassOfRelations: Map[IRI, Set[IRI]],
                                  resourceSuperClassOfRelations: Map[IRI, Set[IRI]],
-                                 propertyDefs: Map[IRI, PropertyEntityInfoV1])
+                                 propertyDefs: Map[IRI, PropertyEntityInfoV1],
+                                 standoffClassDefs: Map[IRI, StandoffClassEntityInfoV1],
+                                 standoffPropertyDefs: Map[IRI, StandoffPropertyEntityInfoV1],
+                                 standoffClassDefsWithDataType: Map[IRI, StandoffClassEntityInfoV1])
 
 
     /**
@@ -89,7 +93,10 @@ class OntologyResponderV1 extends ResponderV1 {
         case ResourceTypesForNamedGraphGetRequestV1(namedGraphIri, userProfile) => future2Message(sender(), getResourceTypesForNamedGraph(namedGraphIri, userProfile), log)
         case PropertyTypesForNamedGraphGetRequestV1(namedGraphIri, userProfile) => future2Message(sender(), getPropertyTypesForNamedGraph(namedGraphIri, userProfile), log)
         case PropertyTypesForResourceTypeGetRequestV1(restypeId, userProfile) => future2Message(sender(), getPropertyTypesForResourceType(restypeId, userProfile), log)
-        case other => handleUnexpectedMessage(sender(), other, log)
+        case StandoffEntityInfoGetRequestV1(standoffClassIris, standoffPropertyIris, userProfile) => future2Message(sender(), getStandoffEntityInfoResponseV1(standoffClassIris, standoffPropertyIris, userProfile), log)
+        case StandoffClassesWithDataTypeGetRequestV1(userProfile) => future2Message(sender(), getStandoffStandoffClassesWithDataTypeV1(userProfile), log)
+        case StandoffAllPropertyEntitiesGetRequestV1(userProfile) => future2Message(sender(), getAllStandoffPropertyEntities(userProfile), log)
+        case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }
 
     /**
@@ -114,9 +121,9 @@ class OntologyResponderV1 extends ResponderV1 {
         case class OwlCardinality(propertyIri: IRI,
                                   cardinalityIri: IRI,
                                   cardinalityValue: Int,
-                                  isLinkProp: Boolean,
-                                  isLinkValueProp: Boolean,
-                                  isFileValueProp: Boolean)
+                                  isLinkProp: Boolean = false,
+                                  isLinkValueProp: Boolean = false,
+                                  isFileValueProp: Boolean = false)
 
         /**
           * Gets the IRI of the ontology that an entity belongs to. This is assumed to be the namespace
@@ -152,25 +159,25 @@ class OntologyResponderV1 extends ResponderV1 {
           * a base class.
           *
           * @param resourceClassIri                 the IRI of the resource class whose properties are to be computed.
-          * @param directSubClassRelations          a map of the direct `rdfs:subClassOf` relations defined on each resource class.
-          * @param allSubPropertyRelations          a map in which each property IRI points to the full set of its base properties.
+          * @param directSubClassOfRelations          a map of the direct `rdfs:subClassOf` relations defined on each resource class.
+          * @param allSubPropertyOfRelations          a map in which each property IRI points to the full set of its base properties.
           * @param directResourceClassCardinalities a map of the cardinalities defined directly on each resource class.
           * @return a map in which each key is the IRI of a property that has a cardinality in the resource class (or that it inherits
           *         from its base classes), and each value is the cardinality on the property.
           */
         def inheritCardinalities(resourceClassIri: IRI,
-                                 directSubClassRelations: Map[IRI, Set[IRI]],
-                                 allSubPropertyRelations: Map[IRI, Set[IRI]],
+                                 directSubClassOfRelations: Map[IRI, Set[IRI]],
+                                 allSubPropertyOfRelations: Map[IRI, Set[IRI]],
                                  directResourceClassCardinalities: Map[IRI, Map[IRI, OwlCardinality]]): Map[IRI, OwlCardinality] = {
             // Recursively get properties that are available to inherit from base classes. If we have no information about
             // a class, that could mean that it isn't a subclass of knora-base:Resource (e.g. it's something like
             // foaf:Person), in which case we assume that it has no base classes.
-            val cardinalitiesAvailableToInherit: Map[IRI, OwlCardinality] = directSubClassRelations.getOrElse(resourceClassIri, Set.empty[IRI]).foldLeft(Map.empty[IRI, OwlCardinality]) {
+            val cardinalitiesAvailableToInherit: Map[IRI, OwlCardinality] = directSubClassOfRelations.getOrElse(resourceClassIri, Set.empty[IRI]).foldLeft(Map.empty[IRI, OwlCardinality]) {
                 case (acc, baseClass) =>
                     acc ++ inheritCardinalities(
                         resourceClassIri = baseClass,
-                        directSubClassRelations = directSubClassRelations,
-                        allSubPropertyRelations = allSubPropertyRelations,
+                        directSubClassOfRelations = directSubClassOfRelations,
+                        allSubPropertyOfRelations = allSubPropertyOfRelations,
                         directResourceClassCardinalities = directResourceClassCardinalities
                     )
             }
@@ -184,7 +191,10 @@ class OntologyResponderV1 extends ResponderV1 {
             val inheritedCardinalities: Map[IRI, OwlCardinality] = cardinalitiesAvailableToInherit.filterNot {
                 case (baseClassProp, baseClassCardinality) => thisClassCardinalities.exists {
                     case (thisClassProp, cardinality) =>
-                        allSubPropertyRelations(thisClassProp).contains(baseClassProp)
+                        allSubPropertyOfRelations.get(thisClassProp) match {
+                            case Some(baseProps) => baseProps.contains(baseClassProp)
+                            case None => thisClassProp == baseClassProp
+                        }
                 }
             }
 
@@ -316,8 +326,8 @@ class OntologyResponderV1 extends ResponderV1 {
                 resourceClassIri =>
                     val resourceClassCardinalities: Set[OwlCardinality] = inheritCardinalities(
                         resourceClassIri = resourceClassIri,
-                        directSubClassRelations = directResourceSubClassOfRelations,
-                        allSubPropertyRelations = allSubPropertyOfRelations,
+                        directSubClassOfRelations = directResourceSubClassOfRelations,
+                        allSubPropertyOfRelations = allSubPropertyOfRelations,
                         directResourceClassCardinalities = directResourceClassCardinalities
                     ).values.toSet
 
@@ -427,16 +437,236 @@ class OntologyResponderV1 extends ResponderV1 {
                     propertyIri -> propertyEntityInfo
             }
 
+            //
+            // get all the standoff class definitions and their properties
+            //
+
+            // get ontology information about the value base classes
+            valueBaseClassesSparql <- Future(queries.sparql.v1.txt.getValueBaseClassDefinitions(triplestore = settings.triplestoreType).toString())
+            valueBaseClassesResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(valueBaseClassesSparql)).mapTo[SparqlSelectResponse]
+            valueBaseClassesRows: Seq[VariableResultsRow] = valueBaseClassesResponse.results.bindings
+
+            // get ontology information about the standoff classes
+            standoffClassesSparql <- Future(queries.sparql.v1.txt.getStandoffClassDefinitions(triplestore = settings.triplestoreType).toString())
+            standoffClassesResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(standoffClassesSparql)).mapTo[SparqlSelectResponse]
+            standoffClassRows: Seq[VariableResultsRow] = standoffClassesResponse.results.bindings
+
+            // add the property Iris of the value base classes since they may be used by some standoff classes
+            combinedStandoffClasses = valueBaseClassesRows ++ standoffClassRows
+
+            // collect all the standoff property Iris from the cardinalities
+            standoffPropertyIris = combinedStandoffClasses.foldLeft(Set.empty[IRI]) {
+                case (acc, row) =>
+                    val standoffPropIri: Option[String] = row.rowMap.get("cardinalityProp")
+
+                    if (standoffPropIri.isDefined) {
+                        acc + standoffPropIri.get
+                    } else {
+                        acc
+                    }
+            }
+
+            // get information about the standoff properties
+            standoffPropsSparql <- Future(queries.sparql.v1.txt.getStandoffPropertyDefinitions(triplestore = settings.triplestoreType, standoffPropertyIris.toList).toString())
+            standoffPropsResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(standoffPropsSparql)).mapTo[SparqlSelectResponse]
+            standoffPropsRows: Seq[VariableResultsRow] = standoffPropsResponse.results.bindings
+
+            // Group the rows representing value base class definitions by value base class IRI.
+            valueBaseClassesGrouped: Map[IRI, Seq[VariableResultsRow]] = valueBaseClassesRows.groupBy(_.rowMap("valueBaseClass"))
+            valueBaseClassIris = valueBaseClassesGrouped.keySet
+
+            // Group the rows representing standoff class definitions by standoff class IRI.
+            standoffClassesGrouped: Map[IRI, Seq[VariableResultsRow]] = standoffClassRows.groupBy(_.rowMap("standoffClass"))
+            standoffClassIris = standoffClassesGrouped.keySet
+
+            // Group the rows representing property definitions by property IRI.
+            standoffPropertyDefsGrouped: Map[IRI, Seq[VariableResultsRow]] = standoffPropsRows.groupBy(_.rowMap("prop"))
+
+            // Make a map of standoff property IRIs to their immediate base properties.
+            directStandoffSubPropertyOfRelations: Map[IRI, Set[IRI]] = standoffPropertyDefsGrouped.map {
+                case (propertyIri, rows) =>
+                    val baseProperties = rows.filter(_.rowMap.get("propPred").contains(OntologyConstants.Rdfs.SubPropertyOf)).map(_.rowMap("propObj")).toSet
+                    (propertyIri, baseProperties)
+            }
+
+            // Make a map of standoff class IRIs to their immediate base classes.
+            directStandoffSubClassOfRelations: Map[IRI, Set[IRI]] = standoffClassesGrouped.map {
+                case (standoffClassIri, rows) =>
+                    val baseClasses = rows.filter(_.rowMap.get("standoffClassPred").contains(OntologyConstants.Rdfs.SubClassOf)).map(_.rowMap("standoffClassObj")).toSet
+                    (standoffClassIri, baseClasses)
+            }
+
+            // Make a map in which each standoff class IRI points to the full set of its base classes. A class is also
+            // a subclass of itself.
+            allStandoffSubClassOfRelations: Map[IRI, Set[IRI]] = standoffClassIris.map {
+                standoffClassIri => (standoffClassIri, getAllBaseDefs(standoffClassIri, directStandoffSubClassOfRelations) + standoffClassIri)
+            }.toMap
+
+            // Make a map of the cardinalities defined directly on each value base class. Each value base class IRI points to a map of
+            // property IRIs to OwlCardinality objects.
+            valueBaseClassCardinalities: Map[IRI, Map[IRI, OwlCardinality]] = valueBaseClassesGrouped.map {
+                case (valueBaseClassIri, rows) =>
+                    val valueBaseClassCardinalities: Map[IRI, OwlCardinality] = rows.filter(_.rowMap.contains("cardinalityProp")).map {
+                        cardinalityRow =>
+                            val cardinalityRowMap = cardinalityRow.rowMap
+                            val propertyIri = cardinalityRowMap("cardinalityProp")
+
+                            val owlCardinality = OwlCardinality(
+                                propertyIri = propertyIri,
+                                cardinalityIri = cardinalityRowMap("cardinality"),
+                                cardinalityValue = cardinalityRowMap("cardinalityVal").toInt
+                            )
+
+                            propertyIri -> owlCardinality
+                    }.toMap
+
+                    valueBaseClassIri -> valueBaseClassCardinalities
+            }
+
+            // Make a map of the cardinalities defined directly on each standoff class. Each standoff class IRI points to a map of
+            // property IRIs to OwlCardinality objects.
+            directStandoffClassCardinalities: Map[IRI, Map[IRI, OwlCardinality]] = standoffClassesGrouped.map {
+                case (standoffClassIri, rows) =>
+                    val standoffClassCardinalities: Map[IRI, OwlCardinality] = rows.filter(_.rowMap.contains("cardinalityProp")).map {
+                        cardinalityRow =>
+                            val cardinalityRowMap = cardinalityRow.rowMap
+                            val propertyIri = cardinalityRowMap("cardinalityProp")
+
+                            val owlCardinality = OwlCardinality(
+                                propertyIri = propertyIri,
+                                cardinalityIri = cardinalityRowMap("cardinality"),
+                                cardinalityValue = cardinalityRowMap("cardinalityVal").toInt
+                            )
+
+                            propertyIri -> owlCardinality
+                    }.toMap
+
+                    standoffClassIri -> standoffClassCardinalities
+            }
+
+            // Allow each standoff class to inherit cardinalities from its base classes.
+            standoffCardinalitiesWithInheritance = standoffClassIris.map {
+                standoffClassIri =>
+                    val standoffClassCardinalities: Set[OwlCardinality] = inheritCardinalities(
+                        resourceClassIri = standoffClassIri,
+                        directSubClassOfRelations = directStandoffSubClassOfRelations,
+                        allSubPropertyOfRelations = directStandoffSubPropertyOfRelations,
+                        directResourceClassCardinalities = directStandoffClassCardinalities ++ valueBaseClassCardinalities
+                    ).values.toSet
+
+                    val prop2Card: Map[IRI, Cardinality.Value] = standoffClassCardinalities.map {
+                        (card: OwlCardinality) =>
+                            card.propertyIri -> Cardinality.owlCardinality2KnoraCardinality(
+                                propertyIri = card.propertyIri,
+                                owlCardinalityIri = card.cardinalityIri,
+                                owlCardinalityValue = card.cardinalityValue
+                            )
+                    }.toMap
+
+                    standoffClassIri -> prop2Card
+            }.toMap
+
+            standoffClassEntityInfos: Map[IRI, StandoffClassEntityInfoV1] = standoffClassesGrouped.map {
+                case (standoffClassIri, standoffClassRows) =>
+
+                    val standoffGroupedByPredicate: Map[IRI, Seq[VariableResultsRow]] = standoffClassRows.filter(_.rowMap.contains("standoffClassPred")).groupBy(_.rowMap("standoffClassPred")) - OntologyConstants.Rdfs.SubClassOf
+
+                    val predicates: Map[IRI, PredicateInfoV1] = standoffGroupedByPredicate.map {
+                        case (predicateIri, predicateRows) =>
+                            val (predicateRowsWithLang, predicateRowsWithoutLang) = predicateRows.partition(_.rowMap.contains("standoffClassObjLang"))
+                            val objects = predicateRowsWithoutLang.map(_.rowMap("standoffClassObj")).toSet
+                            val objectsWithLang = predicateRowsWithLang.map {
+                                predicateRow => predicateRow.rowMap("standoffClassObjLang") -> predicateRow.rowMap("standoffClassObj")
+                            }.toMap
+
+                            predicateIri -> PredicateInfoV1(
+                                predicateIri = predicateIri,
+                                ontologyIri = getOntologyIri(standoffClassIri),
+                                objects = objects,
+                                objectsWithLang = objectsWithLang
+                            )
+                    }
+
+                    // determine the data type of the given standoff class IRI
+                    // if the resulting set is empty, it is not a typed standoff class
+                    val standoffDataType: Set[IRI] = allStandoffSubClassOfRelations(standoffClassIri).intersect(StandoffDataTypeClasses.getStandoffClassIris)
+                    if (standoffDataType.size > 1) {
+                        throw InconsistentTriplestoreDataException(s"standoff class $standoffClassIri is a subclass of more than one standoff data type class: ${standoffDataType.mkString(", ")}")
+                    }
+
+                    val standoffInfo = StandoffClassEntityInfoV1(
+                        standoffClassIri = standoffClassIri,
+                        ontologyIri = getOntologyIri(standoffClassIri),
+                        predicates = predicates,
+                        cardinalities = standoffCardinalitiesWithInheritance(standoffClassIri),
+                        dataType = standoffDataType.headOption match {
+                            case Some(dataType: IRI) => Some(StandoffDataTypeClasses.lookup(dataType, () => throw InconsistentTriplestoreDataException(s"$dataType is not a valid standoff data type")))
+                            case None => None
+                        }
+                    )
+
+                    standoffClassIri -> standoffInfo
+            }
+
+            // Make a map in which each standoff property IRI points to the full set of its base properties. A property is also
+            // a subproperty of itself.
+            allStandoffSubPropertyOfRelations: Map[IRI, Set[IRI]] = standoffPropertyIris.map {
+                propertyIri => (propertyIri, getAllBaseDefs(propertyIri, directStandoffSubPropertyOfRelations) + propertyIri)
+            }.toMap
+
+
+            // Construct a StandoffPropertyEntityInfoV1 for each property definition, not taking inheritance into account.
+            standoffPropertyEntityInfos: Map[IRI, StandoffPropertyEntityInfoV1] = standoffPropertyDefsGrouped.map {
+                case (standoffPropertyIri, propertyRows) =>
+                    val ontologyIri = getOntologyIri(standoffPropertyIri)
+
+                    // Group the rows for each property by predicate IRI.
+                    val groupedByPredicate: Map[IRI, Seq[VariableResultsRow]] = propertyRows.groupBy(_.rowMap("propPred")) - OntologyConstants.Rdfs.SubPropertyOf
+
+                    val predicates: Map[IRI, PredicateInfoV1] = groupedByPredicate.map {
+                        case (predicateIri, predicateRows) =>
+                            val (predicateRowsWithLang, predicateRowsWithoutLang) = predicateRows.partition(_.rowMap.contains("propObjLang"))
+                            val objects = predicateRowsWithoutLang.map(_.rowMap("propObj")).toSet
+                            val objectsWithLang = predicateRowsWithLang.map {
+                                predicateRow => predicateRow.rowMap("propObjLang") -> predicateRow.rowMap("propObj")
+                            }.toMap
+
+                            predicateIri -> PredicateInfoV1(
+                                predicateIri = predicateIri,
+                                ontologyIri = ontologyIri,
+                                objects = objects,
+                                objectsWithLang = objectsWithLang
+                            )
+                    }
+
+                    val standoffPropertyEntityInfo = StandoffPropertyEntityInfoV1(
+                        standoffPropertyIri = standoffPropertyIri,
+                        ontologyIri = ontologyIri,
+                        predicates = predicates,
+                        isSubPropertyOf = allStandoffSubPropertyOfRelations(standoffPropertyIri)
+                    )
+
+                    standoffPropertyIri -> standoffPropertyEntityInfo
+            }
+
+            // collect all the standoff classes that have a data type (i.e. are subclasses of a data type standoff class)
+            standoffClassEntityInfosWithDataType: Map[IRI, StandoffClassEntityInfoV1] = standoffClassEntityInfos.filter {
+                case (standoffClassIri: IRI, entityInfo: StandoffClassEntityInfoV1) =>
+                    entityInfo.dataType.isDefined
+            }
+
             // Cache all the data.
 
-            ontologyCacheData = OntologyCacheData(
+            ontologyCacheData: OntologyCacheData = OntologyCacheData(
                 namedGraphResourceClasses = new ErrorHandlingMap[IRI, Set[IRI]](graphClassMap, { key => s"Named graph not found: $key" }),
                 namedGraphProperties = new ErrorHandlingMap[IRI, Set[IRI]](graphPropMap, { key => s"Named graph not found: $key" }),
                 resourceClassDefs = new ErrorHandlingMap[IRI, ResourceEntityInfoV1](resourceEntityInfos, { key => s"Resource class not found: $key" }),
                 resourceAndValueSubClassOfRelations = new ErrorHandlingMap[IRI, Set[IRI]](allResourceSubClassOfRelations ++ allValueSubClassOfRelations, { key => s"Class not found: $key" }),
                 resourceSuperClassOfRelations = new ErrorHandlingMap[IRI, Set[IRI]](allResourceSuperClassOfRelations, { key => s"Class not found: $key" }),
-                propertyDefs = new ErrorHandlingMap[IRI, PropertyEntityInfoV1](propertyEntityInfos, { key => s"Property not found: $key" })
-            )
+                propertyDefs = new ErrorHandlingMap[IRI, PropertyEntityInfoV1](propertyEntityInfos, { key => s"Property not found: $key" }),
+                standoffClassDefs = new ErrorHandlingMap[IRI, StandoffClassEntityInfoV1](standoffClassEntityInfos, { key => s"Standoff class def not found $key" }),
+                standoffPropertyDefs = new ErrorHandlingMap[IRI, StandoffPropertyEntityInfoV1](standoffPropertyEntityInfos, { key => s"Standoff property def not found $key" }),
+                standoffClassDefsWithDataType = new ErrorHandlingMap[IRI, StandoffClassEntityInfoV1](standoffClassEntityInfosWithDataType, { key => s"Standoff class def with datatype not found $key" }))
 
             _ = CacheUtil.put(cacheName = OntologyCacheName, key = OntologyCacheKey, value = ontologyCacheData)
 
@@ -471,6 +701,55 @@ class OntologyResponderV1 extends ResponderV1 {
             response = EntityInfoGetResponseV1(
                 resourceEntityInfoMap = new ErrorHandlingMap(cacheData.resourceClassDefs.filterKeys(resourceIris), { key => s"Resource class $key not found" }),
                 propertyEntityInfoMap = new ErrorHandlingMap(cacheData.propertyDefs.filterKeys(propertyIris), { key => s"Property $key not found" })
+            )
+        } yield response
+    }
+
+
+    /**
+      * Given a list of standoff class IRIs and a list of property IRIs (ontology entities), returns an [[StandoffEntityInfoGetResponseV1]] describing both resource and property entities.
+      *
+      * @param standoffClassIris    the IRIs of the resource entities to be queried.
+      * @param standoffPropertyIris the IRIs of the property entities to be queried.
+      * @param userProfile          the profile of the user making the request.
+      * @return an [[EntityInfoGetResponseV1]].
+      */
+    private def getStandoffEntityInfoResponseV1(standoffClassIris: Set[IRI] = Set.empty[IRI], standoffPropertyIris: Set[IRI] = Set.empty[IRI], userProfile: UserProfileV1): Future[StandoffEntityInfoGetResponseV1] = {
+        for {
+            cacheData <- getCacheData
+            response = StandoffEntityInfoGetResponseV1(
+                standoffClassEntityInfoMap = cacheData.standoffClassDefs.filterKeys(standoffClassIris),
+                standoffPropertyEntityInfoMap = cacheData.standoffPropertyDefs.filterKeys(standoffPropertyIris)
+            )
+        } yield response
+    }
+
+    /**
+      * Gets information about all standoff classes that are a subclass of a data type standoff class.
+      *
+      * @param userProfile the profile of the user making the request.
+      * @return a [[StandoffClassesWithDataTypeGetResponseV1]]
+      */
+    private def getStandoffStandoffClassesWithDataTypeV1(userProfile: UserProfileV1): Future[StandoffClassesWithDataTypeGetResponseV1] = {
+        for {
+            cacheData <- getCacheData
+            response = StandoffClassesWithDataTypeGetResponseV1(
+                standoffClassEntityInfoMap = cacheData.standoffClassDefsWithDataType
+            )
+        } yield response
+    }
+
+    /**
+      * Gets all standoff property entities.
+      *
+      * @param userProfile the profile of the user making the request.
+      * @return a [[StandoffAllPropertyEntitiesGetResponseV1]].
+      */
+    private def getAllStandoffPropertyEntities(userProfile: UserProfileV1): Future[StandoffAllPropertyEntitiesGetResponseV1] = {
+        for {
+            cacheData <- getCacheData
+            response = StandoffAllPropertyEntitiesGetResponseV1(
+                standoffAllPropertiesEntityInfoMap = cacheData.standoffPropertyDefs
             )
         } yield response
     }

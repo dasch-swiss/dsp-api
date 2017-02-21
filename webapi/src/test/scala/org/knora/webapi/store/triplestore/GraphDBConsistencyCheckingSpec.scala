@@ -20,9 +20,8 @@ class GraphDBConsistencyCheckingSpec extends CoreSpec(GraphDBConsistencyChecking
     private val timeout = 30.seconds
 
     val rdfDataObjects = List(
-        RdfDataObject(path = "_test_data/ontologies/incunabula-onto.ttl", name = "http://www.knora.org/ontology/incunabula"),
-        RdfDataObject(path = "_test_data/ontologies/anything-onto.ttl", name = "http://www.knora.org/ontology/anything"),
-        RdfDataObject(path = "_test_data/store.triplestore.GraphDBConsistencyCheckingSpec/incunabula-data.ttl", name = "http://www.knora.org/data/incunabula")
+        RdfDataObject(path = "_test_data/store.triplestore.GraphDBConsistencyCheckingSpec/incunabula-data.ttl", name = "http://www.knora.org/data/incunabula"),
+        RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/anything")
     )
 
     if (settings.triplestoreType.startsWith("graphdb")) {
@@ -37,7 +36,7 @@ class GraphDBConsistencyCheckingSpec extends CoreSpec(GraphDBConsistencyChecking
             expectMsgPF(timeout) {
                 case akka.actor.Status.Failure(TriplestoreResponseException(msg: String, _)) =>
                     (msg.contains(s"$CONSISTENCY_CHECK_ERROR cardinality_1_not_less_any_object") &&
-                        msg.trim.endsWith("http://data.knora.org/missingPartOf http://www.knora.org/ontology/incunabula#partOfValue *")) should ===(true)
+                        msg.trim.endsWith("http://data.knora.org/missingPartOf http://www.knora.org/ontology/incunabula#partOf *")) should ===(true)
             }
         }
 
@@ -87,9 +86,7 @@ class GraphDBConsistencyCheckingSpec extends CoreSpec(GraphDBConsistencyChecking
             }
         }
 
-        "not create a new resource with a link to a resource of the wrong class" ignore {
-            // Ignored because of a bug in GraphDB 7.1.
-
+        "not create a new resource with a link to a resource of the wrong class" in {
             storeManager ! SparqlUpdateRequest(wrongLinkTargetClass)
 
             expectMsgPF(timeout) {
@@ -151,21 +148,10 @@ object GraphDBConsistencyCheckingSpec {
           |    GRAPH ?dataNamedGraph {
           |        ?resource rdf:type ?resourceClass ;
           |            knora-base:isDeleted "false"^^xsd:boolean ;
-          |            knora-base:attachedToUser ?ownerIri ;
+          |            knora-base:attachedToUser ?creatorIri ;
           |            knora-base:attachedToProject ?projectIri ;
           |            rdfs:label ?label ;
-          |
-          |
-          |
-          |                <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#KnownUser> ;
-          |
-          |                <http://www.knora.org/ontology/knora-base#hasModifyPermission> <http://www.knora.org/ontology/knora-base#Owner> ;
-          |
-          |                <http://www.knora.org/ontology/knora-base#hasModifyPermission> <http://www.knora.org/ontology/knora-base#ProjectMember> ;
-          |
-          |                <http://www.knora.org/ontology/knora-base#hasRestrictedViewPermission> <http://www.knora.org/ontology/knora-base#UnknownUser> ;
-          |
-          |
+          |            knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" ;
           |            knora-base:creationDate ?currentTime .
           |
           |
@@ -183,18 +169,8 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |
-          |
-          |            ?newValue1 <http://www.knora.org/ontology/knora-base#attachedToUser> <http://data.knora.org/users/b83acc5f05> .
-          |
-          |            ?newValue1 <http://www.knora.org/ontology/knora-base#attachedToProject> <http://data.knora.org/projects/77275339> .
-          |
-          |            ?newValue1 <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#KnownUser> .
-          |
-          |            ?newValue1 <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#UnknownUser> .
-          |
-          |            ?newValue1 <http://www.knora.org/ontology/knora-base#hasModifyPermission> <http://www.knora.org/ontology/knora-base#ProjectMember> .
-          |
-          |            ?newValue1 <http://www.knora.org/ontology/knora-base#hasDeletePermission> <http://www.knora.org/ontology/knora-base#Owner> .
+          |            ?newValue1 <http://www.knora.org/ontology/knora-base#attachedToUser> ?creatorIri ;
+          |                knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" .
           |
           |
           |        ?newValue1 knora-base:valueHasOrder ?nextOrder1 ;
@@ -229,9 +205,8 @@ object GraphDBConsistencyCheckingSpec {
           |                ?newValue2 knora-base:valueHasString "test.jpg" .
           |
           |
-          |            ?newValue2 <http://www.knora.org/ontology/knora-base#attachedToUser> <http://data.knora.org/users/b83acc5f05> .
-          |
-          |            ?newValue2 <http://www.knora.org/ontology/knora-base#attachedToProject> <http://data.knora.org/projects/77275339> .
+          |            ?newValue2 <http://www.knora.org/ontology/knora-base#attachedToUser> ?creatorIri ;
+          |                 knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" .
           |
           |
           |        ?newValue2 knora-base:valueHasOrder ?nextOrder2 ;
@@ -270,9 +245,8 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |
-          |            ?newValue3 <http://www.knora.org/ontology/knora-base#attachedToUser> <http://data.knora.org/users/b83acc5f05> .
-          |
-          |            ?newValue3 <http://www.knora.org/ontology/knora-base#attachedToProject> <http://data.knora.org/projects/77275339> .
+          |            ?newValue3 <http://www.knora.org/ontology/knora-base#attachedToUser> ?creatorIri ;
+          |                 knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" .
           |
           |
           |        ?newValue3 knora-base:valueHasOrder ?nextOrder3 ;
@@ -305,16 +279,8 @@ object GraphDBConsistencyCheckingSpec {
           |            knora-base:valueCreationDate ?currentTime .
           |
           |
-          |            ?newLinkValue4 <http://www.knora.org/ontology/knora-base#attachedToUser> <http://data.knora.org/users/b83acc5f05> .
-          |
-          |            ?newLinkValue4 <http://www.knora.org/ontology/knora-base#attachedToProject> <http://data.knora.org/projects/77275339> .
-          |
-          |            ?newLinkValue4 <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#KnownUser> .
-          |
-          |            ?newLinkValue4 <http://www.knora.org/ontology/knora-base#hasModifyPermission> <http://www.knora.org/ontology/knora-base#ProjectMember> .
-          |
-          |            ?newLinkValue4 <http://www.knora.org/ontology/knora-base#hasDeletePermission> <http://www.knora.org/ontology/knora-base#Owner> .
-          |
+          |            ?newLinkValue4 <http://www.knora.org/ontology/knora-base#attachedToUser> ?creatorIri ;
+          |                 knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" .
           |
           |
           |        ?resource ?linkValueProperty4 ?newLinkValue4 .
@@ -336,17 +302,8 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |
-          |            ?newValue5 <http://www.knora.org/ontology/knora-base#attachedToUser> <http://data.knora.org/users/b83acc5f05> .
-          |
-          |            ?newValue5 <http://www.knora.org/ontology/knora-base#attachedToProject> <http://data.knora.org/projects/77275339> .
-          |
-          |            ?newValue5 <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#KnownUser> .
-          |
-          |            ?newValue5 <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#Owner> .
-          |
-          |            ?newValue5 <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#ProjectMember> .
-          |
-          |            ?newValue5 <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#UnknownUser> .
+          |            ?newValue5 <http://www.knora.org/ontology/knora-base#attachedToUser> ?creatorIri ;
+          |                knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" .
           |
           |
           |        ?newValue5 knora-base:valueHasOrder ?nextOrder5 ;
@@ -372,17 +329,8 @@ object GraphDBConsistencyCheckingSpec {
           |                                     knora-base:valueHasString "1" .
           |
           |
-          |            ?newValue6 <http://www.knora.org/ontology/knora-base#attachedToUser> <http://data.knora.org/users/b83acc5f05> .
-          |
-          |            ?newValue6 <http://www.knora.org/ontology/knora-base#attachedToProject> <http://data.knora.org/projects/77275339> .
-          |
-          |            ?newValue6 <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#KnownUser> .
-          |
-          |            ?newValue6 <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#ProjectMember> .
-          |
-          |            ?newValue6 <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#UnknownUser> .
-          |
-          |            ?newValue6 <http://www.knora.org/ontology/knora-base#hasModifyPermission> <http://www.knora.org/ontology/knora-base#Owner> .
+          |            ?newValue6 <http://www.knora.org/ontology/knora-base#attachedToUser> ?creatorIri ;
+          |                knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" .
           |
           |
           |        ?newValue6 knora-base:valueHasOrder ?nextOrder6 ;
@@ -402,7 +350,7 @@ object GraphDBConsistencyCheckingSpec {
           |    BIND(IRI("http://www.knora.org/data/incunabula") AS ?dataNamedGraph)
           |    BIND(IRI("http://data.knora.org/missingPartOf") AS ?resource)
           |    BIND(IRI("http://www.knora.org/ontology/incunabula#page") AS ?resourceClass)
-          |    BIND(IRI("http://data.knora.org/users/b83acc5f05") AS ?ownerIri)
+          |    BIND(IRI("http://data.knora.org/users/b83acc5f05") AS ?creatorIri)
           |    BIND(IRI("http://data.knora.org/projects/77275339") AS ?projectIri)
           |    BIND(str("Test-Page") AS ?label)
           |    BIND(NOW() AS ?currentTime)
@@ -621,21 +569,10 @@ object GraphDBConsistencyCheckingSpec {
           |    GRAPH ?dataNamedGraph {
           |        ?resource rdf:type ?resourceClass ;
           |            knora-base:isDeleted "false"^^xsd:boolean ;
-          |            knora-base:attachedToUser ?ownerIri ;
+          |            knora-base:attachedToUser ?creatorIri ;
           |            knora-base:attachedToProject ?projectIri ;
           |            rdfs:label ?label ;
-          |
-          |
-          |
-          |                <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#KnownUser> ;
-          |
-          |                <http://www.knora.org/ontology/knora-base#hasModifyPermission> <http://www.knora.org/ontology/knora-base#Owner> ;
-          |
-          |                <http://www.knora.org/ontology/knora-base#hasModifyPermission> <http://www.knora.org/ontology/knora-base#ProjectMember> ;
-          |
-          |                <http://www.knora.org/ontology/knora-base#hasRestrictedViewPermission> <http://www.knora.org/ontology/knora-base#UnknownUser> ;
-          |
-          |
+          |            knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" ;
           |            knora-base:creationDate ?currentTime .
           |
           |
@@ -660,17 +597,8 @@ object GraphDBConsistencyCheckingSpec {
           |            knora-base:valueCreationDate ?currentTime .
           |
           |
-          |            ?newLinkValue0 <http://www.knora.org/ontology/knora-base#attachedToUser> <http://data.knora.org/users/b83acc5f05> .
-          |
-          |            ?newLinkValue0 <http://www.knora.org/ontology/knora-base#attachedToProject> <http://data.knora.org/projects/77275339> .
-          |
-          |            ?newLinkValue0 <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#KnownUser> .
-          |
-          |            ?newLinkValue0 <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#ProjectMember> .
-          |
-          |            ?newLinkValue0 <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#UnknownUser> .
-          |
-          |            ?newLinkValue0 <http://www.knora.org/ontology/knora-base#hasDeletePermission> <http://www.knora.org/ontology/knora-base#Owner> .
+          |            ?newLinkValue0 <http://www.knora.org/ontology/knora-base#attachedToUser> ?creatorIri ;
+          |                knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" .
           |
           |
           |
@@ -692,17 +620,8 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |
-          |            ?newValue1 <http://www.knora.org/ontology/knora-base#attachedToUser> <http://data.knora.org/users/b83acc5f05> .
-          |
-          |            ?newValue1 <http://www.knora.org/ontology/knora-base#attachedToProject> <http://data.knora.org/projects/77275339> .
-          |
-          |            ?newValue1 <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#KnownUser> .
-          |
-          |            ?newValue1 <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#UnknownUser> .
-          |
-          |            ?newValue1 <http://www.knora.org/ontology/knora-base#hasModifyPermission> <http://www.knora.org/ontology/knora-base#ProjectMember> .
-          |
-          |            ?newValue1 <http://www.knora.org/ontology/knora-base#hasDeletePermission> <http://www.knora.org/ontology/knora-base#Owner> .
+          |            ?newValue1 <http://www.knora.org/ontology/knora-base#attachedToUser> ?creatorIri ;
+          |                knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" .
           |
           |
           |        ?newValue1 knora-base:valueHasOrder ?nextOrder1 ;
@@ -736,15 +655,8 @@ object GraphDBConsistencyCheckingSpec {
           |            knora-base:valueCreationDate ?currentTime .
           |
           |
-          |            ?newLinkValue4 <http://www.knora.org/ontology/knora-base#attachedToUser> <http://data.knora.org/users/b83acc5f05> .
-          |
-          |            ?newLinkValue4 <http://www.knora.org/ontology/knora-base#attachedToProject> <http://data.knora.org/projects/77275339> .
-          |
-          |            ?newLinkValue4 <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#KnownUser> .
-          |
-          |            ?newLinkValue4 <http://www.knora.org/ontology/knora-base#hasModifyPermission> <http://www.knora.org/ontology/knora-base#ProjectMember> .
-          |
-          |            ?newLinkValue4 <http://www.knora.org/ontology/knora-base#hasDeletePermission> <http://www.knora.org/ontology/knora-base#Owner> .
+          |            ?newLinkValue4 <http://www.knora.org/ontology/knora-base#attachedToUser> ?creatorIri ;
+          |                knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" .
           |
           |
           |
@@ -766,17 +678,8 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |
-          |            ?newValue5 <http://www.knora.org/ontology/knora-base#attachedToUser> <http://data.knora.org/users/b83acc5f05> .
-          |
-          |            ?newValue5 <http://www.knora.org/ontology/knora-base#attachedToProject> <http://data.knora.org/projects/77275339> .
-          |
-          |            ?newValue5 <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#KnownUser> .
-          |
-          |            ?newValue5 <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#Owner> .
-          |
-          |            ?newValue5 <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#ProjectMember> .
-          |
-          |            ?newValue5 <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#UnknownUser> .
+          |            ?newValue5 <http://www.knora.org/ontology/knora-base#attachedToUser> ?creatorIri ;
+          |                knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" .
           |
           |
           |        ?newValue5 knora-base:valueHasOrder ?nextOrder5 ;
@@ -803,17 +706,8 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |
-          |            ?newValue6 <http://www.knora.org/ontology/knora-base#attachedToUser> <http://data.knora.org/users/b83acc5f05> .
-          |
-          |            ?newValue6 <http://www.knora.org/ontology/knora-base#attachedToProject> <http://data.knora.org/projects/77275339> .
-          |
-          |            ?newValue6 <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#KnownUser> .
-          |
-          |            ?newValue6 <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#ProjectMember> .
-          |
-          |            ?newValue6 <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#UnknownUser> .
-          |
-          |            ?newValue6 <http://www.knora.org/ontology/knora-base#hasModifyPermission> <http://www.knora.org/ontology/knora-base#Owner> .
+          |            ?newValue6 <http://www.knora.org/ontology/knora-base#attachedToUser> ?creatorIri ;
+          |                knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" .
           |
           |
           |        ?newValue6 knora-base:valueHasOrder ?nextOrder6 ;
@@ -833,7 +727,7 @@ object GraphDBConsistencyCheckingSpec {
           |    BIND(IRI("http://www.knora.org/data/incunabula") AS ?dataNamedGraph)
           |    BIND(IRI("http://data.knora.org/missingFileValue") AS ?resource)
           |    BIND(IRI("http://www.knora.org/ontology/incunabula#page") AS ?resourceClass)
-          |    BIND(IRI("http://data.knora.org/users/b83acc5f05") AS ?ownerIri)
+          |    BIND(IRI("http://data.knora.org/users/b83acc5f05") AS ?creatorIri)
           |    BIND(IRI("http://data.knora.org/projects/77275339") AS ?projectIri)
           |    BIND(str("Test-Page") AS ?label)
           |    BIND(NOW() AS ?currentTime)
@@ -1008,21 +902,10 @@ object GraphDBConsistencyCheckingSpec {
           |    GRAPH ?dataNamedGraph {
           |        ?resource rdf:type ?resourceClass ;
           |            knora-base:isDeleted "false"^^xsd:boolean ;
-          |            knora-base:attachedToUser ?ownerIri ;
+          |            knora-base:attachedToUser ?creatorIri ;
           |            knora-base:attachedToProject ?projectIri ;
           |            rdfs:label ?label ;
-          |
-          |
-          |
-          |                <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#KnownUser> ;
-          |
-          |                <http://www.knora.org/ontology/knora-base#hasModifyPermission> <http://www.knora.org/ontology/knora-base#Owner> ;
-          |
-          |                <http://www.knora.org/ontology/knora-base#hasModifyPermission> <http://www.knora.org/ontology/knora-base#ProjectMember> ;
-          |
-          |                <http://www.knora.org/ontology/knora-base#hasRestrictedViewPermission> <http://www.knora.org/ontology/knora-base#UnknownUser> ;
-          |
-          |
+          |            knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" ;
           |            knora-base:creationDate ?currentTime .
           |
           |
@@ -1040,17 +923,8 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |
-          |            ?newValue0 <http://www.knora.org/ontology/knora-base#attachedToUser> <http://data.knora.org/users/b83acc5f05> .
-          |
-          |            ?newValue0 <http://www.knora.org/ontology/knora-base#attachedToProject> <http://data.knora.org/projects/77275339> .
-          |
-          |            ?newValue0 <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#KnownUser> .
-          |
-          |            ?newValue0 <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#UnknownUser> .
-          |
-          |            ?newValue0 <http://www.knora.org/ontology/knora-base#hasModifyPermission> <http://www.knora.org/ontology/knora-base#ProjectMember> .
-          |
-          |            ?newValue0 <http://www.knora.org/ontology/knora-base#hasDeletePermission> <http://www.knora.org/ontology/knora-base#Owner> .
+          |            ?newValue0 <http://www.knora.org/ontology/knora-base#attachedToUser> ?creatorIri ;
+          |                knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" .
           |
           |
           |        ?newValue0 knora-base:valueHasOrder ?nextOrder0 ;
@@ -1082,17 +956,8 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |
-          |            ?newValue1 <http://www.knora.org/ontology/knora-base#attachedToUser> <http://data.knora.org/users/b83acc5f05> .
-          |
-          |            ?newValue1 <http://www.knora.org/ontology/knora-base#attachedToProject> <http://data.knora.org/projects/77275339> .
-          |
-          |            ?newValue1 <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#KnownUser> .
-          |
-          |            ?newValue1 <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#UnknownUser> .
-          |
-          |            ?newValue1 <http://www.knora.org/ontology/knora-base#hasModifyPermission> <http://www.knora.org/ontology/knora-base#ProjectMember> .
-          |
-          |            ?newValue1 <http://www.knora.org/ontology/knora-base#hasDeletePermission> <http://www.knora.org/ontology/knora-base#Owner> .
+          |            ?newValue1 <http://www.knora.org/ontology/knora-base#attachedToUser> ?creatorIri ;
+          |                knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" .
           |
           |
           |        ?newValue1 knora-base:valueHasOrder ?nextOrder1 ;
@@ -1119,17 +984,8 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |
-          |            ?newValue2 <http://www.knora.org/ontology/knora-base#attachedToUser> <http://data.knora.org/users/b83acc5f05> .
-          |
-          |            ?newValue2 <http://www.knora.org/ontology/knora-base#attachedToProject> <http://data.knora.org/projects/77275339> .
-          |
-          |            ?newValue2 <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#KnownUser> .
-          |
-          |            ?newValue2 <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#UnknownUser> .
-          |
-          |            ?newValue2 <http://www.knora.org/ontology/knora-base#hasModifyPermission> <http://www.knora.org/ontology/knora-base#ProjectMember> .
-          |
-          |            ?newValue2 <http://www.knora.org/ontology/knora-base#hasDeletePermission> <http://www.knora.org/ontology/knora-base#Owner> .
+          |            ?newValue2 <http://www.knora.org/ontology/knora-base#attachedToUser> ?creatorIri ;
+          |                knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" .
           |
           |
           |        ?newValue2 knora-base:valueHasOrder ?nextOrder2 ;
@@ -1154,17 +1010,8 @@ object GraphDBConsistencyCheckingSpec {
           |                ?newValue3 knora-base:valueHasString "ein Zitat" .
           |
           |
-          |            ?newValue3 <http://www.knora.org/ontology/knora-base#attachedToUser> <http://data.knora.org/users/b83acc5f05> .
-          |
-          |            ?newValue3 <http://www.knora.org/ontology/knora-base#attachedToProject> <http://data.knora.org/projects/77275339> .
-          |
-          |            ?newValue3 <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#KnownUser> .
-          |
-          |            ?newValue3 <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#UnknownUser> .
-          |
-          |            ?newValue3 <http://www.knora.org/ontology/knora-base#hasModifyPermission> <http://www.knora.org/ontology/knora-base#ProjectMember> .
-          |
-          |            ?newValue3 <http://www.knora.org/ontology/knora-base#hasDeletePermission> <http://www.knora.org/ontology/knora-base#Owner> .
+          |            ?newValue3 <http://www.knora.org/ontology/knora-base#attachedToUser> ?creatorIri ;
+          |                knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" .
           |
           |
           |        ?newValue3 knora-base:valueHasOrder ?nextOrder3 ;
@@ -1190,17 +1037,8 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |
-          |            ?newValue4 <http://www.knora.org/ontology/knora-base#attachedToUser> <http://data.knora.org/users/b83acc5f05> .
-          |
-          |            ?newValue4 <http://www.knora.org/ontology/knora-base#attachedToProject> <http://data.knora.org/projects/77275339> .
-          |
-          |            ?newValue4 <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#KnownUser> .
-          |
-          |            ?newValue4 <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#UnknownUser> .
-          |
-          |            ?newValue4 <http://www.knora.org/ontology/knora-base#hasModifyPermission> <http://www.knora.org/ontology/knora-base#ProjectMember> .
-          |
-          |            ?newValue4 <http://www.knora.org/ontology/knora-base#hasDeletePermission> <http://www.knora.org/ontology/knora-base#Owner> .
+          |            ?newValue4 <http://www.knora.org/ontology/knora-base#attachedToUser> ?creatorIri ;
+          |                knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" .
           |
           |
           |        ?newValue4 knora-base:valueHasOrder ?nextOrder4 ;
@@ -1254,17 +1092,8 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |
-          |            ?newValue5 <http://www.knora.org/ontology/knora-base#attachedToUser> <http://data.knora.org/users/b83acc5f05> .
-          |
-          |            ?newValue5 <http://www.knora.org/ontology/knora-base#attachedToProject> <http://data.knora.org/projects/77275339> .
-          |
-          |            ?newValue5 <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#KnownUser> .
-          |
-          |            ?newValue5 <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#UnknownUser> .
-          |
-          |            ?newValue5 <http://www.knora.org/ontology/knora-base#hasModifyPermission> <http://www.knora.org/ontology/knora-base#ProjectMember> .
-          |
-          |            ?newValue5 <http://www.knora.org/ontology/knora-base#hasDeletePermission> <http://www.knora.org/ontology/knora-base#Owner> .
+          |            ?newValue5 <http://www.knora.org/ontology/knora-base#attachedToUser> ?creatorIri ;
+          |                knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" .
           |
           |
           |        ?newValue5 knora-base:valueHasOrder ?nextOrder5 ;
@@ -1291,17 +1120,8 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |
-          |            ?newValue6 <http://www.knora.org/ontology/knora-base#attachedToUser> <http://data.knora.org/users/b83acc5f05> .
-          |
-          |            ?newValue6 <http://www.knora.org/ontology/knora-base#attachedToProject> <http://data.knora.org/projects/77275339> .
-          |
-          |            ?newValue6 <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#KnownUser> .
-          |
-          |            ?newValue6 <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#ProjectMember> .
-          |
-          |            ?newValue6 <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#UnknownUser> .
-          |
-          |            ?newValue6 <http://www.knora.org/ontology/knora-base#hasDeletePermission> <http://www.knora.org/ontology/knora-base#Owner> .
+          |            ?newValue6 <http://www.knora.org/ontology/knora-base#attachedToUser> ?creatorIri ;
+          |                knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" .
           |
           |
           |        ?newValue6 knora-base:valueHasOrder ?nextOrder6 ;
@@ -1328,17 +1148,8 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |
-          |            ?newValue7 <http://www.knora.org/ontology/knora-base#attachedToUser> <http://data.knora.org/users/b83acc5f05> .
-          |
-          |            ?newValue7 <http://www.knora.org/ontology/knora-base#attachedToProject> <http://data.knora.org/projects/77275339> .
-          |
-          |            ?newValue7 <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#KnownUser> .
-          |
-          |            ?newValue7 <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#ProjectMember> .
-          |
-          |            ?newValue7 <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#UnknownUser> .
-          |
-          |            ?newValue7 <http://www.knora.org/ontology/knora-base#hasDeletePermission> <http://www.knora.org/ontology/knora-base#Owner> .
+          |            ?newValue7 <http://www.knora.org/ontology/knora-base#attachedToUser> ?creatorIri ;
+          |                knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" .
           |
           |
           |        ?newValue7 knora-base:valueHasOrder ?nextOrder7 ;
@@ -1359,7 +1170,7 @@ object GraphDBConsistencyCheckingSpec {
           |    BIND(IRI("http://www.knora.org/data/incunabula") AS ?dataNamedGraph)
           |    BIND(IRI("http://data.knora.org/tooManyPublocs") AS ?resource)
           |    BIND(IRI("http://www.knora.org/ontology/incunabula#book") AS ?resourceClass)
-          |    BIND(IRI("http://data.knora.org/users/b83acc5f05") AS ?ownerIri)
+          |    BIND(IRI("http://data.knora.org/users/b83acc5f05") AS ?creatorIri)
           |    BIND(IRI("http://data.knora.org/projects/77275339") AS ?projectIri)
           |    BIND(str("Test-Book") AS ?label)
           |    BIND(NOW() AS ?currentTime)
@@ -1589,21 +1400,10 @@ object GraphDBConsistencyCheckingSpec {
           |            knora-base:isDeleted "false"^^xsd:boolean ;
           |            knora-base:lastModificationDate "2016-01-23T11:31:24Z"^^xsd:dateTimeStamp ;
           |			   knora-base:lastModificationDate ?currentTime ;
-          |            knora-base:attachedToUser ?ownerIri ;
+          |            knora-base:attachedToUser ?creatorIri ;
           |            knora-base:attachedToProject ?projectIri ;
           |            rdfs:label ?label ;
-          |
-          |
-          |
-          |                <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#KnownUser> ;
-          |
-          |                <http://www.knora.org/ontology/knora-base#hasModifyPermission> <http://www.knora.org/ontology/knora-base#Owner> ;
-          |
-          |                <http://www.knora.org/ontology/knora-base#hasModifyPermission> <http://www.knora.org/ontology/knora-base#ProjectMember> ;
-          |
-          |                <http://www.knora.org/ontology/knora-base#hasRestrictedViewPermission> <http://www.knora.org/ontology/knora-base#UnknownUser> ;
-          |
-          |
+          |            knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" ;
           |            knora-base:creationDate ?currentTime .
           |
           |
@@ -1621,17 +1421,8 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |
-          |            ?newValue0 <http://www.knora.org/ontology/knora-base#attachedToUser> <http://data.knora.org/users/b83acc5f05> .
-          |
-          |            ?newValue0 <http://www.knora.org/ontology/knora-base#attachedToProject> <http://data.knora.org/projects/77275339> .
-          |
-          |            ?newValue0 <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#KnownUser> .
-          |
-          |            ?newValue0 <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#UnknownUser> .
-          |
-          |            ?newValue0 <http://www.knora.org/ontology/knora-base#hasModifyPermission> <http://www.knora.org/ontology/knora-base#ProjectMember> .
-          |
-          |            ?newValue0 <http://www.knora.org/ontology/knora-base#hasDeletePermission> <http://www.knora.org/ontology/knora-base#Owner> .
+          |            ?newValue0 <http://www.knora.org/ontology/knora-base#attachedToUser> ?creatorIri ;
+          |                knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" .
           |
           |
           |        ?newValue0 knora-base:valueHasOrder ?nextOrder0 ;
@@ -1663,17 +1454,8 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |
-          |            ?newValue1 <http://www.knora.org/ontology/knora-base#attachedToUser> <http://data.knora.org/users/b83acc5f05> .
-          |
-          |            ?newValue1 <http://www.knora.org/ontology/knora-base#attachedToProject> <http://data.knora.org/projects/77275339> .
-          |
-          |            ?newValue1 <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#KnownUser> .
-          |
-          |            ?newValue1 <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#UnknownUser> .
-          |
-          |            ?newValue1 <http://www.knora.org/ontology/knora-base#hasModifyPermission> <http://www.knora.org/ontology/knora-base#ProjectMember> .
-          |
-          |            ?newValue1 <http://www.knora.org/ontology/knora-base#hasDeletePermission> <http://www.knora.org/ontology/knora-base#Owner> .
+          |            ?newValue1 <http://www.knora.org/ontology/knora-base#attachedToUser> ?creatorIri ;
+          |                knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" .
           |
           |
           |        ?newValue1 knora-base:valueHasOrder ?nextOrder1 ;
@@ -1702,17 +1484,8 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |
-          |            ?newValue6 <http://www.knora.org/ontology/knora-base#attachedToUser> <http://data.knora.org/users/b83acc5f05> .
-          |
-          |            ?newValue6 <http://www.knora.org/ontology/knora-base#attachedToProject> <http://data.knora.org/projects/77275339> .
-          |
-          |            ?newValue6 <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#KnownUser> .
-          |
-          |            ?newValue6 <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#ProjectMember> .
-          |
-          |            ?newValue6 <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#UnknownUser> .
-          |
-          |            ?newValue6 <http://www.knora.org/ontology/knora-base#hasDeletePermission> <http://www.knora.org/ontology/knora-base#Owner> .
+          |            ?newValue6 <http://www.knora.org/ontology/knora-base#attachedToUser> ?creatorIri ;
+          |                knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" .
           |
           |
           |        ?newValue6 knora-base:valueHasOrder ?nextOrder6 ;
@@ -1732,7 +1505,7 @@ object GraphDBConsistencyCheckingSpec {
           |    BIND(IRI("http://www.knora.org/data/incunabula") AS ?dataNamedGraph)
           |    BIND(IRI("http://data.knora.org/tooManyLastModificationDates") AS ?resource)
           |    BIND(IRI("http://www.knora.org/ontology/incunabula#book") AS ?resourceClass)
-          |    BIND(IRI("http://data.knora.org/users/b83acc5f05") AS ?ownerIri)
+          |    BIND(IRI("http://data.knora.org/users/b83acc5f05") AS ?creatorIri)
           |    BIND(IRI("http://data.knora.org/projects/77275339") AS ?projectIri)
           |    BIND(str("Test-Book") AS ?label)
           |    BIND(NOW() AS ?currentTime)
@@ -1833,21 +1606,10 @@ object GraphDBConsistencyCheckingSpec {
           |            knora-base:valueHasString "A resource is not allowed to have a valueHasString property" ;
           |            knora-base:isDeleted "false"^^xsd:boolean ;
           |			   knora-base:lastModificationDate ?currentTime ;
-          |            knora-base:attachedToUser ?ownerIri ;
+          |            knora-base:attachedToUser ?creatorIri ;
           |            knora-base:attachedToProject ?projectIri ;
           |            rdfs:label ?label ;
-          |
-          |
-          |
-          |                <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#KnownUser> ;
-          |
-          |                <http://www.knora.org/ontology/knora-base#hasModifyPermission> <http://www.knora.org/ontology/knora-base#Owner> ;
-          |
-          |                <http://www.knora.org/ontology/knora-base#hasModifyPermission> <http://www.knora.org/ontology/knora-base#ProjectMember> ;
-          |
-          |                <http://www.knora.org/ontology/knora-base#hasRestrictedViewPermission> <http://www.knora.org/ontology/knora-base#UnknownUser> ;
-          |
-          |
+          |            knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" ;
           |            knora-base:creationDate ?currentTime .
           |
           |
@@ -1866,17 +1628,8 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |
-          |            ?newValue0 <http://www.knora.org/ontology/knora-base#attachedToUser> <http://data.knora.org/users/b83acc5f05> .
-          |
-          |            ?newValue0 <http://www.knora.org/ontology/knora-base#attachedToProject> <http://data.knora.org/projects/77275339> .
-          |
-          |            ?newValue0 <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#KnownUser> .
-          |
-          |            ?newValue0 <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#UnknownUser> .
-          |
-          |            ?newValue0 <http://www.knora.org/ontology/knora-base#hasModifyPermission> <http://www.knora.org/ontology/knora-base#ProjectMember> .
-          |
-          |            ?newValue0 <http://www.knora.org/ontology/knora-base#hasDeletePermission> <http://www.knora.org/ontology/knora-base#Owner> .
+          |            ?newValue0 <http://www.knora.org/ontology/knora-base#attachedToUser> ?creatorIri ;
+          |                knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" .
           |
           |
           |        ?newValue0 knora-base:valueHasOrder ?nextOrder0 ;
@@ -1907,17 +1660,8 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |
-          |            ?newValue1 <http://www.knora.org/ontology/knora-base#attachedToUser> <http://data.knora.org/users/b83acc5f05> .
-          |
-          |            ?newValue1 <http://www.knora.org/ontology/knora-base#attachedToProject> <http://data.knora.org/projects/77275339> .
-          |
-          |            ?newValue1 <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#KnownUser> .
-          |
-          |            ?newValue1 <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#UnknownUser> .
-          |
-          |            ?newValue1 <http://www.knora.org/ontology/knora-base#hasModifyPermission> <http://www.knora.org/ontology/knora-base#ProjectMember> .
-          |
-          |            ?newValue1 <http://www.knora.org/ontology/knora-base#hasDeletePermission> <http://www.knora.org/ontology/knora-base#Owner> .
+          |            ?newValue1 <http://www.knora.org/ontology/knora-base#attachedToUser> ?creatorIri ;
+          |                knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" .
           |
           |
           |        ?newValue1 knora-base:valueHasOrder ?nextOrder1 ;
@@ -1945,17 +1689,8 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |
-          |            ?newValue6 <http://www.knora.org/ontology/knora-base#attachedToUser> <http://data.knora.org/users/b83acc5f05> .
-          |
-          |            ?newValue6 <http://www.knora.org/ontology/knora-base#attachedToProject> <http://data.knora.org/projects/77275339> .
-          |
-          |            ?newValue6 <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#KnownUser> .
-          |
-          |            ?newValue6 <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#ProjectMember> .
-          |
-          |            ?newValue6 <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#UnknownUser> .
-          |
-          |            ?newValue6 <http://www.knora.org/ontology/knora-base#hasDeletePermission> <http://www.knora.org/ontology/knora-base#Owner> .
+          |            ?newValue6 <http://www.knora.org/ontology/knora-base#attachedToUser> ?creatorIri ;
+          |                knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" .
           |
           |
           |        ?newValue6 knora-base:valueHasOrder ?nextOrder6 ;
@@ -1975,7 +1710,7 @@ object GraphDBConsistencyCheckingSpec {
           |    BIND(IRI("http://www.knora.org/data/incunabula") AS ?dataNamedGraph)
           |    BIND(IRI("http://data.knora.org/wrongSubjectClass") AS ?resource)
           |    BIND(IRI("http://www.knora.org/ontology/incunabula#book") AS ?resourceClass)
-          |    BIND(IRI("http://data.knora.org/users/b83acc5f05") AS ?ownerIri)
+          |    BIND(IRI("http://data.knora.org/users/b83acc5f05") AS ?creatorIri)
           |    BIND(IRI("http://data.knora.org/projects/77275339") AS ?projectIri)
           |    BIND(str("Test-Book") AS ?label)
           |    BIND(NOW() AS ?currentTime)
@@ -2075,21 +1810,10 @@ object GraphDBConsistencyCheckingSpec {
           |        ?resource rdf:type ?resourceClass ;
           |            knora-base:isDeleted "false"^^xsd:boolean ;
           |			   knora-base:lastModificationDate ?currentTime ;
-          |            knora-base:attachedToUser ?ownerIri ;
+          |            knora-base:attachedToUser ?creatorIri ;
           |            knora-base:attachedToProject ?projectIri ;
           |            rdfs:label ?label ;
-          |
-          |
-          |
-          |                <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#KnownUser> ;
-          |
-          |                <http://www.knora.org/ontology/knora-base#hasModifyPermission> <http://www.knora.org/ontology/knora-base#Owner> ;
-          |
-          |                <http://www.knora.org/ontology/knora-base#hasModifyPermission> <http://www.knora.org/ontology/knora-base#ProjectMember> ;
-          |
-          |                <http://www.knora.org/ontology/knora-base#hasRestrictedViewPermission> <http://www.knora.org/ontology/knora-base#UnknownUser> ;
-          |
-          |
+          |            knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" ;
           |            knora-base:creationDate ?currentTime .
           |
           |
@@ -2108,17 +1832,8 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |
-          |            ?newValue0 <http://www.knora.org/ontology/knora-base#attachedToUser> <http://data.knora.org/users/b83acc5f05> .
-          |
-          |            ?newValue0 <http://www.knora.org/ontology/knora-base#attachedToProject> <http://data.knora.org/projects/77275339> .
-          |
-          |            ?newValue0 <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#KnownUser> .
-          |
-          |            ?newValue0 <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#UnknownUser> .
-          |
-          |            ?newValue0 <http://www.knora.org/ontology/knora-base#hasModifyPermission> <http://www.knora.org/ontology/knora-base#ProjectMember> .
-          |
-          |            ?newValue0 <http://www.knora.org/ontology/knora-base#hasDeletePermission> <http://www.knora.org/ontology/knora-base#Owner> .
+          |            ?newValue0 <http://www.knora.org/ontology/knora-base#attachedToUser> ?creatorIri ;
+          |                knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" .
           |
           |
           |        ?newValue0 knora-base:valueHasOrder ?nextOrder0 ;
@@ -2147,17 +1862,8 @@ object GraphDBConsistencyCheckingSpec {
           |                                     knora-base:valueHasCalendar "GREGORIAN" ;
           |                                     knora-base:valueHasString "2015-12-03" .
           |
-          |            ?newValue1 <http://www.knora.org/ontology/knora-base#attachedToUser> <http://data.knora.org/users/b83acc5f05> .
-          |
-          |            ?newValue1 <http://www.knora.org/ontology/knora-base#attachedToProject> <http://data.knora.org/projects/77275339> .
-          |
-          |            ?newValue1 <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#KnownUser> .
-          |
-          |            ?newValue1 <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#UnknownUser> .
-          |
-          |            ?newValue1 <http://www.knora.org/ontology/knora-base#hasModifyPermission> <http://www.knora.org/ontology/knora-base#ProjectMember> .
-          |
-          |            ?newValue1 <http://www.knora.org/ontology/knora-base#hasDeletePermission> <http://www.knora.org/ontology/knora-base#Owner> .
+          |            ?newValue1 <http://www.knora.org/ontology/knora-base#attachedToUser> ?creatorIri ;
+          |                knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" .
           |
           |
           |        ?newValue1 knora-base:valueHasOrder ?nextOrder1 ;
@@ -2184,17 +1890,8 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |
-          |            ?newValue6 <http://www.knora.org/ontology/knora-base#attachedToUser> <http://data.knora.org/users/b83acc5f05> .
-          |
-          |            ?newValue6 <http://www.knora.org/ontology/knora-base#attachedToProject> <http://data.knora.org/projects/77275339> .
-          |
-          |            ?newValue6 <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#KnownUser> .
-          |
-          |            ?newValue6 <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#ProjectMember> .
-          |
-          |            ?newValue6 <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#UnknownUser> .
-          |
-          |            ?newValue6 <http://www.knora.org/ontology/knora-base#hasDeletePermission> <http://www.knora.org/ontology/knora-base#Owner> .
+          |            ?newValue6 <http://www.knora.org/ontology/knora-base#attachedToUser> ?creatorIri ;
+          |                knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" .
           |
           |
           |        ?newValue6 knora-base:valueHasOrder ?nextOrder6 ;
@@ -2213,7 +1910,7 @@ object GraphDBConsistencyCheckingSpec {
           |    BIND(IRI("http://www.knora.org/data/incunabula") AS ?dataNamedGraph)
           |    BIND(IRI("http://data.knora.org/wrongObjectClass") AS ?resource)
           |    BIND(IRI("http://www.knora.org/ontology/incunabula#book") AS ?resourceClass)
-          |    BIND(IRI("http://data.knora.org/users/b83acc5f05") AS ?ownerIri)
+          |    BIND(IRI("http://data.knora.org/users/b83acc5f05") AS ?creatorIri)
           |    BIND(IRI("http://data.knora.org/projects/77275339") AS ?projectIri)
           |    BIND(str("Test-Book") AS ?label)
           |    BIND(NOW() AS ?currentTime)
@@ -2307,27 +2004,33 @@ object GraphDBConsistencyCheckingSpec {
           |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
           |PREFIX owl: <http://www.w3.org/2002/07/owl#>
           |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+          |PREFIX incunabula: <http://www.knora.org/ontology/incunabula#>
+          |PREFIX salsah-gui: <http://www.knora.org/ontology/salsah-gui#>
           |
           |INSERT {
           |    GRAPH ?dataNamedGraph {
+          |
+          |
+          |        # A property that incunabula:book has no cardinality for.
+          |        incunabula:unused rdf:type owl:ObjectProperty ;
+          |            rdfs:subPropertyOf knora-base:hasValue ;
+          |            rdfs:label "Unused property"@en ;
+          |            rdfs:comment "A property used only in tests"@en ;
+          |            knora-base:subjectClassConstraint incunabula:book ;
+          |            knora-base:objectClassConstraint knora-base:TextValue ;
+          |            salsah-gui:guiOrder "1"^^xsd:integer ;
+          |            salsah-gui:guiElement salsah-gui:SimpleText ;
+          |            salsah-gui:guiAttribute "min=4" ,
+          |                                    "max=8" .
+          |
+          |
           |        ?resource rdf:type ?resourceClass ;
           |            knora-base:isDeleted "false"^^xsd:boolean ;
           |			   knora-base:lastModificationDate ?currentTime ;
-          |            knora-base:attachedToUser ?ownerIri ;
+          |            knora-base:attachedToUser ?creatorIri ;
           |            knora-base:attachedToProject ?projectIri ;
           |            rdfs:label ?label ;
-          |
-          |
-          |
-          |                <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#KnownUser> ;
-          |
-          |                <http://www.knora.org/ontology/knora-base#hasModifyPermission> <http://www.knora.org/ontology/knora-base#Owner> ;
-          |
-          |                <http://www.knora.org/ontology/knora-base#hasModifyPermission> <http://www.knora.org/ontology/knora-base#ProjectMember> ;
-          |
-          |                <http://www.knora.org/ontology/knora-base#hasRestrictedViewPermission> <http://www.knora.org/ontology/knora-base#UnknownUser> ;
-          |
-          |
+          |            knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" ;
           |            knora-base:creationDate ?currentTime .
           |
           |
@@ -2344,17 +2047,8 @@ object GraphDBConsistencyCheckingSpec {
           |                ?newValue0 knora-base:valueHasString "A beautiful book" .
           |
           |
-          |            ?newValue0 <http://www.knora.org/ontology/knora-base#attachedToUser> <http://data.knora.org/users/b83acc5f05> .
-          |
-          |            ?newValue0 <http://www.knora.org/ontology/knora-base#attachedToProject> <http://data.knora.org/projects/77275339> .
-          |
-          |            ?newValue0 <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#KnownUser> .
-          |
-          |            ?newValue0 <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#UnknownUser> .
-          |
-          |            ?newValue0 <http://www.knora.org/ontology/knora-base#hasModifyPermission> <http://www.knora.org/ontology/knora-base#ProjectMember> .
-          |
-          |            ?newValue0 <http://www.knora.org/ontology/knora-base#hasDeletePermission> <http://www.knora.org/ontology/knora-base#Owner> .
+          |            ?newValue0 <http://www.knora.org/ontology/knora-base#attachedToUser> ?creatorIri ;
+          |                knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" .
           |
           |
           |        ?newValue0 knora-base:valueHasOrder ?nextOrder0 ;
@@ -2385,17 +2079,8 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |
-          |            ?newValue1 <http://www.knora.org/ontology/knora-base#attachedToUser> <http://data.knora.org/users/b83acc5f05> .
-          |
-          |            ?newValue1 <http://www.knora.org/ontology/knora-base#attachedToProject> <http://data.knora.org/projects/77275339> .
-          |
-          |            ?newValue1 <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#KnownUser> .
-          |
-          |            ?newValue1 <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#UnknownUser> .
-          |
-          |            ?newValue1 <http://www.knora.org/ontology/knora-base#hasModifyPermission> <http://www.knora.org/ontology/knora-base#ProjectMember> .
-          |
-          |            ?newValue1 <http://www.knora.org/ontology/knora-base#hasDeletePermission> <http://www.knora.org/ontology/knora-base#Owner> .
+          |            ?newValue1 <http://www.knora.org/ontology/knora-base#attachedToUser> ?creatorIri ;
+          |                knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" .
           |
           |
           |        ?newValue1 knora-base:valueHasOrder ?nextOrder1 ;
@@ -2421,17 +2106,8 @@ object GraphDBConsistencyCheckingSpec {
           |                ?newValue6 knora-base:valueHasString "Entenhausen" .
           |
           |
-          |            ?newValue6 <http://www.knora.org/ontology/knora-base#attachedToUser> <http://data.knora.org/users/b83acc5f05> .
-          |
-          |            ?newValue6 <http://www.knora.org/ontology/knora-base#attachedToProject> <http://data.knora.org/projects/77275339> .
-          |
-          |            ?newValue6 <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#KnownUser> .
-          |
-          |            ?newValue6 <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#ProjectMember> .
-          |
-          |            ?newValue6 <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#UnknownUser> .
-          |
-          |            ?newValue6 <http://www.knora.org/ontology/knora-base#hasDeletePermission> <http://www.knora.org/ontology/knora-base#Owner> .
+          |            ?newValue6 <http://www.knora.org/ontology/knora-base#attachedToUser> ?creatorIri ;
+          |                knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" .
           |
           |
           |        ?newValue6 knora-base:valueHasOrder ?nextOrder6 ;
@@ -2447,7 +2123,7 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |        # Value 7 (there's no cardinality for it, so it should cause an error)
-          |        # Property: http://www.knora.org/ontology/incunabula#pagenum
+          |        # Property: http://www.knora.org/ontology/incunabula#unused
           |
           |
           |        ?newValue7 rdf:type ?valueType7 ;
@@ -2460,17 +2136,8 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |
-          |            ?newValue7 <http://www.knora.org/ontology/knora-base#attachedToUser> <http://data.knora.org/users/b83acc5f05> .
-          |
-          |            ?newValue7 <http://www.knora.org/ontology/knora-base#attachedToProject> <http://data.knora.org/projects/77275339> .
-          |
-          |            ?newValue7 <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#KnownUser> .
-          |
-          |            ?newValue7 <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#UnknownUser> .
-          |
-          |            ?newValue7 <http://www.knora.org/ontology/knora-base#hasModifyPermission> <http://www.knora.org/ontology/knora-base#ProjectMember> .
-          |
-          |            ?newValue7 <http://www.knora.org/ontology/knora-base#hasDeletePermission> <http://www.knora.org/ontology/knora-base#Owner> .
+          |            ?newValue7 <http://www.knora.org/ontology/knora-base#attachedToUser> ?creatorIri ;
+          |                knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" .
           |
           |
           |        ?newValue7 knora-base:valueHasOrder ?nextOrder7 ;
@@ -2493,7 +2160,7 @@ object GraphDBConsistencyCheckingSpec {
           |    BIND(IRI("http://www.knora.org/data/incunabula") AS ?dataNamedGraph)
           |    BIND(IRI("http://data.knora.org/resourcePropWithNoCardinality") AS ?resource)
           |    BIND(IRI("http://www.knora.org/ontology/incunabula#book") AS ?resourceClass)
-          |    BIND(IRI("http://data.knora.org/users/b83acc5f05") AS ?ownerIri)
+          |    BIND(IRI("http://data.knora.org/users/b83acc5f05") AS ?creatorIri)
           |    BIND(IRI("http://data.knora.org/projects/77275339") AS ?projectIri)
           |    BIND(str("Test-Book") AS ?label)
           |    BIND(NOW() AS ?currentTime)
@@ -2582,9 +2249,9 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |    # Value 7
-          |    # Property: http://www.knora.org/ontology/incunabula#pagenum
+          |    # Property: http://www.knora.org/ontology/incunabula#unused
           |
-          |    BIND(IRI("http://www.knora.org/ontology/incunabula#pagenum") AS ?property7)
+          |    BIND(IRI("http://www.knora.org/ontology/incunabula#unused") AS ?property7)
           |    BIND(IRI("http://data.knora.org/resourcePropWithNoCardinality/values/nQ3tRObaQWe74WQv2_OdCg") AS ?newValue7)
           |    BIND(IRI("http://www.knora.org/ontology/knora-base#TextValue") AS ?valueType7)
           |
@@ -2608,21 +2275,10 @@ object GraphDBConsistencyCheckingSpec {
           |        ?resource rdf:type ?resourceClass ;
           |            knora-base:isDeleted "false"^^xsd:boolean ;
           |			   knora-base:lastModificationDate ?currentTime ;
-          |            knora-base:attachedToUser ?ownerIri ;
+          |            knora-base:attachedToUser ?creatorIri ;
           |            knora-base:attachedToProject ?projectIri ;
           |            rdfs:label ?label ;
-          |
-          |
-          |
-          |                <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#KnownUser> ;
-          |
-          |                <http://www.knora.org/ontology/knora-base#hasModifyPermission> <http://www.knora.org/ontology/knora-base#Owner> ;
-          |
-          |                <http://www.knora.org/ontology/knora-base#hasModifyPermission> <http://www.knora.org/ontology/knora-base#ProjectMember> ;
-          |
-          |                <http://www.knora.org/ontology/knora-base#hasRestrictedViewPermission> <http://www.knora.org/ontology/knora-base#UnknownUser> ;
-          |
-          |
+          |            knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" ;
           |            knora-base:creationDate ?currentTime .
           |
           |
@@ -2639,17 +2295,8 @@ object GraphDBConsistencyCheckingSpec {
           |                ?newValue0 knora-base:valueHasString "A beautiful book" .
           |
           |
-          |            ?newValue0 <http://www.knora.org/ontology/knora-base#attachedToUser> <http://data.knora.org/users/b83acc5f05> .
-          |
-          |            ?newValue0 <http://www.knora.org/ontology/knora-base#attachedToProject> <http://data.knora.org/projects/77275339> .
-          |
-          |            ?newValue0 <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#KnownUser> .
-          |
-          |            ?newValue0 <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#UnknownUser> .
-          |
-          |            ?newValue0 <http://www.knora.org/ontology/knora-base#hasModifyPermission> <http://www.knora.org/ontology/knora-base#ProjectMember> .
-          |
-          |            ?newValue0 <http://www.knora.org/ontology/knora-base#hasDeletePermission> <http://www.knora.org/ontology/knora-base#Owner> .
+          |            ?newValue0 <http://www.knora.org/ontology/knora-base#attachedToUser> ?creatorIri ;
+          |                knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" .
           |
           |
           |        ?newValue0 knora-base:valueHasOrder ?nextOrder0 ;
@@ -2680,17 +2327,8 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |
-          |            ?newValue1 <http://www.knora.org/ontology/knora-base#attachedToUser> <http://data.knora.org/users/b83acc5f05> .
-          |
-          |            ?newValue1 <http://www.knora.org/ontology/knora-base#attachedToProject> <http://data.knora.org/projects/77275339> .
-          |
-          |            ?newValue1 <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#KnownUser> .
-          |
-          |            ?newValue1 <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#UnknownUser> .
-          |
-          |            ?newValue1 <http://www.knora.org/ontology/knora-base#hasModifyPermission> <http://www.knora.org/ontology/knora-base#ProjectMember> .
-          |
-          |            ?newValue1 <http://www.knora.org/ontology/knora-base#hasDeletePermission> <http://www.knora.org/ontology/knora-base#Owner> .
+          |            ?newValue1 <http://www.knora.org/ontology/knora-base#attachedToUser> ?creatorIri ;
+          |                knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" .
           |
           |
           |        ?newValue1 knora-base:valueHasOrder ?nextOrder1 ;
@@ -2708,6 +2346,13 @@ object GraphDBConsistencyCheckingSpec {
           |        # Property: http://www.knora.org/ontology/incunabula#publoc
           |
           |
+          |        # A property that knora-base:TextValue has no cardinality for.
+          |        knora-base:valueHasTest rdf:type owl:DatatypeProperty ;
+          |                 rdfs:subPropertyOf knora-base:valueHas ;
+          |                 knora-base:subjectClassConstraint knora-base:TextValue ;
+          |                 knora-base:objectDatatypeConstraint xsd:integer .
+          |
+          |
           |        ?newValue6 rdf:type ?valueType6 ;
           |            knora-base:isDeleted "false"^^xsd:boolean .
           |
@@ -2715,19 +2360,10 @@ object GraphDBConsistencyCheckingSpec {
           |
           |                ?newValue6 knora-base:valueHasString "Entenhausen" .
           |
-          |                ?newValue6 knora-base:valueHasInteger "3"^^xsd:integer . # No cardinality for this property, so it should cause an error.
+          |                ?newValue6 knora-base:valueHasTest "3"^^xsd:integer . # No cardinality for this property, so it should cause an error.
           |
-          |            ?newValue6 <http://www.knora.org/ontology/knora-base#attachedToUser> <http://data.knora.org/users/b83acc5f05> .
-          |
-          |            ?newValue6 <http://www.knora.org/ontology/knora-base#attachedToProject> <http://data.knora.org/projects/77275339> .
-          |
-          |            ?newValue6 <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#KnownUser> .
-          |
-          |            ?newValue6 <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#ProjectMember> .
-          |
-          |            ?newValue6 <http://www.knora.org/ontology/knora-base#hasViewPermission> <http://www.knora.org/ontology/knora-base#UnknownUser> .
-          |
-          |            ?newValue6 <http://www.knora.org/ontology/knora-base#hasDeletePermission> <http://www.knora.org/ontology/knora-base#Owner> .
+          |            ?newValue6 <http://www.knora.org/ontology/knora-base#attachedToUser> ?creatorIri ;
+          |                knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" .
           |
           |
           |        ?newValue6 knora-base:valueHasOrder ?nextOrder6 ;
@@ -2749,7 +2385,7 @@ object GraphDBConsistencyCheckingSpec {
           |    BIND(IRI("http://www.knora.org/data/incunabula") AS ?dataNamedGraph)
           |    BIND(IRI("http://data.knora.org/valuePropWithNoCardinality") AS ?resource)
           |    BIND(IRI("http://www.knora.org/ontology/incunabula#book") AS ?resourceClass)
-          |    BIND(IRI("http://data.knora.org/users/b83acc5f05") AS ?ownerIri)
+          |    BIND(IRI("http://data.knora.org/users/b83acc5f05") AS ?creatorIri)
           |    BIND(IRI("http://data.knora.org/projects/77275339") AS ?projectIri)
           |    BIND(str("Test-Book") AS ?label)
           |    BIND(NOW() AS ?currentTime)
@@ -2848,17 +2484,10 @@ object GraphDBConsistencyCheckingSpec {
           |    GRAPH ?dataNamedGraph {
           |        ?resource rdf:type ?resourceClass ;
           |            knora-base:isDeleted false ;
-          |            knora-base:attachedToUser ?ownerIri ;
+          |            knora-base:attachedToUser ?creatorIri ;
           |            knora-base:attachedToProject ?projectIri ;
           |            rdfs:label ?label ;
-          |
-          |
-          |
-          |
-          |                    knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" ;
-          |
-          |
-          |
+          |            knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" ;
           |            knora-base:creationDate ?currentTime .
           |
           |
@@ -2883,17 +2512,8 @@ object GraphDBConsistencyCheckingSpec {
           |            knora-base:isDeleted false ;
           |            knora-base:valueCreationDate ?currentTime .
           |
-          |        ?newLinkValue0 knora-base:attachedToUser <http://data.knora.org/users/9XBCrDV3SRa7kS1WwynB4Q> .
-          |
-          |
-          |
-          |                ?newLinkValue0 knora-base:attachedToProject <http://data.knora.org/projects/anything> .
-          |
-          |
-          |
-          |
-          |
-          |                ?newLinkValue0 knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" .
+          |        ?newLinkValue0 knora-base:attachedToUser <http://data.knora.org/users/9XBCrDV3SRa7kS1WwynB4Q> ;
+          |                knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" .
           |
           |
           |
@@ -2913,7 +2533,7 @@ object GraphDBConsistencyCheckingSpec {
           |    BIND(IRI("http://www.knora.org/data/anything") AS ?dataNamedGraph)
           |    BIND(IRI("http://data.knora.org/wrongTargetClass") AS ?resource)
           |    BIND(IRI("http://www.knora.org/ontology/anything#Thing") AS ?resourceClass)
-          |    BIND(IRI("http://data.knora.org/users/9XBCrDV3SRa7kS1WwynB4Q") AS ?ownerIri)
+          |    BIND(IRI("http://data.knora.org/users/9XBCrDV3SRa7kS1WwynB4Q") AS ?creatorIri)
           |    BIND(IRI("http://data.knora.org/projects/anything") AS ?projectIri)
           |    BIND(str("Test Thing") AS ?label)
           |    BIND(NOW() AS ?currentTime)
@@ -2968,15 +2588,11 @@ object GraphDBConsistencyCheckingSpec {
           |    GRAPH ?dataNamedGraph {
           |        ?resource rdf:type ?resourceClass ;
           |            knora-base:isDeleted false ;
-          |            knora-base:attachedToUser ?ownerIri ;
+          |            knora-base:attachedToUser ?creatorIri ;
           |            knora-base:attachedToProject ?projectIri ;
           |            rdfs:label ?label;
           |            rdfs:label "Second label not allowed" ;
-          |
-          |
-          |                    knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" ;
-          |
-          |
+          |            knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" ;
           |            knora-base:creationDate ?currentTime .
           |    }
           |}
@@ -2988,7 +2604,7 @@ object GraphDBConsistencyCheckingSpec {
           |    BIND(IRI("http://www.knora.org/data/anything") AS ?dataNamedGraph)
           |    BIND(IRI("http://data.knora.org/wrongTargetClass") AS ?resource)
           |    BIND(IRI("http://www.knora.org/ontology/anything#Thing") AS ?resourceClass)
-          |    BIND(IRI("http://data.knora.org/users/9XBCrDV3SRa7kS1WwynB4Q") AS ?ownerIri)
+          |    BIND(IRI("http://data.knora.org/users/9XBCrDV3SRa7kS1WwynB4Q") AS ?creatorIri)
           |    BIND(IRI("http://data.knora.org/projects/anything") AS ?projectIri)
           |    BIND(str("Test Thing") AS ?label)
           |    BIND(NOW() AS ?currentTime)

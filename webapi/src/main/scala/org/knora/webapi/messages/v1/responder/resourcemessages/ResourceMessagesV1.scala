@@ -77,7 +77,46 @@ case class CreateResourceValueV1(richtext_value: Option[CreateRichtextV1] = None
                                  hlist_value: Option[IRI] = None,
                                  interval_value: Option[Seq[BigDecimal]] = None,
                                  geoname_value: Option[String] = None,
-                                 comment: Option[String] = None)
+                                 comment: Option[String] = None) {
+
+    // Make sure only one value is given.
+    if (List(
+        richtext_value,
+        link_value,
+        int_value,
+        decimal_value,
+        boolean_value,
+        uri_value,
+        date_value,
+        color_value,
+        geom_value,
+        hlist_value,
+        interval_value,
+        geoname_value).flatten.size > 1) {
+        throw BadRequestException(s"Different value types were submitted for the same property")
+    }
+
+    /**
+      * Returns the type of the given value.
+      *
+      * @return a value type IRI.
+      */
+    def getValueClassIri: IRI = {
+        if (richtext_value.nonEmpty) OntologyConstants.KnoraBase.TextValue
+        else if (link_value.nonEmpty) OntologyConstants.KnoraBase.LinkValue
+        else if (int_value.nonEmpty) OntologyConstants.KnoraBase.IntValue
+        else if (decimal_value.nonEmpty) OntologyConstants.KnoraBase.DecimalValue
+        else if (boolean_value.nonEmpty) OntologyConstants.KnoraBase.BooleanValue
+        else if (uri_value.nonEmpty) OntologyConstants.KnoraBase.UriValue
+        else if (date_value.nonEmpty) OntologyConstants.KnoraBase.DateValue
+        else if (color_value.nonEmpty) OntologyConstants.KnoraBase.ColorValue
+        else if (geom_value.nonEmpty) OntologyConstants.KnoraBase.GeomValue
+        else if (hlist_value.nonEmpty) OntologyConstants.KnoraBase.ListValue
+        else if (interval_value.nonEmpty) OntologyConstants.KnoraBase.IntervalValue
+        else if (geoname_value.nonEmpty) OntologyConstants.KnoraBase.GeonameValue
+        else throw BadRequestException("No value specified")
+    }
+}
 
 /**
   * Represents an API request that asks the Knora API server to change a resource's label.

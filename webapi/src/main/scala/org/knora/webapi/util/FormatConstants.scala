@@ -36,6 +36,10 @@ object FormatConstants {
     // A non-printing delimiter character, Unicode INFORMATION SEPARATOR TWO, that should never occur in data.
     val INFORMATION_SEPARATOR_FOUR = '\u001C'
 
+    // a separator to be inserted in the XML to separate nodes from one another
+    // this separator is only used temporarily while XML is being processed
+    val PARAGRAPH_SEPARATOR = '\u2029'
+
     // Control sequences for changing text colour in terminals.
     val ANSI_RED = "\u001B[31m"
     val ANSI_GREEN = "\u001B[32m"

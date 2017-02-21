@@ -235,65 +235,30 @@ export module basicMessageComponents {
     }
 
     /**
-     * Represents a range in the text.
-     */
-    interface standoffPosition {
-
-        /**
-         * Start position of the range
-         */
-        start: integer;
-
-        /**
-         * End psoition of the range
-         */
-        end: integer;
-
-        /**
-         * In case it is a hyperlink, this is the link's target
-         */
-        href?: URI;
-
-        /**
-         * In case it is an internal link, this is the referred resource's IRI
-         */
-        resid?: KnoraIRI;
-    }
-
-    /**
-     * Represents the standoff information for a text value.
-     */
-    export interface textattr {
-        /**
-         * A map of attribute names to standoff positions.
-         * For each attribute the standoff positions indicate in which ranges of the text the attribute occurs.
-         */
-        [index: string]: Array<standoffPosition>
-    }
-
-    /**
-     * String must be a stringified [[textattr]] (using `JSON.stringify()`) that can pe parsed in a [[textattr]] using `JSON.parse()`.
-     */
-    type textattrStringified = string;
-
-    /**
-     * Represents a rich text value
+     * Represents a text with markup.
      */
     interface richtext {
+        /**
+         * The XML representing a text with markup.
+         * Please note that the XML has to be stringified.
+         */
+        xml: String;
+
+        /**
+         * The IRI of the mapping to be used to convert the XML into a standoff representation and back.
+         */
+        mapping_id: KnoraIRI;
+    }
+
+    /**
+     * Represents a simple text value without markup.
+     */
+    interface simpletext {
         /**
          * Mere string representation
          */
         utf8str:string;
 
-        /**
-         * Markup information in standoff format
-         */
-        textattr:textattrStringified;
-
-        /**
-         * References to Knora resources from the text
-         */
-        resource_reference:Array<basicMessageComponents.KnoraIRI>
     }
 
     /**
@@ -385,7 +350,7 @@ export module basicMessageComponents {
      * Describes a Knora Value.
      * Either a simple type or a complex represented by an interface.
      */
-    export type knoraValue = integer|decimal|boolean|richtext|interval|date|color|KnoraIRI|URI|geometry|geoname|KnoraListNodeIRI;
+    export type knoraValue = integer|decimal|boolean|richtext|simpletext|interval|date|color|KnoraIRI|URI|geometry|geoname|KnoraListNodeIRI;
 
     interface valueBase {
 
@@ -400,7 +365,7 @@ export module basicMessageComponents {
         /**
          * A richtext value
          */
-        richtext_value: richtext;
+        richtext_value: simpletext|richtext;
     }
 
 

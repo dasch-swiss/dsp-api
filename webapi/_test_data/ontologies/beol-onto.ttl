@@ -7,6 +7,7 @@
 @prefix dc: <http://www.knora.org/ontology/dc#> .
 @prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
 @prefix salsah-gui: <http://www.knora.org/ontology/salsah-gui#> .
+@prefix standoff: <http://www.knora.org/ontology/standoff#> .
 @base <http://www.knora.org/ontology/beol> .
 
 @prefix : <http://www.knora.org/ontology/beol#> .
@@ -34,7 +35,7 @@
 
            rdfs:comment """Titel"""@de ;
 
-           knora-base:subjectClassConstraint :manuscript ;
+       knora-base:subjectClassConstraint :writtenSource ;
 
            knora-base:objectClassConstraint knora-base:TextValue ;
 
@@ -45,8 +46,9 @@
            salsah-gui:guiAttribute "size=80" ,
                                    "maxlength=255" .
 
-    ### ###########################################
-    ### beol:creationDate
+
+### ###########################################
+### beol:creationDate
 
     :creationDate rdf:type owl:ObjectProperty ;
 
@@ -54,7 +56,7 @@
 
                   rdfs:label "Datum der Entstehung"@de ;
 
-                  knora-base:subjectClassConstraint :manuscript ;
+                  knora-base:subjectClassConstraint :writtenSource ;
 
                   knora-base:objectClassConstraint knora-base:DateValue ;
 
@@ -67,158 +69,232 @@
 
                   rdfs:comment """Datum der Entstehung"""@de .
 
-    ### ###########################################
-    ### beol:hasAuthor
+
+### ###########################################
+### beol:hasAuthor
 
     :hasAuthor rdf:type owl:ObjectProperty ;
 
-               rdfs:subPropertyOf dc:creator ;
+           rdfs:subPropertyOf knora-base:hasLinkTo ;
 
                rdfs:label "Creator"@de ;
 
                rdfs:comment """Erzeuger/Autor"""@de ;
 
-               knora-base:subjectClassConstraint :manuscript ;
+           knora-base:subjectClassConstraint :writtenSource ;
 
-               knora-base:objectClassConstraint knora-base:TextValue ;
+           knora-base:objectClassConstraint :person ;
 
                salsah-gui:guiOrder "2"^^xsd:integer ;
 
-               salsah-gui:guiElement salsah-gui:SimpleText ;
-
-               salsah-gui:guiAttribute "size=60" ,
-                                       "maxlength=255" .
+           salsah-gui:guiElement salsah-gui:Searchbox .
 
 
-   ### ###########################################
-   ### beol:location
+### ###########################################
+### beol:hasAuthorValue
 
-   :location rdf:type owl:ObjectProperty ;
-
-             rdfs:subPropertyOf knora-base:hasValue ;
-
-             rdfs:label "Standort"@de ,
-                        "Emplacement"@fr ,
-                        "Postazione"@it ,
-                        "Location"@en ;
-
-             rdfs:comment """Der Ort, wo sich das physische Original befindet"""@de ;
-
-             knora-base:subjectClassConstraint :manuscript ;
-
-             knora-base:objectClassConstraint knora-base:TextValue ;
-
-             salsah-gui:guiOrder "4"^^xsd:integer ;
-
-             salsah-gui:guiElement salsah-gui:Textarea ;
-
-             salsah-gui:guiAttribute "cols=60" ,
-                                     "rows=4" ,
-                                     "wrap=soft" .
-
-   ### ###########################################
-   ### beol:partOfValue
-
-   :partOfValue rdf:type owl:ObjectProperty ;
-
-                rdfs:subPropertyOf knora-base:isPartOfValue ;
+:hasAuthorValue rdf:type owl:ObjectProperty ;
 
                 knora-base:objectClassConstraint knora-base:LinkValue ;
 
-                rdfs:label "ist ein Teil von"@de ,
-                           "est un part de"@fr ,
-                           "e una parte di"@it ,
-                           "is a part of"@en ;
+                knora-base:subjectClassConstraint :writtenSource ;
 
-                rdfs:comment """Diese Property bezeichnet eine Verbindung zu einer anderen Resource, in dem ausgesagt wird, dass die vorliegende Resource ein integraler Teil der anderen Resource ist. Zum Beispiel ist eine Buchseite ein integraler Bestandteil genau eines Buches."""@de ;
+                rdfs:subPropertyOf knora-base:hasLinkToValue ;
 
-                knora-base:subjectClassConstraint :page ;
+                rdfs:label "Creator"@de ;
 
-                salsah-gui:guiOrder "2"^^xsd:integer ;
+                rdfs:comment """Erzeuger/Autor"""@de .
+
+### ###########################################
+### beol:hasRecipient
+
+:hasRecipient rdf:type owl:ObjectProperty ;
+
+              rdfs:subPropertyOf knora-base:hasLinkTo ;
+
+              rdfs:label "Empfänger"@de ;
+
+              rdfs:comment """Empfänger"""@de ;
+
+              knora-base:subjectClassConstraint :letter ;
+
+              knora-base:objectClassConstraint :person ;
+
+              salsah-gui:guiOrder "4"^^xsd:integer ;
+
+              salsah-gui:guiElement salsah-gui:Searchbox .
+
+### ###########################################
+### beol:hasRecipientValue
+
+:hasRecipientValue rdf:type owl:ObjectProperty ;
+
+                   knora-base:objectClassConstraint knora-base:LinkValue ;
+
+                   knora-base:subjectClassConstraint :letter ;
+
+                   rdfs:subPropertyOf knora-base:hasLinkToValue .
+
+
+### ###########################################
+### beol:mentionsPerson
+
+:mentionsPerson rdf:type owl:ObjectProperty ;
+
+                rdfs:subPropertyOf knora-base:hasLinkTo ;
+
+                rdfs:label "erwähnte Person"@de ;
+
+                rdfs:comment """erwähnte Person"""@de ;
+
+                knora-base:subjectClassConstraint :letter ;
+
+                knora-base:objectClassConstraint :person ;
+
+                salsah-gui:guiOrder "5"^^xsd:integer ;
 
                 salsah-gui:guiElement salsah-gui:Searchbox .
 
+### ###########################################
+### beol:mentionsPersonValue
 
-   ### ###########################################
-   ### beol:partOf
+:mentionsPersonValue rdf:type owl:ObjectProperty ;
 
-   :partOf rdf:type owl:ObjectProperty ;
+                     knora-base:objectClassConstraint knora-base:LinkValue ;
 
-           rdfs:subPropertyOf knora-base:isPartOf ;
+                     knora-base:subjectClassConstraint :letter ;
 
-           rdfs:label "ist ein Teil von"@de ,
-                      "est un part de"@fr ,
-                      "e una parte di"@it ,
-                      "is a part of"@en ;
-
-           rdfs:comment """Diese Property bezeichnet eine Verbindung zu einer anderen Resource, in dem ausgesagt wird, dass die vorliegende Resource ein integraler Teil der anderen Resource ist. Zum Beispiel ist eine Buchseite ein integraler Bestandteil genau eines Buches."""@de ;
-
-           knora-base:subjectClassConstraint :page ;
-
-           knora-base:objectClassConstraint :manuscript ;
-
-           salsah-gui:guiOrder "2"^^xsd:integer ;
-
-           salsah-gui:guiElement salsah-gui:Searchbox .
-
-   ### ###########################################
-   ### beol:seqnum
-
-   :seqnum rdf:type owl:ObjectProperty ;
-
-           rdfs:subPropertyOf knora-base:seqnum ;
-
-           rdfs:label "Sequenznummer"@de ,
-                      "Numéro de Séquence"@fr ,
-                      "Numero di scala"@it ,
-                      "Sequence number"@en ;
-
-           rdfs:comment """Diese Property bezeichnet die Position in einer geordneten Reihenfolge"""@de ,
-                        """Cette \"property\" dénote la position dans un séquence."""@fr ,
-                        """This property stands for the position within a set of rdered items (resoucres)"""@en ;
-
-           knora-base:subjectClassConstraint :page ;
-
-           knora-base:objectClassConstraint knora-base:IntValue ;
-
-           salsah-gui:guiOrder "1"^^xsd:integer ;
-
-           salsah-gui:guiElement salsah-gui:Spinbox ;
-
-           salsah-gui:guiAttribute "min=0" ,
-                                   "max=-1" .
-
-    ### ###########################################
-    ### beol:pagenum
-
-    :pagenum rdf:type owl:ObjectProperty ;
-
-            rdfs:subPropertyOf knora-base:hasValue ;
-
-            rdfs:label "Seitenbezeichnung"@de ,
-                       "Désignation de page"@fr ,
-                       "Page identifier"@en ;
-
-            rdfs:comment """Eine eindeutige numerische Bezeichnung einer Seite"""@de ,
-                         """A distinct identification of a page"""@en ;
-
-            knora-base:subjectClassConstraint :page ;
-
-            knora-base:objectClassConstraint knora-base:TextValue ;
-
-            salsah-gui:guiOrder "3"^^xsd:integer ;
-
-            salsah-gui:guiElement salsah-gui:SimpleText ;
-
-            salsah-gui:guiAttribute "min=4" ,
-                                    "max=8" .
+                     rdfs:subPropertyOf knora-base:hasLinkToValue .
 
 
+### ###########################################
+### beol:location
 
-    ### ###########################################
-    ### beol:comment
+:location rdf:type owl:ObjectProperty ;
 
-    :comment rdf:type owl:ObjectProperty ;
+          rdfs:subPropertyOf knora-base:hasValue ;
+
+          rdfs:label "Standort"@de ,
+                     "Emplacement"@fr ,
+                     "Postazione"@it ,
+                     "Location"@en ;
+
+          rdfs:comment """Der Ort, wo sich das physische Original befindet"""@de ;
+
+          knora-base:subjectClassConstraint :writtenSource ;
+
+          knora-base:objectClassConstraint knora-base:TextValue ;
+
+          salsah-gui:guiOrder "6"^^xsd:integer ;
+
+          salsah-gui:guiElement salsah-gui:Textarea ;
+
+          salsah-gui:guiAttribute "cols=60" ,
+                                  "rows=4" ,
+                                  "wrap=soft" .
+
+### ###########################################
+### beol:partOfValue
+
+:partOfValue rdf:type owl:ObjectProperty ;
+
+             rdfs:subPropertyOf knora-base:isPartOfValue ;
+
+             knora-base:objectClassConstraint knora-base:LinkValue ;
+
+             rdfs:label "ist ein Teil von"@de ,
+                        "est un part de"@fr ,
+                        "e una parte di"@it ,
+                        "is a part of"@en ;
+
+             rdfs:comment """Diese Property bezeichnet eine Verbindung zu einer anderen Resource, in dem ausgesagt wird, dass die vorliegende Resource ein integraler Teil der anderen Resource ist. Zum Beispiel ist eine Buchseite ein integraler Bestandteil genau eines Buches."""@de ;
+
+             knora-base:subjectClassConstraint :page ;
+
+             salsah-gui:guiOrder "2"^^xsd:integer ;
+
+             salsah-gui:guiElement salsah-gui:Searchbox .
+
+
+### ###########################################
+### beol:partOf
+
+:partOf rdf:type owl:ObjectProperty ;
+
+        rdfs:subPropertyOf knora-base:isPartOf ;
+
+        rdfs:label "ist ein Teil von"@de ,
+                   "est un part de"@fr ,
+                   "fa parte di"@it ,
+                   "is a part of"@en ;
+
+        rdfs:comment """Diese Property bezeichnet eine Verbindung zu einer anderen Resource, in dem ausgesagt wird, dass die vorliegende Resource ein integraler Teil der anderen Resource ist. Zum Beispiel ist eine Buchseite ein integraler Bestandteil genau eines Buches."""@de ;
+
+        knora-base:subjectClassConstraint :page ;
+
+        knora-base:objectClassConstraint :manuscript ;
+
+        salsah-gui:guiOrder "7"^^xsd:integer ;
+
+        salsah-gui:guiElement salsah-gui:Searchbox .
+
+### ###########################################
+### beol:seqnum
+
+:seqnum rdf:type owl:ObjectProperty ;
+
+        rdfs:subPropertyOf knora-base:seqnum ;
+
+        rdfs:label "Sequenznummer"@de ,
+                   "Numéro de Séquence"@fr ,
+                   "Numero di scala"@it ,
+                   "Sequence number"@en ;
+
+        rdfs:comment """Diese Property bezeichnet die Position in einer geordneten Reihenfolge"""@de ,
+                     """Cette \"property\" dénote la position dans un séquence."""@fr ,
+                     """This property stands for the position within a set of rdered items (resoucres)"""@en ;
+
+        knora-base:subjectClassConstraint :page ;
+
+        knora-base:objectClassConstraint knora-base:IntValue ;
+
+        salsah-gui:guiOrder "9"^^xsd:integer ;
+
+        salsah-gui:guiElement salsah-gui:Spinbox ;
+
+        salsah-gui:guiAttribute "min=0" ,
+                                "max=-1" .
+
+### ###########################################
+### beol:pagenum
+
+:pagenum rdf:type owl:ObjectProperty ;
+
+         rdfs:subPropertyOf knora-base:hasValue ;
+
+         rdfs:label "Seitenbezeichnung"@de ,
+                    "Désignation de page"@fr ,
+                    "Page identifier"@en ;
+
+         rdfs:comment """Eine eindeutige numerische Bezeichnung einer Seite"""@de ,
+                      """A distinct identification of a page"""@en ;
+
+         knora-base:subjectClassConstraint :page ;
+
+         knora-base:objectClassConstraint knora-base:TextValue ;
+
+         salsah-gui:guiOrder "10"^^xsd:integer ;
+
+         salsah-gui:guiElement salsah-gui:SimpleText ;
+
+         salsah-gui:guiAttribute "min=4" ,
+                                 "max=8" .
+
+
+### ###########################################
+### beol:comment
+
+:comment rdf:type owl:ObjectProperty ;
 
                   rdfs:subPropertyOf knora-base:hasComment ;
 
@@ -233,15 +309,39 @@
 
                   knora-base:objectClassConstraint knora-base:TextValue ;
 
-                  salsah-gui:guiOrder "5"^^xsd:integer ;
+                  salsah-gui:guiOrder "11"^^xsd:integer ;
+
+                  salsah-gui:guiElement salsah-gui:Richtext .
 
 
-                  salsah-gui:guiElement salsah-gui:SimpleText .
+### ###########################################
+### beol:hasText
 
-    ### ###########################################
-    ### beol:hasSon
+:hasText rdf:type owl:ObjectProperty ;
 
-    :hasSon rdf:type owl:ObjectProperty ;
+                  rdfs:subPropertyOf knora-base:hasValue ;
+
+                  rdfs:label "Text"@de ,
+                             "texte"@fr ,
+                             "testo"@it ,
+                             "text"@en ;
+
+                  rdfs:comment """Text"""@de ;
+
+                  knora-base:subjectClassConstraint :writtenSource ;
+
+                  knora-base:objectClassConstraint knora-base:TextValue ;
+
+                  salsah-gui:guiOrder "11"^^xsd:integer ;
+
+                  salsah-gui:guiElement salsah-gui:Richtext .
+
+
+
+### ###########################################
+### beol:hasSon
+
+:hasSon rdf:type owl:ObjectProperty ;
 
                       rdfs:subPropertyOf knora-base:hasLinkTo ;
 
@@ -252,22 +352,23 @@
 
                       rdfs:comment """Repräsentiert eine Vater-Sohn Beziehung"""@de ;
 
-                      knora-base:subjectClassConstraint :Person ;
+                      knora-base:subjectClassConstraint :person ;
 
-                      knora-base:objectClassConstraint knora-base:Person ;
+                      knora-base:objectClassConstraint :person ;
 
                       salsah-gui:guiOrder "5"^^xsd:integer ;
 
                       salsah-gui:guiElement salsah-gui:Searchbox .
 
-    ### ###########################################
-    ### beol:hasSonValue
 
-    :hasSonValue rdf:type owl:ObjectProperty ;
+### ###########################################
+### beol:hasSonValue
+
+:hasSonValue rdf:type owl:ObjectProperty ;
 
                     rdfs:subPropertyOf knora-base:hasLinkToValue ;
 
-                    knora-base:subjectClassConstraint :Person ;
+                    knora-base:subjectClassConstraint :person ;
 
                     knora-base:objectClassConstraint knora-base:LinkValue ;
 
@@ -299,7 +400,7 @@
 
                   salsah-gui:guiElement salsah-gui:SimpleText ;
 
-                  knora-base:subjectClassConstraint :Person ;
+                  knora-base:subjectClassConstraint :person ;
 
                   rdfs:subPropertyOf knora-base:hasValue .
 
@@ -319,7 +420,7 @@
 
                    salsah-gui:guiElement salsah-gui:SimpleText ;
 
-                   knora-base:subjectClassConstraint :Person ;
+                   knora-base:subjectClassConstraint :person ;
 
                    rdfs:subPropertyOf knora-base:hasValue .
 
@@ -338,7 +439,7 @@
 
                       salsah-gui:guiElement salsah-gui:SimpleText ;
 
-                      knora-base:subjectClassConstraint :Person ;
+                      knora-base:subjectClassConstraint :person ;
 
                       rdfs:subPropertyOf knora-base:hasValue .
 
@@ -358,7 +459,7 @@
 
                   salsah-gui:guiElement salsah-gui:Date ;
 
-                  knora-base:subjectClassConstraint :Person ;
+                  knora-base:subjectClassConstraint :person ;
 
                   rdfs:subPropertyOf knora-base:hasValue .
 
@@ -378,7 +479,7 @@
 
                   salsah-gui:guiElement salsah-gui:Date ;
 
-                  knora-base:subjectClassConstraint :Person ;
+                  knora-base:subjectClassConstraint :person ;
 
                   rdfs:subPropertyOf knora-base:hasValue .
 
@@ -391,28 +492,13 @@
     ##########################################################
 
 
-    ### ###########################################
-    ### beol:manuscript
 
-    :manuscript rdf:type owl:Class ;
+### ###########################################
+### beol:manuscript
 
-          rdfs:subClassOf knora-base:Resource ,
-                          [
-                             rdf:type owl:Restriction ;
-                             owl:onProperty :title ;
-                             owl:minCardinality "1"^^xsd:nonNegativeInteger                      ] ,
-                          [
-                             rdf:type owl:Restriction ;
-                             owl:onProperty :hasAuthor ;
-                             owl:minCardinality "0"^^xsd:nonNegativeInteger                      ] ,
-                          [
-                             rdf:type owl:Restriction ;
-                             owl:onProperty :creationDate ;
-                             owl:maxCardinality "1"^^xsd:nonNegativeInteger                      ] ,
-                          [
-                             rdf:type owl:Restriction ;
-                             owl:onProperty :location ;
-                             owl:maxCardinality "1"^^xsd:nonNegativeInteger                      ] ,
+:manuscript rdf:type owl:Class ;
+
+          rdfs:subClassOf :writtenSource ,
                           [
                              rdf:type owl:Restriction ;
                              owl:onProperty :comment ;
@@ -428,10 +514,10 @@
 
           rdfs:comment """Diese Resource-Klasse beschreibt ein Manuskript"""@de .
 
-    ### ###########################################
-    ### beol:page
+### ###########################################
+### beol:page
 
-    :page rdf:type owl:Class ;
+:page rdf:type owl:Class ;
 
           rdfs:subClassOf knora-base:StillImageRepresentation ,
                           [
@@ -466,51 +552,333 @@
                        """Une page est une partie d'un convoluté"""@fr ,
                        """A page is a part of a convolute"""@en .
 
-    ### ###########################################
-    ### beol:Person
 
-    :Person rdf:type owl:Class ;
+### ###########################################
+### beol:letter
 
-        rdfs:subClassOf knora-base:Resource, foaf:Person,
-                                [ rdf:type owl:Restriction ;
-                                  owl:onProperty :hasFamilyName ;
-                                  owl:maxCardinality "1"^^xsd:nonNegativeInteger
-                                ],
-                                [ rdf:type owl:Restriction ;
-                                  owl:onProperty :hasGivenName ;
-                                  owl:maxCardinality "1"^^xsd:nonNegativeInteger
-                                ],
-                                [ rdf:type owl:Restriction ;
-                                  owl:onProperty :hasIAFIdentifier ;
-                                  owl:maxCardinality "1"^^xsd:nonNegativeInteger
-                                ],
-                                [ rdf:type owl:Restriction ;
-                                  owl:onProperty :hasBirthDate ;
-                                  owl:maxCardinality "1"^^xsd:nonNegativeInteger
-                                ],
-                                [ rdf:type owl:Restriction ;
-                                  owl:onProperty :hasDeathDate ;
-                                  owl:maxCardinality "1"^^xsd:nonNegativeInteger
-                                ],
-                                [
-                                    rdf:type owl:Restriction ;
-                                    owl:onProperty :hasSonValue ;
-                                    owl:minCardinality "0"^^xsd:nonNegativeInteger
-                                ],
-                                [
-                                    rdf:type owl:Restriction ;
-                                    owl:onProperty :hasSon ;
-                                    owl:minCardinality "0"^^xsd:nonNegativeInteger
-                                ],
-                                [
-                                    rdf:type owl:Restriction ;
-                                    owl:onProperty :comment ;
-                                    owl:minCardinality "0"^^xsd:nonNegativeInteger
-                                ];
+:letter rdf:type owl:Class ;
 
-        rdfs:label  "Person"@de ,
-                    "Personne"@fr ,
-                    "Person"@en ;
+        rdfs:subClassOf :writtenSource,
+                        [
+                          rdf:type owl:Restriction ;
+                          owl:onProperty :hasRecipient ;
+                          owl:minCardinality "0"^^xsd:nonNegativeInteger
+                        ] ,
+                        [
+                          rdf:type owl:Restriction ;
+                          owl:onProperty :hasRecipientValue ;
+                          owl:minCardinality "0"^^xsd:nonNegativeInteger
+                        ],
+                        [
+                          rdf:type owl:Restriction ;
+                          owl:onProperty :mentionsPerson ;
+                          owl:minCardinality "0"^^xsd:nonNegativeInteger
+                        ] ,
+                        [
+                          rdf:type owl:Restriction ;
+                          owl:onProperty :mentionsPersonValue ;
+                          owl:minCardinality "0"^^xsd:nonNegativeInteger
+                        ];
 
-        rdfs:comment "A resource representing a person"@en .
+        rdfs:label "Brief"@de ,
+                   "Lettre"@fr ,
+                   "Letter"@en ;
 
+        rdfs:comment "A resource representing a letter"@en .
+
+
+### ###########################################
+### beol:writtenSource
+
+:writtenSource rdf:type owl:Class ;
+
+             rdfs:subClassOf knora-base:Resource ,
+             [
+               rdf:type owl:Restriction ;
+               owl:onProperty :title ;
+               owl:minCardinality "1"^^xsd:nonNegativeInteger
+             ] ,
+             [
+               rdf:type owl:Restriction ;
+               owl:onProperty :hasAuthorValue ;
+               owl:minCardinality "0"^^xsd:nonNegativeInteger
+             ],
+             [
+               rdf:type owl:Restriction ;
+               owl:onProperty :hasAuthor ;
+               owl:minCardinality "0"^^xsd:nonNegativeInteger
+             ],
+             [
+               rdf:type owl:Restriction ;
+               owl:onProperty :creationDate ;
+               owl:maxCardinality "1"^^xsd:nonNegativeInteger
+             ] ,
+             [
+               rdf:type owl:Restriction ;
+               owl:onProperty :location ;
+               owl:maxCardinality "1"^^xsd:nonNegativeInteger
+             ],
+             [
+               rdf:type owl:Restriction ;
+               owl:onProperty :hasText ;
+               owl:maxCardinality "1"^^xsd:nonNegativeInteger
+             ];
+
+    rdfs:comment "schriftliche Quelle"@de ;
+
+    rdfs:label "schriftliche Quelle"@de .
+
+
+### ###########################################
+### beol:person
+
+:person rdf:type owl:Class ;
+
+    rdfs:subClassOf knora-base:Resource, foaf:Person ,
+    					[ rdf:type owl:Restriction ;
+                      owl:onProperty :hasFamilyName ;
+                      owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                    ],
+                    [ rdf:type owl:Restriction ;
+                      owl:onProperty :hasGivenName ;
+                      owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                    ],
+                    [ rdf:type owl:Restriction ;
+                      owl:onProperty :hasIAFIdentifier ;
+                      owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                    ],
+                    [ rdf:type owl:Restriction ;
+                      owl:onProperty :hasBirthDate ;
+                      owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                    ],
+                    [ rdf:type owl:Restriction ;
+                      owl:onProperty :hasDeathDate ;
+                      owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                    ],
+                    [ rdf:type owl:Restriction ;
+                      owl:onProperty :hasSonValue ;
+                      owl:minCardinality "0"^^xsd:nonNegativeInteger
+                    ],
+                    [ rdf:type owl:Restriction ;
+                      owl:onProperty :hasSon ;
+                      owl:minCardinality "0"^^xsd:nonNegativeInteger
+                    ] ,
+                    [ rdf:type owl:Restriction ;
+                      owl:onProperty :comment ;
+                      owl:minCardinality "0"^^xsd:nonNegativeInteger
+                    ] ;
+
+    rdfs:label "Person"@de ,
+               "Personne"@fr ,
+               "Person"@en ;
+
+    rdfs:comment "A resource representing a person"@en .
+
+
+##########################################################
+#
+# Standoff Tags
+#
+##########################################################
+
+###  http://www.knora.org/ontology/beol#StandoffFacsimileTag
+
+:StandoffFacsimileTag rdf:type owl:Class ;
+
+                      rdfs:subClassOf knora-base:StandoffUriTag ;
+
+                      rdfs:comment "a URI referring to a facsimile"@en .
+
+
+###  http://www.knora.org/ontology/beol#StandoffFigureTag
+
+:StandoffFigureTag rdf:type owl:Class ;
+
+                      rdfs:subClassOf knora-base:StandoffUriTag ;
+
+                      rdfs:comment "a URI referring to a figure"@en .
+
+
+###  http://www.knora.org/ontology/beol#StandoffMathTag
+
+:StandoffMathTag rdf:type owl:Class ;
+
+                 rdfs:subClassOf knora-base:StandoffTag ;
+
+                 rdfs:comment "mathematical notation encoded in LaTeX"@en .
+
+
+###  http://www.knora.org/ontology/beol#StandoffNoWikiTag
+
+:StandoffNoWikiTag rdf:type owl:Class ;
+
+                 rdfs:subClassOf knora-base:StandoffTag ;
+
+                 rdfs:comment "escapes a special character in the MediaWiki syntax"@en .
+
+
+###  http://www.knora.org/ontology/beol#StandoffHrTag
+
+:StandoffHrTag rdf:type owl:Class ;
+
+                 rdfs:subClassOf knora-base:StandoffTag ;
+
+                 rdfs:comment "represents a horizontal line"@en .
+
+
+###  http://www.knora.org/ontology/beol#StandoffNbspTag
+
+:StandoffNbspTag rdf:type owl:Class ;
+
+                 rdfs:subClassOf knora-base:StandoffTag ;
+
+                 rdfs:comment "represents a non breaking space"@en .
+
+
+###  http://www.knora.org/ontology/beol#StandoffBrTag
+
+:StandoffBrTag rdf:type owl:Class ;
+
+              rdfs:subClassOf knora-base:StandoffTag ;
+
+              rdfs:comment "represents a break"@en .
+
+              ###  http://www.knora.org/ontology/beol#StandoffBrTag
+
+
+:StandoffHtmlTag rdf:type owl:Class ;
+
+            rdfs:subClassOf knora-base:StandoffTag ;
+
+            rdfs:comment "represents a HTML tag in MediaWiki"@en .
+
+
+:StandoffReferenceTag  rdf:type owl:Class ;
+
+             rdfs:subClassOf knora-base:StandoffTag ;
+
+             rdfs:comment "represents a footnote (<ref>) tag in MediaWiki"@en .
+
+
+:standoffTableTagHasBorder rdf:type owl:DatatypeProperty ;
+
+             rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
+
+             rdfs:comment "border settings of a table"@en ;
+
+             knora-base:subjectClassConstraint :StandoffTableTag ;
+
+             knora-base:objectDatatypeConstraint xsd:string .
+
+
+:standoffTableTagHasCellPadding rdf:type owl:DatatypeProperty ;
+
+             rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
+
+             rdfs:comment "table cell padding"@en ;
+
+             knora-base:subjectClassConstraint :StandoffTableTag ;
+
+             knora-base:objectDatatypeConstraint xsd:string .
+
+
+:standoffTableCellTagHasWidth rdf:type owl:DatatypeProperty ;
+
+                 rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
+
+                 rdfs:comment "settings for the wifth of a table cell"@en ;
+
+                 knora-base:subjectClassConstraint :StandoffTableCellTag ;
+
+                 knora-base:objectDatatypeConstraint xsd:string .
+
+
+:standoffTableCellTagHasWidth rdf:type owl:DatatypeProperty ;
+
+                 rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
+
+                 rdfs:comment "settings for the width of a table cell"@en ;
+
+                 knora-base:subjectClassConstraint :StandoffTableCellTag ;
+
+                 knora-base:objectDatatypeConstraint xsd:string .
+
+
+:standoffTableCellTagHasAlignment rdf:type owl:DatatypeProperty ;
+
+                 rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
+
+                 rdfs:comment "settings for the alignment of a table cell"@en ;
+
+                 knora-base:subjectClassConstraint :StandoffTableCellTag ;
+
+                 knora-base:objectDatatypeConstraint xsd:string .
+
+
+:standoffTableCellTagHasVerticalAlignment rdf:type owl:DatatypeProperty ;
+
+                 rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
+
+                 rdfs:comment "settings for the vertical alignment of a table cell"@en ;
+
+                 knora-base:subjectClassConstraint :StandoffTableCellTag ;
+
+                 knora-base:objectDatatypeConstraint xsd:string .
+
+
+:standoffTableCellTagHasRowSpan rdf:type owl:DatatypeProperty ;
+
+                 rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
+
+                 rdfs:comment "settings for row span of a table cell"@en ;
+
+                 knora-base:subjectClassConstraint :StandoffTableCellTag ;
+
+                 knora-base:objectDatatypeConstraint xsd:string .
+
+:standoffTableCellTagHasColumnSpan rdf:type owl:DatatypeProperty ;
+
+                 rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
+
+                 rdfs:comment "settings for column span of a table cell"@en ;
+
+                 knora-base:subjectClassConstraint :StandoffTableCellTag ;
+
+                 knora-base:objectDatatypeConstraint xsd:string .
+
+
+:StandoffTableTag rdf:type owl:Class;
+
+             rdfs:subClassOf standoff:StandoffTableTag ,
+             [ rdf:type owl:Restriction ;
+               owl:onProperty :standoffTableTagHasBorder ;
+               owl:maxCardinality "1"^^xsd:nonNegativeInteger
+             ] ,
+             [ rdf:type owl:Restriction ;
+               owl:onProperty :standoffTableTagHasCellPadding ;
+               owl:maxCardinality "1"^^xsd:nonNegativeInteger
+             ] .
+
+ :StandoffTableCellTag rdf:type owl:Class ;
+
+             rdfs:subClassOf standoff:StandoffTableCellTag ,
+             [ rdf:type owl:Restriction ;
+               owl:onProperty :standoffTableCellTagHasWidth ;
+               owl:maxCardinality "1"^^xsd:nonNegativeInteger
+             ] ,
+             [ rdf:type owl:Restriction ;
+               owl:onProperty :standoffTableCellTagHasAlignment ;
+               owl:maxCardinality "1"^^xsd:nonNegativeInteger
+             ],
+             [ rdf:type owl:Restriction ;
+               owl:onProperty :standoffTableCellTagHasVerticalAlignment ;
+               owl:maxCardinality "1"^^xsd:nonNegativeInteger
+             ] ,
+             [ rdf:type owl:Restriction ;
+               owl:onProperty :standoffTableCellTagHasRowSpan ;
+               owl:maxCardinality "1"^^xsd:nonNegativeInteger
+             ] ,
+             [ rdf:type owl:Restriction ;
+               owl:onProperty :standoffTableCellTagHasColumnSpan ;
+               owl:maxCardinality "1"^^xsd:nonNegativeInteger
+             ] .

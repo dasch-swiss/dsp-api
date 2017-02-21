@@ -22,7 +22,7 @@ let thing: createResourceFormats.createResourceWithoutRepresentationRequest = {
     "label": "A thing",
     "project_id": "http://data.knora.org/projects/anything",
     "properties": {
-        "http://www.knora.org/ontology/anything#hasText": [{"richtext_value":{"textattr":"{}","resource_reference" :[],"utf8str":"Test text"}}],
+        "http://www.knora.org/ontology/anything#hasText": [{"richtext_value":{"utf8str":"Test text"}}],
         "http://www.knora.org/ontology/anything#hasInteger": [{"int_value":12345}, {"int_value":1}],
         "http://www.knora.org/ontology/anything#hasDecimal": [{"decimal_value":5.6}, {"decimal_value":5.7}],
         "http://www.knora.org/ontology/anything#hasUri": [{"uri_value":"http://dhlab.unibas.ch"}],
@@ -38,7 +38,7 @@ let thingWithFile: createResourceFormats.createResourceWithRepresentationRequest
     "label": "A thing",
     "project_id": "http://data.knora.org/projects/anything",
     "properties": {
-        "http://www.knora.org/ontology/anything#hasText": [{"richtext_value":{"textattr":"{}","resource_reference" :[],"utf8str":"Test text"}}],
+        "http://www.knora.org/ontology/anything#hasText": [{"richtext_value":{"utf8str":"Test text"}}],
         "http://www.knora.org/ontology/anything#hasInteger": [{"int_value":12345}],
         "http://www.knora.org/ontology/anything#hasDecimal": [{"decimal_value":5.6}, {"decimal_value":5.7}],
         "http://www.knora.org/ontology/anything#hasUri": [{"uri_value":"http://dhlab.unibas.ch"}],

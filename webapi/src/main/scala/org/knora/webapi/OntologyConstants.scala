@@ -60,6 +60,14 @@ object OntologyConstants {
         )
     }
 
+    object Xsd {
+        val String = "http://www.w3.org/2001/XMLSchema#string"
+        val Boolean = "http://www.w3.org/2001/XMLSchema#boolean"
+        val Integer = "http://www.w3.org/2001/XMLSchema#integer"
+        val Decimal = "http://www.w3.org/2001/XMLSchema#decimal"
+        val Uri = "http://www.w3.org/2001/XMLSchema#anyURI"
+    }
+
     object KnoraBase {
         val KnoraBasePrefix = "knora-base:"
         val KnoraBasePrefixExpansion = "http://www.knora.org/ontology/knora-base#"
@@ -74,6 +82,19 @@ object OntologyConstants {
         val StillImageRepresentation = "http://www.knora.org/ontology/knora-base#StillImageRepresentation"
         val TextRepresentation = "http://www.knora.org/ontology/knora-base#TextRepresentation"
 
+        val XMLToStandoffMapping = "http://www.knora.org/ontology/knora-base#XMLToStandoffMapping"
+        val MappingElement = "http://www.knora.org/ontology/knora-base#MappingElement"
+        val mappingHasStandoffClass = "http://www.knora.org/ontology/knora-base#mappingHasStandoffClass"
+        val mappingHasStandoffProperty = "http://www.knora.org/ontology/knora-base#mappingHasStandoffProperty"
+        val mappingHasXMLClass = "http://www.knora.org/ontology/knora-base#mappingHasXMLClass"
+        val mappingHasXMLNamespace = "http://www.knora.org/ontology/knora-base#mappingHasXMLNamespace"
+        val mappingHasXMLTagname = "http://www.knora.org/ontology/knora-base#mappingHasXMLTagname"
+        val mappingHasXMLAttribute = "http://www.knora.org/ontology/knora-base#mappingHasXMLAttribute"
+        val mappingHasXMLAttributename = "http://www.knora.org/ontology/knora-base#mappingHasXMLAttributename"
+        val mappingHasStandoffDataTypeClass = "http://www.knora.org/ontology/knora-base#mappingHasStandoffDataTypeClass"
+        val mappingElementRequiresSeparator = "http://www.knora.org/ontology/knora-base#mappingElementRequiresSeparator"
+
+
         val AbstractResourceClasses = Set(
             Resource,
             ExternalResource,
@@ -87,6 +108,7 @@ object OntologyConstants {
         )
 
         val ObjectClassConstraint = "http://www.knora.org/ontology/knora-base#objectClassConstraint"
+        val ObjectDatatypeConstraint = "http://www.knora.org/ontology/knora-base#objectDatatypeConstraint"
 
         val LinkObj = "http://www.knora.org/ontology/knora-base#LinkObj"
         val HasLinkTo = "http://www.knora.org/ontology/knora-base#hasLinkTo"
@@ -94,7 +116,11 @@ object OntologyConstants {
         val Region = "http://www.knora.org/ontology/knora-base#Region"
         val IsRegionOf = "http://www.knora.org/ontology/knora-base#isRegionOf"
 
+        val ValueHas = "http://www.knora.org/ontology/knora-base#valueHas"
+        val ObjectCannotBeMarkedAsDeleted = "http://www.knora.org/ontology/knora-base#objectCannotBeMarkedAsDeleted"
+
         val ValueHasString = "http://www.knora.org/ontology/knora-base#valueHasString"
+        val ValueHasMapping = "http://www.knora.org/ontology/knora-base#valueHasMapping"
         val ValueHasInteger = "http://www.knora.org/ontology/knora-base#valueHasInteger"
         val ValueHasDecimal = "http://www.knora.org/ontology/knora-base#valueHasDecimal"
         val ValueHasStandoff = "http://www.knora.org/ontology/knora-base#valueHasStandoff"
@@ -149,45 +175,41 @@ object OntologyConstants {
         val GeomValue = "http://www.knora.org/ontology/knora-base#GeomValue"
         val ListValue = "http://www.knora.org/ontology/knora-base#ListValue"
         val IntervalValue = "http://www.knora.org/ontology/knora-base#IntervalValue"
-        val StillImageFileValue = "http://www.knora.org/ontology/knora-base#StillImageFileValue"
-        val MovingImageFileValue = "http://www.knora.org/ontology/knora-base#MovingImageFileValue"
-        val FileValue = "http://www.knora.org/ontology/knora-base#FileValue"
         val LinkValue = "http://www.knora.org/ontology/knora-base#LinkValue"
         val GeonameValue = "http://www.knora.org/ontology/knora-base#GeonameValue"
+        val FileValue = "http://www.knora.org/ontology/knora-base#FileValue"
+        val AudioFileValue = "http://www.knora.org/ontology/knora-base#AudioFileValue"
+        val DDDFileValue = "http://www.knora.org/ontology/knora-base#DDDFileValue"
+        val DocumentFileValue = "http://www.knora.org/ontology/knora-base#DocumentFileValue"
+        val StillImageFileValue = "http://www.knora.org/ontology/knora-base#StillImageFileValue"
+        val MovingImageFileValue = "http://www.knora.org/ontology/knora-base#MovingImageFileValue"
+        val TextFileValue = "http://www.knora.org/ontology/knora-base#TextFileValue"
+
+        val ValueClasses: Set[IRI] = Set(
+            TextValue,
+            IntValue,
+            BooleanValue,
+            UriValue,
+            DecimalValue,
+            DateValue,
+            ColorValue,
+            GeomValue,
+            ListValue,
+            IntervalValue,
+            LinkValue,
+            GeonameValue,
+            FileValue,
+            AudioFileValue,
+            DDDFileValue,
+            DocumentFileValue,
+            StillImageFileValue,
+            MovingImageFileValue,
+            TextFileValue
+        )
 
         val ListNode = "http://www.knora.org/ontology/knora-base#ListNode"
 
         val IsDeleted = "http://www.knora.org/ontology/knora-base#isDeleted"
-
-        /* Standoff */
-        val StandoffTagHasStart = "http://www.knora.org/ontology/knora-base#standoffTagHasStart"
-        val StandoffTagHasEnd = "http://www.knora.org/ontology/knora-base#standoffTagHasEnd"
-        val StandoffTagHasLink = "http://www.knora.org/ontology/knora-base#standoffTagHasLink"
-        val HasStandoffLinkTo = "http://www.knora.org/ontology/knora-base#hasStandoffLinkTo"
-        val HasStandoffLinkToValue = "http://www.knora.org/ontology/knora-base#hasStandoffLinkToValue"
-
-        val StandoffParagraphTag = "http://www.knora.org/ontology/knora-base#StandoffParagraphTag"
-        val StandoffItalicTag = "http://www.knora.org/ontology/knora-base#StandoffItalicTag"
-        val StandoffBoldTag = "http://www.knora.org/ontology/knora-base#StandoffBoldTag"
-        val StandoffUnderlineTag = "http://www.knora.org/ontology/knora-base#StandoffUnderlineTag"
-        val StandoffStrikethroughTag = "http://www.knora.org/ontology/knora-base#StandoffStrikethroughTag"
-
-        val StandoffLinkTag = "http://www.knora.org/ontology/knora-base#StandoffLinkTag"
-        val StandoffUriTag = "http://www.knora.org/ontology/knora-base#StandoffUriTag"
-
-        val StandoffHeader1Tag = "http://www.knora.org/ontology/knora-base#StandoffHeader1Tag"
-        val StandoffHeader2Tag = "http://www.knora.org/ontology/knora-base#StandoffHeader2Tag"
-        val StandoffHeader3Tag = "http://www.knora.org/ontology/knora-base#StandoffHeader3Tag"
-        val StandoffHeader4Tag = "http://www.knora.org/ontology/knora-base#StandoffHeader4Tag"
-        val StandoffHeader5Tag = "http://www.knora.org/ontology/knora-base#StandoffHeader5Tag"
-        val StandoffHeader6Tag = "http://www.knora.org/ontology/knora-base#StandoffHeader6Tag"
-
-        val StandoffSuperscriptTag = "http://www.knora.org/ontology/knora-base#StandoffSuperscriptTag"
-        val StandoffSubscriptTag = "http://www.knora.org/ontology/knora-base#StandoffSubscriptTag"
-        val StandoffOrderedListTag = "http://www.knora.org/ontology/knora-base#StandoffOrderedListTag"
-        val StandoffUnorderedListTag = "http://www.knora.org/ontology/knora-base#StandoffUnorderedListTag"
-        val StandoffListElementTag = "http://www.knora.org/ontology/knora-base#StandoffListElementTag"
-        val StandoffStyleElementTag = "http://www.knora.org/ontology/knora-base#StandoffStyleTag"
 
         /* Resource creator */
         val AttachedToUser = "http://www.knora.org/ontology/knora-base#attachedToUser"
@@ -292,13 +314,41 @@ object OntologyConstants {
             HasDefaultChangeRightsPermission
         )
 
+        /* Standoff */
+
+        val StandoffTagHasStart = "http://www.knora.org/ontology/knora-base#standoffTagHasStart"
+        val StandoffTagHasEnd = "http://www.knora.org/ontology/knora-base#standoffTagHasEnd"
+        val StandoffTagHasStartIndex = "http://www.knora.org/ontology/knora-base#standoffTagHasStartIndex"
+        val StandoffTagHasEndIndex = "http://www.knora.org/ontology/knora-base#standoffTagHasEndIndex"
+        val StandoffTagHasStartParent = "http://www.knora.org/ontology/knora-base#standoffTagHasStartParent"
+        val StandoffTagHasEndParent = "http://www.knora.org/ontology/knora-base#standoffTagHasEndParent"
+        val StandoffTagHasUUID = "http://www.knora.org/ontology/knora-base#standoffTagHasUUID"
+        val StandoffTagHasOriginalXMLID = "http://www.knora.org/ontology/knora-base#standoffTagHasOriginalXMLID"
+        val StandoffTagHasInternalReference = "http://www.knora.org/ontology/knora-base#standoffTagHasInternalReference"
+
+        val StandoffTagHasLink = "http://www.knora.org/ontology/knora-base#standoffTagHasLink"
+        val HasStandoffLinkTo = "http://www.knora.org/ontology/knora-base#hasStandoffLinkTo"
+        val HasStandoffLinkToValue = "http://www.knora.org/ontology/knora-base#hasStandoffLinkToValue"
+
+        val StandoffDateTag = "http://www.knora.org/ontology/knora-base#StandoffDateTag"
+        val StandoffColorTag = "http://www.knora.org/ontology/knora-base#StandoffColorTag"
+        val StandoffIntegerTag = "http://www.knora.org/ontology/knora-base#StandoffIntegerTag"
+        val StandoffDecimalTag = "http://www.knora.org/ontology/knora-base#StandoffDecimalTag"
+        val StandoffIntervalTag = "http://www.knora.org/ontology/knora-base#StandoffIntervalTag"
+        val StandoffBooleanTag = "http://www.knora.org/ontology/knora-base#StandoffBooleanTag"
+        val StandoffLinkTag = "http://www.knora.org/ontology/knora-base#StandoffLinkTag"
+        val StandoffUriTag = "http://www.knora.org/ontology/knora-base#StandoffUriTag"
+        val StandoffInternalReferenceTag = "http://www.knora.org/ontology/knora-base#StandoffInternalReferenceTag"
+
+        val StandardMapping = "http://data.knora.org/projects/standoff/mappings/StandardMapping"
+
         val AdministrativePermission = KnoraBasePrefixExpansion       + "AdministrativePermission"
         val DefaultObjectAccessPermission = KnoraBasePrefixExpansion  + "DefaultObjectAccessPermission"
         val ForProject = KnoraBasePrefixExpansion                     + "forProject"
         val ForGroup = KnoraBasePrefixExpansion                       + "forGroup"
         val ForResourceClass = KnoraBasePrefixExpansion               + "forResourceClass"
         val ForProperty = KnoraBasePrefixExpansion                    + "forProperty"
-
+        
         val SystemProject = KnoraBasePrefixExpansion                  + "SystemProject"
 
         /**
@@ -309,6 +359,29 @@ object OntologyConstants {
 
         val CreationDate = "http://www.knora.org/ontology/knora-base#creationDate"
         val ValueCreationDate = "http://www.knora.org/ontology/knora-base#valueCreationDate"
+    }
+
+    object Standoff {
+        val StandoffRootTag = "http://www.knora.org/ontology/standoff#StandoffRootTag"
+        val StandoffParagraphTag = "http://www.knora.org/ontology/standoff#StandoffParagraphTag"
+        val StandoffItalicTag = "http://www.knora.org/ontology/standoff#StandoffItalicTag"
+        val StandoffBoldTag = "http://www.knora.org/ontology/standoff#StandoffBoldTag"
+        val StandoffUnderlineTag = "http://www.knora.org/ontology/standoff#StandoffUnderlineTag"
+        val StandoffStrikethroughTag = "http://www.knora.org/ontology/standoff#StandoffStrikethroughTag"
+
+        val StandoffHeader1Tag = "http://www.knora.org/ontology/standoff#StandoffHeader1Tag"
+        val StandoffHeader2Tag = "http://www.knora.org/ontology/standoff#StandoffHeader2Tag"
+        val StandoffHeader3Tag = "http://www.knora.org/ontology/standoff#StandoffHeader3Tag"
+        val StandoffHeader4Tag = "http://www.knora.org/ontology/standoff#StandoffHeader4Tag"
+        val StandoffHeader5Tag = "http://www.knora.org/ontology/standoff#StandoffHeader5Tag"
+        val StandoffHeader6Tag = "http://www.knora.org/ontology/standoff#StandoffHeader6Tag"
+
+        val StandoffSuperscriptTag = "http://www.knora.org/ontology/standoff#StandoffSuperscriptTag"
+        val StandoffSubscriptTag = "http://www.knora.org/ontology/standoff#StandoffSubscriptTag"
+        val StandoffOrderedListTag = "http://www.knora.org/ontology/standoff#StandoffOrderedListTag"
+        val StandoffUnorderedListTag = "http://www.knora.org/ontology/standoff#StandoffUnorderedListTag"
+        val StandoffListElementTag = "http://www.knora.org/ontology/standoff#StandoffListElementTag"
+        val StandoffStyleElementTag = "http://www.knora.org/ontology/standoff#StandoffStyleTag"
     }
 
     object SalsahGui {

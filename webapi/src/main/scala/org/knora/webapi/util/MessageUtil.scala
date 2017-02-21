@@ -138,6 +138,8 @@ object MessageUtil {
 
             case stillImageFileValue: StillImageFileValueV1 => basicObjectResponse // TODO: implement this.
 
+            case textFileValue: TextFileValueV1 => basicObjectResponse
+
             case hlistValue: HierarchicalListValueV1 => basicObjectResponse
 
             case colorValue: ColorValueV1 => basicObjectResponse

@@ -26,6 +26,7 @@ import akka.actor.Status
 import akka.pattern._
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.permissionmessages._
+import org.knora.webapi.messages.v1.responder.usermessages.UserProfileType.UserProfileType
 import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.messages.v1.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, SparqlUpdateRequest, SparqlUpdateResponse}
 import org.knora.webapi.responders.IriLocker
@@ -53,30 +54,33 @@ class UsersResponderV1 extends ResponderV1 {
       * method first returns `Failure` to the sender, then throws an exception.
       */
     def receive = {
-        case UserProfileByIRIGetRequestV1(userIri, profileType) => future2Message(sender(), getUserProfileByIRIV1(userIri, profileType), log)
-        case UserProfileByEmailGetRequestV1(username, profileType) => future2Message(sender(), getUserProfileByEmailV1(username, profileType), log)
+        case UserProfileByIRIGetV1(userIri, profileType) => future2Message(sender(), userProfileByIRIGetV1(userIri, profileType), log)
+        case UserProfileByIRIGetRequestV1(userIri, profileType, userProfile) => future2Message(sender(), userProfileByIRIGetRequestV1(userIri, profileType, userProfile), log)
+        case UserProfileByEmailGetV1(email, profileType) => future2Message(sender(), userProfileByEmailGetV1(email, profileType), log)
+        case UserProfileByEmailGetRequestV1(email, profileType, userProfile) => future2Message(sender(), userProfileByEmailGetRequestV1(email, profileType, userProfile), log)
         case UserCreateRequestV1(createRequest, userProfile, apiRequestID) => future2Message(sender(), createNewUserV1(createRequest, userProfile, apiRequestID), log)
         case UserUpdateRequestV1(userIri, changeUserData, userProfile, apiRequestID) => future2Message(sender(), updateBasicUserDataV1(userIri, changeUserData, userProfile, apiRequestID), log)
         case UserChangePasswordRequestV1(userIri, changePasswordRequest, userProfile, apiRequestID) => future2Message(sender(), changePasswordV1(userIri, changePasswordRequest, userProfile, apiRequestID), log)
         case UserChangeStatusRequestV1(userIri, changeStatusRequest, userProfile, apiRequestID) => future2Message(sender(), changeUserStatusV1(userIri, changeStatusRequest, userProfile, apiRequestID), log)
-        case other => handleUnexpectedMessage(sender(), other, log)
+        case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }
 
     /**
       * Gets information about a Knora user, and returns it in a [[UserProfileV1]].
       *
-      * @param userIRI the IRI of the user.
+      * @param userIRI     the IRI of the user.
+      * @param profileType the type of the requested profile (restricted of full).
       * @return a [[UserProfileV1]] describing the user.
       */
-    private def getUserProfileByIRIV1(userIRI: IRI, profileType: UserProfileType.Value): Future[UserProfileV1] = {
-        //log.debug(s"getUserProfileByIRIV1: userIri = $userIRI', clean = '$profileType'")
+    private def userProfileByIRIGetV1(userIRI: IRI, profileType: UserProfileType): Future[UserProfileV1] = {
+        //log.debug(s"userProfileByIRIGetV1: userIri = $userIRI', clean = '$profileType'")
         for {
             sparqlQueryString <- Future(queries.sparql.v1.txt.getUserByIri(
                 triplestore = settings.triplestoreType,
                 userIri = userIRI
             ).toString())
 
-            //_ = log.debug(s"getUserProfileByIRIV1 - sparqlQueryString: $sparqlQueryString")
+            //_ = log.debug(s"userProfileByIRIGetV1 - sparqlQueryString: $sparqlQueryString")
 
             userDataQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResponse]
 
@@ -90,19 +94,35 @@ class UsersResponderV1 extends ResponderV1 {
     }
 
     /**
+      * Gets information about a Knora user, and returns it as a [[UserProfileResponseV1]].
+      *
+      * @param userIRI     the IRI of the user.
+      * @param profileType the type of the requested profile (restriced or full).
+      * @param userProfile the requesting user's profile.
+      * @return a [[UserProfileResponseV1]]
+      */
+    private def userProfileByIRIGetRequestV1(userIRI: IRI, profileType: UserProfileType, userProfile: UserProfileV1): Future[UserProfileResponseV1] = {
+        for {
+            up <- userProfileByIRIGetV1(userIRI, profileType)
+            result = UserProfileResponseV1(up, userProfile.userData)
+        } yield result
+    }
+
+    /**
       * Gets information about a Knora user, and returns it in a [[UserProfileV1]].
       *
-      * @param email the username of the user.
+      * @param email       the email of the user.
+      * @param profileType the type of the requested profile (restricted or full).
       * @return a [[UserProfileV1]] describing the user.
       */
-    private def getUserProfileByEmailV1(email: String, profileType: UserProfileType.Value): Future[UserProfileV1] = {
-        //log.debug(s"getUserProfileByEmailV1: username = '$email', type = '$profileType'")
+    private def userProfileByEmailGetV1(email: String, profileType: UserProfileType): Future[UserProfileV1] = {
+        //log.debug(s"userProfileByEmailGetV1: username = '$email', type = '$profileType'")
         for {
             sparqlQueryString <- Future(queries.sparql.v1.txt.getUserByEmail(
                 triplestore = settings.triplestoreType,
                 email = email
             ).toString())
-            //_ = log.debug(s"getUserProfileByEmailV1 - sparqlQueryString: $sparqlQueryString")
+            //_ = log.debug(s"userProfileByEmailGetV1 - sparqlQueryString: $sparqlQueryString")
 
             userDataQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResponse]
 
@@ -115,6 +135,21 @@ class UsersResponderV1 extends ResponderV1 {
             userProfileV1 <- userDataQueryResponse2UserProfile(userDataQueryResponse, profileType)
 
         } yield userProfileV1 // UserProfileV1(userDataV1, groupIris, projectIris)
+    }
+
+    /**
+      * Gets information about a Knora user, and returns it as a [[UserProfileResponseV1]].
+      *
+      * @param email       the email of the user.
+      * @param profileType the type of the requested profile (restricted or full).
+      * @param userProfile the requesting user's profile.
+      * @return a [[UserProfileResponseV1]]
+      */
+    private def userProfileByEmailGetRequestV1(email: String, profileType: UserProfileType, userProfile: UserProfileV1): Future[UserProfileResponseV1] = {
+        for {
+            up <- userProfileByEmailGetV1(email, profileType)
+            result = UserProfileResponseV1(up, userProfile.userData)
+        } yield result
     }
 
     /**
@@ -132,7 +167,7 @@ class UsersResponderV1 extends ResponderV1 {
     private def createNewUserV1(createRequest: CreateUserApiRequestV1, userProfile: UserProfileV1, apiRequestID: UUID): Future[UserOperationResponseV1] = {
 
         def createNewUserTask(createRequest: CreateUserApiRequestV1, userProfile: UserProfileV1, apiRequestID: UUID) = for {
-            // check if required information is supplied
+        // check if required information is supplied
             _ <- Future(if (createRequest.email.isEmpty) throw BadRequestException("Email cannot be empty"))
             _ = if (createRequest.password.isEmpty) throw BadRequestException("Password cannot be empty")
             _ = if (createRequest.givenName.isEmpty) throw BadRequestException("Given name cannot be empty")
@@ -195,7 +230,7 @@ class UsersResponderV1 extends ResponderV1 {
         } yield userOperationResponseV1
 
         for {
-            // run user creation with an global IRI lock
+        // run user creation with an global IRI lock
             taskResult <- IriLocker.runWithIriLock(
                 apiRequestID,
                 USERS_GLOBAL_LOCK_IRI,
@@ -216,7 +251,7 @@ class UsersResponderV1 extends ResponderV1 {
       */
     private def updateBasicUserDataV1(userIri: IRI, updateUserRequest: UpdateUserApiRequestV1, userProfile: UserProfileV1, apiRequestID: UUID): Future[UserOperationResponseV1] = for {
 
-        // check if the requesting user is allowed to perform updates
+    // check if the requesting user is allowed to perform updates
         _ <- Future(
             if (!userProfile.userData.user_id.contains(userIri) && !userProfile.permissionData.isSystemAdmin) {
                 // not the user and not a system admin
@@ -258,7 +293,7 @@ class UsersResponderV1 extends ResponderV1 {
         def changePaswordTask(userIri: IRI, changePasswordRequest: ChangeUserPasswordApiRequestV1, userProfile: UserProfileV1, apiRequestID: UUID): Future[UserOperationResponseV1] = for {
 
         // check if old password matches current user password
-            userProfile <- getUserProfileByIRIV1(userIri, UserProfileType.FULL)
+            userProfile <- userProfileByIRIGetV1(userIri, UserProfileType.FULL)
             _ = if (!userProfile.passwordMatch(changePasswordRequest.oldPassword)) throw BadRequestException("The supplied old password does not match the current users password.")
 
             // create the update request
@@ -290,10 +325,11 @@ class UsersResponderV1 extends ResponderV1 {
 
     /**
       * Change the user's status (active / inactive).
-      * @param userIri the IRI of the existing user that we want to update.
+      *
+      * @param userIri             the IRI of the existing user that we want to update.
       * @param changeStatusRequest the new status.
-      * @param userProfile the user profile of the requesting user.
-      * @param apiRequestID the unique api request ID.
+      * @param userProfile         the user profile of the requesting user.
+      * @param apiRequestID        the unique api request ID.
       * @return
       */
     private def changeUserStatusV1(userIri: IRI, changeStatusRequest: ChangeUserStatusApiRequestV1, userProfile: UserProfileV1, apiRequestID: UUID): Future[UserOperationResponseV1] = {
@@ -311,7 +347,7 @@ class UsersResponderV1 extends ResponderV1 {
         val updateUserRequest = UpdateUserApiRequestV1(status = Some(changeStatusRequest.newStatus))
 
         for {
-            // run the change status task with an IRI lock
+        // run the change status task with an IRI lock
             taskResult <- IriLocker.runWithIriLock(
                 apiRequestID,
                 userIri,
@@ -334,7 +370,7 @@ class UsersResponderV1 extends ResponderV1 {
     private def updateUserDataV1(userIri: IRI, apiUpdateRequest: UpdateUserApiRequestV1, userProfile: UserProfileV1, apiRequestID: UUID): Future[UserOperationResponseV1] = {
 
         for {
-            /* Update the user */
+        /* Update the user */
             updateUserSparqlString <- Future(queries.sparql.v1.txt.updateUser(
                 adminNamedGraphIri = "http://www.knora.org/data/admin",
                 triplestore = settings.triplestoreType,
@@ -351,7 +387,7 @@ class UsersResponderV1 extends ResponderV1 {
             createResourceResponse <- (storeManager ? SparqlUpdateRequest(updateUserSparqlString)).mapTo[SparqlUpdateResponse]
 
             /* Verify that the user was updated. */
-            updatedUserProfile <- getUserProfileByIRIV1(userIri, UserProfileType.FULL)
+            updatedUserProfile <- userProfileByIRIGetV1(userIri, UserProfileType.FULL)
             updatedUserData = updatedUserProfile.userData
 
             //_ = log.debug(s"apiUpdateRequest: $apiUpdateRequest /  updatedUserdata: $updatedUserData")
@@ -425,6 +461,14 @@ class UsersResponderV1 extends ResponderV1 {
 
         //_ = log.debug(s"userDataQueryResponse2UserProfile - groupedUserData: ${MessageUtil.toSource(groupedUserData)}")
 
+        /* the projects the user is member of */
+        val projectIris: Seq[IRI] = groupedUserData.get(OntologyConstants.KnoraBase.IsInProject) match {
+            case Some(projects) => projects
+            case None => Seq.empty[IRI]
+        }
+
+        //println(projectIris)
+
         val userDataV1 = UserDataV1(
             lang = groupedUserData.get(OntologyConstants.KnoraBase.PreferredLanguage) match {
                 case Some(langList) => langList.head
@@ -436,16 +480,12 @@ class UsersResponderV1 extends ResponderV1 {
             lastname = groupedUserData.get(OntologyConstants.KnoraBase.FamilyName).map(_.head),
             password = groupedUserData.get(OntologyConstants.KnoraBase.Password).map(_.head),
             isActiveUser = groupedUserData.get(OntologyConstants.KnoraBase.Status).map(_.head.toBoolean),
-            active_project = groupedUserData.get(OntologyConstants.KnoraBase.UsersActiveProject).map(_.head)
+            projects = projectIris
         )
         //_ = log.debug(s"userDataQueryResponse2UserProfile - userDataV1: ${MessageUtil.toSource(userDataV1)}")
 
 
-        /* the projects the user is member of */
-        val projectIris = groupedUserData.get(OntologyConstants.KnoraBase.IsInProject) match {
-            case Some(projects) => projects
-            case None => Vector.empty[IRI]
-        }
+
         //_ = log.debug(s"userDataQueryResponse2UserProfile - projectIris: ${MessageUtil.toSource(projectIris)}")
 
         /* the groups the user is member of (only explicit groups) */

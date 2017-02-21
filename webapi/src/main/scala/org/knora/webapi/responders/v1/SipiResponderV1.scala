@@ -23,6 +23,7 @@ package org.knora.webapi.responders.v1
 import akka.actor.Status
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.marshalling.Marshal
+import akka.http.scaladsl.model.HttpEntity.Strict
 import akka.http.scaladsl.model._
 import akka.pattern._
 import akka.stream.ActorMaterializer
@@ -31,8 +32,8 @@ import org.knora.webapi.messages.v1.responder.sipimessages.RepresentationV1JsonP
 import org.knora.webapi.messages.v1.responder.sipimessages.SipiConstants.FileType
 import org.knora.webapi.messages.v1.responder.sipimessages._
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
-import org.knora.webapi.messages.v1.responder.valuemessages.{ApiValueV1, FileValueV1, StillImageFileValueV1}
-import org.knora.webapi.messages.v1.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse}
+import org.knora.webapi.messages.v1.responder.valuemessages.{FileValueV1, StillImageFileValueV1, TextFileValueV1}
+import org.knora.webapi.messages.v1.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.{InputValidation, PermissionUtilV1}
 import spray.json._
@@ -60,7 +61,7 @@ class SipiResponderV1 extends ResponderV1 {
         case SipiFileInfoGetRequestV1(fileValueIri, userProfile) => future2Message(sender(), getFileInfoForSipiV1(fileValueIri, userProfile), log)
         case convertPathRequest: SipiResponderConversionPathRequestV1 => future2Message(sender(), convertPathV1(convertPathRequest), log)
         case convertFileRequest: SipiResponderConversionFileRequestV1 => future2Message(sender(), convertFileV1(convertFileRequest), log)
-        case other => handleUnexpectedMessage(sender(), other, log)
+        case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -72,28 +73,35 @@ class SipiResponderV1 extends ResponderV1 {
       * @param filename the iri of the resource.
       * @return a [[SipiFileInfoGetResponseV1]].
       */
-    private def getFileInfoForSipiV1(filename: IRI, userProfile: UserProfileV1): Future[SipiFileInfoGetResponseV1] = {
+    private def getFileInfoForSipiV1(filename: String, userProfile: UserProfileV1): Future[SipiFileInfoGetResponseV1] = {
         for {
             sparqlQuery <- Future(queries.sparql.v1.txt.getFileValue(
                 triplestore = settings.triplestoreType,
                 filename = filename
             ).toString())
+
             queryResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
-            rows = queryResponse.results.bindings
+            rows: Seq[VariableResultsRow] = queryResponse.results.bindings
             // check if rows were found for the given filename
             _ = if (rows.isEmpty) throw BadRequestException(s"No file value was found for filename $filename")
-            valueProps = valueUtilV1.createValueProps(filename, rows)
-            valueV1: ApiValueV1 = valueUtilV1.makeValueV1(valueProps)
-            path = valueV1 match {
-                case imageValueV1: StillImageFileValueV1 => imageValueV1.internalFilename // return internal filename associated with the given file value Iri to Sipi
-                // TODO: prepend file value specific cases for each file value type (movie, audio etc.)
-                case otherFileValueV1: FileValueV1 => throw NotImplementedException(s"Handling of file value type ${otherFileValueV1.valueTypeIri} not implemented yet")
-                case otherValue => throw InconsistentTriplestoreDataException(s"Value $filename is not a FileValue, it is an instance of ${otherValue.valueTypeIri}")
+
+            // check that only one file value was found (by grouping by file value IRI)
+            groupedByResourceIri = rows.groupBy {
+                (row: VariableResultsRow) =>
+                    row.rowMap("fileValue")
             }
-            permissionCode: Option[Int] = PermissionUtilV1.getUserPermissionV1WithValueProps(filename, valueProps, userProfile)
+            _ = if(groupedByResourceIri.size > 1) throw InconsistentTriplestoreDataException(s"filename $filename is referred to from more than one file value")
+
+            valueProps = valueUtilV1.createValueProps(filename, rows)
+
+            permissionCode: Option[Int] = PermissionUtilV1.getUserPermissionV1WithValueProps(
+                subjectIri = filename,
+                valueProps = valueProps,
+                subjectProject = None, // no need to specify this here, because it's in valueProps
+                userProfile = userProfile
+            )
         } yield SipiFileInfoGetResponseV1(
-            permissionCode = permissionCode,
-            filepath = permissionCode.map(_ => path),
+            permissionCode = permissionCode.getOrElse(0), // Sipi expects a permission code from 0 to 8
             userdata = userProfile.userData
         )
     }
@@ -142,24 +150,38 @@ class SipiResponderV1 extends ResponderV1 {
 
             /* get json from response body */
             responseAsJson: JsValue <- statusInt match {
-                case 2 => conversionResultResponse.entity.toStrict(5.seconds).map(_.data.decodeString("UTF-8").parseJson) // returns a Future(Map(...))
+                case 2 => conversionResultResponse.entity.toStrict(5.seconds).map(
+                    (strict: Strict) =>
+                        try {
+                            strict.data.decodeString("UTF-8").parseJson
+                        } catch {
+                            // the Sipi response message could not be parsed correctly
+                            case e: spray.json.JsonParser.ParsingException => throw SipiException(message = "JSON response returned by Sipi is not valid JSON", e = e, log = log)
+
+                            case all: Exception => throw SipiException(message = "JSON response returned by Sipi is not valid JSON", e = all, log = log)
+                        }
+                ) // returns a Future(Map(...))
                 case 4 =>
                     // Bad Request: it is the user's responsibility
-                    val errMessage: Future[SipiErrorConversionResponse] = try {
-                        // parse answer as a Sipi error message
-                        val sef: Future[SipiErrorConversionResponse] = conversionResultResponse.entity.toStrict(5.seconds).map(_.data.decodeString("UTF-8").parseJson.convertTo[SipiErrorConversionResponse])
-                        sef
-                    } catch {
-                        // the Sipi error message could not be parsed correctly
-                        case e: DeserializationException => throw SipiException(message = "JSON error response returned by Sipi is invalid, it cannot be turned into a SipiErrorConversionResponse", e = e, log = log)
-                    }
+                    val errMessage: Future[SipiErrorConversionResponse] = conversionResultResponse.entity.toStrict(5.seconds).map(
+                        (strict: Strict) =>
+                            try {
+                                strict.data.decodeString("UTF-8").parseJson.convertTo[SipiErrorConversionResponse]
+                            } catch {
+                                // the Sipi error message could not be parsed correctly
+                                case e: spray.json.JsonParser.ParsingException => throw SipiException(message = "JSON error response returned by Sipi is invalid, it cannot be turned into a SipiErrorConversionResponse", e = e, log = log)
+
+                                case all: Exception => throw SipiException(message = "JSON error response returned by Sipi is not valid JSON", e = all, log = log)
+                            }
+                    )
+
                     // most probably the user sent invalid data which caused a Sipi error
                     errMessage.map(errMsg => throw BadRequestException(s"Sipi returned a non successful HTTP status code $httpStatusCode: $errMsg"))
                 case 5 =>
                     // Internal Server Error: not the user's fault
                     val errString: Future[String] = conversionResultResponse.entity.toStrict(5.seconds).map(_.data.decodeString("UTF-8"))
                     errString.map(errStr => throw SipiException(s"Sipi reported an internal server error $httpStatusCode - $errStr"))
-                case other => throw SipiException(s"Sipi returned $other!")
+                case _ => throw SipiException(s"Sipi returned $httpStatusCode!")
             }
 
             // get file type from Sipi response
@@ -203,6 +225,22 @@ class SipiResponderV1 extends ResponderV1 {
                             qualityName = Some(SipiConstants.StillImage.thumbnailQuality),
                             isPreview = true
                         ))
+
+                case SipiConstants.FileType.TEXT =>
+
+                    // parse response as a [[SipiTextResponse]]
+                    val textStoreResult = try {
+                        responseAsJson.convertTo[SipiTextResponse]
+                    } catch {
+                        case e: DeserializationException => throw SipiException(message = "JSON response returned by Sipi is invalid, it cannot be turned into a SipiImageConversionResponse", e = e, log = log)
+                    }
+
+                    Vector(TextFileValueV1(
+                        internalMimeType = InputValidation.toSparqlEncodedString(textStoreResult.mimetype, () => throw BadRequestException(s"The internal MIME type returned by Sipi is invalid: '${textStoreResult.mimetype}")),
+                        internalFilename = InputValidation.toSparqlEncodedString(textStoreResult.filename, () => throw BadRequestException(s"The internal filename returned by Sipi is invalid: '${textStoreResult.filename}")),
+                        originalFilename = InputValidation.toSparqlEncodedString(textStoreResult.original_filename, () => throw BadRequestException(s"The internal filename returned by Sipi is invalid: '${textStoreResult.original_filename}")),
+                        originalMimeType = Some(InputValidation.toSparqlEncodedString(textStoreResult.mimetype, () => throw BadRequestException(s"The orignal MIME type returned by Sipi is invalid: '${textStoreResult.original_mimetype}")))
+                    ))
 
                 case unknownType => throw NotImplementedException(s"Could not handle file type $unknownType")
 

@@ -27,7 +27,7 @@ import akka.actor.Status
 import akka.pattern._
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.ontologymessages._
-import org.knora.webapi.messages.v1.responder.permissionmessages.{DefaultObjectAccessPermissionsStringForResourceClassGetV1, ResourceCreateOperation}
+import org.knora.webapi.messages.v1.responder.permissionmessages.{DefaultObjectAccessPermissionsStringForResourceClassGetV1, DefaultObjectAccessPermissionsStringResponseV1, ResourceCreateOperation}
 import org.knora.webapi.messages.v1.responder.projectmessages._
 import org.knora.webapi.messages.v1.responder.resourcemessages.{MultipleResourceCreateResponseV1, _}
 import org.knora.webapi.messages.v1.responder.sipimessages._
@@ -77,7 +77,7 @@ class ResourcesResponderV1 extends ResponderV1 {
         case ChangeResourceLabelRequestV1(resourceIri, label, userProfile, apiRequestID) => future2Message(sender(), changeResourceLabelV1(resourceIri, label, apiRequestID, userProfile), log)
         case UnexpectedMessageRequest() => future2Message(sender(), makeFutureOfUnit, log)
         case InternalServerExceptionMessageRequest() => future2Message(sender, makeInternalServerException, log)
-        case other => handleUnexpectedMessage(sender(), other, log)
+        case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -106,14 +106,14 @@ class ResourcesResponderV1 extends ResponderV1 {
           * @param nodeIri         the IRI of the node.
           * @param nodeClass       the IRI of the node's class.
           * @param nodeLabel       the node's label.
-          * @param nodeOwner       the node's owner.
+          * @param nodeCreator     the node's creator.
           * @param nodeProject     the node's project.
           * @param nodePermissions the node's permissions.
           */
         case class QueryResultNode(nodeIri: IRI,
                                    nodeClass: IRI,
                                    nodeLabel: String,
-                                   nodeOwner: IRI,
+                                   nodeCreator: IRI,
                                    nodeProject: IRI,
                                    nodePermissions: Option[String])
 
@@ -124,16 +124,16 @@ class ResourcesResponderV1 extends ResponderV1 {
           * @param sourceNodeIri        the IRI of the source node.
           * @param targetNodeIri        the IRI of the target node.
           * @param linkProp             the IRI of the link property.
-          * @param linkValueOwner       the link value's owner.
-          * @param linkValueProject     the link value's project.
+          * @param linkValueCreator     the link value's creator.
+          * @param sourceNodeProject    the project of the source node.
           * @param linkValuePermissions the link value's permissions.
           */
         case class QueryResultEdge(linkValueIri: IRI,
                                    sourceNodeIri: IRI,
                                    targetNodeIri: IRI,
                                    linkProp: IRI,
-                                   linkValueOwner: IRI,
-                                   linkValueProject: IRI,
+                                   linkValueCreator: IRI,
+                                   sourceNodeProject: IRI,
                                    linkValuePermissions: Option[String])
 
         /**
@@ -147,10 +147,10 @@ class ResourcesResponderV1 extends ResponderV1 {
         /**
           * Recursively queries outbound or inbound links from/to a resource.
           *
-          * @param startNode the node to use as the starting point of the query. The user is assumed to have permission
-          *                  to see this node.
-          * @param outbound `true` to get outbound links, `false` to get inbound links.
-          * @param depth the maximum depth of the query.
+          * @param startNode      the node to use as the starting point of the query. The user is assumed to have permission
+          *                       to see this node.
+          * @param outbound       `true` to get outbound links, `false` to get inbound links.
+          * @param depth          the maximum depth of the query.
           * @param traversedEdges edges that have already been traversed.
           * @return a [[GraphQueryResults]].
           */
@@ -158,7 +158,7 @@ class ResourcesResponderV1 extends ResponderV1 {
             if (depth < 1) Future.failed(AssertionException("Depth must be at least 1"))
 
             for {
-                // Get the direct links from/to the start node.
+            // Get the direct links from/to the start node.
                 sparql <- Future(queries.sparql.v1.txt.getGraphData(
                     triplestore = settings.triplestoreType,
                     startNodeIri = startNode.nodeIri,
@@ -177,123 +177,124 @@ class ResourcesResponderV1 extends ResponderV1 {
                     Future(GraphQueryResults())
                 } else {
                     // Yes. Get the nodes from the query results.
-                        val otherNodes: Seq[QueryResultNode] = rows.map {
-                            row =>
-                                val rowMap = row.rowMap
+                    val otherNodes: Seq[QueryResultNode] = rows.map {
+                        row =>
+                            val rowMap = row.rowMap
 
-                                QueryResultNode(
-                                    nodeIri = rowMap("node"),
-                                    nodeClass = rowMap("nodeClass"),
-                                    nodeLabel = rowMap("nodeLabel"),
-                                    nodeOwner = rowMap("nodeOwner"),
-                                    nodeProject = rowMap("nodeProject"),
-                                    nodePermissions = rowMap.get("nodePermissions")
-                                )
-                        }.filter {
-                            node =>
-                                // Filter out the nodes that the user doesn't have permission to see.
-                                PermissionUtilV1.getUserPermissionV1(
-                                    subjectIri = node.nodeIri,
-                                    subjectCreator = node.nodeOwner,
-                                    subjectProject = node.nodeProject,
-                                    subjectPermissionLiteral = node.nodePermissions,
+                            QueryResultNode(
+                                nodeIri = rowMap("node"),
+                                nodeClass = rowMap("nodeClass"),
+                                nodeLabel = rowMap("nodeLabel"),
+                                nodeCreator = rowMap("nodeCreator"),
+                                nodeProject = rowMap("nodeProject"),
+                                nodePermissions = rowMap.get("nodePermissions")
+                            )
+                    }.filter {
+                        node =>
+                            // Filter out the nodes that the user doesn't have permission to see.
+                            PermissionUtilV1.getUserPermissionV1(
+                                subjectIri = node.nodeIri,
+                                subjectCreator = node.nodeCreator,
+                                subjectProject = node.nodeProject,
+                                subjectPermissionLiteral = node.nodePermissions,
+                                userProfile = graphDataGetRequest.userProfile
+                            ).nonEmpty
+                    }
+
+                    // Collect the IRIs of the nodes that the user has permission to see, including the start node.
+                    val visibleNodeIris = otherNodes.map(_.nodeIri).toSet + startNode.nodeIri
+
+                    // Get the edges from the query results.
+                    val edges: Set[QueryResultEdge] = rows.map {
+                        row =>
+                            val rowMap = row.rowMap
+                            val nodeIri = rowMap("node")
+
+                            // The SPARQL query takes a start node and returns the other node in the edge.
+                            //
+                            // If we're querying outbound edges, the start node is the source node, and the other
+                            // node is the target node.
+                            //
+                            // If we're querying inbound edges, the start node is the target node, and the other
+                            // node is the source node.
+
+                            QueryResultEdge(
+                                linkValueIri = rowMap("linkValue"),
+                                sourceNodeIri = if (outbound) startNode.nodeIri else nodeIri,
+                                targetNodeIri = if (outbound) nodeIri else startNode.nodeIri,
+                                linkProp = rowMap("linkProp"),
+                                linkValueCreator = rowMap("linkValueCreator"),
+                                sourceNodeProject = if (outbound) startNode.nodeProject else rowMap("nodeProject"),
+                                linkValuePermissions = rowMap.get("linkValuePermissions")
+                            )
+                    }.filter {
+                        edge =>
+                            // Filter out the edges that the user doesn't have permission to see. To see an edge,
+                            // the user must have some permission on the link value and on the source and target
+                            // nodes.
+                            val hasPermission = visibleNodeIris.contains(edge.sourceNodeIri) && visibleNodeIris.contains(edge.targetNodeIri) &&
+                                PermissionUtilV1.getUserPermissionOnLinkValueV1(
+                                    linkValueIri = edge.linkValueIri,
+                                    predicateIri = edge.linkProp,
+                                    linkValueCreator = edge.linkValueCreator,
+                                    containingResourceProject = edge.sourceNodeProject,
+                                    linkValuePermissionLiteral = edge.linkValuePermissions,
                                     userProfile = graphDataGetRequest.userProfile
                                 ).nonEmpty
-                        }
 
-                        // Collect the IRIs of the nodes that the user has permission to see, including the start node.
-                        val visibleNodeIris = otherNodes.map(_.nodeIri).toSet + startNode.nodeIri
+                            // Filter out edges we've already traversed.
+                            val isRedundant = traversedEdges.contains(edge)
+                            // if (isRedundant) println(s"filtering out edge from ${edge.sourceNodeIri} to ${edge.targetNodeIri}")
 
-                        // Get the edges from the query results.
-                        val edges: Set[QueryResultEdge] = rows.map {
-                            row =>
-                                val rowMap = row.rowMap
-                                val nodeIri = rowMap("node")
+                            hasPermission && !isRedundant
+                    }.toSet
 
-                                // The SPARQL query takes a start node and returns the other node in the edge.
-                                //
-                                // If we're querying outbound edges, the start node is the source node, and the other
-                                // node is the target node.
-                                //
-                                // If we're querying inbound edges, the start node is the target node, and the other
-                                // node is the source node.
+                    // Include only nodes that are reachable via edges that we're going to traverse (i.e. the user
+                    // has permission to see those edges, and we haven't already traversed them).
+                    val visibleNodeIrisFromEdges = edges.map(_.sourceNodeIri) ++ edges.map(_.targetNodeIri)
+                    val filteredOtherNodes = otherNodes.filter(node => visibleNodeIrisFromEdges.contains(node.nodeIri))
 
-                                QueryResultEdge(
-                                    linkValueIri = rowMap("linkValue"),
-                                    sourceNodeIri = if (outbound) startNode.nodeIri else nodeIri,
-                                    targetNodeIri = if (outbound) nodeIri else startNode.nodeIri,
-                                    linkProp = rowMap("linkProp"),
-                                    linkValueOwner = rowMap("linkValueOwner"),
-                                    linkValueProject = rowMap.getOrElse("linkValueProject", if (outbound) startNode.nodeProject else rowMap("nodeProject")),
-                                    linkValuePermissions = rowMap.get("linkValuePermissions")
-                                )
-                        }.filter {
-                            edge =>
-                                // Filter out the edges that the user doesn't have permission to see. To see an edge,
-                                // the user must have some permission on the link value and on the source and target
-                                // nodes.
-                                val hasPermission = visibleNodeIris.contains(edge.sourceNodeIri) && visibleNodeIris.contains(edge.targetNodeIri) &&
-                                    PermissionUtilV1.getUserPermissionOnLinkValueV1(
-                                        linkValueIri = edge.linkValueIri,
-                                        predicateIri = edge.linkProp,
-                                        linkValueOwner = edge.linkValueOwner,
-                                        linkValueProject = edge.linkValueProject,
-                                        linkValuePermissionLiteral = edge.linkValuePermissions,
-                                        userProfile = graphDataGetRequest.userProfile
-                                    ).nonEmpty
+                    // Make a GraphQueryResults containing the resulting nodes and edges, including the start
+                    // node.
+                    val results = GraphQueryResults(nodes = filteredOtherNodes.toSet + startNode, edges = edges)
 
-                                // Filter out edges we've already traversed.
-                                val isRedundant = traversedEdges.contains(edge)
-                                // if (isRedundant) println(s"filtering out edge from ${edge.sourceNodeIri} to ${edge.targetNodeIri}")
+                    // Have we reached the maximum depth?
+                    if (depth == 1) {
+                        // Yes. Just return the results we have.
+                        Future(results)
+                    } else {
+                        // No. Recursively get results for each of the nodes we found.
 
-                                hasPermission && !isRedundant
-                        }.toSet
-
-                        // Include only nodes that are reachable via edges that we're going to traverse (i.e. the user
-                        // has permission to see those edges, and we haven't already traversed them).
-                        val visibleNodeIrisFromEdges = edges.map(_.sourceNodeIri) ++ edges.map(_.targetNodeIri)
-                        val filteredOtherNodes = otherNodes.filter(node => visibleNodeIrisFromEdges.contains(node.nodeIri))
-
-                        // Make a GraphQueryResults containing the resulting nodes and edges, including the start
-                        // node.
-                        val results = GraphQueryResults(nodes = filteredOtherNodes.toSet + startNode, edges = edges)
-
-                        // Have we reached the maximum depth?
-                        if (depth == 1) {
-                            // Yes. Just return the results we have.
-                            Future(results)
-                        } else {
-                            // No. Recursively get results for each of the nodes we found.
-
-                            val lowerResultFutures: Seq[Future[GraphQueryResults]] = filteredOtherNodes.map {
-                                node => traverseGraph(
+                        val lowerResultFutures: Seq[Future[GraphQueryResults]] = filteredOtherNodes.map {
+                            node =>
+                                traverseGraph(
                                     startNode = node,
                                     outbound = outbound,
                                     depth = depth - 1,
                                     traversedEdges = traversedEdges ++ edges
                                 )
-                            }
-
-                            val lowerResultsFuture: Future[Seq[GraphQueryResults]] = Future.sequence(lowerResultFutures)
-
-                            // Return those results plus the ones we found.
-
-                            for {
-                                lowerResultsSeq <- lowerResultsFuture
-                            } yield lowerResultsSeq.foldLeft(results) {
-                                case (acc, lowerResults) =>
-                                    GraphQueryResults(
-                                        nodes = acc.nodes ++ lowerResults.nodes,
-                                        edges = acc.edges ++ lowerResults.edges
-                                    )
-                            }
                         }
+
+                        val lowerResultsFuture: Future[Seq[GraphQueryResults]] = Future.sequence(lowerResultFutures)
+
+                        // Return those results plus the ones we found.
+
+                        for {
+                            lowerResultsSeq <- lowerResultsFuture
+                        } yield lowerResultsSeq.foldLeft(results) {
+                            case (acc, lowerResults) =>
+                                GraphQueryResults(
+                                    nodes = acc.nodes ++ lowerResults.nodes,
+                                    edges = acc.edges ++ lowerResults.edges
+                                )
+                        }
+                    }
                 }
             } yield recursiveResults
         }
 
         for {
-            // Get the start node.
+        // Get the start node.
             sparql <- Future(queries.sparql.v1.txt.getGraphData(
                 triplestore = settings.triplestoreType,
                 startNodeIri = graphDataGetRequest.resourceIri,
@@ -315,7 +316,7 @@ class ResourcesResponderV1 extends ResponderV1 {
                 nodeIri = firstRowMap("node"),
                 nodeClass = firstRowMap("nodeClass"),
                 nodeLabel = firstRowMap("nodeLabel"),
-                nodeOwner = firstRowMap("nodeOwner"),
+                nodeCreator = firstRowMap("nodeCreator"),
                 nodeProject = firstRowMap("nodeProject"),
                 nodePermissions = firstRowMap.get("nodePermissions")
             )
@@ -323,7 +324,7 @@ class ResourcesResponderV1 extends ResponderV1 {
             // Make sure the user has permission to see the start node.
             _ = if (PermissionUtilV1.getUserPermissionV1(
                 subjectIri = startNode.nodeIri,
-                subjectCreator = startNode.nodeOwner,
+                subjectCreator = startNode.nodeCreator,
                 subjectProject = startNode.nodeProject,
                 subjectPermissionLiteral = startNode.nodePermissions,
                 userProfile = graphDataGetRequest.userProfile
@@ -433,8 +434,6 @@ class ResourcesResponderV1 extends ResponderV1 {
       * @return a [[ResourceFullResponseV1]].
       */
     private def getFullResponseV1(resourceIri: IRI, userProfile: UserProfileV1, getIncoming: Boolean = true): Future[ResourceFullResponseV1] = {
-        // TODO: error handling if a required value does not exist
-
         // Query resource info, resource properties, and incoming references in parallel.
         // See http://buransky.com/scala/scala-for-comprehension-with-concurrently-running-futures/
 
@@ -503,7 +502,7 @@ class ResourcesResponderV1 extends ResponderV1 {
                                 (incomingResPermission, incomingResInfo) <- makeResourceInfoV1(incomingIri, rowsForResInfo, userProfile, queryOntology = false)
 
                                 // Does the user have permission to see the referring resource?
-                                incomingV1s: Vector[IncomingV1] = incomingResPermission match {
+                                incomingV1s: Vector[IncomingV1] <- incomingResPermission match {
                                     case Some(_) =>
                                         // Yes. For each link from the referring resource, check whether the user has permission to see the link. If so, make an IncomingV1 for the link.
 
@@ -514,39 +513,31 @@ class ResourcesResponderV1 extends ResponderV1 {
                                         val groupedByLinkValue: Map[String, Seq[VariableResultsRow]] = rowsWithLinkValues.groupBy(_.rowMap("obj"))
 
                                         // For each LinkValue, check whether the user has permission to see the link, and if so, make an IncomingV1.
-                                        val maybeIncomingV1s: Iterable[Option[IncomingV1]] = groupedByLinkValue.map {
+                                        val maybeIncomingV1sWithFuture: Iterable[Future[Option[IncomingV1]]] = groupedByLinkValue.map {
                                             case (linkValueIri: IRI, linkValueRows: Seq[VariableResultsRow]) =>
                                                 // Convert the rows representing the LinkValue to a ValueProps.
-                                                val originalValueProps = valueUtilV1.createValueProps(valueIri = linkValueIri, objRows = linkValueRows)
-
-                                                // If the ValueProps doesn't contain a project, add the resource's project, because it's cumbersome to do this in SPARQL.
-                                                val valuePropsWithProject = if (originalValueProps.literalData.contains(OntologyConstants.KnoraBase.AttachedToProject)) {
-                                                    originalValueProps
-                                                } else {
-                                                    val projectTuple = (OntologyConstants.KnoraBase.AttachedToProject, ValueLiterals(Seq(incomingResInfo.project_id)))
-                                                    val valueLiteralsWithProject = originalValueProps.literalData + projectTuple
-                                                    ValueProps(literalData = valueLiteralsWithProject)
-                                                }
+                                                val linkValueProps = valueUtilV1.createValueProps(valueIri = linkValueIri, objRows = linkValueRows)
 
                                                 // Convert the resulting ValueProps into a LinkValueV1 so we can check its rdf:predicate.
 
-                                                val apiValueV1 = valueUtilV1.makeValueV1(valuePropsWithProject)
+                                                for {
+                                                    apiValueV1 <- valueUtilV1.makeValueV1(linkValueProps, responderManager, userProfile)
 
-                                                val linkValueV1: LinkValueV1 = apiValueV1 match {
-                                                    case linkValueV1: LinkValueV1 => linkValueV1
-                                                    case _ => throw InconsistentTriplestoreDataException(s"Expected $linkValueIri to be a knora-base:LinkValue, but its type is ${apiValueV1.valueTypeIri}")
-                                                }
+                                                    linkValueV1: LinkValueV1 = apiValueV1 match {
+                                                        case linkValueV1: LinkValueV1 => linkValueV1
+                                                        case _ => throw InconsistentTriplestoreDataException(s"Expected $linkValueIri to be a knora-base:LinkValue, but its type is ${apiValueV1.valueTypeIri}")
+                                                    }
 
-                                                // Check the permissions on the LinkValue.
-                                                val linkValuePermission = PermissionUtilV1.getUserPermissionOnLinkValueV1WithValueProps(
-                                                    linkValueIri = linkValueIri,
-                                                    predicateIri = linkValueV1.predicateIri,
-                                                    valueProps = valuePropsWithProject,
-                                                    userProfile = userProfile
-                                                )
-
-                                                // Does the user have permission to see this link?
-                                                linkValuePermission match {
+                                                    // Check the permissions on the LinkValue.
+                                                    linkValuePermission = PermissionUtilV1.getUserPermissionOnLinkValueV1WithValueProps(
+                                                        linkValueIri = linkValueIri,
+                                                        predicateIri = linkValueV1.predicateIri,
+                                                        valueProps = linkValueProps,
+                                                        subjectProject = Some(incomingResInfo.project_id),
+                                                        userProfile = userProfile
+                                                    )
+                                                } yield linkValuePermission match {
+                                                    // Does the user have permission to see this link?
                                                     case Some(_) =>
                                                         // Yes. Make a Some containing an IncomingV1 for the link.
                                                         Some(IncomingV1(
@@ -562,14 +553,20 @@ class ResourcesResponderV1 extends ResponderV1 {
                                                         // No. Make a None.
                                                         None
                                                 }
+
                                         }
 
+                                        for {
+
+                                        // turn the Iterable of Futures into a Future of an Iterable
+                                            maybeIncomingV1s: Iterable[Option[IncomingV1]] <- Future.sequence(maybeIncomingV1sWithFuture)
+
                                         // Filter out the Nones, which represent incoming links that the user doesn't have permission to see.
-                                        maybeIncomingV1s.flatten.toVector
+                                        } yield maybeIncomingV1s.flatten.toVector
 
                                     case None =>
                                         // The user doesn't have permission to see the referring resource.
-                                        Vector.empty[IncomingV1]
+                                        Future(Vector.empty[IncomingV1])
                                 }
                             } yield incomingV1s
 
@@ -649,7 +646,7 @@ class ResourcesResponderV1 extends ResponderV1 {
             }
 
             // Construct PropertyV1 objects for the properties that have data for this resource.
-            propertiesWithData = queryResults2PropertyV1s(
+            propertiesWithData <- queryResults2PropertyV1s(
                 containingResourceIri = resourceIri,
                 groupedPropertiesByType = groupedPropsByType,
                 propertyEntityInfoMap = entityInfoResponse.propertyEntityInfoMap,
@@ -784,10 +781,7 @@ class ResourcesResponderV1 extends ResponderV1 {
           */
         def createStillImageFileValueFromResultRow(row: VariableResultsRow): Option[StillImageFileValue] = {
             // if the file value has no project, get the project from the source object
-            val fileValueProject = row.rowMap.get("fileValueAttachedToProject") match {
-                case Some(fileValueProjectIri) => fileValueProjectIri
-                case None => row.rowMap("sourceObjectAttachedToProject")
-            }
+            val fileValueProject = row.rowMap("sourceObjectAttachedToProject")
 
             // The row may or may not contain a file value IRI.
             row.rowMap.get("fileValue") match {
@@ -827,14 +821,13 @@ class ResourcesResponderV1 extends ResponderV1 {
             val sourceObjectPermissionCode = PermissionUtilV1.getUserPermissionV1(subjectIri = sourceObjectIri, subjectCreator = sourceObjectOwner, subjectProject = sourceObjectProject, subjectPermissionLiteral = sourceObjectLiteral, userProfile = userProfile)
 
             val linkValueIri = row.rowMap("linkValue")
-            val linkValueOwner = row.rowMap("linkValueOwner")
-            val linkValueProject = row.rowMap.getOrElse("linkValueProject", sourceObjectProject)
+            val linkValueCreator = row.rowMap("linkValueCreator")
             val linkValuePermissions = row.rowMap.get("linkValuePermissions")
 
             // The link can't be a standoff link, because we know the link property is a subproperty of knora-base:isPartOf,
             // so we don't have to treat it as a special case here.
 
-            val linkValuePermissionCode = PermissionUtilV1.getUserPermissionV1(subjectIri = linkValueIri, subjectCreator = linkValueOwner, subjectProject = linkValueProject, subjectPermissionLiteral = linkValuePermissions, userProfile = userProfile)
+            val linkValuePermissionCode = PermissionUtilV1.getUserPermissionV1(subjectIri = linkValueIri, subjectCreator = linkValueCreator, subjectProject = sourceObjectProject, subjectPermissionLiteral = linkValuePermissions, userProfile = userProfile)
 
             // Allow the user to see the link only if they have permission to see both the source object and the link value.
             val permissionCode = Seq(sourceObjectPermissionCode, linkValuePermissionCode).min
@@ -882,14 +875,13 @@ class ResourcesResponderV1 extends ResponderV1 {
                         )
 
                         linkValueIri = rowMap("linkValue")
-                        linkValueOwner = rowMap("linkValueOwner")
-                        linkValueProject = rowMap.getOrElse("linkValueProject", containingResourceProject)
+                        linkValueCreator = rowMap("linkValueCreator")
                         linkValuePermissions = rowMap.get("linkValuePermissions")
 
                         // The link can't be a standoff link, because we know the link property is a subproperty of knora-base:isPartOf,
                         // so we don't have to treat it as a special case here.
 
-                        linkValuePermissionCode = PermissionUtilV1.getUserPermissionV1(subjectIri = linkValueIri, subjectCreator = linkValueOwner, subjectProject = linkValueProject, subjectPermissionLiteral = linkValuePermissions, userProfile = userProfile)
+                        linkValuePermissionCode = PermissionUtilV1.getUserPermissionV1(subjectIri = linkValueIri, subjectCreator = linkValueCreator, subjectProject = containingResourceProject, subjectPermissionLiteral = linkValuePermissions, userProfile = userProfile)
 
                         // Allow the user to see the link only if they have permission to see both the containing resource and the link value.
                         permissionCode = Seq(containingResourcePermissionCode, linkValuePermissionCode).min
@@ -1586,7 +1578,7 @@ class ResourcesResponderV1 extends ResponderV1 {
 
         val resultFuture = for {
 
-            // Get user's IRI and don't allow anonymous users to create resources.
+        // Get user's IRI and don't allow anonymous users to create resources.
             userIri: IRI <- Future {
                 userProfile.userData.user_id match {
                     case Some(iri) => iri
@@ -1617,7 +1609,7 @@ class ResourcesResponderV1 extends ResponderV1 {
 
             defaultObjectAccessPermissions <- {
                 responderManager ? DefaultObjectAccessPermissionsStringForResourceClassGetV1(projectIri = projectIri, resourceClassIri = resourceClassIri, userProfile.permissionData)
-            }.mapTo[Option[String]]
+            }.mapTo[DefaultObjectAccessPermissionsStringResponseV1]
             _ = log.debug(s"createNewResource - defaultObjectAccessPermissions: $defaultObjectAccessPermissions")
 
             result: ResourceCreateResponseV1 <- IriLocker.runWithIriLock(
@@ -1629,7 +1621,7 @@ class ResourcesResponderV1 extends ResponderV1 {
                             resourceIri,
                             values,
                             sipiConversionRequest,
-                            permissions = defaultObjectAccessPermissions,
+                            permissions = Some(defaultObjectAccessPermissions.permissionLiteral),
                             ownerIri=userIri,
                             namedGraph,
                             userProfile,
@@ -1663,7 +1655,7 @@ class ResourcesResponderV1 extends ResponderV1 {
 
         def makeTaskFuture(userIri: IRI): Future[ResourceDeleteResponseV1] = {
             for {
-                // Check that the user has permission to delete the resource.
+            // Check that the user has permission to delete the resource.
                 (permissionCode, resourceInfo) <- getResourceInfoV1(resourceIri = resourceDeleteRequest.resourceIri, userProfile = resourceDeleteRequest.userProfile, queryOntology = false)
 
                 _ = if (!PermissionUtilV1.impliesV1(userHasPermissionCode = permissionCode, userNeedsPermission = OntologyConstants.KnoraBase.DeletePermission)) {
@@ -1925,14 +1917,16 @@ class ResourcesResponderV1 extends ResponderV1 {
                 case None =>
                     Future((Map.empty[IRI, PropertyEntityInfoV1], Map.empty[IRI, ResourceEntityInfoV1], Map.empty[IRI, Cardinality.Value]))
             }
-        } yield queryResults2PropertyV1s(
-            containingResourceIri = resourceIri,
-            groupedPropertiesByType = groupedPropsByType,
-            propertyEntityInfoMap = propertyEntityInfoMap,
-            resourceEntityInfoMap = resourceEntityInfoMap,
-            propsAndCardinalities = propsAndCardinalities,
-            userProfile = userProfile
-        )
+
+            queryResult <- queryResults2PropertyV1s(
+                containingResourceIri = resourceIri,
+                groupedPropertiesByType = groupedPropsByType,
+                propertyEntityInfoMap = propertyEntityInfoMap,
+                resourceEntityInfoMap = resourceEntityInfoMap,
+                propsAndCardinalities = propsAndCardinalities,
+                userProfile = userProfile
+            )
+        } yield queryResult
     }
 
     /**
@@ -1951,59 +1945,77 @@ class ResourcesResponderV1 extends ResponderV1 {
         if (resInfoResponseRows.isEmpty) {
             Future.failed(NotFoundException(s"Resource $resourceIri was not found (it may have been deleted)."))
         } else {
-            // Get the rows describing file values from the query results, grouped by file value IRI.
-            val fileValueGroupedRows: Seq[(IRI, Seq[VariableResultsRow])] = resInfoResponseRows.filter(row => InputValidation.optionStringToBoolean(row.rowMap.get("isFileValue"))).groupBy(row => row.rowMap("obj")).toVector
-
-            // Convert the file value rows to ValueProps objects, and filter out the ones that the user doesn't have permission to see.
-            val valuePropsForFileValues: Seq[(IRI, ValueProps)] = fileValueGroupedRows.map {
-                case (fileValueIri, fileValueRows) => (fileValueIri, valueUtilV1.createValueProps(fileValueIri, fileValueRows))
-            }.filter {
-                case (fileValueIri, fileValueProps) =>
-                    val permissionCode = PermissionUtilV1.getUserPermissionV1WithValueProps(fileValueIri, fileValueProps, userProfile)
-                    PermissionUtilV1.impliesV1(userHasPermissionCode = permissionCode, userNeedsPermission = OntologyConstants.KnoraBase.RestrictedViewPermission)
-            }
-
-            // Convert the ValueProps objects into FileValueV1 objects
-            val fileValues: Seq[FileValueV1] = valuePropsForFileValues.map {
-                case (fileValueIri, fileValueProps) =>
-                    valueUtilV1.makeValueV1(fileValueProps) match {
-                        case fileValueV1: FileValueV1 => fileValueV1
-                        case otherValueV1 => throw InconsistentTriplestoreDataException(s"Value $fileValueIri is not a knora-base:FileValue, it is an instance of ${otherValueV1.valueTypeIri}")
-                    }
-            }
-
-            val (previewFileValues, fullFileValues) = fileValues.partition {
-                case fileValue: StillImageFileValueV1 => fileValue.isPreview
-                case _ => false
-            }
-
-            // Convert the preview file value into a LocationV1 as required by Knora API v1.
-            val preview: Option[LocationV1] = previewFileValues.headOption.map(fileValueV1 => valueUtilV1.fileValueV12LocationV1(fileValueV1))
-
-            // Convert the full-resolution file values into LocationV1 objects as required by Knora API v1.
-            val locations: Seq[LocationV1] = preview.toVector ++ fullFileValues.flatMap {
-                fileValueV1 => createMultipleImageResolutions(fileValueV1).map(oneResolution => valueUtilV1.fileValueV12LocationV1(oneResolution))
-            }
+            for {
 
             // Extract the permission-relevant assertions from the query results.
-            val permissionRelevantAssertions = PermissionUtilV1.filterPermissionRelevantAssertions(resInfoResponseRows.map(row => (row.rowMap("prop"), row.rowMap("obj"))))
+                permissionRelevantAssertions: Seq[(IRI, IRI)] <- Future(PermissionUtilV1.filterPermissionRelevantAssertions(resInfoResponseRows.map(row => (row.rowMap("prop"), row.rowMap("obj")))))
 
-            // Get the user's permission on the resource.
-            val userPermission = PermissionUtilV1.getUserPermissionV1FromAssertions(
-                subjectIri = resourceIri,
-                assertions = permissionRelevantAssertions,
-                userProfile = userProfile
-            )
+                maybeResourceProjectStatement: Option[(IRI, IRI)] = permissionRelevantAssertions.find {
+                    case (subject, predicate) => subject == OntologyConstants.KnoraBase.AttachedToProject
+                }
 
-            // group the SPARQL results by the predicate "prop" and map each row to a Seq of objects "obj", etc. (getting rid of VariableResultsRow).
-            val groupedByPredicateToWrap: Map[IRI, Seq[Map[String, String]]] = resInfoResponseRows.groupBy(row => row.rowMap("prop")).map {
-                case (predicate: IRI, rows: Seq[VariableResultsRow]) => (predicate, rows.map(_.rowMap - "prop"))
-            }
+                resourceProject = maybeResourceProjectStatement.getOrElse(throw InconsistentTriplestoreDataException(s"Resource $resourceIri has no knora-base:attachedToProject"))._2
 
-            val groupedByPredicate = new ErrorHandlingMap(groupedByPredicateToWrap, { key: IRI => s"Resource $resourceIri has no $key" })
+                // Get the rows describing file values from the query results, grouped by file value IRI.
+                fileValueGroupedRows: Seq[(IRI, Seq[VariableResultsRow])] = resInfoResponseRows.filter(row => InputValidation.optionStringToBoolean(row.rowMap.get("isFileValue"))).groupBy(row => row.rowMap("obj")).toVector
 
-            for {
-            // Query the ontology about the resource's OWL class.
+                // Convert the file value rows to ValueProps objects, and filter out the ones that the user doesn't have permission to see.
+                valuePropsForFileValues: Seq[(IRI, ValueProps)] = fileValueGroupedRows.map {
+                    case (fileValueIri, fileValueRows) => (fileValueIri, valueUtilV1.createValueProps(fileValueIri, fileValueRows))
+                }.filter {
+                    case (fileValueIri, fileValueProps) =>
+                        val permissionCode = PermissionUtilV1.getUserPermissionV1WithValueProps(
+                            subjectIri = fileValueIri,
+                            valueProps = fileValueProps,
+                            subjectProject = Some(resourceProject),
+                            userProfile = userProfile
+                        )
+                        PermissionUtilV1.impliesV1(userHasPermissionCode = permissionCode, userNeedsPermission = OntologyConstants.KnoraBase.RestrictedViewPermission)
+                }
+
+                // Convert the ValueProps objects into FileValueV1 objects
+                fileValuesWithFuture: Seq[Future[FileValueV1]] = valuePropsForFileValues.map {
+                    case (fileValueIri, fileValueProps) =>
+                        for {
+                            valueV1 <- valueUtilV1.makeValueV1(fileValueProps, responderManager, userProfile)
+
+                        } yield valueV1 match {
+                            case fileValueV1: FileValueV1 => fileValueV1
+                            case otherValueV1 => throw InconsistentTriplestoreDataException(s"Value $fileValueIri is not a knora-base:FileValue, it is an instance of ${otherValueV1.valueTypeIri}")
+                        }
+                }
+
+                fileValues: Seq[FileValueV1] <- Future.sequence(fileValuesWithFuture)
+
+                (previewFileValues, fullFileValues) = fileValues.partition {
+                    case fileValue: StillImageFileValueV1 => fileValue.isPreview
+                    case _ => false
+                }
+
+                // Convert the preview file value into a LocationV1 as required by Knora API v1.
+                preview: Option[LocationV1] = previewFileValues.headOption.map(fileValueV1 => valueUtilV1.fileValueV12LocationV1(fileValueV1))
+
+                // Convert the full-resolution file values into LocationV1 objects as required by Knora API v1.
+                locations: Seq[LocationV1] = preview.toVector ++ fullFileValues.flatMap {
+                    fileValueV1 => createMultipleImageResolutions(fileValueV1).map(oneResolution => valueUtilV1.fileValueV12LocationV1(oneResolution))
+                }
+
+                // Get the user's permission on the resource.
+                userPermission = PermissionUtilV1.getUserPermissionV1FromAssertions(
+                    subjectIri = resourceIri,
+                    assertions = permissionRelevantAssertions,
+                    userProfile = userProfile
+                )
+
+                // group the SPARQL results by the predicate "prop" and map each row to a Seq of objects "obj", etc. (getting rid of VariableResultsRow).
+                groupedByPredicateToWrap: Map[IRI, Seq[Map[String, String]]] = resInfoResponseRows.groupBy(row => row.rowMap("prop")).map {
+                    case (predicate: IRI, rows: Seq[VariableResultsRow]) => (predicate, rows.map(_.rowMap - "prop"))
+                }
+
+                groupedByPredicate = new ErrorHandlingMap(groupedByPredicateToWrap, { key: IRI => s"Resource $resourceIri has no $key" })
+
+
+                // Query the ontology about the resource's OWL class.
                 (restype_label, restype_description, restype_iconsrc) <- if (queryOntology) {
                     val resTypeIri = groupedByPredicate(OntologyConstants.Rdf.Type).head("obj")
                     for {
@@ -2085,7 +2097,7 @@ class ResourcesResponderV1 extends ResponderV1 {
                                          propertyEntityInfoMap: Map[IRI, PropertyEntityInfoV1],
                                          resourceEntityInfoMap: Map[IRI, ResourceEntityInfoV1],
                                          propsAndCardinalities: Map[IRI, Cardinality.Value],
-                                         userProfile: UserProfileV1): Seq[PropertyV1] = {
+                                         userProfile: UserProfileV1): Future[Seq[PropertyV1]] = {
         /**
           * Constructs a [[PropertyV1]].
           *
@@ -2146,21 +2158,28 @@ class ResourcesResponderV1 extends ResponderV1 {
         }
 
         // Make a PropertyV1 for each value property that has data.
-        val valuePropertiesWithData: Seq[PropertyV1] = groupedPropertiesByType.groupedOrdinaryValueProperties.groupedProperties.map {
+        val valuePropertiesWithDataWithFuture: Iterable[Future[Option[PropertyV1]]] = groupedPropertiesByType.groupedOrdinaryValueProperties.groupedProperties.map {
             case (propertyIri: IRI, valueObject: ValueObjects) =>
 
-                val valueObjectsV1: Seq[ValueObjectV1] = valueObject.valueObjects.map {
+                val valueObjectsV1WithFuture: Iterable[Future[ValueObjectV1]] = valueObject.valueObjects.map {
                     case (valObjIri: IRI, valueProps: ValueProps) =>
                         // Make sure the value object has an rdf:type.
                         valueProps.literalData.getOrElse(OntologyConstants.Rdf.Type, throw InconsistentTriplestoreDataException(s"$valObjIri has no rdf:type"))
 
+                        for {
                         // Convert the SPARQL query results to a ValueV1.
-                        val valueV1 = valueUtilV1.makeValueV1(valueProps)
+                            valueV1 <- valueUtilV1.makeValueV1(valueProps, responderManager, userProfile)
 
-                        val valPermission = PermissionUtilV1.getUserPermissionV1WithValueProps(valObjIri, valueProps, userProfile)
-                        val predicates = valueProps.literalData
+                            valPermission = PermissionUtilV1.getUserPermissionV1WithValueProps(
+                                subjectIri = valObjIri,
+                                valueProps = valueProps,
+                                subjectProject = None, // We don't need to specify this here, because it's in valueProps
+                                userProfile = userProfile
+                            )
 
-                        ValueObjectV1(
+                            predicates = valueProps.literalData
+
+                        } yield ValueObjectV1(
                             valueObjectIri = valObjIri,
                             valueV1 = valueV1,
                             valuePermission = valPermission,
@@ -2171,142 +2190,166 @@ class ResourcesResponderV1 extends ResponderV1 {
                                 case _ => 0 // order statement is missing, set it to zero
                             }
                         )
-                }.toVector.sortBy(_.order) // sort the values by their order given in the triplestore [[OntologyConstants.KnoraBase.ValueHasOrder]]
-
-                // get all the values the user has at least viewing permissions on
-                val valueObjectListFiltered = valueObjectsV1.filter(_.valuePermission.nonEmpty)
-
-                // Get the ontology information about the property.
-                val propertyEntityInfo = propertyEntityInfoMap.get(propertyIri)
-
-                // Make a PropertyV1 for the property.
-                val propertyV1 = makePropertyV1(propertyIri = propertyIri,
-                    propertyCardinality = propsAndCardinalities.get(propertyIri),
-                    propertyEntityInfo = propertyEntityInfo,
-                    valueObjects = valueObjectListFiltered)
-
-                // If the property has a value that the user isn't allowed to see, and its cardinality
-                // is MustHaveOne or MayHaveOne, don't return any information about the property.
-                propsAndCardinalities.get(propertyIri) match {
-                    case Some(cardinality) if (cardinality == Cardinality.MustHaveOne || cardinality == Cardinality.MayHaveOne) && valueObjectsV1.nonEmpty && valueObjectListFiltered.isEmpty => None
-                    case _ => Some(propertyV1)
                 }
-        }.toVector.flatten
 
-        // Make a PropertyV1 for each link property with data. We have to treat links as a special case because they're not really values (they don't have IRIs),
-        // and because Knora API v1 needs some information about the target resource.
-        val linkPropertiesWithData: Seq[PropertyV1] = groupedPropertiesByType.groupedLinkProperties.groupedProperties.map {
-            case (propertyIri: IRI, targetResource: ValueObjects) =>
-                val valueObjectsV1: Seq[ValueObjectV1] = targetResource.valueObjects.map {
-                    case (targetResourceIri: IRI, valueProps: ValueProps) =>
+                for {
+                    valueObjectsV1 <- Future.sequence(valueObjectsV1WithFuture)
 
-                        val predicates = valueProps.literalData
+                    valueObjectsV1Sorted = valueObjectsV1.toVector.sortBy(_.order) // sort the values by their order given in the triplestore [[OntologyConstants.KnoraBase.ValueHasOrder]]
 
-                        // Get the IRI of the resource class of the referenced resource.
-                        val referencedResType = predicates(OntologyConstants.Rdf.Type).literals.head
+                    // get all the values the user has at least viewing permissions on
+                    valueObjectListFiltered = valueObjectsV1Sorted.filter(_.valuePermission.nonEmpty)
 
-                        // Get info about that resource class, if available.
-                        // Use resource entity infos to do so.
-                        val (maybeResourceClassLabel: Option[String], maybeResourceClassIcon: Option[String]) = resourceEntityInfoMap.get(referencedResType) match {
-                            case Some(referencedResTypeEntityInfo) =>
+                    // Get the ontology information about the property.
+                    propertyEntityInfo = propertyEntityInfoMap.get(propertyIri)
 
-                                val labelOption: Option[String] = referencedResTypeEntityInfo.getPredicateObject(predicateIri = OntologyConstants.Rdfs.Label, preferredLangs = Some(userProfile.userData.lang, settings.fallbackLanguage))
-                                val resIconOption: Option[String] = referencedResTypeEntityInfo.getPredicateObject(OntologyConstants.KnoraBase.ResourceIcon)
-
-                                (labelOption, resIconOption)
-
-                            case None => (None, None)
-                        }
-
-                        val valueResourceClassOption = predicates(OntologyConstants.Rdf.Type).literals.headOption
-                        // build the correct path to the icon
-                        val maybeValueResourceClassIcon = valueResourceClassOption match {
-                            case Some(resClass) if maybeResourceClassIcon.nonEmpty => Some(valueUtilV1.makeResourceClassIconURL(resClass, maybeResourceClassIcon.get))
-                            case _ => None
-                        }
-
-                        val valueV1 = LinkV1(
-                            targetResourceIri = targetResourceIri,
-                            valueLabel = predicates.get(OntologyConstants.Rdfs.Label).map(_.literals.head),
-                            valueResourceClass = valueResourceClassOption,
-                            valueResourceClassLabel = maybeResourceClassLabel,
-                            valueResourceClassIcon = maybeValueResourceClassIcon
-                        )
-
-                        // A direct link between resources has a corresponding LinkValue reification. We use its IRI as the
-                        // value object IRI, since links don't have IRIs of their own.
-
-                        // Convert the link property IRI to a link value property IRI.
-                        val linkValuePropertyIri = knoraIdUtil.linkPropertyIriToLinkValuePropertyIri(propertyIri)
-
-                        // Get the details of the link value that's pointed to by that link value property, and that has the target resource as its rdf:object.
-                        val (linkValueIri, linkValueProps) = groupedPropertiesByType.groupedLinkValueProperties.groupedProperties.getOrElse(linkValuePropertyIri,
-                            throw InconsistentTriplestoreDataException(s"Resource $containingResourceIri has link property $propertyIri but does not have a corresponding link value property")).valueObjects.find {
-                            case (someLinkValueIri, someLinkValueProps) =>
-                                someLinkValueProps.literalData.getOrElse(OntologyConstants.Rdf.Object, throw InconsistentTriplestoreDataException(s"Link value $someLinkValueIri has no rdf:object")).literals.head == targetResourceIri
-                        }.getOrElse(throw InconsistentTriplestoreDataException(s"Link property $propertyIri of resource $containingResourceIri points to resource $targetResourceIri, but there is no corresponding link value with the target resource as its rdf:object"))
-
-                        val linkValueOrder = linkValueProps.literalData.get(OntologyConstants.KnoraBase.ValueHasOrder) match {
-                            // this should not be necessary as an order should always be given (also if there is only one value)
-                            case Some(ValueLiterals(literals)) => literals.head.toInt
-                            case _ => 0 // order statement is missing, set it to zero
-                        }
-
-                        val apiValueV1ForLinkValue = valueUtilV1.makeValueV1(linkValueProps)
-
-                        val linkValueV1: LinkValueV1 = apiValueV1ForLinkValue match {
-                            case linkValueV1: LinkValueV1 => linkValueV1
-                            case _ => throw InconsistentTriplestoreDataException(s"Expected $linkValueIri to be a knora-base:LinkValue, but its type is ${apiValueV1ForLinkValue.valueTypeIri}")
-                        }
-
-                        // Check the permissions on the LinkValue.
-                        val linkValuePermission = PermissionUtilV1.getUserPermissionOnLinkValueV1WithValueProps(
-                            linkValueIri = linkValueIri,
-                            predicateIri = linkValueV1.predicateIri,
-                            valueProps = linkValueProps,
-                            userProfile = userProfile
-                        )
-
-                        // We only allow the user to see information about the link if they have at least view permission on both the link value
-                        // and on the target resource.
-
-                        val targetResourcePermission = PermissionUtilV1.getUserPermissionV1WithValueProps(targetResourceIri, valueProps, userProfile)
-
-                        val linkPermission = (targetResourcePermission, linkValuePermission) match {
-                            case (Some(targetResourcePermissionCode), Some(linkValuePermissionCode)) => Some(scala.math.min(targetResourcePermissionCode, linkValuePermissionCode))
-                            case _ => None
-                        }
-
-                        ValueObjectV1(
-                            valueObjectIri = linkValueIri,
-                            valueV1 = valueV1,
-                            valuePermission = linkPermission,
-                            order = linkValueOrder,
-                            comment = linkValueProps.literalData.get(OntologyConstants.KnoraBase.ValueHasComment).map(_.literals.head) // get comment from LinkValue
-                        )
-                }.toVector
-
-                // get all the values the user has at least viewing permissions on
-                val valueObjectListFiltered = valueObjectsV1.filter(_.valuePermission.nonEmpty)
-
-                // Get the ontology information about the property, if available.
-                val propertyEntityInfo = propertyEntityInfoMap.get(propertyIri)
-
-                // Make a PropertyV1 for the property.
-                val propertyV1 = makePropertyV1(propertyIri = propertyIri,
-                    propertyCardinality = propsAndCardinalities.get(propertyIri),
-                    propertyEntityInfo = propertyEntityInfo,
-                    valueObjects = valueObjectListFiltered)
-
-                // If the property has a value that the user isn't allowed to see, and its cardinality
+                    // Make a PropertyV1 for the property.
+                    propertyV1 = makePropertyV1(propertyIri = propertyIri,
+                        propertyCardinality = propsAndCardinalities.get(propertyIri),
+                        propertyEntityInfo = propertyEntityInfo,
+                        valueObjects = valueObjectListFiltered)
+                } yield
+                    // If the property has a value that the user isn't allowed to see, and its cardinality
                 // is MustHaveOne or MayHaveOne, don't return any information about the property.
-                propsAndCardinalities.get(propertyIri) match {
-                    case Some(cardinality) if (cardinality == Cardinality.MustHaveOne || cardinality == Cardinality.MayHaveOne) && valueObjectsV1.nonEmpty && valueObjectListFiltered.isEmpty => None
-                    case _ => Some(propertyV1)
-                }
-        }.toVector.flatten
+                    propsAndCardinalities.get(propertyIri) match {
+                        case Some(cardinality) if (cardinality == Cardinality.MustHaveOne || cardinality == Cardinality.MayHaveOne) && valueObjectsV1Sorted.nonEmpty && valueObjectListFiltered.isEmpty => None
+                        case _ => Some(propertyV1)
+                    }
+        }
 
-        valuePropertiesWithData ++ linkPropertiesWithData
+        for {
+            valuePropertiesWithDataWithOption: Iterable[Option[PropertyV1]] <- Future.sequence(valuePropertiesWithDataWithFuture)
+
+            valuePropertiesWithData = valuePropertiesWithDataWithOption.toVector.flatten
+
+            // Make a PropertyV1 for each link property with data. We have to treat links as a special case because they're not really values (they don't have IRIs),
+            // and because Knora API v1 needs some information about the target resource.
+            linkPropertiesWithDataWithFuture: Iterable[Future[Option[PropertyV1]]] = groupedPropertiesByType.groupedLinkProperties.groupedProperties.map {
+                case (propertyIri: IRI, targetResource: ValueObjects) =>
+                    val valueObjectsV1WithFuture: Vector[Future[ValueObjectV1]] = targetResource.valueObjects.map {
+                        case (targetResourceIri: IRI, valueProps: ValueProps) =>
+
+                            val predicates = valueProps.literalData
+
+                            // Get the IRI of the resource class of the referenced resource.
+                            val referencedResType = predicates(OntologyConstants.Rdf.Type).literals.head
+
+                            // Get info about that resource class, if available.
+                            // Use resource entity infos to do so.
+                            val (maybeResourceClassLabel: Option[String], maybeResourceClassIcon: Option[String]) = resourceEntityInfoMap.get(referencedResType) match {
+                                case Some(referencedResTypeEntityInfo) =>
+
+                                    val labelOption: Option[String] = referencedResTypeEntityInfo.getPredicateObject(predicateIri = OntologyConstants.Rdfs.Label, preferredLangs = Some(userProfile.userData.lang, settings.fallbackLanguage))
+                                    val resIconOption: Option[String] = referencedResTypeEntityInfo.getPredicateObject(OntologyConstants.KnoraBase.ResourceIcon)
+
+                                    (labelOption, resIconOption)
+
+                                case None => (None, None)
+                            }
+
+                            val valueResourceClassOption = predicates(OntologyConstants.Rdf.Type).literals.headOption
+                            // build the correct path to the icon
+                            val maybeValueResourceClassIcon = valueResourceClassOption match {
+                                case Some(resClass) if maybeResourceClassIcon.nonEmpty => Some(valueUtilV1.makeResourceClassIconURL(resClass, maybeResourceClassIcon.get))
+                                case _ => None
+                            }
+
+                            val valueV1 = LinkV1(
+                                targetResourceIri = targetResourceIri,
+                                valueLabel = predicates.get(OntologyConstants.Rdfs.Label).map(_.literals.head),
+                                valueResourceClass = valueResourceClassOption,
+                                valueResourceClassLabel = maybeResourceClassLabel,
+                                valueResourceClassIcon = maybeValueResourceClassIcon
+                            )
+
+                            // A direct link between resources has a corresponding LinkValue reification. We use its IRI as the
+                            // value object IRI, since links don't have IRIs of their own.
+
+                            // Convert the link property IRI to a link value property IRI.
+                            val linkValuePropertyIri = knoraIdUtil.linkPropertyIriToLinkValuePropertyIri(propertyIri)
+
+                            // Get the details of the link value that's pointed to by that link value property, and that has the target resource as its rdf:object.
+                            val (linkValueIri, linkValueProps) = groupedPropertiesByType.groupedLinkValueProperties.groupedProperties.getOrElse(linkValuePropertyIri,
+                                throw InconsistentTriplestoreDataException(s"Resource $containingResourceIri has link property $propertyIri but does not have a corresponding link value property")).valueObjects.find {
+                                case (someLinkValueIri, someLinkValueProps) =>
+                                    someLinkValueProps.literalData.getOrElse(OntologyConstants.Rdf.Object, throw InconsistentTriplestoreDataException(s"Link value $someLinkValueIri has no rdf:object")).literals.head == targetResourceIri
+                            }.getOrElse(throw InconsistentTriplestoreDataException(s"Link property $propertyIri of resource $containingResourceIri points to resource $targetResourceIri, but there is no corresponding link value with the target resource as its rdf:object"))
+
+                            val linkValueOrder = linkValueProps.literalData.get(OntologyConstants.KnoraBase.ValueHasOrder) match {
+                                // this should not be necessary as an order should always be given (also if there is only one value)
+                                case Some(ValueLiterals(literals)) => literals.head.toInt
+                                case _ => 0 // order statement is missing, set it to zero
+                            }
+
+                            for {
+                                apiValueV1ForLinkValue <- valueUtilV1.makeValueV1(linkValueProps, responderManager, userProfile)
+
+                                linkValueV1: LinkValueV1 = apiValueV1ForLinkValue match {
+                                    case linkValueV1: LinkValueV1 => linkValueV1
+                                    case _ => throw InconsistentTriplestoreDataException(s"Expected $linkValueIri to be a knora-base:LinkValue, but its type is ${apiValueV1ForLinkValue.valueTypeIri}")
+                                }
+
+                                // Check the permissions on the LinkValue.
+                                linkValuePermission = PermissionUtilV1.getUserPermissionOnLinkValueV1WithValueProps(
+                                    linkValueIri = linkValueIri,
+                                    predicateIri = linkValueV1.predicateIri,
+                                    valueProps = linkValueProps,
+                                    subjectProject = None, // We don't need to specify this here, because it's in linkValueProps
+                                    userProfile = userProfile
+                                )
+
+                                // We only allow the user to see information about the link if they have at least view permission on both the link value
+                                // and on the target resource.
+
+                                targetResourcePermission = PermissionUtilV1.getUserPermissionV1WithValueProps(
+                                    subjectIri = targetResourceIri,
+                                    valueProps = valueProps,
+                                    subjectProject = None, // We don't need to specify this here, because it's in valueProps
+                                    userProfile = userProfile
+                                )
+
+                                linkPermission = (targetResourcePermission, linkValuePermission) match {
+                                    case (Some(targetResourcePermissionCode), Some(linkValuePermissionCode)) => Some(scala.math.min(targetResourcePermissionCode, linkValuePermissionCode))
+                                    case _ => None
+                                }
+
+                            } yield ValueObjectV1(
+                                valueObjectIri = linkValueIri,
+                                valueV1 = valueV1,
+                                valuePermission = linkPermission,
+                                order = linkValueOrder,
+                                comment = linkValueProps.literalData.get(OntologyConstants.KnoraBase.ValueHasComment).map(_.literals.head) // get comment from LinkValue
+                            )
+                    }.toVector
+
+                    for {
+                        valueObjectsV1: Vector[ValueObjectV1] <- Future.sequence(valueObjectsV1WithFuture)
+
+                        // get all the values the user has at least viewing permissions on
+                        valueObjectListFiltered = valueObjectsV1.filter(_.valuePermission.nonEmpty)
+
+                        // Get the ontology information about the property, if available.
+                        propertyEntityInfo = propertyEntityInfoMap.get(propertyIri)
+
+                        // Make a PropertyV1 for the property.
+                        propertyV1 = makePropertyV1(propertyIri = propertyIri,
+                            propertyCardinality = propsAndCardinalities.get(propertyIri),
+                            propertyEntityInfo = propertyEntityInfo,
+                            valueObjects = valueObjectListFiltered)
+
+                    // If the property has a value that the user isn't allowed to see, and its cardinality
+                    // is MustHaveOne or MayHaveOne, don't return any information about the property.
+                    } yield propsAndCardinalities.get(propertyIri) match {
+                        case Some(cardinality) if (cardinality == Cardinality.MustHaveOne || cardinality == Cardinality.MayHaveOne) && valueObjectsV1.nonEmpty && valueObjectListFiltered.isEmpty => None
+                        case _ => Some(propertyV1)
+                    }
+            }
+
+            linkPropertiesWithDataWithOption: Iterable[Option[PropertyV1]] <- Future.sequence(linkPropertiesWithDataWithFuture)
+
+            linkPropertiesWithData: Vector[PropertyV1] = linkPropertiesWithDataWithOption.toVector.flatten
+
+        } yield valuePropertiesWithData ++ linkPropertiesWithData
     }
 
     private def convertPropertyV1toPropertyGetV1(propertyV1: PropertyV1): PropertyGetV1 = {

@@ -33,7 +33,7 @@ about books, pages, their contents, and relationships between them. At the momen
 only the RDF data is provided in the example project, not the images.
 
 The ``incunabula`` ontology is in the file ``incunabula-onto.ttl``, and its
-data is in the file ``incunabula-data.ttl``. Both these files are in a
+data is in the file ``incunabula-demo-data.ttl``. Both these files are in a
 standard RDF file format called Turtle_. The Knora distribution includes
 sample scripts (in the ``webapi/scripts`` directory) for importing these files
 directly into different triplestores. If you are starting a new project from

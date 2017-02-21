@@ -26,11 +26,12 @@ import com.typesafe.config.ConfigFactory
 import org.knora.webapi.messages.v1.responder.resourcemessages.{CreateResourceApiRequestV1, CreateResourceValueV1}
 import org.knora.webapi.messages.v1.responder.valuemessages.CreateRichtextV1
 import org.knora.webapi.messages.v1.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
-import org.knora.webapi.{FileWriteException, ITSpec, InvalidApiJsonException}
+import org.knora.webapi.{FileWriteException, IRI, ITSpec, InvalidApiJsonException}
 import spray.json._
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
+import scala.io.{Codec, Source}
 
 
 object SipiV1ITSpec {
@@ -63,7 +64,7 @@ class SipiV1ITSpec extends ITSpec(SipiV1ITSpec.config) with TriplestoreJsonProto
         // Contact the SIPI fileserver to see if Sipi is running
         // Plase make sure that 1) fileserver.docroot is set in config file and 2) it contains a file test.html
         val request = Get(baseSipiUrl + "/server/test.html")
-        val response = singleAwaitingRequest(request, 1.second)
+        val response = singleAwaitingRequest(request, 5.second)
         assert(response.status == StatusCodes.OK, s"SIPI is probably not running! ${response.status}")
     }
 
@@ -73,37 +74,67 @@ class SipiV1ITSpec extends ITSpec(SipiV1ITSpec.config) with TriplestoreJsonProto
         singleAwaitingRequest(request, 300.seconds)
     }
 
+    object ResponseUtils {
+
+        def getStringMemberFromResponse(response: HttpResponse, memberName: String): IRI = {
+
+            // get the specified string member of the response
+            val resIdFuture: Future[String] = response.entity.toStrict(5.seconds).map {
+                responseBody =>
+                    val resBodyAsString = responseBody.data.decodeString("UTF-8")
+                    resBodyAsString.parseJson.asJsObject.fields.get(memberName) match {
+                        case Some(JsString(entitiyId)) => entitiyId
+                        case None => throw InvalidApiJsonException(s"The response does not contain a field called '$memberName'")
+                        case other => throw InvalidApiJsonException(s"The response does not contain a field '$memberName' of type JsString, but ${other}")
+                    }
+            }
+
+            // wait for the Future to complete
+            Await.result(resIdFuture, 5.seconds)
+
+        }
+
+    }
+
     object RequestParams {
 
-        val createResourceParams = CreateResourceApiRequestV1(
-            restype_id = "http://www.knora.org/ontology/incunabula#page",
-            properties = Map(
-                "http://www.knora.org/ontology/incunabula#pagenum" -> Seq(CreateResourceValueV1(
-                    richtext_value = Some(CreateRichtextV1(
-                        utf8str = "test_page",
-                        textattr = None,
-                        resource_reference = None
-                    ))
-                )),
-                "http://www.knora.org/ontology/incunabula#origname" -> Seq(CreateResourceValueV1(
-                    richtext_value = Some(CreateRichtextV1(
-                        utf8str = "test",
-                        textattr = None,
-                        resource_reference = None
-                    ))
-                )),
-                "http://www.knora.org/ontology/incunabula#partOf" -> Seq(CreateResourceValueV1(
-                    link_value = Some("http://data.knora.org/5e77e98d2603")
-                )),
-                "http://www.knora.org/ontology/incunabula#seqnum" -> Seq(CreateResourceValueV1(
-                    int_value = Some(999)
-                ))
-            ),
-            label = "test",
-            project_id = "http://data.knora.org/projects/77275339"
-        )
 
-        val pathToFile = "_test_data/test_route/images/Chlaus.jpg"
+        val paramsPageWithBinaries =
+            s"""
+           {
+                "restype_id": "http://www.knora.org/ontology/incunabula#page",
+                "label": "test",
+                "project_id": "http://data.knora.org/projects/77275339",
+                "properties": {
+                    "http://www.knora.org/ontology/incunabula#pagenum": [
+                        {
+                            "richtext_value": {
+                                "utf8str": "test_page"
+                            }
+                        }
+                    ],
+                    "http://www.knora.org/ontology/incunabula#origname": [
+                        {
+                            "richtext_value": {
+                                "utf8str": "test"
+                            }
+                        }
+                    ],
+                    "http://www.knora.org/ontology/incunabula#partOf": [
+                        {
+                            "link_value": "http://data.knora.org/5e77e98d2603"
+                        }
+                    ],
+                    "http://www.knora.org/ontology/incunabula#seqnum": [
+                        {
+                            "int_value": 999
+                        }
+                    ]
+                }
+           }
+         """
+
+        val pathToImageFile = "_test_data/test_route/images/Chlaus.jpg"
 
         def createTmpFileDir() = {
             // check if tmp datadir exists and create it if not
@@ -128,14 +159,14 @@ class SipiV1ITSpec extends ITSpec(SipiV1ITSpec.config) with TriplestoreJsonProto
              * inside webapi folder ./_test_data/test_route/create_page_with_binaries.py
              */
 
-            val fileToSend = new File(RequestParams.pathToFile)
+            val fileToSend = new File(RequestParams.pathToImageFile)
             // check if the file exists
-            assert(fileToSend.exists(), s"File ${RequestParams.pathToFile} does not exist")
+            assert(fileToSend.exists(), s"File ${RequestParams.pathToImageFile} does not exist")
 
             val formData = Multipart.FormData(
                 Multipart.FormData.BodyPart(
                     "json",
-                    HttpEntity(ContentTypes.`application/json`, RequestParams.createResourceParams.toJsValue.compactPrint)
+                    HttpEntity(ContentTypes.`application/json`, RequestParams.paramsPageWithBinaries)
                 ),
                 Multipart.FormData.BodyPart(
                     "file",
@@ -150,24 +181,12 @@ class SipiV1ITSpec extends ITSpec(SipiV1ITSpec.config) with TriplestoreJsonProto
 
             assert(response.status === StatusCodes.OK)
 
-            // get the new resource Iri
-            val resIdFuture: Future[String] = response.entity.toStrict(5.seconds).map {
-                responseBody =>
-                    val resBodyAsString = responseBody.data.decodeString("UTF-8")
-                    resBodyAsString.parseJson.asJsObject.fields.get("res_id") match {
-                        case Some(JsString(resourceId)) => resourceId
-                        case None => throw InvalidApiJsonException(s"The response does not contain a field called 'res_id'")
-                        case other => throw InvalidApiJsonException(s"The response does not contain a res_id of type JsString, but ${other}")
-                    }
-            }
-
-            // wait for the Future to complete
-            val newResourceIri: String = Await.result(resIdFuture, 5.seconds)
+            val newResourceIri: String = ResponseUtils.getStringMemberFromResponse(response, "res_id")
 
             val requestNewResource = Get(baseApiUrl + "/v1/resources/" + URLEncoder.encode(newResourceIri, "UTF-8")) ~> addCredentials(BasicHttpCredentials(username, password))
             val responseNewResource = singleAwaitingRequest(requestNewResource, 20.seconds)
 
-            assert(responseNewResource.status == StatusCodes.OK)
+            assert(responseNewResource.status == StatusCodes.OK, responseNewResource.entity.toString)
 
             val IIIFPathFuture: Future[String] = responseNewResource.entity.toStrict(5.seconds).map {
                 newResponseBody =>
@@ -201,20 +220,18 @@ class SipiV1ITSpec extends ITSpec(SipiV1ITSpec.config) with TriplestoreJsonProto
             // TODO: now we could try to request the path from Sipi
             // TODO: we should run Sipi in test mode so it does not do run the preflight request
 
-            println(IIIFPath)
-
-        }
-
-
-        "create an 'incunabula:page' with parameters" in {
-
+            //println(IIIFPath)
 
         }
 
         "change an 'incunabula:page' with binary data" in {}
 
+        "create an 'incunabula:page' with parameters" in {}
+
         "change an 'incunabula:page' with parameters" in {}
 
         "create an 'anything:thing'" in {}
+
+
     }
 }

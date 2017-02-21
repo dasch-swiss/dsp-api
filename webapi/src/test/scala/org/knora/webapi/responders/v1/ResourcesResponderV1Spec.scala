@@ -30,11 +30,12 @@ import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRe
 import org.knora.webapi.messages.v1.responder.permissionmessages.{ObjectAccessPermissionV1, ObjectAccessPermissionsForResourceGetV1, PermissionV1}
 import org.knora.webapi.messages.v1.responder.resourcemessages._
 import org.knora.webapi.messages.v1.responder.sipimessages.SipiResponderConversionFileRequestV1
-import org.knora.webapi.messages.v1.responder.usermessages.UserDataV1
+import org.knora.webapi.messages.v1.responder.standoffmessages.StandoffDataTypeClasses
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v1.store.triplestoremessages._
 import org.knora.webapi.responders._
 import org.knora.webapi.store._
+import org.knora.webapi.twirl.{StandoffTagIriAttributeV1, StandoffTagV1}
 import org.knora.webapi.util._
 
 import scala.concurrent.duration._
@@ -84,7 +85,7 @@ object ResourcesResponderV1Spec {
                             None,
                             None,
                             "Siehe Seite c5v",
-                            TextValueV1("Siehe Seite c5v"),
+                            TextValueSimpleV1("Siehe Seite c5v"),
                             "http://data.knora.org/021ec18f1735/values/8a96c303338201",
                             None,
                             None))),
@@ -630,9 +631,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
     private val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
 
     val rdfDataObjects = List(
-        RdfDataObject(path = "_test_data/ontologies/incunabula-onto.ttl", name = "http://www.knora.org/ontology/incunabula"),
         RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/incunabula"),
-        RdfDataObject(path = "_test_data/ontologies/anything-onto.ttl", name = "http://www.knora.org/ontology/anything"),
         RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/anything")
     )
 
@@ -853,10 +852,10 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
     private def checkPermissionsOnResource(resourceIri: IRI): Unit = {
 
         val expected = Set(
-            PermissionV1.ChangeRightsPermission("http://www.knora.org/ontology/knora-base#Creator"),
-            PermissionV1.ModifyPermission("http://www.knora.org/ontology/knora-base#ProjectMember"),
-            PermissionV1.ViewPermission("http://www.knora.org/ontology/knora-base#KnownUser"),
-            PermissionV1.RestrictedViewPermission("http://www.knora.org/ontology/knora-base#UnknownUser")
+            PermissionV1.changeRightsPermission("http://www.knora.org/ontology/knora-base#Creator"),
+            PermissionV1.modifyPermission("http://www.knora.org/ontology/knora-base#ProjectMember"),
+            PermissionV1.viewPermission("http://www.knora.org/ontology/knora-base#KnownUser"),
+            PermissionV1.restrictedViewPermission("http://www.knora.org/ontology/knora-base#UnknownUser")
         )
 
         responderManager ! ObjectAccessPermissionsForResourceGetV1(resourceIri = newBookResourceIri.get)
@@ -905,7 +904,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
 
             expectMsgPF(timeout) {
                 case response: ResourceFullResponseV1 =>
-                    // compareResourceFullResponses(received = response, expected = ResourcesResponderV1SpecFullData.expectedRegionFullResource)
+                // compareResourceFullResponses(received = response, expected = ResourcesResponderV1SpecFullData.expectedRegionFullResource)
             }
         }
 
@@ -1059,7 +1058,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
             // Title and publoc are required but missing
 
             val author = Vector(
-                CreateValueV1WithComment(TextValueV1(utf8str = "Franciscus de Retza"), None)
+                CreateValueV1WithComment(TextValueSimpleV1(utf8str = "Franciscus de Retza"), None)
             )
 
             val pubdate = Vector(
@@ -1091,30 +1090,92 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
             }
         }
 
+        "not create a resource containing a text value with a standoff reference to a nonexistent resource" in {
+            val nonexistentIri = "http://data.knora.org/nonexistent"
+
+            val title1 = TextValueSimpleV1("A beautiful book")
+
+            val citation1 = TextValueWithStandoffV1(
+                utf8str = "This comment refers to another resource",
+                standoff = Vector(
+                    StandoffTagV1(
+                        standoffTagClassIri = OntologyConstants.KnoraBase.StandoffLinkTag,
+                        dataType = Some(StandoffDataTypeClasses.StandoffLinkTag),
+                        startPosition = 31,
+                        endPosition = 39,
+                        startIndex = 0,
+                        attributes = Vector(StandoffTagIriAttributeV1(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink, value = nonexistentIri)),
+                        uuid = UUID.randomUUID().toString,
+                        originalXMLID = None
+                    )
+                ),
+                resource_reference = Set(nonexistentIri),
+                mapping = ResourcesResponderV1SpecFullData.dummyMapping,
+                mappingIri = "http://data.knora.org/projects/standoff/mappings/StandardMapping"
+            )
+
+            val publoc = TextValueSimpleV1("Entenhausen")
+
+            val pubdate = DateUtilV1.createJDNValueV1FromDateString("GREGORIAN:2015-12-03")
+
+            val valuesToBeCreated: Map[IRI, Seq[CreateValueV1WithComment]] = Map(
+                "http://www.knora.org/ontology/incunabula#title" -> Vector(CreateValueV1WithComment(title1)),
+                "http://www.knora.org/ontology/incunabula#pubdate" -> Vector(CreateValueV1WithComment(pubdate)),
+                "http://www.knora.org/ontology/incunabula#citation" -> Vector(
+                    CreateValueV1WithComment(citation1, None)
+                ),
+                "http://www.knora.org/ontology/incunabula#publoc" -> Vector(CreateValueV1WithComment(publoc))
+            )
+
+            actorUnderTest ! ResourceCreateRequestV1(
+                resourceTypeIri = "http://www.knora.org/ontology/incunabula#book",
+                label = "Book with reference to nonexistent resource",
+                projectIri = "http://data.knora.org/projects/77275339",
+                values = valuesToBeCreated,
+                userProfile = SharedAdminTestData.incunabulaProjectAdminUser,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[NotFoundException] should ===(true)
+            }
+        }
+
         "create a new resource of type incunabula:book with values" in {
 
-            val title1 = TextValueV1("A beautiful book")
+            val title1 = TextValueSimpleV1("A beautiful book")
 
-            val citation1 = TextValueV1("ein Zitat")
-            val citation2 = TextValueV1(
+            val citation1 = TextValueSimpleV1("ein Zitat")
+            val citation2 = TextValueWithStandoffV1(
                 utf8str = "This citation refers to another resource",
-                textattr = Map(
-                    StandoffTagV1.bold -> Vector(StandoffPositionV1(
-                        start = 5,
-                        end = 13
-                    )),
-                    StandoffTagV1.link -> Vector(StandoffPositionV1(
-                        start = 32,
-                        end = 40,
-                        resid = Some("http://data.knora.org/c5058f3a")
-                    ))
+                standoff = Vector(
+                    StandoffTagV1(
+                        standoffTagClassIri = OntologyConstants.Standoff.StandoffBoldTag,
+                        startPosition = 5,
+                        endPosition = 13,
+                        uuid = UUID.randomUUID().toString,
+                        originalXMLID = None,
+                        startIndex = 0
+                    ),
+                    StandoffTagV1(
+                        standoffTagClassIri = OntologyConstants.KnoraBase.StandoffLinkTag,
+                        dataType = Some(StandoffDataTypeClasses.StandoffLinkTag),
+                        startPosition = 32,
+                        endPosition = 40,
+                        attributes = Vector(StandoffTagIriAttributeV1(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink, value = "http://data.knora.org/c5058f3a")),
+                        uuid = UUID.randomUUID().toString,
+                        originalXMLID = None,
+                        startIndex = 0
+                    )
                 ),
+                mapping = ResourcesResponderV1SpecFullData.dummyMapping,
+                mappingIri = "http://data.knora.org/projects/standoff/mappings/StandardMapping",
                 resource_reference = Set("http://data.knora.org/c5058f3a")
             )
-            val citation3 = TextValueV1("und noch eines")
-            val citation4 = TextValueV1("noch ein letztes")
+            val citation3 = TextValueSimpleV1("und noch eines")
+            val citation4 = TextValueSimpleV1("noch ein letztes")
 
-            val publoc = TextValueV1("Entenhausen")
+            val publoc = TextValueSimpleV1("Entenhausen")
 
             val pubdateRequest = DateUtilV1.createJDNValueV1FromDateString("GREGORIAN:2015-12-03")
             val pubdateResponse = DateValueV1(dateval1 = "2015-12-03", dateval2 = "2015-12-03", calendar = KnoraCalendarV1.GREGORIAN)
@@ -1170,8 +1231,8 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
         }
 
         "create an incunabula:page with a resource pointer" in {
-            val recto = TextValueV1("recto")
-            val origname = TextValueV1("Blatt")
+            val recto = TextValueSimpleV1("recto")
+            val origname = TextValueSimpleV1("Blatt")
             val seqnum = IntegerValueV1(1)
 
             val fileValueFull = StillImageFileValueV1(
@@ -1486,7 +1547,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
             )
 
             expectMsgPF(timeout) {
-                case response: GraphDataGetResponseV1 => response should===(graphWithStandoffLink)
+                case response: GraphDataGetResponseV1 => response should ===(graphWithStandoffLink)
             }
         }
 
@@ -1498,7 +1559,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
             )
 
             expectMsgPF(timeout) {
-                case response: GraphDataGetResponseV1 => response should===(graphWithOneNode)
+                case response: GraphDataGetResponseV1 => response should ===(graphWithOneNode)
             }
         }
     }

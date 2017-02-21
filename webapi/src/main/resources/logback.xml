@@ -41,6 +41,7 @@
     <logger name="org.knora.webapi.routing.Authenticator" level="INFO"/>
     <logger name="org.knora.webapi.routing.v1.AssetsRouteV1" level="INFO"/>
     <logger name="org.knora.webapi.routing.v1.ResourcesRouteV1" level="INFO"/>
+    <logger name="org.knora.webapi.routing.v1.StandoffRouteV1" level="INFO"/>
     <logger name="org.knora.webapi.routing.v1.ValuesRouteV1" level="INFO"/>
     <logger name="org.knora.webapi.store.StoreManager" level="INFO"/>
     <logger name="org.knora.webapi.store.triplestore" level="INFO"/>
@@ -53,6 +54,8 @@
     <logger name="org.knora.webapi.responders.v1.ValuesResponderV1" level="INFO"/>
     <logger name="org.knora.webapi.responders.v1.StoreResponderV1" level="INFO"/>
     <logger name="org.knora.webapi.viewhandlers.ResourceHtmlView" level="INFO"/>
+
+    <!-- for logging during tests, please see/use logback-test.xml under test/resources -->
 
     <root level="INFO">
         <appender-ref ref="stdout"/>

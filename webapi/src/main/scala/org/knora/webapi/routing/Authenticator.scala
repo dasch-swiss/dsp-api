@@ -110,7 +110,7 @@ trait Authenticator {
                         JsObject(
                             "status" -> JsNumber(0),
                             "message" -> JsString("session credentials are OK"),
-                            "userdata" -> userProfile.userData.toJsValue
+                            "userdata" -> userProfile.ofType(UserProfileType.RESTRICTED).userData.toJsValue
                         ).compactPrint
                     )
                 )
@@ -333,7 +333,7 @@ object Authenticator {
         val cookies: Seq[HttpCookiePair] = requestContext.request.cookies
         cookies.find(_.name == "KnoraAuthentication") match {
             case Some(authCookie) =>
-                val value = CacheUtil.get[UserProfileV1](AUTHENTICATION_CACHE_NAME, authCookie.value)
+                val value: Option[UserProfileV1] = CacheUtil.get[UserProfileV1](AUTHENTICATION_CACHE_NAME, authCookie.value)
                 log.debug(s"Found this session id: ${authCookie.value} leading to this content in the cache: $value")
                 value
             case None =>
@@ -433,7 +433,7 @@ object Authenticator {
       */
     private def getUserProfileByIri(iri: IRI)(implicit system: ActorSystem, timeout: Timeout, executionContext: ExecutionContext): UserProfileV1 = {
         val responderManager = system.actorSelection(RESPONDER_MANAGER_ACTOR_PATH)
-        val userProfileV1Future = (responderManager ? UserProfileByIRIGetRequestV1(iri, UserProfileType.FULL)).mapTo[UserProfileV1]
+        val userProfileV1Future = (responderManager ? UserProfileByIRIGetV1(iri, UserProfileType.FULL)).mapTo[UserProfileV1]
 
         userProfileV1Future.recover {
             case nfe: NotFoundException => throw BadCredentialsException(s"$BAD_CRED_USER_NOT_FOUND: ${nfe.message}")
@@ -464,7 +464,7 @@ object Authenticator {
                 case None =>
                     // didn't found one, so I will try to get it from the triple store
                     val userProfileV1Future = for {
-                        userProfileV1 <- (responderManager ? UserProfileByEmailGetRequestV1(email, UserProfileType.FULL)).mapTo[UserProfileV1]
+                        userProfileV1 <- (responderManager ? UserProfileByEmailGetV1(email, UserProfileType.FULL)).mapTo[UserProfileV1]
                         _ = CacheUtil.put(AUTHENTICATION_CACHE_NAME, email, userProfileV1)
                         _ = log.debug(s"getUserProfileByEmail - from triplestore: $userProfileV1")
                     } yield userProfileV1

@@ -22,6 +22,7 @@ package org.knora.webapi.messages.v1.responder.ontologymessages
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi._
+import org.knora.webapi.messages.v1.responder.standoffmessages.StandoffDataTypeClasses
 import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1, UserV1JsonProtocol}
 import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
 import spray.json._
@@ -68,6 +69,60 @@ case class EntityInfoGetRequestV1(resourceClassIris: Set[IRI] = Set.empty[IRI], 
   */
 case class EntityInfoGetResponseV1(resourceEntityInfoMap: Map[IRI, ResourceEntityInfoV1],
                                    propertyEntityInfoMap: Map[IRI, PropertyEntityInfoV1])
+
+
+/**
+  * Requests all available information about a list of ontology entities (standoff classes and/or properties). A successful response will be an
+  * [[StandoffEntityInfoGetResponseV1]].
+  *
+  * @param standoffClassIris the IRIs of the resource entities to be queried.
+  * @param standoffPropertyIris      the IRIs of the property entities to be queried.
+  * @param userProfile       the profile of the user making the request.
+  */
+case class StandoffEntityInfoGetRequestV1(standoffClassIris: Set[IRI] = Set.empty[IRI], standoffPropertyIris: Set[IRI] = Set.empty[IRI], userProfile: UserProfileV1) extends OntologyResponderRequestV1
+
+
+/**
+  * Represents assertions about one or more ontology entities (resource classes and/or properties).
+  *
+  * @param standoffClassEntityInfoMap a [[Map]] of resource entity IRIs to [[StandoffClassEntityInfoV1]] objects.
+  * @param standoffPropertyEntityInfoMap a [[Map]] of property entity IRIs to [[StandoffPropertyEntityInfoV1]] objects.
+  */
+case class StandoffEntityInfoGetResponseV1(standoffClassEntityInfoMap: Map[IRI, StandoffClassEntityInfoV1],
+                                           standoffPropertyEntityInfoMap: Map[IRI, StandoffPropertyEntityInfoV1])
+
+/**
+  * Requests information about all standoff classes that are a subclass of a data type standoff class. A successful response will be an
+  * [[StandoffClassesWithDataTypeGetResponseV1]].
+  *
+  * @param userProfile       the profile of the user making the request.
+  */
+case class StandoffClassesWithDataTypeGetRequestV1(userProfile: UserProfileV1) extends OntologyResponderRequestV1
+
+
+/**
+  * Represents assertions about all standoff classes that are a subclass of a data type standoff class.
+  *
+  * @param standoffClassEntityInfoMap a [[Map]] of resource entity IRIs to [[StandoffClassEntityInfoV1]] objects.
+  */
+case class StandoffClassesWithDataTypeGetResponseV1(standoffClassEntityInfoMap: Map[IRI, StandoffClassEntityInfoV1])
+
+/**
+  * Requests information about all standoff property entities. A successful response will be an
+  * [[StandoffAllPropertyEntitiesGetResponseV1]].
+  *
+  * @param userProfile       the profile of the user making the request.
+  */
+case class StandoffAllPropertyEntitiesGetRequestV1(userProfile: UserProfileV1) extends OntologyResponderRequestV1
+
+
+/**
+  * Represents assertions about all standoff all standoff property entities.
+  *
+  * @param standoffAllPropertiesEntityInfoMap a [[Map]] of resource entity IRIs to [[StandoffPropertyEntityInfoV1]] objects.
+  */
+case class StandoffAllPropertyEntitiesGetResponseV1(standoffAllPropertiesEntityInfoMap: Map[IRI, StandoffPropertyEntityInfoV1])
+
 
 /**
   * Requests information about a resource type and its possible properties. A successful response will be a
@@ -380,6 +435,19 @@ case class ResourceEntityInfoV1(resourceClassIri: IRI,
                                 fileValueProperties: Set[IRI]) extends EntityInfoV1
 
 /**
+  * Represents the assertions about a given standoff class.
+  *
+  * @param standoffClassIri the IRI of the standoff class.
+  * @param ontologyIri      the IRI of the ontology in which the standoff class is defined.
+  * @param predicates       a [[Map]] of predicate IRIs to [[PredicateInfoV1]] objects.
+  * @param cardinalities    a [[Map]] of property IRIs to [[Cardinality.Value]] objects.
+  */
+case class StandoffClassEntityInfoV1(standoffClassIri: IRI,
+                                     ontologyIri: IRI,
+                                     predicates: Map[IRI, PredicateInfoV1],
+                                     cardinalities: Map[IRI, Cardinality.Value],
+                                     dataType: Option[StandoffDataTypeClasses.Value] = None) extends EntityInfoV1
+/**
   * Represents the assertions about a given property.
   *
   * @param propertyIri     the IRI of the queried property.
@@ -395,6 +463,19 @@ case class PropertyEntityInfoV1(propertyIri: IRI,
                                 isLinkValueProp: Boolean,
                                 isFileValueProp: Boolean,
                                 predicates: Map[IRI, PredicateInfoV1]) extends EntityInfoV1
+
+/**
+  * Represents the assertions about a given standoff property.
+  *
+  * @param standoffPropertyIri the IRI of the queried standoff property.
+  * @param ontologyIri         the IRI of the ontology in which the standoff property is defined.
+  * @param predicates          a [[Map]] of predicate IRIs to [[PredicateInfoV1]] objects.
+  * @param isSubPropertyOf     a [[Set]] of IRIs representing this standoff property's super properties.
+  */
+case class StandoffPropertyEntityInfoV1(standoffPropertyIri: IRI,
+                                        ontologyIri: IRI,
+                                        predicates: Map[IRI, PredicateInfoV1],
+                                        isSubPropertyOf: Set[IRI]) extends EntityInfoV1
 
 /**
   * Represents the assertions about a given named graph entity.

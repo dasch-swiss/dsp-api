@@ -25,6 +25,7 @@ import java.security.{KeyStore, SecureRandom}
 import javax.net.ssl.{KeyManagerFactory, SSLContext, TrustManagerFactory}
 
 import akka.actor.{ActorSystem, _}
+import akka.event.LoggingAdapter
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.{ConnectionContext, Http}
@@ -82,7 +83,7 @@ trait KnoraService {
     /**
       * Provide logging
       */
-    protected val log = akka.event.Logging(system, "KnoraService")
+    protected val log: LoggingAdapter = akka.event.Logging(system, "KnoraService")
 
     /**
       * Timeout definition (need to be high enough to allow reloading of data so that checkActorSystem doesn't timeout)
@@ -101,14 +102,17 @@ trait KnoraService {
         ResourcesRouteV1.knoraApiPath(system, settings, log) ~
             ValuesRouteV1.knoraApiPath(system, settings, log) ~
             SipiRouteV1.knoraApiPath(system, settings, log) ~
+            StandoffRouteV1.knoraApiPath(system, settings, log) ~
             ListsRouteV1.knoraApiPath(system, settings, log) ~
             ResourceTypesRouteV1.knoraApiPath(system, settings, log) ~
             SearchRouteV1.knoraApiPath(system, settings, log) ~
             AuthenticateRouteV1.knoraApiPath(system, settings, log) ~
             AssetsRouteV1.knoraApiPath(system, settings, log) ~
-            ProjectsRouteV1.knoraApiPath(system, settings, log) ~
             CkanRouteV1.knoraApiPath(system, settings, log) ~
             StoreRouteV1.knoraApiPath(system, settings, log) ~
+            UsersRouteV1.knoraApiPath(system, settings, log) ~
+            ProjectsRouteV1.knoraApiPath(system, settings, log) ~
+            GroupsRouteV1.knoraApiPath(system, settings, log) ~
 			PermissionsRouteV1.knoraApiPath(system, settings, log),
         settings,
         log
