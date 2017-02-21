@@ -36,9 +36,9 @@ object SharedPermissionsTestData {
         doap(
             iri = "http://data.knora.org/permissions/001-d1",
             p = DefaultObjectAccessPermissionV1(iri = "http://data.knora.org/permissions/001-d1", forProject = OntologyConstants.KnoraBase.SystemProject, forGroup = None, forResourceClass = Some(OntologyConstants.KnoraBase.LinkObj), forProperty = None, hasPermissions = Set(
-                                PermissionV1.ModifyPermission(OntologyConstants.KnoraBase.ProjectMember),
-                                PermissionV1.ViewPermission(OntologyConstants.KnoraBase.KnownUser),
-                                PermissionV1.ViewPermission(OntologyConstants.KnoraBase.UnknownUser)
+                                PermissionV1.modifyPermission(OntologyConstants.KnoraBase.ProjectMember),
+                                PermissionV1.viewPermission(OntologyConstants.KnoraBase.KnownUser),
+                                PermissionV1.viewPermission(OntologyConstants.KnoraBase.UnknownUser)
                             ))
         )
 
@@ -46,9 +46,9 @@ object SharedPermissionsTestData {
         doap(
             iri = "http://data.knora.org/permissions/001-d2",
             p = DefaultObjectAccessPermissionV1(iri = "http://data.knora.org/permissions/001-d2", forProject = OntologyConstants.KnoraBase.SystemProject, forGroup = None, forResourceClass = Some(OntologyConstants.KnoraBase.Region), forProperty = None, hasPermissions = Set(
-                                PermissionV1.ModifyPermission(OntologyConstants.KnoraBase.ProjectMember),
-                                PermissionV1.ViewPermission(OntologyConstants.KnoraBase.KnownUser),
-                                PermissionV1.ViewPermission(OntologyConstants.KnoraBase.UnknownUser)
+                                PermissionV1.modifyPermission(OntologyConstants.KnoraBase.ProjectMember),
+                                PermissionV1.viewPermission(OntologyConstants.KnoraBase.KnownUser),
+                                PermissionV1.viewPermission(OntologyConstants.KnoraBase.UnknownUser)
                             ))
         )
 
@@ -56,10 +56,10 @@ object SharedPermissionsTestData {
         doap(
             iri = "http://data.knora.org/permissions/001-d3",
             p = DefaultObjectAccessPermissionV1(iri = "http://data.knora.org/permissions/001-d3", forProject = OntologyConstants.KnoraBase.SystemProject, forGroup = None, forResourceClass = None, forProperty = Some(OntologyConstants.KnoraBase.HasStillImageFileValue), hasPermissions = Set(
-                                PermissionV1.ModifyPermission(OntologyConstants.KnoraBase.Creator),
-                                PermissionV1.ModifyPermission(OntologyConstants.KnoraBase.ProjectMember),
-                                PermissionV1.ViewPermission(OntologyConstants.KnoraBase.KnownUser),
-                                PermissionV1.RestrictedViewPermission(OntologyConstants.KnoraBase.UnknownUser)
+                                PermissionV1.modifyPermission(OntologyConstants.KnoraBase.Creator),
+                                PermissionV1.modifyPermission(OntologyConstants.KnoraBase.ProjectMember),
+                                PermissionV1.viewPermission(OntologyConstants.KnoraBase.KnownUser),
+                                PermissionV1.restrictedViewPermission(OntologyConstants.KnoraBase.UnknownUser)
                             ))
         )
 
@@ -87,10 +87,20 @@ object SharedPermissionsTestData {
         doap(
             iri = "http://data.knora.org/permissions/002-d1",
             p = DefaultObjectAccessPermissionV1(iri = "http://data.knora.org/permissions/002-d1", forProject = SharedAdminTestData.IMAGES_PROJECT_IRI, forGroup = Some(OntologyConstants.KnoraBase.ProjectMember), forResourceClass = None, forProperty = None, hasPermissions = Set(
-                                PermissionV1.ChangeRightsPermission(OntologyConstants.KnoraBase.Creator),
-                                PermissionV1.ModifyPermission(OntologyConstants.KnoraBase.ProjectMember),
-                                PermissionV1.ViewPermission(OntologyConstants.KnoraBase.KnownUser)
+                                PermissionV1.changeRightsPermission(OntologyConstants.KnoraBase.Creator),
+                                PermissionV1.modifyPermission(OntologyConstants.KnoraBase.ProjectMember),
+                                PermissionV1.viewPermission(OntologyConstants.KnoraBase.KnownUser)
                             ))
+        )
+
+    val perm002_d2: doap =
+        doap(
+            iri = "http://data.knora.org/permissions/002-d2",
+            p = DefaultObjectAccessPermissionV1(iri = "http://data.knora.org/permissions/002-d2", forProject = SharedAdminTestData.IMAGES_PROJECT_IRI, forGroup = Some(OntologyConstants.KnoraBase.KnownUser), forResourceClass = None, forProperty = None, hasPermissions = Set(
+                PermissionV1.changeRightsPermission(OntologyConstants.KnoraBase.Creator),
+                PermissionV1.modifyPermission(OntologyConstants.KnoraBase.ProjectMember),
+                PermissionV1.viewPermission(OntologyConstants.KnoraBase.KnownUser)
+            ))
         )
 
     /*************************************/
@@ -116,10 +126,10 @@ object SharedPermissionsTestData {
         oap(
             iri = "http://data.knora.org/00014b43f902", // incunabula:page
             p = ObjectAccessPermissionV1(forResource = Some("http://data.knora.org/00014b43f902"), forValue = None, hasPermissions = Set(
-                                PermissionV1.ChangeRightsPermission(OntologyConstants.KnoraBase.Creator),
-                                PermissionV1.ModifyPermission(OntologyConstants.KnoraBase.ProjectMember),
-                                PermissionV1.ViewPermission(OntologyConstants.KnoraBase.KnownUser),
-                                PermissionV1.RestrictedViewPermission(OntologyConstants.KnoraBase.UnknownUser)
+                                PermissionV1.changeRightsPermission(OntologyConstants.KnoraBase.Creator),
+                                PermissionV1.modifyPermission(OntologyConstants.KnoraBase.ProjectMember),
+                                PermissionV1.viewPermission(OntologyConstants.KnoraBase.KnownUser),
+                                PermissionV1.restrictedViewPermission(OntologyConstants.KnoraBase.UnknownUser)
                             ))
         )
 
@@ -127,10 +137,10 @@ object SharedPermissionsTestData {
         oap(
             iri = "http://data.knora.org/00014b43f902/values/1ad3999ad60b", // knora-base:TextValue
             p = ObjectAccessPermissionV1(forResource = None, forValue = Some("http://data.knora.org/00014b43f902/values/1ad3999ad60b"), hasPermissions = Set(
-                                    PermissionV1.ViewPermission(OntologyConstants.KnoraBase.UnknownUser),
-                                    PermissionV1.ViewPermission(OntologyConstants.KnoraBase.KnownUser),
-                                    PermissionV1.ViewPermission(OntologyConstants.KnoraBase.ProjectMember),
-                                    PermissionV1.ChangeRightsPermission(OntologyConstants.KnoraBase.Creator)
+                                    PermissionV1.viewPermission(OntologyConstants.KnoraBase.UnknownUser),
+                                    PermissionV1.viewPermission(OntologyConstants.KnoraBase.KnownUser),
+                                    PermissionV1.viewPermission(OntologyConstants.KnoraBase.ProjectMember),
+                                    PermissionV1.changeRightsPermission(OntologyConstants.KnoraBase.Creator)
                                 ))
         )
 
@@ -144,10 +154,10 @@ object SharedPermissionsTestData {
                 forResourceClass = None,
                 forProperty = None,
                 hasPermissions = Set(
-                    PermissionV1.ChangeRightsPermission(OntologyConstants.KnoraBase.Creator),
-                    PermissionV1.ModifyPermission(OntologyConstants.KnoraBase.ProjectMember),
-                    PermissionV1.ViewPermission(OntologyConstants.KnoraBase.KnownUser),
-                    PermissionV1.RestrictedViewPermission(OntologyConstants.KnoraBase.UnknownUser)
+                    PermissionV1.changeRightsPermission(OntologyConstants.KnoraBase.Creator),
+                    PermissionV1.modifyPermission(OntologyConstants.KnoraBase.ProjectMember),
+                    PermissionV1.viewPermission(OntologyConstants.KnoraBase.KnownUser),
+                    PermissionV1.restrictedViewPermission(OntologyConstants.KnoraBase.UnknownUser)
                 ))
         )
 
@@ -161,10 +171,10 @@ object SharedPermissionsTestData {
                 forResourceClass = Some(SharedAdminTestData.INCUNABULA_BOOK_RESOURCE_CLASS),
                 forProperty = None,
                 hasPermissions = Set(
-                    PermissionV1.ChangeRightsPermission(OntologyConstants.KnoraBase.Creator),
-                    PermissionV1.ModifyPermission(OntologyConstants.KnoraBase.ProjectMember),
-                    PermissionV1.ViewPermission(OntologyConstants.KnoraBase.KnownUser),
-                    PermissionV1.RestrictedViewPermission(OntologyConstants.KnoraBase.UnknownUser)
+                    PermissionV1.changeRightsPermission(OntologyConstants.KnoraBase.Creator),
+                    PermissionV1.modifyPermission(OntologyConstants.KnoraBase.ProjectMember),
+                    PermissionV1.viewPermission(OntologyConstants.KnoraBase.KnownUser),
+                    PermissionV1.restrictedViewPermission(OntologyConstants.KnoraBase.UnknownUser)
                 ))
         )
 
@@ -178,9 +188,9 @@ object SharedPermissionsTestData {
                 forResourceClass = Some(SharedAdminTestData.INCUNABULA_PAGE_RESOURCE_CLASS),
                 forProperty = None,
                 hasPermissions = Set(
-                    PermissionV1.ChangeRightsPermission(OntologyConstants.KnoraBase.Creator),
-                    PermissionV1.ModifyPermission(OntologyConstants.KnoraBase.ProjectMember),
-                    PermissionV1.ViewPermission(OntologyConstants.KnoraBase.KnownUser)
+                    PermissionV1.changeRightsPermission(OntologyConstants.KnoraBase.Creator),
+                    PermissionV1.modifyPermission(OntologyConstants.KnoraBase.ProjectMember),
+                    PermissionV1.viewPermission(OntologyConstants.KnoraBase.KnownUser)
                 ))
         )
 
@@ -207,10 +217,10 @@ object SharedPermissionsTestData {
         doap(
             iri = "http://data.knora.org/permissions/005-d1",
             p = DefaultObjectAccessPermissionV1(iri = "http://data.knora.org/permissions/005-d1", forProject = SharedAdminTestData.ANYTHING_PROJECT_IRI, forGroup = Some(OntologyConstants.KnoraBase.ProjectMember), forResourceClass = None, forProperty = None, hasPermissions = Set(
-                                PermissionV1.ChangeRightsPermission(OntologyConstants.KnoraBase.Creator),
-                                PermissionV1.ModifyPermission(OntologyConstants.KnoraBase.ProjectMember),
-                                PermissionV1.ViewPermission(OntologyConstants.KnoraBase.KnownUser),
-                                PermissionV1.RestrictedViewPermission(OntologyConstants.KnoraBase.UnknownUser)
+                                PermissionV1.changeRightsPermission(OntologyConstants.KnoraBase.Creator),
+                                PermissionV1.modifyPermission(OntologyConstants.KnoraBase.ProjectMember),
+                                PermissionV1.viewPermission(OntologyConstants.KnoraBase.KnownUser),
+                                PermissionV1.restrictedViewPermission(OntologyConstants.KnoraBase.UnknownUser)
                             ))
         )
 

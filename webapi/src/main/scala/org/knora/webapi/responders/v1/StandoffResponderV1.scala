@@ -71,7 +71,7 @@ class StandoffResponderV1 extends ResponderV1 {
         case CreateMappingRequestV1(xml, label, projectIri, mappingName, userProfile, uuid) => future2Message(sender(), createMappingV1(xml, label, projectIri, mappingName, userProfile, uuid), log)
         case GetMappingRequestV1(mappingIri, userProfile) => future2Message(sender(), getMappingV1(mappingIri, userProfile), log)
         case GetXSLTransformationRequestV1(textValIri, xsltTextReprIri, userProfile) => future2Message(sender(), applyXSLTransformation(textValIri, xsltTextReprIri, userProfile), log)
-        case other => handleUnexpectedMessage(sender(), other, log)
+        case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }
 
     val xsltCacheName = "xsltCache"

@@ -1,5 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<!--
+  ~ Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
+  ~ Tobias Schweizer, André Kilchenmann, and André Fatton.
+  ~
+  ~ This file is part of Knora.
+  ~
+  ~ Knora is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published
+  ~ by the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ Knora is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public
+  ~ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
 <!-- For assistance related to logback-translator or configuration  -->
 <!-- files in general, please contact the logback user mailing list -->
 <!-- at http://www.qos.ch/mailman/listinfo/logback-user             -->
@@ -41,7 +61,7 @@
     <logger name="org.knora.webapi.routing.Authenticator" level="INFO"/>
     <logger name="org.knora.webapi.routing.v1.AssetsRouteV1" level="INFO"/>
     <logger name="org.knora.webapi.routing.v1.ResourcesRouteV1" level="INFO"/>
-    <logger name="org.knora.webapi.routing.v1.StandoffRouteV1" level="INFO"/>
+    <logger name="org.knora.webapi.routing.v1.StandoffRouteV1" level="DEBUG"/>
     <logger name="org.knora.webapi.routing.v1.ValuesRouteV1" level="INFO"/>
     <logger name="org.knora.webapi.store.StoreManager" level="INFO"/>
     <logger name="org.knora.webapi.store.triplestore" level="INFO"/>
@@ -54,8 +74,8 @@
     <logger name="org.knora.webapi.responders.v1.ValuesResponderV1" level="INFO"/>
     <logger name="org.knora.webapi.responders.v1.StoreResponderV1" level="INFO"/>
     <logger name="org.knora.webapi.viewhandlers.ResourceHtmlView" level="INFO"/>
+    <logger name="org.knora.webapi.e2e.v1.ResourceValuePermissionsV1E2ESpec" level="INFO"/>
 
-    <!-- for logging during tests, please see/use logback-test.xml under test/resources -->
 
     <root level="INFO">
         <appender-ref ref="stdout"/>

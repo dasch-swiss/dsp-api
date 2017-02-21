@@ -61,7 +61,7 @@ class SipiResponderV1 extends ResponderV1 {
         case SipiFileInfoGetRequestV1(fileValueIri, userProfile) => future2Message(sender(), getFileInfoForSipiV1(fileValueIri, userProfile), log)
         case convertPathRequest: SipiResponderConversionPathRequestV1 => future2Message(sender(), convertPathV1(convertPathRequest), log)
         case convertFileRequest: SipiResponderConversionFileRequestV1 => future2Message(sender(), convertFileV1(convertFileRequest), log)
-        case other => handleUnexpectedMessage(sender(), other, log)
+        case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -73,7 +73,7 @@ class SipiResponderV1 extends ResponderV1 {
       * @param filename the iri of the resource.
       * @return a [[SipiFileInfoGetResponseV1]].
       */
-    private def getFileInfoForSipiV1(filename: IRI, userProfile: UserProfileV1): Future[SipiFileInfoGetResponseV1] = {
+    private def getFileInfoForSipiV1(filename: String, userProfile: UserProfileV1): Future[SipiFileInfoGetResponseV1] = {
         for {
             sparqlQuery <- Future(queries.sparql.v1.txt.getFileValue(
                 triplestore = settings.triplestoreType,
@@ -94,7 +94,12 @@ class SipiResponderV1 extends ResponderV1 {
 
             valueProps = valueUtilV1.createValueProps(filename, rows)
 
-            permissionCode: Option[Int] = PermissionUtilV1.getUserPermissionV1WithValueProps(filename, valueProps, userProfile)
+            permissionCode: Option[Int] = PermissionUtilV1.getUserPermissionV1WithValueProps(
+                subjectIri = filename,
+                valueProps = valueProps,
+                subjectProject = None, // no need to specify this here, because it's in valueProps
+                userProfile = userProfile
+            )
         } yield SipiFileInfoGetResponseV1(
             permissionCode = permissionCode.getOrElse(0), // Sipi expects a permission code from 0 to 8
             userdata = userProfile.userData

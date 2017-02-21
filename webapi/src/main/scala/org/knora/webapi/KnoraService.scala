@@ -25,6 +25,7 @@ import java.security.{KeyStore, SecureRandom}
 import javax.net.ssl.{KeyManagerFactory, SSLContext, TrustManagerFactory}
 
 import akka.actor.{ActorSystem, _}
+import akka.event.LoggingAdapter
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.{ConnectionContext, Http}
@@ -82,7 +83,7 @@ trait KnoraService {
     /**
       * Provide logging
       */
-    protected val log = akka.event.Logging(system, "KnoraService")
+    protected val log: LoggingAdapter = akka.event.Logging(system, "KnoraService")
 
     /**
       * Timeout definition (need to be high enough to allow reloading of data so that checkActorSystem doesn't timeout)

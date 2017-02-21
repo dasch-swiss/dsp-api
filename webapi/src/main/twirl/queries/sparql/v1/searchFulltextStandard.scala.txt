@@ -55,14 +55,13 @@ SELECT DISTINCT
     ?previewPath
     ?previewDimX
     ?previewDimY
-    ?resourceOwner
+    ?resourceCreator
     ?resourceProject
     ?resourcePermissions
     ?resourceProperty
     ?valueObject
     ?valueObjectType
-    ?valueOwner
-    ?valueProject
+    ?valueCreator
     ?valuePermissions
     ?literal
 WHERE {
@@ -109,11 +108,7 @@ WHERE {
 
         BIND(?matchingSubject AS ?valueObject)
 
-        ?valueObject knora-base:attachedToUser ?valueOwner .
-
-        OPTIONAL {
-            ?valueObject knora-base:attachedToProject ?valueProject .
-        }
+        ?valueObject knora-base:attachedToUser ?valueCreator .
 
         OPTIONAL {
             ?valueObject knora-base:hasPermissions ?valuePermissions .
@@ -177,7 +172,7 @@ WHERE {
         }
     }
 
-    ?resource knora-base:attachedToUser ?resourceOwner .
+    ?resource knora-base:attachedToUser ?resourceCreator .
     ?resource knora-base:attachedToProject ?resourceProject .
 
     OPTIONAL {

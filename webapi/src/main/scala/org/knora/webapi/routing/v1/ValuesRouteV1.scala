@@ -92,7 +92,6 @@ object ValuesRouteV1 extends Authenticator {
         }
 
         def makeCreateValueRequestMessage(apiRequest: CreateValueApiRequestV1, userProfile: UserProfileV1): Future[CreateValueRequestV1] = {
-            val projectIri = InputValidation.toIri(apiRequest.project_id, () => throw BadRequestException(s"Invalid project IRI ${apiRequest.project_id}"))
             val resourceIri = InputValidation.toIri(apiRequest.res_id, () => throw BadRequestException(s"Invalid resource IRI ${apiRequest.res_id}"))
             val propertyIri = InputValidation.toIri(apiRequest.prop, () => throw BadRequestException(s"Invalid property IRI ${apiRequest.prop}"))
 
@@ -184,7 +183,6 @@ object ValuesRouteV1 extends Authenticator {
                 }
             } yield
                 CreateValueRequestV1(
-                    projectIri = projectIri,
                     resourceIri = resourceIri,
                     propertyIri = propertyIri,
                     value = value,
@@ -195,7 +193,6 @@ object ValuesRouteV1 extends Authenticator {
         }
 
         def makeAddValueVersionRequestMessage(valueIriStr: IRI, apiRequest: ChangeValueApiRequestV1, userProfile: UserProfileV1): Future[ChangeValueRequestV1] = {
-            val projectIri = InputValidation.toIri(apiRequest.project_id, () => throw BadRequestException(s"Invalid project IRI: ${apiRequest.project_id}"))
             val valueIri = InputValidation.toIri(valueIriStr, () => throw BadRequestException(s"Invalid value IRI: $valueIriStr"))
 
             for {
@@ -406,7 +403,7 @@ object ValuesRouteV1 extends Authenticator {
                         // In API v1, you cannot change a value and its comment in a single request. So we know that here,
                         // we are getting a request to change either the value or the comment, but not both.
                         val requestMessageFuture = apiRequest match {
-                            case ChangeValueApiRequestV1(_, _, _, _, _, _, _, _, _, _, _, _, _, Some(comment)) => Future(makeChangeCommentRequestMessage(valueIriStr = valueIriStr, comment = Some(comment), userProfile = userProfile))
+                            case ChangeValueApiRequestV1(_, _, _, _, _, _, _, _, _, _, _, _, Some(comment)) => Future(makeChangeCommentRequestMessage(valueIriStr = valueIriStr, comment = Some(comment), userProfile = userProfile))
                             case _ => makeAddValueVersionRequestMessage(valueIriStr = valueIriStr, apiRequest = apiRequest, userProfile = userProfile)
                         }
 
