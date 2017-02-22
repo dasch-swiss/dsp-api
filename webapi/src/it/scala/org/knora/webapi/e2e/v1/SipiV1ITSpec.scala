@@ -275,9 +275,10 @@ class SipiV1ITSpec extends ITSpec(SipiV1ITSpec.config) with TriplestoreJsonProto
                         )
                     )
             }
-/*
+
             val params = Await.result(paramsFuture, 5.seconds)
 
+            /*
             val knoraFormData = Multipart.FormData(
                 Multipart.FormData.BodyPart(
                     "json",
