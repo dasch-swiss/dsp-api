@@ -1367,7 +1367,7 @@ class ResourcesResponderV1 extends ResponderV1 {
 
             // Check that each submitted value is consistent with the knora-base:objectClassConstraint of the property that is supposed to
             // point to it.
-            _ = if (checkObject==true) {
+            _ <- if (checkObject) {
                 for {
                     propertyObjectClassConstraintChecks: Seq[Unit] <- Future.sequence {
                         values.foldLeft(Vector.empty[Future[Unit]]) {
@@ -1378,17 +1378,21 @@ class ResourcesResponderV1 extends ResponderV1 {
                                 }
 
                                 acc ++ valuesWithComments.map {
-                                    valueV1WithComment: CreateValueV1WithComment => checkPropertyObjectClassConstraintForValue(
-                                        propertyIri = propertyIri,
-                                        propertyObjectClassConstraint = propertyObjectClassConstraint,
-                                        updateValueV1 = valueV1WithComment.updateValueV1,
-                                        userProfile = userProfile
-                                    )
+                                    valueV1WithComment: CreateValueV1WithComment =>
+                                        checkPropertyObjectClassConstraintForValue(
+                                            propertyIri = propertyIri,
+                                            propertyObjectClassConstraint = propertyObjectClassConstraint,
+                                            updateValueV1 = valueV1WithComment.updateValueV1,
+                                            userProfile = userProfile
+                                        )
                                 }
                         }
                     }
-                    } yield propertyObjectClassConstraintChecks
+                } yield propertyObjectClassConstraintChecks
+            } else {
+                Future(Seq.empty[Unit])
             }
+
             // Check that the resource class has a suitable cardinality for each submitted value.
             resourceClassInfo = entityInfoResponse.resourceEntityInfoMap (resourceClassIri)
 
