@@ -22,9 +22,7 @@ import java.nio.file.{Files, Paths}
 
 import akka.http.scaladsl.model.headers._
 import akka.http.scaladsl.model.{HttpEntity, _}
-import com.typesafe.config.ConfigFactory
-import org.knora.webapi.messages.v1.responder.resourcemessages.{CreateResourceApiRequestV1, CreateResourceValueV1}
-import org.knora.webapi.messages.v1.responder.valuemessages.CreateRichtextV1
+import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi.messages.v1.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
 import org.knora.webapi.util.MutableTestIri
 import org.knora.webapi.{FileWriteException, IRI, ITSpec, InvalidApiJsonException}
@@ -32,11 +30,10 @@ import spray.json._
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
-import scala.io.{Codec, Source}
 
 
 object SipiV1ITSpec {
-    val config = ConfigFactory.parseString(
+    val config: Config = ConfigFactory.parseString(
         """
           akka.loglevel = "DEBUG"
           akka.stdout-loglevel = "DEBUG"
@@ -47,17 +44,12 @@ object SipiV1ITSpec {
   * End-to-End (E2E) test specification for testing sipi integration. A running SIPI server is needed!
   */
 class SipiV1ITSpec extends ITSpec(SipiV1ITSpec.config) with TriplestoreJsonProtocol {
-
+/*
     private val rdfDataObjects = List(
-        RdfDataObject(path = "../knora-ontologies/knora-base.ttl", name = "http://www.knora.org/ontology/knora-base"),
-        RdfDataObject(path = "../knora-ontologies/knora-dc.ttl", name = "http://www.knora.org/ontology/dc"),
-        RdfDataObject(path = "../knora-ontologies/salsah-gui.ttl", name = "http://www.knora.org/ontology/salsah-gui"),
-        RdfDataObject(path = "_test_data/ontologies/incunabula-onto.ttl", name = "http://www.knora.org/ontology/incunabula"),
         RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/incunabula"),
-        RdfDataObject(path = "_test_data/ontologies/anything-onto.ttl", name = "http://www.knora.org/ontology/anything"),
         RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/anything")
     )
-
+*/
     private val username = "root@example.com"
     private val password = "test"
 
@@ -68,13 +60,13 @@ class SipiV1ITSpec extends ITSpec(SipiV1ITSpec.config) with TriplestoreJsonProto
         val response = singleAwaitingRequest(request, 5.second)
         assert(response.status == StatusCodes.OK, s"SIPI is probably not running! ${response.status}")
     }
-
+/*
     "Load test data" in {
         // send POST to 'v1/store/ResetTriplestoreContent'
         val request = Post(baseApiUrl + "/v1/store/ResetTriplestoreContent", HttpEntity(ContentTypes.`application/json`, rdfDataObjects.toJson.compactPrint))
         singleAwaitingRequest(request, 300.seconds)
     }
-
+*/
     object ResponseUtils {
 
         def getStringMemberFromResponse(response: HttpResponse, memberName: String): IRI = {
@@ -148,12 +140,12 @@ class SipiV1ITSpec extends ITSpec(SipiV1ITSpec.config) with TriplestoreJsonProto
         }
     }
 
-    "The Resources Endpoint" should {
-
+    "Knora and Sipi" should {
+/*
         "create an 'incunabula:page' with binary data" in {
 
             /* for live testing do:
-             * inside sipi folder: ./local/bin/sipi -config config/sipi.knora-config.lua
+             * inside sipi folder: ./local/bin/sipi --config config/sipi.knora-config.lua
              * inside webapi folder ./_test_data/test_route/create_page_with_binaries.py
              */
 
@@ -182,7 +174,7 @@ class SipiV1ITSpec extends ITSpec(SipiV1ITSpec.config) with TriplestoreJsonProto
             pageIri.set(ResponseUtils.getStringMemberFromResponse(response, "res_id"))
 
             val requestNewResource = Get(baseApiUrl + "/v1/resources/" + URLEncoder.encode(pageIri.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(username, password))
-            val responseNewResource = singleAwaitingRequest(requestNewResource, 20.seconds)
+            val responseNewResource = singleAwaitingRequest(requestNewResource, 5.seconds)
 
             assert(responseNewResource.status == StatusCodes.OK, responseNewResource.entity.toString)
 
@@ -238,14 +230,15 @@ class SipiV1ITSpec extends ITSpec(SipiV1ITSpec.config) with TriplestoreJsonProto
 
             createTmpFileDir()
             val request = Put(baseApiUrl + "/v1/filevalue/" + URLEncoder.encode(pageIri.get, "UTF-8"), formData) ~> addCredentials(BasicHttpCredentials(username, password))
-            val response = singleAwaitingRequest(request, 20.seconds)
+            val response = singleAwaitingRequest(request, 5.seconds)
 
             assert(response.status === StatusCodes.OK)
         }
 
-        "create an 'incunabula:page' with parameters" in {}
-
-        "change an 'incunabula:page' with parameters" ignore {
+        // "create an 'incunabula:page' with parameters" in {}
+*/
+        // "change an 'incunabula:page' with parameters" in {
+        "create a thumbnail" in {
             // Blocked by https://github.com/dhlab-basel/Sipi/issues/121
 
             val fileToSend = new File(pathToChlaus)
@@ -255,13 +248,13 @@ class SipiV1ITSpec extends ITSpec(SipiV1ITSpec.config) with TriplestoreJsonProto
             val sipiFormData = Multipart.FormData(
                 Multipart.FormData.BodyPart(
                     "file",
-                    HttpEntity.fromPath(MediaTypes.`image/jpeg`, fileToSend.toPath, chunkSize = fileToSend.length.toInt),
+                    HttpEntity.fromPath(MediaTypes.`image/jpeg`, fileToSend.toPath),
                     Map("filename" -> fileToSend.getName)
                 )
             )
 
-            val sipiRequest = Post(baseSipiUrl + "/make_thumbnail", sipiFormData)
-            val sipiResponse = singleAwaitingRequest(sipiRequest, 20.seconds)
+            val sipiRequest = Post(baseSipiUrl + "/make_thumbnail", sipiFormData) ~> addCredentials(BasicHttpCredentials(username, password))
+            val sipiResponse = singleAwaitingRequest(sipiRequest, 10.seconds)
 
             assert(sipiResponse.status === StatusCodes.OK)
 
@@ -282,7 +275,7 @@ class SipiV1ITSpec extends ITSpec(SipiV1ITSpec.config) with TriplestoreJsonProto
                         )
                     )
             }
-
+/*
             val params = Await.result(paramsFuture, 5.seconds)
 
             val knoraFormData = Multipart.FormData(
@@ -298,13 +291,15 @@ class SipiV1ITSpec extends ITSpec(SipiV1ITSpec.config) with TriplestoreJsonProto
             )
 
             val knoraRequest = Put(baseApiUrl + "/v1/filevalue/" + URLEncoder.encode("http://data.knora.org/8a0b1e75", "UTF-8"), knoraFormData) ~> addCredentials(BasicHttpCredentials(username, password))
-            val knoraResponse = singleAwaitingRequest(knoraRequest, 20.seconds)
+            val knoraResponse = singleAwaitingRequest(knoraRequest, 5.seconds)
 
             assert(knoraResponse.status === StatusCodes.OK)
+*/
         }
 
-        "create an 'anything:thing'" in {}
-
+        // "create an 'anything:thing'" in {}
 
     }
 }
+
+

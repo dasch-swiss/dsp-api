@@ -70,13 +70,13 @@ class ITSpec(_system: ActorSystem) extends Core with KnoraService with Suite wit
         log.debug(s"Starting Knora Service")
         StartupFlags.allowResetTriplestoreContentOperationOverHTTP send true
         checkActorSystem()
-        startService()
+        // startService()
     }
 
     override def afterAll: Unit = {
         /* Stop the server when everything else has finished */
         log.debug(s"Stopping Knora Service")
-        stopService()
+        // stopService()
     }
 
 }
