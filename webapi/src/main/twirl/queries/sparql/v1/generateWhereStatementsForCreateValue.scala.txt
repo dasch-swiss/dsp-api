@@ -94,12 +94,12 @@
 
                 *@
 
-                <@linkUpdate.linkTargetIri> rdf:type ?linkTargetClass{@resourceIndex}_{@linkValueIndex} ;
+                <@linkUpdate.linkTargetIri> rdf:type ?linkTargetClass@linkValueIndex ;
                     knora-base:isDeleted false .
 
-                ?linkTargetClass{@resourceIndex}_{@linkValueIndex} rdfs:subClassOf* knora-base:Resource .
-                <@linkUpdate.linkPropertyIri> knora-base:objectClassConstraint ?expectedTargetClass{@resourceIndex}_{@linkValueIndex} .
-                ?linkTargetClass{@resourceIndex}_{@linkValueIndex} rdfs:subClassOf* ?expectedTargetClass{@resourceIndex}_{@linkValueIndex} .
+                ?linkTargetClass@linkValueIndex rdfs:subClassOf* knora-base:Resource .
+                <@linkUpdate.linkPropertyIri> knora-base:objectClassConstraint ?expectedTargetClass@linkValueIndex .
+                ?linkTargetClass@linkValueIndex rdfs:subClassOf* ?expectedTargetClass@linkValueIndex .
             }
 
             @if(linkUpdate.directLinkExists) {
@@ -119,8 +119,8 @@
                 between the source and target resources, and has the correct reference count.
 
                 *@
-                ?resource@resourceIndex <@{linkUpdate.linkPropertyIri}Value> ?linkValue{@resourceIndex}_{@linkValueIndex} .
-                ?linkValue{@resourceIndex}_{@linkValueIndex} rdf:type knora-base:LinkValue ;
+                ?resource@resourceIndex <@{linkUpdate.linkPropertyIri}Value> ?linkValue@linkValueIndex .
+                ?linkValue@linkValueIndex rdf:type knora-base:LinkValue ;
                     rdf:subject ?resource@resourceIndex ;
                     rdf:predicate <@linkUpdate.linkPropertyIri> ;
                     rdf:object <@linkUpdate.linkTargetIri> ;
@@ -130,8 +130,8 @@
             } else {
                 @* Make sure there is no such knora-base:LinkValue. *@
                 MINUS {
-                    ?resource@resourceIndex <@{linkUpdate.linkPropertyIri}Value> ?linkValue{@resourceIndex}_{@linkValueIndex} .
-                    ?linkValue{@resourceIndex}_{@linkValueIndex} rdf:type knora-base:LinkValue ;
+                    ?resource@resourceIndex <@{linkUpdate.linkPropertyIri}Value> ?linkValue@linkValueIndex .
+                    ?linkValue@linkValueIndex rdf:type knora-base:LinkValue ;
                         rdf:subject ?resource@resourceIndex ;
                         rdf:predicate <@linkUpdate.linkPropertyIri> ;
                         rdf:object <@linkUpdate.linkTargetIri> ;

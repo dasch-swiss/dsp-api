@@ -351,7 +351,7 @@ class ValuesResponderV1 extends ResponderV1 {
                 }
 
                 // Generate INSERT clause statements based on those SparqlTemplateLinkUpdates.
-                standoffLinkInsertSparql: String = queries.sparql.v1.txt.generateInsertStatementsForStandoffLinks(linkUpdates = standoffLinkUpdates).toString()
+                standoffLinkInsertSparql: String = queries.sparql.v1.txt.generateInsertStatementsForStandoffLinks(linkUpdates = standoffLinkUpdates, resourceIndex=0).toString()
 
                 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
                 // Number each value to be created, and give it a valueHasOrder

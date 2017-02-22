@@ -51,31 +51,31 @@
   @if(checkObj) {
         @* Make sure the link target is a knora-base:Resource. *@
 
-        ?linkTarget@valueIndex rdf:type ?linkTargetClass@valueIndex .
-        ?linkTargetClass@valueIndex rdfs:subClassOf* knora-base:Resource .
+        ?linkTarget@index rdf:type ?linkTargetClass@index .
+        ?linkTargetClass@index rdfs:subClassOf* knora-base:Resource .
 
         @* Do nothing if the target resource belongs to the wrong OWL class. *@
 
-        ?linkProperty@valueIndex knora-base:objectClassConstraint ?expectedTargetClass@valueIndex .
-        ?linkTargetClass@valueIndex rdfs:subClassOf* ?expectedTargetClass@valueIndex .
+        ?linkProperty@index knora-base:objectClassConstraint ?expectedTargetClass@index .
+        ?linkTargetClass@index rdfs:subClassOf* ?expectedTargetClass@index .
 
         @* Do nothing if the target resource doesn't exist or is marked as deleted. *@
 
-        ?linkTarget@valueIndex knora-base:isDeleted false .
+        ?linkTarget@index knora-base:isDeleted false .
 
         @* Do nothing if the source resource's OWL class has no cardinality for the link property. *@
-        ?resourceClass rdfs:subClassOf* ?restriction@valueIndex .
-        ?restriction@valueIndex a owl:Restriction .
-        ?restriction@valueIndex owl:onProperty ?linkProperty@valueIndex .
+        ?resourceClass@resourceIndex rdfs:subClassOf* ?restriction@index .
+        ?restriction@index a owl:Restriction .
+        ?restriction@index owl:onProperty ?linkProperty@index .
 
     }
 
     @if(linkUpdate.directLinkExists) {
-        @{throw SparqlGenerationException(s"linkUpdate.directLinkExists must be false (for valueIndex $valueIndex) in this SPARQL template"); ()}
+        @{throw SparqlGenerationException(s"linkUpdate.directLinkExists must be false (for valueIndex $index) in this SPARQL template"); ()}
     }
 
     @if(linkUpdate.linkValueExists) {
-        @{throw SparqlGenerationException(s"linkUpdate.linkValueExists must be false (for valueIndex $valueIndex) in this SPARQL template"); ()}
+        @{throw SparqlGenerationException(s"linkUpdate.linkValueExists must be false (for valueIndex $index) in this SPARQL template"); ()}
     }
 
     @*

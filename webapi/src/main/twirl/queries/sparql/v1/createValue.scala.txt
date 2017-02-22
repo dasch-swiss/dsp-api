@@ -64,7 +64,7 @@ PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 DELETE {
     GRAPH ?dataNamedGraph {
         @* Delete the resource's last modification date so we can update it. *@
-        ?resource knora-base:lastModificationDate ?resourceLastModificationDate .
+        ?resource@resourceIndex knora-base:lastModificationDate ?resourceLastModificationDate .
 
         @* If any LinkValues need to be updated, detach them from the resource. *@
         @if(linkUpdates.exists(_.linkValueExists)) {
@@ -78,14 +78,14 @@ DELETE {
                     so we can attach the new version.
 
                     *@
-                    ?resource <@{linkUpdate.linkPropertyIri}Value> ?linkValue@linkValueIndex .
+                    ?resource@resourceIndex <@{linkUpdate.linkPropertyIri}Value> ?linkValue@linkValueIndex .
                 }
             }
         }
     }
 } INSERT {
     GRAPH ?dataNamedGraph {
-        ?resource knora-base:lastModificationDate ?currentTime .
+        ?resource@resourceIndex knora-base:lastModificationDate ?currentTime .
 
         @{
             queries.sparql.v1.txt.generateInsertStatementsForCreateValue(resourceIndex = resourceIndex,
@@ -106,19 +106,19 @@ DELETE {
 }
 WHERE {
     BIND(IRI("@dataNamedGraph") AS ?dataNamedGraph)
-    BIND(IRI("@resourceIri") AS ?resource)
+    BIND(IRI("@resourceIri") AS ?resource@resourceIndex)
     BIND(NOW() as ?currentTime)
 
     @* Do nothing if the resource doesn't exist, is marked as deleted, or isn't actually a resource. *@
 
-    ?resource rdf:type ?resourceClass ;
+    ?resource@resourceIndex rdf:type ?resourceClass@resourceIndex ;
         knora-base:isDeleted false .
-    ?resourceClass rdfs:subClassOf* knora-base:Resource .
+    ?resourceClass@resourceIndex rdfs:subClassOf* knora-base:Resource .
 
     @* Get the resource's last modification date, if it has one, so we can update it. *@
 
     OPTIONAL {
-        ?resource knora-base:lastModificationDate ?resourceLastModificationDate .
+        ?resource@resourceIndex knora-base:lastModificationDate ?resourceLastModificationDate .
     }
 
     @{

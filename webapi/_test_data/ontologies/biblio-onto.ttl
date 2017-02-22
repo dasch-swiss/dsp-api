@@ -157,7 +157,7 @@
 
                     rdfs:comment """Represents the author of the publication."""@en ;
 
-                    knora-base:objectClassConstraint beol:Person ;
+                    knora-base:objectClassConstraint beol:person ;
 
                     salsah-gui:guiElement salsah-gui:Searchbox ;
 
@@ -282,7 +282,7 @@
 
                     rdfs:comment """Represents the editor of the publication."""@en ;
 
-                    knora-base:objectClassConstraint beol:Person ;
+                    knora-base:objectClassConstraint beol:person ;
 
                     salsah-gui:guiElement salsah-gui:Searchbox ;
 
@@ -628,7 +628,7 @@
 
                     rdfs:comment """Represents the translator of a publication."""@en ;
 
-                    knora-base:objectClassConstraint beol:Person ;
+                    knora-base:objectClassConstraint beol:person ;
 
                     salsah-gui:guiElement salsah-gui:Searchbox ;
 
