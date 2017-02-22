@@ -52,7 +52,7 @@ class SipiV1ITSpec extends ITSpec(SipiV1ITSpec.config) with TriplestoreJsonProto
 */
     private val username = "root@example.com"
     private val password = "test"
-
+/*
     "Check if SIPI is running" in {
         // Contact the SIPI fileserver to see if Sipi is running
         // Plase make sure that 1) fileserver.docroot is set in config file and 2) it contains a file test.html
@@ -60,6 +60,7 @@ class SipiV1ITSpec extends ITSpec(SipiV1ITSpec.config) with TriplestoreJsonProto
         val response = singleAwaitingRequest(request, 5.second)
         assert(response.status == StatusCodes.OK, s"SIPI is probably not running! ${response.status}")
     }
+    */
 /*
     "Load test data" in {
         // send POST to 'v1/store/ResetTriplestoreContent'
