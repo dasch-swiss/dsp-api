@@ -25,7 +25,7 @@ import akka.http.scaladsl.model.{HttpEntity, _}
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi.messages.v1.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
 import org.knora.webapi.util.MutableTestIri
-import org.knora.webapi.{FileWriteException, IRI, ITSpec, InvalidApiJsonException}
+import org.knora.webapi.{FileWriteException, ITSpec, InvalidApiJsonException}
 import spray.json._
 
 import scala.concurrent.duration._
@@ -44,15 +44,15 @@ object SipiV1ITSpec {
   * End-to-End (E2E) test specification for testing sipi integration. A running SIPI server is needed!
   */
 class SipiV1ITSpec extends ITSpec(SipiV1ITSpec.config) with TriplestoreJsonProtocol {
-/*
+
     private val rdfDataObjects = List(
         RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/incunabula"),
         RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/anything")
     )
-*/
+
     private val username = "root@example.com"
     private val password = "test"
-/*
+
     "Check if SIPI is running" in {
         // Contact the SIPI fileserver to see if Sipi is running
         // Plase make sure that 1) fileserver.docroot is set in config file and 2) it contains a file test.html
@@ -60,34 +60,11 @@ class SipiV1ITSpec extends ITSpec(SipiV1ITSpec.config) with TriplestoreJsonProto
         val response = singleAwaitingRequest(request, 5.second)
         assert(response.status == StatusCodes.OK, s"SIPI is probably not running! ${response.status}")
     }
-    */
-/*
+
     "Load test data" in {
         // send POST to 'v1/store/ResetTriplestoreContent'
         val request = Post(baseApiUrl + "/v1/store/ResetTriplestoreContent", HttpEntity(ContentTypes.`application/json`, rdfDataObjects.toJson.compactPrint))
         singleAwaitingRequest(request, 300.seconds)
-    }
-*/
-    object ResponseUtils {
-
-        def getStringMemberFromResponse(response: HttpResponse, memberName: String): IRI = {
-
-            // get the specified string member of the response
-            val resIdFuture: Future[String] = response.entity.toStrict(5.seconds).map {
-                responseBody =>
-                    val resBodyAsString = responseBody.data.decodeString("UTF-8")
-                    resBodyAsString.parseJson.asJsObject.fields.get(memberName) match {
-                        case Some(JsString(entitiyId)) => entitiyId
-                        case None => throw InvalidApiJsonException(s"The response does not contain a field called '$memberName'")
-                        case other => throw InvalidApiJsonException(s"The response does not contain a field '$memberName' of type JsString, but ${other}")
-                    }
-            }
-
-            // wait for the Future to complete
-            Await.result(resIdFuture, 5.seconds)
-
-        }
-
     }
 
     val paramsPageWithBinaries =
@@ -142,7 +119,7 @@ class SipiV1ITSpec extends ITSpec(SipiV1ITSpec.config) with TriplestoreJsonProto
     }
 
     "Knora and Sipi" should {
-/*
+
         "create an 'incunabula:page' with binary data" in {
 
             /* for live testing do:
@@ -167,52 +144,45 @@ class SipiV1ITSpec extends ITSpec(SipiV1ITSpec.config) with TriplestoreJsonProto
             )
 
             createTmpFileDir()
-            val request = Post(baseApiUrl + "/v1/resources", formData) ~> addCredentials(BasicHttpCredentials(username, password))
-            val response = singleAwaitingRequest(request, 20.seconds)
+            val knoraRequest = Post(baseApiUrl + "/v1/resources", formData) ~> addCredentials(BasicHttpCredentials(username, password))
+            val knoraResponse = singleAwaitingRequest(knoraRequest, 20.seconds)
+            val knoraResponseBodyFuture: Future[String] = knoraResponse.entity.toStrict(5.seconds).map(_.data.decodeString("UTF-8"))
+            val knoraResponseBodyStr = Await.result(knoraResponseBodyFuture, 5.seconds)
+            assert(knoraResponse.status === StatusCodes.OK, knoraResponseBodyStr)
 
-            assert(response.status === StatusCodes.OK)
-
-            pageIri.set(ResponseUtils.getStringMemberFromResponse(response, "res_id"))
+            val resourceIri: String = knoraResponseBodyStr.parseJson.asJsObject.fields("res_id").asInstanceOf[JsString].value
+            pageIri.set(resourceIri)
 
             val requestNewResource = Get(baseApiUrl + "/v1/resources/" + URLEncoder.encode(pageIri.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(username, password))
             val responseNewResource = singleAwaitingRequest(requestNewResource, 5.seconds)
+            val responseNewResourceBodyFuture: Future[String] = responseNewResource.entity.toStrict(5.seconds).map(_.data.decodeString("UTF-8"))
+            val responseNewResourceStr: String = Await.result(responseNewResourceBodyFuture, 5.seconds)
 
-            assert(responseNewResource.status == StatusCodes.OK, responseNewResource.entity.toString)
+            assert(responseNewResource.status == StatusCodes.OK, responseNewResourceStr)
 
-            val iiifPathFuture: Future[String] = responseNewResource.entity.toStrict(5.seconds).map {
-                newResponseBody =>
-                    val newResBodyAsString = newResponseBody.data.decodeString("UTF-8")
-
-                    newResBodyAsString.parseJson.asJsObject.fields.get("resinfo") match {
-
-                        case Some(resinfo: JsObject) =>
-                            resinfo.fields.get("locdata") match {
-                                case Some(locdata: JsObject) =>
-                                    locdata.fields.get("path") match {
-                                        case Some(JsString(path)) => path
-                                        case None => throw InvalidApiJsonException("no 'path' given")
-                                        case other => throw InvalidApiJsonException("'path' could not pe parsed correctly")
-                                    }
-                                case None => throw InvalidApiJsonException("no 'locdata' given")
-
-                                case other => throw InvalidApiJsonException("'locdata' could not pe parsed correctly")
+            val iiifPath = responseNewResourceStr.parseJson.asJsObject.fields.get("resinfo") match {
+                case Some(resinfo: JsObject) =>
+                    resinfo.fields.get("locdata") match {
+                        case Some(locdata: JsObject) =>
+                            locdata.fields.get("path") match {
+                                case Some(JsString(path)) => path
+                                case None => throw InvalidApiJsonException("no 'path' given")
+                                case other => throw InvalidApiJsonException("'path' could not pe parsed correctly")
                             }
+                        case None => throw InvalidApiJsonException("no 'locdata' given")
 
-                        case None => throw InvalidApiJsonException("no 'resinfo' given")
-
-                        case other => throw InvalidApiJsonException("'resinfo' could not pe parsed correctly")
+                        case other => throw InvalidApiJsonException("'locdata' could not pe parsed correctly")
                     }
 
-            }
+                case None => throw InvalidApiJsonException("no 'resinfo' given")
 
-            // wait for the Future to complete
-            val iiifPath = Await.result(iiifPathFuture, 5.seconds)
+                case other => throw InvalidApiJsonException("'resinfo' could not pe parsed correctly")
+            }
 
             // TODO: now we could try to request the path from Sipi
             // TODO: we should run Sipi in test mode so it does not do run the preflight request
 
             //println(IIIFPath)
-
         }
 
         "change an 'incunabula:page' with binary data" in {
@@ -237,11 +207,8 @@ class SipiV1ITSpec extends ITSpec(SipiV1ITSpec.config) with TriplestoreJsonProto
         }
 
         // "create an 'incunabula:page' with parameters" in {}
-*/
-        // "change an 'incunabula:page' with parameters" in {
-        "create a thumbnail" in {
-            // Blocked by https://github.com/dhlab-basel/Sipi/issues/121
 
+        "change an 'incunabula:page' with parameters" in {
             val fileToSend = new File(pathToChlaus)
             // check if the file exists
             assert(fileToSend.exists(), s"File $pathToChlaus does not exist")
@@ -257,51 +224,35 @@ class SipiV1ITSpec extends ITSpec(SipiV1ITSpec.config) with TriplestoreJsonProto
             val sipiRequest = Post(baseSipiUrl + "/make_thumbnail", sipiFormData) ~> addCredentials(BasicHttpCredentials(username, password))
             val sipiResponse = singleAwaitingRequest(sipiRequest, 10.seconds)
 
-            assert(sipiResponse.status === StatusCodes.OK)
+            val sipiResponseBodyFuture: Future[String] = sipiResponse.entity.toStrict(5.seconds).map(_.data.decodeString("UTF-8"))
+            val sipiResponseBodyStr = Await.result(sipiResponseBodyFuture, 5.seconds)
+            assert(sipiResponse.status === StatusCodes.OK, sipiResponseBodyStr)
 
-            val paramsFuture: Future[JsObject] = sipiResponse.entity.toStrict(5.seconds).map {
-                sipiResponseBody =>
-                    val sipiResponseBodyStr = sipiResponseBody.data.decodeString("UTF-8")
-                    val jsonFields = sipiResponseBodyStr.parseJson.asJsObject.fields
+            val jsonFields = sipiResponseBodyStr.parseJson.asJsObject.fields
 
-                    JsObject(
+            val knoraParams = JsObject(
+                Map(
+                    "file" -> JsObject(
                         Map(
-                            "file" -> JsObject(
-                                Map(
-                                    "originalFilename" -> jsonFields("original_filename"),
-                                    "originalMimeType" -> jsonFields("original_mimetype"),
-                                    "filename" -> jsonFields("filename")
-                                )
-                            )
+                            "originalFilename" -> jsonFields("original_filename"),
+                            "originalMimeType" -> jsonFields("original_mimetype"),
+                            "filename" -> jsonFields("filename")
                         )
                     )
-            }
-
-            val params = Await.result(paramsFuture, 5.seconds)
-
-            /*
-            val knoraFormData = Multipart.FormData(
-                Multipart.FormData.BodyPart(
-                    "json",
-                    HttpEntity(ContentTypes.`application/json`, params.compactPrint)
-                ),
-                Multipart.FormData.BodyPart(
-                    "file",
-                    HttpEntity.fromPath(MediaTypes.`image/jpeg`, fileToSend.toPath),
-                    Map("filename" -> fileToSend.getName)
                 )
             )
 
-            val knoraRequest = Put(baseApiUrl + "/v1/filevalue/" + URLEncoder.encode("http://data.knora.org/8a0b1e75", "UTF-8"), knoraFormData) ~> addCredentials(BasicHttpCredentials(username, password))
+            val knoraRequest = Put(baseApiUrl + "/v1/filevalue/" + URLEncoder.encode("http://data.knora.org/8a0b1e75", "UTF-8"), HttpEntity(ContentTypes.`application/json`, knoraParams.compactPrint)) ~> addCredentials(BasicHttpCredentials(username, password))
             val knoraResponse = singleAwaitingRequest(knoraRequest, 5.seconds)
-
-            assert(knoraResponse.status === StatusCodes.OK)
-*/
+            val knoraResponseBodyFuture: Future[String] = knoraResponse.entity.toStrict(5.seconds).map(_.data.decodeString("UTF-8"))
+            val knoraResponseBodyStr = Await.result(knoraResponseBodyFuture, 5.seconds)
+            assert(knoraResponse.status === StatusCodes.OK, knoraResponseBodyStr)
         }
 
         // "create an 'anything:thing'" in {}
 
     }
+
 }
 
 

@@ -499,17 +499,20 @@ object ValuesRouteV1 extends Authenticator {
                         /* get the file data and save file to temporary location */
                         // collect all parts of the multipart as it arrives into a map
                         val allPartsFuture: Future[Map[Name, Any]] = formdata.parts.mapAsync[(Name, Any)](1) {
-                            case b: BodyPart if b.name == FILE_PART => {
-                                loggingAdapter.debug(s"inside allPartsFuture - processing $FILE_PART")
-                                val filename = b.filename.getOrElse(throw BadRequestException(s"Filename is not given"))
-                                val tmpFile = InputValidation.createTempFile(settings)
-                                val written = b.entity.dataBytes.runWith(FileIO.toPath(tmpFile.toPath))
-                                written.map { written =>
-                                    loggingAdapter.debug(s"written result: ${written.wasSuccessful}, ${b.filename.get}, ${tmpFile.getAbsolutePath}")
-                                    receivedFile.success(tmpFile)
-                                    (b.name, FileInfo(b.name, filename, b.entity.contentType))
+                            case b: BodyPart =>
+                                if (b.name == FILE_PART) {
+                                    loggingAdapter.debug(s"inside allPartsFuture - processing $FILE_PART")
+                                    val filename = b.filename.getOrElse(throw BadRequestException(s"Filename is not given"))
+                                    val tmpFile = InputValidation.createTempFile(settings)
+                                    val written = b.entity.dataBytes.runWith(FileIO.toPath(tmpFile.toPath))
+                                    written.map { written =>
+                                        loggingAdapter.debug(s"written result: ${written.wasSuccessful}, ${b.filename.get}, ${tmpFile.getAbsolutePath}")
+                                        receivedFile.success(tmpFile)
+                                        (b.name, FileInfo(b.name, filename, b.entity.contentType))
+                                    }
+                                } else {
+                                    throw BadRequestException(s"Unexpected body part '${b.name}' in multipart request")
                                 }
-                            }
                         }.runFold(Map.empty[Name, Any])((map, tuple) => map + tuple)
 
                         val requestMessageFuture = for {
