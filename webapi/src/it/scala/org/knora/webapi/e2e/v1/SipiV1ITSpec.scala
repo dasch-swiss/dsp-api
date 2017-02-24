@@ -57,7 +57,7 @@ class SipiV1ITSpec extends ITSpec(SipiV1ITSpec.config) with TriplestoreJsonProto
         // Contact the SIPI fileserver to see if Sipi is running
         // Plase make sure that 1) fileserver.docroot is set in config file and 2) it contains a file test.html
         val request = Get(baseSipiUrl + "/server/test.html")
-        val response = singleAwaitingRequest(request, 5.second)
+        val response = singleAwaitingRequest(request)
         assert(response.status == StatusCodes.OK, s"SIPI is probably not running! ${response.status}")
     }
 
@@ -66,41 +66,6 @@ class SipiV1ITSpec extends ITSpec(SipiV1ITSpec.config) with TriplestoreJsonProto
         val request = Post(baseApiUrl + "/v1/store/ResetTriplestoreContent", HttpEntity(ContentTypes.`application/json`, rdfDataObjects.toJson.compactPrint))
         singleAwaitingRequest(request, 300.seconds)
     }
-
-    val paramsPageWithBinaries =
-        s"""
-           {
-                "restype_id": "http://www.knora.org/ontology/incunabula#page",
-                "label": "test",
-                "project_id": "http://data.knora.org/projects/77275339",
-                "properties": {
-                    "http://www.knora.org/ontology/incunabula#pagenum": [
-                        {
-                            "richtext_value": {
-                                "utf8str": "test_page"
-                            }
-                        }
-                    ],
-                    "http://www.knora.org/ontology/incunabula#origname": [
-                        {
-                            "richtext_value": {
-                                "utf8str": "test"
-                            }
-                        }
-                    ],
-                    "http://www.knora.org/ontology/incunabula#partOf": [
-                        {
-                            "link_value": "http://data.knora.org/5e77e98d2603"
-                        }
-                    ],
-                    "http://www.knora.org/ontology/incunabula#seqnum": [
-                        {
-                            "int_value": 999
-                        }
-                    ]
-                }
-           }
-         """
 
     val pathToChlaus = "_test_data/test_route/images/Chlaus.jpg"
     val pathToMarbles = "_test_data/test_route/images/marbles.tif"
@@ -121,16 +86,50 @@ class SipiV1ITSpec extends ITSpec(SipiV1ITSpec.config) with TriplestoreJsonProto
     "Knora and Sipi" should {
 
         "create an 'incunabula:page' with binary data" in {
+            // Make sure the Knora API server's temporary upload directory exists.
+            createTmpFileDir()
 
-            /* for live testing do:
-             * inside sipi folder: ./local/bin/sipi --config config/sipi.knora-config.lua
-             * inside webapi folder ./_test_data/test_route/create_page_with_binaries.py
-             */
+            // JSON describing the resource to be created.
+            val paramsPageWithBinaries =
+                s"""
+                   |{
+                   |     "restype_id": "http://www.knora.org/ontology/incunabula#page",
+                   |     "label": "test",
+                   |     "project_id": "http://data.knora.org/projects/77275339",
+                   |     "properties": {
+                   |         "http://www.knora.org/ontology/incunabula#pagenum": [
+                   |             {
+                   |                 "richtext_value": {
+                   |                     "utf8str": "test_page"
+                   |                 }
+                   |             }
+                   |         ],
+                   |         "http://www.knora.org/ontology/incunabula#origname": [
+                   |             {
+                   |                 "richtext_value": {
+                   |                     "utf8str": "test"
+                   |                 }
+                   |             }
+                   |         ],
+                   |         "http://www.knora.org/ontology/incunabula#partOf": [
+                   |             {
+                   |                 "link_value": "http://data.knora.org/5e77e98d2603"
+                   |             }
+                   |         ],
+                   |         "http://www.knora.org/ontology/incunabula#seqnum": [
+                   |             {
+                   |                 "int_value": 999
+                   |             }
+                   |         ]
+                   |     }
+                   |}
+                 """.stripMargin
 
+            // The image to be uploaded.
             val fileToSend = new File(pathToChlaus)
-            // check if the file exists
             assert(fileToSend.exists(), s"File $pathToChlaus does not exist")
 
+            // A multipart/form-data request containing the image and the JSON.
             val formData = Multipart.FormData(
                 Multipart.FormData.BodyPart(
                     "json",
@@ -143,24 +142,26 @@ class SipiV1ITSpec extends ITSpec(SipiV1ITSpec.config) with TriplestoreJsonProto
                 )
             )
 
-            createTmpFileDir()
-            val knoraRequest = Post(baseApiUrl + "/v1/resources", formData) ~> addCredentials(BasicHttpCredentials(username, password))
-            val knoraResponse = singleAwaitingRequest(knoraRequest, 20.seconds)
-            val knoraResponseBodyFuture: Future[String] = knoraResponse.entity.toStrict(5.seconds).map(_.data.decodeString("UTF-8"))
-            val knoraResponseBodyStr = Await.result(knoraResponseBodyFuture, 5.seconds)
-            assert(knoraResponse.status === StatusCodes.OK, knoraResponseBodyStr)
+            // Send the multipart/form-data request to the Knora API server.
+            val knoraPostRequest = Post(baseApiUrl + "/v1/resources", formData) ~> addCredentials(BasicHttpCredentials(username, password))
+            val knoraPostResponse = singleAwaitingRequest(knoraPostRequest)
+            val knoraPostResponseBodyFuture: Future[String] = knoraPostResponse.entity.toStrict(5.seconds).map(_.data.decodeString("UTF-8"))
+            val knoraPostResponseBodyStr = Await.result(knoraPostResponseBodyFuture, 5.seconds)
+            assert(knoraPostResponse.status === StatusCodes.OK, knoraPostResponseBodyStr)
 
-            val resourceIri: String = knoraResponseBodyStr.parseJson.asJsObject.fields("res_id").asInstanceOf[JsString].value
+            // Get the IRI of the newly created resource.
+            val resourceIri: String = knoraPostResponseBodyStr.parseJson.asJsObject.fields("res_id").asInstanceOf[JsString].value
             pageIri.set(resourceIri)
 
-            val requestNewResource = Get(baseApiUrl + "/v1/resources/" + URLEncoder.encode(pageIri.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(username, password))
-            val responseNewResource = singleAwaitingRequest(requestNewResource, 5.seconds)
-            val responseNewResourceBodyFuture: Future[String] = responseNewResource.entity.toStrict(5.seconds).map(_.data.decodeString("UTF-8"))
-            val responseNewResourceStr: String = Await.result(responseNewResourceBodyFuture, 5.seconds)
+            // Request the resource from the Knora API server.
+            val knoraRequestNewResource = Get(baseApiUrl + "/v1/resources/" + URLEncoder.encode(pageIri.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(username, password))
+            val knoraResponseNewResource = singleAwaitingRequest(knoraRequestNewResource)
+            val knoraResponseNewResourceBodyFuture: Future[String] = knoraResponseNewResource.entity.toStrict(5.seconds).map(_.data.decodeString("UTF-8"))
+            val knoraResponseNewResourceStr: String = Await.result(knoraResponseNewResourceBodyFuture, 5.seconds)
+            assert(knoraResponseNewResource.status == StatusCodes.OK, knoraResponseNewResourceStr)
 
-            assert(responseNewResource.status == StatusCodes.OK, responseNewResourceStr)
-
-            val iiifPath = responseNewResourceStr.parseJson.asJsObject.fields.get("resinfo") match {
+            // Get the URL of the image that was uploaded.
+            val iiifUrl = knoraResponseNewResourceStr.parseJson.asJsObject.fields.get("resinfo") match {
                 case Some(resinfo: JsObject) =>
                     resinfo.fields.get("locdata") match {
                         case Some(locdata: JsObject) =>
@@ -171,26 +172,28 @@ class SipiV1ITSpec extends ITSpec(SipiV1ITSpec.config) with TriplestoreJsonProto
                             }
                         case None => throw InvalidApiJsonException("no 'locdata' given")
 
-                        case other => throw InvalidApiJsonException("'locdata' could not pe parsed correctly")
+                        case _ => throw InvalidApiJsonException("'locdata' could not pe parsed correctly")
                     }
 
                 case None => throw InvalidApiJsonException("no 'resinfo' given")
 
-                case other => throw InvalidApiJsonException("'resinfo' could not pe parsed correctly")
+                case _ => throw InvalidApiJsonException("'resinfo' could not pe parsed correctly")
             }
 
-            // TODO: now we could try to request the path from Sipi
-            // TODO: we should run Sipi in test mode so it does not do run the preflight request
-
-            //println(IIIFPath)
+            // Request the image from Sipi.
+            val sipiGetRequest = Get(iiifUrl) ~> addCredentials(BasicHttpCredentials(username, password))
+            val sipiGetResponse = singleAwaitingRequest(sipiGetRequest)
+            val sipiGetResponseBodyFuture: Future[String] = sipiGetResponse.entity.toStrict(5.seconds).map(_.data.decodeString("UTF-8"))
+            val sipiGetResponseStr: String = Await.result(sipiGetResponseBodyFuture, 5.seconds)
+            assert(sipiGetResponse.status == StatusCodes.OK, sipiGetResponseStr)
         }
 
         "change an 'incunabula:page' with binary data" in {
-
+            // The image to be uploaded.
             val fileToSend = new File(pathToMarbles)
-            // check if the file exists
             assert(fileToSend.exists(), s"File $pathToMarbles does not exist")
 
+            // A multipart/form-data request containing the image.
             val formData = Multipart.FormData(
                 Multipart.FormData.BodyPart(
                     "file",
@@ -199,20 +202,20 @@ class SipiV1ITSpec extends ITSpec(SipiV1ITSpec.config) with TriplestoreJsonProto
                 )
             )
 
-            createTmpFileDir()
+            // Send the image in a PUT request to the Knora API server.
             val request = Put(baseApiUrl + "/v1/filevalue/" + URLEncoder.encode(pageIri.get, "UTF-8"), formData) ~> addCredentials(BasicHttpCredentials(username, password))
-            val response = singleAwaitingRequest(request, 5.seconds)
-
+            val response = singleAwaitingRequest(request)
             assert(response.status === StatusCodes.OK)
         }
 
         // "create an 'incunabula:page' with parameters" in {}
 
         "change an 'incunabula:page' with parameters" in {
+            // The image to be uploaded.d
             val fileToSend = new File(pathToChlaus)
-            // check if the file exists
             assert(fileToSend.exists(), s"File $pathToChlaus does not exist")
 
+            // A multipart/form-data request containing the image.
             val sipiFormData = Multipart.FormData(
                 Multipart.FormData.BodyPart(
                     "file",
@@ -221,15 +224,15 @@ class SipiV1ITSpec extends ITSpec(SipiV1ITSpec.config) with TriplestoreJsonProto
                 )
             )
 
+            // Send a POST request to Sipi, asking it to make a thumbnail of the image.
             val sipiRequest = Post(baseSipiUrl + "/make_thumbnail", sipiFormData) ~> addCredentials(BasicHttpCredentials(username, password))
-            val sipiResponse = singleAwaitingRequest(sipiRequest, 10.seconds)
-
+            val sipiResponse = singleAwaitingRequest(sipiRequest)
             val sipiResponseBodyFuture: Future[String] = sipiResponse.entity.toStrict(5.seconds).map(_.data.decodeString("UTF-8"))
             val sipiResponseBodyStr = Await.result(sipiResponseBodyFuture, 5.seconds)
             assert(sipiResponse.status === StatusCodes.OK, sipiResponseBodyStr)
-
             val jsonFields = sipiResponseBodyStr.parseJson.asJsObject.fields
 
+            // JSON describing the new image to Knora.
             val knoraParams = JsObject(
                 Map(
                     "file" -> JsObject(
@@ -242,8 +245,9 @@ class SipiV1ITSpec extends ITSpec(SipiV1ITSpec.config) with TriplestoreJsonProto
                 )
             )
 
+            // Send the JSON in a PUT request to the Knora API server.
             val knoraRequest = Put(baseApiUrl + "/v1/filevalue/" + URLEncoder.encode("http://data.knora.org/8a0b1e75", "UTF-8"), HttpEntity(ContentTypes.`application/json`, knoraParams.compactPrint)) ~> addCredentials(BasicHttpCredentials(username, password))
-            val knoraResponse = singleAwaitingRequest(knoraRequest, 5.seconds)
+            val knoraResponse = singleAwaitingRequest(knoraRequest)
             val knoraResponseBodyFuture: Future[String] = knoraResponse.entity.toStrict(5.seconds).map(_.data.decodeString("UTF-8"))
             val knoraResponseBodyStr = Await.result(knoraResponseBodyFuture, 5.seconds)
             assert(knoraResponse.status === StatusCodes.OK, knoraResponseBodyStr)
