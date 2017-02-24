@@ -211,7 +211,7 @@ class SipiV1ITSpec extends ITSpec(SipiV1ITSpec.config) with TriplestoreJsonProto
         // "create an 'incunabula:page' with parameters" in {}
 
         "change an 'incunabula:page' with parameters" in {
-            // The image to be uploaded.d
+            // The image to be uploaded.
             val fileToSend = new File(pathToChlaus)
             assert(fileToSend.exists(), s"File $pathToChlaus does not exist")
 
