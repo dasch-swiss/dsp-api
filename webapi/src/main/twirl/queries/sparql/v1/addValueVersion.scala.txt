@@ -53,7 +53,7 @@
   valueTypeIri: IRI,
   value: UpdateValueV1,
   valueCreator: IRI,
-  maybeValuePermissions: Option[String],
+  valuePermissions: String,
   maybeComment: Option[String],
   linkUpdates: Seq[SparqlTemplateLinkUpdate])
 
@@ -254,18 +254,8 @@ DELETE {
         }
 
         @* Insert the value's owner and permissions. *@
-        ?newValue knora-base:attachedToUser <@valueCreator> .
-
-        @maybeValuePermissions match {
-
-            case Some(valuePermissions) => {
-
-                ?newValue knora-base:hasPermissions "@valuePermissions" .
-
-            }
-
-            case None => {}
-        }
+        ?newValue knora-base:attachedToUser <@valueCreator> ;
+            knora-base:hasPermissions "@valuePermissions" .
 
         @* TODO: in case of a file value, order is not given *@
         ?newValue knora-base:valueHasOrder ?order .
@@ -295,18 +285,8 @@ DELETE {
                 }
                 knora-base:valueCreationDate ?currentTime .
 
-            <@linkUpdate.newLinkValueIri> knora-base:attachedToUser <@linkUpdate.newLinkValueCreator> .
-
-            @linkUpdate.newLinkValuePermissions match {
-
-                case Some(linkValuePermissions) => {
-
-                    <@linkUpdate.newLinkValueIri> knora-base:hasPermissions "@linkValuePermissions" .
-
-                }
-
-                case None => {}
-            }
+            <@linkUpdate.newLinkValueIri> knora-base:attachedToUser <@linkUpdate.newLinkValueCreator> ;
+                knora-base:hasPermissions "@linkUpdate.newLinkValuePermissions" .
 
             @* If we're inserting a new version of an existing LinkValue, attach it to the previous version. *@
             @if(linkUpdate.linkValueExists) {

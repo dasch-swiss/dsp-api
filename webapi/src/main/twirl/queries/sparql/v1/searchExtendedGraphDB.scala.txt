@@ -156,11 +156,8 @@ WHERE {
                         ?targetResource@index rdfs:label ?literal@index ;
                             knora-base:isDeleted false ;
                             knora-base:attachedToUser ?targetResourceCreator@index ;
-                            knora-base:attachedToProject ?targetResourceProject@index .
-
-                        OPTIONAL {
-                            ?targetResource@index knora-base:hasPermissions ?targetResourcePermissions@index .
-                        }
+                            knora-base:attachedToProject ?targetResourceProject@index ;
+                            knora-base:hasPermissions ?targetResourcePermissions@index .
 
                         ?valueObject@index rdf:type knora-base:LinkValue ;
                             rdf:subject ?resource ;
@@ -229,11 +226,8 @@ WHERE {
                         <@searchCriterion.searchValue> rdfs:label ?literal@index ;
                             knora-base:isDeleted false ;
                             knora-base:attachedToUser ?targetResourceCreator@index ;
-                            knora-base:attachedToProject ?targetResourceProject@index .
-
-                        OPTIONAL {
-                            <@searchCriterion.searchValue> knora-base:hasPermissions ?targetResourcePermissions@index .
-                        }
+                            knora-base:attachedToProject ?targetResourceProject@index ;
+                            knora-base:hasPermissions ?targetResourcePermissions@index .
 
                         ?valueObject@index rdf:type knora-base:LinkValue ;
                             rdf:subject ?resource ;
@@ -481,11 +475,8 @@ WHERE {
         }
 
         ?valueObject@index knora-base:isDeleted false ;
-            knora-base:attachedToUser ?valueCreator@index .
-
-        OPTIONAL {
-            ?valueObject@index knora-base:hasPermissions ?valuePermissions@index .
-        }
+            knora-base:attachedToUser ?valueCreator@index ;
+            knora-base:hasPermissions ?valuePermissions@index .
     }
 
     ?resource knora-base:isDeleted false .
@@ -547,16 +538,8 @@ WHERE {
         }
     }
 
-    OPTIONAL {
-        ?resource knora-base:hasPermissions ?resourcePermissions .
-    }
-
-    OPTIONAL {
-        ?resource knora-base:attachedToUser ?resourceCreator .
-    }
-
-    OPTIONAL {
-        ?resource knora-base:attachedToProject ?resourceProject .
-    }
+    ?resource knora-base:hasPermissions ?resourcePermissions ;
+        knora-base:attachedToUser ?resourceCreator ;
+        knora-base:attachedToProject ?resourceProject .
 }
 LIMIT 500

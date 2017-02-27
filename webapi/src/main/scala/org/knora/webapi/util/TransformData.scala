@@ -507,7 +507,7 @@ object TransformData extends App {
                         val permissionStatement = valueFactory.createStatement(
                             valueFactory.createIRI(subjectIri),
                             valueFactory.createIRI(OntologyConstants.KnoraBase.HasPermissions),
-                            valueFactory.createLiteral(permissionLiteral.get)
+                            valueFactory.createLiteral(permissionLiteral)
                         )
 
                         turtleWriter.handleStatement(permissionStatement)
@@ -1214,10 +1214,7 @@ object TransformData extends App {
                         val permissionsWithCreator = Set(PermissionV1.changeRightsPermission(OntologyConstants.KnoraBase.Creator)) ++ currentPermissions
 
                         /* transform back to literal */
-                        val changedPermissionsLiteral: String = PermissionUtilV1.formatPermissions(permissionsWithCreator, PermissionType.OAP) match {
-                            case Some(literal) => literal
-                            case None => throw InconsistentTriplestoreDataException(s"We really shouldn't be here. There seem to be no permissions that we can write!")
-                        }
+                        val changedPermissionsLiteral: String = PermissionUtilV1.formatPermissions(permissionsWithCreator, PermissionType.OAP)
 
                         /* create statement with new literal */
                         val newHasPermissionsStatement = valueFactory.createStatement(

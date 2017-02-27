@@ -80,11 +80,8 @@ WHERE {
 
     ?sourceObject rdfs:label ?firstprop ;
         knora-base:attachedToUser ?sourceObjectAttachedToUser ;
-        knora-base:attachedToProject ?sourceObjectAttachedToProject .
-
-    OPTIONAL {
-        ?sourceObject knora-base:hasPermissions ?sourceObjectPermissions .
-    }
+        knora-base:attachedToProject ?sourceObjectAttachedToProject ;
+        knora-base:hasPermissions ?sourceObjectPermissions .
 
     ?sourceObject knora-base:hasLinkToValue ?linkValue .
 
@@ -93,11 +90,8 @@ WHERE {
         rdf:predicate ?linkingProp ;
         rdf:object ?resource ;
         knora-base:isDeleted false ;
-        knora-base:attachedToUser ?linkValueCreator .
-
-    OPTIONAL {
-        ?linkValue knora-base:hasPermissions ?linkValuePermissions .
-    }
+        knora-base:attachedToUser ?linkValueCreator ;
+        knora-base:hasPermissions ?linkValuePermissions .
 
     OPTIONAL {
         ?sourceObject knora-base:hasFileValue ?fileValue .
@@ -114,13 +108,9 @@ WHERE {
                  knora-base:internalFilename ?internalFilename ;
                  knora-base:dimX ?dimX ;
                  knora-base:dimY ?dimY ;
-                 knora-base:qualityLevel ?qualityLevel .
-
-        ?fileValue knora-base:attachedToUser ?fileValueAttachedToUser .
-
-        OPTIONAL {
-            ?fileValue knora-base:hasPermissions ?fileValuePermissions .
-        }
+                 knora-base:qualityLevel ?qualityLevel ;
+                 knora-base:attachedToUser ?fileValueAttachedToUser ;
+                 knora-base:hasPermissions ?fileValuePermissions .
     }
 }
 ORDER BY ?seqnum ?sourceObject ?isPreview

@@ -176,7 +176,7 @@ class SearchResponderV1 extends ResponderV1 {
 
                     val resourceCreator = firstRowMap("resourceCreator")
                     val resourceProject = firstRowMap("resourceProject")
-                    val resourcePermissions = firstRowMap.get("resourcePermissions")
+                    val resourcePermissions = firstRowMap("resourcePermissions")
 
                     val resourcePermissionCode: Option[Int] = PermissionUtilV1.getUserPermissionV1(subjectIri = resourceIri, subjectCreator = resourceCreator, subjectProject = resourceProject, subjectPermissionLiteral = resourcePermissions, userProfile = searchGetRequest.userProfile)
 
@@ -196,7 +196,7 @@ class SearchResponderV1 extends ResponderV1 {
                                 val valueIri = row.rowMap("valueObject")
                                 val literal = row.rowMap("literal")
                                 val valueCreator = row.rowMap("valueCreator")
-                                val valuePermissionsLiteral = row.rowMap.get("valuePermissions")
+                                val valuePermissionsLiteral = row.rowMap("valuePermissions")
                                 val valuePermissionCode = PermissionUtilV1.getUserPermissionV1(
                                     subjectIri = valueIri, subjectCreator = valueCreator,
                                     subjectProject = resourceProject,
@@ -489,7 +489,7 @@ class SearchResponderV1 extends ResponderV1 {
 
                     val resourceCreator = firstRowMap("resourceCreator")
                     val resourceProject = firstRowMap("resourceProject")
-                    val resourcePermissions = firstRowMap.get("resourcePermissions")
+                    val resourcePermissions = firstRowMap("resourcePermissions")
 
                     val resourcePermissionCode: Option[Int] = PermissionUtilV1.getUserPermissionV1(subjectIri = resourceIri, subjectCreator = resourceCreator, subjectProject = resourceProject, subjectPermissionLiteral = resourcePermissions, userProfile = searchGetRequest.userProfile)
 
@@ -512,18 +512,17 @@ class SearchResponderV1 extends ResponderV1 {
                                         case (searchCriterion, index) =>
                                             val valueIri = row.rowMap(s"valueObject$index")
                                             val literal = row.rowMap(s"literal$index")
-                                            val valuePermissionLiteral = row.rowMap.get(s"valuePermissions$index")
+                                            val valuePermissionLiteral = row.rowMap(s"valuePermissions$index")
                                             val valueCreator = row.rowMap(s"valueCreator$index")
 
                                             // Is the matching value object a LinkValue?
                                             val valuePermissionCode = if (searchCriterion.valueType == OntologyConstants.KnoraBase.Resource) {
-                                                // Yes. Handle it as a special case, because LinkValues for standoff links don't have permissions.
-                                                val linkValuePermissionCode = PermissionUtilV1.getUserPermissionOnLinkValueV1(
-                                                    linkValueIri = valueIri,
-                                                    predicateIri = searchCriterion.propertyIri,
-                                                    linkValueCreator = valueCreator,
-                                                    containingResourceProject = resourceProject,
-                                                    linkValuePermissionLiteral = valuePermissionLiteral,
+                                                // Yes.
+                                                val linkValuePermissionCode = PermissionUtilV1.getUserPermissionV1(
+                                                    subjectIri = valueIri,
+                                                    subjectCreator = valueCreator,
+                                                    subjectProject = resourceProject,
+                                                    subjectPermissionLiteral = valuePermissionLiteral,
                                                     userProfile = searchGetRequest.userProfile
                                                 )
 
@@ -531,7 +530,7 @@ class SearchResponderV1 extends ResponderV1 {
                                                 val targetResourceIri = row.rowMap(s"targetResource$index")
                                                 val targetResourceCreator = row.rowMap(s"targetResourceCreator$index")
                                                 val targetResourceProject = row.rowMap(s"targetResourceProject$index")
-                                                val targetResourcePermissionLiteral = row.rowMap.get(s"targetResourcePermissions$index")
+                                                val targetResourcePermissionLiteral = row.rowMap(s"targetResourcePermissions$index")
 
                                                 val targetResourcePermissionCode = PermissionUtilV1.getUserPermissionV1(subjectIri = targetResourceIri, subjectCreator = targetResourceCreator, subjectProject = targetResourceProject, subjectPermissionLiteral = targetResourcePermissionLiteral, userProfile = searchGetRequest.userProfile)
 

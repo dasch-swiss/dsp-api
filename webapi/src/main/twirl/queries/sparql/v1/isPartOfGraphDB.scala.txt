@@ -61,10 +61,7 @@ WHERE {
         rdf:predicate ?linkingProp ;
         rdf:object ?containingResource ;
         knora-base:isDeleted false ;
-        knora-base:attachedToUser ?linkValueCreator .
-
-    OPTIONAL {
-        ?linkValue knora-base:hasPermissions ?linkValuePermissions .
-    }
+        knora-base:attachedToUser ?linkValueCreator ;
+        knora-base:hasPermissions ?linkValuePermissions .
 }
 LIMIT 1
