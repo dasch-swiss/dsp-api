@@ -300,6 +300,63 @@ object ResourcesRouteV1 extends Authenticator {
             )
         }
 
+        /**
+          * parses the xml and for each xml element creates a resource request
+          * @param xml : a simple xml
+          * @return Seq[CreateResourceRequestV1] collection of resource creation requests
+          */
+        def parseXml(xml:NodeSeq):Seq[CreateResourceRequestV1]={
+
+            xml.head.child
+              .filter(node => node.label != "#PCDATA")
+              .map( node => {
+                  val entityType = node.label
+                  // the id attribute of the xml element is the resource label
+                  val resLabel = (node \"@id").toString
+                  // namespaces of xml
+                  val elemNS = node.getNamespace(node.prefix)
+                  //element namespace + # + element tag gives the resource class Id
+                  val restype_id = elemNS + "#" + entityType
+                  //traversing the subelements to collect the values of resource
+                  val properties :Seq[(IRI, Seq[CreateResourceValueV1])] = node.child
+                    .filter(child => child.label != "#PCDATA")
+                    .map {
+                        case (child) =>
+                            val subnodes = scala.xml.Utility.trim(child).descendant
+
+                            if (child.descendant.size != 1) {
+
+                                (child.getNamespace(child.prefix) + "#" + child.label ->
+                                  subnodes.map {
+                                      case (subnode) =>
+                                          //xml elements with ref attribute are links
+                                          val ref_att = subnode.attribute("ref").get
+                                          if (ref_att!=None) {
+                                              CreateResourceValueV1(None, Some(subnode.getNamespace(subnode.prefix) + "/" + subnode.label+"#"+ ref_att))
+                                          } else {
+                                              CreateResourceValueV1(Some(CreateRichtextV1(Some(subnode.text))))
+                                          }
+                                  }
+                                  )
+
+                            } else {
+
+                                if (child.label.contains("Date") || child.label.contains("date") ) {
+                                    println(child.label, child.text)
+                                    (child.getNamespace(child.prefix) + "#" + child.label ->
+                                    List(CreateResourceValueV1(date_value=Some(child.text))))
+                                } else {
+                                    (child.getNamespace(child.prefix) + "#" + child.label ->
+                                     List(CreateResourceValueV1(Some(CreateRichtextV1(Some(child.text))))))
+                                }
+
+                            }
+
+                    }
+                  CreateResourceRequestV1(restype_id , resLabel, properties.toMap)
+              })
+        }
+
         path("v1" / "resources") {
             get {
                 // search for resources matching the given search string (searchstr) and return their Iris.
@@ -598,48 +655,10 @@ object ResourcesRouteV1 extends Authenticator {
                     val userProfile = getUserProfileV1(requestContext)
 
                     val projectId = "http://data.knora.org/projects/DczxPs-sR6aZN91qV92ZmQ"
-                    val root = xml.head
-                    val apiRequestID = UUID.fromString("26106dcd-865a-4c81-b0e8-914e46939e70")
-                    val resourcesToCreate = root.child
-                            .filter(node => node.label != "#PCDATA")
-                            .map( node => {
-                                val entityType = node.label
-                                val resLabel = (node \"@id").toString
 
-                                val elemNS = node.getNamespace(node.prefix)
-                                val restype_id = elemNS + "#" + entityType
-                                val properties :Seq[(IRI, Seq[CreateResourceValueV1])] = node.child
-                                    .filter(child => child.label != "#PCDATA")
-                                      .map {
-                                          case (child) =>
-                                              val subnodes = scala.xml.Utility.trim(child).descendant
-
-                                              if (child.descendant.size != 1) {
-
-                                                  (child.getNamespace(child.prefix) + "#" + child.label ->
-                                                    subnodes.map {
-                                                      case (subnode) =>
-                                                          val ref_att = subnode.attribute("ref").get
-                                                          if (ref_att!=None) {
-                                                              CreateResourceValueV1(None, Some(subnode.getNamespace(subnode.prefix) + "/" + subnode.label+"#"+ ref_att))
-                                                          } else {
-                                                              CreateResourceValueV1(Some(CreateRichtextV1(Some(subnode.text))))
-                                                          }
-                                                    }
-                                                    )
-
-                                              } else {
-
-                                                  (child.getNamespace(child.prefix) + "#" + child.label
-                                                    -> List(CreateResourceValueV1(Some(CreateRichtextV1(Some(child.text))))))
-
-                                              }
-
-                                      }
-                                CreateResourceRequestV1(restype_id , resLabel, properties.toMap)
-                            })
+                    val apiRequestID = UUID.randomUUID
+                    val resourcesToCreate = parseXml(xml)
                     val request1 = makeMultiResourcesRequestMessage(resourcesToCreate, projectId, apiRequestID, userProfile)
-//                   complete(request1.resourcesToCreate.head.resourceTypeIri.toString)
 
                     RouteUtilV1.runJsonRouteWithFuture(
                         request1,

@@ -1280,7 +1280,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    |       <biblio:journalVolume>27</biblio:journalVolume>
                    |       <biblio:startPage>48</biblio:startPage>
                    |       <biblio:endPage>73</biblio:endPage>
-                   |       <biblio:publicationHasDate>1974</biblio:publicationHasDate>
+                   |       <biblio:publicationHasDate>GREGORIAN:1974</biblio:publicationHasDate>
                    |    </biblio:JournalArticle>
 
                    |</xml>""".stripMargin
@@ -1289,11 +1289,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
 
 
                 val resourcesToCreate =Seq.empty[OneOfMultipleResourceCreateRequestV1]
-                val responseExpected = MultipleResourceCreateRequestV1( resourcesToCreate,
-                    "http://data.knora.org/projects/DczxPs-sR6aZN91qV92ZmQ",
-                    apiRequestID = UUID.fromString("26106dcd-865a-4c81-b0e8-914e46939e70"),
-                    userProfile = biblioUser
-                )
+
 
                 responseAs[String] should include("createdResources")
             }
