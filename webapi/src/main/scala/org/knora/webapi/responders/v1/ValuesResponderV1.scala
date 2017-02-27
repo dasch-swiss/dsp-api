@@ -1945,6 +1945,7 @@ class ValuesResponderV1 extends ResponderV1 {
             )
 
             // Generate a SPARQL update string.
+            //resourceIndex = 0 because this method isn't used when creating multiple resources
             sparqlUpdate = queries.sparql.v1.txt.createLink(
                 resourceIndex = 0,
                 dataNamedGraph = dataNamedGraph,
@@ -1952,7 +1953,7 @@ class ValuesResponderV1 extends ResponderV1 {
                 resourceIri = resourceIri,
                 linkUpdate = sparqlTemplateLinkUpdate,
                 maybeComment = comment,
-                checkObj = false
+                checkObj = true
             ).toString()
 
             /*
@@ -2020,6 +2021,7 @@ class ValuesResponderV1 extends ResponderV1 {
             }
 
             // Generate a SPARQL update string.
+            //resourceIndex = 0 because this method isn't used when creating multiple resources
             sparqlUpdate = queries.sparql.v1.txt.createValue(
                 resourceIndex = 0,
                 checkObj=true,

@@ -25,11 +25,13 @@
 @**
  * Inserts a new link between resources.
  *
- * @param dataNamedGraph the named graph in which the project stores its data.
- * @param triplestore the name of the triplestore being used.
- * @param resourceIri the resource that is the source of the link.
- * @param linkUpdate a [[LinkUpdate]] object describing the link to insert.
- * @param maybeComment an optional comment on the link.
+ * @param resourceIndex     the index of the resource that is the source of the link.
+ * @param dataNamedGraph    the named graph in which the project stores its data.
+ * @param triplestore       the name of the triplestore being used.
+ * @param resourceIri       the resource that is the source of the link.
+ * @param linkUpdate        a [[LinkUpdate]] object describing the link to insert.
+ * @param maybeComment      an optional comment on the link.
+ * @param checkObj          flag for checking object class constraints
  *
  * To find out whether the update succeeded, the application must query the link.
  *@

@@ -1,6 +1,6 @@
 /*
  * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ * Tobias Schweizer, Sepideh Alassi, André Kilchenmann, and André Fatton.
  *
  * This file is part of Knora.
  *
@@ -390,7 +390,6 @@ case class CreateValueV1WithComment(updateValueV1: UpdateValueV1, comment: Optio
   * @param userProfile      the user that is creating the values.
   */
 
-//TODO: apiRequestID should be removed and resource index should be added
 case class GenerateSparqlToCreateMultipleValuesRequestV1(projectIri: IRI,
                                                          resourceIri: IRI,
                                                          resourceClassIri: IRI,

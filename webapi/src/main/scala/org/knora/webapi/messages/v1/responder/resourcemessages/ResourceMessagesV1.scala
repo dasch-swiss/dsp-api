@@ -1,6 +1,6 @@
 /*
  * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ * Tobias Schweizer, Sepideh Alassi, André Kilchenmann, and André Fatton.
  *
  * This file is part of Knora.
  *
@@ -197,10 +197,26 @@ case class ResourceCreateRequestV1(resourceTypeIri: IRI,
                                    userProfile: UserProfileV1,
                                    apiRequestID: UUID) extends ResourcesResponderRequestV1
 
+
+/**
+  * Requests the creation of one of Multiple new resources.
+  *
+  * @param resourceTypeIri the type of the new resource.
+  * @param label           the rdfs:label of the resource.
+  * @param values          the properties to add: type and value(s): a Map of propertyIris to ApiValueV1.
+  */
 case class OneOfMultipleResourceCreateRequestV1(resourceTypeIri: IRI,
                                                  label: String,
                                                  values: Map[IRI, Seq[CreateValueV1WithComment]])
 
+/**
+  * Requests the creation of Multiple new resources.
+  *
+  * @param resourcesToCreate the collection of requests for creation of new resources.
+  * @param projectIri      the IRI of the project the resources is added to.
+  * @param userProfile     the profile of the user making the request.
+  * @param apiRequestID    the ID of the API request.
+  */
 case class MultipleResourceCreateRequestV1(resourcesToCreate: Seq[OneOfMultipleResourceCreateRequestV1],
                                            projectIri : IRI,
                                            userProfile: UserProfileV1,

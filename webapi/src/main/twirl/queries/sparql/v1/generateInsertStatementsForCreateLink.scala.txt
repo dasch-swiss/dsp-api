@@ -1,6 +1,6 @@
 @*
  * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ * Tobias Schweizer, Sepideh Alassi, André Kilchenmann, and André Fatton.
  *
  * This file is part of Knora.
  *
@@ -27,6 +27,7 @@
  * This template is used in two contexts: when creating a single link in an existing resource, and when creating
  * a new resource with its initial values.
  *
+ * @param resourceIndex     the index of the resource .
  * @param valueIndex the index of the link value in the sequence of values that are being created in the transaction.
  *                   This index will be used to make SPARQL variable names specific to the value being created. If
  *                   a single link is being created in an existing resource, `valueIndex` will be 0.

@@ -1,6 +1,6 @@
 @*
  * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ * Tobias Schweizer, Sepideh Alassi, André Kilchenmann, and André Fatton.
  *
  * This file is part of Knora.
  *
@@ -30,6 +30,7 @@
  *
  * @param linkUpdates a list of [[LinkUpdate]] objects describing links and LinkValues that need to be
  *        updated for resource references in Standoff text values.
+ * @param resourceIndex     the index of the resource.
  *
  * The SPARQL variables `?resource` and `?currentTime` must already be bound.
  *@

@@ -733,7 +733,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
                         // convert CreateValueResponseV1 to a ResourceCreateValueResponseV1
                         MessageUtil.convertCreateValueResponseV1ToResourceCreateValueResponseV1(
                             resourceIri = "http://www.knora.org/test",
-                            ownerIri = "http://data.knora.org/users/b83acc5f05",
+                            creatorIri = "http://data.knora.org/users/b83acc5f05",
                             propertyIri = propIri,
                             valueResponse = valueResponse
                         )
