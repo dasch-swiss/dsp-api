@@ -213,7 +213,7 @@ case class OneOfMultipleResourceCreateRequestV1(resourceTypeIri: IRI,
   * Requests the creation of Multiple new resources.
   *
   * @param resourcesToCreate the collection of requests for creation of new resources.
-  * @param projectIri      the IRI of the project the resources is added to.
+  * @param projectIri      the IRI of the project the resources are added to.
   * @param userProfile     the profile of the user making the request.
   * @param apiRequestID    the ID of the API request.
   */

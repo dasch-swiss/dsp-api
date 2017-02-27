@@ -1284,7 +1284,11 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    |    </biblio:JournalArticle>
 
                    |</xml>""".stripMargin
-            Post("/v1/resources/xml", HttpEntity(ContentTypes.`text/xml(UTF-8)`, params)) ~> addCredentials(BasicHttpCredentials(biblioUserEmail, password)) ~> resourcesPath ~> check {
+
+            val projectIRI = java.net.URLEncoder.encode( "http://data.knora.org/projects/DczxPs-sR6aZN91qV92ZmQ", "utf-8")
+
+            Post(s"/v1/resources/xml/${projectIRI}"
+                , HttpEntity(ContentTypes.`text/xml(UTF-8)`, params)) ~> addCredentials(BasicHttpCredentials(biblioUserEmail, password)) ~> resourcesPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)
 
 

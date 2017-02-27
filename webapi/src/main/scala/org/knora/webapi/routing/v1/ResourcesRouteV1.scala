@@ -341,7 +341,7 @@ object ResourcesRouteV1 extends Authenticator {
 
                             } else {
 
-                                if (child.label.contains("Date") || child.label.contains("date") ) {
+                                if (child.text.contains("GREGORIAN") || child.text.contains("JULIAN") ) {
                                     println(child.label, child.text)
                                     (child.getNamespace(child.prefix) + "#" + child.label ->
                                     List(CreateResourceValueV1(date_value=Some(child.text))))
@@ -648,13 +648,10 @@ object ResourcesRouteV1 extends Authenticator {
                     )
             }
 
-        } ~  path("v1" / "resources" / "xml" ) {
+        } ~  path("v1" / "resources" / "xml" / Segment) { (projectId ) =>
             post {
-                entity(as[NodeSeq]) {
-                    xml => requestContext =>
+                entity(as[NodeSeq]) { xml => requestContext =>
                     val userProfile = getUserProfileV1(requestContext)
-
-                    val projectId = "http://data.knora.org/projects/DczxPs-sR6aZN91qV92ZmQ"
 
                     val apiRequestID = UUID.randomUUID
                     val resourcesToCreate = parseXml(xml)
