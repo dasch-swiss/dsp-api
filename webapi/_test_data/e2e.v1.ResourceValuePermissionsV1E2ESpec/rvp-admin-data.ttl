@@ -24,7 +24,7 @@
         knora-base:email "drawings-gods-test-user@example.com"^^xsd:string ;
         knora-base:givenName "Drawings Gods"^^xsd:string ;
         knora-base:familyName "Test User"^^xsd:string ;
-        knora-base:password "$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"^^xsd:string ;
+        knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="^^xsd:string ;
         knora-base:preferredLanguage "fr"^^xsd:string ;
         knora-base:status "true"^^xsd:boolean ;
         knora-base:isInProject <http://data.knora.org/projects/drawings-gods> ;
@@ -49,7 +49,7 @@
         knora-base:email "parole@unil.ch"^^xsd:string ;
         knora-base:givenName "parole"^^xsd:string ;
         knora-base:familyName "parole"^^xsd:string ;
-        knora-base:password "$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"^^xsd:string ;
+        knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="^^xsd:string ;
         knora-base:preferredLanguage "fr"^^xsd:string ;
         knora-base:status "true"^^xsd:boolean ;
         knora-base:isInProject <http://data.knora.org/projects/parole-religieuse> ;
