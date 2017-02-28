@@ -20,7 +20,6 @@ import akka.actor.Props
 import akka.actor.Status.Failure
 import akka.testkit.{ImplicitSender, TestActorRef}
 import com.typesafe.config.ConfigFactory
-import org.apache.jena.sparql.function.library.leviathan.log
 import org.knora.webapi.SharedAdminTestData._
 import org.knora.webapi.SharedPermissionsTestData._
 import org.knora.webapi._
@@ -92,7 +91,7 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
                 expectMsg(SharedAdminTestData.rootUser.permissionData)
             }
 
-            "return the permissions profile ( multi group user)" in {
+            "return the permissions profile (multi group user)" in {
                 actorUnderTest ! PermissionDataGetV1(
                     projectIris = SharedAdminTestData.multiuserUser.projects,
                     groupIris = SharedAdminTestData.multiuserUser.groups,
@@ -140,6 +139,16 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
                     isInSystemAdminGroup = false
                 )
                 expectMsg(SharedAdminTestData.imagesUser01.permissionData)
+            }
+
+            "return the permissions profile (images-reviewer-user)" in {
+                actorUnderTest ! PermissionDataGetV1(
+                    projectIris = SharedAdminTestData.imagesReviewerUser.projects,
+                    groupIris = SharedAdminTestData.imagesReviewerUser.groups,
+                    isInProjectAdminGroups = Seq.empty[IRI],
+                    isInSystemAdminGroup = false
+                )
+                expectMsg(SharedAdminTestData.imagesReviewerUser.permissionData)
             }
 
             "return the permissions profile (anything user 01)" in {

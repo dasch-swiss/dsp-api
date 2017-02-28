@@ -214,7 +214,7 @@ object SharedAdminTestData {
             lang = "de",
             projects = List("http://data.knora.org/projects/images")
         ),
-        groups = List("http://data.knora.org/groups/images-reviewer"),
+        groups = List.empty[IRI],
         projects = List("http://data.knora.org/projects/images"),
         sessionId = None,
         permissionData = PermissionDataV1(
@@ -238,6 +238,30 @@ object SharedAdminTestData {
             firstname = Some("User02"),
             lastname = Some("User"),
             email = Some("user02.user@example.com"),
+            password = Some("$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"), // -> "test"
+            token = None,
+            isActiveUser = Some(true),
+            lang = "de",
+            projects = List("http://data.knora.org/projects/images")
+        ),
+        groups = List.empty[IRI],
+        projects = List("http://data.knora.org/projects/images"),
+        sessionId = None,
+        permissionData = PermissionDataV1(
+            groupsPerProject = Map(
+                "http://data.knora.org/projects/images" -> List(s"${OntologyConstants.KnoraBase.ProjectMember}")
+            ),
+            anonymousUser = false
+        )
+    )
+
+    /* represents 'images-reviewer-user' as found in admin-data.ttl  */
+    def imagesReviewerUser = UserProfileV1(
+        userData = UserDataV1(
+            user_id = Some("http://data.knora.org/users/images-reviewer-user"),
+            firstname = Some("User03"),
+            lastname = Some("User"),
+            email = Some("images-reviewer-user@example.com"),
             password = Some("$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"), // -> "test"
             token = None,
             isActiveUser = Some(true),

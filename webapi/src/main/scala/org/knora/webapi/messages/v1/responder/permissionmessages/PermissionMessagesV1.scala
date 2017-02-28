@@ -432,7 +432,7 @@ case class PermissionDataV1(groupsPerProject: Map[IRI, List[IRI]] = Map.empty[IR
                 case ResourceCreateOperation(resourceClassIri) => {
                     this.administrativePermissionsPerProject.get(insideProject) match {
                         case Some(set) => {
-                            set(PermissionV1.ProjectResourceCreateAllPermission)
+                            set(PermissionV1.ProjectResourceCreateAllPermission) || set(PermissionV1.projectResourceCreateRestrictedPermission(resourceClassIri))
                         }
                         case None => {
                             // println("FALSE: No administrative permissions defined for this project.")
