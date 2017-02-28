@@ -277,7 +277,8 @@ Permission Precedence Rules (Default Object Access Permissions)
 The following list is sorted by the permission precedence level in descending order:
 
     - permissions on ``knora-base:ProjectAdmin`` (highest level)
-    - permissions on resource classes / properties
+    - permissions on resource classes / properties (own project)
+    - permissions on resource classes / properties (``knora-base:SystemProject``)
     - permissions on custom groups
     - permissions on ``knora-base:ProjectMember``
     - permissions on ``knora-base:KnownUser`` (lowest level)
