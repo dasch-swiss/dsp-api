@@ -192,7 +192,7 @@ class PermissionUtilV1Spec extends CoreSpec("PermissionUtilSpec") with ImplicitS
 
         "build a 'PermissionV1' object" in {
             PermissionUtilV1.buildPermissionObject(
-                name = OntologyConstants.KnoraAdmin.ProjectResourceCreateRestrictedPermission,
+                name = OntologyConstants.KnoraBase.ProjectResourceCreateRestrictedPermission,
                 iris = Set("1", "2", "3")
             ) should equal(
                 Set(

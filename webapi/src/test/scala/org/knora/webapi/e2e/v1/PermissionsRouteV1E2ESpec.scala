@@ -51,7 +51,7 @@ class PermissionsRouteV1E2ESpec extends E2ESpec(StoreRouteV1E2ESpec.config) with
 
         "return administrative permissions" in {
             val projectIri = java.net.URLEncoder.encode(SharedAdminTestData.imagesProjectInfo.id, "utf-8")
-            val groupIri = java.net.URLEncoder.encode(OntologyConstants.KnoraBase.ProjectMember, "utf-8")
+            val groupIri = java.net.URLEncoder.encode(OntologyConstants.KnoraAdmin.ProjectMember, "utf-8")
 
             val request = Get(baseApiUrl + s"/v1/permissions/$projectIri/$groupIri")
             val response = singleAwaitingRequest(request, 1.seconds)
