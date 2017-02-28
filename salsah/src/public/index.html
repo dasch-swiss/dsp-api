@@ -214,7 +214,7 @@
 
 					$('#dologin').simpledialog('loginbox', 'close');
 
-					$('#userctrl').empty().append(s_('_user') + ' : ' + SALSAH.userdata.username)
+					$('#userctrl').empty().append(s_('_user') + ' : ' + SALSAH.userdata.firstname + ' ' + SALSAH.userdata.lastname)
 						.append($('<img>').attr({id: 'dologout', src: 'app/icons/24x24/delete_user.png', title: s_('_logout')})
 						.simpledialog('logoutbox', {'class': 'loginbox', width: 400, positioning: 'upper'})
 					);
@@ -278,8 +278,8 @@
 			});
 		});
 
-		if (SALSAH.userdata.user_id !== undefined) {
-			$('#userctrl').empty().append(s_('_user') + ' : ' + SALSAH.userdata.username)
+		if (SALSAH.userdata.email !== undefined) {
+			$('#userctrl').empty().append(s_('_user') + ' : ' + SALSAH.userdata.firstname + ' ' + SALSAH.userdata.lastname)
 				.append($('<img>').attr({id: 'dologout', src: 'app/icons/24x24/delete_user.png', title: s_('_logout')})
 				.simpledialog('logoutbox', {'class': 'loginbox', width: 400, positioning: 'upper'})
 			);
