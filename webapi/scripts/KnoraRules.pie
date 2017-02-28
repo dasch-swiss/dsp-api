@@ -430,13 +430,13 @@ Consistency: value_prop_cardinality_any
     r <owl:onProperty> p
 
 
-/*
+// If a standoff tag's class has a knora-base:standoffParentClassConstraint,
+// and the tag has a parent, the parent must belong to the specified class.
 Consistency: standoff_parent
     i <knora-base:standoffTagHasStartParent> j
     i <rdf:type> t
-    ------------------------------------
     t <knora-base:standoffParentClassConstraint> c
+    ------------------------------------
     j <rdf:type> c
-*/
 
 }

@@ -121,6 +121,15 @@ class GraphDBConsistencyCheckingSpec extends CoreSpec(GraphDBConsistencyChecking
                     msg.contains(s"$CONSISTENCY_CHECK_ERROR cardinality_1_not_greater_rdfs_label") should ===(true)
             }
         }
+
+        "not create a new resource with incorrect standoff tag nesting" in {
+            storeManager ! SparqlUpdateRequest(wrongStandoffTagNesting)
+
+            expectMsgPF(timeout) {
+                case akka.actor.Status.Failure(TriplestoreResponseException(msg: String, _)) =>
+                    msg.contains(s"$CONSISTENCY_CHECK_ERROR standoff_parent_1") should ===(true)
+            }
+        }
     } else {
         s"Not running GraphDBConsistencyCheckingSpec with triplestore type ${settings.triplestoreType}" in {}
     }
@@ -1051,61 +1060,6 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |
-          |        # Value 5
-          |        # Property: http://www.knora.org/ontology/incunabula#citation
-          |
-          |
-          |        ?newValue5 rdf:type ?valueType5 ;
-          |            knora-base:isDeleted "false"^^xsd:boolean .
-          |
-          |
-          |
-          |                ?newValue5 knora-base:valueHasString "This citation refers to another resource" .
-          |
-          |
-          |
-          |
-          |                    ?newValue5 knora-base:valueHasStandoff
-          |                        [
-          |
-          |
-          |                                    rdf:type knora-base:StandoffVisualAttribute ;
-          |                                    knora-base:standoffHasAttribute "bold" ;
-          |
-          |
-          |                            knora-base:standoffHasStart 5 ;
-          |                            knora-base:standoffHasEnd 13
-          |                        ] .
-          |
-          |                    ?newValue5 knora-base:valueHasStandoff
-          |                        [
-          |
-          |
-          |                                    rdf:type knora-base:StandoffLink ;
-          |                                    knora-base:standoffHasAttribute "_link" ;
-          |                                    knora-base:standoffHasLink <http://data.knora.org/c5058f3a> ;
-          |
-          |
-          |                            knora-base:standoffHasStart 32 ;
-          |                            knora-base:standoffHasEnd 40
-          |                        ] .
-          |
-          |
-          |
-          |            ?newValue5 <http://www.knora.org/ontology/knora-base#attachedToUser> ?creatorIri ;
-          |                knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" .
-          |
-          |
-          |        ?newValue5 knora-base:valueHasOrder ?nextOrder5 ;
-          |                             knora-base:valueCreationDate ?currentTime .
-          |
-          |
-          |
-          |        ?resource ?property5 ?newValue5 .
-          |
-          |
-          |
-          |
           |        # Value 6
           |        # Property: http://www.knora.org/ontology/incunabula#publoc
           |
@@ -1306,33 +1260,7 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |            BIND(2 AS ?nextOrder4)
-          |
-          |
-          |
-          |
-          |
-          |
-          |    # Value 5
-          |    # Property: http://www.knora.org/ontology/incunabula#citation
-          |
-          |    BIND(IRI("http://www.knora.org/ontology/incunabula#citation") AS ?property5)
-          |    BIND(IRI("http://data.knora.org/tooManyPublocs/values/y7zDf5oNSE6-9GNNgXSbwA") AS ?newValue5)
-          |    BIND(IRI("http://www.knora.org/ontology/knora-base#TextValue") AS ?valueType5)
-          |
-          |
-          |
-          |    ?property5 knora-base:objectClassConstraint ?propertyRange5 .
-          |    ?valueType5 rdfs:subClassOf* ?propertyRange5 .
-          |
-          |
-          |
-          |    ?resourceClass rdfs:subClassOf* ?restriction5 .
-          |    ?restriction5 a owl:Restriction .
-          |    ?restriction5 owl:onProperty ?property5 .
-          |
-          |
-          |
-          |            BIND(3 AS ?nextOrder5)
+
           |
           |
           |
@@ -2575,7 +2503,6 @@ object GraphDBConsistencyCheckingSpec {
           |}
         """.stripMargin
 
-
     private val twoLabels =
         """
           |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -2608,16 +2535,106 @@ object GraphDBConsistencyCheckingSpec {
           |    BIND(IRI("http://data.knora.org/projects/anything") AS ?projectIri)
           |    BIND(str("Test Thing") AS ?label)
           |    BIND(NOW() AS ?currentTime)
+          |}
+        """.stripMargin
+
+    private val wrongStandoffTagNesting =
+        """
+          |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+          |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+          |PREFIX owl: <http://www.w3.org/2002/07/owl#>
+          |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+          |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+          |
+          |PREFIX standoff: <http://www.knora.org/ontology/standoff#>
+          |INSERT {
+          |    GRAPH ?dataNamedGraph {
+          |        ?resource rdf:type ?resourceClass ;
+          |            knora-base:isDeleted false ;
+          |            knora-base:attachedToUser ?creatorIri ;
+          |            knora-base:attachedToProject ?projectIri ;
+          |            rdfs:label ?label;
+          |            knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" ;
+          |            knora-base:creationDate ?currentTime .
+          |
+          |        # Value 0
+          |        # Property: http://www.knora.org/ontology/anything#hasText
+          |
+          |
+          |        ?newValue0 rdf:type ?valueType0 ;
+          |            knora-base:isDeleted "false"^^xsd:boolean .
+          |
+          |                ?newValue0 knora-base:valueHasString "A list: one two three" .
+          |
+          |                ?newValue0 knora-base:valueHasStandoff <http://data.knora.org/wrongStandoffNesting/values/IKVNJVSWTryEtK4i9OCSIQ/standoff/RGHPdxY9S3GvXcUNVFS6tA> , <http://data.knora.org/wrongStandoffNesting/values/IKVNJVSWTryEtK4i9OCSIQ/standoff/PRuRPhPWTuSdW7ZH8Z_AoQ> , <http://data.knora.org/wrongStandoffNesting/values/IKVNJVSWTryEtK4i9OCSIQ/standoff/moUCaHalTP6MQDx86YPw0Q> .
+          |
+          |                <http://data.knora.org/wrongStandoffNesting/values/IKVNJVSWTryEtK4i9OCSIQ/standoff/RGHPdxY9S3GvXcUNVFS6tA> a standoff:StandoffRootTag ;
+          |                    knora-base:standoffTagHasStart "0"^^xsd:int ;
+          |                    knora-base:standoffTagHasEnd "21"^^xsd:int ;
+          |                	   knora-base:standoffTagHasStartIndex "0"^^xsd:integer ;
+          |                	   knora-base:standoffTagHasUUID "47875e5c-04b8-4279-b90a-8c2cdf45f9b3"^^xsd:string .
+          |
+          |                <http://data.knora.org/wrongStandoffNesting/values/IKVNJVSWTryEtK4i9OCSIQ/standoff/PRuRPhPWTuSdW7ZH8Z_AoQ> a standoff:StandoffOrderedListTag ;
+          |                	   knora-base:standoffTagHasStart "8"^^xsd:int ;
+          |                	   knora-base:standoffTagHasEnd "21"^^xsd:int ;
+          |                	   knora-base:standoffTagHasStartIndex "1"^^xsd:integer ;
+          |                	   knora-base:standoffTagHasStartParent <http://data.knora.org/wrongStandoffNesting/values/IKVNJVSWTryEtK4i9OCSIQ/standoff/RGHPdxY9S3GvXcUNVFS6tA> ;
+          |                	   knora-base:standoffTagHasUUID "beb746c5-6467-4e18-b201-06974e95facf" .
+          |
+          |                # The parent of this node is the root node, but it should be the ordered list tag
+          |                <http://data.knora.org/wrongStandoffNesting/values/IKVNJVSWTryEtK4i9OCSIQ/standoff/moUCaHalTP6MQDx86YPw0Q> a standoff:StandoffListElementTag ;
+          |                	   knora-base:standoffTagHasStart "8"^^xsd:int ;
+          |                	   knora-base:standoffTagHasEnd "11"^^xsd:int ;
+          |                	   knora-base:standoffTagHasStartIndex "2"^^xsd:integer ;
+          |                	   knora-base:standoffTagHasStartParent <http://data.knora.org/wrongStandoffNesting/values/IKVNJVSWTryEtK4i9OCSIQ/standoff/RGHPdxY9S3GvXcUNVFS6tA> ;
+          |                	   knora-base:standoffTagHasUUID "93d31a31-af8a-4fb6-ad6d-6f768260a29e" .
+          |
+          |            ?newValue0 <http://www.knora.org/ontology/knora-base#attachedToUser> ?creatorIri ;
+          |                knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" .
+          |
+          |
+          |        ?newValue0 knora-base:valueHasOrder ?nextOrder0 ;
+          |                             knora-base:valueCreationDate ?currentTime .
           |
           |
           |
-          |    # Value 0
-          |    # Property: http://www.knora.org/ontology/anything#hasBlueThing
+          |        ?resource ?property0 ?newValue0 .
           |
-          |    BIND(IRI("http://www.knora.org/ontology/anything#hasBlueThing") AS ?linkProperty0)
-          |    BIND(IRI("http://www.knora.org/ontology/anything#hasBlueThingValue") AS ?linkValueProperty0)
-          |    BIND(IRI("http://data.knora.org/wrongTargetClass/values/GjV_4ayjRDebneEQM0zHuw") AS ?newLinkValue0)
-          |    BIND(IRI("http://data.knora.org/a-thing") AS ?linkTarget0)
+          |    }
+          |}
+          |
+          |
+          |    USING <http://www.ontotext.com/explicit>
+          |
+          |WHERE {
+          |    BIND(IRI("http://www.knora.org/data/anything") AS ?dataNamedGraph)
+          |    BIND(IRI("http://data.knora.org/wrongStandoffNesting") AS ?resource)
+          |    BIND(IRI("http://www.knora.org/ontology/anything#Thing") AS ?resourceClass)
+          |    BIND(IRI("http://data.knora.org/users/9XBCrDV3SRa7kS1WwynB4Q") AS ?creatorIri)
+          |    BIND(IRI("http://data.knora.org/projects/anything") AS ?projectIri)
+          |    BIND(str("Test Thing") AS ?label)
+          |    BIND(NOW() AS ?currentTime)
+          |
+          |    BIND(IRI("http://www.knora.org/ontology/anything#hasText") AS ?property0)
+          |    BIND(IRI("http://data.knora.org/wrongStandoffNesting/values/IKVNJVSWTryEtK4i9OCSIQ") AS ?newValue0)
+          |    BIND(IRI("http://www.knora.org/ontology/knora-base#TextValue") AS ?valueType0)
+          |
+          |
+          |
+          |    ?property0 knora-base:objectClassConstraint ?propertyRange0 .
+          |    ?valueType0 rdfs:subClassOf* ?propertyRange0 .
+          |
+          |
+          |
+          |    ?resourceClass rdfs:subClassOf* ?restriction0 .
+          |    ?restriction0 a owl:Restriction .
+          |    ?restriction0 owl:onProperty ?property0 .
+          |
+          |
+          |
+          |            BIND(0 AS ?nextOrder0)
+          |
+          |
           |}
         """.stripMargin
 }

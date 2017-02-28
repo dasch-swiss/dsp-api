@@ -536,6 +536,11 @@
                   :objectDatatypeConstraint xsd:string .
 
 
+###  http://www.knora.org/ontology/knora-base#standoffParentClassConstraint
+
+:standoffParentClassConstraint rdf:type owl:ObjectProperty .
+
+
 ###  http://www.knora.org/ontology/knora-base#hasSubListNode
 
 :hasSubListNode rdf:type owl:ObjectProperty ;
