@@ -886,6 +886,43 @@ object TransformData extends App {
 
             val groupedBySubject: Map[IRI, Vector[Statement]] = allTransformedStatements.groupBy(st => st.getSubject.stringValue())
 
+            val standoffLinkValues: Map[IRI, Vector[Statement]] = groupedBySubject.filter {
+                case (subjectIri: IRI, statements: Seq[Statement]) =>
+                    statements.exists {
+                        (statement: Statement) =>
+                            statement.getPredicate.stringValue == OntologyConstants.Rdf.Type &&
+                                statement.getObject.stringValue == OntologyConstants.KnoraBase.LinkValue
+                    } && statements.exists {
+                        (statement: Statement) =>
+                            statement.getPredicate.stringValue == OntologyConstants.Rdf.Predicate &&
+                                statement.getObject.stringValue == OntologyConstants.KnoraBase.HasStandoffLinkTo
+                    }
+            }
+
+            val transformedStandoffLinkValues = standoffLinkValues.map {
+                case (subjectIri: IRI, statements: Seq[Statement]) =>
+                    val statementsWithoutCreatorOrPermissions = statements.filterNot {
+                        (statement: Statement) =>
+                            statement.getPredicate.stringValue == OntologyConstants.KnoraBase.AttachedToUser ||
+                            statement.getPredicate.stringValue == OntologyConstants.KnoraBase.HasPermissions
+                    }
+
+                    val creatorStatement = valueFactory.createStatement(
+                        valueFactory.createIRI(subjectIri),
+                        valueFactory.createIRI(OntologyConstants.KnoraBase.AttachedToUser),
+                        valueFactory.createIRI(OntologyConstants.KnoraBase.SystemUser)
+                    )
+
+                    val permissionsStatement = valueFactory.createStatement(
+                        valueFactory.createIRI(subjectIri),
+                        valueFactory.createIRI(OntologyConstants.KnoraBase.HasPermissions),
+                        valueFactory.createLiteral("CR knora-base:Creator|V knora-base:UnknownUser")
+                    )
+
+                    val transformedLinkValueStatements = statementsWithoutCreatorOrPermissions :+ creatorStatement :+ permissionsStatement
+                    subjectIri -> transformedLinkValueStatements
+            }
+
             val textValues: Map[IRI, Vector[Statement]] = groupedBySubject.filter {
                 case (subjectIri: IRI, statements: Seq[Statement]) =>
                     statements.exists {
@@ -910,8 +947,8 @@ object TransformData extends App {
 
             val transformedEverything: Vector[Statement] = groupedBySubject.flatMap {
                 case (subjectIri: IRI, statements: Vector[Statement]) =>
-                    if (allStandoff.contains(subjectIri)) {
-                        // Ignore standoff because we're going to regenerate it
+                    if (allStandoff.contains(subjectIri) || transformedStandoffLinkValues.contains(subjectIri)) {
+                        // Ignore standoff nodes and standoff link values because we're going to replace them
                         Vector.empty[Statement]
                     } else if (textValues.contains(subjectIri)) {
                         // Generate transformed text value and standoff
@@ -1046,10 +1083,10 @@ object TransformData extends App {
                             statements ++ standoffWithRootTag ++ mappingToAdd
                         }
                     } else {
-                        // Not a text value or standoff, leave as is
+                        // Not a text value, standoff node, or standoff link value, so leave as is
                         statements
                     }
-            }.toVector
+            }.toVector ++ transformedStandoffLinkValues.values.flatten
 
             // Sort them by subject IRI.
             val sortedStatements = transformedEverything.sortBy(_.getPredicate.stringValue).sortBy(_.getSubject.stringValue())
