@@ -333,7 +333,7 @@ object ResourcesRouteV1 extends Authenticator {
                                           //xml elements with ref attribute are links
                                           val ref_att = subnode.attribute("ref").get
                                           if (ref_att!=None) {
-                                              CreateResourceValueV1(None, Some(subnode.getNamespace(subnode.prefix) + "/" + subnode.label+"#"+ ref_att))
+                                              CreateResourceValueV1(link_value= Some(subnode.getNamespace(subnode.prefix) + "/" + subnode.label+"#"+ ref_att))
                                           } else {
                                               CreateResourceValueV1(Some(CreateRichtextV1(Some(subnode.text))))
                                           }

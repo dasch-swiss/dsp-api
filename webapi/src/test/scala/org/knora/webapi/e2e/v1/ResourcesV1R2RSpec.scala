@@ -1285,7 +1285,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
 
                    |</xml>""".stripMargin
 
-            val projectIRI = java.net.URLEncoder.encode( "http://data.knora.org/projects/DczxPs-sR6aZN91qV92ZmQ", "utf-8")
+            val projectIRI = URLEncoder.encode( "http://data.knora.org/projects/DczxPs-sR6aZN91qV92ZmQ", "utf-8")
 
             Post(s"/v1/resources/xml/${projectIRI}"
                 , HttpEntity(ContentTypes.`text/xml(UTF-8)`, params)) ~> addCredentials(BasicHttpCredentials(biblioUserEmail, password)) ~> resourcesPath ~> check {
@@ -1298,5 +1298,13 @@ class ResourcesV1R2RSpec extends R2RSpec {
                 responseAs[String] should include("createdResources")
             }
         }
+//        "get the journal resources created from xml" in {
+//            val resTypeIri = URLEncoder.encode("http://www.knora.org/ontology/biblio#Journal", "UTF-8")
+//            Get(s"/v1/resourcetypes/${resTypeIri}" ) ~> addCredentials(BasicHttpCredentials(biblioUserEmail, password)) ~> resourcesPath ~> check {
+//                assert(status == StatusCodes.OK, response.toString)
+//                println(response)
+//            }
+//
+//        }
     }
 }

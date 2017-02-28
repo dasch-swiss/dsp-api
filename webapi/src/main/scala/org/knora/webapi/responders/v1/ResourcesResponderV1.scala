@@ -1300,6 +1300,12 @@ class ResourcesResponderV1 extends ResponderV1 {
                                 (resRequest.label -> knoraIdUtil.makeRandomResourceIri )
 
                     ).toMap
+                    resourceTypes: Map[String, IRI] = resourcesToCreate.map (
+                        resRequest =>
+                            (resRequest.label -> resRequest.resourceTypeIri )
+
+                    ).toMap
+
                     sequenceOfFutures: Seq[Future[ResourceToCreate]] = resourcesToCreate.zipWithIndex.map {
                         case (resRequest, index) =>
 
@@ -1318,18 +1324,19 @@ class ResourcesResponderV1 extends ResponderV1 {
 
 
                                     resourceIri = resourceInfo(resRequest.label)
-                                    //for LinkValues to be created change the key of target resource from label to IRI
-                                    resValues: Map[IRI, Seq[CreateValueV1WithComment]]= resRequest.values.map {
-                                        case (propertyIri, valuesWithComment) =>
-                                            val vals=changeIRILinkValues(valuesWithComment, resourceInfo)
-                                            (propertyIri -> vals)
-                                    }
+
 
                                     propertyIris = resRequest.values.keySet
 
                                     // check every resource to be created with respect of ontology and cardinalities
-                                    fileValuesV1 <- checkResource(resRequest.resourceTypeIri, propertyIris, userProfile, resValues, None,  checkObj=false)
+                                    fileValuesV1 <- checkResource(resRequest.resourceTypeIri, propertyIris, userProfile, resRequest.values, None,  checkObj=false, resourceTypes)
 
+                                    //for LinkValues to be created change the key of target resource from label to IRI
+                                    resValues: Map[IRI, Seq[CreateValueV1WithComment]]= resRequest.values.map {
+                                      case (propertyIri, valuesWithComment) =>
+                                        val vals=changeIRILinkValues(valuesWithComment, resourceInfo)
+                                        (propertyIri -> vals)
+                                    }
                                     //generate sparql statemnt for every resource
                                     generateSparqlForValuesResponse <- createNewSparqlStatement(projectIri, resourceIri, resRequest.resourceTypeIri, index,checkObj=false, resValues, fileValuesV1 , userProfile, apiRequestID)
 
@@ -1378,7 +1385,7 @@ class ResourcesResponderV1 extends ResponderV1 {
       */
 
     private def checkResource(resourceClassIri:IRI, propertyIris:Set[String], userProfile: UserProfileV1, values: Map[IRI, Seq[CreateValueV1WithComment]],
-                              sipiConversionRequest: Option[SipiResponderConversionRequestV1],  checkObj: Boolean): Future[Option[(IRI, Vector[CreateValueV1WithComment])]] = {
+                              sipiConversionRequest: Option[SipiResponderConversionRequestV1],  checkObj: Boolean, resourceTypes: Map[String, IRI]): Future[Option[(IRI, Vector[CreateValueV1WithComment])]] = {
 
         for {
             // Get ontology information about the resource class's cardinalities and about each property's knora-base:objectClassConstraint.
@@ -1389,33 +1396,58 @@ class ResourcesResponderV1 extends ResponderV1 {
             userProfile = userProfile
             ) ).mapTo[EntityInfoGetResponseV1]
 
+
             // Check that each submitted value is consistent with the knora-base:objectClassConstraint of the property that is supposed to
             // point to it.
-            _ <- if (checkObj) {
-                for {
-                    propertyObjectClassConstraintChecks: Seq[Unit] <- Future.sequence {
-                        values.foldLeft(Vector.empty[Future[Unit]]) {
-                            case (acc, (propertyIri, valuesWithComments)) =>
-                                val propertyInfo = entityInfoResponse.propertyEntityInfoMap(propertyIri)
-                                val propertyObjectClassConstraint = propertyInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint).getOrElse {
-                                    throw InconsistentTriplestoreDataException(s"Property $propertyIri has no knora-base:objectClassConstraint")
-                                }
 
-                                acc ++ valuesWithComments.map {
-                                    valueV1WithComment: CreateValueV1WithComment =>
-                                        checkPropertyObjectClassConstraintForValue(
-                                            propertyIri = propertyIri,
-                                            propertyObjectClassConstraint = propertyObjectClassConstraint,
-                                            updateValueV1 = valueV1WithComment.updateValueV1,
-                                            userProfile = userProfile
-                                        )
-                                }
+
+            propertyObjectClassConstraintChecks: Seq[Unit] <- Future.sequence {
+                values.foldLeft(Vector.empty[Future[Unit]]) {
+                    case (acc, (propertyIri, valuesWithComments)) =>
+                        val propertyInfo = entityInfoResponse.propertyEntityInfoMap(propertyIri)
+                        val propertyObjectClassConstraint = propertyInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint).getOrElse {
+                            throw InconsistentTriplestoreDataException(s"Property $propertyIri has no knora-base:objectClassConstraint")
                         }
-                    }
-                } yield propertyObjectClassConstraintChecks
-            } else {
-                Future(Seq.empty[Unit])
+
+                        acc ++ valuesWithComments.map {
+                            valueV1WithComment: CreateValueV1WithComment =>
+                              if (checkObj) {
+                                checkPropertyObjectClassConstraintForValue(
+                                  propertyIri = propertyIri,
+                                  propertyObjectClassConstraint = propertyObjectClassConstraint,
+                                  updateValueV1 = valueV1WithComment.updateValueV1,
+                                  userProfile = userProfile
+                                )
+                              } else {
+                                if (valueV1WithComment.updateValueV1.isInstanceOf[LinkUpdateV1]) {
+                                  val targetVal = valueV1WithComment.updateValueV1.toString.split("#")
+                                  val checkSubClassRequest = CheckSubClassRequestV1(
+                                    subClassIri = resourceTypes(targetVal(1)),
+                                    superClassIri = propertyObjectClassConstraint
+                                  )
+                                  for {
+                                    subClassResponse <- (responderManager ? checkSubClassRequest).mapTo[CheckSubClassResponseV1]
+
+
+                                    _ = if (!subClassResponse.isSubClass) {
+                                      println("in here")
+                                      throw OntologyConstraintException(s"Resource ${resourceTypes(targetVal(1))} cannot be the target of property $propertyIri, because it is not a member of OWL class $propertyObjectClassConstraint")
+                                    }
+                                  } yield ()
+                                } else {
+
+                                  valueUtilV1.checkValueTypeForPropertyObjectClassConstraint(
+                                    propertyIri = propertyIri,
+                                    propertyObjectClassConstraint = propertyObjectClassConstraint,
+                                    valueType = valueV1WithComment.updateValueV1.valueTypeIri,
+                                    responderManager = responderManager)
+                                }
+                              }
+                        }
+                }
             }
+
+
 
             // Check that the resource class has a suitable cardinality for each submitted value.
             resourceClassInfo = entityInfoResponse.resourceEntityInfoMap (resourceClassIri)
@@ -1607,10 +1639,11 @@ class ResourcesResponderV1 extends ResponderV1 {
                                userProfile: UserProfileV1,
                                apiRequestID: UUID): Future[ResourceCreateResponseV1] = {
         val propertyIris = values.keySet
+        val resourceTypes = Map(label-> resourceClassIri )
         // Everything looks OK, so we can create the resource and its values.
 
         for {
-            fileValuesV1 <- checkResource(resourceClassIri, propertyIris, userProfile, values, sipiConversionRequest, checkObj=true)
+            fileValuesV1 <- checkResource(resourceClassIri, propertyIris, userProfile, values, sipiConversionRequest, checkObj=true, resourceTypes)
             generateSparqlForValuesResponse <- createNewSparqlStatement(projectIri, resourceIri, resourceClassIri,
                                                     resourceIndex=0, checkObj = true, values, fileValuesV1, userProfile, apiRequestID)
             resourcesToCreate = Seq[ResourceToCreate] (ResourceToCreate(resourceIri, permissions, generateSparqlForValuesResponse,resourceClassIri, 0, label ))
@@ -1785,6 +1818,7 @@ class ResourcesResponderV1 extends ResponderV1 {
       * @return a [[ResourceCheckClassResponseV1]].
       */
     private def checkResourceClass(resourceIri: IRI, owlClass: IRI, userProfile: UserProfileV1): Future[ResourceCheckClassResponseV1] = {
+
         for {
         // Check that the user has permission to view the resource.
             (permissionCode, resourceInfo) <- getResourceInfoV1(resourceIri = resourceIri, userProfile = userProfile, queryOntology = false)
@@ -1795,11 +1829,12 @@ class ResourcesResponderV1 extends ResponderV1 {
             }
 
             checkSubClassRequest = CheckSubClassRequestV1(
-                subClassIri = resourceInfo.restype_id,
-                superClassIri = owlClass
+              subClassIri = resourceInfo.restype_id,
+              superClassIri = owlClass
             )
 
             subClassResponse <- (responderManager ? checkSubClassRequest).mapTo[CheckSubClassResponseV1]
+
         } yield ResourceCheckClassResponseV1(isInClass = subClassResponse.isSubClass)
     }
 
