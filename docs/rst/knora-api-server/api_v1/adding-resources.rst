@@ -1,5 +1,5 @@
 .. Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
-   Tobias Schweizer, André Kilchenmann, and André Fatton.
+   Tobias Schweizer, Sepideh Alassi, André Kilchenmann, and André Fatton.
 
    This file is part of Knora.
 
@@ -132,3 +132,50 @@ The resource's Iri has to be provided in the URL (as its last segment). The new 
 The JSON format of the request is described in the TypeScript interface ``changeResourceLabelRequest`` in module ``createResourceFormats``.
 The response is described in the TypeScript interface ``changeResourceLabelResponse`` in module ``createResourceFormats``.
 
+********************************
+Adding Multiple Resources by XML
+********************************
+In order to create multiple resources, the resources can be specified in a XML file. The XML file containing the resource descriptions can be imported directly to Knora by a POST request.
+
+The request has to be sent to the Knora server using the ``resources/xml`` path segment.
+
+::
+
+     HTTP POST to http://host/v1/resources/xml
+
+---------------
+XML File Format
+---------------
+
+The ontologies of the resource classes should be specified in xml file as namespaces. For example, if the resource classes from beol and biblio ontologies are defined in XML file, these ontologies should be specified as below:
+
+::
+
+      <xml xmlns:beol="http://www.knora.org/ontology/beol"
+         xmlns:biblio="http://www.knora.org/ontology/biblio">
+
+The resources defined as xml elements should comply to their definition in ontology with respect to name of resource class, and its properties as well as cardinality of the properties. For example, if the resource class ``person`` in beol ontology has the
+properties hasGivenName and hasFamilyName, the corresponding xml element should be in following form:
+
+::
+
+      <beol:person id="abel">
+       	    <beol:hasGivenName>Niels Henrik</beol:hasGivenName>
+      	    <beol:hasFamilyName>Abel</beol:hasFamilyName>
+      </beol:person>
+
+Note that every resource should have a unique ``id`` which will be the unique ``label`` of the resource.
+
+The property values of resources should be in the format specified for that property in Ontology. For example, if the property has knora-base:DateValue type in ontology, a Knora date string must be submitted as value of property.
+
+::
+
+  <biblio:publicationHasDate>GREGORIAN:1974</biblio:publicationHasDate>
+
+The resource class properties of LinkValue type should have a child element which specifies the type of the target resource in its tag, and should have a ``ref`` attribute which points to ``id`` attribute of xml element corresponding to target resource. e.g:
+
+::
+
+      <biblio:publicationHasAuthor>
+         <beol:person ref="abel"/>
+     </biblio:publicationHasAuthor>
