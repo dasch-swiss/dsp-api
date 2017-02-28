@@ -52,6 +52,7 @@ import scala.collection.immutable.Iterable
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
 import scala.xml.{Node, NodeSeq, Text}
+import scala.util.{Try, Success, Failure}
 
 
 
@@ -340,14 +341,14 @@ object ResourcesRouteV1 extends Authenticator {
                                   )
 
                             } else {
+                                Try(InputValidation.toDate(child.text,()=> throw BadRequestException(s"not a dateValue"))) match {
 
-                                if (child.text.contains("GREGORIAN") || child.text.contains("JULIAN") ) {
-                                    println(child.label, child.text)
-                                    (child.getNamespace(child.prefix) + "#" + child.label ->
-                                    List(CreateResourceValueV1(date_value=Some(child.text))))
-                                } else {
-                                    (child.getNamespace(child.prefix) + "#" + child.label ->
-                                     List(CreateResourceValueV1(Some(CreateRichtextV1(Some(child.text))))))
+                                    case Success(s)=>
+                                        (child.getNamespace(child.prefix) + "#" + child.label ->
+                                            List(CreateResourceValueV1(date_value=Some(s))))
+                                    case Failure(f) =>
+                                        (child.getNamespace(child.prefix) + "#" + child.label ->
+                                          List(CreateResourceValueV1(Some(CreateRichtextV1(Some(child.text))))))
                                 }
 
                             }
