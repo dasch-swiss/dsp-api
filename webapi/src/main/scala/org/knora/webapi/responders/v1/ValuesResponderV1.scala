@@ -24,7 +24,7 @@ import akka.actor.Status
 import akka.pattern._
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.ontologymessages.{Cardinality, EntityInfoGetRequestV1, EntityInfoGetResponseV1}
-import org.knora.webapi.messages.v1.responder.permissionmessages.DefaultObjectAccessPermissionsStringForPropertyGetV1
+import org.knora.webapi.messages.v1.responder.permissionmessages.{DefaultObjectAccessPermissionsStringForPropertyGetV1, DefaultObjectAccessPermissionsStringResponseV1}
 import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoByIRIGetV1, ProjectInfoV1}
 import org.knora.webapi.messages.v1.responder.resourcemessages._
 import org.knora.webapi.messages.v1.responder.sipimessages.{SipiConstants, SipiResponderConversionPathRequestV1, SipiResponderConversionRequestV1, SipiResponderConversionResponseV1}
@@ -88,7 +88,7 @@ class ValuesResponderV1 extends ResponderV1 {
             response <- maybeValueQueryResult match {
                 case Some(valueQueryResult) =>
                     for {
-                        valueOwnerProfile <- (responderManager ? UserProfileByIRIGetV1(valueQueryResult.ownerIri, UserProfileType.RESTRICTED)).mapTo[UserProfileV1]
+                        valueOwnerProfile <- (responderManager ? UserProfileByIRIGetV1(valueQueryResult.creatorIri, UserProfileType.RESTRICTED)).mapTo[UserProfileV1]
                     } yield ValueGetResponseV1(
                         valuetype = valueQueryResult.value.valueTypeIri,
                         rights = valueQueryResult.permissionCode,
@@ -181,27 +181,37 @@ class ValuesResponderV1 extends ResponderV1 {
                 throw OntologyConstraintException(s"Cardinality restrictions do not allow a value to be added for property ${createValueRequest.propertyIri} of resource ${createValueRequest.resourceIri}")
             }
 
-            // Everything seems OK, so we can create the value.
+            // Get the IRI of project of the containing resource.
+            projectIri = resourceFullResponse.resinfo.getOrElse(throw InconsistentTriplestoreDataException(s"Did not find resource info for resource ${createValueRequest.resourceIri}")).project_id
 
-            // FIXME: Query the PermissionsResponder for Property DOAP
             defaultObjectAccessPermissions <- {
-                responderManager ? DefaultObjectAccessPermissionsStringForPropertyGetV1(projectIri = createValueRequest.projectIri, propertyIri = createValueRequest.propertyIri, createValueRequest.userProfile.permissionData)
-            }.mapTo[Option[String]]
+                responderManager ? DefaultObjectAccessPermissionsStringForPropertyGetV1(
+                    projectIri = projectIri,
+                    propertyIri = createValueRequest.propertyIri,
+                    createValueRequest.userProfile.permissionData
+                )
+            }.mapTo[DefaultObjectAccessPermissionsStringResponseV1]
             _ = log.debug(s"createValueV1 - defaultObjectAccessPermissions: $defaultObjectAccessPermissions")
 
-            // Construct its permissions from the default permissions of the resource property.
-            //permissionsFromDefaults: Option[String] = PermissionUtilV1.makePermissionsFromEntityDefaults(propertyInfo)
+            // Get project info
+            projectInfo <- {
+                responderManager ? ProjectInfoByIRIGetV1(
+                    iri = projectIri,
+                    userProfileV1 = Some(createValueRequest.userProfile)
+                )
+            }.mapTo[ProjectInfoV1]
 
-            // Create the new value.
+            // Everything seems OK, so create the value.
+
             unverifiedValue <- createValueV1AfterChecks(
+                dataNamedGraph = projectInfo.dataNamedGraph,
                 projectIri = resourceFullResponse.resinfo.get.project_id,
                 resourceIri = createValueRequest.resourceIri,
                 propertyIri = createValueRequest.propertyIri,
                 value = createValueRequest.value,
                 comment = createValueRequest.comment,
-                valueOwner = userIri, // Make the requesting user the owner.
-                valueProject = resourceFullResponse.resinfo.get.project_id, // Give the new value the same project as the containing resource
-                valuePermissions = defaultObjectAccessPermissions,
+                valueCreator = userIri,
+                valuePermissions = Some(defaultObjectAccessPermissions.permissionLiteral),
                 updateResourceLastModificationDate = true,
                 userProfile = createValueRequest.userProfile)
 
@@ -280,12 +290,6 @@ class ValuesResponderV1 extends ResponderV1 {
                                                          valueIndexes: Vector[Int] = Vector.empty[Int])
 
             for {
-            // Get ontology information about the default permissions on the resource's properties.
-                entityInfoResponse: EntityInfoGetResponseV1 <- (responderManager ? EntityInfoGetRequestV1(
-                    propertyIris = createMultipleValuesRequest.values.keySet,
-                    userProfile = createMultipleValuesRequest.userProfile
-                )).mapTo[EntityInfoGetResponseV1]
-
                 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
                 // Generate SPARQL to create links and LinkValues for standoff resource references in text values
 
@@ -294,7 +298,7 @@ class ValuesResponderV1 extends ResponderV1 {
                 // that have standoff references to a particular target resource.
 
                 // First, make a single list of all the values to be created.
-                valuesToCreatePerProperty: Map[IRI, Seq[CreateValueV1WithComment]] = createMultipleValuesRequest.values
+                valuesToCreatePerProperty: Map[IRI, Seq[CreateValueV1WithComment]] <- Future(createMultipleValuesRequest.values)
                 valuesToCreateForAllProperties: Iterable[Seq[CreateValueV1WithComment]] = valuesToCreatePerProperty.values
                 allValuesToCreate: Iterable[CreateValueV1WithComment] = valuesToCreateForAllProperties.flatten
 
@@ -341,8 +345,7 @@ class ValuesResponderV1 extends ResponderV1 {
                             linkTargetIri = targetIri,
                             currentReferenceCount = 0,
                             newReferenceCount = initialReferenceCount,
-                            newLinkValueOwner = OntologyConstants.KnoraBase.SystemUser,
-                            newLinkValueProject = None,
+                            newLinkValueCreator = OntologyConstants.KnoraBase.SystemUser,
                             newLinkValuePermissions = None
                         )
                 }
@@ -384,19 +387,12 @@ class ValuesResponderV1 extends ResponderV1 {
                 // Make a SparqlGenerationResultForProperty for each property.
                 sparqlGenerationResults: Map[IRI, SparqlGenerationResultForProperty] = groupedNumberedValuesWithValueHasOrder.map {
                     case (propertyIri: IRI, valuesToCreate: Seq[NumberedValueToCreate]) =>
-                        // Construct a list of permission-relevant assertions about the new values of each property,
-                        // i.e. the values' owner and project plus their permissions. Use the property's default
-                        // permissions to make permissions for the new values.
-                        val propertyInfo = entityInfoResponse.propertyEntityInfoMap(propertyIri)
-
-                        // FIXME: Query the PermissionsResponder for Property DOAP
-                        //val permissionsFromDefaults: Option[String] = PermissionUtilV1.makePermissionsFromEntityDefaults(propertyInfo)
                         val defaultObjectAccessPermissionsF = {
                             responderManager ? DefaultObjectAccessPermissionsStringForPropertyGetV1(
                                 projectIri = createMultipleValuesRequest.projectIri,
                                 propertyIri = propertyIri,
                                 createMultipleValuesRequest.userProfile.permissionData)
-                        }.mapTo[Option[String]]
+                        }.mapTo[DefaultObjectAccessPermissionsStringResponseV1]
 
                         val defaultObjectAccessPermissions = Await.result(defaultObjectAccessPermissionsF, 1.second)
                         log.debug(s"createValueV1 - defaultObjectAccessPermissions: $defaultObjectAccessPermissions")
@@ -424,9 +420,8 @@ class ValuesResponderV1 extends ResponderV1 {
                                             linkTargetIri = linkUpdateV1.targetResourceIri,
                                             currentReferenceCount = 0,
                                             newReferenceCount = 1,
-                                            newLinkValueOwner = userIri,
-                                            newLinkValueProject = Some(createMultipleValuesRequest.projectIri),
-                                            newLinkValuePermissions = defaultObjectAccessPermissions
+                                            newLinkValueCreator = userIri,
+                                            newLinkValuePermissions = Some(defaultObjectAccessPermissions.permissionLiteral)
                                         )
 
                                         // Generate WHERE clause statements for the link.
@@ -468,9 +463,8 @@ class ValuesResponderV1 extends ResponderV1 {
                                             newValueIri = newValueIri,
                                             linkUpdates = Seq.empty[SparqlTemplateLinkUpdate], // This is empty because we have to generate SPARQL for standoff links separately.
                                             maybeComment = valueToCreate.createValueV1WithComment.comment,
-                                            valueOwner = userIri,
-                                            valueProject = createMultipleValuesRequest.projectIri,
-                                            maybeValuePermissions = defaultObjectAccessPermissions
+                                            valueCreator = userIri,
+                                            maybeValuePermissions = Some(defaultObjectAccessPermissions.permissionLiteral)
                                         ).toString()
 
                                         //println(insertSparql)
@@ -843,8 +837,16 @@ class ValuesResponderV1 extends ResponderV1 {
                         projectIri = findResourceWithValueResult.projectIri,
                         propertyIri = findResourceWithValueResult.propertyIri,
                         permissionData = changeValueRequest.userProfile.permissionData)
-                }.mapTo[Option[String]]
+                }.mapTo[DefaultObjectAccessPermissionsStringResponseV1]
                 _ = log.debug(s"changeValueV1 - defaultObjectAccessPermissions: $defaultObjectAccessPermissions")
+
+                // Get project info
+                projectInfo <- {
+                    responderManager ? ProjectInfoByIRIGetV1(
+                        iri = resourceFullResponse.resinfo.get.project_id,
+                        userProfileV1 = Some(changeValueRequest.userProfile)
+                    )
+                }.mapTo[ProjectInfoV1]
 
                 // The rest of the preparation for the update depends on whether we're changing a link or an ordinary value.
                 apiResponse <- (changeValueRequest.value, currentValueQueryResult) match {
@@ -856,31 +858,24 @@ class ValuesResponderV1 extends ResponderV1 {
                             throw ForbiddenException(s"User $userIri does not have permission to modify resource ${findResourceWithValueResult.resourceIri}")
                         }
 
-                        // We'll need to create a new LinkValue. Use the property's default permissions to make permissions
-                        // for it.
-                        // FIXME: Query the PermissionsResponder for Property DOAP
-                        //val permissionsFromDefaults: Option[String] = PermissionUtilV1.makePermissionsFromEntityDefaults(propertyInfo)
+                        // We'll need to create a new LinkValue.
 
                         changeLinkValueV1AfterChecks(projectIri = currentValueQueryResult.projectIri,
+                            dataNamedGraph = projectInfo.dataNamedGraph,
                             resourceIri = findResourceWithValueResult.resourceIri,
                             propertyIri = propertyIri,
                             currentLinkValueV1 = currentLinkValueQueryResult.value,
                             linkUpdateV1 = linkUpdateV1,
                             comment = changeValueRequest.comment,
-                            valueOwner = userIri, // Make the requesting user the owner.
-                            valueProject = resourceFullResponse.resinfo.get.project_id, // Give it the same project as the containing resource.
-                            valuePermissions = defaultObjectAccessPermissions,
+                            valueCreator = userIri,
+                            valuePermissions = Some(defaultObjectAccessPermissions.permissionLiteral),
                             userProfile = changeValueRequest.userProfile)
 
                     case _ =>
                         // We're updating an ordinary value. Generate an IRI for the new version of the value.
                         val newValueIri = knoraIdUtil.makeRandomValueIri(findResourceWithValueResult.resourceIri)
 
-                        // Give the new version the same project and permissions as the previous version.
-
-                        val valueProject = currentValueQueryResult.permissionRelevantAssertions.find {
-                            case (p, o) => p == OntologyConstants.KnoraBase.AttachedToProject
-                        }.map(_._2).getOrElse(resourceFullResponse.resinfo.get.project_id)
+                        // Give the new version the same permissions as the previous version.
 
                         val valuePermissions = currentValueQueryResult.permissionRelevantAssertions.find {
                             case (p, o) => p == OntologyConstants.KnoraBase.HasPermissions
@@ -894,14 +889,12 @@ class ValuesResponderV1 extends ResponderV1 {
                             newValueIri = newValueIri,
                             updateValueV1 = changeValueRequest.value,
                             comment = changeValueRequest.comment,
-                            valueOwner = userIri, // Make the requesting user the owner.
-                            valueProject = valueProject,
+                            valueCreator = userIri,
                             valuePermissions = valuePermissions,
                             userProfile = changeValueRequest.userProfile)
                 }
             } yield apiResponse
         }
-
 
         for {
         // Don't allow anonymous users to update values.
@@ -1041,11 +1034,7 @@ class ValuesResponderV1 extends ResponderV1 {
                     // It's a LinkValue. Make a new version of it with a reference count of 0, and mark the new
                     // version as deleted.
 
-                    // Give the new version the same project and permissions as the previous version.
-
-                    val valueProject: IRI = currentValueQueryResult.permissionRelevantAssertions.find {
-                        case (p, o) => p == OntologyConstants.KnoraBase.AttachedToProject
-                    }.map(_._2).getOrElse(findResourceWithValueResult.projectIri)
+                    // Give the new version the same permissions as the previous version.
 
                     val valuePermissions: Option[String] = currentValueQueryResult.permissionRelevantAssertions.find {
                         case (p, o) => p == OntologyConstants.KnoraBase.HasPermissions
@@ -1062,13 +1051,11 @@ class ValuesResponderV1 extends ResponderV1 {
                             )
                         }.mapTo[ProjectInfoV1]
 
-
                         sparqlTemplateLinkUpdate <- decrementLinkValue(
                             sourceResourceIri = findResourceWithValueResult.resourceIri,
                             linkPropertyIri = linkPropertyIri,
                             targetResourceIri = linkValue.objectIri,
-                            valueOwner = userIri, // Make the requesting user the owner.
-                            valueProject = Some(valueProject),
+                            valueCreator = userIri,
                             valuePermissions = valuePermissions,
                             userProfile = deleteValueRequest.userProfile
                         )
@@ -1095,8 +1082,7 @@ class ValuesResponderV1 extends ResponderV1 {
                                         sourceResourceIri = findResourceWithValueResult.resourceIri,
                                         linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
                                         targetResourceIri = targetResourceIri,
-                                        valueOwner = OntologyConstants.KnoraBase.SystemUser,
-                                        valueProject = None,
+                                        valueCreator = OntologyConstants.KnoraBase.SystemUser,
                                         valuePermissions = None,
                                         userProfile = deleteValueRequest.userProfile
                                     )
@@ -1227,7 +1213,7 @@ class ValuesResponderV1 extends ResponderV1 {
             filteredVersionRowsVector = versionRowsVector.filter {
                 rowMap =>
                     val valueIri = rowMap("value")
-                    val valueOwner = rowMap("valueOwner")
+                    val valueCreator = rowMap("valueCreator")
                     val project = rowMap("project")
                     val valuePermissions = rowMap.get("valuePermissions")
 
@@ -1237,14 +1223,14 @@ class ValuesResponderV1 extends ResponderV1 {
                         PermissionUtilV1.getUserPermissionOnLinkValueV1(
                             linkValueIri = valueIri,
                             predicateIri = rowMap("linkValuePredicate"),
-                            linkValueOwner = valueOwner,
-                            linkValueProject = project,
+                            linkValueCreator = valueCreator,
+                            containingResourceProject = project,
                             linkValuePermissionLiteral = valuePermissions,
                             userProfile = versionHistoryRequest.userProfile
                         )
                     } else {
                         // It's not a LinkValue.
-                        PermissionUtilV1.getUserPermissionV1(subjectIri = valueIri, subjectCreator = valueOwner, subjectProject = project, subjectPermissionLiteral = valuePermissions, userProfile = versionHistoryRequest.userProfile)
+                        PermissionUtilV1.getUserPermissionV1(subjectIri = valueIri, subjectCreator = valueCreator, subjectProject = project, subjectPermissionLiteral = valuePermissions, userProfile = versionHistoryRequest.userProfile)
                     }
 
                     valuePermissionCode.nonEmpty
@@ -1295,13 +1281,13 @@ class ValuesResponderV1 extends ResponderV1 {
             linkValueResponse <- maybeValueQueryResult match {
                 case Some(valueQueryResult) =>
                     for {
-                        valueOwnerProfile <- (responderManager ? UserProfileByIRIGetV1(valueQueryResult.ownerIri, UserProfileType.RESTRICTED)).mapTo[UserProfileV1]
+                        valueCreatorProfile <- (responderManager ? UserProfileByIRIGetV1(valueQueryResult.creatorIri, UserProfileType.RESTRICTED)).mapTo[UserProfileV1]
                     } yield ValueGetResponseV1(
                         valuetype = valueQueryResult.value.valueTypeIri,
                         rights = valueQueryResult.permissionCode,
                         value = valueQueryResult.value,
-                        valuecreator = valueOwnerProfile.userData.email.get,
-                        valuecreatorname = valueOwnerProfile.userData.fullname.get,
+                        valuecreator = valueCreatorProfile.userData.email.get,
+                        valuecreatorname = valueCreatorProfile.userData.fullname.get,
                         valuecreationdate = valueQueryResult.creationDate,
                         comment = valueQueryResult.comment,
                         userdata = userProfile.userData
@@ -1328,7 +1314,7 @@ class ValuesResponderV1 extends ResponderV1 {
         /**
           * The IRI Of the user that created the value.
           */
-        def ownerIri: IRI
+        def creatorIri: IRI
 
         /**
           * The date when the value was created, represented as a string.
@@ -1361,7 +1347,7 @@ class ValuesResponderV1 extends ResponderV1 {
       * value (not a link).
       */
     case class BasicValueQueryResult(value: ApiValueV1,
-                                     ownerIri: IRI,
+                                     creatorIri: IRI,
                                      creationDate: String,
                                      projectIri: IRI,
                                      comment: Option[String],
@@ -1376,7 +1362,7 @@ class ValuesResponderV1 extends ResponderV1 {
       */
     case class LinkValueQueryResult(value: LinkValueV1,
                                     linkValueIri: IRI,
-                                    ownerIri: IRI,
+                                    creatorIri: IRI,
                                     creationDate: String,
                                     projectIri: IRI,
                                     comment: Option[String],
@@ -1444,7 +1430,7 @@ class ValuesResponderV1 extends ResponderV1 {
 
             maybeSourcePermissionCode = PermissionUtilV1.getUserPermissionV1(
                 subjectIri = rowMap("source"),
-                subjectCreator = rowMap("sourceOwner"),
+                subjectCreator = rowMap("sourceCreator"),
                 subjectProject = rowMap("sourceProject"),
                 subjectPermissionLiteral = rowMap.get("sourcePermissions"),
                 userProfile = userProfile
@@ -1452,7 +1438,7 @@ class ValuesResponderV1 extends ResponderV1 {
 
             maybeTargetPermissionCode = PermissionUtilV1.getUserPermissionV1(
                 subjectIri = rowMap("target"),
-                subjectCreator = rowMap("targetOwner"),
+                subjectCreator = rowMap("targetCreator"),
                 subjectProject = rowMap("targetProject"),
                 subjectPermissionLiteral = rowMap.get("targetPermissions"),
                 userProfile = userProfile
@@ -1554,11 +1540,11 @@ class ValuesResponderV1 extends ResponderV1 {
                 // Get the value's class IRI.
                 valueClassIri = getValuePredicateObject(predicateIri = OntologyConstants.Rdf.Type, rows = rows).getOrElse(throw InconsistentTriplestoreDataException(s"Value $valueIri has no rdf:type"))
 
-                // Get the IRI of the value's owner.
-                ownerIri = getValuePredicateObject(predicateIri = OntologyConstants.KnoraBase.AttachedToUser, rows = rows).getOrElse(throw InconsistentTriplestoreDataException(s"Value $valueIri has no owner"))
+                // Get the IRI of the value's creator.
+                creatorIri = getValuePredicateObject(predicateIri = OntologyConstants.KnoraBase.AttachedToUser, rows = rows).getOrElse(throw InconsistentTriplestoreDataException(s"Value $valueIri has no knora-base:attachedToUser"))
 
                 // Get the value's project IRI.
-                projectIri = getValuePredicateObject(predicateIri = OntologyConstants.KnoraBase.AttachedToProject, rows = rows).getOrElse(throw InconsistentTriplestoreDataException(s"Value $valueIri has no project"))
+                projectIri = getValuePredicateObject(predicateIri = OntologyConstants.KnoraBase.AttachedToProject, rows = rows).getOrElse(throw InconsistentTriplestoreDataException(s"The resource containing value $valueIri has no knora-base:attachedToProject"))
 
                 // Get the value's creation date.
                 creationDate = getValuePredicateObject(predicateIri = OntologyConstants.KnoraBase.ValueCreationDate, rows = rows).getOrElse(throw InconsistentTriplestoreDataException(s"Value $valueIri has no valueCreationDate"))
@@ -1584,6 +1570,7 @@ class ValuesResponderV1 extends ResponderV1 {
                             linkValueIri = valueIri,
                             predicateIri = linkPredicateIri,
                             valueProps = valueProps,
+                            subjectProject = None, // no need to specify this here, because it's in valueProps
                             userProfile = userProfile
                         )
 
@@ -1602,7 +1589,7 @@ class ValuesResponderV1 extends ResponderV1 {
             } yield Some(
                 BasicValueQueryResult(
                     value = value,
-                    ownerIri = ownerIri,
+                    creatorIri = creatorIri,
                     creationDate = creationDate,
                     comment = comment,
                     projectIri = projectIri,
@@ -1639,10 +1626,10 @@ class ValuesResponderV1 extends ResponderV1 {
                 }
 
                 // Get the IRI of the value's owner.
-                ownerIri = getValuePredicateObject(predicateIri = OntologyConstants.KnoraBase.AttachedToUser, rows = rows).getOrElse(throw InconsistentTriplestoreDataException(s"Value $linkValueIri has no owner"))
+                creatorIri = getValuePredicateObject(predicateIri = OntologyConstants.KnoraBase.AttachedToUser, rows = rows).getOrElse(throw InconsistentTriplestoreDataException(s"Value $linkValueIri has no knora-base:attachedToUser"))
 
                 // Get the value's project IRI.
-                projectIri = getValuePredicateObject(predicateIri = OntologyConstants.KnoraBase.AttachedToProject, rows = rows).getOrElse(throw InconsistentTriplestoreDataException(s"Value $linkValueIri has no project"))
+                projectIri = getValuePredicateObject(predicateIri = OntologyConstants.KnoraBase.AttachedToProject, rows = rows).getOrElse(throw InconsistentTriplestoreDataException(s"The resource containing value $linkValueIri has no knora-base:attachedToProject"))
 
                 // Get the value's creation date.
                 creationDate = getValuePredicateObject(predicateIri = OntologyConstants.KnoraBase.ValueCreationDate, rows = rows).getOrElse(throw InconsistentTriplestoreDataException(s"Value $linkValueIri has no valueCreationDate"))
@@ -1658,6 +1645,7 @@ class ValuesResponderV1 extends ResponderV1 {
                     linkValueIri = linkValueIri,
                     predicateIri = linkValueV1.predicateIri,
                     valueProps = valueProps,
+                    subjectProject = None, // no need to specify this here, because it's in valueProps
                     userProfile = userProfile
                 ).getOrElse {
                     val userIri = userProfile.userData.user_id.getOrElse(OntologyConstants.KnoraBase.UnknownUser)
@@ -1671,7 +1659,7 @@ class ValuesResponderV1 extends ResponderV1 {
                 LinkValueQueryResult(
                     value = linkValueV1,
                     linkValueIri = linkValueIri,
-                    ownerIri = ownerIri,
+                    creatorIri = creatorIri,
                     creationDate = creationDate,
                     comment = comment,
                     projectIri = projectIri,
@@ -1867,36 +1855,36 @@ class ValuesResponderV1 extends ResponderV1 {
       * Creates a new value (either an ordinary value or a link), using an existing transaction, assuming that
       * pre-update checks have already been done.
       *
+      * @param dataNamedGraph                     the named graph in which the value is to be created.
       * @param projectIri                         the IRI of the project in which to create the value.
       * @param resourceIri                        the IRI of the resource in which to create the value.
       * @param propertyIri                        the IRI of the property that will point from the resource to the value.
       * @param value                              the value to create.
-      * @param valueOwner                         the IRI of the new value's owner.
-      * @param valueProject                       the IRI of the new value's project.
+      * @param valueCreator                       the IRI of the new value's owner.
       * @param valuePermissions                   the literal that should be used as the object of the new value's `knora-base:hasPermissions` predicate.
       * @param updateResourceLastModificationDate if true, update the resource's `knora-base:lastModificationDate`.
       * @param userProfile                        the profile of the user making the request.
       * @return an [[UnverifiedValueV1]].
       */
-    private def createValueV1AfterChecks(projectIri: IRI,
+    private def createValueV1AfterChecks(dataNamedGraph: IRI,
+                                         projectIri: IRI,
                                          resourceIri: IRI,
                                          propertyIri: IRI,
                                          value: UpdateValueV1,
                                          comment: Option[String],
-                                         valueOwner: IRI,
-                                         valueProject: IRI,
+                                         valueCreator: IRI,
                                          valuePermissions: Option[String],
                                          updateResourceLastModificationDate: Boolean,
                                          userProfile: UserProfileV1): Future[UnverifiedValueV1] = {
         value match {
             case linkUpdateV1: LinkUpdateV1 =>
                 createLinkValueV1AfterChecks(
+                    dataNamedGraph = dataNamedGraph,
                     resourceIri = resourceIri,
                     propertyIri = propertyIri,
                     linkUpdateV1 = linkUpdateV1,
                     comment = comment,
-                    valueOwner = valueOwner,
-                    valueProject = valueProject,
+                    valueCreator = valueCreator,
                     valuePermissions = valuePermissions,
                     updateResourceLastModificationDate = updateResourceLastModificationDate,
                     userProfile = userProfile
@@ -1904,12 +1892,12 @@ class ValuesResponderV1 extends ResponderV1 {
 
             case ordinaryUpdateValueV1 =>
                 createOrdinaryValueV1AfterChecks(
+                    dataNamedGraph = dataNamedGraph,
                     resourceIri = resourceIri,
                     propertyIri = propertyIri,
                     value = ordinaryUpdateValueV1,
                     comment = comment,
-                    valueOwner = valueOwner,
-                    valueProject = valueProject,
+                    valueCreator = valueCreator,
                     valuePermissions = valuePermissions,
                     updateResourceLastModificationDate = updateResourceLastModificationDate,
                     userProfile = userProfile
@@ -1920,22 +1908,22 @@ class ValuesResponderV1 extends ResponderV1 {
     /**
       * Creates a link, using an existing transaction, assuming that pre-update checks have already been done.
       *
+      * @param dataNamedGraph                     the named graph in which the link is to be created.
       * @param resourceIri                        the resource in which the link is to be created.
       * @param propertyIri                        the link property.
       * @param linkUpdateV1                       a [[LinkUpdateV1]] specifying the target resource.
-      * @param valueOwner                         the IRI of the new link value's owner.
-      * @param valueProject                       the IRI of the new link value's project.
+      * @param valueCreator                       the IRI of the new link value's owner.
       * @param valuePermissions                   the literal that should be used as the object of the new link value's `knora-base:hasPermissions` predicate.
       * @param updateResourceLastModificationDate if true, update the resource's `knora-base:lastModificationDate`.
       * @param userProfile                        the profile of the user making the request.
       * @return an [[UnverifiedValueV1]].
       */
-    private def createLinkValueV1AfterChecks(resourceIri: IRI,
+    private def createLinkValueV1AfterChecks(dataNamedGraph: IRI,
+                                             resourceIri: IRI,
                                              propertyIri: IRI,
                                              linkUpdateV1: LinkUpdateV1,
                                              comment: Option[String],
-                                             valueOwner: IRI,
-                                             valueProject: IRI,
+                                             valueCreator: IRI,
                                              valuePermissions: Option[String],
                                              updateResourceLastModificationDate: Boolean,
                                              userProfile: UserProfileV1): Future[UnverifiedValueV1] = {
@@ -1944,23 +1932,14 @@ class ValuesResponderV1 extends ResponderV1 {
                 sourceResourceIri = resourceIri,
                 linkPropertyIri = propertyIri,
                 targetResourceIri = linkUpdateV1.targetResourceIri,
-                valueOwner = valueOwner,
-                valueProject = Some(valueProject),
+                valueCreator = valueCreator,
                 valuePermissions = valuePermissions,
                 userProfile = userProfile
             )
 
-            // Get project info
-            projectInfo <- {
-                responderManager ? ProjectInfoByIRIGetV1(
-                    valueProject,
-                    None
-                )
-            }.mapTo[ProjectInfoV1]
-
             // Generate a SPARQL update string.
             sparqlUpdate = queries.sparql.v1.txt.createLink(
-                dataNamedGraph = projectInfo.dataNamedGraph,
+                dataNamedGraph = dataNamedGraph,
                 triplestore = settings.triplestoreType,
                 resourceIri = resourceIri,
                 linkUpdate = sparqlTemplateLinkUpdate,
@@ -1987,19 +1966,18 @@ class ValuesResponderV1 extends ResponderV1 {
       * @param resourceIri                        the resource in which the value is to be created.
       * @param propertyIri                        the property that should point to the value.
       * @param value                              an [[UpdateValueV1]] describing the value.
-      * @param valueOwner                         the IRI of the new value's owner.
-      * @param valueProject                       the IRI of the new value's project.
+      * @param valueCreator                       the IRI of the new value's owner.
       * @param valuePermissions                   the literal that should be used as the object of the new value's `knora-base:hasPermissions` predicate.
       * @param updateResourceLastModificationDate if true, update the resource's `knora-base:lastModificationDate`.
       * @param userProfile                        the profile of the user making the request.
       * @return an [[UnverifiedValueV1]].
       */
-    private def createOrdinaryValueV1AfterChecks(resourceIri: IRI,
+    private def createOrdinaryValueV1AfterChecks(dataNamedGraph: IRI,
+                                                 resourceIri: IRI,
                                                  propertyIri: IRI,
                                                  value: UpdateValueV1,
                                                  comment: Option[String],
-                                                 valueOwner: IRI,
-                                                 valueProject: IRI,
+                                                 valueCreator: IRI,
                                                  valuePermissions: Option[String],
                                                  updateResourceLastModificationDate: Boolean,
                                                  userProfile: UserProfileV1): Future[UnverifiedValueV1] = {
@@ -2021,8 +1999,7 @@ class ValuesResponderV1 extends ResponderV1 {
                                     sourceResourceIri = resourceIri,
                                     linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
                                     targetResourceIri = targetResourceIri,
-                                    valueOwner = OntologyConstants.KnoraBase.SystemUser,
-                                    valueProject = None,
+                                    valueCreator = OntologyConstants.KnoraBase.SystemUser,
                                     valuePermissions = None,
                                     userProfile = userProfile
                                 )
@@ -2033,17 +2010,9 @@ class ValuesResponderV1 extends ResponderV1 {
                 case _ => Future(Vector.empty[SparqlTemplateLinkUpdate])
             }
 
-            // Get project info
-            projectInfo <- {
-                responderManager ? ProjectInfoByIRIGetV1(
-                    valueProject,
-                    None
-                )
-            }.mapTo[ProjectInfoV1]
-
             // Generate a SPARQL update string.
             sparqlUpdate = queries.sparql.v1.txt.createValue(
-                dataNamedGraph = projectInfo.dataNamedGraph,
+                dataNamedGraph = dataNamedGraph,
                 triplestore = settings.triplestoreType,
                 resourceIri = resourceIri,
                 propertyIri = propertyIri,
@@ -2052,8 +2021,7 @@ class ValuesResponderV1 extends ResponderV1 {
                 value = value,
                 linkUpdates = standoffLinkUpdates,
                 maybeComment = comment,
-                valueOwner = valueOwner,
-                valueProject = valueProject,
+                valueCreator = valueCreator,
                 maybeValuePermissions = valuePermissions
             ).toString()
 
@@ -2074,26 +2042,26 @@ class ValuesResponderV1 extends ResponderV1 {
     /**
       * Changes a link, assuming that pre-update checks have already been done.
       *
+      * @param dataNamedGraph     the IRI of the named graph containing the link.
       * @param projectIri         the IRI of the project containing the link.
       * @param resourceIri        the IRI of the resource containing the link.
       * @param propertyIri        the IRI of the link property.
       * @param currentLinkValueV1 a [[LinkValueV1]] representing the `knora-base:LinkValue` for the existing link.
       * @param linkUpdateV1       a [[LinkUpdateV1]] indicating the new target resource.
       * @param comment            an optional comment on the new link value.
-      * @param valueOwner         the IRI of the new link value's owner.
-      * @param valueProject       the IRI of the new link value's project.
+      * @param valueCreator       the IRI of the new link value's owner.
       * @param valuePermissions   the literal that should be used as the object of the new link value's `knora-base:hasPermissions` predicate.
       * @param userProfile        the profile of the user making the request.
       * @return a [[ChangeValueResponseV1]].
       */
-    private def changeLinkValueV1AfterChecks(projectIri: IRI,
+    private def changeLinkValueV1AfterChecks(dataNamedGraph: IRI,
+                                             projectIri: IRI,
                                              resourceIri: IRI,
                                              propertyIri: IRI,
                                              currentLinkValueV1: LinkValueV1,
                                              linkUpdateV1: LinkUpdateV1,
                                              comment: Option[String],
-                                             valueOwner: IRI,
-                                             valueProject: IRI,
+                                             valueCreator: IRI,
                                              valuePermissions: Option[String],
                                              userProfile: UserProfileV1): Future[ChangeValueResponseV1] = {
         for {
@@ -2102,8 +2070,7 @@ class ValuesResponderV1 extends ResponderV1 {
                 sourceResourceIri = resourceIri,
                 linkPropertyIri = propertyIri,
                 targetResourceIri = currentLinkValueV1.objectIri,
-                valueOwner = valueOwner,
-                valueProject = Some(valueProject),
+                valueCreator = valueCreator,
                 valuePermissions = valuePermissions,
                 userProfile = userProfile
             )
@@ -2113,8 +2080,7 @@ class ValuesResponderV1 extends ResponderV1 {
                 sourceResourceIri = resourceIri,
                 linkPropertyIri = propertyIri,
                 targetResourceIri = linkUpdateV1.targetResourceIri,
-                valueOwner = valueOwner,
-                valueProject = Some(valueProject),
+                valueCreator = valueCreator,
                 valuePermissions = valuePermissions,
                 userProfile = userProfile
             )
@@ -2180,8 +2146,7 @@ class ValuesResponderV1 extends ResponderV1 {
       * @param newValueIri      the IRI of the new value.
       * @param updateValueV1    an [[UpdateValueV1]] representing the new value.
       * @param comment          an optional comment on the new value.
-      * @param valueOwner       the IRI of the new value's owner.
-      * @param valueProject     the IRI of the new value's project.
+      * @param valueCreator     the IRI of the new value's owner.
       * @param valuePermissions the literal that should be used as the object of the new value's `knora-base:hasPermissions` predicate.
       * @param userProfile      the profile of the user making the request.
       * @return a [[ChangeValueResponseV1]].
@@ -2194,8 +2159,7 @@ class ValuesResponderV1 extends ResponderV1 {
                                                  newValueIri: IRI,
                                                  updateValueV1: UpdateValueV1,
                                                  comment: Option[String],
-                                                 valueOwner: IRI,
-                                                 valueProject: IRI,
+                                                 valueCreator: IRI,
                                                  valuePermissions: Option[String],
                                                  userProfile: UserProfileV1): Future[ChangeValueResponseV1] = {
         for {
@@ -2234,8 +2198,7 @@ class ValuesResponderV1 extends ResponderV1 {
                                 sourceResourceIri = resourceIri,
                                 linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
                                 targetResourceIri = targetResourceIri,
-                                valueOwner = OntologyConstants.KnoraBase.SystemUser,
-                                valueProject = None,
+                                valueCreator = OntologyConstants.KnoraBase.SystemUser,
                                 valuePermissions = None,
                                 userProfile = userProfile
                             )
@@ -2248,8 +2211,7 @@ class ValuesResponderV1 extends ResponderV1 {
                                 sourceResourceIri = resourceIri,
                                 linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
                                 targetResourceIri = removedTargetResource,
-                                valueOwner = OntologyConstants.KnoraBase.SystemUser,
-                                valueProject = None,
+                                valueCreator = OntologyConstants.KnoraBase.SystemUser,
                                 valuePermissions = None,
                                 userProfile = userProfile
                             )
@@ -2278,8 +2240,7 @@ class ValuesResponderV1 extends ResponderV1 {
                 newValueIri = newValueIri,
                 valueTypeIri = updateValueV1.valueTypeIri,
                 value = updateValueV1,
-                valueOwner = valueOwner,
-                valueProject = valueProject,
+                valueCreator = valueCreator,
                 maybeValuePermissions = valuePermissions,
                 maybeComment = comment,
                 linkUpdates = standoffLinkUpdates
@@ -2327,8 +2288,7 @@ class ValuesResponderV1 extends ResponderV1 {
       * @param sourceResourceIri the IRI of the source resource.
       * @param linkPropertyIri   the IRI of the property that links the source resource to the target resource.
       * @param targetResourceIri the IRI of the target resource.
-      * @param valueOwner        the IRI of the new link value's owner.
-      * @param valueProject      the IRI of the new link value's project.
+      * @param valueCreator      the IRI of the new link value's owner.
       * @param valuePermissions  the literal that should be used as the object of the new link value's `knora-base:hasPermissions` predicate.
       * @param userProfile       the profile of the user making the request.
       * @return a [[SparqlTemplateLinkUpdate]] that can be passed to a SPARQL update template.
@@ -2336,8 +2296,7 @@ class ValuesResponderV1 extends ResponderV1 {
     private def incrementLinkValue(sourceResourceIri: IRI,
                                    linkPropertyIri: IRI,
                                    targetResourceIri: IRI,
-                                   valueOwner: IRI,
-                                   valueProject: Option[IRI],
+                                   valueCreator: IRI,
                                    valuePermissions: Option[String],
                                    userProfile: UserProfileV1): Future[SparqlTemplateLinkUpdate] = {
         for {
@@ -2373,8 +2332,7 @@ class ValuesResponderV1 extends ResponderV1 {
                         linkTargetIri = targetResourceIri,
                         currentReferenceCount = currentReferenceCount,
                         newReferenceCount = newReferenceCount,
-                        newLinkValueOwner = valueOwner,
-                        newLinkValueProject = valueProject,
+                        newLinkValueCreator = valueCreator,
                         newLinkValuePermissions = valuePermissions
                     )
 
@@ -2391,8 +2349,7 @@ class ValuesResponderV1 extends ResponderV1 {
                         linkTargetIri = targetResourceIri,
                         currentReferenceCount = 0,
                         newReferenceCount = 1,
-                        newLinkValueOwner = valueOwner,
-                        newLinkValueProject = valueProject,
+                        newLinkValueCreator = valueCreator,
                         newLinkValuePermissions = valuePermissions
                     )
             }
@@ -2414,8 +2371,7 @@ class ValuesResponderV1 extends ResponderV1 {
       * @param sourceResourceIri the IRI of the source resource.
       * @param linkPropertyIri   the IRI of the property that links the source resource to the target resource.
       * @param targetResourceIri the IRI of the target resource.
-      * @param valueOwner        the IRI of the new link value's owner.
-      * @param valueProject      the IRI of the new link value's project.
+      * @param valueCreator      the IRI of the new link value's owner.
       * @param valuePermissions  the literal that should be used as the object of the new link value's `knora-base:hasPermissions` predicate.
       * @param userProfile       the profile of the user making the request.
       * @return a [[SparqlTemplateLinkUpdate]] that can be passed to a SPARQL update template.
@@ -2423,8 +2379,7 @@ class ValuesResponderV1 extends ResponderV1 {
     private def decrementLinkValue(sourceResourceIri: IRI,
                                    linkPropertyIri: IRI,
                                    targetResourceIri: IRI,
-                                   valueOwner: IRI,
-                                   valueProject: Option[IRI],
+                                   valueCreator: IRI,
                                    valuePermissions: Option[String],
                                    userProfile: UserProfileV1): Future[SparqlTemplateLinkUpdate] = {
         for {
@@ -2462,8 +2417,7 @@ class ValuesResponderV1 extends ResponderV1 {
                         linkTargetIri = targetResourceIri,
                         currentReferenceCount = currentReferenceCount,
                         newReferenceCount = newReferenceCount,
-                        newLinkValueOwner = valueOwner,
-                        newLinkValueProject = valueProject,
+                        newLinkValueCreator = valueCreator,
                         newLinkValuePermissions = valuePermissions
                     )
 

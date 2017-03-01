@@ -77,21 +77,15 @@ WHERE {
 
     {
         ?linkValue ?objPred ?objObj .
-
-        FILTER(?objPred != knora-base:attachedToProject)
     }
     UNION
     {
-        @* Return the value's project if it has one, otherwise return the project of the resource that contains the value. *@
+        @* Return the project of the resource that contains the value. *@
 
         ?subject ?predicateForLinkValue ?linkValue . @* TODO: Why do we need this here? (Issue 235) *@
         ?subject knora-base:attachedToProject ?resourceProject .
 
-        OPTIONAL {
-            ?linkValue knora-base:attachedToProject ?valueProject .
-        }
-
         BIND(knora-base:attachedToProject AS ?objPred)
-        BIND(COALESCE(?valueProject, ?resourceProject) AS ?objObj)
+        BIND(?resourceProject AS ?objObj)
     }
 }

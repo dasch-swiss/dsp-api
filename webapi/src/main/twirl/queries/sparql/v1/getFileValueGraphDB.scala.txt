@@ -53,35 +53,25 @@ WHERE {
     }
     UNION
     {
-        @* Return the value's project if it has one, otherwise return the project of the resource that contains the value. *@
+        @* Return the project of the resource that contains the value. *@
 
         ?resource knora-base:hasFileValue ?fileValue ;
             knora-base:isDeleted false ;
             knora-base:attachedToProject ?resourceProject .
 
-        OPTIONAL {
-            ?fileValue knora-base:attachedToProject ?valueProject .
-        }
-
         BIND(knora-base:attachedToProject AS ?objPred)
-        BIND(COALESCE(?valueProject, ?resourceProject) AS ?objObj)
+        BIND(?resourceProject AS ?objObj)
     }
     UNION
     {
-        @* Return the base path of whichever project was found. *@
+        @* Return the project's base path. *@
 
         ?resource knora-base:hasFileValue ?fileValue ;
             knora-base:isDeleted false ;
             knora-base:attachedToProject ?resourceProject .
         ?resourceProject knora-base:projectBasepath ?resourceProjectBasepath .
 
-        OPTIONAL {
-            ?fileValue knora-base:attachedToProject ?valueProject .
-	        ?valueProject knora-base:projectBasepath ?valueProjectBasePath .
-        }
-
-        BIND(COALESCE(?valueProjectBasePath, ?resourceProjectBasepath) AS ?projectBasepath)
         BIND(knora-base:projectBasepath AS ?objPred)
-        BIND(?projectBasepath AS ?objObj)
+        BIND(?resourceProjectBasepath AS ?objObj)
     }
 }
