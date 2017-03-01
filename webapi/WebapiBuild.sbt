@@ -131,7 +131,8 @@ lazy val webApiLibs = Seq(
     // input validation
     "commons-validator" % "commons-validator" % "1.4.1",
     // authentication
-    "com.github.t3hnar" %% "scala-bcrypt" % "3.0",
+    "org.bouncycastle" % "bcprov-jdk15on" % "1.56",
+    "org.springframework.security" % "spring-security-core" % "4.2.1.RELEASE",
     // caching
     "net.sf.ehcache" % "ehcache" % "2.10.0",
     // monitoring - disabled for now

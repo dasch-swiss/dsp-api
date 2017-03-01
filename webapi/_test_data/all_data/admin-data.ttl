@@ -22,7 +22,7 @@
 
                                    knora-base:familyName "Administrator"^^xsd:string ;
 
-                                   knora-base:password "$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"^^xsd:string ;
+                                   knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="^^xsd:string ;
 
                                    knora-base:phone "123456"^^xsd:string ;
 
@@ -41,7 +41,7 @@
 
                                         knora-base:familyName "User"^^xsd:string ;
 
-                                        knora-base:password "$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"^^xsd:string ;
+                                        knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="^^xsd:string ;
 
                                         knora-base:phone "123456"^^xsd:string ;
 
@@ -60,7 +60,7 @@
 
                                          knora-base:familyName "User"^^xsd:string ;
 
-                                         knora-base:password "$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"^^xsd:string ;
+                                         knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="^^xsd:string ;
 
                                          knora-base:phone "123456"^^xsd:string ;
 
@@ -79,7 +79,7 @@
 
                                            knora-base:familyName "User"^^xsd:string ;
 
-                                           knora-base:password "$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"^^xsd:string ;
+                                           knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="^^xsd:string ;
 
                                            knora-base:phone "123456"^^xsd:string ;
 
@@ -127,7 +127,7 @@
 
                                          knora-base:familyName "User"^^xsd:string ;
 
-                                         knora-base:password "$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"^^xsd:string ;
+                                         knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="^^xsd:string ;
 
                                          knora-base:preferredLanguage "de"^^xsd:string ;
 
@@ -149,7 +149,7 @@
 
                                          knora-base:familyName "User"^^xsd:string ;
 
-                                         knora-base:password "$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"^^xsd:string ;
+                                         knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="^^xsd:string ;
 
                                          knora-base:preferredLanguage "de"^^xsd:string ;
 
@@ -222,7 +222,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 
                                          knora-base:familyName "Test"^^xsd:string ;
 
-                                         knora-base:password "$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"^^xsd:string ;
+                                         knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="^^xsd:string ;
 
                                          knora-base:email "user.test@example.com"^^xsd:string ;
 
@@ -244,7 +244,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 
                                          knora-base:givenName "Administrator-alt"^^xsd:string ;
 
-                                         knora-base:password "$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"^^xsd:string ;
+                                         knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="^^xsd:string ;
 
                                          knora-base:email "root-alt@example.com"^^xsd:string ;
 
@@ -266,7 +266,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 
                                          knora-base:givenName "Test"^^xsd:string ;
 
-                                         knora-base:password "$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"^^xsd:string ;
+                                         knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="^^xsd:string ;
 
                                          knora-base:email "test.user2@test.ch"^^xsd:string ;
 
@@ -294,7 +294,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 
                                         knora-base:familyName "User"^^xsd:string ;
 
-                                        knora-base:password "$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"^^xsd:string ;
+                                        knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="^^xsd:string ;
 
                                         knora-base:email "multi.user@example.com"^^xsd:string ;
 
@@ -335,7 +335,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 	knora-base:userid "anything-user"^^xsd:string ;
 	knora-base:givenName "Anything"^^xsd:string ;
 	knora-base:familyName "User01"^^xsd:string ;
-	knora-base:password "$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"^^xsd:string ;
+	knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="^^xsd:string ;
 	knora-base:email "anything.user01@example.org"^^xsd:string ;
 	knora-base:preferredLanguage "de"^^xsd:string ;
 	knora-base:status "true"^^xsd:boolean ;
@@ -346,7 +346,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 	knora-base:userid "anything-user-2" ;
 	knora-base:givenName "Anything" ;
 	knora-base:familyName "User02" ;
-	knora-base:password "$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW" ;
+	knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU=" ;
 	knora-base:email "anything.user02@example.org" ;
 	knora-base:preferredLanguage "de"^^xsd:string ;
 	knora-base:status "true"^^xsd:boolean ;
@@ -387,7 +387,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 	knora-base:userid "beol"^^xsd:string ;
 	knora-base:familyName "BEOL"^^xsd:string ;
 	knora-base:givenName "BEOL"^^xsd:string ;
-	knora-base:password "a94a8fe5ccb19ba61c4c0873d391e987982fbbd3"^^xsd:string ;
+	knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="^^xsd:string ;
 	knora-base:email "t.schweizer@unibas.ch"^^xsd:string ;
 	knora-base:preferredLanguage "de"^^xsd:string ;
 	knora-base:status "true"^^xsd:boolean ;
@@ -412,13 +412,12 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 
 
 <http://data.knora.org/users/Q-6Sssu8TBWrcCGuVJ0lVw> a knora-base:User ;
-
+	knora-base:userid "biblio"^^xsd:string ;
 	knora-base:familyName "biblio"^^xsd:string ;
 	knora-base:givenName "biblio"^^xsd:string ;
-	knora-base:password "$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"^^xsd:string ;
-	knora-base:email "biblio@example.com"^^xsd:string ;
+	knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="^^xsd:string ;
+	knora-base:email "sepideh.alassi@unibas.ch"^^xsd:string ;
 	knora-base:preferredLanguage "de"^^xsd:string ;
 	knora-base:status "true"^^xsd:boolean ;
 	knora-base:isInProject <http://data.knora.org/projects/DczxPs-sR6aZN91qV92ZmQ> ;
-	knora-base:isInProjectAdminGroup <http://data.knora.org/projects/DczxPs-sR6aZN91qV92ZmQ> ;
 	knora-base:isInSystemAdminGroup "false"^^xsd:boolean .
