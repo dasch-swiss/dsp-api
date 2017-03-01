@@ -459,7 +459,7 @@ WHERE {
                 }
 
                 @if(searchCriterion.matchBooleanNegativeTerms.nonEmpty) {
-                    MINUS {
+                    FILTER NOT EXISTS {
                         @for(negativeTerm <- searchCriterion.matchBooleanNegativeTerms) {
 
                             ?literal@index <http://www.ontotext.com/owlim/lucene#fullTextSearchIndex> '@negativeTerm' .

@@ -476,7 +476,7 @@ WHERE {
                 }
 
                 @if(searchCriterion.matchBooleanNegativeTerms.nonEmpty) {
-                    MINUS {
+                    FILTER NOT EXISTS {
                         @for(negativeTerm <- searchCriterion.matchBooleanNegativeTerms) {
 
                             @triplestore match {

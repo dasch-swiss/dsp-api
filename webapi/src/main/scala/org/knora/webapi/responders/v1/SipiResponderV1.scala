@@ -95,7 +95,7 @@ class SipiResponderV1 extends ResponderV1 {
             valueProps = valueUtilV1.createValueProps(filename, rows)
 
             permissionCode: Option[Int] = PermissionUtilV1.getUserPermissionV1WithValueProps(
-                subjectIri = filename,
+                valueIri = filename,
                 valueProps = valueProps,
                 subjectProject = None, // no need to specify this here, because it's in valueProps
                 userProfile = userProfile

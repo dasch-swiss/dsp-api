@@ -1566,7 +1566,7 @@ class ValuesResponderV1 extends ResponderV1 {
                         val linkPredicateIri = getValuePredicateObject(predicateIri = OntologyConstants.Rdf.Predicate, rows = rows).getOrElse(throw InconsistentTriplestoreDataException(s"Link value $valueIri has no rdf:predicate"))
 
                         PermissionUtilV1.getUserPermissionV1WithValueProps(
-                            subjectIri = valueIri,
+                            valueIri = valueIri,
                             valueProps = valueProps,
                             subjectProject = None, // no need to specify this here, because it's in valueProps
                             userProfile = userProfile
@@ -1640,7 +1640,7 @@ class ValuesResponderV1 extends ResponderV1 {
 
                 // Get the permission code representing the user's permissions on the value.
                 permissionCode = PermissionUtilV1.getUserPermissionV1WithValueProps(
-                    subjectIri = linkValueIri,
+                    valueIri = linkValueIri,
                     valueProps = valueProps,
                     subjectProject = None, // no need to specify this here, because it's in valueProps
                     userProfile = userProfile
