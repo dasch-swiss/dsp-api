@@ -91,7 +91,6 @@
 						localdata.settings.comment = localdata.ele.find('textarea').val();
 						SALSAH.ApiPut('values/' + encodeURIComponent(localdata.settings.value_id),
 							{
-								project_id: SALSAH.userdata.projects[0], // TODO: how to get this information in a correct way? https://github.com/dhlab-basel/Knora/issues/118
 								comment: localdata.settings.comment
 							},
 							function(data) {
@@ -131,9 +130,6 @@
                         .append($('<span>').addClass('glyphicon glyphicon-trash'))
                         .on('click', function (event) {
                         SALSAH.ApiDelete('valuecomments/' + encodeURIComponent(localdata.settings.value_id),
-                            {
-                                project_id: SALSAH.userdata.projects[0], // TODO: how to get this information in a correct way? https://github.com/dhlab-basel/Knora/issues/118
-                            },
                             function(data) {
                                 if (data.status == ApiErrors.OK) {
                                     localdata.ele.empty().css({'display': 'none'});

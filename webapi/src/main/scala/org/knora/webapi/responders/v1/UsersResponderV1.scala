@@ -26,13 +26,14 @@ import akka.actor.Status
 import akka.pattern._
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.permissionmessages._
+import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoByIRIGetV1, ProjectInfoV1}
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileType.UserProfileType
 import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.messages.v1.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, SparqlUpdateRequest, SparqlUpdateResponse}
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.util.ActorUtil._
-import org.knora.webapi.util.{CacheUtil, KnoraIdUtil}
+import org.knora.webapi.util.{CacheUtil, KnoraIdUtil, MessageUtil}
 import org.springframework.security.crypto.scrypt.SCryptPasswordEncoder
 
 import scala.concurrent.Future
@@ -468,8 +469,6 @@ class UsersResponderV1 extends ResponderV1 {
             case None => Seq.empty[IRI]
         }
 
-        //println(projectIris)
-
         val userDataV1 = UserDataV1(
             lang = groupedUserData.get(OntologyConstants.KnoraBase.PreferredLanguage) match {
                 case Some(langList) => langList.head
@@ -483,18 +482,16 @@ class UsersResponderV1 extends ResponderV1 {
             isActiveUser = groupedUserData.get(OntologyConstants.KnoraBase.Status).map(_.head.toBoolean),
             projects = projectIris
         )
-        //_ = log.debug(s"userDataQueryResponse2UserProfile - userDataV1: ${MessageUtil.toSource(userDataV1)}")
 
-
-
-        //_ = log.debug(s"userDataQueryResponse2UserProfile - projectIris: ${MessageUtil.toSource(projectIris)}")
+        println(s"userDataQueryResponse2UserProfile - projectIris: ${MessageUtil.toSource(projectIris)}")
 
         /* the groups the user is member of (only explicit groups) */
         val groupIris = groupedUserData.get(OntologyConstants.KnoraBase.IsInGroup) match {
             case Some(groups) => groups
             case None => Vector.empty[IRI]
         }
-        //_ = log.debug(s"userDataQueryResponse2UserProfile - groupIris: ${MessageUtil.toSource(groupIris)}")
+
+        // log.debug(s"userDataQueryResponse2UserProfile - groupIris: ${MessageUtil.toSource(groupIris)}")
 
         /* the projects for which the user is implicitly considered a member of the 'http://www.knora.org/ontology/knora-base#ProjectAdmin' group */
         val isInProjectAdminGroups = groupedUserData.getOrElse(OntologyConstants.KnoraBase.IsInProjectAdminGroup, Vector.empty[IRI])
@@ -506,11 +503,22 @@ class UsersResponderV1 extends ResponderV1 {
         /* get the user's permission profile from the permissions responder */
             permissionData <- (responderManager ? PermissionDataGetV1(projectIris = projectIris, groupIris = groupIris, isInProjectAdminGroups = isInProjectAdminGroups, isInSystemAdminGroup = isInSystemAdminGroup)).mapTo[PermissionDataV1]
 
+            projectInfoFutures: Seq[Future[ProjectInfoV1]] = projectIris.map {
+                projectIri => (responderManager ? ProjectInfoByIRIGetV1(iri = projectIri, userProfileV1 = None)).mapTo[ProjectInfoV1]
+            }
+
+            projectInfos: Seq[ProjectInfoV1] <- Future.sequence(projectInfoFutures)
+
+            _ = println(s"got project infos: ${projectInfos.size}")
+
+            projectInfoMap: Map[IRI, ProjectInfoV1] = projectInfos.map(projectInfo => projectInfo.id -> projectInfo).toMap
+
             /* construct the user profile from the different parts */
             up = UserProfileV1(
                 userData = userDataV1,
                 groups = groupIris,
                 projects = projectIris,
+                projects_info = projectInfoMap,
                 sessionId = None,
                 permissionData = permissionData
             )

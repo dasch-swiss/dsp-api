@@ -1118,7 +1118,7 @@
 							SALSAH.ApiPost('resources', {
 								restype_id: rtinfo.name,
 								properties: propvals,
-								project_id: SALSAH.userdata.projects[0], // TODO: take the user's active project here: https://github.com/dhlab-basel/Knora/issues/118
+								project_id: SALSAH.userprofile.active_project,
 								file: file,
 								label: labelStr
 

@@ -124,7 +124,7 @@
 				$this.data('localdata', localdata);
 				my.defaultData = {
 					userName: 'milchkannen',
-					lang: SALSAH.userdata.lang
+					lang: SALSAH.userprofile.userData.lang
 				};
 
 				$this.html(

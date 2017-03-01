@@ -25,7 +25,7 @@ import java.util.UUID
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.permissionmessages.{PermissionDataV1, PermissionV1JsonProtocol}
-import org.knora.webapi.messages.v1.responder.projectmessages.ProjectV1JsonProtocol
+import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoV1, ProjectV1JsonProtocol}
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileType.UserProfileType
 import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
 import org.knora.webapi.util.MessageUtil
@@ -228,10 +228,10 @@ case class UserOperationResponseV1(userProfile: UserProfileV1, userData: UserDat
 case class UserProfileV1(userData: UserDataV1 = UserDataV1(lang = "en"),
                          groups: Seq[IRI] = Vector.empty[IRI],
                          projects: Seq[IRI] = Vector.empty[IRI],
+                         projects_info: Map[IRI, ProjectInfoV1] = Map.empty[IRI, ProjectInfoV1],
                          sessionId: Option[String] = None,
                          isSystemUser: Boolean = false,
-                         permissionData: PermissionDataV1 = PermissionDataV1()
-                        ) {
+                         permissionData: PermissionDataV1 = PermissionDataV1()) {
 
     /**
       * Check password using either SHA-1 or SCrypt.
@@ -310,6 +310,7 @@ case class UserProfileV1(userData: UserDataV1 = UserDataV1(lang = "en"),
                     userData = newuserdata,
                     groups = groups,
                     projects = projects,
+                    projects_info = projects_info,
                     permissionData = permissionData,
                     sessionId = sessionId
                 )
@@ -319,6 +320,7 @@ case class UserProfileV1(userData: UserDataV1 = UserDataV1(lang = "en"),
                     userData = userData,
                     groups = groups,
                     projects = projects,
+                    projects_info = projects_info,
                     permissionData = permissionData,
                     sessionId = sessionId
                 )
@@ -330,7 +332,7 @@ case class UserProfileV1(userData: UserDataV1 = UserDataV1(lang = "en"),
     def getDigest: String = {
         val md = java.security.MessageDigest.getInstance("SHA-1")
         val time = System.currentTimeMillis().toString
-        val value = (time + userData.toString) getBytes ("UTF-8")
+        val value = (time + userData.toString).getBytes("UTF-8")
         md.digest(value).map("%02x".format(_)).mkString
     }
 
@@ -358,6 +360,8 @@ case class UserProfileV1(userData: UserDataV1 = UserDataV1(lang = "en"),
             case None => false
         }
     }
+
+    def toJsValue: JsValue = UserV1JsonProtocol.userProfileV1Format.write(this)
 
 }
 
@@ -445,7 +449,7 @@ object UserProfileType extends Enumeration {
 object UserV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with NullOptions with ProjectV1JsonProtocol with PermissionV1JsonProtocol {
 
     implicit val userDataV1Format: JsonFormat[UserDataV1] = lazyFormat(jsonFormat9(UserDataV1))
-    implicit val userProfileV1Format: JsonFormat[UserProfileV1] = jsonFormat6(UserProfileV1)
+    implicit val userProfileV1Format: JsonFormat[UserProfileV1] = jsonFormat7(UserProfileV1)
     implicit val createUserApiRequestV1Format: RootJsonFormat[CreateUserApiRequestV1] = jsonFormat7(CreateUserApiRequestV1)
     implicit val updateUserApiRequestV1Format: RootJsonFormat[UpdateUserApiRequestV1] = jsonFormat7(UpdateUserApiRequestV1)
     implicit val changeUserPasswordApiRequestV1Format: RootJsonFormat[ChangeUserPasswordApiRequestV1] = jsonFormat2(ChangeUserPasswordApiRequestV1)
