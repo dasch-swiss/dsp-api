@@ -226,6 +226,7 @@ mainClass in assembly := Some("org.knora.webapi.Main")
 // change merge strategy for fat-jar
 assemblyMergeStrategy in assembly := {
     case PathList("org", "apache", "commons", "logging", xs @ _*)   => MergeStrategy.first
+    case PathList("org", "aopalliance", xs @ _*)   => MergeStrategy.first
     case PathList("META-INF", xs @ _*) =>
     xs.map(_.toLowerCase) match {
         case ("manifest.mf" :: Nil) | ("index.list" :: Nil) | ("dependencies" :: Nil) =>
@@ -239,6 +240,7 @@ assemblyMergeStrategy in assembly := {
         case ("spring.schemas" :: Nil) | ("spring.handlers" :: Nil) =>
         MergeStrategy.filterDistinctLines
         case ps@(x :: xs) if ps.last.endsWith("aop.xml") => MergeStrategy.first
+        case "spring.tooling" :: xs => MergeStrategy.discard
         case _ => MergeStrategy.deduplicate
     }
     case x =>
