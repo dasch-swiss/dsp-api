@@ -79,6 +79,9 @@
 	 * language selection
 	*/
 	SALSAH.reset_project_selection = function() {
+		alertObjectContent(SALSAH.userdata);
+
+
 		$('#projectctrl').text(s_('_project') + ' : ');
 		if (SALSAH.userdata === null) {
 		}
