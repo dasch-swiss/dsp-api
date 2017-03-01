@@ -1261,50 +1261,42 @@ class ResourcesV1R2RSpec extends R2RSpec {
 
             val params =
                 s"""<xml xmlns:beol="http://www.knora.org/ontology/beol"
-                   |   xmlns:biblio="http://www.knora.org/ontology/biblio">
-                   |   <beol:person id="abel">
-                   | 	    <beol:hasGivenName>Niels Henrik</beol:hasGivenName>
-                   |	      <beol:hasFamilyName>Abel</beol:hasFamilyName>
-                   |	  </beol:person>
-                   |   <biblio:Journal id="math_intelligencer_">
-                   |		    <biblio:hasName>math intelligencer </biblio:hasName>
-                   |   </biblio:Journal>
-                   |   <biblio:JournalArticle id="strings_in_the_16th_and_17th_centuries" >
-                   |       <biblio:publicationHasTitle>Strings in the 16th and 17th Centuries</biblio:publicationHasTitle>
-                   |       <biblio:publicationHasAuthor>
-                   |           <beol:person ref="abel"/>
-                   |       </biblio:publicationHasAuthor>
-                   |       <biblio:isPartOfJournal>
-                   |           <biblio:Journal ref="math_intelligencer_"/>
-                   |       </biblio:isPartOfJournal>
-                   |       <biblio:journalVolume>27</biblio:journalVolume>
-                   |       <biblio:startPage>48</biblio:startPage>
-                   |       <biblio:endPage>73</biblio:endPage>
-                   |       <biblio:publicationHasDate>GREGORIAN:1974</biblio:publicationHasDate>
-                   |    </biblio:JournalArticle>
+                    |   xmlns:biblio="http://www.knora.org/ontology/biblio">
+                    |   <beol:person id="abel">
+                    | 	    <beol:hasGivenName>Niels Henrik</beol:hasGivenName>
+                    |	      <beol:hasFamilyName>Abel</beol:hasFamilyName>
+                    |	  </beol:person>
+                    |   <biblio:Journal id="math_intelligencer_">
+                    |		    <biblio:hasName>math intelligencer </biblio:hasName>
+                    |   </biblio:Journal>
+                    |   <biblio:JournalArticle id="strings_in_the_16th_and_17th_centuries" >
+                    |       <biblio:publicationHasTitle>Strings in the 16th and 17th Centuries</biblio:publicationHasTitle>
+                    |       <biblio:publicationHasAuthor>
+                    |           <beol:person ref="abel"/>
+                    |       </biblio:publicationHasAuthor>
+                    |       <biblio:isPartOfJournal>
+                    |           <biblio:Journal ref="math_intelligencer_"/>
+                    |       </biblio:isPartOfJournal>
+                    |       <biblio:journalVolume>27</biblio:journalVolume>
+                    |       <biblio:startPage>48</biblio:startPage>
+                    |       <biblio:endPage>73</biblio:endPage>
+                    |       <biblio:publicationHasDate>GREGORIAN:1974</biblio:publicationHasDate>
+                    |    </biblio:JournalArticle>
 
-                   |</xml>""".stripMargin
+                    |</xml>""".stripMargin
 
-            val projectIRI = URLEncoder.encode( "http://data.knora.org/projects/DczxPs-sR6aZN91qV92ZmQ", "utf-8")
+            val projectIRI = URLEncoder.encode("http://data.knora.org/projects/DczxPs-sR6aZN91qV92ZmQ", "utf-8")
 
             Post(s"/v1/resources/xml/${projectIRI}"
                 , HttpEntity(ContentTypes.`text/xml(UTF-8)`, params)) ~> addCredentials(BasicHttpCredentials(biblioUserEmail, password)) ~> resourcesPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)
 
 
-                val resourcesToCreate =Seq.empty[OneOfMultipleResourceCreateRequestV1]
+                val resourcesToCreate = Seq.empty[OneOfMultipleResourceCreateRequestV1]
 
 
                 responseAs[String] should include("createdResources")
             }
         }
-//        "get the journal resources created from xml" in {
-//            val resTypeIri = URLEncoder.encode("http://www.knora.org/ontology/biblio#Journal", "UTF-8")
-//            Get(s"/v1/resourcetypes/${resTypeIri}" ) ~> addCredentials(BasicHttpCredentials(biblioUserEmail, password)) ~> resourcesPath ~> check {
-//                assert(status == StatusCodes.OK, response.toString)
-//                println(response)
-//            }
-//
-//        }
     }
 }

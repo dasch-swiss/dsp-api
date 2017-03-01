@@ -416,7 +416,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 	knora-base:familyName "biblio"^^xsd:string ;
 	knora-base:givenName "biblio"^^xsd:string ;
 	knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="^^xsd:string ;
-	knora-base:email "sepideh.alassi@unibas.ch"^^xsd:string ;
+    knora-base:email "biblio@example.com"^^xsd:string ;
 	knora-base:preferredLanguage "de"^^xsd:string ;
 	knora-base:status "true"^^xsd:boolean ;
 	knora-base:isInProject <http://data.knora.org/projects/DczxPs-sR6aZN91qV92ZmQ> ;

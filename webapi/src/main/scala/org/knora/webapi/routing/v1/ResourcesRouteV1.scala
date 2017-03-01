@@ -94,7 +94,7 @@ object ResourcesRouteV1 extends Authenticator {
         }
 
 
-        def valuesToCreate(properties : Map[IRI, Seq[CreateResourceValueV1]],  userProfile: UserProfileV1): Map[IRI, Future[Seq[CreateValueV1WithComment]]] = {
+        def valuesToCreate(properties: Map[IRI, Seq[CreateResourceValueV1]], userProfile: UserProfileV1): Map[IRI, Future[Seq[CreateValueV1WithComment]]] = {
             properties.map {
                 case (propIri: IRI, values: Seq[CreateResourceValueV1]) =>
                     (InputValidation.toIri(propIri, () => throw BadRequestException(s"Invalid property IRI $propIri")), values.map {
@@ -192,7 +192,8 @@ object ResourcesRouteV1 extends Authenticator {
                             }
 
                     })
-            }.map { // transform Seq of Futures to a Future of a Seq
+            }.map {
+                // transform Seq of Futures to a Future of a Seq
                 case (propIri: IRI, values: Seq[Future[CreateValueV1WithComment]]) =>
                     (propIri, Future.sequence(values))
             }
@@ -261,7 +262,7 @@ object ResourcesRouteV1 extends Authenticator {
 
 
         def formOneResourceRequest(resourceRequest: CreateResourceRequestV1, userProfile: UserProfileV1): Future[OneOfMultipleResourceCreateRequestV1] = {
-            val values= valuesToCreate(resourceRequest.properties, userProfile)
+            val values = valuesToCreate(resourceRequest.properties, userProfile)
             // make the whole Map a Future
 
             for {
@@ -306,56 +307,56 @@ object ResourcesRouteV1 extends Authenticator {
           * @param xml : a simple xml
           * @return Seq[CreateResourceRequestV1] collection of resource creation requests
           */
-        def parseXml(xml:NodeSeq):Seq[CreateResourceRequestV1]={
+        def parseXml(xml: NodeSeq): Seq[CreateResourceRequestV1] = {
 
             xml.head.child
-              .filter(node => node.label != "#PCDATA")
-              .map( node => {
-                  val entityType = node.label
-                  // the id attribute of the xml element is the resource label
-                  val resLabel = (node \"@id").toString
-                  // namespaces of xml
-                  val elemNS = node.getNamespace(node.prefix)
-                  //element namespace + # + element tag gives the resource class Id
-                  val restype_id = elemNS + "#" + entityType
-                  //traversing the subelements to collect the values of resource
-                  val properties :Seq[(IRI, Seq[CreateResourceValueV1])] = node.child
-                    .filter(child => child.label != "#PCDATA")
-                    .map {
-                        case (child) =>
-                            val subnodes = scala.xml.Utility.trim(child).descendant
+                .filter(node => node.label != "#PCDATA")
+                .map(node => {
+                    val entityType = node.label
+                    // the id attribute of the xml element is the resource label
+                    val resLabel = (node \ "@id").toString
+                    // namespaces of xml
+                    val elemNS = node.getNamespace(node.prefix)
+                    //element namespace + # + element tag gives the resource class Id
+                    val restype_id = elemNS + "#" + entityType
+                    //traversing the subelements to collect the values of resource
+                    val properties: Seq[(IRI, Seq[CreateResourceValueV1])] = node.child
+                        .filter(child => child.label != "#PCDATA")
+                        .map {
+                            case (child) =>
+                                val subnodes = scala.xml.Utility.trim(child).descendant
 
-                            if (child.descendant.size != 1) {
+                                if (child.descendant.size != 1) {
 
-                                (child.getNamespace(child.prefix) + "#" + child.label ->
-                                  subnodes.map {
-                                      case (subnode) =>
-                                          //xml elements with ref attribute are links
-                                          val ref_att = subnode.attribute("ref").get
-                                          if (ref_att!=None) {
-                                              CreateResourceValueV1(link_value= Some(subnode.getNamespace(subnode.prefix) + "/" + subnode.label+"#"+ ref_att))
-                                          } else {
-                                              CreateResourceValueV1(Some(CreateRichtextV1(Some(subnode.text))))
-                                          }
-                                  }
-                                  )
+                                    (child.getNamespace(child.prefix) + "#" + child.label ->
+                                        subnodes.map {
+                                            case (subnode) =>
+                                                //xml elements with ref attribute are links
+                                                val ref_att = subnode.attribute("ref").get
+                                                if (ref_att != None) {
+                                                    CreateResourceValueV1(link_value = Some(subnode.getNamespace(subnode.prefix) + "/" + subnode.label + "#" + ref_att))
+                                                } else {
+                                                    CreateResourceValueV1(Some(CreateRichtextV1(Some(subnode.text))))
+                                                }
+                                        }
+                                        )
 
-                            } else {
-                                Try(InputValidation.toDate(child.text,()=> throw BadRequestException(s"not a dateValue"))) match {
+                                } else {
+                                    Try(InputValidation.toDate(child.text, () => throw BadRequestException(s"not a dateValue"))) match {
 
-                                    case Success(s)=>
-                                        (child.getNamespace(child.prefix) + "#" + child.label ->
-                                            List(CreateResourceValueV1(date_value=Some(s))))
-                                    case Failure(f) =>
-                                        (child.getNamespace(child.prefix) + "#" + child.label ->
-                                          List(CreateResourceValueV1(Some(CreateRichtextV1(Some(child.text))))))
+                                        case Success(s) =>
+                                            (child.getNamespace(child.prefix) + "#" + child.label ->
+                                                List(CreateResourceValueV1(date_value = Some(s))))
+                                        case Failure(f) =>
+                                            (child.getNamespace(child.prefix) + "#" + child.label ->
+                                                List(CreateResourceValueV1(Some(CreateRichtextV1(Some(child.text))))))
+                                    }
+
                                 }
 
-                            }
-
-                    }
-                  CreateResourceRequestV1(restype_id , resLabel, properties.toMap)
-              })
+                        }
+                    CreateResourceRequestV1(restype_id, resLabel, properties.toMap)
+                })
         }
 
         path("v1" / "resources") {
