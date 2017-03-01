@@ -1820,7 +1820,7 @@ class ResourcesResponderV1 extends ResponderV1 {
                 }.filter {
                     case (fileValueIri, fileValueProps) =>
                         val permissionCode = PermissionUtilV1.getUserPermissionV1WithValueProps(
-                            subjectIri = fileValueIri,
+                            valueIri = fileValueIri,
                             valueProps = fileValueProps,
                             subjectProject = Some(resourceProject),
                             userProfile = userProfile
@@ -2026,7 +2026,7 @@ class ResourcesResponderV1 extends ResponderV1 {
                             valueV1 <- valueUtilV1.makeValueV1(valueProps, responderManager, userProfile)
 
                             valPermission = PermissionUtilV1.getUserPermissionV1WithValueProps(
-                                subjectIri = valObjIri,
+                                valueIri = valObjIri,
                                 valueProps = valueProps,
                                 subjectProject = None, // We don't need to specify this here, because it's in valueProps
                                 userProfile = userProfile
@@ -2157,7 +2157,7 @@ class ResourcesResponderV1 extends ResponderV1 {
                                 // and on the target resource.
 
                                 targetResourcePermission = PermissionUtilV1.getUserPermissionV1WithValueProps(
-                                    subjectIri = targetResourceIri,
+                                    valueIri = targetResourceIri,
                                     valueProps = valueProps,
                                     subjectProject = None, // We don't need to specify this here, because it's in valueProps
                                     userProfile = userProfile

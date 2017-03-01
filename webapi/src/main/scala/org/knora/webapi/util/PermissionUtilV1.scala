@@ -21,7 +21,6 @@
 package org.knora.webapi.util
 
 import com.typesafe.scalalogging.Logger
-import org.knora.webapi.messages.v1.responder.ontologymessages.{EntityInfoV1, PropertyEntityInfoV1, ResourceEntityInfoV1}
 import org.knora.webapi.messages.v1.responder.permissionmessages.PermissionType.PermissionType
 import org.knora.webapi.messages.v1.responder.permissionmessages.{PermissionType, PermissionV1}
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
@@ -97,19 +96,20 @@ object PermissionUtilV1 {
     /**
       * Determines the permissions that a user has on a `knora-base:Value`, and returns a permissions code in Knora API v1 format.
       *
-      * @param valueProps  a [[ValueProps]] containing the permission-relevant predicates and objects
-      *                    pertaining to the value, grouped by predicate. The predicates must include
-      *                    [[org.knora.webapi.OntologyConstants.KnoraBase.AttachedToUser]], and should include
-      *                    [[org.knora.webapi.OntologyConstants.KnoraBase.AttachedToProject]]
-      *                    and [[org.knora.webapi.OntologyConstants.KnoraBase.HasPermissions]]. Other predicates may be
-      *                    included, but they will be ignored, so there is no need to filter them before passing them to
-      *                    this function.
-      * @param subjectProject if provided, the `knora-base:attachedToProject` of the value. Otherwise, this predicate
-      *                       must be in `valueProps`.
-      * @param userProfile the profile of the user making the request.
+      * @param valueIri       the IRI of the `knora-base:Value`.
+      * @param valueProps     a [[ValueProps]] containing the permission-relevant predicates and objects
+      *                       pertaining to the value, grouped by predicate. The predicates must include
+      *                       [[org.knora.webapi.OntologyConstants.KnoraBase.AttachedToUser]], and should include
+      *                       [[org.knora.webapi.OntologyConstants.KnoraBase.AttachedToProject]]
+      *                       and [[org.knora.webapi.OntologyConstants.KnoraBase.HasPermissions]]. Other predicates may be
+      *                       included, but they will be ignored, so there is no need to filter them before passing them to
+      *                       this function.
+      * @param subjectProject if provided, the `knora-base:attachedToProject` of the resource containing the value. Otherwise,
+      *                       this predicate must be in `valueProps`.
+      * @param userProfile    the profile of the user making the request.
       * @return a code representing the user's permission level on the value.
       */
-    def getUserPermissionV1WithValueProps(subjectIri: IRI,
+    def getUserPermissionV1WithValueProps(valueIri: IRI,
                                           valueProps: ValueProps,
                                           subjectProject: Option[IRI],
                                           userProfile: UserProfileV1): Option[Int] = {
@@ -121,18 +121,18 @@ object PermissionUtilV1 {
         val providedProjects = Vector(valuePropsProject, subjectProject).flatten.distinct
 
         if (providedProjects.isEmpty) {
-            throw InconsistentTriplestoreDataException(s"No knora-base:attachedToProject was provided for subject $subjectIri")
+            throw InconsistentTriplestoreDataException(s"No knora-base:attachedToProject was provided for subject $valueIri")
         }
 
         if (providedProjects.size > 1) {
-            throw InconsistentTriplestoreDataException(s"Two different values of knora-base:attachedToProject were provided for subject $subjectIri: ${valuePropsProject.get} and ${subjectProject.get}")
+            throw InconsistentTriplestoreDataException(s"Two different values of knora-base:attachedToProject were provided for subject $valueIri: ${valuePropsProject.get} and ${subjectProject.get}")
         }
 
         val valuePropsAssertionsWithoutProject: Vector[(IRI, IRI)] = valuePropsAssertions.filter(_._1 != OntologyConstants.KnoraBase.AttachedToProject)
         val projectAssertion: (IRI, IRI) = (OntologyConstants.KnoraBase.AttachedToProject, providedProjects.head)
 
         getUserPermissionV1FromAssertions(
-            subjectIri = subjectIri,
+            subjectIri = valueIri,
             assertions = valuePropsAssertionsWithoutProject :+ projectAssertion,
             userProfile = userProfile
         )
@@ -326,15 +326,15 @@ object PermissionUtilV1 {
       * If the `rdf:predicate` of the `LinkValue` is [[OntologyConstants.KnoraBase.HasStandoffLinkTo]], this method always returns
       * view permission. Otherwise, it returns the value returned by [[getUserPermissionV1WithValueProps]].
       *
-      * @param linkValueIri the IRI of the `LinkValue`.
-      * @param predicateIri the `rdf:predicate` of the `LinkValue`.
-      * @param valueProps   a [[ValueProps]] containing the permission-relevant predicates and objects
-      *                     pertaining to the value, grouped by predicate.
-      *                     Other predicates may be included, but they will be ignored, so there is no need to filter
-      *                     them before passing them to this function.
+      * @param linkValueIri   the IRI of the `LinkValue`.
+      * @param predicateIri   the `rdf:predicate` of the `LinkValue`.
+      * @param valueProps     a [[ValueProps]] containing the permission-relevant predicates and objects
+      *                       pertaining to the value, grouped by predicate.
+      *                       Other predicates may be included, but they will be ignored, so there is no need to filter
+      *                       them before passing them to this function.
       * @param subjectProject if provided, the `knora-base:attachedToProject` of the value. Otherwise, this predicate
       *                       must be in `valueProps`.
-      * @param userProfile  the profile of the user making the request.
+      * @param userProfile    the profile of the user making the request.
       * @return a code representing the user's permission level on the value.
       */
     def getUserPermissionOnLinkValueV1WithValueProps(linkValueIri: IRI,
@@ -346,7 +346,7 @@ object PermissionUtilV1 {
             Some(permissionsToV1PermissionCodes(OntologyConstants.KnoraBase.ViewPermission))
         } else {
             getUserPermissionV1WithValueProps(
-                subjectIri = linkValueIri,
+                valueIri = linkValueIri,
                 valueProps = valueProps,
                 subjectProject = subjectProject,
                 userProfile = userProfile
@@ -361,7 +361,7 @@ object PermissionUtilV1 {
       *
       * @param linkValueIri               the IRI of the link value.
       * @param predicateIri               the IRI of the link value's `rdf:predicate`.
-      * @param linkValueCreator             the IRI of the link value's creator.
+      * @param linkValueCreator           the IRI of the link value's creator.
       * @param containingResourceProject  the IRI of the project of the resource that contains the link value.
       * @param linkValuePermissionLiteral the literal object of the link value's `knora-base:hasPermissions` predicate.
       * @param userProfile                the profile of the user making the request.
@@ -578,7 +578,7 @@ object PermissionUtilV1 {
       * Helper method used to transform a set of permissions into a permissions string ready to be written into the
       * triplestore as the value for the 'knora-base:hasPermissions' property.
       *
-      * @param permissions the permissions to be formatted.
+      * @param permissions    the permissions to be formatted.
       * @param permissionType a [[PermissionType]] indicating the type of permissions to be formatted.
       * @return
       */
