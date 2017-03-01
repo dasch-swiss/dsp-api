@@ -240,7 +240,7 @@ assemblyMergeStrategy in assembly := {
         case ("spring.schemas" :: Nil) | ("spring.handlers" :: Nil) =>
         MergeStrategy.filterDistinctLines
         case ps@(x :: xs) if ps.last.endsWith("aop.xml") => MergeStrategy.first
-        case "spring.tooling" :: xs => MergeStrategy.discard
+        case "spring.tooling" :: xs => MergeStrategy.first
         case _ => MergeStrategy.deduplicate
     }
     case x =>
