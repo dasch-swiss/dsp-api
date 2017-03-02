@@ -219,12 +219,12 @@ object SharedAdminTestData {
         sessionId = None,
         permissionData = PermissionDataV1(
             groupsPerProject = Map(
-                IMAGES_PROJECT_IRI -> List("http://data.knora.org/groups/images-reviewer", s"${OntologyConstants.KnoraBase.ProjectMember}", s"${OntologyConstants.KnoraBase.ProjectAdmin}")
+                IMAGES_PROJECT_IRI -> List(s"${OntologyConstants.KnoraBase.ProjectMember}", s"${OntologyConstants.KnoraBase.ProjectAdmin}")
             ),
             administrativePermissionsPerProject = Map(
                 "http://data.knora.org/projects/images" -> Set(
-                    PermissionV1.ProjectResourceCreateAllPermission,
-                    PermissionV1.ProjectAdminAllPermission
+                    PermissionV1.ProjectAdminAllPermission,
+                    PermissionV1.ProjectResourceCreateAllPermission
                 )
             ),
             anonymousUser = false
@@ -251,6 +251,11 @@ object SharedAdminTestData {
             groupsPerProject = Map(
                 "http://data.knora.org/projects/images" -> List(s"${OntologyConstants.KnoraBase.ProjectMember}")
             ),
+            administrativePermissionsPerProject = Map(
+                "http://data.knora.org/projects/images" -> Set(
+                    PermissionV1.ProjectResourceCreateAllPermission
+                )
+            ),
             anonymousUser = false
         )
     )
@@ -273,7 +278,13 @@ object SharedAdminTestData {
         sessionId = None,
         permissionData = PermissionDataV1(
             groupsPerProject = Map(
-                "http://data.knora.org/projects/images" -> List(s"${OntologyConstants.KnoraBase.ProjectMember}", "http://data.knora.org/groups/images-reviewer")
+                "http://data.knora.org/projects/images" -> List("http://data.knora.org/groups/images-reviewer", s"${OntologyConstants.KnoraBase.ProjectMember}")
+            ),
+            administrativePermissionsPerProject = Map(
+                "http://data.knora.org/projects/images" -> Set(
+                    PermissionV1.projectResourceCreateRestrictedPermission("http://www.knora.org/ontology/images#bild"),
+                    PermissionV1.projectResourceCreateRestrictedPermission("http://www.knora.org/ontology/images#bildformat")
+                )
             ),
             anonymousUser = false
         )

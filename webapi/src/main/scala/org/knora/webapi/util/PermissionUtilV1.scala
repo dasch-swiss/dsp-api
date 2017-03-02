@@ -478,6 +478,7 @@ object PermissionUtilV1 {
 
             case OntologyConstants.KnoraBase.ProjectResourceCreateRestrictedPermission =>
                 if (iris.nonEmpty) {
+                    log.debug(s"buildPermissionObject - ProjectResourceCreateRestrictedPermission - iris: $iris")
                     iris.map(iri => PermissionV1.projectResourceCreateRestrictedPermission(iri))
                 } else {
                     throw InconsistentTriplestoreDataException(s"Missing additional permission information.")

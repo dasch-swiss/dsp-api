@@ -175,7 +175,7 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
                     SharedAdminTestData.rootUser
                 )
                 expectMsg(AdministrativePermissionsForProjectGetResponseV1(
-                    Seq(perm002_a2.p, perm002_a1.p)
+                    Seq(perm002_a2.p, perm002_a1.p, perm002_a3.p)
                 ))
             }
 

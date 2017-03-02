@@ -400,7 +400,7 @@ case class PermissionDataV1(groupsPerProject: Map[IRI, List[IRI]] = Map.empty[IR
         groupsPerProject.getOrElse(OntologyConstants.KnoraBase.SystemProject, List.empty[IRI]).contains(OntologyConstants.KnoraBase.SystemAdmin)
     }
 
-    /* Does the user have the 'ProjectAllAdmin' permission for the project */
+    /* Does the user have the 'ProjectAdminAllPermission' permission for the project */
     def hasProjectAdminAllPermissionFor(projectIri: IRI): Boolean = {
         administrativePermissionsPerProject.get(projectIri) match {
             case Some(permissions) => {

@@ -24,6 +24,8 @@ import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.messages.v1.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.{KnoraIdUtil, MessageUtil, PermissionUtilV1}
+
+import scala.collection.immutable.Iterable
 import scala.collection.mutable.ListBuffer
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
@@ -168,7 +170,7 @@ class PermissionsResponderV1 extends ResponderV1 {
 
 
         /* Get all permissions per project, applying permission precedence rule */
-        def calculatePermission(projectIri: IRI, extendedUserGroups: List[IRI]): Set[PermissionV1] = {
+        def calculatePermission(projectIri: IRI, extendedUserGroups: List[IRI]): Future[(IRI, Set[PermissionV1])] = {
 
 
             /* List buffer holding default object access permissions tagged with the precedence level:
@@ -178,7 +180,6 @@ class PermissionsResponderV1 extends ResponderV1 {
             val permissionsListBuffer = ListBuffer.empty[(Int, Set[PermissionV1])]
 
             for {
-
                 /* Get administrative permissions for the knora-base:ProjectAdmin group */
                 administrativePermissionsOnProjectAdminGroup: Set[PermissionV1] <- administrativePermissionForGroupsGetV1(projectIri, List(OntologyConstants.KnoraBase.ProjectAdmin))
                 _ = if (administrativePermissionsOnProjectAdminGroup.nonEmpty) {
@@ -230,26 +231,26 @@ class PermissionsResponderV1 extends ResponderV1 {
                 _ = log.debug(s"userAdministrativePermissionsGetV1 - project: $projectIri, administrativePermissionsOnKnownUserGroup: $administrativePermissionsOnKnownUserGroup")
 
 
-                projectAdministrativePermissions: Set[PermissionV1] = permissionsListBuffer.length match {
-                    case 1 => permissionsListBuffer.head._2
-                    case 0 => Set.empty[PermissionV1]
+                projectAdministrativePermissions: (IRI, Set[PermissionV1]) = permissionsListBuffer.length match {
+                    case 1 => (projectIri, permissionsListBuffer.head._2)
+                    case 0 => (projectIri, Set.empty[PermissionV1])
                     case _ => throw AssertionException("The permissions list buffer holding default object permissions should never be larger then 1.")
                 }
 
             } yield projectAdministrativePermissions
-
         }
 
-        for {
+        val permissionsPerProject: Iterable[Future[(IRI, Set[PermissionV1])]] = for {
             (projectIri, groups) <- groupsPerProject
 
             /* Explicitly add 'KnownUser' group */
             extendedUserGroups = OntologyConstants.KnoraBase.KnownUser :: groups
 
+            result = calculatePermission(projectIri, groups)
 
         } yield result
 
-        val result: Future[Map[IRI, Set[PermissionV1]]] = Future.sequence(ppf).map(_.toMap)
+        val result: Future[Map[IRI, Set[PermissionV1]]] = Future.sequence(permissionsPerProject).map(_.toMap)
 
         log.debug(s"userAdministrativePermissionsGetV1 - result: $result")
         result
