@@ -121,6 +121,15 @@ class GraphDBConsistencyCheckingSpec extends CoreSpec(GraphDBConsistencyChecking
                     msg.contains(s"$CONSISTENCY_CHECK_ERROR cardinality_1_not_greater_rdfs_label") should ===(true)
             }
         }
+
+        "not create a LinkValue without permissions" in {
+            storeManager ! SparqlUpdateRequest(linkValueWithoutPermissions)
+
+            expectMsgPF(timeout) {
+                case akka.actor.Status.Failure(TriplestoreResponseException(msg: String, _)) =>
+                    msg.contains(s"$CONSISTENCY_CHECK_ERROR cardinality_1_not_less_any_object") should ===(true)
+            }
+        }
     } else {
         s"Not running GraphDBConsistencyCheckingSpec with triplestore type ${settings.triplestoreType}" in {}
     }
@@ -2602,7 +2611,7 @@ object GraphDBConsistencyCheckingSpec {
           |
           |WHERE {
           |    BIND(IRI("http://www.knora.org/data/anything") AS ?dataNamedGraph)
-          |    BIND(IRI("http://data.knora.org/wrongTargetClass") AS ?resource)
+          |    BIND(IRI("http://data.knora.org/twoLabels") AS ?resource)
           |    BIND(IRI("http://www.knora.org/ontology/anything#Thing") AS ?resourceClass)
           |    BIND(IRI("http://data.knora.org/users/9XBCrDV3SRa7kS1WwynB4Q") AS ?creatorIri)
           |    BIND(IRI("http://data.knora.org/projects/anything") AS ?projectIri)
@@ -2616,8 +2625,92 @@ object GraphDBConsistencyCheckingSpec {
           |
           |    BIND(IRI("http://www.knora.org/ontology/anything#hasBlueThing") AS ?linkProperty0)
           |    BIND(IRI("http://www.knora.org/ontology/anything#hasBlueThingValue") AS ?linkValueProperty0)
-          |    BIND(IRI("http://data.knora.org/wrongTargetClass/values/GjV_4ayjRDebneEQM0zHuw") AS ?newLinkValue0)
+          |    BIND(IRI("http://data.knora.org/twoLabels/values/GjV_4ayjRDebneEQM0zHuw") AS ?newLinkValue0)
           |    BIND(IRI("http://data.knora.org/a-thing") AS ?linkTarget0)
           |}
         """.stripMargin
+
+
+    private val linkValueWithoutPermissions =
+        """
+          |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+          |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+          |PREFIX owl: <http://www.w3.org/2002/07/owl#>
+          |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+          |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+          |
+          |INSERT {
+          |    GRAPH ?dataNamedGraph {
+          |        ?resource rdf:type ?resourceClass ;
+          |            knora-base:isDeleted false ;
+          |            knora-base:attachedToUser ?creatorIri ;
+          |            knora-base:attachedToProject ?projectIri ;
+          |            rdfs:label ?label ;
+          |            knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" ;
+          |            knora-base:creationDate ?currentTime .
+          |
+          |
+          |
+          |        # Value 0
+          |        # Property: http://www.knora.org/ontology/anything#hasThing
+          |
+          |            ?resource ?linkProperty0 ?linkTarget0 .
+          |
+          |        ?newLinkValue0 rdf:type knora-base:LinkValue ;
+          |            rdf:subject ?resource ;
+          |            rdf:predicate ?linkProperty0 ;
+          |            rdf:object ?linkTarget0 ;
+          |            knora-base:valueHasString "http://data.knora.org/a-thing" ;
+          |            knora-base:valueHasRefCount 1 ;
+          |            knora-base:valueHasOrder ?nextOrder0 ;
+          |            knora-base:isDeleted false ;
+          |            knora-base:valueCreationDate ?currentTime .
+          |
+          |        ?newLinkValue0 knora-base:attachedToUser <http://data.knora.org/users/9XBCrDV3SRa7kS1WwynB4Q> .
+          |        ?resource ?linkValueProperty0 ?newLinkValue0 .
+          |    }
+          |}
+          |
+          |
+          |    USING <http://www.ontotext.com/explicit>
+          |
+          |WHERE {
+          |    BIND(IRI("http://www.knora.org/data/anything") AS ?dataNamedGraph)
+          |    BIND(IRI("http://data.knora.org/missingValuePermissions") AS ?resource)
+          |    BIND(IRI("http://www.knora.org/ontology/anything#Thing") AS ?resourceClass)
+          |    BIND(IRI("http://data.knora.org/users/9XBCrDV3SRa7kS1WwynB4Q") AS ?creatorIri)
+          |    BIND(IRI("http://data.knora.org/projects/anything") AS ?projectIri)
+          |    BIND(str("Test Thing") AS ?label)
+          |    BIND(NOW() AS ?currentTime)
+          |
+          |    # Value 0
+          |    # Property: http://www.knora.org/ontology/anything#hasOtherThing
+          |
+          |    BIND(IRI("http://www.knora.org/ontology/anything#hasOtherThing") AS ?linkProperty0)
+          |    BIND(IRI("http://www.knora.org/ontology/anything#hasOtherThingValue") AS ?linkValueProperty0)
+          |    BIND(IRI("http://data.knora.org/missingValuePermissions/values/GjV_4ayjRDebneEQM0zHuw") AS ?newLinkValue0)
+          |    BIND(IRI("http://data.knora.org/a-thing") AS ?linkTarget0)
+          |
+          |
+          |
+          |    ?linkTarget0 rdf:type ?linkTargetClass0 ;
+          |        knora-base:isDeleted false .
+          |    ?linkTargetClass0 rdfs:subClassOf+ knora-base:Resource .
+          |
+          |
+          |
+          |    ?resourceClass rdfs:subClassOf* ?restriction0 .
+          |    ?restriction0 a owl:Restriction .
+          |    ?restriction0 owl:onProperty ?linkProperty0 .
+          |
+          |
+          |            BIND(0 AS ?nextOrder0)
+          |
+          |
+          |
+          |}
+        """.stripMargin
+
+
+
 }

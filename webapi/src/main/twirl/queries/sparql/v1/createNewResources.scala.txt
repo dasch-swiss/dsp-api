@@ -56,18 +56,7 @@ INSERT {
                 knora-base:attachedToUser ?creatorIri ;
                 knora-base:attachedToProject ?projectIri ;
                 rdfs:label ?label@res.resourceIndex ;
-
-                @* Insert permissions. *@
-                @res.permissions match {
-                    case Some(permissions) => {
-
-                        knora-base:hasPermissions "@permissions" ;
-
-                    }
-
-                    case None => {}
-                }
-
+ 				knora-base:hasPermissions "@permissions" ;
                 knora-base:creationDate ?currentTime .
 
             @res.generateSparqlForValuesResponse.insertSparql
@@ -88,8 +77,6 @@ WHERE {
         BIND(IRI("@res.resourceIri") AS ?resource@res.resourceIndex)
         BIND(IRI("@res.resourceClassIri") AS ?resourceClass@res.resourceIndex)
         BIND(str("@res.resourceLabel") AS ?label@res.resourceIndex)
-
-
 
         @res.generateSparqlForValuesResponse.whereSparql
     }

@@ -70,11 +70,6 @@ WHERE {
         BIND(true as ?isLinkValue)
     }
 
-    OPTIONAL {
-        ?value knora-base:attachedToUser ?valueCreator .
-    }
-
-    OPTIONAL {
-        ?value knora-base:hasPermissions ?valuePermissions .
-    }
+    ?value knora-base:attachedToUser ?valueCreator ;
+        knora-base:hasPermissions ?valuePermissions .
 }

@@ -36,7 +36,7 @@
  *        updated for resource references in Standoff text values.
  * @param maybeComment an optional comment on the value.
  * @param valueCreator the IRI of the user who created the value.
- * @param maybeValuePermissions the permissions that should be attached to the value.
+ * @param valuePermissions the permissions that should be attached to the value.
  *
  * The generated WHERE clause does some consistency checks. If these fail, the operation will do nothing.
  * To find out whether the update succeeded, the application must query the property's version history.
@@ -53,7 +53,7 @@
   linkUpdates: Seq[SparqlTemplateLinkUpdate],
   maybeComment: Option[String],
   valueCreator: IRI,
-  maybeValuePermissions: Option[String])
+  valuePermissions: String)
 
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -96,7 +96,7 @@ DELETE {
                                                                          linkUpdates = linkUpdates,
                                                                          maybeComment = maybeComment,
                                                                          valueCreator = valueCreator,
-                                                                         maybeValuePermissions = maybeValuePermissions)
+                                                                         valuePermissions = valuePermissions)
         }
     }
 }

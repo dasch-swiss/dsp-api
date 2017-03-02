@@ -70,18 +70,8 @@
             knora-base:isDeleted false ;
             knora-base:valueCreationDate ?currentTime .
 
-        ?newLinkValue@index knora-base:attachedToUser <@linkUpdate.newLinkValueCreator> .
-
-        @linkUpdate.newLinkValuePermissions match {
-
-            case Some(linkValuePermissions) => {
-
-                ?newLinkValue@index knora-base:hasPermissions "@linkValuePermissions" .
-
-            }
-
-            case None => {}
-        }
+        ?newLinkValue@index knora-base:attachedToUser <@linkUpdate.newLinkValueCreator> ;
+            knora-base:hasPermissions "@linkUpdate.newLinkValuePermissions" .
 
         @* Attach the new LinkValue to its containing resource. *@
         ?resource@resourceIndex ?linkValueProperty@index ?newLinkValue@index .

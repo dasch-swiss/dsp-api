@@ -49,10 +49,7 @@ WHERE {
     ?region a ?resclass .
     ?resclass rdfs:subClassOf* knora-base:Region .
 
-    ?region knora-base:attachedToUser ?owner .
-    ?region knora-base:attachedToProject ?project .
-
-    OPTIONAL {
-        ?region knora-base:hasPermissions ?regionObjectPermissions .
-    }
+    ?region knora-base:attachedToUser ?owner ;
+        knora-base:attachedToProject ?project ;
+        knora-base:hasPermissions ?regionObjectPermissions .
 }
