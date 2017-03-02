@@ -33,7 +33,7 @@ import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.{CacheUtil, KnoraIdUtil}
-import org.mindrot.jbcrypt.BCrypt
+import org.springframework.security.crypto.scrypt.SCryptPasswordEncoder
 
 import scala.concurrent.Future
 
@@ -187,7 +187,8 @@ class UsersResponderV1 extends ResponderV1 {
 
             userIri = knoraIdUtil.makeRandomPersonIri
 
-            hashedPassword = BCrypt.hashpw(createRequest.password, BCrypt.gensalt())
+            encoder = new SCryptPasswordEncoder
+            hashedPassword =  encoder.encode(createRequest.password)
 
             // Create the new user.
             createNewUserSparqlString = queries.sparql.v1.txt.createNewUser(
