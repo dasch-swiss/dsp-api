@@ -345,7 +345,7 @@ class ValuesResponderV1 extends ResponderV1 {
                             linkTargetIri = targetIri,
                             currentReferenceCount = 0,
                             newReferenceCount = initialReferenceCount,
-                            newLinkValueCreator = OntologyConstants.KnoraBase.SystemUser,
+                            newLinkValueCreator = OntologyConstants.KnoraAdmin.SystemUser,
                             newLinkValuePermissions = None
                         )
                 }
@@ -1082,7 +1082,7 @@ class ValuesResponderV1 extends ResponderV1 {
                                         sourceResourceIri = findResourceWithValueResult.resourceIri,
                                         linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
                                         targetResourceIri = targetResourceIri,
-                                        valueCreator = OntologyConstants.KnoraBase.SystemUser,
+                                        valueCreator = OntologyConstants.KnoraAdmin.SystemUser,
                                         valuePermissions = None,
                                         userProfile = deleteValueRequest.userProfile
                                     )
@@ -1426,7 +1426,7 @@ class ValuesResponderV1 extends ResponderV1 {
             }
 
             rowMap = rows.head.rowMap
-            userIri = userProfile.userData.user_id.getOrElse(OntologyConstants.KnoraBase.UnknownUser)
+            userIri = userProfile.userData.user_id.getOrElse(OntologyConstants.KnoraAdmin.UnknownUser)
 
             maybeSourcePermissionCode = PermissionUtilV1.getUserPermissionV1(
                 subjectIri = rowMap("source"),
@@ -1541,10 +1541,10 @@ class ValuesResponderV1 extends ResponderV1 {
                 valueClassIri = getValuePredicateObject(predicateIri = OntologyConstants.Rdf.Type, rows = rows).getOrElse(throw InconsistentTriplestoreDataException(s"Value $valueIri has no rdf:type"))
 
                 // Get the IRI of the value's creator.
-                creatorIri = getValuePredicateObject(predicateIri = OntologyConstants.KnoraBase.AttachedToUser, rows = rows).getOrElse(throw InconsistentTriplestoreDataException(s"Value $valueIri has no knora-base:attachedToUser"))
+                creatorIri = getValuePredicateObject(predicateIri = OntologyConstants.KnoraAdmin.AttachedToUser, rows = rows).getOrElse(throw InconsistentTriplestoreDataException(s"Value $valueIri has no knora-admin:attachedToUser"))
 
                 // Get the value's project IRI.
-                projectIri = getValuePredicateObject(predicateIri = OntologyConstants.KnoraBase.AttachedToProject, rows = rows).getOrElse(throw InconsistentTriplestoreDataException(s"The resource containing value $valueIri has no knora-base:attachedToProject"))
+                projectIri = getValuePredicateObject(predicateIri = OntologyConstants.KnoraAdmin.AttachedToProject, rows = rows).getOrElse(throw InconsistentTriplestoreDataException(s"The resource containing value $valueIri has no knora-admin:attachedToProject"))
 
                 // Get the value's creation date.
                 creationDate = getValuePredicateObject(predicateIri = OntologyConstants.KnoraBase.ValueCreationDate, rows = rows).getOrElse(throw InconsistentTriplestoreDataException(s"Value $valueIri has no valueCreationDate"))
@@ -1582,7 +1582,7 @@ class ValuesResponderV1 extends ResponderV1 {
                 }
 
                 permissionCode = maybePermissionCode.getOrElse {
-                    val userIri = userProfile.userData.user_id.getOrElse(OntologyConstants.KnoraBase.UnknownUser)
+                    val userIri = userProfile.userData.user_id.getOrElse(OntologyConstants.KnoraAdmin.UnknownUser)
                     throw ForbiddenException(s"User $userIri does not have permission to see value $valueIri")
                 }
 
@@ -1626,10 +1626,10 @@ class ValuesResponderV1 extends ResponderV1 {
                 }
 
                 // Get the IRI of the value's owner.
-                creatorIri = getValuePredicateObject(predicateIri = OntologyConstants.KnoraBase.AttachedToUser, rows = rows).getOrElse(throw InconsistentTriplestoreDataException(s"Value $linkValueIri has no knora-base:attachedToUser"))
+                creatorIri = getValuePredicateObject(predicateIri = OntologyConstants.KnoraAdmin.AttachedToUser, rows = rows).getOrElse(throw InconsistentTriplestoreDataException(s"Value $linkValueIri has no knora-base:attachedToUser"))
 
                 // Get the value's project IRI.
-                projectIri = getValuePredicateObject(predicateIri = OntologyConstants.KnoraBase.AttachedToProject, rows = rows).getOrElse(throw InconsistentTriplestoreDataException(s"The resource containing value $linkValueIri has no knora-base:attachedToProject"))
+                projectIri = getValuePredicateObject(predicateIri = OntologyConstants.KnoraAdmin.AttachedToProject, rows = rows).getOrElse(throw InconsistentTriplestoreDataException(s"The resource containing value $linkValueIri has no knora-base:attachedToProject"))
 
                 // Get the value's creation date.
                 creationDate = getValuePredicateObject(predicateIri = OntologyConstants.KnoraBase.ValueCreationDate, rows = rows).getOrElse(throw InconsistentTriplestoreDataException(s"Value $linkValueIri has no valueCreationDate"))
@@ -1648,7 +1648,7 @@ class ValuesResponderV1 extends ResponderV1 {
                     subjectProject = None, // no need to specify this here, because it's in valueProps
                     userProfile = userProfile
                 ).getOrElse {
-                    val userIri = userProfile.userData.user_id.getOrElse(OntologyConstants.KnoraBase.UnknownUser)
+                    val userIri = userProfile.userData.user_id.getOrElse(OntologyConstants.KnoraAdmin.UnknownUser)
                     throw ForbiddenException(s"User $userIri does not have permission to see value $linkValueIri")
                 }
 
@@ -1999,7 +1999,7 @@ class ValuesResponderV1 extends ResponderV1 {
                                     sourceResourceIri = resourceIri,
                                     linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
                                     targetResourceIri = targetResourceIri,
-                                    valueCreator = OntologyConstants.KnoraBase.SystemUser,
+                                    valueCreator = OntologyConstants.KnoraAdmin.SystemUser,
                                     valuePermissions = None,
                                     userProfile = userProfile
                                 )
@@ -2198,7 +2198,7 @@ class ValuesResponderV1 extends ResponderV1 {
                                 sourceResourceIri = resourceIri,
                                 linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
                                 targetResourceIri = targetResourceIri,
-                                valueCreator = OntologyConstants.KnoraBase.SystemUser,
+                                valueCreator = OntologyConstants.KnoraAdmin.SystemUser,
                                 valuePermissions = None,
                                 userProfile = userProfile
                             )
@@ -2211,7 +2211,7 @@ class ValuesResponderV1 extends ResponderV1 {
                                 sourceResourceIri = resourceIri,
                                 linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
                                 targetResourceIri = removedTargetResource,
-                                valueCreator = OntologyConstants.KnoraBase.SystemUser,
+                                valueCreator = OntologyConstants.KnoraAdmin.SystemUser,
                                 valuePermissions = None,
                                 userProfile = userProfile
                             )

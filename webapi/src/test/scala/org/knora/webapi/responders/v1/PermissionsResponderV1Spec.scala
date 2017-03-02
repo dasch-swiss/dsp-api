@@ -178,7 +178,7 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
             "return AdministrativePermission for project and group" in {
                 actorUnderTest ! AdministrativePermissionForProjectGroupGetRequestV1(
                     projectIri = IMAGES_PROJECT_IRI,
-                    groupIri = OntologyConstants.KnoraBase.ProjectMember,
+                    groupIri = OntologyConstants.KnoraAdmin.ProjectMember,
                     SharedAdminTestData.rootUser
                 )
                 expectMsg(AdministrativePermissionForProjectGroupGetResponseV1(perm002_a1.p))
@@ -208,13 +208,13 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
                     newAdministrativePermissionV1 = NewAdministrativePermissionV1(
                         iri = iri,
                         forProject = IMAGES_PROJECT_IRI,
-                        forGroup = OntologyConstants.KnoraBase.ProjectMember,
+                        forGroup = OntologyConstants.KnoraAdmin.ProjectMember,
                         hasOldPermissions = Set.empty[PermissionV1],
                         hasNewPermissions = Set(PermissionV1.ProjectResourceCreateAllPermission)
                     ),
                     userProfileV1 = rootUser
                 )
-                expectMsg(Failure(DuplicateValueException(s"Permission for project: '${IMAGES_PROJECT_IRI}' and group: '${OntologyConstants.KnoraBase.ProjectMember}' combination already exists.")))
+                expectMsg(Failure(DuplicateValueException(s"Permission for project: '${IMAGES_PROJECT_IRI}' and group: '${OntologyConstants.KnoraAdmin.ProjectMember}' combination already exists.")))
             }
 
             "create and return an administrative permission " ignore {}
@@ -259,7 +259,7 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
             "return DefaultObjectAccessPermission for project and group" in {
                 actorUnderTest ! DefaultObjectAccessPermissionGetRequestV1(
                     projectIRI = INCUNABULA_PROJECT_IRI,
-                    groupIRI = Some(OntologyConstants.KnoraBase.ProjectMember),
+                    groupIRI = Some(OntologyConstants.KnoraAdmin.ProjectMember),
                     resourceClassIRI = None,
                     propertyIRI = None,
                     userProfile = SharedAdminTestData.rootUser

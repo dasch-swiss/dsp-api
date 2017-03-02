@@ -100,11 +100,11 @@ class PermissionsResponderV1 extends ResponderV1 {
             })
             //_ = log.debug(s"permissionsProfileGetV1 - groups: ${MessageUtil.toSource(groups)}")
 
-            /* materialize implicit membership in 'http://www.knora.org/ontology/knora-base#ProjectMember' group for each project */
+            /* materialize implicit membership in 'http://www.knora.org/ontology/knora-admin#ProjectMember' group for each project */
             projectMembers: List[(IRI, IRI)] = if (projectIris.nonEmpty) {
                 for {
                     projectIri <- projectIris.toList
-                    res = (projectIri, OntologyConstants.KnoraBase.ProjectMember)
+                    res = (projectIri, OntologyConstants.KnoraAdmin.ProjectMember)
                 } yield res
             } else {
                 List.empty[(IRI, IRI)]
@@ -112,11 +112,11 @@ class PermissionsResponderV1 extends ResponderV1 {
             //_ = log.debug(s"permissionsProfileGetV1 - projectMembers: ${MessageUtil.toSource(projectMembers)}")
 
 
-            /* materialize implicit membership in 'http://www.knora.org/ontology/knora-base#ProjectAdmin' group for each project */
+            /* materialize implicit membership in 'http://www.knora.org/ontology/knora-admin#ProjectAdmin' group for each project */
             projectAdmins: List[(IRI, IRI)] = if (projectIris.nonEmpty) {
                 for {
                     projectAdminForGroup <- isInProjectAdminGroups.toList
-                    res = (projectAdminForGroup, OntologyConstants.KnoraBase.ProjectAdmin)
+                    res = (projectAdminForGroup, OntologyConstants.KnoraAdmin.ProjectAdmin)
                 } yield res
             } else {
                 List.empty[(IRI, IRI)]
@@ -124,9 +124,9 @@ class PermissionsResponderV1 extends ResponderV1 {
             //_ = log.debug(s"permissionsProfileGetV1 - projectAdmins: ${MessageUtil.toSource(projectAdmins)}")
 
 
-            /* materialize implicit membership in 'http://www.knora.org/ontology/knora-base#SystemAdmin' group */
+            /* materialize implicit membership in 'http://www.knora.org/ontology/knora-admin#SystemAdmin' group */
             systemAdmin: List[(IRI, IRI)] = if (isInSystemAdminGroup) {
-                List((OntologyConstants.KnoraBase.SystemProject, OntologyConstants.KnoraBase.SystemAdmin))
+                List((OntologyConstants.KnoraAdmin.SystemProject, OntologyConstants.KnoraAdmin.SystemAdmin))
             } else {
                 List.empty[(IRI, IRI)]
             }
@@ -299,7 +299,7 @@ class PermissionsResponderV1 extends ResponderV1 {
                     val hasPermissions: Set[PermissionV1] = PermissionUtilV1.parsePermissionsWithType(propsMap.get(OntologyConstants.KnoraBase.HasPermissions), PermissionType.AP)
 
                     /* construct permission object */
-                    AdministrativePermissionV1(iri = permissionIri, forProject = propsMap.getOrElse(OntologyConstants.KnoraBase.ForProject, throw InconsistentTriplestoreDataException(s"Administrative Permission $permissionIri has no project attached.")), forGroup = propsMap.getOrElse(OntologyConstants.KnoraBase.ForGroup, throw InconsistentTriplestoreDataException(s"Administrative Permission $permissionIri has no group attached.")), hasPermissions = hasPermissions)
+                    AdministrativePermissionV1(iri = permissionIri, forProject = propsMap.getOrElse(OntologyConstants.KnoraAdmin.ForProject, throw InconsistentTriplestoreDataException(s"Administrative Permission $permissionIri has no project attached.")), forGroup = propsMap.getOrElse(OntologyConstants.KnoraAdmin.ForGroup, throw InconsistentTriplestoreDataException(s"Administrative Permission $permissionIri has no group attached.")), hasPermissions = hasPermissions)
             }.toSeq
 
             /* construct response object */
@@ -345,7 +345,7 @@ class PermissionsResponderV1 extends ResponderV1 {
             //_ = log.debug(s"administrativePermissionForIriGetRequestV1 - hasPermissions: ${MessageUtil.toSource(hasPermissions)}")
 
             /* construct the permission object */
-            permission = AdministrativePermissionV1(iri = administrativePermissionIri, forProject = groupedPermissionsQueryResponse.getOrElse(OntologyConstants.KnoraBase.ForProject, throw InconsistentTriplestoreDataException(s"Permission $administrativePermissionIri has no project attached")).head, forGroup = groupedPermissionsQueryResponse.getOrElse(OntologyConstants.KnoraBase.ForGroup, throw InconsistentTriplestoreDataException(s"Permission $administrativePermissionIri has no group attached")).head, hasPermissions = hasPermissions)
+            permission = AdministrativePermissionV1(iri = administrativePermissionIri, forProject = groupedPermissionsQueryResponse.getOrElse(OntologyConstants.KnoraAdmin.ForProject, throw InconsistentTriplestoreDataException(s"Permission $administrativePermissionIri has no project attached")).head, forGroup = groupedPermissionsQueryResponse.getOrElse(OntologyConstants.KnoraAdmin.ForGroup, throw InconsistentTriplestoreDataException(s"Permission $administrativePermissionIri has no group attached")).head, hasPermissions = hasPermissions)
 
             /* construct the response object */
             response = AdministrativePermissionForIriGetResponseV1(permission)
@@ -588,7 +588,7 @@ class PermissionsResponderV1 extends ResponderV1 {
                     val hasPermissions: Set[PermissionV1] = PermissionUtilV1.parsePermissionsWithType(propsMap.get(OntologyConstants.KnoraBase.HasPermissions), PermissionType.OAP)
 
                     /* construct permission object */
-                    DefaultObjectAccessPermissionV1(iri = permissionIri, forProject = propsMap.getOrElse(OntologyConstants.KnoraBase.ForProject, throw InconsistentTriplestoreDataException(s"Permission $permissionIri has no project.")), forGroup = propsMap.get(OntologyConstants.KnoraBase.ForGroup), forResourceClass = propsMap.get(OntologyConstants.KnoraBase.ForResourceClass), forProperty = propsMap.get(OntologyConstants.KnoraBase.ForProperty), hasPermissions = hasPermissions)
+                    DefaultObjectAccessPermissionV1(iri = permissionIri, forProject = propsMap.getOrElse(OntologyConstants.KnoraAdmin.ForProject, throw InconsistentTriplestoreDataException(s"Permission $permissionIri has no project.")), forGroup = propsMap.get(OntologyConstants.KnoraAdmin.ForGroup), forResourceClass = propsMap.get(OntologyConstants.KnoraAdmin.ForResourceClass), forProperty = propsMap.get(OntologyConstants.KnoraAdmin.ForProperty), hasPermissions = hasPermissions)
             }.toSeq
 
             /* construct response object */
@@ -631,7 +631,7 @@ class PermissionsResponderV1 extends ResponderV1 {
 
             hasPermissions = PermissionUtilV1.parsePermissionsWithType(groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.HasPermissions).map(_.head), PermissionType.OAP)
 
-            defaultObjectAccessPermission = DefaultObjectAccessPermissionV1(iri = permissionIri, forProject = groupedPermissionsQueryResponse.getOrElse(OntologyConstants.KnoraBase.ForProject, throw InconsistentTriplestoreDataException(s"Permission $permissionIri has no project.")).head, forGroup = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.ForGroup).map(_.head), forResourceClass = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.ForResourceClass).map(_.head), forProperty = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.ForProperty).map(_.head), hasPermissions = hasPermissions)
+            defaultObjectAccessPermission = DefaultObjectAccessPermissionV1(iri = permissionIri, forProject = groupedPermissionsQueryResponse.getOrElse(OntologyConstants.KnoraAdmin.ForProject, throw InconsistentTriplestoreDataException(s"Permission $permissionIri has no project.")).head, forGroup = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraAdmin.ForGroup).map(_.head), forResourceClass = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraAdmin.ForResourceClass).map(_.head), forProperty = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraAdmin.ForProperty).map(_.head), hasPermissions = hasPermissions)
 
             result = DefaultObjectAccessPermissionForIriGetResponseV1(defaultObjectAccessPermission)
 
@@ -684,7 +684,7 @@ class PermissionsResponderV1 extends ResponderV1 {
                 }
                 val hasPermissions: Set[PermissionV1] = PermissionUtilV1.parsePermissionsWithType(groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.HasPermissions).map(_.head), PermissionType.OAP)
                 Some(
-                    DefaultObjectAccessPermissionV1(iri = permissionIri, forProject = groupedPermissionsQueryResponse.getOrElse(OntologyConstants.KnoraBase.ForProject, throw InconsistentTriplestoreDataException(s"Permission has no project.")).head, forGroup = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.ForGroup).map(_.head), forResourceClass = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.ForResourceClass).map(_.head), forProperty = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.ForProperty).map(_.head), hasPermissions = hasPermissions)
+                    DefaultObjectAccessPermissionV1(iri = permissionIri, forProject = groupedPermissionsQueryResponse.getOrElse(OntologyConstants.KnoraAdmin.ForProject, throw InconsistentTriplestoreDataException(s"Permission has no project.")).head, forGroup = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraAdmin.ForGroup).map(_.head), forResourceClass = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraAdmin.ForResourceClass).map(_.head), forProperty = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraAdmin.ForProperty).map(_.head), hasPermissions = hasPermissions)
                 )
             } else {
                 None
@@ -717,7 +717,7 @@ class PermissionsResponderV1 extends ResponderV1 {
                     case None => {
                         /* if the query was for a property, then we need to additionally check if it is a system property */
                         if (propertyIri.isDefined) {
-                            val systemProject = OntologyConstants.KnoraBase.SystemProject
+                            val systemProject = OntologyConstants.KnoraAdmin.SystemProject
                             val doapF = defaultObjectAccessPermissionGetV1(systemProject, groupIri, resourceClassIri, propertyIri)
                             doapF.mapTo[Option[DefaultObjectAccessPermissionV1]].map {
                                 case Some(systemDoap) => DefaultObjectAccessPermissionGetResponseV1(systemDoap)
@@ -751,7 +751,7 @@ class PermissionsResponderV1 extends ResponderV1 {
             _ = if (resourceClassIri.isDefined && propertyIri.isDefined) throw BadRequestException("Not allowed to supply both resourceClassIri and propertyTypeIri")
 
             /* Get the default object access permissions for the knora-base:KnownUser group */
-            defaultPermissionsOnKnownUserOption: Option[DefaultObjectAccessPermissionV1] <- defaultObjectAccessPermissionGetV1(projectIri = projectIri, groupIri = Some(OntologyConstants.KnoraBase.KnownUser), resourceClassIri = None, propertyIri = None)
+            defaultPermissionsOnKnownUserOption: Option[DefaultObjectAccessPermissionV1] <- defaultObjectAccessPermissionGetV1(projectIri = projectIri, groupIri = Some(OntologyConstants.KnoraAdmin.KnownUser), resourceClassIri = None, propertyIri = None)
 
             defaultPermissionsOnKnownUser: Set[PermissionV1] = defaultPermissionsOnKnownUserOption match {
                 case Some(doap) => doap.hasPermissions
@@ -775,7 +775,7 @@ class PermissionsResponderV1 extends ResponderV1 {
             /* Since we also have default object access permissions defined in the SystemProject,
                we need to check there too, but only in the case that we didn't find anything
                on the project level, since the project level definition overrides the system level definition. */
-            systemProject = OntologyConstants.KnoraBase.SystemProject
+            systemProject = OntologyConstants.KnoraAdmin.SystemProject
             defaultPermissionsOnSystemEntityOptionF: Future[Option[DefaultObjectAccessPermissionV1]] = if (defaultPermissionsOnProjectEntity.isEmpty) {
                 defaultObjectAccessPermissionGetV1(projectIri = systemProject, groupIri = None, resourceClassIri = resourceClassIri, propertyIri = propertyIri)
             } else {
@@ -790,7 +790,7 @@ class PermissionsResponderV1 extends ResponderV1 {
 
             /* Get the default permissions defined for the SystemAdmin group. This is a kind of fallback if the
                SystemAdmin user is not part of the project and could result in an empty permissions string. */
-            defaultPermissionsForSystemAdminOption: Option[DefaultObjectAccessPermissionV1] <- defaultObjectAccessPermissionGetV1(projectIri = OntologyConstants.KnoraBase.SystemProject, groupIri = Some(OntologyConstants.KnoraBase.SystemAdmin), resourceClassIri = None, propertyIri = None)
+            defaultPermissionsForSystemAdminOption: Option[DefaultObjectAccessPermissionV1] <- defaultObjectAccessPermissionGetV1(projectIri = OntologyConstants.KnoraAdmin.SystemProject, groupIri = Some(OntologyConstants.KnoraAdmin.SystemAdmin), resourceClassIri = None, propertyIri = None)
             defaultPermissionsForSystemAdmin = if (permissionData.isSystemAdmin) {
                 defaultPermissionsForSystemAdminOption match {
                     case Some(doap) => doap.hasPermissions

@@ -63,8 +63,8 @@ object PermissionUtilV1 {
       * A set of assertions that are relevant for calculating permissions.
       */
     private val permissionRelevantAssertions = Set(
-        OntologyConstants.KnoraBase.AttachedToUser,
-        OntologyConstants.KnoraBase.AttachedToProject,
+        OntologyConstants.KnoraAdmin.AttachedToUser,
+        OntologyConstants.KnoraAdmin.AttachedToProject,
         OntologyConstants.KnoraBase.HasPermissions
     )
 
@@ -99,12 +99,12 @@ object PermissionUtilV1 {
       *
       * @param valueProps  a [[ValueProps]] containing the permission-relevant predicates and objects
       *                    pertaining to the value, grouped by predicate. The predicates must include
-      *                    [[org.knora.webapi.OntologyConstants.KnoraBase.AttachedToUser]], and should include
-      *                    [[org.knora.webapi.OntologyConstants.KnoraBase.AttachedToProject]]
+      *                    [[org.knora.webapi.OntologyConstants.KnoraAdmin.AttachedToUser]], and should include
+      *                    [[org.knora.webapi.OntologyConstants.KnoraAdmin.AttachedToProject]]
       *                    and [[org.knora.webapi.OntologyConstants.KnoraBase.HasPermissions]]. Other predicates may be
       *                    included, but they will be ignored, so there is no need to filter them before passing them to
       *                    this function.
-      * @param subjectProject if provided, the `knora-base:attachedToProject` of the value. Otherwise, this predicate
+      * @param subjectProject if provided, the `knora-admin:attachedToProject` of the value. Otherwise, this predicate
       *                       must be in `valueProps`.
       * @param userProfile the profile of the user making the request.
       * @return a code representing the user's permission level on the value.
@@ -117,19 +117,19 @@ object PermissionUtilV1 {
         // Either subjectProject must be provided, or there must be a knora-base:attachedToProject in valueProps.
 
         val valuePropsAssertions: Vector[(IRI, IRI)] = filterPermissionRelevantAssertionsFromValueProps(valueProps)
-        val valuePropsProject: Option[IRI] = valuePropsAssertions.find(_._1 == OntologyConstants.KnoraBase.AttachedToProject).map(_._2)
+        val valuePropsProject: Option[IRI] = valuePropsAssertions.find(_._1 == OntologyConstants.KnoraAdmin.AttachedToProject).map(_._2)
         val providedProjects = Vector(valuePropsProject, subjectProject).flatten.distinct
 
         if (providedProjects.isEmpty) {
-            throw InconsistentTriplestoreDataException(s"No knora-base:attachedToProject was provided for subject $subjectIri")
+            throw InconsistentTriplestoreDataException(s"No knora-admin:attachedToProject was provided for subject $subjectIri")
         }
 
         if (providedProjects.size > 1) {
-            throw InconsistentTriplestoreDataException(s"Two different values of knora-base:attachedToProject were provided for subject $subjectIri: ${valuePropsProject.get} and ${subjectProject.get}")
+            throw InconsistentTriplestoreDataException(s"Two different values of knora-admin:attachedToProject were provided for subject $subjectIri: ${valuePropsProject.get} and ${subjectProject.get}")
         }
 
-        val valuePropsAssertionsWithoutProject: Vector[(IRI, IRI)] = valuePropsAssertions.filter(_._1 != OntologyConstants.KnoraBase.AttachedToProject)
-        val projectAssertion: (IRI, IRI) = (OntologyConstants.KnoraBase.AttachedToProject, providedProjects.head)
+        val valuePropsAssertionsWithoutProject: Vector[(IRI, IRI)] = valuePropsAssertions.filter(_._1 != OntologyConstants.KnoraAdmin.AttachedToProject)
+        val projectAssertion: (IRI, IRI) = (OntologyConstants.KnoraAdmin.AttachedToProject, providedProjects.head)
 
         getUserPermissionV1FromAssertions(
             subjectIri = subjectIri,
@@ -140,8 +140,8 @@ object PermissionUtilV1 {
 
     /**
       * Given the IRI of an RDF property, returns `true` if the property is relevant to calculating permissions. This
-      * is the case if the property is [[org.knora.webapi.OntologyConstants.KnoraBase.AttachedToUser]],
-      * [[org.knora.webapi.OntologyConstants.KnoraBase.AttachedToProject]], or
+      * is the case if the property is [[org.knora.webapi.OntologyConstants.KnoraAdmin.AttachedToUser]],
+      * [[org.knora.webapi.OntologyConstants.KnoraAdmin.AttachedToProject]], or
       * or [[org.knora.webapi.OntologyConstants.KnoraBase.HasPermissions]].
       *
       * @param p the IRI of the property.
@@ -240,13 +240,13 @@ object PermissionUtilV1 {
                 // The user is a known user.
                 // If the user is the creator of the subject, put the user in the "creator" built-in group.
                 val creatorOption = if (userIri == subjectCreator) {
-                    Some(OntologyConstants.KnoraBase.Creator)
+                    Some(OntologyConstants.KnoraAdmin.Creator)
                 } else {
                     None
                 }
 
                 val systemAdminOption = if (userProfile.permissionData.isSystemAdmin) {
-                    Some(OntologyConstants.KnoraBase.SystemAdmin)
+                    Some(OntologyConstants.KnoraAdmin.SystemAdmin)
                 } else {
                     None
                 }
@@ -258,10 +258,10 @@ object PermissionUtilV1 {
 
                 // Make the complete list of the user's groups: KnownUser, the user's built-in (e.g., ProjectAdmin,
                 // ProjectMember) and non-built-in groups, possibly creator, and possibly SystemAdmin.
-                Vector(OntologyConstants.KnoraBase.KnownUser) ++ otherGroups ++ creatorOption ++ systemAdminOption
+                Vector(OntologyConstants.KnoraAdmin.KnownUser) ++ otherGroups ++ creatorOption ++ systemAdminOption
             case None =>
                 // The user is an unknown user; put them in the UnknownUser built-in group.
-                Vector(OntologyConstants.KnoraBase.UnknownUser)
+                Vector(OntologyConstants.KnoraAdmin.UnknownUser)
         }
 
         log.debug(s"getUserPermissionV1 - userGroups: $userGroups")
@@ -281,7 +281,7 @@ object PermissionUtilV1 {
                 case None =>
                     // If the result is that they would get no permissions, give them user whatever permission an
                     // unknown user would have.
-                    calculateHighestGrantedPermission(subjectPermissions, Vector(OntologyConstants.KnoraBase.UnknownUser))
+                    calculateHighestGrantedPermission(subjectPermissions, Vector(OntologyConstants.KnoraAdmin.UnknownUser))
             }
         }
 
@@ -299,8 +299,8 @@ object PermissionUtilV1 {
       * @param subjectIri  the IRI of the subject.
       * @param assertions  a [[Seq]] containing all the permission-relevant predicates and objects
       *                    pertaining to the subject. The predicates must include
-      *                    [[org.knora.webapi.OntologyConstants.KnoraBase.AttachedToUser]] and
-      *                    [[org.knora.webapi.OntologyConstants.KnoraBase.AttachedToProject]], and should include
+      *                    [[org.knora.webapi.OntologyConstants.KnoraAdimn.AttachedToUser]] and
+      *                    [[org.knora.webapi.OntologyConstants.KnoraAdmin.AttachedToProject]], and should include
       *                    [[org.knora.webapi.OntologyConstants.KnoraBase.HasPermissions]].
       *                    Other predicates may be included, but they will be ignored, so there is no need to filter
       *                    them before passing them to this function.
@@ -314,8 +314,8 @@ object PermissionUtilV1 {
         val assertionMap: Map[IRI, String] = assertions.toMap
 
         // Anything with permissions must have an creator and a project.
-        val subjectCreator: IRI = assertionMap.getOrElse(OntologyConstants.KnoraBase.AttachedToUser, throw InconsistentTriplestoreDataException(s"Subject $subjectIri has no creator"))
-        val subjectProject: IRI = assertionMap.getOrElse(OntologyConstants.KnoraBase.AttachedToProject, throw InconsistentTriplestoreDataException(s"Subject $subjectIri has no project"))
+        val subjectCreator: IRI = assertionMap.getOrElse(OntologyConstants.KnoraAdmin.AttachedToUser, throw InconsistentTriplestoreDataException(s"Subject $subjectIri has no creator"))
+        val subjectProject: IRI = assertionMap.getOrElse(OntologyConstants.KnoraAdmin.AttachedToProject, throw InconsistentTriplestoreDataException(s"Subject $subjectIri has no project"))
         val subjectPermissionLiteral: Option[String] = assertionMap.get(OntologyConstants.KnoraBase.HasPermissions)
 
         getUserPermissionV1(subjectIri = subjectIri, subjectCreator = subjectCreator, subjectProject = subjectProject, subjectPermissionLiteral = subjectPermissionLiteral, userProfile = userProfile)
