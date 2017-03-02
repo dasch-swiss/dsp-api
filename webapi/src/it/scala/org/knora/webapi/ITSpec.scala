@@ -62,7 +62,7 @@ class ITSpec(_system: ActorSystem) extends Core with KnoraService with Suite wit
     implicit protected val ec: ExecutionContextExecutor = system.dispatcher
     implicit protected val materializer = ActorMaterializer()
 
-    protected def singleAwaitingRequest(request: HttpRequest, duration: Duration = 5.seconds): HttpResponse = {
+    protected def singleAwaitingRequest(request: HttpRequest, duration: Duration = 15.seconds): HttpResponse = {
         val responseFuture = Http().singleRequest(request)
         Await.result(responseFuture, duration)
     }

@@ -209,30 +209,34 @@ class SipiV1ITSpec extends ITSpec(SipiV1ITSpec.config) with TriplestoreJsonProto
             val sipiGetRequest = Get(previewUrl) ~> addCredentials(BasicHttpCredentials(username, password))
             checkResponseOK(sipiGetRequest)
 
+            val fileParams = JsObject(
+                Map(
+                    "originalFilename" -> jsonFields("original_filename"),
+                    "originalMimeType" -> jsonFields("original_mimetype"),
+                    "filename" -> jsonFields("filename")
+                )
+            )
+
             val knoraParams =
                 s"""
-                  |{
-                  |    "restype_id": "http://www.knora.org/ontology/incunabula#page",
-                  |    "properties": {
-                  |        "http://www.knora.org/ontology/incunabula#pagenum": [
-                  |            {"richtext_value": {"utf8str": "test page"}}
-                  |        ],
-                  |        "http://www.knora.org/ontology/incunabula#origname": [
-                  |            {"richtext_value": {"utf8str": "Chlaus"}}
-                  |        ],
-                  |        "http://www.knora.org/ontology/incunabula#partOf": [
-                  |            {"link_value": "http://data.knora.org/5e77e98d2603"}
-                  |        ],
-                  |        "http://www.knora.org/ontology/incunabula#seqnum": [{"int_value": 99999999}]
-                  |    },
-                  |    "file": {
-                  |        "originalFilename" : "${jsonFields("original_filename").asInstanceOf[JsString].value}",
-                  |        "originalMimeType" : "${jsonFields("original_mimetype").asInstanceOf[JsString].value}",
-                  |        "filename" : "${jsonFields("filename").asInstanceOf[JsString].value}"
-                  |    },
-                  |    "label": "test page",
-                  |    "project_id": "http://data.knora.org/projects/77275339"
-                  |}
+                   |{
+                   |    "restype_id": "http://www.knora.org/ontology/incunabula#page",
+                   |    "properties": {
+                   |        "http://www.knora.org/ontology/incunabula#pagenum": [
+                   |            {"richtext_value": {"utf8str": "test page"}}
+                   |        ],
+                   |        "http://www.knora.org/ontology/incunabula#origname": [
+                   |            {"richtext_value": {"utf8str": "Chlaus"}}
+                   |        ],
+                   |        "http://www.knora.org/ontology/incunabula#partOf": [
+                   |            {"link_value": "http://data.knora.org/5e77e98d2603"}
+                   |        ],
+                   |        "http://www.knora.org/ontology/incunabula#seqnum": [{"int_value": 99999999}]
+                   |    },
+                   |    "file": ${fileParams.compactPrint},
+                   |    "label": "test page",
+                   |    "project_id": "http://data.knora.org/projects/77275339"
+                   |}
                 """.stripMargin
 
             // Send the JSON in a POST request to the Knora API server.
