@@ -271,8 +271,11 @@ right permission to the creator, modify permission to all project members, and v
 this **implicitly** applies to all resource classes and all their properties inside the project.
 
 
-Permission Precedence Rules (Default Object Access Permissions)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Permission Precedence Rules 
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+For both administrative permissions and default object access permissions, the resulting permissions are derived by
+applying precedence rules, for the case that the user is member of more than one group.
 
 The following list is sorted by the permission precedence level in descending order:
 
@@ -283,9 +286,15 @@ The following list is sorted by the permission precedence level in descending or
     - permissions on ``knora-base:ProjectMember``
     - permissions on ``knora-base:KnownUser`` (lowest level)
 
-When a user creates a resource or value, then **only** the default object permissions from the **highest level** are
-applied. If a user is a member of more than one group on the same level (only possible for custom groups) then the
-defined permissions are summed up and the most permissive are applied.
+The permissions on resource classes / properties are only relevant for default object access permissions.
+
+**Administrative Permissions**: When a user performs an operation requiring administrative permissions, then **only**
+the permissions from the **highest level** are taken into account. If a user is a member of more than one group on the
+same level (only possible for custom groups) then the defined permissions are summed up and all are taken into account.
+
+**Default Object Access Permissions**: When a user creates a resource or value, then **only** the default object
+permissions from the **highest level** are applied. If a user is a member of more than one group on the same level
+(only possible for custom groups) then the defined permissions are summed up and the most permissive are applied.
 
 In the case of users belonging to the **SystemAdmin** group, but which are not members of a project and thus no group
 belonging to the project, the *default object access permissions* from the **highest defined level** will apply.

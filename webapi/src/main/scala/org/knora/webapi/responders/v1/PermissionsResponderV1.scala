@@ -132,8 +132,9 @@ class PermissionsResponderV1 extends ResponderV1 {
             /* combine explicit groups with materialized implicit groups */
             /* here we don't add the KnownUser group, as this would inflate the whole thing. */
             /* we instead inject the relevant information in defaultObjectAccessPermissionsStringForEntityGetV1 */
+            /* and in userAdministrativePermissionsGetV1 */
             allGroups = groups ::: projectMembers ::: projectAdmins ::: systemAdmin
-            groupsPerProject = allGroups.groupBy(_._1).map { case (k,v) => (k,v.map(_._2))}
+            groupsPerProject: Map[IRI, List[IRI]] = allGroups.groupBy(_._1).map { case (k,v) => (k,v.map(_._2))}
             _= log.debug(s"permissionsProfileGetV1 - groupsPerProject: ${MessageUtil.toSource(groupsPerProject)}")
 
             /* retrieve the administrative permissions for each group per project the user is member of */
@@ -157,52 +158,148 @@ class PermissionsResponderV1 extends ResponderV1 {
 
     /**
       * By providing all the projects and groups in which the user is a member of, calculate the user's
-      * max administrative permissions of each project.
+      * administrative permissions of each project by applying the precedence rules.
       *
-      * @param groupsPerProject the groups in each project the user is member of.
-      * @return a the user's max permissions for each project.
+      * @param groupsPerProject the groups inside each project the user is member of.
+      * @return a the user's resulting set of administrative permissions for each project.
       */
     def userAdministrativePermissionsGetV1(groupsPerProject: Map[IRI, List[IRI]]): Future[Map[IRI, Set[PermissionV1]]] = {
 
-        /* Get all permissions per project, combining them from all groups */
-        val ppf: Iterable[Future[(IRI, Seq[PermissionV1])]] = for {
-            (projectIri, groups) <- groupsPerProject
-            groupIri <- groups
-            //_ = log.debug(s"userAdministrativePermissionsGetV1 - projectIri: $projectIri, groupIri: $groupIri")
-            projectPermission: Future[(IRI, Seq[PermissionV1])] = administrativePermissionForProjectGroupGetV1(projectIri, groupIri).map {
-                case Some(ap: AdministrativePermissionV1) => (projectIri, ap.hasPermissions.toSeq)
-                case None => (projectIri, Seq.empty[PermissionV1])
-            }
 
-        } yield projectPermission
 
-        val allPermissionsFuture: Future[Iterable[(IRI, Seq[PermissionV1])]] = Future.sequence(ppf)
+        /* Get all permissions per project, applying permission precedence rule */
+        def calculatePermission(projectIri: IRI, extendedUserGroups: List[IRI]): Set[PermissionV1] = {
 
-        /* combines all permissions for each project and removes duplicate permissions inside a project  */
-        val result: Future[Map[IRI, Set[PermissionV1]]] = for {
-            allPermissions: Iterable[(IRI, Seq[PermissionV1])] <- allPermissionsFuture
 
-            // remove instances with empty PermissionV1 sets
-            cleanedAllPermissions: Iterable[(IRI, Seq[PermissionV1])] = allPermissions.filter(_._2.nonEmpty)
+            /* List buffer holding default object access permissions tagged with the precedence level:
+               1. ProjectAdmin > 2. CustomGroups > 3. ProjectMember > 4. KnownUser
+               Permissions are added following the precedence level from the highest to the lowest. As soon as one set
+               of permissions is written into the buffer, any additionally found permissions are ignored. */
+            val permissionsListBuffer = ListBuffer.empty[(Int, Set[PermissionV1])]
 
-            result = cleanedAllPermissions.groupBy(_._1).map { case (projectIri: IRI, projectPermissions: Iterable[(IRI, Seq[PermissionV1])]) =>
+            for {
 
-                /* Combine permission sequences */
-                val combined = projectPermissions.foldLeft(Seq.empty[PermissionV1]) { (acc, seq) =>
-                    acc ++ seq._2
+                /* Get administrative permissions for the knora-base:ProjectAdmin group */
+                administrativePermissionsOnProjectAdminGroup: Set[PermissionV1] <- administrativePermissionForGroupsGetV1(projectIri, List(OntologyConstants.KnoraBase.ProjectAdmin))
+                _ = if (administrativePermissionsOnProjectAdminGroup.nonEmpty) {
+                    if (extendedUserGroups.contains(OntologyConstants.KnoraBase.ProjectAdmin)) {
+                        permissionsListBuffer += ((1, administrativePermissionsOnProjectAdminGroup))
+                    }
                 }
-                /* Remove possible duplicate permissions */
-                val squashed: Set[PermissionV1] = PermissionUtilV1.removeDuplicatePermissions(combined)
-                (projectIri, squashed)
-            }
-        //_ = log.debug(s"userAdministrativePermissionsGetV1 - result: $result")
+                _ = log.debug(s"userAdministrativePermissionsGetV1 - project: $projectIri, administrativePermissionsOnProjectAdminGroup: $administrativePermissionsOnProjectAdminGroup")
+
+
+                /* Get administrative permissions for custom groups (all groups other than the built-in groups) */
+                administrativePermissionsOnCustomGroups: Set[PermissionV1] <- {
+                    val customGroups = extendedUserGroups diff List(OntologyConstants.KnoraBase.KnownUser, OntologyConstants.KnoraBase.ProjectMember, OntologyConstants.KnoraBase.ProjectAdmin)
+                    if (customGroups.nonEmpty) {
+                        administrativePermissionForGroupsGetV1(projectIri, customGroups)
+                    } else {
+                        Future(Set.empty[PermissionV1])
+                    }
+                }
+                _ = if (administrativePermissionsOnCustomGroups.nonEmpty) {
+                    if (permissionsListBuffer.isEmpty) {
+                        permissionsListBuffer += ((2, administrativePermissionsOnCustomGroups))
+                    }
+                }
+                _ = log.debug(s"userAdministrativePermissionsGetV1 - project: $projectIri, administrativePermissionsOnCustomGroups: $administrativePermissionsOnCustomGroups")
+
+
+                /* Get administrative permissions for the knora-base:ProjectMember group */
+                administrativePermissionsOnProjectMemberGroup: Set[PermissionV1] <- administrativePermissionForGroupsGetV1(projectIri, List(OntologyConstants.KnoraBase.ProjectMember))
+                _ = if (administrativePermissionsOnProjectMemberGroup.nonEmpty) {
+                    if (permissionsListBuffer.isEmpty) {
+                        if (extendedUserGroups.contains(OntologyConstants.KnoraBase.ProjectMember)) {
+                            permissionsListBuffer += ((3, administrativePermissionsOnProjectMemberGroup))
+                        }
+                    }
+                }
+                _ = log.debug(s"userAdministrativePermissionsGetV1 - project: $projectIri, administrativePermissionsOnProjectMemberGroup: $administrativePermissionsOnProjectMemberGroup")
+
+
+                /* Get administrative permissions for the knora-base:KnownUser group */
+                administrativePermissionsOnKnownUserGroup: Set[PermissionV1] <- administrativePermissionForGroupsGetV1(projectIri, List(OntologyConstants.KnoraBase.KnownUser))
+                _ = if (administrativePermissionsOnKnownUserGroup.nonEmpty) {
+                    if (permissionsListBuffer.isEmpty) {
+                        if (extendedUserGroups.contains(OntologyConstants.KnoraBase.KnownUser)) {
+                            permissionsListBuffer += ((4, administrativePermissionsOnKnownUserGroup))
+                        }
+                    }
+                }
+                _ = log.debug(s"userAdministrativePermissionsGetV1 - project: $projectIri, administrativePermissionsOnKnownUserGroup: $administrativePermissionsOnKnownUserGroup")
+
+
+                projectAdministrativePermissions: Set[PermissionV1] = permissionsListBuffer.length match {
+                    case 1 => permissionsListBuffer.head._2
+                    case 0 => Set.empty[PermissionV1]
+                    case _ => throw AssertionException("The permissions list buffer holding default object permissions should never be larger then 1.")
+                }
+
+            } yield projectAdministrativePermissions
+
+        }
+
+        for {
+            (projectIri, groups) <- groupsPerProject
+
+            /* Explicitly add 'KnownUser' group */
+            extendedUserGroups = OntologyConstants.KnoraBase.KnownUser :: groups
+
+
         } yield result
+
+        val result: Future[Map[IRI, Set[PermissionV1]]] = Future.sequence(ppf).map(_.toMap)
+
+        log.debug(s"userAdministrativePermissionsGetV1 - result: $result")
         result
     }
+
 
     /*************************************************************************/
     /* ADMINISTRATIVE PERMISSIONS                                            */
     /*************************************************************************/
+
+    /**
+      * Convenience method returning a set with combined administrative permission. Used in userAdministrativePermissionsGetV1.
+      * @param projectIri the IRI of the project.
+      * @param groups the list of groups for which administrative permissions are retrieved and combined.
+      * @return a set of [[PermissionV1]].
+      */
+    private def administrativePermissionForGroupsGetV1(projectIri: IRI, groups: List[IRI] ): Future[Set[PermissionV1]] = {
+
+        /* Get administrative permissions for each group and combine them */
+        val gpf: Iterable[Future[Seq[PermissionV1]]] = for {
+            groupIri <- groups
+            _ = log.debug(s"administrativePermissionForGroupsGetV1 - projectIri: $projectIri, groupIri: $groupIri")
+
+            groupPermissions: Future[Seq[PermissionV1]] = administrativePermissionForProjectGroupGetV1(projectIri, groupIri).map {
+                case Some(ap: AdministrativePermissionV1) => ap.hasPermissions.toSeq
+                case None => Seq.empty[PermissionV1]
+            }
+
+        } yield groupPermissions
+
+        val allPermissionsFuture: Future[Iterable[Seq[PermissionV1]]] = Future.sequence(gpf)
+
+        /* combines all permissions for each group and removes duplicates  */
+        val result: Future[Set[PermissionV1]] = for {
+            allPermissions: Iterable[Seq[PermissionV1]] <- allPermissionsFuture
+
+            // remove instances with empty PermissionV1 sets
+            cleanedAllPermissions: Iterable[Seq[PermissionV1]] = allPermissions.filter(_.nonEmpty)
+
+            /* Combine permission sequences */
+            combined = cleanedAllPermissions.foldLeft(Seq.empty[PermissionV1]) { (acc, seq) =>
+                acc ++ seq
+            }
+            /* Remove possible duplicate permissions */
+            result: Set[PermissionV1] = PermissionUtilV1.removeDuplicatePermissions(combined)
+
+            _ = log.debug(s"administrativePermissionForGroupsGetV1 - result: $result")
+        } yield result
+        result
+    }
 
     /**
       * Gets all administrative permissions defined inside a project.
@@ -695,7 +792,7 @@ class PermissionsResponderV1 extends ResponderV1 {
 
         val allPermissionsFuture: Future[Iterable[Seq[PermissionV1]]] = Future.sequence(gpf)
 
-        /* combines all permissions for each project and removes duplicate permissions inside a project  */
+        /* combines all permissions for each group and removes duplicates  */
         val result: Future[Set[PermissionV1]] = for {
             allPermissions: Iterable[Seq[PermissionV1]] <- allPermissionsFuture
 

@@ -411,7 +411,6 @@ case class PermissionDataV1(groupsPerProject: Map[IRI, List[IRI]] = Map.empty[IR
     }
 
 
-    /*  */
     /**
       * Given an operation, checks if the user is allowed to perform it.
       *
