@@ -56,7 +56,7 @@ INSERT {
                 knora-base:attachedToUser ?creatorIri ;
                 knora-base:attachedToProject ?projectIri ;
                 rdfs:label ?label@res.resourceIndex ;
- 				knora-base:hasPermissions "@permissions" ;
+ 				knora-base:hasPermissions "@res.permissions" ;
                 knora-base:creationDate ?currentTime .
 
             @res.generateSparqlForValuesResponse.insertSparql

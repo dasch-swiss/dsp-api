@@ -1331,7 +1331,7 @@ class ResourcesResponderV1 extends ResponderV1 {
                         //generate sparql statemnt for every resource
                         generateSparqlForValuesResponse <- createNewSparqlStatement(projectIri, resourceIri, resRequest.resourceTypeIri, index, checkObj = false, resValues, fileValuesV1, userProfile, apiRequestID)
 
-                    } yield ResourceToCreate(resourceIri, Some(defaultObjectAccessPermissions.permissionLiteral), generateSparqlForValuesResponse, resRequest.resourceTypeIri, index, resRequest.label)
+                    } yield ResourceToCreate(resourceIri, defaultObjectAccessPermissions.permissionLiteral, generateSparqlForValuesResponse, resRequest.resourceTypeIri, index, resRequest.label)
 
             }
 
@@ -1624,7 +1624,7 @@ class ResourcesResponderV1 extends ResponderV1 {
                                resourceIri: IRI,
                                values: Map[IRI, Seq[CreateValueV1WithComment]],
                                sipiConversionRequest: Option[SipiResponderConversionRequestV1],
-                               permissions: Option[String],
+                               permissions: String,
                                ownerIri: IRI,
                                namedGraph: IRI,
                                userProfile: UserProfileV1,
