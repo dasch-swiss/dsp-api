@@ -292,6 +292,28 @@ case class UserProfileV1(userData: UserDataV1 = UserDataV1(lang = "en"),
     def ofType(userProfileType: UserProfileType): UserProfileV1 = {
 
         userProfileType match {
+            case UserProfileType.SHORT => {
+                val olduserdata = userData
+                val newuserdata = UserDataV1(
+                    user_id = olduserdata.user_id,
+                    token = None, // remove token
+                    firstname = olduserdata.firstname,
+                    lastname = olduserdata.lastname,
+                    email = olduserdata.email,
+                    password = None, // remove password
+                    isActiveUser = olduserdata.isActiveUser,
+                    projects = olduserdata.projects,
+                    lang = olduserdata.lang
+                )
+
+                UserProfileV1(
+                    userData = newuserdata,
+                    groups = Vector.empty[IRI], // removed groups
+                    projects = Vector.empty[IRI], // removed projects
+                    permissionData = PermissionDataV1(anonymousUser = false),
+                    sessionId = None // removed sessionId
+                )
+            }
             case UserProfileType.RESTRICTED => {
                 val olduserdata = userData
                 val newuserdata = UserDataV1(
@@ -311,7 +333,7 @@ case class UserProfileV1(userData: UserDataV1 = UserDataV1(lang = "en"),
                     groups = groups,
                     projects = projects,
                     permissionData = permissionData,
-                    sessionId = sessionId
+                    sessionId = None // removed sessionId
                 )
             }
             case UserProfileType.FULL => {
@@ -417,9 +439,9 @@ object UserProfileType extends Enumeration {
 
     type UserProfileType = Value
 
-    val RESTRICTED = Value(0, "restricted")
-    // without sensitive information
-    val FULL = Value(1, "full") // everything, including sensitive information
+    val SHORT = Value(0, "short") // only userdata
+    val RESTRICTED = Value(1, "restricted") // without sensitive information
+    val FULL = Value(2, "full") // everything, including sensitive information
 
     val valueMap: Map[String, Value] = values.map(v => (v.toString, v)).toMap
 

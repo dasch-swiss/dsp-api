@@ -24,10 +24,11 @@ import java.util.UUID
 
 import akka.actor.Status
 import akka.pattern._
+import org.apache.jena.sparql.function.library.leviathan.log
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.ontologymessages.NamedGraphV1
 import org.knora.webapi.messages.v1.responder.projectmessages._
-import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
+import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileByIRIGetRequestV1, UserProfileType, UserProfileV1}
 import org.knora.webapi.messages.v1.store.triplestoremessages._
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.util.ActorUtil._
@@ -223,26 +224,26 @@ class ProjectsResponderV1 extends ResponderV1 {
     /**
       * Gets the project with the given project Iri and returns the information as a [[ProjectInfoV1]].
       *
-      * @param projectIRI the Iri of the project requested.
+      * @param projectIri the Iri of the project requested.
       * @param userProfile the profile of user that is making the request.
       * @return information about the project as a [[ProjectInfoResponseV1]].
       */
-    private def projectInfoByIRIGetV1(projectIRI: IRI, userProfile: Option[UserProfileV1] = None): Future[ProjectInfoV1] = {
+    private def projectInfoByIRIGetV1(projectIri: IRI, userProfile: Option[UserProfileV1] = None): Future[ProjectInfoV1] = {
 
-        log.debug(s"projectInfoByIRIGetV1 - projectIRI: $projectIRI")
+        log.debug(s"projectInfoByIRIGetV1 - projectIRI: $projectIri")
 
         for {
             sparqlQuery <- Future(queries.sparql.v1.txt.getProjectByIri(
                 triplestore = settings.triplestoreType,
-                projectIri = projectIRI
+                projectIri = projectIri
             ).toString())
             projectResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
 
             _ = if (projectResponse.results.bindings.isEmpty) {
-                throw NotFoundException(s"Project '$projectIRI' not found")
+                throw NotFoundException(s"Project '$projectIri' not found")
             }
 
-            projectInfo = createProjectInfoV1(projectResponse = projectResponse.results.bindings, projectIri = projectIRI, userProfile)
+            projectInfo = createProjectInfoV1(projectResponse = projectResponse.results.bindings, projectIri = projectIri, userProfile)
 
             _ = log.debug(s"projectInfoByIRIGetV1 - projectInfo: $projectInfo")
 
@@ -289,11 +290,66 @@ class ProjectsResponderV1 extends ResponderV1 {
     /**
       * Gets the members of a project with the given IRI.
       *
-      * @param iri the IRI of the project.
+      * @param projectIri the IRI of the project.
       * @param userProfileV1 the profile of the user that is making the request.
       * @return the members of a project as a [[ProjectMembersGetResponseV1]]
       */
-    private def projectMembersByIRIGetRequestV1(iri: IRI, userProfileV1: UserProfileV1): Future[ProjectMembersGetResponseV1] = ???
+    private def projectMembersByIRIGetRequestV1(projectIri: IRI, userProfileV1: UserProfileV1): Future[ProjectMembersGetResponseV1] = {
+
+        log.debug(s"projectMembersByIRIGetRequestV1 - projectIRI: $projectIri")
+
+        def getUserData(userIri: IRI, userProfileV1: UserProfileV1): Future[UserDataV1] = {
+            for {
+                userProfile <- (responderManager ? UserProfileByIRIGetRequestV1(userIri, UserProfileType.SHORT, userProfileV1)).mapTo[Option[UserProfileV1]]
+
+                result = userProfile match {
+                    case Some(up) => up.userData
+                    case None => throw InconsistentTriplestoreDataException(s"User $userIri was not found but is member of project. Please report this as a possible bug.")
+                }
+            } yield result
+        }
+
+        val projectMemberIrisFuture: Future[Seq[IRI]] = for {
+            sparqlQueryString <- Future(queries.sparql.v1.txt.getProjectMembersByIri(
+                triplestore = settings.triplestoreType,
+                projectIri = projectIri
+            ).toString())
+            //_ = log.debug(s"projectMembersByIRIGetRequestV1 - query: $sparqlQueryString")
+
+            projectMembersResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResponse]
+            //_ = log.debug(s"projectMembersByIRIGetRequestV1 - result: ${MessageUtil.toSource(projectMembersResponse)}")
+
+            // get project member Iri from results rows
+            projectMemberIris: Seq[IRI] = if (projectMembersResponse.results.bindings.nonEmpty) {
+                projectMembersResponse.results.bindings.map(_.rowMap("s"))
+            } else {
+                throw NotFoundException(s"Project '$projectIri' either not found or has no members")
+            }
+            _ = log.debug(s"projectMembersByIRIGetRequestV1 - projectMemberIris: $projectMemberIris")
+
+            //_ = log.debug(s"projectMembersByIRIGetRequestV1 - projectMembers: $projectMembers")
+
+        } yield projectMemberIris
+
+        val userDatasFuture: Future[Seq[Future[UserDataV1]]] = for {
+            memberIris: Seq[IRI] <- projectMemberIrisFuture
+            userDatas: Seq[Future[UserDataV1]] = memberIris.map{ case userIri: IRI =>
+                getUserData(userIri, userProfileV1)
+            }
+        } yield userDatas
+
+        val userDatas: Future[Seq[Future[UserDataV1]]] = projectMemberIrisFuture map {
+            case userIris: Seq[IRI] => {
+                userIris map {
+                    case userIri: IRI => {
+                        val userData = getUserData(userIri, userProfileV1)
+                        userData
+                    }
+                }
+            }
+
+        }
+    }
 
 
     /**
@@ -303,7 +359,33 @@ class ProjectsResponderV1 extends ResponderV1 {
       * @param userProfileV1 the profile of the user that is making the request.
       * @return the members of a project as a [[ProjectMembersGetResponseV1]]
       */
-    private def projectMembersByShortnameGetRequestV1(shortname: String, userProfileV1: UserProfileV1): Future[ProjectMembersGetResponseV1] = ???
+    private def projectMembersByShortnameGetRequestV1(shortname: String, userProfileV1: UserProfileV1): Future[ProjectMembersGetResponseV1] = {
+
+        for {
+            sparqlQueryString <- Future(queries.sparql.v1.txt.getProjectMembersByShortname(
+                triplestore = settings.triplestoreType,
+                shortname = shortname
+            ).toString())
+            //_ = log.debug(s"projectMembersByShortnameGetRequestV1 - query: $sparqlQueryString")
+
+            projectMembersResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResponse]
+            //_ = log.debug(s"projectMembersByShortnameGetRequestV1 - result: ${MessageUtil.toSource(projectMembersResponse)}")
+
+
+            // get project member Iri from results rows
+            projectMemberIris: Seq[IRI] = if (projectMembersResponse.results.bindings.nonEmpty) {
+                projectMembersResponse.results.bindings.map(_.rowMap("s"))
+            } else {
+                throw NotFoundException(s"Project '$shortname' either not found or has no members")
+            }
+            _ = log.debug(s"projectMembersByShortnameGetRequestV1 - projectMemberIris: $projectMemberIris")
+
+            projectMembers = Seq.empty[UserDataV1]
+
+            //_ = log.debug(s"projectMembersByShortnameGetRequestV1 - projectMembers: $projectMembers")
+
+        } yield ProjectMembersGetResponseV1(projectMembers, userProfileV1.userData)
+    }
 
     private def projectCreateRequestV1(createRequest: CreateProjectApiRequestV1, userProfile: UserProfileV1, apiRequestID: UUID): Future[ProjectOperationResponseV1] = {
 

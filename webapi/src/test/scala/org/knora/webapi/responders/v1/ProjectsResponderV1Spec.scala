@@ -29,6 +29,7 @@ import com.typesafe.config.ConfigFactory
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse}
 import org.knora.webapi.messages.v1.responder.projectmessages._
+import org.knora.webapi.messages.v1.responder.usermessages.UserDataV1
 import org.knora.webapi.messages.v1.store.triplestoremessages._
 import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_NAME
 import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
@@ -124,9 +125,10 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
             }
 
         }
+
         "asked about a project identified by 'shortname' " should {
 
-            "return 'full' project info if the project is known " in {
+            "return project info if the project is known " in {
                 actorUnderTest ! ProjectInfoByShortnameGetRequestV1(SharedAdminTestData.incunabulaProjectInfo.shortname, Some(rootUserProfileV1))
                 expectMsg(ProjectInfoResponseV1(SharedAdminTestData.incunabulaProjectInfo, Some(rootUserProfileV1.userData)))
             }
@@ -136,6 +138,32 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
                 expectMsg(Failure(NotFoundException(s"Project 'projectwrong' not found")))
             }
 
+        }
+
+        "asked about members of a project identified by 'IRI" should {
+
+            "return members if the project is known" in {
+                actorUnderTest ! ProjectMembersByIRIGetRequestV1(SharedAdminTestData.imagesProjectInfo.id, SharedAdminTestData.rootUser)
+                expectMsg(ProjectMembersGetResponseV1(Seq.empty[UserDataV1], SharedAdminTestData.rootUser.userData))
+            }
+
+            "return 'NotFound' when the project is unknown" in {
+                actorUnderTest ! ProjectMembersByIRIGetRequestV1("http://data.knora.org/projects/notexisting", SharedAdminTestData.rootUser)
+                expectMsg(Failure(NotFoundException(s"Project 'http://data.knora.org/projects/notexisting' either not found or has no members")))
+            }
+        }
+
+        "asked about members of a project identified by 'shortname" should {
+
+            "return members if the project is known" in {
+                actorUnderTest ! ProjectMembersByShortnameGetRequestV1(SharedAdminTestData.imagesProjectInfo.shortname, SharedAdminTestData.rootUser)
+                expectMsg(ProjectMembersGetResponseV1(Seq.empty[UserDataV1], SharedAdminTestData.rootUser.userData))
+            }
+
+            "return 'NotFound' when the project is unknown" in {
+                actorUnderTest ! ProjectMembersByShortnameGetRequestV1("projectwrong", SharedAdminTestData.rootUser)
+                expectMsg(Failure(NotFoundException(s"Project 'projectwrong' either not found or has no members")))
+            }
         }
 
         "asked to create a new project " should {

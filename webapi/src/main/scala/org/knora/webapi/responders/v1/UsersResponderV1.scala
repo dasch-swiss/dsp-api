@@ -502,7 +502,11 @@ class UsersResponderV1 extends ResponderV1 {
 
             for {
             /* get the user's permission profile from the permissions responder */
-                permissionData <- (responderManager ? PermissionDataGetV1(projectIris = projectIris, groupIris = groupIris, isInProjectAdminGroups = isInProjectAdminGroups, isInSystemAdminGroup = isInSystemAdminGroup)).mapTo[PermissionDataV1]
+                permissionData <- if (userProfileType != UserProfileType.SHORT) {
+                    (responderManager ? PermissionDataGetV1(projectIris = projectIris, groupIris = groupIris, isInProjectAdminGroups = isInProjectAdminGroups, isInSystemAdminGroup = isInSystemAdminGroup)).mapTo[PermissionDataV1]
+                } else {
+                    Future(PermissionDataV1(anonymousUser = false))
+                }
 
                 /* construct the user profile from the different parts */
                 up = UserProfileV1(
