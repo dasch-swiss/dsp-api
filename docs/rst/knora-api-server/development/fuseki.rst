@@ -41,4 +41,4 @@ We can use the ``dhlabbasel:fuseki`` docker image from docker hub:
 
 ::
 
-  $ docker run --rm -it -p 3030:3030 dhlabbasel:fuseki
+  $ docker run --rm -it -p 3030:3030 dhlabbasel/fuseki
