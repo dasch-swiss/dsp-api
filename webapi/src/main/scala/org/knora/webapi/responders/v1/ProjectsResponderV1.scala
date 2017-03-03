@@ -349,6 +349,7 @@ class ProjectsResponderV1 extends ResponderV1 {
             }
 
         }
+        Future(ProjectMembersGetResponseV1(Seq.empty[UserDataV1], userProfileV1.userData))
     }
 
 

@@ -941,7 +941,7 @@ class PermissionsResponderV1 extends ResponderV1 {
 
             /* Create permissions string */
             result = permissionsListBuffer.length match {
-                case 1 => PermissionUtilV1.formatPermissions(permissionsListBuffer.head._2, PermissionType.OAP).get
+                case 1 => PermissionUtilV1.formatPermissions(permissionsListBuffer.head._2, PermissionType.OAP)
                 case 0 => throw BadRequestException("The resulting request would lead to an empty permissions string, which is not allowed. Are all the necessary default object access permissions defined?")
                 case _ => throw AssertionException("The permissions list buffer holding default object permissions should never be larger then 1.")
             }
