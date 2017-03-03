@@ -90,18 +90,8 @@ INSERT {
                 @{throw SparqlGenerationException(s"linkUpdate.newReferenceCount must be 0 in this SPARQL template"); ()}
             }
 
-        ?newLinkValue knora-base:attachedToUser <@linkUpdate.newLinkValueCreator> .
-
-        @linkUpdate.newLinkValuePermissions match {
-
-            case Some(linkValuePermissions) => {
-
-                ?newLinkValue knora-base:hasPermissions "@linkValuePermissions" .
-
-            }
-
-            case None => {}
-        }
+        ?newLinkValue knora-base:attachedToUser <@linkUpdate.newLinkValueCreator> ;
+            knora-base:hasPermissions "@linkUpdate.newLinkValuePermissions" .
 
         @* Attach the new LinkValue to its containing resource. *@
         ?linkSource ?linkValueProperty ?newLinkValue .

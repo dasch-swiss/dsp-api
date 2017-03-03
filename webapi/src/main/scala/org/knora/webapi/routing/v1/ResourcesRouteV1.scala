@@ -47,7 +47,7 @@ import org.knora.webapi.viewhandlers.ResourceHtmlView
 import org.slf4j.LoggerFactory
 import spray.json._
 
-import scala.concurrent.Future
+import scala.concurrent.{Future, Promise}
 import scala.concurrent.duration._
 
 /**
@@ -330,11 +330,9 @@ object ResourcesRouteV1 extends Authenticator {
                         val JSON_PART = "json"
                         val FILE_PART = "file"
 
-                        /* TODO: refactor to remove the need for this var */
-                        /* makes sure that variables updated in another thread return the latest version */
-                        @volatile var receivedFile: Option[File] = None
+                        val receivedFile = Promise[File]
 
-                        log.debug(s"receivedFile is defined before: ${receivedFile.isDefined}")
+                        log.debug(s"receivedFile is completed before: ${receivedFile.isCompleted}")
 
                         // collect all parts of the multipart as it arrives into a map
                         val allPartsFuture: Future[Map[Name, Any]] = formdata.parts.mapAsync[(Name, Any)](1) {
@@ -349,7 +347,7 @@ object ResourcesRouteV1 extends Authenticator {
                                 val written = b.entity.dataBytes.runWith(FileIO.toPath(tmpFile.toPath))
                                 written.map { written =>
                                     //println(s"written result: ${written.wasSuccessful}, ${b.filename.get}, ${tmpFile.getAbsolutePath}")
-                                    receivedFile = Some(tmpFile)
+                                    receivedFile.success(tmpFile)
                                     (b.name, FileInfo(b.name, b.filename.get, b.entity.contentType))
                                 }
                             }
@@ -362,44 +360,41 @@ object ResourcesRouteV1 extends Authenticator {
                         // TODO  (in case they were not deleted by Knora which should not happen -> this has also to be implemented for Sipi for the thumbnails)
                         // TODO: how to check if the user has sent multiple files?
 
-                        val requestMessageFuture: Future[ResourceCreateRequestV1] = allPartsFuture.flatMap { allParts => // use flatMap to get rid of nested Futures
-
-                            log.debug(s"allParts: $allParts")
-                            log.debug(s"receivedFile is defined: ${receivedFile.isDefined}")
-
+                        val requestMessageFuture: Future[ResourceCreateRequestV1] = for {
+                            allParts <- allPartsFuture
                             // get the json params and turn them into a case class
-                            val apiRequest: CreateResourceApiRequestV1 = try {
+                            apiRequest: CreateResourceApiRequestV1 = try {
                                 allParts.getOrElse(JSON_PART, throw BadRequestException(s"MultiPart POST request was sent without required '$JSON_PART' part!")).asInstanceOf[JsValue].convertTo[CreateResourceApiRequestV1]
                             } catch {
                                 case e: DeserializationException => throw BadRequestException("JSON params structure is invalid: " + e.toString)
                             }
 
                             // check if the API request contains file information: this is illegal for this route
-                            if (apiRequest.file.nonEmpty) throw BadRequestException("param 'file' is set for a post multipart request. This is not allowed.")
+                            _ = if (apiRequest.file.nonEmpty) throw BadRequestException("param 'file' is set for a post multipart request. This is not allowed.")
 
-                            val sourcePath = receivedFile.getOrElse(throw FileUploadException())
+                            sourcePath <- receivedFile.future
 
                             // get the file info containing the original filename and content type.
-                            val fileInfo = allParts.getOrElse(FILE_PART, throw BadRequestException(s"MultiPart POST request was sent without required '$FILE_PART' part!")).asInstanceOf[FileInfo]
-                            val originalFilename = fileInfo.fileName
-                            val originalMimeType = fileInfo.contentType.toString
+                            fileInfo = allParts.getOrElse(FILE_PART, throw BadRequestException(s"MultiPart POST request was sent without required '$FILE_PART' part!")).asInstanceOf[FileInfo]
+                            originalFilename = fileInfo.fileName
+                            originalMimeType = fileInfo.contentType.toString
 
 
-                            val sipiConvertPathRequest = SipiResponderConversionPathRequestV1(
+                            sipiConvertPathRequest = SipiResponderConversionPathRequestV1(
                                 originalFilename = InputValidation.toSparqlEncodedString(originalFilename, () => throw BadRequestException(s"Original filename is invalid: '$originalFilename'")),
                                 originalMimeType = InputValidation.toSparqlEncodedString(originalMimeType, () => throw BadRequestException(s"Original MIME type is invalid: '$originalMimeType'")),
                                 source = sourcePath,
                                 userProfile = userProfile
                             )
 
-                            val requestMessageFuture: Future[ResourceCreateRequestV1] = makeCreateResourceRequestMessage(
+                            requestMessageFuture: Future[ResourceCreateRequestV1] = makeCreateResourceRequestMessage(
                                 apiRequest = apiRequest,
                                 multipartConversionRequest = Some(sipiConvertPathRequest),
                                 userProfile = userProfile
                             )
-                            requestMessageFuture
-                        }
 
+                            requestMessage <- requestMessageFuture
+                        } yield requestMessage
 
                         RouteUtilV1.runJsonRouteWithFuture(
                             requestMessageFuture,

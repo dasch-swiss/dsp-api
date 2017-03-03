@@ -275,6 +275,7 @@
 					$.ajax({
 						url: SIPI_URL + SIPI_LOGOUT_ROUTE,
 						type: "POST",
+						contentType: "application/x-www-form-urlencoded; charset=UTF-8",
 						xhrFields: {
 							withCredentials: true
 						},
