@@ -23,7 +23,6 @@ package org.knora.webapi.responders.v1
 import akka.actor.ActorSystem
 import org.knora.webapi.{Settings, SharedAdminTestData}
 import org.knora.webapi.messages.v1.responder.resourcemessages._
-import org.knora.webapi.messages.v1.responder.usermessages.UserDataV1
 
 object ResourcesResponderV1SpecContextData {
 
@@ -102,7 +101,6 @@ object ResourcesResponderV1SpecContextData {
     // but adding all the 402 locations consisting of one preview and six different qualities (402*7) is not possible here.
     // Therefore, only the first location is checked, see above.
     val expectedBookResourceContextResponse = ResourceContextResponseV1(
-        userdata = SharedAdminTestData.incunabulaProjectAdminUser.userData,
         resource_context = ResourceContextV1(
             parent_resinfo = None,
             parent_res_id = None,
@@ -5364,7 +5362,6 @@ object ResourcesResponderV1SpecContextData {
     )
 
     val expectedPageResourceContextResponse = ResourceContextResponseV1(
-        userdata = SharedAdminTestData.incunabulaProjectAdminUser.userData,
         resource_context = ResourceContextV1(
             parent_resinfo = Some(ResourceInfoV1(
                 firstproperty = Some("Zeitgl\u00F6cklein des Lebens und Leidens Christi"),

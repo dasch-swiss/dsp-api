@@ -23,7 +23,7 @@ package org.knora.webapi.messages.v1.responder.ontologymessages
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.standoffmessages.StandoffDataTypeClasses
-import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1, UserV1JsonProtocol}
+import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
 import spray.json._
 
@@ -75,9 +75,9 @@ case class EntityInfoGetResponseV1(resourceEntityInfoMap: Map[IRI, ResourceEntit
   * Requests all available information about a list of ontology entities (standoff classes and/or properties). A successful response will be an
   * [[StandoffEntityInfoGetResponseV1]].
   *
-  * @param standoffClassIris the IRIs of the resource entities to be queried.
-  * @param standoffPropertyIris      the IRIs of the property entities to be queried.
-  * @param userProfile       the profile of the user making the request.
+  * @param standoffClassIris    the IRIs of the resource entities to be queried.
+  * @param standoffPropertyIris the IRIs of the property entities to be queried.
+  * @param userProfile          the profile of the user making the request.
   */
 case class StandoffEntityInfoGetRequestV1(standoffClassIris: Set[IRI] = Set.empty[IRI], standoffPropertyIris: Set[IRI] = Set.empty[IRI], userProfile: UserProfileV1) extends OntologyResponderRequestV1
 
@@ -85,7 +85,7 @@ case class StandoffEntityInfoGetRequestV1(standoffClassIris: Set[IRI] = Set.empt
 /**
   * Represents assertions about one or more ontology entities (resource classes and/or properties).
   *
-  * @param standoffClassEntityInfoMap a [[Map]] of resource entity IRIs to [[StandoffClassEntityInfoV1]] objects.
+  * @param standoffClassEntityInfoMap    a [[Map]] of resource entity IRIs to [[StandoffClassEntityInfoV1]] objects.
   * @param standoffPropertyEntityInfoMap a [[Map]] of property entity IRIs to [[StandoffPropertyEntityInfoV1]] objects.
   */
 case class StandoffEntityInfoGetResponseV1(standoffClassEntityInfoMap: Map[IRI, StandoffClassEntityInfoV1],
@@ -95,7 +95,7 @@ case class StandoffEntityInfoGetResponseV1(standoffClassEntityInfoMap: Map[IRI, 
   * Requests information about all standoff classes that are a subclass of a data type standoff class. A successful response will be an
   * [[StandoffClassesWithDataTypeGetResponseV1]].
   *
-  * @param userProfile       the profile of the user making the request.
+  * @param userProfile the profile of the user making the request.
   */
 case class StandoffClassesWithDataTypeGetRequestV1(userProfile: UserProfileV1) extends OntologyResponderRequestV1
 
@@ -111,7 +111,7 @@ case class StandoffClassesWithDataTypeGetResponseV1(standoffClassEntityInfoMap: 
   * Requests information about all standoff property entities. A successful response will be an
   * [[StandoffAllPropertyEntitiesGetResponseV1]].
   *
-  * @param userProfile       the profile of the user making the request.
+  * @param userProfile the profile of the user making the request.
   */
 case class StandoffAllPropertyEntitiesGetRequestV1(userProfile: UserProfileV1) extends OntologyResponderRequestV1
 
@@ -137,10 +137,8 @@ case class ResourceTypeGetRequestV1(resourceTypeIri: IRI, userProfile: UserProfi
   * Represents the Knora API v1 JSON response to a request for information about a resource type.
   *
   * @param restype_info basic information about the resource type.
-  * @param userdata     information about the user that made the request.
   */
-case class ResourceTypeResponseV1(restype_info: ResTypeInfoV1,
-                                  userdata: UserDataV1) extends KnoraResponseV1 {
+case class ResourceTypeResponseV1(restype_info: ResTypeInfoV1) extends KnoraResponseV1 {
     def toJsValue = ResourceTypeV1JsonProtocol.resourceTypeResponseV1Format.write(this)
 }
 
@@ -174,9 +172,8 @@ case class NamedGraphsGetRequestV1(userProfile: UserProfileV1) extends OntologyR
   * It contains all the existing named graphs.
   *
   * @param vocabularies all the existing named graphs.
-  * @param userdata     information about the user that made the request.
   */
-case class NamedGraphsResponseV1(vocabularies: Seq[NamedGraphV1], userdata: UserDataV1) extends KnoraResponseV1 {
+case class NamedGraphsResponseV1(vocabularies: Seq[NamedGraphV1]) extends KnoraResponseV1 {
     def toJsValue = ResourceTypeV1JsonProtocol.namedGraphsResponseV1Format.write(this)
 }
 
@@ -193,9 +190,8 @@ case class ResourceTypesForNamedGraphGetRequestV1(namedGraph: Option[IRI], userP
   * It contains all the resource classes for a named graph.
   *
   * @param resourcetypes the resource classes for the queried named graph.
-  * @param userdata      information about the user that made the request.
   */
-case class ResourceTypesForNamedGraphResponseV1(resourcetypes: Seq[ResourceTypeV1], userdata: UserDataV1) extends KnoraResponseV1 {
+case class ResourceTypesForNamedGraphResponseV1(resourcetypes: Seq[ResourceTypeV1]) extends KnoraResponseV1 {
     def toJsValue = ResourceTypeV1JsonProtocol.resourceTypesForNamedGraphResponseV1Format.write(this)
 }
 
@@ -213,9 +209,8 @@ case class PropertyTypesForNamedGraphGetRequestV1(namedGraph: Option[IRI], userP
   * It contains all property types for the requested named graph.
   *
   * @param properties the property types for the requested named graph.
-  * @param userdata   information about the user that made the request.
   */
-case class PropertyTypesForNamedGraphResponseV1(properties: Seq[PropertyDefinitionInNamedGraphV1], userdata: UserDataV1) extends KnoraResponseV1 {
+case class PropertyTypesForNamedGraphResponseV1(properties: Seq[PropertyDefinitionInNamedGraphV1]) extends KnoraResponseV1 {
     def toJsValue = ResourceTypeV1JsonProtocol.propertyTypesForNamedGraphResponseV1Format.write(this)
 }
 
@@ -232,9 +227,8 @@ case class PropertyTypesForResourceTypeGetRequestV1(resourceClassIri: IRI, userP
   * It contains all the property types for the requested resource class.
   *
   * @param properties the property types for the requested resource class.
-  * @param userdata   information about the user that made the request.
   */
-case class PropertyTypesForResourceTypeResponseV1(properties: Vector[PropertyDefinitionV1], userdata: UserDataV1) extends KnoraResponseV1 {
+case class PropertyTypesForResourceTypeResponseV1(properties: Vector[PropertyDefinitionV1]) extends KnoraResponseV1 {
     def toJsValue = ResourceTypeV1JsonProtocol.propertyTypesForResourceTypeResponseV1Format.write(this)
 }
 
@@ -251,9 +245,8 @@ case class SubClassesGetRequestV1(resourceClassIri: IRI, userProfile: UserProfil
   * Provides information about the subclasses of a Knora resource class.
   *
   * @param subClasses a list of [[SubClassInfoV1]] representing the subclasses of the specified class.
-  * @param userdata   information about the user that made the request.
   */
-case class SubClassesGetResponseV1(subClasses: Seq[SubClassInfoV1], userdata: UserDataV1) extends KnoraResponseV1 {
+case class SubClassesGetResponseV1(subClasses: Seq[SubClassInfoV1]) extends KnoraResponseV1 {
     def toJsValue = ResourceTypeV1JsonProtocol.subClassesGetResponseV1Format.write(this)
 }
 
@@ -447,6 +440,7 @@ case class StandoffClassEntityInfoV1(standoffClassIri: IRI,
                                      predicates: Map[IRI, PredicateInfoV1],
                                      cardinalities: Map[IRI, Cardinality.Value],
                                      dataType: Option[StandoffDataTypeClasses.Value] = None) extends EntityInfoV1
+
 /**
   * Represents the assertions about a given property.
   *
@@ -616,19 +610,17 @@ case class PropertyTypeV1(id: IRI, label: String) {
   */
 object ResourceTypeV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with NullOptions {
 
-    import UserV1JsonProtocol.userDataV1Format
-
     implicit val propertyDefinitionV1Format: JsonFormat[PropertyDefinitionV1] = jsonFormat10(PropertyDefinitionV1)
     implicit val propertyDefinitionInNamedGraphV1Format: JsonFormat[PropertyDefinitionInNamedGraphV1] = jsonFormat8(PropertyDefinitionInNamedGraphV1)
     implicit val resTypeInfoV1Format: JsonFormat[ResTypeInfoV1] = jsonFormat5(ResTypeInfoV1)
-    implicit val resourceTypeResponseV1Format: RootJsonFormat[ResourceTypeResponseV1] = jsonFormat2(ResourceTypeResponseV1)
+    implicit val resourceTypeResponseV1Format: RootJsonFormat[ResourceTypeResponseV1] = jsonFormat1(ResourceTypeResponseV1)
     implicit val namedGraphV1Format: RootJsonFormat[NamedGraphV1] = jsonFormat7(NamedGraphV1)
-    implicit val namedGraphsResponseV1Format: RootJsonFormat[NamedGraphsResponseV1] = jsonFormat2(NamedGraphsResponseV1)
+    implicit val namedGraphsResponseV1Format: RootJsonFormat[NamedGraphsResponseV1] = jsonFormat1(NamedGraphsResponseV1)
     implicit val propertyTypeV1Format: RootJsonFormat[PropertyTypeV1] = jsonFormat2(PropertyTypeV1)
     implicit val resourceTypeV1Format: RootJsonFormat[ResourceTypeV1] = jsonFormat3(ResourceTypeV1)
-    implicit val resourceTypesForNamedGraphResponseV1Format: RootJsonFormat[ResourceTypesForNamedGraphResponseV1] = jsonFormat2(ResourceTypesForNamedGraphResponseV1)
-    implicit val propertyTypesForNamedGraphResponseV1Format: RootJsonFormat[PropertyTypesForNamedGraphResponseV1] = jsonFormat2(PropertyTypesForNamedGraphResponseV1)
-    implicit val propertyTypesForResourceTypeResponseV1Format: RootJsonFormat[PropertyTypesForResourceTypeResponseV1] = jsonFormat2(PropertyTypesForResourceTypeResponseV1)
+    implicit val resourceTypesForNamedGraphResponseV1Format: RootJsonFormat[ResourceTypesForNamedGraphResponseV1] = jsonFormat1(ResourceTypesForNamedGraphResponseV1)
+    implicit val propertyTypesForNamedGraphResponseV1Format: RootJsonFormat[PropertyTypesForNamedGraphResponseV1] = jsonFormat1(PropertyTypesForNamedGraphResponseV1)
+    implicit val propertyTypesForResourceTypeResponseV1Format: RootJsonFormat[PropertyTypesForResourceTypeResponseV1] = jsonFormat1(PropertyTypesForResourceTypeResponseV1)
     implicit val subClassInfoV1Format: JsonFormat[SubClassInfoV1] = jsonFormat2(SubClassInfoV1)
-    implicit val subClassesGetResponseV1Format: RootJsonFormat[SubClassesGetResponseV1] = jsonFormat2(SubClassesGetResponseV1)
+    implicit val subClassesGetResponseV1Format: RootJsonFormat[SubClassesGetResponseV1] = jsonFormat1(SubClassesGetResponseV1)
 }

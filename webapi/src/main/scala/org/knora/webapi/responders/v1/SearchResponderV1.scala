@@ -277,7 +277,6 @@ class SearchResponderV1 extends ResponderV1 {
             resultsPage = subjects.slice(searchGetRequest.startAt, searchGetRequest.startAt + limit)
 
             results = SearchGetResponseV1(
-                userdata = searchGetRequest.userProfile.userData,
                 subjects = resultsPage,
                 nhits = subjects.size.toString,
                 thumb_max = SearchPreviewDimensionsV1(maxPreviewDimX, maxPreviewDimY),
@@ -628,7 +627,6 @@ class SearchResponderV1 extends ResponderV1 {
             resultsPage = subjects.slice(searchGetRequest.startAt, searchGetRequest.startAt + limit)
 
             results = SearchGetResponseV1(
-                userdata = searchGetRequest.userProfile.userData,
                 subjects = resultsPage,
                 nhits = subjects.size.toString,
                 thumb_max = SearchPreviewDimensionsV1(maxPreviewDimX, maxPreviewDimY),

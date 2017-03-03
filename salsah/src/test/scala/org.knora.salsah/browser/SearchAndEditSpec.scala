@@ -62,8 +62,7 @@ class SearchAndEditSpec extends SalsahSpec {
             ]
         """
 
-    val rootEmail = "root@example.com"
-    val rootEmailEnc = java.net.URLEncoder.encode(rootEmail, "utf-8")
+    private val rootEmail = "root@example.com"
 
     // In order to run these tests, start `webapi` using the option `allowResetTriplestoreContentOperationOverHTTP`
 

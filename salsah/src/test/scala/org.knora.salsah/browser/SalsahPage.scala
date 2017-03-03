@@ -107,16 +107,16 @@ class SalsahPage {
     /**
       * Checks that SALSAH.userdata contains the necessary data (assigned after successful login)
       */
-    def checkForUserdata = {
+    def checkForUserdata: Unit = {
         driver match {
             case jsExe: JavascriptExecutor =>
-                // return the global variable SALSAH.userdata from the browser's window object
-                val userdata: String = jsExe.executeScript("return window.SALSAH.userdata;").toString
+                // return the global variable SALSAH.userprofile from the browser's window object
+                val userdata: String = jsExe.executeScript("return window.SALSAH.userprofile;").toString
 
-                // if userdata still contains the default value, the userdata has not been written back yet
-                // async request to v1/session returns JSON with the userdata
-                // userdata contains the user's projects which we need to create new resources
-                if (userdata == "{lang=en}") throw new Exception("expected userdata is not there yet")
+                // if userprofile still contains the default value, the userprofile has not been written back yet
+                // async request to v1/session returns JSON with the userprofile
+                // userprofile contains the user's projects which we need to create new resources
+                if (userdata == "{lang=en}") throw new Exception("expected userprofile is not there yet")
 
             case _ => throw new Exception("cannot execute javascript")
         }

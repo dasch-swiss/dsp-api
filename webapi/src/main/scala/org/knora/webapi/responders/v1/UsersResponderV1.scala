@@ -104,8 +104,8 @@ class UsersResponderV1 extends ResponderV1 {
       */
     private def userProfileByIRIGetRequestV1(userIRI: IRI, profileType: UserProfileType, userProfile: UserProfileV1): Future[UserProfileResponseV1] = {
         for {
-            up <- userProfileByIRIGetV1(userIRI, profileType)
-            result = UserProfileResponseV1(up, userProfile.userData)
+            userProfileToReturn <- userProfileByIRIGetV1(userIRI, profileType)
+            result = UserProfileResponseV1(userProfileToReturn)
         } yield result
     }
 
@@ -148,8 +148,8 @@ class UsersResponderV1 extends ResponderV1 {
       */
     private def userProfileByEmailGetRequestV1(email: String, profileType: UserProfileType, userProfile: UserProfileV1): Future[UserProfileResponseV1] = {
         for {
-            up <- userProfileByEmailGetV1(email, profileType)
-            result = UserProfileResponseV1(up, userProfile.userData)
+            userProfileToReturn <- userProfileByEmailGetV1(email, profileType)
+            result = UserProfileResponseV1(userProfileToReturn)
         } yield result
     }
 
@@ -227,7 +227,7 @@ class UsersResponderV1 extends ResponderV1 {
             newUserProfile <- userDataQueryResponse2UserProfile(userDataQueryResponse, UserProfileType.RESTRICTED)
 
             // create the user operation response
-            userOperationResponseV1 = UserOperationResponseV1(newUserProfile, userProfile.userData)
+            userOperationResponseV1 = UserOperationResponseV1(newUserProfile)
 
         } yield userOperationResponseV1
 
@@ -432,9 +432,9 @@ class UsersResponderV1 extends ResponderV1 {
                     case None => // user has not session id, so no cache to update
                 }
 
-                UserOperationResponseV1(updatedUserProfile.ofType(UserProfileType.RESTRICTED), updatedUserProfile.ofType(UserProfileType.RESTRICTED).userData)
+                UserOperationResponseV1(updatedUserProfile.ofType(UserProfileType.RESTRICTED))
             } else {
-                UserOperationResponseV1(updatedUserProfile.ofType(UserProfileType.RESTRICTED), userProfile.userData)
+                UserOperationResponseV1(updatedUserProfile.ofType(UserProfileType.RESTRICTED))
             }
         } yield userOperationResponseV1
     }
@@ -479,8 +479,7 @@ class UsersResponderV1 extends ResponderV1 {
             firstname = groupedUserData.get(OntologyConstants.KnoraBase.GivenName).map(_.head),
             lastname = groupedUserData.get(OntologyConstants.KnoraBase.FamilyName).map(_.head),
             password = groupedUserData.get(OntologyConstants.KnoraBase.Password).map(_.head),
-            isActiveUser = groupedUserData.get(OntologyConstants.KnoraBase.Status).map(_.head.toBoolean),
-            projects = projectIris
+            isActiveUser = groupedUserData.get(OntologyConstants.KnoraBase.Status).map(_.head.toBoolean)
         )
 
         println(s"userDataQueryResponse2UserProfile - projectIris: ${MessageUtil.toSource(projectIris)}")
@@ -508,16 +507,12 @@ class UsersResponderV1 extends ResponderV1 {
             }
 
             projectInfos: Seq[ProjectInfoV1] <- Future.sequence(projectInfoFutures)
-
-            _ = println(s"got project infos: ${projectInfos.size}")
-
             projectInfoMap: Map[IRI, ProjectInfoV1] = projectInfos.map(projectInfo => projectInfo.id -> projectInfo).toMap
 
             /* construct the user profile from the different parts */
             up = UserProfileV1(
                 userData = userDataV1,
                 groups = groupIris,
-                projects = projectIris,
                 projects_info = projectInfoMap,
                 sessionId = None,
                 permissionData = permissionData

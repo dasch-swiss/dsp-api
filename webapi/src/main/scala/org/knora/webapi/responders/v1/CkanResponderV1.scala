@@ -80,7 +80,7 @@ class CkanResponderV1 extends ResponderV1 {
                 case _ => None
             }
             result <- Future.sequence(ckanProjects)
-            response = CkanResponseV1(projects = result, userdata = userProfile.userData)
+            response = CkanResponseV1(projects = result)
         } yield response
     }
 
@@ -365,7 +365,7 @@ class CkanResponderV1 extends ResponderV1 {
         val resourceFullResponseFuture = (responderManager ? ResourceFullGetRequestV1(iri, userProfileV1)).mapTo[ResourceFullResponseV1]
 
         resourceFullResponseFuture map {
-            case ResourceFullResponseV1(resInfo, _, props, _, _, _) => (iri, resInfo, props)
+            case ResourceFullResponseV1(resInfo, _, props, _, _) => (iri, resInfo, props)
         }
 
     }

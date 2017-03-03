@@ -98,11 +98,7 @@ class ProjectsResponderV1 extends ResponderV1 {
 
             result = if (projects.nonEmpty) {
                 ProjectsResponseV1(
-                    projects = projects,
-                    userdata = userProfile match {
-                        case Some(profile) => Some(profile.userData)
-                        case None => None
-                    }
+                    projects = projects
                 )
             } else {
                 throw NotFoundException(s"No projects found")
@@ -210,11 +206,7 @@ class ProjectsResponderV1 extends ResponderV1 {
         for {
             projectInfo <- projectInfoByIRIGetV1(projectIRI, userProfile)
         } yield ProjectInfoResponseV1(
-            project_info = projectInfo,
-            userdata = userProfile match {
-                case Some(profile) => Some(profile.userData)
-                case None => None
-            }
+            project_info = projectInfo
         )
     }
 
@@ -276,11 +268,7 @@ class ProjectsResponderV1 extends ResponderV1 {
             projectInfo = createProjectInfoV1(projectResponse = projectResponse.results.bindings, projectIri = projectIri, userProfile)
 
         } yield ProjectInfoResponseV1(
-            project_info = projectInfo,
-            userdata = userProfile match {
-                case Some(profile) => Some(profile.userData)
-                case None => None
-            }
+            project_info = projectInfo
         )
     }
 
@@ -348,7 +336,7 @@ class ProjectsResponderV1 extends ResponderV1 {
             newProjectInfo = createProjectInfoV1(projectResponse, newProjectIRI, Some(userProfile))
 
             // create the project operation response
-            projectOperationResponseV1 = ProjectOperationResponseV1(newProjectInfo, userProfile.userData)
+            projectOperationResponseV1 = ProjectOperationResponseV1(newProjectInfo)
 
         } yield projectOperationResponseV1
 

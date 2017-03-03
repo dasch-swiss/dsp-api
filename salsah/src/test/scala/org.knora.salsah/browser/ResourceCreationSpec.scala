@@ -62,11 +62,9 @@ class ResourceCreationSpec extends SalsahSpec {
             ]
         """
 
-    val rootEmail = "root@example.com"
-    val rootEmailEnc = java.net.URLEncoder.encode(rootEmail, "utf-8")
+    private val rootEmail = "root@example.com"
 
-    val anythingUserEmail = "anything.user01@example.org"
-    val anythingUserEmailEnc = java.net.URLEncoder.encode(anythingUserEmail, "utf-8")
+    private val anythingUserEmail = "anything.user01@example.org"
 
     // In order to run these tests, start `webapi` using the option `allowResetTriplestoreContentOperationOverHTTP`
 
