@@ -814,7 +814,7 @@ class PermissionsResponderV1 extends ResponderV1 {
             //_ = log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissions: $defaultPermissions")
 
             /* Create permissions string */
-            result = PermissionUtilV1.formatPermissions(defaultPermissions, PermissionType.OAP).getOrElse(throw BadRequestException("The resulting request would lead to an empty permissions string, which is not allowed. Are all the necessary default object access permissions defined?"))
+            result = PermissionUtilV1.formatPermissions(defaultPermissions, PermissionType.OAP)
             // _ = log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - result: $result")
         } yield DefaultObjectAccessPermissionsStringResponseV1(result)
     }

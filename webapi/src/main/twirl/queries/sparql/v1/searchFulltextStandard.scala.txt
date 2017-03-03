@@ -108,17 +108,12 @@ WHERE {
 
         BIND(?matchingSubject AS ?valueObject)
 
-        ?valueObject knora-base:attachedToUser ?valueCreator .
-
-        OPTIONAL {
-            ?valueObject knora-base:hasPermissions ?valuePermissions .
-        }
-
+        ?valueObject knora-base:attachedToUser ?valueCreator ;
+            knora-base:hasPermissions ?valuePermissions .
 
         @if(triplestore == "embedded-jena-tdb" || triplestore == "fuseki") {
             ?valueObject knora-base:valueHasString ?literal .
         }
-
     }
 
     # If the previous OPTIONAL clause executed, ?matchingSubject is a value, and ?containingResource will be set. Otherwise, ?matchingSubject is a resource.
@@ -172,11 +167,8 @@ WHERE {
         }
     }
 
-    ?resource knora-base:attachedToUser ?resourceCreator .
-    ?resource knora-base:attachedToProject ?resourceProject .
-
-    OPTIONAL {
-        ?resource knora-base:hasPermissions ?resourcePermissions .
-    }
+    ?resource knora-base:attachedToUser ?resourceCreator ;
+        knora-base:attachedToProject ?resourceProject ;
+        knora-base:hasPermissions ?resourcePermissions .
 }
 LIMIT 500

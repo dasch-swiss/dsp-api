@@ -101,8 +101,8 @@ lazy val webApiCommonSettings = Seq(
     scalaVersion := "2.12.1"
 )
 
-lazy val akkaVersion = "2.4.14"
-lazy val akkaHttpVersion = "10.0.0"
+lazy val akkaVersion = "2.4.16"
+lazy val akkaHttpVersion = "10.0.3"
 
 lazy val webApiLibs = Seq(
     // akka

@@ -46,7 +46,7 @@ mv $TMP_HTML/manual $TMP_HTML/api ../documentation
 
 git add ../documentation/manual
 git add ../documentation/api
-git commit -m "Update gh-pages."
+git commit -m "Update gh-pages." || true
 git push origin gh-pages
 
 # Switch back to the develop branch, and remove the leftover documentation directory.

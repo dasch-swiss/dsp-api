@@ -54,4 +54,4 @@ case class SparqlTemplateLinkUpdate(linkPropertyIri: IRI,
                                     currentReferenceCount: Int,
                                     newReferenceCount: Int,
                                     newLinkValueCreator: IRI,
-                                    newLinkValuePermissions: Option[String])
+                                    newLinkValuePermissions: String)

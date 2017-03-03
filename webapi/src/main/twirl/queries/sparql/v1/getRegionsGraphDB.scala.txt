@@ -47,13 +47,10 @@ WHERE {
         rdf:type knora-base:Region ;
         knora-base:isDeleted false ;
         knora-base:attachedToUser ?owner ;
-        knora-base:attachedToProject ?project .
+        knora-base:attachedToProject ?project ;
+        knora-base:hasPermissions ?regionObjectPermissions .
 
     GRAPH <http://www.ontotext.com/explicit> {
         ?region rdf:type ?resclass .
-    }
-
-    OPTIONAL {
-        ?region knora-base:hasPermissions ?regionObjectPermissions .
     }
 }

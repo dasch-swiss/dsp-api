@@ -43,7 +43,7 @@ Depending on the type of the new value, one of the following formats (all TypeSc
   - ``addDecimalValueRequest``
   - ``addBooleanValueRequest``
   - ``addUriValueRequest``
-  - ``addDateValueRequest``
+  - ``addDateValueRequest`` (see ``dateString`` in ``basicMessageComponents`` for the date format)
   - ``addColorValueRequest``
   - ``addGeometryValueRequest``
   - ``addHierarchicalListValueRequest``

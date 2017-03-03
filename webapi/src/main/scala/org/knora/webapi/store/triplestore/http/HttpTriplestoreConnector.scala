@@ -123,6 +123,8 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
       * @return a [[SparqlSelectResponse]].
       */
     private def sparqlHttpSelect(sparql: String): Future[SparqlSelectResponse] = {
+        // println(sparql)
+
         def parseJsonResponse(sparql: String, resultStr: String): Future[SparqlSelectResponse] = {
             val parseTry = Try {
                 resultStr.parseJson.convertTo[SparqlSelectResponse]
