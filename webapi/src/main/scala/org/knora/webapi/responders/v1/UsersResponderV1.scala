@@ -481,7 +481,7 @@ class UsersResponderV1 extends ResponderV1 {
             password = groupedUserData.get(OntologyConstants.KnoraBase.Password).map(_.head),
             isActiveUser = groupedUserData.get(OntologyConstants.KnoraBase.Status).map(_.head.toBoolean)
         )
-        
+
         /* the groups the user is member of (only explicit groups) */
         val groupIris = groupedUserData.get(OntologyConstants.KnoraBase.IsInGroup) match {
             case Some(groups) => groups

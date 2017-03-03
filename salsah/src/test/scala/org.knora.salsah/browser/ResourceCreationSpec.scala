@@ -22,8 +22,7 @@ package org.knora.salsah.browser
 
 import akka.actor.ActorSystem
 import akka.util.Timeout
-import org.openqa.selenium.{By, WebElement}
-import org.scalatest.concurrent.Eventually._
+import org.openqa.selenium.WebElement
 
 import scala.concurrent.duration._
 
@@ -62,9 +61,13 @@ class ResourceCreationSpec extends SalsahSpec {
             ]
         """
 
-    private val rootEmail = "root@example.com"
-
     private val anythingUserEmail = "anything.user01@example.org"
+    private val anythingUserFullName = "Anything User01"
+
+    private val imagesUserEmail = "user02.user@example.com"
+    private val imagesUserFullName = "User02 User"
+
+    private val testPassword = "test"
 
     // In order to run these tests, start `webapi` using the option `allowResetTriplestoreContentOperationOverHTTP`
 
@@ -73,33 +76,25 @@ class ResourceCreationSpec extends SalsahSpec {
             loadTestData(rdfDataObjectsJsonList)
         }
 
-
         "have the correct title" in {
             page.load()
             page.getPageTitle should be("System for Annotation and Linkage of Sources in Arts and Humanities")
 
         }
 
-
         "log in as anything user" in {
 
             page.load()
+            page.doLogin(email = anythingUserEmail, password = testPassword, fullName = anythingUserFullName)
+            page.doLogout()
 
-            page.doLogin(anythingUserEmail, "test")
-
-            eventually {
-                // check if login has succeeded
-
-                page.checkForUserdata
-
-
-            }
         }
-
 
         "create a resource of type images:person" in {
 
             page.load()
+
+            page.doLogin(email = imagesUserEmail, password = testPassword, fullName = imagesUserFullName)
 
             page.clickAddResourceButton()
 
@@ -125,12 +120,15 @@ class ResourceCreationSpec extends SalsahSpec {
 
             val window = page.getWindow(1)
 
+            page.doLogout()
 
         }
 
         "create a resource of type anything:thing" in {
 
             page.load()
+
+            page.doLogin(email = anythingUserEmail, password = testPassword, fullName = anythingUserFullName)
 
             page.clickAddResourceButton()
 
@@ -142,11 +140,11 @@ class ResourceCreationSpec extends SalsahSpec {
 
             label.sendKeys("Testding")
 
-            val floatVal =  page.getFormFieldByName("http://www.knora.org/ontology/anything#hasDecimal")
+            val floatVal = page.getFormFieldByName("http://www.knora.org/ontology/anything#hasDecimal")
 
             floatVal.sendKeys("5.3")
 
-            val textVal =  page.getFormFieldByName("http://www.knora.org/ontology/anything#hasText")
+            val textVal = page.getFormFieldByName("http://www.knora.org/ontology/anything#hasText")
 
             textVal.sendKeys("Dies ist ein Test")
 
@@ -154,12 +152,15 @@ class ResourceCreationSpec extends SalsahSpec {
 
             val window = page.getWindow(1)
 
+            page.doLogout()
 
         }
 
         "create another resource of type anything:thing" in {
 
             page.load()
+
+            page.doLogin(email = anythingUserEmail, password = testPassword, fullName = anythingUserFullName)
 
             page.clickAddResourceButton()
 
@@ -171,11 +172,11 @@ class ResourceCreationSpec extends SalsahSpec {
 
             label.sendKeys("ein zweites Testding")
 
-            val floatVal =  page.getFormFieldByName("http://www.knora.org/ontology/anything#hasDecimal")
+            val floatVal = page.getFormFieldByName("http://www.knora.org/ontology/anything#hasDecimal")
 
             floatVal.sendKeys("5.7")
 
-            val textVal =  page.getFormFieldByName("http://www.knora.org/ontology/anything#hasText")
+            val textVal = page.getFormFieldByName("http://www.knora.org/ontology/anything#hasText")
 
             textVal.sendKeys("Dies ist auch ein Test")
 
@@ -183,12 +184,12 @@ class ResourceCreationSpec extends SalsahSpec {
 
             val window = page.getWindow(1)
 
+            page.doLogout()
 
         }
 
         "close the browser" in {
             page.quit()
         }
-
     }
 }
