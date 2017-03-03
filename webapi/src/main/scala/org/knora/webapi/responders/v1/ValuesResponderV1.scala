@@ -215,7 +215,7 @@ class ValuesResponderV1 extends ResponderV1 {
                 value = createValueRequest.value,
                 comment = createValueRequest.comment,
                 valueCreator = userIri,
-                valuePermissions = Some(defaultObjectAccessPermissions.permissionLiteral),
+                valuePermissions = defaultObjectAccessPermissions.permissionLiteral,
                 updateResourceLastModificationDate = true,
                 userProfile = createValueRequest.userProfile)
 
@@ -350,7 +350,7 @@ class ValuesResponderV1 extends ResponderV1 {
                             currentReferenceCount = 0,
                             newReferenceCount = initialReferenceCount,
                             newLinkValueCreator = OntologyConstants.KnoraBase.SystemUser,
-                            newLinkValuePermissions = None
+                            newLinkValuePermissions = standoffLinkValuePermissions
                         )
                 }
 
@@ -425,7 +425,7 @@ class ValuesResponderV1 extends ResponderV1 {
                                             currentReferenceCount = 0,
                                             newReferenceCount = 1,
                                             newLinkValueCreator = userIri,
-                                            newLinkValuePermissions = Some(defaultObjectAccessPermissions.permissionLiteral)
+                                            newLinkValuePermissions = defaultObjectAccessPermissions.permissionLiteral
                                         )
 
                                         // Generate WHERE clause statements for the link.
@@ -468,7 +468,7 @@ class ValuesResponderV1 extends ResponderV1 {
                                             linkUpdates = Seq.empty[SparqlTemplateLinkUpdate], // This is empty because we have to generate SPARQL for standoff links separately.
                                             maybeComment = valueToCreate.createValueV1WithComment.comment,
                                             valueCreator = userIri,
-                                            maybeValuePermissions = Some(defaultObjectAccessPermissions.permissionLiteral)
+                                            valuePermissions = defaultObjectAccessPermissions.permissionLiteral
                                         ).toString()
 
                                         //println(insertSparql)
@@ -872,7 +872,7 @@ class ValuesResponderV1 extends ResponderV1 {
                             linkUpdateV1 = linkUpdateV1,
                             comment = changeValueRequest.comment,
                             valueCreator = userIri,
-                            valuePermissions = Some(defaultObjectAccessPermissions.permissionLiteral),
+                            valuePermissions = defaultObjectAccessPermissions.permissionLiteral,
                             userProfile = changeValueRequest.userProfile)
 
                     case _ =>
@@ -883,7 +883,7 @@ class ValuesResponderV1 extends ResponderV1 {
 
                         val valuePermissions = currentValueQueryResult.permissionRelevantAssertions.find {
                             case (p, o) => p == OntologyConstants.KnoraBase.HasPermissions
-                        }.map(_._2)
+                        }.map(_._2).getOrElse(throw InconsistentTriplestoreDataException(s"Value ${changeValueRequest.valueIri} has no permissions"))
 
                         changeOrdinaryValueV1AfterChecks(projectIri = currentValueQueryResult.projectIri,
                             resourceIri = findResourceWithValueResult.resourceIri,
@@ -1040,9 +1040,9 @@ class ValuesResponderV1 extends ResponderV1 {
 
                     // Give the new version the same permissions as the previous version.
 
-                    val valuePermissions: Option[String] = currentValueQueryResult.permissionRelevantAssertions.find {
+                    val valuePermissions: String = currentValueQueryResult.permissionRelevantAssertions.find {
                         case (p, o) => p == OntologyConstants.KnoraBase.HasPermissions
-                    }.map(_._2)
+                    }.map(_._2).getOrElse(throw InconsistentTriplestoreDataException(s"Value ${deleteValueRequest.valueIri} has no permissions"))
 
                     val linkPropertyIri = knoraIdUtil.linkValuePropertyIri2LinkPropertyIri(findResourceWithValueResult.propertyIri)
 
@@ -1087,7 +1087,7 @@ class ValuesResponderV1 extends ResponderV1 {
                                         linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
                                         targetResourceIri = targetResourceIri,
                                         valueCreator = OntologyConstants.KnoraBase.SystemUser,
-                                        valuePermissions = None,
+                                        valuePermissions = standoffLinkValuePermissions,
                                         userProfile = deleteValueRequest.userProfile
                                     )
                             }.toVector
@@ -1219,17 +1219,16 @@ class ValuesResponderV1 extends ResponderV1 {
                     val valueIri = rowMap("value")
                     val valueCreator = rowMap("valueCreator")
                     val project = rowMap("project")
-                    val valuePermissions = rowMap.get("valuePermissions")
+                    val valuePermissions = rowMap("valuePermissions")
 
                     // Permission-checking on LinkValues is special, because they can be system-created rather than user-created.
                     val valuePermissionCode = if (InputValidation.optionStringToBoolean(rowMap.get("isLinkValue"))) {
                         // It's a LinkValue.
-                        PermissionUtilV1.getUserPermissionOnLinkValueV1(
-                            linkValueIri = valueIri,
-                            predicateIri = rowMap("linkValuePredicate"),
-                            linkValueCreator = valueCreator,
-                            containingResourceProject = project,
-                            linkValuePermissionLiteral = valuePermissions,
+                        PermissionUtilV1.getUserPermissionV1(
+                            subjectIri = valueIri,
+                            subjectCreator = valueCreator,
+                            subjectProject = project,
+                            subjectPermissionLiteral = valuePermissions,
                             userProfile = versionHistoryRequest.userProfile
                         )
                     } else {
@@ -1440,7 +1439,7 @@ class ValuesResponderV1 extends ResponderV1 {
                 subjectIri = rowMap("source"),
                 subjectCreator = rowMap("sourceCreator"),
                 subjectProject = rowMap("sourceProject"),
-                subjectPermissionLiteral = rowMap.get("sourcePermissions"),
+                subjectPermissionLiteral = rowMap("sourcePermissions"),
                 userProfile = userProfile
             )
 
@@ -1448,7 +1447,7 @@ class ValuesResponderV1 extends ResponderV1 {
                 subjectIri = rowMap("target"),
                 subjectCreator = rowMap("targetCreator"),
                 subjectProject = rowMap("targetProject"),
-                subjectPermissionLiteral = rowMap.get("targetPermissions"),
+                subjectPermissionLiteral = rowMap("targetPermissions"),
                 userProfile = userProfile
             )
 
@@ -1574,9 +1573,8 @@ class ValuesResponderV1 extends ResponderV1 {
                     case OntologyConstants.KnoraBase.LinkValue =>
                         val linkPredicateIri = getValuePredicateObject(predicateIri = OntologyConstants.Rdf.Predicate, rows = rows).getOrElse(throw InconsistentTriplestoreDataException(s"Link value $valueIri has no rdf:predicate"))
 
-                        PermissionUtilV1.getUserPermissionOnLinkValueV1WithValueProps(
-                            linkValueIri = valueIri,
-                            predicateIri = linkPredicateIri,
+                        PermissionUtilV1.getUserPermissionV1WithValueProps(
+                            valueIri = valueIri,
                             valueProps = valueProps,
                             subjectProject = None, // no need to specify this here, because it's in valueProps
                             userProfile = userProfile
@@ -1649,9 +1647,8 @@ class ValuesResponderV1 extends ResponderV1 {
                 permissionRelevantAssertions = PermissionUtilV1.filterPermissionRelevantAssertionsFromValueProps(valueProps)
 
                 // Get the permission code representing the user's permissions on the value.
-                permissionCode = PermissionUtilV1.getUserPermissionOnLinkValueV1WithValueProps(
-                    linkValueIri = linkValueIri,
-                    predicateIri = linkValueV1.predicateIri,
+                permissionCode = PermissionUtilV1.getUserPermissionV1WithValueProps(
+                    valueIri = linkValueIri,
                     valueProps = valueProps,
                     subjectProject = None, // no need to specify this here, because it's in valueProps
                     userProfile = userProfile
@@ -1881,7 +1878,7 @@ class ValuesResponderV1 extends ResponderV1 {
                                          value: UpdateValueV1,
                                          comment: Option[String],
                                          valueCreator: IRI,
-                                         valuePermissions: Option[String],
+                                         valuePermissions: String,
                                          updateResourceLastModificationDate: Boolean,
                                          userProfile: UserProfileV1): Future[UnverifiedValueV1] = {
         value match {
@@ -1932,7 +1929,7 @@ class ValuesResponderV1 extends ResponderV1 {
                                              linkUpdateV1: LinkUpdateV1,
                                              comment: Option[String],
                                              valueCreator: IRI,
-                                             valuePermissions: Option[String],
+                                             valuePermissions: String,
                                              updateResourceLastModificationDate: Boolean,
                                              userProfile: UserProfileV1): Future[UnverifiedValueV1] = {
         for {
@@ -1986,7 +1983,7 @@ class ValuesResponderV1 extends ResponderV1 {
                                                  value: UpdateValueV1,
                                                  comment: Option[String],
                                                  valueCreator: IRI,
-                                                 valuePermissions: Option[String],
+                                                 valuePermissions: String,
                                                  updateResourceLastModificationDate: Boolean,
                                                  userProfile: UserProfileV1): Future[UnverifiedValueV1] = {
         // Generate an IRI for the new value.
@@ -2008,7 +2005,7 @@ class ValuesResponderV1 extends ResponderV1 {
                                     linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
                                     targetResourceIri = targetResourceIri,
                                     valueCreator = OntologyConstants.KnoraBase.SystemUser,
-                                    valuePermissions = None,
+                                    valuePermissions = standoffLinkValuePermissions,
                                     userProfile = userProfile
                                 )
                         }.toVector
@@ -2030,7 +2027,7 @@ class ValuesResponderV1 extends ResponderV1 {
                 linkUpdates = standoffLinkUpdates,
                 maybeComment = comment,
                 valueCreator = valueCreator,
-                maybeValuePermissions = valuePermissions
+                valuePermissions = valuePermissions
             ).toString()
 
             /*
@@ -2070,7 +2067,7 @@ class ValuesResponderV1 extends ResponderV1 {
                                              linkUpdateV1: LinkUpdateV1,
                                              comment: Option[String],
                                              valueCreator: IRI,
-                                             valuePermissions: Option[String],
+                                             valuePermissions: String,
                                              userProfile: UserProfileV1): Future[ChangeValueResponseV1] = {
         for {
         // Delete the existing link and decrement its LinkValue's reference count.
@@ -2168,7 +2165,7 @@ class ValuesResponderV1 extends ResponderV1 {
                                                  updateValueV1: UpdateValueV1,
                                                  comment: Option[String],
                                                  valueCreator: IRI,
-                                                 valuePermissions: Option[String],
+                                                 valuePermissions: String,
                                                  userProfile: UserProfileV1): Future[ChangeValueResponseV1] = {
         for {
         // If we're adding a text value, update direct links and LinkValues for any resource references in Standoff.
@@ -2207,7 +2204,7 @@ class ValuesResponderV1 extends ResponderV1 {
                                 linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
                                 targetResourceIri = targetResourceIri,
                                 valueCreator = OntologyConstants.KnoraBase.SystemUser,
-                                valuePermissions = None,
+                                valuePermissions = standoffLinkValuePermissions,
                                 userProfile = userProfile
                             )
                     }
@@ -2220,7 +2217,7 @@ class ValuesResponderV1 extends ResponderV1 {
                                 linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
                                 targetResourceIri = removedTargetResource,
                                 valueCreator = OntologyConstants.KnoraBase.SystemUser,
-                                valuePermissions = None,
+                                valuePermissions = standoffLinkValuePermissions,
                                 userProfile = userProfile
                             )
                     }
@@ -2249,7 +2246,7 @@ class ValuesResponderV1 extends ResponderV1 {
                 valueTypeIri = updateValueV1.valueTypeIri,
                 value = updateValueV1,
                 valueCreator = valueCreator,
-                maybeValuePermissions = valuePermissions,
+                valuePermissions = valuePermissions,
                 maybeComment = comment,
                 linkUpdates = standoffLinkUpdates
             ).toString()
@@ -2305,7 +2302,7 @@ class ValuesResponderV1 extends ResponderV1 {
                                    linkPropertyIri: IRI,
                                    targetResourceIri: IRI,
                                    valueCreator: IRI,
-                                   valuePermissions: Option[String],
+                                   valuePermissions: String,
                                    userProfile: UserProfileV1): Future[SparqlTemplateLinkUpdate] = {
         for {
         // Check whether a LinkValue already exists for this link.
@@ -2388,7 +2385,7 @@ class ValuesResponderV1 extends ResponderV1 {
                                    linkPropertyIri: IRI,
                                    targetResourceIri: IRI,
                                    valueCreator: IRI,
-                                   valuePermissions: Option[String],
+                                   valuePermissions: String,
                                    userProfile: UserProfileV1): Future[SparqlTemplateLinkUpdate] = {
         for {
         // Query the LinkValue to ensure that it exists and to get its contents.
@@ -2531,5 +2528,17 @@ class ValuesResponderV1 extends ResponderV1 {
                         responderManager = responderManager)
             }
         } yield result
+    }
+
+    /**
+      * The permissions that are granted by every `knora-base:LinkValue` describing a standoff link.
+      */
+    lazy val standoffLinkValuePermissions: String = {
+        val permissionMap = Map(
+            OntologyConstants.KnoraBase.ChangeRightsPermission -> Set(OntologyConstants.KnoraBase.SystemUser),
+            OntologyConstants.KnoraBase.ViewPermission -> Set(OntologyConstants.KnoraBase.UnknownUser)
+        )
+
+        PermissionUtilV1.formatPermissions(permissionMap)
     }
 }

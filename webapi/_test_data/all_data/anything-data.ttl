@@ -330,6 +330,7 @@
 	knora-base:valueHasRefCount 2 ;
 	knora-base:valueCreationDate "2016-03-02T15:05:54Z"^^xsd:dateTimeStamp ;
 	knora-base:isDeleted false ;
+	knora-base:hasPermissions "CR knora-base:Creator|V knora-base:UnknownUser" ;
 	knora-base:attachedToUser knora-base:SystemUser .
 
 <http://data.knora.org/a-thing-with-text-values/values/1> a knora-base:TextValue ;
@@ -653,6 +654,7 @@
 	knora-base:valueHasRefCount 1 ;
 	knora-base:valueCreationDate "2016-03-02T15:05:54Z"^^xsd:dateTimeStamp ;
 	knora-base:isDeleted false ;
+	knora-base:hasPermissions "CR knora-base:Creator|V knora-base:UnknownUser" ;
 	knora-base:attachedToUser knora-base:SystemUser .
 
 <http://data.knora.org/project-thing-1/values/2> a knora-base:TextValue ;

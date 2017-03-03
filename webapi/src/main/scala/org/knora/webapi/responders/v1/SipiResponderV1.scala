@@ -95,7 +95,7 @@ class SipiResponderV1 extends ResponderV1 {
             valueProps = valueUtilV1.createValueProps(filename, rows)
 
             permissionCode: Option[Int] = PermissionUtilV1.getUserPermissionV1WithValueProps(
-                subjectIri = filename,
+                valueIri = filename,
                 valueProps = valueProps,
                 subjectProject = None, // no need to specify this here, because it's in valueProps
                 userProfile = userProfile
@@ -133,12 +133,7 @@ class SipiResponderV1 extends ResponderV1 {
         // handle unsuccessful requests to Sipi
         //
         val recoveredConversionResultFuture = conversionResultFuture.recoverWith {
-            case noResponse: akka.http.impl.engine.HttpConnectionTimeoutException =>
-                // this problem is hardly the user's fault. Create a SipiException
-                throw SipiException(message = "Sipi not reachable", e = noResponse, log = log)
-
             case err =>
-                // unknown error
                 throw SipiException(message = s"Unknown error: ${err.toString}", e = err, log = log)
         }
 
