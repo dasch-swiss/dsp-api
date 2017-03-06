@@ -28,7 +28,7 @@ import org.apache.jena.sparql.function.library.leviathan.log
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.ontologymessages.NamedGraphV1
 import org.knora.webapi.messages.v1.responder.projectmessages._
-import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileByIRIGetRequestV1, UserProfileType, UserProfileV1}
+import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.messages.v1.store.triplestoremessages._
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.util.ActorUtil._
@@ -298,18 +298,9 @@ class ProjectsResponderV1 extends ResponderV1 {
 
         log.debug(s"projectMembersByIRIGetRequestV1 - projectIRI: $projectIri")
 
-        def getUserData(userIri: IRI, userProfileV1: UserProfileV1): Future[UserDataV1] = {
-            for {
-                userProfile <- (responderManager ? UserProfileByIRIGetRequestV1(userIri, UserProfileType.SHORT, userProfileV1)).mapTo[Option[UserProfileV1]]
 
-                result = userProfile match {
-                    case Some(up) => up.userData
-                    case None => throw InconsistentTriplestoreDataException(s"User $userIri was not found but is member of project. Please report this as a possible bug.")
-                }
-            } yield result
-        }
 
-        val projectMemberIrisFuture: Future[Seq[IRI]] = for {
+        for {
             sparqlQueryString <- Future(queries.sparql.v1.txt.getProjectMembersByIri(
                 triplestore = settings.triplestoreType,
                 projectIri = projectIri
@@ -327,29 +318,9 @@ class ProjectsResponderV1 extends ResponderV1 {
             }
             _ = log.debug(s"projectMembersByIRIGetRequestV1 - projectMemberIris: $projectMemberIris")
 
-            //_ = log.debug(s"projectMembersByIRIGetRequestV1 - projectMembers: $projectMembers")
+            response <- createProjectMembersGetResponse(projectMemberIris, userProfileV1)
 
-        } yield projectMemberIris
-
-        val userDatasFuture: Future[Seq[Future[UserDataV1]]] = for {
-            memberIris: Seq[IRI] <- projectMemberIrisFuture
-            userDatas: Seq[Future[UserDataV1]] = memberIris.map{ case userIri: IRI =>
-                getUserData(userIri, userProfileV1)
-            }
-        } yield userDatas
-
-        val userDatas: Future[Seq[Future[UserDataV1]]] = projectMemberIrisFuture map {
-            case userIris: Seq[IRI] => {
-                userIris map {
-                    case userIri: IRI => {
-                        val userData = getUserData(userIri, userProfileV1)
-                        userData
-                    }
-                }
-            }
-
-        }
-        Future(ProjectMembersGetResponseV1(Seq.empty[UserDataV1], userProfileV1.userData))
+        } yield response
     }
 
 
@@ -381,11 +352,9 @@ class ProjectsResponderV1 extends ResponderV1 {
             }
             _ = log.debug(s"projectMembersByShortnameGetRequestV1 - projectMemberIris: $projectMemberIris")
 
-            projectMembers = Seq.empty[UserDataV1]
+            response <- createProjectMembersGetResponse(projectMemberIris, userProfileV1)
 
-            //_ = log.debug(s"projectMembersByShortnameGetRequestV1 - projectMembers: $projectMembers")
-
-        } yield ProjectMembersGetResponseV1(projectMembers, userProfileV1.userData)
+        } yield response
     }
 
     private def projectCreateRequestV1(createRequest: CreateProjectApiRequestV1, userProfile: UserProfileV1, apiRequestID: UUID): Future[ProjectOperationResponseV1] = {
@@ -482,7 +451,7 @@ class ProjectsResponderV1 extends ResponderV1 {
       */
     private def createProjectInfoV1(projectResponse: Seq[VariableResultsRow], projectIri: IRI, userProfile: Option[UserProfileV1]): ProjectInfoV1 = {
 
-        log.debug(s"createProjectInfoV1FromProjectResponse - projectResponse: ${MessageUtil.toSource(projectResponse)}")
+        //log.debug(s"createProjectInfoV1FromProjectResponse - projectResponse: ${MessageUtil.toSource(projectResponse)}")
 
         if (projectResponse.nonEmpty) {
 
@@ -490,7 +459,7 @@ class ProjectsResponderV1 extends ResponderV1 {
                 case (acc, row: VariableResultsRow) =>
                     acc + (row.rowMap("p") -> row.rowMap("o"))
             }
-            log.debug(s"createProjectInfoV1FromProjectResponse - projectProperties: ${MessageUtil.toSource(projectProperties)}")
+            //log.debug(s"createProjectInfoV1FromProjectResponse - projectProperties: ${MessageUtil.toSource(projectProperties)}")
 
             /* create and return the project info */
             ProjectInfoV1(
@@ -512,6 +481,37 @@ class ProjectsResponderV1 extends ResponderV1 {
             // no information was found for the given project Iri
             throw NotFoundException(s"For the given project Iri $projectIri no information was found")
         }
+
+    }
+
+    /**
+      * Helper method that turns a sequence of user IRIs into a [[ProjectMembersGetResponseV1]]
+      * @param memberIris the user IRIs
+      * @param userProfile the profile of the user that is making the request
+      * @return a [[ProjectMembersGetResponseV1]]
+      */
+    private def createProjectMembersGetResponse(memberIris: Seq[IRI], userProfile: UserProfileV1): Future[ProjectMembersGetResponseV1] = {
+
+        def getUserData(userIri: IRI): Future[UserDataV1] = {
+            for {
+                userProfile <- (responderManager ? UserProfileByIRIGetV1(userIri, UserProfileType.SHORT)).mapTo[Option[UserProfileV1]]
+
+                result = userProfile match {
+                    case Some(up) => up.userData
+                    case None => throw InconsistentTriplestoreDataException(s"User $userIri was not found but is member of project. Please report this as a possible bug.")
+                }
+            } yield result
+        }
+
+        val userDatasFuture: Future[Seq[Future[UserDataV1]]] = for {
+            memberIris: Seq[IRI] <- Future(memberIris)
+            userDatas: Seq[Future[UserDataV1]] = memberIris.map(userIri => getUserData(userIri))
+        } yield userDatas
+
+        for {
+            userDatas <- userDatasFuture
+            result: Seq[UserDataV1] <- Future.sequence(userDatas)
+        } yield ProjectMembersGetResponseV1(result, userProfile.ofType(UserProfileType.SHORT).userData)
 
     }
 }

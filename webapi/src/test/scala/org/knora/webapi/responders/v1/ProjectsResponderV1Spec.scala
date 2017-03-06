@@ -26,10 +26,11 @@ import akka.actor.Props
 import akka.actor.Status.Failure
 import akka.testkit.{ImplicitSender, TestActorRef}
 import com.typesafe.config.ConfigFactory
+import org.knora.webapi
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse}
 import org.knora.webapi.messages.v1.responder.projectmessages._
-import org.knora.webapi.messages.v1.responder.usermessages.UserDataV1
+import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileType}
 import org.knora.webapi.messages.v1.store.triplestoremessages._
 import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_NAME
 import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
@@ -144,7 +145,17 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
 
             "return members if the project is known" in {
                 actorUnderTest ! ProjectMembersByIRIGetRequestV1(SharedAdminTestData.imagesProjectInfo.id, SharedAdminTestData.rootUser)
-                expectMsg(ProjectMembersGetResponseV1(Seq.empty[UserDataV1], SharedAdminTestData.rootUser.userData))
+                expectMsg(
+                    ProjectMembersGetResponseV1(
+                        Seq(
+                            SharedAdminTestData.imagesUser01.ofType(UserProfileType.SHORT).userData,
+                            SharedAdminTestData.imagesUser02.ofType(UserProfileType.SHORT).userData,
+                            SharedAdminTestData.multiuserUser.ofType(UserProfileType.SHORT).userData,
+                            SharedAdminTestData.imagesReviewerUser.ofType(UserProfileType.SHORT).userData
+                        ),
+                        SharedAdminTestData.rootUser.ofType(UserProfileType.SHORT).userData
+                    )
+                )
             }
 
             "return 'NotFound' when the project is unknown" in {
@@ -157,7 +168,17 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
 
             "return members if the project is known" in {
                 actorUnderTest ! ProjectMembersByShortnameGetRequestV1(SharedAdminTestData.imagesProjectInfo.shortname, SharedAdminTestData.rootUser)
-                expectMsg(ProjectMembersGetResponseV1(Seq.empty[UserDataV1], SharedAdminTestData.rootUser.userData))
+                expectMsg(
+                    ProjectMembersGetResponseV1(
+                        Seq(
+                            SharedAdminTestData.imagesUser01.ofType(UserProfileType.SHORT).userData,
+                            SharedAdminTestData.imagesUser02.ofType(UserProfileType.SHORT).userData,
+                            SharedAdminTestData.multiuserUser.ofType(UserProfileType.SHORT).userData,
+                            SharedAdminTestData.imagesReviewerUser.ofType(UserProfileType.SHORT).userData
+                        ),
+                        SharedAdminTestData.rootUser.ofType(UserProfileType.SHORT).userData
+                    )
+                )
             }
 
             "return 'NotFound' when the project is unknown" in {

@@ -153,7 +153,7 @@ object SharedAdminTestData {
             token = None,
             isActiveUser = Some(true),
             lang = "de",
-            projects =  List(INCUNABULA_PROJECT_IRI, IMAGES_PROJECT_IRI)
+            projects =  List(IMAGES_PROJECT_IRI, INCUNABULA_PROJECT_IRI)
         ),
         groups = List("http://data.knora.org/groups/images-reviewer"),
         projects = List(INCUNABULA_PROJECT_IRI, IMAGES_PROJECT_IRI),
