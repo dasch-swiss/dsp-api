@@ -16,11 +16,16 @@
 
 package org.knora.webapi.other.v1
 
+import java.util.UUID
+
 import akka.actor.Props
 import com.typesafe.config.ConfigFactory
 import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse}
-import org.knora.webapi.messages.v1.responder.permissionmessages.{DefaultObjectAccessPermissionsStringForResourceClassGetV1, DefaultObjectAccessPermissionsStringResponseV1}
+import org.knora.webapi.messages.v1.responder.permissionmessages.{DefaultObjectAccessPermissionsStringForPropertyGetV1, DefaultObjectAccessPermissionsStringForResourceClassGetV1, DefaultObjectAccessPermissionsStringResponseV1}
+import org.knora.webapi.messages.v1.responder.resourcemessages.{ResourceCreateRequestV1, ResourceCreateResponseV1}
+import org.knora.webapi.messages.v1.responder.sipimessages.SipiResponderConversionFileRequestV1
 import org.knora.webapi.messages.v1.responder.usermessages.{UserProfileByIRIGetV1, UserProfileType, UserProfileV1}
+import org.knora.webapi.messages.v1.responder.valuemessages.{CreateValueV1WithComment, LinkUpdateV1, TextValueSimpleV1}
 import org.knora.webapi.messages.v1.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent, ResetTriplestoreContentACK, TriplestoreJsonProtocol}
 import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_NAME
 import org.knora.webapi.responders.v1.ResponderManagerV1
@@ -51,10 +56,10 @@ class DrawingsGodsV1Spec extends CoreSpec(DrawingsGodsV1Spec.config) with Triple
     val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
 
     private val rdfDataObjects: List[RdfDataObject] = List(
-        RdfDataObject(path = "_test_data/other.v1.DrawingsGodsV1Spec/drawings-gods_admin_V3-20170208-test.ttl", name = "http://www.knora.org/data/admin"),
-        RdfDataObject(path = "_test_data/other.v1.DrawingsGodsV1Spec/drawings-gods_permissions_V3-20170203.ttl", name = "http://www.knora.org/data/permissions"),
-        RdfDataObject(path = "_test_data/other.v1.DrawingsGodsV1Spec/drawings-gods_ontology_20170209-uptodate.ttl", name = "http://www.knora.org/ontology/drawings-gods"),
-        RdfDataObject(path = "_test_data/other.v1.DrawingsGodsV1Spec/drawings-gods_data-lists_V4-201700208-uptodate.ttl", name = "http://www.knora.org/data/drawings-gods")
+        RdfDataObject(path = "_test_data/other.v1.DrawingsGodsV1Spec/drawings-gods_admin-data.ttl", name = "http://www.knora.org/data/admin"),
+        RdfDataObject(path = "_test_data/other.v1.DrawingsGodsV1Spec/drawings-gods_permissions-data.ttl", name = "http://www.knora.org/data/permissions"),
+        RdfDataObject(path = "_test_data/other.v1.DrawingsGodsV1Spec/drawings-gods_ontology.ttl", name = "http://www.knora.org/ontology/drawings-gods"),
+        RdfDataObject(path = "_test_data/other.v1.DrawingsGodsV1Spec/drawings-gods_data.ttl", name = "http://www.knora.org/data/drawings-gods")
     )
 
     "Load test data" in {
@@ -71,26 +76,63 @@ class DrawingsGodsV1Spec extends CoreSpec(DrawingsGodsV1Spec.config) with Triple
     "issue: https://github.com/dhlab-basel/Knora/issues/416" should {
 
         val drawingsGodsProjectIri = "http://data.knora.org/projects/drawings-gods"
-        val drawingsGodsUserIri = "http://data.knora.org/users/drawings-gods-test-ddd"
-        val drawingsGodsUserProfile = new MutableUserProfileV1
+        val ddd1UserIri = "http://data.knora.org/users/drawings-gods-test-ddd1"
+        val ddd1 = new MutableUserProfileV1
+        val ddd2UserIri = "http://data.knora.org/users/drawings-gods-test-ddd2"
+        val ddd2 = new MutableUserProfileV1
         val testPass = "test"
         val thingIri = new MutableTestIri
         val firstValueIri = new MutableTestIri
         val secondValueIri = new MutableTestIri
 
         "retrieve the drawings gods user's profile" in {
-            responderManager ! UserProfileByIRIGetV1(drawingsGodsUserIri, UserProfileType.FULL)
+            responderManager ! UserProfileByIRIGetV1(ddd1UserIri, UserProfileType.FULL)
+            val response1 = expectMsgType[Option[UserProfileV1]](timeout)
+            ddd1.set(response1.get)
 
-            expectMsgPF(timeout) {
-                case Some(up: UserProfileV1) => drawingsGodsUserProfile.set(up)
-                case None => fail("user profile not available")
-            }
+            responderManager ! UserProfileByIRIGetV1(ddd2UserIri, UserProfileType.FULL)
+            val response2 = expectMsgType[Option[UserProfileV1]](timeout)
+            ddd2.set(response2.get)
         }
 
-        "return correct drawings-gods:QualityData resource permissions string for drawings-gods user" in {
+        "return correct drawings-gods:QualityData resource permissions string for drawings-gods-test-ddd2 user" in {
             val qualityDataResourceClass = "http://www.knora.org/ontology/drawings-gods#QualityData"
-            responderManager ! DefaultObjectAccessPermissionsStringForResourceClassGetV1(drawingsGodsProjectIri, qualityDataResourceClass, drawingsGodsUserProfile.get.permissionData)
-            expectMsg(DefaultObjectAccessPermissionsStringResponseV1("CR knora-base:ProjectAdmin|D knora-base:Creator|M <http://data.knora.org/groups/drawings-gods-meta-annotators>,<http://data.knora.org/groups/drawings-gods-snf-team>,<http://data.knora.org/groups/drawings-gods-add-drawings>|V knora-base:ProjectMember|RV knora-base:KnownUser,knora-base:UnknownUser"))
+            responderManager ! DefaultObjectAccessPermissionsStringForResourceClassGetV1(drawingsGodsProjectIri, qualityDataResourceClass, ddd2.get.permissionData)
+            expectMsg(DefaultObjectAccessPermissionsStringResponseV1("CR <http://data.knora.org/groups/drawings-gods-admin>|D <http://data.knora.org/groups/drawings-gods-snf-team>,knora-base:Creator|M <http://data.knora.org/groups/drawings-gods-meta-annotators>,<http://data.knora.org/groups/drawings-gods-add-drawings>"))
+        }
+
+        "return correct drawings-gods:Person resource class permissions string for drawings-gods-test-ddd1 user" in {
+            val personResourceClass = "http://www.knora.org/ontology/drawings-gods#Person"
+            responderManager ! DefaultObjectAccessPermissionsStringForResourceClassGetV1(drawingsGodsProjectIri, personResourceClass, ddd1.get.permissionData)
+            expectMsg(DefaultObjectAccessPermissionsStringResponseV1("CR <http://data.knora.org/groups/drawings-gods-admin>|D <http://data.knora.org/groups/drawings-gods-snf-team>,knora-base:Creator|M <http://data.knora.org/groups/drawings-gods-meta-annotators>,<http://data.knora.org/groups/drawings-gods-add-drawings>|V knora-base:KnownUser,knora-base:UnknownUser,knora-base:ProjectMember"))
+        }
+
+        "return correct drawings-gods:hasLastname property permissions string for drawings-gods-test-ddd1 user" in {
+            val hasLastnameProperty = "http://www.knora.org/ontology/drawings-gods#hasLastname"
+            responderManager ! DefaultObjectAccessPermissionsStringForPropertyGetV1(drawingsGodsProjectIri, hasLastnameProperty, ddd1.get.permissionData)
+            expectMsg(DefaultObjectAccessPermissionsStringResponseV1("CR <http://data.knora.org/groups/drawings-gods-admin>|D <http://data.knora.org/groups/drawings-gods-snf-team>"))
+        }
+
+        "allow drawings-gods-test-ddd1 user to see newly created resource and all properties" in {
+
+            val valuesToBeCreated = Map(
+                "http://www.knora.org/ontology/drawings-gods#hasLastname" -> Vector(CreateValueV1WithComment(TextValueSimpleV1("PersonTest DDD1")))
+            )
+
+            responderManager ! ResourceCreateRequestV1(
+                resourceTypeIri = "http://www.knora.org/ontology/drawings-gods#Person",
+                label = "Test-Person",
+                projectIri = drawingsGodsProjectIri,
+                values = valuesToBeCreated,
+                file = None,
+                userProfile = ddd1.get,
+                apiRequestID = UUID.randomUUID
+            )
+
+            val response = expectMsgType[ResourceCreateResponseV1](timeout)
+
+            println(response)
+
         }
     }
 }
