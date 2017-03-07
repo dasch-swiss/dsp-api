@@ -12,8 +12,8 @@
         knora-base:projectBasepath "/data/SALSAH/drawings-gods"^^xsd:string ;
         knora-base:projectLongname "Dessins de Dieux"^^xsd:string ;
         knora-base:projectShortname "drawings-gods"^^xsd:string ;
-        knora-base:projectDescription "Sur la base d’une collecte de plusieurs centaines de dessins dans diverses régions du monde, notamment au Brésil, en Iran, au Japon, aux Pays-Bas, en Roumanie, en Russie et en Suisse, ce projet prévoit d’étudier l’évolution de la représentation de Dieu ou d’autres êtres surnaturels (dieux, esprits, génies, etc) chez des enfants et des adolescents entre 5 et 18 ans. Il s’intéressera tout spécialement aux stratégies mises en place par les enfants : recours à des représentations religieuses traditionnelles, à des images d’êtres surnaturels véhiculées par des films d’animation ou des bandes dessinées. Au terme du projet, l’objectif est d’avoir pu décrire les stratégies principales utilisées les enfants en ayant pu mettre en évidence comment le choix d’une stratégie plutôt qu’une autre est influencé par l’âge, le sexe, l’éducation religieuse et l’environnement culturel de l’enfant."^^xsd:string ;
-        knora-base:projectKeywords "supernatural agents, cross-cultural, digital humanities, drawings, child development, interdisciplinarity, database "^^xsd:string ;
+        knora-base:projectDescription """Sur la base d’une collecte de plusieurs centaines de dessins dans diverses régions du monde, notamment au Brésil, en Iran, au Japon, aux Pays-Bas, en Roumanie, en Russie et en Suisse, ce projet prévoit d’étudier l’évolution de la représentation de Dieu ou d’autres êtres surnaturels (dieux, esprits, génies, etc) chez des enfants et des adolescents entre 5 et 18 ans. Il s’intéressera tout spécialement aux stratégies mises en place par les enfants : recours à des représentations religieuses traditionnelles, à des images d’êtres surnaturels véhiculées par des films d’animation ou des bandes dessinées. Au terme du projet, l’objectif est d’avoir pu décrire les stratégies principales utilisées les enfants en ayant pu mettre en évidence comment le choix d’une stratégie plutôt qu’une autre est influencé par l’âge, le sexe, l’éducation religieuse et l’environnement culturel de l’enfant."""^^xsd:string ;
+        knora-base:projectKeywords "supernatural agents, cross-cultural, digital humanities, drawings, child development, interdisciplinarity, database"^^xsd:string ;
 		knora-base:projectOntologyGraph "http://www.knora.org/ontology/drawings-gods"^^xsd:string ;
         knora-base:projectDataGraph "http://www.knora.org/data/drawings-gods"^^xsd:string ;
         knora-base:status "true"^^xsd:boolean ;
@@ -40,25 +40,44 @@
                                                knora-base:status "true"^^xsd:boolean ;
                                                knora-base:hasSelfJoinEnabled "false"^^xsd:boolean .
 
+<http://data.knora.org/groups/drawings-gods-admin> rdf:type knora-base:UserGroup ;
+                                               knora-base:groupName "Administrators"^^xsd:string ;
+                                               knora-base:groupDescription "A custom admin group created to apply permission precedence rules. Replaces the built-in knora-base:ProjectAdmin group, not used for this project."^^xsd:string ;
+                                               knora-base:belongsToProject <http://data.knora.org/projects/drawings-gods> ;
+                                               knora-base:status "true"^^xsd:boolean ;
+                                               knora-base:hasSelfJoinEnabled "false"^^xsd:boolean .
 
-<http://data.knora.org/users/drawings-gods-test-ddd> a knora-base:User ;
-        knora-base:userid "ddd"^^xsd:string ;
-        knora-base:givenName "ddd"^^xsd:string ;
-        knora-base:familyName "ddd"^^xsd:string ;
-        knora-base:password "$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"^^xsd:string ;
-        knora-base:email "ddd@unil.ch"^^xsd:string ;
+
+<http://data.knora.org/users/drawings-gods-test-ddd1> a knora-base:User ;
+        knora-base:userid "ddd1"^^xsd:string ;
+        knora-base:givenName "ddd1"^^xsd:string ;
+        knora-base:familyName "ddd1"^^xsd:string ;
+        knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="^^xsd:string ;
+        knora-base:email "ddd1@unil.ch"^^xsd:string ;
         knora-base:preferredLanguage "fr"^^xsd:string ;
         knora-base:status "true"^^xsd:boolean ;
         knora-base:isInProject <http://data.knora.org/projects/drawings-gods> ;
-        knora-base:isInProjectAdminGroup <http://data.knora.org/projects/drawings-gods> ;
         knora-base:isInGroup <http://data.knora.org/groups/drawings-gods-snf-team> ;
         knora-base:isInSystemAdminGroup "false"^^xsd:boolean .
+
+<http://data.knora.org/users/drawings-gods-test-ddd2> a knora-base:User ;
+        knora-base:userid "ddd2"^^xsd:string ;
+        knora-base:givenName "ddd2"^^xsd:string ;
+        knora-base:familyName "ddd2"^^xsd:string ;
+        knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="^^xsd:string ;
+        knora-base:email "ddd2@unil.ch"^^xsd:string ;
+        knora-base:preferredLanguage "fr"^^xsd:string ;
+        knora-base:status "true"^^xsd:boolean ;
+        knora-base:isInProject <http://data.knora.org/projects/drawings-gods> ;
+        knora-base:isInGroup <http://data.knora.org/groups/drawings-gods-admin> ;
+        knora-base:isInSystemAdminGroup "false"^^xsd:boolean .
+
 
 <http://data.knora.org/users/drawings-gods-test-user-metaannotator> a knora-base:User ;
         knora-base:userid "metaannotator"^^xsd:string ;
         knora-base:givenName "metaannotator"^^xsd:string ;
         knora-base:familyName "metaannotator"^^xsd:string ;
-        knora-base:password "$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"^^xsd:string ;
+        knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="^^xsd:string ;
         knora-base:email "metaannotator@unil.ch"^^xsd:string ;
         knora-base:preferredLanguage "fr"^^xsd:string ;
         knora-base:status "true"^^xsd:boolean ;
@@ -70,7 +89,7 @@
         knora-base:userid "adddrawings"^^xsd:string ;
         knora-base:givenName "adddrawings"^^xsd:string ;
         knora-base:familyName "adddrawings"^^xsd:string ;
-        knora-base:password "$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"^^xsd:string ;
+        knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="^^xsd:string ;
         knora-base:email "adddrawings@unil.ch"^^xsd:string ;
         knora-base:preferredLanguage "fr"^^xsd:string ;
         knora-base:status "true"^^xsd:boolean ;
@@ -82,7 +101,7 @@
         knora-base:userid "projectmember"^^xsd:string ;
         knora-base:givenName "projectmember"^^xsd:string ;
         knora-base:familyName "projectmember"^^xsd:string ;
-        knora-base:password "$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"^^xsd:string ;
+        knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="^^xsd:string ;
         knora-base:email "projectmember@unil.ch"^^xsd:string ;
         knora-base:preferredLanguage "fr"^^xsd:string ;
         knora-base:status "true"^^xsd:boolean ;
