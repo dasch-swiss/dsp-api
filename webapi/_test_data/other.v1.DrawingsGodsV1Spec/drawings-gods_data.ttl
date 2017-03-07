@@ -822,6 +822,25 @@
 		knora-base:listNodePosition 10 ;
 		rdfs:label "(USAfre) En anglais: SVP, utilisez ce papier, crayons et marquers pour dessiner un image de Dieu. Il n'a pas de façon correcte ou incorrecte pour dessiner, simplement dessinez comme vous pensez Dieu il est."@fr .
 
+###    KeywordsList
+<http://data.knora.org/lists/drawings-gods-2016-list-KeywordsList> a knora-base:ListNode ;
+	knora-base:isRootNode true ;
+	rdfs:comment "Liste de mots-clés"@fr ;
+	rdfs:label "Mots-clés"@fr , "Keywords"@en ;
+	knora-base:hasSubListNode <http://data.knora.org/lists/drawings-gods-2016-list-KeywordsList-node1> ,
+							<http://data.knora.org/lists/drawings-gods-2016-list-KeywordsList-node2> .
+
+<http://data.knora.org/lists/drawings-gods-2016-list-KeywordsList-node1> a knora-base:ListNode ;
+		knora-base:listNodeName "keyword1" ;
+		knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-KeywordsList> ;
+		knora-base:listNodePosition 1 ;
+		rdfs:label "Mot-clé 1"@fr , "Keyword 1"@en .
+
+<http://data.knora.org/lists/drawings-gods-2016-list-KeywordsList-node2> a knora-base:ListNode ;
+		knora-base:listNodeName "keyword2" ;
+		knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-KeywordsList> ;
+		knora-base:listNodePosition 1 ;
+		rdfs:label "Mot-clé 2"@fr , "Keyword 2"@en .
 
 ###   LanguageList
 <http://data.knora.org/lists/drawings-gods-2016-list-LanguageList> a knora-base:ListNode ;
@@ -5039,24 +5058,5 @@
 				knora-base:listNodePosition 0 ;
 				rdfs:label "Tiffin"@fr , "Tiffin"@en .
 
-###    KeywordsList
-<http://data.knora.org/lists/drawings-gods-2016-list-KeywordsList> a knora-base:ListNode ;
-	knora-base:isRootNode true ;
-	rdfs:comment "Liste de mots-clés"@fr ;
-	rdfs:label "Mots-clés"@fr , "Keywords"@en ;
-	knora-base:hasSubListNode <http://data.knora.org/lists/drawings-gods-2016-list-KeywordsList-node1> ,
-							<http://data.knora.org/lists/drawings-gods-2016-list-KeywordsList-node2> .
-
-<http://data.knora.org/lists/drawings-gods-2016-list-KeywordsList-node1> a knora-base:ListNode ;
-		knora-base:listNodeName "keyword1" ;
-		knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-KeywordsList> ;
-		knora-base:listNodePosition 1 ;
-		rdfs:label "Mot-clé 1"@fr , "Keyword 1"@en .
-
-<http://data.knora.org/lists/drawings-gods-2016-list-KeywordsList-node2> a knora-base:ListNode ;
-		knora-base:listNodeName "keyword2" ;
-		knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-KeywordsList> ;
-		knora-base:listNodePosition 1 ;
-		rdfs:label "Mot-clé 2"@fr , "Keyword 2"@en .
 
 
