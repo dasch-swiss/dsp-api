@@ -689,15 +689,39 @@
 		           salsah-gui:guiOrder "5"^^xsd:integer .
 
 
-###  http://www.knora.org/ontology/drawings-gods#hasDrawingComment
-:hasDrawingComment rdf:type owl:ObjectProperty ;
+####  http://www.knora.org/ontology/drawings-gods#hasDrawingComment
+#:hasDrawingComment rdf:type owl:ObjectProperty ;
+#                rdfs:subPropertyOf :hasInternalComment ;
+#                knora-base:objectClassConstraint knora-base:TextValue ;
+#                knora-base:subjectClassConstraint :Drawing ;
+#                rdfs:label "Commentaire interne (dessin)"@fr ,
+#                     	"Internal comment (drawing)"@en ;
+#				rdfs:comment "Commentaire interne (dessin)."@fr ,
+#					 	"Internal comment (drawing)."@en ;
+#			 	salsah-gui:guiElement salsah-gui:SimpleText ;
+#		        salsah-gui:guiOrder "1"^^xsd:integer .
+
+###  http://www.knora.org/ontology/drawings-gods#hasDrawingPublicComment
+:hasDrawingPublicComment rdf:type owl:ObjectProperty ;
                 rdfs:subPropertyOf :hasInternalComment ;
                 knora-base:objectClassConstraint knora-base:TextValue ;
                 knora-base:subjectClassConstraint :Drawing ;
-                rdfs:label "Commentaire interne (dessin)"@fr ,
-                     	"Internal comment (drawing)"@en ;
-				rdfs:comment "Commentaire interne (dessin)."@fr ,
-					 	"Internal comment (drawing)."@en ;
+                rdfs:label "Commentaire interne (dessin en accès public)"@fr ,
+                     	"Internal comment (public drawing)"@en ;
+				rdfs:comment "Commentaire interne (en accès public)."@fr ,
+					 	"Internal comment (public drawing)."@en ;
+			 	salsah-gui:guiElement salsah-gui:SimpleText ;
+		        salsah-gui:guiOrder "1"^^xsd:integer .
+
+###  http://www.knora.org/ontology/drawings-gods#hasDrawingPrivateComment
+:hasDrawingPrivateComment rdf:type owl:ObjectProperty ;
+                rdfs:subPropertyOf :hasInternalComment ;
+                knora-base:objectClassConstraint knora-base:TextValue ;
+                knora-base:subjectClassConstraint :Drawing ;
+                rdfs:label "Commentaire interne  (dessin en accès restreint)"@fr ,
+                     	"Internal comment (private drawing)"@en ;
+				rdfs:comment "Commentaire interne (dessin en accès restreint)."@fr ,
+					 	"Internal comment (private drawing)."@en ;
 			 	salsah-gui:guiElement salsah-gui:SimpleText ;
 		        salsah-gui:guiOrder "1"^^xsd:integer .
 
@@ -877,8 +901,8 @@
             knora-base:subjectClassConstraint :Person ;
             rdfs:label "A dessiné"@fr ,
                      	"Has drawn"@en ;
-            rdfs:comment "Est l'auteur des dessins suivants :"@fr ,
-					 	"Is author of the following drawings:"@en ;
+            rdfs:comment "Est l'auteur des dessins suivants"@fr ,
+					 	"Is author of the following drawings"@en ;
             salsah-gui:guiElement salsah-gui:Searchbox ;
             salsah-gui:guiOrder "3"^^xsd:integer .
 
@@ -915,8 +939,8 @@
           knora-base:subjectClassConstraint :QuestionnaireIndividual ;
           rdfs:label "Modèle de questionnaire"@fr ,
                      "Model questionnaire"@en ;
-          rdfs:comment "Questionnaire individuel fondé sur le questionnaire standardisé suivant :"@fr ,
-					 	"Individual questionnaire is based on the following standardized questionnaire:"@en ;
+          rdfs:comment "Questionnaire individuel fondé sur le questionnaire standardisé suivant"@fr ,
+					 	"Individual questionnaire is based on the following standardized questionnaire"@en ;
           salsah-gui:guiElement salsah-gui:Searchbox ;
           salsah-gui:guiOrder "3"^^xsd:integer .  	
 
@@ -927,8 +951,8 @@
           knora-base:subjectClassConstraint :QuestionnaireIndividual ;
           rdfs:label "Modèle de questionnaire"@fr ,
                      "Model questionnaire"@en ;
-          rdfs:comment "Questionnaire individuel fondé sur le questionnaire standardisé suivant :"@fr ,
-					 	"Individual questionnaire is based on the following standardized questionnaire:"@en ;
+          rdfs:comment "Questionnaire individuel fondé sur le questionnaire standardisé suivant"@fr ,
+					 	"Individual questionnaire is based on the following standardized questionnaire"@en ;
           salsah-gui:guiElement salsah-gui:Searchbox ;
           salsah-gui:guiOrder "3"^^xsd:integer .  	
 
@@ -940,8 +964,8 @@
             knora-base:subjectClassConstraint :Drawing ;
             rdfs:label "Contrôle qualité associé"@fr ,
                      "Has quality control"@en ;
-          	rdfs:comment "Contrôle qualité associé :"@fr ,
-					 	"Has quality control:"@en ;
+          	rdfs:comment "Contrôle qualité associé"@fr ,
+					 	"Has quality control"@en ;
           	salsah-gui:guiElement salsah-gui:Searchbox ;
           	salsah-gui:guiOrder "3"^^xsd:integer .  	
 
@@ -952,8 +976,8 @@
             knora-base:subjectClassConstraint :Drawing ;
             rdfs:label "Contrôle qualité associé"@fr ,
                      "Has quality control"@en ;
-          	rdfs:comment "Contrôle qualité associé :"@fr ,
-					 	"Has quality control:"@en ;
+          	rdfs:comment "Contrôle qualité associé"@fr ,
+					 	"Has quality control"@en ;
           salsah-gui:guiElement salsah-gui:Searchbox ;
           salsah-gui:guiOrder "3"^^xsd:integer .  	
 
@@ -965,8 +989,8 @@
           knora-base:subjectClassConstraint :Drawing ;
           rdfs:label "Verso associé"@fr ,
                      "Attached verso"@en ;
-          rdfs:comment "Verso associé au dessin :"@fr ,
-					 	"Verso attached to the drawing:"@en;
+          rdfs:comment "Verso associé au dessin"@fr ,
+					 	"Verso attached to the drawing"@en;
           salsah-gui:guiElement salsah-gui:Searchbox ;
           salsah-gui:guiOrder "3"^^xsd:integer .  	
 
@@ -977,8 +1001,8 @@
           knora-base:subjectClassConstraint :Drawing ;
           rdfs:label "Verso associé"@fr ,
                      "Attached verso"@en ;
-          rdfs:comment "Verso associé au dessin :"@fr ,
-					 	"Verso attached to the drawing:"@en;
+          rdfs:comment "Verso associé au dessin"@fr ,
+					 	"Verso attached to the drawing"@en;
           salsah-gui:guiElement salsah-gui:Searchbox ;
           salsah-gui:guiOrder "3"^^xsd:integer .  	
 
@@ -999,8 +1023,8 @@
           rdfs:subPropertyOf knora-base:hasLinkTo ;
           knora-base:objectClassConstraint :Passage ;
           knora-base:subjectClassConstraint :Campaign ;
-          rdfs:label "Dessins récoltés dans le cadre de cette campagne :"@fr ,
-                     "Drawings gathered within this campaign :"@en ;
+          rdfs:label "Dessins récoltés dans le cadre de cette campagne"@fr ,
+                     "Drawings gathered within this campaign"@en ;
           rdfs:comment "Dessins récoltés dans le cadre d'une campagne donnée."@fr ,
 					 	"Drawings gathered within a given campaign."@en;
           salsah-gui:guiElement salsah-gui:Searchbox ;
@@ -1011,8 +1035,8 @@
           rdfs:subPropertyOf knora-base:hasLinkToValue ;
           knora-base:objectClassConstraint knora-base:LinkValue ;
           knora-base:subjectClassConstraint :Campaign ;
-          rdfs:label "Dessins récoltés dans le cadre de cette campagne :"@fr ,
-                     "Drawings gathered within this campaign :"@en ;
+          rdfs:label "Dessins récoltés dans le cadre de cette campagne"@fr ,
+                     "Drawings gathered within this campaign"@en ;
           rdfs:comment "Dessins récoltés dans le cadre d'une campagne donnée."@fr ,
 					 	"Drawings gathered within a given campaign."@en;
           salsah-gui:guiElement salsah-gui:Searchbox ;
@@ -1223,8 +1247,8 @@
                 rdfs:subPropertyOf knora-base:hasLinkTo ;
                 knora-base:objectClassConstraint :Drawing ;
                 knora-base:subjectClassConstraint :Annotation ;
-                rdfs:label "Dessin correspondant :"@fr ,
-                     "Relevant drawing  :"@en ;
+                rdfs:label "Dessin correspondant"@fr ,
+                     "Relevant drawing "@en ;
           		rdfs:comment "Annotation portant sur un dessin donné."@fr ,
 					 "Drawing concerned by the annotation."@en ;
 				salsah-gui:guiElement salsah-gui:Searchbox ;
@@ -1235,8 +1259,8 @@
                 rdfs:subPropertyOf knora-base:hasLinkToValue ;
                 knora-base:objectClassConstraint knora-base:LinkValue ;
                 knora-base:subjectClassConstraint :Annotation ;
-                rdfs:label "Dessin correspondant :"@fr ,
-                     "Relevant drawing  :"@en ;
+                rdfs:label "Dessin correspondant"@fr ,
+                     "Relevant drawing "@en ;
           		rdfs:comment "Annotation portant sur un dessin donné."@fr ,
 					 "Drawing concerned by the annotation."@en ;
 				salsah-gui:guiElement salsah-gui:Searchbox ;
@@ -1248,8 +1272,8 @@
               rdfs:subPropertyOf knora-base:hasLinkTo ;
               knora-base:objectClassConstraint :CollectionSite ;
               knora-base:subjectClassConstraint :Campaign ;
-              rdfs:label "Site(s) de collecte correspondants :"@fr ,
-                     "Relevant collection site(s) :"@en ;
+              rdfs:label "Site(s) de collecte correspondants"@fr ,
+                     "Relevant collection site(s)"@en ;
           	  rdfs:comment "Campagne portant sur un/des site(s) de collecte donné(s)."@fr ,
 					 "Collection site(s) concerned by the campaign."@en ;
 			  salsah-gui:guiElement salsah-gui:Searchbox ;
@@ -1261,8 +1285,8 @@
               rdfs:subPropertyOf knora-base:hasLinkToValue ;
               knora-base:objectClassConstraint knora-base:LinkValue ;
               knora-base:subjectClassConstraint :Campaign ;
-              rdfs:label "Site(s) de collecte correspondants :"@fr ,
-                     "Relevant collection site(s) :"@en ;
+              rdfs:label "Site(s) de collecte correspondants"@fr ,
+                     "Relevant collection site(s)"@en ;
           	  rdfs:comment "Campagne portant sur un/des site(s) de collecte donné(s)."@fr ,
 					 "Collection site(s) concerned by the campaign."@en ;
 			  salsah-gui:guiElement salsah-gui:Searchbox ;
@@ -1274,8 +1298,8 @@
            rdfs:subPropertyOf knora-base:hasLinkTo ;
            knora-base:objectClassConstraint :QuestionnaireBase ;
            knora-base:subjectClassConstraint :Campaign ;
-           rdfs:label "Questionnaire standardisé correspondant :"@fr ,
-                     "Relevant standardized questionnaire :"@en ;
+           rdfs:label "Questionnaire standardisé correspondant"@fr ,
+                     "Relevant standardized questionnaire"@en ;
            rdfs:comment "Campagne de collecte fondée sur l'utilisation d'un questionnaire standardisé."@fr ,
 					 "Collection campaign based on a standardized questionnaire."@en ;
 		   salsah-gui:guiElement salsah-gui:Searchbox ;
@@ -1287,8 +1311,8 @@
            rdfs:subPropertyOf knora-base:hasLinkToValue ;
            knora-base:objectClassConstraint knora-base:LinkValue ;
            knora-base:subjectClassConstraint :Campaign ;
-           rdfs:label "Questionnaire standardisé correspondant :"@fr ,
-                     "Relevant standardized questionnaire :"@en ;
+           rdfs:label "Questionnaire standardisé correspondant"@fr ,
+                     "Relevant standardized questionnaire"@en ;
            rdfs:comment "Campagne de collecte fondée sur l'utilisation d'un questionnaire standardisé."@fr ,
 					 "Collection campaign based on a standardized questionnaire."@en ;
        	   salsah-gui:guiElement salsah-gui:Searchbox ;
@@ -1481,8 +1505,8 @@
                                rdfs:subPropertyOf knora-base:isPartOf ;
                                knora-base:subjectClassConstraint :QuestionnairePage ;
              				   knora-base:objectClassConstraint :QuestionnaireIndividual ;
-                               rdfs:label "Questionnaire individuel correspondant à cette page :"@fr ,
-                     				"Relevant individual questionnaire for this page :"@en ;
+                               rdfs:label "Questionnaire individuel correspondant à cette page "@fr ,
+                     				"Relevant individual questionnaire for this page "@en ;
 		  	 				   rdfs:comment "Page faisant partie d'un questionnaire individuel donné."@fr ,
 					 				"Page relevant to a given questionnaire."@en ;
 					 		   salsah-gui:guiElement salsah-gui:Searchbox ;
@@ -1494,8 +1518,8 @@
 		                            rdfs:subPropertyOf knora-base:isPartOfValue ;
 		                            knora-base:subjectClassConstraint :QuestionnairePage ;
              				        knora-base:objectClassConstraint knora-base:LinkValue ;
-		                            rdfs:label "Questionnaire individuel correspondant à cette page :"@fr ,
-		                     				"Relevant individual questionnaire for this page :"@en ;
+		                            rdfs:label "Questionnaire individuel correspondant à cette page "@fr ,
+		                     				"Relevant individual questionnaire for this page "@en ;
 				  	 				rdfs:comment "Page faisant partie d'un questionnaire individuel donné."@fr ,
 							 				"Page relevant to a given questionnaire."@en ;
 							 		salsah-gui:guiElement salsah-gui:Searchbox ;
@@ -1507,8 +1531,8 @@
                          rdfs:subPropertyOf knora-base:isPartOf ;
                          knora-base:subjectClassConstraint :QuestionnaireBaseImage ;
              			 knora-base:objectClassConstraint :QuestionnaireBase ;
-                         rdfs:label "Questionnaire standardisé correspondant à cette page :"@fr ,
-                     				"Relevant standardized questionnaire for this page :"@en ;
+                         rdfs:label "Questionnaire standardisé correspondant à cette page "@fr ,
+                     				"Relevant standardized questionnaire for this page "@en ;
 		  	 			 rdfs:comment "Page faisant partie d'un questionnaire standardisé donné."@fr ,
 					 				"Page relevant to a standardized questionnaire."@en ;
 					 	 salsah-gui:guiElement salsah-gui:Searchbox ;
@@ -1520,8 +1544,8 @@
 		                      rdfs:subPropertyOf knora-base:isPartOfValue ;
 		                      knora-base:subjectClassConstraint :QuestionnaireBaseImage ;
              			 	  knora-base:objectClassConstraint knora-base:LinkValue ;	
-		                      rdfs:label "Questionnaire standardisé correspondant à cette page :"@fr ,
-		                     				"Relevant standardized questionnaire for this page :"@en ;
+		                      rdfs:label "Questionnaire standardisé correspondant à cette page"@fr ,
+		                     				"Relevant standardized questionnaire for this page"@en ;
 				  	 		  rdfs:comment "Page faisant partie d'un questionnaire standardisé donné."@fr ,
 							 				"Page relevant to a standardized questionnaire."@en ;
 							  salsah-gui:guiElement salsah-gui:Searchbox ;
@@ -1617,7 +1641,7 @@
                      		"Religious identity of the context of collect"@en ;
                		  	  rdfs:comment "Contexte religieux de l'activité."@fr ,
 					 		"Activity religious context."@en ;
-					 	  salsah-gui:guiOrder "1"^^xsd:integer ;
+					 	  salsah-gui:guiOrder "31"^^xsd:integer ;
 	                      salsah-gui:guiElement salsah-gui:List ;
 	                      salsah-gui:guiAttribute "hlist=<http://data.knora.org/lists/drawings-gods-2016-list-ReligiousIdentityHList>" .
 
@@ -1997,8 +2021,8 @@
           rdfs:subPropertyOf knora-base:hasLinkTo ;
           knora-base:objectClassConstraint :Instruction ;
           knora-base:subjectClassConstraint :Campaign ;
-          rdfs:label "Instructions correspondantes :"@fr ,
-                     "Relevant instructions :"@en ;
+          rdfs:label "Instructions correspondantes"@fr ,
+                     "Relevant instructions"@en ;
           rdfs:comment "Campagne de collecte fondée sur des instructions données."@fr ,
 					 "Campaign based on a given set of instructions."@en ;
           salsah-gui:guiElement salsah-gui:Searchbox ;
@@ -2010,25 +2034,38 @@
           rdfs:subPropertyOf knora-base:hasLinkToValue ;
           knora-base:objectClassConstraint knora-base:LinkValue ;
           knora-base:subjectClassConstraint :Campaign ;
-          rdfs:label "Instructions correspondantes :"@fr ,
-                     "Relevant instructions :"@en ;
+          rdfs:label "Instructions correspondantes"@fr ,
+                     "Relevant instructions"@en ;
           rdfs:comment "Campagne de collecte fondée sur des instructions données."@fr ,
 					 "Campaign based on a given set of instructions."@en ;
           salsah-gui:guiElement salsah-gui:Searchbox ;
           salsah-gui:guiOrder "3"^^xsd:integer .  
 
 
-###  http://www.knora.org/ontology/drawings-gods#hasScannerSettings
+###  http://www.knora.org/ontology/drawings-gods#hasScannerBrand
+:hasScannerBrand rdf:type owl:ObjectProperty ;
+                 rdfs:subPropertyOf knora-base:hasValue ;
+                 knora-base:objectClassConstraint knora-base:ListValue ;
+                 knora-base:subjectClassConstraint :Passage ;
+                 rdfs:label "Marque du scanner"@fr ,
+                     "Brand of the scanner "@en ;
+          		 rdfs:comment "Marque du scanner utilisé pour scanner les dessins."@fr ,
+					 "Brand of the scanner used to scan the drawings."@en;
+                 salsah-gui:guiOrder "1"^^xsd:integer ;
+                 salsah-gui:guiElement salsah-gui:List ;
+                 salsah-gui:guiAttribute "hlist=<http://data.knora.org/lists/drawings-gods-2016-list-ScannerBrandList>" .
+
+###  http://www.knora.org/ontology/drawings-gods#hashasScannerSettings
 :hasScannerSettings rdf:type owl:ObjectProperty ;
                  rdfs:subPropertyOf knora-base:hasValue ;
                  knora-base:objectClassConstraint knora-base:ListValue ;
                  knora-base:subjectClassConstraint :Passage ;
-                 rdfs:label "Paramètres du scanner"@fr ,
-                     "Scanner settings"@en ;
-          		 rdfs:comment "Paramètres utilisés pour numériser les dessins."@fr ,
-					 "Settings used to digitize drawings."@en;
+                 rdfs:label "Paramètre standards du scanner"@fr ,
+                     "Standard scanner settings"@en ;
+          		 rdfs:comment "Est-ce que les paramètres standards du scanner ont bien été respectés ? (300dpi, tiff, color - millions, A4)"@fr ,
+					 "Are the standard scanner settings respected ? (300dpi, tiff, color - millions, A4)"@en;
                  salsah-gui:guiOrder "1"^^xsd:integer ;
-                 salsah-gui:guiElement salsah-gui:Pulldown ;
+                 salsah-gui:guiElement salsah-gui:List ;
                  salsah-gui:guiAttribute "hlist=<http://data.knora.org/lists/drawings-gods-2016-list-ScannerSettingsList>" .
 
 
@@ -2514,10 +2551,10 @@
                            owl:onProperty :hasCodeAlt ;
                            owl:minCardinality "0"^^xsd:nonNegativeInteger
                          ] ,
-                         [ rdf:type owl:Restriction ;
-                           owl:onProperty :hasDrawingComment ;
-                           owl:minCardinality "0"^^xsd:nonNegativeInteger
-                         ] ,
+#                         [ rdf:type owl:Restriction ;
+#                           owl:onProperty :hasDrawingComment ;
+#                           owl:minCardinality "0"^^xsd:nonNegativeInteger
+#                         ] ,
                          [ rdf:type owl:Restriction ;
                            owl:onProperty :hasKeywords ;
                            owl:minCardinality "0"^^xsd:nonNegativeInteger
@@ -2595,12 +2632,18 @@
                            owl:maxCardinality "1"^^xsd:nonNegativeInteger
                          ];
 		rdfs:label "Dessin"@fr ,
-			"Drawing"@en .
+			"Drawing"@en ;
+		rdfs:comment """Ressource à ne pas utiliser directement : à la place, créer les ressources ou "Dessin en accès public", "Dessin en accès restreint"."""@fr ,
+             		 """Resource not meant to be used directly: use "Drawing (public access)" or "Drawing (restricted access)" instead."""@en . 
 
 
 ###  http://www.knora.org/ontology/drawings-gods#DrawingPrivate
 :DrawingPrivate rdf:type owl:Class ;
-                rdfs:subClassOf :Drawing ;
+                rdfs:subClassOf :Drawing ,
+                         [ rdf:type owl:Restriction ;
+                           owl:onProperty :hasDrawingPrivateComment ;
+                           owl:minCardinality "0"^^xsd:nonNegativeInteger
+                         ] ;
                 rdfs:label "Dessin en accès restreint"@fr ,
 					"Drawing (restricted access)"@en ;
 				rdfs:comment "Accès au dessin limité."@fr ,
@@ -2609,7 +2652,11 @@
 
 ###  http://www.knora.org/ontology/drawings-gods#DrawingPublic
 :DrawingPublic rdf:type owl:Class ;
-               rdfs:subClassOf :Drawing ;
+               rdfs:subClassOf :Drawing ,
+                         [ rdf:type owl:Restriction ;
+                           owl:onProperty :hasDrawingPrivateComment ;
+                           owl:minCardinality "0"^^xsd:nonNegativeInteger
+                         ] ;
                rdfs:label "Dessin en accès public"@fr ,
 					"Drawing (public access)"@en . 
 
@@ -2674,8 +2721,12 @@
                            owl:minCardinality "0"^^xsd:nonNegativeInteger
                          ] ,
                          [ rdf:type owl:Restriction ;
-                           owl:onProperty :hasScannerSettings ;
+                           owl:onProperty :hasScannerBrand ;
                            owl:minCardinality "0"^^xsd:nonNegativeInteger
+                         ] ,
+                         [ rdf:type owl:Restriction ;
+                           owl:onProperty :hasScannerSettings ;
+                           owl:maxCardinality "1"^^xsd:nonNegativeInteger
                          ] ,
                          [ rdf:type owl:Restriction ;
                            owl:onProperty :hasCollectRulesGeneral ;
@@ -2729,11 +2780,13 @@
 #        				:Codable ,
                         [ rdf:type owl:Restriction ;
                           owl:onProperty :hasDrawing ;
-                          owl:minCardinality "1"^^xsd:nonNegativeInteger
+                          owl:minCardinality "0"^^xsd:nonNegativeInteger
+ #                         owl:minCardinality "1"^^xsd:nonNegativeInteger
                         ] ,
                         [ rdf:type owl:Restriction ;
                           owl:onProperty :hasDrawingValue ;
-                          owl:minCardinality "1"^^xsd:nonNegativeInteger
+                          owl:minCardinality "0"^^xsd:nonNegativeInteger
+ #                         owl:minCardinality "1"^^xsd:nonNegativeInteger
                         ] ,
                         [ rdf:type owl:Restriction ;
                           owl:onProperty :hasLanguageOther ;
@@ -2970,10 +3023,10 @@
                                    [ rdf:type owl:Restriction ;
                                      owl:onProperty :hasQuestionnaireBaseComment ;
                                      owl:minCardinality "0"^^xsd:nonNegativeInteger
-                                   ] ,
-                                   [ rdf:type owl:Restriction ;
-                                     owl:onProperty :hasQuestionnaireBaseTranslator ;
-                                     owl:minCardinality "0"^^xsd:nonNegativeInteger
+#                                   ] ,
+#                                   [ rdf:type owl:Restriction ;
+#                                     owl:onProperty :hasQuestionnaireBaseTranslator ;
+#                                     owl:minCardinality "0"^^xsd:nonNegativeInteger
                                    ] ;
                    rdfs:label "Questionnaire standardisé"@fr ,
              			"Standardized questionnaire"@en . 
@@ -2997,6 +3050,7 @@
 :QuestionnaireBaseImage rdf:type owl:Class ;
                         rdfs:subClassOf knora-base:Resource ,
                                         knora-base:StillImageRepresentation ,
+                                        :QuestionnaireBase ,
                                         [ rdf:type owl:Restriction ;
                                           owl:onProperty :isPartOfQuestionnaireBase ;
                                           owl:cardinality "1"^^xsd:nonNegativeInteger

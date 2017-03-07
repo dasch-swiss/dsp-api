@@ -932,25 +932,80 @@
 		knora-base:listNodePosition 11 ;
 		rdfs:label "russe"@fr , "Russian"@en .
 				
+###    ScannerBrandList
+<http://data.knora.org/lists/drawings-gods-2016-list-ScannerBrandList> a knora-base:ListNode ;
+	knora-base:isRootNode true ;
+	rdfs:comment "Liste des références de scanner"@fr ;
+	rdfs:label "Liste des références de scanner"@fr , "Scanners references list"@en ;
+	knora-base:hasSubListNode <http://data.knora.org/lists/drawings-gods-2016-list-ScannerBrandList-Epson> ,
+									<http://data.knora.org/lists/drawings-gods-2016-list-ScannerBrandList-Brother> ,
+									<http://data.knora.org/lists/drawings-gods-2016-list-ScannerBrandList-Canon> ,
+									<http://data.knora.org/lists/drawings-gods-2016-list-ScannerBrandList-Unknown> ,
+									<http://data.knora.org/lists/drawings-gods-2016-list-ScannerBrandList-Other> .
+	
+		<http://data.knora.org/lists/drawings-gods-2016-list-ScannerBrandList-Epson> a knora-base:ListNode ;
+			knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-ScannerBrandList> ;
+			knora-base:listNodeName "Epson" ;
+			knora-base:listNodePosition 0 ;
+			rdfs:label "Epson"@fr , "Epson"@en .
+			
+		<http://data.knora.org/lists/drawings-gods-2016-list-ScannerBrandList-Brother> a knora-base:ListNode ;
+			knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-ScannerBrandList> ;
+			knora-base:listNodeName "Brother" ;
+			knora-base:listNodePosition 1 ;
+			rdfs:label "Brother"@fr , "Brother"@en .
+			
+		<http://data.knora.org/lists/drawings-gods-2016-list-ScannerBrandList-Canon> a knora-base:ListNode ;
+			knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-ScannerBrandList> ;
+			knora-base:listNodeName "Canon" ;
+			knora-base:listNodePosition 2 ;
+			rdfs:label "Canon"@fr , "Canon"@en .
+		
+		<http://data.knora.org/lists/drawings-gods-2016-list-ScannerBrandList-Unknown> a knora-base:ListNode ;
+			knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-ScannerBrandList> ;
+			knora-base:listNodeName "Unknown" ;
+			knora-base:listNodePosition 3 ;
+			rdfs:label "Inconnu"@fr , "Unknown"@en .
+			
+		<http://data.knora.org/lists/drawings-gods-2016-list-ScannerBrandList-Other> a knora-base:ListNode ;
+			knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-ScannerBrandList> ;
+			knora-base:listNodeName "Other" ;
+			knora-base:listNodePosition 4 ;
+			rdfs:label "Other"@fr , "Other"@en .
+
 ###    ScannerSettingsList
 <http://data.knora.org/lists/drawings-gods-2016-list-ScannerSettingsList> a knora-base:ListNode ;
 	knora-base:isRootNode true ;
-	rdfs:comment "Liste des paramètres de numérisation des documents"@fr ;
-	rdfs:label "Paramètres de numérisation"@fr , "Digitization settings"@en ;
-	knora-base:hasSubListNode <http://data.knora.org/lists/drawings-gods-2016-list-ScannerSettingsList-node1> ,
-							<http://data.knora.org/lists/drawings-gods-2016-list-ScannerSettingsList-node2> .
-
-<http://data.knora.org/lists/drawings-gods-2016-list-ScannerSettingsList-node1> a knora-base:ListNode ;
-		knora-base:listNodeName "scannerSetting1" ;
-		knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-ScannerSettingsList> ;
-		knora-base:listNodePosition 1 ;
-		rdfs:label "Paramètre 1"@fr , "Setting 1"@en .
-
-<http://data.knora.org/lists/drawings-gods-2016-list-ScannerSettingsList-node2> a knora-base:ListNode ;
-		knora-base:listNodeName "scannerSetting2" ;
-		knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-ScannerSettingsList> ;
-		knora-base:listNodePosition 1 ;
-		rdfs:label "Paramètre 2"@fr , "Setting 2"@en .
+	rdfs:comment "Liste de contrôle de la conformité des numérisation"@fr ;
+	rdfs:label "Images conformes"@fr , "Images fit to standard"@en ;
+	knora-base:hasSubListNode <http://data.knora.org/lists/drawings-gods-2016-list-ScannerSettingsList-yes> ,
+									<http://data.knora.org/lists/drawings-gods-2016-list-ScannerSettingsList-no> ,
+									<http://data.knora.org/lists/drawings-gods-2016-list-ScannerSettingsList-idontknow> ,
+									<http://data.knora.org/lists/drawings-gods-2016-list-ScannerSettingsList-Other> .
+	
+		<http://data.knora.org/lists/drawings-gods-2016-list-ScannerSettingsList-yes> a knora-base:ListNode ;
+			knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-ScannerSettingsList> ;
+			knora-base:listNodeName "yes" ;
+			knora-base:listNodePosition 0 ;
+			rdfs:label "Oui"@fr , "Yes"@en .
+			
+		<http://data.knora.org/lists/drawings-gods-2016-list-ScannerSettingsList-no> a knora-base:ListNode ;
+			knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-ScannerSettingsList> ;
+			knora-base:listNodeName "no" ;
+			knora-base:listNodePosition 1 ;
+			rdfs:label "Non"@fr , "No"@en .
+			
+		<http://data.knora.org/lists/drawings-gods-2016-list-ScannerSettingsList-idontknow> a knora-base:ListNode ;
+			knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-ScannerSettingsList> ;
+			knora-base:listNodeName "idontknow" ;
+			knora-base:listNodePosition 2 ;
+			rdfs:label "Je ne sais pas"@fr , "I don't know"@en .
+			
+		<http://data.knora.org/lists/drawings-gods-2016-list-ScannerSettingsList-Other> a knora-base:ListNode ;
+			knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-ScannerSettingsList> ;
+			knora-base:listNodeName "Other" ;
+			knora-base:listNodePosition 3 ;
+			rdfs:label "Other"@fr , "Other"@en .
 
 
 ###    SchoolHList
