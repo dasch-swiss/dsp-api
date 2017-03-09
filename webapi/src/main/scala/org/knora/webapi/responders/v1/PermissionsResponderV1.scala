@@ -177,17 +177,17 @@ class PermissionsResponderV1 extends ResponderV1 {
                1. ProjectAdmin > 2. CustomGroups > 3. ProjectMember > 4. KnownUser
                Permissions are added following the precedence level from the highest to the lowest. As soon as one set
                of permissions is written into the buffer, any additionally found permissions are ignored. */
-            val permissionsListBuffer = ListBuffer.empty[(Int, Set[PermissionV1])]
+            val permissionsListBuffer = ListBuffer.empty[(String, Set[PermissionV1])]
 
             for {
                 /* Get administrative permissions for the knora-base:ProjectAdmin group */
                 administrativePermissionsOnProjectAdminGroup: Set[PermissionV1] <- administrativePermissionForGroupsGetV1(projectIri, List(OntologyConstants.KnoraBase.ProjectAdmin))
                 _ = if (administrativePermissionsOnProjectAdminGroup.nonEmpty) {
                     if (extendedUserGroups.contains(OntologyConstants.KnoraBase.ProjectAdmin)) {
-                        permissionsListBuffer += ((1, administrativePermissionsOnProjectAdminGroup))
+                        permissionsListBuffer += (("ProjectAdmin", administrativePermissionsOnProjectAdminGroup))
                     }
                 }
-                _ = log.debug(s"userAdministrativePermissionsGetV1 - project: $projectIri, administrativePermissionsOnProjectAdminGroup: $administrativePermissionsOnProjectAdminGroup")
+                //_ = log.debug(s"userAdministrativePermissionsGetV1 - project: $projectIri, administrativePermissionsOnProjectAdminGroup: $administrativePermissionsOnProjectAdminGroup")
 
 
                 /* Get administrative permissions for custom groups (all groups other than the built-in groups) */
@@ -201,10 +201,10 @@ class PermissionsResponderV1 extends ResponderV1 {
                 }
                 _ = if (administrativePermissionsOnCustomGroups.nonEmpty) {
                     if (permissionsListBuffer.isEmpty) {
-                        permissionsListBuffer += ((2, administrativePermissionsOnCustomGroups))
+                        permissionsListBuffer += (("CustomGroups", administrativePermissionsOnCustomGroups))
                     }
                 }
-                _ = log.debug(s"userAdministrativePermissionsGetV1 - project: $projectIri, administrativePermissionsOnCustomGroups: $administrativePermissionsOnCustomGroups")
+                //_ = log.debug(s"userAdministrativePermissionsGetV1 - project: $projectIri, administrativePermissionsOnCustomGroups: $administrativePermissionsOnCustomGroups")
 
 
                 /* Get administrative permissions for the knora-base:ProjectMember group */
@@ -212,11 +212,11 @@ class PermissionsResponderV1 extends ResponderV1 {
                 _ = if (administrativePermissionsOnProjectMemberGroup.nonEmpty) {
                     if (permissionsListBuffer.isEmpty) {
                         if (extendedUserGroups.contains(OntologyConstants.KnoraBase.ProjectMember)) {
-                            permissionsListBuffer += ((3, administrativePermissionsOnProjectMemberGroup))
+                            permissionsListBuffer += (("ProjectMember", administrativePermissionsOnProjectMemberGroup))
                         }
                     }
                 }
-                _ = log.debug(s"userAdministrativePermissionsGetV1 - project: $projectIri, administrativePermissionsOnProjectMemberGroup: $administrativePermissionsOnProjectMemberGroup")
+                //_ = log.debug(s"userAdministrativePermissionsGetV1 - project: $projectIri, administrativePermissionsOnProjectMemberGroup: $administrativePermissionsOnProjectMemberGroup")
 
 
                 /* Get administrative permissions for the knora-base:KnownUser group */
@@ -224,15 +224,18 @@ class PermissionsResponderV1 extends ResponderV1 {
                 _ = if (administrativePermissionsOnKnownUserGroup.nonEmpty) {
                     if (permissionsListBuffer.isEmpty) {
                         if (extendedUserGroups.contains(OntologyConstants.KnoraBase.KnownUser)) {
-                            permissionsListBuffer += ((4, administrativePermissionsOnKnownUserGroup))
+                            permissionsListBuffer += (("KnownUser", administrativePermissionsOnKnownUserGroup))
                         }
                     }
                 }
-                _ = log.debug(s"userAdministrativePermissionsGetV1 - project: $projectIri, administrativePermissionsOnKnownUserGroup: $administrativePermissionsOnKnownUserGroup")
+                //_ = log.debug(s"userAdministrativePermissionsGetV1 - project: $projectIri, administrativePermissionsOnKnownUserGroup: $administrativePermissionsOnKnownUserGroup")
 
 
                 projectAdministrativePermissions: (IRI, Set[PermissionV1]) = permissionsListBuffer.length match {
-                    case 1 => (projectIri, permissionsListBuffer.head._2)
+                    case 1 => {
+                        log.debug(s"userAdministrativePermissionsGetV1 - project: $projectIri, precedence: ${permissionsListBuffer.head._1}, administrativePermissions: ${permissionsListBuffer.head._2}")
+                        (projectIri, permissionsListBuffer.head._2)
+                    }
                     case 0 => (projectIri, Set.empty[PermissionV1])
                     case _ => throw AssertionException("The permissions list buffer holding default object permissions should never be larger then 1.")
                 }
@@ -272,7 +275,7 @@ class PermissionsResponderV1 extends ResponderV1 {
         /* Get administrative permissions for each group and combine them */
         val gpf: Iterable[Future[Seq[PermissionV1]]] = for {
             groupIri <- groups
-            _ = log.debug(s"administrativePermissionForGroupsGetV1 - projectIri: $projectIri, groupIri: $groupIri")
+            //_ = log.debug(s"administrativePermissionForGroupsGetV1 - projectIri: $projectIri, groupIri: $groupIri")
 
             groupPermissions: Future[Seq[PermissionV1]] = administrativePermissionForProjectGroupGetV1(projectIri, groupIri).map {
                 case Some(ap: AdministrativePermissionV1) => ap.hasPermissions.toSeq
@@ -297,7 +300,7 @@ class PermissionsResponderV1 extends ResponderV1 {
             /* Remove possible duplicate permissions */
             result: Set[PermissionV1] = PermissionUtilV1.removeDuplicatePermissions(combined)
 
-            _ = log.debug(s"administrativePermissionForGroupsGetV1 - result: $result")
+            //_ = log.debug(s"administrativePermissionForGroupsGetV1 - result: $result")
         } yield result
         result
     }
@@ -782,7 +785,7 @@ class PermissionsResponderV1 extends ResponderV1 {
         /* Get default object access permissions for each group and combine them */
         val gpf: Iterable[Future[Seq[PermissionV1]]] = for {
             groupIri <- groups
-            _ = log.debug(s"userDefaultObjectAccessPermissionsGetV1 - projectIri: $projectIri, groupIri: $groupIri")
+            //_ = log.debug(s"userDefaultObjectAccessPermissionsGetV1 - projectIri: $projectIri, groupIri: $groupIri")
 
             groupPermissions: Future[Seq[PermissionV1]] = defaultObjectAccessPermissionGetV1(projectIri = projectIri, groupIri = Some(groupIri), resourceClassIri = None, propertyIri = None).map {
                 case Some(doap: DefaultObjectAccessPermissionV1) => doap.hasPermissions.toSeq
@@ -807,7 +810,7 @@ class PermissionsResponderV1 extends ResponderV1 {
             /* Remove possible duplicate permissions */
             result: Set[PermissionV1] = PermissionUtilV1.removeDuplicatePermissions(combined)
 
-            _ = log.debug(s"defaultObjectAccessPermissionsForGroupsGetV1 - result: $result")
+            //_ = log.debug(s"defaultObjectAccessPermissionsForGroupsGetV1 - result: $result")
         } yield result
         result
     }
@@ -849,20 +852,20 @@ class PermissionsResponderV1 extends ResponderV1 {
             }
 
             /* List buffer holding default object access permissions tagged with the precedence level:
-               1. ProjectAdmin > 2. ProjectEntity > 3. SystemEntity > 4. CustomGroups > 5. ProjectMember > 6. KnownUser
+               0. ProjectAdmin > 1. ProjectEntity > 2. SystemEntity > 3. CustomGroups > 4. ProjectMember > 5. KnownUser
                Permissions are added following the precedence level from the highest to the lowest. As soon as one set
                of permissions is written into the buffer, any additionally found permissions are ignored. */
-            permissionsListBuffer = ListBuffer.empty[(Int, Set[PermissionV1])]
+            permissionsListBuffer = ListBuffer.empty[(String, Set[PermissionV1])]
 
 
             /* Get the default object access permissions for the knora-base:ProjectAdmin group */
             defaultPermissionsOnProjectAdminGroup: Set[PermissionV1] <- defaultObjectAccessPermissionsForGroupsGetV1(projectIri, List(OntologyConstants.KnoraBase.ProjectAdmin))
             _ = if (defaultPermissionsOnProjectAdminGroup.nonEmpty) {
                 if (extendedUserGroups.contains(OntologyConstants.KnoraBase.ProjectAdmin) || extendedUserGroups.contains(OntologyConstants.KnoraBase.SystemAdmin)) {
-                        permissionsListBuffer += ((1, defaultPermissionsOnProjectAdminGroup))
+                        permissionsListBuffer += (("ProjectAdmin", defaultPermissionsOnProjectAdminGroup))
                 }
             }
-            _ = log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnProjectAdminGroup: $defaultPermissionsOnProjectAdminGroup")
+            //_ = log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnProjectAdminGroup: $defaultPermissionsOnProjectAdminGroup")
 
 
             /* Get the default object access permissions defined on the resource class/property for the current project */
@@ -873,10 +876,10 @@ class PermissionsResponderV1 extends ResponderV1 {
             }
             _ = if (defaultPermissionsOnProjectEntity.nonEmpty) {
                 if (permissionsListBuffer.isEmpty) {
-                    permissionsListBuffer += ((2, defaultPermissionsOnProjectEntity))
+                    permissionsListBuffer += (("ProjectEntity", defaultPermissionsOnProjectEntity))
                 }
             }
-            _ = log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnProjectEntity: $defaultPermissionsOnProjectEntity")
+            //_ = log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnProjectEntity: $defaultPermissionsOnProjectEntity")
 
 
             /* Get the default object access permissions defined on the resource class/property inside the SystemProject */
@@ -888,10 +891,10 @@ class PermissionsResponderV1 extends ResponderV1 {
             }
             _ = if (defaultPermissionsOnSystemEntity.nonEmpty) {
                 if (permissionsListBuffer.isEmpty) {
-                    permissionsListBuffer += ((3, defaultPermissionsOnSystemEntity))
+                    permissionsListBuffer += (("SystemEntity", defaultPermissionsOnSystemEntity))
                 }
             }
-            _ = log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnSystemEntity: $defaultPermissionsOnSystemEntity")
+            //_ = log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnSystemEntity: $defaultPermissionsOnSystemEntity")
 
 
             /* Get the default object access permissions for custom groups (all groups other than the built-in groups) */
@@ -910,10 +913,10 @@ class PermissionsResponderV1 extends ResponderV1 {
             }
             _ = if (defaultPermissionsOnCustomGroups.nonEmpty) {
                 if (permissionsListBuffer.isEmpty) {
-                    permissionsListBuffer += ((4, defaultPermissionsOnCustomGroups))
+                    permissionsListBuffer += (("CustomGroups", defaultPermissionsOnCustomGroups))
                 }
             }
-            _ = log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnCustomGroups: $defaultPermissionsOnCustomGroups")
+            //_ = log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnCustomGroups: $defaultPermissionsOnCustomGroups")
 
 
             /* Get the default object access permissions for the knora-base:ProjectMember group */
@@ -921,11 +924,11 @@ class PermissionsResponderV1 extends ResponderV1 {
             _ = if (defaultPermissionsOnProjectMemberGroup.nonEmpty) {
                 if (permissionsListBuffer.isEmpty) {
                     if (extendedUserGroups.contains(OntologyConstants.KnoraBase.ProjectMember) || extendedUserGroups.contains(OntologyConstants.KnoraBase.SystemAdmin)) {
-                        permissionsListBuffer += ((5, defaultPermissionsOnProjectMemberGroup))
+                        permissionsListBuffer += (("ProjectMember", defaultPermissionsOnProjectMemberGroup))
                     }
                 }
             }
-            _ = log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnProjectMemberGroup: $defaultPermissionsOnProjectMemberGroup")
+            //_ = log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnProjectMemberGroup: $defaultPermissionsOnProjectMemberGroup")
 
 
             /* Get the default object access permissions for the knora-base:KnownUser group */
@@ -933,19 +936,21 @@ class PermissionsResponderV1 extends ResponderV1 {
             _ = if (defaultPermissionsOnKnownUserGroup.nonEmpty) {
                 if (permissionsListBuffer.isEmpty) {
                     if (extendedUserGroups.contains(OntologyConstants.KnoraBase.KnownUser)) {
-                        permissionsListBuffer += ((6, defaultPermissionsOnKnownUserGroup))
+                        permissionsListBuffer += (("KnownUser", defaultPermissionsOnKnownUserGroup))
                     }
                 }
             }
-            _ = log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnKnownUserGroup: $defaultPermissionsOnKnownUserGroup")
+            //_ = log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnKnownUserGroup: $defaultPermissionsOnKnownUserGroup")
 
             /* Create permissions string */
             result = permissionsListBuffer.length match {
-                case 1 => PermissionUtilV1.formatPermissions(permissionsListBuffer.head._2, PermissionType.OAP)
+                case 1 => {
+                    PermissionUtilV1.formatPermissions(permissionsListBuffer.head._2, PermissionType.OAP)
+                }
                 case 0 => throw BadRequestException("The resulting request would lead to an empty permissions string, which is not allowed. Are all the necessary default object access permissions defined?")
                 case _ => throw AssertionException("The permissions list buffer holding default object permissions should never be larger then 1.")
             }
-            _ = log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - result: $result")
+            _ = log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - project: $projectIri, precedence: ${permissionsListBuffer.head._1}, defaultObjectAccessPermissions: $result")
         } yield DefaultObjectAccessPermissionsStringResponseV1(result)
     }
 

@@ -98,19 +98,19 @@ class DrawingsGodsV1Spec extends CoreSpec(DrawingsGodsV1Spec.config) with Triple
         "return correct drawings-gods:QualityData resource permissions string for drawings-gods-test-ddd2 user" in {
             val qualityDataResourceClass = "http://www.knora.org/ontology/drawings-gods#QualityData"
             responderManager ! DefaultObjectAccessPermissionsStringForResourceClassGetV1(drawingsGodsProjectIri, qualityDataResourceClass, ddd2.get.permissionData)
-            expectMsg(DefaultObjectAccessPermissionsStringResponseV1("CR <http://data.knora.org/groups/drawings-gods-admin>|D <http://data.knora.org/groups/drawings-gods-snf-team>,knora-base:Creator|M <http://data.knora.org/groups/drawings-gods-meta-annotators>,<http://data.knora.org/groups/drawings-gods-add-drawings>"))
+            expectMsg(DefaultObjectAccessPermissionsStringResponseV1("CR http://data.knora.org/groups/drawings-gods-admin|D http://data.knora.org/groups/drawings-gods-snf-team,knora-base:Creator|M http://data.knora.org/groups/drawings-gods-add-drawings,http://data.knora.org/groups/drawings-gods-meta-annotators"))
         }
 
         "return correct drawings-gods:Person resource class permissions string for drawings-gods-test-ddd1 user" in {
             val personResourceClass = "http://www.knora.org/ontology/drawings-gods#Person"
             responderManager ! DefaultObjectAccessPermissionsStringForResourceClassGetV1(drawingsGodsProjectIri, personResourceClass, ddd1.get.permissionData)
-            expectMsg(DefaultObjectAccessPermissionsStringResponseV1("CR <http://data.knora.org/groups/drawings-gods-admin>|D <http://data.knora.org/groups/drawings-gods-snf-team>,knora-base:Creator|M <http://data.knora.org/groups/drawings-gods-meta-annotators>,<http://data.knora.org/groups/drawings-gods-add-drawings>|V knora-base:KnownUser,knora-base:UnknownUser,knora-base:ProjectMember"))
+            expectMsg(DefaultObjectAccessPermissionsStringResponseV1("CR http://data.knora.org/groups/drawings-gods-admin|D http://data.knora.org/groups/drawings-gods-snf-team,knora-base:Creator|M http://data.knora.org/groups/drawings-gods-add-drawings,http://data.knora.org/groups/drawings-gods-meta-annotators|V knora-base:KnownUser,knora-base:UnknownUser,knora-base:ProjectMember"))
         }
 
         "return correct drawings-gods:hasLastname property permissions string for drawings-gods-test-ddd1 user" in {
             val hasLastnameProperty = "http://www.knora.org/ontology/drawings-gods#hasLastname"
             responderManager ! DefaultObjectAccessPermissionsStringForPropertyGetV1(drawingsGodsProjectIri, hasLastnameProperty, ddd1.get.permissionData)
-            expectMsg(DefaultObjectAccessPermissionsStringResponseV1("CR <http://data.knora.org/groups/drawings-gods-admin>|D <http://data.knora.org/groups/drawings-gods-snf-team>"))
+            expectMsg(DefaultObjectAccessPermissionsStringResponseV1("CR http://data.knora.org/groups/drawings-gods-admin|D http://data.knora.org/groups/drawings-gods-snf-team"))
         }
 
         "allow drawings-gods-test-ddd1 user to see newly created resource and all properties" in {
@@ -130,9 +130,6 @@ class DrawingsGodsV1Spec extends CoreSpec(DrawingsGodsV1Spec.config) with Triple
             )
 
             val response = expectMsgType[ResourceCreateResponseV1](timeout)
-
-            println(response)
-
         }
     }
 }
