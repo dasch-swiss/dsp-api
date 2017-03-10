@@ -122,11 +122,6 @@ export module basicMessageComponents {
          * Knora status code
          */
         status:KnoraStatusCode;
-
-        /**
-         * The current user's data
-         */
-        userdata:userdata;
     }
 
     /**
