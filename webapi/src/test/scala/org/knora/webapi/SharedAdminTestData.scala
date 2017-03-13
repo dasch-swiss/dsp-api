@@ -186,7 +186,6 @@ object SharedAdminTestData {
         belongsToInstitution = None,
         ontologyNamedGraph = "http://www.knora.org/ontology/knora-base",
         dataNamedGraph = "-",
-        basepath = "-",
         status = true,
         hasSelfJoinEnabled = false
     )
@@ -266,7 +265,6 @@ object SharedAdminTestData {
         belongsToInstitution = None,
         ontologyNamedGraph = "http://www.knora.org/ontology/images",
         dataNamedGraph = "http://www.knora.org/data/images",
-        basepath = "/imldata/SALSAH-TEST-01/images",
         status = true,
         hasSelfJoinEnabled = false
     )
@@ -427,7 +425,6 @@ object SharedAdminTestData {
         belongsToInstitution = None,
         ontologyNamedGraph = "http://www.knora.org/ontology/incunabula",
         dataNamedGraph = "http://www.knora.org/data/incunabula",
-        basepath = "/imldata/SALSAH-TEST-01/Incunabula",
         status = true,
         hasSelfJoinEnabled = false
     )
@@ -517,7 +514,6 @@ object SharedAdminTestData {
         belongsToInstitution = None,
         ontologyNamedGraph = "http://www.knora.org/ontology/anything",
         dataNamedGraph = "http://www.knora.org/data/anything",
-        basepath = "/foo/bar/baz",
         status = true,
         hasSelfJoinEnabled = false
     )
@@ -539,7 +535,6 @@ object SharedAdminTestData {
         belongsToInstitution = None,
         ontologyNamedGraph = "http://www.knora.org/ontology/beol",
         dataNamedGraph = "http://www.knora.org/data/beol",
-        basepath = "/foo/bar/baz",
         status = true,
         hasSelfJoinEnabled = false
     )
@@ -561,7 +556,6 @@ object SharedAdminTestData {
         belongsToInstitution = None,
         ontologyNamedGraph = "http://www.knora.org/ontology/biblio",
         dataNamedGraph = "http://www.knora.org/data/biblio",
-        basepath = "/foo/bar/baz",
         status = true,
         hasSelfJoinEnabled = false
     )
@@ -583,7 +577,6 @@ object SharedAdminTestData {
         belongsToInstitution = None,
         ontologyNamedGraph = "http://www.knora.org/ontology/dokubib",
         dataNamedGraph = "http://www.knora.org/data/dokubib",
-        basepath = "/foo/bar/baz",
         status = false,
         hasSelfJoinEnabled = false
     )

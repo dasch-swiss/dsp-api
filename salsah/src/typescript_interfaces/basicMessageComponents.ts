@@ -170,66 +170,6 @@ export module basicMessageComponents {
     }
 
     /**
-     * Represents the current user's data
-     */
-    interface userdata {
-        /**
-         * User's email address
-         */
-        email:string | null;
-
-        /**
-         * User's unique name
-         */
-        username:string | null;
-
-        /**
-         * User's first name
-         */
-        firstname:string | null;
-
-        /**
-         * User's last name
-         */
-        lastname:string | null;
-
-        /**
-         * List of project descriptions the user is member of
-         */
-        projects_info:Array<projectItem>;
-
-        /**
-         * User's IRI
-         */
-        user_id:string | null;
-
-        /**
-         * User's preferred language
-         */
-        lang:string;
-
-        /**
-         * User's active project
-         */
-        active_project:string | null;
-
-        /**
-         * Session token
-         */
-        token:string | null;
-
-        /**
-         * List of project IRIs the user is member of
-         */
-        projects:Array<string> | null;
-
-        /**
-         * obsolete
-         */
-        password:string | null;
-    }
-
-    /**
      * Represents a text with markup.
      */
     interface richtext {
