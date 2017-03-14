@@ -1257,8 +1257,8 @@ class ResourcesV1R2RSpec extends R2RSpec {
 
 
         }
-        "create a resources from simple xml" in {
 
+        "create resources from simple xml" in {
             val params =
                 s"""<xml xmlns:beol="http://www.knora.org/ontology/beol"
                     |   xmlns:biblio="http://www.knora.org/ontology/biblio">
@@ -1282,19 +1282,12 @@ class ResourcesV1R2RSpec extends R2RSpec {
                     |       <biblio:endPage>73</biblio:endPage>
                     |       <biblio:publicationHasDate>GREGORIAN:1974</biblio:publicationHasDate>
                     |    </biblio:JournalArticle>
-
                     |</xml>""".stripMargin
 
             val projectIRI = URLEncoder.encode("http://data.knora.org/projects/DczxPs-sR6aZN91qV92ZmQ", "utf-8")
 
-            Post(s"/v1/resources/xml/${projectIRI}"
-                , HttpEntity(ContentTypes.`text/xml(UTF-8)`, params)) ~> addCredentials(BasicHttpCredentials(biblioUserEmail, password)) ~> resourcesPath ~> check {
+            Post(s"/v1/resources/xml/$projectIRI", HttpEntity(ContentTypes.`text/xml(UTF-8)`, params)) ~> addCredentials(BasicHttpCredentials(biblioUserEmail, password)) ~> resourcesPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)
-
-
-                val resourcesToCreate = Seq.empty[OneOfMultipleResourceCreateRequestV1]
-
-
                 responseAs[String] should include("createdResources")
             }
         }
