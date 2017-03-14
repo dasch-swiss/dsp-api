@@ -136,13 +136,14 @@ The response is described in the TypeScript interface ``changeResourceLabelRespo
 Adding Multiple Resources in a Single Request
 *********************************************
 
-Multiple resources can be created in a single request. This is especially useful if the resources have links to one another,
-such that 
-The entire request will be checked for consistency, 
+Multiple resources can be created in a single request. This is especially
+useful if the resources have links to one another. The entire request will be
+checked for consistency as a whole.
 
-In order to create multiple resources, the resources can be specified in a XML file. The XML file containing the resource descriptions can be imported directly to Knora by a POST request.
-
-The request has to be sent to the Knora server using the ``resources/xml`` path segment.
+The resources to be created must be described in an XML file. The XML file
+containing the resource descriptions can be imported directly to Knora by a
+POST request. The request has to be sent to the Knora server using the
+``resources/xml`` path segment.
 
 ::
 

@@ -48,10 +48,10 @@ import org.knora.webapi.viewhandlers.ResourceHtmlView
 import org.slf4j.LoggerFactory
 import spray.json._
 
-import scala.concurrent.{Future, Promise}
 import scala.concurrent.duration._
+import scala.concurrent.{Future, Promise}
 import scala.util.{Failure, Success, Try}
-import scala.xml.NodeSeq
+import scala.xml.{Node, NodeSeq}
 
 
 /**
@@ -220,13 +220,11 @@ object ResourcesRouteV1 extends Authenticator {
 
             val valuesToBeCreatedWithFuture: Map[IRI, Future[Seq[CreateValueV1WithComment]]] = valuesToCreate(apiRequest.properties, userProfile)
 
-
             // since this function `makeCreateResourceRequestMessage` is called by the POST multipart route receiving the binaries (non GUI-case)
             // and by the other POST route, either multipartConversionRequest or paramConversionRequest is set if a file should be attached to the resource, but not both.
             if (multipartConversionRequest.nonEmpty && paramConversionRequest.nonEmpty) throw BadRequestException("Binaries sent and file params set to route. This is illegal.")
 
             for {
-
             // make the whole Map a Future
                 valuesToBeCreated: Iterable[(IRI, Seq[CreateValueV1WithComment])] <- Future.traverse(valuesToBeCreatedWithFuture) {
                     case (propIri: IRI, valuesFuture: Future[Seq[CreateValueV1WithComment]]) =>
@@ -237,7 +235,6 @@ object ResourcesRouteV1 extends Authenticator {
 
                         } yield propIri -> values
                 }
-
 
                 // since this function `makeCreateResourceRequestMessage` is called by the POST multipart route receiving the binaries (non GUI-case)
                 // and by the other POST route, either multipartConversionRequest or paramConversionRequest is set if a file should be attached to the resource, but not both.
@@ -258,32 +255,27 @@ object ResourcesRouteV1 extends Authenticator {
             )
         }
 
-
         def formOneResourceRequest(resourceRequest: CreateResourceRequestV1, userProfile: UserProfileV1): Future[OneOfMultipleResourceCreateRequestV1] = {
             val values = valuesToCreate(resourceRequest.properties, userProfile)
+
             // make the whole Map a Future
 
             for {
                 valuesToBeCreated <- Future.traverse(values) {
                     case (propIri: IRI, valuesFuture: Future[Seq[CreateValueV1WithComment]]) =>
-
                         for {
-
                             values <- valuesFuture
-
                         } yield propIri -> values
                 }
-
-
             } yield OneOfMultipleResourceCreateRequestV1(resourceRequest.restype_id, resourceRequest.label, valuesToBeCreated.toMap)
         }
 
         def makeMultiResourcesRequestMessage(resourceRequest: Seq[CreateResourceRequestV1], projectId: IRI, apiRequestID: UUID, userProfile: UserProfileV1): Future[MultipleResourceCreateRequestV1] = {
             val resourcesToCreate: Seq[Future[OneOfMultipleResourceCreateRequestV1]] =
-                resourceRequest.map(x => formOneResourceRequest(x, userProfile))
+                resourceRequest.map(createResourceRequest => formOneResourceRequest(createResourceRequest, userProfile))
+
             for {
                 resToCreateCollection: Seq[OneOfMultipleResourceCreateRequestV1] <- Future.sequence(resourcesToCreate)
-
             } yield MultipleResourceCreateRequestV1(resToCreateCollection, projectId, userProfile, apiRequestID)
         }
 
@@ -301,24 +293,28 @@ object ResourcesRouteV1 extends Authenticator {
         }
 
         /**
-          * parses the xml and for each xml element creates a resource request
+          * Parses XML for bulk resource creation, and creates a [[CreateResourceRequestV1]] for each resource
+          * described in the XML.
           *
-          * @param xml : a simple xml
-          * @return Seq[CreateResourceRequestV1] collection of resource creation requests
+          * @param xml XML describing multiple resources to be created.
+          * @return Seq[CreateResourceRequestV1] a collection of resource creation requests.
           */
         def parseXml(xml: NodeSeq): Seq[CreateResourceRequestV1] = {
-
             xml.head.child
                 .filter(node => node.label != "#PCDATA")
                 .map(node => {
                     val entityType = node.label
+
                     // the id attribute of the xml element is the resource label
                     val resLabel = (node \ "@id").toString
+
                     // namespaces of xml
                     val elemNS = node.getNamespace(node.prefix)
-                    //element namespace + # + element tag gives the resource class Id
+
+                    // element namespace + # + element tag gives the resource class Id
                     val restype_id = elemNS + "#" + entityType
-                    //traversing the subelements to collect the values of resource
+
+                    // traversing the subelements to collect the values of resource
                     val properties: Seq[(IRI, Seq[CreateResourceValueV1])] = node.child
                         .filter(child => child.label != "#PCDATA")
                         .map {
@@ -327,33 +323,34 @@ object ResourcesRouteV1 extends Authenticator {
 
                                 if (child.descendant.size != 1) {
 
-                                    (child.getNamespace(child.prefix) + "#" + child.label ->
+                                    child.getNamespace(child.prefix) + "#" + child.label ->
                                         subnodes.map {
                                             case (subnode) =>
-                                                //xml elements with ref attribute are links
-                                                val ref_att = subnode.attribute("ref").get
-                                                if (ref_att != None) {
+                                                // xml elements with ref attribute are links
+                                                val ref_att: Seq[Node] = subnode.attribute("ref").get
+
+                                                if (ref_att.nonEmpty) {
                                                     CreateResourceValueV1(link_value = Some(subnode.getNamespace(subnode.prefix) + "/" + subnode.label + "#" + ref_att))
                                                 } else {
                                                     CreateResourceValueV1(Some(CreateRichtextV1(Some(subnode.text))))
                                                 }
                                         }
-                                        )
 
                                 } else {
+                                    // TODO: find out from the ontology which type of value we should expect for the property.
                                     Try(InputValidation.toDate(child.text, () => throw BadRequestException(s"not a dateValue"))) match {
-
                                         case Success(s) =>
-                                            (child.getNamespace(child.prefix) + "#" + child.label ->
-                                                List(CreateResourceValueV1(date_value = Some(s))))
+                                            child.getNamespace(child.prefix) + "#" + child.label ->
+                                                List(CreateResourceValueV1(date_value = Some(s)))
                                         case Failure(f) =>
-                                            (child.getNamespace(child.prefix) + "#" + child.label ->
-                                                List(CreateResourceValueV1(Some(CreateRichtextV1(Some(child.text))))))
+                                            // TODO: support the other value types, including text with markup.
+                                            child.getNamespace(child.prefix) + "#" + child.label ->
+                                                List(CreateResourceValueV1(Some(CreateRichtextV1(Some(child.text)))))
                                     }
 
                                 }
-
                         }
+
                     CreateResourceRequestV1(restype_id, resLabel, properties.toMap)
                 })
         }
@@ -365,8 +362,10 @@ object ResourcesRouteV1 extends Authenticator {
                     val userProfile = getUserProfileV1(requestContext)
                     val params = requestContext.request.uri.query().toMap
                     val searchstr = params.getOrElse("searchstr", throw BadRequestException(s"required param searchstr is missing"))
-                    val restype = params.getOrElse("restype_id", "-1")
+
                     // default -1 means: no restriction at all
+                    val restype = params.getOrElse("restype_id", "-1")
+
                     val numprops = params.getOrElse("numprops", "1")
                     val limit = params.getOrElse("limit", "11")
 

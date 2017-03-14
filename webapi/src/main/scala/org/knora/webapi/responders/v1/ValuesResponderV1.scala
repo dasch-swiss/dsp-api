@@ -289,14 +289,14 @@ class ValuesResponderV1 extends ResponderV1 {
                                                          valueIndexes: Vector[Int] = Vector.empty[Int])
 
             for {
-                ////////////////////////////////////////////////////////////////////////////////////////////////////////////
-                // Generate SPARQL to create links and LinkValues for standoff resource references in text values
+            ////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            // Generate SPARQL to create links and LinkValues for standoff resource references in text values
 
-                // To create LinkValues for the standoff resource references in the values to be created, we need to compute
-                // the initial reference count of each LinkValue. This is equal to the number of TextValues in the resource
-                // that have standoff references to a particular target resource.
+            // To create LinkValues for the standoff resource references in the values to be created, we need to compute
+            // the initial reference count of each LinkValue. This is equal to the number of TextValues in the resource
+            // that have standoff references to a particular target resource.
 
-                // First, make a single list of all the values to be created.
+            // First, make a single list of all the values to be created.
                 valuesToCreatePerProperty: Map[IRI, Seq[CreateValueV1WithComment]] <- Future(createMultipleValuesRequest.values)
                 valuesToCreateForAllProperties: Iterable[Seq[CreateValueV1WithComment]] = valuesToCreatePerProperty.values
                 allValuesToCreate: Iterable[CreateValueV1WithComment] = valuesToCreateForAllProperties.flatten
@@ -350,7 +350,7 @@ class ValuesResponderV1 extends ResponderV1 {
                 }
 
                 // Generate INSERT clause statements based on those SparqlTemplateLinkUpdates.
-                standoffLinkInsertSparql: String = queries.sparql.v1.txt.generateInsertStatementsForStandoffLinks(linkUpdates = standoffLinkUpdates, resourceIndex=0).toString()
+                standoffLinkInsertSparql: String = queries.sparql.v1.txt.generateInsertStatementsForStandoffLinks(linkUpdates = standoffLinkUpdates, resourceIndex = 0).toString()
 
                 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
                 // Number each value to be created, and give it a valueHasOrder
@@ -2009,7 +2009,7 @@ class ValuesResponderV1 extends ResponderV1 {
             //resourceIndex = 0 because this method isn't used when creating multiple resources
             sparqlUpdate = queries.sparql.v1.txt.createValue(
                 resourceIndex = 0,
-                checkObj=true,
+                checkObj = true,
                 dataNamedGraph = dataNamedGraph,
                 triplestore = settings.triplestoreType,
                 resourceIri = resourceIri,
