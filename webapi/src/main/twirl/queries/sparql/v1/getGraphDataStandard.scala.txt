@@ -50,11 +50,8 @@ WHERE {
             rdfs:label ?nodeLabel ;
             knora-base:attachedToUser ?nodeCreator ;
             knora-base:attachedToProject ?nodeProject ;
-            knora-base:isDeleted false .
-
-        OPTIONAL {
-            ?node knora-base:hasPermissions ?nodePermissions .
-        }
+            knora-base:isDeleted false ;
+            knora-base:hasPermissions ?nodePermissions .
     } else {
         BIND(IRI("@startNodeIri") AS ?startNode) .
 
@@ -93,17 +90,11 @@ WHERE {
         ?node a ?nodeClass ;
             rdfs:label ?nodeLabel ;
             knora-base:attachedToUser ?nodeCreator ;
-            knora-base:attachedToProject ?nodeProject .
+            knora-base:attachedToProject ?nodeProject ;
+            knora-base:hasPermissions ?nodePermissions .
 
-        OPTIONAL {
-            ?node knora-base:hasPermissions ?nodePermissions .
-        }
-
-        ?linkValue knora-base:attachedToUser ?linkValueCreator .
-
-        OPTIONAL {
-            ?linkValue knora-base:hasPermissions ?linkValuePermissions .
-        }
+        ?linkValue knora-base:attachedToUser ?linkValueCreator ;
+            knora-base:hasPermissions ?linkValuePermissions .
     }
 }
 LIMIT 50
