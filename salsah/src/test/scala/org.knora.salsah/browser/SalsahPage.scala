@@ -119,6 +119,18 @@ class SalsahPage {
         }
     }
 
+    /**
+      * Sets the active project.
+      *
+      * @param projectIri the IRI of the project to be selected.
+      */
+    def selectProject(projectIri: String): Unit = {
+        eventually {
+            val projectSelect = driver.findElement(By.id("project_sel"))
+            new Select(projectSelect).selectByValue(projectIri)
+        }
+    }
+
     /*
 
     Search
@@ -433,6 +445,15 @@ class SalsahPage {
 
         builder.clickAndHold(titlebar).moveByOffset(offsetX, offsetY).release().build.perform()
 
+    }
+
+    /**
+      * Closes a window.
+      *
+      * @param window  the [[WebElement]] representing the window.
+      */
+    def closeWindow(window: WebElement): Unit = {
+        window.findElement(By.xpath("//div[@class='close']")).click()
     }
 
     /*

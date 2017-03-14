@@ -67,7 +67,13 @@ class ResourceCreationSpec extends SalsahSpec {
     private val imagesUserEmail = "user02.user@example.com"
     private val imagesUserFullName = "User02 User"
 
+    private val multiUserEmail = "multi.user@example.com"
+    private val multiUserFullName = "Multi User"
+
     private val testPassword = "test"
+
+    private val anythingProjectIri = "http://data.knora.org/projects/anything"
+    private val incunabulaProjectIri = "http://data.knora.org/projects/77275339"
 
     // In order to run these tests, start `webapi` using the option `allowResetTriplestoreContentOperationOverHTTP`
 
@@ -124,65 +130,59 @@ class ResourceCreationSpec extends SalsahSpec {
 
         }
 
-        "create a resource of type anything:thing" in {
+        "create two resources of type anything:thing in two different projects as the multi-project user" in {
 
             page.load()
 
-            page.doLogin(email = anythingUserEmail, password = testPassword, fullName = anythingUserFullName)
+            page.doLogin(email = multiUserEmail, password = testPassword, fullName = multiUserFullName)
+
+            page.selectProject(anythingProjectIri)
 
             page.clickAddResourceButton()
 
             page.selectVocabulary("0") // select all
 
-            val restypes = page.selectRestype("http://www.knora.org/ontology/anything#Thing")
+            page.selectRestype("http://www.knora.org/ontology/anything#Thing")
 
-            val label: WebElement = page.getFormFieldByName("__LABEL__")
+            val resource1Label: WebElement = page.getFormFieldByName("__LABEL__")
 
-            label.sendKeys("Testding")
+            resource1Label.sendKeys("Testding")
 
-            val floatVal = page.getFormFieldByName("http://www.knora.org/ontology/anything#hasDecimal")
+            val resource1FloatVal = page.getFormFieldByName("http://www.knora.org/ontology/anything#hasDecimal")
 
-            floatVal.sendKeys("5.3")
+            resource1FloatVal.sendKeys("5.3")
 
-            val textVal = page.getFormFieldByName("http://www.knora.org/ontology/anything#hasText")
+            val resource1TextVal = page.getFormFieldByName("http://www.knora.org/ontology/anything#hasText")
 
-            textVal.sendKeys("Dies ist ein Test")
+            resource1TextVal.sendKeys("Dies ist ein Test")
 
             page.clickSaveButtonForResourceCreationForm()
 
-            val window = page.getWindow(1)
+            val resource1Window = page.getWindow(1)
 
-            page.doLogout()
+            page.closeWindow(resource1Window)
 
-        }
-
-        "create another resource of type anything:thing" in {
-
-            page.load()
-
-            page.doLogin(email = anythingUserEmail, password = testPassword, fullName = anythingUserFullName)
+            page.selectProject(incunabulaProjectIri)
 
             page.clickAddResourceButton()
 
             page.selectVocabulary("0") // select all
 
-            val restypes = page.selectRestype("http://www.knora.org/ontology/anything#Thing")
+            page.selectRestype("http://www.knora.org/ontology/anything#Thing")
 
-            val label: WebElement = page.getFormFieldByName("__LABEL__")
+            val resource2Label: WebElement = page.getFormFieldByName("__LABEL__")
 
-            label.sendKeys("ein zweites Testding")
+            resource2Label.sendKeys("ein zweites Testding")
 
-            val floatVal = page.getFormFieldByName("http://www.knora.org/ontology/anything#hasDecimal")
+            val resource2FloatVal = page.getFormFieldByName("http://www.knora.org/ontology/anything#hasDecimal")
 
-            floatVal.sendKeys("5.7")
+            resource2FloatVal.sendKeys("5.7")
 
-            val textVal = page.getFormFieldByName("http://www.knora.org/ontology/anything#hasText")
+            val resource2TextVal = page.getFormFieldByName("http://www.knora.org/ontology/anything#hasText")
 
-            textVal.sendKeys("Dies ist auch ein Test")
+            resource2TextVal.sendKeys("Dies ist auch ein Test")
 
             page.clickSaveButtonForResourceCreationForm()
-
-            val window = page.getWindow(1)
 
             page.doLogout()
 

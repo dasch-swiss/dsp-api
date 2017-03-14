@@ -100,7 +100,7 @@
 				}
 				//  set the user's active project
 
-				var psel = $('<select>').appendTo('#projectctrl').on('change', function(event){
+				var psel = $('<select id="project_sel">').appendTo('#projectctrl').on('change', function(event){
 					SALSAH.userprofile.active_project = $(this).val();
 					window.sessionStorage.setItem('userprofile', JSON.stringify(SALSAH.userprofile));
 
