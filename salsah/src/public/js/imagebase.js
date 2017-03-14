@@ -1660,7 +1660,7 @@ $(function() {
 					SALSAH.ApiPost('resources', { // use resources route because it is a knora-base_linkObject resource that is to be created
 						restype_id: "http://www.knora.org/ontology/knora-base#LinkObj",
 						label: window_content.find(".__label").val(),
-						project_id: SALSAH.userdata.projects[0],
+						project_id: SALSAH.active_project,
 						properties: {
 							"http://www.knora.org/ontology/knora-base#hasLinkTo": resIdsArr,
 							"http://www.knora.org/ontology/knora-base#hasComment": [{richtext_value: rt_props}]

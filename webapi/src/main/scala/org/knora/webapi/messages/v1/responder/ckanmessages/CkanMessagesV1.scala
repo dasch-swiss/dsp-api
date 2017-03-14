@@ -21,7 +21,7 @@
 package org.knora.webapi.messages.v1.responder.ckanmessages
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1, UserV1JsonProtocol}
+import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
 import spray.json._
 
@@ -51,8 +51,7 @@ case class CkanRequestV1(projects: Option[Seq[String]], limit: Option[Int], info
   *
   * @param projects
   */
-case class CkanResponseV1(projects: Seq[CkanProjectV1],
-                          userdata: UserDataV1) extends KnoraResponseV1 {
+case class CkanResponseV1(projects: Seq[CkanProjectV1]) extends KnoraResponseV1 {
     def toJsValue = CkanV1JsonProtocol.ckanResponseV1Format.write(this)
 }
 
@@ -189,11 +188,9 @@ case class IncunabulaCkanProjectDatasetFileV1(resid: String,
   */
 object CkanV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol {
 
-    import UserV1JsonProtocol.userDataV1Format
-
     implicit val ckanProjectDatasetFileV1Format: JsonFormat[CkanProjectDatasetFileV1] = jsonFormat7(CkanProjectDatasetFileV1)
     implicit val ckanProjectDatasetV1Format: JsonFormat[CkanProjectDatasetV1] = jsonFormat4(CkanProjectDatasetV1)
     implicit val ckanProjectInfoV1Format: JsonFormat[CkanProjectInfoV1] = jsonFormat4(CkanProjectInfoV1)
     implicit val ckanProjectV1Format: JsonFormat[CkanProjectV1] = jsonFormat2(CkanProjectV1)
-    implicit val ckanResponseV1Format: RootJsonFormat[CkanResponseV1] = jsonFormat2(CkanResponseV1)
+    implicit val ckanResponseV1Format: RootJsonFormat[CkanResponseV1] = jsonFormat1(CkanResponseV1)
 }

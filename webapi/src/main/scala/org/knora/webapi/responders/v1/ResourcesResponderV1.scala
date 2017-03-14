@@ -385,7 +385,7 @@ class ResourcesResponderV1 extends ResponderV1 {
                     )
             }.toVector
 
-        } yield GraphDataGetResponseV1(nodes = resultNodes, edges = resultEdges, userdata = graphDataGetRequest.userProfile.userData)
+        } yield GraphDataGetResponseV1(nodes = resultNodes, edges = resultEdges)
     }
 
 
@@ -407,8 +407,7 @@ class ResourcesResponderV1 extends ResponderV1 {
             case Some(permissions) =>
                 ResourceInfoResponseV1(
                     resource_info = Some(resInfo),
-                    rights = userPermissions,
-                    userdata = userProfile.userData
+                    rights = userPermissions
                 )
             case None =>
                 val userID = userProfile.userData.user_id.getOrElse(OntologyConstants.KnoraBase.UnknownUser)
@@ -716,8 +715,7 @@ class ResourcesResponderV1 extends ResponderV1 {
                     resdata = Some(resData),
                     props = Some(PropsV1(properties)),
                     incoming = incomingRefs,
-                    access = "OK",
-                    userdata = userProfile.userData
+                    access = "OK"
                 )
             } else {
                 val userID = userProfile.userData.user_id.getOrElse(OntologyConstants.KnoraBase.UnknownUser)
@@ -1055,9 +1053,7 @@ class ResourcesResponderV1 extends ResponderV1 {
                     )
                 }
             }
-        } yield ResourceContextResponseV1(
-            resource_context = resourceContextV1,
-            userdata = userProfile.userData)
+        } yield ResourceContextResponseV1(resource_context = resourceContextV1)
 
     }
 
@@ -1073,10 +1069,7 @@ class ResourcesResponderV1 extends ResponderV1 {
             (userPermission, _) <- getResourceInfoV1(resourceIri, userProfile, queryOntology = false)
 
             // Construct an API response.
-            rightsResponse = ResourceRightsResponseV1(
-                rights = userPermission,
-                userdata = userProfile.userData
-            )
+            rightsResponse = ResourceRightsResponseV1(rights = userPermission)
         } yield rightsResponse
     }
 
@@ -1175,9 +1168,7 @@ class ResourcesResponderV1 extends ResponderV1 {
                     }
             }.filter(_.rights.nonEmpty) // user must have permissions to see resource (must not be None)
 
-        } yield ResourceSearchResponseV1(
-            resources = resources,
-            userdata = userProfile.userData)
+        } yield ResourceSearchResponseV1(resources = resources)
     }
 
     /**
@@ -1407,7 +1398,7 @@ class ResourcesResponderV1 extends ResponderV1 {
                     })
                 }
 
-                apiResponse: ResourceCreateResponseV1 = ResourceCreateResponseV1(results = resourceCreateValueResponses, res_id = resourceIri, userdata = userProfile.userData)
+                apiResponse: ResourceCreateResponseV1 = ResourceCreateResponseV1(results = resourceCreateValueResponses, res_id = resourceIri)
             } yield apiResponse
         }
 
@@ -1536,10 +1527,7 @@ class ResourcesResponderV1 extends ResponderV1 {
                 _ = if (rows.isEmpty || !InputValidation.optionStringToBoolean(rows.head.rowMap.get("isDeleted"))) {
                     throw UpdateNotPerformedException(s"Resource ${resourceDeleteRequest.resourceIri} was not marked as deleted. Please report this as a possible bug.")
                 }
-            } yield ResourceDeleteResponseV1(
-                id = resourceDeleteRequest.resourceIri,
-                userdata = resourceDeleteRequest.userProfile.userData
-            )
+            } yield ResourceDeleteResponseV1(id = resourceDeleteRequest.resourceIri)
         }
 
         for {
@@ -1642,10 +1630,10 @@ class ResourcesResponderV1 extends ResponderV1 {
 
                 // we expect exactly one row to be returned if the label was updated correctly in the data.
                 _ = if (rows.length != 1) {
-                    throw UpdateNotPerformedException(s"The label of the resource ${resourceIri} was not updated correctly. Please report this as a possible bug.")
+                    throw UpdateNotPerformedException(s"The label of the resource $resourceIri was not updated correctly. Please report this as a possible bug.")
                 }
 
-            } yield ChangeResourceLabelResponseV1(res_id = resourceIri, label = label, userProfile.userData)
+            } yield ChangeResourceLabelResponseV1(res_id = resourceIri, label = label)
         }
 
         for {
@@ -1719,7 +1707,7 @@ class ResourcesResponderV1 extends ResponderV1 {
 
             }
 
-        } yield PropertiesGetResponseV1(PropsGetV1(propertiesGetV1), userdata = userProfile.userData)
+        } yield PropertiesGetResponseV1(PropsGetV1(propertiesGetV1))
 
     }
 

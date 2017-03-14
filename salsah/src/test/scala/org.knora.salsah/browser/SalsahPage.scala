@@ -84,41 +84,50 @@ class SalsahPage {
     /**
       * Does login with given credentials.
       *
-      * @param user     username
-      * @param password password
+      * @param email    user's email address
+      * @param password user's password
+      * @param fullName user's full name
       */
-    def doLogin(user: String, password: String): Unit = {
+    def doLogin(email: String, password: String, fullName: String): Unit = {
         val loginButton = driver.findElement(By.id("dologin"))
-
         loginButton.click()
 
         val userInput = driver.findElement(By.id("user_id"))
         val passwordInput = driver.findElement(By.id("password"))
         val sendCredentials = driver.findElement(By.id("login_button"))
 
-        userInput.sendKeys(user)
+        userInput.sendKeys(email)
         passwordInput.sendKeys("test")
         sendCredentials.click()
 
-
-
+        eventually {
+            driver.findElement(By.xpath("//*[@id=\"userctrl\"]")).getText.contains(fullName)
+            driver.findElement(By.id("dologout"))
+        }
     }
 
     /**
-      * Checks that SALSAH.userdata contains the necessary data (assigned after successful login)
+      * Logs the user out.
       */
-    def checkForUserdata = {
-        driver match {
-            case jsExe: JavascriptExecutor =>
-                // return the global variable SALSAH.userdata from the browser's window object
-                val userdata: String = jsExe.executeScript("return window.SALSAH.userdata;").toString
+    def doLogout(): Unit = {
+        val logoutButton = driver.findElement(By.id("dologout"))
+        logoutButton.click()
 
-                // if userdata still contains the default value, the userdata has not been written back yet
-                // async request to v1/session returns JSON with the userdata
-                // userdata contains the user's projects which we need to create new resources
-                if (userdata == "{lang=en}") throw new Exception("expected userdata is not there yet")
+        eventually {
+            val logoutConfirmButton = driver.findElement(By.id("logout_button"))
+            logoutConfirmButton.click()
+        }
+    }
 
-            case _ => throw new Exception("cannot execute javascript")
+    /**
+      * Sets the active project.
+      *
+      * @param projectIri the IRI of the project to be selected.
+      */
+    def selectProject(projectIri: String): Unit = {
+        eventually {
+            val projectSelect = driver.findElement(By.id("project_sel"))
+            new Select(projectSelect).selectByValue(projectIri)
         }
     }
 
@@ -436,6 +445,15 @@ class SalsahPage {
 
         builder.clickAndHold(titlebar).moveByOffset(offsetX, offsetY).release().build.perform()
 
+    }
+
+    /**
+      * Closes a window.
+      *
+      * @param window  the [[WebElement]] representing the window.
+      */
+    def closeWindow(window: WebElement): Unit = {
+        window.findElement(By.xpath("//div[@class='close']")).click()
     }
 
     /*

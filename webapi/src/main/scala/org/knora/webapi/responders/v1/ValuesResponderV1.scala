@@ -96,8 +96,7 @@ class ValuesResponderV1 extends ResponderV1 {
                         valuecreator = valueOwnerProfile.userData.email.get,
                         valuecreatorname = valueOwnerProfile.userData.fullname.get,
                         valuecreationdate = valueQueryResult.creationDate,
-                        comment = valueQueryResult.comment,
-                        userdata = userProfile.userData
+                        comment = valueQueryResult.comment
                     )
 
                 case None =>
@@ -682,8 +681,7 @@ class ValuesResponderV1 extends ResponderV1 {
                         }
 
                         valueUtilV1.fileValueV12LocationV1(fileValue)
-                },
-                userdata = changeFileValueRequest.userProfile.userData
+                }
             )
 
             // If a temporary file was created, ensure that it's deleted, regardless of whether the request succeeded or failed.
@@ -977,8 +975,7 @@ class ValuesResponderV1 extends ResponderV1 {
                 value = verifyUpdateResult.value,
                 comment = verifyUpdateResult.comment,
                 id = newValueIri,
-                rights = verifyUpdateResult.permissionCode,
-                userdata = changeCommentRequest.userProfile.userData
+                rights = verifyUpdateResult.permissionCode
             )
         }
 
@@ -1130,10 +1127,7 @@ class ValuesResponderV1 extends ResponderV1 {
             _ = if (rows.isEmpty || !InputValidation.optionStringToBoolean(rows.head.rowMap.get("isDeleted"))) {
                 throw UpdateNotPerformedException(s"The request to mark value ${deleteValueRequest.valueIri} (or a new version of that value) as deleted did not succeed. Please report this as a possible bug.")
             }
-        } yield DeleteValueResponseV1(
-            id = deletedValueIri,
-            userdata = deleteValueRequest.userProfile.userData
-        )
+        } yield DeleteValueResponseV1(id = deletedValueIri)
 
         for {
         // Don't allow anonymous users to update values.
@@ -1250,10 +1244,7 @@ class ValuesResponderV1 extends ResponderV1 {
                         }
                     )
             }
-        } yield ValueVersionHistoryGetResponseV1(
-            valueVersions = versionV1Vector,
-            versionHistoryRequest.userProfile.userData
-        )
+        } yield ValueVersionHistoryGetResponseV1(valueVersions = versionV1Vector)
     }
 
     /**
@@ -1288,8 +1279,7 @@ class ValuesResponderV1 extends ResponderV1 {
                         valuecreator = valueCreatorProfile.userData.email.get,
                         valuecreatorname = valueCreatorProfile.userData.fullname.get,
                         valuecreationdate = valueQueryResult.creationDate,
-                        comment = valueQueryResult.comment,
-                        userdata = userProfile.userData
+                        comment = valueQueryResult.comment
                     )
 
                 case None =>
@@ -1704,8 +1694,7 @@ class ValuesResponderV1 extends ResponderV1 {
                     value = apiResponseValue,
                     comment = linkValueQueryResult.comment,
                     id = unverifiedValue.newValueIri,
-                    rights = linkValueQueryResult.permissionCode,
-                    userdata = userProfile.userData
+                    rights = linkValueQueryResult.permissionCode
                 )
 
             case ordinaryUpdateValueV1 =>
@@ -1720,8 +1709,7 @@ class ValuesResponderV1 extends ResponderV1 {
                     value = verifyUpdateResult.value,
                     comment = verifyUpdateResult.comment,
                     id = unverifiedValue.newValueIri,
-                    rights = verifyUpdateResult.permissionCode,
-                    userdata = userProfile.userData
+                    rights = verifyUpdateResult.permissionCode
                 )
         }
     }
@@ -2127,8 +2115,7 @@ class ValuesResponderV1 extends ResponderV1 {
             value = apiResponseValue,
             comment = linkValueQueryResult.comment,
             id = sparqlTemplateLinkUpdateForNewLink.newLinkValueIri,
-            rights = linkValueQueryResult.permissionCode,
-            userdata = userProfile.userData
+            rights = linkValueQueryResult.permissionCode
         )
     }
 
@@ -2263,8 +2250,7 @@ class ValuesResponderV1 extends ResponderV1 {
             value = verifyUpdateResult.value,
             comment = verifyUpdateResult.comment,
             id = newValueIri,
-            rights = verifyUpdateResult.permissionCode,
-            userdata = userProfile.userData
+            rights = verifyUpdateResult.permissionCode
         )
     }
 

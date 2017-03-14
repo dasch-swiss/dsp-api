@@ -141,34 +141,9 @@ class PermissionUtilV1Spec extends CoreSpec("PermissionUtilSpec") with ImplicitS
             ) should equal(Some(6)) // modify permissions
         }
 
-        "return user's max permission on link value with value props (1)" ignore {
-
-            "http://www.knora.org/ontology/knora-base#hasStandoffLinkTo"
-
-
-        }
-
-        "return user's max permission on link value with value props (2)" ignore {
-
-            /*
-            "incunabula:partOf"
-            "V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember|D knora-base:Owner"
-            "http://data.knora.org/users/91e19f1e01"
-
-
-            PermissionUtilV1.getUserPermissionOnLinkValueV1WithValueProps(
-                linkValueIri = "http://data.knora.org/00014b43f902/values/a3a1ec4d-84b5-4769-83ab-319a1cfcf8a3",
-                predicateIri = "incunabula:partOf",
-                valueProps = ,
-                userProfile = SharedAdminTestData.incunabulaUser
-            ) should equal(Some(5))
-            */
-        }
-
-
 
         "return user's max permission on link value" ignore {
-
+            // TODO
         }
 
         "return parsed permissions string as 'Map[IRI, Set[String]]" in {

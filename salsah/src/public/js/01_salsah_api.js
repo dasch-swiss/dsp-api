@@ -88,10 +88,6 @@ SALSAH.ApiGet = function() {
 	}
 
 	send_params.success = function(data, textStatus, jqXHR) {
-		if ((typeof data == 'object') && (typeof data.userdata == 'object')) {
-			SALSAH.userdata = data.userdata;
-			delete data.userdata;
-		}
 		if (typeof success_cb == 'function') {
 			success_cb(data, textStatus, jqXHR);
 		}
@@ -182,14 +178,6 @@ SALSAH.ApiPost = function() {
 			}
 		}
 	}
-	/*
-	if (SALSAH.userdata !== undefined) {
-		if (send_params.data === undefined) {
-			send_params.data = {};
-		}
-		send_params.data.userdata = SALSAH.userdata;
-	}
-	*/
 
 	//
 	// convert all data to JSON before sending...
@@ -197,10 +185,6 @@ SALSAH.ApiPost = function() {
 	send_params.data = JSON.stringify(send_params.data);
 
 	send_params.success = function(data, textStatus, jqXHR) {
-		if ((typeof data == 'object') && (typeof data.userdata == 'object')) {
-			SALSAH.userdata = data.userdata;
-			delete data.userdata;
-		}
 		if (typeof success_cb == 'function') {
 			success_cb(data, textStatus, jqXHR);
 		}
@@ -272,25 +256,12 @@ SALSAH.ApiPut = function() {
 		}
 	}
 
-	/*
-	if (SALSAH.userdata !== undefined) {
-		if (send_params.data === undefined) {
-			send_params.data = {};
-		}
-		send_params.data.userdata = SALSAH.userdata;
-	}
-	*/
-
 	//
 	// convert all data to JSON before sending...
 	//
 	send_params.data = JSON.stringify(send_params.data);
 
 	send_params.success = function(data, textStatus, jqXHR) {
-		if ((typeof data == 'object') && (typeof data.userdata == 'object')) {
-			SALSAH.userdata = data.userdata;
-			delete data.userdata;
-		}
 		if (typeof success_cb == 'function') {
 			success_cb(data, textStatus, jqXHR);
 		}
@@ -351,10 +322,6 @@ SALSAH.ApiDelete = function() {
 	send_params.data = JSON.stringify(send_params.data);
 
 	send_params.success = function(data, textStatus, jqXHR) {
-		if ((typeof data == 'object') && (typeof data.userdata == 'object')) {
-			SALSAH.userdata = data.userdata;
-			delete data.userdata;
-		}
 		if (typeof success_cb == 'function') {
 			success_cb(data, textStatus, jqXHR);
 		}

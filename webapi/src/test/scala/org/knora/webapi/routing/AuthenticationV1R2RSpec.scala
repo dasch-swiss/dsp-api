@@ -52,28 +52,28 @@ class AuthenticationV1R2RSpec extends R2RSpec with SessionJsonProtocol {
          akka.stdout-loglevel = "DEBUG"
         """.stripMargin
 
-    val responderManager = system.actorOf(Props(new ResponderManagerV1 with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
-    val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
+    private val responderManager = system.actorOf(Props(new ResponderManagerV1 with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
+    private val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
 
-    val authenticatePath = AuthenticateRouteV1.knoraApiPath(system, settings, log)
-    val resourcesPath = ResourcesRouteV1.knoraApiPath(system, settings, log)
+    private val authenticatePath = AuthenticateRouteV1.knoraApiPath(system, settings, log)
+    private val resourcesPath = ResourcesRouteV1.knoraApiPath(system, settings, log)
 
-    implicit val timeout: Timeout = 300.seconds
+    private implicit val timeout: Timeout = 300.seconds
 
-    implicit def default(implicit system: ActorSystem) = RouteTestTimeout(5.seconds)
+    private implicit def default(implicit system: ActorSystem) = RouteTestTimeout(5.seconds)
 
-    val rdfDataObjects = List(
+    private val rdfDataObjects = List(
         RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/incunabula"),
         RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/images")
     )
 
-    val rootEmail = SharedAdminTestData.rootUser.userData.email.get
-    val rootEmailEnc = java.net.URLEncoder.encode(rootEmail, "utf-8")
-    val inactiveUser = java.net.URLEncoder.encode(SharedAdminTestData.inactiveUser.userData.email.get, "utf-8")
-    val wrongEmail = "wrong@example.com"
-    val wrongEmailEnc = java.net.URLEncoder.encode(wrongEmail, "utf-8")
-    val testPass = java.net.URLEncoder.encode("test", "utf-8")
-    val wrongPass = java.net.URLEncoder.encode("wrong", "utf-8")
+    private val rootEmail = SharedAdminTestData.rootUser.userData.email.get
+    private val rootEmailEnc = java.net.URLEncoder.encode(rootEmail, "utf-8")
+    private val inactiveUser = java.net.URLEncoder.encode(SharedAdminTestData.inactiveUser.userData.email.get, "utf-8")
+    private val wrongEmail = "wrong@example.com"
+    private val wrongEmailEnc = java.net.URLEncoder.encode(wrongEmail, "utf-8")
+    private val testPass = java.net.URLEncoder.encode("test", "utf-8")
+    private val wrongPass = java.net.URLEncoder.encode("wrong", "utf-8")
 
     "Load test data" in {
         Await.result(storeManager ? ResetTriplestoreContent(rdfDataObjects), 300.seconds)
@@ -256,8 +256,8 @@ class AuthenticationV1R2RSpec extends R2RSpec with SessionJsonProtocol {
             Get(s"/v1/resources/http%3A%2F%2Fdata.knora.org%2Fc5058f3a?email=$rootEmailEnc&password=$testPass") ~> resourcesPath ~> check {
                 //log.debug("==>> " + responseAs[String])
                 // assert(status === StatusCodes.OK)
-                assert(responseAs[String] contains "\"password\":null")
-                assert(responseAs[String] contains "\"token\":null")
+                assert(!responseAs[String].contains("\"password\""))
+                assert(!responseAs[String].contains("\"token\""))
             }
         }
 
