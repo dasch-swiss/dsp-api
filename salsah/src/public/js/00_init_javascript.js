@@ -171,7 +171,7 @@ var s_ = function(key) {
 
 SALSAH.reload_css = function() {
     var href = $('#loadcss').attr('href'); + ',#';
-	if ((SALSAH.userdata !== null) && (SALSAH.userdata.active_project !== undefined)) href += '&project_id=' + SALSAH.userdata.active_project;
+	if ((SALSAH.userprofile.active_project !== undefined)) href += '&project_id=' + SALSAH.userprofile.active_project;
 
     $('#loadcss').attr({href: href});
 }

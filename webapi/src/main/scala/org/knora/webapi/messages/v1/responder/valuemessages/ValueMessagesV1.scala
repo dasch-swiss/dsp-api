@@ -22,17 +22,16 @@ package org.knora.webapi.messages.v1.responder.valuemessages
 
 import java.util.UUID
 
+import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi.messages.v1.responder.resourcemessages.LocationV1
 import org.knora.webapi.messages.v1.responder.sipimessages.SipiResponderConversionRequestV1
-import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1, UserV1JsonProtocol}
+import org.knora.webapi.messages.v1.responder.standoffmessages.MappingXMLtoStandoff
+import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
-import org.knora.webapi.util.{DateUtilV1, ErrorHandlingMap, InputValidation, KnoraIdUtil}
-import org.knora.webapi.{BadRequestException, _}
-import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import org.knora.webapi.messages.v1.responder.ontologymessages.StandoffEntityInfoGetResponseV1
-import org.knora.webapi.messages.v1.responder.standoffmessages.{GetMappingResponseV1, MappingXMLtoStandoff, StandoffDataTypeClasses}
 import org.knora.webapi.twirl.{StandoffTagAttributeV1, StandoffTagInternalReferenceAttributeV1, StandoffTagV1}
 import org.knora.webapi.util.standoff.StandoffTagUtilV1
+import org.knora.webapi.util.{DateUtilV1, InputValidation, KnoraIdUtil}
+import org.knora.webapi.{BadRequestException, _}
 import spray.json._
 
 
@@ -254,7 +253,6 @@ case class LinkValueGetRequestV1(subjectIri: IRI, predicateIri: IRI, objectIri: 
   * @param valuecreationdate the date when the value was created.
   * @param comment           the comment on the value, if any.
   * @param rights            the user's permission on the value.
-  * @param userdata          information about the user that made the request.
   */
 case class ValueGetResponseV1(valuetype: IRI,
                               value: ApiValueV1,
@@ -262,8 +260,7 @@ case class ValueGetResponseV1(valuetype: IRI,
                               valuecreatorname: String,
                               valuecreationdate: String,
                               comment: Option[String] = None,
-                              rights: Int,
-                              userdata: UserDataV1) extends KnoraResponseV1 {
+                              rights: Int) extends KnoraResponseV1 {
     def toJsValue = ApiValueV1JsonProtocol.valueGetResponseV1Format.write(this)
 }
 
@@ -284,10 +281,8 @@ case class ValueVersionHistoryGetRequestV1(resourceIri: IRI,
   * Provides the version history of a value.
   *
   * @param valueVersions a list of the versions of the value, from newest to oldest.
-  * @param userdata      information about the user that made the request.
   */
-case class ValueVersionHistoryGetResponseV1(valueVersions: Seq[ValueVersionV1],
-                                            userdata: UserDataV1) extends KnoraResponseV1 {
+case class ValueVersionHistoryGetResponseV1(valueVersions: Seq[ValueVersionV1]) extends KnoraResponseV1 {
     def toJsValue = ApiValueV1JsonProtocol.valueVersionHistoryGetResponseV1Format.write(this)
 }
 
@@ -316,17 +311,15 @@ case class CreateValueRequestV1(resourceIndex: Int = 0,
 /**
   * Represents a response to a [[CreateValueRequestV1]].
   *
-  * @param value    the value that was added.
-  * @param comment  an optional comment on the value.
-  * @param id       the IRI of the value that was added.
-  * @param rights   a code representing the requesting user's permissions on the value.
-  * @param userdata information about the user that made the request.
+  * @param value   the value that was added.
+  * @param comment an optional comment on the value.
+  * @param id      the IRI of the value that was added.
+  * @param rights  a code representing the requesting user's permissions on the value.
   */
 case class CreateValueResponseV1(value: ApiValueV1,
                                  comment: Option[String] = None,
                                  id: IRI,
-                                 rights: Int,
-                                 userdata: UserDataV1) extends KnoraResponseV1 {
+                                 rights: Int) extends KnoraResponseV1 {
     def toJsValue = ApiValueV1JsonProtocol.createValueResponseV1Format.write(this)
 }
 
@@ -456,16 +449,14 @@ case class ChangeCommentRequestV1(valueIri: IRI,
 /**
   * Represents a response to an [[ChangeValueRequestV1]].
   *
-  * @param value    the value that was added.
-  * @param comment  an optional comment on the value.
-  * @param id       the IRI of the value that was added.
-  * @param userdata information about the user that made the request.
+  * @param value   the value that was added.
+  * @param comment an optional comment on the value.
+  * @param id      the IRI of the value that was added.
   */
 case class ChangeValueResponseV1(value: ApiValueV1,
                                  comment: Option[String] = None,
                                  id: IRI,
-                                 rights: Int,
-                                 userdata: UserDataV1) extends KnoraResponseV1 {
+                                 rights: Int) extends KnoraResponseV1 {
     def toJsValue = ApiValueV1JsonProtocol.changeValueResponseV1Format.write(this)
 }
 
@@ -485,14 +476,12 @@ case class DeleteValueRequestV1(valueIri: IRI,
 /**
   * Represents a response to a [[DeleteValueRequestV1]].
   *
-  * @param id       the IRI of the value that was marked as deleted. If this was a `LinkValue`, a new version of it
-  *                 will have been created, and `id` will the IRI of that new version. Otherwise, `id` will be the IRI
-  *                 submitted in the [[DeleteValueRequestV1]]. For an explanation of this behaviour, see the chapter
-  *                 ''Triplestore Updates'' in the Knora API server design documentation.
-  * @param userdata information about the user that made the request.
+  * @param id the IRI of the value that was marked as deleted. If this was a `LinkValue`, a new version of it
+  *           will have been created, and `id` will the IRI of that new version. Otherwise, `id` will be the IRI
+  *           submitted in the [[DeleteValueRequestV1]]. For an explanation of this behaviour, see the chapter
+  *           ''Triplestore Updates'' in the Knora API server design documentation.
   */
-case class DeleteValueResponseV1(id: IRI,
-                                 userdata: UserDataV1) extends KnoraResponseV1 {
+case class DeleteValueResponseV1(id: IRI) extends KnoraResponseV1 {
     def toJsValue = ApiValueV1JsonProtocol.deleteValueResponseV1Format.write(this)
 }
 
@@ -510,10 +499,8 @@ case class ChangeFileValueRequestV1(resourceIri: IRI, file: SipiResponderConvers
   * Possibly, two file values have been changed (thumb and full quality).
   *
   * @param locations the updated file value(s).
-  * @param userdata  information about the user that made the request.
   */
-case class ChangeFileValueResponseV1(locations: Vector[LocationV1],
-                                     userdata: UserDataV1) extends KnoraResponseV1 {
+case class ChangeFileValueResponseV1(locations: Vector[LocationV1]) extends KnoraResponseV1 {
     def toJsValue = ApiValueV1JsonProtocol.changeFileValueresponseV1Format.write(this)
 }
 
@@ -1524,7 +1511,6 @@ case class ValueVersionV1(valueObjectIri: IRI,
   */
 object ApiValueV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with NullOptions {
 
-    import UserV1JsonProtocol.userDataV1Format
     import org.knora.webapi.messages.v1.responder.resourcemessages.ResourceV1JsonProtocol._
 
     /**
@@ -1571,20 +1557,20 @@ object ApiValueV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
 
     implicit val createFileQualityLevelFormat: RootJsonFormat[CreateFileQualityLevelV1] = jsonFormat4(CreateFileQualityLevelV1)
     implicit val createFileV1Format: RootJsonFormat[CreateFileV1] = jsonFormat3(CreateFileV1)
-    implicit val valueGetResponseV1Format: RootJsonFormat[ValueGetResponseV1] = jsonFormat8(ValueGetResponseV1)
+    implicit val valueGetResponseV1Format: RootJsonFormat[ValueGetResponseV1] = jsonFormat7(ValueGetResponseV1)
     implicit val dateValueV1Format: JsonFormat[DateValueV1] = jsonFormat3(DateValueV1)
     implicit val stillImageFileValueV1Format: JsonFormat[StillImageFileValueV1] = jsonFormat9(StillImageFileValueV1)
     implicit val textFileValueV1Format: JsonFormat[TextFileValueV1] = jsonFormat4(TextFileValueV1)
     implicit val movingImageFileValueV1Format: JsonFormat[MovingImageFileValueV1] = jsonFormat4(MovingImageFileValueV1)
     implicit val valueVersionV1Format: JsonFormat[ValueVersionV1] = jsonFormat3(ValueVersionV1)
     implicit val linkValueV1Format: JsonFormat[LinkValueV1] = jsonFormat4(LinkValueV1)
-    implicit val valueVersionHistoryGetResponseV1Format: RootJsonFormat[ValueVersionHistoryGetResponseV1] = jsonFormat2(ValueVersionHistoryGetResponseV1)
+    implicit val valueVersionHistoryGetResponseV1Format: RootJsonFormat[ValueVersionHistoryGetResponseV1] = jsonFormat1(ValueVersionHistoryGetResponseV1)
     implicit val createRichtextV1Format: RootJsonFormat[CreateRichtextV1] = jsonFormat3(CreateRichtextV1)
     implicit val createValueApiRequestV1Format: RootJsonFormat[CreateValueApiRequestV1] = jsonFormat15(CreateValueApiRequestV1)
-    implicit val createValueResponseV1Format: RootJsonFormat[CreateValueResponseV1] = jsonFormat5(CreateValueResponseV1)
+    implicit val createValueResponseV1Format: RootJsonFormat[CreateValueResponseV1] = jsonFormat4(CreateValueResponseV1)
     implicit val changeValueApiRequestV1Format: RootJsonFormat[ChangeValueApiRequestV1] = jsonFormat13(ChangeValueApiRequestV1)
-    implicit val changeValueResponseV1Format: RootJsonFormat[ChangeValueResponseV1] = jsonFormat5(ChangeValueResponseV1)
-    implicit val deleteValueResponseV1Format: RootJsonFormat[DeleteValueResponseV1] = jsonFormat2(DeleteValueResponseV1)
+    implicit val changeValueResponseV1Format: RootJsonFormat[ChangeValueResponseV1] = jsonFormat4(ChangeValueResponseV1)
+    implicit val deleteValueResponseV1Format: RootJsonFormat[DeleteValueResponseV1] = jsonFormat1(DeleteValueResponseV1)
     implicit val changeFileValueApiRequestV1Format: RootJsonFormat[ChangeFileValueApiRequestV1] = jsonFormat1(ChangeFileValueApiRequestV1)
-    implicit val changeFileValueresponseV1Format: RootJsonFormat[ChangeFileValueResponseV1] = jsonFormat2(ChangeFileValueResponseV1)
+    implicit val changeFileValueresponseV1Format: RootJsonFormat[ChangeFileValueResponseV1] = jsonFormat1(ChangeFileValueResponseV1)
 }

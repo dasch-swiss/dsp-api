@@ -24,7 +24,7 @@ import java.util.UUID
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi.IRI
-import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1, UserV1JsonProtocol}
+import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
 import spray.json.{DefaultJsonProtocol, JsonFormat, NullOptions, RootJsonFormat}
 
@@ -47,8 +47,7 @@ case class CreateProjectApiRequestV1(shortname: String,
                                      logo: Option[String],
                                      basepath: String,
                                      status: Boolean = true,
-                                     hasSelfJoinEnabled: Boolean = false
-                                    ) extends ProjectV1JsonProtocol {
+                                     hasSelfJoinEnabled: Boolean = false) extends ProjectV1JsonProtocol {
     def toJsValue = createProjectApiRequestV1Format.write(this)
 }
 
@@ -149,10 +148,8 @@ case class ProjectUpdateRequestV1(projectIri: IRI,
   * Represents the Knora API v1 JSON response to a request for information about all projects.
   *
   * @param projects information about all existing projects.
-  * @param userdata information about the user that made the request.
   */
-case class ProjectsResponseV1(projects: Seq[ProjectInfoV1],
-                              userdata: Option[UserDataV1]) extends KnoraResponseV1 with ProjectV1JsonProtocol {
+case class ProjectsResponseV1(projects: Seq[ProjectInfoV1]) extends KnoraResponseV1 with ProjectV1JsonProtocol {
     def toJsValue = projectsResponseV1Format.write(this)
 }
 
@@ -160,10 +157,8 @@ case class ProjectsResponseV1(projects: Seq[ProjectInfoV1],
   * Represents the Knora API v1 JSON response to a request for information about a single project.
   *
   * @param project_info all information about the project.
-  * @param userdata     information about the user that made the request.
   */
-case class ProjectInfoResponseV1(project_info: ProjectInfoV1,
-                                 userdata: Option[UserDataV1]) extends KnoraResponseV1 with ProjectV1JsonProtocol {
+case class ProjectInfoResponseV1(project_info: ProjectInfoV1) extends KnoraResponseV1 with ProjectV1JsonProtocol {
     def toJsValue = projectInfoResponseV1Format.write(this)
 }
 
@@ -171,10 +166,8 @@ case class ProjectInfoResponseV1(project_info: ProjectInfoV1,
   * Represents an answer to a project creating/modifying operation.
   *
   * @param project_info the new project info of the created/modified project.
-  * @param userData     information about the user that made the request.
   */
-case class ProjectOperationResponseV1(project_info: ProjectInfoV1,
-                                      userData: UserDataV1) extends KnoraResponseV1 with ProjectV1JsonProtocol {
+case class ProjectOperationResponseV1(project_info: ProjectInfoV1) extends KnoraResponseV1 with ProjectV1JsonProtocol {
     def toJsValue = projectOperationResponseV1Format.write(this)
 }
 
@@ -188,12 +181,10 @@ case class ProjectInfoV1(id: IRI,
                          keywords: Option[String],
                          logo: Option[String],
                          belongsToInstitution: Option[IRI],
-                         basepath: String,
                          ontologyNamedGraph: IRI,
                          dataNamedGraph: IRI,
                          status: Boolean,
-                         hasSelfJoinEnabled: Boolean
-                        )
+                         hasSelfJoinEnabled: Boolean)
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -204,16 +195,15 @@ case class ProjectInfoV1(id: IRI,
   */
 trait ProjectV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with NullOptions {
 
-    import UserV1JsonProtocol.userDataV1Format
-
-    implicit val projectInfoV1Format: JsonFormat[ProjectInfoV1] = jsonFormat12(ProjectInfoV1)
-    // we have to use lazyFormat here because `UserV1JsonProtocol` contains an import statement for this object.
-    // this results in recursive import statements
+    // Some of these formatters have to use lazyFormat because there is a recursive dependency between this
+    // protocol and UserV1JsonProtocol. See ttps://github.com/spray/spray-json#jsonformats-for-recursive-types.
     // rootFormat makes it return the expected type again.
-    // https://github.com/spray/spray-json#jsonformats-for-recursive-types
-    implicit val projectsResponseV1Format: RootJsonFormat[ProjectsResponseV1] = rootFormat(lazyFormat(jsonFormat(ProjectsResponseV1, "projects", "userdata")))
-    implicit val projectInfoResponseV1Format: RootJsonFormat[ProjectInfoResponseV1] = rootFormat(lazyFormat(jsonFormat(ProjectInfoResponseV1, "project_info", "userdata")))
+
+    implicit val projectInfoV1Format: JsonFormat[ProjectInfoV1] = jsonFormat11(ProjectInfoV1)
+    implicit val projectsResponseV1Format: RootJsonFormat[ProjectsResponseV1] = rootFormat(lazyFormat(jsonFormat(ProjectsResponseV1, "projects")))
+    implicit val projectInfoResponseV1Format: RootJsonFormat[ProjectInfoResponseV1] = rootFormat(lazyFormat(jsonFormat(ProjectInfoResponseV1, "project_info")))
     implicit val createProjectApiRequestV1Format: RootJsonFormat[CreateProjectApiRequestV1] = rootFormat(lazyFormat(jsonFormat8(CreateProjectApiRequestV1)))
     implicit val updateProjectApiRequestV1Format: RootJsonFormat[UpdateProjectApiRequestV1] = rootFormat(lazyFormat(jsonFormat2(UpdateProjectApiRequestV1)))
-    implicit val projectOperationResponseV1Format: RootJsonFormat[ProjectOperationResponseV1] = rootFormat(lazyFormat(jsonFormat2(ProjectOperationResponseV1)))
+    implicit val projectOperationResponseV1Format: RootJsonFormat[ProjectOperationResponseV1] = rootFormat(lazyFormat(jsonFormat1(ProjectOperationResponseV1)))
+
 }

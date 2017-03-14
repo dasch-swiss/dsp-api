@@ -17,26 +17,26 @@
 package org.knora.webapi.messages.v1.responder.usermessages
 
 import org.knora.webapi._
-import org.knora.webapi.messages.v1.responder.permissionmessages.{PermissionDataType, PermissionDataV1}
-import org.springframework.security.crypto.scrypt.SCryptPasswordEncoder
+import org.knora.webapi.messages.v1.responder.permissionmessages.PermissionDataType
 import org.scalatest.{Matchers, WordSpecLike}
+import org.springframework.security.crypto.scrypt.SCryptPasswordEncoder
 
 /**
   * This spec is used to test subclasses of the [[UsersResponderRequestV1]] class.
   */
 class UserMessagesV1Spec extends WordSpecLike with Matchers {
 
-    val lang = SharedAdminTestData.rootUser.userData.lang
-    val user_id = SharedAdminTestData.rootUser.userData.user_id
-    val token = SharedAdminTestData.rootUser.userData.token
-    val firstname = SharedAdminTestData.rootUser.userData.firstname
-    val lastname = SharedAdminTestData.rootUser.userData.lastname
-    val email = SharedAdminTestData.rootUser.userData.email
-    val password = SharedAdminTestData.rootUser.userData.password
-    val groups = SharedAdminTestData.rootUser.groups
-    val projects = SharedAdminTestData.rootUser.projects
-    val permissionData = SharedAdminTestData.rootUser.permissionData
-    val sessionId = SharedAdminTestData.rootUser.sessionId
+    private val lang = SharedAdminTestData.rootUser.userData.lang
+    private val user_id = SharedAdminTestData.rootUser.userData.user_id
+    private val token = SharedAdminTestData.rootUser.userData.token
+    private val firstname = SharedAdminTestData.rootUser.userData.firstname
+    private val lastname = SharedAdminTestData.rootUser.userData.lastname
+    private val email = SharedAdminTestData.rootUser.userData.email
+    private val password = SharedAdminTestData.rootUser.userData.password
+    private val groups = SharedAdminTestData.rootUser.groups
+    private val projects_info = SharedAdminTestData.rootUser.projects_info
+    private val permissionData = SharedAdminTestData.rootUser.permissionData
+    private val sessionId = SharedAdminTestData.rootUser.sessionId
 
 
     "The UserProfileV1 case class " should {
@@ -52,7 +52,7 @@ class UserMessagesV1Spec extends WordSpecLike with Matchers {
                     lang = lang
                 ),
                 groups = groups,
-                projects = projects,
+                projects_info = projects_info,
                 permissionData = permissionData,
                 sessionId = sessionId
 
@@ -66,9 +66,9 @@ class UserMessagesV1Spec extends WordSpecLike with Matchers {
                     password = None,
                     token = None,
                     lang = lang
-                    ),
+                ),
                 groups = groups,
-                projects = projects,
+                projects_info = projects_info,
                 permissionData = permissionData.ofType(PermissionDataType.RESTRICTED),
                 sessionId = sessionId
             )

@@ -71,7 +71,6 @@ trait Authenticator {
     def doLogin(requestContext: RequestContext)(implicit system: ActorSystem, executionContext: ExecutionContext): HttpResponse = {
 
         val sId = extractCredentialsAndAuthenticate(requestContext, session = true)
-
         val userProfile = getUserProfileV1(requestContext)
 
         HttpResponse(
@@ -83,7 +82,7 @@ trait Authenticator {
                     "status" -> JsNumber(0),
                     "message" -> JsString("credentials are OK"),
                     "sid" -> JsString(sId),
-                    "userdata" -> userProfile.userData.toJsValue
+                    "userProfile" -> userProfile.ofType(UserProfileType.RESTRICTED).toJsValue
                 ).compactPrint
             )
         )
@@ -110,7 +109,7 @@ trait Authenticator {
                         JsObject(
                             "status" -> JsNumber(0),
                             "message" -> JsString("session credentials are OK"),
-                            "userdata" -> userProfile.ofType(UserProfileType.RESTRICTED).userData.toJsValue
+                            "userProfile" -> userProfile.ofType(UserProfileType.RESTRICTED).toJsValue
                         ).compactPrint
                     )
                 )
@@ -153,7 +152,7 @@ trait Authenticator {
                 JsObject(
                     "status" -> JsNumber(0),
                     "message" -> JsString("credentials are OK"),
-                    "userdata" -> userProfile.userData.toJsValue
+                    "userProfile" -> userProfile.ofType(UserProfileType.RESTRICTED).toJsValue
                 ).compactPrint
             )
         )

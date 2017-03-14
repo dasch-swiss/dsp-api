@@ -101,8 +101,7 @@ class SipiResponderV1 extends ResponderV1 {
                 userProfile = userProfile
             )
         } yield SipiFileInfoGetResponseV1(
-            permissionCode = permissionCode.getOrElse(0), // Sipi expects a permission code from 0 to 8
-            userdata = userProfile.userData
+            permissionCode = permissionCode.getOrElse(0) // Sipi expects a permission code from 0 to 8
         )
     }
 

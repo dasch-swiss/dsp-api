@@ -22,7 +22,7 @@ package org.knora.webapi.messages.v1.responder.listmessages
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi._
-import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1, UserV1JsonProtocol}
+import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
 import spray.json._
 
@@ -66,22 +66,14 @@ case class NodePathGetRequestV1(iri: IRI, userProfile: UserProfileV1) extends Li
 /**
   * An abstract class extended by `HListGetResponseV1` and `SelectionGetResponseV1`.
   */
-sealed abstract class ListsGetResponseV1 extends KnoraResponseV1 {
-    /**
-      * Information about the user that made the request.
-      *
-      * @return a [[UserDataV1]].
-      */
-    def userdata: UserDataV1
-}
+sealed abstract class ListsGetResponseV1 extends KnoraResponseV1
 
 /**
   * Provides a hierarchical list representing a "hlist" in the old SALSAH.
   *
-  * @param hlist    the list requested.
-  * @param userdata information about the user that made the request.
+  * @param hlist the list requested.
   */
-case class HListGetResponseV1(hlist: Seq[HierarchicalListV1], userdata: UserDataV1) extends ListsGetResponseV1 {
+case class HListGetResponseV1(hlist: Seq[HierarchicalListV1]) extends ListsGetResponseV1 {
     def toJsValue = HierarchicalListV1JsonProtocol.hlistGetResponseV1Format.write(this)
 }
 
@@ -89,9 +81,8 @@ case class HListGetResponseV1(hlist: Seq[HierarchicalListV1], userdata: UserData
   * Provides a hierarchical list representing a "selection" in the old SALSAH.
   *
   * @param selection the list requested.
-  * @param userdata  information about the user that made the request.
   */
-case class SelectionGetResponseV1(selection: Seq[HierarchicalListV1], userdata: UserDataV1) extends ListsGetResponseV1 {
+case class SelectionGetResponseV1(selection: Seq[HierarchicalListV1]) extends ListsGetResponseV1 {
     def toJsValue = HierarchicalListV1JsonProtocol.selectionGetResponseV1Format.write(this)
 }
 
@@ -99,9 +90,8 @@ case class SelectionGetResponseV1(selection: Seq[HierarchicalListV1], userdata: 
   * Responds to a [[NodePathGetRequestV1]] by providing the path to a particular hierarchical list node.
   *
   * @param nodelist a list of the nodes composing the path from the list's root node up to and including the specified node.
-  * @param userdata information about the user that made the request.
   */
-case class NodePathGetResponseV1(nodelist: Seq[NodePathElementV1], userdata: UserDataV1) extends ListsGetResponseV1 {
+case class NodePathGetResponseV1(nodelist: Seq[NodePathElementV1]) extends ListsGetResponseV1 {
     def toJsValue = HierarchicalListV1JsonProtocol.nodePathGetResponseV1Format.write(this)
 }
 
@@ -137,8 +127,6 @@ case class NodePathElementV1(id: IRI, name: Option[String], label: Option[String
   */
 object HierarchicalListV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with NullOptions {
 
-    import UserV1JsonProtocol.userDataV1Format
-
     implicit object HierarchicalListV1JsonFormat extends JsonFormat[HierarchicalListV1] {
         /**
           * Recursively converts a [[HierarchicalListV1]] to a [[JsValue]].
@@ -172,8 +160,8 @@ object HierarchicalListV1JsonProtocol extends SprayJsonSupport with DefaultJsonP
         def read(jsonVal: JsValue) = ???
     }
 
-    implicit val hlistGetResponseV1Format: RootJsonFormat[HListGetResponseV1] = jsonFormat2(HListGetResponseV1)
-    implicit val selectionGetResponseV1Format: RootJsonFormat[SelectionGetResponseV1] = jsonFormat2(SelectionGetResponseV1)
+    implicit val hlistGetResponseV1Format: RootJsonFormat[HListGetResponseV1] = jsonFormat1(HListGetResponseV1)
+    implicit val selectionGetResponseV1Format: RootJsonFormat[SelectionGetResponseV1] = jsonFormat1(SelectionGetResponseV1)
     implicit val nodePathElementV1Format: JsonFormat[NodePathElementV1] = jsonFormat3(NodePathElementV1)
-    implicit val nodePathGetResponseV1Format: RootJsonFormat[NodePathGetResponseV1] = jsonFormat2(NodePathGetResponseV1)
+    implicit val nodePathGetResponseV1Format: RootJsonFormat[NodePathGetResponseV1] = jsonFormat1(NodePathGetResponseV1)
 }

@@ -19,8 +19,7 @@ package org.knora.webapi.responders.v1
 import akka.actor.Props
 import akka.actor.Status.Failure
 import akka.testkit.{ImplicitSender, TestActorRef}
-import com.typesafe.config.ConfigFactory
-import org.apache.jena.sparql.function.library.leviathan.log
+import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi.SharedAdminTestData._
 import org.knora.webapi.SharedPermissionsTestData._
 import org.knora.webapi._
@@ -38,7 +37,7 @@ import scala.concurrent.duration._
 
 object PermissionsResponderV1Spec {
 
-    val config = ConfigFactory.parseString(
+    val config: Config = ConfigFactory.parseString(
         """
          akka.loglevel = "DEBUG"
          akka.stdout-loglevel = "DEBUG"
@@ -51,20 +50,20 @@ object PermissionsResponderV1Spec {
   */
 class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.config) with ImplicitSender {
 
-    implicit val executionContext = system.dispatcher
+    private implicit val executionContext = system.dispatcher
     private val timeout = 5.seconds
 
-    val knoraIdUtil = new KnoraIdUtil
+    private val knoraIdUtil = new KnoraIdUtil
 
-    val rootUser = SharedAdminTestData.rootUser
-    val multiuserUserProfileV1 = SharedAdminTestData.multiuserUser
+    private val rootUser = SharedAdminTestData.rootUser
+    private val multiuserUserProfileV1 = SharedAdminTestData.multiuserUser
 
-    val actorUnderTest = TestActorRef[PermissionsResponderV1]
-    val underlyingActorUnderTest = actorUnderTest.underlyingActor
-    val responderManager = system.actorOf(Props(new ResponderManagerV1 with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
-    val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
+    private val actorUnderTest = TestActorRef[PermissionsResponderV1]
+    private val underlyingActorUnderTest = actorUnderTest.underlyingActor
+    private val responderManager = system.actorOf(Props(new ResponderManagerV1 with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
+    private val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
 
-    val rdfDataObjects = List(
+    private val rdfDataObjects = List(
         RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/incunabula"),
         RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/anything")
     )
@@ -84,7 +83,7 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
 
             "return the permissions profile (root user)" in {
                 actorUnderTest ! PermissionDataGetV1(
-                    projectIris = SharedAdminTestData.rootUser.projects,
+                    projectIris = SharedAdminTestData.rootUser.projects_info.keys.toSeq,
                     groupIris = SharedAdminTestData.rootUser.groups,
                     isInProjectAdminGroups = Seq.empty[IRI],
                     isInSystemAdminGroup = true
@@ -94,7 +93,7 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
 
             "return the permissions profile ( multi group user)" in {
                 actorUnderTest ! PermissionDataGetV1(
-                    projectIris = SharedAdminTestData.multiuserUser.projects,
+                    projectIris = SharedAdminTestData.multiuserUser.projects_info.keys.toSeq,
                     groupIris = SharedAdminTestData.multiuserUser.groups,
                     isInProjectAdminGroups = Seq("http://data.knora.org/projects/77275339", "http://data.knora.org/projects/images"),
                     isInSystemAdminGroup = false
@@ -104,7 +103,7 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
 
             "return the permissions profile (incunabula project admin user)" in {
                 actorUnderTest ! PermissionDataGetV1(
-                    projectIris = SharedAdminTestData.incunabulaProjectAdminUser.projects,
+                    projectIris = SharedAdminTestData.incunabulaProjectAdminUser.projects_info.keys.toSeq,
                     groupIris = SharedAdminTestData.incunabulaProjectAdminUser.groups,
                     isInProjectAdminGroups = Seq("http://data.knora.org/projects/77275339"),
                     isInSystemAdminGroup = false
@@ -114,7 +113,7 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
 
             "return the permissions profile (incunabula creator user)" in {
                 actorUnderTest ! PermissionDataGetV1(
-                    projectIris = SharedAdminTestData.incunabulaProjectAdminUser.projects,
+                    projectIris = SharedAdminTestData.incunabulaProjectAdminUser.projects_info.keys.toSeq,
                     groupIris = SharedAdminTestData.incunabulaCreatorUser.groups,
                     isInProjectAdminGroups = Seq.empty[IRI],
                     isInSystemAdminGroup = false
@@ -124,7 +123,7 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
 
             "return the permissions profile (incunabula normal project member user)" in {
                 actorUnderTest ! PermissionDataGetV1(
-                    projectIris = SharedAdminTestData.incunabulaProjectAdminUser.projects,
+                    projectIris = SharedAdminTestData.incunabulaProjectAdminUser.projects_info.keys.toSeq,
                     groupIris = SharedAdminTestData.incunabulaMemberUser.groups,
                     isInProjectAdminGroups = Seq.empty[IRI],
                     isInSystemAdminGroup = false
@@ -134,7 +133,7 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
 
             "return the permissions profile (images user 01)" in {
                 actorUnderTest ! PermissionDataGetV1(
-                    projectIris = SharedAdminTestData.imagesUser01.projects,
+                    projectIris = SharedAdminTestData.imagesUser01.projects_info.keys.toSeq,
                     groupIris = SharedAdminTestData.imagesUser01.groups,
                     isInProjectAdminGroups = Seq("http://data.knora.org/projects/images"),
                     isInSystemAdminGroup = false
@@ -144,7 +143,7 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
 
             "return the permissions profile (anything user 01)" in {
                 actorUnderTest ! PermissionDataGetV1(
-                    projectIris = SharedAdminTestData.anythingUser1.projects,
+                    projectIris = SharedAdminTestData.anythingUser1.projects_info.keys.toSeq,
                     groupIris = SharedAdminTestData.anythingUser1.groups,
                     isInProjectAdminGroups = Seq.empty[IRI],
                     isInSystemAdminGroup = false
@@ -198,7 +197,7 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
 
             "fail and return a 'BadRequestException' when project does not exist" ignore {}
 
-            "fail and return a  'BadRequestException' when group does not exist" ignore {}
+            "fail and return a 'BadRequestException' when group does not exist" ignore {}
 
             "fail and return a 'NotAuthorizedException' whe the user's permission are not high enough (e.g., not member of ProjectAdmin group" ignore {}
 

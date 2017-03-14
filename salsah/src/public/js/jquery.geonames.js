@@ -261,7 +261,7 @@
 								response($.map(data.geonames, function (item) {
 									var displayName = undefined;
 									for (var i in item.alternateNames) { // here we search through the alternate names to get the proper language
-										if (item.alternateNames[i].lang == SALSAH.userdata.lang) {
+										if (item.alternateNames[i].lang == SALSAH.userprofile.userData.lang) {
 											if (displayName === undefined) {
 												displayName = item.alternateNames[i].name;
 											}
