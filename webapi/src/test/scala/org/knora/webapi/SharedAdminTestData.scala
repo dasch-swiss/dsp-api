@@ -1,6 +1,6 @@
 /*
  * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
  *
  * This file is part of Knora.
  *
@@ -560,6 +560,23 @@ object SharedAdminTestData {
         hasSelfJoinEnabled = false
     )
 
+    /* represents the user profile of 'superuser' as found in admin-data.ttl */
+    def biblioUser = UserProfileV1(
+        UserDataV1(
+            user_id = Some("http://data.knora.org/users/Q-6Sssu8TBWrcCGuVJ0lVw"),
+            firstname = Some("biblio"),
+            lastname = Some("biblio"),
+            email = Some("biblio@example.com"),
+            password = Some("$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"), // -> "test"
+            token = None,
+            isActiveUser = Some(true),
+            lang = "en"
+        ),
+        groups = Vector.empty[IRI],
+        projects_info = Map(BIBLIO_PROJECT_IRI -> biblioProjectInfo),
+        sessionId = None,
+        permissionData = PermissionDataV1()
+    )
 
     /************************************/
     /** DOKUBIB                        **/

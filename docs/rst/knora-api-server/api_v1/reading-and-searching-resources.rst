@@ -1,5 +1,5 @@
 .. Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
-   Tobias Schweizer, André Kilchenmann, and André Fatton.
+   Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
 
    This file is part of Knora.
 
@@ -111,7 +111,7 @@ In order to get information about a resource class, the path segment ``resourcet
     HTTP GET to http://host/v1/resourcetypes/resourceClassIRI
 
 In the JSON, the information about the resource class and all the property types that it may have are returned.
-Please note that none of these are actual instances of a property, but only only types (see TypeScript interface ``resourceTypeResponse`` in module ``resourceResponseFormats``).
+Please note that none of these are actual instances of a property, but only types (see TypeScript interface ``resourceTypeResponse`` in module ``resourceResponseFormats``).
 
 --------------------------------------------------------------
 Get all the Property Types of a Resource Class or a Vocabulary
@@ -253,7 +253,7 @@ Explanation of the comparison operators:
   - ``EXISTS``: checks if an instance of the indicated property type *exists* for a resource. **Please always provide an empty search value when using EXISTS: "searchval="**. Otherwise, the query syntax rules would be violated.
   - ``MATCH``: checks if a resource's text value *matches* the search value. The behaviour depends on the used triplestore's full text index.
   - ``LIKE``: checks if the search value is contained in a resource's text value.
-  - ``!LIKE``: checks if the search value is not contained in a resource's text value. 
+  - ``!LIKE``: checks if the search value is not contained in a resource's text value.
   - ``MATCH_BOOLEAN``: checks if a resource's text value *matches* the provided list of positive (exist) and negative (do not exist) terms. The list takes this form: ``([+-]term\s)+``.
 
 Additionally, these parameters can be set:

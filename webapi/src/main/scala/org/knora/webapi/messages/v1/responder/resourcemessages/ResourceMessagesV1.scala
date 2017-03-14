@@ -1,6 +1,6 @@
 /*
  * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ * Tobias Schweizer, Sepideh Alassi, André Kilchenmann, and Sepideh Alassi.
  *
  * This file is part of Knora.
  *
@@ -23,6 +23,7 @@ package org.knora.webapi.messages.v1.responder.resourcemessages
 import java.util.UUID
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
+import com.fasterxml.jackson.annotation.JsonValue
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.sipimessages.SipiResponderConversionRequestV1
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
@@ -55,6 +56,9 @@ case class CreateResourceApiRequestV1(restype_id: IRI,
 
 }
 
+case class CreateResourceRequestV1(restype_id: IRI,
+                                      label: String,
+                                      properties: Map[IRI, Seq[CreateResourceValueV1]])
 /**
   * Represents a property value to be created.
   *
@@ -62,7 +66,7 @@ case class CreateResourceApiRequestV1(restype_id: IRI,
   * @param int_value      an integer literal to be used in the value.
   */
 case class CreateResourceValueV1(richtext_value: Option[CreateRichtextV1] = None,
-                                 link_value: Option[IRI] = None,
+                                 link_value: Option[IRI]= None,
                                  int_value: Option[Int] = None,
                                  decimal_value: Option[BigDecimal] = None,
                                  boolean_value: Option[Boolean] = None,
@@ -193,6 +197,44 @@ case class ResourceCreateRequestV1(resourceTypeIri: IRI,
                                    userProfile: UserProfileV1,
                                    apiRequestID: UUID) extends ResourcesResponderRequestV1
 
+
+/**
+  * Requests the creation of one of multiple new resources.
+  *
+  * @param resourceTypeIri the type of the new resource.
+  * @param label           the rdfs:label of the resource.
+  * @param values          the properties to add: type and value(s): a Map of propertyIris to ApiValueV1.
+  */
+case class OneOfMultipleResourceCreateRequestV1(resourceTypeIri: IRI,
+                                                 label: String,
+                                                 values: Map[IRI, Seq[CreateValueV1WithComment]])
+
+/**
+  * Requests the creation of multiple new resources.
+  *
+  * @param resourcesToCreate the collection of requests for creation of new resources.
+  * @param projectIri      the IRI of the project the resources are added to.
+  * @param userProfile     the profile of the user making the request.
+  * @param apiRequestID    the ID of the API request.
+  */
+case class MultipleResourceCreateRequestV1(resourcesToCreate: Seq[OneOfMultipleResourceCreateRequestV1],
+                                           projectIri : IRI,
+                                           userProfile: UserProfileV1,
+                                           apiRequestID: UUID) extends ResourcesResponderRequestV1
+
+
+/**
+  * describes the answer to creation of multiple resources
+  *
+  * @param createdResources created resources
+
+  */
+case class MultipleResourceCreateResponseV1(createdResources: Seq[JsValue]) extends KnoraResponseV1 {
+
+    def toJsValue = ResourceV1JsonProtocol.multipleResourceCreateResponseV1Format.write(this)
+
+}
+
 /**
   * Checks whether a resource belongs to a certain OWL class or to a subclass of that class. This message is used
   * internally by Knora, and is not part of Knora API v1. A successful response will be a [[ResourceCheckClassResponseV1]].
@@ -303,6 +345,7 @@ case class ResourceCreateResponseV1(res_id: IRI,
                                     results: Map[IRI, Seq[ResourceCreateValueResponseV1]] = Map.empty[IRI, Seq[ResourceCreateValueResponseV1]]) extends KnoraResponseV1 {
     def toJsValue = ResourceV1JsonProtocol.resourceCreateResponseV1Format.write(this)
 }
+
 
 /**
   * Requests the properties of a given resource.
@@ -1077,6 +1120,7 @@ object ResourceV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
     implicit val resourceSearchResponseV1Format: RootJsonFormat[ResourceSearchResponseV1] = jsonFormat1(ResourceSearchResponseV1)
     implicit val resourceCreateValueObjectResponseV1Format: RootJsonFormat[ResourceCreateValueObjectResponseV1] = jsonFormat14(ResourceCreateValueObjectResponseV1)
     implicit val resourceCreateValueResponseV1Format: RootJsonFormat[ResourceCreateValueResponseV1] = jsonFormat2(ResourceCreateValueResponseV1)
+    implicit val multipleResourceCreateResponseV1Format: RootJsonFormat[MultipleResourceCreateResponseV1] = jsonFormat1(MultipleResourceCreateResponseV1)
     implicit val resourceCreateResponseV1Format: RootJsonFormat[ResourceCreateResponseV1] = jsonFormat2(ResourceCreateResponseV1)
     implicit val resourceDeleteResponseV1Format: RootJsonFormat[ResourceDeleteResponseV1] = jsonFormat1(ResourceDeleteResponseV1)
     implicit val changeResourceLabelResponseV1Format: RootJsonFormat[ChangeResourceLabelResponseV1] = jsonFormat2(ChangeResourceLabelResponseV1)

@@ -1,6 +1,6 @@
 /*
  * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ * Tobias Schweizer, Sepideh Alassi, André Kilchenmann, and Sepideh Alassi.
  *
  * This file is part of Knora.
  *
@@ -290,6 +290,8 @@ case class ValueVersionHistoryGetResponseV1(valueVersions: Seq[ValueVersionV1]) 
   * Represents a request to add a new value of a resource property (as opposed to a new version of an existing value). A
   * successful response will be an [[CreateValueResponseV1]].
   *
+  * @param resourceIndex the index of the resource
+  * @param checkObj     check the objectClassConstrain of link
   * @param resourceIri  the IRI of the resource to which the value should be added.
   * @param propertyIri  the IRI of the property that should receive the value.
   * @param value        the value to be added.
@@ -297,7 +299,9 @@ case class ValueVersionHistoryGetResponseV1(valueVersions: Seq[ValueVersionV1]) 
   * @param userProfile  the profile of the user making the request.
   * @param apiRequestID the ID of this API request.
   */
-case class CreateValueRequestV1(resourceIri: IRI,
+case class CreateValueRequestV1(resourceIndex: Int = 0,
+                                checkObj: Boolean = true,
+                                resourceIri: IRI,
                                 propertyIri: IRI,
                                 value: UpdateValueV1,
                                 comment: Option[String] = None,
@@ -372,16 +376,22 @@ case class CreateValueV1WithComment(updateValueV1: UpdateValueV1, comment: Optio
   * @param projectIri       the project the values belong to.
   * @param resourceIri      the resource the values will be attached to.
   * @param resourceClassIri the IRI of the resource's OWL class.
+  * @param resourceIndex      the index of the resource to be created
+  * @param checkObj         the flag for checking the ObjectClassConstraint of the links
   * @param values           the values to be added, with optional comments.
+  *
   * @param userProfile      the user that is creating the values.
-  * @param apiRequestID     the ID of this API request.
   */
+
 case class GenerateSparqlToCreateMultipleValuesRequestV1(projectIri: IRI,
                                                          resourceIri: IRI,
                                                          resourceClassIri: IRI,
+                                                         resourceIndex: Int,
+                                                         checkObj:Boolean,
                                                          values: Map[IRI, Seq[CreateValueV1WithComment]],
-                                                         userProfile: UserProfileV1,
+                                                         userProfile: UserProfileV1 ,
                                                          apiRequestID: UUID) extends ValuesResponderRequestV1
+
 
 /**
   * Represents a response to a [[GenerateSparqlToCreateMultipleValuesRequestV1]], providing strings that can be included
