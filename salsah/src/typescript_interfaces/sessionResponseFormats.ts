@@ -45,7 +45,7 @@ export module sessionResponseFormats {
 		/**
 		 * The IRIs of the groups that the user belongs to.
 		 */
-        groups: Array<string>;
+        groups: Array<basicMessageComponents.KnoraIRI>;
 
         /**
          * Projects the user is a member of. The keys are project IRIs.
@@ -97,7 +97,7 @@ export module sessionResponseFormats {
         /**
          * User's IRI
          */
-        user_id: string | null;
+        user_id: basicMessageComponents.KnoraIRI | null;
 
         /**
          * User's preferred language
@@ -127,7 +127,7 @@ export module sessionResponseFormats {
         /**
          * The project's IRI.
          */
-        id: string;
+        id: basicMessageComponents.KnoraIRI;
 
     	/**
     	 * The project's short name.
@@ -142,7 +142,7 @@ export module sessionResponseFormats {
         /**
          * The IRI of the institution, if any, that the project belongs to.
          */
-        belongsToInstitution: string | null;
+        belongsToInstitution: basicMessageComponents.KnoraIRI | null;
 
         /**
          * The filename of the project's logo, if any.
@@ -192,7 +192,7 @@ export module sessionResponseFormats {
         /**
          * An optional IRI (e.g., group IRI, resource class IRI).
          */
-        additionalInformation: string | null;
+        additionalInformation: basicMessageComponents.KnoraIRI | null;
 
         /**
          * A number representing the operations that the user has permission to carry out.
@@ -208,7 +208,7 @@ export module sessionResponseFormats {
     	 * The groups the user belongs to for each project. The keys are project IRIs.
     	 */
         groupsPerProject: {
-            [index:string]: Array<string>;
+            [index:string]: Array<basicMessageComponents.KnoraIRI>;
         }
 
         /**
