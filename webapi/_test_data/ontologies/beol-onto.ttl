@@ -743,7 +743,13 @@
 
               rdfs:comment "represents a break"@en .
 
-              ###  http://www.knora.org/ontology/beol#StandoffBrTag
+###  http://www.knora.org/ontology/beol#StandoffPbTag
+
+:StandoffPbTag rdf:type owl:Class ;
+
+              rdfs:subClassOf knora-base:StandoffTag ;
+
+              rdfs:comment "represents a page break"@en .
 
 
 :StandoffHtmlTag rdf:type owl:Class ;
