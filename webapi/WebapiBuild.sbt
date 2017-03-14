@@ -99,7 +99,7 @@ lazy val webapi = (project in file(".")).
         ).
         settings(Revolver.settings: _*).
         enablePlugins(SbtTwirl). // Enable the SbtTwirl plugin
-        enablePlugins(JavaAppPackaging) // Enable the sbt-native-packager docker plugin
+        enablePlugins(JavaAppPackaging) // Enable the sbt-native-packager plugin
 
 lazy val webApiCommonSettings = Seq(
     organization := "org.knora",
