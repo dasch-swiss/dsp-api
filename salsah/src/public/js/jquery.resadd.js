@@ -469,12 +469,15 @@
 												selection_id = attr[1].replace("<", "").replace(">", ""); // remove brackets from Iri to make it a valid URL
 											}
 										});
-										create_entry(propname, pinfo, function(ele, attr, pinfo) {
-											var radiobox = $('<span>', attr).insertBefore(ele.find('.entrySep'));
-											radiobox.selradio('edit', {
-												selection_id: selection_id
-											});
-										});
+										create_entry(propname, pinfo, (function(sel_id) {
+                                                return function (ele, attr, pinfo) {
+                                                    var radiobox = $('<span>', attr).insertBefore(ele.find('.entrySep'));
+                                                    radiobox.selradio('edit', {
+                                                        selection_id: sel_id
+                                                        //selection_id: selection_id
+                                                    });
+                                                }
+                                            }(selection_id)));
 										prop_status[propname].attributes = attributes; // save attributes for later use
 										break;
 									}
@@ -652,13 +655,15 @@
 												hlist_id = attr[1].replace("<", "").replace(">", ""); // remove brackets from Iri to make it a valid URL
 											}
 										});
-										create_entry(propname, pinfo, function(ele, attr, pinfo) {
-											var hlistbox = $('<span>', attr).insertBefore(ele.find('.entrySep'));
-											hlistbox.hlist('edit', {
-												hlist_id: hlist_id
-											});
-											return hlistbox;
-										});
+										create_entry(propname, pinfo, (function(list_id) {
+											return function(ele, attr, pinfo) {
+                                                var hlistbox = $('<span>', attr).insertBefore(ele.find('.entrySep'));
+                                                hlistbox.hlist('edit', {
+                                                    hlist_id: list_id
+                                                });
+                                                return hlistbox;
+                                            }
+                                        }(hlist_id)));
 										prop_status[propname].attributes = attributes; // save attributes for later use
 										break;
 									}

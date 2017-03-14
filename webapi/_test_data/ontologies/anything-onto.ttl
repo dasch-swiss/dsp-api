@@ -34,6 +34,26 @@
        salsah-gui:guiAttribute "hlist=<http://data.knora.org/anything/treeList>" .
 
 
+:hasOtherListItem rdf:type owl:ObjectProperty ;
+
+       rdfs:subPropertyOf knora-base:hasValue ;
+
+       rdfs:label "Andere listenelement"@de ,
+                  "Autre elément de liste"@fr ,
+                  "Altra elemento di lista"@it ,
+                  "Other list element"@en ;
+
+       knora-base:subjectClassConstraint :Thing ;
+
+       knora-base:objectClassConstraint knora-base:ListValue ;
+
+       salsah-gui:guiOrder "0"^^xsd:integer ;
+
+       salsah-gui:guiElement salsah-gui:List ;
+
+       salsah-gui:guiAttribute "hlist=<http://data.knora.org/anything/otherTreeList>" .
+
+
 
 :hasOtherThing rdf:type owl:ObjectProperty ;
 
@@ -426,6 +446,11 @@
                       [
                          rdf:type owl:Restriction ;
                          owl:onProperty :hasListItem ;
+                         owl:minCardinality "0"^^xsd:nonNegativeInteger
+                      ] ,
+                      [
+                         rdf:type owl:Restriction ;
+                         owl:onProperty :hasOtherListItem ;
                          owl:minCardinality "0"^^xsd:nonNegativeInteger
                       ] ,
                       [
