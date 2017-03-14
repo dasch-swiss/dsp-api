@@ -1,6 +1,6 @@
 /*
  * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, Sepideh Alassi, André Kilchenmann, and André Fatton.
+ * Tobias Schweizer, Sepideh Alassi, André Kilchenmann, and Sepideh Alassi.
  *
  * This file is part of Knora.
  *
