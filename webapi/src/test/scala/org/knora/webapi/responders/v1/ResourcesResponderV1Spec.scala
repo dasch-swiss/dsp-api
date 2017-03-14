@@ -1,6 +1,6 @@
 /*
  * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
  *
  * This file is part of Knora.
  *
@@ -24,7 +24,7 @@ import java.util.UUID
 
 import akka.actor.Props
 import akka.testkit.{ImplicitSender, TestActorRef}
-import com.typesafe.config.ConfigFactory
+import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse}
 import org.knora.webapi.messages.v1.responder.permissionmessages.{ObjectAccessPermissionV1, ObjectAccessPermissionsForResourceGetV1, PermissionV1}
@@ -45,7 +45,7 @@ import scala.concurrent.duration._
   */
 object ResourcesResponderV1Spec {
 
-    val config = ConfigFactory.parseString(
+    val config: Config = ConfigFactory.parseString(
         """
          akka.loglevel = "DEBUG"
          akka.stdout-loglevel = "DEBUG"
@@ -56,8 +56,7 @@ object ResourcesResponderV1Spec {
             id = "http://data.knora.org/2a6221216701",
             value = Vector("Reise ins Heilige Land", "Reysen und wanderschafften durch das Gelobte Land", "Itinerarius"),
             rights = Some(6)
-        )),
-        userdata = SharedAdminTestData.incunabulaMemberUser.userData
+        ))
     )
 
     val ReiseInsHeiligelandOneValueRestrictedToBook = ResourceSearchResponseV1(
@@ -65,8 +64,7 @@ object ResourcesResponderV1Spec {
             id = "http://data.knora.org/2a6221216701",
             value = Vector("Reise ins Heilige Land"),
             rights = Some(6)
-        )),
-        userdata = SharedAdminTestData.incunabulaMemberUser.userData
+        ))
     )
 
     private val propertiesGetResponseV1Region = PropertiesGetResponseV1(
@@ -146,7 +144,7 @@ object ResourcesResponderV1Spec {
                                 None),
                             "http://data.knora.org/021ec18f1735/values/fbcb88bf-cd16-4b7b-b843-51e17c0669d7",
                             None,
-                            None))))), userdata = SharedAdminTestData.incunabulaProjectAdminUser.userData)
+                            None))))))
 
     private val hasOtherThingIncomingLink = IncomingV1(
         value = Some("A thing that only project members can see"),
@@ -241,7 +239,6 @@ object ResourcesResponderV1Spec {
     )
 
     private val graphForAnythingUser1 = GraphDataGetResponseV1(
-        userdata = SharedAdminTestData.anythingUser1.userData,
         edges = Vector(
             GraphEdgeV1(
                 propertyLabel = "Ein anderes Ding",
@@ -429,7 +426,6 @@ object ResourcesResponderV1Spec {
     )
 
     private val graphForIncunabulaUser = GraphDataGetResponseV1(
-        userdata = SharedAdminTestData.incunabulaProjectAdminUser.userData,
         edges = Vector(
             GraphEdgeV1(
                 propertyLabel = "Ein anderes Ding",
@@ -581,7 +577,6 @@ object ResourcesResponderV1Spec {
     )
 
     private val graphWithStandoffLink = GraphDataGetResponseV1(
-        userdata = SharedAdminTestData.anythingUser1.userData,
         edges = Vector(GraphEdgeV1(
             propertyLabel = "hat Standoff Link zu",
             propertyIri = "http://www.knora.org/ontology/knora-base#hasStandoffLinkTo",
@@ -605,7 +600,6 @@ object ResourcesResponderV1Spec {
     )
 
     private val graphWithOneNode = GraphDataGetResponseV1(
-        userdata = SharedAdminTestData.anythingUser1.userData,
         edges = Nil,
         nodes = Vector(GraphNodeV1(
             resourceClassLabel = "Ding",
@@ -626,11 +620,11 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
     // Construct the actors needed for this test.
     private val actorUnderTest = TestActorRef[ResourcesResponderV1]
 
-    val responderManager = system.actorOf(Props(new TestResponderManagerV1(Map(SIPI_ROUTER_ACTOR_NAME -> system.actorOf(Props(new MockSipiResponderV1))))), name = RESPONDER_MANAGER_ACTOR_NAME)
+    private val responderManager = system.actorOf(Props(new TestResponderManagerV1(Map(SIPI_ROUTER_ACTOR_NAME -> system.actorOf(Props(new MockSipiResponderV1))))), name = RESPONDER_MANAGER_ACTOR_NAME)
 
     private val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
 
-    val rdfDataObjects = List(
+    private val rdfDataObjects = List(
         RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/incunabula"),
         RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/anything")
     )
@@ -645,7 +639,6 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
         // println(MessageUtil.toSource(received))
 
         assert(received.access == expected.access, "access does not match")
-        assert(received.userdata == expected.userdata, "userdata does not match")
         assert(received.resinfo == expected.resinfo, "resinfo does not match")
         assert(received.resdata == expected.resdata, "resdata does not match")
         assert(received.incoming == expected.incoming, "incoming does not match")
@@ -726,14 +719,13 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
                         val valueResponse = CreateValueResponseV1(
                             value = propValue,
                             rights = 6,
-                            id = "http://www.knora.org/test/values/test",
-                            userdata = SharedAdminTestData.incunabulaProjectAdminUser.userData
+                            id = "http://www.knora.org/test/values/test"
                         )
 
                         // convert CreateValueResponseV1 to a ResourceCreateValueResponseV1
                         MessageUtil.convertCreateValueResponseV1ToResourceCreateValueResponseV1(
                             resourceIri = "http://www.knora.org/test",
-                            ownerIri = "http://data.knora.org/users/b83acc5f05",
+                            creatorIri = "http://data.knora.org/users/b83acc5f05",
                             propertyIri = propIri,
                             valueResponse = valueResponse
                         )
@@ -1334,7 +1326,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
 
             actorUnderTest ! resourceDeleteRequest
 
-            expectMsg(timeout, ResourceDeleteResponseV1(id = newPageResourceIri.get, userdata = SharedAdminTestData.incunabulaProjectAdminUser.userData))
+            expectMsg(timeout, ResourceDeleteResponseV1(id = newPageResourceIri.get))
 
             // Check that the resource is marked as deleted.
             actorUnderTest ! ResourceInfoGetRequestV1(iri = newPageResourceIri.get, userProfile = SharedAdminTestData.incunabulaProjectAdminUser)

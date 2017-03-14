@@ -1,6 +1,6 @@
 /*
  * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
  * This file is part of Knora.
  * Knora is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
@@ -122,11 +122,6 @@ export module basicMessageComponents {
          * Knora status code
          */
         status:KnoraStatusCode;
-
-        /**
-         * The current user's data
-         */
-        userdata:userdata;
     }
 
     /**
@@ -172,66 +167,6 @@ export module basicMessageComponents {
          * Project's long name
          */
         longname:string;
-    }
-
-    /**
-     * Represents the current user's data
-     */
-    interface userdata {
-        /**
-         * User's email address
-         */
-        email:string | null;
-
-        /**
-         * User's unique name
-         */
-        username:string | null;
-
-        /**
-         * User's first name
-         */
-        firstname:string | null;
-
-        /**
-         * User's last name
-         */
-        lastname:string | null;
-
-        /**
-         * List of project descriptions the user is member of
-         */
-        projects_info:Array<projectItem>;
-
-        /**
-         * User's IRI
-         */
-        user_id:string | null;
-
-        /**
-         * User's preferred language
-         */
-        lang:string;
-
-        /**
-         * User's active project
-         */
-        active_project:string | null;
-
-        /**
-         * Session token
-         */
-        token:string | null;
-
-        /**
-         * List of project IRIs the user is member of
-         */
-        projects:Array<string> | null;
-
-        /**
-         * obsolete
-         */
-        password:string | null;
     }
 
     /**

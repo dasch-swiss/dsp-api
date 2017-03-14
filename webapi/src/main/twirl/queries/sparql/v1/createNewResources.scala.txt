@@ -1,0 +1,83 @@
+@*
+ * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
+ * Tobias Schweizer, Sepideh Alassi, André Kilchenmann, and Sepideh Alassi.
+ *
+ * This file is part of Knora.
+ *
+ * Knora is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Knora is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public
+ * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ *@
+
+@import org.knora.webapi.IRI
+@import org.knora.webapi.messages.v1.responder.valuemessages._
+@import org.knora.webapi.twirl.ResourceToCreate
+
+
+@**
+ * Create new resources.
+ *
+ * @param dataNamedGraph    the named graph in which the project stores its data.
+ * @param triplestore       the name of the triplestore being used.
+ * @param resourcesToCreate collection of resources to be created.
+ * @param projectIri        Iri of the project.
+ * @param creatorIri        Iri  of the craetor of resources.
+ *
+ *@
+
+
+@(dataNamedGraph: IRI,
+  triplestore: String,
+  resourcesToCreate: Seq[ResourceToCreate],
+  projectIri: IRI,
+  creatorIri: IRI
+  )
+
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+
+INSERT {
+    GRAPH ?dataNamedGraph {
+        @for(res <- resourcesToCreate) {
+            ?resource@res.resourceIndex rdf:type ?resourceClass@res.resourceIndex ;
+                knora-base:isDeleted false ;
+                knora-base:attachedToUser ?creatorIri ;
+                knora-base:attachedToProject ?projectIri ;
+                rdfs:label ?label@res.resourceIndex ;
+ 				knora-base:hasPermissions "@res.permissions" ;
+                knora-base:creationDate ?currentTime .
+
+            @res.generateSparqlForValuesResponse.insertSparql
+        }
+    }
+}
+@* Ensure that inference is not used in the WHERE clause of this update. *@
+@if(triplestore.startsWith("graphdb")) {
+    USING <http://www.ontotext.com/explicit>
+}
+WHERE {
+    BIND(IRI("@dataNamedGraph") AS ?dataNamedGraph)
+    BIND(IRI("@creatorIri") AS ?creatorIri)
+    BIND(IRI("@projectIri") AS ?projectIri)
+
+    BIND(NOW() AS ?currentTime)
+    @for(res <- resourcesToCreate) {
+        BIND(IRI("@res.resourceIri") AS ?resource@res.resourceIndex)
+        BIND(IRI("@res.resourceClassIri") AS ?resourceClass@res.resourceIndex)
+        BIND(str("@res.resourceLabel") AS ?label@res.resourceIndex)
+
+        @res.generateSparqlForValuesResponse.whereSparql
+    }
+}

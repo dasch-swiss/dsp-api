@@ -1,6 +1,6 @@
 /*
  * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
  * This file is part of Knora.
  * Knora is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
@@ -22,7 +22,7 @@ import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.v1.responder._
-import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1, UserV1JsonProtocol}
+import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.responders.v1.GroupsResponderV1
 import spray.json.{DefaultJsonProtocol, JsonFormat, NullOptions, RootJsonFormat}
 
@@ -134,10 +134,9 @@ case class GroupPermissionUpdateRequest(userProfile: UserProfileV1,
 /**
   * Represents the Knora API v1 JSON response to a request for information about all groups.
   *
-  * @param groups   information about all existing groups.
-  * @param userdata information about the user that made the request.
+  * @param groups information about all existing groups.
   */
-case class GroupsResponseV1(groups: Seq[GroupInfoV1], userdata: Option[UserDataV1]) extends KnoraResponseV1 {
+case class GroupsResponseV1(groups: Seq[GroupInfoV1]) extends KnoraResponseV1 {
     def toJsValue = GroupV1JsonProtocol.groupsResponseV1Format.write(this)
 }
 
@@ -145,9 +144,8 @@ case class GroupsResponseV1(groups: Seq[GroupInfoV1], userdata: Option[UserDataV
   * Represents the Knora API v1 JSON response to a request for information about a single group.
   *
   * @param group_info all information about the group.
-  * @param userdata   information about the user that made the request.
   */
-case class GroupInfoResponseV1(group_info: GroupInfoV1, userdata: Option[UserDataV1]) extends KnoraResponseV1 {
+case class GroupInfoResponseV1(group_info: GroupInfoV1) extends KnoraResponseV1 {
     def toJsValue = GroupV1JsonProtocol.groupInfoResponseV1Format.write(this)
 }
 
@@ -155,9 +153,8 @@ case class GroupInfoResponseV1(group_info: GroupInfoV1, userdata: Option[UserDat
   * Represents an answer to a group creating/modifying operation.
   *
   * @param group_info the new group info of the created/modified group.
-  * @param userdata   information about the user that made the request.
   */
-case class GroupOperationResponseV1(group_info: GroupInfoV1, userdata: UserDataV1) extends KnoraResponseV1 {
+case class GroupOperationResponseV1(group_info: GroupInfoV1) extends KnoraResponseV1 {
     def toJsValue = GroupV1JsonProtocol.groupOperationResponseV1Format.write(this)
 }
 
@@ -180,8 +177,7 @@ case class GroupInfoV1(id: IRI,
                        description: Option[String] = None,
                        belongsToProject: IRI,
                        status: Boolean,
-                       hasSelfJoinEnabled: Boolean
-                      )
+                       hasSelfJoinEnabled: Boolean)
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // JSON formating
@@ -191,16 +187,10 @@ case class GroupInfoV1(id: IRI,
   */
 object GroupV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with NullOptions {
 
-    import UserV1JsonProtocol.userDataV1Format
-
     implicit val groupInfoV1Format: JsonFormat[GroupInfoV1] = jsonFormat6(GroupInfoV1)
-    // we have to use lazyFormat here because `UserV1JsonProtocol` contains an import statement for this object.
-    // this results in recursive import statements
-    // rootFormat makes it return the expected type again.
-    // https://github.com/spray/spray-json#jsonformats-for-recursive-types
-    implicit val groupsResponseV1Format: RootJsonFormat[GroupsResponseV1] = rootFormat(lazyFormat(jsonFormat2(GroupsResponseV1)))
-    implicit val groupInfoResponseV1Format: RootJsonFormat[GroupInfoResponseV1] = rootFormat(lazyFormat(jsonFormat2(GroupInfoResponseV1)))
-    implicit val createGroupApiRequestV1Format: RootJsonFormat[CreateGroupApiRequestV1] = rootFormat(lazyFormat(jsonFormat5(CreateGroupApiRequestV1)))
-    implicit val updateGroupApiRequestV1Format: RootJsonFormat[UpdateGroupApiRequestV1] = rootFormat(lazyFormat(jsonFormat2(UpdateGroupApiRequestV1)))
-    implicit val groupOperationResponseV1Format: RootJsonFormat[GroupOperationResponseV1] = rootFormat(lazyFormat(jsonFormat2(GroupOperationResponseV1)))
+    implicit val groupsResponseV1Format: RootJsonFormat[GroupsResponseV1] = jsonFormat1(GroupsResponseV1)
+    implicit val groupInfoResponseV1Format: RootJsonFormat[GroupInfoResponseV1] = jsonFormat1(GroupInfoResponseV1)
+    implicit val createGroupApiRequestV1Format: RootJsonFormat[CreateGroupApiRequestV1] = jsonFormat5(CreateGroupApiRequestV1)
+    implicit val updateGroupApiRequestV1Format: RootJsonFormat[UpdateGroupApiRequestV1] = jsonFormat2(UpdateGroupApiRequestV1)
+    implicit val groupOperationResponseV1Format: RootJsonFormat[GroupOperationResponseV1] = jsonFormat1(GroupOperationResponseV1)
 }

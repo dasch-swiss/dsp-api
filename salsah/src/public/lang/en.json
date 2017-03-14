@@ -200,6 +200,7 @@
 	"_extsearch_show" : "Limit selections by vocabulary: ",
 	"_vocabulary" : "RDF-vocabulary",
 	"_extsearch_for" : "Search for:",
+	"_addresource" : "Add a resource...",
 	"_addlink" : "Add a link...",
 	"_annotation" : "Annotation",
 	"_is_annotation" : "is nnotation",
