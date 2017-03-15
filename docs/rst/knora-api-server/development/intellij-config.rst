@@ -22,11 +22,27 @@ Setup IntelliJ for development of Knora
 =======================================
 
 -  Download and install `IntelliJ <https://www.jetbrains.com/idea/>`__
--  To open the gitrep ``rapier-scala`` with IntelliJ's full scala
-   support, do the following: ``Import Project`` -> Choose the option
-   ``module SBT``
--  Then install the Scala plugin for IntelliJ
--  make sure that the tab size is set correctly to **4 spaces** (so you can use automatic code reformatting): Preferences -> Code Style and also Preferences -> Code Style -> Scala.
+-  Follow the installation procedure and install the  ``Scala plugin``
+
+.. figure:: figures/install-scala-plugin.png
+   :alt: screenshot 'Install Scala Plugin'
+
+   screenshot 'Install Scala Plugin'
+
+-  Import Knora's project: ``Import Project`` -> Choose the option ``module SBT``
+
+.. figure:: figures/import-from-sbt.png
+   :alt: screenshot 'import existing SBT project'
+
+   screenshot 'import existing SBT project'
+
+-  make sure that the tab size is set correctly to **4 spaces** (so you can use automatic code reformatting): ``Preferences -> Code Style -> Scala``:
+
+.. figure:: figures/setting-tab-space.png
+   :alt: screenshot 'setting tab size'
+
+   screenshot 'setting tab size'
+
 
 Twirl
 -----
@@ -34,37 +50,46 @@ Twirl
 By default, Intellij excludes some folders like the twirl template files. To include them, go to ``Project Structure`` and remove ``target/scala-2.1*/twirl`` from excluded folders.
 Then Intellij will correctly resolve the references to the template files.
 
-How Use IntelliJ IDEA's Debugger with the Knora API Server
-----------------------------------------------------------
+How to use IntelliJ IDEA's Debugger with the Knora API Server
+-------------------------------------------------------------
 
 -  Create an application configuration:
 
-.. figure:: figures/Screenshot_2015-07-22_16.36.14.png
-   :alt: Screenshot_2015-07-22_16.36.14
+.. figure:: figures/edit-config.png
+   :alt: screenshot 'edit application config'
 
-   Screenshot_2015-07-22_16.36.14
+   screenshot 'edit application config'
 
-.. figure:: figures/Screenshot_2015-07-22_16.36.28.png
-   :alt: Screenshot_2015-07-22_16.36.28
+.. figure:: figures/create-app.png
+   :alt: screenshot 'create application configuration'
 
-   Screenshot_2015-07-22_16.36.28
+   screenshot 'create application configuration'
 
-.. figure:: figures/Screenshot_2015-07-22_16.42.35.png
-   :alt: Screenshot_2015-07-22_16.42.35
+   Fill in the configuration details, increase the default memory settings in the ``VM options`` to avoid errors like:
 
-   Screenshot_2015-07-22_16.42.35
+::
+
+    Information:15.03.17 11:33 - Compilation completed with 1 error and 2 warnings in 1m 8s 286ms
+    Error:scalac: Error while emitting org/knora/webapi/responders/v1/ResourcesResponderV1SpecContextData$
+    Java heap space
+    Warning:scalac: java.lang.OutOfMemoryError: Java heap space
+
+.. figure:: figures/app-config-setup.png
+   :alt: screenshot 'change application configuration'
+
+   screenshot 'change application configuration'
 
 -  Click on the debugging symbol to start the application with a
    debugger attached
 
-.. figure:: figures/Screenshot_2015-07-22_16.42.46.png
-   :alt: Screenshot_2015-07-22_16.42.46
+.. figure:: figures/debug.png
+   :alt: screenshot 'debug'
 
-   Screenshot_2015-07-22_16.42.46
+   screenshot 'debug'
 
 -  Click on a line-number to add a breakpoint
 
-.. figure:: figures/Screenshot_2015-07-22_16.47.04.png
-   :alt: Screenshot_2015-07-22_16.47.04
+.. figure:: figures/breakpoint.png
+   :alt: screenshot 'set a breakpoint'
 
-   Screenshot_2015-07-22_16.47.04
+   screenshot 'set a breakpoint'
