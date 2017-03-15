@@ -19,26 +19,25 @@
  */
 
 
-
 package org.knora.webapi.twirl
 
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.valuemessages.GenerateSparqlToCreateMultipleValuesResponseV1
 
 /**
-  * Created by sepidehalassi on 27.02.17.
-  */
-
-/**
-  * Forms the resource to be created with its index, label, Iri, the permissions and Sparql statement for its values
+  * Represents a resource to be created with its index, label, IRI, permissions, and SPARQL for creating its values
   *
-  * @param resourceIri    the IRI of the resource to be created.
-  * @param permissions    the permissions user has for creating new resource
-  * @param generateSparqlForValuesResponse     the sparql statement for creation of values of resource.
-  * @param resourceClassIri    the type of the resource to be created.
-  * @param resourceIndex  the index of the resource
-  * @param resourceLabel  the label of the resource
+  * @param resourceIri                     the IRI of the resource to be created.
+  * @param permissions                     the permissions user has for creating the new resource.
+  * @param generateSparqlForValuesResponse the SPARQL for creating the values of the resource.
+  * @param resourceClassIri                the type of the resource to be created.
+  * @param resourceIndex                   the index of the resource.
+  * @param resourceLabel                   the label of the resource.
   */
 
-case class ResourceToCreate(resourceIri:IRI,  permissions:String, generateSparqlForValuesResponse:GenerateSparqlToCreateMultipleValuesResponseV1, resourceClassIri:IRI, resourceIndex:Int
-                            , resourceLabel:String)
+case class ResourceToCreate(resourceIri: IRI,
+                            permissions: String,
+                            generateSparqlForValuesResponse: GenerateSparqlToCreateMultipleValuesResponseV1,
+                            resourceClassIri: IRI,
+                            resourceIndex: Int,
+                            resourceLabel: String)
