@@ -500,12 +500,18 @@ class UsersResponderV1 extends ResponderV1 {
         /* get the user's permission profile from the permissions responder */
             permissionData <- (responderManager ? PermissionDataGetV1(projectIris = projectIris, groupIris = groupIris, isInProjectAdminGroups = isInProjectAdminGroups, isInSystemAdminGroup = isInSystemAdminGroup)).mapTo[PermissionDataV1]
 
+            projectInfosStart = System.currentTimeMillis()
+
             projectInfoFutures: Seq[Future[ProjectInfoV1]] = projectIris.map {
                 projectIri => (responderManager ? ProjectInfoByIRIGetV1(iri = projectIri, userProfileV1 = None)).mapTo[ProjectInfoV1]
             }
 
             projectInfos: Seq[ProjectInfoV1] <- Future.sequence(projectInfoFutures)
             projectInfoMap: Map[IRI, ProjectInfoV1] = projectInfos.map(projectInfo => projectInfo.id -> projectInfo).toMap
+
+            projectInfosDuration = System.currentTimeMillis() - projectInfosStart
+
+            _ = log.debug(s"************* UsersResponderV1.userDataQueryResponse2UserProfile: getting projectInfos took $projectInfosDuration millis")
 
             /* construct the user profile from the different parts */
             up = UserProfileV1(

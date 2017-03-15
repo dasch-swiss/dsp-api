@@ -20,6 +20,8 @@
 
 package org.knora.webapi.routing
 
+import java.util.UUID
+
 import akka.actor.ActorSystem
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.{HttpCookie, HttpCookiePair}
@@ -310,7 +312,7 @@ object Authenticator {
             // create session id and cache user profile under this id
             log.debug("authenticateCredentials - password matched")
             if (session) {
-                val sId = System.currentTimeMillis().toString
+                val sId = UUID.randomUUID().toString
                 CacheUtil.put(AUTHENTICATION_CACHE_NAME, sId, userProfileV1)
                 sId
             } else {
