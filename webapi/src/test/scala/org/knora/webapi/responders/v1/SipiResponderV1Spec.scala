@@ -1,6 +1,6 @@
 /*
  * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
  *
  * This file is part of Knora.
  *
@@ -41,21 +41,7 @@ object SipiResponderV1Spec {
     // A test UserDataV1.
     private val userData: UserDataV1 = userProfile.userData
 
-    /*
-        This file value has not project Iri attached, it has to be retrieved from the resource.
-     */
-    private val fileValueResponseFull = SipiFileInfoGetResponseV1(
-        permissionCode = 6,
-        userdata = SipiResponderV1Spec.userData
-    )
-
-    /*
-        This file value is attached to the test project 666
-     */
-    private val fileValueResponsePreview = SipiFileInfoGetResponseV1(
-        permissionCode = 2, // the user is not member of the file value's project.
-        userdata = SipiResponderV1Spec.userData
-    )
+    private val fileValueResponseFull = SipiFileInfoGetResponseV1(permissionCode = 6)
 }
 
 /**

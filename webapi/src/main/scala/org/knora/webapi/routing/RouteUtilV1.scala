@@ -1,6 +1,6 @@
 /*
  * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
  *
  * This file is part of Knora.
  *
@@ -30,7 +30,6 @@ import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.standoffmessages.{GetMappingRequestV1, GetMappingResponseV1}
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.responder.{ApiStatusCodesV1, KnoraRequestV1, KnoraResponseV1}
-import org.knora.webapi.util.MessageUtil
 import org.knora.webapi.util.standoff.StandoffTagUtilV1
 import org.knora.webapi.util.standoff.StandoffTagUtilV1.TextWithStandoffTagsV1
 import spray.json.{JsNumber, JsObject}
@@ -63,7 +62,7 @@ object RouteUtilV1 {
                     (implicit timeout: Timeout, executionContext: ExecutionContext): Future[RouteResult] = {
         // Optionally log the request message. TODO: move this to the testing framework.
         if (settings.dumpMessages) {
-            log.debug(MessageUtil.toSource(requestMessage))
+            log.debug(requestMessage.toString)
         }
 
         val httpResponse: Future[HttpResponse] = for {
@@ -79,7 +78,7 @@ object RouteUtilV1 {
 
             // Optionally log the reply message. TODO: move this to the testing framework.
             _ = if (settings.dumpMessages) {
-                log.debug(MessageUtil.toSource(knoraResponse))
+                log.debug(knoraResponse.toString)
             }
 
             // The request was successful, so add a status of ApiStatusCodesV1.OK to the response.
@@ -149,7 +148,7 @@ object RouteUtilV1 {
 
         // Optionally log the request message. TODO: move this to the testing framework.
         if (settings.dumpMessages) {
-            log.debug(MessageUtil.toSource(requestMessage))
+            log.debug(requestMessage.toString)
         }
 
         val httpResponse: Future[HttpResponse] = for {
@@ -166,7 +165,7 @@ object RouteUtilV1 {
 
             // Optionally log the reply message. TODO: move this to the testing framework.
             _ = if (settings.dumpMessages) {
-                log.debug(MessageUtil.toSource(knoraResponse))
+                log.debug(knoraResponse.toString)
             }
 
         } yield HttpResponse(

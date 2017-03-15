@@ -1,6 +1,6 @@
 @*
  * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ * Tobias Schweizer, Sepideh Alassi, André Kilchenmann, and Sepideh Alassi.
  *
  * This file is part of Knora.
  *
@@ -30,20 +30,24 @@
  *
  * @param linkUpdates a list of [[LinkUpdate]] objects describing links and LinkValues that need to be
  *        updated for resource references in Standoff text values.
+ * @param resourceIndex     the index of the resource.
  *
  * The SPARQL variables `?resource` and `?currentTime` must already be bound.
  *@
-@(linkUpdates: Seq[SparqlTemplateLinkUpdate])
+@(linkUpdates: Seq[SparqlTemplateLinkUpdate],
+    resourceIndex: Int
+
+)
 
         @for((linkUpdate, linkValueIndex) <- linkUpdates.zipWithIndex) {
             @* Insert a direct link for the resource reference if necessary. *@
             @if(linkUpdate.insertDirectLink) {
-                ?resource <@linkUpdate.linkPropertyIri> <@linkUpdate.linkTargetIri> .
+                ?resource@resourceIndex <@linkUpdate.linkPropertyIri> <@linkUpdate.linkTargetIri> .
             }
 
             @* Insert a LinkValue for the resource reference. *@
             <@linkUpdate.newLinkValueIri> rdf:type knora-base:LinkValue ;
-                rdf:subject ?resource ;
+                rdf:subject ?resource@resourceIndex ;
                 rdf:predicate <@linkUpdate.linkPropertyIri> ;
                 rdf:object <@linkUpdate.linkTargetIri> ;
                 knora-base:valueHasString "@linkUpdate.linkTargetIri" ;
@@ -51,18 +55,8 @@
                 knora-base:isDeleted false ;
                 knora-base:valueCreationDate ?currentTime .
 
-            <@linkUpdate.newLinkValueIri> knora-base:attachedToUser <@linkUpdate.newLinkValueCreator> .
-
-            @linkUpdate.newLinkValuePermissions match {
-
-                case Some(linkValuePermissions) => {
-
-                    <@linkUpdate.newLinkValueIri> knora-base:hasPermissions "@linkValuePermissions" .
-
-                }
-
-                case None => {}
-            }
+            <@linkUpdate.newLinkValueIri> knora-base:attachedToUser <@linkUpdate.newLinkValueCreator> ;
+                knora-base:hasPermissions "@linkUpdate.newLinkValuePermissions" .
 
             @*
 
@@ -81,5 +75,5 @@
             }
 
             @* Attach the new LinkValue to its containing resource. *@
-            ?resource <@{linkUpdate.linkPropertyIri}Value> <@linkUpdate.newLinkValueIri> .
+            ?resource@resourceIndex <@{linkUpdate.linkPropertyIri}Value> <@linkUpdate.newLinkValueIri> .
         }

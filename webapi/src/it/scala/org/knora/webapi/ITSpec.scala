@@ -1,6 +1,6 @@
 /*
  * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
  * This file is part of Knora.
  * Knora is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
@@ -20,14 +20,16 @@ import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.client.RequestBuilding
-import akka.http.scaladsl.model.{HttpRequest, HttpResponse}
+import akka.http.scaladsl.model.{HttpRequest, HttpResponse, StatusCodes}
 import akka.stream.ActorMaterializer
 import com.typesafe.config.{Config, ConfigFactory}
 import org.scalatest.{BeforeAndAfterAll, Matchers, Suite, WordSpecLike}
+import spray.json.JsObject
 
 import scala.concurrent.duration._
-import scala.concurrent.{Await, ExecutionContextExecutor}
+import scala.concurrent.{Await, ExecutionContextExecutor, Future}
 import scala.languageFeature.postfixOps
+import spray.json._
 
 object ITSpec {
     val defaultConfig: Config = ConfigFactory.load()
@@ -60,9 +62,25 @@ class ITSpec(_system: ActorSystem) extends Core with KnoraService with Suite wit
     implicit protected val ec: ExecutionContextExecutor = system.dispatcher
     implicit protected val materializer = ActorMaterializer()
 
-    def singleAwaitingRequest(request: HttpRequest, duration: Duration = 3.seconds): HttpResponse = {
+    protected def singleAwaitingRequest(request: HttpRequest, duration: Duration = 15.seconds): HttpResponse = {
         val responseFuture = Http().singleRequest(request)
         Await.result(responseFuture, duration)
+    }
+
+    protected def getResponseString(request: HttpRequest): String = {
+        val response = singleAwaitingRequest(request)
+        val responseBodyFuture: Future[String] = response.entity.toStrict(5.seconds).map(_.data.decodeString("UTF-8"))
+        val responseBodyStr = Await.result(responseBodyFuture, 5.seconds)
+        assert(response.status === StatusCodes.OK, responseBodyStr)
+        responseBodyStr
+    }
+
+    protected def checkResponseOK(request: HttpRequest): Unit = {
+        getResponseString(request)
+    }
+
+    protected def getResponseJson(request: HttpRequest): JsObject = {
+        getResponseString(request).parseJson.asJsObject
     }
 
     override def beforeAll: Unit = {

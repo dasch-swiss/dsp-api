@@ -1,6 +1,6 @@
 /*
  * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
  *
  * This file is part of Knora.
  *
@@ -54,4 +54,4 @@ case class SparqlTemplateLinkUpdate(linkPropertyIri: IRI,
                                     currentReferenceCount: Int,
                                     newReferenceCount: Int,
                                     newLinkValueCreator: IRI,
-                                    newLinkValuePermissions: Option[String])
+                                    newLinkValuePermissions: String)

@@ -1,6 +1,6 @@
 /*
  * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
  *
  * This file is part of Knora.
  *
@@ -20,7 +20,7 @@
 
 /*
  * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
  *
  * This file is part of Knora.
  *
@@ -73,7 +73,7 @@ class PermissionUtilV1Spec extends CoreSpec("PermissionUtilSpec") with ImplicitS
                 subjectIri = "http://data.knora.org/00014b43f902",
                 subjectCreator = "http://data.knora.org/users/91e19f1e01",
                 subjectProject = SharedAdminTestData.INCUNABULA_PROJECT_IRI,
-                subjectPermissionLiteral = Some(permissionLiteral),
+                subjectPermissionLiteral = permissionLiteral,
                 userProfile = SharedAdminTestData.incunabulaMemberUser
             ) should equal(Some(6)) // modify permission
         }
@@ -83,7 +83,7 @@ class PermissionUtilV1Spec extends CoreSpec("PermissionUtilSpec") with ImplicitS
                 subjectIri = "http://data.knora.org/00014b43f902",
                 subjectCreator = "http://data.knora.org/users/91e19f1e01",
                 subjectProject = SharedAdminTestData.INCUNABULA_PROJECT_IRI,
-                subjectPermissionLiteral = Some(permissionLiteral),
+                subjectPermissionLiteral = permissionLiteral,
                 userProfile = SharedAdminTestData.incunabulaProjectAdminUser
             ) should equal(Some(8)) // change rights permission
         }
@@ -93,7 +93,7 @@ class PermissionUtilV1Spec extends CoreSpec("PermissionUtilSpec") with ImplicitS
                 subjectIri = "http://data.knora.org/00014b43f902",
                 subjectCreator = "http://data.knora.org/users/91e19f1e01",
                 subjectProject = SharedAdminTestData.INCUNABULA_PROJECT_IRI,
-                subjectPermissionLiteral = Some(permissionLiteral),
+                subjectPermissionLiteral = permissionLiteral,
                 userProfile = SharedAdminTestData.incunabulaCreatorUser
             ) should equal(Some(8)) // change rights permission
         }
@@ -103,7 +103,7 @@ class PermissionUtilV1Spec extends CoreSpec("PermissionUtilSpec") with ImplicitS
                 subjectIri = "http://data.knora.org/00014b43f902",
                 subjectCreator = "http://data.knora.org/users/91e19f1e01",
                 subjectProject = SharedAdminTestData.INCUNABULA_PROJECT_IRI,
-                subjectPermissionLiteral = Some(permissionLiteral),
+                subjectPermissionLiteral = permissionLiteral,
                 userProfile = SharedAdminTestData.rootUser
             ) should equal(Some(8)) // change rights permission
         }
@@ -113,7 +113,7 @@ class PermissionUtilV1Spec extends CoreSpec("PermissionUtilSpec") with ImplicitS
                 subjectIri = "http://data.knora.org/00014b43f902",
                 subjectCreator = "http://data.knora.org/users/91e19f1e01",
                 subjectProject = SharedAdminTestData.INCUNABULA_PROJECT_IRI,
-                subjectPermissionLiteral = Some(permissionLiteral),
+                subjectPermissionLiteral = permissionLiteral,
                 userProfile = SharedAdminTestData.normalUser
             ) should equal(Some(2)) // restricted view permission
         }
@@ -123,7 +123,7 @@ class PermissionUtilV1Spec extends CoreSpec("PermissionUtilSpec") with ImplicitS
                 subjectIri = "http://data.knora.org/00014b43f902",
                 subjectCreator = "http://data.knora.org/users/91e19f1e01",
                 subjectProject = SharedAdminTestData.INCUNABULA_PROJECT_IRI,
-                subjectPermissionLiteral = Some(permissionLiteral),
+                subjectPermissionLiteral = permissionLiteral,
                 userProfile = SharedAdminTestData.anonymousUser
             ) should equal(Some(1)) // restricted view permission
         }
@@ -141,38 +141,13 @@ class PermissionUtilV1Spec extends CoreSpec("PermissionUtilSpec") with ImplicitS
             ) should equal(Some(6)) // modify permissions
         }
 
-        "return user's max permission on link value with value props (1)" ignore {
-
-            "http://www.knora.org/ontology/knora-base#hasStandoffLinkTo"
-
-
-        }
-
-        "return user's max permission on link value with value props (2)" ignore {
-
-            /*
-            "incunabula:partOf"
-            "V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember|D knora-base:Owner"
-            "http://data.knora.org/users/91e19f1e01"
-
-
-            PermissionUtilV1.getUserPermissionOnLinkValueV1WithValueProps(
-                linkValueIri = "http://data.knora.org/00014b43f902/values/a3a1ec4d-84b5-4769-83ab-319a1cfcf8a3",
-                predicateIri = "incunabula:partOf",
-                valueProps = ,
-                userProfile = SharedAdminTestData.incunabulaUser
-            ) should equal(Some(5))
-            */
-        }
-
-
 
         "return user's max permission on link value" ignore {
-
+            // TODO
         }
 
         "return parsed permissions string as 'Map[IRI, Set[String]]" in {
-            PermissionUtilV1.parsePermissions(Some(permissionLiteral)) should equal(parsedPermissionLiteral)
+            PermissionUtilV1.parsePermissions(permissionLiteral) should equal(parsedPermissionLiteral)
         }
 
 
@@ -258,7 +233,7 @@ class PermissionUtilV1Spec extends CoreSpec("PermissionUtilSpec") with ImplicitS
             val permissionsString = "CR knora-base:Creator,1|D 2|M knora-base:ProjectMember|V knora-base:KnownUser"
 
             val result = PermissionUtilV1.formatPermissions(permissions, PermissionType.OAP)
-            result should equal(Some(permissionsString))
+            result should equal(permissionsString)
 
         }
     }

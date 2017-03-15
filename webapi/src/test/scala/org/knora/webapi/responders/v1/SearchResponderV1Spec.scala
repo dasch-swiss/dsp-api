@@ -1,6 +1,6 @@
 /*
  * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
  *
  * This file is part of Knora.
  *
@@ -255,12 +255,10 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
                 preview_path = Some(settings.salsahBaseUrl + settings.salsahProjectIconsBasePath + "incunabula/book.gif"),
                 obj_id = "http://data.knora.org/ff17e5ef9601"
             )
-        ),
-        userdata = incunabulaUser.userData
+        )
     )
 
     val bertholdResponse = SearchGetResponseV1(
-        userdata = incunabulaUser.userData,
         subjects = Vector(
             SearchResultRowV1(
                 obj_id = "http://data.knora.org/c5058f3a",

@@ -1,6 +1,6 @@
 @*
  * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
  *
  * This file is part of Knora.
  *
@@ -85,18 +85,8 @@ INSERT {
                 @{throw SparqlGenerationException(s"linkUpdateForCurrentLink.newReferenceCount must be 0 in this SPARQL template"); ()}
             }
 
-        ?newLinkValueForCurrentLink knora-base:attachedToUser <@linkUpdateForCurrentLink.newLinkValueCreator> .
-
-        @linkUpdateForCurrentLink.newLinkValuePermissions match {
-
-            case Some(linkValuePermissions) => {
-
-                ?newLinkValueForCurrentLink knora-base:hasPermissions "@linkValuePermissions" .
-
-            }
-
-            case None => {}
-        }
+        ?newLinkValueForCurrentLink knora-base:attachedToUser <@linkUpdateForCurrentLink.newLinkValueCreator> ;
+            knora-base:hasPermissions "@linkUpdateForCurrentLink.newLinkValuePermissions" .
 
         @* Attach the new LinkValue to its containing resource. *@
         ?linkSource ?linkValueProperty ?newLinkValueForCurrentLink .
@@ -123,18 +113,8 @@ INSERT {
             knora-base:isDeleted false ;
             knora-base:valueCreationDate ?currentTime .
 
-        ?newLinkValueForNewLink knora-base:attachedToUser <@linkUpdateForNewLink.newLinkValueCreator> .
-
-        @linkUpdateForNewLink.newLinkValuePermissions match {
-
-            case Some(linkValuePermissions) => {
-
-                ?newLinkValueForNewLink knora-base:hasPermissions "@linkValuePermissions" .
-
-            }
-
-            case None => {}
-        }
+        ?newLinkValueForNewLink knora-base:attachedToUser <@linkUpdateForNewLink.newLinkValueCreator> ;
+            knora-base:hasPermissions "@linkUpdateForNewLink.newLinkValuePermissions" .
 
         @* Attach the new LinkValue to its containing resource. *@
         ?linkSource ?linkValueProperty ?newLinkValueForNewLink .

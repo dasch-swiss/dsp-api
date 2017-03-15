@@ -1,5 +1,5 @@
 .. Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
-   Tobias Schweizer, André Kilchenmann, and André Fatton.
+   Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
 
    This file is part of Knora.
 
@@ -947,6 +947,10 @@ We can visualise the result as the following graph:
        linkValue -> collection [label = "object"]
     }
 
+The Knora API server allows a user to see a link if
+the requesting user has permission to see the source and target resources
+as well as the ``kb:LinkValue``.
+
 .. _knora-base-standoff:
 
 Text with Standoff Markup
@@ -1202,9 +1206,10 @@ The result can be visualized like this:
     }
 
 Link values created automatically for resource references in standoff
-are automatically visible to all users, as long as they have permission
-to see the source and target resources. The creator of these link values
+are visible to all users, and the creator of these link values
 is always ``kb:SystemUser`` (see :ref:`knora-base-users-and-groups`).
+The Knora API server allows a user to see a standoff link if the user
+has permission to see the source and target resources.
 
 .. _knora-base-standoff-internal-reference:
 
@@ -1429,8 +1434,9 @@ Permissions
 -----------
 
 An object can grant the following permissions, which are stored in a
-compact format in a single string, which is the object of the predicate
-``kb:hasPermissions``:
+compact format in a single string. This string is the object of the predicate
+``kb:hasPermissions``, which is required on every ``kb:Resource`` and
+``kb:Value``.
 
 #. **Restricted view permission (RV)** Allows a restricted view of
    the object, e.g. a view of an image with a watermark.

@@ -1,5 +1,5 @@
 .. Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
-   Tobias Schweizer, André Kilchenmann, and André Fatton.
+   Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
 
    This file is part of Knora.
 
@@ -43,7 +43,7 @@ Depending on the type of the new value, one of the following formats (all TypeSc
   - ``addDecimalValueRequest``
   - ``addBooleanValueRequest``
   - ``addUriValueRequest``
-  - ``addDateValueRequest``
+  - ``addDateValueRequest`` (see ``dateString`` in ``basicMessageComponents`` for the date format)
   - ``addColorValueRequest``
   - ``addGeometryValueRequest``
   - ``addHierarchicalListValueRequest``

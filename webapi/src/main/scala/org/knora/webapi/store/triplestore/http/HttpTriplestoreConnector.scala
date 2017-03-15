@@ -1,6 +1,6 @@
 /*
  * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
  *
  * This file is part of Knora.
  *
@@ -123,6 +123,8 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
       * @return a [[SparqlSelectResponse]].
       */
     private def sparqlHttpSelect(sparql: String): Future[SparqlSelectResponse] = {
+        // println(sparql)
+
         def parseJsonResponse(sparql: String, resultStr: String): Future[SparqlSelectResponse] = {
             val parseTry = Try {
                 resultStr.parseJson.convertTo[SparqlSelectResponse]

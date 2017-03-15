@@ -1,6 +1,6 @@
 /*
  * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
  *
  * This file is part of Knora.
  *
@@ -98,11 +98,7 @@ class ProjectsResponderV1 extends ResponderV1 {
 
             result = if (projects.nonEmpty) {
                 ProjectsResponseV1(
-                    projects = projects,
-                    userdata = userProfile match {
-                        case Some(profile) => Some(profile.userData)
-                        case None => None
-                    }
+                    projects = projects
                 )
             } else {
                 throw NotFoundException(s"No projects found")
@@ -146,7 +142,6 @@ class ProjectsResponderV1 extends ResponderV1 {
                         keywords = propsMap.get(OntologyConstants.KnoraBase.ProjectKeywords),
                         logo = propsMap.get(OntologyConstants.KnoraBase.ProjectLogo),
                         belongsToInstitution = propsMap.get(OntologyConstants.KnoraBase.BelongsToProject),
-                        basepath = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectBasepath, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no basepath defined.")),
                         ontologyNamedGraph = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectOntologyGraph, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no projectOntologyGraph defined.")),
                         dataNamedGraph = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectDataGraph, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no projectDataGraph defined.")),
                         status = propsMap.getOrElse(OntologyConstants.KnoraBase.Status, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no status defined.")).toBoolean,
@@ -210,11 +205,7 @@ class ProjectsResponderV1 extends ResponderV1 {
         for {
             projectInfo <- projectInfoByIRIGetV1(projectIRI, userProfile)
         } yield ProjectInfoResponseV1(
-            project_info = projectInfo,
-            userdata = userProfile match {
-                case Some(profile) => Some(profile.userData)
-                case None => None
-            }
+            project_info = projectInfo
         )
     }
 
@@ -276,11 +267,7 @@ class ProjectsResponderV1 extends ResponderV1 {
             projectInfo = createProjectInfoV1(projectResponse = projectResponse.results.bindings, projectIri = projectIri, userProfile)
 
         } yield ProjectInfoResponseV1(
-            project_info = projectInfo,
-            userdata = userProfile match {
-                case Some(profile) => Some(profile.userData)
-                case None => None
-            }
+            project_info = projectInfo
         )
     }
 
@@ -348,7 +335,7 @@ class ProjectsResponderV1 extends ResponderV1 {
             newProjectInfo = createProjectInfoV1(projectResponse, newProjectIRI, Some(userProfile))
 
             // create the project operation response
-            projectOperationResponseV1 = ProjectOperationResponseV1(newProjectInfo, userProfile.userData)
+            projectOperationResponseV1 = ProjectOperationResponseV1(newProjectInfo)
 
         } yield projectOperationResponseV1
 
@@ -397,7 +384,6 @@ class ProjectsResponderV1 extends ResponderV1 {
                 keywords = projectProperties.get(OntologyConstants.KnoraBase.ProjectKeywords),
                 logo = projectProperties.get(OntologyConstants.KnoraBase.ProjectLogo),
                 belongsToInstitution = projectProperties.get(OntologyConstants.KnoraBase.BelongsToProject),
-                basepath = projectProperties.getOrElse(OntologyConstants.KnoraBase.ProjectBasepath, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no basepath defined.")),
                 ontologyNamedGraph = projectProperties.getOrElse(OntologyConstants.KnoraBase.ProjectOntologyGraph, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no projectOntologyGraph defined.")),
                 dataNamedGraph = projectProperties.getOrElse(OntologyConstants.KnoraBase.ProjectDataGraph, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no projectDataGraph defined.")),
                 status = projectProperties.getOrElse(OntologyConstants.KnoraBase.Status, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no status defined.")).toBoolean,

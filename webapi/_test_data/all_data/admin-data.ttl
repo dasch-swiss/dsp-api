@@ -111,8 +111,6 @@
 
                                         knora-base:projectDataGraph "http://www.knora.org/data/images"^^xsd:string ;
 
-                                        knora-base:projectBasepath "/imldata/SALSAH-TEST-01/images"^^xsd:string ;
-
                                         knora-base:status "true"^^xsd:boolean ;
 
                                         knora-base:hasSelfJoinEnabled "false"^^xsd:boolean .
@@ -206,8 +204,6 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
                                           knora-base:projectDataGraph "http://www.knora.org/data/incunabula"^^xsd:string ;
 
                                           knora-base:projectLogo "incunabula_logo.png"^^xsd:string ;
-
-                                          knora-base:projectBasepath "/imldata/SALSAH-TEST-01/Incunabula"^^xsd:string ;
 
                                           knora-base:status "true"^^xsd:boolean ;
 
@@ -305,12 +301,14 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
                                         knora-base:status "true"^^xsd:boolean ;
 
                                         knora-base:isInProject <http://data.knora.org/projects/77275339> ,
-                                                               <http://data.knora.org/projects/images>;
+                                                               <http://data.knora.org/projects/images> ,
+                                                               <http://data.knora.org/projects/anything> ;
 
                                         knora-base:isInSystemAdminGroup "false"^^xsd:boolean ;
 
                                         knora-base:isInProjectAdminGroup <http://data.knora.org/projects/77275339> ,
-                                                                         <http://data.knora.org/projects/images>;
+                                                                         <http://data.knora.org/projects/images> ,
+                                                                         <http://data.knora.org/projects/anything> ;
 
                                         knora-base:isInGroup <http://data.knora.org/groups/images-reviewer> .
 
@@ -327,7 +325,6 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 	knora-base:projectDescription "Anything Project"^^xsd:string ;
 	knora-base:projectOntologyGraph "http://www.knora.org/ontology/anything"^^xsd:string ;
   knora-base:projectDataGraph "http://www.knora.org/data/anything"^^xsd:string ;
-  knora-base:projectBasepath "/foo/bar/baz"^^xsd:string ;
   knora-base:status "true"^^xsd:boolean ;
   knora-base:hasSelfJoinEnabled "false"^^xsd:boolean .
 
@@ -363,7 +360,6 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
   knora-base:projectDescription "Dokubib"^^xsd:string ;
 	knora-base:projectOntologyGraph "http://www.knora.org/ontology/dokubib"^^xsd:string ;
   knora-base:projectDataGraph "http://www.knora.org/data/dokubib"^^xsd:string ;
-  knora-base:projectBasepath "/foo/bar/baz"^^xsd:string ;
   knora-base:status "false"^^xsd:boolean ;
   knora-base:hasSelfJoinEnabled "false"^^xsd:boolean .
 
@@ -378,7 +374,6 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
   knora-base:projectDescription "Bernoulli-Euler Online"^^xsd:string ;
 	knora-base:projectOntologyGraph "http://www.knora.org/ontology/beol"^^xsd:string ;
   knora-base:projectDataGraph "http://www.knora.org/data/beol"^^xsd:string ;
-  knora-base:projectBasepath "/foo/bar/baz"^^xsd:string ;
   knora-base:status "true"^^xsd:boolean ;
   knora-base:hasSelfJoinEnabled "false"^^xsd:boolean .
 
@@ -406,7 +401,6 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
   knora-base:projectDescription "Bibliography"^^xsd:string ;
 	knora-base:projectOntologyGraph "http://www.knora.org/ontology/biblio"^^xsd:string ;
   knora-base:projectDataGraph "http://www.knora.org/data/biblio"^^xsd:string ;
-  knora-base:projectBasepath "/foo/bar/baz"^^xsd:string ;
   knora-base:status "true"^^xsd:boolean ;
   knora-base:hasSelfJoinEnabled "false"^^xsd:boolean .
 
@@ -416,7 +410,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 	knora-base:familyName "biblio"^^xsd:string ;
 	knora-base:givenName "biblio"^^xsd:string ;
 	knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="^^xsd:string ;
-	knora-base:email "sepideh.alassi@unibas.ch"^^xsd:string ;
+    knora-base:email "biblio@example.com"^^xsd:string ;
 	knora-base:preferredLanguage "de"^^xsd:string ;
 	knora-base:status "true"^^xsd:boolean ;
 	knora-base:isInProject <http://data.knora.org/projects/DczxPs-sR6aZN91qV92ZmQ> ;

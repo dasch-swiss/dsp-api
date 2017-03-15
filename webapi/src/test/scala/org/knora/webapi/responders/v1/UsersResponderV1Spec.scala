@@ -1,6 +1,6 @@
 /*
  * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
  * This file is part of Knora.
  * Knora is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
@@ -26,20 +26,21 @@ import java.util.UUID
 import akka.actor.Props
 import akka.actor.Status.Failure
 import akka.testkit.{ImplicitSender, TestActorRef}
-import com.typesafe.config.ConfigFactory
+import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse}
 import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.messages.v1.store.triplestoremessages._
 import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_NAME
 import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
+import org.knora.webapi.util.MessageUtil
 
 import scala.concurrent.duration._
 
 
 object UsersResponderV1Spec {
 
-    val config = ConfigFactory.parseString(
+    val config: Config = ConfigFactory.parseString(
         """
          akka.loglevel = "DEBUG"
          akka.stdout-loglevel = "DEBUG"
@@ -51,25 +52,22 @@ object UsersResponderV1Spec {
   */
 class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with ImplicitSender {
 
-    implicit val executionContext = system.dispatcher
+    private implicit val executionContext = system.dispatcher
     private val timeout = 5.seconds
 
-    val imagesProjectIri = "http://data.knora.org/projects/images"
-    val incunabulaProjectIri = "http://data.knora.org/projects/77275339"
+    private val rootUser = SharedAdminTestData.rootUser
+    private val rootUserIri = rootUser.userData.user_id.get
+    private val rootUserEmail = rootUser.userData.email.get
 
-    val rootUser = SharedAdminTestData.rootUser
-    val rootUserIri = rootUser.userData.user_id.get
-    val rootUserEmail = rootUser.userData.email.get
+    private val incunabulaUser = SharedAdminTestData.incunabulaProjectAdminUser
+    private val incunabulaUserIri = incunabulaUser.userData.user_id.get
+    private val incunabulaUserEmail = incunabulaUser.userData.email.get
 
-    val incunabulaUser = SharedAdminTestData.incunabulaProjectAdminUser
-    val incunabulaUserIri = incunabulaUser.userData.user_id.get
-    val incunabulaUserEmail = incunabulaUser.userData.email.get
+    private val actorUnderTest = TestActorRef[UsersResponderV1]
+    private val responderManager = system.actorOf(Props(new ResponderManagerV1 with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
+    private val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
 
-    val actorUnderTest = TestActorRef[UsersResponderV1]
-    val responderManager = system.actorOf(Props(new ResponderManagerV1 with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
-    val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
-
-    val rdfDataObjects = List() /* sending an empty list, will only load the default ontologies and data */
+    private val rdfDataObjects = List() /* sending an empty list, will only load the default ontologies and data */
 
     "Load test data" in {
         storeManager ! ResetTriplestoreContent(rdfDataObjects)
@@ -122,7 +120,7 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
                         email = "donald.duck@example.com",
                         givenName = "Donald",
                         familyName = "Duck",
-                        password ="test",
+                        password = "test",
                         status = true,
                         lang = "en"
                     ),
@@ -130,7 +128,7 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
                     apiRequestID = UUID.randomUUID
                 )
                 expectMsgPF(timeout) {
-                    case UserOperationResponseV1(newUserProfile, requestingUserData) => {
+                    case UserOperationResponseV1(newUserProfile) => {
                         assert(newUserProfile.userData.firstname.get.equals("Donald"))
                         assert(newUserProfile.userData.lastname.get.equals("Duck"))
                         assert(newUserProfile.userData.email.get.equals("donald.duck@example.com"))
@@ -145,7 +143,7 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
                         email = "root@example.com",
                         givenName = "Donal",
                         familyName = "Duck",
-                        password ="test",
+                        password = "test",
                         status = true,
                         lang = "en"
                     ),
@@ -235,13 +233,9 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
                     UUID.randomUUID
                 )
                 expectMsgPF(timeout) {
-                    case UserOperationResponseV1(updatedUserProfile, requestingUserData) => {
+                    case UserOperationResponseV1(updatedUserProfile) =>
                         // check if information was changed
                         assert(updatedUserProfile.userData.firstname.contains("Donald"))
-
-                        // check if correct and updated userdata is returned
-                        assert(requestingUserData.firstname.contains("Donald"))
-                    }
                 }
 
                 /* User information is updated by a system admin */
@@ -257,13 +251,9 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
                     UUID.randomUUID
                 )
                 expectMsgPF(timeout) {
-                    case UserOperationResponseV1(updatedUserProfile, requestingUserData) => {
+                    case UserOperationResponseV1(updatedUserProfile) =>
                         // check if information was changed
                         assert(updatedUserProfile.userData.lastname.contains("Duck"))
-
-                        // check if the correct userdata is returned
-                        assert(requestingUserData.user_id.contains(SharedAdminTestData.superUser.userData.user_id.get))
-                    }
                 }
 
             }
@@ -311,14 +301,10 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
                     apiRequestID = UUID.randomUUID()
                 )
                 expectMsgPF(timeout) {
-                    case UserOperationResponseV1(updatedUserProfile, requestingUserData) => {
-                        // cant check if password was changed, since it will not be returned. but if no error message
-                        // is returned, then I can assume that the password was successfully changed, as this check is
-                        // performed in the responder itself.
-
-                        // check if the correct userdata is returned
-                        assert(requestingUserData.user_id.contains(SharedAdminTestData.normalUser.userData.user_id.get))
-                    }
+                    case UserOperationResponseV1(_) =>
+                    // Can't check if password was changed, since it will not be returned. but if no error message
+                    // is returned, then I can assume that the password was successfully changed, as this check is
+                    // performed in the responder itself.
                 }
             }
 
@@ -330,16 +316,12 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
                     UUID.randomUUID
                 )
                 expectMsgPF(timeout) {
-                    case UserOperationResponseV1(updatedUserProfile, requestingUserData) => {
+                    case UserOperationResponseV1(updatedUserProfile) =>
                         // check if information was changed
                         assert(updatedUserProfile.userData.isActiveUser.contains(false))
-                    }
                 }
 
             }
-
-
         }
     }
-
 }

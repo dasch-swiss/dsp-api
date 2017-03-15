@@ -1,6 +1,6 @@
 @*
  * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
  *
  * This file is part of Knora.
  *
@@ -90,18 +90,8 @@ INSERT {
                 @{throw SparqlGenerationException(s"linkUpdate.newReferenceCount must be 0 in this SPARQL template"); ()}
             }
 
-        ?newLinkValue knora-base:attachedToUser <@linkUpdate.newLinkValueCreator> .
-
-        @linkUpdate.newLinkValuePermissions match {
-
-            case Some(linkValuePermissions) => {
-
-                ?newLinkValue knora-base:hasPermissions "@linkValuePermissions" .
-
-            }
-
-            case None => {}
-        }
+        ?newLinkValue knora-base:attachedToUser <@linkUpdate.newLinkValueCreator> ;
+            knora-base:hasPermissions "@linkUpdate.newLinkValuePermissions" .
 
         @* Attach the new LinkValue to its containing resource. *@
         ?linkSource ?linkValueProperty ?newLinkValue .

@@ -1,6 +1,6 @@
 /*
  * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
  *
  * This file is part of Knora.
  *
@@ -96,8 +96,7 @@ class ValuesResponderV1 extends ResponderV1 {
                         valuecreator = valueOwnerProfile.userData.email.get,
                         valuecreatorname = valueOwnerProfile.userData.fullname.get,
                         valuecreationdate = valueQueryResult.creationDate,
-                        comment = valueQueryResult.comment,
-                        userdata = userProfile.userData
+                        comment = valueQueryResult.comment
                     )
 
                 case None =>
@@ -211,7 +210,7 @@ class ValuesResponderV1 extends ResponderV1 {
                 value = createValueRequest.value,
                 comment = createValueRequest.comment,
                 valueCreator = userIri,
-                valuePermissions = Some(defaultObjectAccessPermissions.permissionLiteral),
+                valuePermissions = defaultObjectAccessPermissions.permissionLiteral,
                 updateResourceLastModificationDate = true,
                 userProfile = createValueRequest.userProfile)
 
@@ -290,14 +289,14 @@ class ValuesResponderV1 extends ResponderV1 {
                                                          valueIndexes: Vector[Int] = Vector.empty[Int])
 
             for {
-                ////////////////////////////////////////////////////////////////////////////////////////////////////////////
-                // Generate SPARQL to create links and LinkValues for standoff resource references in text values
+            ////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            // Generate SPARQL to create links and LinkValues for standoff resource references in text values
 
-                // To create LinkValues for the standoff resource references in the values to be created, we need to compute
-                // the initial reference count of each LinkValue. This is equal to the number of TextValues in the resource
-                // that have standoff references to a particular target resource.
+            // To create LinkValues for the standoff resource references in the values to be created, we need to compute
+            // the initial reference count of each LinkValue. This is equal to the number of TextValues in the resource
+            // that have standoff references to a particular target resource.
 
-                // First, make a single list of all the values to be created.
+            // First, make a single list of all the values to be created.
                 valuesToCreatePerProperty: Map[IRI, Seq[CreateValueV1WithComment]] <- Future(createMultipleValuesRequest.values)
                 valuesToCreateForAllProperties: Iterable[Seq[CreateValueV1WithComment]] = valuesToCreatePerProperty.values
                 allValuesToCreate: Iterable[CreateValueV1WithComment] = valuesToCreateForAllProperties.flatten
@@ -346,12 +345,12 @@ class ValuesResponderV1 extends ResponderV1 {
                             currentReferenceCount = 0,
                             newReferenceCount = initialReferenceCount,
                             newLinkValueCreator = OntologyConstants.KnoraBase.SystemUser,
-                            newLinkValuePermissions = None
+                            newLinkValuePermissions = standoffLinkValuePermissions
                         )
                 }
 
                 // Generate INSERT clause statements based on those SparqlTemplateLinkUpdates.
-                standoffLinkInsertSparql: String = queries.sparql.v1.txt.generateInsertStatementsForStandoffLinks(linkUpdates = standoffLinkUpdates).toString()
+                standoffLinkInsertSparql: String = queries.sparql.v1.txt.generateInsertStatementsForStandoffLinks(linkUpdates = standoffLinkUpdates, resourceIndex = 0).toString()
 
                 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
                 // Number each value to be created, and give it a valueHasOrder
@@ -421,19 +420,22 @@ class ValuesResponderV1 extends ResponderV1 {
                                             currentReferenceCount = 0,
                                             newReferenceCount = 1,
                                             newLinkValueCreator = userIri,
-                                            newLinkValuePermissions = Some(defaultObjectAccessPermissions.permissionLiteral)
+                                            newLinkValuePermissions = defaultObjectAccessPermissions.permissionLiteral
                                         )
 
                                         // Generate WHERE clause statements for the link.
                                         val whereSparql = queries.sparql.v1.txt.generateWhereStatementsForCreateLink(
+                                            resourceIndex = createMultipleValuesRequest.resourceIndex,
                                             valueIndex = valueToCreate.valueIndex,
                                             resourceIri = createMultipleValuesRequest.resourceIri,
                                             linkUpdate = sparqlTemplateLinkUpdate,
-                                            maybeValueHasOrder = Some(valueToCreate.valueHasOrder)
+                                            maybeValueHasOrder = Some(valueToCreate.valueHasOrder),
+                                            checkObj = createMultipleValuesRequest.checkObj
                                         ).toString()
 
                                         // Generate INSERT clause statements for the link.
                                         val insertSparql = queries.sparql.v1.txt.generateInsertStatementsForCreateLink(
+                                            resourceIndex = createMultipleValuesRequest.resourceIndex,
                                             valueIndex = valueToCreate.valueIndex,
                                             linkUpdate = sparqlTemplateLinkUpdate,
                                             maybeComment = valueToCreate.createValueV1WithComment.comment
@@ -446,17 +448,20 @@ class ValuesResponderV1 extends ResponderV1 {
 
                                         // Generate WHERE clause statements for the value.
                                         val whereSparql = queries.sparql.v1.txt.generateWhereStatementsForCreateValue(
+                                            resourceIndex = createMultipleValuesRequest.resourceIndex,
                                             valueIndex = valueToCreate.valueIndex,
                                             resourceIri = createMultipleValuesRequest.resourceIri,
                                             propertyIri = propertyIri,
                                             newValueIri = newValueIri,
                                             valueTypeIri = updateValueV1.valueTypeIri,
                                             linkUpdates = Seq.empty[SparqlTemplateLinkUpdate], // This is empty because we have to generate SPARQL for standoff links separately.
-                                            maybeValueHasOrder = Some(valueToCreate.valueHasOrder)
+                                            maybeValueHasOrder = Some(valueToCreate.valueHasOrder),
+                                            checkObj = createMultipleValuesRequest.checkObj
                                         ).toString()
 
                                         // Generate INSERT clause statements for the value.
                                         val insertSparql = queries.sparql.v1.txt.generateInsertStatementsForCreateValue(
+                                            resourceIndex = createMultipleValuesRequest.resourceIndex,
                                             valueIndex = valueToCreate.valueIndex,
                                             propertyIri = propertyIri,
                                             value = updateValueV1,
@@ -464,7 +469,7 @@ class ValuesResponderV1 extends ResponderV1 {
                                             linkUpdates = Seq.empty[SparqlTemplateLinkUpdate], // This is empty because we have to generate SPARQL for standoff links separately.
                                             maybeComment = valueToCreate.createValueV1WithComment.comment,
                                             valueCreator = userIri,
-                                            maybeValuePermissions = Some(defaultObjectAccessPermissions.permissionLiteral)
+                                            valuePermissions = defaultObjectAccessPermissions.permissionLiteral
                                         ).toString()
 
                                         //println(insertSparql)
@@ -544,7 +549,6 @@ class ValuesResponderV1 extends ResponderV1 {
                             userProfile = verifyRequest.userProfile
                         )
                 }
-
                 propertyIri -> Future.sequence(valueVerificationResponsesForProperty)
         }
 
@@ -682,8 +686,7 @@ class ValuesResponderV1 extends ResponderV1 {
                         }
 
                         valueUtilV1.fileValueV12LocationV1(fileValue)
-                },
-                userdata = changeFileValueRequest.userProfile.userData
+                }
             )
 
             // If a temporary file was created, ensure that it's deleted, regardless of whether the request succeeded or failed.
@@ -868,7 +871,7 @@ class ValuesResponderV1 extends ResponderV1 {
                             linkUpdateV1 = linkUpdateV1,
                             comment = changeValueRequest.comment,
                             valueCreator = userIri,
-                            valuePermissions = Some(defaultObjectAccessPermissions.permissionLiteral),
+                            valuePermissions = defaultObjectAccessPermissions.permissionLiteral,
                             userProfile = changeValueRequest.userProfile)
 
                     case _ =>
@@ -879,7 +882,7 @@ class ValuesResponderV1 extends ResponderV1 {
 
                         val valuePermissions = currentValueQueryResult.permissionRelevantAssertions.find {
                             case (p, o) => p == OntologyConstants.KnoraBase.HasPermissions
-                        }.map(_._2)
+                        }.map(_._2).getOrElse(throw InconsistentTriplestoreDataException(s"Value ${changeValueRequest.valueIri} has no permissions"))
 
                         changeOrdinaryValueV1AfterChecks(projectIri = currentValueQueryResult.projectIri,
                             resourceIri = findResourceWithValueResult.resourceIri,
@@ -977,8 +980,7 @@ class ValuesResponderV1 extends ResponderV1 {
                 value = verifyUpdateResult.value,
                 comment = verifyUpdateResult.comment,
                 id = newValueIri,
-                rights = verifyUpdateResult.permissionCode,
-                userdata = changeCommentRequest.userProfile.userData
+                rights = verifyUpdateResult.permissionCode
             )
         }
 
@@ -1036,9 +1038,9 @@ class ValuesResponderV1 extends ResponderV1 {
 
                     // Give the new version the same permissions as the previous version.
 
-                    val valuePermissions: Option[String] = currentValueQueryResult.permissionRelevantAssertions.find {
+                    val valuePermissions: String = currentValueQueryResult.permissionRelevantAssertions.find {
                         case (p, o) => p == OntologyConstants.KnoraBase.HasPermissions
-                    }.map(_._2)
+                    }.map(_._2).getOrElse(throw InconsistentTriplestoreDataException(s"Value ${deleteValueRequest.valueIri} has no permissions"))
 
                     val linkPropertyIri = knoraIdUtil.linkValuePropertyIri2LinkPropertyIri(findResourceWithValueResult.propertyIri)
 
@@ -1083,7 +1085,7 @@ class ValuesResponderV1 extends ResponderV1 {
                                         linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
                                         targetResourceIri = targetResourceIri,
                                         valueCreator = OntologyConstants.KnoraBase.SystemUser,
-                                        valuePermissions = None,
+                                        valuePermissions = standoffLinkValuePermissions,
                                         userProfile = deleteValueRequest.userProfile
                                     )
                             }.toVector
@@ -1130,10 +1132,7 @@ class ValuesResponderV1 extends ResponderV1 {
             _ = if (rows.isEmpty || !InputValidation.optionStringToBoolean(rows.head.rowMap.get("isDeleted"))) {
                 throw UpdateNotPerformedException(s"The request to mark value ${deleteValueRequest.valueIri} (or a new version of that value) as deleted did not succeed. Please report this as a possible bug.")
             }
-        } yield DeleteValueResponseV1(
-            id = deletedValueIri,
-            userdata = deleteValueRequest.userProfile.userData
-        )
+        } yield DeleteValueResponseV1(id = deletedValueIri)
 
         for {
         // Don't allow anonymous users to update values.
@@ -1215,17 +1214,16 @@ class ValuesResponderV1 extends ResponderV1 {
                     val valueIri = rowMap("value")
                     val valueCreator = rowMap("valueCreator")
                     val project = rowMap("project")
-                    val valuePermissions = rowMap.get("valuePermissions")
+                    val valuePermissions = rowMap("valuePermissions")
 
                     // Permission-checking on LinkValues is special, because they can be system-created rather than user-created.
                     val valuePermissionCode = if (InputValidation.optionStringToBoolean(rowMap.get("isLinkValue"))) {
                         // It's a LinkValue.
-                        PermissionUtilV1.getUserPermissionOnLinkValueV1(
-                            linkValueIri = valueIri,
-                            predicateIri = rowMap("linkValuePredicate"),
-                            linkValueCreator = valueCreator,
-                            containingResourceProject = project,
-                            linkValuePermissionLiteral = valuePermissions,
+                        PermissionUtilV1.getUserPermissionV1(
+                            subjectIri = valueIri,
+                            subjectCreator = valueCreator,
+                            subjectProject = project,
+                            subjectPermissionLiteral = valuePermissions,
                             userProfile = versionHistoryRequest.userProfile
                         )
                     } else {
@@ -1251,10 +1249,7 @@ class ValuesResponderV1 extends ResponderV1 {
                         }
                     )
             }
-        } yield ValueVersionHistoryGetResponseV1(
-            valueVersions = versionV1Vector,
-            versionHistoryRequest.userProfile.userData
-        )
+        } yield ValueVersionHistoryGetResponseV1(valueVersions = versionV1Vector)
     }
 
     /**
@@ -1289,8 +1284,7 @@ class ValuesResponderV1 extends ResponderV1 {
                         valuecreator = valueCreatorProfile.userData.email.get,
                         valuecreatorname = valueCreatorProfile.userData.fullname.get,
                         valuecreationdate = valueQueryResult.creationDate,
-                        comment = valueQueryResult.comment,
-                        userdata = userProfile.userData
+                        comment = valueQueryResult.comment
                     )
 
                 case None =>
@@ -1432,7 +1426,7 @@ class ValuesResponderV1 extends ResponderV1 {
                 subjectIri = rowMap("source"),
                 subjectCreator = rowMap("sourceCreator"),
                 subjectProject = rowMap("sourceProject"),
-                subjectPermissionLiteral = rowMap.get("sourcePermissions"),
+                subjectPermissionLiteral = rowMap("sourcePermissions"),
                 userProfile = userProfile
             )
 
@@ -1440,7 +1434,7 @@ class ValuesResponderV1 extends ResponderV1 {
                 subjectIri = rowMap("target"),
                 subjectCreator = rowMap("targetCreator"),
                 subjectProject = rowMap("targetProject"),
-                subjectPermissionLiteral = rowMap.get("targetPermissions"),
+                subjectPermissionLiteral = rowMap("targetPermissions"),
                 userProfile = userProfile
             )
 
@@ -1566,9 +1560,8 @@ class ValuesResponderV1 extends ResponderV1 {
                     case OntologyConstants.KnoraBase.LinkValue =>
                         val linkPredicateIri = getValuePredicateObject(predicateIri = OntologyConstants.Rdf.Predicate, rows = rows).getOrElse(throw InconsistentTriplestoreDataException(s"Link value $valueIri has no rdf:predicate"))
 
-                        PermissionUtilV1.getUserPermissionOnLinkValueV1WithValueProps(
-                            linkValueIri = valueIri,
-                            predicateIri = linkPredicateIri,
+                        PermissionUtilV1.getUserPermissionV1WithValueProps(
+                            valueIri = valueIri,
                             valueProps = valueProps,
                             subjectProject = None, // no need to specify this here, because it's in valueProps
                             userProfile = userProfile
@@ -1641,9 +1634,8 @@ class ValuesResponderV1 extends ResponderV1 {
                 permissionRelevantAssertions = PermissionUtilV1.filterPermissionRelevantAssertionsFromValueProps(valueProps)
 
                 // Get the permission code representing the user's permissions on the value.
-                permissionCode = PermissionUtilV1.getUserPermissionOnLinkValueV1WithValueProps(
-                    linkValueIri = linkValueIri,
-                    predicateIri = linkValueV1.predicateIri,
+                permissionCode = PermissionUtilV1.getUserPermissionV1WithValueProps(
+                    valueIri = linkValueIri,
                     valueProps = valueProps,
                     subjectProject = None, // no need to specify this here, because it's in valueProps
                     userProfile = userProfile
@@ -1707,8 +1699,7 @@ class ValuesResponderV1 extends ResponderV1 {
                     value = apiResponseValue,
                     comment = linkValueQueryResult.comment,
                     id = unverifiedValue.newValueIri,
-                    rights = linkValueQueryResult.permissionCode,
-                    userdata = userProfile.userData
+                    rights = linkValueQueryResult.permissionCode
                 )
 
             case ordinaryUpdateValueV1 =>
@@ -1719,12 +1710,12 @@ class ValuesResponderV1 extends ResponderV1 {
                         searchValueIri = unverifiedValue.newValueIri,
                         userProfile = userProfile
                     )
+
                 } yield CreateValueResponseV1(
                     value = verifyUpdateResult.value,
                     comment = verifyUpdateResult.comment,
                     id = unverifiedValue.newValueIri,
-                    rights = verifyUpdateResult.permissionCode,
-                    userdata = userProfile.userData
+                    rights = verifyUpdateResult.permissionCode
                 )
         }
     }
@@ -1754,9 +1745,10 @@ class ValuesResponderV1 extends ResponderV1 {
                 ).toString()
             }
 
-            // _ = println(sparqlQuery)
+
 
             updateVerificationResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
+
             rows = updateVerificationResponse.results.bindings
 
             resultOption <- sparqlQueryResults2ValueQueryResult(valueIri = searchValueIri, rows = rows, userProfile = userProfile)
@@ -1873,7 +1865,7 @@ class ValuesResponderV1 extends ResponderV1 {
                                          value: UpdateValueV1,
                                          comment: Option[String],
                                          valueCreator: IRI,
-                                         valuePermissions: Option[String],
+                                         valuePermissions: String,
                                          updateResourceLastModificationDate: Boolean,
                                          userProfile: UserProfileV1): Future[UnverifiedValueV1] = {
         value match {
@@ -1924,7 +1916,7 @@ class ValuesResponderV1 extends ResponderV1 {
                                              linkUpdateV1: LinkUpdateV1,
                                              comment: Option[String],
                                              valueCreator: IRI,
-                                             valuePermissions: Option[String],
+                                             valuePermissions: String,
                                              updateResourceLastModificationDate: Boolean,
                                              userProfile: UserProfileV1): Future[UnverifiedValueV1] = {
         for {
@@ -1938,12 +1930,15 @@ class ValuesResponderV1 extends ResponderV1 {
             )
 
             // Generate a SPARQL update string.
+            //resourceIndex = 0 because this method isn't used when creating multiple resources
             sparqlUpdate = queries.sparql.v1.txt.createLink(
+                resourceIndex = 0,
                 dataNamedGraph = dataNamedGraph,
                 triplestore = settings.triplestoreType,
                 resourceIri = resourceIri,
                 linkUpdate = sparqlTemplateLinkUpdate,
-                maybeComment = comment
+                maybeComment = comment,
+                checkObj = true
             ).toString()
 
             /*
@@ -1978,7 +1973,7 @@ class ValuesResponderV1 extends ResponderV1 {
                                                  value: UpdateValueV1,
                                                  comment: Option[String],
                                                  valueCreator: IRI,
-                                                 valuePermissions: Option[String],
+                                                 valuePermissions: String,
                                                  updateResourceLastModificationDate: Boolean,
                                                  userProfile: UserProfileV1): Future[UnverifiedValueV1] = {
         // Generate an IRI for the new value.
@@ -2000,7 +1995,7 @@ class ValuesResponderV1 extends ResponderV1 {
                                     linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
                                     targetResourceIri = targetResourceIri,
                                     valueCreator = OntologyConstants.KnoraBase.SystemUser,
-                                    valuePermissions = None,
+                                    valuePermissions = standoffLinkValuePermissions,
                                     userProfile = userProfile
                                 )
                         }.toVector
@@ -2011,7 +2006,10 @@ class ValuesResponderV1 extends ResponderV1 {
             }
 
             // Generate a SPARQL update string.
+            //resourceIndex = 0 because this method isn't used when creating multiple resources
             sparqlUpdate = queries.sparql.v1.txt.createValue(
+                resourceIndex = 0,
+                checkObj = true,
                 dataNamedGraph = dataNamedGraph,
                 triplestore = settings.triplestoreType,
                 resourceIri = resourceIri,
@@ -2022,7 +2020,7 @@ class ValuesResponderV1 extends ResponderV1 {
                 linkUpdates = standoffLinkUpdates,
                 maybeComment = comment,
                 valueCreator = valueCreator,
-                maybeValuePermissions = valuePermissions
+                valuePermissions = valuePermissions
             ).toString()
 
             /*
@@ -2062,7 +2060,7 @@ class ValuesResponderV1 extends ResponderV1 {
                                              linkUpdateV1: LinkUpdateV1,
                                              comment: Option[String],
                                              valueCreator: IRI,
-                                             valuePermissions: Option[String],
+                                             valuePermissions: String,
                                              userProfile: UserProfileV1): Future[ChangeValueResponseV1] = {
         for {
         // Delete the existing link and decrement its LinkValue's reference count.
@@ -2130,8 +2128,7 @@ class ValuesResponderV1 extends ResponderV1 {
             value = apiResponseValue,
             comment = linkValueQueryResult.comment,
             id = sparqlTemplateLinkUpdateForNewLink.newLinkValueIri,
-            rights = linkValueQueryResult.permissionCode,
-            userdata = userProfile.userData
+            rights = linkValueQueryResult.permissionCode
         )
     }
 
@@ -2160,7 +2157,7 @@ class ValuesResponderV1 extends ResponderV1 {
                                                  updateValueV1: UpdateValueV1,
                                                  comment: Option[String],
                                                  valueCreator: IRI,
-                                                 valuePermissions: Option[String],
+                                                 valuePermissions: String,
                                                  userProfile: UserProfileV1): Future[ChangeValueResponseV1] = {
         for {
         // If we're adding a text value, update direct links and LinkValues for any resource references in Standoff.
@@ -2199,7 +2196,7 @@ class ValuesResponderV1 extends ResponderV1 {
                                 linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
                                 targetResourceIri = targetResourceIri,
                                 valueCreator = OntologyConstants.KnoraBase.SystemUser,
-                                valuePermissions = None,
+                                valuePermissions = standoffLinkValuePermissions,
                                 userProfile = userProfile
                             )
                     }
@@ -2212,7 +2209,7 @@ class ValuesResponderV1 extends ResponderV1 {
                                 linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
                                 targetResourceIri = removedTargetResource,
                                 valueCreator = OntologyConstants.KnoraBase.SystemUser,
-                                valuePermissions = None,
+                                valuePermissions = standoffLinkValuePermissions,
                                 userProfile = userProfile
                             )
                     }
@@ -2241,7 +2238,7 @@ class ValuesResponderV1 extends ResponderV1 {
                 valueTypeIri = updateValueV1.valueTypeIri,
                 value = updateValueV1,
                 valueCreator = valueCreator,
-                maybeValuePermissions = valuePermissions,
+                valuePermissions = valuePermissions,
                 maybeComment = comment,
                 linkUpdates = standoffLinkUpdates
             ).toString()
@@ -2266,8 +2263,7 @@ class ValuesResponderV1 extends ResponderV1 {
             value = verifyUpdateResult.value,
             comment = verifyUpdateResult.comment,
             id = newValueIri,
-            rights = verifyUpdateResult.permissionCode,
-            userdata = userProfile.userData
+            rights = verifyUpdateResult.permissionCode
         )
     }
 
@@ -2297,7 +2293,7 @@ class ValuesResponderV1 extends ResponderV1 {
                                    linkPropertyIri: IRI,
                                    targetResourceIri: IRI,
                                    valueCreator: IRI,
-                                   valuePermissions: Option[String],
+                                   valuePermissions: String,
                                    userProfile: UserProfileV1): Future[SparqlTemplateLinkUpdate] = {
         for {
         // Check whether a LinkValue already exists for this link.
@@ -2380,7 +2376,7 @@ class ValuesResponderV1 extends ResponderV1 {
                                    linkPropertyIri: IRI,
                                    targetResourceIri: IRI,
                                    valueCreator: IRI,
-                                   valuePermissions: Option[String],
+                                   valuePermissions: String,
                                    userProfile: UserProfileV1): Future[SparqlTemplateLinkUpdate] = {
         for {
         // Query the LinkValue to ensure that it exists and to get its contents.
@@ -2523,5 +2519,17 @@ class ValuesResponderV1 extends ResponderV1 {
                         responderManager = responderManager)
             }
         } yield result
+    }
+
+    /**
+      * The permissions that are granted by every `knora-base:LinkValue` describing a standoff link.
+      */
+    lazy val standoffLinkValuePermissions: String = {
+        val permissionMap = Map(
+            OntologyConstants.KnoraBase.ChangeRightsPermission -> Set(OntologyConstants.KnoraBase.SystemUser),
+            OntologyConstants.KnoraBase.ViewPermission -> Set(OntologyConstants.KnoraBase.UnknownUser)
+        )
+
+        PermissionUtilV1.formatPermissions(permissionMap)
     }
 }

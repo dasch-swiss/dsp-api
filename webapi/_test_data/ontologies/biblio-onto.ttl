@@ -76,7 +76,7 @@
 
                     rdfs:comment """Represents a Publication Date."""@en ;
 
-                    knora-base:objectClassConstraint knora-base:DateValue ;
+                    knora-base:objectClassConstraint knora-base:DateValue  ;
 
                     salsah-gui:guiElement salsah-gui:Date ;
 
@@ -102,7 +102,7 @@
 
                     knora-base:subjectClassConstraint :Publication ;
 
-                    rdfs:subPropertyOf knora-base:hasLinkTo , dcterms:publisher.
+                    rdfs:subPropertyOf knora-base:hasLinkTo .
 
 
 
@@ -157,7 +157,7 @@
 
                     rdfs:comment """Represents the author of the publication."""@en ;
 
-                    knora-base:objectClassConstraint beol:Person ;
+                    knora-base:objectClassConstraint beol:person ;
 
                     salsah-gui:guiElement salsah-gui:Searchbox ;
 
@@ -282,7 +282,7 @@
 
                     rdfs:comment """Represents the editor of the publication."""@en ;
 
-                    knora-base:objectClassConstraint beol:Person ;
+                    knora-base:objectClassConstraint beol:person ;
 
                     salsah-gui:guiElement salsah-gui:Searchbox ;
 
@@ -628,7 +628,7 @@
 
                     rdfs:comment """Represents the translator of a publication."""@en ;
 
-                    knora-base:objectClassConstraint beol:Person ;
+                    knora-base:objectClassConstraint beol:person ;
 
                     salsah-gui:guiElement salsah-gui:Searchbox ;
 
