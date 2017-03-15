@@ -1,6 +1,6 @@
 /*
  * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
  *
  * This file is part of Knora.
  *
@@ -95,14 +95,13 @@ class SipiResponderV1 extends ResponderV1 {
             valueProps = valueUtilV1.createValueProps(filename, rows)
 
             permissionCode: Option[Int] = PermissionUtilV1.getUserPermissionV1WithValueProps(
-                subjectIri = filename,
+                valueIri = filename,
                 valueProps = valueProps,
                 subjectProject = None, // no need to specify this here, because it's in valueProps
                 userProfile = userProfile
             )
         } yield SipiFileInfoGetResponseV1(
-            permissionCode = permissionCode.getOrElse(0), // Sipi expects a permission code from 0 to 8
-            userdata = userProfile.userData
+            permissionCode = permissionCode.getOrElse(0) // Sipi expects a permission code from 0 to 8
         )
     }
 
@@ -133,12 +132,7 @@ class SipiResponderV1 extends ResponderV1 {
         // handle unsuccessful requests to Sipi
         //
         val recoveredConversionResultFuture = conversionResultFuture.recoverWith {
-            case noResponse: akka.http.impl.engine.HttpConnectionTimeoutException =>
-                // this problem is hardly the user's fault. Create a SipiException
-                throw SipiException(message = "Sipi not reachable", e = noResponse, log = log)
-
             case err =>
-                // unknown error
                 throw SipiException(message = s"Unknown error: ${err.toString}", e = err, log = log)
         }
 

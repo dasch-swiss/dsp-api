@@ -1,6 +1,6 @@
 @*
  * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
  *
  * This file is part of Knora.
  *
@@ -49,10 +49,7 @@ WHERE {
     ?region a ?resclass .
     ?resclass rdfs:subClassOf* knora-base:Region .
 
-    ?region knora-base:attachedToUser ?owner .
-    ?region knora-base:attachedToProject ?project .
-
-    OPTIONAL {
-        ?region knora-base:hasPermissions ?regionObjectPermissions .
-    }
+    ?region knora-base:attachedToUser ?owner ;
+        knora-base:attachedToProject ?project ;
+        knora-base:hasPermissions ?regionObjectPermissions .
 }

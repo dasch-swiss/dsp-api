@@ -1,6 +1,6 @@
 /*
  * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
  *
  * This file is part of Knora.
  *
@@ -62,8 +62,9 @@ class SearchAndEditSpec extends SalsahSpec {
             ]
         """
 
-    val rootEmail = "root@example.com"
-    val rootEmailEnc = java.net.URLEncoder.encode(rootEmail, "utf-8")
+    private val incunabulaUserEmail = "root@example.com"
+    private val incunabulaUserFullName = "System Administrator"
+    private val testPassword = "test"
 
     // In order to run these tests, start `webapi` using the option `allowResetTriplestoreContentOperationOverHTTP`
 
@@ -97,23 +98,20 @@ class SearchAndEditSpec extends SalsahSpec {
 
         }
 
-        "log in as root" in {
+        "log in as an Incunabula project user" in {
 
             page.load()
+            page.doLogin(email = incunabulaUserEmail, password = testPassword, fullName = incunabulaUserFullName)
+            page.doLogout()
 
-            page.doLogin(rootEmail, "test")
-
-            eventually {
-                // check if login has succeeded
-                // search for element with id 'dologout'
-                page.driver.findElement(By.id("dologout"))
-            }
         }
 
 
         "do a simple search for 'Zeitglöcklein' and open a search result row representing a page" in {
 
             page.load()
+
+            page.doLogin(email = incunabulaUserEmail, password = testPassword, fullName = incunabulaUserFullName)
 
             doZeitgloeckleinSearch()
 
@@ -128,12 +126,15 @@ class SearchAndEditSpec extends SalsahSpec {
             // drag and drop the window
             page.dragWindow(window, 90, 10)
 
+            page.doLogout()
 
         }
 
         "do a simple search for 'Zeitglöcklein' and open a search result row representing a book" in {
 
             page.load()
+
+            page.doLogin(email = incunabulaUserEmail, password = testPassword, fullName = incunabulaUserFullName)
 
             doZeitgloeckleinSearch()
 
@@ -155,11 +156,15 @@ class SearchAndEditSpec extends SalsahSpec {
 
             }
 
+            page.doLogout()
+
         }
 
         "do an extended search for restype book containing 'Zeitglöcklein in the title'" in {
 
             page.load()
+
+            page.doLogin(email = incunabulaUserEmail, password = testPassword, fullName = incunabulaUserFullName)
 
             page.clickExtendedSearchButton()
 
@@ -179,12 +184,16 @@ class SearchAndEditSpec extends SalsahSpec {
 
             assert(rows.length == 2, "There should be two result rows")
 
+            page.doLogout()
+
         }
 
 
         "do an extended search for restype region and open a region" in {
 
             page.load()
+
+            page.doLogin(email = incunabulaUserEmail, password = testPassword, fullName = incunabulaUserFullName)
 
             page.clickExtendedSearchButton()
 
@@ -200,16 +209,18 @@ class SearchAndEditSpec extends SalsahSpec {
 
             val window = page.getWindow(1)
 
-
             // get metadata section
             val metadataSection: WebElement = page.getMetadataSection(window)
 
+            page.doLogout()
 
         }
 
         "do an extended search for restype page with seqnum 1 belonging to a book containing 'Narrenschiff' in its title" in {
 
             page.load()
+
+            page.doLogin(email = incunabulaUserEmail, password = testPassword, fullName = incunabulaUserFullName)
 
             page.clickExtendedSearchButton()
 
@@ -239,11 +250,15 @@ class SearchAndEditSpec extends SalsahSpec {
 
             assert(rows.length == 1, "There should be one result row")
 
+            page.doLogout()
+
         }
 
         "do an extended search for images:bild involving a hierarchical list selection for its title" in {
 
             page.load()
+
+            page.doLogin(email = incunabulaUserEmail, password = testPassword, fullName = incunabulaUserFullName)
 
             page.clickExtendedSearchButton()
 
@@ -278,10 +293,14 @@ class SearchAndEditSpec extends SalsahSpec {
 
             assert(rows.length == 5, "There should be five result rows")
 
+            page.doLogout()
+
         }
 
         "do an extended search for a book with the exact publication date Julian 1497-08-01" in {
             page.load()
+
+            page.doLogin(email = incunabulaUserEmail, password = testPassword, fullName = incunabulaUserFullName)
 
             page.clickExtendedSearchButton()
 
@@ -318,12 +337,15 @@ class SearchAndEditSpec extends SalsahSpec {
 
             assert(rows.length == 2, "There should be two result rows")
 
+            page.doLogout()
 
         }
 
         "do an extended search for a book with the period Julian 1495 as publication date" in {
 
             page.load()
+
+            page.doLogin(email = incunabulaUserEmail, password = testPassword, fullName = incunabulaUserFullName)
 
             page.clickExtendedSearchButton()
 
@@ -385,11 +407,15 @@ class SearchAndEditSpec extends SalsahSpec {
 
             assert(rows.length == 3, "There should be three result rows")
 
+            page.doLogout()
+
         }
 
         "change the publication date of a book" in {
 
             page.load()
+
+            page.doLogin(email = incunabulaUserEmail, password = testPassword, fullName = incunabulaUserFullName)
 
             page.clickExtendedSearchButton()
 
@@ -451,13 +477,15 @@ class SearchAndEditSpec extends SalsahSpec {
 
             }
 
-
+            page.doLogout()
 
         }
 
         "edit the seqnum and the pagenumber of a page" in {
 
             page.load()
+
+            page.doLogin(email = incunabulaUserEmail, password = testPassword, fullName = incunabulaUserFullName)
 
             doZeitgloeckleinSearch()
 
@@ -521,11 +549,15 @@ class SearchAndEditSpec extends SalsahSpec {
 
             assert(pagenumValue.contains("test"), s"pagnum should be 'test', but is $pagenumValue")
 
+            page.doLogout()
+
         }
 
         "add a new creator to a book" in {
 
             page.load()
+
+            page.doLogin(email = incunabulaUserEmail, password = testPassword, fullName = incunabulaUserFullName)
 
             doZeitgloeckleinSearch()
 
@@ -565,11 +597,15 @@ class SearchAndEditSpec extends SalsahSpec {
 
             assert(creatorValue.contains("Tobiasus"), s"$creatorValue")
 
+            page.doLogout()
+
         }
 
         "edit the description of a page" ignore {
 
             page.load()
+
+            page.doLogin(email = incunabulaUserEmail, password = testPassword, fullName = incunabulaUserFullName)
 
             doZeitgloeckleinSearch()
 
@@ -602,13 +638,16 @@ class SearchAndEditSpec extends SalsahSpec {
             // read the new value back
             val seqnumValueContainer = page.getValueContainer(descriptionField)
 
-
             assert(descriptionField.getText.substring(0, 7) == "my text")
+
+            page.doLogout()
         }
 
         "change the partof property of a page" in {
 
             page.load()
+
+            page.doLogin(email = incunabulaUserEmail, password = testPassword, fullName = incunabulaUserFullName)
 
             doZeitgloeckleinSearch()
 
@@ -618,7 +657,6 @@ class SearchAndEditSpec extends SalsahSpec {
             rows(1).click()
 
             val window = page.getWindow(1)
-
 
             // get metadata section
             val metadataSection: WebElement = page.getMetadataSection(window)
@@ -645,11 +683,15 @@ class SearchAndEditSpec extends SalsahSpec {
 
             assert(partOfValue.contains("Narrenschiff"), s"$partOfValue")
 
+            page.doLogout()
+
         }
 
         "change the season property of a image:bild to summer" in {
 
             page.load()
+
+            page.doLogin(email = incunabulaUserEmail, password = testPassword, fullName = incunabulaUserFullName)
 
             page.clickExtendedSearchButton()
 
@@ -690,11 +732,15 @@ class SearchAndEditSpec extends SalsahSpec {
 
             assert(seasonValue.contains("Sommer"), s"$seasonValue")
 
+            page.doLogout()
+
         }
 
         "add a season to a image:bild" in {
 
             page.load()
+
+            page.doLogin(email = incunabulaUserEmail, password = testPassword, fullName = incunabulaUserFullName)
 
             page.clickExtendedSearchButton()
 
@@ -735,24 +781,39 @@ class SearchAndEditSpec extends SalsahSpec {
 
             assert(seasonValue.contains("Winter"), s"$seasonValue")
 
-
+            page.doLogout()
 
         }
 
         "display a compound resource without images" in {
 
             page.load()
+
+            page.doLogin(email = incunabulaUserEmail, password = testPassword, fullName = incunabulaUserFullName)
+
             val searchField: WebElement = page.getSimpleSearchField
+
             searchField.clear()
+
             searchField.sendKeys("excluded alpha\n")
+
             val header = page.getSearchResultHeader
+
             assert(header.contains("Total of 1 hits"))
+
             val rows = page.getExtendedSearchResultRows
+
             val row1Text = page.getSearchResultRowText(rows.head)
+
             assert(row1Text.contains("excluded Alpha"))
+
             rows.head.click()
+
             val window = page.getWindow(1)
+
             val metadataSection: WebElement = page.getMetadataSection(window)
+
+            page.doLogout()
 
         }
 

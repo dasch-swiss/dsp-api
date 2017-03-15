@@ -1,5 +1,5 @@
 .. Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
-   Tobias Schweizer, André Kilchenmann, and André Fatton.
+   Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
 
    This file is part of Knora.
 
@@ -25,7 +25,7 @@ Overview
 Developing for the Knora API server requires a complete local installation of Knora. The different parts are:
 
   1. The cloned Knora_ Github repository
-  2. One of the supplied triple stores in the Knora Github repository (GraphDB-SE 7 or Fuseki 2).
+  2. One of the supplied triple stores in the Knora Github repository (GraphDB-SE 8 or Fuseki 3).
   3. SIPI by building from source_ or using the docker image_
 
 
@@ -56,7 +56,7 @@ work out of the box with the following triplestores:
 * `Apache Jena`_, which is `free software`_. Knora comes bundled with Jena and with
   its standalone SPARQL server, Fuseki.
 
-See the chapters on :ref:`starting-fuseki-2` and :ref:`starting-graphdb-se-7` for more details.
+See the chapters on :ref:`starting-fuseki` and :ref:`starting-graphdb-se` for more details.
 
 .. _free software: http://www.gnu.org/philosophy/free-sw.en.html
 .. _Ontotext GraphDB: http://ontotext.com/products/graphdb/

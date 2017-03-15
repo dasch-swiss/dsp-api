@@ -1,6 +1,6 @@
 @*
  * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
  *
  * This file is part of Knora.
  *
@@ -70,11 +70,6 @@ WHERE {
         BIND(true as ?isLinkValue)
     }
 
-    OPTIONAL {
-        ?value knora-base:attachedToUser ?valueCreator .
-    }
-
-    OPTIONAL {
-        ?value knora-base:hasPermissions ?valuePermissions .
-    }
+    ?value knora-base:attachedToUser ?valueCreator ;
+        knora-base:hasPermissions ?valuePermissions .
 }

@@ -1,6 +1,6 @@
 @*
  * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
  *
  * This file is part of Knora.
  *
@@ -101,11 +101,8 @@ WHERE {
 
         BIND(?matchingSubject AS ?valueObject)
 
-        ?valueObject knora-base:attachedToUser ?valueCreator .
-
-        OPTIONAL {
-            ?valueObject knora-base:hasPermissions ?valuePermissions .
-        }
+        ?valueObject knora-base:attachedToUser ?valueCreator ;
+            knora-base:hasPermissions ?valuePermissions .
     }
 
     # If the previous OPTIONAL clause executed, ?matchingSubject is a value, and ?containingResource will be set. Otherwise, ?matchingSubject is a resource.
@@ -159,11 +156,8 @@ WHERE {
         }
     }
 
-    ?resource knora-base:attachedToUser ?resourceCreator .
-    ?resource knora-base:attachedToProject ?resourceProject .
-
-    OPTIONAL {
-        ?resource knora-base:hasPermissions ?resourcePermissions .
-    }
+    ?resource knora-base:attachedToUser ?resourceCreator ;
+        knora-base:attachedToProject ?resourceProject ;
+        knora-base:hasPermissions ?resourcePermissions .
 }
 LIMIT 500

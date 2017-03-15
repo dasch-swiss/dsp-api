@@ -1,5 +1,5 @@
 .. Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
-   Tobias Schweizer, André Kilchenmann, and André Fatton.
+   Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
 
    This file is part of Knora.
 
@@ -16,41 +16,45 @@
    You should have received a copy of the GNU Affero General Public
    License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
-.. _starting-graphdb-se-7:
+.. _starting-graphdb-se:
 
-Starting GraphDB-SE 7
+Starting GraphDB-SE
 =====================
 
-Inside the Knora API server git repository, there is a folder called ``/triplestores/graphdb-se-7`` containing the
-GraphDB-SE-7 distribution archive and the dockerfile we will use to build the docker image. This docker image will then
-be used to run a docker container, inside which GraphDB will be running.
+Inside the Knora API server git repository, there is a folder called ``/triplestores/graphdb-se`` containing the
+latest supported version of the GraphDB-SE distribution archive.
 
-Important Steps
+
+Running Locally
 ---------------
 
-To be able to successfully run GraphDB inside docker three important steps need to be done beforhand:
-
-  1. Install Docker from http://docker.com.
-  2. Copy the GraphDB-SE license file into this folder and name it ``GRAPHDB_SE.license``. It is already added to a
-     local ``.gitignore`` file which can be found inside this folder. Under no circumstance should the license file be
-     committed to Github.
-  3. (optional) The current version of ``KnoraRules.pie`` from the ``webapi/scripts`` needs to be copied to this folder
-     each time it was changed. This file needs to be copied into the docker image, which can only be done if it is found
-     inside this folder.
-
-
-Usage
------
-
-From inside the ``triplestores/graphdb-se-7`` folder, type:
+Unzip ``graphdb-se-x.x.x-dist.zip`` to a place of your choosing and run the following:
 
 ::
 
-  $ docker build -t graphdb .
-  $ docker run --rm -it -p 7200:7200 graphdb
+  $ cd /to/unziped/location
+  $ ./bin/graphdb -Dgraphdb.license.file=/path/to/GRAPHDB_SE.license
 
 
-Do not forget the '.' in the first command.
+Running inside Docker
+---------------------
+
+Important Steps
+^^^^^^^^^^^^^^^
+
+To be able to successfully run GraphDB inside docker two important steps need to be done beforhand:
+
+  1. Install Docker from http://docker.com.
+  2. Copy the GraphDB-SE license file into a folder of you choosing and name it ``GRAPHDB_SE.license``. We will mount
+     this folder into the docker container, so that the license can be used by GraphDB running inside the container.
+
+Usage
+^^^^^^
+
+::
+
+  $ docker run --rm -it -v /path/to/license/folder:/external -p 7200:7200 dhlabbasel/graphdb
+
 
  - ``--rm`` removes the container as soon as you stop it
  - ``-p`` forwards the exposed port to your host (or if you use boot2docker to this IP)
@@ -63,8 +67,7 @@ at a later time, follow the following steps:
 
 ::
 
-  $ docker build -t graphdb <path-to-dockerfile>
-  $ docker run --name graphdb -d -t -p 7200:7200 graphdb
+  $ docker run --name graphdb -d -t -v /path/to/license/folder:/external -p 7200:7200 dhlabbasel/graphdb
   
   (to see the console output, attach to the container; to detach press Ctrl-c)
   $ docker attach graphdb

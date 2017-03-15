@@ -330,6 +330,7 @@
 	knora-base:valueHasRefCount 2 ;
 	knora-base:valueCreationDate "2016-03-02T15:05:54Z"^^xsd:dateTimeStamp ;
 	knora-base:isDeleted false ;
+	knora-base:hasPermissions "CR knora-base:Creator|V knora-base:UnknownUser" ;
 	knora-base:attachedToUser knora-base:SystemUser .
 
 <http://data.knora.org/a-thing-with-text-values/values/1> a knora-base:TextValue ;
@@ -483,6 +484,42 @@
 	knora-base:hasRootNode <http://data.knora.org/anything/treeList> ;
 	knora-base:listNodePosition 1 ;
 	rdfs:label "Tree list node 11"@en .
+
+<http://data.knora.org/anything/otherTreeList> a knora-base:ListNode ;
+	knora-base:isRootNode true ;
+	rdfs:label "Tree list root"@en ;
+	knora-base:hasSubListNode <http://data.knora.org/anything/otherTreeList01> , <http://data.knora.org/anything/otherTreeList02> , <http://data.knora.org/anything/otherTreeList03> .
+
+<http://data.knora.org/anything/otherTreeList01> a knora-base:ListNode ;
+	knora-base:listNodeName "Other Tree list node 01" ;
+	knora-base:hasRootNode <http://data.knora.org/anything/otherTreeList> ;
+	knora-base:listNodePosition 0 ;
+	rdfs:label "Other Tree list node 01"@en .
+
+<http://data.knora.org/anything/otherTreeList02> a knora-base:ListNode ;
+	knora-base:listNodeName "Other Tree list node 02" ;
+	knora-base:hasRootNode <http://data.knora.org/anything/otherTreeList> ;
+	knora-base:listNodePosition 1 ;
+	rdfs:label "Other Tree list node 02"@en .
+
+<http://data.knora.org/anything/otherTreeList03> a knora-base:ListNode ;
+	knora-base:listNodeName "Other Tree list node 03" ;
+	knora-base:hasRootNode <http://data.knora.org/anything/otherTreeList> ;
+	knora-base:listNodePosition 2 ;
+	rdfs:label "Other Tree list node 03"@en ;
+	knora-base:hasSubListNode <http://data.knora.org/anything/otherTreeList10> , <http://data.knora.org/anything/otherTreeList11> .
+
+<http://data.knora.org/anything/otherTreeList10> a knora-base:ListNode ;
+	knora-base:listNodeName "Other Tree list node 10" ;
+	knora-base:hasRootNode <http://data.knora.org/anything/otherTreeList> ;
+	knora-base:listNodePosition 0 ;
+	rdfs:label "Other Tree list node 10"@en .
+
+<http://data.knora.org/anything/otherTreeList11> a knora-base:ListNode ;
+	knora-base:listNodeName "Other Tree list node 11" ;
+	knora-base:hasRootNode <http://data.knora.org/anything/otherTreeList> ;
+	knora-base:listNodePosition 1 ;
+	rdfs:label "Other Tree list node 11"@en .
 
 <http://data.knora.org/cL5AwEioRLOm6Vrqwl1RmQ> a anything:Thing ;
 	knora-base:attachedToUser <http://data.knora.org/users/9XBCrDV3SRa7kS1WwynB4Q> ;
@@ -653,6 +690,7 @@
 	knora-base:valueHasRefCount 1 ;
 	knora-base:valueCreationDate "2016-03-02T15:05:54Z"^^xsd:dateTimeStamp ;
 	knora-base:isDeleted false ;
+	knora-base:hasPermissions "CR knora-base:Creator|V knora-base:UnknownUser" ;
 	knora-base:attachedToUser knora-base:SystemUser .
 
 <http://data.knora.org/project-thing-1/values/2> a knora-base:TextValue ;

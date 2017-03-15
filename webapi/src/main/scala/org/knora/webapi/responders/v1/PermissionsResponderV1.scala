@@ -1,6 +1,6 @@
 /*
  * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
  * This file is part of Knora.
  * Knora is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
@@ -814,7 +814,7 @@ class PermissionsResponderV1 extends ResponderV1 {
             //_ = log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissions: $defaultPermissions")
 
             /* Create permissions string */
-            result = PermissionUtilV1.formatPermissions(defaultPermissions, PermissionType.OAP).getOrElse(throw BadRequestException("The resulting request would lead to an empty permissions string, which is not allowed. Are all the necessary default object access permissions defined?"))
+            result = PermissionUtilV1.formatPermissions(defaultPermissions, PermissionType.OAP)
             // _ = log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - result: $result")
         } yield DefaultObjectAccessPermissionsStringResponseV1(result)
     }

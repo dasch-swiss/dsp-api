@@ -109,8 +109,8 @@ lazy val webApiCommonSettings = Seq(
     scalaVersion := "2.12.1"
 )
 
-lazy val akkaVersion = "2.4.14"
-lazy val akkaHttpVersion = "10.0.0"
+lazy val akkaVersion = "2.4.16"
+lazy val akkaHttpVersion = "10.0.3"
 
 lazy val webApiLibs = Seq(
     // akka
@@ -119,7 +119,11 @@ lazy val webApiLibs = Seq(
     "com.typesafe.akka" %% "akka-stream" % akkaVersion,
     "com.typesafe.akka" %% "akka-slf4j" % akkaVersion,
     "com.typesafe.akka" %% "akka-http" % akkaHttpVersion,
+    "com.typesafe.akka" %% "akka-http-xml" % akkaHttpVersion,
     "com.typesafe.akka" %% "akka-http-spray-json" % akkaHttpVersion,
+
+    "org.scala-lang.modules" %% "scala-xml" % "1.0.6",
+
     // testing
     "org.scalatest" %% "scalatest" % "3.0.0" % "test",
     //CORS support

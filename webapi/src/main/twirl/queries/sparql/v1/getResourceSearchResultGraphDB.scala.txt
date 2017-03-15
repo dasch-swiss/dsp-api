@@ -1,6 +1,6 @@
 @*
  * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
  *
  * This file is part of Knora.
  *
@@ -121,12 +121,9 @@ WHERE {
 
     }
 
-    ?resourceIri knora-base:attachedToUser ?attachedToUser .
-    ?resourceIri knora-base:attachedToProject ?attachedToProject .
-
-    OPTIONAL {
-        ?resourceIri knora-base:hasPermissions ?resourcePermissions
-    }
+    ?resourceIri knora-base:attachedToUser ?attachedToUser ;
+        knora-base:attachedToProject ?attachedToProject ;
+        knora-base:hasPermissions ?resourcePermissions .
 }
 
 GROUP BY ?resourceIri ?firstProp ?attachedToUser ?attachedToProject ?resourcePermissions

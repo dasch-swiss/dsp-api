@@ -1,5 +1,5 @@
 .. Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
-   Tobias Schweizer, André Kilchenmann, and André Fatton.
+   Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
 
    This file is part of Knora.
 
@@ -16,9 +16,9 @@
    You should have received a copy of the GNU Affero General Public
    License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
-.. _starting-fuseki-2:
+.. _starting-fuseki:
 
-Starting Fuseki 2
+Starting Fuseki 3
 ==================
 
 
@@ -27,7 +27,7 @@ Locally
 
 Inside the Knora API server git repository, there is a folder called
 ``triplestores/fuseki`` containing a script named ``fuseki-server``. All needed
-configuration files are in place. To start Fuseki 2, just run this
+configuration files are in place. To start Fuseki 3, just run this
 script:
 
 ::
@@ -37,14 +37,8 @@ script:
 Inside Docker
 --------------
 
-Inside the Knora API server git repository, there is a folder called ``triplestores/fuseki`` containing the
-``Dockerfile`` we can use to create the docker image:
+We can use the ``dhlabbasel:fuseki`` docker image from docker hub:
 
 ::
 
-  $ cd triplestores/fuseki
-  $ docker build -t fuseki .
-  $ docker run --rm -it -p 3030:3030 fuseki
-
-
-Do not forget the '.' in the first command.
+  $ docker run --rm -it -p 3030:3030 dhlabbasel/fuseki

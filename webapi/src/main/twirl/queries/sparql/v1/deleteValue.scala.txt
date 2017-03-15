@@ -1,6 +1,6 @@
 @*
  * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
  *
  * This file is part of Knora.
  *
@@ -107,18 +107,8 @@ DELETE {
                 }
                 knora-base:valueCreationDate ?currentTime .
 
-            <@linkUpdate.newLinkValueIri> knora-base:attachedToUser <@linkUpdate.newLinkValueCreator> .
-
-            @linkUpdate.newLinkValuePermissions match {
-
-                case Some(linkValuePermissions) => {
-
-                    <@linkUpdate.newLinkValueIri> knora-base:hasPermissions "@linkValuePermissions" .
-
-                }
-
-                case None => {}
-            }
+            <@linkUpdate.newLinkValueIri> knora-base:attachedToUser <@linkUpdate.newLinkValueCreator> ;
+                knora-base:hasPermissions "@linkUpdate.newLinkValuePermissions" .
 
             @* If we're inserting a new version of an existing LinkValue, attach it to the previous version. *@
             @if(linkUpdate.linkValueExists) {

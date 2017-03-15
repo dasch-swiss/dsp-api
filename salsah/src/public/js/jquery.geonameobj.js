@@ -1,6 +1,6 @@
 /*
  * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
  * This file is part of Knora.
  * Knora is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
@@ -124,7 +124,7 @@
 				$this.data('localdata', localdata);
 				my.defaultData = {
 					userName: 'milchkannen',
-					lang: SALSAH.userdata.lang
+					lang: SALSAH.userprofile.userData.lang
 				};
 
 				$this.html(

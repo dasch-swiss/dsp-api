@@ -79,20 +79,31 @@
 	 * language selection
 	*/
 	SALSAH.reset_project_selection = function() {
+
 		$('#projectctrl').text(s_('_project') + ' : ');
-		if (SALSAH.userdata === null) {
+		if (SALSAH.userprofile === null) {
+			$('#projectctrl').text('-');
 		}
-		else if (SALSAH.userdata.projects_info === undefined) {
+		else if (SALSAH.userprofile.projects_info === undefined) {
 			$('#projectctrl').text('-');
 		}
 		else {
-			if (SALSAH.userdata.projects_info.length > 1) {
 
+
+			if (Object.keys(SALSAH.userprofile.projects_info).length > 1) {
+
+				if (SALSAH.userprofile.active_project === undefined) {
+					for (id in SALSAH.userprofile.projects_info) {
+						SALSAH.userprofile.active_project = id;
+						break;
+					}
+				}
 				//  set the user's active project
-				SALSAH.userdata.active_project = SALSAH.userdata.projects[0];
 
-				var psel = $('<select>').appendTo('#projectctrl').on('change', function(event){
-					SALSAH.userdata.active_project = $(this).val();
+				var psel = $('<select id="project_sel">').appendTo('#projectctrl').on('change', function(event){
+					SALSAH.userprofile.active_project = $(this).val();
+					window.sessionStorage.setItem('userprofile', JSON.stringify(SALSAH.userprofile));
+
 					// TODO: https://github.com/dhlab-basel/Knora/issues/147
 					/*SALSAH.ApiPost('userdata', {project: $(this).val()}, function(data) {
 						if (data.status == ApiErrors.OK) {
@@ -104,19 +115,24 @@
 					});*/
 				});
 
-				for(var i in SALSAH.userdata.projects_info) {
-					if (SALSAH.userdata.projects_info[i].id == SALSAH.userdata.active_project) {
-						psel.append($('<option>').attr({selected: true}).val(SALSAH.userdata.projects_info[i].id).text(SALSAH.userdata.projects_info[i].shortname));
+				for (var i in SALSAH.userprofile.projects_info) {
+					if (i == SALSAH.userprofile.active_project) {
+						psel.append($('<option>').attr({selected: true}).val(i).text(SALSAH.userprofile.projects_info[i].shortname));
 					}
 					else {
-						psel.append($('<option>').val(SALSAH.userdata.projects_info[i].id).text(SALSAH.userdata.projects_info[i].shortname));
+						psel.append($('<option>').val(i).text(SALSAH.userprofile.projects_info[i].shortname));
 					}
 				}
 			}
-			else if (SALSAH.userdata.projects_info.length == 1) {
-				$('#projectctrl').append(SALSAH.userdata.projects_info[0].shortname);
-				//  set the user's active project
-				SALSAH.userdata.active_project = SALSAH.userdata.projects[0];
+			else if (Object.keys(SALSAH.userprofile.projects_info).length == 1) {
+				if (SALSAH.userprofile.active_project === undefined) {
+					for (id in SALSAH.userprofile.projects_info) {
+						SALSAH.userprofile.active_project = id;
+						break;
+					}
+				}
+
+				$('#projectctrl').append(SALSAH.userprofile.projects_info[SALSAH.userprofile.active_project].shortname);
 			}
 			else {
 				$('#projectctrl').append('-');
@@ -129,13 +145,13 @@
 		var lc = $('#langctrl');
 
 		var build_lang_ctrl = function() {
-			if (SALSAH.userdata.lang === undefined) SALSAH.userdata.lang = 'de';
+			if (SALSAH.userprofile.userData.lang === undefined) SALSAH.userprofile.userData.lang = 'de';
 			for (var l in langs) {
-				if (l == SALSAH.userdata.lang) {
+				if (l == SALSAH.userprofile.userData.lang) {
 					lc.append(' ' + l);
 				}
 				else {
-					lc.append(' ').append($('<a>').attr({href: '#'}).data({lang: l, language_id: SALSAH.userdata.lang[l]}).on('click', function(data) {
+					lc.append(' ').append($('<a>').attr({href: '#'}).data({lang: l, language_id: l}).on('click', function(data) {
 						if (confirm(s_('_langchangeq'))) {
 							var newref = 'http://' + window.location.host + window.location.pathname + '?lang=' + $(this).data('lang');
 							location.replace(newref);
@@ -174,13 +190,15 @@
 		//$('#dologout').simpledialog('logoutbox', {'class': 'loginbox', width: 400, positioning: 'upper'});
 		$('#userctrl').append($('<img>').attr({id: 'dologin', src: 'app/icons/24x24/user.png', title: s_('_login')})
 		.simpledialog('loginbox', {'class': 'loginbox', width: 400, positioning: 'upper', focus: '#user_id'}));
-		var json_userdata;
-		if ((json_userdata = window.sessionStorage.getItem('userdata')) != null) {
-			SALSAH.userdata = JSON.parse(json_userdata);
+	
+		var json_userprofile;
+		if ((json_userprofile = window.sessionStorage.getItem('userprofile')) != null) {
+			SALSAH.userprofile = JSON.parse(json_userprofile);
 		}
+
 		SALSAH.reset_project_selection();
 
-		$('#login_button').on('click', function(){
+		$('#login_button').on('click', function() {
 			var credentials = {
 				salsah_username: $('#user_id').val(),
 				salsah_password: $('#password').val()
@@ -192,7 +210,8 @@
 					// Now do a request to Sipi providing the Knora session id.
 					// When retrieving a file from Sipi (e.g. an IIIF URL), Sipi can send the session id to Knora with the request,
 					// identifying the user that is making the request to Knora.
-					window.sessionStorage.setItem('userdata', JSON.stringify(SALSAH.userdata));
+					SALSAH.userprofile = data.userProfile;
+					window.sessionStorage.setItem('userprofile', JSON.stringify(SALSAH.userprofile));
 
 					$.ajax({
 						url: SIPI_URL + SIPI_LOGIN_ROUTE,
@@ -214,23 +233,28 @@
 
 					$('#dologin').simpledialog('loginbox', 'close');
 
-					$('#userctrl').empty().append(s_('_user') + ' : ' + SALSAH.userdata.username)
+					$('#userctrl').empty().append(s_('_user') + ' : ' + SALSAH.userprofile.userData.firstname + ' ' + SALSAH.userprofile.userData.lastname)
 						.append($('<img>').attr({id: 'dologout', src: 'app/icons/24x24/delete_user.png', title: s_('_logout')})
 						.simpledialog('logoutbox', {'class': 'loginbox', width: 400, positioning: 'upper'})
 					);
 					if (SALSAH.reset_project_selection !== undefined) SALSAH.reset_project_selection();
 
+					if (SALSAH.userprofile.projects_info) {
+						if (SALSAH.userprofile.active_project === undefined) {
+							for (id in SALSAH.userprofile.projects_info) {
+								SALSAH.userprofile.active_project = id;
+								break;
+							}
+						}
 
-					if (SALSAH.userdata.projects_info) {
-						var active_project = SALSAH.userdata.active_project;
 						var selele;
 						$('#searchlimsel')
 						.empty()
 						.append(s_('_limitsearch'))
 						.append(selele = $('<select>').attr({id: 'limitproject', title: 'limit search to project'}));
 						selele.append($('<option>').attr({title: 'ALl'}).val(-1).text('-'));
-						for (var p in SALSAH.userdata.projects_info) {
-							selele.append($('<option>').attr({title: SALSAH.userdata.projects_info[p].longname}).val(SALSAH.userdata.projects_info[p].id).text(SALSAH.userdata.projects_info[p].shortname));
+						for (var p in SALSAH.userprofile.projects_info) {
+							selele.append($('<option>').attr({title: SALSAH.userprofile.projects_info[p].longname}).val(SALSAH.userprofile.projects_info[p].id).text(SALSAH.userprofile.projects_info[p].shortname));
 						}
 					}
 
@@ -245,8 +269,8 @@
 		$('#logout_button').on('click', function() {
             SALSAH.ApiDelete('session', function(data) {
 				if (data.status == ApiErrors.OK) {
-					window.sessionStorage.removeItem('userdata');
-					SALSAH.userdata = null;
+					window.sessionStorage.removeItem('userprofile');
+					SALSAH.userprofile = null;
 					// invalidate cookie obtained from Sipi when logging in to Knora
 					$.ajax({
 						url: SIPI_URL + SIPI_LOGOUT_ROUTE,
@@ -279,8 +303,8 @@
 			});
 		});
 
-		if (SALSAH.userdata.user_id !== undefined) {
-			$('#userctrl').empty().append(s_('_user') + ' : ' + SALSAH.userdata.username)
+		if (SALSAH.userprofile.userData.email !== undefined) {
+			$('#userctrl').empty().append(s_('_user') + ' : ' + SALSAH.userprofile.userData.firstname + ' ' + SALSAH.userprofile.userData.lastname)
 				.append($('<img>').attr({id: 'dologout', src: 'app/icons/24x24/delete_user.png', title: s_('_logout')})
 				.simpledialog('logoutbox', {'class': 'loginbox', width: 400, positioning: 'upper'})
 			);
@@ -333,33 +357,40 @@
 		);
 		
 
-		if (SALSAH.userdata.projects_info) {
-			var active_project = SALSAH.userdata.active_project;
+		if (SALSAH.userprofile.projects_info) {
 			var selele;
 			$('#searchlimsel')
 			.empty()
 			.append(s_('_limitsearch'))
 			.append(selele = $('<select>').attr({id: 'limitproject', title: 'limit search to project'}));
 			selele.append($('<option>').attr({title: 'ALl'}).val(-1).text('-'));
-			for (var p in SALSAH.userdata.projects_info) {
-				selele.append($('<option>').attr({title: SALSAH.userdata.projects_info[p].longname}).val(SALSAH.userdata.projects_info[p].id).text(SALSAH.userdata.projects_info[p].shortname));
+			for (var p in SALSAH.userprofile.projects_info) {
+				if (p == SALSAH.userprofile.active_project) {
+					selele.append($('<option>').attr({title: SALSAH.userprofile.projects_info[p].longname, selected: true}).val(p).text(SALSAH.userprofile.projects_info[p].shortname));
+				}
+				else {
+					selele.append($('<option>').attr({title: SALSAH.userprofile.projects_info[p].longname}).val(p).text(SALSAH.userprofile.projects_info[p].shortname));
+				}
 			}
 		}
 
 	};
 	
 	$(function(){
-		if (urlparams["lang"] !== undefined) {
-    		SALSAH.userdata = {lang: urlparams["lang"]};
+		if (SALSAH.userprofile === undefined) SALSAH.userprofile = {};
+		if (SALSAH.userprofile.userData === undefined) SALSAH.userprofile.userData = {};
+ 		if (urlparams["lang"] !== undefined) {
+   			SALSAH.userprofile.userData.lang = urlparams["lang"];
 		}
 		else {
-    		SALSAH.userdata = {lang: 'en'};
+    		SALSAH.userprofile.userData.lang = 'en';
 		}
-		$.get('lang/' + SALSAH.userdata.lang + '.json', function(data) {
+		$.get('lang/' + SALSAH.userprofile.userData.lang + '.json', function(data) {
 			strings = data;
 			init_gui();
 		}, 'json');
 	});
+
 	</script>
 	<link id="loadcss" rel="stylesheet" type="text/css" href="default.css" />
 	<link href="vendor/bootstrap/css/bootstrap-btn-only.css" rel="stylesheet">

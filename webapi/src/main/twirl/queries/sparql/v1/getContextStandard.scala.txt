@@ -1,6 +1,6 @@
 @*
  * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
  *
  * This file is part of Knora.
  *
@@ -79,11 +79,8 @@ WHERE {
 
     ?sourceObject rdfs:label ?firstprop ;
         knora-base:attachedToUser ?sourceObjectAttachedToUser ;
-        knora-base:attachedToProject ?sourceObjectAttachedToProject .
-
-    OPTIONAL {
-        ?sourceObject knora-base:hasPermissions ?sourceObjectPermissions .
-    }
+        knora-base:attachedToProject ?sourceObjectAttachedToProject ;
+        knora-base:hasPermissions ?sourceObjectPermissions .
 
     BIND(IRI(CONCAT(STR(?linkingProp), "Value")) AS ?linkValueProp)
 
@@ -94,11 +91,8 @@ WHERE {
         rdf:predicate ?linkingProp ;
         rdf:object ?resource ;
         knora-base:isDeleted false ;
-        knora-base:attachedToUser ?linkValueCreator .
-
-    OPTIONAL {
-        ?linkValue knora-base:hasPermissions ?linkValuePermissions .
-    }
+        knora-base:attachedToUser ?linkValueCreator ;
+        knora-base:hasPermissions ?linkValuePermissions .
 
     OPTIONAL {
         ?fileValueProp rdfs:subPropertyOf* knora-base:hasFileValue .
@@ -116,13 +110,9 @@ WHERE {
                  knora-base:internalFilename ?internalFilename ;
                  knora-base:dimX ?dimX ;
                  knora-base:dimY ?dimY ;
-                 knora-base:qualityLevel ?qualityLevel .
-
-        ?fileValue knora-base:attachedToUser ?fileValueAttachedToUser .
-
-        OPTIONAL {
-            ?fileValue knora-base:hasPermissions ?fileValuePermissions .
-        }
+                 knora-base:qualityLevel ?qualityLevel ;
+                 knora-base:attachedToUser ?fileValueAttachedToUser ;
+                 knora-base:hasPermissions ?fileValuePermissions .
     }
 }
 ORDER BY ?seqnum ?sourceObject ?isPreview
