@@ -102,7 +102,7 @@ class UsersResponderV1 extends ResponderV1 {
         for {
             maybeUserProfileToReturn <- userProfileByIRIGetV1(userIRI, profileType)
             result = maybeUserProfileToReturn match {
-                case Some(up) => UserProfileResponseV1(up, userProfile.userData)
+                case Some(up) => UserProfileResponseV1(up)
                 case None => throw NotFoundException(s"User '$userIRI' not found")
             }
         } yield result
@@ -144,7 +144,7 @@ class UsersResponderV1 extends ResponderV1 {
         for {
             maybeUserProfileToReturn <- userProfileByEmailGetV1(email, profileType)
             result = maybeUserProfileToReturn match {
-                case Some(up: UserProfileV1) => UserProfileResponseV1(up, userProfile.userData)
+                case Some(up: UserProfileV1) => UserProfileResponseV1(up)
                 case None => throw NotFoundException(s"User '$email' not found")
             }
         } yield result

@@ -24,7 +24,7 @@ import java.util.UUID
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi.IRI
-import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
+import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
 import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
 import spray.json.{DefaultJsonProtocol, JsonFormat, NullOptions, RootJsonFormat}
 
@@ -222,6 +222,8 @@ case class ProjectInfoV1(id: IRI,
   * A spray-json protocol for generating Knora API v1 JSON providing data about projects.
   */
 trait ProjectV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with NullOptions {
+
+    import org.knora.webapi.messages.v1.responder.usermessages.UserV1JsonProtocol._
 
     // Some of these formatters have to use lazyFormat because there is a recursive dependency between this
     // protocol and UserV1JsonProtocol. See ttps://github.com/spray/spray-json#jsonformats-for-recursive-types.

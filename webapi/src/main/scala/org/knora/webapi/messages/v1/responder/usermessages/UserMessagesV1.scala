@@ -227,7 +227,7 @@ case class UserProfileV1(userData: UserDataV1 = UserDataV1(lang = "en"),
                          projects_info: Map[IRI, ProjectInfoV1] = Map.empty[IRI, ProjectInfoV1],
                          sessionId: Option[String] = None,
                          isSystemUser: Boolean = false,
-                         permissionData: PermissionDataV1 = PermissionDataV1()) {
+                         permissionData: PermissionDataV1 = PermissionDataV1(anonymousUser = true)) {
 
     /**
       * Check password using either SHA-1 or SCrypt.
@@ -260,23 +260,22 @@ case class UserProfileV1(userData: UserDataV1 = UserDataV1(lang = "en"),
 
         userProfileType match {
             case UserProfileType.SHORT => {
-                val olduserdata = userData
-                val newuserdata = UserDataV1(
-                    user_id = olduserdata.user_id,
+                val oldUserData = userData
+                val newUserData = UserDataV1(
+                    user_id = oldUserData.user_id,
                     token = None, // remove token
-                    firstname = olduserdata.firstname,
-                    lastname = olduserdata.lastname,
-                    email = olduserdata.email,
+                    firstname = oldUserData.firstname,
+                    lastname = oldUserData.lastname,
+                    email = oldUserData.email,
                     password = None, // remove password
-                    isActiveUser = olduserdata.isActiveUser,
-                    projects = olduserdata.projects,
-                    lang = olduserdata.lang
+                    isActiveUser = oldUserData.isActiveUser,
+                    lang = oldUserData.lang
                 )
 
                 UserProfileV1(
-                    userData = newuserdata,
+                    userData = newUserData,
                     groups = Vector.empty[IRI], // removed groups
-                    projects = Vector.empty[IRI], // removed projects
+                    projects_info = Map.empty[IRI, ProjectInfoV1], // removed projects
                     permissionData = PermissionDataV1(anonymousUser = false),
                     sessionId = None // removed sessionId
                 )
@@ -356,7 +355,6 @@ case class UserProfileV1(userData: UserDataV1 = UserDataV1(lang = "en"),
   * @param firstname    The user's given name.
   * @param lastname     The user's surname.
   * @param isActiveUser The user's status.
-  * @param projects     The projects the user is member of.
   * @param lang         The ISO 639-1 code of the user's preferred language.
   */
 case class UserDataV1(user_id: Option[IRI] = None,
