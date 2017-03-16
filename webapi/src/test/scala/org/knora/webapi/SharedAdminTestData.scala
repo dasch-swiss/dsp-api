@@ -1,6 +1,6 @@
 /*
  * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
  *
  * This file is part of Knora.
  *
@@ -47,11 +47,9 @@ object SharedAdminTestData {
             lastname = Some("Administrator"),
             token = None,
             isActiveUser = Some(true),
-            lang = "de",
-            projects =  Vector.empty[IRI]
+            lang = "de"
         ),
         groups = Vector.empty[IRI],
-        projects =  Vector.empty[IRI],
         sessionId = None,
         permissionData = PermissionDataV1(
             groupsPerProject = Map(
@@ -72,11 +70,9 @@ object SharedAdminTestData {
             password = Some("$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="), // -> "test"
             token = None,
             isActiveUser = Some(true),
-            lang = "de",
-            projects =  Vector.empty[IRI]
+            lang = "de"
         ),
         groups = Vector.empty[IRI],
-        projects = Vector.empty[IRI],
         sessionId = None,
         permissionData = PermissionDataV1(
             groupsPerProject = Map(
@@ -96,11 +92,9 @@ object SharedAdminTestData {
             password = Some("$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="), // -> "test"
             token = None,
             isActiveUser = Some(true),
-            lang = "de",
-            projects =  Vector.empty[IRI]
+            lang = "de"
         ),
         groups = Vector.empty[IRI],
-        projects = Vector.empty[IRI],
         sessionId = None,
         permissionData = PermissionDataV1(
             anonymousUser = false
@@ -117,11 +111,9 @@ object SharedAdminTestData {
             password = Some("$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="), // -> "test"
             token = None,
             isActiveUser = Some(false),
-            lang = "de",
-            projects =  Vector.empty[IRI]
+            lang = "de"
         ),
         groups = Vector.empty[IRI],
-        projects = Vector.empty[IRI],
         sessionId = None,
         permissionData = PermissionDataV1(
             anonymousUser = false
@@ -134,7 +126,6 @@ object SharedAdminTestData {
             lang = "de"
         ),
         groups = Vector.empty[IRI],
-        projects = Vector.empty[IRI],
         sessionId = None,
         permissionData = PermissionDataV1(
             anonymousUser = true
@@ -152,11 +143,10 @@ object SharedAdminTestData {
             password = Some("$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="), // -> "test"
             token = None,
             isActiveUser = Some(true),
-            lang = "de",
-            projects =  List(IMAGES_PROJECT_IRI, INCUNABULA_PROJECT_IRI)
+            lang = "de"
         ),
         groups = List("http://data.knora.org/groups/images-reviewer"),
-        projects = List(INCUNABULA_PROJECT_IRI, IMAGES_PROJECT_IRI),
+        projects_info = Map(INCUNABULA_PROJECT_IRI -> incunabulaProjectInfo, IMAGES_PROJECT_IRI -> imagesProjectInfo),
         sessionId = None,
         permissionData = PermissionDataV1(
             groupsPerProject = Map(
@@ -189,7 +179,6 @@ object SharedAdminTestData {
         belongsToInstitution = None,
         ontologyNamedGraph = "http://www.knora.org/ontology/knora-base",
         dataNamedGraph = "-",
-        basepath = "-",
         status = true,
         hasSelfJoinEnabled = false
     )
@@ -211,11 +200,10 @@ object SharedAdminTestData {
             password = Some("$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="), // -> "test"
             token = None,
             isActiveUser = Some(true),
-            lang = "de",
-            projects = List("http://data.knora.org/projects/images")
+            lang = "de"
         ),
-        groups = List.empty[IRI],
-        projects = List("http://data.knora.org/projects/images"),
+        groups = List("http://data.knora.org/groups/images-reviewer"),
+        projects_info = Map(IMAGES_PROJECT_IRI -> imagesProjectInfo),
         sessionId = None,
         permissionData = PermissionDataV1(
             groupsPerProject = Map(
@@ -241,8 +229,7 @@ object SharedAdminTestData {
             password = Some("$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="), // -> "test"
             token = None,
             isActiveUser = Some(true),
-            lang = "de",
-            projects = List("http://data.knora.org/projects/images")
+            lang = "de"
         ),
         groups = List.empty[IRI],
         projects = List("http://data.knora.org/projects/images"),
@@ -274,7 +261,7 @@ object SharedAdminTestData {
             projects = List("http://data.knora.org/projects/images")
         ),
         groups = List("http://data.knora.org/groups/images-reviewer"),
-        projects = List("http://data.knora.org/projects/images"),
+        projects_info = Map(IMAGES_PROJECT_IRI -> imagesProjectInfo),
         sessionId = None,
         permissionData = PermissionDataV1(
             groupsPerProject = Map(
@@ -301,7 +288,6 @@ object SharedAdminTestData {
         belongsToInstitution = None,
         ontologyNamedGraph = "http://www.knora.org/ontology/images",
         dataNamedGraph = "http://www.knora.org/data/images",
-        basepath = "/imldata/SALSAH-TEST-01/images",
         status = true,
         hasSelfJoinEnabled = false
     )
@@ -355,11 +341,10 @@ object SharedAdminTestData {
             password = Some("$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="), // -> "test"
             token = None,
             isActiveUser = Some(true),
-            lang = "de",
-            projects = List(INCUNABULA_PROJECT_IRI)
+            lang = "de"
         ),
         groups = Vector.empty[IRI],
-        projects = List(INCUNABULA_PROJECT_IRI),
+        projects_info = Map("http://data.knora.org/projects/77275339" -> incunabulaProjectInfo),
         sessionId = None,
         permissionData = PermissionDataV1(
             groupsPerProject = Map(
@@ -385,11 +370,10 @@ object SharedAdminTestData {
             password = Some("$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="), // -> "test"
             token = None,
             isActiveUser = Some(true),
-            lang = "de",
-            projects = List("http://data.knora.org/projects/77275339")
+            lang = "de"
         ),
         groups = Vector.empty[IRI],
-        projects = List("http://data.knora.org/projects/77275339"),
+        projects_info = Map(INCUNABULA_PROJECT_IRI -> incunabulaProjectInfo),
         sessionId = None,
         permissionData = PermissionDataV1(
             groupsPerProject = Map(
@@ -414,11 +398,10 @@ object SharedAdminTestData {
             password = Some("$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="), // -> "test"
             token = None,
             isActiveUser = Some(true),
-            lang = "de",
-            projects = List("http://data.knora.org/projects/77275339")
+            lang = "de"
         ),
         groups = Vector.empty[IRI],
-        projects = List("http://data.knora.org/projects/77275339"),
+        projects_info = Map(INCUNABULA_PROJECT_IRI -> incunabulaProjectInfo),
         sessionId = None,
         permissionData = PermissionDataV1(
             groupsPerProject = Map(
@@ -444,7 +427,6 @@ object SharedAdminTestData {
         belongsToInstitution = None,
         ontologyNamedGraph = "http://www.knora.org/ontology/incunabula",
         dataNamedGraph = "http://www.knora.org/data/incunabula",
-        basepath = "/imldata/SALSAH-TEST-01/Incunabula",
         status = true,
         hasSelfJoinEnabled = false
     )
@@ -464,11 +446,10 @@ object SharedAdminTestData {
             password = Some("$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="), // -> "test"
             token = None,
             isActiveUser = Some(true),
-            lang = "de",
-            projects = Seq(ANYTHING_PROJECT_IRI)
+            lang = "de"
         ),
         groups = Seq.empty[IRI],
-        projects = Seq(ANYTHING_PROJECT_IRI),
+        projects_info = Map(ANYTHING_PROJECT_IRI -> anythingProjectInfo),
         sessionId = None,
         permissionData = PermissionDataV1(
             groupsPerProject = Map(
@@ -493,11 +474,10 @@ object SharedAdminTestData {
             password = Some("$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="), // -> "test"
             token = None,
             isActiveUser = Some(true),
-            lang = "de",
-            projects = Vector(ANYTHING_PROJECT_IRI)
+            lang = "de"
         ),
         groups = Vector.empty[IRI],
-        projects = Vector(ANYTHING_PROJECT_IRI),
+        projects_info = Map(ANYTHING_PROJECT_IRI -> anythingProjectInfo),
         sessionId = None,
         permissionData = PermissionDataV1(
             groupsPerProject = Map(
@@ -522,7 +502,6 @@ object SharedAdminTestData {
         belongsToInstitution = None,
         ontologyNamedGraph = "http://www.knora.org/ontology/anything",
         dataNamedGraph = "http://www.knora.org/data/anything",
-        basepath = "/foo/bar/baz",
         status = true,
         hasSelfJoinEnabled = false
     )
@@ -544,7 +523,6 @@ object SharedAdminTestData {
         belongsToInstitution = None,
         ontologyNamedGraph = "http://www.knora.org/ontology/beol",
         dataNamedGraph = "http://www.knora.org/data/beol",
-        basepath = "/foo/bar/baz",
         status = true,
         hasSelfJoinEnabled = false
     )
@@ -566,11 +544,27 @@ object SharedAdminTestData {
         belongsToInstitution = None,
         ontologyNamedGraph = "http://www.knora.org/ontology/biblio",
         dataNamedGraph = "http://www.knora.org/data/biblio",
-        basepath = "/foo/bar/baz",
         status = true,
         hasSelfJoinEnabled = false
     )
 
+    /* represents the user profile of 'superuser' as found in admin-data.ttl */
+    def biblioUser = UserProfileV1(
+        UserDataV1(
+            user_id = Some("http://data.knora.org/users/Q-6Sssu8TBWrcCGuVJ0lVw"),
+            firstname = Some("biblio"),
+            lastname = Some("biblio"),
+            email = Some("biblio@example.com"),
+            password = Some("$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"), // -> "test"
+            token = None,
+            isActiveUser = Some(true),
+            lang = "en"
+        ),
+        groups = Vector.empty[IRI],
+        projects_info = Map(BIBLIO_PROJECT_IRI -> biblioProjectInfo),
+        sessionId = None,
+        permissionData = PermissionDataV1()
+    )
 
     /************************************/
     /** DOKUBIB                        **/
@@ -588,7 +582,6 @@ object SharedAdminTestData {
         belongsToInstitution = None,
         ontologyNamedGraph = "http://www.knora.org/ontology/dokubib",
         dataNamedGraph = "http://www.knora.org/data/dokubib",
-        basepath = "/foo/bar/baz",
         status = false,
         hasSelfJoinEnabled = false
     )

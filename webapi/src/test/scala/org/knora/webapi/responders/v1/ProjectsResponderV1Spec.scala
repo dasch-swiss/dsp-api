@@ -1,6 +1,6 @@
 /*
  * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
  * This file is part of Knora.
  * Knora is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
@@ -25,9 +25,8 @@ import java.util.UUID
 import akka.actor.Props
 import akka.actor.Status.Failure
 import akka.testkit.{ImplicitSender, TestActorRef}
-import com.typesafe.config.ConfigFactory
-import org.knora.webapi
-import org.knora.webapi.{SharedAdminTestData, _}
+import com.typesafe.config.{Config, ConfigFactory}
+import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse}
 import org.knora.webapi.messages.v1.responder.projectmessages._
 import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileType}
@@ -40,7 +39,7 @@ import scala.concurrent.duration._
 
 object ProjectsResponderV1Spec {
 
-    val config = ConfigFactory.parseString(
+    val config: Config = ConfigFactory.parseString(
         """
          akka.loglevel = "DEBUG"
          akka.stdout-loglevel = "DEBUG"
@@ -52,14 +51,14 @@ object ProjectsResponderV1Spec {
   */
 class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) with ImplicitSender {
 
-    implicit val executionContext = system.dispatcher
+    private implicit val executionContext = system.dispatcher
     private val timeout = 5.seconds
 
-    val rootUserProfileV1 = SharedAdminTestData.rootUser
+    private val rootUserProfileV1 = SharedAdminTestData.rootUser
 
-    val actorUnderTest = TestActorRef[ProjectsResponderV1]
-    val responderManager = system.actorOf(Props(new ResponderManagerV1 with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
-    val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
+    private val actorUnderTest = TestActorRef[ProjectsResponderV1]
+    private val responderManager = system.actorOf(Props(new ResponderManagerV1 with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
+    private val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
 
     val rdfDataObjects = List()
 
@@ -97,21 +96,21 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
                     SharedAdminTestData.incunabulaProjectInfo.id,
                     Some(SharedAdminTestData.rootUser)
                 )
-                expectMsg(ProjectInfoResponseV1(SharedAdminTestData.incunabulaProjectInfo, Some(rootUserProfileV1.userData)))
+                expectMsg(ProjectInfoResponseV1(SharedAdminTestData.incunabulaProjectInfo))
 
                 /* Images project */
                 actorUnderTest ! ProjectInfoByIRIGetRequestV1(
                     SharedAdminTestData.imagesProjectInfo.id,
                     Some(SharedAdminTestData.rootUser)
                 )
-                expectMsg(ProjectInfoResponseV1(SharedAdminTestData.imagesProjectInfo, Some(rootUserProfileV1.userData)))
+                expectMsg(ProjectInfoResponseV1(SharedAdminTestData.imagesProjectInfo))
 
                 /* 'SystemProject' */
                 actorUnderTest ! ProjectInfoByIRIGetRequestV1(
                     SharedAdminTestData.systemProjectInfo.id,
                     Some(SharedAdminTestData.rootUser)
                 )
-                expectMsg(ProjectInfoResponseV1(SharedAdminTestData.systemProjectInfo, Some(rootUserProfileV1.userData)))
+                expectMsg(ProjectInfoResponseV1(SharedAdminTestData.systemProjectInfo))
 
             }
 
@@ -128,7 +127,7 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
 
             "return project info if the project is known " in {
                 actorUnderTest ! ProjectInfoByShortnameGetRequestV1(SharedAdminTestData.incunabulaProjectInfo.shortname, Some(rootUserProfileV1))
-                expectMsg(ProjectInfoResponseV1(SharedAdminTestData.incunabulaProjectInfo, Some(rootUserProfileV1.userData)))
+                expectMsg(ProjectInfoResponseV1(SharedAdminTestData.incunabulaProjectInfo))
             }
 
             "return 'NotFoundException' when the project is unknown " in {

@@ -1,6 +1,6 @@
 /*
  * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
  *
  * This file is part of Knora.
  *
@@ -100,8 +100,7 @@ class ValuesResponderV1 extends ResponderV1 {
                         valuecreator = valueCreatorProfile.userData.email.get,
                         valuecreatorname = valueCreatorProfile.userData.fullname.get,
                         valuecreationdate = valueQueryResult.creationDate,
-                        comment = valueQueryResult.comment,
-                        userdata = userProfile.userData
+                        comment = valueQueryResult.comment
                     )
 
                 case None =>
@@ -294,14 +293,14 @@ class ValuesResponderV1 extends ResponderV1 {
                                                          valueIndexes: Vector[Int] = Vector.empty[Int])
 
             for {
-                ////////////////////////////////////////////////////////////////////////////////////////////////////////////
-                // Generate SPARQL to create links and LinkValues for standoff resource references in text values
+            ////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            // Generate SPARQL to create links and LinkValues for standoff resource references in text values
 
-                // To create LinkValues for the standoff resource references in the values to be created, we need to compute
-                // the initial reference count of each LinkValue. This is equal to the number of TextValues in the resource
-                // that have standoff references to a particular target resource.
+            // To create LinkValues for the standoff resource references in the values to be created, we need to compute
+            // the initial reference count of each LinkValue. This is equal to the number of TextValues in the resource
+            // that have standoff references to a particular target resource.
 
-                // First, make a single list of all the values to be created.
+            // First, make a single list of all the values to be created.
                 valuesToCreatePerProperty: Map[IRI, Seq[CreateValueV1WithComment]] <- Future(createMultipleValuesRequest.values)
                 valuesToCreateForAllProperties: Iterable[Seq[CreateValueV1WithComment]] = valuesToCreatePerProperty.values
                 allValuesToCreate: Iterable[CreateValueV1WithComment] = valuesToCreateForAllProperties.flatten
@@ -355,7 +354,7 @@ class ValuesResponderV1 extends ResponderV1 {
                 }
 
                 // Generate INSERT clause statements based on those SparqlTemplateLinkUpdates.
-                standoffLinkInsertSparql: String = queries.sparql.v1.txt.generateInsertStatementsForStandoffLinks(linkUpdates = standoffLinkUpdates).toString()
+                standoffLinkInsertSparql: String = queries.sparql.v1.txt.generateInsertStatementsForStandoffLinks(linkUpdates = standoffLinkUpdates, resourceIndex = 0).toString()
 
                 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
                 // Number each value to be created, and give it a valueHasOrder
@@ -430,14 +429,17 @@ class ValuesResponderV1 extends ResponderV1 {
 
                                         // Generate WHERE clause statements for the link.
                                         val whereSparql = queries.sparql.v1.txt.generateWhereStatementsForCreateLink(
+                                            resourceIndex = createMultipleValuesRequest.resourceIndex,
                                             valueIndex = valueToCreate.valueIndex,
                                             resourceIri = createMultipleValuesRequest.resourceIri,
                                             linkUpdate = sparqlTemplateLinkUpdate,
-                                            maybeValueHasOrder = Some(valueToCreate.valueHasOrder)
+                                            maybeValueHasOrder = Some(valueToCreate.valueHasOrder),
+                                            checkObj = createMultipleValuesRequest.checkObj
                                         ).toString()
 
                                         // Generate INSERT clause statements for the link.
                                         val insertSparql = queries.sparql.v1.txt.generateInsertStatementsForCreateLink(
+                                            resourceIndex = createMultipleValuesRequest.resourceIndex,
                                             valueIndex = valueToCreate.valueIndex,
                                             linkUpdate = sparqlTemplateLinkUpdate,
                                             maybeComment = valueToCreate.createValueV1WithComment.comment
@@ -450,17 +452,20 @@ class ValuesResponderV1 extends ResponderV1 {
 
                                         // Generate WHERE clause statements for the value.
                                         val whereSparql = queries.sparql.v1.txt.generateWhereStatementsForCreateValue(
+                                            resourceIndex = createMultipleValuesRequest.resourceIndex,
                                             valueIndex = valueToCreate.valueIndex,
                                             resourceIri = createMultipleValuesRequest.resourceIri,
                                             propertyIri = propertyIri,
                                             newValueIri = newValueIri,
                                             valueTypeIri = updateValueV1.valueTypeIri,
                                             linkUpdates = Seq.empty[SparqlTemplateLinkUpdate], // This is empty because we have to generate SPARQL for standoff links separately.
-                                            maybeValueHasOrder = Some(valueToCreate.valueHasOrder)
+                                            maybeValueHasOrder = Some(valueToCreate.valueHasOrder),
+                                            checkObj = createMultipleValuesRequest.checkObj
                                         ).toString()
 
                                         // Generate INSERT clause statements for the value.
                                         val insertSparql = queries.sparql.v1.txt.generateInsertStatementsForCreateValue(
+                                            resourceIndex = createMultipleValuesRequest.resourceIndex,
                                             valueIndex = valueToCreate.valueIndex,
                                             propertyIri = propertyIri,
                                             value = updateValueV1,
@@ -548,7 +553,6 @@ class ValuesResponderV1 extends ResponderV1 {
                             userProfile = verifyRequest.userProfile
                         )
                 }
-
                 propertyIri -> Future.sequence(valueVerificationResponsesForProperty)
         }
 
@@ -686,8 +690,7 @@ class ValuesResponderV1 extends ResponderV1 {
                         }
 
                         valueUtilV1.fileValueV12LocationV1(fileValue)
-                },
-                userdata = changeFileValueRequest.userProfile.userData
+                }
             )
 
             // If a temporary file was created, ensure that it's deleted, regardless of whether the request succeeded or failed.
@@ -981,8 +984,7 @@ class ValuesResponderV1 extends ResponderV1 {
                 value = verifyUpdateResult.value,
                 comment = verifyUpdateResult.comment,
                 id = newValueIri,
-                rights = verifyUpdateResult.permissionCode,
-                userdata = changeCommentRequest.userProfile.userData
+                rights = verifyUpdateResult.permissionCode
             )
         }
 
@@ -1134,10 +1136,7 @@ class ValuesResponderV1 extends ResponderV1 {
             _ = if (rows.isEmpty || !InputValidation.optionStringToBoolean(rows.head.rowMap.get("isDeleted"))) {
                 throw UpdateNotPerformedException(s"The request to mark value ${deleteValueRequest.valueIri} (or a new version of that value) as deleted did not succeed. Please report this as a possible bug.")
             }
-        } yield DeleteValueResponseV1(
-            id = deletedValueIri,
-            userdata = deleteValueRequest.userProfile.userData
-        )
+        } yield DeleteValueResponseV1(id = deletedValueIri)
 
         for {
         // Don't allow anonymous users to update values.
@@ -1254,10 +1253,7 @@ class ValuesResponderV1 extends ResponderV1 {
                         }
                     )
             }
-        } yield ValueVersionHistoryGetResponseV1(
-            valueVersions = versionV1Vector,
-            versionHistoryRequest.userProfile.userData
-        )
+        } yield ValueVersionHistoryGetResponseV1(valueVersions = versionV1Vector)
     }
 
     /**
@@ -1296,8 +1292,7 @@ class ValuesResponderV1 extends ResponderV1 {
                         valuecreator = valueCreatorProfile.userData.email.get,
                         valuecreatorname = valueCreatorProfile.userData.fullname.get,
                         valuecreationdate = valueQueryResult.creationDate,
-                        comment = valueQueryResult.comment,
-                        userdata = userProfile.userData
+                        comment = valueQueryResult.comment
                     )
 
                 case None =>
@@ -1712,8 +1707,7 @@ class ValuesResponderV1 extends ResponderV1 {
                     value = apiResponseValue,
                     comment = linkValueQueryResult.comment,
                     id = unverifiedValue.newValueIri,
-                    rights = linkValueQueryResult.permissionCode,
-                    userdata = userProfile.userData
+                    rights = linkValueQueryResult.permissionCode
                 )
 
             case ordinaryUpdateValueV1 =>
@@ -1724,12 +1718,12 @@ class ValuesResponderV1 extends ResponderV1 {
                         searchValueIri = unverifiedValue.newValueIri,
                         userProfile = userProfile
                     )
+
                 } yield CreateValueResponseV1(
                     value = verifyUpdateResult.value,
                     comment = verifyUpdateResult.comment,
                     id = unverifiedValue.newValueIri,
-                    rights = verifyUpdateResult.permissionCode,
-                    userdata = userProfile.userData
+                    rights = verifyUpdateResult.permissionCode
                 )
         }
     }
@@ -1759,9 +1753,10 @@ class ValuesResponderV1 extends ResponderV1 {
                 ).toString()
             }
 
-            // _ = println(sparqlQuery)
+
 
             updateVerificationResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
+
             rows = updateVerificationResponse.results.bindings
 
             resultOption <- sparqlQueryResults2ValueQueryResult(valueIri = searchValueIri, rows = rows, userProfile = userProfile)
@@ -1943,12 +1938,15 @@ class ValuesResponderV1 extends ResponderV1 {
             )
 
             // Generate a SPARQL update string.
+            //resourceIndex = 0 because this method isn't used when creating multiple resources
             sparqlUpdate = queries.sparql.v1.txt.createLink(
+                resourceIndex = 0,
                 dataNamedGraph = dataNamedGraph,
                 triplestore = settings.triplestoreType,
                 resourceIri = resourceIri,
                 linkUpdate = sparqlTemplateLinkUpdate,
-                maybeComment = comment
+                maybeComment = comment,
+                checkObj = true
             ).toString()
 
             /*
@@ -2016,7 +2014,10 @@ class ValuesResponderV1 extends ResponderV1 {
             }
 
             // Generate a SPARQL update string.
+            //resourceIndex = 0 because this method isn't used when creating multiple resources
             sparqlUpdate = queries.sparql.v1.txt.createValue(
+                resourceIndex = 0,
+                checkObj = true,
                 dataNamedGraph = dataNamedGraph,
                 triplestore = settings.triplestoreType,
                 resourceIri = resourceIri,
@@ -2135,8 +2136,7 @@ class ValuesResponderV1 extends ResponderV1 {
             value = apiResponseValue,
             comment = linkValueQueryResult.comment,
             id = sparqlTemplateLinkUpdateForNewLink.newLinkValueIri,
-            rights = linkValueQueryResult.permissionCode,
-            userdata = userProfile.userData
+            rights = linkValueQueryResult.permissionCode
         )
     }
 
@@ -2271,8 +2271,7 @@ class ValuesResponderV1 extends ResponderV1 {
             value = verifyUpdateResult.value,
             comment = verifyUpdateResult.comment,
             id = newValueIri,
-            rights = verifyUpdateResult.permissionCode,
-            userdata = userProfile.userData
+            rights = verifyUpdateResult.permissionCode
         )
     }
 

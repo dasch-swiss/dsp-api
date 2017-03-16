@@ -1,6 +1,6 @@
 /*
  * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
  *
  * This file is part of Knora.
  *
@@ -25,10 +25,9 @@ import java.util.UUID
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.permissionmessages.{PermissionDataV1, PermissionV1JsonProtocol}
-import org.knora.webapi.messages.v1.responder.projectmessages.ProjectV1JsonProtocol
+import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoV1, ProjectV1JsonProtocol}
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileType.UserProfileType
 import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
-import org.knora.webapi.util.MessageUtil
 import spray.json._
 
 
@@ -194,22 +193,20 @@ case class UserChangeStatusRequestV1(userIri: IRI,
 // Responses
 
 /**
-  * Represents an answer to an user profile request.
+  * Represents an answer to a user profile request.
   *
   * @param userProfile the user's profile of the requested type.
-  * @param userData    information about the user that made the request.
   */
-case class UserProfileResponseV1(userProfile: UserProfileV1, userData: UserDataV1) extends KnoraResponseV1 {
+case class UserProfileResponseV1(userProfile: UserProfileV1) extends KnoraResponseV1 {
     def toJsValue = UserV1JsonProtocol.userProfileResponseV1Format.write(this)
 }
 
 /**
-  * Represents an answer to an user creating/modifying operation.
+  * Represents an answer to a user creating/modifying operation.
   *
   * @param userProfile the new user profile of the created/modified user.
-  * @param userData    information about the user that made the request.
   */
-case class UserOperationResponseV1(userProfile: UserProfileV1, userData: UserDataV1) extends KnoraResponseV1 {
+case class UserOperationResponseV1(userProfile: UserProfileV1) extends KnoraResponseV1 {
     def toJsValue = UserV1JsonProtocol.userOperationResponseV1Format.write(this)
 }
 
@@ -221,17 +218,16 @@ case class UserOperationResponseV1(userProfile: UserProfileV1, userData: UserDat
   *
   * @param userData       basic information about the user.
   * @param groups         the groups that the user belongs to.
-  * @param projects       the projects that the user belongs to.
+  * @param projects_info  the projects that the user belongs to.
   * @param sessionId      the sessionId,.
   * @param permissionData the user's permission data.
   */
 case class UserProfileV1(userData: UserDataV1 = UserDataV1(lang = "en"),
                          groups: Seq[IRI] = Vector.empty[IRI],
-                         projects: Seq[IRI] = Vector.empty[IRI],
+                         projects_info: Map[IRI, ProjectInfoV1] = Map.empty[IRI, ProjectInfoV1],
                          sessionId: Option[String] = None,
                          isSystemUser: Boolean = false,
-                         permissionData: PermissionDataV1
-                        ) {
+                         permissionData: PermissionDataV1 = PermissionDataV1()) {
 
     /**
       * Check password using either SHA-1 or SCrypt.
@@ -242,45 +238,16 @@ case class UserProfileV1(userData: UserDataV1 = UserDataV1(lang = "en"),
       */
     def passwordMatch(password: String): Boolean = {
         userData.password.exists {
-            hashedpassword =>
-                hashedpassword match {
-                    case hp if hp.startsWith("$e0801$") => {
-                        //println(s"UserProfileV1 - passwordMatch - password: $password, hashedpassword: $hashedpassword")
-                        import org.springframework.security.crypto.scrypt.SCryptPasswordEncoder
-                        val encoder = new SCryptPasswordEncoder
-                        encoder.matches(password, hp)
-                    }
-                    case hp => {
-                        val md = java.security.MessageDigest.getInstance("SHA-1")
-                        md.digest(password.getBytes("UTF-8")).map("%02x".format(_)).mkString.equals(hp)
-                    }
+            hashedPassword =>
+                if (hashedPassword.startsWith("$e0801$")) {
+                    //println(s"UserProfileV1 - passwordMatch - password: $password, hashedPassword: hashedPassword")
+                    import org.springframework.security.crypto.scrypt.SCryptPasswordEncoder
+                    val encoder = new SCryptPasswordEncoder
+                    encoder.matches(password, hashedPassword)
+                } else {
+                    val md = java.security.MessageDigest.getInstance("SHA-1")
+                    md.digest(password.getBytes("UTF-8")).map("%02x".format(_)).mkString.equals(hashedPassword)
                 }
-        }
-    }
-
-    /**
-      * Check password hashed using SHA-1.
-      *
-      * @param password the password to check.
-      * @return true if password matches and false if password doesn't match.
-      */
-    private def passwordMatchSha1(password: String): Boolean = {
-        val md = java.security.MessageDigest.getInstance("SHA-1")
-        userData.password.exists { hashedPassword =>
-            md.digest(password.getBytes("UTF-8")).map("%02x".format(_)).mkString.equals(hashedPassword)
-        }
-    }
-
-    /**
-      * Check password hashed using SCrypt.
-      *
-      * @param password the password to check
-      * @return true if password matches and false if password doesn't match.
-      */
-    private def passwordMatchSCrypt(password: String): Boolean = {
-        import org.springframework.security.crypto.scrypt.SCryptPasswordEncoder
-        userData.password.exists {
-            hashedPassword => new SCryptPasswordEncoder().matches(password, hashedPassword)
         }
     }
 
@@ -315,23 +282,22 @@ case class UserProfileV1(userData: UserDataV1 = UserDataV1(lang = "en"),
                 )
             }
             case UserProfileType.RESTRICTED => {
-                val olduserdata = userData
-                val newuserdata = UserDataV1(
-                    user_id = olduserdata.user_id,
+                val oldUserData = userData
+                val newUserData = UserDataV1(
+                    lang = oldUserData.lang,
+                    user_id = oldUserData.user_id,
                     token = None, // remove token
-                    firstname = olduserdata.firstname,
-                    lastname = olduserdata.lastname,
-                    email = olduserdata.email,
+                    firstname = oldUserData.firstname,
+                    lastname = oldUserData.lastname,
+                    email = oldUserData.email,
                     password = None, // remove password
-                    isActiveUser = olduserdata.isActiveUser,
-                    projects = olduserdata.projects,
-                    lang = olduserdata.lang
+                    isActiveUser = oldUserData.isActiveUser
                 )
 
                 UserProfileV1(
-                    userData = newuserdata,
+                    userData = newUserData,
                     groups = groups,
-                    projects = projects,
+                    projects_info = projects_info,
                     permissionData = permissionData,
                     sessionId = None // removed sessionId
                 )
@@ -340,7 +306,7 @@ case class UserProfileV1(userData: UserDataV1 = UserDataV1(lang = "en"),
                 UserProfileV1(
                     userData = userData,
                     groups = groups,
-                    projects = projects,
+                    projects_info = projects_info,
                     permissionData = permissionData,
                     sessionId = sessionId
                 )
@@ -352,7 +318,7 @@ case class UserProfileV1(userData: UserDataV1 = UserDataV1(lang = "en"),
     def getDigest: String = {
         val md = java.security.MessageDigest.getInstance("SHA-1")
         val time = System.currentTimeMillis().toString
-        val value = (time + userData.toString) getBytes ("UTF-8")
+        val value = (time + userData.toString).getBytes("UTF-8")
         md.digest(value).map("%02x".format(_)).mkString
     }
 
@@ -360,18 +326,9 @@ case class UserProfileV1(userData: UserDataV1 = UserDataV1(lang = "en"),
         UserProfileV1(
             userData = userData,
             groups = groups,
-            projects = projects,
             permissionData = permissionData,
             sessionId = Some(sessionId)
         )
-    }
-
-    def toSourceString: String = {
-        MessageUtil.toSource(userData) + "\n" +
-                MessageUtil.toSource(groups) + "\n" +
-                MessageUtil.toSource(projects) + "\n" +
-                permissionData.toSourceString + "\n" +
-                MessageUtil.toSource(sessionId)
     }
 
     def isAnonymousUser: Boolean = {
@@ -380,6 +337,8 @@ case class UserProfileV1(userData: UserDataV1 = UserDataV1(lang = "en"),
             case None => false
         }
     }
+
+    def toJsValue: JsValue = UserV1JsonProtocol.userProfileV1Format.write(this)
 
 }
 
@@ -407,9 +366,7 @@ case class UserDataV1(user_id: Option[IRI] = None,
                       firstname: Option[String] = None,
                       lastname: Option[String] = None,
                       isActiveUser: Option[Boolean] = None,
-                      projects: Seq[IRI] = Seq.empty[IRI],
-                      lang: String
-                     ) {
+                      lang: String) {
 
     def fullname: Option[String] = {
         (firstname, lastname) match {
@@ -431,8 +388,8 @@ case class UserDataV1(user_id: Option[IRI] = None,
   *
   * Mainly used in combination with the 'ofType' method, to make sure that a request receiving this information
   * also returns the user profile of the correct type. Should be used in cases where we don't want to expose
-  * sensitive information to the outside world. Since in API V1 [[UserDataV1]] is returned with almost every response,
-  * we use 'restricted' in those cases every time.
+  * sensitive information to the outside world. Since in API V1 [[UserDataV1]] is returned with some responses,
+  * we use 'restricted' in those cases.
   */
 object UserProfileType extends Enumeration {
     /* TODO: Extend to incorporate user privacy wishes */
@@ -468,12 +425,12 @@ object UserProfileType extends Enumeration {
   */
 object UserV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with NullOptions with ProjectV1JsonProtocol with PermissionV1JsonProtocol {
 
-    implicit val userDataV1Format: JsonFormat[UserDataV1] = lazyFormat(jsonFormat9(UserDataV1))
+    implicit val userDataV1Format: JsonFormat[UserDataV1] = lazyFormat(jsonFormat8(UserDataV1))
     implicit val userProfileV1Format: JsonFormat[UserProfileV1] = jsonFormat6(UserProfileV1)
     implicit val createUserApiRequestV1Format: RootJsonFormat[CreateUserApiRequestV1] = jsonFormat7(CreateUserApiRequestV1)
     implicit val updateUserApiRequestV1Format: RootJsonFormat[UpdateUserApiRequestV1] = jsonFormat7(UpdateUserApiRequestV1)
     implicit val changeUserPasswordApiRequestV1Format: RootJsonFormat[ChangeUserPasswordApiRequestV1] = jsonFormat2(ChangeUserPasswordApiRequestV1)
     implicit val changeUserStatusApiRequestV1Format: RootJsonFormat[ChangeUserStatusApiRequestV1] = jsonFormat1(ChangeUserStatusApiRequestV1)
-    implicit val userProfileResponseV1Format: RootJsonFormat[UserProfileResponseV1] = jsonFormat2(UserProfileResponseV1)
-    implicit val userOperationResponseV1Format: RootJsonFormat[UserOperationResponseV1] = jsonFormat2(UserOperationResponseV1)
+    implicit val userProfileResponseV1Format: RootJsonFormat[UserProfileResponseV1] = jsonFormat1(UserProfileResponseV1)
+    implicit val userOperationResponseV1Format: RootJsonFormat[UserOperationResponseV1] = jsonFormat1(UserOperationResponseV1)
 }

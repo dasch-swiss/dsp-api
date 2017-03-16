@@ -1,6 +1,6 @@
 /*
  * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
  *
  * This file is part of Knora.
  *
@@ -193,7 +193,6 @@ class StandoffResponderV1 extends ResponderV1 {
                 // checks if the attributes defined for XML elements have cardinalities for the standoff properties defined on the standoff class
                 _ <- getStandoffEntitiesFromMappingV1(mappingXMLToStandoff, userProfile)
 
-
                 // check if the mapping Iri already exists
                 getExistingMappingSparql = queries.sparql.v1.txt.getMapping(
                     triplestore = settings.triplestoreType,
@@ -229,7 +228,7 @@ class StandoffResponderV1 extends ResponderV1 {
 
 
             } yield {
-                CreateMappingResponseV1(mappingIri = mappingIri, userdata = userProfile.userData)
+                CreateMappingResponseV1(mappingIri = mappingIri)
             }
 
 
@@ -425,8 +424,7 @@ class StandoffResponderV1 extends ResponderV1 {
                     } yield GetMappingResponseV1(
                         mappingIri = mappingIri,
                         mapping = mapping,
-                        standoffEntities = entities,
-                        userdata = userProfile.userData
+                        standoffEntities = entities
                     )
 
                 case None =>
@@ -439,8 +437,7 @@ class StandoffResponderV1 extends ResponderV1 {
                     } yield GetMappingResponseV1(
                         mappingIri = mappingIri,
                         mapping = mapping,
-                        standoffEntities = entities,
-                        userdata = userProfile.userData
+                        standoffEntities = entities
                     )
             }
 

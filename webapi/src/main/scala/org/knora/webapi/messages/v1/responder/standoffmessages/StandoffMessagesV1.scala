@@ -1,6 +1,6 @@
 /*
  * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
  *
  * This file is part of Knora.
  *
@@ -24,9 +24,9 @@ import java.util.UUID
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi.messages.v1.responder.ontologymessages.StandoffEntityInfoGetResponseV1
-import org.knora.webapi.{IRI, OntologyConstants}
-import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1, UserV1JsonProtocol}
+import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
+import org.knora.webapi.{IRI, OntologyConstants}
 import spray.json._
 
 import scala.collection.immutable.SortedSet
@@ -41,8 +41,8 @@ sealed trait StandoffResponderRequestV1 extends KnoraRequestV1
   * Represents a request to create a mapping between XML elements and attributes and standoff classes and properties.
   * A successful response will be a [[CreateMappingResponseV1]].
   *
-  * @param xml the mapping in XML.
-  * @param projectIri the IRI of the project the mapping belongs to.
+  * @param xml         the mapping in XML.
+  * @param projectIri  the IRI of the project the mapping belongs to.
   * @param mappingName the name of the mapping to be created.
   * @param userProfile the profile of the user making the request.
   */
@@ -52,9 +52,8 @@ case class CreateMappingRequestV1(xml: String, label: String, projectIri: IRI, m
   * Provides the Iri of the created mapping.
   *
   * @param mappingIri the Iri of the resource (knora-base:XMLToStandoffMapping) representing the mapping that has been created.
-  * @param userdata information about the user that made the request.
   */
-case class CreateMappingResponseV1(mappingIri: IRI, userdata: UserDataV1) extends KnoraResponseV1 {
+case class CreateMappingResponseV1(mappingIri: IRI) extends KnoraResponseV1 {
     def toJsValue = RepresentationV1JsonProtocol.createMappingResponseV1Format.write(this)
 }
 
@@ -72,9 +71,8 @@ case class GetMappingRequestV1(mappingIri: IRI, userProfile: UserProfileV1) exte
   * @param mappingIri       the Iri of the requested mapping.
   * @param mapping          the requested mapping.
   * @param standoffEntities the standoff entities referred to in the mapping.
-  * @param userdata         information about the user that made the request.
   */
-case class GetMappingResponseV1(mappingIri: IRI, mapping: MappingXMLtoStandoff, standoffEntities: StandoffEntityInfoGetResponseV1, userdata: UserDataV1)
+case class GetMappingResponseV1(mappingIri: IRI, mapping: MappingXMLtoStandoff, standoffEntities: StandoffEntityInfoGetResponseV1)
 
 /**
   * Represents a mapping between XML tags and standoff entities (classes and properties).
@@ -92,8 +90,8 @@ case class MappingXMLtoStandoff(namespace: Map[String, Map[String, Map[String, X
 /**
   * Represents a mapping between an XML tag and standoff entities (classes and properties).
   *
-  * @param name the tag name.
-  * @param mapping the corresponding standoff entities.
+  * @param name              the tag name.
+  * @param mapping           the corresponding standoff entities.
   * @param separatorRequired indicates if the element requires a separator in the text once the markup has been converted to standoff.
   */
 case class XMLTag(name: String, mapping: XMLTagToStandoffClass, separatorRequired: Boolean)
@@ -106,9 +104,9 @@ case class XMLTag(name: String, mapping: XMLTagToStandoffClass, separatorRequire
   *
   * attributesToProps = Map("myXMLNamespace" -> Map("myXMLAttributeName" -> "standoffPropertyIri"))
   *
-  * @param standoffClassIri the Iri of the standoff class.
+  * @param standoffClassIri  the Iri of the standoff class.
   * @param attributesToProps a mapping between XML namespaces and attribute names and standoff properties.
-  * @param dataType the data type of the standoff class (e.g., a date).
+  * @param dataType          the data type of the standoff class (e.g., a date).
   */
 case class XMLTagToStandoffClass(standoffClassIri: IRI, attributesToProps: Map[String, Map[String, IRI]] = Map.empty[String, Map[String, IRI]], dataType: Option[XMLStandoffDataTypeClass])
 
@@ -116,15 +114,15 @@ case class XMLTagToStandoffClass(standoffClassIri: IRI, attributesToProps: Map[S
   * Represents a data type standoff class in mapping for an XML element.
   *
   * @param standoffDataTypeClass the data type of the standoff class (e.g., a date).
-  * @param dataTypeXMLAttribute the XML attribute holding the information needed for the standoff class data type (e.g., a date string).
+  * @param dataTypeXMLAttribute  the XML attribute holding the information needed for the standoff class data type (e.g., a date string).
   */
 case class XMLStandoffDataTypeClass(standoffDataTypeClass: StandoffDataTypeClasses.Value, dataTypeXMLAttribute: String)
 
 /**
   * Represents an API request to create a mapping.
   *
-  * @param project_id the project in which the mapping is to be added.
-  * @param label the label describing the mapping.
+  * @param project_id  the project in which the mapping is to be added.
+  * @param label       the label describing the mapping.
   * @param mappingName the name of the mapping (will be appended to the mapping Iri).
   */
 case class CreateMappingApiRequestV1(project_id: IRI, label: String, mappingName: String) {
@@ -241,8 +239,6 @@ object StandoffProperties {
   */
 object RepresentationV1JsonProtocol extends DefaultJsonProtocol with NullOptions with SprayJsonSupport {
 
-    import UserV1JsonProtocol.userDataV1Format
-
     implicit val createMappingApiRequestV1Format: RootJsonFormat[CreateMappingApiRequestV1] = jsonFormat3(CreateMappingApiRequestV1)
-    implicit val createMappingResponseV1Format: RootJsonFormat[CreateMappingResponseV1] = jsonFormat2(CreateMappingResponseV1)
+    implicit val createMappingResponseV1Format: RootJsonFormat[CreateMappingResponseV1] = jsonFormat1(CreateMappingResponseV1)
 }

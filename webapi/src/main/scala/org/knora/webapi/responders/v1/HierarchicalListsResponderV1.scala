@@ -1,6 +1,6 @@
 /*
  * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
  *
  * This file is part of Knora.
  *
@@ -159,14 +159,12 @@ class HierarchicalListsResponderV1 extends ResponderV1 {
             list = pathType match {
                 case PathType.HList =>
                     HListGetResponseV1(
-                        hlist = children,
-                        userdata = userProfile.userData
+                        hlist = children
                     )
 
                 case PathType.Selection =>
                     SelectionGetResponseV1(
-                        selection = children,
-                        userdata = userProfile.userData
+                        selection = children
                     )
             }
 
@@ -255,8 +253,7 @@ class HierarchicalListsResponderV1 extends ResponderV1 {
                     }
             }
         } yield NodePathGetResponseV1(
-            nodelist = makePath(queryNodeIri, nodeMap, parentMap, Nil),
-            userdata = userProfile.userData
+            nodelist = makePath(queryNodeIri, nodeMap, parentMap, Nil)
         )
     }
 }

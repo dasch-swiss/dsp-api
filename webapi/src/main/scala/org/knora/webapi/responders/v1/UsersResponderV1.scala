@@ -1,6 +1,6 @@
 /*
  * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
  *
  * This file is part of Knora.
  *
@@ -26,13 +26,14 @@ import akka.actor.Status
 import akka.pattern._
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.permissionmessages._
+import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoByIRIGetV1, ProjectInfoV1}
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileType.UserProfileType
 import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.messages.v1.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, SparqlUpdateRequest, SparqlUpdateResponse}
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.util.ActorUtil._
-import org.knora.webapi.util.{CacheUtil, KnoraIdUtil}
+import org.knora.webapi.util.{CacheUtil, KnoraIdUtil, MessageUtil}
 import org.springframework.security.crypto.scrypt.SCryptPasswordEncoder
 
 import scala.concurrent.Future
@@ -99,8 +100,8 @@ class UsersResponderV1 extends ResponderV1 {
       */
     private def userProfileByIRIGetRequestV1(userIRI: IRI, profileType: UserProfileType, userProfile: UserProfileV1): Future[UserProfileResponseV1] = {
         for {
-            maybeUP <- userProfileByIRIGetV1(userIRI, profileType)
-            result = maybeUP match {
+            maybeUserProfileToReturn <- userProfileByIRIGetV1(userIRI, profileType)
+            result = maybeUserProfileToReturn match {
                 case Some(up) => UserProfileResponseV1(up, userProfile.userData)
                 case None => throw NotFoundException(s"User '$userIRI' not found")
             }
@@ -141,8 +142,8 @@ class UsersResponderV1 extends ResponderV1 {
       */
     private def userProfileByEmailGetRequestV1(email: String, profileType: UserProfileType, userProfile: UserProfileV1): Future[UserProfileResponseV1] = {
         for {
-            maybeUserProfileV1 <- userProfileByEmailGetV1(email, profileType)
-            result = maybeUserProfileV1 match {
+            maybeUserProfileToReturn <- userProfileByEmailGetV1(email, profileType)
+            result = maybeUserProfileToReturn match {
                 case Some(up: UserProfileV1) => UserProfileResponseV1(up, userProfile.userData)
                 case None => throw NotFoundException(s"User '$email' not found")
             }
@@ -221,7 +222,7 @@ class UsersResponderV1 extends ResponderV1 {
             newUserProfile = maybeNewUserProfile.getOrElse(throw UpdateNotPerformedException(s"User $userIri was not created. Please report this as a possible bug."))
 
             // create the user operation response
-            userOperationResponseV1 = UserOperationResponseV1(newUserProfile, userProfile.userData)
+            userOperationResponseV1 = UserOperationResponseV1(newUserProfile)
 
         } yield userOperationResponseV1
 
@@ -428,9 +429,9 @@ class UsersResponderV1 extends ResponderV1 {
                     case None => // user has not session id, so no cache to update
                 }
 
-                UserOperationResponseV1(updatedUserProfile.ofType(UserProfileType.RESTRICTED), updatedUserProfile.ofType(UserProfileType.RESTRICTED).userData)
+                UserOperationResponseV1(updatedUserProfile.ofType(UserProfileType.RESTRICTED))
             } else {
-                UserOperationResponseV1(updatedUserProfile.ofType(UserProfileType.RESTRICTED), userProfile.userData)
+                UserOperationResponseV1(updatedUserProfile.ofType(UserProfileType.RESTRICTED))
             }
         } yield userOperationResponseV1
     }
@@ -466,36 +467,30 @@ class UsersResponderV1 extends ResponderV1 {
                 case None => Seq.empty[IRI]
             }
 
-            //println(projectIris)
+        val userDataV1 = UserDataV1(
+            lang = groupedUserData.get(OntologyConstants.KnoraBase.PreferredLanguage) match {
+                case Some(langList) => langList.head
+                case None => settings.fallbackLanguage
+            },
+            user_id = Some(returnedUserIri),
+            email = groupedUserData.get(OntologyConstants.KnoraBase.Email).map(_.head),
+            firstname = groupedUserData.get(OntologyConstants.KnoraBase.GivenName).map(_.head),
+            lastname = groupedUserData.get(OntologyConstants.KnoraBase.FamilyName).map(_.head),
+            password = groupedUserData.get(OntologyConstants.KnoraBase.Password).map(_.head),
+            isActiveUser = groupedUserData.get(OntologyConstants.KnoraBase.Status).map(_.head.toBoolean)
+        )
+        //_ = log.debug(s"userDataQueryResponse2UserProfile - userDataV1: ${MessageUtil.toSource(userDataV1)}")
 
-            val userDataV1 = UserDataV1(
-                lang = groupedUserData.get(OntologyConstants.KnoraBase.PreferredLanguage) match {
-                    case Some(langList) => langList.head
-                    case None => settings.fallbackLanguage
-                },
-                user_id = Some(returnedUserIri),
-                email = groupedUserData.get(OntologyConstants.KnoraBase.Email).map(_.head),
-                firstname = groupedUserData.get(OntologyConstants.KnoraBase.GivenName).map(_.head),
-                lastname = groupedUserData.get(OntologyConstants.KnoraBase.FamilyName).map(_.head),
-                password = groupedUserData.get(OntologyConstants.KnoraBase.Password).map(_.head),
-                isActiveUser = groupedUserData.get(OntologyConstants.KnoraBase.Status).map(_.head.toBoolean),
-                projects = projectIris
-            )
-            //_ = log.debug(s"userDataQueryResponse2UserProfile - userDataV1: ${MessageUtil.toSource(userDataV1)}")
+        /* the groups the user is member of (only explicit groups) */
+        val groupIris = groupedUserData.get(OntologyConstants.KnoraBase.IsInGroup) match {
+            case Some(groups) => groups
+            case None => Vector.empty[IRI]
+        }
 
+        // log.debug(s"userDataQueryResponse2UserProfile - groupIris: ${MessageUtil.toSource(groupIris)}")
 
-
-            //_ = log.debug(s"userDataQueryResponse2UserProfile - projectIris: ${MessageUtil.toSource(projectIris)}")
-
-            /* the groups the user is member of (only explicit groups) */
-            val groupIris = groupedUserData.get(OntologyConstants.KnoraBase.IsInGroup) match {
-                case Some(groups) => groups
-                case None => Vector.empty[IRI]
-            }
-            //_ = log.debug(s"userDataQueryResponse2UserProfile - groupIris: ${MessageUtil.toSource(groupIris)}")
-
-            /* the projects for which the user is implicitly considered a member of the 'http://www.knora.org/ontology/knora-base#ProjectAdmin' group */
-            val isInProjectAdminGroups = groupedUserData.getOrElse(OntologyConstants.KnoraBase.IsInProjectAdminGroup, Vector.empty[IRI])
+        /* the projects for which the user is implicitly considered a member of the 'http://www.knora.org/ontology/knora-base#ProjectAdmin' group */
+        val isInProjectAdminGroups = groupedUserData.getOrElse(OntologyConstants.KnoraBase.IsInProjectAdminGroup, Vector.empty[IRI])
 
             /* is the user implicitly considered a member of the 'http://www.knora.org/ontology/knora-base#SystemAdmin' group */
             val isInSystemAdminGroup = groupedUserData.get(OntologyConstants.KnoraBase.IsInSystemAdminGroup).exists(p => p.head.toBoolean)
@@ -508,15 +503,22 @@ class UsersResponderV1 extends ResponderV1 {
                     Future(PermissionDataV1(anonymousUser = false))
                 }
 
-                /* construct the user profile from the different parts */
-                up = UserProfileV1(
-                    userData = userDataV1,
-                    groups = groupIris,
-                    projects = projectIris,
-                    sessionId = None,
-                    permissionData = permissionData
-                )
-                //_ = log.debug(s"Retrieved UserProfileV1: ${up.toString}")
+            projectInfoFutures: Seq[Future[ProjectInfoV1]] = projectIris.map {
+                projectIri => (responderManager ? ProjectInfoByIRIGetV1(iri = projectIri, userProfileV1 = None)).mapTo[ProjectInfoV1]
+            }
+
+            projectInfos: Seq[ProjectInfoV1] <- Future.sequence(projectInfoFutures)
+            projectInfoMap: Map[IRI, ProjectInfoV1] = projectInfos.map(projectInfo => projectInfo.id -> projectInfo).toMap
+
+            /* construct the user profile from the different parts */
+            up = UserProfileV1(
+                userData = userDataV1,
+                groups = groupIris,
+                projects_info = projectInfoMap,
+                sessionId = None,
+                permissionData = permissionData
+            )
+            //_ = log.debug(s"Retrieved UserProfileV1: ${up.toString}")
 
                 result: Option[UserProfileV1] = Some(up.ofType(userProfileType))
             } yield result

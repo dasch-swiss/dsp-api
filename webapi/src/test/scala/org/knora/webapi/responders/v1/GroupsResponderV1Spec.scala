@@ -1,6 +1,6 @@
 /*
  * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
  * This file is part of Knora.
  * Knora is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
@@ -25,7 +25,7 @@ import java.util.UUID
 import akka.actor.Props
 import akka.actor.Status.Failure
 import akka.testkit.{ImplicitSender, TestActorRef}
-import com.typesafe.config.ConfigFactory
+import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.groupmessages._
 import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse}
@@ -38,7 +38,7 @@ import scala.concurrent.duration._
 
 object GroupsResponderV1Spec {
 
-    val config = ConfigFactory.parseString(
+    val config: Config = ConfigFactory.parseString(
         """
          akka.loglevel = "DEBUG"
          akka.stdout-loglevel = "DEBUG"
@@ -50,18 +50,18 @@ object GroupsResponderV1Spec {
   */
 class GroupsResponderV1Spec extends CoreSpec(GroupsResponderV1Spec.config) with ImplicitSender {
 
-    implicit val executionContext = system.dispatcher
+    implicit private val executionContext = system.dispatcher
     private val timeout = 5.seconds
 
-    val imageReviewerGroupInfo = SharedAdminTestData.imageReviewerGroupInfo
-    val imagesProjectAdminGroupInfo = SharedAdminTestData.imagesProjectAdminGroupInfo
-    val imagesProjectMemberGroupInfo = SharedAdminTestData.imagesProjectMemberGroupInfo
+    private val imageReviewerGroupInfo = SharedAdminTestData.imageReviewerGroupInfo
+    private val imagesProjectAdminGroupInfo = SharedAdminTestData.imagesProjectAdminGroupInfo
+    private val imagesProjectMemberGroupInfo = SharedAdminTestData.imagesProjectMemberGroupInfo
 
-    val rootUserProfileV1 = SharedAdminTestData.rootUser
+    private val rootUserProfileV1 = SharedAdminTestData.rootUser
 
-    val actorUnderTest = TestActorRef[GroupsResponderV1]
-    val responderManager = system.actorOf(Props(new ResponderManagerV1 with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
-    val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
+    private val actorUnderTest = TestActorRef[GroupsResponderV1]
+    private val responderManager = system.actorOf(Props(new ResponderManagerV1 with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
+    private val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
 
     val rdfDataObjects = List()
 
@@ -77,7 +77,7 @@ class GroupsResponderV1Spec extends CoreSpec(GroupsResponderV1Spec.config) with 
         "asked about a group identified by 'iri' " should {
             "return group info if the group is known " in {
                 actorUnderTest ! GroupInfoByIRIGetRequest(imageReviewerGroupInfo.id, Some(rootUserProfileV1))
-                expectMsg(GroupInfoResponseV1(imageReviewerGroupInfo, Some(rootUserProfileV1.userData)))
+                expectMsg(GroupInfoResponseV1(imageReviewerGroupInfo))
             }
             "return 'NotFoundException' when the group is unknown " in {
                 actorUnderTest ! GroupInfoByIRIGetRequest("http://data.knora.org/groups/notexisting", Some(rootUserProfileV1))
@@ -87,7 +87,7 @@ class GroupsResponderV1Spec extends CoreSpec(GroupsResponderV1Spec.config) with 
         "asked about a group identified by 'name' " should {
             "return group info if the group is known " in {
                 actorUnderTest ! GroupInfoByNameGetRequest(imagesProjectAdminGroupInfo.belongsToProject, imagesProjectAdminGroupInfo.name, Some(rootUserProfileV1))
-                expectMsg(GroupInfoResponseV1(imagesProjectAdminGroupInfo, Some(rootUserProfileV1.userData)))
+                expectMsg(GroupInfoResponseV1(imagesProjectAdminGroupInfo))
             }
             "return 'NotFoundException' when the group is unknown " in {
                 actorUnderTest ! GroupInfoByNameGetRequest(imagesProjectMemberGroupInfo.belongsToProject, "groupwrong", Some(rootUserProfileV1))
@@ -102,7 +102,7 @@ class GroupsResponderV1Spec extends CoreSpec(GroupsResponderV1Spec.config) with 
                     UUID.randomUUID
                 )
                 expectMsgPF(timeout) {
-                    case GroupOperationResponseV1(newGroupInfo, requestingUserData) => {
+                    case GroupOperationResponseV1(newGroupInfo) => {
                         newGroupInfo.name should equal ("NewGroup")
                         newGroupInfo.description should equal (Some("NewGroupDescription"))
                         newGroupInfo.belongsToProject should equal ("http://data.knora.org/projects/images")

@@ -1,6 +1,6 @@
 /*
  * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
  * This file is part of Knora.
  * Knora is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
@@ -21,7 +21,7 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.{`Set-Cookie`, _}
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import akka.http.scaladsl.unmarshalling.Unmarshal
-import com.typesafe.config.ConfigFactory
+import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi.{E2ESpec, SharedAdminTestData}
 import org.knora.webapi.messages.v1.responder.sessionmessages.{SessionJsonProtocol, SessionResponse}
 import org.knora.webapi.messages.v1.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
@@ -33,7 +33,7 @@ import scala.concurrent.duration._
 
 
 object AuthenticationV1E2ESpec {
-    val config = ConfigFactory.parseString(
+    val config: Config = ConfigFactory.parseString(
         """
           akka.loglevel = "DEBUG"
           akka.stdout-loglevel = "DEBUG"
@@ -47,20 +47,20 @@ object AuthenticationV1E2ESpec {
   */
 class AuthenticationV1E2ESpec extends E2ESpec(AuthenticationV1E2ESpec.config) with SessionJsonProtocol with TriplestoreJsonProtocol {
 
-    implicit def default(implicit system: ActorSystem) = RouteTestTimeout(5.seconds)
+    private implicit def default(implicit system: ActorSystem) = RouteTestTimeout(5.seconds)
 
     private val rdfDataObjects = List(
         RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/incunabula"),
         RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/images")
     )
 
-    val rootEmail = SharedAdminTestData.rootUser.userData.email.get
-    val rootEmailEnc = java.net.URLEncoder.encode(rootEmail, "utf-8")
-    val inactiveUserEmailEnc = java.net.URLEncoder.encode(SharedAdminTestData.inactiveUser.userData.email.get, "utf-8")
-    val wrongEmail = "wrong@example.com"
-    val wrongEmailEnc = java.net.URLEncoder.encode(wrongEmail, "utf-8")
-    val testPass = java.net.URLEncoder.encode("test", "utf-8")
-    val wrongPass = java.net.URLEncoder.encode("wrong", "utf-8")
+    private val rootEmail = SharedAdminTestData.rootUser.userData.email.get
+    private val rootEmailEnc = java.net.URLEncoder.encode(rootEmail, "utf-8")
+    private val inactiveUserEmailEnc = java.net.URLEncoder.encode(SharedAdminTestData.inactiveUser.userData.email.get, "utf-8")
+    private val wrongEmail = "wrong@example.com"
+    private val wrongEmailEnc = java.net.URLEncoder.encode(wrongEmail, "utf-8")
+    private val testPass = java.net.URLEncoder.encode("test", "utf-8")
+    private val wrongPass = java.net.URLEncoder.encode("wrong", "utf-8")
 
     "Load test data" in {
         // send POST to 'v1/store/ResetTriplestoreContent'
@@ -282,8 +282,8 @@ class AuthenticationV1E2ESpec extends E2ESpec(AuthenticationV1E2ESpec.config) wi
             //log.debug("==>> " + responseAs[String])
             // assert(status === StatusCodes.OK)
             val body: String = Await.result(Unmarshal(response.entity).to[String], 1.seconds)
-            assert(body contains "\"password\":null")
-            assert(body contains "\"token\":null")
+            assert(!body.contains("\"password\""))
+            assert(!body.contains("\"token\""))
         }
     }
 }
