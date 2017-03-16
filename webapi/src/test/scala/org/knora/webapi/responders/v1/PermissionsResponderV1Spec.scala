@@ -143,7 +143,7 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
 
             "return the permissions profile (images-reviewer-user)" in {
                 actorUnderTest ! PermissionDataGetV1(
-                    projectIris = SharedAdminTestData.imagesReviewerUser.projects,
+                    projectIris = SharedAdminTestData.imagesReviewerUser.projects_info.keys.toSeq,
                     groupIris = SharedAdminTestData.imagesReviewerUser.groups,
                     isInProjectAdminGroups = Seq.empty[IRI],
                     isInSystemAdminGroup = false

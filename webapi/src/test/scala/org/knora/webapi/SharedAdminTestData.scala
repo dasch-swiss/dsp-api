@@ -232,7 +232,7 @@ object SharedAdminTestData {
             lang = "de"
         ),
         groups = List.empty[IRI],
-        projects = List("http://data.knora.org/projects/images"),
+        projects_info = Map(IMAGES_PROJECT_IRI -> imagesProjectInfo),
         sessionId = None,
         permissionData = PermissionDataV1(
             groupsPerProject = Map(
@@ -257,8 +257,7 @@ object SharedAdminTestData {
             password = Some("$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"), // -> "test"
             token = None,
             isActiveUser = Some(true),
-            lang = "de",
-            projects = List("http://data.knora.org/projects/images")
+            lang = "de"
         ),
         groups = List("http://data.knora.org/groups/images-reviewer"),
         projects_info = Map(IMAGES_PROJECT_IRI -> imagesProjectInfo),
@@ -344,7 +343,7 @@ object SharedAdminTestData {
             lang = "de"
         ),
         groups = Vector.empty[IRI],
-        projects_info = Map("http://data.knora.org/projects/77275339" -> incunabulaProjectInfo),
+        projects_info = Map(INCUNABULA_PROJECT_IRI -> incunabulaProjectInfo),
         sessionId = None,
         permissionData = PermissionDataV1(
             groupsPerProject = Map(
@@ -563,7 +562,7 @@ object SharedAdminTestData {
         groups = Vector.empty[IRI],
         projects_info = Map(BIBLIO_PROJECT_IRI -> biblioProjectInfo),
         sessionId = None,
-        permissionData = PermissionDataV1()
+        permissionData = PermissionDataV1(anonymousUser = false)
     )
 
     /************************************/
