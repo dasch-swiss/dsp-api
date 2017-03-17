@@ -1,5 +1,5 @@
 # Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
-# Tobias Schweizer, André Kilchenmann, and André Fatton.
+# Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
 #
 # This file is part of Knora.
 #
@@ -320,20 +320,6 @@
 
 
 
-###  http://www.knora.org/ontology/knora-base#projectBasepath
-
-:projectBasepath rdf:type owl:DatatypeProperty ;
-
-            rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
-
-            rdfs:comment "Basepath for digital objects which belong to this project"@en ;
-
-            :subjectClassConstraint :knoraProject ;
-
-            :objectDatatypeConstraint xsd:string .
-
-
-
 ###  http://www.knora.org/ontology/knora-base#projectDataGraph
 
 :projectDataGraph rdf:type owl:DatatypeProperty ;
@@ -597,10 +583,6 @@
                                 owl:cardinality "1"^^xsd:nonNegativeInteger
                               ] ,
                               [ rdf:type owl:Restriction ;
-                                owl:onProperty :projectBasepath ;
-                                owl:cardinality "1"^^xsd:nonNegativeInteger
-                              ] ,
-                              [ rdf:type owl:Restriction ;
                                 owl:onProperty :status ;
                                 owl:cardinality "1"^^xsd:nonNegativeInteger
                               ] ,
@@ -674,7 +656,6 @@
             :projectDescription "Knora System Project" ;
             :projectOntologyGraph "http://www.knora.org/ontology/knora-base" ;
             :projectDataGraph "-" ;
-            :projectBasepath "-"^^xsd:string ;
             :status "true"^^xsd:boolean ;
             :hasSelfJoinEnabled "false"^^xsd:boolean .
 

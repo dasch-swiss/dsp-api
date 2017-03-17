@@ -1,0 +1,43 @@
+/*
+ * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
+ * Tobias Schweizer, Sepideh Alassi, André Kilchenmann, and Sepideh Alassi.
+ *
+ * This file is part of Knora.
+ *
+ * Knora is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Knora is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public
+ * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+
+package org.knora.webapi.twirl
+
+import org.knora.webapi._
+import org.knora.webapi.messages.v1.responder.valuemessages.GenerateSparqlToCreateMultipleValuesResponseV1
+
+/**
+  * Represents a resource to be created with its index, label, IRI, permissions, and SPARQL for creating its values
+  *
+  * @param resourceIri                     the IRI of the resource to be created.
+  * @param permissions                     the permissions user has for creating the new resource.
+  * @param generateSparqlForValuesResponse the SPARQL for creating the values of the resource.
+  * @param resourceClassIri                the type of the resource to be created.
+  * @param resourceIndex                   the index of the resource.
+  * @param resourceLabel                   the label of the resource.
+  */
+
+case class ResourceToCreate(resourceIri: IRI,
+                            permissions: String,
+                            generateSparqlForValuesResponse: GenerateSparqlToCreateMultipleValuesResponseV1,
+                            resourceClassIri: IRI,
+                            resourceIndex: Int,
+                            resourceLabel: String)

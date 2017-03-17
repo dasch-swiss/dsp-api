@@ -1,6 +1,6 @@
 @*
  * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ * Tobias Schweizer, Sepideh Alassi, André Kilchenmann, and Sepideh Alassi.
  *
  * This file is part of Knora.
  *
@@ -27,6 +27,7 @@
  * property (as opposed to a new version of an existing value). This template is used in two contexts: when creating a
  * single value in an existing resource, and when creating a new resource with its initial values.
  *
+ * @param resourceIndex the index of the resource
  * @param valueIndex the index of the value in the sequence of values that are being created in the transaction (can
  *                   be 0 if only one value is being created). This index will be used to make SPARQL variable names
  *                   specific to the value being created.
@@ -42,97 +43,103 @@
  *
  * The SPARQL variables `?resource` and `?resourceClass` must already be bound.
  *@
-@(valueIndex: Int,
+@(
+  resourceIndex: Int,
+  valueIndex: Int,
   resourceIri: IRI,
   propertyIri: IRI,
   newValueIri: IRI,
   valueTypeIri: IRI,
   linkUpdates: Seq[SparqlTemplateLinkUpdate],
-  maybeValueHasOrder: Option[Int])
-
-    # Value @valueIndex
+  maybeValueHasOrder: Option[Int],
+  checkObj: Boolean)
+    @index = {@resourceIndex.toString()_@valueIndex.toString()}
+    # Value @index
     # Property: @propertyIri
 
-    BIND(IRI("@propertyIri") AS ?property@valueIndex)
-    BIND(IRI("@newValueIri") AS ?newValue@valueIndex)
-    BIND(IRI("@valueTypeIri") AS ?valueType@valueIndex)
+    BIND(IRI("@propertyIri") AS ?property@index)
+    BIND(IRI("@newValueIri") AS ?newValue@index)
+    BIND(IRI("@valueTypeIri") AS ?valueType@index)
 
     @* Do nothing if the submitted value has the wrong type. *@
 
-    ?property@valueIndex knora-base:objectClassConstraint ?propertyRange@valueIndex .
-    ?valueType@valueIndex rdfs:subClassOf* ?propertyRange@valueIndex .
+    ?property@index knora-base:objectClassConstraint ?propertyRange@index .
+    ?valueType@index rdfs:subClassOf* ?propertyRange@index .
 
     @* Do nothing if neither the resource class nor any of its superclasses has a cardinality for this property. *@
 
-    ?resourceClass rdfs:subClassOf* ?restriction@valueIndex .
-    ?restriction@valueIndex a owl:Restriction .
-    ?restriction@valueIndex owl:onProperty ?property@valueIndex .
+    ?resourceClass@resourceIndex rdfs:subClassOf* ?restriction@index .
+    ?restriction@index a owl:Restriction .
+    ?restriction@index owl:onProperty ?property@index .
+    @if(checkObj==true) {
+        @*
 
-    @*
+        If this template is being used to create a single text value in an existing resource, there may be existing
+        LinkValues that need to be updated for standoff links in the text. In that case, check the state of those
+        LinkValues. For each existing LinkValue, bind a SPARQL variable ?linkValue@linkValueIndex. This is necessary so
+        that a new version of the LinkValue can be inserted and point to the previous one.
 
-    If this template is being used to create a single text value in an existing resource, there may be existing
-    LinkValues that need to be updated for standoff links in the text. In that case, check the state of those
-    LinkValues. For each existing LinkValue, bind a SPARQL variable ?linkValue@linkValueIndex. This is necessary so
-    that a new version of the LinkValue can be inserted and point to the previous one.
+        If this template is being used to create a new resource with its initial values, linkUpdates will be empty, so there
+        is nothing to check here and no SPARQL variables to bind.
 
-    If this template is being used to create a new resource with its initial values, linkUpdates will be empty, so there
-    is nothing to check here and no SPARQL variables to bind.
+        *@
 
-    *@
+        @for((linkUpdate, linkValueIndex) <- linkUpdates.zipWithIndex) {
 
-    @for((linkUpdate, linkValueIndex) <- linkUpdates.zipWithIndex) {
-        @if(linkUpdate.insertDirectLink) {
-            @*
+            @if(linkUpdate.insertDirectLink) {
+                @*
 
-            Do nothing if we were asked to insert a direct link to a target that doesn't exist, is marked as deleted,
-            isn't a knora-base:Resource, or belongs to the wrong OWL class for the link property.
+                Do nothing if we were asked to insert a direct link to a target that doesn't exist, is marked as deleted,
+                isn't a knora-base:Resource, or belongs to the wrong OWL class for the link property.
 
-            *@
+                *@
 
-            <@linkUpdate.linkTargetIri> rdf:type ?linkTargetClass@linkValueIndex ;
-                knora-base:isDeleted false .
+                <@linkUpdate.linkTargetIri> rdf:type ?linkTargetClass@linkValueIndex ;
+                    knora-base:isDeleted false .
 
-            ?linkTargetClass@linkValueIndex rdfs:subClassOf* knora-base:Resource .
-            <@linkUpdate.linkPropertyIri> knora-base:objectClassConstraint ?expectedTargetClass@linkValueIndex .
-            ?linkTargetClass@linkValueIndex rdfs:subClassOf* ?expectedTargetClass@linkValueIndex .
-        }
-
-        @if(linkUpdate.directLinkExists) {
-            @* Make sure the relevant direct link exists between the two resources. *@
-            ?resource <@linkUpdate.linkPropertyIri> <@linkUpdate.linkTargetIri> .
-        } else {
-            @* Make sure there no such direct link. *@
-            MINUS {
-                ?resource <@linkUpdate.linkPropertyIri> <@linkUpdate.linkTargetIri> .
+                ?linkTargetClass@linkValueIndex rdfs:subClassOf* knora-base:Resource .
+                <@linkUpdate.linkPropertyIri> knora-base:objectClassConstraint ?expectedTargetClass@linkValueIndex .
+                ?linkTargetClass@linkValueIndex rdfs:subClassOf* ?expectedTargetClass@linkValueIndex .
             }
-        }
 
-        @if(linkUpdate.linkValueExists) {
-            @*
+            @if(linkUpdate.directLinkExists) {
+                @* Make sure the relevant direct link exists between the two resources. *@
+                ?resource@resourceIndex <@linkUpdate.linkPropertyIri> <@linkUpdate.linkTargetIri> .
+            } else {
+                @* Make sure there no such direct link. *@
+                MINUS {
+                    ?resource@resourceIndex <@linkUpdate.linkPropertyIri> <@linkUpdate.linkTargetIri> .
+                }
+            }
 
-            Make sure a knora-base:LinkValue exists, describing the relevant direct link
-            between the source and target resources, and has the correct reference count.
+            @if(linkUpdate.linkValueExists) {
+                @*
 
-            *@
-            ?resource <@{linkUpdate.linkPropertyIri}Value> ?linkValue@linkValueIndex .
-            ?linkValue@linkValueIndex rdf:type knora-base:LinkValue ;
-                rdf:subject ?resource ;
-                rdf:predicate <@linkUpdate.linkPropertyIri> ;
-                rdf:object <@linkUpdate.linkTargetIri> ;
-                knora-base:valueHasRefCount @linkUpdate.currentReferenceCount ;
-                knora-base:isDeleted false .
+                Make sure a knora-base:LinkValue exists, describing the relevant direct link
+                between the source and target resources, and has the correct reference count.
 
-        } else {
-            @* Make sure there is no such knora-base:LinkValue. *@
-            MINUS {
-                ?resource <@{linkUpdate.linkPropertyIri}Value> ?linkValue@linkValueIndex .
+                *@
+                ?resource@resourceIndex <@{linkUpdate.linkPropertyIri}Value> ?linkValue@linkValueIndex .
                 ?linkValue@linkValueIndex rdf:type knora-base:LinkValue ;
-                    rdf:subject ?resource ;
+                    rdf:subject ?resource@resourceIndex ;
                     rdf:predicate <@linkUpdate.linkPropertyIri> ;
                     rdf:object <@linkUpdate.linkTargetIri> ;
+                    knora-base:valueHasRefCount @linkUpdate.currentReferenceCount ;
                     knora-base:isDeleted false .
+
+            } else {
+                @* Make sure there is no such knora-base:LinkValue. *@
+                MINUS {
+                    ?resource@resourceIndex <@{linkUpdate.linkPropertyIri}Value> ?linkValue@linkValueIndex .
+                    ?linkValue@linkValueIndex rdf:type knora-base:LinkValue ;
+                        rdf:subject ?resource@resourceIndex ;
+                        rdf:predicate <@linkUpdate.linkPropertyIri> ;
+                        rdf:object <@linkUpdate.linkTargetIri> ;
+                        knora-base:isDeleted false .
+                }
             }
         }
+
     }
 
     @*
@@ -152,17 +159,17 @@
     @maybeValueHasOrder match {
         case Some(valueHasOrder) => {
 
-            BIND(@valueHasOrder AS ?nextOrder@valueIndex)
+            BIND(@valueHasOrder AS ?nextOrder@index)
 
         }
 
         case None => {
 
             {
-                SELECT ((MAX(?order@valueIndex)) AS ?maxOrder@valueIndex) (IF(BOUND(?maxOrder@valueIndex), ?maxOrder@valueIndex + 1, 0) AS ?nextOrder@valueIndex)
+                SELECT ((MAX(?order@index)) AS ?maxOrder@index) (IF(BOUND(?maxOrder@index), ?maxOrder@index + 1, 0) AS ?nextOrder@index)
                 WHERE {
-                    <@resourceIri> <@propertyIri> ?otherValue@valueIndex .
-                    ?otherValue@valueIndex knora-base:valueHasOrder ?order@valueIndex ;
+                    <@resourceIri> <@propertyIri> ?otherValue@index .
+                    ?otherValue@index knora-base:valueHasOrder ?order@index ;
                         knora-base:isDeleted false .
                 }
             }

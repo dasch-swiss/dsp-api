@@ -1,6 +1,6 @@
 /*
  * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
  *
  * This file is part of Knora.
  *
@@ -828,8 +828,7 @@ class OntologyResponderV1 extends ResponderV1 {
                     description = resourceClassInfo.getPredicateObject(predicateIri = OntologyConstants.Rdfs.Comment, preferredLangs = Some(userProfile.userData.lang, settings.fallbackLanguage)),
                     iconsrc = resourceClassInfo.getPredicateObject(OntologyConstants.KnoraBase.ResourceIcon),
                     properties = propertyDefinitions
-                ),
-                userProfile.userData
+                )
             )
         } yield resourceTypeResponse
     }
@@ -875,8 +874,7 @@ class OntologyResponderV1 extends ResponderV1 {
             }
 
             response = SubClassesGetResponseV1(
-                subClasses = subClasses,
-                userdata = getSubClassesRequest.userProfile.userData
+                subClasses = subClasses
             )
         } yield response
     }
@@ -893,8 +891,7 @@ class OntologyResponderV1 extends ResponderV1 {
             projectsNamedGraph <- (responderManager ? ProjectsNamedGraphGetV1(userProfile)).mapTo[Seq[NamedGraphV1]]
 
             response = NamedGraphsResponseV1(
-                vocabularies = projectsNamedGraph,
-                userdata = userProfile.userData
+                vocabularies = projectsNamedGraph
             )
         } yield response
     }
@@ -968,14 +965,14 @@ class OntologyResponderV1 extends ResponderV1 {
             case Some(namedGraphIri) => // get the resource types for the given named graph
                 for {
                     resourceTypes <- getResourceTypes(namedGraphIri)
-                } yield ResourceTypesForNamedGraphResponseV1(resourcetypes = resourceTypes, userdata = userProfile.userData)
+                } yield ResourceTypesForNamedGraphResponseV1(resourcetypes = resourceTypes)
 
             case None => // map over all named graphs and collect the resource types
                 for {
                     projectNamedGraphIris: Seq[IRI] <- (responderManager ? ProjectsNamedGraphGetV1(userProfile)).mapTo[Seq[NamedGraphV1]] map (_.map(_.uri))
                     resourceTypesPerProject: Seq[Future[Seq[ResourceTypeV1]]] = projectNamedGraphIris map (iri => getResourceTypes(iri))
                     resourceTypes: Seq[Seq[ResourceTypeV1]] <- Future.sequence(resourceTypesPerProject)
-                } yield ResourceTypesForNamedGraphResponseV1(resourcetypes = resourceTypes.flatten, userdata = userProfile.userData)
+                } yield ResourceTypesForNamedGraphResponseV1(resourcetypes = resourceTypes.flatten)
         }
 
     }
@@ -1040,14 +1037,14 @@ class OntologyResponderV1 extends ResponderV1 {
                 for {
                     propertyTypes <- getPropertiesForNamedGraph(namedGraphIri, userProfile)
 
-                } yield PropertyTypesForNamedGraphResponseV1(properties = propertyTypes, userdata = userProfile.userData)
+                } yield PropertyTypesForNamedGraphResponseV1(properties = propertyTypes)
             case None => // get the property types for all named graphs (collect them by mapping over all named graphs)
 
                 for {
                     projectNamedGraphIris: Seq[IRI] <- (responderManager ? ProjectsNamedGraphGetV1(userProfile)).mapTo[Seq[NamedGraphV1]] map (_.map(_.uri))
                     propertyTypesPerProject: Seq[Future[Seq[PropertyDefinitionInNamedGraphV1]]] = projectNamedGraphIris map (iri => getPropertiesForNamedGraph(iri, userProfile))
                     propertyTypes: Seq[Seq[PropertyDefinitionInNamedGraphV1]] <- Future.sequence(propertyTypesPerProject)
-                } yield PropertyTypesForNamedGraphResponseV1(properties = propertyTypes.flatten, userdata = userProfile.userData)
+                } yield PropertyTypesForNamedGraphResponseV1(properties = propertyTypes.flatten)
         }
 
     }
@@ -1064,7 +1061,7 @@ class OntologyResponderV1 extends ResponderV1 {
             resInfo: ResourceTypeResponseV1 <- getResourceTypeResponseV1(resourceClassIri, userProfile)
             propertyTypes = resInfo.restype_info.properties.toVector
 
-        } yield PropertyTypesForResourceTypeResponseV1(properties = propertyTypes, userdata = userProfile.userData)
+        } yield PropertyTypesForResourceTypeResponseV1(properties = propertyTypes)
 
     }
 

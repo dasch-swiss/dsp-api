@@ -1,6 +1,6 @@
 /*
  * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
  *
  * This file is part of Knora.
  *
@@ -65,7 +65,6 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
     private val timeout = 10.seconds
 
     private val page = ResourceTypeResponseV1(
-        userdata = SharedAdminTestData.incunabulaProjectAdminUser.userData,
         restype_info = ResTypeInfoV1(
             properties = Vector(
                 PropertyDefinitionV1(
@@ -209,7 +208,6 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
     )
 
     private val book = ResourceTypeResponseV1(
-        userdata = SharedAdminTestData.incunabulaProjectAdminUser.userData,
         restype_info = ResTypeInfoV1(
             properties = Vector(
                 PropertyDefinitionV1(
@@ -365,7 +363,6 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
     )
 
     private val region = ResourceTypeResponseV1(
-        userdata = SharedAdminTestData.incunabulaProjectAdminUser.userData,
         restype_info = ResTypeInfoV1(
             properties = Vector(
                 PropertyDefinitionV1(
@@ -425,7 +422,6 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
     )
 
     private val linkObject = ResourceTypeResponseV1(
-        userdata = SharedAdminTestData.incunabulaProjectAdminUser.userData,
         restype_info = ResTypeInfoV1(
             properties = Vector(
                 PropertyDefinitionV1(
@@ -474,7 +470,6 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
     }
 
     private val resourceTypesForNamedGraphIncunabula = ResourceTypesForNamedGraphResponseV1(
-        userdata = SharedAdminTestData.incunabulaProjectAdminUser.userData,
         resourcetypes = Vector(
             ResourceTypeV1(
                 properties = Vector(
@@ -618,7 +613,6 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
     )
 
     private val vocabulariesResponseV1 = NamedGraphsResponseV1(
-        userdata = OntologyResponderV1Spec.userProfileWithEnglish.userData,
         vocabularies = Vector(
             NamedGraphV1( // SystemProject
                 active = true,
@@ -687,7 +681,6 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
     )
 
     private val propertyTypesForNamedGraphIncunabula = PropertyTypesForNamedGraphResponseV1(
-        userdata = SharedAdminTestData.incunabulaProjectAdminUser.userData,
         properties = Vector(
             PropertyDefinitionInNamedGraphV1(
                 gui_name = Some("text"),
@@ -1081,7 +1074,6 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
             expectMsgPF(timeout) {
                 case receivedMsg: NamedGraphsResponseV1 => {
                     checkVocabularies(received = receivedMsg, expected = vocabulariesResponseV1)
-                    receivedMsg.userdata should equal(vocabulariesResponseV1.userdata)
                     receivedMsg.vocabularies should contain allElementsOf(vocabulariesResponseV1.vocabularies)
                 }
             }

@@ -1,6 +1,6 @@
 /*
  * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
  *
  * This file is part of Knora.
  *
@@ -21,6 +21,7 @@
 package org.knora.webapi.e2e.v1
 
 import java.net.URLEncoder
+import java.util.UUID
 
 import akka.actor.{ActorSystem, Props}
 import akka.http.scaladsl.model._
@@ -31,6 +32,7 @@ import akka.util.Timeout
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.ontologymessages.LoadOntologiesRequest
 import org.knora.webapi.messages.v1.responder.resourcemessages.PropsGetForRegionV1
+import org.knora.webapi.messages.v1.responder.resourcemessages._
 import org.knora.webapi.messages.v1.responder.resourcemessages.ResourceV1JsonProtocol._
 import org.knora.webapi.messages.v1.store.triplestoremessages._
 import org.knora.webapi.responders._
@@ -77,6 +79,10 @@ class ResourcesV1R2RSpec extends R2RSpec {
     private val anythingUser = SharedAdminTestData.anythingUser1
     private val anythingUserEmail = anythingUser.userData.email.get
 
+    private val biblioUser = SharedAdminTestData.biblioUser
+    private val biblioUserEmail = biblioUser.userData.email.get
+
+
     private val password = "test"
 
     implicit private val timeout: Timeout = settings.defaultRestoreTimeout
@@ -86,9 +92,11 @@ class ResourcesV1R2RSpec extends R2RSpec {
     implicit val ec = system.dispatcher
 
     private val rdfDataObjects = List(
+
         RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/incunabula"),
         RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/images"),
         RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/anything")
+
     )
 
     "Load test data" in {
@@ -1248,6 +1256,40 @@ class ResourcesV1R2RSpec extends R2RSpec {
 
 
 
+        }
+
+        "create resources from simple xml" in {
+            val params =
+                s"""<xml xmlns:beol="http://www.knora.org/ontology/beol"
+                    |   xmlns:biblio="http://www.knora.org/ontology/biblio">
+                    |   <beol:person id="abel">
+                    | 	    <beol:hasGivenName>Niels Henrik</beol:hasGivenName>
+                    |	      <beol:hasFamilyName>Abel</beol:hasFamilyName>
+                    |	  </beol:person>
+                    |   <biblio:Journal id="math_intelligencer_">
+                    |		    <biblio:hasName>math intelligencer </biblio:hasName>
+                    |   </biblio:Journal>
+                    |   <biblio:JournalArticle id="strings_in_the_16th_and_17th_centuries" >
+                    |       <biblio:publicationHasTitle>Strings in the 16th and 17th Centuries</biblio:publicationHasTitle>
+                    |       <biblio:publicationHasAuthor>
+                    |           <beol:person ref="abel"/>
+                    |       </biblio:publicationHasAuthor>
+                    |       <biblio:isPartOfJournal>
+                    |           <biblio:Journal ref="math_intelligencer_"/>
+                    |       </biblio:isPartOfJournal>
+                    |       <biblio:journalVolume>27</biblio:journalVolume>
+                    |       <biblio:startPage>48</biblio:startPage>
+                    |       <biblio:endPage>73</biblio:endPage>
+                    |       <biblio:publicationHasDate>GREGORIAN:1974</biblio:publicationHasDate>
+                    |    </biblio:JournalArticle>
+                    |</xml>""".stripMargin
+
+            val projectIRI = URLEncoder.encode("http://data.knora.org/projects/DczxPs-sR6aZN91qV92ZmQ", "utf-8")
+
+            Post(s"/v1/resources/xml/$projectIRI", HttpEntity(ContentTypes.`text/xml(UTF-8)`, params)) ~> addCredentials(BasicHttpCredentials(biblioUserEmail, password)) ~> resourcesPath ~> check {
+                assert(status == StatusCodes.OK, response.toString)
+                responseAs[String] should include("createdResources")
+            }
         }
     }
 }

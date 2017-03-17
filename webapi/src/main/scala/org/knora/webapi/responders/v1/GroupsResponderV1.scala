@@ -1,6 +1,6 @@
 /*
  * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
  * This file is part of Knora.
  * Knora is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
@@ -94,11 +94,7 @@ class GroupsResponderV1 extends ResponderV1 {
                     )
             }.toVector
         } yield GroupsResponseV1(
-            groups = groups,
-            userdata = userProfile match {
-                case Some(profile) => Some(profile.userData)
-                case None => None
-            }
+            groups = groups
         )
     }
 
@@ -126,11 +122,7 @@ class GroupsResponderV1 extends ResponderV1 {
             groupInfo = createGroupInfoV1FromGroupResponse(groupResponse = groupResponse.results.bindings, groupIri = groupIRI, userProfile)
 
         } yield GroupInfoResponseV1(
-            group_info = groupInfo,
-            userdata = userProfile match {
-                case Some(profile) => Some(profile.userData)
-                case None => None
-            }
+            group_info = groupInfo
         )
     }
 
@@ -164,11 +156,7 @@ class GroupsResponderV1 extends ResponderV1 {
             hasSelfJoinEnabled = false)
 
         val groupInfoResponse = GroupInfoResponseV1(
-            group_info = groupInfo,
-            userdata = userProfile match {
-                case Some(profile) => Some(profile.userData)
-                case None => None
-            }
+            group_info = groupInfo
         )
 
         Future(groupInfoResponse)
@@ -185,11 +173,7 @@ class GroupsResponderV1 extends ResponderV1 {
             hasSelfJoinEnabled = false)
 
         val groupInfoResponse = GroupInfoResponseV1(
-            group_info = groupInfo,
-            userdata = userProfile match {
-                case Some(profile) => Some(profile.userData)
-                case None => None
-            }
+            group_info = groupInfo
         )
 
         Future(groupInfoResponse)
@@ -222,11 +206,7 @@ class GroupsResponderV1 extends ResponderV1 {
             )
 
             groupInfoResponse = GroupInfoResponseV1(
-                group_info = groupInfo,
-                userdata = userProfile match {
-                    case Some(profile) => Some(profile.userData)
-                    case None => None
-                }
+                group_info = groupInfo
             )
         } yield groupInfoResponse
     }
@@ -291,7 +271,7 @@ class GroupsResponderV1 extends ResponderV1 {
             )
 
             /* create the group operation response */
-            groupOperationResponseV1 = GroupOperationResponseV1(groupInfo, userProfile.userData)
+            groupOperationResponseV1 = GroupOperationResponseV1(groupInfo)
 
         } yield groupOperationResponseV1
 
