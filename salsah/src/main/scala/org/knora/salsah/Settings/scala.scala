@@ -28,6 +28,10 @@ import com.typesafe.config.Config
   * Reads application settings that come from `application.conf`.
   */
 class SettingsImpl(config: Config) extends Extension {
+
+    val hostName = config.getString("app.http.hostname")
+    val httpPort = config.getInt("app.http.http-port")
+    val httpsPort = config.getInt("app.http.https-port")
     val baseKNORAUrl = config.getString("app.http.base-knora-url")
 }
 

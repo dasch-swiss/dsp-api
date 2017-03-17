@@ -29,6 +29,11 @@ object Main extends App {
     implicit val materializer = ActorMaterializer()
     implicit val ec = system.dispatcher
 
+    /**
+      * The application's configuration.
+      */
+    val settings: SettingsImpl = Settings(system)
+
     val log = akka.event.Logging(system, this.getClass)
 
     val handler =
@@ -36,7 +41,7 @@ object Main extends App {
             getFromDirectory("src/public/")
         }
 
-    val (host, port) = ("localhost", 3335)
+    val (host, port) = (settings.hostName, settings.httpPort)
 
     log.info(s"Salsah online at http://$host:$port/index.html")
 
