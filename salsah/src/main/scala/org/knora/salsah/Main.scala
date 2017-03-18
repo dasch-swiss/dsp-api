@@ -38,7 +38,11 @@ object Main extends App {
 
     val handler =
         get {
-            getFromDirectory("src/public/")
+            if (settings.deployed) {
+                getFromDirectory("src/public/")
+            } else {
+                getFromDirectory("public")
+            }
         }
 
     val (host, port) = (settings.hostName, settings.httpPort)

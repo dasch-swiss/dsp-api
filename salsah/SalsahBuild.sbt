@@ -20,8 +20,8 @@ lazy val salsah = (project in file(".")).
         ).
         settings( // enable deployment staging with `sbt stage`
             mappings in Universal ++= {
-                // copy the scripts folder
-                directory("scripts") ++
+                // copy the public folder
+                directory("src/public") ++
                 // copy configuration files to config directory
                 contentOf("src/main/resources").toMap.mapValues("config/" + _)
             },

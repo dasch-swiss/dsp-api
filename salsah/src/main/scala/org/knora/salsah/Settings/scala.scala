@@ -33,6 +33,7 @@ class SettingsImpl(config: Config) extends Extension {
     val httpPort = config.getInt("app.http.http-port")
     val httpsPort = config.getInt("app.http.https-port")
     val baseKNORAUrl = config.getString("app.http.base-knora-url")
+    val deployed = config.getBoolean("app.deployed")
 }
 
 
