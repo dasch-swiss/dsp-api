@@ -36,12 +36,17 @@ object Main extends App {
 
     val log = akka.event.Logging(system, this.getClass)
 
+    log.info(s"Deployed: ${settings.deployed}")
+    val whereami = System.getProperty("user.dir")
+    log.info(s"Working Directory: $whereami")
+
     val handler =
         get {
             if (settings.deployed) {
-                getFromDirectory("src/public/")
+                getFromDirectory("public/")
             } else {
-                getFromDirectory("public")
+                getFromDirectory("src/public/")
+
             }
         }
 
