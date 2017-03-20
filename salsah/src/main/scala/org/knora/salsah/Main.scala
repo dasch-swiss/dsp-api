@@ -43,10 +43,9 @@ object Main extends App {
     val handler =
         get {
             if (settings.deployed) {
-                getFromDirectory("/salsah/public/")
+                getFromDirectory("public/")
             } else {
-                getFromDirectory("src/public/")
-
+                getFromDirectory("src/public")
             }
         }
 
