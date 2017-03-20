@@ -41,14 +41,18 @@ object Main extends App {
     val handler = if (settings.deployed) {
         val workdir = settings.workingDirectory
         log.info(s"Working Directory: $workdir")
+        val publicDir = workdir + "/public"
+        log.info(s"serving files from: $publicDir")
         get {
-            getFromDirectory(s"$workdir/public")
+            getFromDirectory(publicDir)
         }
     } else {
         val wherami = System.getProperty("user.dir")
         log.info(s"user.dir: $wherami")
+        val publicDir = wherami + "/src/public"
+        log.info(s"serving files from: $publicDir")
         get {
-            getFromDirectory(s"$wherami/src/public")
+            getFromDirectory(publicDir)
         }
     }
 
