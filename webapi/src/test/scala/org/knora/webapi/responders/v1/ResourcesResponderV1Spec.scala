@@ -664,21 +664,6 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
         }
     }
 
-    private def compareResourceCompoundContextResponses(received: ResourceContextResponseV1, expected: ResourceContextResponseV1): Unit = {
-        val receivedContext = received.resource_context
-        val expectedContext = expected.resource_context
-
-        assert(receivedContext.firstprop == expectedContext.firstprop, "firstprop does not match")
-        assert(receivedContext.context == expectedContext.context, "context does not match")
-        assert(receivedContext.preview == expectedContext.preview, "preview does not match")
-        assert(receivedContext.locations.nonEmpty, "no locations given")
-        assert(receivedContext.locations.get.size == 402, "the length of locations did not match")
-        assert(receivedContext.locations.get.head == ResourcesResponderV1SpecContextData.expectedFirstLocationOfBookResourceContextResponse, "first location did not match")
-        assert(receivedContext.canonical_res_id == expectedContext.canonical_res_id, "canonical_res_id does not match")
-        assert(receivedContext.region == expectedContext.region, "region does not match")
-        assert(receivedContext.res_id == expectedContext.res_id, "res_id does not match")
-    }
-
     private def compareResourcePartOfContextResponses(received: ResourceContextResponseV1, expected: ResourceContextResponseV1): Unit = {
         val receivedContext = received.resource_context
         val expectedContext = expected.resource_context
@@ -905,7 +890,9 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
             actorUnderTest ! ResourceContextGetRequestV1(iri = "http://data.knora.org/c5058f3a", resinfo = true, userProfile = SharedAdminTestData.incunabulaProjectAdminUser)
 
             expectMsgPF(timeout) {
-                case response: ResourceContextResponseV1 => compareResourceCompoundContextResponses(received = response, expected = ResourcesResponderV1SpecContextData.expectedBookResourceContextResponse)
+                case response: ResourceContextResponseV1 =>
+                    val responseAsJson = response.toJsValue
+                    assert(responseAsJson == ResourcesResponderV1SpecContextData.expectedBookResourceContextResponse, "book context response did not match")
             }
         }
 
