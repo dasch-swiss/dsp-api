@@ -37,24 +37,26 @@ object Main extends App {
     val log = akka.event.Logging(system, this.getClass)
 
     log.info(s"Deployed: ${settings.deployed}")
-    val whereami = System.getProperty("user.dir")
-    log.info(s"Working Directory: $whereami")
 
-    val handler =
+    val handler = if (settings.deployed) {
+        val workdir = settings.workingDirectory
+        log.info(s"Working Directory: $workdir")
         get {
-            if (settings.deployed) {
-                getFromDirectory("public/")
-            } else {
-                getFromDirectory("src/public")
-            }
+            getFromDirectory(s"$workdir/public")
         }
+    } else {
+        val wherami = System.getProperty("user.dir")
+        log.info(s"user.dir: $wherami")
+        get {
+            getFromDirectory(s"$wherami/src/public")
+        }
+    }
 
     val (host, port) = (settings.hostName, settings.httpPort)
 
     log.info(s"Salsah online at http://$host:$port/index.html")
 
-    val bindingFuture: Future[ServerBinding] =
-        Http().bindAndHandle(handler, host, port)
+    val bindingFuture: Future[ServerBinding] =  Http().bindAndHandle(handler, host, port)
 
     bindingFuture onFailure {
         case ex: Exception =>
