@@ -455,9 +455,9 @@ class PermissionsResponderV1 extends ResponderV1 {
         private def deleteAdministrativePermissionV1(administrativePermissionIri: IRI, userProfileV1: UserProfileV1): Future[AdministrativePermissionOperationResponseV1] = ???
     */
 
-    /** ***********************************************************************/
-    /* OBJECT ACCESS PERMISSIONS                                             */
-    /** ***********************************************************************/
+    ///////////////////////////////////////////////////////////////////////////
+    // OBJECT ACCESS PERMISSIONS
+    ///////////////////////////////////////////////////////////////////////////
 
     /**
       * Gets all permissions attached to the resource.
