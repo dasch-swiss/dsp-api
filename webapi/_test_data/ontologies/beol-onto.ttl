@@ -580,6 +580,8 @@
                           owl:minCardinality "0"^^xsd:nonNegativeInteger
                         ];
 
+        knora-base:resourceIcon "letter.png" ;
+
         rdfs:label "Brief"@de ,
                    "Lettre"@fr ,
                    "Letter"@en ;
@@ -667,6 +669,9 @@
                       owl:onProperty :comment ;
                       owl:minCardinality "0"^^xsd:nonNegativeInteger
                     ] ;
+
+    knora-base:resourceIcon "person.png" ;
+
 
     rdfs:label "Person"@de ,
                "Personne"@fr ,
