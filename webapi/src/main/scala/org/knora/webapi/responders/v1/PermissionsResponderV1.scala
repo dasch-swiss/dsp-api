@@ -134,7 +134,7 @@ class PermissionsResponderV1 extends ResponderV1 {
             /* we instead inject the relevant information in defaultObjectAccessPermissionsStringForEntityGetV1 */
             allGroups = groups ++ projectMembers ++ projectAdmins ++ systemAdmin
             groupsPerProject = allGroups.groupBy(_._1).map { case (k, v) => (k, v.map(_._2)) }
-            _ = log.debug(s"permissionsProfileGetV1 - groupsPerProject: ${MessageUtil.toSource(groupsPerProject)}")
+            // _ = log.debug(s"permissionsProfileGetV1 - groupsPerProject: ${MessageUtil.toSource(groupsPerProject)}")
 
             /* retrieve the administrative permissions for each group per project the user is member of */
             administrativePermissionsPerProjectFuture: Future[Map[IRI, Set[PermissionV1]]] = if (projectIris.nonEmpty) {
