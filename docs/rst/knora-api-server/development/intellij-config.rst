@@ -21,7 +21,12 @@
 Setup IntelliJ for development of Knora
 =======================================
 
--  Download and install `IntelliJ <https://www.jetbrains.com/idea/>`__
+.. contents:: :local:
+
+Create an IntelliJ Project for the Knora API Server
+---------------------------------------------------
+
+-  Download and install `IntelliJ IDEA`_.
 -  Follow the installation procedure and install the  ``Scala plugin``
 
 .. figure:: figures/install-scala-plugin.png
@@ -29,7 +34,7 @@ Setup IntelliJ for development of Knora
 
    screenshot 'Install Scala Plugin'
 
--  Import Knora's project: ``Import Project`` -> Choose the option ``module SBT``
+-  Import the ``webapi`` directory in the Knora source tree: ``Import Project`` -> Choose the option ``module SBT``
 
 .. figure:: figures/import-from-sbt.png
    :alt: screenshot 'import existing SBT project'
@@ -50,8 +55,8 @@ Twirl
 By default, Intellij excludes some folders like the twirl template files. To include them, go to ``Project Structure`` and remove ``target/scala-2.1*/twirl`` from excluded folders.
 Then Intellij will correctly resolve the references to the template files.
 
-How to use IntelliJ IDEA's Debugger with the Knora API Server
--------------------------------------------------------------
+Use IntelliJ IDEA's Debugger with the Knora API Server
+------------------------------------------------------
 
 -  Create an application configuration:
 
@@ -93,3 +98,64 @@ How to use IntelliJ IDEA's Debugger with the Knora API Server
    :alt: screenshot 'set a breakpoint'
 
    screenshot 'set a breakpoint'
+
+Profile Knora Using VisualVM in IntelliJ
+----------------------------------------
+
+First, download and install VisualVM_.
+
+Then, in IntelliJ, under Preferences -> Plugins, search for the `VisualVM
+Launcher`_, click on "Search in repositories", install the plugin, and restart
+IntelliJ. IntelliJ's toolbar should now contain a button with a green triangle
+on an orange circle, with the tooltip "Run with VisualVM":
+
+.. figure:: figures/launch-visualvm.png
+   :alt: screenshot 'Run with VisualVM button'
+
+   screenshot 'Run with VisualVM button'
+
+You can use this button to run the class ``org.knora.webapi.Main`` and profile it in VisualVM.
+The first time you do this, IntelliJ will ask you for the path to the VisualVM executable.
+On macOS this is ``/Applications/VisualVM.app/Contents/MacOS/visualvm``.
+
+When VisualVM starts, it will open a window like this:
+
+.. figure:: figures/visualvm-overview.png
+   :alt: screenshot 'VisualVM overview'
+
+   screenshot 'VisualVM overview'
+
+To use the profiler, click on the "Sampler" tab, then on the "CPU" button:
+
+.. figure:: figures/visualvm-sampler.png
+   :alt: screenshot 'VisualVM sampler'
+
+   screenshot 'VisualVM sampler'
+
+Now run some Knora API operations that you're interested in profiling,
+preferably several times to allow the sampler to collect enough data. Then
+click on the "Snapshot" button:
+
+.. figure:: figures/visualvm-snapshot-button.png
+   :alt: screenshot 'VisualVM snapshot button'
+
+   screenshot 'VisualVM snapshot button'
+
+In the snapshot, you'll see a list of threads that were profiled:
+
+.. figure:: figures/visualvm-snapshot.png
+   :alt: screenshot 'VisualVM snapshot'
+
+   screenshot 'VisualVM snapshot'
+
+You can then browse the call tree for each thread, looking for Knora method
+calls, to see the total time spent in each method:
+
+.. figure:: figures/visualvm-call-tree.png
+   :alt: screenshot 'VisualVM call tree'
+
+   screenshot 'VisualVM call tree'
+
+.. _IntelliJ IDEA: https://www.jetbrains.com/idea/
+.. _VisualVM: https://visualvm.github.io/
+.. _VisualVM Launcher: https://plugins.jetbrains.com/plugin/7115-visualvm-launcher
