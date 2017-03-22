@@ -29,8 +29,8 @@ function getUrlVars()
 }
 
 
-var API_URL = 'http://webapi:3333';
-var SIPI_URL = 'http://sipi:1024';
+var API_URL = 'http://localhost:3333';
+var SIPI_URL = 'http://localhost:1024';
 var SIPI_LOGIN_ROUTE = '/Knora_login';
 var SIPI_LOGOUT_ROUTE = '/Knora_logout';
 
