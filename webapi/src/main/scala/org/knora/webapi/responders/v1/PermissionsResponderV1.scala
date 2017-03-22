@@ -39,6 +39,10 @@ class PermissionsResponderV1 extends ResponderV1 {
     // Creates IRIs for new Knora user objects.
     val knoraIdUtil = new KnoraIdUtil
 
+    /* Entity types used to more clearly distinguish what kind of entity is meant */
+    val RESOURCE_ENTITY_TYPE = "resource"
+    val PROPERTY_ENTITY_TYPE = "property"
+
     /**
       * Receives a message extending [[org.knora.webapi.messages.v1.responder.permissionmessages.PermissionsResponderRequestV1]].
       * If a serious error occurs (i.e. an error that isn't the client's fault), this
@@ -57,8 +61,8 @@ class PermissionsResponderV1 extends ResponderV1 {
         case DefaultObjectAccessPermissionsForProjectGetRequestV1(projectIri, userProfileV1) => future2Message(sender(), defaultObjectAccessPermissionsForProjectGetRequestV1(projectIri, userProfileV1), log)
         case DefaultObjectAccessPermissionForIriGetRequestV1(defaultObjectAccessPermissionIri, userProfileV1) => future2Message(sender(), defaultObjectAccessPermissionForIriGetRequestV1(defaultObjectAccessPermissionIri, userProfileV1), log)
         case DefaultObjectAccessPermissionGetRequestV1(projectIri, groupIri, resourceClassIri, propertyIri, userProfile) => future2Message(sender(), defaultObjectAccessPermissionGetRequestV1(projectIri, groupIri, resourceClassIri, propertyIri, userProfile), log)
-        case DefaultObjectAccessPermissionsStringForResourceClassGetV1(projectIri, resourceClassIri, permissionData) => future2Message(sender(), defaultObjectAccessPermissionsStringForEntityGetV1(projectIri, Some(resourceClassIri), None, permissionData), log)
-        case DefaultObjectAccessPermissionsStringForPropertyGetV1(projectIri, propertyTypeIri, permissionData) => future2Message(sender(), defaultObjectAccessPermissionsStringForEntityGetV1(projectIri, None, Some(propertyTypeIri), permissionData), log)
+        case DefaultObjectAccessPermissionsStringForResourceClassGetV1(projectIri, resourceClassIri, permissionData) => future2Message(sender(), defaultObjectAccessPermissionsStringForEntityGetV1(projectIri, resourceClassIri, None, RESOURCE_ENTITY_TYPE, permissionData), log)
+        case DefaultObjectAccessPermissionsStringForPropertyGetV1(projectIri, resourceClassIri, propertyTypeIri, permissionData) => future2Message(sender(), defaultObjectAccessPermissionsStringForEntityGetV1(projectIri, resourceClassIri, Some(propertyTypeIri), PROPERTY_ENTITY_TYPE, permissionData), log)
         //case DefaultObjectAccessPermissionCreateRequestV1(newDefaultObjectAccessPermissionV1, userProfileV1) => future2Message(sender(), createDefaultObjectAccessPermissionV1(newDefaultObjectAccessPermissionV1, userProfileV1), log)
         //case DefaultObjectAccessPermissionDeleteRequestV1(defaultObjectAccessPermissionIri, userProfileV1) => future2Message(sender(), deleteDefaultObjectAccessPermissionV1(defaultObjectAccessPermissionIri, userProfileV1), log)
         //case TemplatePermissionsCreateRequestV1(projectIri, permissionsTemplate, userProfileV1) => future2Message(sender(), templatePermissionsCreateRequestV1(projectIri, permissionsTemplate, userProfileV1), log)
@@ -683,7 +687,11 @@ class PermissionsResponderV1 extends ResponderV1 {
     }
 
     /**
-      * Gets a single default object access permission identified by project and either group / resource class / property.
+      * Gets a single default object access permission identified by project and either:
+      * - group
+      * - resource class
+      * - resource class and property
+      * - property
       *
       * @param projectIri the project's IRI.
       * @param groupIri the group's IRI.
@@ -696,9 +704,9 @@ class PermissionsResponderV1 extends ResponderV1 {
             // check if necessary field are not empty.
             _ <- Future(if (projectIri.isEmpty) throw BadRequestException("Project cannot be empty"))
 
-            // check supplied parameters.
-            parametersSupplied = List(groupIri, resourceClassIri, propertyIri).flatten.size
-            _ = if (parametersSupplied != 1) throw BadRequestException("Either groupIri or resourceClassIri or propertyTypeIri can be supplied")
+            /* check supplied parameters */
+            _ = if(groupIri.isDefined && resourceClassIri.isDefined) throw BadRequestException("Not allowed to supply groupIri and resourceClassIri together")
+            _ = if(groupIri.isDefined && propertyIri.isDefined) throw BadRequestException("Not allowed to supply groupIri and propertyIri together")
 
             sparqlQueryString = queries.sparql.v1.txt.getDefaultObjectAccessPermission(
                 triplestore = settings.triplestoreType,
@@ -826,14 +834,15 @@ class PermissionsResponderV1 extends ResponderV1 {
       * @param permissionData the permission data of the user for which the default object access permissions are requested.
       * @return an optional string with object access permission statements
       */
-    def defaultObjectAccessPermissionsStringForEntityGetV1(projectIri: IRI, resourceClassIri: Option[IRI], propertyIri: Option[IRI], permissionData: PermissionDataV1): Future[DefaultObjectAccessPermissionsStringResponseV1] = {
+    def defaultObjectAccessPermissionsStringForEntityGetV1(projectIri: IRI, resourceClassIri: IRI, propertyIri: Option[IRI], entityType: String, permissionData: PermissionDataV1): Future[DefaultObjectAccessPermissionsStringResponseV1] = {
 
         //log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - projectIRI: $projectIRI, resourceClassIRI: $resourceClassIRI, propertyIRI: $propertyIRI, permissionData:$permissionData")
         for {
             // check if necessary field are defined.
             _ <- Future(if (projectIri.isEmpty) throw BadRequestException("Project cannot be empty"))
-            _ = if (resourceClassIri.isEmpty && propertyIri.isEmpty) throw BadRequestException("Either resourceClassIri or propertyTypeIri need to be supplied")
-            _ = if (resourceClassIri.isDefined && propertyIri.isDefined) throw BadRequestException("Not allowed to supply both resourceClassIri and propertyTypeIri")
+            _ = if (entityType == PROPERTY_ENTITY_TYPE && propertyIri.isEmpty) {
+                    throw BadRequestException("PropertyTypeIri needs to be supplied")
+            }
             _ = if (permissionData.anonymousUser) throw BadRequestException("Anonymous Users are not allowed.")
 
 
@@ -869,7 +878,7 @@ class PermissionsResponderV1 extends ResponderV1 {
 
 
             /* Get the default object access permissions defined on the resource class/property for the current project */
-            defaultPermissionsOnProjectEntityOption: Option[DefaultObjectAccessPermissionV1] <- defaultObjectAccessPermissionGetV1(projectIri = projectIri, groupIri = None, resourceClassIri = resourceClassIri, propertyIri = propertyIri)
+            defaultPermissionsOnProjectEntityOption: Option[DefaultObjectAccessPermissionV1] <- defaultObjectAccessPermissionGetV1(projectIri = projectIri, groupIri = None, resourceClassIri = Some(resourceClassIri), propertyIri = propertyIri)
             defaultPermissionsOnProjectEntity: Set[PermissionV1] = defaultPermissionsOnProjectEntityOption match {
                 case Some(doap) => doap.hasPermissions
                 case None => Set.empty[PermissionV1]
@@ -884,7 +893,7 @@ class PermissionsResponderV1 extends ResponderV1 {
 
             /* Get the default object access permissions defined on the resource class/property inside the SystemProject */
             systemProject = OntologyConstants.KnoraBase.SystemProject
-            defaultPermissionsOnSystemEntityOption <- defaultObjectAccessPermissionGetV1(projectIri = systemProject, groupIri = None, resourceClassIri = resourceClassIri, propertyIri = propertyIri)
+            defaultPermissionsOnSystemEntityOption <- defaultObjectAccessPermissionGetV1(projectIri = systemProject, groupIri = None, resourceClassIri = Some(resourceClassIri), propertyIri = propertyIri)
             defaultPermissionsOnSystemEntity: Set[PermissionV1] = defaultPermissionsOnSystemEntityOption match {
                 case Some(doap) => doap.hasPermissions
                 case None => Set.empty[PermissionV1]

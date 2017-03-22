@@ -194,13 +194,14 @@ case class DefaultObjectAccessPermissionForIriGetRequestV1(defaultObjectAccessPe
 case class DefaultObjectAccessPermissionsStringForResourceClassGetV1(projectIri: IRI, resourceClassIri: IRI, permissionData: PermissionDataV1) extends PermissionsResponderRequestV1
 
 /**
-  * A message that requests default object access permissions for a resource class inside a specific project. A successful response will be a
+  * A message that requests default object access permissions for a resource class / property combination inside a specific project. A successful response will be a
   * [[DefaultObjectAccessPermissionsStringResponseV1]].
   *
   * @param projectIri  the project for which the default object permissions need to be retrieved.
+  * @param resourceClassIri the resource class which can also cary default object access permissions.
   * @param propertyIri the property type which can also cary default object access permissions.
   */
-case class DefaultObjectAccessPermissionsStringForPropertyGetV1(projectIri: IRI, propertyIri: IRI, permissionData: PermissionDataV1) extends PermissionsResponderRequestV1
+case class DefaultObjectAccessPermissionsStringForPropertyGetV1(projectIri: IRI, resourceClassIri: IRI, propertyIri: IRI, permissionData: PermissionDataV1) extends PermissionsResponderRequestV1
 
 /**
   * Create a single [[DefaultObjectAccessPermissionV1]].
