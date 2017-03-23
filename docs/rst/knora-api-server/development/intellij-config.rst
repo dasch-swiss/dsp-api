@@ -30,6 +30,7 @@ Create an IntelliJ Project for the Knora API Server
 -  Follow the installation procedure and install the  ``Scala plugin``
 
 .. figure:: figures/install-scala-plugin.png
+   :width: 100%
    :alt: screenshot 'Install Scala Plugin'
 
    screenshot 'Install Scala Plugin'
@@ -37,6 +38,7 @@ Create an IntelliJ Project for the Knora API Server
 -  Import the ``webapi`` directory in the Knora source tree: ``Import Project`` -> Choose the option ``module SBT``
 
 .. figure:: figures/import-from-sbt.png
+   :width: 100%
    :alt: screenshot 'import existing SBT project'
 
    screenshot 'import existing SBT project'
@@ -44,6 +46,7 @@ Create an IntelliJ Project for the Knora API Server
 -  make sure that the tab size is set correctly to **4 spaces** (so you can use automatic code reformatting): ``Preferences -> Code Style -> Scala``:
 
 .. figure:: figures/setting-tab-space.png
+   :width: 100%
    :alt: screenshot 'setting tab size'
 
    screenshot 'setting tab size'
@@ -61,25 +64,21 @@ Use IntelliJ IDEA's Debugger with the Knora API Server
 -  Create an application configuration:
 
 .. figure:: figures/edit-config.png
+   :width: 100%
    :alt: screenshot 'edit application config'
 
    screenshot 'edit application config'
 
 .. figure:: figures/create-app.png
+   :width: 100%
    :alt: screenshot 'create application configuration'
 
    screenshot 'create application configuration'
 
-   Fill in the configuration details, increase the default memory settings in the ``VM options`` to avoid errors like:
-
-::
-
-    Information:15.03.17 11:33 - Compilation completed with 1 error and 2 warnings in 1m 8s 286ms
-    Error:scalac: Error while emitting org/knora/webapi/responders/v1/ResourcesResponderV1SpecContextData$
-    Java heap space
-    Warning:scalac: java.lang.OutOfMemoryError: Java heap space
+   Fill in the configuration details:
 
 .. figure:: figures/app-config-setup.png
+   :width: 100%
    :alt: screenshot 'change application configuration'
 
    screenshot 'change application configuration'
@@ -88,6 +87,7 @@ Use IntelliJ IDEA's Debugger with the Knora API Server
    debugger attached
 
 .. figure:: figures/debug.png
+   :width: 100%
    :alt: screenshot 'debug'
 
    screenshot 'debug'
@@ -95,6 +95,7 @@ Use IntelliJ IDEA's Debugger with the Knora API Server
 -  Click on a line-number to add a breakpoint
 
 .. figure:: figures/breakpoint.png
+   :width: 100%
    :alt: screenshot 'set a breakpoint'
 
    screenshot 'set a breakpoint'
@@ -121,6 +122,7 @@ On macOS this is ``/Applications/VisualVM.app/Contents/MacOS/visualvm``.
 When VisualVM starts, it will open a window like this:
 
 .. figure:: figures/visualvm-overview.png
+   :width: 100%
    :alt: screenshot 'VisualVM overview'
 
    screenshot 'VisualVM overview'
@@ -128,6 +130,7 @@ When VisualVM starts, it will open a window like this:
 To use the profiler, click on the "Sampler" tab, then on the "CPU" button:
 
 .. figure:: figures/visualvm-sampler.png
+   :width: 100%
    :alt: screenshot 'VisualVM sampler'
 
    screenshot 'VisualVM sampler'
@@ -137,6 +140,7 @@ preferably several times to allow the sampler to collect enough data. Then
 click on the "Snapshot" button:
 
 .. figure:: figures/visualvm-snapshot-button.png
+   :width: 100%
    :alt: screenshot 'VisualVM snapshot button'
 
    screenshot 'VisualVM snapshot button'
@@ -144,6 +148,7 @@ click on the "Snapshot" button:
 In the snapshot, you'll see a list of threads that were profiled:
 
 .. figure:: figures/visualvm-snapshot.png
+   :width: 100%
    :alt: screenshot 'VisualVM snapshot'
 
    screenshot 'VisualVM snapshot'
@@ -152,6 +157,7 @@ You can then browse the call tree for each thread, looking for Knora method
 calls, to see the total time spent in each method:
 
 .. figure:: figures/visualvm-call-tree.png
+   :width: 100%
    :alt: screenshot 'VisualVM call tree'
 
    screenshot 'VisualVM call tree'
