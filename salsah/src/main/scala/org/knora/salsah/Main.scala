@@ -21,8 +21,11 @@ import akka.http.scaladsl.Http
 import akka.http.scaladsl.Http.ServerBinding
 import akka.http.scaladsl.server.Directives._
 import akka.stream.ActorMaterializer
+import spray.http
 
 import scala.concurrent.Future
+import sys.process._
+
 
 object Main extends App {
     implicit val system = ActorSystem("salsah-system")
@@ -39,14 +42,31 @@ object Main extends App {
     log.info(s"Deployed: ${settings.deployed}")
 
     val handler = if (settings.deployed) {
+        // deployed state
         val workdir = settings.workingDirectory
         log.info(s"Working Directory: $workdir")
         val publicDir = workdir + "/public"
         log.info(s"serving files from: $publicDir")
+
+        // rewriting webapi url in 00_init_javascript.js
+        val webapiUrl = settings.webapiUrl
+        val webapiUrlRewriteCommand = Seq("sed", "-ie", s"'s|http://localhost:3333|$webapiUrl|g'", s"$publicDir/js/00_init_javascript.js")
+        log.info("webapiUrlRewriteCommand: {}", webapiUrlRewriteCommand.toString)
+        val webapiExitCode = webapiUrlRewriteCommand.!
+        log.info("Rewriting webapi url to: {} with result: {}", webapiUrl,  webapiExitCode.toString)
+
+        // rewriting sipi url in 00_init_javascript.js
+        val sipiUrl = settings.sipiUrl
+        val sipiUrlRewriteCommand = Seq(s"sed", "-ie", s"'s|http://localhost:1024|$sipiUrl|g'", s"$publicDir/js/00_init_javascript.js")
+        log.info("sipiUrlRewriteCommand: {}", sipiUrlRewriteCommand)
+        val sipiExitCode = sipiUrlRewriteCommand.!
+        log.info("Rewriting sipi url to: {} with result: {}", sipiUrl, sipiExitCode.toString)
+
         get {
             getFromDirectory(publicDir)
         }
     } else {
+        // undeployed state (default when run from sbt)
         val wherami = System.getProperty("user.dir")
         log.info(s"user.dir: $wherami")
         val publicDir = wherami + "/src/public"

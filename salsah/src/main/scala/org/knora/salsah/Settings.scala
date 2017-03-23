@@ -35,6 +35,10 @@ class SettingsImpl(config: Config) extends Extension {
     val baseKNORAUrl = config.getString("app.http.base-knora-url")
     val deployed = config.getBoolean("app.deployed")
     val workingDirectory = config.getString("app.workdir")
+
+    // Javascript Configuration
+    val webapiUrl = config.getString("app.jsconf.webapi-url")
+    val sipiUrl = config.getString("app.jsconf.sipi-url")
 }
 
 
