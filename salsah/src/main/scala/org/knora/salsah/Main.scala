@@ -16,16 +16,16 @@
 
 package org.knora.salsah
 
+import java.io.{File, PrintWriter}
+
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.Http.ServerBinding
 import akka.http.scaladsl.server.Directives._
 import akka.stream.ActorMaterializer
-import spray.http
 
 import scala.concurrent.Future
-import sys.process._
-
+import scala.io.Source
 
 object Main extends App {
     implicit val system = ActorSystem("salsah-system")
@@ -48,19 +48,32 @@ object Main extends App {
         val publicDir = workdir + "/public"
         log.info(s"serving files from: $publicDir")
 
-        // rewriting webapi url in 00_init_javascript.js
+        // rewriting webapi and sipi url in 00_init_javascript.js
         val webapiUrl = settings.webapiUrl
-        val webapiUrlRewriteCommand = Seq("sed", "-ie", s"'s|http://localhost:3333|$webapiUrl|g'", s"$publicDir/js/00_init_javascript.js")
-        log.info("webapiUrlRewriteCommand: {}", webapiUrlRewriteCommand.toString)
-        val webapiExitCode = webapiUrlRewriteCommand.!
-        log.info("Rewriting webapi url to: {} with result: {}", webapiUrl,  webapiExitCode.toString)
+        log.info("webapiUrl: {}", webapiUrl)
 
-        // rewriting sipi url in 00_init_javascript.js
         val sipiUrl = settings.sipiUrl
-        val sipiUrlRewriteCommand = Seq(s"sed", "-ie", s"'s|http://localhost:1024|$sipiUrl|g'", s"$publicDir/js/00_init_javascript.js")
-        log.info("sipiUrlRewriteCommand: {}", sipiUrlRewriteCommand)
-        val sipiExitCode = sipiUrlRewriteCommand.!
-        log.info("Rewriting sipi url to: {} with result: {}", sipiUrl, sipiExitCode.toString)
+        log.info("sipiUrl: {}", sipiUrl)
+
+        val originalFile = new File(s"$publicDir/js/00_init_javascript.js")  // Original File
+        val tempFile = new File("/tmp/00_init_javascript.js") // Temporary File
+        val w = new PrintWriter(tempFile)
+
+        Source.fromFile(originalFile).getLines
+                .map { x =>
+                    if(x.contains("http://localhost:3333")) {
+                        s"var API_URL = 'http://$webapiUrl';"
+                    } else if (x.contains("http://localhost:1024")) {
+                        s"var SIPI_URL = 'http://$sipiUrl';"
+                    } else {
+                        x
+                    }
+                }
+                .foreach(x => w.println(x))
+
+        w.close()
+        //tempFile.renameTo(originalFile)
+
 
         get {
             getFromDirectory(publicDir)
