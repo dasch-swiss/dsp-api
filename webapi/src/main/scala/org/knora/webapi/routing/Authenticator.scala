@@ -20,6 +20,8 @@
 
 package org.knora.webapi.routing
 
+import java.util.UUID
+
 import akka.actor.ActorSystem
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.{HttpCookie, HttpCookiePair}
@@ -27,7 +29,6 @@ import akka.http.scaladsl.server.RequestContext
 import akka.pattern._
 import akka.util.{ByteString, Timeout}
 import com.typesafe.scalalogging.Logger
-import org.knora.webapi
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_PATH
@@ -229,7 +230,7 @@ trait Authenticator {
                             log.debug("Supplied credentials pass authentication, get the UserProfileV1")
 
                             val userProfileV1 = getUserProfileByEmail(e)
-                            log.debug (s"I got a UserProfileV1 '${userProfileV1.toString}', which means that the password is a match")
+                            log.debug(s"I got a UserProfileV1 '${userProfileV1.toString}', which means that the password is a match")
                             /* we return the userProfileV1 without sensitive information */
                             userProfileV1.ofType(UserProfileType.RESTRICTED)
 
@@ -264,7 +265,6 @@ object Authenticator {
     val log = Logger(LoggerFactory.getLogger(this.getClass))
 
 
-
     /**
       * Tries to extract and then authenticate the credentials.
       *
@@ -287,7 +287,7 @@ object Authenticator {
       * password matches. Caches the user profile after successful authentication under a generated session id if 'session=true', and
       * returns that said session id (or 0 if no session is needed).
       *
-      * @param email the email of the user
+      * @param email    the email of the user
       * @param password the password of th user
       * @param session  a [[Boolean]] if set true then a session id will be created and the user profile cached
       * @param system   the current [[ActorSystem]]
@@ -310,7 +310,7 @@ object Authenticator {
             // create session id and cache user profile under this id
             log.debug("authenticateCredentials - password matched")
             if (session) {
-                val sId = System.currentTimeMillis().toString
+                val sId = UUID.randomUUID().toString
                 CacheUtil.put(AUTHENTICATION_CACHE_NAME, sId, userProfileV1)
                 sId
             } else {
@@ -438,6 +438,7 @@ object Authenticator {
             case nfe: NotFoundException => throw BadCredentialsException(s"$BAD_CRED_USER_NOT_FOUND: ${nfe.message}")
         }
 
+        // TODO: return the future here instead of using Await.
         Await.result(userProfileV1Future, Duration(3, SECONDS))
     }
 
@@ -476,6 +477,7 @@ object Authenticator {
                         }
                     }
 
+                    // TODO: return the future here instead of using Await.
                     Await.result(userProfileV1Future, Duration(3, SECONDS))
             }
         } else {
