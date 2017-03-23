@@ -32,7 +32,11 @@ class SettingsImpl(config: Config) extends Extension {
     val hostName = config.getString("app.http.hostname")
     val httpPort = config.getInt("app.http.http-port")
     val httpsPort = config.getInt("app.http.https-port")
+
+    // used for testing
     val baseKNORAUrl = config.getString("app.http.base-knora-url")
+
+    // used in deployment
     val deployed = config.getBoolean("app.deployed")
     val workingDirectory = config.getString("app.workdir")
 
