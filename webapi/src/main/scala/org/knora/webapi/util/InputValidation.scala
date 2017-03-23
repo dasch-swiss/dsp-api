@@ -156,8 +156,6 @@ object InputValidation {
     def toDate(s: String, errorFun: () => Nothing): String = {
         // TODO: how to deal with dates BC -> ERA
 
-        // TODO: how to treat invalid dates (e.g. 29 February)
-
         // TODO: import calendars instead of hardcoding them
 
         // Calendar:YYYY[-MM[-DD]][:YYYY[-MM[-DD]]]
@@ -175,7 +173,9 @@ object InputValidation {
             precision_separator +
             "\\d{1,2})?)?)?$" // day 2
 
-        // if the pattern doesn't match (=> None), the date string is invalid
+        // if the pattern doesn't match (=> None), the date string is formally invalid
+        // Please note that this is a mere formal validation,
+        // the actual validity check is done in `DateUtilV1.dateString2DateRange`
         pattern.r.findFirstIn(s) match {
             case Some(value) => value
             case None => errorFun() // calling this function throws an error
