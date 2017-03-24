@@ -108,8 +108,9 @@ class DrawingsGodsV1Spec extends CoreSpec(DrawingsGodsV1Spec.config) with Triple
         }
 
         "return correct drawings-gods:hasLastname property permissions string for drawings-gods-test-ddd1 user" in {
+            val personResourceClass = "http://www.knora.org/ontology/drawings-gods#Person"
             val hasLastnameProperty = "http://www.knora.org/ontology/drawings-gods#hasLastname"
-            responderManager ! DefaultObjectAccessPermissionsStringForPropertyGetV1(drawingsGodsProjectIri, hasLastnameProperty, ddd1.get.permissionData)
+            responderManager ! DefaultObjectAccessPermissionsStringForPropertyGetV1(drawingsGodsProjectIri, personResourceClass, hasLastnameProperty, ddd1.get.permissionData)
             expectMsg(DefaultObjectAccessPermissionsStringResponseV1("CR http://data.knora.org/groups/drawings-gods-admin|D http://data.knora.org/groups/drawings-gods-snf-team"))
         }
 

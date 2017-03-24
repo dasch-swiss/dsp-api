@@ -59,6 +59,9 @@ WHERE {
 
     @if(maybePropertyIri.nonEmpty) {
         ?s knora-base:forProperty <@maybePropertyIri.get> .
+    } else {
+        OPTIONAL { ?s knora-base:forProperty ?prop } .
+        FILTER ( !bound(?prop) )
     }
 
     ?s ?p ?o .

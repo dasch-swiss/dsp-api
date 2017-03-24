@@ -228,6 +228,9 @@
                       knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser"^^xsd:string .
 
 
+
+
+
 ##########################################################
 #
 # BEOL Project Permissions

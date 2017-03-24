@@ -715,7 +715,7 @@ class PermissionsResponderV1 extends ResponderV1 {
                 maybeResourceClassIri = resourceClassIri,
                 maybePropertyIri = propertyIri
             ).toString()
-            //_ = log.debug(s"defaultObjectAccessPermissionGetV1 - query: $sparqlQueryString")
+            _ = log.debug(s"defaultObjectAccessPermissionGetV1 - query: $sparqlQueryString")
 
             permissionQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResponse]
             //_ = log.debug(s"defaultObjectAccessPermissionGetV1 - result: ${MessageUtil.toSource(permissionQueryResponse)}")
@@ -824,6 +824,55 @@ class PermissionsResponderV1 extends ResponderV1 {
     }
 
     /**
+      * Convenience method returning a set with default object access permissions defined on a resource class.
+      * @param projectIri the IRI of the project.
+      * @param resourceClassIri the resource's class IRI
+      * @return a set of [[PermissionV1]].
+      */
+    def defaultObjectAccessPermissionsForResourceClassGetV1(projectIri: IRI, resourceClassIri: IRI): Future[Set[PermissionV1]] = {
+        for {
+            defaultPermissionsOption: Option[DefaultObjectAccessPermissionV1] <- defaultObjectAccessPermissionGetV1(projectIri = projectIri, groupIri = None, resourceClassIri = Some(resourceClassIri), propertyIri = None)
+            defaultPermissions: Set[PermissionV1] = defaultPermissionsOption match {
+                case Some(doap) => doap.hasPermissions
+                case None => Set.empty[PermissionV1]
+            }
+        } yield defaultPermissions
+    }
+
+    /**
+      * Convenience method returning a set with default object access permissions defined on a resource class / property combination.
+      * @param projectIri the IRI of the project.
+      * @param resourceClassIri the resource's class IRI
+      * @param propertyIri the property's IRI.
+      * @return a set of [[PermissionV1]].
+      */
+    def defaultObjectAccessPermissionsForResourceClassPropertyGetV1(projectIri: IRI, resourceClassIri: IRI, propertyIri: IRI): Future[Set[PermissionV1]] = {
+        for {
+            defaultPermissionsOption: Option[DefaultObjectAccessPermissionV1] <- defaultObjectAccessPermissionGetV1(projectIri = projectIri, groupIri = None, resourceClassIri = Some(resourceClassIri), propertyIri = Some(propertyIri))
+            defaultPermissions: Set[PermissionV1] = defaultPermissionsOption match {
+                case Some(doap) => doap.hasPermissions
+                case None => Set.empty[PermissionV1]
+            }
+        } yield defaultPermissions
+    }
+
+    /**
+      * Convenience method returning a set with default object access permissions defined on a property.
+      * @param projectIri the IRI of the project.
+      * @param propertyIri the property's IRI.
+      * @return a set of [[PermissionV1]].
+      */
+    def defaultObjectAccessPermissionsForPropertyGetV1(projectIri: IRI, propertyIri: IRI): Future[Set[PermissionV1]] = {
+        for {
+            defaultPermissionsOption: Option[DefaultObjectAccessPermissionV1] <- defaultObjectAccessPermissionGetV1(projectIri = projectIri, groupIri = None, resourceClassIri = None, propertyIri = Some(propertyIri))
+            defaultPermissions: Set[PermissionV1] = defaultPermissionsOption match {
+                case Some(doap) => doap.hasPermissions
+                case None => Set.empty[PermissionV1]
+            }
+        } yield defaultPermissions
+    }
+
+    /**
       * Returns a string containing default object permissions statements ready for usage during creation of a new resource.
       * The permissions include any default object access permissions defined for the resource class and on any groups the
       * user is member of.
@@ -871,44 +920,97 @@ class PermissionsResponderV1 extends ResponderV1 {
             defaultPermissionsOnProjectAdminGroup: Set[PermissionV1] <- defaultObjectAccessPermissionsForGroupsGetV1(projectIri, List(OntologyConstants.KnoraBase.ProjectAdmin))
             _ = if (defaultPermissionsOnProjectAdminGroup.nonEmpty) {
                 if (extendedUserGroups.contains(OntologyConstants.KnoraBase.ProjectAdmin) || extendedUserGroups.contains(OntologyConstants.KnoraBase.SystemAdmin)) {
-                        permissionsListBuffer += (("ProjectAdmin", defaultPermissionsOnProjectAdminGroup))
+                    permissionsListBuffer += (("ProjectAdmin", defaultPermissionsOnProjectAdminGroup))
+                    log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnProjectAdminGroup: $defaultPermissionsOnProjectAdminGroup")
                 }
             }
-            //_ = log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnProjectAdminGroup: $defaultPermissionsOnProjectAdminGroup")
 
-
-            /* Get the default object access permissions defined on the resource class/property for the current project */
-            defaultPermissionsOnProjectEntityOption: Option[DefaultObjectAccessPermissionV1] <- defaultObjectAccessPermissionGetV1(projectIri = projectIri, groupIri = None, resourceClassIri = Some(resourceClassIri), propertyIri = propertyIri)
-            defaultPermissionsOnProjectEntity: Set[PermissionV1] = defaultPermissionsOnProjectEntityOption match {
-                case Some(doap) => doap.hasPermissions
-                case None => Set.empty[PermissionV1]
-            }
-            _ = if (defaultPermissionsOnProjectEntity.nonEmpty) {
-                if (permissionsListBuffer.isEmpty) {
-                    permissionsListBuffer += (("ProjectEntity", defaultPermissionsOnProjectEntity))
+            /* Get the default object access permissions defined on the resource class for the current project */
+            defaultPermissionsOnProjectResourceClass: Set[PermissionV1] <- {
+                if (entityType == RESOURCE_ENTITY_TYPE && permissionsListBuffer.isEmpty) {
+                    defaultObjectAccessPermissionsForResourceClassGetV1(projectIri = projectIri, resourceClassIri = resourceClassIri)
+                } else {
+                    Future(Set.empty[PermissionV1])
                 }
             }
-            //_ = log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnProjectEntity: $defaultPermissionsOnProjectEntity")
-
-
-            /* Get the default object access permissions defined on the resource class/property inside the SystemProject */
-            systemProject = OntologyConstants.KnoraBase.SystemProject
-            defaultPermissionsOnSystemEntityOption <- defaultObjectAccessPermissionGetV1(projectIri = systemProject, groupIri = None, resourceClassIri = Some(resourceClassIri), propertyIri = propertyIri)
-            defaultPermissionsOnSystemEntity: Set[PermissionV1] = defaultPermissionsOnSystemEntityOption match {
-                case Some(doap) => doap.hasPermissions
-                case None => Set.empty[PermissionV1]
+            _ = if (defaultPermissionsOnProjectResourceClass.nonEmpty) {
+                permissionsListBuffer += (("ProjectResourceClass", defaultPermissionsOnProjectResourceClass))
+                log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnProjectResourceClass: {}", defaultPermissionsOnProjectResourceClass)
             }
-            _ = if (defaultPermissionsOnSystemEntity.nonEmpty) {
-                if (permissionsListBuffer.isEmpty) {
-                    permissionsListBuffer += (("SystemEntity", defaultPermissionsOnSystemEntity))
+
+            /* Get the default object access permissions defined on the resource class inside the SystemProject */
+            defaultPermissionsOnSystemResourceClass: Set[PermissionV1] <- {
+                if (entityType == RESOURCE_ENTITY_TYPE && permissionsListBuffer.isEmpty) {
+                    val systemProject = OntologyConstants.KnoraBase.SystemProject
+                    defaultObjectAccessPermissionsForResourceClassGetV1(projectIri = systemProject, resourceClassIri = resourceClassIri)
+                } else {
+                    Future(Set.empty[PermissionV1])
                 }
             }
-            //_ = log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnSystemEntity: $defaultPermissionsOnSystemEntity")
+            _ = if (defaultPermissionsOnSystemResourceClass.nonEmpty) {
+                permissionsListBuffer += (("SystemResourceClass", defaultPermissionsOnSystemResourceClass))
+                log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnSystemResourceClass: {}", defaultPermissionsOnSystemResourceClass)
+            }
+
+
+            /* project resource class / property combination */
+            defaultPermissionsOnProjectResourceClassProperty: Set[PermissionV1] <- {
+                if (entityType == PROPERTY_ENTITY_TYPE && permissionsListBuffer.isEmpty) {
+                    defaultObjectAccessPermissionsForResourceClassPropertyGetV1(projectIri = projectIri, resourceClassIri = resourceClassIri, propertyIri = propertyIri.getOrElse(throw BadRequestException("PropertyIri needs to be supplied.")))
+                } else {
+                    Future(Set.empty[PermissionV1])
+                }
+            }
+            _= if (defaultPermissionsOnProjectResourceClassProperty.nonEmpty) {
+                permissionsListBuffer += (("ProjectResourceClassProperty", defaultPermissionsOnProjectResourceClassProperty))
+                log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnProjectResourceClassProperty: {}", defaultPermissionsOnProjectResourceClassProperty)
+            }
+
+            /* system resource class / property combination */
+            defaultPermissionsOnSystemResourceClassProperty: Set[PermissionV1] <- {
+                if (entityType == PROPERTY_ENTITY_TYPE && permissionsListBuffer.isEmpty) {
+                    val systemProject = OntologyConstants.KnoraBase.SystemProject
+                    defaultObjectAccessPermissionsForResourceClassPropertyGetV1(projectIri = systemProject, resourceClassIri = resourceClassIri, propertyIri = propertyIri.getOrElse(throw BadRequestException("PropertyIri needs to be supplied.")))
+                } else {
+                    Future(Set.empty[PermissionV1])
+                }
+            }
+            _= if (defaultPermissionsOnSystemResourceClassProperty.nonEmpty) {
+                permissionsListBuffer += (("SystemResourceClassProperty", defaultPermissionsOnSystemResourceClassProperty))
+                log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnSystemResourceClassProperty: {}", defaultPermissionsOnSystemResourceClassProperty)
+            }
+
+            /* project property */
+            defaultPermissionsOnProjectProperty: Set[PermissionV1] <- {
+                if (entityType == PROPERTY_ENTITY_TYPE && permissionsListBuffer.isEmpty) {
+                    defaultObjectAccessPermissionsForPropertyGetV1(projectIri = projectIri, propertyIri = propertyIri.getOrElse(throw BadRequestException("PropertyIri needs to be supplied.")))
+                } else {
+                    Future(Set.empty[PermissionV1])
+                }
+            }
+            _= if (defaultPermissionsOnProjectProperty.nonEmpty) {
+                permissionsListBuffer += (("ProjectProperty", defaultPermissionsOnProjectProperty))
+                log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnProjectProperty: {}", defaultPermissionsOnProjectProperty)
+            }
+
+            /* system property */
+            defaultPermissionsOnSystemProperty: Set[PermissionV1] <- {
+                if (entityType == PROPERTY_ENTITY_TYPE && permissionsListBuffer.isEmpty) {
+                    val systemProject = OntologyConstants.KnoraBase.SystemProject
+                    defaultObjectAccessPermissionsForPropertyGetV1(projectIri = systemProject, propertyIri = propertyIri.getOrElse(throw BadRequestException("PropertyIri needs to be supplied.")))
+                } else {
+                    Future(Set.empty[PermissionV1])
+                }
+            }
+            _= if (defaultPermissionsOnSystemProperty.nonEmpty) {
+                permissionsListBuffer += (("SystemProperty", defaultPermissionsOnSystemProperty))
+                log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnSystemProperty: {}", defaultPermissionsOnSystemProperty)
+            }
 
 
             /* Get the default object access permissions for custom groups (all groups other than the built-in groups) */
             defaultPermissionsOnCustomGroups: Set[PermissionV1] <- {
-                if (extendedUserGroups.nonEmpty) {
+                if (extendedUserGroups.nonEmpty && permissionsListBuffer.isEmpty) {
                     val customGroups = extendedUserGroups diff List(OntologyConstants.KnoraBase.KnownUser, OntologyConstants.KnoraBase.ProjectMember, OntologyConstants.KnoraBase.ProjectAdmin, OntologyConstants.KnoraBase.SystemAdmin)
                     if (customGroups.nonEmpty) {
                         defaultObjectAccessPermissionsForGroupsGetV1(projectIri, customGroups)
@@ -921,35 +1023,41 @@ class PermissionsResponderV1 extends ResponderV1 {
                 }
             }
             _ = if (defaultPermissionsOnCustomGroups.nonEmpty) {
-                if (permissionsListBuffer.isEmpty) {
-                    permissionsListBuffer += (("CustomGroups", defaultPermissionsOnCustomGroups))
-                }
+                permissionsListBuffer += (("CustomGroups", defaultPermissionsOnCustomGroups))
+                log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnCustomGroups: $defaultPermissionsOnCustomGroups")
             }
-            //_ = log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnCustomGroups: $defaultPermissionsOnCustomGroups")
 
 
             /* Get the default object access permissions for the knora-base:ProjectMember group */
-            defaultPermissionsOnProjectMemberGroup: Set[PermissionV1] <- defaultObjectAccessPermissionsForGroupsGetV1(projectIri, List(OntologyConstants.KnoraBase.ProjectMember))
-            _ = if (defaultPermissionsOnProjectMemberGroup.nonEmpty) {
+            defaultPermissionsOnProjectMemberGroup: Set[PermissionV1] <- {
                 if (permissionsListBuffer.isEmpty) {
-                    if (extendedUserGroups.contains(OntologyConstants.KnoraBase.ProjectMember) || extendedUserGroups.contains(OntologyConstants.KnoraBase.SystemAdmin)) {
-                        permissionsListBuffer += (("ProjectMember", defaultPermissionsOnProjectMemberGroup))
-                    }
+                    defaultObjectAccessPermissionsForGroupsGetV1(projectIri, List(OntologyConstants.KnoraBase.ProjectMember))
+                } else {
+                    Future(Set.empty[PermissionV1])
                 }
             }
-            //_ = log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnProjectMemberGroup: $defaultPermissionsOnProjectMemberGroup")
+            _ = if (defaultPermissionsOnProjectMemberGroup.nonEmpty) {
+                if (extendedUserGroups.contains(OntologyConstants.KnoraBase.ProjectMember) || extendedUserGroups.contains(OntologyConstants.KnoraBase.SystemAdmin)) {
+                    permissionsListBuffer += (("ProjectMember", defaultPermissionsOnProjectMemberGroup))
+                }
+                log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnProjectMemberGroup: $defaultPermissionsOnProjectMemberGroup")
+            }
 
 
             /* Get the default object access permissions for the knora-base:KnownUser group */
-            defaultPermissionsOnKnownUserGroup: Set[PermissionV1] <- defaultObjectAccessPermissionsForGroupsGetV1(projectIri, List(OntologyConstants.KnoraBase.KnownUser))
-            _ = if (defaultPermissionsOnKnownUserGroup.nonEmpty) {
+            defaultPermissionsOnKnownUserGroup: Set[PermissionV1] <- {
                 if (permissionsListBuffer.isEmpty) {
-                    if (extendedUserGroups.contains(OntologyConstants.KnoraBase.KnownUser)) {
-                        permissionsListBuffer += (("KnownUser", defaultPermissionsOnKnownUserGroup))
-                    }
+                    defaultObjectAccessPermissionsForGroupsGetV1(projectIri, List(OntologyConstants.KnoraBase.KnownUser))
+                } else {
+                    Future(Set.empty[PermissionV1])
                 }
             }
-            //_ = log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnKnownUserGroup: $defaultPermissionsOnKnownUserGroup")
+            _ = if (defaultPermissionsOnKnownUserGroup.nonEmpty) {
+                if (extendedUserGroups.contains(OntologyConstants.KnoraBase.KnownUser)) {
+                    permissionsListBuffer += (("KnownUser", defaultPermissionsOnKnownUserGroup))
+                    log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnKnownUserGroup: $defaultPermissionsOnKnownUserGroup")
+                }
+            }
 
             /* Create permissions string */
             result = permissionsListBuffer.length match {
@@ -959,7 +1067,7 @@ class PermissionsResponderV1 extends ResponderV1 {
                 case 0 => throw BadRequestException("The resulting request would lead to an empty permissions string, which is not allowed. Are all the necessary default object access permissions defined?")
                 case _ => throw AssertionException("The permissions list buffer holding default object permissions should never be larger then 1.")
             }
-            _ = log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - project: $projectIri, precedence: ${permissionsListBuffer.head._1}, defaultObjectAccessPermissions: $result")
+            _ = log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - project: {}, precedence: {}, defaultObjectAccessPermissions: {}", projectIri, permissionsListBuffer.head._1, result)
         } yield DefaultObjectAccessPermissionsStringResponseV1(result)
     }
 

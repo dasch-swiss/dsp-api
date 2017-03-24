@@ -64,6 +64,7 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
     private val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
 
     private val rdfDataObjects = List(
+        RdfDataObject(path = "_test_data/responders.v1.PermissionsResponderV1Spec/additional_permissions-data.ttl", name = "http://www.knora.org/data/permissions"),
         RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/incunabula"),
         RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/anything")
     )
@@ -359,7 +360,10 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
 
             "return the default object access permissions 'string' for the 'knora-base:hasStillImageFileValue' property (system property)" in {
                 actorUnderTest ! DefaultObjectAccessPermissionsStringForPropertyGetV1(
-                    projectIri = INCUNABULA_PROJECT_IRI, propertyIri = OntologyConstants.KnoraBase.HasStillImageFileValue, incunabulaProjectAdminUser.permissionData
+                    projectIri = INCUNABULA_PROJECT_IRI,
+                    resourceClassIri = OntologyConstants.KnoraBase.StillImageRepresentation,
+                    propertyIri = OntologyConstants.KnoraBase.HasStillImageFileValue,
+                    incunabulaProjectAdminUser.permissionData
                 )
                 expectMsg(DefaultObjectAccessPermissionsStringResponseV1("M knora-base:Creator,knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser"))
             }
@@ -380,16 +384,32 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
 
             "return the default object access permissions 'string' for the 'images:jahreszeit' property" in {
                 actorUnderTest ! DefaultObjectAccessPermissionsStringForPropertyGetV1(
-                    projectIri = IMAGES_PROJECT_IRI, propertyIri = "http://www.knora.org/ontology/images#jahreszeit", imagesUser01.permissionData
+                    projectIri = IMAGES_PROJECT_IRI,
+                    resourceClassIri = "http://www.knora.org/ontology/images#bild",
+                    propertyIri = "http://www.knora.org/ontology/images#jahreszeit",
+                    imagesUser01.permissionData
                 )
                 expectMsg(DefaultObjectAccessPermissionsStringResponseV1("CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser"))
             }
 
             "return the default object access permissions 'string' for the 'anything:hasInterval' property" in {
                 actorUnderTest ! DefaultObjectAccessPermissionsStringForPropertyGetV1(
-                    projectIri = ANYTHING_PROJECT_IRI, propertyIri = "http://www.knora.org/ontology/anything#hasInterval", anythingUser1.permissionData
+                    projectIri = ANYTHING_PROJECT_IRI,
+                    resourceClassIri = "http://www.knora.org/ontology/anything#Thing",
+                    propertyIri = "http://www.knora.org/ontology/anything#hasInterval",
+                    anythingUser1.permissionData
                 )
                 expectMsg(DefaultObjectAccessPermissionsStringResponseV1("CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser"))
+            }
+
+            "return the default object access permissions 'string' for the 'anything:Thing' and 'anything:hasText' property" in {
+                actorUnderTest ! DefaultObjectAccessPermissionsStringForPropertyGetV1(
+                    projectIri = ANYTHING_PROJECT_IRI,
+                    resourceClassIri = "http://www.knora.org/ontology/anything#Thing",
+                    propertyIri = "http://www.knora.org/ontology/anything#hasText",
+                    anythingUser1.permissionData
+                )
+                expectMsg(DefaultObjectAccessPermissionsStringResponseV1("CR knora-base:Creator"))
             }
 
             "return the default object access permissions 'string' for the 'anything:Thing' resource class for the root user (system admin and not member of project)" in {

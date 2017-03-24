@@ -22,6 +22,7 @@ package org.knora.webapi.responders.v1
 
 import akka.actor.Status
 import akka.pattern._
+import org.apache.jena.sparql.function.library.leviathan.log
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.ontologymessages.{Cardinality, EntityInfoGetRequestV1, EntityInfoGetResponseV1}
 import org.knora.webapi.messages.v1.responder.permissionmessages.{DefaultObjectAccessPermissionsStringForPropertyGetV1, DefaultObjectAccessPermissionsStringResponseV1}
@@ -154,7 +155,7 @@ class ValuesResponderV1 extends ResponderV1 {
                 getIncoming = false
             )).mapTo[ResourceFullResponseV1]
 
-            resourcePermissionCode = resourceFullResponse.resdata.flatMap(resdata => resdata.rights)
+            resourcePermissionCode: Option[Int] = resourceFullResponse.resdata.flatMap(resdata => resdata.rights)
 
             _ = if (!PermissionUtilV1.impliesV1(userHasPermissionCode = resourcePermissionCode, userNeedsPermission = OntologyConstants.KnoraBase.ModifyPermission)) {
                 throw ForbiddenException(s"User $userIri does not have permission to modify resource ${createValueRequest.resourceIri}")
@@ -185,11 +186,15 @@ class ValuesResponderV1 extends ResponderV1 {
             }
 
             // Get the IRI of project of the containing resource.
-            projectIri = resourceFullResponse.resinfo.getOrElse(throw InconsistentTriplestoreDataException(s"Did not find resource info for resource ${createValueRequest.resourceIri}")).project_id
+            projectIri: IRI = resourceFullResponse.resinfo.getOrElse(throw InconsistentTriplestoreDataException(s"Did not find resource info for resource ${createValueRequest.resourceIri}")).project_id
+
+            // Get the resource class of the containing resource
+            resourceClassIri: IRI = resourceFullResponse.resinfo.getOrElse(throw InconsistentTriplestoreDataException(s"Did not find resource info for resource ${createValueRequest.resourceIri}")).restype_id
 
             defaultObjectAccessPermissions <- {
                 responderManager ? DefaultObjectAccessPermissionsStringForPropertyGetV1(
                     projectIri = projectIri,
+                    resourceClassIri = resourceClassIri,
                     propertyIri = createValueRequest.propertyIri,
                     createValueRequest.userProfile.permissionData
                 )
@@ -393,6 +398,7 @@ class ValuesResponderV1 extends ResponderV1 {
                         val defaultObjectAccessPermissionsF = {
                             responderManager ? DefaultObjectAccessPermissionsStringForPropertyGetV1(
                                 projectIri = createMultipleValuesRequest.projectIri,
+                                resourceClassIri = createMultipleValuesRequest.resourceClassIri,
                                 propertyIri = propertyIri,
                                 createMultipleValuesRequest.userProfile.permissionData)
                         }.mapTo[DefaultObjectAccessPermissionsStringResponseV1]
@@ -838,10 +844,14 @@ class ValuesResponderV1 extends ResponderV1 {
 
                 }
 
+                // Get the resource class of the containing resource
+                resourceClassIri: IRI = resourceFullResponse.resinfo.getOrElse(throw InconsistentTriplestoreDataException(s"Did not find resource info for resource ${findResourceWithValueResult.resourceIri}")).restype_id
+
                 _ = log.debug(s"changeValueV1 - DefaultObjectAccessPermissionsStringForPropertyGetV1 - projectIri ${findResourceWithValueResult.projectIri}, propertyIri: ${findResourceWithValueResult.propertyIri}, permissionData: ${changeValueRequest.userProfile.permissionData} ")
                 defaultObjectAccessPermissions <- {
                     responderManager ? DefaultObjectAccessPermissionsStringForPropertyGetV1(
                         projectIri = findResourceWithValueResult.projectIri,
+                        resourceClassIri = resourceClassIri,
                         propertyIri = findResourceWithValueResult.propertyIri,
                         permissionData = changeValueRequest.userProfile.permissionData)
                 }.mapTo[DefaultObjectAccessPermissionsStringResponseV1]
