@@ -46,15 +46,21 @@ object Main extends App {
         val workdir = settings.workingDirectory
         log.info(s"Working Directory: $workdir")
         val publicDir = workdir + "/public"
-        log.info(s"serving files from: $publicDir")
+        log.info(s"Public Directory: $publicDir")
 
-        // rewriting webapi and sipi url in 00_init_javascript.js
         val webapiUrl = settings.webapiUrl
         log.info("webapiUrl: {}", webapiUrl)
 
         val sipiUrl = settings.sipiUrl
         log.info("sipiUrl: {}", sipiUrl)
 
+        //create /tmp directory if it does not exist
+        val tmpDir = new File("/tmp")
+        if (! tmpDir.exists()){
+            tmpDir.mkdir()
+        }
+
+        // rewriting webapi and sipi url in 00_init_javascript.js
         val originalFile = new File(s"$publicDir/js/00_init_javascript.js")  // Original File
         val tempFile = new File("/tmp/00_init_javascript.js") // Temporary File
         val w = new PrintWriter(tempFile)
@@ -62,9 +68,9 @@ object Main extends App {
         Source.fromFile(originalFile).getLines
                 .map { x =>
                     if(x.contains("http://localhost:3333")) {
-                        s"var API_URL = 'http://$webapiUrl';"
+                        s"var API_URL = '$webapiUrl';"
                     } else if (x.contains("http://localhost:1024")) {
-                        s"var SIPI_URL = 'http://$sipiUrl';"
+                        s"var SIPI_URL = '$sipiUrl';"
                     } else {
                         x
                     }
