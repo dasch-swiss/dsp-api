@@ -60,12 +60,13 @@ object Main extends App {
             tmpDir.mkdir()
         }
 
-        // rewriting webapi and sipi url in 00_init_javascript.js
+        // rewriting webapi and sipi url in public/js/00_init_javascript.js
         val originalFile = new File(s"$publicDir/js/00_init_javascript.js")  // Original File
         val tempFile = new File("/tmp/00_init_javascript.js") // Temporary File
         val printWriter = new PrintWriter(tempFile)
 
-        Source.fromFile(originalFile).getLines
+        Source.fromFile(originalFile)("UTF-8")
+                .getLines
                 .map { line =>
                     if(line.contains("http://localhost:3333")) {
                         s"var API_URL = '$webapiUrl';"
