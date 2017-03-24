@@ -63,23 +63,22 @@ object Main extends App {
         // rewriting webapi and sipi url in 00_init_javascript.js
         val originalFile = new File(s"$publicDir/js/00_init_javascript.js")  // Original File
         val tempFile = new File("/tmp/00_init_javascript.js") // Temporary File
-        val w = new PrintWriter(tempFile)
+        val printWriter = new PrintWriter(tempFile)
 
         Source.fromFile(originalFile).getLines
-                .map { x =>
-                    if(x.contains("http://localhost:3333")) {
+                .map { line =>
+                    if(line.contains("http://localhost:3333")) {
                         s"var API_URL = '$webapiUrl';"
-                    } else if (x.contains("http://localhost:1024")) {
+                    } else if (line.contains("http://localhost:1024")) {
                         s"var SIPI_URL = '$sipiUrl';"
                     } else {
-                        x
+                        line.toString
                     }
                 }
-                .foreach(x => w.println(x))
+                .foreach(x => printWriter.println(x))
 
-        w.close()
-        //tempFile.renameTo(originalFile)
-
+        printWriter.close()
+        tempFile.renameTo(originalFile)
 
         get {
             getFromDirectory(publicDir)
