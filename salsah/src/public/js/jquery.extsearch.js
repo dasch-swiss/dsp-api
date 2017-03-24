@@ -567,7 +567,7 @@
 				SALSAH.ApiGet('projects', function(data){
 					if (data.status == ApiErrors.OK) {
 						for (var i in data.projects) {
-							if (data.projects[i].active) {
+							if (data.projects[i].id == SALSAH.userprofile.active_project) {
 								projfilt.append($('<option>', {'value': data.projects[i].id, selected: 'selected'}).append(data.projects[i].shortname + '*'));
 							}
 							else {
