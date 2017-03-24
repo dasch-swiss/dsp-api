@@ -487,10 +487,12 @@
 								var tmpele;
 								for (var i in data.vocabularies)
 								{
-									vocsel.append(tmpele = $('<option>', {value: data.vocabularies[i].id}).append(data.vocabularies[i].longname + ' [' + data.vocabularies[i].shortname + ']'));
 									if (data.vocabularies[i].active) {
-										tmpele.prop({selected: 'selected'});
-										localdata.settings.vocabulary_selected = data.vocabularies[i].id;
+										vocsel.append(tmpele = $('<option>', {value: data.vocabularies[i].id}).append(data.vocabularies[i].longname + ' [' + data.vocabularies[i].shortname + ']'));
+										//if (data.vocabularies[i].active) {
+										//	tmpele.prop({selected: 'selected'});
+										//	localdata.settings.vocabulary_selected = data.vocabularies[i].id;
+										//}
 									}
 								}
 								get_restypes($this);
