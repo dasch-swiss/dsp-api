@@ -55,8 +55,8 @@ case class PermissionDataGetV1(projectIris: Seq[IRI],
   * In the case of an existing project, this operation behaves destructive, in the sense that all existing permissions
   * attached to a project are deleted, before any new permissions are created.
   *
-  * @param projectIri          the IRI of the project.
-  * @param permissionsTemplate the permissions template.
+  * param projectIri          the IRI of the project.
+  * param permissionsTemplate the permissions template.
   */
 //case class TemplatePermissionsCreateRequestV1(projectIri: IRI, permissionsTemplate: PermissionsTemplate, userProfileV1: UserProfileV1) extends PermissionsResponderRequestV1
 
@@ -363,7 +363,7 @@ case class DefaultObjectAccessPermissionOperationResponseV1(success: Boolean,
   * @param groupsPerProject                         the groups the user belongs to for each project.
   * @param administrativePermissionsPerProject      the user's administrative permissions for each project.
   */
-case class PermissionDataV1(groupsPerProject: Map[IRI, List[IRI]] = Map.empty[IRI, List[IRI]],
+case class PermissionDataV1(groupsPerProject: Map[IRI, Seq[IRI]] = Map.empty[IRI, Seq[IRI]],
                             administrativePermissionsPerProject: Map[IRI, Set[PermissionV1]] = Map.empty[IRI, Set[PermissionV1]],
                             anonymousUser: Boolean
                            ) {
