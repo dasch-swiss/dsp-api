@@ -27,8 +27,7 @@ import org.knora.webapi.util.{KnoraIdUtil, MessageUtil, PermissionUtilV1}
 
 import scala.collection.immutable.Iterable
 import scala.collection.mutable.ListBuffer
-import scala.concurrent.duration._
-import scala.concurrent.{Await, Future}
+import scala.concurrent.Future
 
 
 /**
@@ -174,7 +173,7 @@ class PermissionsResponderV1 extends ResponderV1 {
 
 
         /* Get all permissions per project, applying permission precedence rule */
-        def calculatePermission(projectIri: IRI, extendedUserGroups: List[IRI]): Future[(IRI, Set[PermissionV1])] = {
+        def calculatePermission(projectIri: IRI, extendedUserGroups: Seq[IRI]): Future[(IRI, Set[PermissionV1])] = {
 
 
             /* List buffer holding default object access permissions tagged with the precedence level:
@@ -251,7 +250,7 @@ class PermissionsResponderV1 extends ResponderV1 {
             (projectIri, groups) <- groupsPerProject
 
             /* Explicitly add 'KnownUser' group */
-            extendedUserGroups = OntologyConstants.KnoraBase.KnownUser :: groups
+            extendedUserGroups = OntologyConstants.KnoraBase.KnownUser ++ groups
 
             result = calculatePermission(projectIri, groups)
 
@@ -274,10 +273,10 @@ class PermissionsResponderV1 extends ResponderV1 {
       * @param groups the list of groups for which administrative permissions are retrieved and combined.
       * @return a set of [[PermissionV1]].
       */
-    private def administrativePermissionForGroupsGetV1(projectIri: IRI, groups: List[IRI] ): Future[Set[PermissionV1]] = {
+    private def administrativePermissionForGroupsGetV1(projectIri: IRI, groups: Seq[IRI] ): Future[Set[PermissionV1]] = {
 
         /* Get administrative permissions for each group and combine them */
-        val gpf: Iterable[Future[Seq[PermissionV1]]] = for {
+        val gpf: Seq[Future[Seq[PermissionV1]]] = for {
             groupIri <- groups
             //_ = log.debug(s"administrativePermissionForGroupsGetV1 - projectIri: $projectIri, groupIri: $groupIri")
 
@@ -288,14 +287,14 @@ class PermissionsResponderV1 extends ResponderV1 {
 
         } yield groupPermissions
 
-        val allPermissionsFuture: Future[Iterable[Seq[PermissionV1]]] = Future.sequence(gpf)
+        val allPermissionsFuture: Future[Seq[Seq[PermissionV1]]] = Future.sequence(gpf)
 
         /* combines all permissions for each group and removes duplicates  */
         val result: Future[Set[PermissionV1]] = for {
-            allPermissions: Iterable[Seq[PermissionV1]] <- allPermissionsFuture
+            allPermissions: Seq[Seq[PermissionV1]] <- allPermissionsFuture
 
             // remove instances with empty PermissionV1 sets
-            cleanedAllPermissions: Iterable[Seq[PermissionV1]] = allPermissions.filter(_.nonEmpty)
+            cleanedAllPermissions: Seq[Seq[PermissionV1]] = allPermissions.filter(_.nonEmpty)
 
             /* Combine permission sequences */
             combined = cleanedAllPermissions.foldLeft(Seq.empty[PermissionV1]) { (acc, seq) =>
@@ -776,10 +775,10 @@ class PermissionsResponderV1 extends ResponderV1 {
       * @param groups the list of groups for which default object access permissions are retrieved and combined.
       * @return a set of [[PermissionV1]].
       */
-    def defaultObjectAccessPermissionsForGroupsGetV1(projectIri: IRI, groups: List[IRI]): Future[Set[PermissionV1]] = {
+    def defaultObjectAccessPermissionsForGroupsGetV1(projectIri: IRI, groups: Seq[IRI]): Future[Set[PermissionV1]] = {
 
         /* Get default object access permissions for each group and combine them */
-        val gpf: Iterable[Future[Seq[PermissionV1]]] = for {
+        val gpf: Seq[Future[Seq[PermissionV1]]] = for {
             groupIri <- groups
             //_ = log.debug(s"userDefaultObjectAccessPermissionsGetV1 - projectIri: $projectIri, groupIri: $groupIri")
 
@@ -790,14 +789,14 @@ class PermissionsResponderV1 extends ResponderV1 {
 
         } yield groupPermissions
 
-        val allPermissionsFuture: Future[Iterable[Seq[PermissionV1]]] = Future.sequence(gpf)
+        val allPermissionsFuture: Future[Seq[Seq[PermissionV1]]] = Future.sequence(gpf)
 
         /* combines all permissions for each group and removes duplicates  */
         val result: Future[Set[PermissionV1]] = for {
-            allPermissions: Iterable[Seq[PermissionV1]] <- allPermissionsFuture
+            allPermissions: Seq[Seq[PermissionV1]] <- allPermissionsFuture
 
             // remove instances with empty PermissionV1 sets
-            cleanedAllPermissions: Iterable[Seq[PermissionV1]] = allPermissions.filter(_.nonEmpty)
+            cleanedAllPermissions: Seq[Seq[PermissionV1]] = allPermissions.filter(_.nonEmpty)
 
             /* Combine permission sequences */
             combined = cleanedAllPermissions.foldLeft(Seq.empty[PermissionV1]) { (acc, seq) =>
@@ -884,17 +883,17 @@ class PermissionsResponderV1 extends ResponderV1 {
 
 
             /* Get the groups the user is member of. */
-            userGroupsOption = permissionData.groupsPerProject.get(projectIri)
-            userGroups: List[IRI] = userGroupsOption match {
+            userGroupsOption: Option[Seq[IRI]] = permissionData.groupsPerProject.get(projectIri)
+            userGroups: Seq[IRI] = userGroupsOption match {
                 case Some(groups) => groups
-                case None => List.empty[IRI]
+                case None => Seq.empty[IRI]
             }
 
             /* Explicitly add 'SystemAdmin' and 'KnownUser' groups. */
-            extendedUserGroups = if (permissionData.isSystemAdmin) {
-                OntologyConstants.KnoraBase.SystemAdmin :: OntologyConstants.KnoraBase.KnownUser :: userGroups
+            extendedUserGroups: List[IRI] = if (permissionData.isSystemAdmin) {
+                OntologyConstants.KnoraBase.SystemAdmin :: OntologyConstants.KnoraBase.KnownUser :: userGroups.toList
             } else {
-                OntologyConstants.KnoraBase.KnownUser :: userGroups
+                OntologyConstants.KnoraBase.KnownUser :: userGroups.toList
             }
 
             /* List buffer holding default object access permissions tagged with the precedence level:
@@ -999,7 +998,7 @@ class PermissionsResponderV1 extends ResponderV1 {
             /* Get the default object access permissions for custom groups (all groups other than the built-in groups) */
             defaultPermissionsOnCustomGroups: Set[PermissionV1] <- {
                 if (extendedUserGroups.nonEmpty && permissionsListBuffer.isEmpty) {
-                    val customGroups = extendedUserGroups diff List(OntologyConstants.KnoraBase.KnownUser, OntologyConstants.KnoraBase.ProjectMember, OntologyConstants.KnoraBase.ProjectAdmin, OntologyConstants.KnoraBase.SystemAdmin)
+                    val customGroups: List[IRI] = extendedUserGroups.toList diff List(OntologyConstants.KnoraBase.KnownUser, OntologyConstants.KnoraBase.ProjectMember, OntologyConstants.KnoraBase.ProjectAdmin, OntologyConstants.KnoraBase.SystemAdmin)
                     if (customGroups.nonEmpty) {
                         defaultObjectAccessPermissionsForGroupsGetV1(projectIri, customGroups)
                     } else {
