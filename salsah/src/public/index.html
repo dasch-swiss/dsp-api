@@ -216,6 +216,8 @@
 					$.ajax({
 						url: SIPI_URL + SIPI_LOGIN_ROUTE,
 						type: "POST",
+						contentType: "application/x-www-form-urlencoded; charset=UTF-8",
+						dataType: "text", // response is empty, but without explicit content-type jQuery tries to parse the answer as XML
 						data: {
 							sid: data.sid
 						},
@@ -279,6 +281,7 @@
 						xhrFields: {
 							withCredentials: true
 						},
+						dataType: "text", // response is empty, but without explicit content-type jQuery tries to parse the answer as XML
 						error: function(jqXHR, textStatus, errorThrown) {
 							if (errorThrown !== undefined) {
 								alert("Sipi returned an error: " + errorThrown);
