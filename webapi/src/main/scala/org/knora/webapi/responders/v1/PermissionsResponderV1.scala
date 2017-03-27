@@ -24,6 +24,7 @@ import org.knora.webapi.messages.v1.responder.permissionmessages.{Administrative
 import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoV1, ProjectsGetV1}
 import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.messages.v1.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
+import org.knora.webapi.responders.Responder
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.{KnoraIdUtil, MessageUtil, PermissionUtilV1}
 
@@ -35,7 +36,7 @@ import scala.concurrent.{Await, Future}
 /**
   * Provides information about Knora users to other responders.
   */
-class PermissionsResponderV1 extends ResponderV1 {
+class PermissionsResponderV1 extends Responder {
 
     // Creates IRIs for new Knora user objects.
     val knoraIdUtil = new KnoraIdUtil

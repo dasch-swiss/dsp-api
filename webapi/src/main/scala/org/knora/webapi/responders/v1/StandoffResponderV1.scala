@@ -35,7 +35,7 @@ import org.knora.webapi.messages.v1.responder.standoffmessages._
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v1.store.triplestoremessages._
-import org.knora.webapi.responders.IriLocker
+import org.knora.webapi.responders.{IriLocker, Responder}
 import org.knora.webapi.twirl.{MappingElement, MappingStandoffDatatypeClass, MappingXMLAttribute}
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.standoff.StandoffTagUtilV1.XMLTagItem
@@ -51,7 +51,7 @@ import scala.xml.{Node, NodeSeq, XML}
 /**
   * Responds to requests relating to the creation of mappings from XML elements and attributes to standoff classes and properties.
   */
-class StandoffResponderV1 extends ResponderV1 {
+class StandoffResponderV1 extends Responder {
 
     implicit val materializer = ActorMaterializer()
 

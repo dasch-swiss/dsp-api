@@ -32,7 +32,7 @@ import org.knora.webapi.messages.v1.responder.standoffmessages.StandoffDataTypeC
 import org.knora.webapi.messages.v1.responder.usermessages.{UserProfileByIRIGetV1, UserProfileType, UserProfileV1}
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v1.store.triplestoremessages._
-import org.knora.webapi.responders.IriLocker
+import org.knora.webapi.responders.{IriLocker, Responder}
 import org.knora.webapi.twirl.{SparqlTemplateLinkUpdate, StandoffTagV1}
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util._
@@ -45,7 +45,7 @@ import scala.concurrent.{Await, Future}
 /**
   * Updates Knora values.
   */
-class ValuesResponderV1 extends ResponderV1 {
+class ValuesResponderV1 extends Responder {
     // Creates IRIs for new Knora value objects.
     val knoraIdUtil = new KnoraIdUtil
 

@@ -30,7 +30,6 @@ import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
 import org.knora.webapi.util.InputValidation
 import org.knora.webapi.{BadRequestException, IRI, SettingsImpl}
 
-import scala.concurrent.Future
 import scala.language.postfixOps
 
 // slash after path without following segment

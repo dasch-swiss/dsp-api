@@ -30,7 +30,7 @@ import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoByIRIG
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileType.UserProfileType
 import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.messages.v1.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, SparqlUpdateRequest, SparqlUpdateResponse}
-import org.knora.webapi.responders.IriLocker
+import org.knora.webapi.responders.{IriLocker, Responder}
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.{CacheUtil, KnoraIdUtil, MessageUtil}
@@ -41,7 +41,7 @@ import scala.concurrent.Future
 /**
   * Provides information about Knora users to other responders.
   */
-class UsersResponderV1 extends ResponderV1 {
+class UsersResponderV1 extends Responder {
 
     // Creates IRIs for new Knora user objects.
     val knoraIdUtil = new KnoraIdUtil

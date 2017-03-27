@@ -34,6 +34,7 @@ import org.knora.webapi.messages.v1.responder.sipimessages._
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.responder.valuemessages.{FileValueV1, StillImageFileValueV1, TextFileValueV1}
 import org.knora.webapi.messages.v1.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
+import org.knora.webapi.responders.Responder
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.{InputValidation, PermissionUtilV1}
 import spray.json._
@@ -45,7 +46,7 @@ import scala.concurrent.duration._
   * Responds to requests for information about binary representations of resources, and returns responses in Knora API
   * v1 format.
   */
-class SipiResponderV1 extends ResponderV1 {
+class SipiResponderV1 extends Responder {
 
     implicit val materializer = ActorMaterializer()
 
