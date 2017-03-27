@@ -35,9 +35,12 @@ import org.knora.webapi.http.CORSSupport.CORS
 import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse}
 import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
 import org.knora.webapi.messages.v1.store.triplestoremessages.{Initialized, InitializedResponse, ResetTriplestoreContent, ResetTriplestoreContentACK}
+import org.knora.webapi.messages.v2.responder.searchmessages.{FulltextSearchGetRequestV2, SearchGetResponseV2}
 import org.knora.webapi.responders._
 import org.knora.webapi.responders.v1.ResponderManagerV1
+import org.knora.webapi.responders.v2.ResponderManagerV2
 import org.knora.webapi.routing.v1._
+import org.knora.webapi.routing.v2.SearchRouteV2
 import org.knora.webapi.store._
 import org.knora.webapi.store.triplestore.RdfDataObjectFactory
 import org.knora.webapi.util.CacheUtil
@@ -69,6 +72,8 @@ trait KnoraService {
       * The supervisor actor that forwards messages to responder actors to handle API requests.
       */
     private val responderManager = system.actorOf(Props(new ResponderManagerV1 with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
+
+    private val responderManager2 = system.actorOf(Props(new ResponderManagerV2 with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME2)
 
     /**
       * The supervisor actor that forwards messages to actors that deal with persistent storage.
@@ -113,7 +118,8 @@ trait KnoraService {
             UsersRouteV1.knoraApiPath(system, settings, log) ~
             ProjectsRouteV1.knoraApiPath(system, settings, log) ~
             GroupsRouteV1.knoraApiPath(system, settings, log) ~
-			PermissionsRouteV1.knoraApiPath(system, settings, log),
+            PermissionsRouteV1.knoraApiPath(system, settings, log) ~
+            SearchRouteV2.knoraApiPath(system, settings, log), // This is a V2 responder !
         settings,
         log
     )
