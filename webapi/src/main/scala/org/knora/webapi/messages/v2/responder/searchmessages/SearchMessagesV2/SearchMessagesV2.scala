@@ -2,7 +2,6 @@ package org.knora.webapi.messages.v2.responder.searchmessages
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
-import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
 import org.knora.webapi.messages.v2.responder.{KnoraRequestV2, KnoraResponseV2}
 import spray.json.{DefaultJsonProtocol, NullOptions, RootJsonFormat}
 
