@@ -31,7 +31,7 @@
 <http://data.knora.org/permissions/drawings-gods-a3> a knora-base:AdministrativePermission ;
                       knora-base:forProject <http://data.knora.org/projects/drawings-gods> ;
                       knora-base:forGroup <http://data.knora.org/groups/drawings-gods-add-drawings> ;
-                      knora-base:hasPermissions "ProjectResourceCreateRestrictedPermission http://www.knora.org/ontology/drawings-gods#Annotation,http://www.knora.org/ontology/drawings-gods#DrawingPrivate,http://www.knora.org/ontology/drawings-gods#DrawingPublic,http://www.knora.org/ontology/drawings-gods#QualityData,http://www.knora.org/ontology/drawings-gods#QuestionnaireBase,http://www.knora.org/ontology/drawings-gods#QuestionnaireIndividual,http://www.knora.org/ontology/drawings-gods#TextOnDrawing,http://www.knora.org/ontology/drawings-gods#Verso"^^xsd:string .
+                      knora-base:hasPermissions "ProjectResourceCreateRestrictedPermission http://www.knora.org/ontology/drawings-gods#Annotation,http://www.knora.org/ontology/drawings-gods#DrawingPrivate,http://www.knora.org/ontology/drawings-gods#DrawingPublic,http://www.knora.org/ontology/drawings-gods#Person,http://www.knora.org/ontology/drawings-gods#QualityData,http://www.knora.org/ontology/drawings-gods#QuestionnaireBase,http://www.knora.org/ontology/drawings-gods#QuestionnaireIndividual,http://www.knora.org/ontology/drawings-gods#QuestionnairePage,http://www.knora.org/ontology/drawings-gods#TextOnDrawing,http://www.knora.org/ontology/drawings-gods#Verso"^^xsd:string .
 
 ### Administrative Permissions on SNFTeam group
 <http://data.knora.org/permissions/drawings-gods-a4> a knora-base:AdministrativePermission ;
@@ -47,8 +47,8 @@
 <http://data.knora.org/permissions/drawings-gods-a5> a knora-base:AdministrativePermission ;
                       knora-base:forProject <http://data.knora.org/projects/drawings-gods> ;
                       knora-base:forGroup <http://data.knora.org/groups/drawings-gods-admin> ;
-#                      knora-base:hasPermissions "ProjectResourceCreateRestrictedPermission <http://www.knora.org/ontology/drawings-gods#Annotation>,<http://www.knora.org/ontology/drawings-gods#Campaign>,<http://www.knora.org/ontology/drawings-gods#CollectionSite>,<http://www.knora.org/ontology/drawings-gods#DrawingPrivate>,<http://www.knora.org/ontology/drawings-gods#DrawingPublic>,<http://www.knora.org/ontology/drawings-gods#Instruction>,<http://www.knora.org/ontology/drawings-gods#Passage>,<http://www.knora.org/ontology/drawings-gods#Person>,<http://www.knora.org/ontology/drawings-gods#PersonLinkedFile>,<http://www.knora.org/ontology/drawings-gods#QualityData>,<http://www.knora.org/ontology/drawings-gods#QuestionnaireBaseEn>,<http://www.knora.org/ontology/drawings-gods#QuestionnaireBaseFr>,<http://www.knora.org/ontology/drawings-gods#QuestionnaireBaseOriginal>,<http://www.knora.org/ontology/drawings-gods#QuestionnaireIndividual>,<http://www.knora.org/ontology/drawings-gods#QuestionnairePage>,<http://www.knora.org/ontology/drawings-gods#TextOnDrawing>,<http://www.knora.org/ontology/drawings-gods#Verso>"^^xsd:string .                       
-                      knora-base:hasPermissions "ProjectResourceCreateAllPermission|ProjectAdminAllPermission"^^xsd:string .  
+                      knora-base:hasPermissions "ProjectResourceCreateRestrictedPermission http://www.knora.org/ontology/drawings-gods#Annotation,http://www.knora.org/ontology/drawings-gods#Campaign,http://www.knora.org/ontology/drawings-gods#CollectionSite,http://www.knora.org/ontology/drawings-gods#DrawingPrivate,<http://www.knora.org/ontology/drawings-gods#DrawingPublic,http://www.knora.org/ontology/drawings-gods#Instruction,http://www.knora.org/ontology/drawings-gods#Passage,http://www.knora.org/ontology/drawings-gods#Person,http://www.knora.org/ontology/drawings-gods#PersonLinkedFile,http://www.knora.org/ontology/drawings-gods#QualityData,http://www.knora.org/ontology/drawings-gods#QuestionnaireBase,http://www.knora.org/ontology/drawings-gods#QuestionnaireBaseEn,http://www.knora.org/ontology/drawings-gods#QuestionnaireBaseFr,http://www.knora.org/ontology/drawings-gods#QuestionnaireBaseOriginal,http://www.knora.org/ontology/drawings-gods#QuestionnaireIndividual,http://www.knora.org/ontology/drawings-gods#QuestionnairePage,http://www.knora.org/ontology/drawings-gods#TextOnDrawing,http://www.knora.org/ontology/drawings-gods#Verso"^^xsd:string .                       
+#                      knora-base:hasPermissions "ProjectResourceCreateAllPermission|ProjectAdminAllPermission"^^xsd:string .  
 
 
 #
@@ -68,13 +68,13 @@
 <http://data.knora.org/permissions/drawings-gods-o002> rdf:type knora-base:DefaultObjectAccessPermission ;
      knora-base:forProject <http://data.knora.org/projects/drawings-gods> ;
      knora-base:forGroup <http://data.knora.org/groups/drawings-gods-meta-annotators> ;
-     knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember,<http://data.knora.org/groups/drawings-gods-add-drawings>|M <http://data.knora.org/groups/drawings-gods-meta-annotators>|D <http://data.knora.org/groups/drawings-gods-snf-team>,knora-base:Creator|CR <http://data.knora.org/groups/drawings-gods-admin>"^^xsd:string .
+     knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember,|M <http://data.knora.org/groups/drawings-gods-add-drawings>,<http://data.knora.org/groups/drawings-gods-meta-annotators>|D <http://data.knora.org/groups/drawings-gods-snf-team>,knora-base:Creator|CR <http://data.knora.org/groups/drawings-gods-admin>"^^xsd:string .
 
 ### Default Object Access Permissions on AddDrawings Group
 <http://data.knora.org/permissions/drawings-gods-o003> rdf:type knora-base:DefaultObjectAccessPermission ;
      knora-base:forProject <http://data.knora.org/projects/drawings-gods> ;
      knora-base:forGroup <http://data.knora.org/groups/drawings-gods-add-drawings> ;
-     knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember|M <http://data.knora.org/groups/drawings-gods-meta-annotators>|D <http://data.knora.org/groups/drawings-gods-add-drawings>,<http://data.knora.org/groups/drawings-gods-snf-team>,knora-base:Creator|CR <http://data.knora.org/groups/drawings-gods-admin>"^^xsd:string .
+     knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember|M <http://data.knora.org/groups/drawings-gods-add-drawings>,<http://data.knora.org/groups/drawings-gods-meta-annotators>|D ,<http://data.knora.org/groups/drawings-gods-snf-team>,knora-base:Creator|CR <http://data.knora.org/groups/drawings-gods-admin>"^^xsd:string .
 
 
 ### Default Object Access Permissions on SNFTeam Group 
@@ -131,7 +131,7 @@
 <http://data.knora.org/permissions/drawings-gods-o016> rdf:type knora-base:DefaultObjectAccessPermission ;
      knora-base:forProject <http://data.knora.org/projects/drawings-gods> ;
      knora-base:forResourceClass drawings-gods:DrawingPrivate ;
-     knora-base:hasPermissions "RV knora-base:UnknownUser,knora-base:KnownUser|V knora-base:ProjectMember|M <http://data.knora.org/groups/drawings-gods-meta-annotators>,<http://data.knora.org/groups/drawings-gods-add-drawings>|D <http://data.knora.org/groups/drawings-gods-snf-team>,knora-base:Creator|CR <http://data.knora.org/groups/drawings-gods-admin>"^^xsd:string .
+     knora-base:hasPermissions "V knora-base:ProjectMember|M <http://data.knora.org/groups/drawings-gods-meta-annotators>,<http://data.knora.org/groups/drawings-gods-add-drawings>|D <http://data.knora.org/groups/drawings-gods-snf-team>,knora-base:Creator|CR <http://data.knora.org/groups/drawings-gods-admin>"^^xsd:string .
 
 ### Default Object Access Permissions on resource class Instruction
 <http://data.knora.org/permissions/drawings-gods-o017> rdf:type knora-base:DefaultObjectAccessPermission ;
@@ -204,7 +204,7 @@
 <http://data.knora.org/permissions/drawings-gods-o028> rdf:type knora-base:DefaultObjectAccessPermission ;
      knora-base:forProject <http://data.knora.org/projects/drawings-gods> ;
      knora-base:forResourceClass drawings-gods:Verso ;
-     knora-base:hasPermissions "RV knora-base:UnknownUser,knora-base:KnownUser|V knora-base:ProjectMember|M <http://data.knora.org/groups/drawings-gods-meta-annotators>,<http://data.knora.org/groups/drawings-gods-add-drawings>|D <http://data.knora.org/groups/drawings-gods-snf-team>,knora-base:Creator|CR <http://data.knora.org/groups/drawings-gods-admin>"^^xsd:string .
+     knora-base:hasPermissions "V knora-base:ProjectMember|M <http://data.knora.org/groups/drawings-gods-meta-annotators>,<http://data.knora.org/groups/drawings-gods-add-drawings>|D <http://data.knora.org/groups/drawings-gods-snf-team>,knora-base:Creator|CR <http://data.knora.org/groups/drawings-gods-admin>"^^xsd:string .
 
 #### Default Object Access Permissions on resource class QuestionnaireBaseImage
 ### Not used directly. So no need DOAP.
@@ -239,12 +239,6 @@
      knora-base:forProperty drawings-gods:hasCampaignDescription ;
      knora-base:hasPermissions "D <http://data.knora.org/groups/drawings-gods-snf-team>|CR <http://data.knora.org/groups/drawings-gods-admin>"^^xsd:string .
 
-### Default Object Access Permissions on hasCampaignDescription
-<http://data.knora.org/permissions/drawings-gods-o103> rdf:type knora-base:DefaultObjectAccessPermission ;
-     knora-base:forProject <http://data.knora.org/projects/drawings-gods> ;
-     knora-base:forProperty drawings-gods:hasCampaignDescription ;
-     knora-base:hasPermissions "D <http://data.knora.org/groups/drawings-gods-snf-team>|CR <http://data.knora.org/groups/drawings-gods-admin>"^^xsd:string .
-
 ### Default Object Access Permissions on hasCampaignPersonContact
 <http://data.knora.org/permissions/drawings-gods-o104> rdf:type knora-base:DefaultObjectAccessPermission ;
      knora-base:forProject <http://data.knora.org/projects/drawings-gods> ;
@@ -256,6 +250,12 @@
      knora-base:forProject <http://data.knora.org/projects/drawings-gods> ;
      knora-base:forProperty drawings-gods:hasCollectorMain ;
      knora-base:hasPermissions "D <http://data.knora.org/groups/drawings-gods-snf-team>|CR <http://data.knora.org/groups/drawings-gods-admin>"^^xsd:string .
+
+### Default Object Access Permissions on hasBirthDate
+<http://data.knora.org/permissions/drawings-gods-o105> rdf:type knora-base:DefaultObjectAccessPermission ;
+     knora-base:forProject <http://data.knora.org/projects/drawings-gods> ;
+     knora-base:forProperty drawings-gods:hasBirthDate ;
+     knora-base:hasPermissions "M <http://data.knora.org/groups/drawings-gods-meta-annotators>,<http://data.knora.org/groups/drawings-gods-add-drawings>|D <http://data.knora.org/groups/drawings-gods-snf-team>|CR <http://data.knora.org/groups/drawings-gods-admin>"^^xsd:string .
 
 ### Default Object Access Permissions on hasGeonameCode
 <http://data.knora.org/permissions/drawings-gods-o106> rdf:type knora-base:DefaultObjectAccessPermission ;
@@ -324,11 +324,12 @@
 ##
 # 
 
-### Default Object Access Permissions on knora-base:hasStillImageFileValue
-<http://data.knora.org/permissions/drawings-gods-o201> rdf:type knora-base:DefaultObjectAccessPermission ;
-     knora-base:forProject <http://data.knora.org/projects/drawings-gods> ;
-     knora-base:forProperty knora-base:hasStillImageFileValue ;
-     knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember,<http://data.knora.org/groups/drawings-gods-meta-annotators>|M <http://data.knora.org/groups/drawings-gods-add-drawings>|D <http://data.knora.org/groups/drawings-gods-snf-team>|CR <http://data.knora.org/groups/drawings-gods-admin>"^^xsd:string .
+#### Default Object Access Permissions on drawings-gods:hasDrawingPublicStillImageFileValue
+#<http://data.knora.org/permissions/drawings-gods-o201> rdf:type knora-base:DefaultObjectAccessPermission ;
+#     knora-base:forProject <http://data.knora.org/projects/drawings-gods> ;
+#	  knora-base:forResourceClass drawings-gods:DrawingPublic
+#     knora-base:forProperty drawings-gods:hasDrawingPublicStillImageFileValue ;
+#     knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember,<http://data.knora.org/groups/drawings-gods-meta-annotators>|M <http://data.knora.org/groups/drawings-gods-add-drawings>|D <http://data.knora.org/groups/drawings-gods-snf-team>|CR <http://data.knora.org/groups/drawings-gods-admin>"^^xsd:string .
  
 # ### Default Object Access Permissions on Internal comment & subproperties
 # DOAP has to be defined on each of its subclasses.
@@ -342,13 +343,34 @@
 <http://data.knora.org/permissions/drawings-gods-o203> rdf:type knora-base:DefaultObjectAccessPermission ;
      knora-base:forProject <http://data.knora.org/projects/drawings-gods> ;
      knora-base:forProperty drawings-gods:hasDrawingPublicComment ;
-     knora-base:hasPermissions "M <http://data.knora.org/groups/drawings-gods-meta-annotators>,<http://data.knora.org/groups/drawings-gods-add-drawings>|D <http://data.knora.org/groups/drawings-gods-snf-team>|CR <http://data.knora.org/groups/drawings-gods-admin>"^^xsd:string .
+     knora-base:hasPermissions "M http://data.knora.org/groups/drawings-gods-meta-annotators,http://data.knora.org/groups/drawings-gods-add-drawings|D http://data.knora.org/groups/drawings-gods-snf-team|CR http://data.knora.org/groups/drawings-gods-admin"^^xsd:string .
 
  ### Default Object Access Permissions on Private Drawing internal comment
 <http://data.knora.org/permissions/drawings-gods-o204> rdf:type knora-base:DefaultObjectAccessPermission ;
      knora-base:forProject <http://data.knora.org/projects/drawings-gods> ;
      knora-base:forProperty drawings-gods:hasDrawingPrivateComment ;
-     knora-base:hasPermissions "M <http://data.knora.org/groups/drawings-gods-meta-annotators>,<http://data.knora.org/groups/drawings-gods-add-drawings>|D <http://data.knora.org/groups/drawings-gods-snf-team>|CR <http://data.knora.org/groups/drawings-gods-admin>"^^xsd:string .
- 
+     knora-base:hasPermissions "M http://data.knora.org/groups/drawings-gods-meta-annotators,http://data.knora.org/groups/drawings-gods-add-drawings|D http://data.knora.org/groups/drawings-gods-snf-team|CR http://data.knora.org/groups/drawings-gods-admin"^^xsd:string .
+
+#
+##
+### 	Default Object Access Permissions on Resources & Properties combination
+##
+#
+
+### Default Object Access Permissions on drawings-gods:DrawingPublic for knora-base:hasStillImageFileValue
+<http://data.knora.org/permissions/drawings-gods-o301> rdf:type knora-base:DefaultObjectAccessPermission ;
+     knora-base:forProject <http://data.knora.org/projects/drawings-gods> ;
+	 knora-base:forResourceClass <http://www.knora.org/ontology/drawings-gods#DrawingPublic> ;
+     knora-base:forProperty <http://www.knora.org/ontology/knora-base#hasStillImageFileValue> ;
+     knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember,http://data.knora.org/groups/drawings-gods-meta-annotators|M http://data.knora.org/groups/drawings-gods-add-drawings|D http://data.knora.org/groups/drawings-gods-snf-team|CR http://data.knora.org/groups/drawings-gods-admin"^^xsd:string .
+
+### Default Object Access Permissions on drawings-gods:DrawingPrivate for knora-base:hasStillImageFileValue
+<http://data.knora.org/permissions/drawings-gods-o302> rdf:type knora-base:DefaultObjectAccessPermission ;
+     knora-base:forProject <http://data.knora.org/projects/drawings-gods> ;
+	 knora-base:forResourceClass <http://www.knora.org/ontology/drawings-gods#DrawingPrivate> ;
+     knora-base:forProperty <http://www.knora.org/ontology/knora-base#hasStillImageFileValue> ;
+     knora-base:hasPermissions "V knora-base:ProjectMember|M http://data.knora.org/groups/drawings-gods-meta-annotators,http://data.knora.org/groups/drawings-gods-add-drawings|D http://data.knora.org/groups/drawings-gods-snf-team|CR http://data.knora.org/groups/drawings-gods-admin"^^xsd:string .
+
+
 
                     

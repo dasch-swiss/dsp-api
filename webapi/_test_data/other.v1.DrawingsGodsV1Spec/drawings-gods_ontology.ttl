@@ -3,6 +3,7 @@
 @prefix xml: <http://www.w3.org/XML/1998/namespace>.
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#>.
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
+@prefix dc: <http://purl.org/dc/elements/1.1/>.
 @prefix knora-base: <http://www.knora.org/ontology/knora-base#>.
 @prefix salsah-gui: <http://www.knora.org/ontology/salsah-gui#>.
 @base <http://www.knora.org/ontology/drawings-gods>.
@@ -10,7 +11,21 @@
 @prefix drawings-gods: <http://www.knora.org/ontology/drawings-gods>.
 @prefix : <http://www.knora.org/ontology/drawings-gods#>.
 
-<http://www.knora.org/ontology/drawings-gods> rdf:type owl:Ontology .
+<http://www.knora.org/ontology/drawings-gods> rdf:type owl:Ontology ;
+												dc:contributor "Christelle Cocco"^^xsd:string,
+																"Olga Serbaeva"^^xsd:string,
+																"Gregory Dessart"^^xsd:string,
+																"Pierre-Yves Brandt"^^xsd:string,
+												        		"Zhargalma Dandarova"^^xsd:string ;
+												dc:creator "Marion Rivoal"^^xsd:string;
+												dc:date "2017-02-23" ;
+												dc:description """drawings-gods ontology aims at describing research material gathered within a project funded by the Swiss National Founds. Research materials include thousands drawings, data regarding the socio-cultural context of the producers, as well as questionnaires upon those drawings."""^^xsd:string ;
+												dc:rights "to be determined"@en ;
+												dc:title "FaBiO, the FRBR-aligned Bibliographic Ontology"^^xsd:string ;
+#												vann:preferredNamespacePrefix "drawings-gods"^^xsd:string ;
+#												vann:preferredNamespaceUri "to/be/defined/"^^xsd:anyURI ;
+												rdfs:comment """ """^^xsd:string ;
+												owl:versionInfo "1.0."^^xsd:string .
 
 
 #################################################################
@@ -705,7 +720,7 @@
 :hasDrawingPublicComment rdf:type owl:ObjectProperty ;
                 rdfs:subPropertyOf :hasInternalComment ;
                 knora-base:objectClassConstraint knora-base:TextValue ;
-                knora-base:subjectClassConstraint :Drawing ;
+                knora-base:subjectClassConstraint :DrawingPublic ;
                 rdfs:label "Commentaire interne (dessin en accès public)"@fr ,
                      	"Internal comment (public drawing)"@en ;
 				rdfs:comment "Commentaire interne (en accès public)."@fr ,
@@ -717,7 +732,7 @@
 :hasDrawingPrivateComment rdf:type owl:ObjectProperty ;
                 rdfs:subPropertyOf :hasInternalComment ;
                 knora-base:objectClassConstraint knora-base:TextValue ;
-                knora-base:subjectClassConstraint :Drawing ;
+                knora-base:subjectClassConstraint :DrawingPrivate ;
                 rdfs:label "Commentaire interne  (dessin en accès restreint)"@fr ,
                      	"Internal comment (private drawing)"@en ;
 				rdfs:comment "Commentaire interne (dessin en accès restreint)."@fr ,
@@ -2557,27 +2572,33 @@
 #                         ] ,
                          [ rdf:type owl:Restriction ;
                            owl:onProperty :hasKeywords ;
-                           owl:minCardinality "0"^^xsd:nonNegativeInteger
+#                           owl:minCardinality "0"^^xsd:nonNegativeInteger
+						   owl:minCardinality "0"^^xsd:nonNegativeInteger
                          ] ,
                          [ rdf:type owl:Restriction ;
                            owl:onProperty :hasCodeRecto ;
-                           owl:cardinality "1"^^xsd:nonNegativeInteger
+#                          owl:cardinality "1"^^xsd:nonNegativeInteger
+						   owl:minCardinality "0"^^xsd:nonNegativeInteger
                          ] ,
                          [ rdf:type owl:Restriction ;
                            owl:onProperty :hasDrawingDate ;
-                           owl:cardinality "1"^^xsd:nonNegativeInteger
+#                           owl:cardinality "1"^^xsd:nonNegativeInteger
+						   owl:minCardinality "0"^^xsd:nonNegativeInteger
                          ] ,
                          [ rdf:type owl:Restriction ;
                            owl:onProperty :hasDrawingType ;
-                           owl:cardinality "1"^^xsd:nonNegativeInteger
+#                           owl:cardinality "1"^^xsd:nonNegativeInteger
+						   owl:minCardinality "0"^^xsd:nonNegativeInteger
                          ] ,
                          [ rdf:type owl:Restriction ;
                            owl:onProperty :hasOrientation ;
-                           owl:cardinality "1"^^xsd:nonNegativeInteger
+#                           owl:cardinality "1"^^xsd:nonNegativeInteger
+						   owl:minCardinality "0"^^xsd:nonNegativeInteger
                          ] ,
                          [ rdf:type owl:Restriction ;
                            owl:onProperty :hasDrawingOrder ;
-                           owl:cardinality "1"^^xsd:nonNegativeInteger
+#                           owl:cardinality "1"^^xsd:nonNegativeInteger
+						   owl:minCardinality "0"^^xsd:nonNegativeInteger
                          ] ,
                          [ rdf:type owl:Restriction ;
                            owl:onProperty :hasAgeDecimal ;
@@ -2585,11 +2606,13 @@
                          ] ,
                          [ rdf:type owl:Restriction ;
                            owl:onProperty :hasInstruction ;
-                           owl:minCardinality "1"^^xsd:nonNegativeInteger
+#                           owl:minCardinality "1"^^xsd:nonNegativeInteger
+							owl:minCardinality "0"^^xsd:nonNegativeInteger
                          ] ,
                          [ rdf:type owl:Restriction ;
                            owl:onProperty :hasInstructionValue ;
-                           owl:minCardinality "1"^^xsd:nonNegativeInteger
+#                           owl:minCardinality "1"^^xsd:nonNegativeInteger
+							owl:minCardinality "0"^^xsd:nonNegativeInteger
                          ] ,
                          [ rdf:type owl:Restriction ;
                            owl:onProperty :hasDrawerAgeAssignedMonth ;
@@ -2643,7 +2666,7 @@
                          [ rdf:type owl:Restriction ;
                            owl:onProperty :hasDrawingPrivateComment ;
                            owl:minCardinality "0"^^xsd:nonNegativeInteger
-                         ] ;
+                         ] ; 
                 rdfs:label "Dessin en accès restreint"@fr ,
 					"Drawing (restricted access)"@en ;
 				rdfs:comment "Accès au dessin limité."@fr ,
@@ -2654,7 +2677,7 @@
 :DrawingPublic rdf:type owl:Class ;
                rdfs:subClassOf :Drawing ,
                          [ rdf:type owl:Restriction ;
-                           owl:onProperty :hasDrawingPrivateComment ;
+                           owl:onProperty :hasDrawingPublicComment ;
                            owl:minCardinality "0"^^xsd:nonNegativeInteger
                          ] ;
                rdfs:label "Dessin en accès public"@fr ,
@@ -2794,7 +2817,7 @@
                         ] ,
                         [ rdf:type owl:Restriction ;
                           owl:onProperty :hasLastname ;
-                          owl:minCardinality "0"^^xsd:nonNegativeInteger
+                          owl:maxCardinality "1"^^xsd:nonNegativeInteger
                         ] ,
                         [ rdf:type owl:Restriction ;
                           owl:onProperty :hasNationality ;
@@ -2814,15 +2837,15 @@
                         ] ,		
                         [ rdf:type owl:Restriction ;
                           owl:onProperty :hasCodePerson ;
-                          owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                          owl:cardinality "1"^^xsd:nonNegativeInteger
                         ] ,
                         [ rdf:type owl:Restriction ;
                           owl:onProperty :hasDrawingChildTotal ;
-                          owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                          owl:cardinality "1"^^xsd:nonNegativeInteger
                         ] ,
                         [ rdf:type owl:Restriction ;
                           owl:onProperty :hasPersonGender ;
-                          owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                          owl:cardinality "1"^^xsd:nonNegativeInteger
                         ] ,
                         [ rdf:type owl:Restriction ;
                           owl:onProperty :hasBirthCountry ;
