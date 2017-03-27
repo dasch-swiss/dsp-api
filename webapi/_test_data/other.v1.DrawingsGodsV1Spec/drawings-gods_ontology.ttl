@@ -2837,15 +2837,15 @@
                         ] ,		
                         [ rdf:type owl:Restriction ;
                           owl:onProperty :hasCodePerson ;
-                          owl:cardinality "1"^^xsd:nonNegativeInteger
+                          owl:maxCardinality "1"^^xsd:nonNegativeInteger
                         ] ,
                         [ rdf:type owl:Restriction ;
                           owl:onProperty :hasDrawingChildTotal ;
-                          owl:cardinality "1"^^xsd:nonNegativeInteger
+                          owl:maxCardinality "1"^^xsd:nonNegativeInteger
                         ] ,
                         [ rdf:type owl:Restriction ;
                           owl:onProperty :hasPersonGender ;
-                          owl:cardinality "1"^^xsd:nonNegativeInteger
+                          owl:maxCardinality "1"^^xsd:nonNegativeInteger
                         ] ,
                         [ rdf:type owl:Restriction ;
                           owl:onProperty :hasBirthCountry ;
