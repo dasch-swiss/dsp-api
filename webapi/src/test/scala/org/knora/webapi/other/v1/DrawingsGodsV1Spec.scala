@@ -31,7 +31,7 @@ import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_NAME
 import org.knora.webapi.responders.v1.ResponderManagerV1
 import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
 import org.knora.webapi.util.{MutableTestIri, MutableUserProfileV1}
-import org.knora.webapi.{CoreSpec, LiveActorMaker, SharedAdminTestData}
+import org.knora.webapi.{CoreSpec, LiveActorMaker, OntologyConstants, SharedAdminTestData}
 
 import scala.concurrent.duration._
 
@@ -114,10 +114,25 @@ class DrawingsGodsV1Spec extends CoreSpec(DrawingsGodsV1Spec.config) with Triple
             expectMsg(DefaultObjectAccessPermissionsStringResponseV1("CR http://data.knora.org/groups/drawings-gods-admin|D http://data.knora.org/groups/drawings-gods-snf-team"))
         }
 
+        "return correct drawings-gods:DrawingPublic / knora-base:hasStillImageFileValue combination permissions string for drawings-gods-test-ddd1 user" in {
+            val drawingPublicResourceClass = "http://www.knora.org/ontology/drawings-gods#DrawingPublic"
+            val hasStillImageFileValue = OntologyConstants.KnoraBase.HasStillImageFileValue
+            responderManager ! DefaultObjectAccessPermissionsStringForPropertyGetV1(drawingsGodsProjectIri, drawingPublicResourceClass, hasStillImageFileValue, ddd1.get.permissionData)
+            expectMsg(DefaultObjectAccessPermissionsStringResponseV1("CR http://data.knora.org/groups/drawings-gods-admin|D http://data.knora.org/groups/drawings-gods-snf-team|M http://data.knora.org/groups/drawings-gods-add-drawings|V knora-base:KnownUser,knora-base:UnknownUser,knora-base:ProjectMember,http://data.knora.org/groups/drawings-gods-meta-annotators"))
+        }
+
+        "return correct drawings-gods:DrawingPrivate / knora-base:hasStillImageFileValue combination permissions string for drawings-gods-test-ddd1 user" in {
+            val drawingPrivateResourceClass = "http://www.knora.org/ontology/drawings-gods#DrawingPrivate"
+            val hasStillImageFileValue = OntologyConstants.KnoraBase.HasStillImageFileValue
+            responderManager ! DefaultObjectAccessPermissionsStringForPropertyGetV1(drawingsGodsProjectIri, drawingPrivateResourceClass, hasStillImageFileValue, ddd1.get.permissionData)
+            expectMsg(DefaultObjectAccessPermissionsStringResponseV1("CR http://data.knora.org/groups/drawings-gods-admin|D http://data.knora.org/groups/drawings-gods-snf-team|M http://data.knora.org/groups/drawings-gods-add-drawings,http://data.knora.org/groups/drawings-gods-meta-annotators|V knora-base:ProjectMember"))
+        }
+
         "allow drawings-gods-test-ddd1 user to see newly created resource and all properties" in {
 
             val valuesToBeCreated = Map(
-                "http://www.knora.org/ontology/drawings-gods#hasLastname" -> Vector(CreateValueV1WithComment(TextValueSimpleV1("PersonTest DDD1")))
+                "http://www.knora.org/ontology/drawings-gods#hasLastname" -> Vector(CreateValueV1WithComment(TextValueSimpleV1("PersonTest DDD1"))),
+                "http://www.knora.org/ontology/drawings-gods#hasCodePerson" -> Vector(CreateValueV1WithComment(TextValueSimpleV1("Code")))
             )
 
             responderManager ! ResourceCreateRequestV1(
