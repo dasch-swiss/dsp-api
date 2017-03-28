@@ -61,11 +61,11 @@ object SearchV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol wi
                                 // the property Iri already exists, add to it
                                 val existingValsforProp: Seq[JsValue] = acc(valObj.propertyIri)
 
-                                acc ++ Map(valObj.propertyIri -> (existingValsforProp :+ valObj.value.toJson))
+                                acc ++ Map(valObj.propertyIri -> (existingValsforProp :+ Map("@value" -> valObj.value.toJson, "@type" -> valObj.valueClass.toJson).toJson))
 
                             } else {
                                 // the property Iri does not exist yet, create it
-                                acc ++ Map(valObj.propertyIri -> Vector(valObj.value.toJson))
+                                acc ++ Map(valObj.propertyIri -> Vector(Map("@value" -> valObj.value.toJson, "@type" -> valObj.valueClass.toJson).toJson))
                             }
 
                     }.map {
