@@ -55,18 +55,21 @@ object SearchV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol wi
             val resourceResultRows: JsValue = searchResultV2.results.map {
                 (resultRow: SearchResourceResultRowV2) =>
 
-                    val valueObjects: Seq[Map[IRI, JsValue]] = resultRow.valueObjects.map {
+                    val valueObjects: Map[String, JsValue] = resultRow.valueObjects.map {
                         (valObj) =>
                             Map(
                                 valObj.propertyIri -> valObj.value.toJson
                             )
+                    }.foldLeft(Map.empty[String, JsValue]) {
+                        case (acc: Map[String, JsValue], valObj: Map[IRI, JsValue]) =>
+                            acc ++ valObj
                     }
 
-                    val values = Map(
+                    val values: Map[IRI, JsValue] = Map(
                         "@type" -> resultRow.resourceClass.toJson,
                         "name" -> resultRow.label.toJson,
                         "@id" -> resultRow.resourceIri.toJson
-                    )
+                    ) ++ valueObjects
 
                     values.toJson
 
