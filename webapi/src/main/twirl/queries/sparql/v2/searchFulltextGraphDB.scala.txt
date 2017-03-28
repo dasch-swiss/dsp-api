@@ -1,0 +1,85 @@
+@*
+ * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
+ * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
+ *
+ * This file is part of Knora.
+ *
+ * Knora is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Knora is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public
+ * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ *@
+
+@import org.knora.webapi.IRI
+@import org.knora.webapi.SparqlGenerationException
+
+@*
+ * Performs a simple full-text search using GraphDB.
+ *
+ * This template is used only by searchFulltext.scala.txt.
+ *
+ * Since the triplestore type is GraphDB, we assume that inference is enabled, and we use it to optimise the generated
+ * SPARQL. Specifically, we use inference to return search results matching subclasses of the resource class
+ * specified by the user. This requires us to use GraphDB's GRAPH <http://www.ontotext.com/explicit> whenever
+ * we need to get explicit (non-inferred) statements.
+ *
+ * @param searchTerms search terms.
+ * @param preferredLanguage the language code of the user's preferred language.
+ *@
+@(searchTerms: String)
+
+PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+CONSTRUCT {
+    ?matchingSubject ?matchingProperty ?literal .
+    ?matchingSubject knora-base:attachedToUser ?valueCreatorMatchingSubject ;
+            knora-base:hasPermissions ?valuePermissionsMatchingSubject .
+    ?matchingSubject a ?typeMatchingSubject .
+
+    ?resource ?prop ?matchingSubject .
+    ?resource rdfs:label ?label .
+    ?resource a ?typeResource .
+    ?resource knora-base:attachedToUser ?valueCreatorResource ;
+            knora-base:hasPermissions ?valuePermissionsResource .
+}
+
+WHERE {
+
+    ?matchingSubject ?matchingProperty ?literal .
+    ?literal <http://www.ontotext.com/owlim/lucene#fullTextSearchIndex> '@searchTerms' .
+
+    GRAPH <http://www.ontotext.com/explicit> {
+        ?matchingSubject ?matchingProperty ?literal .
+        ?matchingSubject a ?typeMatchingSubject .
+    }
+
+    ?matchingSubject knora-base:isDeleted false .
+
+    ?matchingSubject knora-base:attachedToUser ?valueCreatorMatchingSubject ;
+        knora-base:hasPermissions ?valuePermissionsMatchingSubject .
+
+
+    OPTIONAL {
+        ?resource knora-base:hasValue ?matchingSubject .
+
+        GRAPH <http://www.ontotext.com/explicit> {
+            ?resource ?prop ?matchingSubject .
+            ?resource a ?typeResource .
+        }
+
+        ?resource knora-base:isDeleted false .
+
+        ?resource rdfs:label ?label .
+
+        ?resource knora-base:attachedToUser ?valueCreatorResource ;
+            knora-base:hasPermissions ?valuePermissionsResource .
+    }
+}

@@ -22,6 +22,7 @@ package org.knora.webapi.responders.v2
 
 import akka.pattern._
 import org.knora.webapi._
+import org.knora.webapi.messages.v1.store.triplestoremessages.{SparqlConstructRequest, SparqlConstructResponse, SparqlSelectRequest, SparqlSelectResponse}
 import org.knora.webapi.messages.v2.responder.searchmessages.{FulltextSearchGetRequestV2, SearchGetResponseV2}
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.util.ActorUtil._
@@ -36,6 +37,29 @@ class SearchResponderV2 extends Responder {
 
     private def fulltextSearchV2(searchGetRequest: FulltextSearchGetRequestV2) = {
 
-        Future(SearchGetResponseV2(nhits = 0))
+        for {
+            searchSparql <- Future(queries.sparql.v2.txt.searchFulltext(
+                triplestore = settings.triplestoreType,
+                searchTerms = searchGetRequest.searchValue
+            ).toString())
+
+            searchResponse: SparqlConstructResponse <- (storeManager ? SparqlConstructRequest(searchSparql)).mapTo[SparqlConstructResponse]
+
+            // collect the subjects that represent a knora-base:Resource
+            resources = searchResponse.statements.filter {
+                case (subject: IRI, assertions: Seq[(IRI, String)]) =>
+
+                    // collect the predicates
+                    val predicates = assertions.map {
+                        case (pred, obj) => pred
+                    }
+
+                    // if it has an rdfs:label, it is a resource
+                    predicates.contains(OntologyConstants.Rdfs.Label)
+            }
+
+
+        } yield SearchGetResponseV2(nhits = resources.size)
+
     }
 }
