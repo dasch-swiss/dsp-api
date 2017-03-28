@@ -55,23 +55,32 @@ object SearchV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol wi
             val resourceResultRows: JsValue = searchResultV2.results.map {
                 (resultRow: SearchResourceResultRowV2) =>
 
-                    val valueObjects: Map[String, JsValue] = resultRow.valueObjects.map {
-                        (valObj) =>
-                            Map(
-                                valObj.propertyIri -> valObj.value.toJson
-                            )
-                    }.foldLeft(Map.empty[String, JsValue]) {
-                        case (acc: Map[String, JsValue], valObj: Map[IRI, JsValue]) =>
-                            acc ++ valObj
+                    val valueObjects: Map[IRI, JsValue] = resultRow.valueObjects.foldLeft(Map.empty[IRI, Seq[JsValue]]) {
+                        case (acc: Map[String, Seq[JsValue]], valObj: SearchValueResultRowV2) =>
+                            if (acc.keySet.contains(valObj.propertyIri)) {
+                                // the property Iri already exists, add to it
+                                val existingValsforProp: Seq[JsValue] = acc(valObj.propertyIri)
+
+                                acc ++ Map(valObj.propertyIri -> (existingValsforProp :+ valObj.value.toJson))
+
+                            } else {
+                                // the property Iri does not exist yet, create it
+                                acc ++ Map(valObj.propertyIri -> Vector(valObj.value.toJson))
+                            }
+
+                    }.map {
+                        case (propIri, values) =>
+                            propIri -> values.toJson
                     }
 
-                    val values: Map[IRI, JsValue] = Map(
+
+                    val values = Map(
                         "@type" -> resultRow.resourceClass.toJson,
                         "name" -> resultRow.label.toJson,
                         "@id" -> resultRow.resourceIri.toJson
-                    ) ++ valueObjects
+                    )
 
-                    values.toJson
+                    values ++ valueObjects
 
             }.toJson
 
