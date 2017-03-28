@@ -4,7 +4,9 @@ import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v2.responder.{KnoraRequestV2, KnoraResponseV2}
-import spray.json.{DefaultJsonProtocol, NullOptions, RootJsonFormat}
+import spray.json._
+
+import scala.collection.immutable.Iterable
 
 /**
   * An abstract trait for messages that can be sent to `SearchResponderV1`.
@@ -44,8 +46,47 @@ case class SearchValueResultRowV2(valueClass: IRI, value: String, valueObjectIri
   */
 object SearchV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with NullOptions {
 
+    implicit object searchResponseV2Format extends JsonFormat[SearchGetResponseV2] {
+
+        def read(jsonVal: JsValue) = ???
+
+        def write(searchResultV2: SearchGetResponseV2) = {
+
+            val resourceResultRows: JsValue = searchResultV2.results.map {
+                (resultRow: SearchResourceResultRowV2) =>
+
+                    val valueObjects: Seq[Map[IRI, JsValue]] = resultRow.valueObjects.map {
+                        (valObj) =>
+                            Map(
+                                valObj.propertyIri -> valObj.value.toJson
+                            )
+                    }
+
+                    val values = Map(
+                        "@type" -> resultRow.resourceClass.toJson,
+                        "name" -> resultRow.label.toJson,
+                        "@id" -> resultRow.resourceIri.toJson
+                    )
+
+                    values.toJson
+
+            }.toJson
+
+            val fields = Map(
+                "@context" -> Map(
+                    "@vocab" -> "http://schema.org/".toJson
+                ).toJson,
+                "@type" -> "ItemList".toJson,
+                "numberOfItems" -> searchResultV2.nhits.toJson,
+                "itemListElement" -> resourceResultRows
+            )
+
+            JsObject(fields)
+        }
+    }
+
     implicit val searchValueResultRowV2Format: RootJsonFormat[SearchValueResultRowV2] = jsonFormat4(SearchValueResultRowV2)
     implicit val searchResourceResultRowV2Format: RootJsonFormat[SearchResourceResultRowV2] = jsonFormat4(SearchResourceResultRowV2)
-    implicit val searchResponseV2Format: RootJsonFormat[SearchGetResponseV2] = jsonFormat2(SearchGetResponseV2)
+    //implicit val searchResponseV2Format: RootJsonFormat[SearchGetResponseV2] = jsonFormat2(SearchGetResponseV2)
 
 }
