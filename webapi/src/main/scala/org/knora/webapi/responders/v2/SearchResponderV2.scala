@@ -22,8 +22,8 @@ package org.knora.webapi.responders.v2
 
 import akka.pattern._
 import org.knora.webapi._
-import org.knora.webapi.messages.v1.store.triplestoremessages.{SparqlConstructRequest, SparqlConstructResponse, SparqlSelectRequest, SparqlSelectResponse}
-import org.knora.webapi.messages.v2.responder.searchmessages.{FulltextSearchGetRequestV2, SearchGetResponseV2}
+import org.knora.webapi.messages.v1.store.triplestoremessages.{SparqlConstructRequest, SparqlConstructResponse}
+import org.knora.webapi.messages.v2.responder.searchmessages.{FulltextSearchGetRequestV2, SearchGetResponseV2, SearchResourceResultRowV2, SearchValueResultRowV2}
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.util.ActorUtil._
 
@@ -45,21 +45,81 @@ class SearchResponderV2 extends Responder {
 
             searchResponse: SparqlConstructResponse <- (storeManager ? SparqlConstructRequest(searchSparql)).mapTo[SparqlConstructResponse]
 
-            // collect the subjects that represent a knora-base:Resource
-            resources = searchResponse.statements.filter {
+            // split resources and value objects
+            (valueObjects: Map[IRI, Seq[(IRI, String)]], resources: Map[IRI, Seq[(IRI, String)]]) = searchResponse.statements.partition {
                 case (subject: IRI, assertions: Seq[(IRI, String)]) =>
 
-                    // collect the predicates
-                    val predicates = assertions.map {
-                        case (pred, obj) => pred
-                    }
+                    // get the subject's type (it could be a resource or a valueObject)
+                    val subjectType: Option[String] = assertions.find {
+                        case (pred, obj) =>
+                            pred == OntologyConstants.Rdf.Type
+                    }.map(_._2) // get the type
 
-                    // if it has an rdfs:label, it is a resource
-                    predicates.contains(OntologyConstants.Rdfs.Label)
+                    OntologyConstants.KnoraBase.ValueClasses.contains(subjectType.getOrElse(throw InconsistentTriplestoreDataException(s"no rdf:type given for $subject")))
+
             }
 
+            resultRows: Seq[SearchResourceResultRowV2] = resources.map {
+                case (resourceIri, assertions) =>
 
-        } yield SearchGetResponseV2(nhits = resources.size)
+                    // get the resource's label
+                    val resourceLabel: Option[String] = assertions.find {
+                        case (pred, obj) =>
+                            pred == OntologyConstants.Rdfs.Label
+                    }.map(_._2) // get the label
+
+                    // get the resource's type
+                    val resourceClass: Option[String] = assertions.find {
+                        case (pred, obj) =>
+                            pred == OntologyConstants.Rdf.Type
+                    }.map(_._2) // get the resource's type
+
+                    // get all the objects from the assertions
+                    val objects: Seq[String] = assertions.map {
+                        case (pred, obj) =>
+                            obj
+                    }
+
+                    // check if one or more of the objects points to a value object
+                    val valueObjectIris: Set[IRI] = valueObjects.keySet.intersect(objects.toSet)
+
+                    SearchResourceResultRowV2(
+                        resourceIri = resourceIri,
+                        resourceClass = resourceClass.getOrElse(throw InconsistentTriplestoreDataException(s"no rdf:type given for $resourceIri")),
+                        label = resourceLabel.getOrElse(throw InconsistentTriplestoreDataException(s"no rdfs:label given for $resourceIri")),
+                        valueObjects = valueObjectIris.map {
+                            (valObj: IRI) =>
+
+                                // get the value object's type
+                                val valueObjectClass: Option[String] = valueObjects.getOrElse(valObj, throw InconsistentTriplestoreDataException(s"value object not found $valObj")).find {
+                                    case (pred, obj) =>
+                                        pred == OntologyConstants.Rdf.Type
+                                }.map(_._2) // get the resource's type
+
+                                // get the value object's knora-base:valueHasString
+                                val valueObjectString: Option[String] = valueObjects.getOrElse(valObj, throw InconsistentTriplestoreDataException(s"value object not found $valObj")).find {
+                                    case (pred, obj) =>
+                                        pred == OntologyConstants.KnoraBase.ValueHasString
+                                }.map(_._2) // get the knora-base:valueHasString
+
+                                // get the property that points from the resource to the value object
+                                val propertyIri = assertions.find {
+                                    case (pred, obj) =>
+                                        obj == valObj
+                                }.map(_._1)
+
+                                SearchValueResultRowV2(
+                                    valueClass = valueObjectClass.getOrElse(s"no rdf:type found for $valueObjectClass"),
+                                    value = valueObjectString.getOrElse(throw InconsistentTriplestoreDataException(s"no knora-base:valueHasString found for $valObj")),
+                                    valueObjectIri = valObj,
+                                    propertyIri = propertyIri.getOrElse(throw InconsistentTriplestoreDataException(s"no property connecting $resourceIri with $valObj"))
+                                )
+                        }.toVector
+                    )
+            }.toVector
+
+
+        } yield SearchGetResponseV2(nhits = resources.size, results = resultRows)
 
     }
 }

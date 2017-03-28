@@ -1,6 +1,7 @@
 package org.knora.webapi.messages.v2.responder.searchmessages
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
+import org.knora.webapi.IRI
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v2.responder.{KnoraRequestV2, KnoraResponseV2}
 import spray.json.{DefaultJsonProtocol, NullOptions, RootJsonFormat}
@@ -26,10 +27,14 @@ case class FulltextSearchGetRequestV2(searchValue: String,
   * Represents a response to a user search query (both fulltext and extended search)
   *
   */
-case class SearchGetResponseV2(nhits: Int) extends KnoraResponseV2 {
-    def toJsValue = SearchV1JsonProtocol.searchResponseV1Format.write(this)
+case class SearchGetResponseV2(nhits: Int, results: Seq[SearchResourceResultRowV2]) extends KnoraResponseV2 {
+    def toJsValue = SearchV1JsonProtocol.searchResponseV2Format.write(this)
 }
 
+
+case class SearchResourceResultRowV2(resourceIri: IRI, resourceClass: IRI, label: String, valueObjects: Seq[SearchValueResultRowV2])
+
+case class SearchValueResultRowV2(valueClass: IRI, value: String, valueObjectIri: IRI, propertyIri: IRI)
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // JSON formatting
@@ -39,5 +44,8 @@ case class SearchGetResponseV2(nhits: Int) extends KnoraResponseV2 {
   */
 object SearchV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with NullOptions {
 
-    implicit val searchResponseV1Format: RootJsonFormat[SearchGetResponseV2] = jsonFormat1(SearchGetResponseV2)
+    implicit val searchValueResultRowV2Format: RootJsonFormat[SearchValueResultRowV2] = jsonFormat4(SearchValueResultRowV2)
+    implicit val searchResourceResultRowV2Format: RootJsonFormat[SearchResourceResultRowV2] = jsonFormat4(SearchResourceResultRowV2)
+    implicit val searchResponseV2Format: RootJsonFormat[SearchGetResponseV2] = jsonFormat2(SearchGetResponseV2)
+
 }

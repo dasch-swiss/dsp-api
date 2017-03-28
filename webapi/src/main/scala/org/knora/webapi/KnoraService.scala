@@ -103,7 +103,7 @@ trait KnoraService {
     /**
       * All routes composed together and CORS activated.
       */
-    private val apiRoutes = CORS(
+    private val apiRoutes: Route = CORS(
         ResourcesRouteV1.knoraApiPath(system, settings, log) ~
             ValuesRouteV1.knoraApiPath(system, settings, log) ~
             SipiRouteV1.knoraApiPath(system, settings, log) ~

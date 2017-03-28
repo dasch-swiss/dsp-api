@@ -38,8 +38,9 @@
 
 PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+
 CONSTRUCT {
-    ?matchingSubject ?matchingProperty ?literal .
+	?matchingSubject ?matchingProperty ?literal .
     ?matchingSubject knora-base:attachedToUser ?valueCreatorMatchingSubject ;
             knora-base:hasPermissions ?valuePermissionsMatchingSubject .
     ?matchingSubject a ?typeMatchingSubject .
@@ -52,34 +53,44 @@ CONSTRUCT {
 }
 
 WHERE {
+    GRAPH <http://www.ontotext.com/explicit> {
+        ?matchingSubject ?matchingProperty ?literal .
+    }
 
-    ?matchingSubject ?matchingProperty ?literal .
     ?literal <http://www.ontotext.com/owlim/lucene#fullTextSearchIndex> '@searchTerms' .
 
     GRAPH <http://www.ontotext.com/explicit> {
-        ?matchingSubject ?matchingProperty ?literal .
         ?matchingSubject a ?typeMatchingSubject .
     }
 
     ?matchingSubject knora-base:isDeleted false .
 
     ?matchingSubject knora-base:attachedToUser ?valueCreatorMatchingSubject ;
-        knora-base:hasPermissions ?valuePermissionsMatchingSubject .
-
+    	knora-base:hasPermissions ?valuePermissionsMatchingSubject .
 
     OPTIONAL {
-        ?resource knora-base:hasValue ?matchingSubject .
+    	?containingResource knora-base:hasValue ?matchingSubject .
 
-        GRAPH <http://www.ontotext.com/explicit> {
-            ?resource ?prop ?matchingSubject .
-            ?resource a ?typeResource .
-        }
+    	GRAPH <http://www.ontotext.com/explicit> {
+        	?containingResource ?prop ?matchingSubject .
+    	}
 
-        ?resource knora-base:isDeleted false .
-
-        ?resource rdfs:label ?label .
-
-        ?resource knora-base:attachedToUser ?valueCreatorResource ;
-            knora-base:hasPermissions ?valuePermissionsResource .
     }
+
+     # If the previous OPTIONAL clause was executed, ?matchingSubject is a value, and ?containingResource will be set. Otherwise, ?matchingSubject is a resource.
+    BIND(COALESCE(?containingResource, ?matchingSubject) AS ?resource)
+
+    GRAPH <http://www.ontotext.com/explicit> {
+        ?resource a ?typeResource .
+    }
+
+    ?resource rdfs:label ?label .
+    ?resource knora-base:attachedToUser ?valueCreatorResource ;
+            knora-base:hasPermissions ?valuePermissionsResource .
+
+    ?resource knora-base:isDeleted false .
+
+    ?resource a knora-base:Resource .
+
+
 }
