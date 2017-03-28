@@ -1,6 +1,6 @@
 /*
  * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
  * This file is part of Knora.
  * Knora is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
@@ -171,7 +171,7 @@ var s_ = function(key) {
 
 SALSAH.reload_css = function() {
     var href = $('#loadcss').attr('href'); + ',#';
-	if ((SALSAH.userdata !== null) && (SALSAH.userdata.active_project !== undefined)) href += '&project_id=' + SALSAH.userdata.active_project;
+	if ((SALSAH.userprofile.active_project !== undefined)) href += '&project_id=' + SALSAH.userprofile.active_project;
 
     $('#loadcss').attr({href: href});
 }

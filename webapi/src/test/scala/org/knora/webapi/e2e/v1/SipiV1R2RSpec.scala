@@ -1,6 +1,6 @@
 /*
  * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
  *
  * This file is part of Knora.
  *
@@ -52,7 +52,7 @@ import scala.concurrent.duration._
   */
 class SipiV1R2RSpec extends R2RSpec {
 
-    override def testConfigSource =
+    override def testConfigSource: String =
         """
          akka.loglevel = "DEBUG"
          akka.stdout-loglevel = "DEBUG"
@@ -115,7 +115,7 @@ class SipiV1R2RSpec extends R2RSpec {
 
         val pathToFile = "_test_data/test_route/images/Chlaus.jpg"
 
-        def createTmpFileDir() = {
+        def createTmpFileDir(): Unit = {
             // check if tmp datadir exists and create it if not
             if (!Files.exists(Paths.get(settings.tmpDataDir))) {
                 try {

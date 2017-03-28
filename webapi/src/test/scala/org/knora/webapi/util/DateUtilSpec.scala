@@ -1,6 +1,6 @@
 /*
  * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
  *
  * This file is part of Knora.
  *
@@ -20,7 +20,9 @@
 
 package org.knora.webapi.util
 
+import org.knora.webapi.BadRequestException
 import org.knora.webapi.messages.v1.responder.valuemessages.{DateValueV1, JulianDayNumberValueV1, KnoraCalendarV1, KnoraPrecisionV1}
+import org.knora.webapi.util.DateUtilV1.DateRange
 import org.scalatest._
 
 /**
@@ -114,6 +116,54 @@ class DateUtilSpec extends WordSpec with Matchers {
             val reverseConvertedDateValueV1 = DateUtilV1.julianDayNumberValueV1ToDateValueV1(julianDayCountValueV1)
 
             reverseConvertedDateValueV1 should be(dateValueV1)
+        }
+
+        "convert a valid date string with day precision to a Java GregorianCalendar" in {
+
+            val dateRange: DateRange = DateUtilV1.dateString2DateRange("2017-02-28", KnoraCalendarV1.GREGORIAN)
+
+        }
+
+        "attempt to convert an date string representing an non existing date with day precision to a Java GregorianCalendar" in {
+
+            assertThrows[BadRequestException] {
+                val dateRange: DateRange = DateUtilV1.dateString2DateRange("2017-02-29", KnoraCalendarV1.GREGORIAN)
+            }
+
+
+        }
+
+        "attempt to convert an invalid date string with day precision to a Java GregorianCalendar" in {
+
+            assertThrows[BadRequestException] {
+                val dateRange: DateRange = DateUtilV1.dateString2DateRange("2017-02-00", KnoraCalendarV1.GREGORIAN)
+            }
+
+
+        }
+
+        "attempt to convert an invalid date string with day precision to a Java GregorianCalendar (2)" in {
+
+            assertThrows[BadRequestException] {
+                val dateRange: DateRange = DateUtilV1.dateString2DateRange("2017-00-01", KnoraCalendarV1.GREGORIAN)
+            }
+
+
+        }
+
+        "convert a valid date string with month precision to a Java GregorianCalendar" in {
+
+            val dateRange: DateRange = DateUtilV1.dateString2DateRange("2017-02", KnoraCalendarV1.GREGORIAN)
+
+        }
+
+        "attempt to convert an invalid date string with month precision to a Java GregorianCalendar" in {
+
+            assertThrows[BadRequestException] {
+                val dateRange: DateRange = DateUtilV1.dateString2DateRange("2017-00", KnoraCalendarV1.GREGORIAN)
+            }
+
+
         }
     }
 }

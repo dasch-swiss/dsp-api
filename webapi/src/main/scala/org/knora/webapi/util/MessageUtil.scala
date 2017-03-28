@@ -91,13 +91,13 @@ object MessageUtil {
       * added to a new resource.
       *
       * @param resourceIri   the Iri of the created resource.
-      * @param ownerIri      the owner of the resource.
+      * @param creatorIri    the creator of the resource.
       * @param propertyIri   the property the valueResponse belongs to.
       * @param valueResponse the value that has been attached to the resource.
       * @return a [[ResourceCreateValueResponseV1]] representing the created value.
       */
     def convertCreateValueResponseV1ToResourceCreateValueResponseV1(resourceIri: IRI,
-                                                                    ownerIri: IRI,
+                                                                    creatorIri: IRI,
                                                                     propertyIri: IRI,
                                                                     valueResponse: CreateValueResponseV1): ResourceCreateValueResponseV1 = {
 
@@ -107,7 +107,7 @@ object MessageUtil {
             textval = Map(LiteralValueType.StringValue -> valueResponse.value.toString),
             resource_id = Map(LiteralValueType.StringValue -> resourceIri),
             property_id = Map(LiteralValueType.StringValue -> propertyIri),
-            person_id = Map(LiteralValueType.StringValue -> ownerIri),
+            person_id = Map(LiteralValueType.StringValue -> creatorIri),
             order = Map(LiteralValueType.IntegerValue -> 1) // TODO: include correct order: valueHasOrder
         )
 

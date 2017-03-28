@@ -1,6 +1,6 @@
 /*
  * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
  *
  * This file is part of Knora.
  *
@@ -65,7 +65,6 @@ object ValuesResponderV1Spec {
     private val anythingUser = SharedAdminTestData.anythingUser1
 
     private val versionHistoryWithHiddenVersion = ValueVersionHistoryGetResponseV1(
-        userdata = incunabulaUser.userData,
         valueVersions = Vector(
             ValueVersionV1(
                 previousValue = None, // The user doesn't have permission to see the previous value.
@@ -801,7 +800,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             )
 
             expectMsgPF(timeout) {
-                case CreateValueResponseV1(newValue: TextValueWithStandoffV1, _, newValueIri: IRI, _, _) =>
+                case CreateValueResponseV1(newValue: TextValueWithStandoffV1, _, newValueIri: IRI, _) =>
                     firstValueIriWithResourceRef.set(newValueIri)
                     checkTextValue(received = newValue, expected = textValueWithResourceRef)
             }
@@ -888,7 +887,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             )
 
             expectMsgPF(timeout) {
-                case ChangeValueResponseV1(newValue: TextValueWithStandoffV1, _, newValueIri: IRI, _, _) =>
+                case ChangeValueResponseV1(newValue: TextValueWithStandoffV1, _, newValueIri: IRI, _) =>
                     firstValueIriWithResourceRef.set(newValueIri)
                     checkTextValue(received = newValue, expected = textValueWithResourceRef)
             }
@@ -964,7 +963,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             )
 
             expectMsgPF(timeout) {
-                case CreateValueResponseV1(newValue: TextValueWithStandoffV1, _, newValueIri: IRI, _, _) =>
+                case CreateValueResponseV1(newValue: TextValueWithStandoffV1, _, newValueIri: IRI, _) =>
                     secondValueIriWithResourceRef.set(newValueIri)
                     checkTextValue(received = newValue, expected = textValueWithResourceRef)
             }
@@ -1023,7 +1022,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             )
 
             expectMsgPF(timeout) {
-                case ChangeValueResponseV1(newValue: TextValueSimpleV1, _, newValueIri: IRI, _, _) =>
+                case ChangeValueResponseV1(newValue: TextValueSimpleV1, _, newValueIri: IRI, _) =>
                     firstValueIriWithResourceRef.set(newValueIri)
                     checkTextValue(received = textValue, expected = newValue)
             }
@@ -1094,7 +1093,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             )
 
             expectMsgPF(timeout) {
-                case ChangeValueResponseV1(newValue: TextValueSimpleV1, _, newValueIri: IRI, _, _) =>
+                case ChangeValueResponseV1(newValue: TextValueSimpleV1, _, newValueIri: IRI, _) =>
                     secondValueIriWithResourceRef.set(newValueIri)
                     checkTextValue(received = newValue, expected = textValue)
             }
@@ -1163,7 +1162,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             )
 
             expectMsgPF(timeout) {
-                case ChangeValueResponseV1(newValue: TextValueWithStandoffV1, _, newValueIri: IRI, _, _) =>
+                case ChangeValueResponseV1(newValue: TextValueWithStandoffV1, _, newValueIri: IRI, _) =>
                     firstValueIriWithResourceRef.set(newValueIri)
                     checkTextValue(received = newValue, expected = textValueWithResourceRef)
             }
@@ -1221,7 +1220,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             )
 
             expectMsgPF(timeout) {
-                case CreateValueResponseV1(newValue: IntegerValueV1, _, newValueIri: IRI, _, incunabulaUserData) =>
+                case CreateValueResponseV1(newValue: IntegerValueV1, _, newValueIri: IRI, _) =>
                     currentSeqnumValueIri.set(newValueIri)
                     newValue should ===(IntegerValueV1(seqnum))
             }
@@ -1239,7 +1238,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             )
 
             expectMsgPF(timeout) {
-                case ChangeValueResponseV1(newValue: IntegerValueV1, _, newValueIri: IRI, _, incunabulaUserData) =>
+                case ChangeValueResponseV1(newValue: IntegerValueV1, _, newValueIri: IRI, _) =>
                     newValue should ===(IntegerValueV1(seqnum))
             }
         }
@@ -1306,7 +1305,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             actorUnderTest ! createValueRequest
 
             expectMsgPF(timeout) {
-                case CreateValueResponseV1(linkV1: LinkV1, _, newLinkValueIri: IRI, _, _) =>
+                case CreateValueResponseV1(linkV1: LinkV1, _, newLinkValueIri: IRI, _) =>
                     linkObjLinkValueIri.set(newLinkValueIri)
                     linkV1.targetResourceIri should ===(zeitglöckleinIri)
                     linkV1.valueResourceClass should ===(Some("http://www.knora.org/ontology/incunabula#book"))
@@ -1383,7 +1382,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             actorUnderTest ! changeValueRequest
 
             expectMsgPF(timeout) {
-                case ChangeValueResponseV1(linkValue: LinkV1, _, newLinkValueIri: IRI, _, _) =>
+                case ChangeValueResponseV1(linkValue: LinkV1, _, newLinkValueIri: IRI, _) =>
                     linkObjLinkValueIri.set(newLinkValueIri)
                     linkValue.targetResourceIri should ===(linkTargetIri)
             }
@@ -1501,7 +1500,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             actorUnderTest ! changeValueRequest
 
             expectMsgPF(timeout) {
-                case ChangeValueResponseV1(linkValue: LinkV1, _, newLinkValueIri: IRI, _, _) =>
+                case ChangeValueResponseV1(linkValue: LinkV1, _, newLinkValueIri: IRI, _) =>
                     // save valueIri for next test
                     partOfLinkValueIri.set(newLinkValueIri)
                     linkValue.targetResourceIri should ===(linkTargetIri)
@@ -1616,7 +1615,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             )
 
             expectMsgPF(timeout) {
-                case ChangeValueResponseV1(newListValue: HierarchicalListValueV1, _, _, _, _) =>
+                case ChangeValueResponseV1(newListValue: HierarchicalListValueV1, _, _, _) =>
                     newListValue should ===(HierarchicalListValueV1(winter))
             }
 
@@ -1635,7 +1634,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             )
 
             expectMsgPF(timeout) {
-                case CreateValueResponseV1(newListValue: HierarchicalListValueV1, _, _, _, _) =>
+                case CreateValueResponseV1(newListValue: HierarchicalListValueV1, _, _, _) =>
                     newListValue should ===(HierarchicalListValueV1(summer))
             }
 
@@ -1653,7 +1652,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             )
 
             expectMsgPF(timeout) {
-                case CreateValueResponseV1(newDecimalValue: DecimalValueV1, _, _, _, _) =>
+                case CreateValueResponseV1(newDecimalValue: DecimalValueV1, _, _, _) =>
                     newDecimalValue should ===(decimalValue)
             }
         }
@@ -1670,7 +1669,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             )
 
             expectMsgPF(timeout) {
-                case CreateValueResponseV1(newIntervalValue: IntervalValueV1, _, _, _, _) =>
+                case CreateValueResponseV1(newIntervalValue: IntervalValueV1, _, _, _) =>
                     newIntervalValue should ===(intervalValue)
             }
         }
@@ -1687,7 +1686,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             )
 
             expectMsgPF(timeout) {
-                case CreateValueResponseV1(newColorValue: ColorValueV1, _, _, _, _) =>
+                case CreateValueResponseV1(newColorValue: ColorValueV1, _, _, _) =>
                     newColorValue should ===(colorValue)
             }
         }
@@ -1741,7 +1740,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             )
 
             expectMsgPF(timeout) {
-                case CreateValueResponseV1(newBooleanValue: BooleanValueV1, _ , _, _, _) =>
+                case CreateValueResponseV1(newBooleanValue: BooleanValueV1, _ , _, _) =>
                     newBooleanValue should ===(booleanValue)
             }
         }
@@ -1758,7 +1757,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             )
 
             expectMsgPF(timeout) {
-                case CreateValueResponseV1(newUriValue: UriValueV1, _, _, _, _) =>
+                case CreateValueResponseV1(newUriValue: UriValueV1, _, _, _) =>
                     newUriValue should ===(uriValue)
             }
         }

@@ -164,11 +164,11 @@ object GraphDBConsistencyCheckingSpec {
           |
           |INSERT {
           |    GRAPH ?dataNamedGraph {
-          |        ?resource rdf:type ?resourceClass ;
+          |        ?resource0 rdf:type ?resourceClass0 ;
           |            knora-base:isDeleted "false"^^xsd:boolean ;
           |            knora-base:attachedToUser ?creatorIri ;
           |            knora-base:attachedToProject ?projectIri ;
-          |            rdfs:label ?label ;
+          |            rdfs:label ?label0 ;
           |            knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" ;
           |            knora-base:creationDate ?currentTime .
           |
@@ -178,25 +178,25 @@ object GraphDBConsistencyCheckingSpec {
           |        # Property: http://www.knora.org/ontology/incunabula#pagenum
           |
           |
-          |        ?newValue1 rdf:type ?valueType1 ;
+          |        ?newValue0_1 rdf:type ?valueType0_1 ;
           |            knora-base:isDeleted "false"^^xsd:boolean .
           |
           |
           |
-          |                ?newValue1 knora-base:valueHasString "recto" .
+          |                ?newValue0_1 knora-base:valueHasString "recto" .
           |
           |
           |
-          |            ?newValue1 <http://www.knora.org/ontology/knora-base#attachedToUser> ?creatorIri ;
+          |            ?newValue0_1 <http://www.knora.org/ontology/knora-base#attachedToUser> ?creatorIri ;
           |                knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" .
           |
           |
-          |        ?newValue1 knora-base:valueHasOrder ?nextOrder1 ;
+          |        ?newValue0_1 knora-base:valueHasOrder ?nextOrder0_1 ;
           |                             knora-base:valueCreationDate ?currentTime .
           |
           |
           |
-          |        ?resource ?property1 ?newValue1 .
+          |        ?resource0 ?property0_1 ?newValue0_1 .
           |
           |
           |
@@ -205,11 +205,11 @@ object GraphDBConsistencyCheckingSpec {
           |        # Property: http://www.knora.org/ontology/knora-base#hasStillImageFileValue
           |
           |
-          |        ?newValue2 rdf:type ?valueType2 ;
+          |        ?newValue0_2 rdf:type ?valueType0_2 ;
           |            knora-base:isDeleted "false"^^xsd:boolean .
           |
           |
-          |                ?newValue2 knora-base:originalFilename "test.jpg" ;
+          |                ?newValue0_2 knora-base:originalFilename "test.jpg" ;
           |                                     knora-base:originalMimeType "image/jpeg" ;
           |                                     knora-base:internalFilename "full.jp2" ;
           |                                     knora-base:internalMimeType "image/jp2" ;
@@ -220,20 +220,20 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |
-          |                ?newValue2 knora-base:valueHasString "test.jpg" .
+          |                ?newValue0_2 knora-base:valueHasString "test.jpg" .
           |
           |
-          |            ?newValue2 <http://www.knora.org/ontology/knora-base#attachedToUser> ?creatorIri ;
+          |            ?newValue0_2 <http://www.knora.org/ontology/knora-base#attachedToUser> ?creatorIri ;
           |                 knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" .
           |
           |
-          |        ?newValue2 knora-base:valueHasOrder ?nextOrder2 ;
+          |        ?newValue0_2 knora-base:valueHasOrder ?nextOrder0_2 ;
           |                             knora-base:valueCreationDate ?currentTime .
           |
           |
           |
           |
-          |        ?resource ?property2 ?newValue2 .
+          |        ?resource0 ?property0_2 ?newValue0_2 .
           |
           |
           |
@@ -242,11 +242,11 @@ object GraphDBConsistencyCheckingSpec {
           |        # Property: http://www.knora.org/ontology/knora-base#hasStillImageFileValue
           |
           |
-          |        ?newValue3 rdf:type ?valueType3 ;
+          |        ?newValue0_3 rdf:type ?valueType0_3 ;
           |            knora-base:isDeleted "false"^^xsd:boolean .
           |
           |
-          |                ?newValue3 knora-base:originalFilename "test.jpg" ;
+          |                ?newValue0_3 knora-base:originalFilename "test.jpg" ;
           |                                     knora-base:originalMimeType "image/jpeg" ;
           |                                     knora-base:internalFilename "thumb.jpg" ;
           |                                     knora-base:internalMimeType "image/jpeg" ;
@@ -256,23 +256,23 @@ object GraphDBConsistencyCheckingSpec {
           |                                     knora-base:valueHasQname "thumbnail" .
           |
           |
-          |                    ?newValue3 knora-base:isPreview true .
+          |                    ?newValue0_3 knora-base:isPreview true .
           |
           |
-          |                ?newValue3 knora-base:valueHasString "test.jpg" .
+          |                ?newValue0_3 knora-base:valueHasString "test.jpg" .
           |
           |
           |
-          |            ?newValue3 <http://www.knora.org/ontology/knora-base#attachedToUser> ?creatorIri ;
+          |            ?newValue0_3 <http://www.knora.org/ontology/knora-base#attachedToUser> ?creatorIri ;
           |                 knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" .
           |
           |
-          |        ?newValue3 knora-base:valueHasOrder ?nextOrder3 ;
+          |        ?newValue0_3 knora-base:valueHasOrder ?nextOrder0_3 ;
           |                             knora-base:valueCreationDate ?currentTime .
           |
           |
           |
-          |        ?resource ?property3 ?newValue3 .
+          |        ?resource0 ?property0_3 ?newValue0_3 .
           |
           |
           |
@@ -282,26 +282,26 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |
-          |            ?resource ?linkProperty4 ?linkTarget4 .
+          |            ?resource0 ?linkProperty0_4 ?linkTarget0_4 .
           |
           |
           |
-          |        ?newLinkValue4 rdf:type knora-base:LinkValue ;
+          |        ?newLinkValue0_4 rdf:type knora-base:LinkValue ;
           |            knora-base:isDeleted "false"^^xsd:boolean ;
-          |            rdf:subject ?resource ;
-          |            rdf:predicate ?linkProperty4 ;
-          |            rdf:object ?linkTarget4 ;
+          |            rdf:subject ?resource0 ;
+          |            rdf:predicate ?linkProperty0_4 ;
+          |            rdf:object ?linkTarget0_4 ;
           |            knora-base:valueHasRefCount 1 ;
           |
-          |            knora-base:valueHasOrder ?nextOrder4 ;
+          |            knora-base:valueHasOrder ?nextOrder0_4 ;
           |            knora-base:valueCreationDate ?currentTime .
           |
           |
-          |            ?newLinkValue4 <http://www.knora.org/ontology/knora-base#attachedToUser> ?creatorIri ;
+          |            ?newLinkValue0_4 <http://www.knora.org/ontology/knora-base#attachedToUser> ?creatorIri ;
           |                 knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" .
           |
           |
-          |        ?resource ?linkValueProperty4 ?newLinkValue4 .
+          |        ?resource0 ?linkValueProperty0_4 ?newLinkValue0_4 .
           |
           |
           |
@@ -310,26 +310,26 @@ object GraphDBConsistencyCheckingSpec {
           |        # Property: http://www.knora.org/ontology/incunabula#origname
           |
           |
-          |        ?newValue5 rdf:type ?valueType5 ;
+          |        ?newValue0_5 rdf:type ?valueType0_5 ;
           |            knora-base:isDeleted "false"^^xsd:boolean .
           |
           |
           |
-          |                ?newValue5 knora-base:valueHasString "Blatt" .
+          |                ?newValue0_5 knora-base:valueHasString "Blatt" .
           |
           |
           |
           |
-          |            ?newValue5 <http://www.knora.org/ontology/knora-base#attachedToUser> ?creatorIri ;
+          |            ?newValue0_5 <http://www.knora.org/ontology/knora-base#attachedToUser> ?creatorIri ;
           |                knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" .
           |
           |
-          |        ?newValue5 knora-base:valueHasOrder ?nextOrder5 ;
+          |        ?newValue0_5 knora-base:valueHasOrder ?nextOrder0_5 ;
           |                             knora-base:valueCreationDate ?currentTime .
           |
           |
           |
-          |        ?resource ?property5 ?newValue5 .
+          |        ?resource0 ?property0_5 ?newValue0_5 .
           |
           |
           |
@@ -338,25 +338,25 @@ object GraphDBConsistencyCheckingSpec {
           |        # Property: http://www.knora.org/ontology/incunabula#seqnum
           |
           |
-          |        ?newValue6 rdf:type ?valueType6 ;
+          |        ?newValue0_6 rdf:type ?valueType0_6 ;
           |            knora-base:isDeleted "false"^^xsd:boolean .
           |
           |
           |
-          |                ?newValue6 knora-base:valueHasInteger 1 ;
+          |                ?newValue0_6 knora-base:valueHasInteger 1 ;
           |                                     knora-base:valueHasString "1" .
           |
           |
-          |            ?newValue6 <http://www.knora.org/ontology/knora-base#attachedToUser> ?creatorIri ;
+          |            ?newValue0_6 <http://www.knora.org/ontology/knora-base#attachedToUser> ?creatorIri ;
           |                knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" .
           |
           |
-          |        ?newValue6 knora-base:valueHasOrder ?nextOrder6 ;
+          |        ?newValue0_6 knora-base:valueHasOrder ?nextOrder0_6 ;
           |                             knora-base:valueCreationDate ?currentTime .
           |
           |
           |
-          |        ?resource ?property6 ?newValue6 .
+          |        ?resource0 ?property0_6 ?newValue0_6 .
           |
           |    }
           |}
@@ -366,11 +366,11 @@ object GraphDBConsistencyCheckingSpec {
           |
           |WHERE {
           |    BIND(IRI("http://www.knora.org/data/incunabula") AS ?dataNamedGraph)
-          |    BIND(IRI("http://data.knora.org/missingPartOf") AS ?resource)
-          |    BIND(IRI("http://www.knora.org/ontology/incunabula#page") AS ?resourceClass)
+          |    BIND(IRI("http://data.knora.org/missingPartOf") AS ?resource0)
+          |    BIND(IRI("http://www.knora.org/ontology/incunabula#page") AS ?resourceClass0)
           |    BIND(IRI("http://data.knora.org/users/b83acc5f05") AS ?creatorIri)
           |    BIND(IRI("http://data.knora.org/projects/77275339") AS ?projectIri)
-          |    BIND(str("Test-Page") AS ?label)
+          |    BIND(str("Test-Page") AS ?label0)
           |    BIND(NOW() AS ?currentTime)
           |
           |
@@ -378,25 +378,25 @@ object GraphDBConsistencyCheckingSpec {
           |    # Value 1
           |    # Property: http://www.knora.org/ontology/incunabula#pagenum
           |
-          |    BIND(IRI("http://www.knora.org/ontology/incunabula#pagenum") AS ?property1)
-          |    BIND(IRI("http://data.knora.org/missingPartOf/values/nQ3tRObaQWe74WQv2_OdCg") AS ?newValue1)
-          |    BIND(IRI("http://www.knora.org/ontology/knora-base#TextValue") AS ?valueType1)
+          |    BIND(IRI("http://www.knora.org/ontology/incunabula#pagenum") AS ?property0_1)
+          |    BIND(IRI("http://data.knora.org/missingPartOf/values/nQ3tRObaQWe74WQv2_OdCg") AS ?newValue0_1)
+          |    BIND(IRI("http://www.knora.org/ontology/knora-base#TextValue") AS ?valueType0_1)
           |
           |
           |
-          |    ?property1 knora-base:objectClassConstraint ?propertyRange1 .
-          |    ?valueType1 rdfs:subClassOf* ?propertyRange1 .
+          |    ?property0_1 knora-base:objectClassConstraint ?propertyRange0_1 .
+          |    ?valueType0_1 rdfs:subClassOf* ?propertyRange0_1 .
           |
           |
           |
-          |    ?resourceClass rdfs:subClassOf* ?restriction1 .
-          |    ?restriction1 a owl:Restriction .
-          |    ?restriction1 owl:onProperty ?property1 .
+          |    ?resourceClass0 rdfs:subClassOf* ?restriction0_1 .
+          |    ?restriction0_1 a owl:Restriction .
+          |    ?restriction0_1 owl:onProperty ?property0_1 .
           |
           |
           |
           |
-          |            BIND(0 AS ?nextOrder1)
+          |            BIND(0 AS ?nextOrder0_1)
           |
           |
           |
@@ -406,25 +406,25 @@ object GraphDBConsistencyCheckingSpec {
           |    # Value 2
           |    # Property: http://www.knora.org/ontology/knora-base#hasStillImageFileValue
           |
-          |    BIND(IRI("http://www.knora.org/ontology/knora-base#hasStillImageFileValue") AS ?property2)
-          |    BIND(IRI("http://data.knora.org/missingPartOf/values/GVE754RbT1CykpMnwR3Csw") AS ?newValue2)
-          |    BIND(IRI("http://www.knora.org/ontology/knora-base#StillImageFileValue") AS ?valueType2)
+          |    BIND(IRI("http://www.knora.org/ontology/knora-base#hasStillImageFileValue") AS ?property0_2)
+          |    BIND(IRI("http://data.knora.org/missingPartOf/values/GVE754RbT1CykpMnwR3Csw") AS ?newValue0_2)
+          |    BIND(IRI("http://www.knora.org/ontology/knora-base#StillImageFileValue") AS ?valueType0_2)
           |
           |
           |
-          |    ?property2 knora-base:objectClassConstraint ?propertyRange2 .
-          |    ?valueType2 rdfs:subClassOf* ?propertyRange2 .
+          |    ?property0_2 knora-base:objectClassConstraint ?propertyRange0_2 .
+          |    ?valueType0_2 rdfs:subClassOf* ?propertyRange0_2 .
           |
           |
           |
-          |    ?resourceClass rdfs:subClassOf* ?restriction2 .
-          |    ?restriction2 a owl:Restriction .
-          |    ?restriction2 owl:onProperty ?property2 .
+          |    ?resourceClass0 rdfs:subClassOf* ?restriction0_2 .
+          |    ?restriction0_2 a owl:Restriction .
+          |    ?restriction0_2 owl:onProperty ?property0_2 .
           |
           |
           |
           |
-          |            BIND(0 AS ?nextOrder2)
+          |            BIND(0 AS ?nextOrder0_2)
           |
           |
           |
@@ -434,25 +434,25 @@ object GraphDBConsistencyCheckingSpec {
           |    # Value 3
           |    # Property: http://www.knora.org/ontology/knora-base#hasStillImageFileValue
           |
-          |    BIND(IRI("http://www.knora.org/ontology/knora-base#hasStillImageFileValue") AS ?property3)
-          |    BIND(IRI("http://data.knora.org/missingPartOf/values/LOT71U6hSQu7shi76oRxWQ") AS ?newValue3)
-          |    BIND(IRI("http://www.knora.org/ontology/knora-base#StillImageFileValue") AS ?valueType3)
+          |    BIND(IRI("http://www.knora.org/ontology/knora-base#hasStillImageFileValue") AS ?property0_3)
+          |    BIND(IRI("http://data.knora.org/missingPartOf/values/LOT71U6hSQu7shi76oRxWQ") AS ?newValue0_3)
+          |    BIND(IRI("http://www.knora.org/ontology/knora-base#StillImageFileValue") AS ?valueType0_3)
           |
           |
           |
-          |    ?property3 knora-base:objectClassConstraint ?propertyRange3 .
-          |    ?valueType3 rdfs:subClassOf* ?propertyRange3 .
+          |    ?property0_3 knora-base:objectClassConstraint ?propertyRange0_3 .
+          |    ?valueType0_3 rdfs:subClassOf* ?propertyRange0_3 .
           |
           |
           |
-          |    ?resourceClass rdfs:subClassOf* ?restriction3 .
-          |    ?restriction3 a owl:Restriction .
-          |    ?restriction3 owl:onProperty ?property3 .
+          |    ?resourceClass0 rdfs:subClassOf* ?restriction0_3 .
+          |    ?restriction0_3 a owl:Restriction .
+          |    ?restriction0_3 owl:onProperty ?property0_3 .
           |
           |
           |
           |
-          |            BIND(1 AS ?nextOrder3)
+          |            BIND(1 AS ?nextOrder0_3)
           |
           |
           |
@@ -462,20 +462,20 @@ object GraphDBConsistencyCheckingSpec {
           |    # Value 4
           |    # Property: http://www.knora.org/ontology/incunabula#hasRightSideband
           |
-          |    BIND(IRI("http://www.knora.org/ontology/incunabula#hasRightSideband") AS ?linkProperty4)
-          |    BIND(IRI("http://www.knora.org/ontology/incunabula#hasRightSidebandValue") AS ?linkValueProperty4)
-          |    BIND(IRI("http://data.knora.org/missingPartOf/values/i5tE5i-RRLOH631soexPFw") AS ?newLinkValue4)
-          |    BIND(IRI("http://data.knora.org/482a33d65c36") AS ?linkTarget4)
+          |    BIND(IRI("http://www.knora.org/ontology/incunabula#hasRightSideband") AS ?linkProperty0_4)
+          |    BIND(IRI("http://www.knora.org/ontology/incunabula#hasRightSidebandValue") AS ?linkValueProperty0_4)
+          |    BIND(IRI("http://data.knora.org/missingPartOf/values/i5tE5i-RRLOH631soexPFw") AS ?newLinkValue0_4)
+          |    BIND(IRI("http://data.knora.org/482a33d65c36") AS ?linkTarget0_4)
           |
           |
           |
-          |    ?linkTarget4 rdf:type ?linkTargetClass4 .
-          |    ?linkTargetClass4 rdfs:subClassOf+ knora-base:Resource .
+          |    ?linkTarget0_4 rdf:type ?linkTargetClass0_4 .
+          |    ?linkTargetClass0_4 rdfs:subClassOf+ knora-base:Resource .
           |
           |
           |
-          |    ?linkProperty4 knora-base:objectClassConstraint ?expectedTargetClass4 .
-          |    ?linkTargetClass4 rdfs:subClassOf* ?expectedTargetClass4 .
+          |    ?linkProperty0_4 knora-base:objectClassConstraint ?expectedTargetClass0_4 .
+          |    ?linkTargetClass0_4 rdfs:subClassOf* ?expectedTargetClass0_4 .
           |
           |
           |
@@ -485,14 +485,14 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |
-          |    ?resourceClass rdfs:subClassOf* ?restriction4 .
-          |    ?restriction4 a owl:Restriction .
-          |    ?restriction4 owl:onProperty ?linkProperty4 .
+          |    ?resourceClass0 rdfs:subClassOf* ?restriction0_4 .
+          |    ?restriction0_4 a owl:Restriction .
+          |    ?restriction0_4 owl:onProperty ?linkProperty0_4 .
           |
           |
           |
           |
-          |            BIND(0 AS ?nextOrder4)
+          |            BIND(0 AS ?nextOrder0_4)
           |
           |
           |
@@ -502,25 +502,25 @@ object GraphDBConsistencyCheckingSpec {
           |    # Value 5
           |    # Property: http://www.knora.org/ontology/incunabula#origname
           |
-          |    BIND(IRI("http://www.knora.org/ontology/incunabula#origname") AS ?property5)
-          |    BIND(IRI("http://data.knora.org/missingPartOf/values/MLWWT-F8SlKsZmRo4JMLHw") AS ?newValue5)
-          |    BIND(IRI("http://www.knora.org/ontology/knora-base#TextValue") AS ?valueType5)
+          |    BIND(IRI("http://www.knora.org/ontology/incunabula#origname") AS ?property0_5)
+          |    BIND(IRI("http://data.knora.org/missingPartOf/values/MLWWT-F8SlKsZmRo4JMLHw") AS ?newValue0_5)
+          |    BIND(IRI("http://www.knora.org/ontology/knora-base#TextValue") AS ?valueType0_5)
           |
           |
           |
-          |    ?property5 knora-base:objectClassConstraint ?propertyRange5 .
-          |    ?valueType5 rdfs:subClassOf* ?propertyRange5 .
+          |    ?property0_5 knora-base:objectClassConstraint ?propertyRange0_5 .
+          |    ?valueType0_5 rdfs:subClassOf* ?propertyRange0_5 .
           |
           |
           |
-          |    ?resourceClass rdfs:subClassOf* ?restriction5 .
-          |    ?restriction5 a owl:Restriction .
-          |    ?restriction5 owl:onProperty ?property5 .
+          |    ?resourceClass0 rdfs:subClassOf* ?restriction0_5 .
+          |    ?restriction0_5 a owl:Restriction .
+          |    ?restriction0_5 owl:onProperty ?property0_5 .
           |
           |
           |
           |
-          |            BIND(0 AS ?nextOrder5)
+          |            BIND(0 AS ?nextOrder0_5)
           |
           |
           |
@@ -530,25 +530,25 @@ object GraphDBConsistencyCheckingSpec {
           |    # Value 6
           |    # Property: http://www.knora.org/ontology/incunabula#seqnum
           |
-          |    BIND(IRI("http://www.knora.org/ontology/incunabula#seqnum") AS ?property6)
-          |    BIND(IRI("http://data.knora.org/missingPartOf/values/uWQtW_X3RxKjFyGrsQwbpQ") AS ?newValue6)
-          |    BIND(IRI("http://www.knora.org/ontology/knora-base#IntValue") AS ?valueType6)
+          |    BIND(IRI("http://www.knora.org/ontology/incunabula#seqnum") AS ?property0_6)
+          |    BIND(IRI("http://data.knora.org/missingPartOf/values/uWQtW_X3RxKjFyGrsQwbpQ") AS ?newValue0_6)
+          |    BIND(IRI("http://www.knora.org/ontology/knora-base#IntValue") AS ?valueType0_6)
           |
           |
           |
-          |    ?property6 knora-base:objectClassConstraint ?propertyRange6 .
-          |    ?valueType6 rdfs:subClassOf* ?propertyRange6 .
+          |    ?property0_6 knora-base:objectClassConstraint ?propertyRange0_6 .
+          |    ?valueType0_6 rdfs:subClassOf* ?propertyRange0_6 .
           |
           |
           |
-          |    ?resourceClass rdfs:subClassOf* ?restriction6 .
-          |    ?restriction6 a owl:Restriction .
-          |    ?restriction6 owl:onProperty ?property6 .
+          |    ?resourceClass0 rdfs:subClassOf* ?restriction0_6 .
+          |    ?restriction0_6 a owl:Restriction .
+          |    ?restriction0_6 owl:onProperty ?property0_6 .
           |
           |
           |
           |
-          |            BIND(0 AS ?nextOrder6)
+          |            BIND(0 AS ?nextOrder0_6)
           |
           |
           |
@@ -556,21 +556,21 @@ object GraphDBConsistencyCheckingSpec {
           |    # Value 7
           |    # Property: http://www.knora.org/ontology/incunabula#pagenum
           |
-          |    BIND(IRI("http://www.knora.org/ontology/incunabula#pagenum") AS ?property7)
-          |    BIND(IRI("http://data.knora.org/missingPartOf/values/nQ3tRObaQWe74WQv2_OdCg") AS ?newValue7)
-          |    BIND(IRI("http://www.knora.org/ontology/knora-base#TextValue") AS ?valueType7)
+          |    BIND(IRI("http://www.knora.org/ontology/incunabula#pagenum") AS ?property0_7)
+          |    BIND(IRI("http://data.knora.org/missingPartOf/values/nQ3tRObaQWe74WQv2_OdCg") AS ?newValue0_7)
+          |    BIND(IRI("http://www.knora.org/ontology/knora-base#TextValue") AS ?valueType0_7)
           |
           |
           |
-          |    ?property7 knora-base:objectClassConstraint ?propertyRange7 .
-          |    ?valueType7 rdfs:subClassOf* ?propertyRange7 .
+          |    ?property0_7 knora-base:objectClassConstraint ?propertyRange0_7 .
+          |    ?valueType0_7 rdfs:subClassOf* ?propertyRange0_7 .
           |
           |
           |
           |
           |
           |
-          |            BIND(0 AS ?nextOrder1)
+          |            BIND(0 AS ?nextOrder0_1)
           |
           |}
         """.stripMargin
@@ -2419,11 +2419,11 @@ object GraphDBConsistencyCheckingSpec {
           |
           |INSERT {
           |    GRAPH ?dataNamedGraph {
-          |        ?resource rdf:type ?resourceClass ;
+          |        ?resource0 rdf:type ?resourceClass0 ;
           |            knora-base:isDeleted false ;
           |            knora-base:attachedToUser ?creatorIri ;
           |            knora-base:attachedToProject ?projectIri ;
-          |            rdfs:label ?label ;
+          |            rdfs:label ?label0 ;
           |            knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" ;
           |            knora-base:creationDate ?currentTime .
           |
@@ -2434,28 +2434,28 @@ object GraphDBConsistencyCheckingSpec {
           |
           |            # The property hasBlueThing has an objectClassConstraint of BlueThing, so using a Thing as a link target should fail.
           |
-          |            ?resource ?linkProperty0 ?linkTarget0 .
+          |            ?resource0 ?linkProperty0_0 ?linkTarget0_0 .
           |
           |
           |
-          |        ?newLinkValue0 rdf:type knora-base:LinkValue ;
-          |            rdf:subject ?resource ;
-          |            rdf:predicate ?linkProperty0 ;
-          |            rdf:object ?linkTarget0 ;
+          |        ?newLinkValue0_0 rdf:type knora-base:LinkValue ;
+          |            rdf:subject ?resource0 ;
+          |            rdf:predicate ?linkProperty0_0 ;
+          |            rdf:object ?linkTarget0_0 ;
           |            knora-base:valueHasString "http://data.knora.org/a-thing" ;
           |            knora-base:valueHasRefCount 1 ;
           |
-          |            knora-base:valueHasOrder ?nextOrder0 ;
+          |            knora-base:valueHasOrder ?nextOrder0_0 ;
           |            knora-base:isDeleted false ;
           |            knora-base:valueCreationDate ?currentTime .
           |
-          |        ?newLinkValue0 knora-base:attachedToUser <http://data.knora.org/users/9XBCrDV3SRa7kS1WwynB4Q> ;
+          |        ?newLinkValue0_0 knora-base:attachedToUser <http://data.knora.org/users/9XBCrDV3SRa7kS1WwynB4Q> ;
           |                knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" .
           |
           |
           |
           |
-          |        ?resource ?linkValueProperty0 ?newLinkValue0 .
+          |        ?resource0 ?linkValueProperty0_0 ?newLinkValue0_0 .
           |
           |
           |
@@ -2468,11 +2468,11 @@ object GraphDBConsistencyCheckingSpec {
           |
           |WHERE {
           |    BIND(IRI("http://www.knora.org/data/anything") AS ?dataNamedGraph)
-          |    BIND(IRI("http://data.knora.org/wrongTargetClass") AS ?resource)
-          |    BIND(IRI("http://www.knora.org/ontology/anything#Thing") AS ?resourceClass)
+          |    BIND(IRI("http://data.knora.org/wrongTargetClass") AS ?resource0)
+          |    BIND(IRI("http://www.knora.org/ontology/anything#Thing") AS ?resourceClass0)
           |    BIND(IRI("http://data.knora.org/users/9XBCrDV3SRa7kS1WwynB4Q") AS ?creatorIri)
           |    BIND(IRI("http://data.knora.org/projects/anything") AS ?projectIri)
-          |    BIND(str("Test Thing") AS ?label)
+          |    BIND(str("Test Thing") AS ?label0)
           |    BIND(NOW() AS ?currentTime)
           |
           |
@@ -2480,32 +2480,32 @@ object GraphDBConsistencyCheckingSpec {
           |    # Value 0
           |    # Property: http://www.knora.org/ontology/anything#hasBlueThing
           |
-          |    BIND(IRI("http://www.knora.org/ontology/anything#hasBlueThing") AS ?linkProperty0)
-          |    BIND(IRI("http://www.knora.org/ontology/anything#hasBlueThingValue") AS ?linkValueProperty0)
-          |    BIND(IRI("http://data.knora.org/wrongTargetClass/values/GjV_4ayjRDebneEQM0zHuw") AS ?newLinkValue0)
+          |    BIND(IRI("http://www.knora.org/ontology/anything#hasBlueThing") AS ?linkProperty0_0)
+          |    BIND(IRI("http://www.knora.org/ontology/anything#hasBlueThingValue") AS ?linkValueProperty0_0)
+          |    BIND(IRI("http://data.knora.org/wrongTargetClass/values/GjV_4ayjRDebneEQM0zHuw") AS ?newLinkValue0_0)
           |    BIND(IRI("http://data.knora.org/a-thing") AS ?linkTarget0)
           |
           |
           |
-          |    ?linkTarget0 rdf:type ?linkTargetClass0 ;
+          |    ?linkTarget0_0 rdf:type ?linkTargetClass0_0 ;
           |        knora-base:isDeleted false .
-          |    ?linkTargetClass0 rdfs:subClassOf+ knora-base:Resource .
+          |    ?linkTargetClass0_0 rdfs:subClassOf+ knora-base:Resource .
           |
           |
           |
-          |    ?resourceClass rdfs:subClassOf* ?restriction0 .
-          |    ?restriction0 a owl:Restriction .
-          |    ?restriction0 owl:onProperty ?linkProperty0 .
-          |
-          |
-          |
-          |
+          |    ?resourceClass0 rdfs:subClassOf* ?restriction0_0 .
+          |    ?restriction0_0 a owl:Restriction .
+          |    ?restriction0_0 owl:onProperty ?linkProperty0_0 .
           |
           |
           |
           |
           |
-          |            BIND(0 AS ?nextOrder0)
+          |
+          |
+          |
+          |
+          |            BIND(0 AS ?nextOrder0_0)
           |
           |
           |

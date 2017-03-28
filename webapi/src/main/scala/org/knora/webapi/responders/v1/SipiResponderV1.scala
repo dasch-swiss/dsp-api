@@ -1,6 +1,6 @@
 /*
  * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
  *
  * This file is part of Knora.
  *
@@ -101,8 +101,7 @@ class SipiResponderV1 extends ResponderV1 {
                 userProfile = userProfile
             )
         } yield SipiFileInfoGetResponseV1(
-            permissionCode = permissionCode.getOrElse(0), // Sipi expects a permission code from 0 to 8
-            userdata = userProfile.userData
+            permissionCode = permissionCode.getOrElse(0) // Sipi expects a permission code from 0 to 8
         )
     }
 

@@ -1,6 +1,6 @@
 /*
  * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
  *
  * This file is part of Knora.
  *
@@ -65,7 +65,6 @@ class HierarchicalListsResponderV1Spec extends CoreSpec() with ImplicitSender {
     private val userData = userProfile.userData
 
     private val hKeywords = HListGetResponseV1(
-        userdata = userData,
         hlist = Vector(
             HierarchicalListV1(
                 position = 0,
@@ -3069,7 +3068,6 @@ class HierarchicalListsResponderV1Spec extends CoreSpec() with ImplicitSender {
     )
 
     private val imageCategory = SelectionGetResponseV1(
-        userdata = userData,
         selection = Vector(
             HierarchicalListV1(
                 position = 0,
@@ -3243,7 +3241,6 @@ class HierarchicalListsResponderV1Spec extends CoreSpec() with ImplicitSender {
     )
 
     private val season = HListGetResponseV1(
-        userdata = userData,
         hlist = Vector(
             HierarchicalListV1(
                 position = 0,
@@ -3265,7 +3262,6 @@ class HierarchicalListsResponderV1Spec extends CoreSpec() with ImplicitSender {
     )
 
     private val nodePath = NodePathGetResponseV1(
-        userdata = userData,
         nodelist = Vector(
             NodePathElementV1(
                 label = Some("KUNST"),

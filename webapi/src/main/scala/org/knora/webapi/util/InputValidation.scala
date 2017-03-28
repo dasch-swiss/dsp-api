@@ -1,6 +1,6 @@
 /*
  * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
  *
  * This file is part of Knora.
  *
@@ -31,7 +31,6 @@ import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.standoffmessages.StandoffDataTypeClasses
-import org.knora.webapi.messages.v1.responder.valuemessages.{CreateRichtextV1, TextValueV1}
 import org.knora.webapi.twirl.StandoffTagV1
 import spray.json.JsonParser
 
@@ -92,9 +91,9 @@ object InputValidation {
       *
       * If the param `revert` is set to `true`, this operation is reverted.
       *
-      * @param s the string to be entered in the triplestore.
+      * @param s        the string to be entered in the triplestore.
       * @param errorFun the error
-      * @param revert if set to `true`, the escaping is reverted. This is useful when a string is read back from the triplestore.
+      * @param revert   if set to `true`, the escaping is reverted. This is useful when a string is read back from the triplestore.
       * @return a [[String]].
       */
     def toSparqlEncodedString(s: String, errorFun: () => Nothing, revert: Boolean = false): String = {
@@ -157,8 +156,6 @@ object InputValidation {
     def toDate(s: String, errorFun: () => Nothing): String = {
         // TODO: how to deal with dates BC -> ERA
 
-        // TODO: how to treat invalid dates (e.g. 29 February)
-
         // TODO: import calendars instead of hardcoding them
 
         // Calendar:YYYY[-MM[-DD]][:YYYY[-MM[-DD]]]
@@ -176,7 +173,9 @@ object InputValidation {
             precision_separator +
             "\\d{1,2})?)?)?$" // day 2
 
-        // if the pattern doesn't match (=> None), the date string is invalid
+        // if the pattern doesn't match (=> None), the date string is formally invalid
+        // Please note that this is a mere formal validation,
+        // the actual validity check is done in `DateUtilV1.dateString2DateRange`
         pattern.r.findFirstIn(s) match {
             case Some(value) => value
             case None => errorFun() // calling this function throws an error

@@ -1,6 +1,6 @@
 /*
  * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
  *
  * This file is part of Knora.
  *
@@ -91,7 +91,7 @@ object DateUtilV1 {
       * @return A tuple containing two calendar dates (interval) and a precision.
       */
     def dateString2DateRange(dateString: String, calendarType: KnoraCalendarV1.Value): DateRange = {
-        val changeDate = getGregorianCalendarChangeDate(calendarType)
+        val changeDate: Date = getGregorianCalendarChangeDate(calendarType)
 
         val daysInMonth = Calendar.DAY_OF_MONTH // will be used to determine the number of days in the given month
         // val monthsInYear = Calendar.MONTH // will be used to determine the number of months in the given year (generic for other calendars)
@@ -102,33 +102,75 @@ object DateUtilV1 {
         // When setting the date, set time to noon (12) as JDC would contain a fraction otherwise:
         // "Julian Days can also be used to tell time; the time of day is expressed as a fraction of a full day, with 12:00 noon (not midnight) as the zero point."
         // From: https://docs.kde.org/trunk5/en/kdeedu/kstars/ai-julianday.html
+
+        // set leniency setting to false as leniency would allow for invalid dates such as Feb 30.
+        // https://docs.oracle.com/javase/8/docs/api/java/util/Calendar.html#setLenient-boolean-
+
+        // call get method on calendar after setting the date, an `IllegalArgumentException` is thrown if the date is invalid
+        // https://docs.oracle.com/javase/8/docs/api/java/util/Calendar.html#get-int-
+
         dateSegments.length match {
             case 1 => // year precision
-                val intervalStart = new GregorianCalendar
-                intervalStart.setGregorianChange(changeDate)
-                intervalStart.set(dateSegments(0).toInt, 0, 1, 12, 0, 0) // January 1st of the given year
 
-                val intervalEnd = new GregorianCalendar
-                intervalEnd.setGregorianChange(changeDate)
-                intervalEnd.set(dateSegments(0).toInt, 11, 31, 12, 0, 0) // December 31st of the given year
+                try {
+                    val intervalStart = new GregorianCalendar
+                    intervalStart.setLenient(false) // set leniency to false in order to check for invalid dates
+                    intervalStart.setGregorianChange(changeDate)
+                    intervalStart.set(dateSegments(0).toInt, 0, 1, 12, 0, 0) // January 1st of the given year. Attention: in java.util.Calendar, month count starts with 0
+                    intervalStart.get(0) // call method `get` in order to format the date; if it is invalid an exception is thrown
 
-                DateRange(intervalStart, intervalEnd, KnoraPrecisionV1.YEAR)
+                    val intervalEnd = new GregorianCalendar
+                    intervalEnd.setLenient(false) // set leniency to false in order to check for invalid dates
+                    intervalEnd.setGregorianChange(changeDate)
+                    intervalEnd.set(dateSegments(0).toInt, 11, 31, 12, 0, 0) // December 31st of the given year. Attention: in java.util.Calendar, month count starts with 0
+                    intervalEnd.get(0) // call method `get` in order to format the date; if it is invalid an exception is thrown
+
+                    DateRange(intervalStart, intervalEnd, KnoraPrecisionV1.YEAR)
+
+                } catch {
+                    case e: IllegalArgumentException => throw BadRequestException(s"The provided date $dateString is invalid: ${e.getMessage}")
+
+                    case e: Exception => throw BadRequestException(s"The provided date $dateString could not be handled correctly: ${e.getMessage}")
+                }
+
             case 2 => // month precision
-                val intervalStart = new GregorianCalendar
-                intervalStart.setGregorianChange(changeDate)
-                intervalStart.set(dateSegments(0).toInt, dateSegments(1).toInt - 1, 1, 12, 0, 0) // Attention: in java.util.Calendar, month count starts with 0; first day of the given month in the given year
 
-                val intervalEnd = new GregorianCalendar
-                intervalEnd.setGregorianChange(changeDate)
-                intervalEnd.set(dateSegments(0).toInt, dateSegments(1).toInt - 1, intervalStart.getActualMaximum(daysInMonth), 12, 0, 0) // Attention: in java.util.Calendar, month count starts with 0; last day of the given month in the given year
+                try {
+                    val intervalStart = new GregorianCalendar
+                    intervalStart.setLenient(false) // set leniency to false in order to check for invalid dates
+                    intervalStart.setGregorianChange(changeDate)
+                    intervalStart.set(dateSegments(0).toInt, dateSegments(1).toInt - 1, 1, 12, 0, 0) // Attention: in java.util.Calendar, month count starts with 0; first day of the given month in the given year
+                    intervalStart.get(0) // call method `get` in order to format the date; if it is invalid an exception is thrown
 
-                DateRange(intervalStart, intervalEnd, KnoraPrecisionV1.MONTH)
+                    val intervalEnd = new GregorianCalendar
+                    intervalEnd.setLenient(false) // set leniency to false in order to check for invalid dates
+                    intervalEnd.setGregorianChange(changeDate)
+                    intervalEnd.set(dateSegments(0).toInt, dateSegments(1).toInt - 1, intervalStart.getActualMaximum(daysInMonth), 12, 0, 0) // Attention: in java.util.Calendar, month count starts with 0; last day of the given month in the given year
+                    intervalEnd.get(0) // call method `get` in order to format the date; if it is invalid an exception is thrown
+
+                    DateRange(intervalStart, intervalEnd, KnoraPrecisionV1.MONTH)
+                } catch {
+                    case e: IllegalArgumentException => throw BadRequestException(s"The provided date $dateString is invalid: ${e.getMessage}")
+
+                    case e: Exception => throw BadRequestException(s"The provided date $dateString could not be handled correctly: ${e.getMessage}")
+                }
+
             case 3 => // day precision
-                val exactDate = new GregorianCalendar
-                exactDate.setGregorianChange(changeDate)
-                exactDate.set(dateSegments(0).toInt, dateSegments(1).toInt - 1, dateSegments(2).toInt) // Attention: in java.util.Calendar, month count starts with 0
 
-                DateRange(exactDate, exactDate, KnoraPrecisionV1.DAY)
+                try {
+                    val exactDate = new GregorianCalendar
+                    exactDate.setLenient(false) // set leniency to false in order to check for invalid dates
+                    exactDate.setGregorianChange(changeDate)
+                    exactDate.set(dateSegments(0).toInt, dateSegments(1).toInt - 1, dateSegments(2).toInt) // Attention: in java.util.Calendar, month count starts with 0
+                    exactDate.get(0) // call method `get` in order to format the date; if it is invalid an exception is thrown
+
+                    DateRange(exactDate, exactDate, KnoraPrecisionV1.DAY)
+                } catch {
+                    case e: IllegalArgumentException => throw BadRequestException(s"The provided date $dateString is invalid: ${e.getMessage}")
+
+                    case e: Exception => throw BadRequestException(s"The provided date $dateString could not be handled correctly: ${e.getMessage}")
+                }
+
             case other => throw BadRequestException(s"Invalid date format: $dateString") // should never be fulfilled due to previous regex checking
         }
     }

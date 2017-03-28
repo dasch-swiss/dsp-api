@@ -1,6 +1,6 @@
 /*
  * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
  *
  * This file is part of Knora.
  *
@@ -132,6 +132,8 @@ class SettingsImpl(config: Config) extends Extension {
     val skipAuthentication: Boolean = config.getBoolean("app.skip-authentication")
 
     val fallbackLanguage: String = config.getString("user.default-language")
+
+    val profileQueries: Boolean = config.getBoolean("app.triplestore.profile-queries")
 }
 
 object Settings extends ExtensionId[SettingsImpl] with ExtensionIdProvider {
