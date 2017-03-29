@@ -21,6 +21,7 @@
 package org.knora.webapi.util
 
 import org.knora.webapi.messages.v1.store.triplestoremessages.SparqlConstructResponse
+import org.knora.webapi.messages.v2.responder.{ResourceRowV2, ValueRowV2}
 import org.knora.webapi.{IRI, InconsistentTriplestoreDataException, OntologyConstants}
 
 object ConstructResponseUtilV2 {
@@ -93,6 +94,68 @@ object ConstructResponseUtilV2 {
         }.toMap
 
         objMap.getOrElse(objectValue, throw InconsistentTriplestoreDataException(s"no object (value) $objectValue found in assertions for $subjectIri"))
+
+    }
+
+    def createResponseForResources(queryResultsSeparated: ResourcesAndValueObjects): Seq[ResourceRowV2] = {
+
+        val resourceResultRows: Seq[ResourceRowV2] = queryResultsSeparated.resources.map {
+            case (resourceIri: IRI, assertions: Seq[(IRI, String)]) =>
+
+                val rdfLabel = ConstructResponseUtilV2.getObjectForUniquePredicateFromAssertions(subjectIri = resourceIri, predicate = OntologyConstants.Rdfs.Label, assertions = assertions)
+
+                val resourceClass = ConstructResponseUtilV2.getObjectForUniquePredicateFromAssertions(subjectIri = resourceIri, predicate = OntologyConstants.Rdf.Type, assertions = assertions)
+
+                // get all the objects from the assertions
+                val objects: Seq[String] = assertions.map {
+                    case (pred, obj) =>
+                        obj
+                }
+
+                // check if one or more of the objects points to a value object
+                val valueObjectIris: Set[IRI] = queryResultsSeparated.valueObjects.keySet.intersect(objects.toSet)
+
+                ResourceRowV2(
+                    resourceIri = resourceIri,
+                    resourceClass = resourceClass,
+                    label = rdfLabel,
+                    valueObjects = valueObjectIris.map {
+                        (valObj: IRI) =>
+
+                            val valueObjectClass = ConstructResponseUtilV2.getObjectForUniquePredicateFromAssertions(subjectIri = valObj, predicate = OntologyConstants.Rdf.Type, assertions = queryResultsSeparated.valueObjects.
+                                getOrElse(valObj, throw InconsistentTriplestoreDataException(s"value object not found $valObj")))
+
+
+
+                            val valueObjectValueHasString: String = ConstructResponseUtilV2.getObjectForUniquePredicateFromAssertions(subjectIri = valObj, predicate = OntologyConstants.KnoraBase.ValueHasString, assertions = queryResultsSeparated.valueObjects.
+                                getOrElse(valObj, throw InconsistentTriplestoreDataException(s"value object not found $valObj")))
+
+                            val value = valueObjectClass match {
+                                case OntologyConstants.KnoraBase.TextValue =>
+                                    val textValue = ConstructResponseUtilV2.getObjectForUniquePredicateFromAssertions(subjectIri = valObj, predicate = OntologyConstants.KnoraBase.ValueHasString, assertions = queryResultsSeparated.valueObjects.
+                                        getOrElse(valObj, throw InconsistentTriplestoreDataException(s"value object not found $valObj")))
+                                    Map(OntologyConstants.KnoraBase.ValueHasString -> textValue)
+
+                                // TODO: implement all value object classes
+                                case other =>
+                                    Map(other -> "not yet implemented")
+
+                            }
+
+                            // get the property that points from the resource to the value object
+                            val propertyIri = ConstructResponseUtilV2.getPredicateForUniqueObjectFromAssertions(subjectIri = resourceIri, objectValue = valObj, assertions)
+
+                            ValueRowV2(
+                                valueClass = valueObjectClass,
+                                value = value,
+                                valueObjectIri = valObj,
+                                propertyIri = propertyIri
+                            )
+                    }.toVector
+                )
+        }.toVector
+
+        resourceResultRows
 
     }
     

@@ -20,14 +20,15 @@
 
 package org.knora.webapi.responders.v2
 
-import org.knora.webapi.messages.v2.responder.resourcemessages.{ResourceV2, ResourcesGetRequestV2, ResourcesResponseV2}
+import akka.pattern._
+import org.knora.webapi.messages.v1.store.triplestoremessages.{SparqlConstructRequest, SparqlConstructResponse}
+import org.knora.webapi.messages.v2.responder.resourcemessages.ResourcesGetRequestV2
+import org.knora.webapi.messages.v2.responder.{ResourceRowV2, ResourcesV2, ValueRowV2}
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.util.ActorUtil.future2Message
-import org.knora.webapi.{IRI, InconsistentTriplestoreDataException, OntologyConstants}
-import org.knora.webapi.messages.v1.store.triplestoremessages.{SparqlConstructRequest, SparqlConstructResponse}
-import akka.pattern._
 import org.knora.webapi.util.ConstructResponseUtilV2
 import org.knora.webapi.util.ConstructResponseUtilV2.ResourcesAndValueObjects
+import org.knora.webapi.{IRI, InconsistentTriplestoreDataException, OntologyConstants}
 
 import scala.concurrent.Future
 
@@ -37,7 +38,7 @@ class ResourcesResponderV2 extends Responder {
         case resourcesGetRequest: ResourcesGetRequestV2 => future2Message(sender(), getResources(resourcesGetRequest.resourceIris), log)
     }
 
-    private def getResources(resourceIris: Seq[IRI]): Future[ResourcesResponseV2] = {
+    private def getResources(resourceIris: Seq[IRI]): Future[ResourcesV2] = {
 
         // TODO: get all the resources
         val resourceIri = resourceIris.head
@@ -56,21 +57,9 @@ class ResourcesResponderV2 extends Responder {
             // there should be exactly one resource
             _ = if (queryResultsSeparated.resources.size != 1) throw InconsistentTriplestoreDataException("there was expected to be exactly one resource in the results")
 
-            rdfLabel = ConstructResponseUtilV2.getObjectForUniquePredicateFromAssertions(
-                subjectIri = resourceIri,
-                predicate = OntologyConstants.Rdfs.Label,
-                assertions = queryResultsSeparated.resources.getOrElse(resourceIri, throw InconsistentTriplestoreDataException(s"no assertions returned for $resourceIri"))
-            )
+            resources = ConstructResponseUtilV2.createResponseForResources(queryResultsSeparated)
 
-            resourceClass = ConstructResponseUtilV2.getObjectForUniquePredicateFromAssertions(
-                subjectIri = resourceIri,
-                predicate = OntologyConstants.Rdf.Type,
-                assertions = queryResultsSeparated.resources.getOrElse(resourceIri, throw InconsistentTriplestoreDataException(s"no assertions returned for $resourceIri"))
-            )
-
-
-
-        } yield ResourcesResponseV2(resources = Vector(ResourceV2(label = rdfLabel, resourceClass = resourceClass)))
+        } yield ResourcesV2(numberOfResources = queryResultsSeparated.resources.size, results = resources)
 
     }
 

@@ -21,9 +21,9 @@
 package org.knora.webapi.responders.v2
 
 import akka.pattern._
-import org.knora.webapi._
 import org.knora.webapi.messages.v1.store.triplestoremessages.{SparqlConstructRequest, SparqlConstructResponse}
-import org.knora.webapi.messages.v2.responder.searchmessages.{FulltextSearchGetRequestV2, SearchGetResponseV2, SearchResourceResultRowV2, SearchValueResultRowV2}
+import org.knora.webapi.messages.v2.responder.ResourcesV2
+import org.knora.webapi.messages.v2.responder.searchmessages.FulltextSearchGetRequestV2
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.ConstructResponseUtilV2
@@ -37,7 +37,7 @@ class SearchResponderV2 extends Responder {
         case searchGetRequest: FulltextSearchGetRequestV2 => future2Message(sender(), fulltextSearchV2(searchGetRequest), log)
     }
 
-    private def fulltextSearchV2(searchGetRequest: FulltextSearchGetRequestV2): Future[SearchGetResponseV2] = {
+    private def fulltextSearchV2(searchGetRequest: FulltextSearchGetRequestV2): Future[ResourcesV2] = {
 
         for {
             searchSparql <- Future(queries.sparql.v2.txt.searchFulltext(
@@ -50,50 +50,10 @@ class SearchResponderV2 extends Responder {
             // separate resources and value objects
             queryResultsSeparated: ResourcesAndValueObjects = ConstructResponseUtilV2.splitResourcesAndValueObjects(constructQueryResults = searchResponse)
 
-            resourceResultRows: Seq[SearchResourceResultRowV2] = queryResultsSeparated.resources.map {
-                case (resourceIri: IRI, assertions: Seq[(IRI, String)]) =>
-
-                    val rdfLabel = ConstructResponseUtilV2.getObjectForUniquePredicateFromAssertions(subjectIri = resourceIri, predicate = OntologyConstants.Rdfs.Label, assertions = assertions)
-
-                    val resourceClass = ConstructResponseUtilV2.getObjectForUniquePredicateFromAssertions(subjectIri = resourceIri, predicate = OntologyConstants.Rdf.Type, assertions = assertions)
-
-                    // get all the objects from the assertions
-                    val objects: Seq[String] = assertions.map {
-                        case (pred, obj) =>
-                            obj
-                    }
-
-                    // check if one or more of the objects points to a value object
-                    val valueObjectIris: Set[IRI] = queryResultsSeparated.valueObjects.keySet.intersect(objects.toSet)
-
-                    SearchResourceResultRowV2(
-                        resourceIri = resourceIri,
-                        resourceClass = resourceClass,
-                        label = rdfLabel,
-                        valueObjects = valueObjectIris.map {
-                            (valObj: IRI) =>
-
-                                val valueObjectClass = ConstructResponseUtilV2.getObjectForUniquePredicateFromAssertions(subjectIri = valObj, predicate = OntologyConstants.Rdf.Type, assertions = queryResultsSeparated.valueObjects.
-                                    getOrElse(valObj, throw InconsistentTriplestoreDataException(s"value object not found $valObj")))
-
-                                val valueObjectValueHasString = ConstructResponseUtilV2.getObjectForUniquePredicateFromAssertions(subjectIri = valObj, predicate = OntologyConstants.KnoraBase.ValueHasString, assertions = queryResultsSeparated.valueObjects.
-                                    getOrElse(valObj, throw InconsistentTriplestoreDataException(s"value object not found $valObj")))
-
-                                // get the property that points from the resource to the value object
-                                val propertyIri = ConstructResponseUtilV2.getPredicateForUniqueObjectFromAssertions(subjectIri = resourceIri, objectValue = valObj, assertions)
-
-                                SearchValueResultRowV2(
-                                    valueClass = valueObjectClass,
-                                    value = valueObjectValueHasString,
-                                    valueObjectIri = valObj,
-                                    propertyIri = propertyIri
-                                )
-                        }.toVector
-                    )
-            }.toVector
+            resources = ConstructResponseUtilV2.createResponseForResources(queryResultsSeparated)
 
 
-        } yield SearchGetResponseV2(nhits = queryResultsSeparated.resources.size, results = resourceResultRows)
+        } yield ResourcesV2(numberOfResources = queryResultsSeparated.resources.size, results = resources)
 
     }
 }

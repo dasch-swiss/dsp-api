@@ -20,11 +20,9 @@
 
 package org.knora.webapi.messages.v2.responder.resourcemessages
 
-import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
-import org.knora.webapi.messages.v2.responder.{KnoraRequestV2, KnoraResponseV2}
-import spray.json.{DefaultJsonProtocol, NullOptions, RootJsonFormat}
+import org.knora.webapi.messages.v2.responder._
 
 /**
   * An abstract trait for messages that can be sent to `ResourcesResponderV2`.
@@ -35,34 +33,10 @@ sealed trait ResourcesResponderRequestV2 extends KnoraRequestV2 {
 }
 
 /**
-  * Requests a description of a resource. A successful response will be a [[ResourcesResponseV2]].
+  * Requests a description of a resource. A successful response will be a [[ResourcesV2]].
   *
   * @param resourceIris the IRI of the resource to be queried.
   * @param userProfile the profile of the user making the request.
   */
 case class ResourcesGetRequestV2(resourceIris: Seq[IRI], userProfile: UserProfileV1) extends ResourcesResponderRequestV2
 
-/**
-  * Represents a resource.
-  *
-  * @param resourceClass
-  * @param label
-  */
-case class ResourceV2(resourceClass: IRI, label: String)
-
-/**
-  * Represents the Knora API V2 JSON response to a request for a description of a resource.
-  *
-  * @param resources  a sequence of resources.
-  *
-  */
-case class ResourcesResponseV2(resources: Seq[ResourceV2]) extends KnoraResponseV2 {
-    def toJsValue = ResourceV2JsonProtocol.resourcesResponseV2Format.write(this)
-}
-
-object ResourceV2JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with NullOptions {
-
-    implicit val resourceV2Format: RootJsonFormat[ResourceV2] = jsonFormat2(ResourceV2)
-    implicit val resourcesResponseV2Format: RootJsonFormat[ResourcesResponseV2] = jsonFormat1(ResourcesResponseV2)
-
-}
