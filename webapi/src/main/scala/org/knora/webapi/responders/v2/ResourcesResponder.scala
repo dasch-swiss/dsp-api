@@ -24,6 +24,10 @@ import org.knora.webapi.messages.v2.responder.resourcemessages.{ResourcesGetRequ
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.util.ActorUtil.future2Message
 import org.knora.webapi.IRI
+import org.knora.webapi.messages.v1.store.triplestoremessages.{SparqlConstructRequest, SparqlConstructResponse}
+import akka.pattern._
+import org.knora.webapi.util.ConstructResponseUtilV2
+import org.knora.webapi.util.ConstructResponseUtilV2.ResourcesAndValueObjects
 
 import scala.concurrent.Future
 
@@ -35,8 +39,21 @@ class ResourcesResponderV2 extends Responder {
 
     private def getResources(resourceIris: Seq[IRI]): Future[ResourcesResponseV2] = {
 
-        Future(ResourcesResponseV2("test"))
+        for {
+            resourceRequestSparql <- Future(queries.sparql.v2.txt.getResourcePropertiesAndValues(
+                triplestore = settings.triplestoreType,
+                resourceIri = resourceIris.head
+            ).toString())
 
+            resourceRequestResponse: SparqlConstructResponse <- (storeManager ? SparqlConstructRequest(resourceRequestSparql)).mapTo[SparqlConstructResponse]
+
+            // separate resources and value objects
+            queryResultsSeparated: ResourcesAndValueObjects = ConstructResponseUtilV2.splitResourcesAndValueObjects(resourceRequestResponse)
+
+            _ = println(queryResultsSeparated.resources.keySet)
+            _ = println(queryResultsSeparated.valueObjects.keySet)
+
+        } yield ResourcesResponseV2("test")
 
     }
 

@@ -26,6 +26,8 @@ import org.knora.webapi.messages.v1.store.triplestoremessages.{SparqlConstructRe
 import org.knora.webapi.messages.v2.responder.searchmessages.{FulltextSearchGetRequestV2, SearchGetResponseV2, SearchResourceResultRowV2, SearchValueResultRowV2}
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.util.ActorUtil._
+import org.knora.webapi.util.ConstructResponseUtilV2
+import org.knora.webapi.util.ConstructResponseUtilV2.ResourcesAndValueObjects
 
 import scala.concurrent.Future
 
@@ -45,21 +47,10 @@ class SearchResponderV2 extends Responder {
 
             searchResponse: SparqlConstructResponse <- (storeManager ? SparqlConstructRequest(searchSparql)).mapTo[SparqlConstructResponse]
 
-            // split resources and value objects
-            (valueObjects: Map[IRI, Seq[(IRI, String)]], resources: Map[IRI, Seq[(IRI, String)]]) = searchResponse.statements.partition {
-                case (subject: IRI, assertions: Seq[(IRI, String)]) =>
+            // separate resources and value objects
+            queryResultsSeparated: ResourcesAndValueObjects = ConstructResponseUtilV2.splitResourcesAndValueObjects(searchResponse)
 
-                    // get the subject's type (it could be a resource or a valueObject)
-                    val subjectType: Option[String] = assertions.find {
-                        case (pred, obj) =>
-                            pred == OntologyConstants.Rdf.Type
-                    }.map(_._2) // get the type
-
-                    OntologyConstants.KnoraBase.ValueClasses.contains(subjectType.getOrElse(throw InconsistentTriplestoreDataException(s"no rdf:type given for $subject")))
-
-            }
-
-            resultRows: Seq[SearchResourceResultRowV2] = resources.map {
+            resourceResultRows: Seq[SearchResourceResultRowV2] = queryResultsSeparated.resources.map {
                 case (resourceIri, assertions) =>
 
                     // get the resource's label
@@ -81,7 +72,7 @@ class SearchResponderV2 extends Responder {
                     }
 
                     // check if one or more of the objects points to a value object
-                    val valueObjectIris: Set[IRI] = valueObjects.keySet.intersect(objects.toSet)
+                    val valueObjectIris: Set[IRI] = queryResultsSeparated.valueObjects.keySet.intersect(objects.toSet)
 
                     SearchResourceResultRowV2(
                         resourceIri = resourceIri,
@@ -91,13 +82,13 @@ class SearchResponderV2 extends Responder {
                             (valObj: IRI) =>
 
                                 // get the value object's type
-                                val valueObjectClass: Option[String] = valueObjects.getOrElse(valObj, throw InconsistentTriplestoreDataException(s"value object not found $valObj")).find {
+                                val valueObjectClass: Option[String] = queryResultsSeparated.valueObjects.getOrElse(valObj, throw InconsistentTriplestoreDataException(s"value object not found $valObj")).find {
                                     case (pred, obj) =>
                                         pred == OntologyConstants.Rdf.Type
                                 }.map(_._2) // get the resource's type
 
                                 // get the value object's knora-base:valueHasString
-                                val valueObjectString: Option[String] = valueObjects.getOrElse(valObj, throw InconsistentTriplestoreDataException(s"value object not found $valObj")).find {
+                                val valueObjectString: Option[String] = queryResultsSeparated.valueObjects.getOrElse(valObj, throw InconsistentTriplestoreDataException(s"value object not found $valObj")).find {
                                     case (pred, obj) =>
                                         pred == OntologyConstants.KnoraBase.ValueHasString
                                 }.map(_._2) // get the knora-base:valueHasString
@@ -119,7 +110,7 @@ class SearchResponderV2 extends Responder {
             }.toVector
 
 
-        } yield SearchGetResponseV2(nhits = resources.size, results = resultRows)
+        } yield SearchGetResponseV2(nhits = queryResultsSeparated.resources.size, results = resourceResultRows)
 
     }
 }
