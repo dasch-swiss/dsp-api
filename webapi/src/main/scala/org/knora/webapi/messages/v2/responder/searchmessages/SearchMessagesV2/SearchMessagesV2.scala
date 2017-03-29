@@ -1,7 +1,7 @@
 package org.knora.webapi.messages.v2.responder.searchmessages
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import org.knora.webapi.IRI
+import org.knora.webapi.{IRI, OntologyConstants}
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v2.responder.{KnoraRequestV2, KnoraResponseV2}
 import spray.json._
@@ -61,11 +61,11 @@ object SearchV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol wi
                                 // the property Iri already exists, add to it
                                 val existingValsforProp: Seq[JsValue] = acc(valObj.propertyIri)
 
-                                acc ++ Map(valObj.propertyIri -> (existingValsforProp :+ Map("@value" -> valObj.value.toJson, "@type" -> valObj.valueClass.toJson).toJson))
+                                acc ++ Map(valObj.propertyIri -> (existingValsforProp :+ Map(OntologyConstants.KnoraBase.ValueHasString -> valObj.value.toJson, "@type" -> valObj.valueClass.toJson, "@id" -> valObj.valueObjectIri.toJson).toJson))
 
                             } else {
                                 // the property Iri does not exist yet, create it
-                                acc ++ Map(valObj.propertyIri -> Vector(Map("@value" -> valObj.value.toJson, "@type" -> valObj.valueClass.toJson).toJson))
+                                acc ++ Map(valObj.propertyIri -> Vector(Map(OntologyConstants.KnoraBase.ValueHasString -> valObj.value.toJson, "@type" -> valObj.valueClass.toJson, "@id" -> valObj.valueObjectIri.toJson).toJson))
                             }
 
                     }.map {
