@@ -24,7 +24,7 @@ import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
-import org.knora.webapi.messages.v2.responder.searchmessages.FulltextSearchGetRequestV2
+import org.knora.webapi.messages.v2.responder.resourcemessages.ResourcesGetRequestV2
 import org.knora.webapi.routing.{Authenticator, RouteUtilV2}
 import org.knora.webapi.util.InputValidation
 import org.knora.webapi.{BadRequestException, SettingsImpl}
@@ -34,7 +34,7 @@ import scala.language.postfixOps
 /**
   * Provides a spray-routing function for API routes that deal with search.
   */
-object SearchRouteV2 extends Authenticator {
+object ResourcesRouteV2 extends Authenticator {
 
 
     def knoraApiPath(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter): Route = {
@@ -43,14 +43,14 @@ object SearchRouteV2 extends Authenticator {
         implicit val timeout = settings.defaultTimeout
         val responderManager = system.actorSelection("/user/responderManager2")
 
-        path("v2" / "search" / Segment) { searchval => // TODO: if a space is encoded as a "+", this is not converted back to a space
+        path("v2" / "resources" / Segment) { resIri =>
             get {
                 requestContext => {
                     val userProfile = getUserProfileV1(requestContext)
 
-                    val searchString = InputValidation.toSparqlEncodedString(searchval, () => throw BadRequestException(s"Invalid search string: '$searchval'"))
+                    val resourceIri = InputValidation.toIri(resIri, () => throw BadRequestException(s"Invalid search string: '$resIri'"))
 
-                    val requestMessage = FulltextSearchGetRequestV2(searchValue = searchString, userProfile)
+                    val requestMessage = ResourcesGetRequestV2(resourceIris = Seq(resourceIri), userProfile = userProfile)
 
                     RouteUtilV2.runJsonRoute(
                         requestMessage,

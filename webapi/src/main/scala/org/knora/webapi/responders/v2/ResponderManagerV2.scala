@@ -24,6 +24,7 @@ import akka.actor.{Actor, ActorLogging, Props}
 import akka.event.LoggingReceive
 import akka.routing.FromConfig
 import org.knora.webapi.ActorMaker
+import org.knora.webapi.messages.v2.responder.resourcemessages.ResourcesGetRequestV2
 import org.knora.webapi.messages.v2.responder.searchmessages.SearchResponderRequestV2
 import org.knora.webapi.responders._
 import org.knora.webapi.util.ActorUtil.handleUnexpectedMessage
@@ -56,14 +57,26 @@ class ResponderManagerV2 extends Actor with ActorLogging {
     protected final def makeDefaultSearchRouter = makeActor(FromConfig.props(Props[SearchResponderV2]), SEARCH_ROUTER_ACTOR_NAME2)
 
     /**
+      * Constructs the default Akka routing actor that routes messages to [[ResourcesResponderV2]].
+      */
+    protected final def makeDefaultResourcesRouter = makeActor(FromConfig.props(Props[ResourcesResponderV2]), RESOURCES_ROUTER_ACTOR_NAME2)
+
+    /**
       * The Akka routing actor that should receive messages addressed to the search responder. Subclasses can override this
       * member to substitute a custom actor instead of the default search responder.
       */
     protected val searchRouter = makeDefaultSearchRouter
 
+    /**
+      * The Akka routing actor that should receive messages addressed to the search responder. Subclasses can override this
+      * member to substitute a custom actor instead of the default search responder.
+      */
+    protected val resourcesRouter = makeDefaultResourcesRouter
+
 
     def receive = LoggingReceive {
         case searchResponderRequest: SearchResponderRequestV2 => searchRouter.forward(searchResponderRequest)
+        case resourcesResponderRequest: ResourcesGetRequestV2 => resourcesRouter.forward(resourcesResponderRequest)
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }
 }

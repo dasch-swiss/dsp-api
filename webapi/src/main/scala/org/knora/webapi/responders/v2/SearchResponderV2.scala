@@ -35,7 +35,7 @@ class SearchResponderV2 extends Responder {
         case searchGetRequest: FulltextSearchGetRequestV2 => future2Message(sender(), fulltextSearchV2(searchGetRequest), log)
     }
 
-    private def fulltextSearchV2(searchGetRequest: FulltextSearchGetRequestV2) = {
+    private def fulltextSearchV2(searchGetRequest: FulltextSearchGetRequestV2): Future[SearchGetResponseV2] = {
 
         for {
             searchSparql <- Future(queries.sparql.v2.txt.searchFulltext(

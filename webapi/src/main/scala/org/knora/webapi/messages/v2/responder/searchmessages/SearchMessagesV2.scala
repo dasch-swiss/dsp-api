@@ -1,15 +1,33 @@
+/*
+ * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
+ * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
+ *
+ * This file is part of Knora.
+ *
+ * Knora is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Knora is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public
+ * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package org.knora.webapi.messages.v2.responder.searchmessages
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import org.knora.webapi.{IRI, OntologyConstants}
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v2.responder.{KnoraRequestV2, KnoraResponseV2}
+import org.knora.webapi.{IRI, OntologyConstants}
 import spray.json._
 
-import scala.collection.immutable.Iterable
-
 /**
-  * An abstract trait for messages that can be sent to `SearchResponderV1`.
+  * An abstract trait for messages that can be sent to `SearchResponderV2`.
   */
 sealed trait SearchResponderRequestV2 extends KnoraRequestV2 {
 
@@ -99,6 +117,5 @@ object SearchV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol wi
 
     implicit val searchValueResultRowV2Format: RootJsonFormat[SearchValueResultRowV2] = jsonFormat4(SearchValueResultRowV2)
     implicit val searchResourceResultRowV2Format: RootJsonFormat[SearchResourceResultRowV2] = jsonFormat4(SearchResourceResultRowV2)
-    //implicit val searchResponseV2Format: RootJsonFormat[SearchGetResponseV2] = jsonFormat2(SearchGetResponseV2)
 
 }

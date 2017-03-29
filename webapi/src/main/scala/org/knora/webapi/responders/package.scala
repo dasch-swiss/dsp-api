@@ -28,9 +28,6 @@ package object responders {
     val RESPONDER_MANAGER_ACTOR_NAME = "responderManager"
     val RESPONDER_MANAGER_ACTOR_PATH = "/user/" + RESPONDER_MANAGER_ACTOR_NAME
 
-    val RESPONDER_MANAGER_ACTOR_NAME2 = "responderManager2"
-    val RESPONDER_MANAGER_ACTOR_PATH2 = "/user/" + RESPONDER_MANAGER_ACTOR_NAME2
-
     val RESOURCES_ROUTER_ACTOR_NAME = "resourcesRouter"
     val RESOURCES_ROUTER_ACTOR_PATH = RESPONDER_MANAGER_ACTOR_PATH + "/" + RESOURCES_ROUTER_ACTOR_NAME
 
@@ -52,9 +49,6 @@ package object responders {
     val SEARCH_ROUTER_ACTOR_NAME = "searchRouter"
     val SEARCH_ROUTER_ACTOR_PATH = RESPONDER_MANAGER_ACTOR_PATH + "/" + SEARCH_ROUTER_ACTOR_NAME
 
-    val SEARCH_ROUTER_ACTOR_NAME2 = "searchRouter2"
-    val SEARCH_ROUTER_ACTOR_PATH2 = RESPONDER_MANAGER_ACTOR_PATH2 + "/" + SEARCH_ROUTER_ACTOR_NAME2
-
     val ONTOLOGY_ROUTER_ACTOR_NAME = "ontologyRouter"
     val ONTOLOGY_ROUTER_ACTOR_PATH = RESPONDER_MANAGER_ACTOR_PATH + "/" + ONTOLOGY_ROUTER_ACTOR_NAME
 
@@ -72,5 +66,18 @@ package object responders {
 
     val GROUPS_ROUTER_ACTOR_NAME = "groupsRouter"
     val GROUPS_ROUTER_ACTOR_PATH = RESPONDER_MANAGER_ACTOR_PATH + "/" + GROUPS_ROUTER_ACTOR_NAME
+
+    // ------------------------------------------------------------------------------------------
+    // --------------------------------------- V2 Routers ---------------------------------------
+    // ------------------------------------------------------------------------------------------
+
+    val RESPONDER_MANAGER_ACTOR_NAME2 = "responderManager2"
+    val RESPONDER_MANAGER_ACTOR_PATH2 = "/user/" + RESPONDER_MANAGER_ACTOR_NAME2
+
+    val SEARCH_ROUTER_ACTOR_NAME2 = "searchRouter2"
+    val SEARCH_ROUTER_ACTOR_PATH2 = RESPONDER_MANAGER_ACTOR_PATH2 + "/" + SEARCH_ROUTER_ACTOR_NAME2
+
+    val RESOURCES_ROUTER_ACTOR_NAME2 = "resourcesRouter2"
+    val RESOURCES_ROUTER_ACTOR_PATH2 = RESPONDER_MANAGER_ACTOR_PATH2 + "/" + RESOURCES_ROUTER_ACTOR_NAME2
 
 }
