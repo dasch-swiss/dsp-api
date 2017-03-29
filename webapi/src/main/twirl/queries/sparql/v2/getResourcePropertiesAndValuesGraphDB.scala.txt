@@ -1,0 +1,77 @@
+@*
+ * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
+ * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
+ *
+ * This file is part of Knora.
+ *
+ * Knora is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Knora is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public
+ * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ *@
+
+@import org.knora.webapi.IRI
+@import org.knora.webapi.SparqlGenerationException
+
+@*
+ * Performs a resource request using GraphDB.
+ *
+ * This template is used only by getResourcePropertiesAndValues.scala.txt.
+ *
+ *
+ * @param resourceIri the Iri of the requested resource.
+ *@
+@(resourceIri: String)
+
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+CONSTRUCT {
+    ?resource knora-base:attachedToProject ?resourceProject .
+    ?resource rdfs:label ?label .
+    ?resource a ?resourceType .
+    ?resource knora-base:attachedToUser ?resourceCreator ;
+            knora-base:hasPermissions ?resourcePermissions .
+
+    ?resource ?resourceProperty ?valueObject .
+    ?valueObject ?valueObjectProperty ?valueObjectValue .
+
+} WHERE {
+    BIND(IRI("@resourceIri") as ?resource)
+
+    ?resource rdf:type knora-base:Resource ;
+        knora-base:isDeleted false ;
+        knora-base:attachedToProject ?resourceProject .
+
+    ?resource rdfs:label ?label .
+
+    GRAPH <http://www.ontotext.com/explicit> {
+        ?resource a ?resourceType .
+    }
+
+    ?resource knora-base:attachedToUser ?resourceCreator ;
+            knora-base:hasPermissions ?resourcePermissions .
+
+    ?resource knora-base:hasValue ?valueObject .
+
+    ?valueObject knora-base:isDeleted false ;
+        a knora-base:Value .
+
+    GRAPH <http://www.ontotext.com/explicit> {
+        ?resource ?resourceProperty ?valueObject .
+
+        ?valueObject a ?valueObjectType .
+        ?valueObject ?valueObjectProperty ?valueObjectValue .
+    }
+
+
+
+}
