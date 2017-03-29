@@ -43,17 +43,26 @@ sealed trait ResourcesResponderRequestV2 extends KnoraRequestV2 {
 case class ResourcesGetRequestV2(resourceIris: Seq[IRI], userProfile: UserProfileV1) extends ResourcesResponderRequestV2
 
 /**
+  * Represents a resource.
+  *
+  * @param resourceClass
+  * @param label
+  */
+case class ResourceV2(resourceClass: IRI, label: String)
+
+/**
   * Represents the Knora API V2 JSON response to a request for a description of a resource.
   *
-  * @param resource  basic information about the resource.
+  * @param resources  a sequence of resources.
   *
   */
-case class ResourcesResponseV2(resource: String) extends KnoraResponseV2 {
-    def toJsValue = ResourceV2JsonProtocol.resourceResponseV2Format.write(this)
+case class ResourcesResponseV2(resources: Seq[ResourceV2]) extends KnoraResponseV2 {
+    def toJsValue = ResourceV2JsonProtocol.resourcesResponseV2Format.write(this)
 }
 
 object ResourceV2JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with NullOptions {
 
-    implicit val resourceResponseV2Format: RootJsonFormat[ResourcesResponseV2] = jsonFormat1(ResourcesResponseV2)
+    implicit val resourceV2Format: RootJsonFormat[ResourceV2] = jsonFormat2(ResourceV2)
+    implicit val resourcesResponseV2Format: RootJsonFormat[ResourcesResponseV2] = jsonFormat1(ResourcesResponseV2)
 
 }

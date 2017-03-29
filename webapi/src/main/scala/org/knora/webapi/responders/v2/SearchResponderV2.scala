@@ -53,9 +53,9 @@ class SearchResponderV2 extends Responder {
             resourceResultRows: Seq[SearchResourceResultRowV2] = queryResultsSeparated.resources.map {
                 case (resourceIri: IRI, assertions: Seq[(IRI, String)]) =>
 
-                    val rdfLabel = ConstructResponseUtilV2.getPredicateValueFromAssertions(subjectIri = resourceIri, predicate = OntologyConstants.Rdfs.Label, assertions = assertions)
+                    val rdfLabel = ConstructResponseUtilV2.getObjectForUniquePredicateFromAssertions(subjectIri = resourceIri, predicate = OntologyConstants.Rdfs.Label, assertions = assertions)
 
-                    val resourceClass = ConstructResponseUtilV2.getPredicateValueFromAssertions(subjectIri = resourceIri, predicate = OntologyConstants.Rdf.Type, assertions = assertions)
+                    val resourceClass = ConstructResponseUtilV2.getObjectForUniquePredicateFromAssertions(subjectIri = resourceIri, predicate = OntologyConstants.Rdf.Type, assertions = assertions)
 
                     // get all the objects from the assertions
                     val objects: Seq[String] = assertions.map {
@@ -73,23 +73,20 @@ class SearchResponderV2 extends Responder {
                         valueObjects = valueObjectIris.map {
                             (valObj: IRI) =>
 
-                                val valueObjectClass = ConstructResponseUtilV2.getPredicateValueFromAssertions(subjectIri = valObj, predicate = OntologyConstants.Rdf.Type, assertions = queryResultsSeparated.valueObjects.
+                                val valueObjectClass = ConstructResponseUtilV2.getObjectForUniquePredicateFromAssertions(subjectIri = valObj, predicate = OntologyConstants.Rdf.Type, assertions = queryResultsSeparated.valueObjects.
                                     getOrElse(valObj, throw InconsistentTriplestoreDataException(s"value object not found $valObj")))
 
-                                val valueObjectValueHasString = ConstructResponseUtilV2.getPredicateValueFromAssertions(subjectIri = valObj, predicate = OntologyConstants.KnoraBase.ValueHasString, assertions = queryResultsSeparated.valueObjects.
+                                val valueObjectValueHasString = ConstructResponseUtilV2.getObjectForUniquePredicateFromAssertions(subjectIri = valObj, predicate = OntologyConstants.KnoraBase.ValueHasString, assertions = queryResultsSeparated.valueObjects.
                                     getOrElse(valObj, throw InconsistentTriplestoreDataException(s"value object not found $valObj")))
 
                                 // get the property that points from the resource to the value object
-                                val propertyIri = assertions.find {
-                                    case (pred, obj) =>
-                                        obj == valObj
-                                }.map(_._1)
+                                val propertyIri = ConstructResponseUtilV2.getPredicateForUniqueObjectFromAssertions(subjectIri = resourceIri, objectValue = valObj, assertions)
 
                                 SearchValueResultRowV2(
                                     valueClass = valueObjectClass,
                                     value = valueObjectValueHasString,
                                     valueObjectIri = valObj,
-                                    propertyIri = propertyIri.getOrElse(throw InconsistentTriplestoreDataException(s"no property connecting $resourceIri with $valObj"))
+                                    propertyIri = propertyIri
                                 )
                         }.toVector
                     )

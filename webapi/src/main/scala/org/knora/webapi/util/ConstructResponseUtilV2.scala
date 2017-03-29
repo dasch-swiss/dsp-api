@@ -45,7 +45,7 @@ object ConstructResponseUtilV2 {
                         pred
                 }
 
-                val rdfType = getPredicateValueFromAssertions(subject, OntologyConstants.Rdf.Type, assertions)
+                val rdfType = getObjectForUniquePredicateFromAssertions(subject, OntologyConstants.Rdf.Type, assertions)
 
                 // returns true if it is a valueObject, false in case of a resource
                 OntologyConstants.KnoraBase.ValueClasses.contains(rdfType)
@@ -56,25 +56,44 @@ object ConstructResponseUtilV2 {
 
     }
 
-    def getPredicateValueFromAssertions(subjectIri: IRI, predicate: IRI, assertions: Seq[(IRI, String)]): String = {
+    /**
+      * Gets the value (object) for the given predicate.
+      * This method assumes that there is only one value (object) for the given predicate.
+      *
+      * @param subjectIri the subject the assertions belong to.
+      * @param predicate the predicate whose value should be returned.
+      * @param assertions the assertions to search in.
+      * @return the given predicate's value (object).
+      */
+    def getObjectForUniquePredicateFromAssertions(subjectIri: IRI, predicate: IRI, assertions: Seq[(IRI, String)]): String = {
 
-        // group assertions by predicate (assertions is a sequence of 2 tuples: pred, obj)
-        val groupedByPredicate: Map[IRI, Seq[(IRI, String)]] = assertions.groupBy {
-            case (pred: IRI, obj: String) =>
-                pred
-        }
+        // make predicate the keys of a map
+        val predicateMap: Map[IRI, String] = assertions.toMap
 
         // get the assertion representing the predicate
-        val assertionForPredicate: Seq[(IRI, String)] = groupedByPredicate.getOrElse(predicate, throw InconsistentTriplestoreDataException(s"no $predicate given for $subjectIri"))
-
-        // make sure that there is exactly one assertion for predicate
-        if (assertionForPredicate.size != 1) throw InconsistentTriplestoreDataException(s"not exactly one $predicate given for $subjectIri")
-
-        // the assertion is a 2 tuple: pre, obj
-        // get the object representing value of the predicate
-        assertionForPredicate.head._2
+        predicateMap.getOrElse(predicate, throw InconsistentTriplestoreDataException(s"no $predicate given for $subjectIri"))
 
     }
 
+    /**
+      * Gets the predicate for the given value (object).
+      * cThis method assumes that the given value (object) is unique in the assertions (no combination of the same value with another predicate).
+      *
+      * @param subjectIri the subject the assertions belong to.
+      * @param objectValue the object (value) whose predicate should be returned.
+      * @param assertions the assertions to search in.
+      * @return the given predicate for the given object (value).
+      */
+    def getPredicateForUniqueObjectFromAssertions(subjectIri: IRI, objectValue: String, assertions: Seq[(IRI, String)]) = {
+
+        // make the objects keys of a map
+        val objMap = assertions.map {
+            case (pred, obj) =>
+                (obj, pred)
+        }.toMap
+
+        objMap.getOrElse(objectValue, throw InconsistentTriplestoreDataException(s"no object (value) $objectValue found in assertions for $subjectIri"))
+
+    }
     
 }
