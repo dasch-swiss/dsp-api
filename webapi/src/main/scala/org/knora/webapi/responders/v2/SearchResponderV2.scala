@@ -48,22 +48,14 @@ class SearchResponderV2 extends Responder {
             searchResponse: SparqlConstructResponse <- (storeManager ? SparqlConstructRequest(searchSparql)).mapTo[SparqlConstructResponse]
 
             // separate resources and value objects
-            queryResultsSeparated: ResourcesAndValueObjects = ConstructResponseUtilV2.splitResourcesAndValueObjects(searchResponse)
+            queryResultsSeparated: ResourcesAndValueObjects = ConstructResponseUtilV2.splitResourcesAndValueObjects(constructQueryResults = searchResponse)
 
             resourceResultRows: Seq[SearchResourceResultRowV2] = queryResultsSeparated.resources.map {
-                case (resourceIri, assertions) =>
+                case (resourceIri: IRI, assertions: Seq[(IRI, String)]) =>
 
-                    // get the resource's label
-                    val resourceLabel: Option[String] = assertions.find {
-                        case (pred, obj) =>
-                            pred == OntologyConstants.Rdfs.Label
-                    }.map(_._2) // get the label
+                    val rdfLabel = ConstructResponseUtilV2.getPredicateValueFromAssertions(subjectIri = resourceIri, predicate = OntologyConstants.Rdfs.Label, assertions = assertions)
 
-                    // get the resource's type
-                    val resourceClass: Option[String] = assertions.find {
-                        case (pred, obj) =>
-                            pred == OntologyConstants.Rdf.Type
-                    }.map(_._2) // get the resource's type
+                    val resourceClass = ConstructResponseUtilV2.getPredicateValueFromAssertions(subjectIri = resourceIri, predicate = OntologyConstants.Rdf.Type, assertions = assertions)
 
                     // get all the objects from the assertions
                     val objects: Seq[String] = assertions.map {
@@ -76,22 +68,16 @@ class SearchResponderV2 extends Responder {
 
                     SearchResourceResultRowV2(
                         resourceIri = resourceIri,
-                        resourceClass = resourceClass.getOrElse(throw InconsistentTriplestoreDataException(s"no rdf:type given for $resourceIri")),
-                        label = resourceLabel.getOrElse(throw InconsistentTriplestoreDataException(s"no rdfs:label given for $resourceIri")),
+                        resourceClass = resourceClass,
+                        label = rdfLabel,
                         valueObjects = valueObjectIris.map {
                             (valObj: IRI) =>
 
-                                // get the value object's type
-                                val valueObjectClass: Option[String] = queryResultsSeparated.valueObjects.getOrElse(valObj, throw InconsistentTriplestoreDataException(s"value object not found $valObj")).find {
-                                    case (pred, obj) =>
-                                        pred == OntologyConstants.Rdf.Type
-                                }.map(_._2) // get the resource's type
+                                val valueObjectClass = ConstructResponseUtilV2.getPredicateValueFromAssertions(subjectIri = valObj, predicate = OntologyConstants.Rdf.Type, assertions = queryResultsSeparated.valueObjects.
+                                    getOrElse(valObj, throw InconsistentTriplestoreDataException(s"value object not found $valObj")))
 
-                                // get the value object's knora-base:valueHasString
-                                val valueObjectString: Option[String] = queryResultsSeparated.valueObjects.getOrElse(valObj, throw InconsistentTriplestoreDataException(s"value object not found $valObj")).find {
-                                    case (pred, obj) =>
-                                        pred == OntologyConstants.KnoraBase.ValueHasString
-                                }.map(_._2) // get the knora-base:valueHasString
+                                val valueObjectValueHasString = ConstructResponseUtilV2.getPredicateValueFromAssertions(subjectIri = valObj, predicate = OntologyConstants.KnoraBase.ValueHasString, assertions = queryResultsSeparated.valueObjects.
+                                    getOrElse(valObj, throw InconsistentTriplestoreDataException(s"value object not found $valObj")))
 
                                 // get the property that points from the resource to the value object
                                 val propertyIri = assertions.find {
@@ -100,8 +86,8 @@ class SearchResponderV2 extends Responder {
                                 }.map(_._1)
 
                                 SearchValueResultRowV2(
-                                    valueClass = valueObjectClass.getOrElse(s"no rdf:type found for $valueObjectClass"),
-                                    value = valueObjectString.getOrElse(throw InconsistentTriplestoreDataException(s"no knora-base:valueHasString found for $valObj")),
+                                    valueClass = valueObjectClass,
+                                    value = valueObjectValueHasString,
                                     valueObjectIri = valObj,
                                     propertyIri = propertyIri.getOrElse(throw InconsistentTriplestoreDataException(s"no property connecting $resourceIri with $valObj"))
                                 )

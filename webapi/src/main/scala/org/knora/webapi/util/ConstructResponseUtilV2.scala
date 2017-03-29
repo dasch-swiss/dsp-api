@@ -20,8 +20,8 @@
 
 package org.knora.webapi.util
 
-import org.knora.webapi.{IRI, InconsistentTriplestoreDataException, OntologyConstants}
 import org.knora.webapi.messages.v1.store.triplestoremessages.SparqlConstructResponse
+import org.knora.webapi.{IRI, InconsistentTriplestoreDataException, OntologyConstants}
 
 object ConstructResponseUtilV2 {
 
@@ -29,7 +29,7 @@ object ConstructResponseUtilV2 {
 
     /**
       * A [[SparqlConstructResponse]] may contain both resources and value objects.
-      * This method splits the results and returns them as separate structures.
+      * This method splits the results by their type and returns them as separate structures.
       *
       * @param constructQueryResults the results of a SPARQL construct query.
       * @return a [[ResourcesAndValueObjects]].
@@ -39,17 +39,42 @@ object ConstructResponseUtilV2 {
         val (valueObjects: Map[IRI, Seq[(IRI, String)]], resources: Map[IRI, Seq[(IRI, String)]]) = constructQueryResults.statements.partition {
             case (subject: IRI, assertions: Seq[(IRI, String)]) =>
 
-                // get the subject's type (it could be a resource or a valueObject)
-                val subjectType: Option[String] = assertions.find {
-                    case (pred, obj) =>
-                        pred == OntologyConstants.Rdf.Type
-                }.map(_._2) // get the type
+                // group assertions by predicate (assertions is a sequence of 2 tuples: pred, obj)
+                val groupedByPredicate: Map[IRI, Seq[(IRI, String)]] = assertions.groupBy {
+                    case (pred: IRI, obj: String) =>
+                        pred
+                }
 
-                OntologyConstants.KnoraBase.ValueClasses.contains(subjectType.getOrElse(throw InconsistentTriplestoreDataException(s"no rdf:type given for $subject")))
+                val rdfType = getPredicateValueFromAssertions(subject, OntologyConstants.Rdf.Type, assertions)
+
+                // returns true if it is a valueObject, false in case of a resource
+                OntologyConstants.KnoraBase.ValueClasses.contains(rdfType)
 
         }
 
         ResourcesAndValueObjects(resources = resources, valueObjects = valueObjects)
 
     }
+
+    def getPredicateValueFromAssertions(subjectIri: IRI, predicate: IRI, assertions: Seq[(IRI, String)]): String = {
+
+        // group assertions by predicate (assertions is a sequence of 2 tuples: pred, obj)
+        val groupedByPredicate: Map[IRI, Seq[(IRI, String)]] = assertions.groupBy {
+            case (pred: IRI, obj: String) =>
+                pred
+        }
+
+        // get the assertion representing the predicate
+        val assertionForPredicate: Seq[(IRI, String)] = groupedByPredicate.getOrElse(predicate, throw InconsistentTriplestoreDataException(s"no $predicate given for $subjectIri"))
+
+        // make sure that there is exactly one assertion for predicate
+        if (assertionForPredicate.size != 1) throw InconsistentTriplestoreDataException(s"not exactly one $predicate given for $subjectIri")
+
+        // the assertion is a 2 tuple: pre, obj
+        // get the object representing value of the predicate
+        assertionForPredicate.head._2
+
+    }
+
+    
 }
