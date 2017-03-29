@@ -41,15 +41,15 @@ PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 
 CONSTRUCT {
 	?matchingSubject ?matchingProperty ?literal .
-    ?matchingSubject knora-base:attachedToUser ?valueCreatorMatchingSubject ;
-            knora-base:hasPermissions ?valuePermissionsMatchingSubject .
-    ?matchingSubject a ?typeMatchingSubject .
+    ?valueObject knora-base:attachedToUser ?valueObjectCreator ;
+            knora-base:hasPermissions ?valueObjectPermissions .
+    ?matchingSubject a ?valueObjectType .
 
-    ?resource ?prop ?matchingSubject .
+    ?resource ?resourceProperty ?matchingSubject .
     ?resource rdfs:label ?label .
-    ?resource a ?typeResource .
-    ?resource knora-base:attachedToUser ?valueCreatorResource ;
-            knora-base:hasPermissions ?valuePermissionsResource .
+    ?resource a ?resourceType .
+    ?resource knora-base:attachedToUser ?resourceCreator ;
+            knora-base:hasPermissions ?resourcePermissions .
 }
 
 WHERE {
@@ -59,21 +59,23 @@ WHERE {
 
     ?literal <http://www.ontotext.com/owlim/lucene#fullTextSearchIndex> '@searchTerms' .
 
-    GRAPH <http://www.ontotext.com/explicit> {
-        ?matchingSubject a ?typeMatchingSubject .
-    }
-
-    ?matchingSubject knora-base:isDeleted false .
-
-    ?matchingSubject knora-base:attachedToUser ?valueCreatorMatchingSubject ;
-    	knora-base:hasPermissions ?valuePermissionsMatchingSubject .
-
     OPTIONAL {
-    	?containingResource knora-base:hasValue ?matchingSubject .
+        ?matchingSubject a knora-base:Value .
+        ?containingResource knora-base:hasValue ?matchingSubject .
 
-    	GRAPH <http://www.ontotext.com/explicit> {
-        	?containingResource ?prop ?matchingSubject .
-    	}
+        GRAPH <http://www.ontotext.com/explicit> {
+            ?containingResource ?resourceProperty ?matchingSubject .
+            ?matchingSubject a ?valueObjectType .
+        }
+
+        FILTER(?valueObjectType != knora-base:LinkValue)
+
+        ?matchingSubject knora-base:isDeleted false .
+
+        BIND(?matchingSubject AS ?valueObject)
+
+        ?valueObject knora-base:attachedToUser ?valueObjectCreator ;
+            knora-base:hasPermissions ?valueObjectPermissions .
 
     }
 
@@ -81,12 +83,12 @@ WHERE {
     BIND(COALESCE(?containingResource, ?matchingSubject) AS ?resource)
 
     GRAPH <http://www.ontotext.com/explicit> {
-        ?resource a ?typeResource .
+        ?resource a ?resourceType .
     }
 
     ?resource rdfs:label ?label .
-    ?resource knora-base:attachedToUser ?valueCreatorResource ;
-            knora-base:hasPermissions ?valuePermissionsResource .
+    ?resource knora-base:attachedToUser ?resourceCreator ;
+            knora-base:hasPermissions ?resourcePermissions .
 
     ?resource knora-base:isDeleted false .
 
