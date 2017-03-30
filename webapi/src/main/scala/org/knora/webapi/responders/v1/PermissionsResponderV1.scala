@@ -912,34 +912,9 @@ class PermissionsResponderV1 extends ResponderV1 {
                 }
             }
 
-            /* Get the default object access permissions defined on the resource class for the current project */
-            defaultPermissionsOnProjectResourceClass: Set[PermissionV1] <- {
-                if (entityType == RESOURCE_ENTITY_TYPE && permissionsListBuffer.isEmpty) {
-                    defaultObjectAccessPermissionsForResourceClassGetV1(projectIri = projectIri, resourceClassIri = resourceClassIri)
-                } else {
-                    Future(Set.empty[PermissionV1])
-                }
-            }
-            _ = if (defaultPermissionsOnProjectResourceClass.nonEmpty) {
-                permissionsListBuffer += (("ProjectResourceClass", defaultPermissionsOnProjectResourceClass))
-                log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnProjectResourceClass: {}", defaultPermissionsOnProjectResourceClass)
-            }
-
-            /* Get the default object access permissions defined on the resource class inside the SystemProject */
-            defaultPermissionsOnSystemResourceClass: Set[PermissionV1] <- {
-                if (entityType == RESOURCE_ENTITY_TYPE && permissionsListBuffer.isEmpty) {
-                    val systemProject = OntologyConstants.KnoraBase.SystemProject
-                    defaultObjectAccessPermissionsForResourceClassGetV1(projectIri = systemProject, resourceClassIri = resourceClassIri)
-                } else {
-                    Future(Set.empty[PermissionV1])
-                }
-            }
-            _ = if (defaultPermissionsOnSystemResourceClass.nonEmpty) {
-                permissionsListBuffer += (("SystemResourceClass", defaultPermissionsOnSystemResourceClass))
-                log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnSystemResourceClass: {}", defaultPermissionsOnSystemResourceClass)
-            }
-
-
+            ///////////////////////////////
+            // RESOURCE CLASS / PROPERTY
+            ///////////////////////////////
             /* project resource class / property combination */
             defaultPermissionsOnProjectResourceClassProperty: Set[PermissionV1] <- {
                 if (entityType == PROPERTY_ENTITY_TYPE && permissionsListBuffer.isEmpty) {
@@ -967,6 +942,39 @@ class PermissionsResponderV1 extends ResponderV1 {
                 log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnSystemResourceClassProperty: {}", defaultPermissionsOnSystemResourceClassProperty)
             }
 
+            ///////////////////////
+            // RESOURCE CLASS
+            ///////////////////////
+            /* Get the default object access permissions defined on the resource class for the current project */
+            defaultPermissionsOnProjectResourceClass: Set[PermissionV1] <- {
+                if (entityType == RESOURCE_ENTITY_TYPE && permissionsListBuffer.isEmpty) {
+                    defaultObjectAccessPermissionsForResourceClassGetV1(projectIri = projectIri, resourceClassIri = resourceClassIri)
+                } else {
+                    Future(Set.empty[PermissionV1])
+                }
+            }
+            _ = if (defaultPermissionsOnProjectResourceClass.nonEmpty) {
+                permissionsListBuffer += (("ProjectResourceClass", defaultPermissionsOnProjectResourceClass))
+                log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnProjectResourceClass: {}", defaultPermissionsOnProjectResourceClass)
+            }
+
+            /* Get the default object access permissions defined on the resource class inside the SystemProject */
+            defaultPermissionsOnSystemResourceClass: Set[PermissionV1] <- {
+                if (entityType == RESOURCE_ENTITY_TYPE && permissionsListBuffer.isEmpty) {
+                    val systemProject = OntologyConstants.KnoraBase.SystemProject
+                    defaultObjectAccessPermissionsForResourceClassGetV1(projectIri = systemProject, resourceClassIri = resourceClassIri)
+                } else {
+                    Future(Set.empty[PermissionV1])
+                }
+            }
+            _ = if (defaultPermissionsOnSystemResourceClass.nonEmpty) {
+                permissionsListBuffer += (("SystemResourceClass", defaultPermissionsOnSystemResourceClass))
+                log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnSystemResourceClass: {}", defaultPermissionsOnSystemResourceClass)
+            }
+
+            ///////////////////////
+            // PROPERTY
+            ///////////////////////
             /* project property */
             defaultPermissionsOnProjectProperty: Set[PermissionV1] <- {
                 if (entityType == PROPERTY_ENTITY_TYPE && permissionsListBuffer.isEmpty) {
@@ -994,7 +1002,9 @@ class PermissionsResponderV1 extends ResponderV1 {
                 log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnSystemProperty: {}", defaultPermissionsOnSystemProperty)
             }
 
-
+            ///////////////////////
+            // CUSTOM GROUPS
+            ///////////////////////
             /* Get the default object access permissions for custom groups (all groups other than the built-in groups) */
             defaultPermissionsOnCustomGroups: Set[PermissionV1] <- {
                 if (extendedUserGroups.nonEmpty && permissionsListBuffer.isEmpty) {
@@ -1014,7 +1024,9 @@ class PermissionsResponderV1 extends ResponderV1 {
                 log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnCustomGroups: $defaultPermissionsOnCustomGroups")
             }
 
-
+            ///////////////////////
+            // PROJECT MEMBER
+            ///////////////////////
             /* Get the default object access permissions for the knora-base:ProjectMember group */
             defaultPermissionsOnProjectMemberGroup: Set[PermissionV1] <- {
                 if (permissionsListBuffer.isEmpty) {
@@ -1030,7 +1042,9 @@ class PermissionsResponderV1 extends ResponderV1 {
                 log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnProjectMemberGroup: $defaultPermissionsOnProjectMemberGroup")
             }
 
-
+            ///////////////////////
+            // KNOWN USER
+            ///////////////////////
             /* Get the default object access permissions for the knora-base:KnownUser group */
             defaultPermissionsOnKnownUserGroup: Set[PermissionV1] <- {
                 if (permissionsListBuffer.isEmpty) {

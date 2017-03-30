@@ -402,7 +402,16 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
                 expectMsg(DefaultObjectAccessPermissionsStringResponseV1("CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser"))
             }
 
-            "return the default object access permissions 'string' for the 'anything:Thing' and 'anything:hasText' property" in {
+            "return the default object access permissions 'string' for the 'anything:Thing' class" in {
+                actorUnderTest ! DefaultObjectAccessPermissionsStringForResourceClassGetV1(
+                    projectIri = ANYTHING_PROJECT_IRI,
+                    resourceClassIri = "http://www.knora.org/ontology/anything#Thing",
+                    anythingUser1.permissionData
+                )
+                expectMsg(DefaultObjectAccessPermissionsStringResponseV1("CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser"))
+            }
+
+            "return the default object access permissions 'string' for the 'anything:Thing' class and 'anything:hasText' property" in {
                 actorUnderTest ! DefaultObjectAccessPermissionsStringForPropertyGetV1(
                     projectIri = ANYTHING_PROJECT_IRI,
                     resourceClassIri = "http://www.knora.org/ontology/anything#Thing",
@@ -410,6 +419,16 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
                     anythingUser1.permissionData
                 )
                 expectMsg(DefaultObjectAccessPermissionsStringResponseV1("CR knora-base:Creator"))
+            }
+
+            "return the default object access permissions 'string' for the 'images:Bild' class and 'anything:hasText' property" in {
+                actorUnderTest ! DefaultObjectAccessPermissionsStringForPropertyGetV1(
+                    projectIri = ANYTHING_PROJECT_IRI,
+                    resourceClassIri = "http://www.knora.org/ontology/images#bild",
+                    propertyIri = "http://www.knora.org/ontology/anything#hasText",
+                    anythingUser1.permissionData
+                )
+                expectMsg(DefaultObjectAccessPermissionsStringResponseV1("CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser"))
             }
 
             "return the default object access permissions 'string' for the 'anything:Thing' resource class for the root user (system admin and not member of project)" in {
