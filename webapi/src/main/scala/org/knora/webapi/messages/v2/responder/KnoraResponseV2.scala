@@ -102,6 +102,16 @@ case class DecimalValueLiteralV2(valueObjectProperty: IRI, value: BigDecimal) ex
     def toMap: Map[IRI, JsValue] = Map(valueObjectProperty -> JsNumber(value))
 }
 
+/**
+  * Represents a Boolean value literal.
+  *
+  * @param valueObjectProperty the value object property connecting the value object and the value literal.
+  * @param value the literal's type specific value.
+  */
+case class BooleanValueLiteralV2(valueObjectProperty: IRI, value: Boolean) extends ValueLiteralV2 {
+    def toMap: Map[IRI, JsValue] = Map(valueObjectProperty -> JsBoolean(value))
+}
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // JSON formatting
 
