@@ -713,7 +713,7 @@ class PermissionsResponderV1 extends ResponderV1 {
 
                 /* check if we only got one default object access permission back */
                 val doapCount: Int = permissionQueryResponseRows.groupBy(_.rowMap("s")).size
-                if (doapCount > 1) throw InconsistentTriplestoreDataException(s"Only one default object permission instance allowed for project: $projectIri and group: $groupIri combination, but found $doapCount.")
+                if (doapCount > 1) throw InconsistentTriplestoreDataException(s"Only one default object permission instance allowed for project: $projectIri and combination of group: $groupIri, resourceClass: $resourceClassIri, property: $propertyIri combination, but found: $doapCount.")
 
                 /* get the iri of the retrieved permission */
                 val permissionIri = permissionQueryResponse.getFirstRow.rowMap("s")
