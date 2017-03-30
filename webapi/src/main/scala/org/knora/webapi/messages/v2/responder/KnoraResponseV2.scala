@@ -21,11 +21,11 @@
 package org.knora.webapi.messages.v2.responder
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import org.knora.webapi.{IRI, Jsonable, OntologyConstants}
+import org.knora.webapi.{IRI, Jsonable}
 import spray.json._
 
 /**
-  * A trait for Knora API v1 response messages. Any response message can be converted into JSON.
+  * A trait for Knora API V2 response messages. Any response message can be converted into JSON.
   */
 trait KnoraResponseV2 extends Jsonable
 
@@ -40,24 +40,67 @@ case class ResourcesV2(numberOfResources: Int, results: Seq[ResourceRowV2]) exte
 }
 
 /**
-  * Represents a resource.
+  * Represents a single resource.
   *
-  * @param resourceIri
-  * @param resourceClass
-  * @param label
-  * @param valueObjects
+  * @param resourceIri the Iri of the resource.
+  * @param resourceClass the class of the resource.
+  * @param label the label of the resource.
+  * @param valueObjects the values belonging to the resource.
   */
 case class ResourceRowV2(resourceIri: IRI, resourceClass: IRI, label: String, valueObjects: Seq[ValueRowV2])
 
 /**
-  * Represents a value that belongs to a resource.
+  * Represents a value object that belongs to a resource.
   *
-  * @param valueClass
-  * @param value
-  * @param valueObjectIri
-  * @param propertyIri
+  * @param valueClass the class of the value.
+  * @param valueLiterals the literals that belong to the value object and represent a possibly complex value.
+  * @param valueObjectIri the Iri of the value object.
+  * @param propertyIri the Iri of the property pointing to the value object from the resource.
   */
-case class ValueRowV2(valueClass: IRI, value: Map[IRI, String], valueObjectIri: IRI, propertyIri: IRI)
+case class ValueRowV2(valueClass: IRI, valueLiterals: Seq[ValueLiteralV2], valueObjectIri: IRI, propertyIri: IRI)
+
+/*
+    A trait representing a value literal.
+ */
+trait ValueLiteralV2 {
+
+    // the value object property connecting the value object and the value literal.
+    val valueObjectProperty: IRI
+
+    // turns a `ValueLiteralV2` into a Map[valueObjectProperty -> JsValue]
+    // the JsValue is the type specific representation of the literal (Number, String etc.)
+    def toMap: Map[IRI, JsValue]
+}
+
+/**
+  * Represents a String value literal.
+  *
+  * @param valueObjectProperty the value object property connecting the value object and the value literal.
+  * @param value the literal's type specific value.
+  */
+case class StringValueLiteralV2(valueObjectProperty: IRI, value: String) extends ValueLiteralV2 {
+    def toMap: Map[IRI, JsValue] = Map(valueObjectProperty -> JsString(value))
+}
+
+/**
+  * Represents an Integer value literal.
+  *
+  * @param valueObjectProperty the value object property connecting the value object and the value literal.
+  * @param value the literal's type specific value.
+  */
+case class IntegerValueLiteralV2(valueObjectProperty: IRI, value: Int) extends ValueLiteralV2 {
+    def toMap: Map[IRI, JsValue] = Map(valueObjectProperty -> JsNumber(value))
+}
+
+/**
+  * Represents a Decimal value literal.
+  *
+  * @param valueObjectProperty the value object property connecting the value object and the value literal.
+  * @param value the literal's type specific value.
+  */
+case class DecimalValueLiteralV2(valueObjectProperty: IRI, value: BigDecimal) extends ValueLiteralV2 {
+    def toMap: Map[IRI, JsValue] = Map(valueObjectProperty -> JsNumber(value))
+}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // JSON formatting
@@ -66,6 +109,16 @@ case class ValueRowV2(valueClass: IRI, value: Map[IRI, String], valueObjectIri: 
   * A spray-json protocol for generating Knora API v1 JSON providing data about representations of a resource.
   */
 object SearchV2JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with NullOptions {
+
+    // TODO: this is kind of a hack as this should never be called
+    // TODO: look for a clean solution
+    implicit object literalV2Format extends JsonFormat[ValueLiteralV2] {
+
+        def read(jsonVal: JsValue) = ???
+
+        def write(literalV2: ValueLiteralV2) = ???
+
+    }
 
     implicit object searchResponseV2Format extends JsonFormat[ResourcesV2] {
 
@@ -82,9 +135,11 @@ object SearchV2JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol wi
                                 // the property Iri already exists, add to it
                                 val existingValsforProp: Seq[JsValue] = acc(valObj.propertyIri)
 
-                                val newValueLiteral: Map[String, JsValue] = valObj.value.map {
-                                    case (valueProp, valueLiteral) => (valueProp, valueLiteral.toJson)
-                                }
+                                // make it a Map so further information can be attached before converting to a JsValue
+                                // TODO: look for a better solution that makes use of the JSON formatter of Jsonable
+                                val newValueLiteral: Map[IRI, JsValue] = valObj.valueLiterals.flatMap {
+                                    case (valueLiteral: ValueLiteralV2) => valueLiteral.toMap
+                                }.toMap
 
                                 val newValueObjectForProp: JsValue = (Map("@type" -> valObj.valueClass.toJson, "@id" -> valObj.valueObjectIri.toJson) ++ newValueLiteral).toJson
 
@@ -93,9 +148,12 @@ object SearchV2JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol wi
                                 acc ++ valuesForProp
                             } else {
                                 // the property Iri does not exist yet, create it
-                                val newValueLiteral: Map[String, JsValue] = valObj.value.map {
-                                    case (valueProp, valueLiteral) => (valueProp, valueLiteral.toJson)
-                                }
+
+                                // make it a Map so further information can be attached before converting to a JsValue
+                                // TODO: look for a better solution that makes use of the JSON formatter of Jsonable
+                                val newValueLiteral: Map[IRI, JsValue] = valObj.valueLiterals.flatMap {
+                                    case (valueLiteral: ValueLiteralV2) => valueLiteral.toMap
+                                }.toMap
 
                                 val newValueObjectForProp = (Map("@type" -> valObj.valueClass.toJson, "@id" -> valObj.valueObjectIri.toJson) ++ newValueLiteral).toJson
 
@@ -134,6 +192,9 @@ object SearchV2JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol wi
         }
     }
 
-    implicit val searchValueResultRowV2Format: RootJsonFormat[ValueRowV2] = jsonFormat4(ValueRowV2)
-    implicit val searchResourceResultRowV2Format: RootJsonFormat[ResourceRowV2] = jsonFormat4(ResourceRowV2)
+    implicit val stringLiteralV2Format: RootJsonFormat[StringValueLiteralV2] = jsonFormat2(StringValueLiteralV2) // TODO: this is not used, look for a clean solution
+    implicit val integerLiteralV2Format: RootJsonFormat[IntegerValueLiteralV2] = jsonFormat2(IntegerValueLiteralV2) // TODO: this is not used, look for a clean solution
+    implicit val decimalLiteralV2Format: RootJsonFormat[DecimalValueLiteralV2] = jsonFormat2(DecimalValueLiteralV2) // TODO: this is not used, look for a clean solution
+    implicit val valueRowV2Format: RootJsonFormat[ValueRowV2] = jsonFormat4(ValueRowV2)
+    implicit val resourceRowV2Format: RootJsonFormat[ResourceRowV2] = jsonFormat4(ResourceRowV2)
 }
