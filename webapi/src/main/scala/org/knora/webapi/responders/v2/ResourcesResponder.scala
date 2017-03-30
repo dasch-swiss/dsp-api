@@ -23,7 +23,7 @@ package org.knora.webapi.responders.v2
 import akka.pattern._
 import org.knora.webapi.messages.v1.store.triplestoremessages.{SparqlConstructRequest, SparqlConstructResponse}
 import org.knora.webapi.messages.v2.responder.resourcemessages.ResourcesGetRequestV2
-import org.knora.webapi.messages.v2.responder.{ResourceRowV2, ResourcesV2, ValueRowV2}
+import org.knora.webapi.messages.v2.responder.{ResourceV2, ResourcesSequenceV2, ValueObjectV2}
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.util.ActorUtil.future2Message
 import org.knora.webapi.util.ConstructResponseUtilV2
@@ -38,7 +38,7 @@ class ResourcesResponderV2 extends Responder {
         case resourcesGetRequest: ResourcesGetRequestV2 => future2Message(sender(), getResources(resourcesGetRequest.resourceIris), log)
     }
 
-    private def getResources(resourceIris: Seq[IRI]): Future[ResourcesV2] = {
+    private def getResources(resourceIris: Seq[IRI]): Future[ResourcesSequenceV2] = {
 
         // TODO: get all the resources
         val resourceIri = resourceIris.head
@@ -59,7 +59,7 @@ class ResourcesResponderV2 extends Responder {
 
             resources = ConstructResponseUtilV2.createResponseForResources(queryResultsSeparated)
 
-        } yield ResourcesV2(numberOfResources = queryResultsSeparated.resources.size, results = resources)
+        } yield ResourcesSequenceV2(numberOfResources = queryResultsSeparated.resources.size, results = resources)
 
     }
 

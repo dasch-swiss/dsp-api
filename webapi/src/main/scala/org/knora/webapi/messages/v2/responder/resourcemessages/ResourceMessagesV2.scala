@@ -33,7 +33,7 @@ sealed trait ResourcesResponderRequestV2 extends KnoraRequestV2 {
 }
 
 /**
-  * Requests a description of a resource. A successful response will be a [[ResourcesV2]].
+  * Requests a description of a resource. A successful response will be a [[ResourcesSequenceV2]].
   *
   * @param resourceIris the IRI of the resource to be queried.
   * @param userProfile the profile of the user making the request.

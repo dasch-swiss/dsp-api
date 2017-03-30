@@ -35,7 +35,7 @@ trait KnoraResponseV2 extends Jsonable
   * Represents a sequence of resources.
   *
   */
-case class ResourcesV2(numberOfResources: Int, results: Seq[ResourceRowV2]) extends KnoraResponseV2 {
+case class ResourcesSequenceV2(numberOfResources: Int, results: Seq[ResourceV2]) extends KnoraResponseV2 {
     def toJsValue = SearchV2JsonProtocol.searchResponseV2Format.write(this)
 }
 
@@ -47,7 +47,14 @@ case class ResourcesV2(numberOfResources: Int, results: Seq[ResourceRowV2]) exte
   * @param label the label of the resource.
   * @param valueObjects the values belonging to the resource.
   */
-case class ResourceRowV2(resourceIri: IRI, resourceClass: IRI, label: String, valueObjects: Seq[ValueRowV2])
+case class ResourceV2(resourceIri: IRI, resourceClass: IRI, label: String, valueObjects: Seq[ValueObjectV2])
+
+
+/*trait ValueLiteralV2_[T] {
+
+    val value: T
+
+}*/
 
 /**
   * Represents a value object that belongs to a resource.
@@ -57,7 +64,7 @@ case class ResourceRowV2(resourceIri: IRI, resourceClass: IRI, label: String, va
   * @param valueObjectIri the Iri of the value object.
   * @param propertyIri the Iri of the property pointing to the value object from the resource.
   */
-case class ValueRowV2(valueClass: IRI, valueLiterals: Seq[ValueLiteralV2], valueObjectIri: IRI, propertyIri: IRI)
+case class ValueObjectV2(valueClass: IRI, valueLiterals: Seq[ValueLiteralV2], valueObjectIri: IRI, propertyIri: IRI)
 
 /*
     A trait representing a value literal.
@@ -130,17 +137,17 @@ object SearchV2JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol wi
 
     }
 
-    implicit object searchResponseV2Format extends JsonFormat[ResourcesV2] {
+    implicit object searchResponseV2Format extends JsonFormat[ResourcesSequenceV2] {
 
         def read(jsonVal: JsValue) = ???
 
-        def write(searchResultV2: ResourcesV2) = {
+        def write(searchResultV2: ResourcesSequenceV2) = {
 
             val resourceResultRows: JsValue = searchResultV2.results.map {
-                (resultRow: ResourceRowV2) =>
+                (resultRow: ResourceV2) =>
 
                     val valueObjects: Map[IRI, JsValue] = resultRow.valueObjects.foldLeft(Map.empty[IRI, Seq[JsValue]]) {
-                        case (acc: Map[String, Seq[JsValue]], valObj: ValueRowV2) =>
+                        case (acc: Map[String, Seq[JsValue]], valObj: ValueObjectV2) =>
                             if (acc.keySet.contains(valObj.propertyIri)) {
                                 // the property Iri already exists, add to it
                                 val existingValsforProp: Seq[JsValue] = acc(valObj.propertyIri)
@@ -205,6 +212,6 @@ object SearchV2JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol wi
     implicit val stringLiteralV2Format: RootJsonFormat[StringValueLiteralV2] = jsonFormat2(StringValueLiteralV2) // TODO: this is not used, look for a clean solution
     implicit val integerLiteralV2Format: RootJsonFormat[IntegerValueLiteralV2] = jsonFormat2(IntegerValueLiteralV2) // TODO: this is not used, look for a clean solution
     implicit val decimalLiteralV2Format: RootJsonFormat[DecimalValueLiteralV2] = jsonFormat2(DecimalValueLiteralV2) // TODO: this is not used, look for a clean solution
-    implicit val valueRowV2Format: RootJsonFormat[ValueRowV2] = jsonFormat4(ValueRowV2)
-    implicit val resourceRowV2Format: RootJsonFormat[ResourceRowV2] = jsonFormat4(ResourceRowV2)
+    implicit val valueRowV2Format: RootJsonFormat[ValueObjectV2] = jsonFormat4(ValueObjectV2)
+    implicit val resourceRowV2Format: RootJsonFormat[ResourceV2] = jsonFormat4(ResourceV2)
 }

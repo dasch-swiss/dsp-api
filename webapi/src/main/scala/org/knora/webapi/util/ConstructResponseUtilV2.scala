@@ -99,9 +99,9 @@ object ConstructResponseUtilV2 {
 
     }
 
-    def createResponseForResources(queryResultsSeparated: ResourcesAndValueObjects): Seq[ResourceRowV2] = {
+    def createResponseForResources(queryResultsSeparated: ResourcesAndValueObjects): Seq[ResourceV2] = {
 
-        val resourceResultRows: Seq[ResourceRowV2] = queryResultsSeparated.resources.map {
+        val resourceResultRows: Seq[ResourceV2] = queryResultsSeparated.resources.map {
             case (resourceIri: IRI, assertions: Seq[(IRI, String)]) =>
 
                 val rdfLabel = ConstructResponseUtilV2.getObjectForUniquePredicateFromAssertions(subjectIri = resourceIri, predicate = OntologyConstants.Rdfs.Label, assertions = assertions)
@@ -117,7 +117,7 @@ object ConstructResponseUtilV2 {
                 // check if one or more of the objects points to a value object
                 val valueObjectIris: Set[IRI] = queryResultsSeparated.valueObjects.keySet.intersect(objects.toSet)
 
-                ResourceRowV2(
+                ResourceV2(
                     resourceIri = resourceIri,
                     resourceClass = resourceClass,
                     label = rdfLabel,
@@ -238,7 +238,7 @@ object ConstructResponseUtilV2 {
                             // get the property that points from the resource to the value object
                             val propertyIri = ConstructResponseUtilV2.getPredicateForUniqueObjectFromAssertions(subjectIri = resourceIri, objectValue = valObj, assertions)
 
-                            ValueRowV2(
+                            ValueObjectV2(
                                 valueClass = valueObjectClass,
                                 valueLiterals = valueStringRepresentation +: valueTypeSpecificRepresentation,
                                 valueObjectIri = valObj,

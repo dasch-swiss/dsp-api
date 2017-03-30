@@ -32,7 +32,7 @@ sealed trait SearchResponderRequestV2 extends KnoraRequestV2 {
 }
 
 /**
-  * Requests a fulltext search. A successful response will be a [[org.knora.webapi.messages.v2.responder.ResourcesV2]].
+  * Requests a fulltext search. A successful response will be a [[ResourcesSequenceV2]].
   *
   * @param userProfile the profile of the user making the request.
   */
