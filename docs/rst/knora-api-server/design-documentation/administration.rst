@@ -253,8 +253,8 @@ permissions correspond to the earlier described object access permission:
         - value: ``CR`` followed by a comma-separated list of ``knora-base:UserGroup``
 
 A single instance of ``knora-base:DefaultObjectAccessPermission`` must always reference a project, but can only
-reference **either** a group (``knora-base:forGroup`` property), a resource class (``knora-base:forResourceClass``), or
-a property (``knora-base:forProperty``).
+reference **either** a group (``knora-base:forGroup`` property), a resource class (``knora-base:forResourceClass``), a
+property (``knora-base:forProperty``), or a combination of resource class **and** property.
 
 Example default object access permission instance:
 
@@ -280,6 +280,8 @@ applying precedence rules, for the case that the user is member of more than one
 The following list is sorted by the permission precedence level in descending order:
 
     - permissions on ``knora-base:ProjectAdmin`` (highest level)
+    - permissions on resource classes and property combination (own project)
+    - permissions on resource classes and property combination (``knora-base:SystemProject``)
     - permissions on resource classes / properties (own project)
     - permissions on resource classes / properties (``knora-base:SystemProject``)
     - permissions on custom groups
