@@ -17,7 +17,7 @@ cat graphdb-se-drop-knora-prod-repository.ttl | $CONSOLE
 printf "\n${GREEN}${DELIMITER}Creating repository${NO_COLOUR}\n\n"
 
 # in this docker version of the script, the path to the KnoraRules.pie is fixed
-sed -e 's@PIE_FILE@'"/localdata/graphdb/KnoraRules.pie"'@' graphdb-se-knora-prod-repository-config.ttl.tmpl > graphdb-se-knora-prod-repository-config.ttl
+sed -e 's@PIE_FILE@'"/graphdb/KnoraRules.pie"'@' graphdb-se-knora-prod-repository-config.ttl.tmpl > graphdb-se-knora-prod-repository-config.ttl
 
 curl -X POST -H "Content-Type:application/x-turtle" -T graphdb-se-knora-prod-repository-config.ttl "$GRAPHDB/repositories/SYSTEM/rdf-graphs/service?graph=http://www.knora.org/config"
 
