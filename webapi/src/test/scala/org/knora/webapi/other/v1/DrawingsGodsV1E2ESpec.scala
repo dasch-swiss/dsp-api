@@ -45,7 +45,11 @@ class DrawingsGodsV1E2ESpec extends E2ESpec(DrawingsGodsV1E2ESpec.config) with T
 
     private val rdfDataObjects: List[RdfDataObject] = List(
         RdfDataObject(path = "_test_data/other.v1.DrawingsGodsV1E2ESpec/rvp-admin-data.ttl", name = "http://www.knora.org/data/admin"),
-        RdfDataObject(path = "_test_data/other.v1.DrawingsGodsV1E2ESpec/rvp-permissions-data.ttl", name = "http://www.knora.org/data/permissions")
+        RdfDataObject(path = "_test_data/other.v1.DrawingsGodsV1E2ESpec/rvp-permissions-data.ttl", name = "http://www.knora.org/data/permissions"),
+        RdfDataObject(path = "_test_data/other.v1.DrawingsGodsV1Spec/drawings-gods_admin-data.ttl", name = "http://www.knora.org/data/admin"),
+        RdfDataObject(path = "_test_data/other.v1.DrawingsGodsV1Spec/drawings-gods_permissions-data.ttl", name = "http://www.knora.org/data/permissions"),
+        RdfDataObject(path = "_test_data/other.v1.DrawingsGodsV1Spec/drawings-gods_ontology.ttl", name = "http://www.knora.org/ontology/drawings-gods"),
+        RdfDataObject(path = "_test_data/other.v1.DrawingsGodsV1Spec/drawings-gods_data.ttl", name = "http://www.knora.org/data/drawings-gods")
     )
 
     "Load test data" in {
@@ -62,7 +66,7 @@ class DrawingsGodsV1E2ESpec extends E2ESpec(DrawingsGodsV1E2ESpec.config) with T
       */
     "issue: https://github.com/dhlab-basel/Knora/issues/408" should {
 
-        val drawingsOfGodsUserEmail = "drawings-gods-test-user@example.com"
+        val drawingsOfGodsUserEmail = "ddd1@unil.ch"
         val paroleReligieuseUserEmail = "parole@unil.ch"
         val testPass = "test"
         val thingIri = new MutableTestIri
@@ -152,41 +156,6 @@ class DrawingsGodsV1E2ESpec extends E2ESpec(DrawingsGodsV1E2ESpec.config) with T
 
             secondValueIri.set(valId)
             log.debug(s"2b. secondValueIri: ${secondValueIri.get}")
-        }
-
-        /**
-          *
-          */
-        "DOAP: single is found for combination" in {
-
-            val params =
-                s"""
-                   |{
-                   |    "restype_id":"http://www.knora.org/ontology/drawings-gods#Verso",
-                   |    "properties":{
-                   |        "http://www.knora.org/ontology/drawings-gods#hasVersoTranslatorEn":[{"hlist_value":"http://data.knora.org/lists/drawings-gods-2016-list-TranslatorList-PYB"}],
-                   |        "http://www.knora.org/ontology/drawings-gods#hasCommentOriginalLanguage":[{"hlist_value":"http://data.knora.org/lists/drawings-gods-2016-list-LanguageList-Buriat"}],
-                   |        "http://www.knora.org/ontology/drawings-gods#hasDescriptionOriginalLanguage":[{"hlist_value":"http://data.knora.org/lists/drawings-gods-2016-list-LanguageList-Buriat"}],
-                   |        "http://www.knora.org/ontology/drawings-gods#hasDescriptionAuthor":[{"hlist_value":"http://data.knora.org/lists/drawings-gods-2016-list-DescriptionAuthorList-child"}],
-                   |        "http://www.knora.org/ontology/drawings-gods#hasInstructionRestitutionOriginalLanguage":[{"hlist_value":"http://data.knora.org/lists/drawings-gods-2016-list-LanguageList-Buriat"}],
-                   |        "http://www.knora.org/ontology/drawings-gods#hasVersoTranslatorFr":[{"hlist_value":"http://data.knora.org/lists/drawings-gods-2016-list-TranslatorList-PYB"}],
-                   |        "http://www.knora.org/ontology/drawings-gods#hasCommentAuthor":[{"hlist_value":"http://data.knora.org/lists/drawings-gods-2016-list-CommentAuthorList-child"}],
-                   |        "http://www.knora.org/ontology/drawings-gods#hasCodeVerso":[{"richtext_value":{"utf8str":"dayyad"}}]
-                   |    },
-                   |    "project_id":"http://data.knora.org/projects/drawings-gods",
-                   |    "file":{"originalFilename":"arbre.jpg",
-                   |        "originalMimeType":"image/jpeg",
-                   |        "filename":"ESO6chtcMdA-BdITsIoctXE"},
-                   |    "label":"dayyad"
-                   |}
-             """.stripMargin
-
-            log.info(s"test: start")
-            val request = Post(baseApiUrl + s"/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(drawingsOfGodsUserEmail, testPass))
-            val response: HttpResponse = singleAwaitingRequest(request)
-            log.debug(s"response: ${response}")
-
-            assert(response.status === StatusCodes.OK)
         }
     }
 
