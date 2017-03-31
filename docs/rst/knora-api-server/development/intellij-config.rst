@@ -1,5 +1,5 @@
 .. Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
-   Tobias Schweizer, André Kilchenmann, and André Fatton.
+   Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
 
    This file is part of Knora.
 
@@ -21,12 +21,36 @@
 Setup IntelliJ for development of Knora
 =======================================
 
--  Download and install `IntelliJ <https://www.jetbrains.com/idea/>`__
--  To open the gitrep ``rapier-scala`` with IntelliJ's full scala
-   support, do the following: ``Import Project`` -> Choose the option
-   ``module SBT``
--  Then install the Scala plugin for IntelliJ
--  make sure that the tab size is set correctly to **4 spaces** (so you can use automatic code reformatting): Preferences -> Code Style and also Preferences -> Code Style -> Scala.
+.. contents:: :local:
+
+Create an IntelliJ Project for the Knora API Server
+---------------------------------------------------
+
+-  Download and install `IntelliJ IDEA`_.
+-  Follow the installation procedure and install the  ``Scala plugin``
+
+.. figure:: figures/install-scala-plugin.png
+   :width: 100%
+   :alt: screenshot 'Install Scala Plugin'
+
+   screenshot 'Install Scala Plugin'
+
+-  Import the ``webapi`` directory in the Knora source tree: ``Import Project`` -> Choose the option ``module SBT``
+
+.. figure:: figures/import-from-sbt.png
+   :width: 100%
+   :alt: screenshot 'import existing SBT project'
+
+   screenshot 'import existing SBT project'
+
+-  make sure that the tab size is set correctly to **4 spaces** (so you can use automatic code reformatting): ``Preferences -> Code Style -> Scala``:
+
+.. figure:: figures/setting-tab-space.png
+   :width: 100%
+   :alt: screenshot 'setting tab size'
+
+   screenshot 'setting tab size'
+
 
 Twirl
 -----
@@ -34,37 +58,110 @@ Twirl
 By default, Intellij excludes some folders like the twirl template files. To include them, go to ``Project Structure`` and remove ``target/scala-2.1*/twirl`` from excluded folders.
 Then Intellij will correctly resolve the references to the template files.
 
-How Use IntelliJ IDEA's Debugger with the Knora API Server
-----------------------------------------------------------
+Use IntelliJ IDEA's Debugger with the Knora API Server
+------------------------------------------------------
 
 -  Create an application configuration:
 
-.. figure:: figures/Screenshot_2015-07-22_16.36.14.png
-   :alt: Screenshot_2015-07-22_16.36.14
+.. figure:: figures/edit-config.png
+   :width: 100%
+   :alt: screenshot 'edit application config'
 
-   Screenshot_2015-07-22_16.36.14
+   screenshot 'edit application config'
 
-.. figure:: figures/Screenshot_2015-07-22_16.36.28.png
-   :alt: Screenshot_2015-07-22_16.36.28
+.. figure:: figures/create-app.png
+   :width: 100%
+   :alt: screenshot 'create application configuration'
 
-   Screenshot_2015-07-22_16.36.28
+   screenshot 'create application configuration'
 
-.. figure:: figures/Screenshot_2015-07-22_16.42.35.png
-   :alt: Screenshot_2015-07-22_16.42.35
+   Fill in the configuration details:
 
-   Screenshot_2015-07-22_16.42.35
+.. figure:: figures/app-config-setup.png
+   :width: 100%
+   :alt: screenshot 'change application configuration'
+
+   screenshot 'change application configuration'
 
 -  Click on the debugging symbol to start the application with a
    debugger attached
 
-.. figure:: figures/Screenshot_2015-07-22_16.42.46.png
-   :alt: Screenshot_2015-07-22_16.42.46
+.. figure:: figures/debug.png
+   :width: 100%
+   :alt: screenshot 'debug'
 
-   Screenshot_2015-07-22_16.42.46
+   screenshot 'debug'
 
 -  Click on a line-number to add a breakpoint
 
-.. figure:: figures/Screenshot_2015-07-22_16.47.04.png
-   :alt: Screenshot_2015-07-22_16.47.04
+.. figure:: figures/breakpoint.png
+   :width: 100%
+   :alt: screenshot 'set a breakpoint'
 
-   Screenshot_2015-07-22_16.47.04
+   screenshot 'set a breakpoint'
+
+Profile Knora Using VisualVM in IntelliJ
+----------------------------------------
+
+First, download and install VisualVM_.
+
+Then, in IntelliJ, under Preferences -> Plugins, search for the `VisualVM
+Launcher`_, click on "Search in repositories", install the plugin, and restart
+IntelliJ. IntelliJ's toolbar should now contain a button with a green triangle
+on an orange circle, with the tooltip "Run with VisualVM":
+
+.. figure:: figures/launch-visualvm.png
+   :alt: screenshot 'Run with VisualVM button'
+
+   screenshot 'Run with VisualVM button'
+
+You can use this button to run the class ``org.knora.webapi.Main`` and profile it in VisualVM.
+The first time you do this, IntelliJ will ask you for the path to the VisualVM executable.
+On macOS this is ``/Applications/VisualVM.app/Contents/MacOS/visualvm``.
+
+When VisualVM starts, it will open a window like this:
+
+.. figure:: figures/visualvm-overview.png
+   :width: 100%
+   :alt: screenshot 'VisualVM overview'
+
+   screenshot 'VisualVM overview'
+
+To use the profiler, click on the "Sampler" tab, then on the "CPU" button:
+
+.. figure:: figures/visualvm-sampler.png
+   :width: 100%
+   :alt: screenshot 'VisualVM sampler'
+
+   screenshot 'VisualVM sampler'
+
+Now run some Knora API operations that you're interested in profiling,
+preferably several times to allow the sampler to collect enough data. Then
+click on the "Snapshot" button:
+
+.. figure:: figures/visualvm-snapshot-button.png
+   :width: 100%
+   :alt: screenshot 'VisualVM snapshot button'
+
+   screenshot 'VisualVM snapshot button'
+
+In the snapshot, you'll see a list of threads that were profiled:
+
+.. figure:: figures/visualvm-snapshot.png
+   :width: 100%
+   :alt: screenshot 'VisualVM snapshot'
+
+   screenshot 'VisualVM snapshot'
+
+You can then browse the call tree for each thread, looking for Knora method
+calls, to see the total time spent in each method:
+
+.. figure:: figures/visualvm-call-tree.png
+   :width: 100%
+   :alt: screenshot 'VisualVM call tree'
+
+   screenshot 'VisualVM call tree'
+
+.. _IntelliJ IDEA: https://www.jetbrains.com/idea/
+.. _VisualVM: https://visualvm.github.io/
+.. _VisualVM Launcher: https://plugins.jetbrains.com/plugin/7115-visualvm-launcher

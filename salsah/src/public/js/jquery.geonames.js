@@ -1,6 +1,6 @@
 /*
  * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
  * This file is part of Knora.
  * Knora is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
@@ -261,7 +261,7 @@
 								response($.map(data.geonames, function (item) {
 									var displayName = undefined;
 									for (var i in item.alternateNames) { // here we search through the alternate names to get the proper language
-										if (item.alternateNames[i].lang == SALSAH.userdata.lang) {
+										if (item.alternateNames[i].lang == SALSAH.userprofile.userData.lang) {
 											if (displayName === undefined) {
 												displayName = item.alternateNames[i].name;
 											}

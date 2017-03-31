@@ -1,6 +1,6 @@
 /*
  * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
  * This file is part of Knora.
  * Knora is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
@@ -446,12 +446,15 @@
 												selection_id = attr[1].replace("<", "").replace(">", ""); // remove brackets from Iri to make it a valid URL
 											}
 										});
-										create_entry(propname, pinfo, function(ele, attr, pinfo) {
-											var selbox = $('<span>', attr).insertBefore(ele.find('.entrySep'));
-											selbox.selection('edit', {
-												selection_id: selection_id
-											});
-										});
+										create_entry(propname, pinfo, (function(sel_id) {
+											return function(ele, attr, pinfo) {
+												var selbox = $('<span>', attr).insertBefore(ele.find('.entrySep'));
+
+												selbox.selection('edit', {
+													selection_id: sel_id
+												});
+											}
+										}(selection_id)));
 										prop_status[propname].attributes = attributes; // save attributes for later use
 										break;
 									}
@@ -466,12 +469,15 @@
 												selection_id = attr[1].replace("<", "").replace(">", ""); // remove brackets from Iri to make it a valid URL
 											}
 										});
-										create_entry(propname, pinfo, function(ele, attr, pinfo) {
-											var radiobox = $('<span>', attr).insertBefore(ele.find('.entrySep'));
-											radiobox.selradio('edit', {
-												selection_id: selection_id
-											});
-										});
+										create_entry(propname, pinfo, (function(sel_id) {
+                                                return function (ele, attr, pinfo) {
+                                                    var radiobox = $('<span>', attr).insertBefore(ele.find('.entrySep'));
+                                                    radiobox.selradio('edit', {
+                                                        selection_id: sel_id
+                                                        //selection_id: selection_id
+                                                    });
+                                                }
+                                            }(selection_id)));
 										prop_status[propname].attributes = attributes; // save attributes for later use
 										break;
 									}
@@ -649,13 +655,15 @@
 												hlist_id = attr[1].replace("<", "").replace(">", ""); // remove brackets from Iri to make it a valid URL
 											}
 										});
-										create_entry(propname, pinfo, function(ele, attr, pinfo) {
-											var hlistbox = $('<span>', attr).insertBefore(ele.find('.entrySep'));
-											hlistbox.hlist('edit', {
-												hlist_id: hlist_id
-											});
-											return hlistbox;
-										});
+										create_entry(propname, pinfo, (function(list_id) {
+											return function(ele, attr, pinfo) {
+                                                var hlistbox = $('<span>', attr).insertBefore(ele.find('.entrySep'));
+                                                hlistbox.hlist('edit', {
+                                                    hlist_id: list_id
+                                                });
+                                                return hlistbox;
+                                            }
+                                        }(hlist_id)));
 										prop_status[propname].attributes = attributes; // save attributes for later use
 										break;
 									}
@@ -1118,7 +1126,7 @@
 							SALSAH.ApiPost('resources', {
 								restype_id: rtinfo.name,
 								properties: propvals,
-								project_id: SALSAH.userdata.projects[0], // TODO: take the user's active project here: https://github.com/dhlab-basel/Knora/issues/118
+								project_id: SALSAH.userprofile.active_project,
 								file: file,
 								label: labelStr
 
@@ -1169,6 +1177,18 @@
 					});
 					if (localdata.settings.rtinfo === undefined) { // we don't know which resource type we want to add – present the selectors...
 						var vocsel;
+						var vocabulary_default;
+						//
+						// preselect the vocabulary of the project
+						//
+						if (SALSAH.userprofile && SALSAH.userprofile.active_project) {
+							for (var p in SALSAH.userprofile.projects_info) {
+								if (SALSAH.userprofile.projects_info[p].id == SALSAH.userprofile.active_project) {
+									vocabulary_default = SALSAH.userprofile.projects_info[p].ontologyNamedGraph;
+									break;
+								}
+							}
+						}
 						//
 						// get vocabularies
 						//
@@ -1186,14 +1206,16 @@
 							if (data.status == ApiErrors.OK) {
 								var tmpele;
 								for (var i in data.vocabularies) {
-									vocsel.append(tmpele = $('<option>', {
-										value: data.vocabularies[i].id
-									}).append(data.vocabularies[i].longname + ' [' + data.vocabularies[i].shortname + ']'));
 									if (data.vocabularies[i].active) {
-										tmpele.prop({
-											selected: 'selected'
-										});
-										vocabulary_selected = data.vocabularies[i].id;
+										vocsel.append(tmpele = $('<option>', {
+											value: data.vocabularies[i].id
+										}).append(data.vocabularies[i].longname + ' [' + data.vocabularies[i].shortname + ']'));
+										if (data.vocabularies[i].id == vocabulary_default) {
+											tmpele.prop({
+												selected: 'selected'
+											});
+											vocabulary_selected = data.vocabularies[i].id;
+										}
 									}
 								}
 								$this.append($('<br>'));

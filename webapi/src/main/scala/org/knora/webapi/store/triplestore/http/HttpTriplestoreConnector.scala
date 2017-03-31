@@ -1,6 +1,6 @@
 /*
  * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
  *
  * This file is part of Knora.
  *
@@ -385,6 +385,12 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
 
             // _ = println(request.toString())
 
+            requestStartTime: Long = if (settings.profileQueries) {
+                System.currentTimeMillis()
+            } else {
+                0
+            }
+
             // Send the HTTP request.
             response <- http.singleRequest(request)
 
@@ -393,6 +399,11 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
 
             _ = if (!response.status.isSuccess) {
                 throw TriplestoreResponseException(s"Triplestore responded with HTTP code ${response.status}: $responseString")
+            }
+
+            _ = if (settings.profileQueries) {
+                val requestDuration = System.currentTimeMillis() - requestStartTime
+                log.debug(s"${logDelimiter}Query took $requestDuration millis:\n\n$sparql$logDelimiter")
             }
         } yield responseString
 

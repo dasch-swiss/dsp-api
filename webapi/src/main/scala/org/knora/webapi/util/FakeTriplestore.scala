@@ -1,6 +1,6 @@
 /*
  * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
  *
  * This file is part of Knora.
  *
@@ -21,14 +21,9 @@
 package org.knora.webapi.util
 
 import java.io.File
-import java.nio.charset.StandardCharsets
-import java.nio.file.{Files, Paths}
 
 import akka.event.LoggingAdapter
 import org.apache.commons.io.FileUtils
-
-import scala.collection.breakOut
-import scala.io.{Codec, Source}
 
 /**
   * A fake triplestore for use in performance testing. This feature is activated in `application.conf`.
@@ -41,23 +36,24 @@ object FakeTriplestore {
 
     var data = Map.empty[String, String]
 
-    def init(dataDir: File) = {
+    def init(dataDir: File): Unit = {
         fakeTriplestoreDir = Some(dataDir)
     }
 
-    def clear() = {
+    def clear(): Unit = {
         FileUtils.deleteDirectory(fakeTriplestoreDir.get)
         fakeTriplestoreDir.get.mkdirs()
         ()
     }
 
-    def load() = {
-        val dataToWrap: Map[String, String] = fakeTriplestoreDir.get.listFiles.map {
+    def load(): Unit = {
+        val dataToWrap = fakeTriplestoreDir.get.listFiles.map {
             queryDir =>
-                val sparql = readFile(queryDir.listFiles.filter(_.getName.endsWith(".rq")).head)
-                val result = readFile(queryDir.listFiles.filter(_.getName.endsWith(".json")).head)
-                (sparql, result)
-        }(breakOut)
+                val sparql = FileUtil.readFile(queryDir.listFiles.filter(_.getName.endsWith(".rq")).head)
+                val result = FileUtil.readFile(queryDir.listFiles.filter(_.getName.endsWith(".json")).head)
+                sparql -> result
+        }.toMap
+
         data = new ErrorHandlingMap(dataToWrap, { key: String => s"No result has been stored in the fake triplestore for this query: $key" })
     }
 
@@ -68,18 +64,11 @@ object FakeTriplestore {
             val queryDir = new File(fakeTriplestoreDir.get, paddedQueryNum)
             queryDir.mkdirs()
             val sparqlFile = new File(queryDir, s"query-$paddedQueryNum.rq")
-            writeFile(sparqlFile, sparql)
+            FileUtil.writeFile(sparqlFile, sparql)
             val resultFile = new File(queryDir, s"response-$paddedQueryNum.json")
-            writeFile(resultFile, result)
+            FileUtil.writeFile(resultFile, result)
             queryNum += 1
         }
     }
 
-    private def writeFile(file: File, content: String) = {
-        Files.write(Paths.get(file.getCanonicalPath), content.getBytes(StandardCharsets.UTF_8))
-    }
-
-    private def readFile(file: File) = {
-        Source.fromFile(file)(Codec.UTF8).mkString
-    }
 }

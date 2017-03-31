@@ -1,6 +1,6 @@
 /*
  * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
  * This file is part of Knora.
  * Knora is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
@@ -54,8 +54,8 @@ case class PermissionDataGetV1(projectIris: Seq[IRI],
   * In the case of an existing project, this operation behaves destructive, in the sense that all existing permissions
   * attached to a project are deleted, before any new permissions are created.
   *
-  * @param projectIri          the IRI of the project.
-  * @param permissionsTemplate the permissions template.
+  * param projectIri          the IRI of the project.
+  * param permissionsTemplate the permissions template.
   */
 //case class TemplatePermissionsCreateRequestV1(projectIri: IRI, permissionsTemplate: PermissionsTemplate, userProfileV1: UserProfileV1) extends PermissionsResponderRequestV1
 
@@ -362,10 +362,9 @@ case class DefaultObjectAccessPermissionOperationResponseV1(success: Boolean,
   * @param administrativePermissionsPerProject      the user's administrative permissions for each project.
   * @param defaultObjectAccessPermissionsPerProject the user's default object access permissions for each project.
   */
-case class PermissionDataV1(groupsPerProject: Map[IRI, List[IRI]] = Map.empty[IRI, List[IRI]],
+case class PermissionDataV1(groupsPerProject: Map[IRI, Seq[IRI]] = Map.empty[IRI, Seq[IRI]],
                             administrativePermissionsPerProject: Map[IRI, Set[PermissionV1]] = Map.empty[IRI, Set[PermissionV1]],
-                            defaultObjectAccessPermissionsPerProject: Map[IRI, Set[PermissionV1]] = Map.empty[IRI, Set[PermissionV1]]
-                           ) {
+                            defaultObjectAccessPermissionsPerProject: Map[IRI, Set[PermissionV1]] = Map.empty[IRI, Set[PermissionV1]]) {
 
     /**
       * Returns [[PermissionDataV1]] of the requested type.

@@ -1,6 +1,6 @@
 /*
  * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
  *
  * This file is part of Knora.
  *
@@ -22,7 +22,7 @@ package org.knora.webapi.messages.v1.responder.searchmessages
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi._
-import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1, UserV1JsonProtocol}
+import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
 import spray.json._
 
@@ -79,14 +79,12 @@ case class ExtendedSearchGetRequestV1(filterByRestype: Option[IRI] = None,
 /**
   * Represents a response to a user search query (both fulltext and extended search)
   *
-  * @param userdata  information about the user that made the request.
   * @param subjects  list of [[SearchResultRowV1]] each representing on resource.
   * @param nhits     total number of hits.
   * @param paging    information for paging.
   * @param thumb_max maximal dimensions of preview representations.
   */
-case class SearchGetResponseV1(userdata: UserDataV1,
-                               subjects: Seq[SearchResultRowV1] = Nil,
+case class SearchGetResponseV1(subjects: Seq[SearchResultRowV1] = Nil,
                                nhits: String,
                                paging: Seq[SearchResultPage] = Nil,
                                thumb_max: SearchPreviewDimensionsV1) extends KnoraResponseV1 {
@@ -172,10 +170,8 @@ case class SearchResultPage(current: Boolean, start_at: Int, show_nrows: Int)
   */
 object SearchV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with NullOptions {
 
-    import UserV1JsonProtocol.userDataV1Format
-
     implicit val searchResultPageV1Format: JsonFormat[SearchResultPage] = jsonFormat3(SearchResultPage)
     implicit val searchPreviewDimensionsV1Format: JsonFormat[SearchPreviewDimensionsV1] = jsonFormat2(SearchPreviewDimensionsV1)
     implicit val searchResultRowV1Format: JsonFormat[SearchResultRowV1] = jsonFormat11(SearchResultRowV1)
-    implicit val searchResponseV1Format: RootJsonFormat[SearchGetResponseV1] = jsonFormat5(SearchGetResponseV1)
+    implicit val searchResponseV1Format: RootJsonFormat[SearchGetResponseV1] = jsonFormat4(SearchGetResponseV1)
 }

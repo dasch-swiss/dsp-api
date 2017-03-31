@@ -1,6 +1,6 @@
 /*
  * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
  *
  * This file is part of Knora.
  *
@@ -29,7 +29,7 @@ object Main extends App with LiveCore with KnoraService  {
     //Kamon.start()
 
     /* Check and wait until all actors are running */
-    checkActorSystem
+    checkActorSystem()
 
     val arglist = args.toList
 
@@ -37,7 +37,7 @@ object Main extends App with LiveCore with KnoraService  {
     if (arglist.contains("allowResetTriplestoreContentOperationOverHTTP")) StartupFlags.allowResetTriplestoreContentOperationOverHTTP send true
 
     /* Start the HTTP layer, allowing access */
-    startService
+    startService()
 
     sys.addShutdownHook(stopService)
 }
