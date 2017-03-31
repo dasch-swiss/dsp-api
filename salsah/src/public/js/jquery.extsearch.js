@@ -468,6 +468,18 @@
 				if (localdata.settings.limit_sel_to_restype === undefined) {
 					var vocsel;
 					gui_ele.append(strings._extsearch_show);
+					var vocabulary_default;
+					//
+					// preselect the vocabulary of the project
+					//
+					if (SALSAH.userprofile && SALSAH.userprofile.active_project) {
+						for (var p in SALSAH.userprofile.projects_info) {
+							if (SALSAH.userprofile.projects_info[p].id == SALSAH.userprofile.active_project) {
+								vocabulary_default = SALSAH.userprofile.projects_info[p].ontologyNamedGraph;
+								break;
+							}
+						}
+					}
 					//
 					// get vocabularies
 					//
@@ -487,10 +499,12 @@
 								var tmpele;
 								for (var i in data.vocabularies)
 								{
-									vocsel.append(tmpele = $('<option>', {value: data.vocabularies[i].id}).append(data.vocabularies[i].longname + ' [' + data.vocabularies[i].shortname + ']'));
 									if (data.vocabularies[i].active) {
-										tmpele.prop({selected: 'selected'});
-										localdata.settings.vocabulary_selected = data.vocabularies[i].id;
+										vocsel.append(tmpele = $('<option>', {value: data.vocabularies[i].id}).append(data.vocabularies[i].longname + ' [' + data.vocabularies[i].shortname + ']'));
+										if (data.vocabularies[i].id == vocabulary_default) {
+											tmpele.prop({selected: 'selected'});
+											localdata.settings.vocabulary_selected = data.vocabularies[i].id;
+										}
 									}
 								}
 								get_restypes($this);
@@ -553,7 +567,7 @@
 				SALSAH.ApiGet('projects', function(data){
 					if (data.status == ApiErrors.OK) {
 						for (var i in data.projects) {
-							if (data.projects[i].active) {
+							if (data.projects[i].id == SALSAH.userprofile.active_project) {
 								projfilt.append($('<option>', {'value': data.projects[i].id, selected: 'selected'}).append(data.projects[i].shortname + '*'));
 							}
 							else {
