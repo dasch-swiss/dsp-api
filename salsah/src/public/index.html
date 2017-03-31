@@ -270,6 +270,7 @@
 		});
 
 		$('#logout_button').on('click', function() {
+			$('#user_id').val('')
             SALSAH.ApiDelete('session', function(data) {
 				if (data.status == ApiErrors.OK) {
 					window.sessionStorage.removeItem('userprofile');
