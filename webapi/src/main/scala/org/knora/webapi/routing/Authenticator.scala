@@ -25,7 +25,11 @@ import java.util.UUID
 import akka.actor.ActorSystem
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.{HttpCookie, HttpCookiePair}
-import akka.http.scaladsl.server.RequestContext
+import akka.http.scaladsl.server.AuthenticationFailedRejection.CredentialsMissing
+import akka.http.scaladsl.server.directives.BasicDirectives.{extractExecutionContext, provide}
+import akka.http.scaladsl.server.directives.RouteDirectives.reject
+import akka.http.scaladsl.server.directives.{AuthenticationDirective, BasicDirectives, Credentials, RouteDirectives}
+import akka.http.scaladsl.server.{AuthenticationFailedRejection, Directive1, RequestContext, Route}
 import akka.pattern._
 import akka.util.{ByteString, Timeout}
 import com.typesafe.scalalogging.Logger
@@ -37,12 +41,34 @@ import org.slf4j.LoggerFactory
 import spray.json.{JsNumber, JsObject, JsString}
 
 import scala.concurrent.duration._
-import scala.concurrent.{Await, ExecutionContext}
+import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.util.{Success, Try}
 
 
 // needs Java 1.8 !!!
 import java.util.Base64
+
+
+trait KnoraSecurityDirectives extends Authenticator{
+
+
+
+    def authenticate[T]: Directive1[T] =
+        extractExecutionContext.flatMap { implicit ec =>
+
+        }
+}
+
+trait KnoraAuthenticationDirective[T] extends Directive1[T] {
+
+}
+object KnoraAuthenticationDirective {
+    implicit def apply[T](other: Directive1[T]): KnoraAuthenticationDirective[T] =
+        new KnoraAuthenticationDirective[T] { def tapply(inner: Tuple1[T] ⇒ Route) = other.tapply(inner) }
+}
+
+
+
 
 
 /**
