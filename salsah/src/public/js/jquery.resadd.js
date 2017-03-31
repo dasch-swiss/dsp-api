@@ -1177,6 +1177,18 @@
 					});
 					if (localdata.settings.rtinfo === undefined) { // we don't know which resource type we want to add – present the selectors...
 						var vocsel;
+						var vocabulary_default;
+						//
+						// preselect the vocabulary of the project
+						//
+						if (SALSAH.userprofile && SALSAH.userprofile.active_project) {
+							for (var p in SALSAH.userprofile.projects_info) {
+								if (SALSAH.userprofile.projects_info[p].id == SALSAH.userprofile.active_project) {
+									vocabulary_default = SALSAH.userprofile.projects_info[p].ontologyNamedGraph;
+									break;
+								}
+							}
+						}
 						//
 						// get vocabularies
 						//
@@ -1194,14 +1206,16 @@
 							if (data.status == ApiErrors.OK) {
 								var tmpele;
 								for (var i in data.vocabularies) {
-									vocsel.append(tmpele = $('<option>', {
-										value: data.vocabularies[i].id
-									}).append(data.vocabularies[i].longname + ' [' + data.vocabularies[i].shortname + ']'));
 									if (data.vocabularies[i].active) {
-										tmpele.prop({
-											selected: 'selected'
-										});
-										vocabulary_selected = data.vocabularies[i].id;
+										vocsel.append(tmpele = $('<option>', {
+											value: data.vocabularies[i].id
+										}).append(data.vocabularies[i].longname + ' [' + data.vocabularies[i].shortname + ']'));
+										if (data.vocabularies[i].id == vocabulary_default) {
+											tmpele.prop({
+												selected: 'selected'
+											});
+											vocabulary_selected = data.vocabularies[i].id;
+										}
 									}
 								}
 								$this.append($('<br>'));
