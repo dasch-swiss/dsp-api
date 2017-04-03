@@ -27,7 +27,10 @@ import spray.json._
 
 sealed trait ValueV2_
 
-case class ReadValueV2(valueObjectIri: IRI, value: ValueObjectV2_) extends ValueV2_
+case class ReadValueV2(valueObjectIri: IRI, value: ValueObjectV2_) extends ValueV2_ {
+
+
+}
 
 case class CreateValueV2(resourceIri: IRI, propertyIri: IRI, value: ValueObjectV2_) extends ValueV2_
 
@@ -46,6 +49,8 @@ sealed trait ValueObjectV2_ {
       */
     def comment: Option[String]
 
+    def toJsValueMap: Map[IRI, JsValue]
+
 }
 
 case class DateValueObjectV2(valueHasString: String,
@@ -58,11 +63,20 @@ case class DateValueObjectV2(valueHasString: String,
 
     def valueTypeIri = OntologyConstants.KnoraBase.DateValue
 
+    def toJsValueMap = {
+        Map(OntologyConstants.KnoraBase.ValueHasString -> JsString(valueHasString),
+        "dateStart" -> JsString("datestart"))
+    }
+
 }
 
 case class TextValueObjectV2(valueHasString: String, comment: Option[String]) extends ValueObjectV2_ {
 
     def valueTypeIri = OntologyConstants.KnoraBase.TextValue
+
+    def toJsValueMap = {
+        Map(OntologyConstants.KnoraBase.ValueHasString -> JsString(valueHasString))
+    }
 
 }
 
@@ -70,11 +84,21 @@ case class IntegerValueObjectV2(valueHasString: String, valueHasInteger: Int, co
 
     def valueTypeIri = OntologyConstants.KnoraBase.ValueHasInteger
 
+    def toJsValueMap = {
+        Map(OntologyConstants.KnoraBase.ValueHasString -> JsString(valueHasString),
+            OntologyConstants.KnoraBase.ValueHasInteger -> JsNumber(valueHasInteger))
+    }
+
 }
 
 case class DecimalValueObjectV2(valueHasString: String, valueHasDecimal: BigDecimal, comment: Option[String]) extends ValueObjectV2_ {
 
     def valueTypeIri = OntologyConstants.KnoraBase.DecimalValue
+
+    def toJsValueMap = {
+        Map(OntologyConstants.KnoraBase.ValueHasString -> JsString(valueHasString),
+        OntologyConstants.KnoraBase.ValueHasInteger -> JsNumber(valueHasDecimal))
+    }
 
 }
 
@@ -93,6 +117,12 @@ case class ReadResourceV2_(resourceIri: IRI, label: String, resourceClass: IRI, 
 
 case class CreateResource(resourceIri: IRI, label: String, resourceClass: IRI, valueObjects: Map[IRI, Seq[CreateValueV2]], resourceInfos: Map[IRI, LiteralV2_]) extends ResourceV2_
 
+case class ReadResourcesSequenceV2_(numberOfResources: Int, resources: Seq[ReadResourceV2_]) extends KnoraResponseV2 {
+    override def toJsValue = ResourcesV2JsonProtocol.readResourcesSequenceV2Format.write(this)
+}
+
+trait KnoraResponseV2 extends Jsonable
+
 sealed trait LiteralV2_
 
 case class StringLiteralV2_(value: String) extends LiteralV2_
@@ -106,7 +136,7 @@ case class BooleanLiteralV2_(value: Boolean) extends LiteralV2_
 /**
   * A trait for Knora API V2 response messages. Any response message can be converted into JSON.
   */
-trait KnoraResponseV2 extends Jsonable
+trait __KnoraResponseV2 extends Jsonable
 
 // Response Messages of the Knora API V2
 
@@ -114,8 +144,8 @@ trait KnoraResponseV2 extends Jsonable
   * Represents a sequence of resources.
   *
   */
-case class ResourcesSequenceV2(numberOfResources: Int, results: Seq[ResourceV2]) extends KnoraResponseV2 {
-    def toJsValue = SearchV2JsonProtocol.searchResponseV2Format.write(this)
+case class ResourcesSequenceV2(numberOfResources: Int, results: Seq[ResourceV2]) extends __KnoraResponseV2 {
+    def toJsValue = ResourcesV2JsonProtocol.searchResponseV2Format.write(this)
 }
 
 /**
@@ -197,7 +227,7 @@ case class BooleanValueLiteralV2(valueObjectProperty: IRI, value: Boolean) exten
 /**
   * A spray-json protocol for generating Knora API v1 JSON providing data about representations of a resource.
   */
-object SearchV2JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with NullOptions {
+object ResourcesV2JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with NullOptions {
 
     // TODO: this is kind of a hack as this should never be called
     // TODO: look for a clean solution
@@ -206,6 +236,53 @@ object SearchV2JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol wi
         def read(jsonVal: JsValue) = ???
 
         def write(literalV2: ValueLiteralV2) = ???
+
+    }
+
+    implicit object readResourcesSequenceV2Format extends JsonFormat[ReadResourcesSequenceV2_] {
+
+        def read(jsonVal: JsValue) = ???
+
+        def write(resourcesSequenceV2: ReadResourcesSequenceV2_) = {
+
+            val resources: JsValue = resourcesSequenceV2.resources.map {
+                (resource: ReadResourceV2_) =>
+
+                    val valueObjects: Map[IRI, JsValue] = resource.valueObjects.map {
+                        case (propIri: IRI, values: Seq[ReadValueV2]) =>
+
+                            val valuesMap: Seq[JsValue] = values.map {
+                                row =>
+                                    val vals = row.value.toJsValueMap
+                                    JsObject(Map("@id" -> JsString(row.valueObjectIri),
+                                        "@type" -> JsString(row.value.valueTypeIri)
+                                    ) ++ vals)
+                            }
+
+                            (propIri, valuesMap.toJson)
+
+                    }
+
+                    Map(
+                        "@type" -> resource.resourceClass.toJson,
+                        "name" -> resource.label.toJson,
+                        "@id" -> resource.resourceIri.toJson
+                    ) ++ valueObjects
+
+            }.toJson
+
+            val fields = Map(
+                "@context" -> Map(
+                    "@vocab" -> "http://schema.org/".toJson
+                ).toJson,
+                "@type" -> "ItemList".toJson,
+                "numberOfItems" -> resourcesSequenceV2.numberOfResources.toJson,
+                "itemListElement" -> resources
+            )
+
+            JsObject(fields)
+
+        }
 
     }
 

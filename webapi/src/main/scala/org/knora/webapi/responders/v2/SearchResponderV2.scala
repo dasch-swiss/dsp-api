@@ -22,7 +22,7 @@ package org.knora.webapi.responders.v2
 
 import akka.pattern._
 import org.knora.webapi.messages.v1.store.triplestoremessages.{SparqlConstructRequest, SparqlConstructResponse}
-import org.knora.webapi.messages.v2.responder.{ResourceV2, ResourceV2_, ResourcesSequenceV2}
+import org.knora.webapi.messages.v2.responder._
 import org.knora.webapi.messages.v2.responder.searchmessages.FulltextSearchGetRequestV2
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.util.ActorUtil._
@@ -37,7 +37,7 @@ class SearchResponderV2 extends Responder {
         case searchGetRequest: FulltextSearchGetRequestV2 => future2Message(sender(), fulltextSearchV2(searchGetRequest), log)
     }
 
-    private def fulltextSearchV2(searchGetRequest: FulltextSearchGetRequestV2): Future[ResourcesSequenceV2] = {
+    private def fulltextSearchV2(searchGetRequest: FulltextSearchGetRequestV2): Future[ReadResourcesSequenceV2_] = {
 
         for {
             searchSparql <- Future(queries.sparql.v2.txt.searchFulltext(
@@ -50,13 +50,9 @@ class SearchResponderV2 extends Responder {
             // separate resources and value objects
             queryResultsSeparated: ResourcesAndValueObjects = ConstructResponseUtilV2.splitResourcesAndValueObjects(constructQueryResults = searchResponse)
 
-            resources_ : Vector[ResourceV2_] = ConstructResponseUtilV2.createResponseForResources(queryResultsSeparated)
+            resources: Vector[ReadResourceV2_] = ConstructResponseUtilV2.createResponseForResources(queryResultsSeparated)
 
-            _ = println(resources_)
-
-            resources = Seq.empty[ResourceV2]
-
-        } yield ResourcesSequenceV2(numberOfResources = queryResultsSeparated.resources.size, results = resources)
+        } yield ReadResourcesSequenceV2_(numberOfResources = queryResultsSeparated.resources.size, resources = resources)
 
     }
 }

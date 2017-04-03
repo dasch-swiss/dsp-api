@@ -105,7 +105,7 @@ object ConstructResponseUtilV2 {
         }
     }
 
-    def createResponseForResources(queryResultsSeparated: ResourcesAndValueObjects): Vector[ResourceV2_] = {
+    def createResponseForResources(queryResultsSeparated: ResourcesAndValueObjects): Vector[ReadResourceV2_] = {
 
         queryResultsSeparated.resources.map {
             case (resourceIri: IRI, assertions: Seq[(IRI, String)]) =>

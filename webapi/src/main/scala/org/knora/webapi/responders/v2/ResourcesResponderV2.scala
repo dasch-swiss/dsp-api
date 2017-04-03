@@ -23,7 +23,7 @@ package org.knora.webapi.responders.v2
 import akka.pattern._
 import org.knora.webapi.messages.v1.store.triplestoremessages.{SparqlConstructRequest, SparqlConstructResponse}
 import org.knora.webapi.messages.v2.responder.resourcemessages.ResourcesGetRequestV2
-import org.knora.webapi.messages.v2.responder.{ResourceV2, ResourceV2_, ResourcesSequenceV2, ValueObjectV2}
+import org.knora.webapi.messages.v2.responder._
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.util.ActorUtil.future2Message
 import org.knora.webapi.util.ConstructResponseUtilV2
@@ -38,7 +38,7 @@ class ResourcesResponderV2 extends Responder {
         case resourcesGetRequest: ResourcesGetRequestV2 => future2Message(sender(), getResources(resourcesGetRequest.resourceIris), log)
     }
 
-    private def getResources(resourceIris: Seq[IRI]): Future[ResourcesSequenceV2] = {
+    private def getResources(resourceIris: Seq[IRI]): Future[ReadResourcesSequenceV2_] = {
 
         // TODO: get all the resources
         val resourceIri = resourceIris.head
@@ -57,13 +57,10 @@ class ResourcesResponderV2 extends Responder {
             // there should be exactly one resource
             _ = if (queryResultsSeparated.resources.size != 1) throw InconsistentTriplestoreDataException("there was expected to be exactly one resource in the results")
 
-            resources_ : Vector[ResourceV2_] = ConstructResponseUtilV2.createResponseForResources(queryResultsSeparated)
+            resources: Vector[ReadResourceV2_] = ConstructResponseUtilV2.createResponseForResources(queryResultsSeparated)
 
-            _ = println(resources_)
 
-            resources = Seq.empty[ResourceV2]
-
-        } yield ResourcesSequenceV2(numberOfResources = queryResultsSeparated.resources.size, results = resources)
+        }  yield ReadResourcesSequenceV2_(numberOfResources = queryResultsSeparated.resources.size, resources = resources)
 
     }
 
