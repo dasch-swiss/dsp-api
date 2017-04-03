@@ -25,12 +25,15 @@ import org.knora.webapi.messages.v1.responder.valuemessages.{KnoraCalendarV1, Kn
 import org.knora.webapi.{IRI, Jsonable, OntologyConstants}
 import spray.json._
 
+sealed trait ValueV2_
 
-/*case class ResourceValueData(resourceIri: IRI, valueData: Map[IRI, Seq[ValueV2]])
-case class ResourceV2(resourceValueData: ResourceValueData, otherStuff: Map[IRI, String])*/
+case class ReadValueV2(valueObjectIri: IRI, value: ValueObjectV2_) extends ValueV2_
 
+case class CreateValueV2(resourceIri: IRI, propertyIri: IRI, value: ValueObjectV2_) extends ValueV2_
 
-sealed trait ValueV2 {
+case class UpdateValueV2(valueObjectIri: IRI, value: ValueObjectV2_) extends ValueV2_
+
+sealed trait ValueObjectV2_ {
     /**
       * The IRI of the Knora value type corresponding to the type of this `ValueV2`.
       */
@@ -45,47 +48,50 @@ sealed trait ValueV2 {
 
 }
 
-case class ReadValueV2(valueObjectIri: IRI, value: ValueV2)
-
-case class CreateValueV2(resourceIri: IRI, propertyIri: IRI, value: ValueV2)
-
-case class UpdateValueV2(valueObjectIri: IRI, value: ValueV2)
-
-case class DateValueV2(valueHasString: String,
-                       valueHasStartJDN: Int,
-                       valueHasEndJDN: Int,
-                       valueHasStartPrecision: KnoraPrecisionV1.Value,
-                       valueHasEndPrecision: KnoraPrecisionV1.Value,
-                       valueHasCalendar: KnoraCalendarV1.Value,
-                       comment: Option[String]) extends ValueV2 {
+case class DateValueObjectV2(valueHasString: String,
+                             valueHasStartJDN: Int,
+                             valueHasEndJDN: Int,
+                             valueHasStartPrecision: KnoraPrecisionV1.Value,
+                             valueHasEndPrecision: KnoraPrecisionV1.Value,
+                             valueHasCalendar: KnoraCalendarV1.Value,
+                             comment: Option[String]) extends ValueObjectV2_ {
 
     def valueTypeIri = OntologyConstants.KnoraBase.DateValue
 
 }
 
-case class TextValueV2(valueHasString: String, comment: Option[String]) extends ValueV2 {
+case class TextValueObjectV2(valueHasString: String, comment: Option[String]) extends ValueObjectV2_ {
 
     def valueTypeIri = OntologyConstants.KnoraBase.TextValue
 
 }
 
-case class IntegerValueV2(valueHasString: String, valueHasInteger: Int, comment: Option[String]) extends ValueV2 {
+case class IntegerValueObjectV2(valueHasString: String, valueHasInteger: Int, comment: Option[String]) extends ValueObjectV2_ {
 
     def valueTypeIri = OntologyConstants.KnoraBase.ValueHasInteger
 
 }
 
-case class DecimalValueV2(valueHasString: String, valueHasDecimal: BigDecimal, comment: Option[String]) extends ValueV2 {
+case class DecimalValueObjectV2(valueHasString: String, valueHasDecimal: BigDecimal, comment: Option[String]) extends ValueObjectV2_ {
 
     def valueTypeIri = OntologyConstants.KnoraBase.DecimalValue
 
 }
 
-case class ResourceV2_(resourceClass: IRI, label: String, valueObjects: Map[IRI, Seq[ValueV2]], resourceInfos: Map[IRI, LiteralV2_] = Map.empty[IRI, LiteralV2_])
+sealed trait ResourceV2_ {
+    def resourceClass: IRI
 
-case class ReadResourceV2_(resourceIri: IRI, resourceProperties: ResourceV2_)
+    def label: String
 
-case class CreateResource(resourceProperties: ResourceV2_)
+    def valueObjects: Map[IRI, Seq[ValueV2_]]
+
+    def resourceInfos: Map[IRI, LiteralV2_]
+
+}
+
+case class ReadResourceV2_(resourceIri: IRI, label: String, resourceClass: IRI, valueObjects: Map[IRI, Seq[ReadValueV2]], resourceInfos: Map[IRI, LiteralV2_]) extends ResourceV2_
+
+case class CreateResource(resourceIri: IRI, label: String, resourceClass: IRI, valueObjects: Map[IRI, Seq[CreateValueV2]], resourceInfos: Map[IRI, LiteralV2_]) extends ResourceV2_
 
 sealed trait LiteralV2_
 

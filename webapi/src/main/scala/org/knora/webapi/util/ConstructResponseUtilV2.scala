@@ -59,7 +59,7 @@ object ConstructResponseUtilV2 {
 
     }
 
-    def createValueV2FromSparqlResults(valueObjects: Map[IRI, Seq[(IRI, String)]]): Map[IRI, ValueV2] = {
+    def createValueV2FromSparqlResults(valueObjects: Map[IRI, Seq[(IRI, String)]]): Map[IRI, ValueObjectV2_] = {
 
         valueObjects.map {
             case (valObjIri: IRI, valueAssertions: Seq[(IRI, String)]) =>
@@ -73,14 +73,14 @@ object ConstructResponseUtilV2 {
 
                 val valueCommentOption: Option[String] = predicateMapForValueObj.get(OntologyConstants.KnoraBase.ValueHasComment)
 
-                val valueV2: ValueV2 = valueObjectClass match {
+                val valueV2: ValueObjectV2_ = valueObjectClass match {
                     case OntologyConstants.KnoraBase.TextValue =>
                         // TODO: handle standoff mapping and conversion to XML
-                        TextValueV2(valueHasString = valueObjectValueHasString, comment = valueCommentOption)
+                        TextValueObjectV2(valueHasString = valueObjectValueHasString, comment = valueCommentOption)
 
                     case OntologyConstants.KnoraBase.DateValue =>
 
-                        DateValueV2(
+                        DateValueObjectV2(
                             valueHasString = valueObjectValueHasString,
                             valueHasStartJDN = predicateMapForValueObj(OntologyConstants.KnoraBase.ValueHasStartJDN).toInt,
                             valueHasEndJDN = predicateMapForValueObj(OntologyConstants.KnoraBase.ValueHasEndJDN).toInt,
@@ -91,14 +91,14 @@ object ConstructResponseUtilV2 {
                         )
 
                     case OntologyConstants.KnoraBase.IntValue =>
-                        IntegerValueV2(valueHasString = valueObjectValueHasString, valueHasInteger = predicateMapForValueObj(OntologyConstants.KnoraBase.ValueHasInteger).toInt, comment = valueCommentOption)
+                        IntegerValueObjectV2(valueHasString = valueObjectValueHasString, valueHasInteger = predicateMapForValueObj(OntologyConstants.KnoraBase.ValueHasInteger).toInt, comment = valueCommentOption)
 
                     case OntologyConstants.KnoraBase.DecimalValue =>
-                        DecimalValueV2(valueHasString = valueObjectValueHasString, valueHasDecimal = BigDecimal(predicateMapForValueObj(OntologyConstants.KnoraBase.ValueHasDecimal)), comment = valueCommentOption)
+                        DecimalValueObjectV2(valueHasString = valueObjectValueHasString, valueHasDecimal = BigDecimal(predicateMapForValueObj(OntologyConstants.KnoraBase.ValueHasDecimal)), comment = valueCommentOption)
 
                     // TODO: implement all value object classes (file values)
                     case other =>
-                        TextValueV2(valueHasString = valueObjectValueHasString, comment = valueCommentOption)
+                        TextValueObjectV2(valueHasString = valueObjectValueHasString, comment = valueCommentOption)
                 }
 
                 (valObjIri, valueV2)
@@ -132,21 +132,21 @@ object ConstructResponseUtilV2 {
                 // TODO: is this really necessary? Do we not already know all the value objects? What about standoff values (third level)?
                 val valueObjectIris: Set[IRI] = queryResultsSeparated.valueObjects.keySet.intersect(objects.toSet)
 
-                val valuesV2: Map[IRI, ValueV2] = createValueV2FromSparqlResults(queryResultsSeparated.valueObjects)
+                val valuesV2: Map[IRI, ValueObjectV2_] = createValueV2FromSparqlResults(queryResultsSeparated.valueObjects)
 
-                val propertiesAsTuples: Vector[(IRI, ValueV2)] = valueObjectIris.map {
+                val propertiesAsTuples: Vector[(IRI, ReadValueV2)] = valueObjectIris.map {
                     (valObjIri) =>
                         // get the property that points from the resource to the value object
                         val propertyIri = objMap(valObjIri)
 
-                        (propertyIri, valuesV2(valObjIri))
+                        (propertyIri, ReadValueV2(valObjIri, valuesV2(valObjIri)))
                 }.toVector
 
-                val propMap: Map[IRI, Seq[ValueV2]] = propertiesAsTuples.foldLeft(Map.empty[IRI, Seq[ValueV2]]) {
-                    case (acc: Map[IRI, Seq[ValueV2]], (propIri: IRI, value: ValueV2)) =>
+                val propMap: Map[IRI, Seq[ReadValueV2]] = propertiesAsTuples.foldLeft(Map.empty[IRI, Seq[ReadValueV2]]) {
+                    case (acc: Map[IRI, Seq[ReadValueV2]], (propIri: IRI, value: ReadValueV2)) =>
 
                         if (acc.keySet.contains(propIri)) {
-                            val existingValsForProp: Seq[ValueV2] = acc(propIri)
+                            val existingValsForProp: Seq[ReadValueV2] = acc(propIri)
 
                             acc + (propIri -> (value +: existingValsForProp))
 
@@ -155,10 +155,12 @@ object ConstructResponseUtilV2 {
                         }
                 }
 
-                ResourceV2_(
+                ReadResourceV2_(
+                    resourceIri = resourceIri,
                     resourceClass = resourceClass,
                     label = rdfLabel,
-                    valueObjects = propMap
+                    valueObjects = propMap,
+                    resourceInfos = Map.empty[IRI, LiteralV2_]
                 )
         }.toVector
 
