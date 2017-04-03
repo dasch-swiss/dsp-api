@@ -60,6 +60,7 @@ CONSTRUCT {
     ?resource knora-base:attachedToUser ?resourceCreator ;
             knora-base:hasPermissions ?resourcePermissions .
 
+    # knora-base:resourceProperty
     ?resource knora-base:hasValue ?valueObject .
 
     ?valueObject knora-base:isDeleted false ;

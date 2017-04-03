@@ -50,6 +50,9 @@ object ConstructResponseUtilV2 {
 
                 val rdfType = getObjectForUniquePredicateFromAssertions(subject, OntologyConstants.Rdf.Type, assertions)
 
+
+                // TODO: add support for standoff nodes
+
                 // returns true if it is a valueObject, false in case of a resource
                 OntologyConstants.KnoraBase.ValueClasses.contains(rdfType)
 
@@ -104,6 +107,7 @@ object ConstructResponseUtilV2 {
         val resourceResultRows: Seq[ResourceV2] = queryResultsSeparated.resources.map {
             case (resourceIri: IRI, assertions: Seq[(IRI, String)]) =>
 
+                // make an error handling map an reuse
                 val rdfLabel = ConstructResponseUtilV2.getObjectForUniquePredicateFromAssertions(subjectIri = resourceIri, predicate = OntologyConstants.Rdfs.Label, assertions = assertions)
 
                 val resourceClass = ConstructResponseUtilV2.getObjectForUniquePredicateFromAssertions(subjectIri = resourceIri, predicate = OntologyConstants.Rdf.Type, assertions = assertions)
@@ -115,6 +119,7 @@ object ConstructResponseUtilV2 {
                 }
 
                 // check if one or more of the objects points to a value object
+                // TODO: is this really necessary? Do we not already know all the value objects? What about standoff values (third level)?
                 val valueObjectIris: Set[IRI] = queryResultsSeparated.valueObjects.keySet.intersect(objects.toSet)
 
                 ResourceV2(
