@@ -69,9 +69,19 @@ case class TextValueV2(valueHasString: String, comment: Option[String]) extends 
 
 }
 
-case class IntegerValueV2(valueHasString: String, valueHasInteger: Int, comment: Option[String])
+case class IntegerValueV2(valueHasString: String, valueHasInteger: Int, comment: Option[String]) extends ValueV2 {
 
-case class ResourceV2_(resourceClass: IRI, label: String, valueObjects: Map[IRI, Seq[ValueV2]], resourceInfos: Map[IRI, LiteralV2_])
+    def valueTypeIri = OntologyConstants.KnoraBase.ValueHasInteger
+
+}
+
+case class DecimalValueV2(valueHasString: String, valueHasDecimal: BigDecimal, comment: Option[String]) extends ValueV2 {
+
+    def valueTypeIri = OntologyConstants.KnoraBase.DecimalValue
+
+}
+
+case class ResourceV2_(resourceClass: IRI, label: String, valueObjects: Map[IRI, Seq[ValueV2]], resourceInfos: Map[IRI, LiteralV2_] = Map.empty[IRI, LiteralV2_])
 
 case class ReadResourceV2_(resourceIri: IRI, resourceProperties: ResourceV2_)
 

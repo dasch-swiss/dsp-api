@@ -22,7 +22,7 @@ package org.knora.webapi.responders.v2
 
 import akka.pattern._
 import org.knora.webapi.messages.v1.store.triplestoremessages.{SparqlConstructRequest, SparqlConstructResponse}
-import org.knora.webapi.messages.v2.responder.ResourcesSequenceV2
+import org.knora.webapi.messages.v2.responder.{ResourceV2, ResourceV2_, ResourcesSequenceV2}
 import org.knora.webapi.messages.v2.responder.searchmessages.FulltextSearchGetRequestV2
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.util.ActorUtil._
@@ -50,8 +50,11 @@ class SearchResponderV2 extends Responder {
             // separate resources and value objects
             queryResultsSeparated: ResourcesAndValueObjects = ConstructResponseUtilV2.splitResourcesAndValueObjects(constructQueryResults = searchResponse)
 
-            resources = ConstructResponseUtilV2.createResponseForResources(queryResultsSeparated)
+            resources_ : Vector[ResourceV2_] = ConstructResponseUtilV2.createResponseForResources(queryResultsSeparated)
 
+            _ = println(resources_)
+
+            resources = Seq.empty[ResourceV2]
 
         } yield ResourcesSequenceV2(numberOfResources = queryResultsSeparated.resources.size, results = resources)
 

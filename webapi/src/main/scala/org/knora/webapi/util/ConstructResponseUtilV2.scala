@@ -23,7 +23,9 @@ package org.knora.webapi.util
 import org.knora.webapi.messages.v1.responder.valuemessages.{KnoraCalendarV1, KnoraPrecisionV1}
 import org.knora.webapi.messages.v1.store.triplestoremessages.SparqlConstructResponse
 import org.knora.webapi.messages.v2.responder._
-import org.knora.webapi.{IRI, InconsistentTriplestoreDataException, OntologyConstants}
+import org.knora.webapi.{IRI, OntologyConstants}
+
+
 
 object ConstructResponseUtilV2 {
 
@@ -40,16 +42,11 @@ object ConstructResponseUtilV2 {
 
         // 2 tuple: value objects (._1) and resources (._2)
         val splitResults: (Map[IRI, Seq[(IRI, String)]], Map[IRI, Seq[(IRI, String)]]) = constructQueryResults.statements.partition {
-            case (subject: IRI, assertions: Seq[(IRI, String)]) =>
+            case (subjectIri: IRI, assertions: Seq[(IRI, String)]) =>
 
-                // group assertions by predicate (assertions is a sequence of 2 tuples: pred, obj)
-                val groupedByPredicate: Map[IRI, Seq[(IRI, String)]] = assertions.groupBy {
-                    case (pred: IRI, obj: String) =>
-                        pred
-                }
+                val predicateMap: Map[IRI, String] = new ErrorHandlingMap(assertions.toMap, { key: IRI => s"Predicate $key not found for $subjectIri" })
 
-                val rdfType = getObjectForUniquePredicateFromAssertions(subject, OntologyConstants.Rdf.Type, assertions)
-
+                val rdfType = predicateMap(OntologyConstants.Rdf.Type)
 
                 // TODO: add support for standoff nodes
 
@@ -62,55 +59,63 @@ object ConstructResponseUtilV2 {
 
     }
 
-    /**
-      * Gets the value (object) for the given predicate.
-      * This method assumes that there is only one value (object) for the given predicate.
-      *
-      * @param subjectIri the subject the assertions belong to.
-      * @param predicate  the predicate whose value should be returned.
-      * @param assertions the assertions to search in.
-      * @return the given predicate's value (object).
-      */
-    def getObjectForUniquePredicateFromAssertions(subjectIri: IRI, predicate: IRI, assertions: Seq[(IRI, String)]): String = {
+    def createValueV2FromSparqlResults(valueObjects: Map[IRI, Seq[(IRI, String)]]): Map[IRI, ValueV2] = {
 
-        // make predicate the keys of a map
-        val predicateMap: Map[IRI, String] = assertions.toMap
+        valueObjects.map {
+            case (valObjIri: IRI, valueAssertions: Seq[(IRI, String)]) =>
 
-        // get the assertion representing the predicate
-        predicateMap.getOrElse(predicate, throw InconsistentTriplestoreDataException(s"no $predicate given for $subjectIri"))
+                // make predicate the keys of a map
+                val predicateMapForValueObj: ErrorHandlingMap[IRI, String] = new ErrorHandlingMap(valueAssertions.toMap, { key: IRI => s"Predicate $key not found for $valObjIri" })
 
+                val valueObjectClass = predicateMapForValueObj(OntologyConstants.Rdf.Type)
+
+                val valueObjectValueHasString: String = predicateMapForValueObj(OntologyConstants.KnoraBase.ValueHasString)
+
+                val valueCommentOption: Option[String] = predicateMapForValueObj.get(OntologyConstants.KnoraBase.ValueHasComment)
+
+                val valueV2: ValueV2 = valueObjectClass match {
+                    case OntologyConstants.KnoraBase.TextValue =>
+                        // TODO: handle standoff mapping and conversion to XML
+                        TextValueV2(valueHasString = valueObjectValueHasString, comment = valueCommentOption)
+
+                    case OntologyConstants.KnoraBase.DateValue =>
+
+                        DateValueV2(
+                            valueHasString = valueObjectValueHasString,
+                            valueHasStartJDN = predicateMapForValueObj(OntologyConstants.KnoraBase.ValueHasStartJDN).toInt,
+                            valueHasEndJDN = predicateMapForValueObj(OntologyConstants.KnoraBase.ValueHasEndJDN).toInt,
+                            valueHasStartPrecision = KnoraPrecisionV1.lookup(predicateMapForValueObj(OntologyConstants.KnoraBase.ValueHasStartPrecision)),
+                            valueHasEndPrecision = KnoraPrecisionV1.lookup(predicateMapForValueObj(OntologyConstants.KnoraBase.ValueHasEndPrecision)),
+                            valueHasCalendar = KnoraCalendarV1.lookup(predicateMapForValueObj(OntologyConstants.KnoraBase.ValueHasCalendar)),
+                            comment = valueCommentOption
+                        )
+
+                    case OntologyConstants.KnoraBase.IntValue =>
+                        IntegerValueV2(valueHasString = valueObjectValueHasString, valueHasInteger = predicateMapForValueObj(OntologyConstants.KnoraBase.ValueHasInteger).toInt, comment = valueCommentOption)
+
+                    case OntologyConstants.KnoraBase.DecimalValue =>
+                        DecimalValueV2(valueHasString = valueObjectValueHasString, valueHasDecimal = BigDecimal(predicateMapForValueObj(OntologyConstants.KnoraBase.ValueHasDecimal)), comment = valueCommentOption)
+
+                    // TODO: implement all value object classes (file values)
+                    case other =>
+                        TextValueV2(valueHasString = valueObjectValueHasString, comment = valueCommentOption)
+                }
+
+                (valObjIri, valueV2)
+        }
     }
 
-    /**
-      * Gets the predicate for the given value (object).
-      * cThis method assumes that the given value (object) is unique in the assertions (no combination of the same value with another predicate).
-      *
-      * @param subjectIri  the subject the assertions belong to.
-      * @param objectValue the object (value) whose predicate should be returned.
-      * @param assertions  the assertions to search in.
-      * @return the given predicate for the given object (value).
-      */
-    def getPredicateForUniqueObjectFromAssertions(subjectIri: IRI, objectValue: String, assertions: Seq[(IRI, String)]) = {
+    def createResponseForResources(queryResultsSeparated: ResourcesAndValueObjects): Vector[ResourceV2_] = {
 
-        // make the objects keys of a map
-        val objMap = assertions.map {
-            case (pred, obj) =>
-                (obj, pred)
-        }.toMap
-
-        objMap.getOrElse(objectValue, throw InconsistentTriplestoreDataException(s"no object (value) $objectValue found in assertions for $subjectIri"))
-
-    }
-
-    def createResponseForResources(queryResultsSeparated: ResourcesAndValueObjects): Seq[ResourceV2] = {
-
-        val resourceResultRows: Seq[ResourceV2] = queryResultsSeparated.resources.map {
+        queryResultsSeparated.resources.map {
             case (resourceIri: IRI, assertions: Seq[(IRI, String)]) =>
 
-                // make an error handling map an reuse
-                val rdfLabel = ConstructResponseUtilV2.getObjectForUniquePredicateFromAssertions(subjectIri = resourceIri, predicate = OntologyConstants.Rdfs.Label, assertions = assertions)
+                // make predicate the keys of a map
+                val predicateMapForResource: ErrorHandlingMap[IRI, String] = new ErrorHandlingMap(assertions.toMap, { key: IRI => s"Predicate $key not found for $resourceIri" })
 
-                val resourceClass = ConstructResponseUtilV2.getObjectForUniquePredicateFromAssertions(subjectIri = resourceIri, predicate = OntologyConstants.Rdf.Type, assertions = assertions)
+                val rdfLabel: String = predicateMapForResource(OntologyConstants.Rdfs.Label)
+
+                val resourceClass = predicateMapForResource(OntologyConstants.Rdf.Type)
 
                 // get all the objects from the assertions
                 val objects: Seq[String] = assertions.map {
@@ -118,142 +123,44 @@ object ConstructResponseUtilV2 {
                         obj
                 }
 
+                val objMap = new ErrorHandlingMap(assertions.map {
+                    case (pred, obj) =>
+                        (obj, pred)
+                }.toMap, { key: IRI => s"object $key not found for $resourceIri" })
+
                 // check if one or more of the objects points to a value object
                 // TODO: is this really necessary? Do we not already know all the value objects? What about standoff values (third level)?
                 val valueObjectIris: Set[IRI] = queryResultsSeparated.valueObjects.keySet.intersect(objects.toSet)
 
-                ResourceV2(
-                    resourceIri = resourceIri,
+                val valuesV2: Map[IRI, ValueV2] = createValueV2FromSparqlResults(queryResultsSeparated.valueObjects)
+
+                val propertiesAsTuples: Vector[(IRI, ValueV2)] = valueObjectIris.map {
+                    (valObjIri) =>
+                        // get the property that points from the resource to the value object
+                        val propertyIri = objMap(valObjIri)
+
+                        (propertyIri, valuesV2(valObjIri))
+                }.toVector
+
+                val propMap: Map[IRI, Seq[ValueV2]] = propertiesAsTuples.foldLeft(Map.empty[IRI, Seq[ValueV2]]) {
+                    case (acc: Map[IRI, Seq[ValueV2]], (propIri: IRI, value: ValueV2)) =>
+
+                        if (acc.keySet.contains(propIri)) {
+                            val existingValsForProp: Seq[ValueV2] = acc(propIri)
+
+                            acc + (propIri -> (value +: existingValsForProp))
+
+                        } else {
+                            acc + (propIri -> Vector(value))
+                        }
+                }
+
+                ResourceV2_(
                     resourceClass = resourceClass,
                     label = rdfLabel,
-                    valueObjects = valueObjectIris.map {
-                        (valObj: IRI) =>
-
-                            val valueObjectClass = ConstructResponseUtilV2.getObjectForUniquePredicateFromAssertions(subjectIri = valObj, predicate = OntologyConstants.Rdf.Type, assertions = queryResultsSeparated.valueObjects.
-                                getOrElse(valObj, throw InconsistentTriplestoreDataException(s"value object not found $valObj")))
-
-                            val valueObjectValueHasString: String = ConstructResponseUtilV2.getObjectForUniquePredicateFromAssertions(subjectIri = valObj, predicate = OntologyConstants.KnoraBase.ValueHasString, assertions = queryResultsSeparated.valueObjects.
-                                getOrElse(valObj, throw InconsistentTriplestoreDataException(s"value object not found $valObj")))
-
-                            val valueStringRepresentation = StringValueLiteralV2(valueObjectProperty = OntologyConstants.KnoraBase.ValueHasString, value = valueObjectValueHasString)
-
-                            val valueTypeSpecificRepresentation: Seq[ValueLiteralV2] = valueObjectClass match {
-                                case OntologyConstants.KnoraBase.TextValue =>
-                                    // TODO: handle standoff mapping and conversion to XML
-                                    Vector.empty[ValueLiteralV2]
-
-                                case OntologyConstants.KnoraBase.DateValue =>
-                                    val dateStartJDN = ConstructResponseUtilV2.getObjectForUniquePredicateFromAssertions(subjectIri = valObj, predicate = OntologyConstants.KnoraBase.ValueHasStartJDN, assertions = queryResultsSeparated.valueObjects.
-                                        getOrElse(valObj, throw InconsistentTriplestoreDataException(s"value object not found $valObj")))
-
-                                    val dateEndJDN = ConstructResponseUtilV2.getObjectForUniquePredicateFromAssertions(subjectIri = valObj, predicate = OntologyConstants.KnoraBase.ValueHasEndJDN, assertions = queryResultsSeparated.valueObjects.
-                                        getOrElse(valObj, throw InconsistentTriplestoreDataException(s"value object not found $valObj")))
-
-                                    val startPrecision = ConstructResponseUtilV2.getObjectForUniquePredicateFromAssertions(subjectIri = valObj, predicate = OntologyConstants.KnoraBase.ValueHasStartPrecision, assertions = queryResultsSeparated.valueObjects.
-                                        getOrElse(valObj, throw InconsistentTriplestoreDataException(s"value object not found $valObj")))
-
-                                    val endPrecision = ConstructResponseUtilV2.getObjectForUniquePredicateFromAssertions(subjectIri = valObj, predicate = OntologyConstants.KnoraBase.ValueHasEndPrecision, assertions = queryResultsSeparated.valueObjects.
-                                        getOrElse(valObj, throw InconsistentTriplestoreDataException(s"value object not found $valObj")))
-
-                                    val calendar = ConstructResponseUtilV2.getObjectForUniquePredicateFromAssertions(subjectIri = valObj, predicate = OntologyConstants.KnoraBase.ValueHasCalendar, assertions = queryResultsSeparated.valueObjects.
-                                        getOrElse(valObj, throw InconsistentTriplestoreDataException(s"value object not found $valObj")))
-
-                                    val startDate = DateUtilV1.julianDayNumber2DateString(dateStartJDN.toInt, KnoraCalendarV1.lookup(calendar), KnoraPrecisionV1.lookup(startPrecision))
-
-                                    val endDate = DateUtilV1.julianDayNumber2DateString(dateEndJDN.toInt, KnoraCalendarV1.lookup(calendar), KnoraPrecisionV1.lookup(endPrecision))
-
-                                    // TODO: define entities to represent these values in a additional ontology
-                                    Vector(
-                                        StringValueLiteralV2(valueObjectProperty = "dateStart", value = startDate),
-                                        StringValueLiteralV2(valueObjectProperty = "endStart", value = endDate)
-                                    )
-
-                                case OntologyConstants.KnoraBase.IntValue =>
-                                    val integerValue = ConstructResponseUtilV2.getObjectForUniquePredicateFromAssertions(subjectIri = valObj, predicate = OntologyConstants.KnoraBase.ValueHasInteger, assertions = queryResultsSeparated.valueObjects.
-                                        getOrElse(valObj, throw InconsistentTriplestoreDataException(s"value object not found $valObj")))
-
-                                    Vector(IntegerValueLiteralV2(valueObjectProperty = OntologyConstants.KnoraBase.ValueHasInteger, value = integerValue.toInt))
-
-                                case OntologyConstants.KnoraBase.DecimalValue =>
-                                    val decimalValue = ConstructResponseUtilV2.getObjectForUniquePredicateFromAssertions(subjectIri = valObj, predicate = OntologyConstants.KnoraBase.ValueHasDecimal, assertions = queryResultsSeparated.valueObjects.
-                                        getOrElse(valObj, throw InconsistentTriplestoreDataException(s"value object not found $valObj")))
-
-                                    Vector(DecimalValueLiteralV2(valueObjectProperty = OntologyConstants.KnoraBase.ValueHasDecimal, value = BigDecimal(decimalValue)))
-
-                                case OntologyConstants.KnoraBase.BooleanValue =>
-                                    val booleanValue = ConstructResponseUtilV2.getObjectForUniquePredicateFromAssertions(subjectIri = valObj, predicate = OntologyConstants.KnoraBase.ValueHasBoolean, assertions = queryResultsSeparated.valueObjects.
-                                        getOrElse(valObj, throw InconsistentTriplestoreDataException(s"value object not found $valObj")))
-
-                                    Vector(BooleanValueLiteralV2(valueObjectProperty = OntologyConstants.KnoraBase.ValueHasBoolean, value = booleanValue.toBoolean))
-
-                                case OntologyConstants.KnoraBase.ColorValue =>
-                                    val colorValue = ConstructResponseUtilV2.getObjectForUniquePredicateFromAssertions(subjectIri = valObj, predicate = OntologyConstants.KnoraBase.ValueHasColor, assertions = queryResultsSeparated.valueObjects.
-                                        getOrElse(valObj, throw InconsistentTriplestoreDataException(s"value object not found $valObj")))
-
-                                    Vector(StringValueLiteralV2(valueObjectProperty = OntologyConstants.KnoraBase.ValueHasColor, value = colorValue))
-
-                                case OntologyConstants.KnoraBase.UriValue =>
-                                    val uriValue = ConstructResponseUtilV2.getObjectForUniquePredicateFromAssertions(subjectIri = valObj, predicate = OntologyConstants.KnoraBase.ValueHasUri, assertions = queryResultsSeparated.valueObjects.
-                                        getOrElse(valObj, throw InconsistentTriplestoreDataException(s"value object not found $valObj")))
-
-                                    Vector(StringValueLiteralV2(valueObjectProperty = OntologyConstants.KnoraBase.ValueHasUri, value = uriValue))
-
-                                case OntologyConstants.KnoraBase.GeomValue =>
-                                    val geomValue = ConstructResponseUtilV2.getObjectForUniquePredicateFromAssertions(subjectIri = valObj, predicate = OntologyConstants.KnoraBase.ValueHasGeometry, assertions = queryResultsSeparated.valueObjects.
-                                        getOrElse(valObj, throw InconsistentTriplestoreDataException(s"value object not found $valObj")))
-
-                                    Vector(StringValueLiteralV2(valueObjectProperty = OntologyConstants.KnoraBase.ValueHasGeometry, value = geomValue))
-
-                                case OntologyConstants.KnoraBase.ListValue =>
-                                    val listNodeValue = ConstructResponseUtilV2.getObjectForUniquePredicateFromAssertions(subjectIri = valObj, predicate = OntologyConstants.KnoraBase.ValueHasListNode, assertions = queryResultsSeparated.valueObjects.
-                                        getOrElse(valObj, throw InconsistentTriplestoreDataException(s"value object not found $valObj")))
-
-                                    Vector(StringValueLiteralV2(valueObjectProperty = OntologyConstants.KnoraBase.ValueHasListNode, value = listNodeValue))
-
-                                case OntologyConstants.KnoraBase.IntervalValue =>
-                                    val intervalStartValue = ConstructResponseUtilV2.getObjectForUniquePredicateFromAssertions(subjectIri = valObj, predicate = OntologyConstants.KnoraBase.ValueHasIntervalStart, assertions = queryResultsSeparated.valueObjects.
-                                        getOrElse(valObj, throw InconsistentTriplestoreDataException(s"value object not found $valObj")))
-
-                                    val intervalEndValue = ConstructResponseUtilV2.getObjectForUniquePredicateFromAssertions(subjectIri = valObj, predicate = OntologyConstants.KnoraBase.ValueHasIntervalStart, assertions = queryResultsSeparated.valueObjects.
-                                        getOrElse(valObj, throw InconsistentTriplestoreDataException(s"value object not found $valObj")))
-
-                                    Vector(StringValueLiteralV2(valueObjectProperty = OntologyConstants.KnoraBase.ValueHasIntervalStart, value = intervalStartValue),
-                                        StringValueLiteralV2(valueObjectProperty = OntologyConstants.KnoraBase.ValueHasIntervalEnd, value = intervalEndValue)
-                                    )
-
-                                case OntologyConstants.KnoraBase.LinkValue =>
-                                    val linkValue = ConstructResponseUtilV2.getObjectForUniquePredicateFromAssertions(subjectIri = valObj, predicate = OntologyConstants.Rdf.Object, assertions = queryResultsSeparated.valueObjects.
-                                        getOrElse(valObj, throw InconsistentTriplestoreDataException(s"value object not found $valObj")))
-
-                                    Vector(StringValueLiteralV2(valueObjectProperty = OntologyConstants.Rdf.Object, value = linkValue))
-
-                                case OntologyConstants.KnoraBase.GeonameValue =>
-                                    val geonameValue = ConstructResponseUtilV2.getObjectForUniquePredicateFromAssertions(subjectIri = valObj, predicate = OntologyConstants.KnoraBase.ValueHasGeonameCode, assertions = queryResultsSeparated.valueObjects.
-                                        getOrElse(valObj, throw InconsistentTriplestoreDataException(s"value object not found $valObj")))
-
-                                    Vector(StringValueLiteralV2(valueObjectProperty = OntologyConstants.KnoraBase.ValueHasGeonameCode, value = geonameValue))
-
-
-                                // TODO: implement all value object classes (file values)
-                                case other =>
-                                    Vector.empty[ValueLiteralV2]
-
-                            }
-
-                            // get the property that points from the resource to the value object
-                            val propertyIri = ConstructResponseUtilV2.getPredicateForUniqueObjectFromAssertions(subjectIri = resourceIri, objectValue = valObj, assertions)
-
-                            ValueObjectV2(
-                                valueClass = valueObjectClass,
-                                valueLiterals = valueStringRepresentation +: valueTypeSpecificRepresentation,
-                                valueObjectIri = valObj,
-                                propertyIri = propertyIri
-                            )
-                    }.toVector
+                    valueObjects = propMap
                 )
         }.toVector
-
-        resourceResultRows
 
     }
 
