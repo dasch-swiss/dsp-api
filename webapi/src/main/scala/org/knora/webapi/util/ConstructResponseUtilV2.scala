@@ -59,7 +59,7 @@ object ConstructResponseUtilV2 {
 
     }
 
-    def createValueV2FromSparqlResults(valueObjects: Map[IRI, Seq[(IRI, String)]]): Map[IRI, ValueObjectV2_] = {
+    def createValueV2FromSparqlResults(valueObjects: Map[IRI, Seq[(IRI, String)]]): Map[IRI, ValueObjectV2] = {
 
         valueObjects.map {
             case (valObjIri: IRI, valueAssertions: Seq[(IRI, String)]) =>
@@ -73,7 +73,7 @@ object ConstructResponseUtilV2 {
 
                 val valueCommentOption: Option[String] = predicateMapForValueObj.get(OntologyConstants.KnoraBase.ValueHasComment)
 
-                val valueV2: ValueObjectV2_ = valueObjectClass match {
+                val valueV2: ValueObjectV2 = valueObjectClass match {
                     case OntologyConstants.KnoraBase.TextValue =>
                         // TODO: handle standoff mapping and conversion to XML
                         TextValueObjectV2(valueHasString = valueObjectValueHasString, comment = valueCommentOption)
@@ -105,7 +105,7 @@ object ConstructResponseUtilV2 {
         }
     }
 
-    def createResponseForResources(queryResultsSeparated: ResourcesAndValueObjects): Vector[ReadResourceV2_] = {
+    def createResponseForResources(queryResultsSeparated: ResourcesAndValueObjects): Vector[ReadResourceV2] = {
 
         queryResultsSeparated.resources.map {
             case (resourceIri: IRI, assertions: Seq[(IRI, String)]) =>
@@ -132,7 +132,7 @@ object ConstructResponseUtilV2 {
                 // TODO: is this really necessary? Do we not already know all the value objects? What about standoff values (third level)?
                 val valueObjectIris: Set[IRI] = queryResultsSeparated.valueObjects.keySet.intersect(objects.toSet)
 
-                val valuesV2: Map[IRI, ValueObjectV2_] = createValueV2FromSparqlResults(queryResultsSeparated.valueObjects)
+                val valuesV2: Map[IRI, ValueObjectV2] = createValueV2FromSparqlResults(queryResultsSeparated.valueObjects)
 
                 val propertiesAsTuples: Vector[(IRI, ReadValueV2)] = valueObjectIris.map {
                     (valObjIri) =>
@@ -155,12 +155,12 @@ object ConstructResponseUtilV2 {
                         }
                 }
 
-                ReadResourceV2_(
+                ReadResourceV2(
                     resourceIri = resourceIri,
                     resourceClass = resourceClass,
                     label = rdfLabel,
                     valueObjects = propMap,
-                    resourceInfos = Map.empty[IRI, LiteralV2_]
+                    resourceInfos = Map.empty[IRI, LiteralV2]
                 )
         }.toVector
 

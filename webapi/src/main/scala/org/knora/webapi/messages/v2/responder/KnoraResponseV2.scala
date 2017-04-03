@@ -25,41 +25,81 @@ import org.knora.webapi.messages.v1.responder.valuemessages.{KnoraCalendarV1, Kn
 import org.knora.webapi.{IRI, Jsonable, OntologyConstants}
 import spray.json._
 
-sealed trait ValueV2_
+/**
+  * The value of a Knora property.
+  * Any implementation of `ValueV2` is an API operation specific wrapper of a `ValueObjectV2`.
+  */
+sealed trait ValueV2
 
-case class ReadValueV2(valueObjectIri: IRI, value: ValueObjectV2_) extends ValueV2_ {
+/**
+  * The value of a Knora property read back from the triplestore.
+  *
+  * @param valueObjectIri the Iri of the value object.
+  * @param value the value.
+  */
+case class ReadValueV2(valueObjectIri: IRI, value: ValueObjectV2) extends ValueV2
 
+/**
+  * The value of a Knora property sent to Knora to be created.
+  *
+  * @param resourceIri the resource the new value should be attached to.
+  * @param propertyIri the property of the new value.
+  * @param value the new value.
+  */
+case class CreateValueV2(resourceIri: IRI, propertyIri: IRI, value: ValueObjectV2) extends ValueV2
 
-}
+/**
+  * The new version of a value of a Knora property to be created.
+  *
+  * @param valueObjectIri the value object to be updated.
+  * @param value the new version of the value.
+  */
+case class UpdateValueV2(valueObjectIri: IRI, value: ValueObjectV2) extends ValueV2
 
-case class CreateValueV2(resourceIri: IRI, propertyIri: IRI, value: ValueObjectV2_) extends ValueV2_
-
-case class UpdateValueV2(valueObjectIri: IRI, value: ValueObjectV2_) extends ValueV2_
-
-sealed trait ValueObjectV2_ {
+/**
+  * The value object of a Knora property.
+  */
+sealed trait ValueObjectV2 {
     /**
-      * The IRI of the Knora value type corresponding to the type of this `ValueV2`.
+      * The IRI of the Knora value type corresponding to the type of this `ValueObjectV2`.
       */
     def valueTypeIri: IRI
 
+    /**
+      * The string representation of this `ValueObjectV2`.
+      */
     def valueHasString: String
 
     /**
-      * A comment on the value, if any.
+      * A comment on this `ValueObjectV2`, if any.
       */
     def comment: Option[String]
 
+    /**
+      * A representation of the `ValueObjectV2` in JSON.
+      */
     def toJsValueMap: Map[IRI, JsValue]
 
 }
 
+/**
+  * Represents a Knora date value.
+  *
+  * @param valueHasString the string of the date.
+  * @param valueHasStartJDN the start of the date as JDN.
+  * @param valueHasEndJDN the end of the date as JDN.
+  * @param valueHasStartPrecision the precision of the start date.
+  * @param valueHasEndPrecision the precision of the end date.
+  * @param valueHasCalendar the calendar of the date.
+  * @param comment a comment on this `ValueObjectV2`, if any.
+  */
 case class DateValueObjectV2(valueHasString: String,
                              valueHasStartJDN: Int,
                              valueHasEndJDN: Int,
                              valueHasStartPrecision: KnoraPrecisionV1.Value,
                              valueHasEndPrecision: KnoraPrecisionV1.Value,
                              valueHasCalendar: KnoraCalendarV1.Value,
-                             comment: Option[String]) extends ValueObjectV2_ {
+                             comment: Option[String]) extends ValueObjectV2 {
 
     def valueTypeIri = OntologyConstants.KnoraBase.DateValue
 
@@ -70,7 +110,13 @@ case class DateValueObjectV2(valueHasString: String,
 
 }
 
-case class TextValueObjectV2(valueHasString: String, comment: Option[String]) extends ValueObjectV2_ {
+/**
+  * Represents a Knora text value.
+  *
+  * @param valueHasString the string representation of the text (without markup).
+  * @param comment a comment on this `ValueObjectV2`, if any.
+  */
+case class TextValueObjectV2(valueHasString: String, comment: Option[String]) extends ValueObjectV2 {
 
     def valueTypeIri = OntologyConstants.KnoraBase.TextValue
 
@@ -80,7 +126,14 @@ case class TextValueObjectV2(valueHasString: String, comment: Option[String]) ex
 
 }
 
-case class IntegerValueObjectV2(valueHasString: String, valueHasInteger: Int, comment: Option[String]) extends ValueObjectV2_ {
+/**
+  * Represents a Knora integer value.
+  *
+  * @param valueHasString the string representation of the integer.
+  * @param valueHasInteger the integer value.
+  * @param comment a comment on this `ValueObjectV2`, if any.
+  */
+case class IntegerValueObjectV2(valueHasString: String, valueHasInteger: Int, comment: Option[String]) extends ValueObjectV2 {
 
     def valueTypeIri = OntologyConstants.KnoraBase.ValueHasInteger
 
@@ -91,7 +144,14 @@ case class IntegerValueObjectV2(valueHasString: String, valueHasInteger: Int, co
 
 }
 
-case class DecimalValueObjectV2(valueHasString: String, valueHasDecimal: BigDecimal, comment: Option[String]) extends ValueObjectV2_ {
+/**
+  * Represents a Knora decimal value.
+  *
+  * @param valueHasString the string representation of the decimal.
+  * @param valueHasDecimal the decimal value.
+  * @param comment a comment on this `ValueObjectV2`, if any.
+  */
+case class DecimalValueObjectV2(valueHasString: String, valueHasDecimal: BigDecimal, comment: Option[String]) extends ValueObjectV2 {
 
     def valueTypeIri = OntologyConstants.KnoraBase.DecimalValue
 
@@ -102,123 +162,88 @@ case class DecimalValueObjectV2(valueHasString: String, valueHasDecimal: BigDeci
 
 }
 
-sealed trait ResourceV2_ {
+/**
+  * Represents a Knora resource.
+  * Any implementation of `ResourceV2` is API operation specific.
+  */
+sealed trait ResourceV2 {
     def resourceClass: IRI
 
     def label: String
 
-    def valueObjects: Map[IRI, Seq[ValueV2_]]
+    def valueObjects: Map[IRI, Seq[ValueV2]]
 
-    def resourceInfos: Map[IRI, LiteralV2_]
+    def resourceInfos: Map[IRI, LiteralV2]
 
 }
 
-case class ReadResourceV2_(resourceIri: IRI, label: String, resourceClass: IRI, valueObjects: Map[IRI, Seq[ReadValueV2]], resourceInfos: Map[IRI, LiteralV2_]) extends ResourceV2_
+/**
+  * Represents a Knora resource when being read back from the triplestore.
+  *
+  * @param resourceIri the Iri of the resource.
+  * @param label the resource's label.
+  * @param resourceClass the class the resource belongs to.
+  * @param valueObjects the resource's values.
+  * @param resourceInfos additional information attached to the resource.
+  */
+case class ReadResourceV2(resourceIri: IRI, label: String, resourceClass: IRI, valueObjects: Map[IRI, Seq[ReadValueV2]], resourceInfos: Map[IRI, LiteralV2]) extends ResourceV2
 
-case class CreateResource(resourceIri: IRI, label: String, resourceClass: IRI, valueObjects: Map[IRI, Seq[CreateValueV2]], resourceInfos: Map[IRI, LiteralV2_]) extends ResourceV2_
+/**
+  * Represents a Knora resource that is about to be created.
+  *
+  * @param label the resource's label.
+  * @param resourceClass the class the resource belongs to.
+  * @param valueObjects the resource's values.
+  * @param resourceInfos additional information attached to the resource (literals).
+  */
+case class CreateResource(label: String, resourceClass: IRI, valueObjects: Map[IRI, Seq[CreateValueV2]], resourceInfos: Map[IRI, LiteralV2]) extends ResourceV2
 
-case class ReadResourcesSequenceV2_(numberOfResources: Int, resources: Seq[ReadResourceV2_]) extends KnoraResponseV2 {
-    override def toJsValue = ResourcesV2JsonProtocol.readResourcesSequenceV2Format.write(this)
-}
+/**
+  * A trait representing literals that may be directly attached to a resource.
+  */
+sealed trait LiteralV2
 
+/**
+  * Represents a string literal attached to a resource.
+  *
+  * @param value a string literal.
+  */
+case class StringLiteralV2(value: String) extends LiteralV2
+
+/**
+  * Represents an integer literal attached to a resource.
+  *
+  * @param value an integer literal.
+  */
+case class IntegerLiteralV2(value: Int) extends LiteralV2
+
+/**
+  * Represents a decimal literal attached to a resource.
+  *
+  * @param value a decimal literal.
+  */
+case class DecimalLiteralV2(value: BigDecimal) extends LiteralV2
+
+/**
+  * Represents a boolean literal attached to a resource.
+  *
+  * @param value a boolean literal.
+  */
+case class BooleanLiteralV2(value: Boolean) extends LiteralV2
+
+/**
+  * A trait for Knora API v2 response messages. Any response message can be converted into JSON.
+  */
 trait KnoraResponseV2 extends Jsonable
 
-sealed trait LiteralV2_
-
-case class StringLiteralV2_(value: String) extends LiteralV2_
-
-case class IntegerLiteralV2_(value: Int) extends LiteralV2_
-
-case class DecimalLiteralV2_(value: BigDecimal) extends LiteralV2_
-
-case class BooleanLiteralV2_(value: Boolean) extends LiteralV2_
-
 /**
-  * A trait for Knora API V2 response messages. Any response message can be converted into JSON.
-  */
-trait __KnoraResponseV2 extends Jsonable
-
-// Response Messages of the Knora API V2
-
-/**
-  * Represents a sequence of resources.
+  * Represents a sequence of resources read back from Knora.
   *
+  * @param numberOfResources the amount of resources returned.
+  * @param resources a sequence of resources.
   */
-case class ResourcesSequenceV2(numberOfResources: Int, results: Seq[ResourceV2]) extends __KnoraResponseV2 {
-    def toJsValue = ResourcesV2JsonProtocol.searchResponseV2Format.write(this)
-}
-
-/**
-  * Represents a single resource.
-  *
-  * @param resourceIri   the Iri of the resource.
-  * @param resourceClass the class of the resource.
-  * @param label         the label of the resource.
-  * @param valueObjects  the values belonging to the resource.
-  */
-case class ResourceV2(resourceIri: IRI, resourceClass: IRI, label: String, valueObjects: Seq[ValueObjectV2])
-
-/**
-  * Represents a value object that belongs to a resource.
-  *
-  * @param valueClass     the class of the value.
-  * @param valueLiterals  the literals that belong to the value object and represent a possibly complex value.
-  * @param valueObjectIri the Iri of the value object.
-  * @param propertyIri    the Iri of the property pointing to the value object from the resource.
-  */
-case class ValueObjectV2(valueClass: IRI, valueLiterals: Seq[ValueLiteralV2], valueObjectIri: IRI, propertyIri: IRI)
-
-/*
-    A trait representing a value literal.
- */
-trait ValueLiteralV2 {
-
-    // the value object property connecting the value object and the value literal.
-    val valueObjectProperty: IRI
-
-    // turns a `ValueLiteralV2` into a Map[valueObjectProperty -> JsValue]
-    // the JsValue is the type specific representation of the literal (Number, String etc.)
-    def toMap: Map[IRI, JsValue]
-}
-
-/**
-  * Represents a String value literal.
-  *
-  * @param valueObjectProperty the value object property connecting the value object and the value literal.
-  * @param value               the literal's type specific value.
-  */
-case class StringValueLiteralV2(valueObjectProperty: IRI, value: String) extends ValueLiteralV2 {
-    def toMap: Map[IRI, JsValue] = Map(valueObjectProperty -> JsString(value))
-}
-
-/**
-  * Represents an Integer value literal.
-  *
-  * @param valueObjectProperty the value object property connecting the value object and the value literal.
-  * @param value               the literal's type specific value.
-  */
-case class IntegerValueLiteralV2(valueObjectProperty: IRI, value: Int) extends ValueLiteralV2 {
-    def toMap: Map[IRI, JsValue] = Map(valueObjectProperty -> JsNumber(value))
-}
-
-/**
-  * Represents a Decimal value literal.
-  *
-  * @param valueObjectProperty the value object property connecting the value object and the value literal.
-  * @param value               the literal's type specific value.
-  */
-case class DecimalValueLiteralV2(valueObjectProperty: IRI, value: BigDecimal) extends ValueLiteralV2 {
-    def toMap: Map[IRI, JsValue] = Map(valueObjectProperty -> JsNumber(value))
-}
-
-/**
-  * Represents a Boolean value literal.
-  *
-  * @param valueObjectProperty the value object property connecting the value object and the value literal.
-  * @param value               the literal's type specific value.
-  */
-case class BooleanValueLiteralV2(valueObjectProperty: IRI, value: Boolean) extends ValueLiteralV2 {
-    def toMap: Map[IRI, JsValue] = Map(valueObjectProperty -> JsBoolean(value))
+case class ReadResourcesSequenceV2_(numberOfResources: Int, resources: Seq[ReadResourceV2]) extends KnoraResponseV2 {
+    override def toJsValue = ResourcesV2JsonProtocol.readResourcesSequenceV2Format.write(this)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -229,16 +254,6 @@ case class BooleanValueLiteralV2(valueObjectProperty: IRI, value: Boolean) exten
   */
 object ResourcesV2JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with NullOptions {
 
-    // TODO: this is kind of a hack as this should never be called
-    // TODO: look for a clean solution
-    implicit object literalV2Format extends JsonFormat[ValueLiteralV2] {
-
-        def read(jsonVal: JsValue) = ???
-
-        def write(literalV2: ValueLiteralV2) = ???
-
-    }
-
     implicit object readResourcesSequenceV2Format extends JsonFormat[ReadResourcesSequenceV2_] {
 
         def read(jsonVal: JsValue) = ???
@@ -246,20 +261,19 @@ object ResourcesV2JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol
         def write(resourcesSequenceV2: ReadResourcesSequenceV2_) = {
 
             val resources: JsValue = resourcesSequenceV2.resources.map {
-                (resource: ReadResourceV2_) =>
+                (resource: ReadResourceV2) =>
 
                     val valueObjects: Map[IRI, JsValue] = resource.valueObjects.map {
-                        case (propIri: IRI, values: Seq[ReadValueV2]) =>
+                        case (propIri: IRI, readValues: Seq[ReadValueV2]) =>
 
-                            val valuesMap: Seq[JsValue] = values.map {
+                            val valuesMap: JsValue = readValues.map {
                                 row =>
-                                    val vals = row.value.toJsValueMap
-                                    JsObject(Map("@id" -> JsString(row.valueObjectIri),
-                                        "@type" -> JsString(row.value.valueTypeIri)
-                                    ) ++ vals)
-                            }
+                                    val valAsMap: Map[IRI, JsValue] = row.value.toJsValueMap
+                                    Map("@id" -> JsString(row.valueObjectIri),
+                                        "@type" -> JsString(row.value.valueTypeIri)) ++ valAsMap
+                            }.toJson
 
-                            (propIri, valuesMap.toJson)
+                            (propIri, valuesMap)
 
                     }
 
@@ -285,85 +299,4 @@ object ResourcesV2JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol
         }
 
     }
-
-    implicit object searchResponseV2Format extends JsonFormat[ResourcesSequenceV2] {
-
-        def read(jsonVal: JsValue) = ???
-
-        def write(searchResultV2: ResourcesSequenceV2) = {
-
-            val resourceResultRows: JsValue = searchResultV2.results.map {
-                (resultRow: ResourceV2) =>
-
-                    val valueObjects: Map[IRI, JsValue] = resultRow.valueObjects.foldLeft(Map.empty[IRI, Seq[JsValue]]) {
-                        case (acc: Map[String, Seq[JsValue]], valObj: ValueObjectV2) =>
-                            if (acc.keySet.contains(valObj.propertyIri)) {
-                                // the property Iri already exists, add to it
-                                val existingValsforProp: Seq[JsValue] = acc(valObj.propertyIri)
-
-                                // make it a Map so further information can be attached before converting to a JsValue
-                                // TODO: look for a better solution that makes use of the JSON formatter of Jsonable
-                                val newValueLiteral: Map[IRI, JsValue] = valObj.valueLiterals.flatMap {
-                                    case (valueLiteral: ValueLiteralV2) => valueLiteral.toMap
-                                }.toMap
-
-                                val newValueObjectForProp: JsValue = (Map("@type" -> valObj.valueClass.toJson, "@id" -> valObj.valueObjectIri.toJson) ++ newValueLiteral).toJson
-
-                                val valuesForProp: Map[IRI, Seq[JsValue]] = Map(valObj.propertyIri -> (existingValsforProp :+ newValueObjectForProp))
-
-                                acc ++ valuesForProp
-                            } else {
-                                // the property Iri does not exist yet, create it
-
-                                // make it a Map so further information can be attached before converting to a JsValue
-                                // TODO: look for a better solution that makes use of the JSON formatter of Jsonable
-                                val newValueLiteral: Map[IRI, JsValue] = valObj.valueLiterals.flatMap {
-                                    case (valueLiteral: ValueLiteralV2) => valueLiteral.toMap
-                                }.toMap
-
-                                val newValueObjectForProp = (Map("@type" -> valObj.valueClass.toJson, "@id" -> valObj.valueObjectIri.toJson) ++ newValueLiteral).toJson
-
-                                val valueObjectForProp: Map[IRI, Vector[JsValue]] = Map(valObj.propertyIri -> Vector(newValueObjectForProp))
-
-
-                                acc ++ valueObjectForProp
-                            }
-
-                    }.map {
-                        case (propIri, values) =>
-                            propIri -> values.toJson
-                    }
-
-
-                    val values = Map(
-                        "@type" -> resultRow.resourceClass.toJson,
-                        "name" -> resultRow.label.toJson,
-                        "@id" -> resultRow.resourceIri.toJson
-                    )
-
-                    values ++ valueObjects
-
-            }.toJson
-
-            val fields = Map(
-                "@context" -> Map(
-                    "@vocab" -> "http://schema.org/".toJson
-                ).toJson,
-                "@type" -> "ItemList".toJson,
-                "numberOfItems" -> searchResultV2.numberOfResources.toJson,
-                "itemListElement" -> resourceResultRows
-            )
-
-            JsObject(fields)
-        }
-    }
-
-    implicit val stringLiteralV2Format: RootJsonFormat[StringValueLiteralV2] = jsonFormat2(StringValueLiteralV2)
-    // TODO: this is not used, look for a clean solution
-    implicit val integerLiteralV2Format: RootJsonFormat[IntegerValueLiteralV2] = jsonFormat2(IntegerValueLiteralV2)
-    // TODO: this is not used, look for a clean solution
-    implicit val decimalLiteralV2Format: RootJsonFormat[DecimalValueLiteralV2] = jsonFormat2(DecimalValueLiteralV2)
-    // TODO: this is not used, look for a clean solution
-    implicit val valueRowV2Format: RootJsonFormat[ValueObjectV2] = jsonFormat4(ValueObjectV2)
-    implicit val resourceRowV2Format: RootJsonFormat[ResourceV2] = jsonFormat4(ResourceV2)
 }

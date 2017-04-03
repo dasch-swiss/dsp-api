@@ -57,7 +57,7 @@ class ResourcesResponderV2 extends Responder {
             // there should be exactly one resource
             _ = if (queryResultsSeparated.resources.size != 1) throw InconsistentTriplestoreDataException("there was expected to be exactly one resource in the results")
 
-            resources: Vector[ReadResourceV2_] = ConstructResponseUtilV2.createResponseForResources(queryResultsSeparated)
+            resources: Vector[ReadResourceV2] = ConstructResponseUtilV2.createResponseForResources(queryResultsSeparated)
 
 
         }  yield ReadResourcesSequenceV2_(numberOfResources = queryResultsSeparated.resources.size, resources = resources)

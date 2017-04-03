@@ -50,7 +50,7 @@ class SearchResponderV2 extends Responder {
             // separate resources and value objects
             queryResultsSeparated: ResourcesAndValueObjects = ConstructResponseUtilV2.splitResourcesAndValueObjects(constructQueryResults = searchResponse)
 
-            resources: Vector[ReadResourceV2_] = ConstructResponseUtilV2.createResponseForResources(queryResultsSeparated)
+            resources: Vector[ReadResourceV2] = ConstructResponseUtilV2.createResponseForResources(queryResultsSeparated)
 
         } yield ReadResourcesSequenceV2_(numberOfResources = queryResultsSeparated.resources.size, resources = resources)
 
