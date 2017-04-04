@@ -41,8 +41,10 @@ CONSTRUCT {
     ?resource knora-base:attachedToUser ?resourceCreator ;
             knora-base:hasPermissions ?resourcePermissions .
 
-    ?resource ?resourceProperty ?valueObject .
-    ?valueObject ?valueObjectProperty ?valueObjectValue .
+    ?resource ?resourceProperty ?referredObject .
+    ?referredObject ?referredObjectProperty ?referredObjectValue .
+
+    ?standoffNode ?standoffProperty ?standoffValue .
 
 } WHERE {
     BIND(IRI("@resourceIri") as ?resource)
@@ -60,17 +62,21 @@ CONSTRUCT {
     ?resource knora-base:attachedToUser ?resourceCreator ;
             knora-base:hasPermissions ?resourcePermissions .
 
-    # knora-base:resourceProperty
-    ?resource knora-base:hasValue ?valueObject .
+    # ?referredObject is either a value object or a resource
+    ?resource knora-base:resourceProperty ?referredObject .
 
-    ?valueObject knora-base:isDeleted false ;
-        a knora-base:Value .
+    ?referredObject knora-base:isDeleted false .
 
     GRAPH <http://www.ontotext.com/explicit> {
-        ?resource ?resourceProperty ?valueObject .
+        ?resource ?resourceProperty ?referredObject .
 
-        ?valueObject a ?valueObjectType .
-        ?valueObject ?valueObjectProperty ?valueObjectValue .
+        ?referredObject a ?referredObjectType .
+        ?referredObject ?referredObjectProperty ?referredObjectValue .
+
+        OPTIONAL {
+            ?referredObject knora-base:valueHasStandoff ?standoffNode .
+            ?standoffNode ?standoffProperty ?standoffValue .
+        }
     }
 
 
