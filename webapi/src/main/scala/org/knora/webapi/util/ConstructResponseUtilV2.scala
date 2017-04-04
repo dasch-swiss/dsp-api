@@ -26,10 +26,9 @@ import org.knora.webapi.messages.v2.responder._
 import org.knora.webapi.{IRI, OntologyConstants}
 
 
-
 object ConstructResponseUtilV2 {
 
-    case class ResourcesAndValueObjects(resources: Map[IRI, Seq[(IRI, String)]], valueObjects: Map[IRI, Seq[(IRI, String)]])
+    case class ResourcesAndValueObjects(resources: Map[IRI, Seq[(IRI, String)]], valueObjects: Map[IRI, Seq[(IRI, String)]], standoff: Map[IRI, Seq[(IRI, String)]])
 
     /**
       * A [[SparqlConstructResponse]] may contain both resources and value objects.
@@ -40,22 +39,44 @@ object ConstructResponseUtilV2 {
       */
     def splitResourcesAndValueObjects(constructQueryResults: SparqlConstructResponse): ResourcesAndValueObjects = {
 
-        // 2 tuple: value objects (._1) and resources (._2)
-        val splitResults: (Map[IRI, Seq[(IRI, String)]], Map[IRI, Seq[(IRI, String)]]) = constructQueryResults.statements.partition {
+        // 2 tuple: value objects (._1) and resources/standoff (._2)
+        val (valueObjects: Map[IRI, Seq[(IRI, String)]], resourcesAndStandoff: Map[IRI, Seq[(IRI, String)]]) = constructQueryResults.statements.partition {
             case (subjectIri: IRI, assertions: Seq[(IRI, String)]) =>
 
                 val predicateMap: Map[IRI, String] = new ErrorHandlingMap(assertions.toMap, { key: IRI => s"Predicate $key not found for $subjectIri" })
 
                 val rdfType = predicateMap(OntologyConstants.Rdf.Type)
 
-                // TODO: add support for standoff nodes
-
-                // returns true if it is a valueObject, false in case of a resource
+                // returns true if it is a valueObject, false in case of a resource or a standoff node
                 OntologyConstants.KnoraBase.ValueClasses.contains(rdfType)
 
         }
 
-        ResourcesAndValueObjects(resources = splitResults._2, valueObjects = splitResults._1)
+        // get standoff node Iris from value objects
+        val standoffNodeIris: Vector[IRI] = valueObjects.flatMap {
+            case (subjectIri: IRI, assertions: Seq[(IRI, String)]) =>
+
+                // a value object may have more than one standoff node, so we cannot use a map here (making knora-base:valueHasStandoff the predicate)
+                assertions.filter {
+                    case (pred: IRI, obj: String) =>
+                        pred == OntologyConstants.KnoraBase.ValueHasStandoff
+                }.map {
+                    case (pred: IRI, obj: String) =>
+                        // we are only interested in the standoff node Iri
+                        obj
+                }
+
+        }.toVector
+
+        // separate resources from standoff nodes
+        val (standoffNodes: Map[IRI, Seq[(IRI, String)]], resources: Map[IRI, Seq[(IRI, String)]]) = resourcesAndStandoff.partition {
+            case (subjectIri: IRI, assertions: Seq[(IRI, String)]) =>
+
+                standoffNodeIris.contains(subjectIri)
+
+        }
+
+        ResourcesAndValueObjects(resources = resources, valueObjects = valueObjects, standoff = standoffNodes)
 
     }
 
@@ -65,7 +86,7 @@ object ConstructResponseUtilV2 {
             case (valObjIri: IRI, valueAssertions: Seq[(IRI, String)]) =>
 
                 // make predicate the keys of a map
-                val predicateMapForValueObj: ErrorHandlingMap[IRI, String] = new ErrorHandlingMap(valueAssertions.toMap, { key: IRI => s"Predicate $key not found for $valObjIri" })
+                val predicateMapForValueObj: ErrorHandlingMap[IRI, String] = new ErrorHandlingMap(valueAssertions.toMap, { key: IRI => s"Predicate $key not found for $valObjIri (value object)" })
 
                 val valueObjectClass = predicateMapForValueObj(OntologyConstants.Rdf.Type)
 
@@ -111,7 +132,7 @@ object ConstructResponseUtilV2 {
             case (resourceIri: IRI, assertions: Seq[(IRI, String)]) =>
 
                 // make predicate the keys of a map
-                val predicateMapForResource: ErrorHandlingMap[IRI, String] = new ErrorHandlingMap(assertions.toMap, { key: IRI => s"Predicate $key not found for $resourceIri" })
+                val predicateMapForResource: ErrorHandlingMap[IRI, String] = new ErrorHandlingMap(assertions.toMap, { key: IRI => s"Predicate $key not found for $resourceIri (resource)" })
 
                 val rdfLabel: String = predicateMapForResource(OntologyConstants.Rdfs.Label)
 
@@ -129,7 +150,6 @@ object ConstructResponseUtilV2 {
                 }.toMap, { key: IRI => s"object $key not found for $resourceIri" })
 
                 // check if one or more of the objects points to a value object
-                // TODO: is this really necessary? Do we not already know all the value objects? What about standoff values (third level)?
                 val valueObjectIris: Set[IRI] = queryResultsSeparated.valueObjects.keySet.intersect(objects.toSet)
 
                 val valuesV2: Map[IRI, ValueObjectV2] = createValueV2FromSparqlResults(queryResultsSeparated.valueObjects)
