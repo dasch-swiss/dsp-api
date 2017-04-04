@@ -76,6 +76,10 @@ object ConstructResponseUtilV2 {
 
         }
 
+        
+
+        // TODO: get referred resources (link targets)
+
         ResourcesAndValueObjects(resources = resources, valueObjects = valueObjects, standoff = standoffNodes)
 
     }
@@ -128,6 +132,8 @@ object ConstructResponseUtilV2 {
 
     def createResponseForResources(queryResultsSeparated: ResourcesAndValueObjects): Vector[ReadResourceV2] = {
 
+        val valuesV2: Map[IRI, ValueObjectV2] = createValueV2FromSparqlResults(queryResultsSeparated.valueObjects)
+
         queryResultsSeparated.resources.map {
             case (resourceIri: IRI, assertions: Seq[(IRI, String)]) =>
 
@@ -149,10 +155,10 @@ object ConstructResponseUtilV2 {
                         (obj, pred)
                 }.toMap, { key: IRI => s"object $key not found for $resourceIri" })
 
-                // check if one or more of the objects points to a value object
-                val valueObjectIris: Set[IRI] = queryResultsSeparated.valueObjects.keySet.intersect(objects.toSet)
 
-                val valuesV2: Map[IRI, ValueObjectV2] = createValueV2FromSparqlResults(queryResultsSeparated.valueObjects)
+
+                // check if one or more of the objects points to a value object
+                val valueObjectIris: Set[IRI] = valuesV2.keySet.intersect(objects.toSet)
 
                 val propertiesAsTuples: Vector[(IRI, ReadValueV2)] = valueObjectIris.map {
                     (valObjIri) =>
