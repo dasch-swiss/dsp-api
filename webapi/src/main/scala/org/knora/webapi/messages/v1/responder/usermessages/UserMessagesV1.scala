@@ -99,6 +99,24 @@ case class ChangeUserStatusApiRequestV1(newStatus: Boolean) {
 sealed trait UsersResponderRequestV1 extends KnoraRequestV1
 
 /**
+  * Get all information about all users in form of [[UsersGetResponseV1]]. The UsersGetRequestV1 returns either
+  * something or a NotFound exception if there are no users found. Administration permission checking is performed.
+  *
+  * @param userProfileV1 the profile of the user that is making the request.
+  */
+case class UsersGetRequestV1(userProfileV1: UserProfileV1) extends UsersResponderRequestV1
+
+
+/**
+  * Get all information about all users in form of a sequence of [[UserDataV1]]. Returns an empty sequence if
+  * no users are found. Administration permission checking is skipped.
+  *
+  */
+case class UsersGetV1() extends UsersResponderRequestV1
+
+
+
+/**
   * A message that requests a user's profile. A successful response will be a [[UserProfileResponseV1]].
   *
   * @param userIri         the IRI of the user to be queried.
@@ -191,6 +209,15 @@ case class UserChangeStatusRequestV1(userIri: IRI,
 
 
 // Responses
+
+/**
+  * Represents an answer to a request for a list of all users.
+  *
+  * @param users a sequence of user profiles of the requested type.
+  */
+case class UsersGetResponseV1(users: Seq[UserDataV1]) extends KnoraResponseV1 {
+    def toJsValue = UserV1JsonProtocol.usersGetResponseV1Format.write(this)
+}
 
 /**
   * Represents an answer to a user profile request.
@@ -429,6 +456,7 @@ object UserV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
     implicit val updateUserApiRequestV1Format: RootJsonFormat[UpdateUserApiRequestV1] = jsonFormat7(UpdateUserApiRequestV1)
     implicit val changeUserPasswordApiRequestV1Format: RootJsonFormat[ChangeUserPasswordApiRequestV1] = jsonFormat2(ChangeUserPasswordApiRequestV1)
     implicit val changeUserStatusApiRequestV1Format: RootJsonFormat[ChangeUserStatusApiRequestV1] = jsonFormat1(ChangeUserStatusApiRequestV1)
+    implicit val usersGetResponseV1Format: RootJsonFormat[UsersGetResponseV1] = jsonFormat1(UsersGetResponseV1)
     implicit val userProfileResponseV1Format: RootJsonFormat[UserProfileResponseV1] = jsonFormat1(UserProfileResponseV1)
     implicit val userOperationResponseV1Format: RootJsonFormat[UserOperationResponseV1] = jsonFormat1(UserOperationResponseV1)
 }

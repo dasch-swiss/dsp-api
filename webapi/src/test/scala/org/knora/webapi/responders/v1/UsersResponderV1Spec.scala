@@ -33,7 +33,6 @@ import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.messages.v1.store.triplestoremessages._
 import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_NAME
 import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
-import org.knora.webapi.util.MessageUtil
 
 import scala.concurrent.duration._
 
@@ -78,6 +77,14 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
     }
 
     "The UsersResponder " when {
+        "asked about all users" should {
+            "return a list" in {
+                actorUnderTest ! UsersGetRequestV1(rootUser)
+                val response = expectMsgType[UsersGetResponseV1](timeout)
+                response.users.nonEmpty should be (true)
+                response.users.size should be (16)
+            }
+        }
         "asked about an user identified by 'iri' " should {
 
             "return a profile if the user (root user) is known" in {

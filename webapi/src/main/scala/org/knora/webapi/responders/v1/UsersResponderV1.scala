@@ -29,11 +29,11 @@ import org.knora.webapi.messages.v1.responder.permissionmessages._
 import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoByIRIGetV1, ProjectInfoV1}
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileType.UserProfileType
 import org.knora.webapi.messages.v1.responder.usermessages._
-import org.knora.webapi.messages.v1.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, SparqlUpdateRequest, SparqlUpdateResponse}
+import org.knora.webapi.messages.v1.store.triplestoremessages._
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.util.ActorUtil._
-import org.knora.webapi.util.{CacheUtil, KnoraIdUtil, MessageUtil}
+import org.knora.webapi.util.{CacheUtil, KnoraIdUtil}
 import org.springframework.security.crypto.scrypt.SCryptPasswordEncoder
 
 import scala.concurrent.Future
@@ -55,6 +55,8 @@ class UsersResponderV1 extends ResponderV1 {
       * method first returns `Failure` to the sender, then throws an exception.
       */
     def receive = {
+        case UsersGetV1() => future2Message(sender(), usersGetV1, log)
+        case UsersGetRequestV1(userProfileV1) => future2Message(sender(), usersGetRequestV1(userProfileV1), log)
         case UserProfileByIRIGetV1(userIri, profileType) => future2Message(sender(), userProfileByIRIGetV1(userIri, profileType), log)
         case UserProfileByIRIGetRequestV1(userIri, profileType, userProfile) => future2Message(sender(), userProfileByIRIGetRequestV1(userIri, profileType, userProfile), log)
         case UserProfileByEmailGetV1(email, profileType) => future2Message(sender(), userProfileByEmailGetV1(email, profileType), log)
@@ -64,6 +66,62 @@ class UsersResponderV1 extends ResponderV1 {
         case UserChangePasswordRequestV1(userIri, changePasswordRequest, userProfile, apiRequestID) => future2Message(sender(), changePasswordV1(userIri, changePasswordRequest, userProfile, apiRequestID), log)
         case UserChangeStatusRequestV1(userIri, changeStatusRequest, userProfile, apiRequestID) => future2Message(sender(), changeUserStatusV1(userIri, changeStatusRequest, userProfile, apiRequestID), log)
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
+    }
+
+
+    /**
+      * Gets all the users and returns them as a sequence of [[UserDataV1]].
+      *
+      * @return all the users as a sequence of [[UserDataV1]].
+      */
+    private def usersGetV1: Future[Seq[UserDataV1]] = {
+        for {
+            sparqlQueryString <- Future(queries.sparql.v1.txt.getUsers(
+                triplestore = settings.triplestoreType
+            ).toString())
+
+            usersResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResponse]
+
+
+            usersResponseRows: Seq[VariableResultsRow] = usersResponse.results.bindings
+
+            usersWithProperties: Map[String, Map[String, String]] = usersResponseRows.groupBy(_.rowMap("s")).map {
+                case (userIri: IRI, rows: Seq[VariableResultsRow]) => (userIri, rows.map(row => (row.rowMap("p"), row.rowMap("o"))).toMap)
+            }
+
+            users = usersWithProperties.map {
+                case (userIri: IRI, propsMap: Map[String, String]) =>
+
+                    UserDataV1(
+                        lang = propsMap.get(OntologyConstants.KnoraBase.PreferredLanguage) match {
+                            case Some(langList) => langList
+                            case None => settings.fallbackLanguage
+                        },
+                        user_id = Some(userIri),
+                        email = propsMap.get(OntologyConstants.KnoraBase.Email),
+                        firstname = propsMap.get(OntologyConstants.KnoraBase.GivenName),
+                        lastname = propsMap.get(OntologyConstants.KnoraBase.FamilyName),
+                        isActiveUser = propsMap.get(OntologyConstants.KnoraBase.Status).map(_.toBoolean)
+                    )
+            }.toSeq
+
+        } yield users
+    }
+
+    /**
+      * Gets all the users and returns them as a [[UsersGetResponseV1]].
+      *
+      * @param userProfileV1 the type of the requested profile (restricted of full).
+      * @return all the users as a [[UsersGetResponseV1]].
+      */
+    private def usersGetRequestV1(userProfileV1: UserProfileV1): Future[UsersGetResponseV1] = {
+        for {
+            maybeUsersListToReturn <- usersGetV1
+            result = maybeUsersListToReturn match {
+                case users: Seq[UserDataV1] if users.nonEmpty => UsersGetResponseV1(users = users)
+                case _ => throw NotFoundException(s"No users found")
+            }
+        } yield result
     }
 
     /**
