@@ -25,13 +25,13 @@ import akka.http.scaladsl.server.Route
 import org.apache.commons.validator.routines.UrlValidator
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.usermessages._
-import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
+import org.knora.webapi.routing.{KnoraSecurityDirectives, _}
 import org.knora.webapi.util.InputValidation
 
 /**
   * Provides a spray-routing function for API routes that deal with lists.
   */
-object UsersRouteV1 extends Authenticator {
+object UsersRouteV1 extends KnoraSecurityDirectives {
 
     /* bring json protocol into scope */
     import UserV1JsonProtocol._
@@ -49,8 +49,8 @@ object UsersRouteV1 extends Authenticator {
 
         path("v1" / "users" / "iri" / Segment) {value =>
             get {
-                requestContext =>
-                    val userProfile = getUserProfileV1(requestContext)
+                requestContext => authenticate[UserProfileV1] { userProfile =>
+                    //val userProfile = getUserProfileV1(requestContext)
                     val userIri = InputValidation.toIri(value, () => throw BadRequestException(s"Invalid user IRI $value"))
                     val requestMessage = UserProfileByIRIGetRequestV1(userIri, UserProfileType.RESTRICTED, userProfile)
                     RouteUtilV1.runJsonRoute(
@@ -60,6 +60,7 @@ object UsersRouteV1 extends Authenticator {
                         responderManager,
                         log
                     )
+                }
             }
         } ~
         path("v1" / "users" / "email" / Segment) {value =>

@@ -25,7 +25,11 @@ import java.util.UUID
 import akka.actor.ActorSystem
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.{HttpCookie, HttpCookiePair}
-import akka.http.scaladsl.server.RequestContext
+import akka.http.scaladsl.server.AuthenticationFailedRejection.CredentialsMissing
+import akka.http.scaladsl.server.directives.BasicDirectives.provide
+import akka.http.scaladsl.server.directives.RouteDirectives.reject
+import akka.http.scaladsl.server.directives.{AuthenticationDirective, BasicDirectives}
+import akka.http.scaladsl.server.{AuthenticationFailedRejection, Directive1, RequestContext, Route}
 import akka.pattern._
 import akka.util.{ByteString, Timeout}
 import com.typesafe.scalalogging.Logger
@@ -33,6 +37,7 @@ import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.permissionmessages.PermissionDataV1
 import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_PATH
+import org.knora.webapi.routing.KnoraSecurityDirectives.KnoraAuthenticationDirective
 import org.knora.webapi.util.CacheUtil
 import org.slf4j.LoggerFactory
 import spray.json.{JsNumber, JsObject, JsString}
@@ -44,6 +49,51 @@ import scala.util.{Success, Try}
 
 // needs Java 1.8 !!!
 import java.util.Base64
+
+
+trait KnoraSecurityDirectives extends Authenticator{
+
+    import BasicDirectives._
+
+
+    def authenticate[T]: KnoraAuthenticationDirective[T] =
+        extractExecutionContext.flatMap { implicit ec =>
+            getUserProfile(ec)
+        }
+    def getUserProfile[T](executionContext: ExecutionContext): T
+}
+object KnoraSecurityDirectives {
+    implicit object UserProfileForV1 extends KnoraSecurityDirectives[UserProfileV1] {
+        def getUserProfile(executionContext: ExecutionContext) = getUserProfileV1(executionContext)
+    }
+}
+
+trait KnoraAuthenticationDirective[T] extends Directive1[T] {
+
+    /**
+      * Returns a copy of this [[AuthenticationDirective]] that will provide `Some(user)` if credentials
+      * were supplied and otherwise `None`.
+      */
+    def optional: Directive1[Option[T]] =
+        this.map(Some(_): Option[T]) recover {
+            case AuthenticationFailedRejection(CredentialsMissing, _) +: _ ⇒ provide(None)
+            case rejs ⇒ reject(rejs: _*)
+        }
+
+    /**
+      * Returns a copy of this [[AuthenticationDirective]] that uses the given object as the
+      * anonymous user which will be used if no credentials were supplied in the request.
+      */
+    def withAnonymousUser(anonymous: T): Directive1[T] = optional map (_ getOrElse anonymous)
+
+}
+object KnoraAuthenticationDirective {
+    implicit def apply[T](other: Directive1[T]): KnoraAuthenticationDirective[T] =
+        new KnoraAuthenticationDirective[T] { def tapply(inner: Tuple1[T] ⇒ Route) = other.tapply(inner) }
+}
+
+
+
 
 
 /**
