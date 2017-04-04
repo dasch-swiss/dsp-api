@@ -41,10 +41,21 @@ CONSTRUCT {
     ?resource knora-base:attachedToUser ?resourceCreator ;
             knora-base:hasPermissions ?resourcePermissions .
 
-    ?resource ?resourceProperty ?referredObject .
-    ?referredObject ?referredObjectProperty ?referredObjectValue .
+    ?resource knora-base:hasValue ?valueObject .
+    ?resource ?resourceValueProperty ?valueObject .
+    ?valueObject ?valueObjectProperty ?valueObjectValue .
 
     ?standoffNode ?standoffProperty ?standoffValue .
+
+    ?resource knora-base:hasLinkTo ?referredResource .
+    ?resource ?resourceLinkProperty ?referredResource .
+
+    ?referredResource rdfs:label ?referredResourceLabel .
+    ?referredResource a ?referredResourceType .
+
+    ?referredResource knora-base:attachedToUser ?referredResourceCreator ;
+        knora-base:hasPermissions ?referredResourcePermissions .
+
 
 } WHERE {
     BIND(IRI("@resourceIri") as ?resource)
@@ -62,23 +73,42 @@ CONSTRUCT {
     ?resource knora-base:attachedToUser ?resourceCreator ;
             knora-base:hasPermissions ?resourcePermissions .
 
-    # ?referredObject is either a value object or a resource
-    ?resource knora-base:resourceProperty ?referredObject .
+    OPTIONAL {
+        ?resource knora-base:hasValue ?valueObject .
 
-    ?referredObject knora-base:isDeleted false .
+        ?valueObject a knora-base:Value ;
+            knora-base:isDeleted false .
 
-    GRAPH <http://www.ontotext.com/explicit> {
-        ?resource ?resourceProperty ?referredObject .
+        GRAPH <http://www.ontotext.com/explicit> {
+            ?resource ?resourceValueProperty ?valueObject .
 
-        ?referredObject a ?referredObjectType .
-        ?referredObject ?referredObjectProperty ?referredObjectValue .
+            ?valueObject a ?valueObjectType .
+            ?valueObject ?valueObjectProperty ?valueObjectValue .
 
-        OPTIONAL {
-            ?referredObject knora-base:valueHasStandoff ?standoffNode .
-            ?standoffNode ?standoffProperty ?standoffValue .
+            OPTIONAL {
+                ?valueObject knora-base:valueHasStandoff ?standoffNode .
+                ?standoffNode ?standoffProperty ?standoffValue .
+            }
         }
     }
 
+    OPTIONAL {
 
+        ?resource knora-base:hasLinkTo ?referredResource .
+
+        ?referredResource a knora-base:Resource ;
+            knora-base:isDeleted false .
+
+        GRAPH <http://www.ontotext.com/explicit> {
+            ?resource ?resourceLinkProperty ?referredResource .
+
+            ?referredResource rdfs:label ?referredResourceLabel .
+            ?referredResource a ?referredResourceType .
+
+            ?referredResource knora-base:attachedToUser ?referredResourceCreator ;
+                        knora-base:hasPermissions ?referredResourcePermissions .
+        }
+
+    }
 
 }
