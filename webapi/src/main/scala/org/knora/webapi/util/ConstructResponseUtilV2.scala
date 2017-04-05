@@ -26,8 +26,6 @@ import org.knora.webapi.messages.v2.responder._
 import org.knora.webapi.{IRI, OntologyConstants}
 
 
-
-
 object ConstructResponseUtilV2 {
 
     case class ValueObject(valueObjectIri: IRI, assertions: Seq[(IRI, String)], standoff: Map[IRI, Seq[(IRI, String)]])
@@ -126,7 +124,6 @@ object ConstructResponseUtilV2 {
                 }.toMap
 
 
-
                 (resourceIri, ResourceWithValues(resourceAssertions = assertionsFiltered, valuePropertyAssertions = valuePropertyToValueObject, linkPropertyAssertions = linkPropToTargets))
 
 
@@ -134,7 +131,7 @@ object ConstructResponseUtilV2 {
 
     }
 
-    def createValueV2FromAssertions(valueObject: ValueObject): ValueObjectV2 = {
+    def createValueV2FromAssertions(valueObject: ValueObject, queryResult: Option[Map[IRI, ResourceWithValues]] = None): ValueObjectV2 = {
 
         // make predicate the keys of a map
         val predicateMapForValueObject: ErrorHandlingMap[IRI, String] = new ErrorHandlingMap(valueObject.assertions.toMap, { key: IRI => s"Predicate $key not found for ${valueObject.valueObjectIri} (value object)" })
@@ -148,6 +145,11 @@ object ConstructResponseUtilV2 {
         valueObjectClass match {
             case OntologyConstants.KnoraBase.TextValue =>
                 // TODO: handle standoff mapping and conversion to XML
+
+                val textValueAssertions = valueObject.assertions
+
+                val standoffAssertions = valueObject.standoff
+
                 TextValueObjectV2(valueHasString = valueObjectValueHasString, comment = valueCommentOption)
 
             case OntologyConstants.KnoraBase.DateValue =>
@@ -168,6 +170,29 @@ object ConstructResponseUtilV2 {
             case OntologyConstants.KnoraBase.DecimalValue =>
                 DecimalValueObjectV2(valueHasString = valueObjectValueHasString, valueHasDecimal = BigDecimal(predicateMapForValueObject(OntologyConstants.KnoraBase.ValueHasDecimal)), comment = valueCommentOption)
 
+            case OntologyConstants.KnoraBase.LinkValue =>
+                val referredResourceIri = predicateMapForValueObject(OntologyConstants.Rdf.Object)
+
+                // check if the referred resource can be represented
+                val referredResourceOption: Option[ReferredResourceV2] = if (queryResult.nonEmpty && queryResult.get.get(referredResourceIri).nonEmpty) {
+
+                    val referredResourceInfoMap: ErrorHandlingMap[IRI, String] = new ErrorHandlingMap(queryResult.get(referredResourceIri).resourceAssertions.toMap, { key: IRI => s"Predicate $key not found for ${referredResourceIri} (referred resource)" })
+
+                    Some(ReferredResourceV2(label = referredResourceInfoMap(OntologyConstants.Rdfs.Label), resourceClass = referredResourceInfoMap(OntologyConstants.Rdf.Type)))
+
+                } else {
+                    None
+                }
+
+                LinkValueObjectV2(
+                    valueHasString = valueObjectValueHasString,
+                    subject = predicateMapForValueObject(OntologyConstants.Rdf.Subject),
+                    predicate = predicateMapForValueObject(OntologyConstants.Rdf.Predicate),
+                    reference = predicateMapForValueObject(OntologyConstants.Rdf.Object),
+                    comment = valueCommentOption,
+                    referredResourceOption
+                )
+
             // TODO: implement all value object classes (file values)
             case other =>
                 TextValueObjectV2(valueHasString = valueObjectValueHasString, comment = valueCommentOption)
@@ -187,7 +212,9 @@ object ConstructResponseUtilV2 {
             case (property: IRI, valObjs: Seq[ValueObject]) =>
                 (property, valObjs.map {
                     valObj =>
-                        ReadValueV2(valObj.valueObjectIri, createValueV2FromAssertions(valObj))
+                        val readValue: ValueObjectV2 = createValueV2FromAssertions(valObj, Some(resourceResults))
+
+                        ReadValueV2(valObj.valueObjectIri, readValue)
                 })
         }
 
@@ -216,7 +243,9 @@ object ConstructResponseUtilV2 {
                     case (property: IRI, valObjs: Seq[ValueObject]) =>
                         (property, valObjs.map {
                             valObj =>
-                                ReadValueV2(valObj.valueObjectIri, createValueV2FromAssertions(valObj))
+                                val readValue = createValueV2FromAssertions(valObj)
+
+                                ReadValueV2(valObj.valueObjectIri, readValue)
                         })
                 }
 
