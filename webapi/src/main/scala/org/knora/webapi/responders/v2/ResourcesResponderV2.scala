@@ -54,25 +54,7 @@ class ResourcesResponderV2 extends Responder {
             // separate resources and value objects
             queryResultsSeparated: Map[IRI, ResourceWithValues] = ConstructResponseUtilV2.splitResourcesAndValueObjects(constructQueryResults = resourceRequestResponse)
 
-            _ = println(queryResultsSeparated(resourceIri).resourceAssertions)
-
-            _ = println("++++++")
-
-            _ = queryResultsSeparated(resourceIri).valuePropertyAssertions.foreach {
-                case (valObj) =>
-
-                    println(valObj)
-
-                    println("------------")
-            }
-
-            _ = println("++++++")
-
-            _ = println(queryResultsSeparated(resourceIri).linkPropertyAssertions)
-
-            //resources: Vector[ReadResourceV2] = ConstructResponseUtilV2.createResponseForResources(queryResultsSeparated)
-
-        }  yield ReadResourcesSequenceV2(numberOfResources = 1, resources = Seq.empty[ReadResourceV2])
+        }  yield ReadResourcesSequenceV2(numberOfResources = resourceIris.size, resources = ConstructResponseUtilV2.createFullResourceResponse(resourceIri, queryResultsSeparated))
 
     }
 

@@ -20,7 +20,9 @@
 
 package org.knora.webapi.util
 
+import org.knora.webapi.messages.v1.responder.valuemessages.{KnoraCalendarV1, KnoraPrecisionV1}
 import org.knora.webapi.messages.v1.store.triplestoremessages.SparqlConstructResponse
+import org.knora.webapi.messages.v2.responder._
 import org.knora.webapi.{IRI, OntologyConstants}
 
 
@@ -130,115 +132,105 @@ object ConstructResponseUtilV2 {
 
         }
 
-
-
     }
-/*
-    def createValueV2FromSparqlResults(valueObjects: Map[IRI, Seq[(IRI, String)]]): Map[IRI, ValueObjectV2] = {
 
-        valueObjects.map {
-            case (valObjIri: IRI, valueAssertions: Seq[(IRI, String)]) =>
+    def createValueV2FromAssertions(valueObject: ValueObject): ValueObjectV2 = {
 
-                // make predicate the keys of a map
-                val predicateMapForValueObj: ErrorHandlingMap[IRI, String] = new ErrorHandlingMap(valueAssertions.toMap, { key: IRI => s"Predicate $key not found for $valObjIri (value object)" })
+        // make predicate the keys of a map
+        val predicateMapForValueObject: ErrorHandlingMap[IRI, String] = new ErrorHandlingMap(valueObject.assertions.toMap, { key: IRI => s"Predicate $key not found for ${valueObject.valueObjectIri} (value object)" })
 
-                val valueObjectClass = predicateMapForValueObj(OntologyConstants.Rdf.Type)
+        val valueObjectClass = predicateMapForValueObject(OntologyConstants.Rdf.Type)
 
-                val valueObjectValueHasString: String = predicateMapForValueObj(OntologyConstants.KnoraBase.ValueHasString)
+        val valueObjectValueHasString: String = predicateMapForValueObject(OntologyConstants.KnoraBase.ValueHasString)
 
-                val valueCommentOption: Option[String] = predicateMapForValueObj.get(OntologyConstants.KnoraBase.ValueHasComment)
+        val valueCommentOption: Option[String] = predicateMapForValueObject.get(OntologyConstants.KnoraBase.ValueHasComment)
 
-                val valueV2: ValueObjectV2 = valueObjectClass match {
-                    case OntologyConstants.KnoraBase.TextValue =>
-                        // TODO: handle standoff mapping and conversion to XML
-                        TextValueObjectV2(valueHasString = valueObjectValueHasString, comment = valueCommentOption)
+        valueObjectClass match {
+            case OntologyConstants.KnoraBase.TextValue =>
+                // TODO: handle standoff mapping and conversion to XML
+                TextValueObjectV2(valueHasString = valueObjectValueHasString, comment = valueCommentOption)
 
-                    case OntologyConstants.KnoraBase.DateValue =>
+            case OntologyConstants.KnoraBase.DateValue =>
 
-                        DateValueObjectV2(
-                            valueHasString = valueObjectValueHasString,
-                            valueHasStartJDN = predicateMapForValueObj(OntologyConstants.KnoraBase.ValueHasStartJDN).toInt,
-                            valueHasEndJDN = predicateMapForValueObj(OntologyConstants.KnoraBase.ValueHasEndJDN).toInt,
-                            valueHasStartPrecision = KnoraPrecisionV1.lookup(predicateMapForValueObj(OntologyConstants.KnoraBase.ValueHasStartPrecision)),
-                            valueHasEndPrecision = KnoraPrecisionV1.lookup(predicateMapForValueObj(OntologyConstants.KnoraBase.ValueHasEndPrecision)),
-                            valueHasCalendar = KnoraCalendarV1.lookup(predicateMapForValueObj(OntologyConstants.KnoraBase.ValueHasCalendar)),
-                            comment = valueCommentOption
-                        )
+                DateValueObjectV2(
+                    valueHasString = valueObjectValueHasString,
+                    valueHasStartJDN = predicateMapForValueObject(OntologyConstants.KnoraBase.ValueHasStartJDN).toInt,
+                    valueHasEndJDN = predicateMapForValueObject(OntologyConstants.KnoraBase.ValueHasEndJDN).toInt,
+                    valueHasStartPrecision = KnoraPrecisionV1.lookup(predicateMapForValueObject(OntologyConstants.KnoraBase.ValueHasStartPrecision)),
+                    valueHasEndPrecision = KnoraPrecisionV1.lookup(predicateMapForValueObject(OntologyConstants.KnoraBase.ValueHasEndPrecision)),
+                    valueHasCalendar = KnoraCalendarV1.lookup(predicateMapForValueObject(OntologyConstants.KnoraBase.ValueHasCalendar)),
+                    comment = valueCommentOption
+                )
 
-                    case OntologyConstants.KnoraBase.IntValue =>
-                        IntegerValueObjectV2(valueHasString = valueObjectValueHasString, valueHasInteger = predicateMapForValueObj(OntologyConstants.KnoraBase.ValueHasInteger).toInt, comment = valueCommentOption)
+            case OntologyConstants.KnoraBase.IntValue =>
+                IntegerValueObjectV2(valueHasString = valueObjectValueHasString, valueHasInteger = predicateMapForValueObject(OntologyConstants.KnoraBase.ValueHasInteger).toInt, comment = valueCommentOption)
 
-                    case OntologyConstants.KnoraBase.DecimalValue =>
-                        DecimalValueObjectV2(valueHasString = valueObjectValueHasString, valueHasDecimal = BigDecimal(predicateMapForValueObj(OntologyConstants.KnoraBase.ValueHasDecimal)), comment = valueCommentOption)
+            case OntologyConstants.KnoraBase.DecimalValue =>
+                DecimalValueObjectV2(valueHasString = valueObjectValueHasString, valueHasDecimal = BigDecimal(predicateMapForValueObject(OntologyConstants.KnoraBase.ValueHasDecimal)), comment = valueCommentOption)
 
-                    // TODO: implement all value object classes (file values)
-                    case other =>
-                        TextValueObjectV2(valueHasString = valueObjectValueHasString, comment = valueCommentOption)
-                }
-
-                (valObjIri, valueV2)
+            // TODO: implement all value object classes (file values)
+            case other =>
+                TextValueObjectV2(valueHasString = valueObjectValueHasString, comment = valueCommentOption)
         }
+
     }
 
-    def createResponseForResources(queryResultsSeparated: ResourcesAndValueObjects): Vector[ReadResourceV2] = {
+    def createFullResourceResponse(resourceIri: IRI, resourceResults: Map[IRI, ResourceWithValues]) = {
 
-        val valuesV2: Map[IRI, ValueObjectV2] = createValueV2FromSparqlResults(queryResultsSeparated.valueObjects)
+        val resourceAssertionsMap = resourceResults(resourceIri).resourceAssertions.toMap
 
-        queryResultsSeparated.resources.map {
-            case (resourceIri: IRI, assertions: Seq[(IRI, String)]) =>
+        val rdfLabel: String = resourceAssertionsMap(OntologyConstants.Rdfs.Label)
 
-                // make predicate the keys of a map
-                val predicateMapForResource: ErrorHandlingMap[IRI, String] = new ErrorHandlingMap(assertions.toMap, { key: IRI => s"Predicate $key not found for $resourceIri (resource)" })
+        val resourceClass = resourceAssertionsMap(OntologyConstants.Rdf.Type)
 
-                val rdfLabel: String = predicateMapForResource(OntologyConstants.Rdfs.Label)
+        val valueObjects: Map[IRI, Seq[ReadValueV2]] = resourceResults(resourceIri).valuePropertyAssertions.map {
+            case (property: IRI, valObjs: Seq[ValueObject]) =>
+                (property, valObjs.map {
+                    valObj =>
+                        ReadValueV2(valObj.valueObjectIri, createValueV2FromAssertions(valObj))
+                })
+        }
 
-                val resourceClass = predicateMapForResource(OntologyConstants.Rdf.Type)
+        Vector(ReadResourceV2(
+            resourceIri = resourceIri,
+            resourceClass = resourceClass,
+            label = rdfLabel,
+            valueObjects = valueObjects,
+            resourceInfos = Map.empty[IRI, LiteralV2]
+        ))
 
-                // get all the objects from the assertions
-                val objects: Seq[String] = assertions.map {
-                    case (pred, obj) =>
-                        obj
-                }
+    }
 
-                val objMap = new ErrorHandlingMap(assertions.map {
-                    case (pred, obj) =>
-                        (obj, pred)
-                }.toMap, { key: IRI => s"object $key not found for $resourceIri" })
+    def createFulltextSearchResponse(searchResults: Map[IRI, ResourceWithValues]): Vector[ReadResourceV2] = {
 
+        searchResults.map {
+            case (resourceIri, assertions) =>
 
-                // check if one or more of the objects points to a value object
-                val valueObjectIris: Set[IRI] = valuesV2.keySet.intersect(objects.toSet)
+                val resourceAssertionsMap = assertions.resourceAssertions.toMap
 
-                val propertiesAsTuples: Vector[(IRI, ReadValueV2)] = valueObjectIris.map {
-                    (valObjIri) =>
-                        // get the property that points from the resource to the value object
-                        val propertyIri = objMap(valObjIri)
+                val rdfLabel: String = resourceAssertionsMap(OntologyConstants.Rdfs.Label)
 
-                        (propertyIri, ReadValueV2(valObjIri, valuesV2(valObjIri)))
-                }.toVector
+                val resourceClass = resourceAssertionsMap(OntologyConstants.Rdf.Type)
 
-                val propMap: Map[IRI, Seq[ReadValueV2]] = propertiesAsTuples.foldLeft(Map.empty[IRI, Seq[ReadValueV2]]) {
-                    case (acc: Map[IRI, Seq[ReadValueV2]], (propIri: IRI, value: ReadValueV2)) =>
-
-                        if (acc.keySet.contains(propIri)) {
-                            val existingValsForProp: Seq[ReadValueV2] = acc(propIri)
-
-                            acc + (propIri -> (value +: existingValsForProp))
-
-                        } else {
-                            acc + (propIri -> Vector(value))
-                        }
+                val valueObjects: Map[IRI, Seq[ReadValueV2]] = assertions.valuePropertyAssertions.map {
+                    case (property: IRI, valObjs: Seq[ValueObject]) =>
+                        (property, valObjs.map {
+                            valObj =>
+                                ReadValueV2(valObj.valueObjectIri, createValueV2FromAssertions(valObj))
+                        })
                 }
 
                 ReadResourceV2(
                     resourceIri = resourceIri,
                     resourceClass = resourceClass,
                     label = rdfLabel,
-                    valueObjects = propMap,
+                    valueObjects = valueObjects,
                     resourceInfos = Map.empty[IRI, LiteralV2]
                 )
         }.toVector
 
-    }*/
+
+    }
+
 
 }

@@ -41,10 +41,12 @@ PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 
 CONSTRUCT {
 	?matchingSubject ?matchingProperty ?literal .
+	?resource knora-base:hasValue ?valueObject .
     ?valueObject knora-base:attachedToUser ?valueObjectCreator ;
             knora-base:hasPermissions ?valueObjectPermissions .
-    ?matchingSubject a ?valueObjectType .
+    ?valueObject a ?valueObjectType .
 
+    ?resource rdf:type knora-base:Resource .
     ?resource ?resourceProperty ?matchingSubject .
     ?resource rdfs:label ?label .
     ?resource a ?resourceType .

@@ -49,9 +49,10 @@ class SearchResponderV2 extends Responder {
             // separate resources and value objects
             queryResultsSeparated = ConstructResponseUtilV2.splitResourcesAndValueObjects(constructQueryResults = searchResponse)
 
+
             //resources: Vector[ReadResourceV2] = ConstructResponseUtilV2.createResponseForResources(queryResultsSeparated)
 
-        } yield ReadResourcesSequenceV2(numberOfResources = 1, resources = Seq.empty[ReadResourceV2])
+        } yield ReadResourcesSequenceV2(numberOfResources = queryResultsSeparated.size, resources = ConstructResponseUtilV2.createFulltextSearchResponse(queryResultsSeparated))
 
     }
 }
