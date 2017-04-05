@@ -21,14 +21,14 @@
 package org.knora.webapi.responders.v2
 
 import akka.pattern._
+import org.knora.webapi.IRI
 import org.knora.webapi.messages.v1.store.triplestoremessages.{SparqlConstructRequest, SparqlConstructResponse}
-import org.knora.webapi.messages.v2.responder.resourcemessages.ResourcesGetRequestV2
 import org.knora.webapi.messages.v2.responder._
+import org.knora.webapi.messages.v2.responder.resourcemessages.ResourcesGetRequestV2
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.util.ActorUtil.future2Message
 import org.knora.webapi.util.ConstructResponseUtilV2
-import org.knora.webapi.util.ConstructResponseUtilV2.ResourcesAndValueObjects
-import org.knora.webapi.{IRI, InconsistentTriplestoreDataException, OntologyConstants}
+import org.knora.webapi.util.ConstructResponseUtilV2.ResourceWithValues
 
 import scala.concurrent.Future
 
@@ -38,7 +38,7 @@ class ResourcesResponderV2 extends Responder {
         case resourcesGetRequest: ResourcesGetRequestV2 => future2Message(sender(), getResources(resourcesGetRequest.resourceIris), log)
     }
 
-    private def getResources(resourceIris: Seq[IRI]): Future[ReadResourcesSequenceV2_] = {
+    private def getResources(resourceIris: Seq[IRI]): Future[ReadResourcesSequenceV2] = {
 
         // TODO: get all the resources
         val resourceIri = resourceIris.head
@@ -52,11 +52,27 @@ class ResourcesResponderV2 extends Responder {
             resourceRequestResponse: SparqlConstructResponse <- (storeManager ? SparqlConstructRequest(resourceRequestSparql)).mapTo[SparqlConstructResponse]
 
             // separate resources and value objects
-            queryResultsSeparated: ResourcesAndValueObjects = ConstructResponseUtilV2.splitResourcesAndValueObjects(constructQueryResults = resourceRequestResponse)
+            queryResultsSeparated: Map[IRI, ResourceWithValues] = ConstructResponseUtilV2.splitResourcesAndValueObjects(constructQueryResults = resourceRequestResponse)
 
-            resources: Vector[ReadResourceV2] = ConstructResponseUtilV2.createResponseForResources(queryResultsSeparated)
+            _ = println(queryResultsSeparated(resourceIri).resourceAssertions)
 
-        }  yield ReadResourcesSequenceV2_(numberOfResources = queryResultsSeparated.resources.size, resources = resources)
+            _ = println("++++++")
+
+            _ = queryResultsSeparated(resourceIri).valuePropertyAssertions.foreach {
+                case (valObj) =>
+
+                    println(valObj)
+
+                    println("------------")
+            }
+
+            _ = println("++++++")
+
+            _ = println(queryResultsSeparated(resourceIri).linkPropertyAssertions)
+
+            //resources: Vector[ReadResourceV2] = ConstructResponseUtilV2.createResponseForResources(queryResultsSeparated)
+
+        }  yield ReadResourcesSequenceV2(numberOfResources = 1, resources = Seq.empty[ReadResourceV2])
 
     }
 

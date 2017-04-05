@@ -242,7 +242,7 @@ trait KnoraResponseV2 extends Jsonable
   * @param numberOfResources the amount of resources returned.
   * @param resources a sequence of resources.
   */
-case class ReadResourcesSequenceV2_(numberOfResources: Int, resources: Seq[ReadResourceV2]) extends KnoraResponseV2 {
+case class ReadResourcesSequenceV2(numberOfResources: Int, resources: Seq[ReadResourceV2]) extends KnoraResponseV2 {
     override def toJsValue = ResourcesV2JsonProtocol.readResourcesSequenceV2Format.write(this)
 }
 
@@ -254,11 +254,11 @@ case class ReadResourcesSequenceV2_(numberOfResources: Int, resources: Seq[ReadR
   */
 object ResourcesV2JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with NullOptions {
 
-    implicit object readResourcesSequenceV2Format extends JsonFormat[ReadResourcesSequenceV2_] {
+    implicit object readResourcesSequenceV2Format extends JsonFormat[ReadResourcesSequenceV2] {
 
         def read(jsonVal: JsValue) = ???
 
-        def write(resourcesSequenceV2: ReadResourcesSequenceV2_) = {
+        def write(resourcesSequenceV2: ReadResourcesSequenceV2) = {
 
             val resources: JsValue = resourcesSequenceV2.resources.map {
                 (resource: ReadResourceV2) =>

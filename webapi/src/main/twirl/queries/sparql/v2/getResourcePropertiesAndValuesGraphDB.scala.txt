@@ -35,6 +35,7 @@ PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 CONSTRUCT {
+    ?resource rdf:type knora-base:Resource .
     ?resource knora-base:attachedToProject ?resourceProject .
     ?resource rdfs:label ?label .
     ?resource a ?resourceType .
@@ -48,6 +49,7 @@ CONSTRUCT {
     ?standoffNode ?standoffProperty ?standoffValue .
 
     ?resource knora-base:hasLinkTo ?referredResource .
+    ?referredResource a knora-base:Resource .
     ?resource ?resourceLinkProperty ?referredResource .
 
     ?referredResource rdfs:label ?referredResourceLabel .

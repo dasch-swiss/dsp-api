@@ -20,70 +20,120 @@
 
 package org.knora.webapi.util
 
-import org.knora.webapi.messages.v1.responder.valuemessages.{KnoraCalendarV1, KnoraPrecisionV1}
 import org.knora.webapi.messages.v1.store.triplestoremessages.SparqlConstructResponse
-import org.knora.webapi.messages.v2.responder._
 import org.knora.webapi.{IRI, OntologyConstants}
+
+
 
 
 object ConstructResponseUtilV2 {
 
-    case class ResourcesAndValueObjects(resources: Map[IRI, Seq[(IRI, String)]], valueObjects: Map[IRI, Seq[(IRI, String)]], standoff: Map[IRI, Seq[(IRI, String)]])
+    case class ValueObject(valueObjectIri: IRI, assertions: Seq[(IRI, String)], standoff: Map[IRI, Seq[(IRI, String)]])
+
+    case class ResourceWithValues(resourceAssertions: Seq[(IRI, String)], valuePropertyAssertions: Map[IRI, Seq[ValueObject]], linkPropertyAssertions: Map[IRI, IRI])
 
     /**
       * A [[SparqlConstructResponse]] may contain both resources and value objects.
       * This method splits the results by their type and returns them as separate structures.
       *
       * @param constructQueryResults the results of a SPARQL construct query.
-      * @return a [[ResourcesAndValueObjects]].
+      * @return a Map[resource Iri -> [[ResourceWithValues]]].
       */
-    def splitResourcesAndValueObjects(constructQueryResults: SparqlConstructResponse): ResourcesAndValueObjects = {
+    def splitResourcesAndValueObjects(constructQueryResults: SparqlConstructResponse): Map[IRI, ResourceWithValues] = {
 
-        // 2 tuple: value objects (._1) and resources/standoff (._2)
-        val (valueObjects: Map[IRI, Seq[(IRI, String)]], resourcesAndStandoff: Map[IRI, Seq[(IRI, String)]]) = constructQueryResults.statements.partition {
+        // spilt statements about resources and other statements (value objects and standoff)
+        val (resourceStatements: Map[IRI, Seq[(IRI, String)]], otherStatements: Map[IRI, Seq[(IRI, String)]]) = constructQueryResults.statements.partition {
+
             case (subjectIri: IRI, assertions: Seq[(IRI, String)]) =>
 
-                val predicateMap: Map[IRI, String] = new ErrorHandlingMap(assertions.toMap, { key: IRI => s"Predicate $key not found for $subjectIri" })
-
-                val rdfType = predicateMap(OntologyConstants.Rdf.Type)
-
-                // returns true if it is a valueObject, false in case of a resource or a standoff node
-                OntologyConstants.KnoraBase.ValueClasses.contains(rdfType)
+                assertions.contains((OntologyConstants.Rdf.Type, OntologyConstants.KnoraBase.Resource))
 
         }
 
-        // get standoff node Iris from value objects
-        val standoffNodeIris: Vector[IRI] = valueObjects.flatMap {
-            case (subjectIri: IRI, assertions: Seq[(IRI, String)]) =>
+        resourceStatements.map {
+            case (resourceIri: IRI, assertions: Seq[(IRI, String)]) =>
 
-                // a value object may have more than one standoff node, so we cannot use a map here (making knora-base:valueHasStandoff the predicate)
-                assertions.filter {
-                    case (pred: IRI, obj: String) =>
-                        pred == OntologyConstants.KnoraBase.ValueHasStandoff
-                }.map {
-                    case (pred: IRI, obj: String) =>
-                        // we are only interested in the standoff node Iri
-                        obj
+                // remove inferred statements (non explicit)
+                val assertionsFiltered: Seq[(IRI, String)] = assertions.filterNot {
+                    case (pred, obj) =>
+                        (pred == OntologyConstants.Rdf.Type && obj == OntologyConstants.KnoraBase.Resource) || pred == OntologyConstants.KnoraBase.HasValue || pred == OntologyConstants.KnoraBase.HasLinkTo
                 }
 
-        }.toVector
+                val objMap: ErrorHandlingMap[String, IRI] = new ErrorHandlingMap(assertionsFiltered.map {
+                    case (pred, obj) =>
+                        (obj, pred)
+                }.toMap, { key: IRI => s"object $key not found for $resourceIri" })
 
-        // separate resources from standoff nodes
-        val (standoffNodes: Map[IRI, Seq[(IRI, String)]], resources: Map[IRI, Seq[(IRI, String)]]) = resourcesAndStandoff.partition {
-            case (subjectIri: IRI, assertions: Seq[(IRI, String)]) =>
+                // get a map from property Iris to value object Iris
+                val valuePropertyToObjectIris: Map[IRI, Seq[String]] = assertions.filter {
+                    case (pred, obj) =>
+                        pred == OntologyConstants.KnoraBase.HasValue
+                }.foldLeft(Map.empty[IRI, Seq[String]]) {
+                    case (acc, (hasValue: IRI, valObj: String)) =>
+                        val propIri = objMap(valObj)
 
-                standoffNodeIris.contains(subjectIri)
+                        if (acc.keySet.contains(propIri)) {
+                            val existingValsForProp = acc(propIri)
+
+                            acc + (propIri -> (valObj +: existingValsForProp))
+
+                        } else {
+                            acc + (propIri -> Vector(valObj))
+                        }
+
+                }
+
+                val valuePropertyToValueObject: Map[IRI, Seq[ValueObject]] = valuePropertyToObjectIris.map {
+                    case (property: IRI, valObjs: Seq[String]) =>
+
+                        (property, valObjs.map {
+                            case valObjIri =>
+
+                                // get all the standoff nodes possibly belonging to this value object
+                                val standoffNodeIris: Seq[String] = otherStatements(valObjIri).filter {
+                                    case (pred: IRI, obj: String) =>
+                                        pred == OntologyConstants.KnoraBase.ValueHasStandoff
+                                }.map {
+                                    case (pred: IRI, obj: String) =>
+                                        // we are only interested in the standoff node Iri
+                                        obj
+                                }
+
+                                val standoffAssertions: Map[IRI, Seq[(IRI, String)]] = otherStatements.filter {
+                                    case (subjIri: IRI, assertions: Seq[(IRI, String)]) =>
+                                        standoffNodeIris.contains(subjIri)
+
+                                }
+
+                                ValueObject(valueObjectIri = valObjIri, assertions = otherStatements(valObjIri), standoff = standoffAssertions)
+
+                        })
+
+                }
+
+
+                val linkPropToTargets: Map[IRI, String] = assertions.filter {
+                    case (pred, obj) =>
+                        pred == OntologyConstants.KnoraBase.HasLinkTo
+                }.flatMap {
+                    case (hasLinkTo, referredRes) =>
+                        assertionsFiltered.filter {
+                            case (pred, obj) =>
+                                obj == referredRes
+                        }
+                }.toMap
+
+
+
+                (resourceIri, ResourceWithValues(resourceAssertions = assertionsFiltered, valuePropertyAssertions = valuePropertyToValueObject, linkPropertyAssertions = linkPropToTargets))
+
 
         }
 
-        
 
-        // TODO: get referred resources (link targets)
-
-        ResourcesAndValueObjects(resources = resources, valueObjects = valueObjects, standoff = standoffNodes)
 
     }
-
+/*
     def createValueV2FromSparqlResults(valueObjects: Map[IRI, Seq[(IRI, String)]]): Map[IRI, ValueObjectV2] = {
 
         valueObjects.map {
@@ -156,7 +206,6 @@ object ConstructResponseUtilV2 {
                 }.toMap, { key: IRI => s"object $key not found for $resourceIri" })
 
 
-
                 // check if one or more of the objects points to a value object
                 val valueObjectIris: Set[IRI] = valuesV2.keySet.intersect(objects.toSet)
 
@@ -190,6 +239,6 @@ object ConstructResponseUtilV2 {
                 )
         }.toVector
 
-    }
+    }*/
 
 }
