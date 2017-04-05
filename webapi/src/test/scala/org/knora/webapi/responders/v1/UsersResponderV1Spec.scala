@@ -88,44 +88,44 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
         "asked about an user identified by 'iri' " should {
 
             "return a profile if the user (root user) is known" in {
-                actorUnderTest ! UserProfileByIRIGetV1(rootUserIri, UserProfileType.FULL)
-                expectMsg(Some(rootUser.ofType(UserProfileType.FULL)))
+                actorUnderTest ! UserProfileByIRIGetV1(rootUserIri, UserProfileTypeV1.FULL)
+                expectMsg(Some(rootUser.ofType(UserProfileTypeV1.FULL)))
             }
 
             "return a profile if the user (incunabula user) is known" in {
-                actorUnderTest ! UserProfileByIRIGetV1(incunabulaUserIri, UserProfileType.FULL)
-                expectMsg(Some(incunabulaUser.ofType(UserProfileType.FULL)))
+                actorUnderTest ! UserProfileByIRIGetV1(incunabulaUserIri, UserProfileTypeV1.FULL)
+                expectMsg(Some(incunabulaUser.ofType(UserProfileTypeV1.FULL)))
             }
 
             "return 'NotFoundException' when the user is unknown " in {
-                actorUnderTest ! UserProfileByIRIGetRequestV1("http://data.knora.org/users/notexisting", UserProfileType.RESTRICTED, rootUser)
+                actorUnderTest ! UserProfileByIRIGetRequestV1("http://data.knora.org/users/notexisting", UserProfileTypeV1.RESTRICTED, rootUser)
                 expectMsg(Failure(NotFoundException(s"User 'http://data.knora.org/users/notexisting' not found")))
             }
 
             "return 'None' when the user is unknown " in {
-                actorUnderTest ! UserProfileByIRIGetV1("http://data.knora.org/users/notexisting", UserProfileType.RESTRICTED)
+                actorUnderTest ! UserProfileByIRIGetV1("http://data.knora.org/users/notexisting", UserProfileTypeV1.RESTRICTED)
                 expectMsg(None)
             }
         }
         "asked about an user identified by 'email'" should {
 
             "return a profile if the user (root user) is known" in {
-                actorUnderTest ! UserProfileByEmailGetV1(rootUserEmail, UserProfileType.RESTRICTED)
-                expectMsg(Some(rootUser.ofType(UserProfileType.RESTRICTED)))
+                actorUnderTest ! UserProfileByEmailGetV1(rootUserEmail, UserProfileTypeV1.RESTRICTED)
+                expectMsg(Some(rootUser.ofType(UserProfileTypeV1.RESTRICTED)))
             }
 
             "return a profile if the user (incunabula user) is known" in {
-                actorUnderTest ! UserProfileByEmailGetV1(incunabulaUserEmail, UserProfileType.RESTRICTED)
-                expectMsg(Some(incunabulaUser.ofType(UserProfileType.RESTRICTED)))
+                actorUnderTest ! UserProfileByEmailGetV1(incunabulaUserEmail, UserProfileTypeV1.RESTRICTED)
+                expectMsg(Some(incunabulaUser.ofType(UserProfileTypeV1.RESTRICTED)))
             }
 
             "return 'NotFoundException' when the user is unknown" in {
-                actorUnderTest ! UserProfileByEmailGetRequestV1("userwrong@example.com", UserProfileType.RESTRICTED, rootUser)
+                actorUnderTest ! UserProfileByEmailGetRequestV1("userwrong@example.com", UserProfileTypeV1.RESTRICTED, rootUser)
                 expectMsg(Failure(NotFoundException(s"User 'userwrong@example.com' not found")))
             }
 
             "return 'None' when the user is unknown" in {
-                actorUnderTest ! UserProfileByEmailGetV1("userwrong@example.com", UserProfileType.RESTRICTED)
+                actorUnderTest ! UserProfileByEmailGetV1("userwrong@example.com", UserProfileTypeV1.RESTRICTED)
                 expectMsg(None)
             }
         }

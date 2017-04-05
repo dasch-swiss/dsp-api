@@ -52,7 +52,7 @@ object UsersRouteV1 extends Authenticator {
                 requestContext =>
                     val userProfile = getUserProfileV1(requestContext)
                     val userIri = InputValidation.toIri(value, () => throw BadRequestException(s"Invalid user IRI $value"))
-                    val requestMessage = UserProfileByIRIGetRequestV1(userIri, UserProfileType.RESTRICTED, userProfile)
+                    val requestMessage = UserProfileByIRIGetRequestV1(userIri, UserProfileTypeV1.RESTRICTED, userProfile)
                     RouteUtilV1.runJsonRoute(
                         requestMessage,
                         requestContext,
@@ -66,7 +66,7 @@ object UsersRouteV1 extends Authenticator {
             get {
                 requestContext =>
                     val userProfile = getUserProfileV1(requestContext)
-                    val requestMessage = UserProfileByEmailGetRequestV1(value, UserProfileType.RESTRICTED, userProfile)
+                    val requestMessage = UserProfileByEmailGetRequestV1(value, UserProfileTypeV1.RESTRICTED, userProfile)
                     RouteUtilV1.runJsonRoute(
                         requestMessage,
                         requestContext,

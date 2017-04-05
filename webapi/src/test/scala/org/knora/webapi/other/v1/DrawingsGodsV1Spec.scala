@@ -24,7 +24,7 @@ import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRe
 import org.knora.webapi.messages.v1.responder.permissionmessages.{DefaultObjectAccessPermissionsStringForPropertyGetV1, DefaultObjectAccessPermissionsStringForResourceClassGetV1, DefaultObjectAccessPermissionsStringResponseV1}
 import org.knora.webapi.messages.v1.responder.resourcemessages.{ResourceCreateRequestV1, ResourceCreateResponseV1}
 import org.knora.webapi.messages.v1.responder.sipimessages.SipiResponderConversionFileRequestV1
-import org.knora.webapi.messages.v1.responder.usermessages.{UserProfileByIRIGetV1, UserProfileType, UserProfileV1}
+import org.knora.webapi.messages.v1.responder.usermessages.{UserProfileByIRIGetV1, UserProfileTypeV1, UserProfileV1}
 import org.knora.webapi.messages.v1.responder.valuemessages.{CreateValueV1WithComment, LinkUpdateV1, TextValueSimpleV1}
 import org.knora.webapi.messages.v1.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent, ResetTriplestoreContentACK, TriplestoreJsonProtocol}
 import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_NAME
@@ -86,11 +86,11 @@ class DrawingsGodsV1Spec extends CoreSpec(DrawingsGodsV1Spec.config) with Triple
         val secondValueIri = new MutableTestIri
 
         "retrieve the drawings gods user's profile" in {
-            responderManager ! UserProfileByIRIGetV1(ddd1UserIri, UserProfileType.FULL)
+            responderManager ! UserProfileByIRIGetV1(ddd1UserIri, UserProfileTypeV1.FULL)
             val response1 = expectMsgType[Option[UserProfileV1]](timeout)
             ddd1.set(response1.get)
 
-            responderManager ! UserProfileByIRIGetV1(ddd2UserIri, UserProfileType.FULL)
+            responderManager ! UserProfileByIRIGetV1(ddd2UserIri, UserProfileTypeV1.FULL)
             val response2 = expectMsgType[Option[UserProfileV1]](timeout)
             ddd2.set(response2.get)
         }

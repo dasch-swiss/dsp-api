@@ -480,7 +480,7 @@ class ProjectsResponderV1 extends ResponderV1 {
 
         def getUserData(userIri: IRI): Future[UserDataV1] = {
             for {
-                userProfile <- (responderManager ? UserProfileByIRIGetV1(userIri, UserProfileType.SHORT)).mapTo[Option[UserProfileV1]]
+                userProfile <- (responderManager ? UserProfileByIRIGetV1(userIri, UserProfileTypeV1.SHORT)).mapTo[Option[UserProfileV1]]
 
                 result = userProfile match {
                     case Some(up) => up.userData
@@ -497,7 +497,7 @@ class ProjectsResponderV1 extends ResponderV1 {
         for {
             userDatas <- userDatasFuture
             result: Seq[UserDataV1] <- Future.sequence(userDatas)
-        } yield ProjectMembersGetResponseV1(result, userProfile.ofType(UserProfileType.SHORT).userData)
+        } yield ProjectMembersGetResponseV1(result, userProfile.ofType(UserProfileTypeV1.SHORT).userData)
 
     }
 }
