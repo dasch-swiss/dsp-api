@@ -168,17 +168,18 @@ case class DecimalValueObjectV2(valueHasString: String, valueHasDecimal: BigDeci
   * @param valueHasString the string representation of the referred resource.
   * @param subject the source of the link.
   * @param predicate the link's predicate.
-  * @param reference the link's target.
+  * @param referredResourceIri the link's target.
   * @param comment a comment on the link.
   * @param referredResource information about the referred resource, if given.
   */
-case class LinkValueObjectV2(valueHasString: String, subject: IRI, predicate: IRI, reference: IRI, comment: Option[String], referredResource: Option[ReferredResourceV2] = None) extends ValueObjectV2 {
+case class LinkValueObjectV2(valueHasString: String, subject: IRI, predicate: IRI, referredResourceIri: IRI, comment: Option[String], referredResource: Option[ReferredResourceV2] = None) extends ValueObjectV2 {
 
     def valueTypeIri = OntologyConstants.KnoraBase.LinkValue
 
     def toJsValueMap = {
 
-        val referredResourceInfoOption: Map[IRI, JsValue] = if (referredResource.nonEmpty) {
+        // if given, include information about the referred resource
+        val referredResourceInfoOption: Map[IRI, JsValue] = if (referredResourceIri.nonEmpty) {
             Map("referredResource" -> JsObject(Map("ReferredResourceType" -> JsString(referredResource.get.resourceClass),
                 "ReferredResourceLabel" -> JsString(referredResource.get.label))))
         } else {
@@ -188,7 +189,7 @@ case class LinkValueObjectV2(valueHasString: String, subject: IRI, predicate: IR
         Map(OntologyConstants.KnoraBase.ValueHasString -> JsString(valueHasString),
             OntologyConstants.Rdf.Subject -> JsString(subject),
             OntologyConstants.Rdf.Predicate -> JsString(predicate),
-            OntologyConstants.KnoraBase.HasLinkTo -> JsString(reference)
+            OntologyConstants.KnoraBase.HasLinkTo -> JsString(referredResourceIri)
         ) ++ referredResourceInfoOption
     }
 

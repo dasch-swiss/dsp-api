@@ -40,7 +40,7 @@ class ResourcesResponderV2 extends Responder {
 
     private def getResources(resourceIris: Seq[IRI]): Future[ReadResourcesSequenceV2] = {
 
-        // TODO: get all the resources
+        // TODO: get all the resources: possibly more than one resource is requested
         val resourceIri = resourceIris.head
 
         for {
@@ -54,7 +54,7 @@ class ResourcesResponderV2 extends Responder {
             // separate resources and value objects
             queryResultsSeparated: Map[IRI, ResourceWithValues] = ConstructResponseUtilV2.splitResourcesAndValueObjects(constructQueryResults = resourceRequestResponse)
 
-        }  yield ReadResourcesSequenceV2(numberOfResources = resourceIris.size, resources = ConstructResponseUtilV2.createFullResourceResponse(resourceIri, queryResultsSeparated))
+        }  yield ReadResourcesSequenceV2(numberOfResources = resourceIris.size, resources = Vector(ConstructResponseUtilV2.createFullResourceResponse(resourceIri, queryResultsSeparated)))
 
     }
 

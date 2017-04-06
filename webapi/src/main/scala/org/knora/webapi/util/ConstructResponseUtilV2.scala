@@ -174,16 +174,26 @@ object ConstructResponseUtilV2 {
 
     }
 
-    def createValueV2FromAssertions(valueObject: ValueObject, queryResult: Option[Map[IRI, ResourceWithValues]] = None): ValueObjectV2 = {
+    /**
+      * Given a [[ValueObject]], create a [[ValueObjectV2]], considering the specific type of the given [[ValueObject]].
+      *
+      * @param valueObject the given [[ValueObject]].
+      * @param queryResult complete results of the SPARQL Construct query, needed in case an Iri of a referred resource has to be resolved.
+      * @return a [[ValueObjectV2]] representing a value.
+      */
+    def createValueV2FromValueObject(valueObject: ValueObject, queryResult: Option[Map[IRI, ResourceWithValues]] = None): ValueObjectV2 = {
 
         // make predicate the keys of a map
-        val predicateMapForValueObject: ErrorHandlingMap[IRI, String] = new ErrorHandlingMap(valueObject.assertions.toMap, { key: IRI => s"Predicate $key not found for ${valueObject.valueObjectIri} (value object)" })
+        val predicateMapForValueAssertions: ErrorHandlingMap[IRI, String] = new ErrorHandlingMap(valueObject.assertions.toMap, { key: IRI => s"Predicate $key not found for ${valueObject.valueObjectIri} (value object)" })
 
-        val valueObjectClass = predicateMapForValueObject(OntologyConstants.Rdf.Type)
+        // get the type of the value
+        val valueObjectClass = predicateMapForValueAssertions(OntologyConstants.Rdf.Type)
 
-        val valueObjectValueHasString: String = predicateMapForValueObject(OntologyConstants.KnoraBase.ValueHasString)
+        // every knora-base:Value (any of its subclasses) has a string representation
+        val valueObjectValueHasString: String = predicateMapForValueAssertions(OntologyConstants.KnoraBase.ValueHasString)
 
-        val valueCommentOption: Option[String] = predicateMapForValueObject.get(OntologyConstants.KnoraBase.ValueHasComment)
+        // every knora-base:value (any of its subclasses) may have a comment
+        val valueCommentOption: Option[String] = predicateMapForValueAssertions.get(OntologyConstants.KnoraBase.ValueHasComment)
 
         valueObjectClass match {
             case OntologyConstants.KnoraBase.TextValue =>
@@ -199,26 +209,28 @@ object ConstructResponseUtilV2 {
 
                 DateValueObjectV2(
                     valueHasString = valueObjectValueHasString,
-                    valueHasStartJDN = predicateMapForValueObject(OntologyConstants.KnoraBase.ValueHasStartJDN).toInt,
-                    valueHasEndJDN = predicateMapForValueObject(OntologyConstants.KnoraBase.ValueHasEndJDN).toInt,
-                    valueHasStartPrecision = KnoraPrecisionV1.lookup(predicateMapForValueObject(OntologyConstants.KnoraBase.ValueHasStartPrecision)),
-                    valueHasEndPrecision = KnoraPrecisionV1.lookup(predicateMapForValueObject(OntologyConstants.KnoraBase.ValueHasEndPrecision)),
-                    valueHasCalendar = KnoraCalendarV1.lookup(predicateMapForValueObject(OntologyConstants.KnoraBase.ValueHasCalendar)),
+                    valueHasStartJDN = predicateMapForValueAssertions(OntologyConstants.KnoraBase.ValueHasStartJDN).toInt,
+                    valueHasEndJDN = predicateMapForValueAssertions(OntologyConstants.KnoraBase.ValueHasEndJDN).toInt,
+                    valueHasStartPrecision = KnoraPrecisionV1.lookup(predicateMapForValueAssertions(OntologyConstants.KnoraBase.ValueHasStartPrecision)),
+                    valueHasEndPrecision = KnoraPrecisionV1.lookup(predicateMapForValueAssertions(OntologyConstants.KnoraBase.ValueHasEndPrecision)),
+                    valueHasCalendar = KnoraCalendarV1.lookup(predicateMapForValueAssertions(OntologyConstants.KnoraBase.ValueHasCalendar)),
                     comment = valueCommentOption
                 )
 
             case OntologyConstants.KnoraBase.IntValue =>
-                IntegerValueObjectV2(valueHasString = valueObjectValueHasString, valueHasInteger = predicateMapForValueObject(OntologyConstants.KnoraBase.ValueHasInteger).toInt, comment = valueCommentOption)
+                IntegerValueObjectV2(valueHasString = valueObjectValueHasString, valueHasInteger = predicateMapForValueAssertions(OntologyConstants.KnoraBase.ValueHasInteger).toInt, comment = valueCommentOption)
 
             case OntologyConstants.KnoraBase.DecimalValue =>
-                DecimalValueObjectV2(valueHasString = valueObjectValueHasString, valueHasDecimal = BigDecimal(predicateMapForValueObject(OntologyConstants.KnoraBase.ValueHasDecimal)), comment = valueCommentOption)
+                DecimalValueObjectV2(valueHasString = valueObjectValueHasString, valueHasDecimal = BigDecimal(predicateMapForValueAssertions(OntologyConstants.KnoraBase.ValueHasDecimal)), comment = valueCommentOption)
 
             case OntologyConstants.KnoraBase.LinkValue =>
-                val referredResourceIri = predicateMapForValueObject(OntologyConstants.Rdf.Object)
+                val referredResourceIri = predicateMapForValueAssertions(OntologyConstants.Rdf.Object)
 
-                // check if the referred resource can be represented
+                // check if the referred resource's Iri can be resolved:
+                // check if `queryResult` is given (it's optional) and if it contains the referred resource's Iri as a key
                 val referredResourceOption: Option[ReferredResourceV2] = if (queryResult.nonEmpty && queryResult.get.get(referredResourceIri).nonEmpty) {
 
+                    // access the assertions about the referred resource
                     val referredResourceInfoMap: ErrorHandlingMap[IRI, String] = new ErrorHandlingMap(queryResult.get(referredResourceIri).resourceAssertions.toMap, { key: IRI => s"Predicate $key not found for ${referredResourceIri} (referred resource)" })
 
                     Some(ReferredResourceV2(label = referredResourceInfoMap(OntologyConstants.Rdfs.Label), resourceClass = referredResourceInfoMap(OntologyConstants.Rdf.Type)))
@@ -229,50 +241,69 @@ object ConstructResponseUtilV2 {
 
                 LinkValueObjectV2(
                     valueHasString = valueObjectValueHasString,
-                    subject = predicateMapForValueObject(OntologyConstants.Rdf.Subject),
-                    predicate = predicateMapForValueObject(OntologyConstants.Rdf.Predicate),
-                    reference = predicateMapForValueObject(OntologyConstants.Rdf.Object),
+                    subject = predicateMapForValueAssertions(OntologyConstants.Rdf.Subject),
+                    predicate = predicateMapForValueAssertions(OntologyConstants.Rdf.Predicate),
+                    referredResourceIri = predicateMapForValueAssertions(OntologyConstants.Rdf.Object),
                     comment = valueCommentOption,
-                    referredResourceOption
+                    referredResourceOption // may be non in case the referred resource's Iri could not be resolved
                 )
 
-            // TODO: implement all value object classes (file values)
+            // TODO: implement all value object classes
             case other =>
                 TextValueObjectV2(valueHasString = valueObjectValueHasString, comment = valueCommentOption)
         }
 
     }
 
-    def createFullResourceResponse(resourceIri: IRI, resourceResults: Map[IRI, ResourceWithValues]) = {
+    /**
+      * Creates a response to a full resource request.
+      *
+      * @param resourceIri the Iri of the requested resource.
+      * @param resourceResults the results returned by the triplestore.
+      * @return a [[ReadResourceV2]].
+      */
+    def createFullResourceResponse(resourceIri: IRI, resourceResults: Map[IRI, ResourceWithValues]): ReadResourceV2 = {
 
+        // access the assertions about the requested resource
+        // a full resource query also returns the resources referred to by the requested resource
+        // however, the should not be included as resources, but as the target og a linking property
         val resourceAssertionsMap = resourceResults(resourceIri).resourceAssertions.toMap
 
         val rdfLabel: String = resourceAssertionsMap(OntologyConstants.Rdfs.Label)
 
         val resourceClass = resourceAssertionsMap(OntologyConstants.Rdf.Type)
 
+        // get the resource's values
         val valueObjects: Map[IRI, Seq[ReadValueV2]] = resourceResults(resourceIri).valuePropertyAssertions.map {
             case (property: IRI, valObjs: Seq[ValueObject]) =>
                 (property, valObjs.map {
                     valObj =>
-                        val readValue: ValueObjectV2 = createValueV2FromAssertions(valObj, Some(resourceResults))
+                        val readValue: ValueObjectV2 = createValueV2FromValueObject(valObj, Some(resourceResults))
 
                         ReadValueV2(valObj.valueObjectIri, readValue)
                 })
         }
 
-        Vector(ReadResourceV2(
+        ReadResourceV2(
             resourceIri = resourceIri,
             resourceClass = resourceClass,
             label = rdfLabel,
             valueObjects = valueObjects,
             resourceInfos = Map.empty[IRI, LiteralV2]
-        ))
+        )
 
     }
 
+    /**
+      * Creates a response to a fulltext search.
+      *
+      * @param searchResults the results returned by the triplestore.
+      * @return a collection of [[ReadResourceV2]], representing the search results.
+      */
     def createFulltextSearchResponse(searchResults: Map[IRI, ResourceWithValues]): Vector[ReadResourceV2] = {
 
+        // each entry represents a resource that matches the search criteria
+        // this is because linking properties are excluded from fulltext search
         searchResults.map {
             case (resourceIri, assertions) =>
 
@@ -282,11 +313,12 @@ object ConstructResponseUtilV2 {
 
                 val resourceClass = resourceAssertionsMap(OntologyConstants.Rdf.Type)
 
+                // get the resource's values
                 val valueObjects: Map[IRI, Seq[ReadValueV2]] = assertions.valuePropertyAssertions.map {
                     case (property: IRI, valObjs: Seq[ValueObject]) =>
                         (property, valObjs.map {
                             valObj =>
-                                val readValue = createValueV2FromAssertions(valObj)
+                                val readValue = createValueV2FromValueObject(valObj)
 
                                 ReadValueV2(valObj.valueObjectIri, readValue)
                         })
@@ -300,9 +332,5 @@ object ConstructResponseUtilV2 {
                     resourceInfos = Map.empty[IRI, LiteralV2]
                 )
         }.toVector
-
-
     }
-
-
 }
