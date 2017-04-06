@@ -21,7 +21,9 @@
 package org.knora.webapi.messages.v2.responder
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import org.knora.webapi.messages.v1.responder.valuemessages.{KnoraCalendarV1, KnoraPrecisionV1}
+import org.knora.webapi.messages.v1.responder.valuemessages.{JulianDayNumberValueV1, KnoraCalendarV1, KnoraPrecisionV1}
+import org.knora.webapi.util.{DateUtilV1, InputValidation}
+import org.knora.webapi.util.DateUtilV1.DateRange
 import org.knora.webapi.{IRI, Jsonable, OntologyConstants}
 import spray.json._
 
@@ -103,9 +105,50 @@ case class DateValueObjectV2(valueHasString: String,
 
     def valueTypeIri = OntologyConstants.KnoraBase.DateValue
 
-    def toJsValueMap = {
-        Map(OntologyConstants.KnoraBase.ValueHasString -> JsString(valueHasString),
-            "dateStart" -> JsString("datestart"))
+    /**
+      * Represents the JDN format in a string format representing the precision.
+      *
+      * @return a tuple (dateStartString, dateEndString)
+      */
+    def toDateStr: (String, String) = {
+
+        val dateStart: String = DateUtilV1.julianDayNumber2DateString(valueHasStartJDN, valueHasCalendar, valueHasStartPrecision)
+        val dateEnd: String = DateUtilV1.julianDayNumber2DateString(valueHasEndJDN, valueHasCalendar, valueHasEndPrecision)
+
+        (dateStart, dateEnd)
+    }
+
+    /**
+      *
+      * Generate JDN format from date strings (containing precision).
+      *
+      * @param dateStartStr the begin of the period.
+      * @param dateEndStr the end of the period.
+      * @param calendarStr the calendar being used.
+      * @return a tuple (dateStartJDN, dateEndJDN).
+      */
+    def fromDateStr(dateStartStr: String, dateEndStr: String, calendarStr: String): (JulianDayNumberValueV1, JulianDayNumberValueV1) = {
+
+        val calendar: KnoraCalendarV1.Value = KnoraCalendarV1.lookup(calendarStr)
+
+        val dateStart: JulianDayNumberValueV1 = DateUtilV1.createJDNValueV1FromDateString(calendar.toString + InputValidation.calendar_separator + dateStartStr)
+
+        val dateEnd: JulianDayNumberValueV1 = DateUtilV1.createJDNValueV1FromDateString(calendar.toString + InputValidation.calendar_separator + dateEndStr)
+
+
+        (dateStart, dateEnd)
+
+    }
+
+    def toJsValueMap: Map[IRI, JsString] = {
+        val dateStrings = toDateStr
+
+        Map(
+            OntologyConstants.KnoraBase.ValueHasString -> JsString(valueHasString),
+            OntologyConstants.KnoraBase.ValueHasCalendar -> JsString(valueHasCalendar.toString),
+            "valueHasStartDate" -> JsString(dateStrings._1),
+            "valueHasEndDate" -> JsString(dateStrings._2)
+        )
     }
 
 }
