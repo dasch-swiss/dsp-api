@@ -21,13 +21,18 @@
 package org.knora.webapi.messages.v2.responder
 
 /**
+  * A tagging trait for messages that can be sent to Knora API v2 responders.
+  */
+trait V2Request
+
+/**
   * A tagging trait for messages that can be sent to Knora API v2 responders and which originate from outside of the
   * server, i.e. generated inside routes.
   */
-trait KnoraExternalRequestV2
+trait KnoraExternalRequestV2 extends V2Request
 
 /**
   * A tagging trait for messages that can be sent to Knora API v2 responders and which originate from inside the
   * server, i.e. generated inside other actors.
   */
-trait KnoraInternalRequestV2
+trait KnoraInternalRequestV2 extends V2Request

@@ -25,7 +25,7 @@ import akka.event.LoggingAdapter
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import org.knora.webapi.SettingsImpl
-import org.knora.webapi.routing.Authenticator
+import org.knora.webapi.routing.{Authenticator, ExtractorHelper}
 
 /**
   * A route providing authentication support. It allows the creation of "sessions", which is used in the SALSAH app.
@@ -41,7 +41,7 @@ object AuthenticateRouteV1 extends Authenticator {
             get {
                 requestContext => {
                     requestContext.complete {
-                        doAuthenticateV1(requestContext)
+                        doAuthenticate(ExtractorHelper.extractCredentials(requestContext))
                     }
                 }
             }

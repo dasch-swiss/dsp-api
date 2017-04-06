@@ -27,7 +27,7 @@ import org.knora.webapi.messages.v1.responder.sipimessages.SipiResponderConversi
 import org.knora.webapi.messages.v1.responder.usermessages.{UserProfileByIRIGetV1, UserProfileTypeV1, UserProfileV1}
 import org.knora.webapi.messages.v1.responder.valuemessages.{CreateValueV1WithComment, LinkUpdateV1, TextValueSimpleV1}
 import org.knora.webapi.messages.v1.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent, ResetTriplestoreContentACK, TriplestoreJsonProtocol}
-import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_NAME
+import org.knora.webapi.responders.RESPONDER_MANAGER_V1_ACTOR_NAME
 import org.knora.webapi.responders.v1.ResponderManagerV1
 import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
 import org.knora.webapi.util.{MutableTestIri, MutableUserProfileV1}
@@ -52,7 +52,7 @@ class DrawingsGodsV1Spec extends CoreSpec(DrawingsGodsV1Spec.config) with Triple
     private val timeout = 5.seconds
     implicit val log = akka.event.Logging(system, this.getClass())
 
-    val responderManager = system.actorOf(Props(new ResponderManagerV1 with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
+    val responderManager = system.actorOf(Props(new ResponderManagerV1 with LiveActorMaker), name = RESPONDER_MANAGER_V1_ACTOR_NAME)
     val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
 
     private val rdfDataObjects: List[RdfDataObject] = List(

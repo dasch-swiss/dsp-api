@@ -25,7 +25,7 @@ import akka.testkit.ImplicitSender
 import akka.util.Timeout
 import com.typesafe.config.ConfigFactory
 import org.knora.webapi.messages.v1.responder.usermessages._
-import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_NAME
+import org.knora.webapi.responders.RESPONDER_MANAGER_V1_ACTOR_NAME
 import org.knora.webapi.util.ActorUtil
 import org.knora.webapi.{BadCredentialsException, CoreSpec, NotFoundException, SharedAdminTestData}
 import org.scalatest.PrivateMethodTester
@@ -60,7 +60,7 @@ class AuthenticatorSpec extends CoreSpec("AuthenticationTestSystem") with Implic
     val rootUserEmail = rootUserProfileV1.userData.email.get
     val rootUserPassword = "test"
 
-    val mockUsersActor = actor(RESPONDER_MANAGER_ACTOR_NAME)(new Act {
+    val mockUsersActor = actor(RESPONDER_MANAGER_V1_ACTOR_NAME)(new Act {
         become {
             case UserProfileByEmailGetV1(submittedEmail, userProfileType) => {
                 if (submittedEmail == "root@example.com") {
