@@ -107,7 +107,7 @@ object RouteUtilV2 {
       * @param executionContext an execution context for futures.
       * @return a [[Future]] containing a [[RouteResult]].
       */
-    def runJsonRouteWithFuture[RequestMessageT <: KnoraRequestV1](requestMessageF: Future[RequestMessageT],
+    def runJsonRouteWithFuture[RequestMessageT <: KnoraExternalRequestV2](requestMessageF: Future[RequestMessageT],
                                                                   requestContext: RequestContext,
                                                                   settings: SettingsImpl,
                                                                   responderManager: ActorSelection,

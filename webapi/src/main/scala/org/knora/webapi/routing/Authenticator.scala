@@ -99,12 +99,12 @@ trait Authenticator {
       * @return a [[HttpResponse]] containing either a failure message or a message with a cookie header containing
       *         the generated session id.
       */
-    def doLogin(requestContext: RequestContext)(implicit system: ActorSystem, executionContext: ExecutionContext): HttpResponse = {
+    def doLoginV1(requestContext: RequestContext)(implicit system: ActorSystem, executionContext: ExecutionContext): HttpResponse = {
 
         val credentials = extractCredentials(requestContext)
 
         // check if session was created
-        val (sId, userProfile) = authenticateCredentials(credentials, sessionEnabled = true) match {
+        val (sId, userProfile) = authenticateCredentialsV1(credentials, sessionEnabled = true) match {
             case SessionV1(Some(sId), userProfile) => (sId, userProfile)
             case _ => throw AuthenticationException("Session ID not created. Please report this as a possible bug.")
         }
@@ -135,9 +135,9 @@ trait Authenticator {
       * @param requestContext a [[RequestContext]] containing the http request
       * @return a [[HttpRequest]]
       */
-    def doSessionAuthentication(requestContext: RequestContext): HttpResponse = {
+    def doSessionAuthenticationV1(requestContext: RequestContext): HttpResponse = {
         val credentials = extractCredentials(requestContext)
-        getUserProfileV1FromSessionId(credentials) match {
+        getUserProfileV1FromSessionCache(credentials) match {
             case Some(userProfile) =>
                 HttpResponse(
                     status = StatusCodes.OK,
@@ -176,12 +176,12 @@ trait Authenticator {
       * @param system         the current [[ActorSystem]]
       * @return a [[RequestContext]]
       */
-    def doAuthenticate(requestContext: RequestContext)(implicit system: ActorSystem, executionContext: ExecutionContext): HttpResponse = {
+    def doAuthenticateV1(requestContext: RequestContext)(implicit system: ActorSystem, executionContext: ExecutionContext): HttpResponse = {
 
         val credentials = extractCredentials(requestContext)
 
-        val (sId, userProfileV1) = authenticateCredentials(credentials, sessionEnabled = false) match {
-            case SessionV1(None, userProfile) => (sId, userProfile)
+        val userProfileV1 = authenticateCredentialsV1(credentials, sessionEnabled = false) match {
+            case SessionV1(_, userProfileV1) => userProfileV1
             case _ => throw AuthenticationException()
         }
 
@@ -211,7 +211,7 @@ trait Authenticator {
       * @param system         the current [[ActorSystem]]
       * @return a [[HttpResponse]]
       */
-    def doLogout(requestContext: RequestContext)(implicit system: ActorSystem): HttpResponse = {
+    def doLogoutV1(requestContext: RequestContext)(implicit system: ActorSystem): HttpResponse = {
 
         val cookies: Seq[HttpCookiePair] = requestContext.request.cookies
         cookies.find(_.name == "KnoraAuthentication") match {
@@ -251,45 +251,37 @@ trait Authenticator {
 
         val settings = Settings(system)
 
-        val credentials: KnoraCredentials = if (settings.skipAuthentication) {
-            // return anonymous if skipAuthentication and if no credentials are supplied
-            KnoraCredentials()
+        val credentials = extractCredentials(requestContext)
+
+        val userProfileV1: UserProfileV1 = if (settings.skipAuthentication) {
+            // return anonymous if skipAuthentication
+            log.debug("Authentication skipping active, returning default UserProfileV1 with 'anonymousUser' inside 'permissionData' set to true!")
+            UserProfileV1()
+        } else if (credentials.isEmpty) {
+            log.debug("No credentials found, returning default UserProfileV1 with 'anonymousUser' inside 'permissionData' set to true!")
+            UserProfileV1()
         } else {
-            extractCredentials(requestContext)
-        }
+            // let us first try to get the user profile through the session id if available in the credentials
+            getUserProfileV1FromSessionCache(credentials) match {
+                case Some(userProfile: UserProfileV1) =>
+                    log.debug(s"Got this UserProfileV1 through the session id: '${userProfile.toString}'")
+                    /* we return the userProfileV1 without sensitive information */
+                    userProfile.ofType(UserProfileTypeV1.RESTRICTED)
+                case None => {
+                    log.debug("No session id found or not valid, so let's try with email / password")
+                    val session: SessionV1 = authenticateCredentialsV1(credentials, sessionEnabled = false)
+                    log.debug("Supplied credentials pass authentication")
 
-        // let us first try to get the user profile through the session id from the cookie
-        if (credentials.sessionId.nonEmpty) {
+                    val userProfileV1 = session.userProfileV1
+                    log.debug(s"I got a UserProfileV1: {}", userProfileV1.toString)
 
-        }
-        getUserProfileV1FromSessionId(credentials) match {
-            case Some(userProfile: UserProfileV1) =>
-                log.debug(s"Got this UserProfileV1 through the session id: '${userProfile.toString}'")
-                /* we return the userProfileV1 without sensitive information */
-                userProfile.ofType(UserProfileTypeV1.RESTRICTED)
-            case None => {
-                log.debug("No cookie or valid session id, so let's look for supplied username / password")
-                credentials match {
-                    case KnoraCredentials(Some(username), Some(password), _) =>
-                        log.debug(s"found some credentials '$username', '$password', next, lets try to authenticate them")
-
-                        authenticateCredentials(credentials, sessionEnabled = false)
-                        log.debug("Supplied credentials pass authentication, get the UserProfileV1")
-
-                        val userProfileV1 = getUserProfileV1ByEmail(e)
-                        log.debug(s"I got a UserProfileV1 '${userProfileV1.toString}', which means that the password is a match")
-                        /* we return the userProfileV1 without sensitive information */
-                        userProfileV1.ofType(UserProfileTypeV1.RESTRICTED)
-
-                    case None =>
-                        log.debug("No credentials found, returning default UserProfileV1 with 'anonymousUser' inside 'permissionData' set to true!")
-                        UserProfileV1(
-                            userData = UserDataV1(lang = settings.fallbackLanguage),
-                            permissionData = PermissionDataV1(anonymousUser = true)
-                        )
+                    /* we return the userProfileV1 without sensitive information */
+                    userProfileV1.ofType(UserProfileTypeV1.RESTRICTED)
                 }
             }
         }
+
+        userProfileV1
     }
 
     def getUserProfileV2(requestContext: RequestContext)(implicit system: ActorSystem, executionContext: ExecutionContext): UserProfileV2 = ???
@@ -325,7 +317,7 @@ object Authenticator {
       * @param system         the current [[ActorSystem]]
       * @return a [[Try[String]] which is the session id under which the profile is stored if authentication was successful.
       */
-    private def authenticateCredentials(credentials: KnoraCredentials, sessionEnabled: Boolean)(implicit system: ActorSystem, executionContext: ExecutionContext): SessionV1 = {
+    private def authenticateCredentialsV1(credentials: KnoraCredentials, sessionEnabled: Boolean)(implicit system: ActorSystem, executionContext: ExecutionContext): SessionV1 = {
 
         // check if email and password are provided
         if (credentials.email.isEmpty || credentials.password.isEmpty) {
@@ -366,7 +358,7 @@ object Authenticator {
       * @param knoraCredentials the user supplied credentials.
       * @return a [[ Option[UserProfileV1] ]]
       */
-    private def getUserProfileV1FromSessionId(knoraCredentials: KnoraCredentials): Option[UserProfileV1] = {
+    private def getUserProfileV1FromSessionCache(knoraCredentials: KnoraCredentials): Option[UserProfileV1] = {
         knoraCredentials match {
             case KnoraCredentials(_, _, Some(sessionId)) =>
                 val value: Option[UserProfileV1] = CacheUtil.get[UserProfileV1](AUTHENTICATION_CACHE_NAME, sessionId)

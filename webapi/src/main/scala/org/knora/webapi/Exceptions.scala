@@ -164,7 +164,7 @@ object InternalServerException {
   *
   * @param message a description of the error.
   */
-case class AuthenticationException(message: String = "Error during authentication. Please report this as a possible bug.") extends InternalServerException
+case class AuthenticationException(message: String = "Error during authentication. Please report this as a possible bug.") extends InternalServerException(message)
 
 /**
   * An exception indicating that during file upload there was an error.
