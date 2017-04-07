@@ -29,6 +29,7 @@ import org.knora.webapi
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.ckanmessages._
 import org.knora.webapi.messages.v1.responder.listmessages.{NodePathGetRequestV1, NodePathGetResponseV1}
+import org.knora.webapi.messages.v1.responder.permissionmessages.PermissionDataV1
 import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoByShortnameGetRequestV1, ProjectInfoResponseV1, ProjectInfoV1}
 import org.knora.webapi.messages.v1.responder.resourcemessages._
 import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
@@ -45,6 +46,15 @@ import scala.concurrent.{Await, Future}
   */
 class CkanResponderV1 extends ResponderV1 {
 
+
+    /**
+      * A user representing the Knora API server, used in those cases where a user is required.
+      */
+    private val systemUser = UserProfileV1(
+        userData = UserDataV1(lang = "en"),
+        isSystemUser = true,
+        permissionData = PermissionDataV1(anonymousUser = false)
+    )
 
     def receive = {
         case CkanRequestV1(projects, limit, info, userProfile) => future2Message(sender(), getCkanResponseV1(projects, limit, info, userProfile), log)
@@ -301,7 +311,7 @@ class CkanResponderV1 extends ResponderV1 {
         Future.sequence {
             for {
                 pName <- projectNames
-                projectInfoResponseFuture = (responderManager ? ProjectInfoByShortnameGetRequestV1(pName, Some(userProfile))).mapTo[ProjectInfoResponseV1]
+                projectInfoResponseFuture = (responderVersionRouter ? ProjectInfoByShortnameGetRequestV1(pName, Some(userProfile))).mapTo[ProjectInfoResponseV1]
                 result = projectInfoResponseFuture.map(_.project_info) map {
                     case pInfo => (pName, pInfo)
                 }
@@ -362,7 +372,7 @@ class CkanResponderV1 extends ResponderV1 {
       */
     private def getResource(iri: webapi.IRI, userProfileV1: UserProfileV1): Future[(String, Option[ResourceInfoV1], Option[PropsV1])] = {
 
-        val resourceFullResponseFuture = (responderManager ? ResourceFullGetRequestV1(iri, userProfileV1)).mapTo[ResourceFullResponseV1]
+        val resourceFullResponseFuture = (responderVersionRouter ? ResourceFullGetRequestV1(iri, userProfileV1)).mapTo[ResourceFullResponseV1]
 
         resourceFullResponseFuture map {
             case ResourceFullResponseV1(resInfo, _, props, _, _) => (iri, resInfo, props)
@@ -419,10 +429,10 @@ class CkanResponderV1 extends ResponderV1 {
                             propertyV1.values.map(literal => dateValue2String(literal.asInstanceOf[DateValueV1]))
 
                         case OntologyConstants.KnoraBase.ListValue =>
-                            propertyV1.values.map(literal => listValue2String(literal.asInstanceOf[HierarchicalListValueV1], responderManager))
+                            propertyV1.values.map(literal => listValue2String(literal.asInstanceOf[HierarchicalListValueV1], responderVersionRouter))
 
                         case OntologyConstants.KnoraBase.Resource => // TODO: this could actually be a subclass of knora-base:Resource.
-                            propertyV1.values.map(literal => resourceValue2String(literal.asInstanceOf[LinkV1], responderManager))
+                            propertyV1.values.map(literal => resourceValue2String(literal.asInstanceOf[LinkV1], responderVersionRouter))
 
                         case _ => Vector()
                     }
@@ -457,7 +467,7 @@ class CkanResponderV1 extends ResponderV1 {
     private def listValue2String(list: HierarchicalListValueV1, responderManager: ActorSelection): String = {
 
 
-        val resultFuture = responderManager ? NodePathGetRequestV1(list.hierarchicalListIri, UserProfileV1(UserDataV1("en")))
+        val resultFuture = responderManager ? NodePathGetRequestV1(list.hierarchicalListIri, systemUser)
         val nodePath = Await.result(resultFuture, Duration(3, SECONDS)).asInstanceOf[NodePathGetResponseV1]
 
         val labels = nodePath.nodelist map {

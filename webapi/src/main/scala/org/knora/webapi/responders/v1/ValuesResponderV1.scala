@@ -22,6 +22,7 @@ package org.knora.webapi.responders.v1
 
 import akka.actor.Status
 import akka.pattern._
+import org.apache.jena.sparql.function.library.leviathan.log
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.ontologymessages.{Cardinality, EntityInfoGetRequestV1, EntityInfoGetResponseV1}
 import org.knora.webapi.messages.v1.responder.permissionmessages.{DefaultObjectAccessPermissionsStringForPropertyGetV1, DefaultObjectAccessPermissionsStringResponseV1}
@@ -29,7 +30,7 @@ import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoByIRIG
 import org.knora.webapi.messages.v1.responder.resourcemessages._
 import org.knora.webapi.messages.v1.responder.sipimessages.{SipiConstants, SipiResponderConversionPathRequestV1, SipiResponderConversionRequestV1, SipiResponderConversionResponseV1}
 import org.knora.webapi.messages.v1.responder.standoffmessages.StandoffDataTypeClasses
-import org.knora.webapi.messages.v1.responder.usermessages.{UserProfileByIRIGetV1, UserProfileType, UserProfileV1}
+import org.knora.webapi.messages.v1.responder.usermessages.{UserProfileByIRIGetV1, UserProfileTypeV1, UserProfileV1}
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v1.store.triplestoremessages._
 import org.knora.webapi.responders.IriLocker
@@ -88,13 +89,17 @@ class ValuesResponderV1 extends ResponderV1 {
             response <- maybeValueQueryResult match {
                 case Some(valueQueryResult) =>
                     for {
-                        valueOwnerProfile <- (responderManager ? UserProfileByIRIGetV1(valueQueryResult.creatorIri, UserProfileType.RESTRICTED)).mapTo[UserProfileV1]
+                        maybeValueCreatorProfile <- (responderVersionRouter ? UserProfileByIRIGetV1(valueQueryResult.creatorIri, UserProfileTypeV1.RESTRICTED)).mapTo[Option[UserProfileV1]]
+                        valueCreatorProfile = maybeValueCreatorProfile match {
+                            case Some(up) => up
+                            case None => throw NotFoundException(s"User ${valueQueryResult.creatorIri} not found")
+                        }
                     } yield ValueGetResponseV1(
                         valuetype = valueQueryResult.value.valueTypeIri,
                         rights = valueQueryResult.permissionCode,
                         value = valueQueryResult.value,
-                        valuecreator = valueOwnerProfile.userData.email.get,
-                        valuecreatorname = valueOwnerProfile.userData.fullname.get,
+                        valuecreator = valueCreatorProfile.userData.email.get,
+                        valuecreatorname = valueCreatorProfile.userData.fullname.get,
                         valuecreationdate = valueQueryResult.creationDate,
                         comment = valueQueryResult.comment
                     )
@@ -122,7 +127,7 @@ class ValuesResponderV1 extends ResponderV1 {
         def makeTaskFuture(userIri: IRI): Future[CreateValueResponseV1] = for {
         // Check that the submitted value has the correct type for the property.
 
-            entityInfoResponse: EntityInfoGetResponseV1 <- (responderManager ? EntityInfoGetRequestV1(
+            entityInfoResponse: EntityInfoGetResponseV1 <- (responderVersionRouter ? EntityInfoGetRequestV1(
                 propertyIris = Set(createValueRequest.propertyIri),
                 userProfile = createValueRequest.userProfile
             )).mapTo[EntityInfoGetResponseV1]
@@ -144,13 +149,13 @@ class ValuesResponderV1 extends ResponderV1 {
             // Check that the user has permission to modify the resource. (We do this as late as possible because it's
             // slower than the other checks, and there's no point in doing it if the other checks fail.)
 
-            resourceFullResponse <- (responderManager ? ResourceFullGetRequestV1(
+            resourceFullResponse <- (responderVersionRouter ? ResourceFullGetRequestV1(
                 iri = createValueRequest.resourceIri,
                 userProfile = createValueRequest.userProfile,
                 getIncoming = false
             )).mapTo[ResourceFullResponseV1]
 
-            resourcePermissionCode = resourceFullResponse.resdata.flatMap(resdata => resdata.rights)
+            resourcePermissionCode: Option[Int] = resourceFullResponse.resdata.flatMap(resdata => resdata.rights)
 
             _ = if (!PermissionUtilV1.impliesV1(userHasPermissionCode = resourcePermissionCode, userNeedsPermission = OntologyConstants.KnoraBase.ModifyPermission)) {
                 throw ForbiddenException(s"User $userIri does not have permission to modify resource ${createValueRequest.resourceIri}")
@@ -181,11 +186,15 @@ class ValuesResponderV1 extends ResponderV1 {
             }
 
             // Get the IRI of project of the containing resource.
-            projectIri = resourceFullResponse.resinfo.getOrElse(throw InconsistentTriplestoreDataException(s"Did not find resource info for resource ${createValueRequest.resourceIri}")).project_id
+            projectIri: IRI = resourceFullResponse.resinfo.getOrElse(throw InconsistentTriplestoreDataException(s"Did not find resource info for resource ${createValueRequest.resourceIri}")).project_id
+
+            // Get the resource class of the containing resource
+            resourceClassIri: IRI = resourceFullResponse.resinfo.getOrElse(throw InconsistentTriplestoreDataException(s"Did not find resource info for resource ${createValueRequest.resourceIri}")).restype_id
 
             defaultObjectAccessPermissions <- {
-                responderManager ? DefaultObjectAccessPermissionsStringForPropertyGetV1(
+                responderVersionRouter ? DefaultObjectAccessPermissionsStringForPropertyGetV1(
                     projectIri = projectIri,
+                    resourceClassIri = resourceClassIri,
                     propertyIri = createValueRequest.propertyIri,
                     createValueRequest.userProfile.permissionData
                 )
@@ -194,7 +203,7 @@ class ValuesResponderV1 extends ResponderV1 {
 
             // Get project info
             projectInfo <- {
-                responderManager ? ProjectInfoByIRIGetV1(
+                responderVersionRouter ? ProjectInfoByIRIGetV1(
                     iri = projectIri,
                     userProfileV1 = Some(createValueRequest.userProfile)
                 )
@@ -387,8 +396,9 @@ class ValuesResponderV1 extends ResponderV1 {
                 sparqlGenerationResults: Map[IRI, SparqlGenerationResultForProperty] = groupedNumberedValuesWithValueHasOrder.map {
                     case (propertyIri: IRI, valuesToCreate: Seq[NumberedValueToCreate]) =>
                         val defaultObjectAccessPermissionsF = {
-                            responderManager ? DefaultObjectAccessPermissionsStringForPropertyGetV1(
+                            responderVersionRouter ? DefaultObjectAccessPermissionsStringForPropertyGetV1(
                                 projectIri = createMultipleValuesRequest.projectIri,
+                                resourceClassIri = createMultipleValuesRequest.resourceClassIri,
                                 propertyIri = propertyIri,
                                 createMultipleValuesRequest.userProfile.permissionData)
                         }.mapTo[DefaultObjectAccessPermissionsStringResponseV1]
@@ -627,7 +637,7 @@ class ValuesResponderV1 extends ResponderV1 {
                 // the message to be sent to Sipi responder
                 sipiConversionRequest: SipiResponderConversionRequestV1 = changeFileValueRequest.file
 
-                sipiResponse: SipiResponderConversionResponseV1 <- (responderManager ? sipiConversionRequest).mapTo[SipiResponderConversionResponseV1]
+                sipiResponse: SipiResponderConversionResponseV1 <- (responderVersionRouter ? sipiConversionRequest).mapTo[SipiResponderConversionResponseV1]
 
                 // check if the file type returned by Sipi corresponds to the already existing file value type (e.g., hasStillImageRepresentation)
                 _ = if (SipiConstants.fileType2FileValueProperty(sipiResponse.file_type) != fileValues.head.property) {
@@ -775,7 +785,7 @@ class ValuesResponderV1 extends ResponderV1 {
 
                 // Check that the submitted value has the correct type for the property.
 
-                entityInfoResponse <- (responderManager ? EntityInfoGetRequestV1(
+                entityInfoResponse <- (responderVersionRouter ? EntityInfoGetRequestV1(
                     propertyIris = Set(propertyIri),
                     userProfile = changeValueRequest.userProfile
                 )).mapTo[EntityInfoGetResponseV1]
@@ -806,7 +816,7 @@ class ValuesResponderV1 extends ResponderV1 {
 
                 // Get details of the resource.  (We do this as late as possible because it's slower than the other checks,
                 // and there's no point in doing it if the other checks fail.)
-                resourceFullResponse <- (responderManager ? ResourceFullGetRequestV1(
+                resourceFullResponse <- (responderVersionRouter ? ResourceFullGetRequestV1(
                     iri = findResourceWithValueResult.resourceIri,
                     userProfile = changeValueRequest.userProfile,
                     getIncoming = false
@@ -834,10 +844,14 @@ class ValuesResponderV1 extends ResponderV1 {
 
                 }
 
+                // Get the resource class of the containing resource
+                resourceClassIri: IRI = resourceFullResponse.resinfo.getOrElse(throw InconsistentTriplestoreDataException(s"Did not find resource info for resource ${findResourceWithValueResult.resourceIri}")).restype_id
+
                 _ = log.debug(s"changeValueV1 - DefaultObjectAccessPermissionsStringForPropertyGetV1 - projectIri ${findResourceWithValueResult.projectIri}, propertyIri: ${findResourceWithValueResult.propertyIri}, permissionData: ${changeValueRequest.userProfile.permissionData} ")
                 defaultObjectAccessPermissions <- {
-                    responderManager ? DefaultObjectAccessPermissionsStringForPropertyGetV1(
+                    responderVersionRouter ? DefaultObjectAccessPermissionsStringForPropertyGetV1(
                         projectIri = findResourceWithValueResult.projectIri,
+                        resourceClassIri = resourceClassIri,
                         propertyIri = findResourceWithValueResult.propertyIri,
                         permissionData = changeValueRequest.userProfile.permissionData)
                 }.mapTo[DefaultObjectAccessPermissionsStringResponseV1]
@@ -845,7 +859,7 @@ class ValuesResponderV1 extends ResponderV1 {
 
                 // Get project info
                 projectInfo <- {
-                    responderManager ? ProjectInfoByIRIGetV1(
+                    responderVersionRouter ? ProjectInfoByIRIGetV1(
                         iri = resourceFullResponse.resinfo.get.project_id,
                         userProfileV1 = Some(changeValueRequest.userProfile)
                     )
@@ -948,7 +962,7 @@ class ValuesResponderV1 extends ResponderV1 {
 
                 // Get project info
                 projectInfo <- {
-                    responderManager ? ProjectInfoByIRIGetV1(
+                    responderVersionRouter ? ProjectInfoByIRIGetV1(
                         findResourceWithValueResult.projectIri,
                         None
                     )
@@ -1047,7 +1061,7 @@ class ValuesResponderV1 extends ResponderV1 {
                     for {
                     // Get project info
                         projectInfo <- {
-                            responderManager ? ProjectInfoByIRIGetV1(
+                            responderVersionRouter ? ProjectInfoByIRIGetV1(
                                 findResourceWithValueResult.projectIri,
                                 None
                             )
@@ -1100,7 +1114,7 @@ class ValuesResponderV1 extends ResponderV1 {
 
                         // Get project info
                         projectInfo <- {
-                            responderManager ? ProjectInfoByIRIGetV1(
+                            responderVersionRouter ? ProjectInfoByIRIGetV1(
                                 findResourceWithValueResult.projectIri,
                                 None
                             )
@@ -1276,7 +1290,11 @@ class ValuesResponderV1 extends ResponderV1 {
             linkValueResponse <- maybeValueQueryResult match {
                 case Some(valueQueryResult) =>
                     for {
-                        valueCreatorProfile <- (responderManager ? UserProfileByIRIGetV1(valueQueryResult.creatorIri, UserProfileType.RESTRICTED)).mapTo[UserProfileV1]
+                        maybeValueCreatorProfile <- (responderVersionRouter ? UserProfileByIRIGetV1(valueQueryResult.creatorIri, UserProfileTypeV1.RESTRICTED)).mapTo[Option[UserProfileV1]]
+                        valueCreatorProfile = maybeValueCreatorProfile match {
+                            case Some(up) => up
+                            case None => throw NotFoundException(s"User ${valueQueryResult.creatorIri} not found")
+                        }
                     } yield ValueGetResponseV1(
                         valuetype = valueQueryResult.value.valueTypeIri,
                         rights = valueQueryResult.permissionCode,
@@ -1529,7 +1547,7 @@ class ValuesResponderV1 extends ResponderV1 {
             val valueProps = valueUtilV1.createValueProps(valueIri, rows)
 
             for {
-                value <- valueUtilV1.makeValueV1(valueProps, responderManager, userProfile)
+                value <- valueUtilV1.makeValueV1(valueProps, responderVersionRouter, userProfile)
 
                 // Get the value's class IRI.
                 valueClassIri = getValuePredicateObject(predicateIri = OntologyConstants.Rdf.Type, rows = rows).getOrElse(throw InconsistentTriplestoreDataException(s"Value $valueIri has no rdf:type"))
@@ -1611,7 +1629,7 @@ class ValuesResponderV1 extends ResponderV1 {
             val valueProps = valueUtilV1.createValueProps(linkValueIri, rows)
 
             for {
-                linkValueMaybe <- valueUtilV1.makeValueV1(valueProps, responderManager, userProfile)
+                linkValueMaybe <- valueUtilV1.makeValueV1(valueProps, responderVersionRouter, userProfile)
 
                 linkValueV1: LinkValueV1 = linkValueMaybe match {
                     case linkValue: LinkValueV1 => linkValue
@@ -2085,7 +2103,7 @@ class ValuesResponderV1 extends ResponderV1 {
 
             // Get project info
             projectInfo <- {
-                responderManager ? ProjectInfoByIRIGetV1(
+                responderVersionRouter ? ProjectInfoByIRIGetV1(
                     projectIri,
                     None
                 )
@@ -2221,7 +2239,7 @@ class ValuesResponderV1 extends ResponderV1 {
 
             // Get project info
             projectInfo <- {
-                responderManager ? ProjectInfoByIRIGetV1(
+                responderVersionRouter ? ProjectInfoByIRIGetV1(
                     projectIri,
                     None
                 )
@@ -2467,7 +2485,7 @@ class ValuesResponderV1 extends ResponderV1 {
             val targetIriCheckFutures: Set[Future[Unit]] = targetIris.map {
                 targetIri =>
                     for {
-                        checkTargetClassResponse <- (responderManager ? ResourceCheckClassRequestV1(
+                        checkTargetClassResponse <- (responderVersionRouter ? ResourceCheckClassRequestV1(
                             resourceIri = targetIri,
                             owlClass = OntologyConstants.KnoraBase.Resource,
                             userProfile = userProfile
@@ -2499,7 +2517,7 @@ class ValuesResponderV1 extends ResponderV1 {
                 case linkUpdate: LinkUpdateV1 =>
                     // We're creating a link. Ask the resources responder to check the OWL class of the target resource.
                     for {
-                        checkTargetClassResponse <- (responderManager ? ResourceCheckClassRequestV1(
+                        checkTargetClassResponse <- (responderVersionRouter ? ResourceCheckClassRequestV1(
                             resourceIri = linkUpdate.targetResourceIri,
                             owlClass = propertyObjectClassConstraint,
                             userProfile = userProfile
@@ -2516,7 +2534,7 @@ class ValuesResponderV1 extends ResponderV1 {
                         propertyIri = propertyIri,
                         propertyObjectClassConstraint = propertyObjectClassConstraint,
                         valueType = otherValue.valueTypeIri,
-                        responderManager = responderManager)
+                        responderManager = responderVersionRouter)
             }
         } yield result
     }

@@ -17,7 +17,7 @@
 package org.knora.webapi.messages.v1.responder.usermessages
 
 import org.knora.webapi._
-import org.knora.webapi.messages.v1.responder.permissionmessages.PermissionDataType
+import org.knora.webapi.messages.v1.responder.permissionmessages.{PermissionDataType, PermissionDataV1}
 import org.scalatest.{Matchers, WordSpecLike}
 import org.springframework.security.crypto.scrypt.SCryptPasswordEncoder
 
@@ -73,17 +73,19 @@ class UserMessagesV1Spec extends WordSpecLike with Matchers {
                 sessionId = sessionId
             )
 
-            assert(rootUserProfileV1.ofType(UserProfileType.RESTRICTED) === rootUserProfileV1Safe)
+            assert(rootUserProfileV1.ofType(UserProfileTypeV1.RESTRICTED) === rootUserProfileV1Safe)
         }
         "allow checking the password (1)" in {
             //hashedPassword =  encoder.encode(createRequest.password);
             val encoder = new SCryptPasswordEncoder
             val hp = encoder.encode("123456")
             val up = UserProfileV1(
-                UserDataV1(
+                userData = UserDataV1(
                     password = Some(hp),
                     lang = lang
-                ))
+                ),
+                permissionData = PermissionDataV1(anonymousUser = false)
+            )
 
             // test SCrypt
             assert(encoder.matches("123456", encoder.encode("123456")))

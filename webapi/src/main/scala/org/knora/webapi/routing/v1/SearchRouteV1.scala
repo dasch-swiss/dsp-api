@@ -185,7 +185,7 @@ object SearchRouteV1 extends Authenticator {
         implicit val system = _system
         implicit val executionContext = system.dispatcher
         implicit val timeout = settings.defaultTimeout
-        val responderManager = system.actorSelection("/user/responderManager")
+        val responderManager = system.actorSelection("/user/responderVersionRouter")
 
         path("v1" / "search" /) {
             // in the original API, there is a slash after "search": "http://www.salsah.org/api/search/?searchtype=extended"

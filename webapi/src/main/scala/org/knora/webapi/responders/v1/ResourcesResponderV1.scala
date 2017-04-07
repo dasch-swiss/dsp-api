@@ -353,7 +353,7 @@ class ResourcesResponderV1 extends ResponderV1 {
             propertyIris = edges.map(_.linkProp)
 
             entityInfoRequest = EntityInfoGetRequestV1(resourceClassIris = resourceClassIris, propertyIris = propertyIris, userProfile = graphDataGetRequest.userProfile)
-            entityInfoResponse: EntityInfoGetResponseV1 <- (responderManager ? entityInfoRequest).mapTo[EntityInfoGetResponseV1]
+            entityInfoResponse: EntityInfoGetResponseV1 <- (responderVersionRouter ? entityInfoRequest).mapTo[EntityInfoGetResponseV1]
 
             // Convert each node to a GraphNodeV1 for the API response message.
             resultNodes: Vector[GraphNodeV1] = nodes.map {
@@ -516,7 +516,7 @@ class ResourcesResponderV1 extends ResponderV1 {
                                                 // Convert the resulting ValueProps into a LinkValueV1 so we can check its rdf:predicate.
 
                                                 for {
-                                                    apiValueV1 <- valueUtilV1.makeValueV1(linkValueProps, responderManager, userProfile)
+                                                    apiValueV1 <- valueUtilV1.makeValueV1(linkValueProps, responderVersionRouter, userProfile)
 
                                                     linkValueV1: LinkValueV1 = apiValueV1 match {
                                                         case linkValueV1: LinkValueV1 => linkValueV1
@@ -583,7 +583,7 @@ class ResourcesResponderV1 extends ResponderV1 {
                 incomingTypes ++ linkedResourceTypes + resInfoWithoutQueryingOntology.restype_id // use Set to eliminate redundancy
 
             // Ask the ontology responder for information about those entities.
-            entityInfoResponse: EntityInfoGetResponseV1 <- (responderManager ? EntityInfoGetRequestV1(
+            entityInfoResponse: EntityInfoGetResponseV1 <- (responderVersionRouter ? EntityInfoGetRequestV1(
                 resourceClassIris = incomingTypes ++ linkedResourceTypes + resInfoWithoutQueryingOntology.restype_id,
                 propertyIris = groupedPropsByType.groupedOrdinaryValueProperties.groupedProperties.keySet ++ groupedPropsByType.groupedLinkProperties.groupedProperties.keySet,
                 userProfile = userProfile)
@@ -655,7 +655,7 @@ class ResourcesResponderV1 extends ResponderV1 {
             emptyPropsIris = propsAndCardinalities.keySet -- (groupedPropsByType.groupedOrdinaryValueProperties.groupedProperties.keySet ++ groupedPropsByType.groupedLinkProperties.groupedProperties.keySet)
 
             // Get information from the ontology about the properties that have no data for this resource.
-            emptyPropsInfoResponse: EntityInfoGetResponseV1 <- (responderManager ? EntityInfoGetRequestV1(propertyIris = emptyPropsIris, userProfile = userProfile)).mapTo[EntityInfoGetResponseV1]
+            emptyPropsInfoResponse: EntityInfoGetResponseV1 <- (responderVersionRouter ? EntityInfoGetRequestV1(propertyIris = emptyPropsIris, userProfile = userProfile)).mapTo[EntityInfoGetResponseV1]
 
             // Create a PropertyV1 for each of those properties.
             emptyProps: Set[PropertyV1] = emptyPropsIris.map {
@@ -987,7 +987,7 @@ class ResourcesResponderV1 extends ResponderV1 {
                                 }
 
                                 // get the icon for this region's resource class
-                                entityInfoResponse: EntityInfoGetResponseV1 <- (responderManager ? EntityInfoGetRequestV1(
+                                entityInfoResponse: EntityInfoGetResponseV1 <- (responderVersionRouter ? EntityInfoGetRequestV1(
                                     resourceClassIris = Set(resClass),
                                     userProfile = userProfile
                                 )).mapTo[EntityInfoGetResponseV1]
@@ -1209,7 +1209,7 @@ class ResourcesResponderV1 extends ResponderV1 {
                         propertyIri = propertyIri,
                         propertyObjectClassConstraint = propertyObjectClassConstraint,
                         valueType = otherValue.valueTypeIri,
-                        responderManager = responderManager)
+                        responderManager = responderVersionRouter)
             }
         } yield result
     }
@@ -1261,7 +1261,7 @@ class ResourcesResponderV1 extends ResponderV1 {
 
             // Get information about the project in which the resources will be created.
             projectInfoResponse <- {
-                responderManager ? ProjectInfoByIRIGetRequestV1(
+                responderVersionRouter ? ProjectInfoByIRIGetRequestV1(
                     projectIri,
                     Some(userProfile)
                 )
@@ -1284,7 +1284,7 @@ class ResourcesResponderV1 extends ResponderV1 {
                     // Check user's PermissionProfile (part of UserProfileV1) to see if the user has the permission to
                     // create a new resource in the given project.
                         defaultObjectAccessPermissions <- {
-                            responderManager ? DefaultObjectAccessPermissionsStringForResourceClassGetV1(projectIri = projectIri, resourceClassIri = resRequest.resourceTypeIri, userProfile.permissionData)
+                            responderVersionRouter ? DefaultObjectAccessPermissionsStringForResourceClassGetV1(projectIri = projectIri, resourceClassIri = resRequest.resourceTypeIri, userProfile.permissionData)
                         }.mapTo[DefaultObjectAccessPermissionsStringResponseV1]
 
                         _ = log.debug(s"createNewResource - defaultObjectAccessPermissions: $defaultObjectAccessPermissions")
@@ -1393,7 +1393,7 @@ class ResourcesResponderV1 extends ResponderV1 {
         for {
         // Get ontology information about the resource class's cardinalities and about each property's knora-base:objectClassConstraint.
 
-            entityInfoResponse: EntityInfoGetResponseV1 <- (responderManager ? EntityInfoGetRequestV1(
+            entityInfoResponse: EntityInfoGetResponseV1 <- (responderVersionRouter ? EntityInfoGetRequestV1(
                 resourceClassIris = Set(resourceClassIri),
                 propertyIris = propertyIris,
                 userProfile = userProfile
@@ -1427,7 +1427,7 @@ class ResourcesResponderV1 extends ResponderV1 {
                                         )
 
                                         for {
-                                            subClassResponse <- (responderManager ? checkSubClassRequest).mapTo[CheckSubClassResponseV1]
+                                            subClassResponse <- (responderVersionRouter ? checkSubClassRequest).mapTo[CheckSubClassResponseV1]
 
                                             _ = if (!subClassResponse.isSubClass) {
                                                 throw OntologyConstraintException(s"Resource ${resourceClasses(targetVal(1))} cannot be the target of property $propertyIri, because it is not a member of OWL class $propertyObjectClassConstraint")
@@ -1439,7 +1439,7 @@ class ResourcesResponderV1 extends ResponderV1 {
                                             propertyIri = propertyIri,
                                             propertyObjectClassConstraint = propertyObjectClassConstraint,
                                             valueType = valueV1WithComment.updateValueV1.valueTypeIri,
-                                            responderManager = responderManager)
+                                            responderManager = responderVersionRouter)
                                     }
                                 }
                         }
@@ -1475,7 +1475,7 @@ class ResourcesResponderV1 extends ResponderV1 {
             fileValues: Option[(IRI, Vector[CreateValueV1WithComment])] <- if (resourceClassInfo.fileValueProperties.nonEmpty) {
                 // call sipi responder
                 for {
-                    sipiResponse: SipiResponderConversionResponseV1 <- (responderManager ? sipiConversionRequest.getOrElse(throw OntologyConstraintException(s"No file (required) given for resource type $resourceClassIri"))).mapTo[SipiResponderConversionResponseV1]
+                    sipiResponse: SipiResponderConversionResponseV1 <- (responderVersionRouter ? sipiConversionRequest.getOrElse(throw OntologyConstraintException(s"No file (required) given for resource type $resourceClassIri"))).mapTo[SipiResponderConversionResponseV1]
 
                     // check if the file type returned by Sipi corresponds to the expected fileValue property in resourceClassInfo.fileValueProperties.head
                     _ = if (SipiConstants.fileType2FileValueProperty(sipiResponse.file_type) != resourceClassInfo.fileValueProperties.head) {
@@ -1539,7 +1539,7 @@ class ResourcesResponderV1 extends ResponderV1 {
                 apiRequestID = apiRequestID
             ))
 
-            generateSparqlForValuesResponse: GenerateSparqlToCreateMultipleValuesResponseV1 <- (responderManager ? generateSparqlForValuesRequest).mapTo[GenerateSparqlToCreateMultipleValuesResponseV1]
+            generateSparqlForValuesResponse: GenerateSparqlToCreateMultipleValuesResponseV1 <- (responderVersionRouter ? generateSparqlForValuesRequest).mapTo[GenerateSparqlToCreateMultipleValuesResponseV1]
         } yield generateSparqlForValuesResponse
     }
 
@@ -1600,7 +1600,7 @@ class ResourcesResponderV1 extends ResponderV1 {
                 userProfile = userProfile
             )
 
-            verifyMultipleValueCreationResponse: VerifyMultipleValueCreationResponseV1 <- (responderManager ? verifyCreateValuesRequest).mapTo[VerifyMultipleValueCreationResponseV1]
+            verifyMultipleValueCreationResponse: VerifyMultipleValueCreationResponseV1 <- (responderVersionRouter ? verifyCreateValuesRequest).mapTo[VerifyMultipleValueCreationResponseV1]
 
             // Convert CreateValueResponseV1 objects to ResourceCreateValueResponseV1 objects.
             resourceCreateValueResponses: Map[IRI, Seq[ResourceCreateValueResponseV1]] = verifyMultipleValueCreationResponse.verifiedValues.map {
@@ -1725,7 +1725,7 @@ class ResourcesResponderV1 extends ResponderV1 {
             }
 
             projectInfoResponse <- {
-                responderManager ? ProjectInfoByIRIGetRequestV1(
+                responderVersionRouter ? ProjectInfoByIRIGetRequestV1(
                     projectIri,
                     Some(userProfile)
                 )
@@ -1742,7 +1742,7 @@ class ResourcesResponderV1 extends ResponderV1 {
             }
 
             defaultObjectAccessPermissions <- {
-                responderManager ? DefaultObjectAccessPermissionsStringForResourceClassGetV1(projectIri = projectIri, resourceClassIri = resourceClassIri, userProfile.permissionData)
+                responderVersionRouter ? DefaultObjectAccessPermissionsStringForResourceClassGetV1(projectIri = projectIri, resourceClassIri = resourceClassIri, userProfile.permissionData)
             }.mapTo[DefaultObjectAccessPermissionsStringResponseV1]
             _ = log.debug(s"createNewResource - defaultObjectAccessPermissions: $defaultObjectAccessPermissions")
 
@@ -1797,7 +1797,7 @@ class ResourcesResponderV1 extends ResponderV1 {
                 }
 
                 projectInfo <- {
-                    responderManager ? ProjectInfoByIRIGetV1(
+                    responderVersionRouter ? ProjectInfoByIRIGetV1(
                         resourceInfo.project_id,
                         None
                     )
@@ -1868,7 +1868,7 @@ class ResourcesResponderV1 extends ResponderV1 {
                 superClassIri = owlClass
             )
 
-            subClassResponse <- (responderManager ? checkSubClassRequest).mapTo[CheckSubClassResponseV1]
+            subClassResponse <- (responderVersionRouter ? checkSubClassRequest).mapTo[CheckSubClassResponseV1]
 
         } yield ResourceCheckClassResponseV1(isInClass = subClassResponse.isSubClass)
     }
@@ -1896,7 +1896,7 @@ class ResourcesResponderV1 extends ResponderV1 {
                 }
 
                 projectInfo <- {
-                    responderManager ? ProjectInfoByIRIGetV1(
+                    responderVersionRouter ? ProjectInfoByIRIGetV1(
                         resourceInfo.project_id,
                         None
                     )
@@ -2034,7 +2034,7 @@ class ResourcesResponderV1 extends ResponderV1 {
                     val resourceEntityIris: Set[IRI] = Set(resourceTypeIri)
 
                     for {
-                        entityInfoResponse <- (responderManager ? EntityInfoGetRequestV1(resourceClassIris = resourceEntityIris, propertyIris = propertyEntityIris, userProfile = userProfile)).mapTo[EntityInfoGetResponseV1]
+                        entityInfoResponse <- (responderVersionRouter ? EntityInfoGetRequestV1(resourceClassIris = resourceEntityIris, propertyIris = propertyEntityIris, userProfile = userProfile)).mapTo[EntityInfoGetResponseV1]
                         resourceEntityInfoMap: Map[IRI, ResourceEntityInfoV1] = entityInfoResponse.resourceEntityInfoMap
                         propertyEntityInfoMap: Map[IRI, PropertyEntityInfoV1] = entityInfoResponse.propertyEntityInfoMap
 
@@ -2110,7 +2110,7 @@ class ResourcesResponderV1 extends ResponderV1 {
                 fileValuesWithFuture: Seq[Future[FileValueV1]] = valuePropsForFileValues.map {
                     case (fileValueIri, fileValueProps) =>
                         for {
-                            valueV1 <- valueUtilV1.makeValueV1(fileValueProps, responderManager, userProfile)
+                            valueV1 <- valueUtilV1.makeValueV1(fileValueProps, responderVersionRouter, userProfile)
 
                         } yield valueV1 match {
                             case fileValueV1: FileValueV1 => fileValueV1
@@ -2152,7 +2152,7 @@ class ResourcesResponderV1 extends ResponderV1 {
                 (restype_label, restype_description, restype_iconsrc) <- if (queryOntology) {
                     val resTypeIri = groupedByPredicate(OntologyConstants.Rdf.Type).head("obj")
                     for {
-                        entityInfoResponse <- (responderManager ? EntityInfoGetRequestV1(resourceClassIris = Set(resTypeIri), userProfile = userProfile)).mapTo[EntityInfoGetResponseV1]
+                        entityInfoResponse <- (responderVersionRouter ? EntityInfoGetRequestV1(resourceClassIris = Set(resTypeIri), userProfile = userProfile)).mapTo[EntityInfoGetResponseV1]
                         entityInfo = entityInfoResponse.resourceEntityInfoMap(resTypeIri)
                         label = entityInfo.getPredicateObject(predicateIri = OntologyConstants.Rdfs.Label, preferredLangs = Some(userProfile.userData.lang, settings.fallbackLanguage))
                         description = entityInfo.getPredicateObject(predicateIri = OntologyConstants.Rdfs.Comment, preferredLangs = Some(userProfile.userData.lang, settings.fallbackLanguage))
@@ -2301,7 +2301,7 @@ class ResourcesResponderV1 extends ResponderV1 {
 
                         for {
                         // Convert the SPARQL query results to a ValueV1.
-                            valueV1 <- valueUtilV1.makeValueV1(valueProps, responderManager, userProfile)
+                            valueV1 <- valueUtilV1.makeValueV1(valueProps, responderVersionRouter, userProfile)
 
                             valPermission = PermissionUtilV1.getUserPermissionV1WithValueProps(
                                 valueIri = valObjIri,
@@ -2415,7 +2415,7 @@ class ResourcesResponderV1 extends ResponderV1 {
                             }
 
                             for {
-                                apiValueV1ForLinkValue <- valueUtilV1.makeValueV1(linkValueProps, responderManager, userProfile)
+                                apiValueV1ForLinkValue <- valueUtilV1.makeValueV1(linkValueProps, responderVersionRouter, userProfile)
 
                                 linkValueV1: LinkValueV1 = apiValueV1ForLinkValue match {
                                     case linkValueV1: LinkValueV1 => linkValueV1

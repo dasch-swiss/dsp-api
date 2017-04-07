@@ -25,7 +25,7 @@ import akka.http.scaladsl.server.Route
 import org.apache.commons.validator.routines.UrlValidator
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.usermessages._
-import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
+import org.knora.webapi.routing.{Authenticator, _}
 import org.knora.webapi.util.InputValidation
 
 /**
@@ -45,14 +45,14 @@ object UsersRouteV1 extends Authenticator {
         implicit val system: ActorSystem = _system
         implicit val executionContext = system.dispatcher
         implicit val timeout = settings.defaultTimeout
-        val responderManager = system.actorSelection("/user/responderManager")
+        val responderManager = system.actorSelection("/user/responderVersionRouter")
 
         path("v1" / "users" / "iri" / Segment) {value =>
             get {
                 requestContext =>
                     val userProfile = getUserProfileV1(requestContext)
                     val userIri = InputValidation.toIri(value, () => throw BadRequestException(s"Invalid user IRI $value"))
-                    val requestMessage = UserProfileByIRIGetRequestV1(userIri, UserProfileType.RESTRICTED, userProfile)
+                    val requestMessage = UserProfileByIRIGetRequestV1(userIri, UserProfileTypeV1.RESTRICTED, userProfile)
                     RouteUtilV1.runJsonRoute(
                         requestMessage,
                         requestContext,
@@ -66,7 +66,7 @@ object UsersRouteV1 extends Authenticator {
             get {
                 requestContext =>
                     val userProfile = getUserProfileV1(requestContext)
-                    val requestMessage = UserProfileByEmailGetRequestV1(value, UserProfileType.RESTRICTED, userProfile)
+                    val requestMessage = UserProfileByEmailGetRequestV1(value, UserProfileTypeV1.RESTRICTED, userProfile)
                     RouteUtilV1.runJsonRoute(
                         requestMessage,
                         requestContext,
@@ -77,6 +77,18 @@ object UsersRouteV1 extends Authenticator {
             }
         } ~
         path("v1" / "users") {
+            get {
+                requestContext =>
+                    val userProfile = getUserProfileV1(requestContext)
+                    val requestMessage = UsersGetRequestV1(userProfile)
+                    RouteUtilV1.runJsonRoute(
+                        requestMessage,
+                        requestContext,
+                        settings,
+                        responderManager,
+                        log
+                    )
+            }
             post {
                 /* create a new user */
                 entity(as[CreateUserApiRequestV1]) { apiRequest => requestContext =>

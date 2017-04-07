@@ -360,8 +360,9 @@ object PermissionUtilV1 {
     def parsePermissionsWithType(maybePermissionListStr: Option[String], permissionType: PermissionType): Set[PermissionV1] = {
         maybePermissionListStr match {
             case Some(permissionListStr) => {
-                val permissions: Seq[String] = permissionListStr.split(OntologyConstants.KnoraBase.PermissionListDelimiter)
-                //log.debug(s"parsePermissions - split permissions: $permissions")
+                val cleanedPermissionListStr = permissionListStr replaceAll("[<>]", "")
+                val permissions: Seq[String] = cleanedPermissionListStr.split(OntologyConstants.KnoraBase.PermissionListDelimiter)
+                log.debug(s"PermissionUtil.parsePermissionsWithType - split permissions: $permissions")
                 permissions.flatMap {
                     permission =>
                         val splitPermission = permission.split(' ')
@@ -408,6 +409,7 @@ object PermissionUtilV1 {
 
             case OntologyConstants.KnoraBase.ProjectResourceCreateRestrictedPermission =>
                 if (iris.nonEmpty) {
+                    log.debug(s"buildPermissionObject - ProjectResourceCreateRestrictedPermission - iris: $iris")
                     iris.map(iri => PermissionV1.projectResourceCreateRestrictedPermission(iri))
                 } else {
                     throw InconsistentTriplestoreDataException(s"Missing additional permission information.")
@@ -517,7 +519,7 @@ object PermissionUtilV1 {
             case PermissionType.OAP =>
                 if (permissions.nonEmpty) {
 
-                    /* a map with permission names and shortened groups. */
+                    /* a map with permission names, shortened groups, and full group names. */
                     val groupedPermissions: Map[String, String] = permissions.groupBy(_.name).map { case (name, perms) =>
                         val shortGroupsString = perms.foldLeft("") { (acc, perm) =>
                             if (acc.isEmpty) {

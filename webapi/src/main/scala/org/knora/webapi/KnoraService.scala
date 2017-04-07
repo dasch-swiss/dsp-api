@@ -33,10 +33,12 @@ import akka.pattern._
 import akka.stream.ActorMaterializer
 import org.knora.webapi.http.CORSSupport.CORS
 import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse}
+import org.knora.webapi.messages.v1.responder.permissionmessages.PermissionDataV1
 import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
 import org.knora.webapi.messages.v1.store.triplestoremessages.{Initialized, InitializedResponse, ResetTriplestoreContent, ResetTriplestoreContentACK}
 import org.knora.webapi.responders._
 import org.knora.webapi.responders.v1.ResponderManagerV1
+import org.knora.webapi.responders.v2.ResponderManagerV2
 import org.knora.webapi.routing.v1._
 import org.knora.webapi.store._
 import org.knora.webapi.store.triplestore.RdfDataObjectFactory
@@ -65,10 +67,17 @@ trait LiveCore extends Core {
 trait KnoraService {
     this: Core =>
 
+    private val responderVersionRouter = system.actorOf(Props(new ResponderVersionRouter), name = RESPONDER_VERSION_ROUTER_ACTOR_NAME)
+
     /**
-      * The supervisor actor that forwards messages to responder actors to handle API requests.
+      * The supervisor actor that forwards messages to responder actors to handle API V1 requests.
       */
-    private val responderManager = system.actorOf(Props(new ResponderManagerV1 with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
+    private val responderManagerV1 = system.actorOf(Props(new ResponderManagerV1 with LiveActorMaker), name = RESPONDER_MANAGER_V1_ACTOR_NAME)
+
+    /**
+      * The supervisor actor that forwards messages to responder actors to handle API V2 requests.
+      */
+    private val responderManagerV2 = system.actorOf(Props(new ResponderManagerV2 with LiveActorMaker), name = RESPONDER_MANAGER_V2_ACTOR_NAME)
 
     /**
       * The supervisor actor that forwards messages to actors that deal with persistent storage.
@@ -93,7 +102,11 @@ trait KnoraService {
     /**
       * A user representing the Knora API server, used for initialisation on startup.
       */
-    private val systemUser = UserProfileV1(userData = UserDataV1(lang = "en"), isSystemUser = true)
+    private val systemUser = UserProfileV1(
+        userData = UserDataV1(lang = "en"),
+        isSystemUser = true,
+        permissionData = PermissionDataV1(anonymousUser = false)
+    )
 
     /**
       * All routes composed together and CORS activated.
@@ -154,7 +167,7 @@ trait KnoraService {
             println("... loading of demo data finished.")
         }
 
-        val ontologyCacheFuture = responderManager ? LoadOntologiesRequest(systemUser)
+        val ontologyCacheFuture = responderVersionRouter ? LoadOntologiesRequest(systemUser)
         Await.result(ontologyCacheFuture, timeout.duration).asInstanceOf[LoadOntologiesResponse]
 
         if (StartupFlags.allowResetTriplestoreContentOperationOverHTTP.get) {

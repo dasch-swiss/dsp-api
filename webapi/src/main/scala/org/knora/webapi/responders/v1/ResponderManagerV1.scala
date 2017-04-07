@@ -63,7 +63,7 @@ class ResponderManagerV1 extends Actor with ActorLogging {
     /**
       * Constructs the default Akka routing actor that routes messages to [[ResourcesResponderV1]].
       */
-    protected final def makeDefaultResourcesRouter = makeActor(FromConfig.props(Props[ResourcesResponderV1]), RESOURCES_ROUTER_ACTOR_NAME)
+    protected final def makeDefaultResourcesRouter = makeActor(FromConfig.props(Props[ResourcesResponderV1]), RESOURCES_ROUTER_V1_ACTOR_NAME)
 
     /**
       * The Akka routing actor that should receive messages addressed to the resources responder. Subclasses can override this
@@ -74,7 +74,7 @@ class ResponderManagerV1 extends Actor with ActorLogging {
     /**
       * Constructs the default Akka routing actor that routes messages to [[ValuesResponderV1]].
       */
-    protected final def makeDefaultValuesRouter = makeActor(FromConfig.props(Props[ValuesResponderV1]), VALUES_ROUTER_ACTOR_NAME)
+    protected final def makeDefaultValuesRouter = makeActor(FromConfig.props(Props[ValuesResponderV1]), VALUES_ROUTER_V1_ACTOR_NAME)
 
     /**
       * The Akka routing actor that should receive messages addressed to the values responder. Subclasses can override this
@@ -85,7 +85,7 @@ class ResponderManagerV1 extends Actor with ActorLogging {
     /**
       * Constructs the default Akka routing actor that routes messages to [[SipiResponderV1]].
       */
-    protected final def makeDefaultSipiRouter = makeActor(FromConfig.props(Props[SipiResponderV1]), SIPI_ROUTER_ACTOR_NAME)
+    protected final def makeDefaultSipiRouter = makeActor(FromConfig.props(Props[SipiResponderV1]), SIPI_ROUTER_V1_ACTOR_NAME)
 
     /**
       * The Akka routing actor that should receive messages addressed to the Sipi responder. Subclasses can override this
@@ -96,7 +96,7 @@ class ResponderManagerV1 extends Actor with ActorLogging {
     /**
       * Constructs the default Akka routing actor that routes messages to [[StandoffResponderV1]].
       */
-    protected final def makeDefaultStandoffRouter = makeActor(FromConfig.props(Props[StandoffResponderV1]), STANDOFF_ROUTER_ACTOR_NAME)
+    protected final def makeDefaultStandoffRouter = makeActor(FromConfig.props(Props[StandoffResponderV1]), STANDOFF_ROUTER_V1_ACTOR_NAME)
 
     /**
       * The Akka routing actor that should receive messages addressed to the Sipi responder. Subclasses can override this
@@ -107,7 +107,7 @@ class ResponderManagerV1 extends Actor with ActorLogging {
     /**
       * Constructs the default Akka routing actor that routes messages to [[UsersResponderV1]].
       */
-    protected final def makeDefaultUsersRouter = makeActor(FromConfig.props(Props[UsersResponderV1]), USERS_ROUTER_ACTOR_NAME)
+    protected final def makeDefaultUsersRouter = makeActor(FromConfig.props(Props[UsersResponderV1]), USERS_ROUTER_V1_ACTOR_NAME)
 
     /**
       * The Akka routing actor that should receive messages addressed to the users responder. Subclasses can override this
@@ -118,7 +118,7 @@ class ResponderManagerV1 extends Actor with ActorLogging {
     /**
       * Constructs the default Akka routing actor that routes messages to [[HierarchicalListsResponderV1]].
       */
-    protected final def makeDefaultListsRouter = makeActor(FromConfig.props(Props[HierarchicalListsResponderV1]), HIERARCHICAL_LISTS_ROUTER_ACTOR_NAME)
+    protected final def makeDefaultListsRouter = makeActor(FromConfig.props(Props[HierarchicalListsResponderV1]), HIERARCHICAL_LISTS_ROUTER_V1_ACTOR_NAME)
 
     /**
       * The Akka routing actor that should receive messages addressed to the lists responder. Subclasses can override this
@@ -129,7 +129,7 @@ class ResponderManagerV1 extends Actor with ActorLogging {
     /**
       * Constructs the default Akka routing actor that routes messages to [[SearchResponderV1]].
       */
-    protected final def makeDefaultSearchRouter = makeActor(FromConfig.props(Props[SearchResponderV1]), SEARCH_ROUTER_ACTOR_NAME)
+    protected final def makeDefaultSearchRouter = makeActor(FromConfig.props(Props[SearchResponderV1]), SEARCH_ROUTER_V1_ACTOR_NAME)
 
     /**
       * The Akka routing actor that should receive messages addressed to the search responder. Subclasses can override this
@@ -140,7 +140,7 @@ class ResponderManagerV1 extends Actor with ActorLogging {
     /**
       * Constructs the default Akka routing actor that routes messages to [[OntologyResponderV1]].
       */
-    protected final def makeDefaultOntologyRouter = makeActor(FromConfig.props(Props[OntologyResponderV1]), ONTOLOGY_ROUTER_ACTOR_NAME)
+    protected final def makeDefaultOntologyRouter = makeActor(FromConfig.props(Props[OntologyResponderV1]), ONTOLOGY_ROUTER_V1_ACTOR_NAME)
 
     /**
       * The Akka routing actor that should receive messages addressed to the ontology responder. Subclasses can override this
@@ -151,7 +151,7 @@ class ResponderManagerV1 extends Actor with ActorLogging {
     /**
       * Constructs the default Akka routing actor that routes messages to [[ProjectsResponderV1]].
       */
-    protected final def makeDefaultProjectsRouter = makeActor(FromConfig.props(Props[ProjectsResponderV1]), PROJECTS_ROUTER_ACTOR_NAME)
+    protected final def makeDefaultProjectsRouter = makeActor(FromConfig.props(Props[ProjectsResponderV1]), PROJECTS_ROUTER_V1_ACTOR_NAME)
 
     /**
       * The Akka routing actor that should receive messages addressed to the projects responder. Subclasses can override this
@@ -162,7 +162,7 @@ class ResponderManagerV1 extends Actor with ActorLogging {
     /**
       * Constructs the default Akka routing actor that routes messages to [[CkanResponderV1]].
       */
-    protected final def makeDefaultCkanRouter = makeActor(FromConfig.props(Props[CkanResponderV1]), CKAN_ROUTER_ACTOR_NAME)
+    protected final def makeDefaultCkanRouter = makeActor(FromConfig.props(Props[CkanResponderV1]), CKAN_ROUTER_V1_ACTOR_NAME)
 
     /**
       * The Akka routing actor that should receive messages addressed to the Ckan responder. Subclasses can override this
@@ -173,7 +173,7 @@ class ResponderManagerV1 extends Actor with ActorLogging {
     /**
       * Constructs the default Akka routing actor that routes messages to [[StoreResponderV1]].
       */
-    protected final def makeDefaultStoreRouter = makeActor(FromConfig.props(Props[StoreResponderV1]), STORE_ROUTER_ACTOR_NAME)
+    protected final def makeDefaultStoreRouter = makeActor(FromConfig.props(Props[StoreResponderV1]), STORE_ROUTER_V1_ACTOR_NAME)
 
     /**
       * The Akka routing actor that should receive messages addressed to the Store responder. Subclasses can override this
@@ -184,7 +184,7 @@ class ResponderManagerV1 extends Actor with ActorLogging {
     /**
       * Constructs the default Akka routing actor that routes messages to [[PermissionsResponderV1]].
       */
-    protected final def makeDefaultPermissionsRouter = makeActor(FromConfig.props(Props[PermissionsResponderV1]), PERMISSIONS_ROUTER_ACTOR_NAME)
+    protected final def makeDefaultPermissionsRouter = makeActor(FromConfig.props(Props[PermissionsResponderV1]), PERMISSIONS_ROUTER_V1_ACTOR_NAME)
 
     /**
       * The Akka routing actor that should receive messages addressed to the Permissions responder. Subclasses can override this
@@ -195,7 +195,7 @@ class ResponderManagerV1 extends Actor with ActorLogging {
     /**
       * Constructs the default Akka routing actor that routes messages to [[GroupsResponderV1]].
       */
-    protected final def makeDefaultGroupsRouter = makeActor(FromConfig.props(Props[GroupsResponderV1]), GROUPS_ROUTER_ACTOR_NAME)
+    protected final def makeDefaultGroupsRouter = makeActor(FromConfig.props(Props[GroupsResponderV1]), GROUPS_ROUTER_V1_ACTOR_NAME)
 
     /**
       * The Akka routing actor that should receive messages addressed to the Permissions responder. Subclasses can override this

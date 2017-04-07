@@ -25,6 +25,8 @@ import org.knora.webapi.messages.v1.store.triplestoremessages.{SparqlSelectReque
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.{KnoraIdUtil, MessageUtil, PermissionUtilV1}
 
+import scala.collection.immutable.Iterable
+import scala.collection.mutable.ListBuffer
 import scala.concurrent.Future
 
 
@@ -35,6 +37,10 @@ class PermissionsResponderV1 extends ResponderV1 {
 
     // Creates IRIs for new Knora user objects.
     val knoraIdUtil = new KnoraIdUtil
+
+    /* Entity types used to more clearly distinguish what kind of entity is meant */
+    val RESOURCE_ENTITY_TYPE = "resource"
+    val PROPERTY_ENTITY_TYPE = "property"
 
     /**
       * Receives a message extending [[org.knora.webapi.messages.v1.responder.permissionmessages.PermissionsResponderRequestV1]].
@@ -54,8 +60,8 @@ class PermissionsResponderV1 extends ResponderV1 {
         case DefaultObjectAccessPermissionsForProjectGetRequestV1(projectIri, userProfileV1) => future2Message(sender(), defaultObjectAccessPermissionsForProjectGetRequestV1(projectIri, userProfileV1), log)
         case DefaultObjectAccessPermissionForIriGetRequestV1(defaultObjectAccessPermissionIri, userProfileV1) => future2Message(sender(), defaultObjectAccessPermissionForIriGetRequestV1(defaultObjectAccessPermissionIri, userProfileV1), log)
         case DefaultObjectAccessPermissionGetRequestV1(projectIri, groupIri, resourceClassIri, propertyIri, userProfile) => future2Message(sender(), defaultObjectAccessPermissionGetRequestV1(projectIri, groupIri, resourceClassIri, propertyIri, userProfile), log)
-        case DefaultObjectAccessPermissionsStringForResourceClassGetV1(projectIri, resourceClassIri, permissionData) => future2Message(sender(), defaultObjectAccessPermissionsStringForEntityGetV1(projectIri, Some(resourceClassIri), None, permissionData), log)
-        case DefaultObjectAccessPermissionsStringForPropertyGetV1(projectIri, propertyTypeIri, permissionData) => future2Message(sender(), defaultObjectAccessPermissionsStringForEntityGetV1(projectIri, None, Some(propertyTypeIri), permissionData), log)
+        case DefaultObjectAccessPermissionsStringForResourceClassGetV1(projectIri, resourceClassIri, permissionData) => future2Message(sender(), defaultObjectAccessPermissionsStringForEntityGetV1(projectIri, resourceClassIri, None, RESOURCE_ENTITY_TYPE, permissionData), log)
+        case DefaultObjectAccessPermissionsStringForPropertyGetV1(projectIri, resourceClassIri, propertyTypeIri, permissionData) => future2Message(sender(), defaultObjectAccessPermissionsStringForEntityGetV1(projectIri, resourceClassIri, Some(propertyTypeIri), PROPERTY_ENTITY_TYPE, permissionData), log)
         //case DefaultObjectAccessPermissionCreateRequestV1(newDefaultObjectAccessPermissionV1, userProfileV1) => future2Message(sender(), createDefaultObjectAccessPermissionV1(newDefaultObjectAccessPermissionV1, userProfileV1), log)
         //case DefaultObjectAccessPermissionDeleteRequestV1(defaultObjectAccessPermissionIri, userProfileV1) => future2Message(sender(), deleteDefaultObjectAccessPermissionV1(defaultObjectAccessPermissionIri, userProfileV1), log)
         //case TemplatePermissionsCreateRequestV1(projectIri, permissionsTemplate, userProfileV1) => future2Message(sender(), templatePermissionsCreateRequestV1(projectIri, permissionsTemplate, userProfileV1), log)
@@ -83,7 +89,7 @@ class PermissionsResponderV1 extends ResponderV1 {
             groupIris.map {
                 groupIri =>
                     for {
-                        groupInfo <- (responderManager ? GroupInfoByIRIGetRequest(groupIri, None)).mapTo[GroupInfoResponseV1]
+                        groupInfo <- (responderVersionRouter ? GroupInfoByIRIGetRequest(groupIri, None)).mapTo[GroupInfoResponseV1]
                         res = (groupInfo.group_info.belongsToProject, groupIri)
                     } yield res
             }
@@ -118,7 +124,7 @@ class PermissionsResponderV1 extends ResponderV1 {
             } else {
                 Vector.empty[(IRI, IRI)]
             }
-            //_ = log.debug(s"permissionsProfileGetV1 - projectAdmins: ${MessageUtil.toSource(projectAdmins)}")
+            _ = log.debug(s"permissionsProfileGetV1 - projectAdmins: ${MessageUtil.toSource(projectAdmins)}")
 
 
             /* materialize implicit membership in 'http://www.knora.org/ontology/knora-base#SystemAdmin' group */
@@ -144,19 +150,11 @@ class PermissionsResponderV1 extends ResponderV1 {
             }
             administrativePermissionsPerProject <- administrativePermissionsPerProjectFuture
 
-            /* retrieve the default object access permissions for each group per project the user is member of */
-            defaultObjectAccessPermissionsPerProjectFuture: Future[Map[IRI, Set[PermissionV1]]] = if (projectIris.nonEmpty) {
-                userDefaultObjectAccessPermissionsGetV1(groupsPerProject)
-            } else {
-                Future(Map.empty[IRI, Set[PermissionV1]])
-            }
-            defaultObjectAccessPermissionsPerProject <- defaultObjectAccessPermissionsPerProjectFuture
-
             /* construct the permission profile from the different parts */
             result = PermissionDataV1(
                 groupsPerProject = groupsPerProject,
                 administrativePermissionsPerProject = administrativePermissionsPerProject,
-                defaultObjectAccessPermissionsPerProject = defaultObjectAccessPermissionsPerProject
+                anonymousUser = false
             )
         //_ = log.debug(s"permissionsDataGetV1 - resulting permissionData: $result")
 
@@ -165,99 +163,150 @@ class PermissionsResponderV1 extends ResponderV1 {
 
     /**
       * By providing all the projects and groups in which the user is a member of, calculate the user's
-      * max administrative permissions of each project.
+      * administrative permissions of each project by applying the precedence rules.
       *
-      * @param groupsPerProject the groups in each project the user is member of.
-      * @return a the user's max permissions for each project.
+      * @param groupsPerProject the groups inside each project the user is member of.
+      * @return a the user's resulting set of administrative permissions for each project.
       */
     def userAdministrativePermissionsGetV1(groupsPerProject: Map[IRI, Seq[IRI]]): Future[Map[IRI, Set[PermissionV1]]] = {
 
-        /* Get all permissions per project, combining them from all groups */
-        val ppf: Iterable[Future[(IRI, Seq[PermissionV1])]] = for {
-            (projectIri, groups) <- groupsPerProject
-            groupIri <- groups
-            //_ = log.debug(s"userAdministrativePermissionsGetV1 - projectIri: $projectIri, groupIri: $groupIri")
-            projectPermission: Future[(IRI, Seq[PermissionV1])] = administrativePermissionForProjectGroupGetV1(projectIri, groupIri).map {
-                case Some(ap: AdministrativePermissionV1) => (projectIri, ap.hasPermissions.toSeq)
-                case None => (projectIri, Seq.empty[PermissionV1])
-            }
 
-        } yield projectPermission
 
-        val allPermissionsFuture: Future[Iterable[(IRI, Seq[PermissionV1])]] = Future.sequence(ppf)
+        /* Get all permissions per project, applying permission precedence rule */
+        def calculatePermission(projectIri: IRI, extendedUserGroups: Seq[IRI]): Future[(IRI, Set[PermissionV1])] = {
 
-        /* combines all permissions for each project and removes duplicate permissions inside a project  */
-        val result: Future[Map[IRI, Set[PermissionV1]]] = for {
-            allPermissions: Iterable[(IRI, Seq[PermissionV1])] <- allPermissionsFuture
 
-            // remove instances with empty PermissionV1 sets
-            cleanedAllPermissions: Iterable[(IRI, Seq[PermissionV1])] = allPermissions.filter(_._2.nonEmpty)
+            /* List buffer holding default object access permissions tagged with the precedence level:
+               1. ProjectAdmin > 2. CustomGroups > 3. ProjectMember > 4. KnownUser
+               Permissions are added following the precedence level from the highest to the lowest. As soon as one set
+               of permissions is written into the buffer, any additionally found permissions are ignored. */
+            val permissionsListBuffer = ListBuffer.empty[(String, Set[PermissionV1])]
 
-            result = cleanedAllPermissions.groupBy(_._1).map { case (projectIri: IRI, projectPermissions: Iterable[(IRI, Seq[PermissionV1])]) =>
-
-                /* Combine permission sequences */
-                val combined = projectPermissions.foldLeft(Seq.empty[PermissionV1]) { (acc, seq) =>
-                    acc ++ seq._2
+            for {
+                /* Get administrative permissions for the knora-base:ProjectAdmin group */
+                administrativePermissionsOnProjectAdminGroup: Set[PermissionV1] <- administrativePermissionForGroupsGetV1(projectIri, List(OntologyConstants.KnoraBase.ProjectAdmin))
+                _ = if (administrativePermissionsOnProjectAdminGroup.nonEmpty) {
+                    if (extendedUserGroups.contains(OntologyConstants.KnoraBase.ProjectAdmin)) {
+                        permissionsListBuffer += (("ProjectAdmin", administrativePermissionsOnProjectAdminGroup))
+                    }
                 }
-                /* Remove possible duplicate permissions */
-                val squashed: Set[PermissionV1] = PermissionUtilV1.removeDuplicatePermissions(combined)
-                (projectIri, squashed)
-            }
-        //_ = log.debug(s"userAdministrativePermissionsGetV1 - result: $result")
+                //_ = log.debug(s"userAdministrativePermissionsGetV1 - project: $projectIri, administrativePermissionsOnProjectAdminGroup: $administrativePermissionsOnProjectAdminGroup")
+
+
+                /* Get administrative permissions for custom groups (all groups other than the built-in groups) */
+                administrativePermissionsOnCustomGroups: Set[PermissionV1] <- {
+                    val customGroups = extendedUserGroups diff List(OntologyConstants.KnoraBase.KnownUser, OntologyConstants.KnoraBase.ProjectMember, OntologyConstants.KnoraBase.ProjectAdmin)
+                    if (customGroups.nonEmpty) {
+                        administrativePermissionForGroupsGetV1(projectIri, customGroups)
+                    } else {
+                        Future(Set.empty[PermissionV1])
+                    }
+                }
+                _ = if (administrativePermissionsOnCustomGroups.nonEmpty) {
+                    if (permissionsListBuffer.isEmpty) {
+                        permissionsListBuffer += (("CustomGroups", administrativePermissionsOnCustomGroups))
+                    }
+                }
+                //_ = log.debug(s"userAdministrativePermissionsGetV1 - project: $projectIri, administrativePermissionsOnCustomGroups: $administrativePermissionsOnCustomGroups")
+
+
+                /* Get administrative permissions for the knora-base:ProjectMember group */
+                administrativePermissionsOnProjectMemberGroup: Set[PermissionV1] <- administrativePermissionForGroupsGetV1(projectIri, List(OntologyConstants.KnoraBase.ProjectMember))
+                _ = if (administrativePermissionsOnProjectMemberGroup.nonEmpty) {
+                    if (permissionsListBuffer.isEmpty) {
+                        if (extendedUserGroups.contains(OntologyConstants.KnoraBase.ProjectMember)) {
+                            permissionsListBuffer += (("ProjectMember", administrativePermissionsOnProjectMemberGroup))
+                        }
+                    }
+                }
+                //_ = log.debug(s"userAdministrativePermissionsGetV1 - project: $projectIri, administrativePermissionsOnProjectMemberGroup: $administrativePermissionsOnProjectMemberGroup")
+
+
+                /* Get administrative permissions for the knora-base:KnownUser group */
+                administrativePermissionsOnKnownUserGroup: Set[PermissionV1] <- administrativePermissionForGroupsGetV1(projectIri, List(OntologyConstants.KnoraBase.KnownUser))
+                _ = if (administrativePermissionsOnKnownUserGroup.nonEmpty) {
+                    if (permissionsListBuffer.isEmpty) {
+                        if (extendedUserGroups.contains(OntologyConstants.KnoraBase.KnownUser)) {
+                            permissionsListBuffer += (("KnownUser", administrativePermissionsOnKnownUserGroup))
+                        }
+                    }
+                }
+                //_ = log.debug(s"userAdministrativePermissionsGetV1 - project: $projectIri, administrativePermissionsOnKnownUserGroup: $administrativePermissionsOnKnownUserGroup")
+
+
+                projectAdministrativePermissions: (IRI, Set[PermissionV1]) = permissionsListBuffer.length match {
+                    case 1 => {
+                        log.debug(s"userAdministrativePermissionsGetV1 - project: $projectIri, precedence: ${permissionsListBuffer.head._1}, administrativePermissions: ${permissionsListBuffer.head._2}")
+                        (projectIri, permissionsListBuffer.head._2)
+                    }
+                    case 0 => (projectIri, Set.empty[PermissionV1])
+                    case _ => throw AssertionException("The permissions list buffer holding default object permissions should never be larger then 1.")
+                }
+
+            } yield projectAdministrativePermissions
+        }
+
+        val permissionsPerProject: Iterable[Future[(IRI, Set[PermissionV1])]] = for {
+            (projectIri, groups) <- groupsPerProject
+
+            /* Explicitly add 'KnownUser' group */
+            extendedUserGroups = OntologyConstants.KnoraBase.KnownUser ++ groups
+
+            result = calculatePermission(projectIri, groups)
+
         } yield result
+
+        val result: Future[Map[IRI, Set[PermissionV1]]] = Future.sequence(permissionsPerProject).map(_.toMap)
+
+        log.debug(s"userAdministrativePermissionsGetV1 - result: $result")
         result
     }
+
+
+    /*************************************************************************/
+    /* ADMINISTRATIVE PERMISSIONS                                            */
+    /*************************************************************************/
 
     /**
-      * By providing all the projects and groups in which the user is a member of, calculate the user's
-      * max default object permissions for each project.
-      *
-      * @param groupsPerProject
-      * @return
+      * Convenience method returning a set with combined administrative permission. Used in userAdministrativePermissionsGetV1.
+      * @param projectIri the IRI of the project.
+      * @param groups the list of groups for which administrative permissions are retrieved and combined.
+      * @return a set of [[PermissionV1]].
       */
-    def userDefaultObjectAccessPermissionsGetV1(groupsPerProject: Map[IRI, Seq[IRI]]): Future[Map[IRI, Set[PermissionV1]]] = {
+    private def administrativePermissionForGroupsGetV1(projectIri: IRI, groups: Seq[IRI] ): Future[Set[PermissionV1]] = {
 
-        /* Get all default object access permissions per project, combining them from all groups */
-        val ppf: Iterable[Future[(IRI, Seq[PermissionV1])]] = for {
-            (projectIri, groups) <- groupsPerProject
+        /* Get administrative permissions for each group and combine them */
+        val gpf: Seq[Future[Seq[PermissionV1]]] = for {
             groupIri <- groups
-            _ = log.debug(s"userDefaultObjectAccessPermissionsGetV1 - projectIri: $projectIri, groupIri: $groupIri")
+            //_ = log.debug(s"administrativePermissionForGroupsGetV1 - projectIri: $projectIri, groupIri: $groupIri")
 
-            projectPermission: Future[(IRI, Seq[PermissionV1])] = defaultObjectAccessPermissionGetV1(projectIri = projectIri, groupIri = Some(groupIri), resourceClassIri = None, propertyIri = None).map {
-                case Some(doap: DefaultObjectAccessPermissionV1) => (projectIri, doap.hasPermissions.toSeq)
-                case None => (projectIri, Seq.empty[PermissionV1])
+            groupPermissions: Future[Seq[PermissionV1]] = administrativePermissionForProjectGroupGetV1(projectIri, groupIri).map {
+                case Some(ap: AdministrativePermissionV1) => ap.hasPermissions.toSeq
+                case None => Seq.empty[PermissionV1]
             }
 
-        } yield projectPermission
+        } yield groupPermissions
 
-        val allPermissionsFuture: Future[Iterable[(IRI, Seq[PermissionV1])]] = Future.sequence(ppf)
+        val allPermissionsFuture: Future[Seq[Seq[PermissionV1]]] = Future.sequence(gpf)
 
-        /* combines all permissions for each project and removes duplicate permissions inside a project  */
-        val result: Future[Map[IRI, Set[PermissionV1]]] = for {
-            allPermissions: Iterable[(IRI, Seq[PermissionV1])] <- allPermissionsFuture
+        /* combines all permissions for each group and removes duplicates  */
+        val result: Future[Set[PermissionV1]] = for {
+            allPermissions: Seq[Seq[PermissionV1]] <- allPermissionsFuture
 
             // remove instances with empty PermissionV1 sets
-            cleanedAllPermissions: Iterable[(IRI, Seq[PermissionV1])] = allPermissions.filter(_._2.nonEmpty)
+            cleanedAllPermissions: Seq[Seq[PermissionV1]] = allPermissions.filter(_.nonEmpty)
 
-            result = cleanedAllPermissions.groupBy(_._1).map { case (projectIri: IRI, projectPermissions: Iterable[(IRI, Seq[PermissionV1])]) =>
-
-                /* Combine permission sequences */
-                val combined = projectPermissions.foldLeft(Seq.empty[PermissionV1]) { (acc, seq) =>
-                    acc ++ seq._2
-                }
-                /* Remove possible duplicate permissions */
-                val squashed: Set[PermissionV1] = PermissionUtilV1.removeDuplicatePermissions(combined)
-                (projectIri, squashed)
+            /* Combine permission sequences */
+            combined = cleanedAllPermissions.foldLeft(Seq.empty[PermissionV1]) { (acc, seq) =>
+                acc ++ seq
             }
-            _ = log.debug(s"userDefaultObjectAccessPermissionsGetV1 - result: $result")
+            /* Remove possible duplicate permissions */
+            result: Set[PermissionV1] = PermissionUtilV1.removeDuplicatePermissions(combined)
+
+            //_ = log.debug(s"administrativePermissionForGroupsGetV1 - result: $result")
         } yield result
         result
     }
-
-
-    ///////////////////////////////////////////////////////////////////////////
-    // ADMINISTRATIVE PERMISSIONS
-    ///////////////////////////////////////////////////////////////////////////
 
     /**
       * Gets all administrative permissions defined inside a project.
@@ -625,7 +674,11 @@ class PermissionsResponderV1 extends ResponderV1 {
     }
 
     /**
-      * Gets a single default object access permission identified by project and either group / resource class / property.
+      * Gets a single default object access permission identified by project and either:
+      * - group
+      * - resource class
+      * - resource class and property
+      * - property
       *
       * @param projectIri       the project's IRI.
       * @param groupIri         the group's IRI.
@@ -635,12 +688,12 @@ class PermissionsResponderV1 extends ResponderV1 {
       */
     def defaultObjectAccessPermissionGetV1(projectIri: IRI, groupIri: Option[IRI], resourceClassIri: Option[IRI], propertyIri: Option[IRI]): Future[Option[DefaultObjectAccessPermissionV1]] = {
         for {
-        // check if necessary field are not empty.
+            // check if necessary field are not empty.
             _ <- Future(if (projectIri.isEmpty) throw BadRequestException("Project cannot be empty"))
 
-            // check supplied parameters.
-            parametersSupplied = List(groupIri, resourceClassIri, propertyIri).flatten.size
-            _ = if (parametersSupplied != 1) throw BadRequestException("Either groupIri or resourceClassIri or propertyTypeIri can be supplied")
+            /* check supplied parameters */
+            _ = if(groupIri.isDefined && resourceClassIri.isDefined) throw BadRequestException("Not allowed to supply groupIri and resourceClassIri together")
+            _ = if(groupIri.isDefined && propertyIri.isDefined) throw BadRequestException("Not allowed to supply groupIri and propertyIri together")
 
             sparqlQueryString = queries.sparql.v1.txt.getDefaultObjectAccessPermission(
                 triplestore = settings.triplestoreType,
@@ -649,7 +702,7 @@ class PermissionsResponderV1 extends ResponderV1 {
                 maybeResourceClassIri = resourceClassIri,
                 maybePropertyIri = propertyIri
             ).toString()
-            //_ = log.debug(s"defaultObjectAccessPermissionGetV1 - query: $sparqlQueryString")
+            _ = log.debug(s"defaultObjectAccessPermissionGetV1 - query: $sparqlQueryString")
 
             permissionQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResponse]
             //_ = log.debug(s"defaultObjectAccessPermissionGetV1 - result: ${MessageUtil.toSource(permissionQueryResponse)}")
@@ -660,7 +713,7 @@ class PermissionsResponderV1 extends ResponderV1 {
 
                 /* check if we only got one default object access permission back */
                 val doapCount: Int = permissionQueryResponseRows.groupBy(_.rowMap("s")).size
-                if (doapCount > 1) throw InconsistentTriplestoreDataException(s"Only one default object permission instance allowed for project: $projectIri and group: $groupIri combination, but found $doapCount.")
+                if (doapCount > 1) throw InconsistentTriplestoreDataException(s"Only one default object permission instance allowed for project: $projectIri and combination of group: $groupIri, resourceClass: $resourceClassIri, property: $propertyIri combination, but found: $doapCount.")
 
                 /* get the iri of the retrieved permission */
                 val permissionIri = permissionQueryResponse.getFirstRow.rowMap("s")
@@ -675,7 +728,7 @@ class PermissionsResponderV1 extends ResponderV1 {
             } else {
                 None
             }
-        //_ = log.debug(s"defaultObjectAccessPermissionGetV1 - p: $projectIRI, g: $groupIRI, r: $resourceClassIRI, p: $propertyIRI, permission: $permission")
+            //_ = log.debug(s"defaultObjectAccessPermissionGetV1 - p: $projectIRI, g: $groupIRI, r: $resourceClassIRI, p: $propertyIRI, permission: $permission")
         } yield permission
     }
 
@@ -717,6 +770,96 @@ class PermissionsResponderV1 extends ResponderV1 {
     }
 
     /**
+      * Convenience method returning a set with combined max default object access permissions.
+      * @param projectIri the IRI of the project.
+      * @param groups the list of groups for which default object access permissions are retrieved and combined.
+      * @return a set of [[PermissionV1]].
+      */
+    def defaultObjectAccessPermissionsForGroupsGetV1(projectIri: IRI, groups: Seq[IRI]): Future[Set[PermissionV1]] = {
+
+        /* Get default object access permissions for each group and combine them */
+        val gpf: Seq[Future[Seq[PermissionV1]]] = for {
+            groupIri <- groups
+            //_ = log.debug(s"userDefaultObjectAccessPermissionsGetV1 - projectIri: $projectIri, groupIri: $groupIri")
+
+            groupPermissions: Future[Seq[PermissionV1]] = defaultObjectAccessPermissionGetV1(projectIri = projectIri, groupIri = Some(groupIri), resourceClassIri = None, propertyIri = None).map {
+                case Some(doap: DefaultObjectAccessPermissionV1) => doap.hasPermissions.toSeq
+                case None => Seq.empty[PermissionV1]
+            }
+
+        } yield groupPermissions
+
+        val allPermissionsFuture: Future[Seq[Seq[PermissionV1]]] = Future.sequence(gpf)
+
+        /* combines all permissions for each group and removes duplicates  */
+        val result: Future[Set[PermissionV1]] = for {
+            allPermissions: Seq[Seq[PermissionV1]] <- allPermissionsFuture
+
+            // remove instances with empty PermissionV1 sets
+            cleanedAllPermissions: Seq[Seq[PermissionV1]] = allPermissions.filter(_.nonEmpty)
+
+            /* Combine permission sequences */
+            combined = cleanedAllPermissions.foldLeft(Seq.empty[PermissionV1]) { (acc, seq) =>
+                acc ++ seq
+            }
+            /* Remove possible duplicate permissions */
+            result: Set[PermissionV1] = PermissionUtilV1.removeDuplicatePermissions(combined)
+
+            //_ = log.debug(s"defaultObjectAccessPermissionsForGroupsGetV1 - result: $result")
+        } yield result
+        result
+    }
+
+    /**
+      * Convenience method returning a set with default object access permissions defined on a resource class.
+      * @param projectIri the IRI of the project.
+      * @param resourceClassIri the resource's class IRI
+      * @return a set of [[PermissionV1]].
+      */
+    def defaultObjectAccessPermissionsForResourceClassGetV1(projectIri: IRI, resourceClassIri: IRI): Future[Set[PermissionV1]] = {
+        for {
+            defaultPermissionsOption: Option[DefaultObjectAccessPermissionV1] <- defaultObjectAccessPermissionGetV1(projectIri = projectIri, groupIri = None, resourceClassIri = Some(resourceClassIri), propertyIri = None)
+            defaultPermissions: Set[PermissionV1] = defaultPermissionsOption match {
+                case Some(doap) => doap.hasPermissions
+                case None => Set.empty[PermissionV1]
+            }
+        } yield defaultPermissions
+    }
+
+    /**
+      * Convenience method returning a set with default object access permissions defined on a resource class / property combination.
+      * @param projectIri the IRI of the project.
+      * @param resourceClassIri the resource's class IRI
+      * @param propertyIri the property's IRI.
+      * @return a set of [[PermissionV1]].
+      */
+    def defaultObjectAccessPermissionsForResourceClassPropertyGetV1(projectIri: IRI, resourceClassIri: IRI, propertyIri: IRI): Future[Set[PermissionV1]] = {
+        for {
+            defaultPermissionsOption: Option[DefaultObjectAccessPermissionV1] <- defaultObjectAccessPermissionGetV1(projectIri = projectIri, groupIri = None, resourceClassIri = Some(resourceClassIri), propertyIri = Some(propertyIri))
+            defaultPermissions: Set[PermissionV1] = defaultPermissionsOption match {
+                case Some(doap) => doap.hasPermissions
+                case None => Set.empty[PermissionV1]
+            }
+        } yield defaultPermissions
+    }
+
+    /**
+      * Convenience method returning a set with default object access permissions defined on a property.
+      * @param projectIri the IRI of the project.
+      * @param propertyIri the property's IRI.
+      * @return a set of [[PermissionV1]].
+      */
+    def defaultObjectAccessPermissionsForPropertyGetV1(projectIri: IRI, propertyIri: IRI): Future[Set[PermissionV1]] = {
+        for {
+            defaultPermissionsOption: Option[DefaultObjectAccessPermissionV1] <- defaultObjectAccessPermissionGetV1(projectIri = projectIri, groupIri = None, resourceClassIri = None, propertyIri = Some(propertyIri))
+            defaultPermissions: Set[PermissionV1] = defaultPermissionsOption match {
+                case Some(doap) => doap.hasPermissions
+                case None => Set.empty[PermissionV1]
+            }
+        } yield defaultPermissions
+    }
+
+    /**
       * Returns a string containing default object permissions statements ready for usage during creation of a new resource.
       * The permissions include any default object access permissions defined for the resource class and on any groups the
       * user is member of.
@@ -727,81 +870,205 @@ class PermissionsResponderV1 extends ResponderV1 {
       * @param permissionData   the permission data of the user for which the default object access permissions are requested.
       * @return an optional string with object access permission statements
       */
-    def defaultObjectAccessPermissionsStringForEntityGetV1(projectIri: IRI, resourceClassIri: Option[IRI], propertyIri: Option[IRI], permissionData: PermissionDataV1): Future[DefaultObjectAccessPermissionsStringResponseV1] = {
+    def defaultObjectAccessPermissionsStringForEntityGetV1(projectIri: IRI, resourceClassIri: IRI, propertyIri: Option[IRI], entityType: String, permissionData: PermissionDataV1): Future[DefaultObjectAccessPermissionsStringResponseV1] = {
 
         //log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - projectIRI: $projectIRI, resourceClassIRI: $resourceClassIRI, propertyIRI: $propertyIRI, permissionData:$permissionData")
         for {
         // check if necessary field are defined.
             _ <- Future(if (projectIri.isEmpty) throw BadRequestException("Project cannot be empty"))
-            _ = if (resourceClassIri.isEmpty && propertyIri.isEmpty) throw BadRequestException("Either resourceClassIri or propertyTypeIri need to be supplied")
-            _ = if (resourceClassIri.isDefined && propertyIri.isDefined) throw BadRequestException("Not allowed to supply both resourceClassIri and propertyTypeIri")
-
-            /* Get the default object access permissions for the knora-base:KnownUser group */
-            defaultPermissionsOnKnownUserOption: Option[DefaultObjectAccessPermissionV1] <- defaultObjectAccessPermissionGetV1(projectIri = projectIri, groupIri = Some(OntologyConstants.KnoraBase.KnownUser), resourceClassIri = None, propertyIri = None)
-
-            defaultPermissionsOnKnownUser: Set[PermissionV1] = defaultPermissionsOnKnownUserOption match {
-                case Some(doap) => doap.hasPermissions
-                case None => Set.empty[PermissionV1]
+            _ = if (entityType == PROPERTY_ENTITY_TYPE && propertyIri.isEmpty) {
+                    throw BadRequestException("PropertyTypeIri needs to be supplied")
             }
-            _ = log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnKnownUser: $defaultPermissionsOnKnownUser")
+            _ = if (permissionData.anonymousUser) throw BadRequestException("Anonymous Users are not allowed.")
 
-            /* Get the user's max default object access permissions from the user's permission data inside the user's profile */
-            defaultPermissionsOnProjectGroups: Set[PermissionV1] = permissionData.defaultObjectAccessPermissionsPerProject.getOrElse(projectIri, Set.empty[PermissionV1])
-            _ = log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnProjectGroups: $defaultPermissionsOnProjectGroups")
 
-            /* Get the default object access permissions defined on the resource class for the current project */
-            defaultPermissionsOnProjectEntityOption: Option[DefaultObjectAccessPermissionV1] <- defaultObjectAccessPermissionGetV1(projectIri = projectIri, groupIri = None, resourceClassIri = resourceClassIri, propertyIri = propertyIri)
-
-            defaultPermissionsOnProjectEntity: Set[PermissionV1] = defaultPermissionsOnProjectEntityOption match {
-                case Some(doap) => doap.hasPermissions
-                case None => Set.empty[PermissionV1]
+            /* Get the groups the user is member of. */
+            userGroupsOption: Option[Seq[IRI]] = permissionData.groupsPerProject.get(projectIri)
+            userGroups: Seq[IRI] = userGroupsOption match {
+                case Some(groups) => groups
+                case None => Seq.empty[IRI]
             }
-            _ = log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnProjectEntity: $defaultPermissionsOnProjectEntity")
 
-            /* Since we also have default object access permissions defined in the SystemProject,
-               we need to check there too, but only in the case that we didn't find anything
-               on the project level, since the project level definition overrides the system level definition. */
-            systemProject = OntologyConstants.KnoraBase.SystemProject
-            defaultPermissionsOnSystemEntityOptionF: Future[Option[DefaultObjectAccessPermissionV1]] = if (defaultPermissionsOnProjectEntity.isEmpty) {
-                defaultObjectAccessPermissionGetV1(projectIri = systemProject, groupIri = None, resourceClassIri = resourceClassIri, propertyIri = propertyIri)
+            /* Explicitly add 'SystemAdmin' and 'KnownUser' groups. */
+            extendedUserGroups: List[IRI] = if (permissionData.isSystemAdmin) {
+                OntologyConstants.KnoraBase.SystemAdmin :: OntologyConstants.KnoraBase.KnownUser :: userGroups.toList
             } else {
-                Future(None)
+                OntologyConstants.KnoraBase.KnownUser :: userGroups.toList
             }
-            defaultPermissionsOnSystemEntityOption <- defaultPermissionsOnSystemEntityOptionF
-            defaultPermissionsOnSystemEntity: Set[PermissionV1] = defaultPermissionsOnSystemEntityOption match {
-                case Some(doap) => doap.hasPermissions
-                case None => Set.empty[PermissionV1]
-            }
-            _ = log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnSystemEntity: $defaultPermissionsOnSystemEntity")
 
-            /* Get the default permissions defined for the SystemAdmin group. This is a kind of fallback if the
-               SystemAdmin user is not part of the project and could result in an empty permissions string. */
-            defaultPermissionsForSystemAdminOption: Option[DefaultObjectAccessPermissionV1] <- defaultObjectAccessPermissionGetV1(projectIri = OntologyConstants.KnoraBase.SystemProject, groupIri = Some(OntologyConstants.KnoraBase.SystemAdmin), resourceClassIri = None, propertyIri = None)
-            defaultPermissionsForSystemAdmin = if (permissionData.isSystemAdmin) {
-                defaultPermissionsForSystemAdminOption match {
-                    case Some(doap) => doap.hasPermissions
-                    case None => Set.empty[PermissionV1]
+            /* List buffer holding default object access permissions tagged with the precedence level:
+               0. ProjectAdmin > 1. ProjectEntity > 2. SystemEntity > 3. CustomGroups > 4. ProjectMember > 5. KnownUser
+               Permissions are added following the precedence level from the highest to the lowest. As soon as one set
+               of permissions is written into the buffer, any additionally found permissions are ignored. */
+            permissionsListBuffer = ListBuffer.empty[(String, Set[PermissionV1])]
+
+
+            /* Get the default object access permissions for the knora-base:ProjectAdmin group */
+            defaultPermissionsOnProjectAdminGroup: Set[PermissionV1] <- defaultObjectAccessPermissionsForGroupsGetV1(projectIri, List(OntologyConstants.KnoraBase.ProjectAdmin))
+            _ = if (defaultPermissionsOnProjectAdminGroup.nonEmpty) {
+                if (extendedUserGroups.contains(OntologyConstants.KnoraBase.ProjectAdmin) || extendedUserGroups.contains(OntologyConstants.KnoraBase.SystemAdmin)) {
+                    permissionsListBuffer += (("ProjectAdmin", defaultPermissionsOnProjectAdminGroup))
+                    log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnProjectAdminGroup: $defaultPermissionsOnProjectAdminGroup")
                 }
-            } else {
-                Set.empty[PermissionV1]
             }
-            _ = log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsForSystemAdmin: $defaultPermissionsForSystemAdmin")
 
-            /* Combine all five together and return most permissive */
-            allDefaultPermissions: Seq[PermissionV1] = defaultPermissionsOnKnownUser.toSeq ++ defaultPermissionsOnProjectGroups.toSeq ++ defaultPermissionsOnProjectEntity.toSeq ++ defaultPermissionsOnSystemEntity.toSeq ++ defaultPermissionsForSystemAdmin.toSeq
-            //_ = log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - allDefaultPermissions: $allDefaultPermissions")
+            ///////////////////////////////
+            // RESOURCE CLASS / PROPERTY
+            ///////////////////////////////
+            /* project resource class / property combination */
+            defaultPermissionsOnProjectResourceClassProperty: Set[PermissionV1] <- {
+                if (entityType == PROPERTY_ENTITY_TYPE && permissionsListBuffer.isEmpty) {
+                    defaultObjectAccessPermissionsForResourceClassPropertyGetV1(projectIri = projectIri, resourceClassIri = resourceClassIri, propertyIri = propertyIri.getOrElse(throw BadRequestException("PropertyIri needs to be supplied.")))
+                } else {
+                    Future(Set.empty[PermissionV1])
+                }
+            }
+            _= if (defaultPermissionsOnProjectResourceClassProperty.nonEmpty) {
+                permissionsListBuffer += (("ProjectResourceClassProperty", defaultPermissionsOnProjectResourceClassProperty))
+                log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnProjectResourceClassProperty: {}", defaultPermissionsOnProjectResourceClassProperty)
+            }
 
-            /* Remove duplicate permissions */
-            deduplicatedDefaultPermissions = PermissionUtilV1.removeDuplicatePermissions(allDefaultPermissions)
-            //_ = log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - deduplicatedDefaultPermissions: $deduplicatedDefaultPermissions")
+            /* system resource class / property combination */
+            defaultPermissionsOnSystemResourceClassProperty: Set[PermissionV1] <- {
+                if (entityType == PROPERTY_ENTITY_TYPE && permissionsListBuffer.isEmpty) {
+                    val systemProject = OntologyConstants.KnoraBase.SystemProject
+                    defaultObjectAccessPermissionsForResourceClassPropertyGetV1(projectIri = systemProject, resourceClassIri = resourceClassIri, propertyIri = propertyIri.getOrElse(throw BadRequestException("PropertyIri needs to be supplied.")))
+                } else {
+                    Future(Set.empty[PermissionV1])
+                }
+            }
+            _= if (defaultPermissionsOnSystemResourceClassProperty.nonEmpty) {
+                permissionsListBuffer += (("SystemResourceClassProperty", defaultPermissionsOnSystemResourceClassProperty))
+                log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnSystemResourceClassProperty: {}", defaultPermissionsOnSystemResourceClassProperty)
+            }
 
-            /* Remove lesser permissions contained in higher ones */
-            defaultPermissions = PermissionUtilV1.removeLesserPermissions(deduplicatedDefaultPermissions, PermissionType.OAP)
-            //_ = log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissions: $defaultPermissions")
+            ///////////////////////
+            // RESOURCE CLASS
+            ///////////////////////
+            /* Get the default object access permissions defined on the resource class for the current project */
+            defaultPermissionsOnProjectResourceClass: Set[PermissionV1] <- {
+                if (entityType == RESOURCE_ENTITY_TYPE && permissionsListBuffer.isEmpty) {
+                    defaultObjectAccessPermissionsForResourceClassGetV1(projectIri = projectIri, resourceClassIri = resourceClassIri)
+                } else {
+                    Future(Set.empty[PermissionV1])
+                }
+            }
+            _ = if (defaultPermissionsOnProjectResourceClass.nonEmpty) {
+                permissionsListBuffer += (("ProjectResourceClass", defaultPermissionsOnProjectResourceClass))
+                log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnProjectResourceClass: {}", defaultPermissionsOnProjectResourceClass)
+            }
+
+            /* Get the default object access permissions defined on the resource class inside the SystemProject */
+            defaultPermissionsOnSystemResourceClass: Set[PermissionV1] <- {
+                if (entityType == RESOURCE_ENTITY_TYPE && permissionsListBuffer.isEmpty) {
+                    val systemProject = OntologyConstants.KnoraBase.SystemProject
+                    defaultObjectAccessPermissionsForResourceClassGetV1(projectIri = systemProject, resourceClassIri = resourceClassIri)
+                } else {
+                    Future(Set.empty[PermissionV1])
+                }
+            }
+            _ = if (defaultPermissionsOnSystemResourceClass.nonEmpty) {
+                permissionsListBuffer += (("SystemResourceClass", defaultPermissionsOnSystemResourceClass))
+                log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnSystemResourceClass: {}", defaultPermissionsOnSystemResourceClass)
+            }
+
+            ///////////////////////
+            // PROPERTY
+            ///////////////////////
+            /* project property */
+            defaultPermissionsOnProjectProperty: Set[PermissionV1] <- {
+                if (entityType == PROPERTY_ENTITY_TYPE && permissionsListBuffer.isEmpty) {
+                    defaultObjectAccessPermissionsForPropertyGetV1(projectIri = projectIri, propertyIri = propertyIri.getOrElse(throw BadRequestException("PropertyIri needs to be supplied.")))
+                } else {
+                    Future(Set.empty[PermissionV1])
+                }
+            }
+            _= if (defaultPermissionsOnProjectProperty.nonEmpty) {
+                permissionsListBuffer += (("ProjectProperty", defaultPermissionsOnProjectProperty))
+                log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnProjectProperty: {}", defaultPermissionsOnProjectProperty)
+            }
+
+            /* system property */
+            defaultPermissionsOnSystemProperty: Set[PermissionV1] <- {
+                if (entityType == PROPERTY_ENTITY_TYPE && permissionsListBuffer.isEmpty) {
+                    val systemProject = OntologyConstants.KnoraBase.SystemProject
+                    defaultObjectAccessPermissionsForPropertyGetV1(projectIri = systemProject, propertyIri = propertyIri.getOrElse(throw BadRequestException("PropertyIri needs to be supplied.")))
+                } else {
+                    Future(Set.empty[PermissionV1])
+                }
+            }
+            _= if (defaultPermissionsOnSystemProperty.nonEmpty) {
+                permissionsListBuffer += (("SystemProperty", defaultPermissionsOnSystemProperty))
+                log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnSystemProperty: {}", defaultPermissionsOnSystemProperty)
+            }
+
+            ///////////////////////
+            // CUSTOM GROUPS
+            ///////////////////////
+            /* Get the default object access permissions for custom groups (all groups other than the built-in groups) */
+            defaultPermissionsOnCustomGroups: Set[PermissionV1] <- {
+                if (extendedUserGroups.nonEmpty && permissionsListBuffer.isEmpty) {
+                    val customGroups: List[IRI] = extendedUserGroups.toList diff List(OntologyConstants.KnoraBase.KnownUser, OntologyConstants.KnoraBase.ProjectMember, OntologyConstants.KnoraBase.ProjectAdmin, OntologyConstants.KnoraBase.SystemAdmin)
+                    if (customGroups.nonEmpty) {
+                        defaultObjectAccessPermissionsForGroupsGetV1(projectIri, customGroups)
+                    } else {
+                        Future(Set.empty[PermissionV1])
+                    }
+                } else {
+                    // case where non SystemAdmin from outside of project
+                    Future(Set.empty[PermissionV1])
+                }
+            }
+            _ = if (defaultPermissionsOnCustomGroups.nonEmpty) {
+                permissionsListBuffer += (("CustomGroups", defaultPermissionsOnCustomGroups))
+                log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnCustomGroups: $defaultPermissionsOnCustomGroups")
+            }
+
+            ///////////////////////
+            // PROJECT MEMBER
+            ///////////////////////
+            /* Get the default object access permissions for the knora-base:ProjectMember group */
+            defaultPermissionsOnProjectMemberGroup: Set[PermissionV1] <- {
+                if (permissionsListBuffer.isEmpty) {
+                    defaultObjectAccessPermissionsForGroupsGetV1(projectIri, List(OntologyConstants.KnoraBase.ProjectMember))
+                } else {
+                    Future(Set.empty[PermissionV1])
+                }
+            }
+            _ = if (defaultPermissionsOnProjectMemberGroup.nonEmpty) {
+                if (extendedUserGroups.contains(OntologyConstants.KnoraBase.ProjectMember) || extendedUserGroups.contains(OntologyConstants.KnoraBase.SystemAdmin)) {
+                    permissionsListBuffer += (("ProjectMember", defaultPermissionsOnProjectMemberGroup))
+                }
+                log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnProjectMemberGroup: $defaultPermissionsOnProjectMemberGroup")
+            }
+
+            ///////////////////////
+            // KNOWN USER
+            ///////////////////////
+            /* Get the default object access permissions for the knora-base:KnownUser group */
+            defaultPermissionsOnKnownUserGroup: Set[PermissionV1] <- {
+                if (permissionsListBuffer.isEmpty) {
+                    defaultObjectAccessPermissionsForGroupsGetV1(projectIri, List(OntologyConstants.KnoraBase.KnownUser))
+                } else {
+                    Future(Set.empty[PermissionV1])
+                }
+            }
+            _ = if (defaultPermissionsOnKnownUserGroup.nonEmpty) {
+                if (extendedUserGroups.contains(OntologyConstants.KnoraBase.KnownUser)) {
+                    permissionsListBuffer += (("KnownUser", defaultPermissionsOnKnownUserGroup))
+                    log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnKnownUserGroup: $defaultPermissionsOnKnownUserGroup")
+                }
+            }
 
             /* Create permissions string */
-            result = PermissionUtilV1.formatPermissions(defaultPermissions, PermissionType.OAP)
-        // _ = log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - result: $result")
+            result = permissionsListBuffer.length match {
+                case 1 => {
+                    PermissionUtilV1.formatPermissions(permissionsListBuffer.head._2, PermissionType.OAP)
+                }
+                case 0 => throw BadRequestException("The resulting request would lead to an empty permissions string, which is not allowed. Are all the necessary default object access permissions defined?")
+                case _ => throw AssertionException("The permissions list buffer holding default object permissions should never be larger then 1.")
+            }
+            _ = log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - project: {}, precedence: {}, defaultObjectAccessPermissions: {}", projectIri, permissionsListBuffer.head._1, result)
         } yield DefaultObjectAccessPermissionsStringResponseV1(result)
     }
 

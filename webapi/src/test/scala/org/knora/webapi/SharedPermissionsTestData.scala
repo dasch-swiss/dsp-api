@@ -83,6 +83,15 @@ object SharedPermissionsTestData {
                             ))
         )
 
+    val perm002_a3: ap =
+        ap(
+            iri = "http://data.knora.org/permissions/002-a3",
+            p = AdministrativePermissionV1(iri = "http://data.knora.org/permissions/002-a3", forProject = SharedAdminTestData.IMAGES_PROJECT_IRI, forGroup = "http://data.knora.org/groups/images-reviewer", hasPermissions = Set(
+                PermissionV1.projectResourceCreateRestrictedPermission("http://www.knora.org/ontology/images#bild"),
+                PermissionV1.projectResourceCreateRestrictedPermission("http://www.knora.org/ontology/images#bildformat")
+            ))
+        )
+
     val perm002_d1: doap =
         doap(
             iri = "http://data.knora.org/permissions/002-d1",

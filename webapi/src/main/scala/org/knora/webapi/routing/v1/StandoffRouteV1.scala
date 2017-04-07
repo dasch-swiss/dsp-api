@@ -51,7 +51,7 @@ object StandoffRouteV1 extends Authenticator {
         implicit val timeout = settings.defaultTimeout
         implicit val materializer = ActorMaterializer()
 
-        val responderManager = system.actorSelection("/user/responderManager")
+        val responderManager = system.actorSelection("/user/responderVersionRouter")
 
         path("v1" / "mapping") {
             post {

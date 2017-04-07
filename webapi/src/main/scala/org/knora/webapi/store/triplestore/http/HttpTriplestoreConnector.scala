@@ -256,7 +256,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
         log.debug("resetTripleStoreContent")
         val resetTriplestoreResult = for {
 
-        // drop old content
+            // drop old content
             dropResult <- dropAllTriplestoreContent()
 
             // insert new content

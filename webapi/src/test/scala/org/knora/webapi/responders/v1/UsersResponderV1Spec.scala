@@ -31,9 +31,8 @@ import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse}
 import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.messages.v1.store.triplestoremessages._
-import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_NAME
+import org.knora.webapi.responders.RESPONDER_MANAGER_V1_ACTOR_NAME
 import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
-import org.knora.webapi.util.MessageUtil
 
 import scala.concurrent.duration._
 
@@ -64,7 +63,7 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
     private val incunabulaUserEmail = incunabulaUser.userData.email.get
 
     private val actorUnderTest = TestActorRef[UsersResponderV1]
-    private val responderManager = system.actorOf(Props(new ResponderManagerV1 with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
+    private val responderManager = system.actorOf(Props(new ResponderManagerV1 with LiveActorMaker), name = RESPONDER_MANAGER_V1_ACTOR_NAME)
     private val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
 
     private val rdfDataObjects = List() /* sending an empty list, will only load the default ontologies and data */
@@ -78,41 +77,59 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
     }
 
     "The UsersResponder " when {
+        "asked about all users" should {
+            "return a list" in {
+                actorUnderTest ! UsersGetRequestV1(rootUser)
+                val response = expectMsgType[UsersGetResponseV1](timeout)
+                response.users.nonEmpty should be (true)
+                response.users.size should be (16)
+            }
+        }
         "asked about an user identified by 'iri' " should {
 
             "return a profile if the user (root user) is known" in {
-                actorUnderTest ! UserProfileByIRIGetV1(rootUserIri, UserProfileType.FULL)
-                expectMsg(rootUser.ofType(UserProfileType.FULL))
+                actorUnderTest ! UserProfileByIRIGetV1(rootUserIri, UserProfileTypeV1.FULL)
+                expectMsg(Some(rootUser.ofType(UserProfileTypeV1.FULL)))
             }
 
             "return a profile if the user (incunabula user) is known" in {
-                actorUnderTest ! UserProfileByIRIGetV1(incunabulaUserIri, UserProfileType.FULL)
-                expectMsg(incunabulaUser.ofType(UserProfileType.FULL))
+                actorUnderTest ! UserProfileByIRIGetV1(incunabulaUserIri, UserProfileTypeV1.FULL)
+                expectMsg(Some(incunabulaUser.ofType(UserProfileTypeV1.FULL)))
             }
 
             "return 'NotFoundException' when the user is unknown " in {
-                actorUnderTest ! UserProfileByIRIGetV1("http://data.knora.org/users/notexisting", UserProfileType.RESTRICTED)
+                actorUnderTest ! UserProfileByIRIGetRequestV1("http://data.knora.org/users/notexisting", UserProfileTypeV1.RESTRICTED, rootUser)
                 expectMsg(Failure(NotFoundException(s"User 'http://data.knora.org/users/notexisting' not found")))
+            }
+
+            "return 'None' when the user is unknown " in {
+                actorUnderTest ! UserProfileByIRIGetV1("http://data.knora.org/users/notexisting", UserProfileTypeV1.RESTRICTED)
+                expectMsg(None)
             }
         }
         "asked about an user identified by 'email'" should {
 
-            "return a profile if the user (root user) is known " in {
-                actorUnderTest ! UserProfileByEmailGetV1(rootUserEmail, UserProfileType.RESTRICTED)
-                expectMsg(rootUser.ofType(UserProfileType.RESTRICTED))
+            "return a profile if the user (root user) is known" in {
+                actorUnderTest ! UserProfileByEmailGetV1(rootUserEmail, UserProfileTypeV1.RESTRICTED)
+                expectMsg(Some(rootUser.ofType(UserProfileTypeV1.RESTRICTED)))
             }
 
-            "return a profile if the user (incunabula user) is known " in {
-                actorUnderTest ! UserProfileByEmailGetV1(incunabulaUserEmail, UserProfileType.RESTRICTED)
-                expectMsg(incunabulaUser.ofType(UserProfileType.RESTRICTED))
+            "return a profile if the user (incunabula user) is known" in {
+                actorUnderTest ! UserProfileByEmailGetV1(incunabulaUserEmail, UserProfileTypeV1.RESTRICTED)
+                expectMsg(Some(incunabulaUser.ofType(UserProfileTypeV1.RESTRICTED)))
             }
 
-            "return 'NotFoundException' when the user is unknown " in {
-                actorUnderTest ! UserProfileByEmailGetV1("userwrong@example.com", UserProfileType.RESTRICTED)
+            "return 'NotFoundException' when the user is unknown" in {
+                actorUnderTest ! UserProfileByEmailGetRequestV1("userwrong@example.com", UserProfileTypeV1.RESTRICTED, rootUser)
                 expectMsg(Failure(NotFoundException(s"User 'userwrong@example.com' not found")))
             }
+
+            "return 'None' when the user is unknown" in {
+                actorUnderTest ! UserProfileByEmailGetV1("userwrong@example.com", UserProfileTypeV1.RESTRICTED)
+                expectMsg(None)
+            }
         }
-        "asked to create a new user " should {
+        "asked to create a new user" should {
 
             "create the user and return it's profile if the supplied username is unique " in {
                 actorUnderTest ! UserCreateRequestV1(

@@ -43,7 +43,7 @@ object ProjectsRouteV1 extends Authenticator {
         implicit val system: ActorSystem = _system
         implicit val executionContext = system.dispatcher
         implicit val timeout = settings.defaultTimeout
-        val responderManager = system.actorSelection("/user/responderManager")
+        val responderManager = system.actorSelection("/user/responderVersionRouter")
 
         path("v1" / "projects") {
             get {
@@ -89,6 +89,35 @@ object ProjectsRouteV1 extends Authenticator {
                         log
                     )
                 }
+            }
+        } ~ path("v1" / "project" / "members" / "iri" / Segment) { value =>
+            get {
+                requestContext =>
+                    val projectIri = InputValidation.toIri(value, () => throw BadRequestException(s"Invalid user IRI $value"))
+                    val userProfile = getUserProfileV1(requestContext)
+                    val params = requestContext.request.uri.query().toMap
+                    val requestMessage = ProjectMembersByIRIGetRequestV1(projectIri, userProfile)
+                    RouteUtilV1.runJsonRoute(
+                        requestMessage,
+                        requestContext,
+                        settings,
+                        responderManager,
+                        log
+                    )
+            }
+        } ~ path("v1" / "project" / "members" / "shortname" / Segment) { value =>
+            get {
+                requestContext =>
+                    val userProfile = getUserProfileV1(requestContext)
+                    val params = requestContext.request.uri.query().toMap
+                    val requestMessage = ProjectMembersByShortnameGetRequestV1(value, userProfile)
+                    RouteUtilV1.runJsonRoute(
+                        requestMessage,
+                        requestContext,
+                        settings,
+                        responderManager,
+                        log
+                    )
             }
         }
     }

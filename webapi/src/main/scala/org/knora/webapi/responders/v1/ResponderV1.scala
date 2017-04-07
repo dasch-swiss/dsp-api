@@ -22,6 +22,8 @@ package org.knora.webapi.responders.v1
 
 import akka.actor.{Actor, ActorLogging}
 import org.knora.webapi.Settings
+import org.knora.webapi.responders.RESPONDER_VERSION_ROUTER_ACTOR_PATH
+import org.knora.webapi.store.STORE_MANAGER_ACTOR_PATH
 
 import scala.language.postfixOps
 
@@ -50,12 +52,12 @@ trait ResponderV1 extends Actor with ActorLogging {
     protected implicit val executionContext = system.dispatcher
 
     /**
-      * A reference to the Knora API v1 responder manager.
+      * A reference to the Knora API version responder router.
       */
-    protected val responderManager = context.actorSelection("/user/responderManager")
+    protected val responderVersionRouter = context.actorSelection(RESPONDER_VERSION_ROUTER_ACTOR_PATH)
 
     /**
       * A reference to the store manager.
       */
-    protected val storeManager = context.actorSelection("/user/storeManager")
+    protected val storeManager = context.actorSelection(STORE_MANAGER_ACTOR_PATH)
 }

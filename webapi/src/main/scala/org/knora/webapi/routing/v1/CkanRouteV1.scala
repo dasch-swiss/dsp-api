@@ -42,7 +42,7 @@ object CkanRouteV1 extends Authenticator {
         implicit val system: ActorSystem = _system
         implicit val executionContext = system.dispatcher
         implicit val timeout = Timeout(30.seconds)
-        val responderManager = system.actorSelection("/user/responderManager")
+        val responderManager = system.actorSelection("/user/responderVersionRouter")
 
         path("v1" / "ckan") {
             get {

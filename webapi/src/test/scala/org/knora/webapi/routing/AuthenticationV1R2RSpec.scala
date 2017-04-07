@@ -52,7 +52,7 @@ class AuthenticationV1R2RSpec extends R2RSpec with SessionJsonProtocol {
          akka.stdout-loglevel = "DEBUG"
         """.stripMargin
 
-    private val responderManager = system.actorOf(Props(new ResponderManagerV1 with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
+    private val responderManager = system.actorOf(Props(new ResponderManagerV1 with LiveActorMaker), name = RESPONDER_MANAGER_V1_ACTOR_NAME)
     private val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
 
     private val authenticatePath = AuthenticateRouteV1.knoraApiPath(system, settings, log)
@@ -175,8 +175,7 @@ class AuthenticationV1R2RSpec extends R2RSpec with SessionJsonProtocol {
             /* wrong username */
             Get(s"/v1/session?login&email=$wrongEmailEnc&password=$testPass") ~> authenticatePath ~> check {
                 //log.debug("==>> " + responseAs[String])
-                // FIXME: This does not work as expected (#372). Want 'Unauthorized'.
-                status should equal(StatusCodes.NotFound)
+                status should equal(StatusCodes.Unauthorized)
             }
         }
 
@@ -211,8 +210,7 @@ class AuthenticationV1R2RSpec extends R2RSpec with SessionJsonProtocol {
             /* wrong email */
             Get("/v1/session?login") ~> addCredentials(BasicHttpCredentials(wrongEmail, testPass)) ~> authenticatePath ~> check {
                 //log.debug("==>> " + responseAs[String])
-                // FIXME: This does not work as expected (#372). Want 'Unauthorized'.
-                status should equal(StatusCodes.NotFound)
+                status should equal(StatusCodes.Unauthorized)
             }
         }
 

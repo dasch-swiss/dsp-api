@@ -25,7 +25,7 @@ import akka.event.LoggingAdapter
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import org.knora.webapi.SettingsImpl
-import org.knora.webapi.routing.Authenticator
+import org.knora.webapi.routing.{Authenticator, ExtractorHelper}
 
 /**
   * A route providing authentication support. It allows the creation of "sessions", which is used in the SALSAH app.
@@ -41,7 +41,7 @@ object AuthenticateRouteV1 extends Authenticator {
             get {
                 requestContext => {
                     requestContext.complete {
-                        doAuthenticate(requestContext)
+                        doAuthenticate(ExtractorHelper.extractCredentials(requestContext))
                     }
                 }
             }
@@ -51,24 +51,24 @@ object AuthenticateRouteV1 extends Authenticator {
                     requestContext.complete {
                         val params = requestContext.request.uri.query().toMap
                         if (params.contains("logout")) {
-                            doLogout(requestContext)
+                            doLogoutV1(requestContext)
                         } else if (params.contains("login")) {
-                            doLogin(requestContext)
+                            doLoginV1(requestContext)
                         } else {
-                            doSessionAuthentication(requestContext)
+                            doSessionAuthenticationV1(requestContext)
                         }
                     }
                 }
             } ~ post {
                 requestContext => {
                     requestContext.complete {
-                        doLogin(requestContext)
+                        doLoginV1(requestContext)
                     }
                 }
             } ~ delete {
                 requestContext => {
                     requestContext.complete {
-                        doLogout(requestContext)
+                        doLogoutV1(requestContext)
                     }
                 }
             }

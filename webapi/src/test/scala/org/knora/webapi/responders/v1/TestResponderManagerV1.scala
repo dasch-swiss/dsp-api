@@ -35,8 +35,8 @@ class TestResponderManagerV1(mockResponders: Map[String, ActorRef]) extends Resp
     this: ActorMaker =>
 
     /**
-      * Initialised to the value of the key [[SIPI_ROUTER_ACTOR_NAME]] in `mockResponders` if provided, otherwise
+      * Initialised to the value of the key [[SIPI_ROUTER_V1_ACTOR_NAME]] in `mockResponders` if provided, otherwise
       * the default Akka router provided by the base class for the Sipi responder.
       */
-    override val sipiRouter = mockResponders.getOrElse(SIPI_ROUTER_ACTOR_NAME, makeDefaultSipiRouter)
+    override val sipiRouter = mockResponders.getOrElse(SIPI_ROUTER_V1_ACTOR_NAME, makeDefaultSipiRouter)
 }

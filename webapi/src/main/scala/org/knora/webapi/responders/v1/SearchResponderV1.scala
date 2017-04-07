@@ -161,7 +161,7 @@ class SearchResponderV1 extends ResponderV1 {
                 userProfile = searchGetRequest.userProfile
             )
 
-            entityInfoResponse <- (responderManager ? entityInfoRequest).mapTo[EntityInfoGetResponseV1]
+            entityInfoResponse <- (responderVersionRouter ? entityInfoRequest).mapTo[EntityInfoGetResponseV1]
 
             // Group the search results by resource IRI.
             groupedByResourceIri: Map[IRI, Seq[VariableResultsRow]] = searchResponse.results.bindings.groupBy(_.rowMap("resource"))
@@ -299,7 +299,7 @@ class SearchResponderV1 extends ResponderV1 {
 
         for {
         // get information about all the properties involved
-            propertyInfo: EntityInfoGetResponseV1 <- (responderManager ? EntityInfoGetRequestV1(propertyIris = searchGetRequest.propertyIri.toSet, userProfile = searchGetRequest.userProfile)).mapTo[EntityInfoGetResponseV1]
+            propertyInfo: EntityInfoGetResponseV1 <- (responderVersionRouter ? EntityInfoGetRequestV1(propertyIris = searchGetRequest.propertyIri.toSet, userProfile = searchGetRequest.userProfile)).mapTo[EntityInfoGetResponseV1]
 
             /*
              * handle parallel lists here: propertyIri, comparisonOperator, SearchValue
@@ -473,7 +473,7 @@ class SearchResponderV1 extends ResponderV1 {
                 userProfile = searchGetRequest.userProfile
             )
 
-            entityInfoResponse <- (responderManager ? entityInfoRequest).mapTo[EntityInfoGetResponseV1]
+            entityInfoResponse <- (responderVersionRouter ? entityInfoRequest).mapTo[EntityInfoGetResponseV1]
 
             // Group the search results by resource IRI.
             groupedByResourceIri: Map[IRI, Seq[VariableResultsRow]] = searchResponse.results.bindings.groupBy(_.rowMap("resource"))
