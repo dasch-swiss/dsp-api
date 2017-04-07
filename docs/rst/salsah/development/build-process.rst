@@ -82,6 +82,7 @@ In order to run the tests, the Selenium driver for Chrome has to be installed.
 
 It is architecture-dependant, please go to ``salsah/lib/chromedriver`` and unzip there the one that matches your architecture, or download it from `here <https://sites.google.com/a/chromium.org/chromedriver/downloads>`_ and install it in this directory.
 Then, make sure that:
+
     - Fuseki was started as shown above,
     - the API server was started as shown above and with the ``allowResetTriplestoreContentOperationOverHTTP`` flag (for more information about this flag, see :ref:`webapi-server-startup-flags`)
 
