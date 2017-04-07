@@ -80,13 +80,9 @@ Run the automated tests
 
 In order to run the tests, the Selenium driver for Chrome has to be installed.
 
-It is architecture-dependant, please go to ``salsah/lib/chromedriver`` and unzip there the one that matches your architecture, or download it from `here <https://sites.google.com/a/chromium.org/chromedriver/downloads>`_ and install it in this directory.
-Then, make sure that:
+It is architecture-dependant, please go to ``salsah/lib/chromedriver`` directory and unzip the distribution that matches your architecture, or download it from `here <https://sites.google.com/a/chromium.org/chromedriver/downloads>`_ and install it in this directory.
 
-    - Fuseki was started as shown above,
-    - the API server was started as shown above and with the ``allowResetTriplestoreContentOperationOverHTTP`` flag (for more information about this flag, see :ref:`webapi-server-startup-flags`)
-
-Then start salsah, at the SBT prompt:
+Then, launch the services as described above; the triple store with the test data, the api server with the ``allowResetTriplestoreContentOperationOverHTTP`` option, sipi with the test configuration and salsah where you can run the tests in the same SBT session:
 
 ::
 
@@ -96,7 +92,7 @@ Then start salsah, at the SBT prompt:
     > re-start
     > test
 
-Note: in case nothing happens, make sure you wait long enough; Salsah reports some errors only after a timeout of 1 minute.
+Note: please be patient as salsah can take up to one mimute (end of a time-out) before reporting some errors.
 
 SBT Build Configuration
 ------------------------
