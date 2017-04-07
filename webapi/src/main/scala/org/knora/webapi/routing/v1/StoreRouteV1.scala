@@ -40,7 +40,7 @@ object StoreRouteV1 extends Authenticator with StoreV1JsonProtocol {
         implicit val system: ActorSystem = _system
         implicit val executionContext = system.dispatcher
         implicit val timeout = Timeout(300.seconds)
-        val responderManager = system.actorSelection("/user/responderManager")
+        val responderManager = system.actorSelection("/user/responderVersionRouter")
 
         path("v1" / "store") {
             get {

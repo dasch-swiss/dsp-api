@@ -167,7 +167,7 @@ trait KnoraService {
             println("... loading of demo data finished.")
         }
 
-        val ontologyCacheFuture = responderManager ? LoadOntologiesRequest(systemUser)
+        val ontologyCacheFuture = responderVersionRouter ? LoadOntologiesRequest(systemUser)
         Await.result(ontologyCacheFuture, timeout.duration).asInstanceOf[LoadOntologiesResponse]
 
         if (StartupFlags.allowResetTriplestoreContentOperationOverHTTP.get) {

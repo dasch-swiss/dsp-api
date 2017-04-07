@@ -311,7 +311,7 @@ class CkanResponderV1 extends ResponderV1 {
         Future.sequence {
             for {
                 pName <- projectNames
-                projectInfoResponseFuture = (responderManager ? ProjectInfoByShortnameGetRequestV1(pName, Some(userProfile))).mapTo[ProjectInfoResponseV1]
+                projectInfoResponseFuture = (responderVersionRouter ? ProjectInfoByShortnameGetRequestV1(pName, Some(userProfile))).mapTo[ProjectInfoResponseV1]
                 result = projectInfoResponseFuture.map(_.project_info) map {
                     case pInfo => (pName, pInfo)
                 }
@@ -372,7 +372,7 @@ class CkanResponderV1 extends ResponderV1 {
       */
     private def getResource(iri: webapi.IRI, userProfileV1: UserProfileV1): Future[(String, Option[ResourceInfoV1], Option[PropsV1])] = {
 
-        val resourceFullResponseFuture = (responderManager ? ResourceFullGetRequestV1(iri, userProfileV1)).mapTo[ResourceFullResponseV1]
+        val resourceFullResponseFuture = (responderVersionRouter ? ResourceFullGetRequestV1(iri, userProfileV1)).mapTo[ResourceFullResponseV1]
 
         resourceFullResponseFuture map {
             case ResourceFullResponseV1(resInfo, _, props, _, _) => (iri, resInfo, props)
@@ -429,10 +429,10 @@ class CkanResponderV1 extends ResponderV1 {
                             propertyV1.values.map(literal => dateValue2String(literal.asInstanceOf[DateValueV1]))
 
                         case OntologyConstants.KnoraBase.ListValue =>
-                            propertyV1.values.map(literal => listValue2String(literal.asInstanceOf[HierarchicalListValueV1], responderManager))
+                            propertyV1.values.map(literal => listValue2String(literal.asInstanceOf[HierarchicalListValueV1], responderVersionRouter))
 
                         case OntologyConstants.KnoraBase.Resource => // TODO: this could actually be a subclass of knora-base:Resource.
-                            propertyV1.values.map(literal => resourceValue2String(literal.asInstanceOf[LinkV1], responderManager))
+                            propertyV1.values.map(literal => resourceValue2String(literal.asInstanceOf[LinkV1], responderVersionRouter))
 
                         case _ => Vector()
                     }

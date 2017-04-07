@@ -45,7 +45,7 @@ object UsersRouteV1 extends Authenticator {
         implicit val system: ActorSystem = _system
         implicit val executionContext = system.dispatcher
         implicit val timeout = settings.defaultTimeout
-        val responderManager = system.actorSelection("/user/responderManager")
+        val responderManager = system.actorSelection("/user/responderVersionRouter")
 
         path("v1" / "users" / "iri" / Segment) {value =>
             get {

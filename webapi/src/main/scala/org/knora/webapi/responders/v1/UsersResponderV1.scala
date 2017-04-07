@@ -556,13 +556,13 @@ class UsersResponderV1 extends ResponderV1 {
             for {
             /* get the user's permission profile from the permissions responder */
                 permissionData <- if (userProfileType != UserProfileTypeV1.SHORT) {
-                    (responderManager ? PermissionDataGetV1(projectIris = projectIris, groupIris = groupIris, isInProjectAdminGroups = isInProjectAdminGroups, isInSystemAdminGroup = isInSystemAdminGroup)).mapTo[PermissionDataV1]
+                    (responderVersionRouter ? PermissionDataGetV1(projectIris = projectIris, groupIris = groupIris, isInProjectAdminGroups = isInProjectAdminGroups, isInSystemAdminGroup = isInSystemAdminGroup)).mapTo[PermissionDataV1]
                 } else {
                     Future(PermissionDataV1(anonymousUser = false))
                 }
 
             projectInfoFutures: Seq[Future[ProjectInfoV1]] = projectIris.map {
-                projectIri => (responderManager ? ProjectInfoByIRIGetV1(iri = projectIri, userProfileV1 = None)).mapTo[ProjectInfoV1]
+                projectIri => (responderVersionRouter ? ProjectInfoByIRIGetV1(iri = projectIri, userProfileV1 = None)).mapTo[ProjectInfoV1]
             }
 
             projectInfos: Seq[ProjectInfoV1] <- Future.sequence(projectInfoFutures)

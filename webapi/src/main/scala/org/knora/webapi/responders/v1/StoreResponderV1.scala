@@ -68,7 +68,7 @@ class StoreResponderV1 extends ResponderV1 {
             resetResponse <- (storeManager ? ResetTriplestoreContent(rdfDataObjects)).mapTo[ResetTriplestoreContentACK]
             _ = log.debug(s"resetTriplestoreContent - triplestore reset done ${resetResponse.toString}")
 
-            loadOntologiesResponse <- (responderManager ? LoadOntologiesRequest(systemUser)).mapTo[LoadOntologiesResponse]
+            loadOntologiesResponse <- (responderVersionRouter ? LoadOntologiesRequest(systemUser)).mapTo[LoadOntologiesResponse]
             _ = log.debug(s"resetTriplestoreContent - load ontology done ${loadOntologiesResponse.toString}")
 
             result = ResetTriplestoreContentResponseV1(message = "success")

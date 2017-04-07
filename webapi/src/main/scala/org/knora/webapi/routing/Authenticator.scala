@@ -32,8 +32,8 @@ import com.typesafe.scalalogging.Logger
 import org.apache.jena.sparql.function.library.leviathan.log
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.usermessages._
-import org.knora.webapi.messages.v2.responder.usermessages.UserProfileV2
-import org.knora.webapi.responders.RESPONDER_MANAGER_V1_ACTOR_PATH
+import org.knora.webapi.messages.v2.responder.usermessages.{UserProfileByEmailGetIntReqV1, UserProfileByEmailGetIntReqV2, UserProfileIntRespV2, UserProfileV2}
+import org.knora.webapi.responders.RESPONDER_VERSION_ROUTER_ACTOR_PATH
 import org.knora.webapi.util.CacheUtil
 import org.slf4j.LoggerFactory
 import spray.json.{JsNumber, JsObject, JsString}
@@ -381,11 +381,11 @@ object Authenticator {
             throw BadCredentialsException(BAD_CRED_USERNAME_PASSWORD_NOT_EXTRACTABLE)
         }
 
-        val userProfileV2 = getUserProfileV2ByEmail(credentials.email.get)
+        val userProfileV2: UserProfileV2 = getUserProfileV2ByEmail(credentials.email.get)
         //log.debug(s"authenticateCredentials - userProfileV1: $userProfileV1")
 
         /* check if the user is active, if not, then no need to check the password */
-        val isActiveUser = if (userProfileV1.userData.isActiveUser.get) {
+        val isActiveUser = if (userProfileV2.userData.isActiveUser.get) {
             true
         } else {
             log.debug("authenticateCredentials - user is not active")
@@ -393,15 +393,15 @@ object Authenticator {
         }
 
         /* check the password and if session is started, store it in the cache */
-        if (userProfileV1.passwordMatch(credentials.password.get)) {
+        if (userProfileV2.passwordMatch(credentials.password.get)) {
             // create session id and cache user profile under this id
             log.debug("authenticateCredentials - password matched")
             if (sessionEnabled) {
                 val sId = UUID.randomUUID().toString
-                CacheUtil.put(AUTHENTICATION_CACHE_NAME, sId, userProfileV1)
-                SessionV1(Some(sId), userProfileV1)
+                CacheUtil.put(AUTHENTICATION_CACHE_NAME, sId, userProfileV2)
+                SessionV2(Some(sId), userProfileV2)
             } else {
-                SessionV1(None, userProfileV1)
+                SessionV2(None, userProfileV2)
             }
         } else {
             log.debug(s"authenticateCredentials - password did not match")
@@ -445,7 +445,7 @@ object Authenticator {
       * @return a [[Success(UserProfileV1)]]
       */
     private def getUserProfileV1ByEmail(email: String)(implicit system: ActorSystem, timeout: Timeout, executionContext: ExecutionContext): UserProfileV1 = {
-        val responderManager = system.actorSelection(RESPONDER_MANAGER_V1_ACTOR_PATH)
+        val responderVersionRouter = system.actorSelection(RESPONDER_VERSION_ROUTER_ACTOR_PATH)
 
         if (email.nonEmpty) {
             // try to get it from the cache
@@ -457,7 +457,7 @@ object Authenticator {
                 case None =>
                     // didn't found one, so I will try to get it from the triple store
                     val userProfileV1Future = for {
-                        maybeUserProfileV1 <- (responderManager ? UserProfileByEmailGetV1(email, UserProfileTypeV1.FULL)).mapTo[Option[UserProfileV1]]
+                        maybeUserProfileV1 <- (responderVersionRouter ? UserProfileByEmailGetV1(email, UserProfileTypeV1.FULL)).mapTo[Option[UserProfileV1]]
                         userProfileV1 = maybeUserProfileV1 match {
                             case Some(up) => up
                             case None => {
@@ -478,7 +478,7 @@ object Authenticator {
     }
 
     /**
-      * Tries to get a [[UserProfileV1]] from the cache or from the triple store matching the email.
+      * Tries to get a [[UserProfileV2]] from the cache or from the triple store matching the email.
       *
       * @param email            the email of the user to be queried
       * @param system           the current akka actor system
@@ -487,29 +487,29 @@ object Authenticator {
       * @return a [[Success(UserProfileV1)]]
       */
     private def getUserProfileV2ByEmail(email: String)(implicit system: ActorSystem, timeout: Timeout, executionContext: ExecutionContext): UserProfileV2 = {
-        val responderManager = system.actorSelection(RESPONDER_MANAGER_V1_ACTOR_PATH)
+        val responderVersionRouter = system.actorSelection(RESPONDER_VERSION_ROUTER_ACTOR_PATH)
 
         if (email.nonEmpty) {
             // try to get it from the cache
-            CacheUtil.get[UserProfileV1](AUTHENTICATION_CACHE_NAME, email) match {
-                case Some(userProfile) =>
+            CacheUtil.get[UserProfileV2](AUTHENTICATION_CACHE_NAME, email) match {
+                case Some(userProfileV2) =>
                     // found a user profile in the cache
-                    log.debug(s"getUserProfileV1ByEmail - cache hit: $userProfile")
-                    userProfile
+                    log.debug(s"getUserProfileV1ByEmail - cache hit: $userProfileV2")
+                    userProfileV2
                 case None =>
                     // didn't found one, so I will try to get it from the triple store
                     val userProfileV1Future = for {
-                        maybeUserProfileV1 <- (responderManager ? UserProfileByEmailGetV1(email, UserProfileTypeV1.FULL)).mapTo[Option[UserProfileV1]]
-                        userProfileV1 = maybeUserProfileV1 match {
+                        maybeUserProfileV2 <- (responderVersionRouter ? UserProfileByEmailGetIntReqV2(email, UserProfileTypeV1.FULL)).mapTo[UserProfileIntRespV2]
+                        userProfileV2 = maybeUserProfileV2.userProfileV2 match {
                             case Some(up) => up
                             case None => {
                                 log.debug(s"getUserProfileV1ByEmail - supplied email not found - throwing exception")
                                 throw BadCredentialsException(s"$BAD_CRED_USER_NOT_FOUND")
                             }
                         }
-                        _ = CacheUtil.put(AUTHENTICATION_CACHE_NAME, email, userProfileV1)
-                        _ = log.debug(s"getUserProfileV1ByEmail - from triplestore: $userProfileV1")
-                    } yield userProfileV1
+                        _ = CacheUtil.put(AUTHENTICATION_CACHE_NAME, email, userProfileV2)
+                        _ = log.debug(s"getUserProfileV1ByEmail - from triplestore: $userProfileV2")
+                    } yield userProfileV2
 
                     // TODO: return the future here instead of using Await.
                     Await.result(userProfileV1Future, Duration(3, SECONDS))

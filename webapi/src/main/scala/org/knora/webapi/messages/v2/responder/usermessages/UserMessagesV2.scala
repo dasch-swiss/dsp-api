@@ -20,7 +20,10 @@
 
 package org.knora.webapi.messages.v2.responder.usermessages
 
-import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
+import org.knora.webapi.IRI
+import org.knora.webapi.messages.v1.responder.KnoraResponseV1
+import org.knora.webapi.messages.v1.responder.usermessages.UserProfileTypeV1.UserProfileTypeV1
+import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.messages.v2.responder.{KnoraExternalRequestV2, KnoraExternalResponseV2, KnoraInternalRequestV2, KnoraInternalResponseV2}
 
 
@@ -55,6 +58,49 @@ case class UsersGetExtReqV2(userProfileV2: UserProfileV2) extends UsersResponder
 case class UsersGetIntReqV2() extends UsersResponderInternalRequestV2
 
 
+/**
+  * A message that requests a user's profile. A successful response will be a [[UserProfileResponseV1]].
+  *
+  * @param userIri         the IRI of the user to be queried.
+  * @param userProfileType the extent of the information returned.
+  */
+case class UserByIRIGetExtReqV2(userIri: IRI,
+                                userProfileType: UserProfileTypeV1,
+                                userProfileV2: UserProfileV2) extends UsersResponderExternalRequestV2
+
+
+/**
+  * A message that requests a user's profile. A successful response will be a [[UserProfileV1]].
+  *
+  * @param userIri         the IRI of the user to be queried.
+  * @param userProfileType the extent of the information returned.
+  */
+case class UserByIRIGetIntReqV1(userIri: IRI,
+                                userProfileType: UserProfileTypeV1) extends UsersResponderInternalRequestV2
+
+/**
+  * A message that requests a user's profile. A successful response will be a [[UserProfileExtRespV2]].
+  *
+  * @param email           the email of the user to be queried.
+  * @param userProfileType the extent of the information returned.
+  * @param userProfileV2   the requesting user's profile.
+  */
+case class UserProfileByEmailGetExtReqV2(email: String,
+                                         userProfileType: UserProfileTypeV1,
+                                         userProfileV2: UserProfileV2) extends UsersResponderExternalRequestV2
+
+
+/**
+  * A message that requests a user's profile. A successful response will be a [[UserProfileIntRespV2]].
+  *
+  * @param email           the email of the user to be queried.
+  * @param userProfileType the extent of the information returned.
+  */
+case class UserProfileByEmailGetIntReqV2(email: String,
+                                         userProfileType: UserProfileTypeV1) extends UsersResponderInternalRequestV2
+
+
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Response Responses
 
@@ -69,6 +115,22 @@ case class UsersGetExtRespV2(users: Seq[UserDataV2]) extends KnoraExternalRespon
 
 case class UsersGetIntRespV2(users: Seq[UserDataV2]) extends KnoraInternalResponseV2
 
+
+/**
+  * Represents an answer to an external user profile request.
+  *
+  * @param userProfileV2 the user's profile of the requested type.
+  */
+case class UserProfileExtRespV2(userProfileV2: UserProfileV2) extends KnoraExternalResponseV2 {
+    def toJsValue = ???
+}
+
+/**
+  * Represents an answer to an internal user profile request.
+  *
+  * @param userProfileV2 the user's profile of the requested type.
+  */
+case class UserProfileIntRespV2(userProfileV2: Option[UserProfileV2]) extends KnoraInternalResponseV2
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Components of messages

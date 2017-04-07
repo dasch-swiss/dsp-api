@@ -888,7 +888,7 @@ class OntologyResponderV1 extends ResponderV1 {
     private def getNamedGraphs(userProfile: UserProfileV1): Future[NamedGraphsResponseV1] = {
 
         for {
-            projectsNamedGraph <- (responderManager ? ProjectsNamedGraphGetV1(userProfile)).mapTo[Seq[NamedGraphV1]]
+            projectsNamedGraph <- (responderVersionRouter ? ProjectsNamedGraphGetV1(userProfile)).mapTo[Seq[NamedGraphV1]]
 
             response = NamedGraphsResponseV1(
                 vocabularies = projectsNamedGraph
@@ -969,7 +969,7 @@ class OntologyResponderV1 extends ResponderV1 {
 
             case None => // map over all named graphs and collect the resource types
                 for {
-                    projectNamedGraphIris: Seq[IRI] <- (responderManager ? ProjectsNamedGraphGetV1(userProfile)).mapTo[Seq[NamedGraphV1]] map (_.map(_.uri))
+                    projectNamedGraphIris: Seq[IRI] <- (responderVersionRouter ? ProjectsNamedGraphGetV1(userProfile)).mapTo[Seq[NamedGraphV1]] map (_.map(_.uri))
                     resourceTypesPerProject: Seq[Future[Seq[ResourceTypeV1]]] = projectNamedGraphIris map (iri => getResourceTypes(iri))
                     resourceTypes: Seq[Seq[ResourceTypeV1]] <- Future.sequence(resourceTypesPerProject)
                 } yield ResourceTypesForNamedGraphResponseV1(resourcetypes = resourceTypes.flatten)
@@ -1041,7 +1041,7 @@ class OntologyResponderV1 extends ResponderV1 {
             case None => // get the property types for all named graphs (collect them by mapping over all named graphs)
 
                 for {
-                    projectNamedGraphIris: Seq[IRI] <- (responderManager ? ProjectsNamedGraphGetV1(userProfile)).mapTo[Seq[NamedGraphV1]] map (_.map(_.uri))
+                    projectNamedGraphIris: Seq[IRI] <- (responderVersionRouter ? ProjectsNamedGraphGetV1(userProfile)).mapTo[Seq[NamedGraphV1]] map (_.map(_.uri))
                     propertyTypesPerProject: Seq[Future[Seq[PropertyDefinitionInNamedGraphV1]]] = projectNamedGraphIris map (iri => getPropertiesForNamedGraph(iri, userProfile))
                     propertyTypes: Seq[Seq[PropertyDefinitionInNamedGraphV1]] <- Future.sequence(propertyTypesPerProject)
                 } yield PropertyTypesForNamedGraphResponseV1(properties = propertyTypes.flatten)

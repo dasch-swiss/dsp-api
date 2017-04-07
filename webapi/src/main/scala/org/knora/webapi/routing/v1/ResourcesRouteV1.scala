@@ -65,7 +65,7 @@ object ResourcesRouteV1 extends Authenticator {
         implicit val materializer = ActorMaterializer()
         implicit val executionContext = system.dispatcher
         implicit val timeout = settings.defaultTimeout
-        val responderManager = system.actorSelection("/user/responderManager")
+        val responderManager = system.actorSelection("/user/responderVersionRouter")
 
         val log = Logger(LoggerFactory.getLogger(this.getClass))
 

@@ -252,7 +252,7 @@ class StandoffResponderV1 extends ResponderV1 {
             }
 
             // check if the given project Iri represents an actual project
-            projectInfo: ProjectInfoResponseV1 <- (responderManager ? ProjectInfoByIRIGetRequestV1(
+            projectInfo: ProjectInfoResponseV1 <- (responderVersionRouter ? ProjectInfoByIRIGetRequestV1(
                 iri = projectIri,
                 Some(userProfile)
             )).mapTo[ProjectInfoResponseV1]
@@ -560,7 +560,7 @@ class StandoffResponderV1 extends ResponderV1 {
         for {
 
         // request information about standoff classes that should be created
-            standoffClassEntities: StandoffEntityInfoGetResponseV1 <- (responderManager ? StandoffEntityInfoGetRequestV1(standoffClassIris = standoffTagIrisFromMapping, userProfile = userProfile)).mapTo[StandoffEntityInfoGetResponseV1]
+            standoffClassEntities: StandoffEntityInfoGetResponseV1 <- (responderVersionRouter ? StandoffEntityInfoGetRequestV1(standoffClassIris = standoffTagIrisFromMapping, userProfile = userProfile)).mapTo[StandoffEntityInfoGetResponseV1]
 
             // check that the ontology responder returned the information for all the standoff classes it was asked for
             // if the ontology responder does not return a standoff class it was asked for, then this standoff class does not exist
@@ -576,7 +576,7 @@ class StandoffResponderV1 extends ResponderV1 {
             }
 
             // request information about the standoff properties
-            standoffPropertyEntities: StandoffEntityInfoGetResponseV1 <- (responderManager ? StandoffEntityInfoGetRequestV1(standoffPropertyIris = standoffPropertyIrisFromOntologyResponder, userProfile = userProfile)).mapTo[StandoffEntityInfoGetResponseV1]
+            standoffPropertyEntities: StandoffEntityInfoGetResponseV1 <- (responderVersionRouter ? StandoffEntityInfoGetRequestV1(standoffPropertyIris = standoffPropertyIrisFromOntologyResponder, userProfile = userProfile)).mapTo[StandoffEntityInfoGetResponseV1]
 
             // check that the ontology responder returned the information for all the standoff properties it was asked for
             // if the ontology responder does not return a standoff property it was asked for, then this standoff property does not exist

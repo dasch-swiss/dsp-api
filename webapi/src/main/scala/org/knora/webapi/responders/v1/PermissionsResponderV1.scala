@@ -89,7 +89,7 @@ class PermissionsResponderV1 extends ResponderV1 {
             groupIris.map {
                 groupIri =>
                     for {
-                        groupInfo <- (responderManager ? GroupInfoByIRIGetRequest(groupIri, None)).mapTo[GroupInfoResponseV1]
+                        groupInfo <- (responderVersionRouter ? GroupInfoByIRIGetRequest(groupIri, None)).mapTo[GroupInfoResponseV1]
                         res = (groupInfo.group_info.belongsToProject, groupIri)
                     } yield res
             }

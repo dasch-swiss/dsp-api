@@ -480,7 +480,7 @@ class ProjectsResponderV1 extends ResponderV1 {
 
         def getUserData(userIri: IRI): Future[UserDataV1] = {
             for {
-                userProfile <- (responderManager ? UserProfileByIRIGetV1(userIri, UserProfileTypeV1.SHORT)).mapTo[Option[UserProfileV1]]
+                userProfile <- (responderVersionRouter ? UserProfileByIRIGetV1(userIri, UserProfileTypeV1.SHORT)).mapTo[Option[UserProfileV1]]
 
                 result = userProfile match {
                     case Some(up) => up.userData

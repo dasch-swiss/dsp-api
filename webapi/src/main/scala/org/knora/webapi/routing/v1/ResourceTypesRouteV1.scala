@@ -41,7 +41,7 @@ object ResourceTypesRouteV1 extends Authenticator {
         implicit val system = _system
         implicit val executionContext = system.dispatcher
         implicit val timeout = settings.defaultTimeout
-        val responderManager = system.actorSelection("/user/responderManager")
+        val responderManager = system.actorSelection("/user/responderVersionRouter")
 
         def makeResourceTypeRequestMessage(resourceTypeIri: String, userProfile: UserProfileV1): OntologyResponderRequestV1 = {
 
