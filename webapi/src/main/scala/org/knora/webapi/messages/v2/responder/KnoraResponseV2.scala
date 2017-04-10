@@ -222,7 +222,7 @@ case class LinkValueObjectV2(valueHasString: String, subject: IRI, predicate: IR
     def toJsValueMap = {
 
         // if given, include information about the referred resource
-        val referredResourceInfoOption: Map[IRI, JsValue] = if (referredResourceIri.nonEmpty) {
+        val referredResourceInfoOption: Map[IRI, JsValue] = if (referredResource.nonEmpty) {
             Map("referredResource" -> JsObject(Map("ReferredResourceType" -> JsString(referredResource.get.resourceClass),
                 "ReferredResourceLabel" -> JsString(referredResource.get.label))))
         } else {
