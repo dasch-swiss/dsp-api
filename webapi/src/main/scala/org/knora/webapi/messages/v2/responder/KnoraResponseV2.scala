@@ -21,11 +21,14 @@
 package org.knora.webapi.messages.v2.responder
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
+import org.knora.webapi.messages.v1.responder.standoffmessages.{GetMappingResponseV1, MappingXMLtoStandoff}
 import org.knora.webapi.messages.v1.responder.valuemessages.{JulianDayNumberValueV1, KnoraCalendarV1, KnoraPrecisionV1}
+import org.knora.webapi.twirl.StandoffTagV1
 import org.knora.webapi.util.{DateUtilV1, InputValidation}
 import org.knora.webapi.util.DateUtilV1.DateRange
+import org.knora.webapi.util.standoff.StandoffTagUtilV1
 import org.knora.webapi.{IRI, Jsonable, OntologyConstants}
-import spray.json._
+import spray.json.{JsString, _}
 
 /**
   * The value of a Knora property.
@@ -157,14 +160,29 @@ case class DateValueObjectV2(valueHasString: String,
   * Represents a Knora text value.
   *
   * @param valueHasString the string representation of the text (without markup).
+  * @param mapping        the mapping to convert between XML and standoff.
+  * @param standoff       a sequence of [[StandoffTagV1]].
   * @param comment        a comment on this `ValueObjectV2`, if any.
   */
-case class TextValueObjectV2(valueHasString: String, comment: Option[String]) extends ValueObjectV2 {
+case class TextValueObjectV2(valueHasString: String, mappingIri: Option[IRI], mapping: Option[MappingXMLtoStandoff], standoff: Seq[StandoffTagV1], comment: Option[String]) extends ValueObjectV2 {
 
     def valueTypeIri = OntologyConstants.KnoraBase.TextValue
 
     def toJsValueMap = {
-        Map(OntologyConstants.KnoraBase.ValueHasString -> JsString(valueHasString))
+
+        if (standoff.nonEmpty) {
+
+            val xml = StandoffTagUtilV1.convertStandoffTagV1ToXML(valueHasString, standoff, mapping.get)
+
+            Map(
+                "xml" -> JsString(xml),
+                "mapping_id" -> JsString(mappingIri.get)
+            )
+
+        } else {
+            Map(OntologyConstants.KnoraBase.ValueHasString -> JsString(valueHasString))
+        }
+
     }
 
 }

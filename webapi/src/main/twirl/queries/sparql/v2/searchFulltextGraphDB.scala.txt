@@ -49,8 +49,8 @@ CONSTRUCT {
     ?valueObject a ?valueObjectType ;
         ?valueObjectProperty ?valueObjectValue .
 
-    ?valueObject knora-base:valueHasStandoff ?standoffNode .
-            ?standoffNode ?standoffProperty ?standoffValue .
+    #?valueObject knora-base:valueHasStandoff ?standoffNode .
+    #        ?standoffNode ?standoffProperty ?standoffValue .
 
     # include this inferred information in the results, needed to identify resources
     ?resource a knora-base:Resource .
@@ -79,12 +79,12 @@ WHERE {
                 ?matchingSubject a ?valueObjectType .
                 ?matchingSubject ?valueObjectProperty ?valueObjectValue .
             }
-        } UNION {
-            GRAPH <http://www.ontotext.com/explicit> {
-                ?matchingSubject knora-base:valueHasStandoff ?standoffNode .
-                ?standoffNode ?standoffProperty ?standoffValue .
-            }
-        }
+        } #UNION {
+           # GRAPH <http://www.ontotext.com/explicit> {
+           #     ?matchingSubject knora-base:valueHasStandoff ?standoffNode .
+           #     ?standoffNode ?standoffProperty ?standoffValue .
+            #}
+        #}
 
         FILTER(?valueObjectType != knora-base:LinkValue)
 

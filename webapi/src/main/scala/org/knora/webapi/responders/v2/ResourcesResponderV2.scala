@@ -22,6 +22,8 @@ package org.knora.webapi.responders.v2
 
 import akka.pattern._
 import org.knora.webapi.IRI
+import org.knora.webapi.messages.v1.responder.standoffmessages.{GetMappingRequestV1, GetMappingResponseV1}
+import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.store.triplestoremessages.{SparqlConstructRequest, SparqlConstructResponse}
 import org.knora.webapi.messages.v2.responder._
 import org.knora.webapi.messages.v2.responder.resourcemessages.ResourcesGetRequestV2
@@ -35,10 +37,10 @@ import scala.concurrent.Future
 class ResourcesResponderV2 extends Responder {
 
     def receive = {
-        case resourcesGetRequest: ResourcesGetRequestV2 => future2Message(sender(), getResources(resourcesGetRequest.resourceIris), log)
+        case resourcesGetRequest: ResourcesGetRequestV2 => future2Message(sender(), getResources(resourcesGetRequest.resourceIris, resourcesGetRequest.userProfile), log)
     }
 
-    private def getResources(resourceIris: Seq[IRI]): Future[ReadResourcesSequenceV2] = {
+    private def getResources(resourceIris: Seq[IRI], userProfile: UserProfileV1): Future[ReadResourcesSequenceV2] = {
 
         // TODO: get all the resources: possibly more than one resource is requested
         val resourceIri = resourceIris.head
@@ -54,7 +56,22 @@ class ResourcesResponderV2 extends Responder {
             // separate resources and value objects
             queryResultsSeparated: Map[IRI, ResourceWithValues] = ConstructResponseUtilV2.splitResourcesAndValueObjects(constructQueryResults = resourceRequestResponse)
 
-        }  yield ReadResourcesSequenceV2(numberOfResources = resourceIris.size, resources = Vector(ConstructResponseUtilV2.createFullResourceResponse(resourceIri, queryResultsSeparated)))
+            // collect the Iris of the mappings
+            mappingIris: Set[IRI] = ConstructResponseUtilV2.getMappingIrisFromValuePropertyAssertions(queryResultsSeparated(resourceIri).valuePropertyAssertions)
+
+            // get all the mappings
+            mappingsFuture: Set[Future[(IRI, GetMappingResponseV1)]] = mappingIris.map {
+                mappingIri =>
+
+                    for {
+                        mappingResponse: GetMappingResponseV1 <- (responderManager ? GetMappingRequestV1(mappingIri = mappingIris.head, userProfile = userProfile)).mapTo[GetMappingResponseV1]
+                    } yield (mappingIri, mappingResponse)
+
+            }
+
+            mappings: Set[(IRI, GetMappingResponseV1)] <- Future.sequence(mappingsFuture)
+
+        }  yield ReadResourcesSequenceV2(numberOfResources = resourceIris.size, resources = Vector(ConstructResponseUtilV2.createFullResourceResponse(resourceIri, mappings = mappings.toMap, queryResultsSeparated)))
 
     }
 
