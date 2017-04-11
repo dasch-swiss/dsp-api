@@ -20,7 +20,8 @@
 
 package org.knora.webapi.util
 
-import org.knora.webapi.messages.v1.responder.standoffmessages.GetMappingResponseV1
+import org.knora.webapi.messages.v1.responder.ontologymessages.StandoffEntityInfoGetResponseV1
+import org.knora.webapi.messages.v1.responder.standoffmessages.{GetMappingResponseV1, MappingXMLtoStandoff}
 import org.knora.webapi.messages.v1.responder.valuemessages.{KnoraCalendarV1, KnoraPrecisionV1}
 import org.knora.webapi.messages.v1.store.triplestoremessages.SparqlConstructResponse
 import org.knora.webapi.messages.v2.responder._
@@ -48,6 +49,16 @@ object ConstructResponseUtilV2 {
       * @param linkPropertyAssertions  assertions about linking properties.
       */
     case class ResourceWithValues(resourceAssertions: Seq[(IRI, String)], valuePropertyAssertions: Map[IRI, Seq[ValueObject]], linkPropertyAssertions: Map[IRI, IRI])
+
+    /**
+      * Represents a mapping including information about the standoff entities.
+      * May include a default XSL transformation.
+      *
+      * @param mapping           the mapping from XML to standoff and vice versa.
+      * @param standoffEntities  information about the standoff entities referred to in the mapping.
+      * @param XSLTransformation the default XSL transformation to convert the resulting XML (e.g., to HTML), if any.
+      */
+    case class MappingAndXSLTransformation(mapping: MappingXMLtoStandoff, standoffEntities: StandoffEntityInfoGetResponseV1, XSLTransformation: Option[String])
 
     /**
       * A [[SparqlConstructResponse]] may contain both resources and value objects as well as standoff.
@@ -215,7 +226,7 @@ object ConstructResponseUtilV2 {
       * @param queryResult complete results of the SPARQL Construct query, needed in case an Iri of a referred resource has to be resolved.
       * @return a [[ValueObjectV2]] representing a value.
       */
-    def createValueV2FromValueObject(valueObject: ValueObject, mappings: Map[IRI, GetMappingResponseV1], queryResult: Option[Map[IRI, ResourceWithValues]] = None): ValueObjectV2 = {
+    def createValueV2FromValueObject(valueObject: ValueObject, mappings: Map[IRI, MappingAndXSLTransformation], queryResult: Option[Map[IRI, ResourceWithValues]] = None): ValueObjectV2 = {
 
         // every knora-base:Value (any of its subclasses) has a string representation
         val valueObjectValueHasString: String = valueObject.assertionsAsMap(OntologyConstants.KnoraBase.ValueHasString)
@@ -234,11 +245,11 @@ object ConstructResponseUtilV2 {
                     // get the Iri of the mapping
                     val mappingIri = valueObject.assertionsAsMap.getOrElse(OntologyConstants.KnoraBase.ValueHasMapping, throw InconsistentTriplestoreDataException(s"no mapping Iri associated with standoff belonging to textValue ${valueObject.valueObjectIri}"))
 
-                    val mapping: GetMappingResponseV1 = mappings(mappingIri)
+                    val mapping: MappingAndXSLTransformation = mappings(mappingIri)
 
                     val standoffTags: Vector[StandoffTagV1] = StandoffTagUtilV1.createStandoffTagsV1FromSparqlResults(mapping.standoffEntities, valueObject.standoff)
 
-                    TextValueObjectV2(valueHasString = valueObjectValueHasString, mappingIri = Some(mapping.mappingIri), mapping = Some(mapping.mapping), standoff = standoffTags, comment = valueCommentOption)
+                    TextValueObjectV2(valueHasString = valueObjectValueHasString, mappingIri = Some(mappingIri), mapping = Some(mapping.mapping), standoff = standoffTags, comment = valueCommentOption)
 
                 } else {
                     // no standoff nodes given
@@ -303,7 +314,7 @@ object ConstructResponseUtilV2 {
       * @param resourceResults the results returned by the triplestore.
       * @return a [[ReadResourceV2]].
       */
-    def createFullResourceResponse(resourceIri: IRI, mappings: Map[IRI, GetMappingResponseV1], resourceResults: Map[IRI, ResourceWithValues]): ReadResourceV2 = {
+    def createFullResourceResponse(resourceIri: IRI, mappings: Map[IRI, MappingAndXSLTransformation], resourceResults: Map[IRI, ResourceWithValues]): ReadResourceV2 = {
 
         // access the assertions about the requested resource
         // a full resource query also returns the resources referred to by the requested resource
@@ -359,7 +370,7 @@ object ConstructResponseUtilV2 {
                     case (property: IRI, valObjs: Seq[ValueObject]) =>
                         (property, valObjs.map {
                             valObj =>
-                                val readValue = createValueV2FromValueObject(valObj, mappings = Map.empty[IRI, GetMappingResponseV1])
+                                val readValue = createValueV2FromValueObject(valObj, mappings = Map.empty[IRI, MappingAndXSLTransformation])
 
                                 ReadValueV2(valObj.valueObjectIri, readValue)
                         })

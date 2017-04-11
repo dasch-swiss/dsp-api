@@ -38,5 +38,5 @@ sealed trait ResourcesResponderRequestV2 extends KnoraRequestV2 {
   * @param resourceIris the IRI of the resource to be queried.
   * @param userProfile the profile of the user making the request.
   */
-case class ResourcesGetRequestV2(resourceIris: Seq[IRI], userProfile: UserProfileV1) extends ResourcesResponderRequestV2
+case class ResourcesGetRequestV2(resourceIris: Set[IRI], userProfile: UserProfileV1) extends ResourcesResponderRequestV2
 

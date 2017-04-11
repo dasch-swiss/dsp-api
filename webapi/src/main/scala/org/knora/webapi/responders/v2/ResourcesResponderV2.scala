@@ -30,7 +30,7 @@ import org.knora.webapi.messages.v2.responder.resourcemessages.ResourcesGetReque
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.util.ActorUtil.future2Message
 import org.knora.webapi.util.ConstructResponseUtilV2
-import org.knora.webapi.util.ConstructResponseUtilV2.ResourceWithValues
+import org.knora.webapi.util.ConstructResponseUtilV2.{MappingAndXSLTransformation, ResourceWithValues}
 
 import scala.concurrent.Future
 
@@ -40,7 +40,7 @@ class ResourcesResponderV2 extends Responder {
         case resourcesGetRequest: ResourcesGetRequestV2 => future2Message(sender(), getResources(resourcesGetRequest.resourceIris, resourcesGetRequest.userProfile), log)
     }
 
-    private def getResources(resourceIris: Seq[IRI], userProfile: UserProfileV1): Future[ReadResourcesSequenceV2] = {
+    private def getResources(resourceIris: Set[IRI], userProfile: UserProfileV1): Future[ReadResourcesSequenceV2] = {
 
         // TODO: get all the resources: possibly more than one resource is requested
         val resourceIri = resourceIris.head
@@ -60,18 +60,27 @@ class ResourcesResponderV2 extends Responder {
             mappingIris: Set[IRI] = ConstructResponseUtilV2.getMappingIrisFromValuePropertyAssertions(queryResultsSeparated(resourceIri).valuePropertyAssertions)
 
             // get all the mappings
-            mappingsFuture: Set[Future[(IRI, GetMappingResponseV1)]] = mappingIris.map {
+            mappingResponsesFuture: Vector[Future[GetMappingResponseV1]] = mappingIris.map {
                 mappingIri =>
 
                     for {
                         mappingResponse: GetMappingResponseV1 <- (responderManager ? GetMappingRequestV1(mappingIri = mappingIris.head, userProfile = userProfile)).mapTo[GetMappingResponseV1]
-                    } yield (mappingIri, mappingResponse)
+                    } yield mappingResponse
+            }.toVector
 
-            }
+            mappingResponses: Vector[GetMappingResponseV1] <- Future.sequence(mappingResponsesFuture)
 
-            mappings: Set[(IRI, GetMappingResponseV1)] <- Future.sequence(mappingsFuture)
+            mappings: Map[IRI, MappingAndXSLTransformation] = mappingResponses.map {
+                (mapping: GetMappingResponseV1) =>
 
-        }  yield ReadResourcesSequenceV2(numberOfResources = resourceIris.size, resources = Vector(ConstructResponseUtilV2.createFullResourceResponse(resourceIri, mappings = mappings.toMap, queryResultsSeparated)))
+                    // if given, get the default XSL Transformation
+                    
+
+                    mapping.mappingIri -> MappingAndXSLTransformation(mapping = mapping.mapping, standoffEntities = mapping.standoffEntities, XSLTransformation = None)
+
+            }.toMap
+
+        }  yield ReadResourcesSequenceV2(numberOfResources = resourceIris.size, resources = Vector(ConstructResponseUtilV2.createFullResourceResponse(resourceIri, mappings = mappings, queryResultsSeparated)))
 
     }
 

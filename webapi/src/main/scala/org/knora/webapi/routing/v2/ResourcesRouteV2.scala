@@ -50,7 +50,7 @@ object ResourcesRouteV2 extends Authenticator {
 
                     val resourceIri = InputValidation.toIri(resIri, () => throw BadRequestException(s"Invalid search string: '$resIri'"))
 
-                    val requestMessage = ResourcesGetRequestV2(resourceIris = Seq(resourceIri), userProfile = userProfile)
+                    val requestMessage = ResourcesGetRequestV2(resourceIris = Set(resourceIri), userProfile = userProfile)
 
                     RouteUtilV2.runJsonRoute(
                         requestMessage,
