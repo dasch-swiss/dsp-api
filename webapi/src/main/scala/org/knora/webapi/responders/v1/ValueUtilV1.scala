@@ -120,6 +120,7 @@ class ValueUtilV1(private val settings: SettingsImpl) {
         "application/vnd.ms-excel" -> "XLS",
         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" -> "XLSX",
         "application/xml" -> "XML",
+        "text/xml" -> "XML",
         "application/zip" -> "ZIP",
         "application/x-compressed-zip" -> "ZIP"
     ), { key: String => s"Unknown MIME type: $key" })

@@ -393,7 +393,7 @@ class ValuesResponderV1 extends Responder {
                                 createMultipleValuesRequest.userProfile.permissionData)
                         }.mapTo[DefaultObjectAccessPermissionsStringResponseV1]
 
-                        val defaultObjectAccessPermissions = Await.result(defaultObjectAccessPermissionsF, 1.second)
+                        val defaultObjectAccessPermissions = Await.result(defaultObjectAccessPermissionsF, 5.second)
                         log.debug(s"createValueV1 - defaultObjectAccessPermissions: $defaultObjectAccessPermissions")
 
                         // For each property, construct a SparqlGenerationResultForProperty containing WHERE clause statements, INSERT clause statements, and UnverifiedValueV1s.
