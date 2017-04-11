@@ -21,14 +21,13 @@
 package org.knora.webapi.messages.v2.responder
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import org.knora.webapi.messages.v1.responder.standoffmessages.{GetMappingResponseV1, MappingXMLtoStandoff}
+import org.knora.webapi.messages.v1.responder.standoffmessages.MappingXMLtoStandoff
 import org.knora.webapi.messages.v1.responder.valuemessages.{JulianDayNumberValueV1, KnoraCalendarV1, KnoraPrecisionV1}
 import org.knora.webapi.twirl.StandoffTagV1
-import org.knora.webapi.util.{DateUtilV1, InputValidation}
-import org.knora.webapi.util.DateUtilV1.DateRange
 import org.knora.webapi.util.standoff.StandoffTagUtilV1
+import org.knora.webapi.util.{DateUtilV1, InputValidation}
 import org.knora.webapi.{IRI, Jsonable, OntologyConstants}
-import spray.json.{JsString, _}
+import spray.json._
 
 /**
   * The value of a Knora property.
