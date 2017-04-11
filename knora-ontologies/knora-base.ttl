@@ -866,6 +866,19 @@
 
                :objectDatatypeConstraint xsd:boolean .
 
+### http://www.knora.org/ontology/knora-base#mappingHasDefaultXSLTransformation
+
+:mappingHasDefaultXSLTransformation rdf:type owl:ObjectProperty ;
+
+               rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
+
+               rdfs:label "default XSL Transformation"@en ;
+
+               rdfs:comment """default XSL Transformation for this mapping"""@en ;
+
+               :subjectClassConstraint :XMLToStandoffMapping ;
+
+               :objectClassConstraint :XSLTransformation .
 
 #################################################################
 #
@@ -2351,6 +2364,21 @@
                     rdfs:comment "A resource containing text files"@en .
 
 
+### http://www.knora.org/ontology/knora-base#XSLTransformation
+
+:XSLTransformation  rdf:type owl:Class ;
+
+                    rdfs:subClassOf :TextRepresentation ,
+                                    [ rdf:type owl:Restriction ;
+                                      owl:onProperty :hasTextFileValue ;
+                                      owl:cardinality "1"^^xsd:nonNegativeInteger
+                                    ] ;
+
+                    rdfs:label "a TextRepresentation representing an XSL transformation"@en ;
+
+                    rdfs:comment "a TextRepresentation representing an XSL transformation"@en .
+
+
 ### http://www.knora.org/ontology/knora-base#MappingComponent
 
 :MappingComponent rdf:type owl:Class ;
@@ -2446,9 +2474,13 @@
 
                     rdfs:subClassOf
                     [ rdf:type owl:Restriction ;
-                       owl:onProperty :hasMappingElement ;
-                       owl:minCardinality "1"^^xsd:nonNegativeInteger
-                    ];
+                      owl:onProperty :hasMappingElement ;
+                      owl:minCardinality "1"^^xsd:nonNegativeInteger
+                    ] ,
+                    [ rdf:type owl:Restriction ;
+                      owl:onProperty :mappingHasDefaultXSLTransformation ;
+                      owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                    ] ;
 
                     rdfs:label "Mapping from XML to standoff entities"@en ;
 

@@ -185,7 +185,8 @@ class StandoffResponderV1 extends Responder {
 
                 // transform mappingElements to the structure that is used internally to convert to or from standoff
                 // in order to check for duplicates (checks are done during transformation)
-                mappingXMLToStandoff: MappingXMLtoStandoff = transformMappingElementsToMappingXMLtoStandoff(mappingElements)
+                // TODO: find a way to provide a default XSL transformation when the mapping is created
+                mappingXMLToStandoff: MappingXMLtoStandoff = transformMappingElementsToMappingXMLtoStandoff(mappingElements, None)
 
                 // get the standoff entities used in the mapping
                 // checks if the standoff classes exist in the ontology
@@ -291,9 +292,9 @@ class StandoffResponderV1 extends Responder {
       * @param mappingElements the Seq of MappingElement to be transformed.
       * @return a [[MappingXMLtoStandoff]].
       */
-    private def transformMappingElementsToMappingXMLtoStandoff(mappingElements: Seq[MappingElement]): MappingXMLtoStandoff = {
+    private def transformMappingElementsToMappingXMLtoStandoff(mappingElements: Seq[MappingElement], defaultXSLTransformation: Option[IRI]): MappingXMLtoStandoff = {
 
-        val mappingXMLToStandoff = mappingElements.foldLeft(MappingXMLtoStandoff(namespace = Map.empty[String, Map[String, Map[String, XMLTag]]])) {
+        val mappingXMLToStandoff = mappingElements.foldLeft(MappingXMLtoStandoff(namespace = Map.empty[String, Map[String, Map[String, XMLTag]]], defaultXSLTransformation = None)) {
             case (acc: MappingXMLtoStandoff, curEle: MappingElement) =>
 
                 // get the name of the XML tag
@@ -385,7 +386,8 @@ class StandoffResponderV1 extends Responder {
 
                 // recreate the whole structure for all namespaces
                 MappingXMLtoStandoff(
-                    namespace = acc.namespace + (namespace -> newNamespaceMap)
+                    namespace = acc.namespace + (namespace -> newNamespaceMap),
+                    defaultXSLTransformation = defaultXSLTransformation
                 )
 
         }
@@ -404,7 +406,7 @@ class StandoffResponderV1 extends Responder {
     val MappingCacheName = "mappingCache"
 
     /**
-      * Gets a mapping either from the cache or by making a requests to the triplestore.
+      * Gets a mapping either from the cache or by making a request to the triplestore.
       *
       * @param mappingIri  the Iri of the mapping to retrieve.
       * @param userProfile the user making the request.
@@ -455,13 +457,12 @@ class StandoffResponderV1 extends Responder {
       */
     private def getMappingFromTriplestore(mappingIri: IRI, userProfile: UserProfileV1): Future[MappingXMLtoStandoff] = {
 
-        for {
+        val getMappingSparql = queries.sparql.v1.txt.getMapping(
+            triplestore = settings.triplestoreType,
+            mappingIri = mappingIri
+        ).toString()
 
-        // check if the mapping Iri already exists
-            getMappingSparql <- Future(queries.sparql.v1.txt.getMapping(
-                triplestore = settings.triplestoreType,
-                mappingIri = mappingIri
-            ).toString())
+        for {
 
             mappingResponse: SparqlConstructResponse <- (storeManager ? SparqlConstructRequest(getMappingSparql)).mapTo[SparqlConstructResponse]
 
@@ -522,7 +523,16 @@ class StandoffResponderV1 extends Responder {
 
             }.toSeq
 
-            mappingXMLToStandoff = transformMappingElementsToMappingXMLtoStandoff(mappingElements)
+            // check if there is a default XSL transformation
+            defaultXSLTransformationOption: Option[IRI] = otherStatements(mappingIri).find {
+                case (pred: IRI, obj: String) =>
+                    pred == OntologyConstants.KnoraBase.mappingHasDefaultXSLTransformation
+            }.map {
+                case (hasDefaultTransformation: IRI, xslTransformationIri: IRI) =>
+                    xslTransformationIri
+            }
+
+            mappingXMLToStandoff = transformMappingElementsToMappingXMLtoStandoff(mappingElements, defaultXSLTransformationOption)
 
             // add the mapping to the cache
             _ = CacheUtil.put(cacheName = MappingCacheName, key = mappingIri, value = mappingXMLToStandoff)

@@ -87,18 +87,14 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
     import ValuesResponderV1Spec._
 
-    private val actorUnderTest = TestActorRef[ValuesResponderV1]
-
     val responderManager = system.actorOf(Props(new TestResponderManagerV1(Map(SIPI_ROUTER_ACTOR_NAME -> system.actorOf(Props(new MockSipiResponderV1))))), name = RESPONDER_MANAGER_ACTOR_NAME)
-
-    private val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
-
     val rdfDataObjects = Vector(
         RdfDataObject(path = "_test_data/responders.v1.ValuesResponderV1Spec/incunabula-data.ttl", name = "http://www.knora.org/data/incunabula"),
         RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/images"),
         RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/anything")
     )
-
+    private val actorUnderTest = TestActorRef[ValuesResponderV1]
+    private val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
     // The default timeout for receiving reply messages from actors.
     private val timeout = 30.seconds
 
@@ -113,6 +109,29 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
     private val currentColorValueIri = new MutableTestIri
     private val currentGeomValueIri = new MutableTestIri
     private val partOfLinkValueIri = new MutableTestIri
+    // a sample set of standoff tags
+    private val sampleStandoff: Vector[StandoffTagV1] = Vector(
+        StandoffTagV1(
+            standoffTagClassIri = OntologyConstants.Standoff.StandoffBoldTag,
+            startPosition = 0,
+            endPosition = 7,
+            uuid = UUID.randomUUID().toString,
+            originalXMLID = None,
+            startIndex = 0
+        ),
+        StandoffTagV1(
+            standoffTagClassIri = OntologyConstants.Standoff.StandoffParagraphTag,
+            startPosition = 0,
+            endPosition = 10,
+            uuid = UUID.randomUUID().toString,
+            originalXMLID = None,
+            startIndex = 0
+        )
+    )
+    private val dummyMapping = MappingXMLtoStandoff(
+            namespace = Map.empty[String, Map[String, Map[String, XMLTag]]],
+        defaultXSLTransformation = None
+    )
 
     private def checkComment1aResponse(response: CreateValueResponseV1, utf8str: String, standoff: Seq[StandoffTagV1] = Seq.empty[StandoffTagV1]): Unit = {
         assert(response.rights == 8, "rights was not 8")
@@ -226,26 +245,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         }
     }
 
-    // a sample set of standoff tags
-    private val sampleStandoff: Vector[StandoffTagV1] = Vector(
-        StandoffTagV1(
-            standoffTagClassIri = OntologyConstants.Standoff.StandoffBoldTag,
-            startPosition = 0,
-            endPosition = 7,
-            uuid = UUID.randomUUID().toString,
-            originalXMLID = None,
-            startIndex = 0
-        ),
-        StandoffTagV1(
-            standoffTagClassIri = OntologyConstants.Standoff.StandoffParagraphTag,
-            startPosition = 0,
-            endPosition = 10,
-            uuid = UUID.randomUUID().toString,
-            originalXMLID = None,
-            startIndex = 0
-        )
-    )
-
     private def checkImageFileValueChange(received: ChangeFileValueResponseV1, request: ChangeFileValueRequestV1): Unit = {
         assert(received.locations.size == 2, "Expected two file values to have been changed (thumb and full quality)")
 
@@ -253,10 +252,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             location: LocationV1 => assert(location.origname == request.file.originalFilename, "wrong original file name")
         }
     }
-
-    private val dummyMapping = MappingXMLtoStandoff(
-            namespace = Map.empty[String, Map[String, Map[String, XMLTag]]]
-    )
 
 
     "Load test data" in {
