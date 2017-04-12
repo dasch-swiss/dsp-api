@@ -88,8 +88,7 @@ object UsersRouteV1 extends Authenticator {
                         responderManager,
                         log
                     )
-            }
-            post {
+            } ~  post {
                 /* create a new user */
                 entity(as[CreateUserApiRequestV1]) { apiRequest => requestContext =>
                     val userProfile = getUserProfileV1(requestContext)
