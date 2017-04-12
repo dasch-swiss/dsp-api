@@ -59,7 +59,8 @@ CONSTRUCT {
     ?referredResource a ?referredResourceType .
 
     ?referredResource knora-base:attachedToUser ?referredResourceCreator ;
-        knora-base:hasPermissions ?referredResourcePermissions .
+        knora-base:hasPermissions ?referredResourcePermissions ;
+        knora-base:attachedToProject ?referredResourceProject .
 
 
 } WHERE {
@@ -111,7 +112,8 @@ CONSTRUCT {
             ?referredResource a ?referredResourceType .
 
             ?referredResource knora-base:attachedToUser ?referredResourceCreator ;
-                        knora-base:hasPermissions ?referredResourcePermissions .
+                        knora-base:hasPermissions ?referredResourcePermissions ;
+                        knora-base:attachedToProject ?referredResourceProject .
         }
 
     } UNION {

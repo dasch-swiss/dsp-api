@@ -21,7 +21,7 @@
 package org.knora.webapi.responders.v2
 
 import akka.pattern._
-import org.knora.webapi.IRI
+import org.knora.webapi.{IRI, NotFoundException}
 import org.knora.webapi.messages.v1.responder.standoffmessages.{GetMappingRequestV1, GetMappingResponseV1, GetXSLTransformationRequestV1, GetXSLTransformationResponseV1}
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.store.triplestoremessages.{SparqlConstructRequest, SparqlConstructResponse}
@@ -54,9 +54,14 @@ class ResourcesResponderV2 extends Responder {
             resourceRequestResponse: SparqlConstructResponse <- (storeManager ? SparqlConstructRequest(resourceRequestSparql)).mapTo[SparqlConstructResponse]
 
             // separate resources and value objects
-            queryResultsSeparated: Map[IRI, ResourceWithValues] = ConstructResponseUtilV2.splitResourcesAndValueObjects(constructQueryResults = resourceRequestResponse)
+            queryResultsSeparated: Map[IRI, ResourceWithValues] = ConstructResponseUtilV2.splitResourcesAndValueObjects(constructQueryResults = resourceRequestResponse, userProfile = userProfile)
 
-            // collect the Iris of the mappings
+            // check if the requested resource was returned
+            _ = if (queryResultsSeparated.get(resourceIri).isEmpty) {
+                throw NotFoundException(s"The requested resource $resourceIri could not be found: maybe you do not have the right to see it or it is marked as deleted.")
+            }
+
+            // collect the Iris of the mappings referred to in text values
             mappingIris: Set[IRI] = ConstructResponseUtilV2.getMappingIrisFromValuePropertyAssertions(queryResultsSeparated(resourceIri).valuePropertyAssertions)
 
             // get all the mappings
@@ -70,6 +75,7 @@ class ResourcesResponderV2 extends Responder {
 
             mappingResponses: Vector[GetMappingResponseV1] <- Future.sequence(mappingResponsesFuture)
 
+            // get the default XSL transformations
             mappingsWithFuture: Vector[Future[(IRI, MappingAndXSLTransformation)]] = mappingResponses.map {
                 (mapping: GetMappingResponseV1) =>
 
@@ -88,7 +94,8 @@ class ResourcesResponderV2 extends Responder {
 
             mappings: Vector[(IRI, MappingAndXSLTransformation)] <- Future.sequence(mappingsWithFuture)
 
-        }  yield ReadResourcesSequenceV2(numberOfResources = resourceIris.size, resources = Vector(ConstructResponseUtilV2.createFullResourceResponse(resourceIri, mappings = mappings.toMap, queryResultsSeparated)))
+            // TODO: possibly more than one resource was requested!
+        }  yield ReadResourcesSequenceV2(numberOfResources = 1, resources = Vector(ConstructResponseUtilV2.createFullResourceResponse(resourceIri, mappings = mappings.toMap, queryResultsSeparated)))
 
     }
 

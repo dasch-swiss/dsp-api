@@ -22,12 +22,13 @@ package org.knora.webapi.util
 
 import org.knora.webapi.messages.v1.responder.ontologymessages.StandoffEntityInfoGetResponseV1
 import org.knora.webapi.messages.v1.responder.standoffmessages.{GetMappingResponseV1, MappingXMLtoStandoff}
+import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.responder.valuemessages.{KnoraCalendarV1, KnoraPrecisionV1}
 import org.knora.webapi.messages.v1.store.triplestoremessages.SparqlConstructResponse
 import org.knora.webapi.messages.v2.responder._
 import org.knora.webapi.twirl._
 import org.knora.webapi.util.standoff.StandoffTagUtilV1
-import org.knora.webapi.{IRI, InconsistentTriplestoreDataException, OntologyConstants}
+import org.knora.webapi.{IRI, InconsistentTriplestoreDataException, NotFoundException, OntologyConstants}
 
 
 object ConstructResponseUtilV2 {
@@ -67,7 +68,7 @@ object ConstructResponseUtilV2 {
       * @param constructQueryResults the results of a SPARQL construct query representing resources and their values.
       * @return a Map[resource Iri -> [[ResourceWithValues]]].
       */
-    def splitResourcesAndValueObjects(constructQueryResults: SparqlConstructResponse): Map[IRI, ResourceWithValues] = {
+    def splitResourcesAndValueObjects(constructQueryResults: SparqlConstructResponse, userProfile: UserProfileV1): Map[IRI, ResourceWithValues] = {
 
         // split statements about resources and other statements (value objects and standoff)
         // resources are identified by the triple "resourceIri a knora-base:Resource" which is an inferred information returned by the SPARQL Construct query.
@@ -80,7 +81,12 @@ object ConstructResponseUtilV2 {
 
         }
 
-        resourceStatements.map {
+        resourceStatements.filterNot {
+            case (resIri: IRI, assertions: Seq[(IRI, String)]) =>
+                // filter out those resources that the user has not sufficient permissions to see
+                // please note that this also applies to referred resources
+                PermissionUtilV1.getUserPermissionV1FromAssertions(resIri, assertions, userProfile).isEmpty
+        }.map {
             case (resourceIri: IRI, assertions: Seq[(IRI, String)]) =>
 
                 // remove inferred statements (non explicit) returned in the query result
@@ -131,13 +137,26 @@ object ConstructResponseUtilV2 {
 
                 }
 
+                val predicateMap: ErrorHandlingMap[IRI, String] = new ErrorHandlingMap(assertionsExplicit.toMap, { key: IRI => s"predicate $key not found for $resourceIri" })
+
                 // create a map of (value) properties to value objects (the same property may have several instances)
                 // resolve the value object Iris and create value objects instead
                 val valuePropertyToValueObject: Map[IRI, Seq[ValueObject]] = valuePropertyToObjectIris.map {
-                    case (property: IRI, valObjIris: Seq[String]) =>
+                    case (property: IRI, valObjIris: Seq[IRI]) =>
 
                         // make the property the key of the map, return all its value objects by mapping over the value object Iris
-                        (property, valObjIris.map {
+                        (property, valObjIris.filterNot {
+                            // check if the user has sufficient permissions to see the value object
+                            case (valObjIri) =>
+                                val assertions = otherStatements(valObjIri)
+
+                                // get the resource's project
+                                // value objects belong to the parent resource's project
+                                val resourceProject: String = predicateMap(OntologyConstants.KnoraBase.AttachedToProject)
+
+                                // prepend the resource's project to the value's assertions
+                                PermissionUtilV1.getUserPermissionV1FromAssertions(valObjIri, (OntologyConstants.KnoraBase.AttachedToProject, resourceProject) +: assertions, userProfile).isEmpty
+                        }.map {
                             (valObjIri: IRI) =>
 
                                 // get all the standoff node Iris possibly belonging to this value object
@@ -173,7 +192,9 @@ object ConstructResponseUtilV2 {
                                     })
 
                         })
-
+                }.filterNot { // filter out those properties that do not have value objects (they may have been filtered out because the user does not have sufficient permissions to see them)
+                    case (property: IRI, valObj: Seq[ValueObject]) =>
+                        valObj.isEmpty
                 }
 
                 // create a map of linking properties to their targets
@@ -236,9 +257,6 @@ object ConstructResponseUtilV2 {
 
         valueObject.valueObjectClass match {
             case OntologyConstants.KnoraBase.TextValue =>
-                // TODO: handle standoff mapping and conversion to XML
-
-                //println(valueObject.assertions)
 
                 if (valueObject.standoff.nonEmpty) {
                     // standoff nodes given
@@ -279,7 +297,7 @@ object ConstructResponseUtilV2 {
                 val referredResourceIri = valueObject.assertionsAsMap(OntologyConstants.Rdf.Object)
 
                 // check if the referred resource's Iri can be resolved:
-                // check if `queryResult` is given (it's optional) and if it contains the referred resource's Iri as a key
+                // check if `queryResult` is given (it's optional) and if it contains the referred resource's Iri as a key (the user may not have sufficient permission to see the referred resource)
                 val referredResourceOption: Option[ReferredResourceV2] = if (queryResult.nonEmpty && queryResult.get.get(referredResourceIri).nonEmpty) {
 
                     // access the assertions about the referred resource
@@ -316,7 +334,6 @@ object ConstructResponseUtilV2 {
       */
     def createFullResourceResponse(resourceIri: IRI, mappings: Map[IRI, MappingAndXSLTransformation], resourceResults: Map[IRI, ResourceWithValues]): ReadResourceV2 = {
 
-        // access the assertions about the requested resource
         // a full resource query also returns the resources referred to by the requested resource
         // however, the should not be included as resources, but as the target og a linking property
         val resourceAssertionsMap = resourceResults(resourceIri).resourceAssertions.toMap

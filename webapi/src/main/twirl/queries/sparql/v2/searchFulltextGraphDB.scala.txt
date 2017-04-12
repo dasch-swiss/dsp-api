@@ -58,7 +58,8 @@ CONSTRUCT {
     ?resource rdfs:label ?label .
     ?resource a ?resourceType .
     ?resource knora-base:attachedToUser ?resourceCreator ;
-            knora-base:hasPermissions ?resourcePermissions .
+            knora-base:hasPermissions ?resourcePermissions ;
+            knora-base:attachedToProject ?referredResourceProject .
 }
 
 WHERE {
@@ -110,6 +111,7 @@ WHERE {
     ?resource rdfs:label ?label .
 
     ?resource knora-base:attachedToUser ?resourceCreator ;
-            knora-base:hasPermissions ?resourcePermissions .
+            knora-base:hasPermissions ?resourcePermissions ;
+            knora-base:attachedToProject ?referredResourceProject .
 
 }

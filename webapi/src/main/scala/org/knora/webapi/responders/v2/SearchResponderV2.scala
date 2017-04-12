@@ -21,6 +21,7 @@
 package org.knora.webapi.responders.v2
 
 import akka.pattern._
+import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.store.triplestoremessages.{SparqlConstructRequest, SparqlConstructResponse}
 import org.knora.webapi.messages.v2.responder._
 import org.knora.webapi.messages.v2.responder.searchmessages.FulltextSearchGetRequestV2
@@ -33,24 +34,21 @@ import scala.concurrent.Future
 class SearchResponderV2 extends Responder {
 
     def receive = {
-        case searchGetRequest: FulltextSearchGetRequestV2 => future2Message(sender(), fulltextSearchV2(searchGetRequest), log)
+        case FulltextSearchGetRequestV2(searchValue, userProfile) => future2Message(sender(), fulltextSearchV2(searchValue, userProfile), log)
     }
 
-    private def fulltextSearchV2(searchGetRequest: FulltextSearchGetRequestV2): Future[ReadResourcesSequenceV2] = {
+    private def fulltextSearchV2(searchValue: String, userProfile: UserProfileV1): Future[ReadResourcesSequenceV2] = {
 
         for {
             searchSparql <- Future(queries.sparql.v2.txt.searchFulltext(
                 triplestore = settings.triplestoreType,
-                searchTerms = searchGetRequest.searchValue
+                searchTerms = searchValue
             ).toString())
 
             searchResponse: SparqlConstructResponse <- (storeManager ? SparqlConstructRequest(searchSparql)).mapTo[SparqlConstructResponse]
 
             // separate resources and value objects
-            queryResultsSeparated = ConstructResponseUtilV2.splitResourcesAndValueObjects(constructQueryResults = searchResponse)
-
-
-            //resources: Vector[ReadResourceV2] = ConstructResponseUtilV2.createResponseForResources(queryResultsSeparated)
+            queryResultsSeparated = ConstructResponseUtilV2.splitResourcesAndValueObjects(constructQueryResults = searchResponse, userProfile = userProfile)
 
         } yield ReadResourcesSequenceV2(numberOfResources = queryResultsSeparated.size, resources = ConstructResponseUtilV2.createFulltextSearchResponse(queryResultsSeparated))
 
