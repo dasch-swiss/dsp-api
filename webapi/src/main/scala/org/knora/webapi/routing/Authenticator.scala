@@ -75,7 +75,7 @@ trait Authenticator {
         val userProfile = getUserProfileV1(requestContext)
 
         HttpResponse(
-            headers = List(headers.`Set-Cookie`(HttpCookie(KNORA_AUTHENTICATION_COOKIE_NAME, sId))),
+            headers = List(headers.`Set-Cookie`(HttpCookie(KNORA_AUTHENTICATION_COOKIE_NAME, sId, path = Some("/")))), // set path to "/" to make the cookie valid for the whole domain (and not just a segment like v1 etc.)
             status = StatusCodes.OK,
             entity = HttpEntity(
                 ContentTypes.`application/json`,
