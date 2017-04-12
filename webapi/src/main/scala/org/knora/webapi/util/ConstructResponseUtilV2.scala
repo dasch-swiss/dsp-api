@@ -243,17 +243,17 @@ object ConstructResponseUtilV2 {
                 if (valueObject.standoff.nonEmpty) {
                     // standoff nodes given
                     // get the Iri of the mapping
-                    val mappingIri = valueObject.assertionsAsMap.getOrElse(OntologyConstants.KnoraBase.ValueHasMapping, throw InconsistentTriplestoreDataException(s"no mapping Iri associated with standoff belonging to textValue ${valueObject.valueObjectIri}"))
+                    val mappingIri: IRI = valueObject.assertionsAsMap.getOrElse(OntologyConstants.KnoraBase.ValueHasMapping, throw InconsistentTriplestoreDataException(s"no mapping Iri associated with standoff belonging to textValue ${valueObject.valueObjectIri}"))
 
                     val mapping: MappingAndXSLTransformation = mappings(mappingIri)
 
                     val standoffTags: Vector[StandoffTagV1] = StandoffTagUtilV1.createStandoffTagsV1FromSparqlResults(mapping.standoffEntities, valueObject.standoff)
 
-                    TextValueObjectV2(valueHasString = valueObjectValueHasString, mappingIri = Some(mappingIri), mapping = Some(mapping.mapping), standoff = standoffTags, comment = valueCommentOption)
+                    TextValueObjectV2(valueHasString = valueObjectValueHasString, standoff = Some(StandoffAndMapping(standoff = standoffTags, mappingIri = mappingIri, mapping = mapping.mapping, XSLT = mapping.XSLTransformation)), comment = valueCommentOption)
 
                 } else {
                     // no standoff nodes given
-                    TextValueObjectV2(valueHasString = valueObjectValueHasString, mappingIri = None, mapping = None, standoff = Seq.empty[StandoffTagV1], comment = valueCommentOption)
+                    TextValueObjectV2(valueHasString = valueObjectValueHasString, standoff = None, comment = valueCommentOption)
                 }
 
 
@@ -302,7 +302,7 @@ object ConstructResponseUtilV2 {
 
             // TODO: implement all value object classes
             case other =>
-                TextValueObjectV2(valueHasString = valueObjectValueHasString, mappingIri = None, mapping = None, standoff = Seq.empty[StandoffTagV1], comment = valueCommentOption)
+                TextValueObjectV2(valueHasString = valueObjectValueHasString, standoff = None, comment = valueCommentOption)
         }
 
     }

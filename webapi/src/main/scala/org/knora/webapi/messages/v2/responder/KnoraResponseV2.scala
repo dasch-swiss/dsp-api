@@ -20,13 +20,16 @@
 
 package org.knora.webapi.messages.v2.responder
 
+import java.io.{StringReader, StringWriter}
+import javax.xml.transform.stream.StreamSource
+
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi.messages.v1.responder.standoffmessages.MappingXMLtoStandoff
 import org.knora.webapi.messages.v1.responder.valuemessages.{JulianDayNumberValueV1, KnoraCalendarV1, KnoraPrecisionV1}
 import org.knora.webapi.twirl.StandoffTagV1
 import org.knora.webapi.util.standoff.StandoffTagUtilV1
 import org.knora.webapi.util.{DateUtilV1, InputValidation}
-import org.knora.webapi.{IRI, Jsonable, OntologyConstants}
+import org.knora.webapi.{IRI, Jsonable, OntologyConstants, StandoffConversionException}
 import spray.json._
 
 /**
@@ -159,11 +162,10 @@ case class DateValueObjectV2(valueHasString: String,
   * Represents a Knora text value.
   *
   * @param valueHasString the string representation of the text (without markup).
-  * @param mapping        the mapping to convert between XML and standoff.
-  * @param standoff       a sequence of [[StandoffTagV1]].
+  * @param standoff       a [[StandoffAndMapping]], if any.
   * @param comment        a comment on this `ValueObjectV2`, if any.
   */
-case class TextValueObjectV2(valueHasString: String, mappingIri: Option[IRI], mapping: Option[MappingXMLtoStandoff], standoff: Seq[StandoffTagV1], comment: Option[String]) extends ValueObjectV2 {
+case class TextValueObjectV2(valueHasString: String, standoff: Option[StandoffAndMapping], comment: Option[String]) extends ValueObjectV2 {
 
     def valueTypeIri = OntologyConstants.KnoraBase.TextValue
 
@@ -171,12 +173,40 @@ case class TextValueObjectV2(valueHasString: String, mappingIri: Option[IRI], ma
 
         if (standoff.nonEmpty) {
 
-            val xml = StandoffTagUtilV1.convertStandoffTagV1ToXML(valueHasString, standoff, mapping.get)
+            val xmlFromStandoff = StandoffTagUtilV1.convertStandoffTagV1ToXML(valueHasString, standoff.get.standoff, standoff.get.mapping)
 
-            Map(
-                "xml" -> JsString(xml),
-                "mapping_id" -> JsString(mappingIri.get)
-            )
+            // check if there is an XSL transformation
+            if (standoff.get.XSLT.nonEmpty) {
+
+                // apply the XSL transformation to xml
+                val proc = new net.sf.saxon.s9api.Processor(false)
+                val comp = proc.newXsltCompiler()
+
+                val exp = comp.compile(new StreamSource(new StringReader(standoff.get.XSLT.get)))
+
+                val source = try {
+                    proc.newDocumentBuilder().build(new StreamSource(new StringReader(xmlFromStandoff)))
+                } catch {
+                    case e: Exception => throw StandoffConversionException(s"The provided XML could not be parsed: ${e.getMessage}")
+                }
+
+                val xmlTransformedStr: StringWriter = new StringWriter()
+                val out = proc.newSerializer(xmlTransformedStr)
+
+                val trans = exp.load()
+                trans.setInitialContextNode(source)
+                trans.setDestination(out)
+                trans.transform()
+
+                // the xml was converted to HTML
+                Map("html" -> JsString(xmlTransformedStr.toString))
+            } else {
+                // xml is returned
+                Map(
+                    "xml" -> JsString(xmlFromStandoff),
+                    "mapping_id" -> JsString(standoff.get.mappingIri)
+                )
+            }
 
         } else {
             Map(OntologyConstants.KnoraBase.ValueHasString -> JsString(valueHasString))
@@ -185,6 +215,17 @@ case class TextValueObjectV2(valueHasString: String, mappingIri: Option[IRI], ma
     }
 
 }
+
+/**
+  * Represents standoff and the corresponsing mapping.
+  * May include an XSL transformation.
+  *
+  * @param standoff a sequence of [[StandoffTagV1]].
+  * @param mappingIri the Iri of the mapping
+  * @param mapping a mapping between XML and standoff.
+  * @param XSLT an XSL transformation.
+  */
+case class StandoffAndMapping(standoff: Seq[StandoffTagV1], mappingIri: IRI, mapping: MappingXMLtoStandoff, XSLT: Option[String])
 
 /**
   * Represents a Knora integer value.

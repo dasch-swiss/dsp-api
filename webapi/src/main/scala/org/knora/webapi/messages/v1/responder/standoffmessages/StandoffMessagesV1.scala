@@ -75,6 +75,21 @@ case class GetMappingRequestV1(mappingIri: IRI, userProfile: UserProfileV1) exte
 case class GetMappingResponseV1(mappingIri: IRI, mapping: MappingXMLtoStandoff, standoffEntities: StandoffEntityInfoGetResponseV1)
 
 /**
+  * Represents a request that gets an XSL Transformation represented by a `knora-base:XSLTransformation`.
+  *
+  * @param xsltTextRepresentationIri    the IRI of the `knora-base:XSLTransformation`.
+  * @param userProfile                  the profile of the user making the request.
+  */
+case class GetXSLTransformationRequestV1(xsltTextRepresentationIri: IRI, userProfile: UserProfileV1) extends StandoffResponderRequestV1
+
+/**
+  * Represents a response to a [[GetXSLTransformationRequestV1]].
+  *
+  * @param xslt      the XSLT to be applied to the XML created from standoff.
+  */
+case class GetXSLTransformationResponseV1(xslt: String)
+
+/**
   * Represents a mapping between XML tags and standoff entities (classes and properties).
   *
   * Example:

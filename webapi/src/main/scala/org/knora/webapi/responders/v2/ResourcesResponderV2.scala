@@ -22,7 +22,7 @@ package org.knora.webapi.responders.v2
 
 import akka.pattern._
 import org.knora.webapi.IRI
-import org.knora.webapi.messages.v1.responder.standoffmessages.{GetMappingRequestV1, GetMappingResponseV1}
+import org.knora.webapi.messages.v1.responder.standoffmessages.{GetMappingRequestV1, GetMappingResponseV1, GetXSLTransformationRequestV1, GetXSLTransformationResponseV1}
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.store.triplestoremessages.{SparqlConstructRequest, SparqlConstructResponse}
 import org.knora.webapi.messages.v2.responder._
@@ -70,17 +70,25 @@ class ResourcesResponderV2 extends Responder {
 
             mappingResponses: Vector[GetMappingResponseV1] <- Future.sequence(mappingResponsesFuture)
 
-            mappings: Map[IRI, MappingAndXSLTransformation] = mappingResponses.map {
+            mappingsWithFuture: Vector[Future[(IRI, MappingAndXSLTransformation)]] = mappingResponses.map {
                 (mapping: GetMappingResponseV1) =>
 
+                    for {
                     // if given, get the default XSL Transformation
-                    
+                        xsltOption: Option[String] <- if (mapping.mapping.defaultXSLTransformation.nonEmpty) {
+                            for {
+                                xslTransformation: GetXSLTransformationResponseV1 <- (responderManager ? GetXSLTransformationRequestV1(mapping.mapping.defaultXSLTransformation.get, userProfile = userProfile)).mapTo[GetXSLTransformationResponseV1]
+                            } yield Some(xslTransformation.xslt)
+                        } else {
+                            Future(None)
+                        }
+                    } yield mapping.mappingIri -> MappingAndXSLTransformation(mapping = mapping.mapping, standoffEntities = mapping.standoffEntities, XSLTransformation = xsltOption)
 
-                    mapping.mappingIri -> MappingAndXSLTransformation(mapping = mapping.mapping, standoffEntities = mapping.standoffEntities, XSLTransformation = None)
+            }
 
-            }.toMap
+            mappings: Vector[(IRI, MappingAndXSLTransformation)] <- Future.sequence(mappingsWithFuture)
 
-        }  yield ReadResourcesSequenceV2(numberOfResources = resourceIris.size, resources = Vector(ConstructResponseUtilV2.createFullResourceResponse(resourceIri, mappings = mappings, queryResultsSeparated)))
+        }  yield ReadResourcesSequenceV2(numberOfResources = resourceIris.size, resources = Vector(ConstructResponseUtilV2.createFullResourceResponse(resourceIri, mappings = mappings.toMap, queryResultsSeparated)))
 
     }
 
