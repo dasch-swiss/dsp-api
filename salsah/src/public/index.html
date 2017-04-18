@@ -203,6 +203,7 @@
 				salsah_username: $('#user_id').val(),
 				salsah_password: $('#password').val()
 			};
+			$('#password').val('')
             SALSAH.ApiPost('session', {username: credentials.salsah_username, password: credentials.salsah_password}, function(data) {
 
 				if (data.status == ApiErrors.OK) {
@@ -269,6 +270,7 @@
 		});
 
 		$('#logout_button').on('click', function() {
+			$('#user_id').val('')
             SALSAH.ApiDelete('session', function(data) {
 				if (data.status == ApiErrors.OK) {
 					window.sessionStorage.removeItem('userprofile');
