@@ -63,29 +63,31 @@ CONSTRUCT {
 }
 
 WHERE {
-    GRAPH <http://www.ontotext.com/explicit> {
-        ?matchingSubject ?matchingProperty ?literal .
-    }
+    {
 
-    ?literal <http://www.ontotext.com/owlim/lucene#fullTextSearchIndex> '@searchTerms' .
+        # make a subquery to find triples mactiing the query string
+        # limit the number of results in order to prevent an error when writing the results back (may be too many)
+        SELECT DISTINCT ?matchingSubject ?matchingProperty ?literal WHERE {
+
+            GRAPH <http://www.ontotext.com/explicit> {
+                ?matchingSubject ?matchingProperty ?literal .
+            }
+
+            ?literal <http://www.ontotext.com/owlim/lucene#fullTextSearchIndex> '@searchTerms' .
+        } LIMIT 500
+    }
 
     OPTIONAL {
         ?matchingSubject a knora-base:Value .
         ?containingResource knora-base:hasValue ?matchingSubject .
 
 
-        {
-            GRAPH <http://www.ontotext.com/explicit> {
-                ?containingResource ?resourceProperty ?matchingSubject .
-                ?matchingSubject a ?valueObjectType .
-                ?matchingSubject ?valueObjectProperty ?valueObjectValue .
-            }
-        } #UNION {
-           # GRAPH <http://www.ontotext.com/explicit> {
-           #     ?matchingSubject knora-base:valueHasStandoff ?standoffNode .
-           #     ?standoffNode ?standoffProperty ?standoffValue .
-            #}
-        #}
+        GRAPH <http://www.ontotext.com/explicit> {
+            ?containingResource ?resourceProperty ?matchingSubject .
+            ?matchingSubject a ?valueObjectType .
+            ?matchingSubject ?valueObjectProperty ?valueObjectValue .
+        }
+
 
         FILTER(?valueObjectType != knora-base:LinkValue)
 
