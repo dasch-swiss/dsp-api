@@ -59,23 +59,40 @@ class ProjectsRouteV1E2ESpec extends E2ESpec(ProjectsRouteV1E2ESpec.config) with
         singleAwaitingRequest(request, 300.seconds)
     }
 
-    "The Projects Route ('v1/projects') with credentials supplied via Basic Auth" should {
+    "The Projects Route ('v1/projects')" when {
 
-        "return all project's information" in {
-            /* Correct username and password */
-            val request = Get(baseApiUrl + s"/v1/projects") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
-            val response: HttpResponse = singleAwaitingRequest(request)
-            log.debug(s"response: ${response.toString}")
-            assert(response.status === StatusCodes.OK)
+        "queried for project information" should {
+
+            "return all project's information" in {
+                /* Correct username and password */
+                val request = Get(baseApiUrl + s"/v1/projects") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
+                val response: HttpResponse = singleAwaitingRequest(request)
+                log.debug(s"response: ${response.toString}")
+                assert(response.status === StatusCodes.OK)
+            }
+
+            "return the project's information" in {
+                /* Correct username and password */
+                val request = Get(baseApiUrl + s"/v1/projects/shortname/$projectShortnameEnc") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
+                val response: HttpResponse = singleAwaitingRequest(request)
+                log.debug(s"response: ${response.toString}")
+                assert(response.status === StatusCodes.OK)
+            }
         }
 
-        "return the project's information" in {
-            /* Correct username and password */
-            val request = Get(baseApiUrl + s"/v1/projects/shortname/$projectShortnameEnc") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
-            val response: HttpResponse = singleAwaitingRequest(request)
-            log.debug(s"response: ${response.toString}")
-            assert(response.status === StatusCodes.OK)
-        }
+        "used to modify project information" should {
 
+            "create the project with using a permissions template, and return the 'full' project info if the supplied shortname is unique" in {
+
+            }
+
+            "return a 'DuplicateValueException' if the supplied project shortname is not unique" in {
+
+            }
+
+            "return 'BadRequestException' if 'shortname' is missing" in {
+
+            }
+        }
     }
 }

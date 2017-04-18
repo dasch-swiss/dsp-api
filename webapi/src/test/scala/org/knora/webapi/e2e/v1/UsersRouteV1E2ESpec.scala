@@ -60,22 +60,52 @@ class UsersRouteV1E2ESpec extends E2ESpec(UsersRouteV1E2ESpec.config) with Sessi
         singleAwaitingRequest(request, 300.seconds)
     }
 
-    "The Users Route ('v1/users') with credentials supplied via Basic Auth" should {
+    "The Users Route ('v1/users')" when {
 
-        "return all users" in {
-            val request = Get(baseApiUrl + s"/v1/users") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
-            val response: HttpResponse = singleAwaitingRequest(request)
-            println(s"response: ${response.toString}")
-            assert(response.status === StatusCodes.OK)
+        "used to query user information" should {
+
+            "return all users" in {
+                val request = Get(baseApiUrl + s"/v1/users") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
+                val response: HttpResponse = singleAwaitingRequest(request)
+                println(s"response: ${response.toString}")
+                assert(response.status === StatusCodes.OK)
+            }
+
+            "return a single user profile" in {
+                /* Correct username and password */
+                val request = Get(baseApiUrl + s"/v1/users/email/$rootEmailEnc") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
+                val response: HttpResponse = singleAwaitingRequest(request)
+                println(s"response: ${response.toString}")
+                assert(response.status === StatusCodes.OK)
+            }
+
         }
 
-        "return the user's profile" in {
-            /* Correct username and password */
-            val request = Get(baseApiUrl + s"/v1/users/email/$rootEmailEnc") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
-            val response: HttpResponse = singleAwaitingRequest(request)
-            println(s"response: ${response.toString}")
-            assert(response.status === StatusCodes.OK)
-        }
+        "used to modify user information" should {
 
+            "create the user and return it's profile if the supplied email is unique " in {
+
+            }
+
+            "update the user's basic information" in {
+
+            }
+
+            "update the user's password" in {
+
+            }
+
+            "deleting the user by making him inactive " in {
+
+            }
+
+            "change (adding and removing) project membership" in {
+
+            }
+
+            "change (adding and removing) group membership for built in groups (ProjectMember, ProjectAdmin)" in {
+
+            }
+        }
     }
 }

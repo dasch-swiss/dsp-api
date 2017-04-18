@@ -179,7 +179,7 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
 
         "asked to create a new project " should {
 
-            "create the project with using a permissions template, and return the 'full' project info if the supplied shortname is unique " in {
+            "create the project with using a permissions template, and return the 'full' project info if the supplied shortname is unique" in {
                 actorUnderTest ! ProjectCreateRequestV1(
                     CreateProjectApiRequestV1(
                         shortname = "newproject",
@@ -202,7 +202,7 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
                 assert(received.project_info.dataNamedGraph.equals("http://www.knora.org/data/newproject"))
             }
 
-            "return a 'DuplicateValueException' if the supplied project shortname is not unique " in {
+            "return a 'DuplicateValueException' if the supplied project shortname is not unique" in {
                 actorUnderTest ! ProjectCreateRequestV1(
                     CreateProjectApiRequestV1(
                         shortname = "newproject",

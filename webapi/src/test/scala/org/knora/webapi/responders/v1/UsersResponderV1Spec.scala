@@ -131,7 +131,7 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
         }
         "asked to create a new user" should {
 
-            "create the user and return it's profile if the supplied username is unique " in {
+            "create the user and return it's profile if the supplied email is unique " in {
                 actorUnderTest ! UserCreateRequestV1(
                     createRequest = CreateUserApiRequestV1(
                         email = "donald.duck@example.com",
