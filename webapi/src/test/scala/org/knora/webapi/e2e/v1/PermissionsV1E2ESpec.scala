@@ -24,7 +24,7 @@ import spray.json._
 
 import scala.concurrent.duration._
 
-object PermissionsRouteV1E2ESpec {
+object PermissionsV1E2ESpec {
     val config = ConfigFactory.parseString(
         """
           akka.loglevel = "DEBUG"
@@ -37,7 +37,7 @@ object PermissionsRouteV1E2ESpec {
   *
   * This spec tests the 'v1/store' route.
   */
-class PermissionsRouteV1E2ESpec extends E2ESpec(StoreRouteV1E2ESpec.config) with TriplestoreJsonProtocol {
+class PermissionsV1E2ESpec extends E2ESpec(PermissionsV1E2ESpec.config) with TriplestoreJsonProtocol {
 
     private val rdfDataObjects: List[RdfDataObject] = List.empty[RdfDataObject]
 

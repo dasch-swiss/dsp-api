@@ -23,13 +23,15 @@ import akka.http.scaladsl.testkit.RouteTestTimeout
 import com.typesafe.config.ConfigFactory
 import org.knora.webapi.messages.v1.responder.sessionmessages.SessionJsonProtocol
 import org.knora.webapi.messages.v1.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
+import org.knora.webapi.util.AkkaHttpUtils
 import org.knora.webapi.{E2ESpec, SharedAdminTestData}
 import spray.json._
+import spray.json.JsonReader
 
 import scala.concurrent.duration._
 
 
-object UsersRouteV1E2ESpec {
+object UsersV1E2ESpec {
     val config = ConfigFactory.parseString(
         """
           akka.loglevel = "DEBUG"
@@ -40,7 +42,7 @@ object UsersRouteV1E2ESpec {
 /**
   * End-to-End (E2E) test specification for testing users endpoint.
   */
-class UsersRouteV1E2ESpec extends E2ESpec(UsersRouteV1E2ESpec.config) with SessionJsonProtocol with TriplestoreJsonProtocol {
+class UsersV1E2ESpec extends E2ESpec(UsersV1E2ESpec.config) with SessionJsonProtocol with TriplestoreJsonProtocol {
 
     implicit def default(implicit system: ActorSystem) = RouteTestTimeout(5.seconds)
 
@@ -67,16 +69,16 @@ class UsersRouteV1E2ESpec extends E2ESpec(UsersRouteV1E2ESpec.config) with Sessi
             "return all users" in {
                 val request = Get(baseApiUrl + s"/v1/users") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
                 val response: HttpResponse = singleAwaitingRequest(request)
-                println(s"response: ${response.toString}")
-                assert(response.status === StatusCodes.OK)
+                // println(s"response: ${response.toString}")
+                response.status should be (StatusCodes.OK)
             }
 
             "return a single user profile" in {
                 /* Correct username and password */
                 val request = Get(baseApiUrl + s"/v1/users/email/$rootEmailEnc") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
                 val response: HttpResponse = singleAwaitingRequest(request)
-                println(s"response: ${response.toString}")
-                assert(response.status === StatusCodes.OK)
+                // println(s"response: ${response.toString}")
+                response.status should be (StatusCodes.OK)
             }
 
         }
@@ -85,9 +87,32 @@ class UsersRouteV1E2ESpec extends E2ESpec(UsersRouteV1E2ESpec.config) with Sessi
 
             "create the user and return it's profile if the supplied email is unique " in {
 
+                val params =
+                    s"""
+                   |{
+                   |    "email": "donald.duck@example.org",
+                   |    "givenName": "Donald",
+                   |    "familyName": "Duck",
+                   |    "password": "test",
+                   |    "status": true,
+                   |    "lang": "en",
+                   |    "systemAdmin": false
+                   |}
+                """.stripMargin
+
+                val request = Post(baseApiUrl + s"/v1/users", HttpEntity(ContentTypes.`application/json`, params))
+                val response: HttpResponse = singleAwaitingRequest(request)
+                response.status should be (StatusCodes.OK)
+
+                val jsonResult: Map[String, JsValue] = AkkaHttpUtils.httpResponseToJson(response).fields("userProfile").asJsObject.fields("userData").asJsObject.fields
+                jsonResult("email").toString contains ("donald.duck@example.org")
+                jsonResult("firstname").toString contains ("Donald")
+                jsonResult("lastname").toString contains ("Duck")
             }
 
             "update the user's basic information" in {
+                
+
 
             }
 

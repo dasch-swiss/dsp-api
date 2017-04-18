@@ -29,7 +29,7 @@ import spray.json._
 import scala.concurrent.duration._
 
 
-object ProjectsRouteV1E2ESpec {
+object ProjectsV1E2ESpec {
     val config = ConfigFactory.parseString(
         """
           akka.loglevel = "DEBUG"
@@ -40,7 +40,7 @@ object ProjectsRouteV1E2ESpec {
 /**
   * End-to-End (E2E) test specification for testing groups endpoint.
   */
-class ProjectsRouteV1E2ESpec extends E2ESpec(ProjectsRouteV1E2ESpec.config) with SessionJsonProtocol with TriplestoreJsonProtocol {
+class ProjectsV1E2ESpec extends E2ESpec(ProjectsV1E2ESpec.config) with SessionJsonProtocol with TriplestoreJsonProtocol {
 
     implicit def default(implicit system: ActorSystem) = RouteTestTimeout(5.seconds)
 
@@ -82,7 +82,7 @@ class ProjectsRouteV1E2ESpec extends E2ESpec(ProjectsRouteV1E2ESpec.config) with
 
         "used to modify project information" should {
 
-            "create the project with using a permissions template, and return the 'full' project info if the supplied shortname is unique" in {
+            "create a new project and return the 'full' project info if the supplied shortname is unique" in {
 
             }
 
