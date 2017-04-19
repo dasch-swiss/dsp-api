@@ -1,6 +1,7 @@
 open knora-test .
 load ../../knora-ontologies/knora-base.ttl into http://www.knora.org/ontology/knora-base .
 load ../../knora-ontologies/knora-admin.ttl into http://www.knora.org/ontology/knora-base .
+load ../../knora-ontologies/knora-api.ttl into http://www.knora.org/ontology/knora-api .
 load ../../knora-ontologies/standoff-onto.ttl into http://www.knora.org/ontology/standoff .
 load ../../knora-ontologies/standoff-data.ttl into http://www.knora.org/data/standoff .
 load ../../knora-ontologies/knora-dc.ttl into http://www.knora.org/ontology/dc .

@@ -1,0 +1,65 @@
+# Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
+# Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
+#
+# This file is part of Knora.
+#
+# Knora is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published
+# by the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Knora is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public
+# License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+
+@prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xml: <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+@prefix : <http://www.knora.org/ontology/knora-api#> .
+
+<http://www.knora.org/ontology/knora-api> rdf:type owl:Ontology .
+
+
+### http://www.knora.org/ontology/knora-api#textValueHasXml
+
+:textValueHasXml rdf:type owl:DatatypeProperty ;
+
+    rdfs:comment "A text value represented in XML."@en ;
+
+    knora-base:objectDatatypeConstraint xsd:string .
+
+
+### http://www.knora.org/ontology/knora-api#textValueHasMapping
+
+:textValueHasMapping rdf:type owl:ObjectProperty ;
+
+    rdfs:comment "The mapping used to turn standoff into XML and vice versa."@en ;
+
+    knora-base:objectDatatypeConstraint xsd:string .
+
+
+### http://www.knora.org/ontology/knora-api#textValueAsHtml
+
+:textValueHasHtml rdf:type owl:DatatypeProperty ;
+
+    rdfs:comment "A text value represented in HTML."@en ;
+
+    knora-base:objectClassConstraint knora-base:XMLToStandoffMapping .
+
+
+### http://www.knora.org/ontology/knora-api#dateValueHasStartYear
+
+:dateValueHasStartYear rdf:type owl:DatatypeProperty ;
+
+    rdfs:comment "The opening year of a date value"@en ;
+
+    knora-base:objectDatatypeConstraint xsd:integer .
+
