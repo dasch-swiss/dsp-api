@@ -2,7 +2,7 @@
 
 <!--
   ~ Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
-  ~ Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
+  ~ Tobias Schweizer, André Kilchenmann, and André Fatton.
   ~
   ~ This file is part of Knora.
   ~
@@ -75,8 +75,7 @@
     <logger name="org.knora.webapi.responders.v1.StoreResponderV1" level="INFO"/>
     <logger name="org.knora.webapi.responders.v1.OntologyResponderV1" level="INFO"/>
     <logger name="org.knora.webapi.viewhandlers.ResourceHtmlView" level="INFO"/>
-    <logger name="org.knora.webapi.other.v1.DrawingsGodsV1Spec" level="INFO"/>
-    <logger name="org.knora.webapi.other.v1.DrawingsGodsV1E2ESpec" level="INFO"/>
+    <logger name="org.knora.webapi.other.v1.DrawingsGodsV1ITSpec" level="INFO"/>
 
 
     <root level="INFO">

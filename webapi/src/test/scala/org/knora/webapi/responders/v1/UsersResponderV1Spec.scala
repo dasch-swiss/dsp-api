@@ -33,7 +33,6 @@ import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.messages.v1.store.triplestoremessages._
 import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_NAME
 import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
-import org.knora.webapi.util.MessageUtil
 
 import scala.concurrent.duration._
 
@@ -78,41 +77,59 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
     }
 
     "The UsersResponder " when {
+        "asked about all users" should {
+            "return a list" in {
+                actorUnderTest ! UsersGetRequestV1(rootUser)
+                val response = expectMsgType[UsersGetResponseV1](timeout)
+                response.users.nonEmpty should be (true)
+                response.users.size should be (16)
+            }
+        }
         "asked about an user identified by 'iri' " should {
 
             "return a profile if the user (root user) is known" in {
                 actorUnderTest ! UserProfileByIRIGetV1(rootUserIri, UserProfileType.FULL)
-                expectMsg(rootUser.ofType(UserProfileType.FULL))
+                expectMsg(Some(rootUser.ofType(UserProfileType.FULL)))
             }
 
             "return a profile if the user (incunabula user) is known" in {
                 actorUnderTest ! UserProfileByIRIGetV1(incunabulaUserIri, UserProfileType.FULL)
-                expectMsg(incunabulaUser.ofType(UserProfileType.FULL))
+                expectMsg(Some(incunabulaUser.ofType(UserProfileType.FULL)))
             }
 
             "return 'NotFoundException' when the user is unknown " in {
-                actorUnderTest ! UserProfileByIRIGetV1("http://data.knora.org/users/notexisting", UserProfileType.RESTRICTED)
+                actorUnderTest ! UserProfileByIRIGetRequestV1("http://data.knora.org/users/notexisting", UserProfileType.RESTRICTED, rootUser)
                 expectMsg(Failure(NotFoundException(s"User 'http://data.knora.org/users/notexisting' not found")))
+            }
+
+            "return 'None' when the user is unknown " in {
+                actorUnderTest ! UserProfileByIRIGetV1("http://data.knora.org/users/notexisting", UserProfileType.RESTRICTED)
+                expectMsg(None)
             }
         }
         "asked about an user identified by 'email'" should {
 
-            "return a profile if the user (root user) is known " in {
+            "return a profile if the user (root user) is known" in {
                 actorUnderTest ! UserProfileByEmailGetV1(rootUserEmail, UserProfileType.RESTRICTED)
-                expectMsg(rootUser.ofType(UserProfileType.RESTRICTED))
+                expectMsg(Some(rootUser.ofType(UserProfileType.RESTRICTED)))
             }
 
-            "return a profile if the user (incunabula user) is known " in {
+            "return a profile if the user (incunabula user) is known" in {
                 actorUnderTest ! UserProfileByEmailGetV1(incunabulaUserEmail, UserProfileType.RESTRICTED)
-                expectMsg(incunabulaUser.ofType(UserProfileType.RESTRICTED))
+                expectMsg(Some(incunabulaUser.ofType(UserProfileType.RESTRICTED)))
             }
 
-            "return 'NotFoundException' when the user is unknown " in {
-                actorUnderTest ! UserProfileByEmailGetV1("userwrong@example.com", UserProfileType.RESTRICTED)
+            "return 'NotFoundException' when the user is unknown" in {
+                actorUnderTest ! UserProfileByEmailGetRequestV1("userwrong@example.com", UserProfileType.RESTRICTED, rootUser)
                 expectMsg(Failure(NotFoundException(s"User 'userwrong@example.com' not found")))
             }
+
+            "return 'None' when the user is unknown" in {
+                actorUnderTest ! UserProfileByEmailGetV1("userwrong@example.com", UserProfileType.RESTRICTED)
+                expectMsg(None)
+            }
         }
-        "asked to create a new user " should {
+        "asked to create a new user" should {
 
             "create the user and return it's profile if the supplied username is unique " in {
                 actorUnderTest ! UserCreateRequestV1(
