@@ -64,7 +64,7 @@ class AuthenticatorSpec extends CoreSpec("AuthenticationTestSystem") with Implic
         become {
             case UserProfileByEmailGetV1(submittedEmail, userProfileType) => {
                 if (submittedEmail == "root@example.com") {
-                    ActorUtil.future2Message(sender, Future(rootUserProfileV1), logger)
+                    ActorUtil.future2Message(sender, Future(Some(rootUserProfileV1)), logger)
                 } else {
                     ActorUtil.future2Message(sender, Future.failed(throw NotFoundException(s"User '$submittedEmail' not found")), logger)
                 }

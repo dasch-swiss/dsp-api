@@ -30,6 +30,7 @@ import akka.pattern._
 import akka.util.{ByteString, Timeout}
 import com.typesafe.scalalogging.Logger
 import org.knora.webapi._
+import org.knora.webapi.messages.v1.responder.permissionmessages.PermissionDataV1
 import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_PATH
 import org.knora.webapi.util.CacheUtil
@@ -211,7 +212,10 @@ trait Authenticator {
     def getUserProfileV1(requestContext: RequestContext)(implicit system: ActorSystem, executionContext: ExecutionContext): UserProfileV1 = {
         val settings = Settings(system)
         if (settings.skipAuthentication) {
-            UserProfileV1(UserDataV1(settings.fallbackLanguage)).ofType(UserProfileType.RESTRICTED)
+            UserProfileV1(
+                userData = UserDataV1(lang = settings.fallbackLanguage),
+                permissionData = PermissionDataV1(anonymousUser = true)
+            ).ofType(UserProfileType.RESTRICTED)
         }
         else {
             // let us first try to get the user profile through the session id from the cookie
@@ -235,8 +239,11 @@ trait Authenticator {
                             userProfileV1.ofType(UserProfileType.RESTRICTED)
 
                         case None =>
-                            log.debug("No credentials found, returning default UserProfileV1!")
-                            UserProfileV1(UserDataV1(settings.fallbackLanguage))
+                            log.debug("No credentials found, returning default UserProfileV1 with 'anonymousUser' inside 'permissionData' set to true!")
+                            UserProfileV1(
+                                userData = UserDataV1(lang = settings.fallbackLanguage),
+                                permissionData = PermissionDataV1(anonymousUser = true)
+                            )
                     }
                 }
             }
@@ -432,14 +439,19 @@ object Authenticator {
       */
     private def getUserProfileByIri(iri: IRI)(implicit system: ActorSystem, timeout: Timeout, executionContext: ExecutionContext): UserProfileV1 = {
         val responderManager = system.actorSelection(RESPONDER_MANAGER_ACTOR_PATH)
-        val userProfileV1Future = (responderManager ? UserProfileByIRIGetV1(iri, UserProfileType.FULL)).mapTo[UserProfileV1]
-
-        userProfileV1Future.recover {
-            case nfe: NotFoundException => throw BadCredentialsException(s"$BAD_CRED_USER_NOT_FOUND: ${nfe.message}")
-        }
+        val userProfileV1Future = for {
+            maybeUserProfile <- (responderManager ? UserProfileByIRIGetV1(iri, UserProfileType.FULL)).mapTo[Option[UserProfileV1]]
+            userProfileV1 = maybeUserProfile match {
+                case Some(up) => up
+                case None => {
+                        log.debug(s"getUserProfileByEmail - supplied email not found - throwing exception")
+                        throw BadCredentialsException(s"$BAD_CRED_USER_NOT_FOUND")
+                }
+            }
+        } yield userProfileV1
 
         // TODO: return the future here instead of using Await.
-        Await.result(userProfileV1Future, Duration(3, SECONDS))
+		Await.result(userProfileV1Future, Duration(3, SECONDS))
     }
 
     /**
@@ -464,21 +476,20 @@ object Authenticator {
                 case None =>
                     // didn't found one, so I will try to get it from the triple store
                     val userProfileV1Future = for {
-                        userProfileV1 <- (responderManager ? UserProfileByEmailGetV1(email, UserProfileType.FULL)).mapTo[UserProfileV1]
+                        maybeUserProfileV1 <- (responderManager ? UserProfileByEmailGetV1(email, UserProfileType.FULL)).mapTo[Option[UserProfileV1]]
+                        userProfileV1 = maybeUserProfileV1 match {
+                            case Some(up) => up
+                            case None => {
+                                log.debug(s"getUserProfileByEmail - supplied email not found - throwing exception")
+                                throw BadCredentialsException(s"$BAD_CRED_USER_NOT_FOUND")
+                            }
+                        }
                         _ = CacheUtil.put(AUTHENTICATION_CACHE_NAME, email, userProfileV1)
                         _ = log.debug(s"getUserProfileByEmail - from triplestore: $userProfileV1")
                     } yield userProfileV1
 
-                    userProfileV1Future.recover {
-                        case nfe: NotFoundException => {
-                            log.debug(s"getUserProfileByEmail - supplied email not found - throwing exception")
-                            // FIXME: This does not work as expected (#372).
-                            throw BadCredentialsException(s"$BAD_CRED_USER_NOT_FOUND: ${nfe.message}")
-                        }
-                    }
-
                     // TODO: return the future here instead of using Await.
-                    Await.result(userProfileV1Future, Duration(3, SECONDS))
+					Await.result(userProfileV1Future, Duration(3, SECONDS))
             }
         } else {
             throw BadCredentialsException(BAD_CRED_USERNAME_NOT_SUPPLIED)

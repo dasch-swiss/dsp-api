@@ -7,31 +7,6 @@
 @prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
 
 
-### drawings of gods project
-<http://data.knora.org/projects/drawings-gods> rdf:type knora-base:knoraProject ;
-        knora-base:projectShortname "drawings-of-gods"^^xsd:string ;
-        knora-base:projectLongname "Drawings of Gods"^^xsd:string ;
-        knora-base:projectDescription "Drawings of Gods"^^xsd:string ;
-        knora-base:projectKeywords "gods, collection"^^xsd:string ;
-        knora-base:projectOntologyGraph "http://www.knora.org/ontology/anything"^^xsd:string ;
-        knora-base:projectDataGraph "http://www.knora.org/data/drawings-gods"^^xsd:string ;
-        knora-base:projectBasepath "-"^^xsd:string ;
-        knora-base:status "true"^^xsd:boolean ;
-        knora-base:hasSelfJoinEnabled "false"^^xsd:boolean .
-
-### drawings of gods user
-<http://data.knora.org/users/drawings-gods-test-user> a knora-base:User ;
-        knora-base:email "drawings-gods-test-user@example.com"^^xsd:string ;
-        knora-base:givenName "Drawings Gods"^^xsd:string ;
-        knora-base:familyName "Test User"^^xsd:string ;
-        knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="^^xsd:string ;
-        knora-base:preferredLanguage "fr"^^xsd:string ;
-        knora-base:status "true"^^xsd:boolean ;
-        knora-base:isInProject <http://data.knora.org/projects/drawings-gods> ;
-        knora-base:isInProjectAdminGroup <http://data.knora.org/projects/drawings-gods> ;
-        knora-base:isInSystemAdminGroup "false"^^xsd:boolean .
-
-
 ### parole-religieuse project
 <http://data.knora.org/projects/parole-religieuse> rdf:type knora-base:knoraProject ;
         knora-base:projectShortname "drawings-of-gods"^^xsd:string ;

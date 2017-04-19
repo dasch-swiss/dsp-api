@@ -29,6 +29,7 @@ import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse}
 import org.knora.webapi.messages.v1.responder.projectmessages._
+import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileType}
 import org.knora.webapi.messages.v1.store.triplestoremessages._
 import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_NAME
 import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
@@ -77,13 +78,10 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
             "return project info for every project" in {
 
                 actorUnderTest ! ProjectsGetRequestV1(Some(rootUserProfileV1))
-                expectMsgPF(timeout) {
-                    case ProjectsResponseV1(projects) => {
-                        //println(projects)
-                        assert(projects.contains(SharedAdminTestData.imagesProjectInfo))
-                        assert(projects.contains(SharedAdminTestData.incunabulaProjectInfo))
-                    }
-                }
+                val received = expectMsgType[ProjectsResponseV1](timeout)
+
+                assert(received.projects.contains(SharedAdminTestData.imagesProjectInfo))
+                assert(received.projects.contains(SharedAdminTestData.incunabulaProjectInfo))
 
             }
 
@@ -124,9 +122,10 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
             }
 
         }
+
         "asked about a project identified by 'shortname' " should {
 
-            "return 'full' project info if the project is known " in {
+            "return project info if the project is known " in {
                 actorUnderTest ! ProjectInfoByShortnameGetRequestV1(SharedAdminTestData.incunabulaProjectInfo.shortname, Some(rootUserProfileV1))
                 expectMsg(ProjectInfoResponseV1(SharedAdminTestData.incunabulaProjectInfo))
             }
@@ -136,6 +135,46 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
                 expectMsg(Failure(NotFoundException(s"Project 'projectwrong' not found")))
             }
 
+        }
+
+        "asked about members of a project identified by 'IRI" should {
+
+            "return members if the project is known" in {
+                actorUnderTest ! ProjectMembersByIRIGetRequestV1(SharedAdminTestData.imagesProjectInfo.id, SharedAdminTestData.rootUser)
+                val received: ProjectMembersGetResponseV1 = expectMsgType[ProjectMembersGetResponseV1](timeout)
+                received.members should contain allElementsOf Seq(
+                    SharedAdminTestData.imagesUser01.ofType(UserProfileType.SHORT).userData,
+                    SharedAdminTestData.imagesUser02.ofType(UserProfileType.SHORT).userData,
+                    SharedAdminTestData.multiuserUser.ofType(UserProfileType.SHORT).userData,
+                    SharedAdminTestData.imagesReviewerUser.ofType(UserProfileType.SHORT).userData
+                )
+                received.userDataV1 should equal (SharedAdminTestData.rootUser.ofType(UserProfileType.SHORT).userData)
+            }
+
+            "return 'NotFound' when the project is unknown" in {
+                actorUnderTest ! ProjectMembersByIRIGetRequestV1("http://data.knora.org/projects/notexisting", SharedAdminTestData.rootUser)
+                expectMsg(Failure(NotFoundException(s"Project 'http://data.knora.org/projects/notexisting' either not found or has no members")))
+            }
+        }
+
+        "asked about members of a project identified by 'shortname" should {
+
+            "return members if the project is known" in {
+                actorUnderTest ! ProjectMembersByShortnameGetRequestV1(SharedAdminTestData.imagesProjectInfo.shortname, SharedAdminTestData.rootUser)
+                val received: ProjectMembersGetResponseV1 = expectMsgType[ProjectMembersGetResponseV1](timeout)
+                received.members should contain allElementsOf Seq(
+                    SharedAdminTestData.imagesUser01.ofType(UserProfileType.SHORT).userData,
+                    SharedAdminTestData.imagesUser02.ofType(UserProfileType.SHORT).userData,
+                    SharedAdminTestData.multiuserUser.ofType(UserProfileType.SHORT).userData,
+                    SharedAdminTestData.imagesReviewerUser.ofType(UserProfileType.SHORT).userData
+                )
+                received.userDataV1 should equal (SharedAdminTestData.rootUser.ofType(UserProfileType.SHORT).userData)
+            }
+
+            "return 'NotFound' when the project is unknown" in {
+                actorUnderTest ! ProjectMembersByShortnameGetRequestV1("projectwrong", SharedAdminTestData.rootUser)
+                expectMsg(Failure(NotFoundException(s"Project 'projectwrong' either not found or has no members")))
+            }
         }
 
         "asked to create a new project " should {
@@ -155,16 +194,12 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
                     SharedAdminTestData.rootUser,
                     UUID.randomUUID()
                 )
-                expectMsgPF(timeout) {
-                    case ProjectOperationResponseV1(newProjectInfo) => {
-                        //println(newProjectInfo)
-                        assert(newProjectInfo.shortname.equals("newproject"))
-                        assert(newProjectInfo.longname.contains("project longname"))
-                        assert(newProjectInfo.description.contains("project description"))
-                        assert(newProjectInfo.ontologyNamedGraph.equals("http://www.knora.org/ontology/newproject"))
-                        assert(newProjectInfo.dataNamedGraph.equals("http://www.knora.org/data/newproject"))
-                    }
-                }
+                val received: ProjectOperationResponseV1 = expectMsgType[ProjectOperationResponseV1](timeout)
+                assert(received.project_info.shortname.equals("newproject"))
+                assert(received.project_info.longname.contains("project longname"))
+                assert(received.project_info.description.contains("project description"))
+                assert(received.project_info.ontologyNamedGraph.equals("http://www.knora.org/ontology/newproject"))
+                assert(received.project_info.dataNamedGraph.equals("http://www.knora.org/data/newproject"))
             }
 
             "return a 'DuplicateValueException' if the supplied project shortname is not unique " in {

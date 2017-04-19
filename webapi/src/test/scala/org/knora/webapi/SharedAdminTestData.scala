@@ -20,7 +20,6 @@
 
 package org.knora.webapi
 
-import akka.actor.FSM.->
 import org.knora.webapi.messages.v1.responder.groupmessages.GroupInfoV1
 import org.knora.webapi.messages.v1.responder.permissionmessages.{PermissionDataV1, PermissionV1}
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1
@@ -57,7 +56,7 @@ object SharedAdminTestData {
                 SYSTEM_PROJECT_IRI -> List(s"${OntologyConstants.KnoraBase.SystemAdmin}")
             ),
             administrativePermissionsPerProject = Map.empty[IRI, Set[PermissionV1]],
-            defaultObjectAccessPermissionsPerProject =  Map.empty[IRI, Set[PermissionV1]]
+            anonymousUser = false
         )
     )
 
@@ -78,7 +77,8 @@ object SharedAdminTestData {
         permissionData = PermissionDataV1(
             groupsPerProject = Map(
                 SYSTEM_PROJECT_IRI -> List(s"${OntologyConstants.KnoraBase.SystemAdmin}")
-            )
+            ),
+            anonymousUser = false
         )
     )
 
@@ -96,7 +96,9 @@ object SharedAdminTestData {
         ),
         groups = Vector.empty[IRI],
         sessionId = None,
-        permissionData = PermissionDataV1()
+        permissionData = PermissionDataV1(
+            anonymousUser = false
+        )
     )
 
     /* represents the user profile of 'inactive user' as found in admin-data.ttl */
@@ -113,7 +115,9 @@ object SharedAdminTestData {
         ),
         groups = Vector.empty[IRI],
         sessionId = None,
-        permissionData = PermissionDataV1()
+        permissionData = PermissionDataV1(
+            anonymousUser = false
+        )
     )
 
     /* represents an anonymous user */
@@ -123,7 +127,9 @@ object SharedAdminTestData {
         ),
         groups = Vector.empty[IRI],
         sessionId = None,
-        permissionData = PermissionDataV1()
+        permissionData = PermissionDataV1(
+            anonymousUser = true
+        )
     )
 
 
@@ -158,20 +164,7 @@ object SharedAdminTestData {
                     PermissionV1.ProjectResourceCreateAllPermission
                 )
             ),
-            defaultObjectAccessPermissionsPerProject =  Map(
-                INCUNABULA_PROJECT_IRI -> Set(
-                    PermissionV1.restrictedViewPermission(OntologyConstants.KnoraBase.UnknownUser),
-                    PermissionV1.changeRightsPermission(OntologyConstants.KnoraBase.Creator),
-                    PermissionV1.viewPermission(OntologyConstants.KnoraBase.KnownUser),
-                    PermissionV1.modifyPermission(OntologyConstants.KnoraBase.ProjectMember)
-                ),
-                IMAGES_PROJECT_IRI -> Set(
-                    PermissionV1.changeRightsPermission(OntologyConstants.KnoraBase.Creator),
-                    PermissionV1.viewPermission(OntologyConstants.KnoraBase.KnownUser),
-                    PermissionV1.modifyPermission(OntologyConstants.KnoraBase.ProjectMember)
-
-                )
-            )
+            anonymousUser = false
         )
     )
 
@@ -209,26 +202,20 @@ object SharedAdminTestData {
             isActiveUser = Some(true),
             lang = "de"
         ),
-        groups = List("http://data.knora.org/groups/images-reviewer"),
+        groups = List.empty[IRI],
         projects_info = Map(IMAGES_PROJECT_IRI -> imagesProjectInfo),
         sessionId = None,
         permissionData = PermissionDataV1(
             groupsPerProject = Map(
-                IMAGES_PROJECT_IRI -> List("http://data.knora.org/groups/images-reviewer", s"${OntologyConstants.KnoraBase.ProjectMember}", s"${OntologyConstants.KnoraBase.ProjectAdmin}")
+                IMAGES_PROJECT_IRI -> List(s"${OntologyConstants.KnoraBase.ProjectMember}", s"${OntologyConstants.KnoraBase.ProjectAdmin}")
             ),
             administrativePermissionsPerProject = Map(
                 "http://data.knora.org/projects/images" -> Set(
-                    PermissionV1.ProjectResourceCreateAllPermission,
-                    PermissionV1.ProjectAdminAllPermission
+                    PermissionV1.ProjectAdminAllPermission,
+                    PermissionV1.ProjectResourceCreateAllPermission
                 )
             ),
-            defaultObjectAccessPermissionsPerProject =  Map(
-                IMAGES_PROJECT_IRI -> Set(
-                    PermissionV1.changeRightsPermission(OntologyConstants.KnoraBase.Creator),
-                    PermissionV1.viewPermission(OntologyConstants.KnoraBase.KnownUser),
-                    PermissionV1.modifyPermission(OntologyConstants.KnoraBase.ProjectMember)
-                )
-            )
+            anonymousUser = false
         )
     )
 
@@ -244,13 +231,48 @@ object SharedAdminTestData {
             isActiveUser = Some(true),
             lang = "de"
         ),
+        groups = List.empty[IRI],
+        projects_info = Map(IMAGES_PROJECT_IRI -> imagesProjectInfo),
+        sessionId = None,
+        permissionData = PermissionDataV1(
+            groupsPerProject = Map(
+                "http://data.knora.org/projects/images" -> List(s"${OntologyConstants.KnoraBase.ProjectMember}")
+            ),
+            administrativePermissionsPerProject = Map(
+                "http://data.knora.org/projects/images" -> Set(
+                    PermissionV1.ProjectResourceCreateAllPermission
+                )
+            ),
+            anonymousUser = false
+        )
+    )
+
+    /* represents 'images-reviewer-user' as found in admin-data.ttl  */
+    def imagesReviewerUser = UserProfileV1(
+        userData = UserDataV1(
+            user_id = Some("http://data.knora.org/users/images-reviewer-user"),
+            firstname = Some("User03"),
+            lastname = Some("User"),
+            email = Some("images-reviewer-user@example.com"),
+            password = Some("$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"), // -> "test"
+            token = None,
+            isActiveUser = Some(true),
+            lang = "de"
+        ),
         groups = List("http://data.knora.org/groups/images-reviewer"),
         projects_info = Map(IMAGES_PROJECT_IRI -> imagesProjectInfo),
         sessionId = None,
         permissionData = PermissionDataV1(
             groupsPerProject = Map(
-                "http://data.knora.org/projects/images" -> List(s"${OntologyConstants.KnoraBase.ProjectMember}", "http://data.knora.org/groups/images-reviewer")
-            )
+                "http://data.knora.org/projects/images" -> List("http://data.knora.org/groups/images-reviewer", s"${OntologyConstants.KnoraBase.ProjectMember}")
+            ),
+            administrativePermissionsPerProject = Map(
+                "http://data.knora.org/projects/images" -> Set(
+                    PermissionV1.projectResourceCreateRestrictedPermission("http://www.knora.org/ontology/images#bild"),
+                    PermissionV1.projectResourceCreateRestrictedPermission("http://www.knora.org/ontology/images#bildformat")
+                )
+            ),
+            anonymousUser = false
         )
     )
 
@@ -321,7 +343,7 @@ object SharedAdminTestData {
             lang = "de"
         ),
         groups = Vector.empty[IRI],
-        projects_info = Map("http://data.knora.org/projects/77275339" -> incunabulaProjectInfo),
+        projects_info = Map(INCUNABULA_PROJECT_IRI -> incunabulaProjectInfo),
         sessionId = None,
         permissionData = PermissionDataV1(
             groupsPerProject = Map(
@@ -333,14 +355,7 @@ object SharedAdminTestData {
                     PermissionV1.ProjectResourceCreateAllPermission
                 )
             ),
-            defaultObjectAccessPermissionsPerProject =  Map(
-                INCUNABULA_PROJECT_IRI -> Set(
-                    PermissionV1.restrictedViewPermission(OntologyConstants.KnoraBase.UnknownUser),
-                    PermissionV1.changeRightsPermission(OntologyConstants.KnoraBase.Creator),
-                    PermissionV1.viewPermission(OntologyConstants.KnoraBase.KnownUser),
-                    PermissionV1.modifyPermission(OntologyConstants.KnoraBase.ProjectMember)
-                )
-            )
+            anonymousUser = false
         )
     )
 
@@ -368,14 +383,7 @@ object SharedAdminTestData {
                     PermissionV1.ProjectResourceCreateAllPermission
                 )
             ),
-            defaultObjectAccessPermissionsPerProject =  Map(
-                INCUNABULA_PROJECT_IRI -> Set(
-                    PermissionV1.changeRightsPermission(OntologyConstants.KnoraBase.Creator),
-                    PermissionV1.modifyPermission(OntologyConstants.KnoraBase.ProjectMember),
-                    PermissionV1.viewPermission(OntologyConstants.KnoraBase.KnownUser),
-                    PermissionV1.restrictedViewPermission(OntologyConstants.KnoraBase.UnknownUser)
-                )
-            )
+            anonymousUser = false
         )
     )
 
@@ -403,14 +411,7 @@ object SharedAdminTestData {
                     PermissionV1.ProjectResourceCreateAllPermission
                 )
             ),
-            defaultObjectAccessPermissionsPerProject =  Map(
-                INCUNABULA_PROJECT_IRI -> Set(
-                    PermissionV1.changeRightsPermission(OntologyConstants.KnoraBase.Creator),
-                    PermissionV1.modifyPermission(OntologyConstants.KnoraBase.ProjectMember),
-                    PermissionV1.viewPermission(OntologyConstants.KnoraBase.KnownUser),
-                    PermissionV1.restrictedViewPermission(OntologyConstants.KnoraBase.UnknownUser)
-                )
-            )
+            anonymousUser = false
         )
     )
 
@@ -458,14 +459,7 @@ object SharedAdminTestData {
                     PermissionV1.ProjectResourceCreateAllPermission
                 )
             ),
-            defaultObjectAccessPermissionsPerProject =  Map(
-                ANYTHING_PROJECT_IRI -> Set(
-                    PermissionV1.restrictedViewPermission(OntologyConstants.KnoraBase.UnknownUser),
-                    PermissionV1.changeRightsPermission(OntologyConstants.KnoraBase.Creator),
-                    PermissionV1.viewPermission(OntologyConstants.KnoraBase.KnownUser),
-                    PermissionV1.modifyPermission(OntologyConstants.KnoraBase.ProjectMember)
-                )
-            )
+            anonymousUser = false
         )
 
     )
@@ -493,14 +487,7 @@ object SharedAdminTestData {
                     PermissionV1.ProjectResourceCreateAllPermission
                 )
             ),
-            defaultObjectAccessPermissionsPerProject =  Map(
-                ANYTHING_PROJECT_IRI -> Set(
-                    PermissionV1.restrictedViewPermission(OntologyConstants.KnoraBase.UnknownUser),
-                    PermissionV1.changeRightsPermission(OntologyConstants.KnoraBase.Creator),
-                    PermissionV1.viewPermission(OntologyConstants.KnoraBase.KnownUser),
-                    PermissionV1.modifyPermission(OntologyConstants.KnoraBase.ProjectMember)
-                )
-            )
+            anonymousUser = false
         )
     )
 
@@ -575,7 +562,7 @@ object SharedAdminTestData {
         groups = Vector.empty[IRI],
         projects_info = Map(BIBLIO_PROJECT_IRI -> biblioProjectInfo),
         sessionId = None,
-        permissionData = PermissionDataV1()
+        permissionData = PermissionDataV1(anonymousUser = false)
     )
 
     /************************************/
