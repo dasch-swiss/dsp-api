@@ -238,9 +238,9 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
             "update the user" in {
 
                 /* User information is updated by the user */
-                actorUnderTest ! UserUpdateRequestV1(
+                actorUnderTest ! UserChangeBasicUserDataRequestV1(
                     userIri = SharedAdminTestData.normalUser.userData.user_id.get,
-                    updateRequest = UpdateUserApiRequestV1(
+                    updateRequest = ChangeBasicUserDataApiRequestV1(
                         email = None,
                         givenName = Some("Donald"),
                         familyName = None,
@@ -256,9 +256,9 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
                 }
 
                 /* User information is updated by a system admin */
-                actorUnderTest ! UserUpdateRequestV1(
+                actorUnderTest ! UserChangeBasicUserDataRequestV1(
                     userIri = SharedAdminTestData.normalUser.userData.user_id.get,
-                    updateRequest = UpdateUserApiRequestV1(
+                    updateRequest = ChangeBasicUserDataApiRequestV1(
                         email = None,
                         givenName = None,
                         familyName = Some("Duck"),
@@ -278,9 +278,9 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
             "return a 'ForbiddenException' if the user requesting update is not the user itself or system admin" in {
 
                 /* User information is updated by other normal user */
-                actorUnderTest ! UserUpdateRequestV1(
+                actorUnderTest ! UserChangeBasicUserDataRequestV1(
                     userIri = SharedAdminTestData.superUser.userData.user_id.get,
-                    updateRequest = UpdateUserApiRequestV1(
+                    updateRequest = ChangeBasicUserDataApiRequestV1(
                         email = None,
                         givenName = Some("Donald"),
                         familyName = None,
@@ -292,9 +292,9 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
                 expectMsg(Failure(ForbiddenException("User information can only be changed by the user itself or a system administrator")))
 
                 /* User information is updated by anonymous */
-                actorUnderTest ! UserUpdateRequestV1(
+                actorUnderTest ! UserChangeBasicUserDataRequestV1(
                     userIri = SharedAdminTestData.superUser.userData.user_id.get,
-                    updateRequest = UpdateUserApiRequestV1(
+                    updateRequest = ChangeBasicUserDataApiRequestV1(
                         email = None,
                         givenName = Some("Donald"),
                         familyName = None,

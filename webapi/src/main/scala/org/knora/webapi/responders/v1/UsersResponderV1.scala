@@ -28,7 +28,7 @@ import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.permissionmessages._
 import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoByIRIGetV1, ProjectInfoV1}
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileType.UserProfileType
-import org.knora.webapi.messages.v1.responder.usermessages._
+import org.knora.webapi.messages.v1.responder.usermessages.{ChangeUserSystemAdminMembershipStatusApiRequestV1, _}
 import org.knora.webapi.messages.v1.store.triplestoremessages._
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.routing.Authenticator
@@ -62,9 +62,10 @@ class UsersResponderV1 extends ResponderV1 {
         case UserProfileByEmailGetV1(email, profileType) => future2Message(sender(), userProfileByEmailGetV1(email, profileType), log)
         case UserProfileByEmailGetRequestV1(email, profileType, userProfile) => future2Message(sender(), userProfileByEmailGetRequestV1(email, profileType, userProfile), log)
         case UserCreateRequestV1(createRequest, userProfile, apiRequestID) => future2Message(sender(), createNewUserV1(createRequest, userProfile, apiRequestID), log)
-        case UserUpdateRequestV1(userIri, changeUserData, userProfile, apiRequestID) => future2Message(sender(), updateBasicUserDataV1(userIri, changeUserData, userProfile, apiRequestID), log)
+        case UserChangeBasicUserDataRequestV1(userIri, changeUserData, userProfile, apiRequestID) => future2Message(sender(), changeBasicUserDataV1(userIri, changeUserData, userProfile, apiRequestID), log)
         case UserChangePasswordRequestV1(userIri, changePasswordRequest, userProfile, apiRequestID) => future2Message(sender(), changePasswordV1(userIri, changePasswordRequest, userProfile, apiRequestID), log)
         case UserChangeStatusRequestV1(userIri, changeStatusRequest, userProfile, apiRequestID) => future2Message(sender(), changeUserStatusV1(userIri, changeStatusRequest, userProfile, apiRequestID), log)
+        case UserChangeSystemAdminMembershipStatusRequestV1(userIri, changeSystemAdminMembershipStatusRequest, userProfile, apiRequestID) => future2Message(sender(), changeUserSystemAdminMembershipStatusV1(userIri, changeSystemAdminMembershipStatusRequest, userProfile, apiRequestID), log)
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }
 
@@ -299,12 +300,12 @@ class UsersResponderV1 extends ResponderV1 {
       * can be changed. For changing the password or user status, use the separate methods.
       *
       * @param userIri           the IRI of the existing user that we want to update.
-      * @param updateUserRequest the updated information.
+      * @param changeBasicUserDataRequest the updated information.
       * @param userProfile       the user profile of the requesting user.
       * @param apiRequestID      the unique api request ID.
       * @return a [[UserOperationResponseV1]]
       */
-    private def updateBasicUserDataV1(userIri: IRI, updateUserRequest: UpdateUserApiRequestV1, userProfile: UserProfileV1, apiRequestID: UUID): Future[UserOperationResponseV1] = for {
+    private def changeBasicUserDataV1(userIri: IRI, changeBasicUserDataRequest: ChangeBasicUserDataApiRequestV1, userProfile: UserProfileV1, apiRequestID: UUID): Future[UserOperationResponseV1] = for {
 
     // check if the requesting user is allowed to perform updates
         _ <- Future(
@@ -317,16 +318,18 @@ class UsersResponderV1 extends ResponderV1 {
         // check if necessary information is present
         _ = if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty")
 
-        // check that we don't want to change the password / status / system admin group membership
-        _ = if (updateUserRequest.password.isDefined) throw BadRequestException("The password cannot be changed by this method.")
-        _ = if (updateUserRequest.status.isDefined) throw BadRequestException("The status cannot be changed by this method.")
-        _ = if (updateUserRequest.systemAdmin.isDefined) throw BadRequestException("The system admin group membership cannot be changed by this method.")
+        userUpdatePayload = UserUpdatePayloadV1(
+            email = changeBasicUserDataRequest.email,
+            givenName = changeBasicUserDataRequest.givenName,
+            familyName = changeBasicUserDataRequest.familyName,
+            lang = changeBasicUserDataRequest.lang
+        )
 
         // run the user update with an global IRI lock
         taskResult <- IriLocker.runWithIriLock(
             apiRequestID,
             USERS_GLOBAL_LOCK_IRI,
-            () => updateUserDataV1(userIri, updateUserRequest, userProfile, apiRequestID)
+            () => updateUserDataV1(userIri, userUpdatePayload, userProfile, apiRequestID)
         )
     } yield taskResult
 
@@ -350,13 +353,13 @@ class UsersResponderV1 extends ResponderV1 {
         // check if old password matches current user password
             maybeUserProfile <- userProfileByIRIGetV1(userIri, UserProfileType.FULL)
             userProfile = maybeUserProfile.getOrElse(throw NotFoundException(s"User '$userIri' not found"))
-            _ = if (!userProfile.passwordMatch(changePasswordRequest.oldPassword)) throw BadRequestException("The supplied old password does not match the current users password.")
+            _ = if (!userProfile.passwordMatch(changePasswordRequest.oldPassword)) throw BadRequestException("The supplied old password does not match the current password of the user.")
 
             // create the update request
-            updateUserRequest = UpdateUserApiRequestV1(password = Some(changePasswordRequest.newPassword))
+            userUpdatePayload = UserUpdatePayloadV1(password = Some(changePasswordRequest.newPassword))
 
             // update the users password
-            result <- updateUserDataV1(userIri, updateUserRequest, userProfile, apiRequestID)
+            result <- updateUserDataV1(userIri, userUpdatePayload, userProfile, apiRequestID)
 
         } yield result
 
@@ -399,31 +402,63 @@ class UsersResponderV1 extends ResponderV1 {
             throw ForbiddenException("User information can only be changed by the user itself or a system administrator")
         }
 
-        // create the update user request
-        val updateUserRequest = UpdateUserApiRequestV1(status = Some(changeStatusRequest.newStatus))
+        // create the update request
+        val userUpdatePayload = UserUpdatePayloadV1(status = Some(changeStatusRequest.newStatus))
 
         for {
         // run the change status task with an IRI lock
             taskResult <- IriLocker.runWithIriLock(
                 apiRequestID,
                 userIri,
-                () => updateUserDataV1(userIri, updateUserRequest, userProfile, apiRequestID)
+                () => updateUserDataV1(userIri, userUpdatePayload, userProfile, apiRequestID)
             )
         } yield taskResult
     }
 
-    private def changeUserSystemAdminMembershipStatusV1(user: IRI, userProfile: UserProfileV1, apiRequestID: UUID): Future[UserOperationResponseV1] = ???
+
+    /**
+      * Change the user's system admin membership status (active / inactive).
+      *
+      * @param userIri             the IRI of the existing user that we want to update.
+      * @param changeStatusRequest the new status.
+      * @param userProfile         the user profile of the requesting user.
+      * @param apiRequestID        the unique api request ID.
+      * @return
+      */
+    private def changeUserSystemAdminMembershipStatusV1(userIri: IRI, changeStatusRequest: ChangeUserSystemAdminMembershipStatusApiRequestV1, userProfile: UserProfileV1, apiRequestID: UUID): Future[UserOperationResponseV1] = {
+
+        // check if necessary information is present
+        if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty")
+
+        // check if the requesting user is allowed to perform updates
+        if (!userProfile.permissionData.isSystemAdmin) {
+            // not a system admin
+            throw ForbiddenException("User's system admin membership can only be changed by a system administrator")
+        }
+
+        // create the update request
+        val userUpdatePayload = UserUpdatePayloadV1(systemAdmin = Some(changeStatusRequest.newSystemAdminMembershipStatus))
+
+        for {
+        // run the change status task with an IRI lock
+            taskResult <- IriLocker.runWithIriLock(
+                apiRequestID,
+                userIri,
+                () => updateUserDataV1(userIri, userUpdatePayload, userProfile, apiRequestID)
+            )
+        } yield taskResult
+    }
 
     /**
       * Updates an existing user. Should not be directly used from the receive method.
       *
       * @param userIri          the IRI of the existing user that we want to update.
-      * @param apiUpdateRequest the updated information.
+      * @param userUpdatePayload the updated information.
       * @param userProfile      the user profile of the requesting user.
       * @param apiRequestID     the unique api request ID.
       * @return a [[UserOperationResponseV1]]
       */
-    private def updateUserDataV1(userIri: IRI, apiUpdateRequest: UpdateUserApiRequestV1, userProfile: UserProfileV1, apiRequestID: UUID): Future[UserOperationResponseV1] = {
+    private def updateUserDataV1(userIri: IRI, userUpdatePayload: UserUpdatePayloadV1, userProfile: UserProfileV1, apiRequestID: UUID): Future[UserOperationResponseV1] = {
 
         for {
         /* Update the user */
@@ -431,13 +466,13 @@ class UsersResponderV1 extends ResponderV1 {
                 adminNamedGraphIri = "http://www.knora.org/data/admin",
                 triplestore = settings.triplestoreType,
                 userIri = userIri,
-                maybeEmail = apiUpdateRequest.email,
-                maybeGivenName = apiUpdateRequest.givenName,
-                maybeFamilyName = apiUpdateRequest.familyName,
-                maybePassword = apiUpdateRequest.password,
-                maybeStatus = apiUpdateRequest.status,
-                maybeLang = apiUpdateRequest.lang,
-                maybeSystemAdmin = apiUpdateRequest.systemAdmin
+                maybeEmail = userUpdatePayload.email,
+                maybeGivenName = userUpdatePayload.givenName,
+                maybeFamilyName = userUpdatePayload.familyName,
+                maybePassword = userUpdatePayload.password,
+                maybeStatus = userUpdatePayload.status,
+                maybeLang = userUpdatePayload.lang,
+                maybeSystemAdmin = userUpdatePayload.systemAdmin
             ).toString)
             //_ = log.debug(s"updateUserDataV1 - query: $updateUserSparqlString")
             createResourceResponse <- (storeManager ? SparqlUpdateRequest(updateUserSparqlString)).mapTo[SparqlUpdateResponse]
@@ -449,32 +484,32 @@ class UsersResponderV1 extends ResponderV1 {
 
             //_ = log.debug(s"apiUpdateRequest: $apiUpdateRequest /  updatedUserdata: $updatedUserData")
 
-            _ = if (apiUpdateRequest.email.isDefined) {
-                if (updatedUserData.email != apiUpdateRequest.email) throw UpdateNotPerformedException("User's 'email' was not updated. Please report this as a possible bug.")
+            _ = if (userUpdatePayload.email.isDefined) {
+                if (updatedUserData.email != userUpdatePayload.email) throw UpdateNotPerformedException("User's 'email' was not updated. Please report this as a possible bug.")
             }
 
-            _ = if (apiUpdateRequest.givenName.isDefined) {
-                if (updatedUserData.firstname != apiUpdateRequest.givenName) throw UpdateNotPerformedException("User's 'givenName' was not updated. Please report this as a possible bug.")
+            _ = if (userUpdatePayload.givenName.isDefined) {
+                if (updatedUserData.firstname != userUpdatePayload.givenName) throw UpdateNotPerformedException("User's 'givenName' was not updated. Please report this as a possible bug.")
             }
 
-            _ = if (apiUpdateRequest.familyName.isDefined) {
-                if (updatedUserData.lastname != apiUpdateRequest.familyName) throw UpdateNotPerformedException("User's 'familyName' was not updated. Please report this as a possible bug.")
+            _ = if (userUpdatePayload.familyName.isDefined) {
+                if (updatedUserData.lastname != userUpdatePayload.familyName) throw UpdateNotPerformedException("User's 'familyName' was not updated. Please report this as a possible bug.")
             }
 
-            _ = if (apiUpdateRequest.password.isDefined) {
-                if (updatedUserData.password != apiUpdateRequest.password) throw UpdateNotPerformedException("User's 'password' was not updated. Please report this as a possible bug.")
+            _ = if (userUpdatePayload.password.isDefined) {
+                if (updatedUserData.password != userUpdatePayload.password) throw UpdateNotPerformedException("User's 'password' was not updated. Please report this as a possible bug.")
             }
 
-            _ = if (apiUpdateRequest.status.isDefined) {
-                if (updatedUserData.isActiveUser != apiUpdateRequest.status) throw UpdateNotPerformedException("User's 'status' was not updated. Please report this as a possible bug.")
+            _ = if (userUpdatePayload.status.isDefined) {
+                if (updatedUserData.isActiveUser != userUpdatePayload.status) throw UpdateNotPerformedException("User's 'status' was not updated. Please report this as a possible bug.")
             }
 
-            _ = if (apiUpdateRequest.lang.isDefined) {
-                if (updatedUserData.lang != apiUpdateRequest.lang.get) throw UpdateNotPerformedException("User's 'lang' was not updated. Please report this as a possible bug.")
+            _ = if (userUpdatePayload.lang.isDefined) {
+                if (updatedUserData.lang != userUpdatePayload.lang.get) throw UpdateNotPerformedException("User's 'lang' was not updated. Please report this as a possible bug.")
             }
 
-            _ = if (apiUpdateRequest.systemAdmin.isDefined) {
-                if (updatedUserData.isActiveUser != apiUpdateRequest.systemAdmin) throw UpdateNotPerformedException("User's 'isInSystemAdminGroup' status was not updated. Please report this as a possible bug.")
+            _ = if (userUpdatePayload.systemAdmin.isDefined) {
+                if (updatedUserData.isActiveUser != userUpdatePayload.systemAdmin) throw UpdateNotPerformedException("User's 'isInSystemAdminGroup' status was not updated. Please report this as a possible bug.")
             }
 
             // create the user operation response

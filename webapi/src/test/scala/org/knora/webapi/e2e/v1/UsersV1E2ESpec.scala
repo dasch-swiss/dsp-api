@@ -23,10 +23,9 @@ import akka.http.scaladsl.testkit.RouteTestTimeout
 import com.typesafe.config.ConfigFactory
 import org.knora.webapi.messages.v1.responder.sessionmessages.SessionJsonProtocol
 import org.knora.webapi.messages.v1.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
-import org.knora.webapi.util.AkkaHttpUtils
+import org.knora.webapi.util.{AkkaHttpUtils, MutableTestIri}
 import org.knora.webapi.{E2ESpec, SharedAdminTestData}
 import spray.json._
-import spray.json.JsonReader
 
 import scala.concurrent.duration._
 
@@ -85,6 +84,8 @@ class UsersV1E2ESpec extends E2ESpec(UsersV1E2ESpec.config) with SessionJsonProt
 
         "used to modify user information" should {
 
+            val donaldIri = new MutableTestIri
+
             "create the user and return it's profile if the supplied email is unique " in {
 
                 val params =
@@ -102,33 +103,89 @@ class UsersV1E2ESpec extends E2ESpec(UsersV1E2ESpec.config) with SessionJsonProt
 
                 val request = Post(baseApiUrl + s"/v1/users", HttpEntity(ContentTypes.`application/json`, params))
                 val response: HttpResponse = singleAwaitingRequest(request)
+                //println(s"response: ${response.toString}")
                 response.status should be (StatusCodes.OK)
 
                 val jsonResult: Map[String, JsValue] = AkkaHttpUtils.httpResponseToJson(response).fields("userProfile").asJsObject.fields("userData").asJsObject.fields
-                jsonResult("email").toString contains ("donald.duck@example.org")
-                jsonResult("firstname").toString contains ("Donald")
-                jsonResult("lastname").toString contains ("Duck")
+                jsonResult("email").convertTo[String] should be ("donald.duck@example.org")
+                jsonResult("firstname").convertTo[String] should be ("Donald")
+                jsonResult("lastname").convertTo[String] should be ("Duck")
+                jsonResult("lang").convertTo[String] should be ("en")
+
+                val iri = jsonResult("user_id").convertTo[String]
+                donaldIri.set(iri)
+                //println(s"iri: ${donaldIri.get}")
             }
 
             "update the user's basic information" in {
-                
 
+                val params =
+                    s"""
+                    {
+                        "email": "donald.big.duck@example.org",
+                        "givenName": "Big Donald",
+                        "familyName": "Duckmann",
+                        "lang": "de"
+                    }
+                    """.stripMargin
 
+                val userIriEncoded = java.net.URLEncoder.encode(donaldIri.get, "utf-8")
+                val request = Put(baseApiUrl + s"/v1/users/" + userIriEncoded, HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
+                val response: HttpResponse = singleAwaitingRequest(request)
+                //println(s"response: ${response.toString}")
+                response.status should be (StatusCodes.OK)
+
+                val jsonResult: Map[String, JsValue] = AkkaHttpUtils.httpResponseToJson(response).fields("userProfile").asJsObject.fields("userData").asJsObject.fields
+                jsonResult("email").convertTo[String] should be ("donald.big.duck@example.org")
+                jsonResult("firstname").convertTo[String] should be ("Big Donald")
+                jsonResult("lastname").convertTo[String] should be ("Duckmann")
+                jsonResult("lang").convertTo[String] should be ("de")
             }
 
             "update the user's password" in {
 
+                val userIriEncoded = java.net.URLEncoder.encode(donaldIri.get, "utf-8")
+
+                val params01 =
+                    s"""
+                    {
+                        "oldPassword": "test",
+                        "newPassword": "test1234"
+                    }
+                    """.stripMargin
+
+
+                val request1 = Put(baseApiUrl + s"/v1/users/" + userIriEncoded, HttpEntity(ContentTypes.`application/json`, params01)) ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
+                val response1: HttpResponse = singleAwaitingRequest(request1)
+                response1.status should be (StatusCodes.OK)
+
+                val params02 =
+                    s"""
+                    {
+                        "oldPassword": "test1234",
+                        "newPassword": "test"
+                    }
+                    """.stripMargin
+
+
+                val request2 = Put(baseApiUrl + s"/v1/users/" + userIriEncoded, HttpEntity(ContentTypes.`application/json`, params02)) ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
+                val response2: HttpResponse = singleAwaitingRequest(request2)
+                response2.status should be (StatusCodes.OK)
             }
 
-            "deleting the user by making him inactive " in {
+            "deleting the user by making him inactive" ignore {
 
             }
 
-            "change (adding and removing) project membership" in {
+            "update the user's system admin membership status" ignore {
 
             }
 
-            "change (adding and removing) group membership for built in groups (ProjectMember, ProjectAdmin)" in {
+            "change (adding and removing) project membership" ignore {
+
+            }
+
+            "change (adding and removing) group membership for built in groups (ProjectMember, ProjectAdmin)" ignore {
 
             }
         }
