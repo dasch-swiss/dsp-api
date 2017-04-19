@@ -30,7 +30,7 @@ import org.knora.webapi.messages.v2.responder.resourcemessages.ResourcesGetReque
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.util.ActorUtil.future2Message
 import org.knora.webapi.util.ConstructResponseUtilV2
-import org.knora.webapi.util.ConstructResponseUtilV2.{MappingAndXSLTransformation, ResourceWithValues}
+import org.knora.webapi.util.ConstructResponseUtilV2.{MappingAndXSLTransformation, ResourceWithValueRdfData}
 
 import scala.concurrent.Future
 
@@ -53,8 +53,8 @@ class ResourcesResponderV2 extends Responder {
 
             resourceRequestResponse: SparqlConstructResponse <- (storeManager ? SparqlConstructRequest(resourceRequestSparql)).mapTo[SparqlConstructResponse]
 
-            // separate resources and value objects
-            queryResultsSeparated: Map[IRI, ResourceWithValues] = ConstructResponseUtilV2.splitResourcesAndValueObjects(constructQueryResults = resourceRequestResponse, userProfile = userProfile)
+            // separate resources and values
+            queryResultsSeparated: Map[IRI, ResourceWithValueRdfData] = ConstructResponseUtilV2.splitResourcesAndValueRdfData(constructQueryResults = resourceRequestResponse, userProfile = userProfile)
 
             // check if the requested resource was returned
             _ = if (queryResultsSeparated.get(resourceIri).isEmpty) {

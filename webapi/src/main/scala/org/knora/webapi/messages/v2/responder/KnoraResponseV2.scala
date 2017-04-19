@@ -33,57 +33,57 @@ import org.knora.webapi.{IRI, Jsonable, OntologyConstants, StandoffConversionExc
 import spray.json._
 
 /**
-  * The value of a Knora property.
-  * Any implementation of `ValueV2` is an API operation specific wrapper of a `ValueObjectV2`.
+  * The value of a Knora property in the context of some particular operation (reading, modifying, etc.).
+  * Any implementation of `ValueV2` is an API operation-specific wrapper of a `ValueContentV2`.
   */
 sealed trait ValueV2
 
 /**
   * The value of a Knora property read back from the triplestore.
   *
-  * @param valueObjectIri the Iri of the value object.
-  * @param value          the value.
+  * @param valueIri the IRI of the value.
+  * @param value    the content of the value.
   */
-case class ReadValueV2(valueObjectIri: IRI, value: ValueObjectV2) extends ValueV2
+case class ReadValueV2(valueIri: IRI, value: ValueContentV2) extends ValueV2
 
 /**
   * The value of a Knora property sent to Knora to be created.
   *
-  * @param resourceIri the resource the new value should be attached to.
-  * @param propertyIri the property of the new value.
-  * @param value       the new value.
+  * @param resourceIri  the resource the new value should be attached to.
+  * @param propertyIri  the property of the new value.
+  * @param valueContent the content of the new value.
   */
-case class CreateValueV2(resourceIri: IRI, propertyIri: IRI, value: ValueObjectV2) extends ValueV2
+case class CreateValueV2(resourceIri: IRI, propertyIri: IRI, valueContent: ValueContentV2) extends ValueV2
 
 /**
   * The new version of a value of a Knora property to be created.
   *
-  * @param valueObjectIri the value object to be updated.
-  * @param value          the new version of the value.
+  * @param valueIri     the IRI of the value to be updated.
+  * @param valueContent the content of the new version of the value.
   */
-case class UpdateValueV2(valueObjectIri: IRI, value: ValueObjectV2) extends ValueV2
+case class UpdateValueV2(valueIri: IRI, valueContent: ValueContentV2) extends ValueV2
 
 /**
-  * The value object of a Knora property.
+  * The content of the value of a Knora property.
   */
-sealed trait ValueObjectV2 {
+sealed trait ValueContentV2 {
     /**
-      * The IRI of the Knora value type corresponding to the type of this `ValueObjectV2`.
+      * The IRI of the Knora value type corresponding to the type of this `ValueContentV2`.
       */
     def valueTypeIri: IRI
 
     /**
-      * The string representation of this `ValueObjectV2`.
+      * The string representation of this `ValueContentV2`.
       */
     def valueHasString: String
 
     /**
-      * A comment on this `ValueObjectV2`, if any.
+      * A comment on this `ValueContentV2`, if any.
       */
     def comment: Option[String]
 
     /**
-      * A representation of the `ValueObjectV2` in JSON.
+      * A representation of the `ValueContentV2` in JSON.
       */
     def toJsValueMap: Map[IRI, JsValue]
 
@@ -98,15 +98,15 @@ sealed trait ValueObjectV2 {
   * @param valueHasStartPrecision the precision of the start date.
   * @param valueHasEndPrecision   the precision of the end date.
   * @param valueHasCalendar       the calendar of the date.
-  * @param comment                a comment on this `ValueObjectV2`, if any.
+  * @param comment                a comment on this `ValueContentV2`, if any.
   */
-case class DateValueObjectV2(valueHasString: String,
-                             valueHasStartJDN: Int,
-                             valueHasEndJDN: Int,
-                             valueHasStartPrecision: KnoraPrecisionV1.Value,
-                             valueHasEndPrecision: KnoraPrecisionV1.Value,
-                             valueHasCalendar: KnoraCalendarV1.Value,
-                             comment: Option[String]) extends ValueObjectV2 {
+case class DateValueContentV2(valueHasString: String,
+                              valueHasStartJDN: Int,
+                              valueHasEndJDN: Int,
+                              valueHasStartPrecision: KnoraPrecisionV1.Value,
+                              valueHasEndPrecision: KnoraPrecisionV1.Value,
+                              valueHasCalendar: KnoraCalendarV1.Value,
+                              comment: Option[String]) extends ValueContentV2 {
 
     def valueTypeIri = OntologyConstants.KnoraBase.DateValue
 
@@ -128,8 +128,8 @@ case class DateValueObjectV2(valueHasString: String,
       * Generate JDN format from date strings (containing precision).
       *
       * @param dateStartStr the begin of the period.
-      * @param dateEndStr the end of the period.
-      * @param calendarStr the calendar being used.
+      * @param dateEndStr   the end of the period.
+      * @param calendarStr  the calendar being used.
       * @return a tuple (dateStartJDN, dateEndJDN).
       */
     def fromDateStr(dateStartStr: String, dateEndStr: String, calendarStr: String): (JulianDayNumberValueV1, JulianDayNumberValueV1) = {
@@ -163,13 +163,13 @@ case class DateValueObjectV2(valueHasString: String,
   *
   * @param valueHasString the string representation of the text (without markup).
   * @param standoff       a [[StandoffAndMapping]], if any.
-  * @param comment        a comment on this `ValueObjectV2`, if any.
+  * @param comment        a comment on this `ValueContentV2`, if any.
   */
-case class TextValueObjectV2(valueHasString: String, standoff: Option[StandoffAndMapping], comment: Option[String]) extends ValueObjectV2 {
+case class TextValueContentV2(valueHasString: String, standoff: Option[StandoffAndMapping], comment: Option[String]) extends ValueContentV2 {
 
     def valueTypeIri = OntologyConstants.KnoraBase.TextValue
 
-    def toJsValueMap = {
+    def toJsValueMap: Map[IRI, JsValue] = {
 
         if (standoff.nonEmpty) {
 
@@ -220,10 +220,10 @@ case class TextValueObjectV2(valueHasString: String, standoff: Option[StandoffAn
   * Represents standoff and the corresponsing mapping.
   * May include an XSL transformation.
   *
-  * @param standoff a sequence of [[StandoffTagV1]].
+  * @param standoff   a sequence of [[StandoffTagV1]].
   * @param mappingIri the Iri of the mapping
-  * @param mapping a mapping between XML and standoff.
-  * @param XSLT an XSL transformation.
+  * @param mapping    a mapping between XML and standoff.
+  * @param XSLT       an XSL transformation.
   */
 case class StandoffAndMapping(standoff: Seq[StandoffTagV1], mappingIri: IRI, mapping: MappingXMLtoStandoff, XSLT: Option[String])
 
@@ -232,13 +232,13 @@ case class StandoffAndMapping(standoff: Seq[StandoffTagV1], mappingIri: IRI, map
   *
   * @param valueHasString  the string representation of the integer.
   * @param valueHasInteger the integer value.
-  * @param comment         a comment on this `ValueObjectV2`, if any.
+  * @param comment         a comment on this `ValueContentV2`, if any.
   */
-case class IntegerValueObjectV2(valueHasString: String, valueHasInteger: Int, comment: Option[String]) extends ValueObjectV2 {
+case class IntegerValueContentV2(valueHasString: String, valueHasInteger: Int, comment: Option[String]) extends ValueContentV2 {
 
     def valueTypeIri = OntologyConstants.KnoraBase.ValueHasInteger
 
-    def toJsValueMap = {
+    def toJsValueMap: Map[IRI, JsValue] = {
         Map(OntologyConstants.KnoraBase.ValueHasString -> JsString(valueHasString),
             OntologyConstants.KnoraBase.ValueHasInteger -> JsNumber(valueHasInteger))
     }
@@ -250,13 +250,13 @@ case class IntegerValueObjectV2(valueHasString: String, valueHasInteger: Int, co
   *
   * @param valueHasString  the string representation of the decimal.
   * @param valueHasDecimal the decimal value.
-  * @param comment         a comment on this `ValueObjectV2`, if any.
+  * @param comment         a comment on this `ValueContentV2`, if any.
   */
-case class DecimalValueObjectV2(valueHasString: String, valueHasDecimal: BigDecimal, comment: Option[String]) extends ValueObjectV2 {
+case class DecimalValueContentV2(valueHasString: String, valueHasDecimal: BigDecimal, comment: Option[String]) extends ValueContentV2 {
 
     def valueTypeIri = OntologyConstants.KnoraBase.DecimalValue
 
-    def toJsValueMap = {
+    def toJsValueMap: Map[IRI, JsValue] = {
         Map(OntologyConstants.KnoraBase.ValueHasString -> JsString(valueHasString),
             OntologyConstants.KnoraBase.ValueHasInteger -> JsNumber(valueHasDecimal))
     }
@@ -266,18 +266,18 @@ case class DecimalValueObjectV2(valueHasString: String, valueHasDecimal: BigDeci
 /**
   * Represents a Knora link value.
   *
-  * @param valueHasString the string representation of the referred resource.
-  * @param subject the source of the link.
-  * @param predicate the link's predicate.
+  * @param valueHasString      the string representation of the referred resource.
+  * @param subject             the source of the link.
+  * @param predicate           the link's predicate.
   * @param referredResourceIri the link's target.
-  * @param comment a comment on the link.
-  * @param referredResource information about the referred resource, if given.
+  * @param comment             a comment on the link.
+  * @param referredResource    information about the referred resource, if given.
   */
-case class LinkValueObjectV2(valueHasString: String, subject: IRI, predicate: IRI, referredResourceIri: IRI, comment: Option[String], referredResource: Option[ReferredResourceV2] = None) extends ValueObjectV2 {
+case class LinkValueContentV2(valueHasString: String, subject: IRI, predicate: IRI, referredResourceIri: IRI, comment: Option[String], referredResource: Option[ReferredResourceV2] = None) extends ValueContentV2 {
 
     def valueTypeIri = OntologyConstants.KnoraBase.LinkValue
 
-    def toJsValueMap = {
+    def toJsValueMap: Map[IRI, JsValue] = {
 
         // if given, include information about the referred resource
         val referredResourceInfoOption: Map[IRI, JsValue] = if (referredResource.nonEmpty) {
@@ -299,7 +299,7 @@ case class LinkValueObjectV2(valueHasString: String, subject: IRI, predicate: IR
 /**
   * Represents information about a resource referred to.
   *
-  * @param label the label of the referred resource.
+  * @param label         the label of the referred resource.
   * @param resourceClass the resource class of the referred resource.
   */
 case class ReferredResourceV2(label: String, resourceClass: IRI)
@@ -313,7 +313,10 @@ sealed trait ResourceV2 {
 
     def label: String
 
-    def valueObjects: Map[IRI, Seq[ValueV2]]
+    /**
+      * A map of property IRIs to [[ValueV2]] objects.
+      */
+    def values: Map[IRI, Seq[ValueV2]]
 
     def resourceInfos: Map[IRI, LiteralV2]
 
@@ -325,20 +328,20 @@ sealed trait ResourceV2 {
   * @param resourceIri   the Iri of the resource.
   * @param label         the resource's label.
   * @param resourceClass the class the resource belongs to.
-  * @param valueObjects  the resource's values.
+  * @param values        the resource's values.
   * @param resourceInfos additional information attached to the resource.
   */
-case class ReadResourceV2(resourceIri: IRI, label: String, resourceClass: IRI, valueObjects: Map[IRI, Seq[ReadValueV2]], resourceInfos: Map[IRI, LiteralV2]) extends ResourceV2
+case class ReadResourceV2(resourceIri: IRI, label: String, resourceClass: IRI, values: Map[IRI, Seq[ReadValueV2]], resourceInfos: Map[IRI, LiteralV2]) extends ResourceV2
 
 /**
   * Represents a Knora resource that is about to be created.
   *
   * @param label         the resource's label.
   * @param resourceClass the class the resource belongs to.
-  * @param valueObjects  the resource's values.
+  * @param values        the resource's values.
   * @param resourceInfos additional information attached to the resource (literals).
   */
-case class CreateResource(label: String, resourceClass: IRI, valueObjects: Map[IRI, Seq[CreateValueV2]], resourceInfos: Map[IRI, LiteralV2]) extends ResourceV2
+case class CreateResource(label: String, resourceClass: IRI, values: Map[IRI, Seq[CreateValueV2]], resourceInfos: Map[IRI, LiteralV2]) extends ResourceV2
 
 /**
   * A trait representing literals that may be directly attached to a resource.
@@ -385,7 +388,7 @@ trait KnoraResponseV2 extends Jsonable
   * @param resources         a sequence of resources.
   */
 case class ReadResourcesSequenceV2(numberOfResources: Int, resources: Seq[ReadResourceV2]) extends KnoraResponseV2 {
-    override def toJsValue = ResourcesV2JsonProtocol.readResourcesSequenceV2Format.write(this)
+    override def toJsValue: JsObject = ResourcesV2JsonProtocol.readResourcesSequenceV2Format.write(this)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -400,19 +403,18 @@ object ResourcesV2JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol
 
         def read(jsonVal: JsValue) = ???
 
-        def write(resourcesSequenceV2: ReadResourcesSequenceV2) = {
+        def write(resourcesSequenceV2: ReadResourcesSequenceV2): JsObject = {
 
             val resources: JsValue = resourcesSequenceV2.resources.map {
                 (resource: ReadResourceV2) =>
 
-                    val valueObjects: Map[IRI, JsValue] = resource.valueObjects.map {
+                    val valuesAsJson: Map[IRI, JsValue] = resource.values.map {
                         case (propIri: IRI, readValues: Seq[ReadValueV2]) =>
-
                             val valuesMap: JsValue = readValues.map {
-                                row =>
-                                    val valAsMap: Map[IRI, JsValue] = row.value.toJsValueMap
-                                    Map("@id" -> JsString(row.valueObjectIri),
-                                        "@type" -> JsString(row.value.valueTypeIri)) ++ valAsMap
+                                readValue =>
+                                    val valAsMap: Map[IRI, JsValue] = readValue.value.toJsValueMap
+                                    Map("@id" -> JsString(readValue.valueIri),
+                                        "@type" -> JsString(readValue.value.valueTypeIri)) ++ valAsMap
                             }.toJson
 
                             (propIri, valuesMap)
@@ -423,7 +425,7 @@ object ResourcesV2JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol
                         "@type" -> resource.resourceClass.toJson,
                         "name" -> resource.label.toJson,
                         "@id" -> resource.resourceIri.toJson
-                    ) ++ valueObjects
+                    ) ++ valuesAsJson
 
             }.toJson
 

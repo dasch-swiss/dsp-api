@@ -34,13 +34,13 @@ import org.knora.webapi.{IRI, InconsistentTriplestoreDataException, NotFoundExce
 object ConstructResponseUtilV2 {
 
     /**
-      * Represents a value object possibly containing standoff.
+      * Represents the RDF data about a value, possibly including standoff.
       *
       * @param valueObjectIri  the value object's Iri.
       * @param assertionsAsMap the value objects assertions.
       * @param standoff        standoff assertions, if any.
       */
-    case class ValueObject(valueObjectIri: IRI, valueObjectClass: IRI, assertionsAsMap: Map[IRI, String], assertions: Seq[(IRI, String)], standoff: Map[IRI, Map[IRI, String]])
+    case class ValueRdfData(valueObjectIri: IRI, valueObjectClass: IRI, assertionsAsMap: Map[IRI, String], assertions: Seq[(IRI, String)], standoff: Map[IRI, Map[IRI, String]])
 
     /**
       * Represents a resource and its values.
@@ -49,7 +49,7 @@ object ConstructResponseUtilV2 {
       * @param valuePropertyAssertions assertions about value properties.
       * @param linkPropertyAssertions  assertions about linking properties.
       */
-    case class ResourceWithValues(resourceAssertions: Seq[(IRI, String)], valuePropertyAssertions: Map[IRI, Seq[ValueObject]], linkPropertyAssertions: Map[IRI, IRI])
+    case class ResourceWithValueRdfData(resourceAssertions: Seq[(IRI, String)], valuePropertyAssertions: Map[IRI, Seq[ValueRdfData]], linkPropertyAssertions: Map[IRI, IRI])
 
     /**
       * Represents a mapping including information about the standoff entities.
@@ -62,13 +62,13 @@ object ConstructResponseUtilV2 {
     case class MappingAndXSLTransformation(mapping: MappingXMLtoStandoff, standoffEntities: StandoffEntityInfoGetResponseV1, XSLTransformation: Option[String])
 
     /**
-      * A [[SparqlConstructResponse]] may contain both resources and value objects as well as standoff.
-      * This method turns a graph (i.e. triples) into a structure organized by the principle of resources and their values, i.e. a map of resource Iris to [[ResourceWithValues]].
+      * A [[SparqlConstructResponse]] may contain both resources and value RDF data objects as well as standoff.
+      * This method turns a graph (i.e. triples) into a structure organized by the principle of resources and their values, i.e. a map of resource Iris to [[ResourceWithValueRdfData]].
       *
       * @param constructQueryResults the results of a SPARQL construct query representing resources and their values.
-      * @return a Map[resource Iri -> [[ResourceWithValues]]].
+      * @return a Map[resource Iri -> [[ResourceWithValueRdfData]]].
       */
-    def splitResourcesAndValueObjects(constructQueryResults: SparqlConstructResponse, userProfile: UserProfileV1): Map[IRI, ResourceWithValues] = {
+    def splitResourcesAndValueRdfData(constructQueryResults: SparqlConstructResponse, userProfile: UserProfileV1): Map[IRI, ResourceWithValueRdfData] = {
 
         // split statements about resources and other statements (value objects and standoff)
         // resources are identified by the triple "resourceIri a knora-base:Resource" which is an inferred information returned by the SPARQL Construct query.
@@ -141,7 +141,7 @@ object ConstructResponseUtilV2 {
 
                 // create a map of (value) properties to value objects (the same property may have several instances)
                 // resolve the value object Iris and create value objects instead
-                val valuePropertyToValueObject: Map[IRI, Seq[ValueObject]] = valuePropertyToObjectIris.map {
+                val valuePropertyToValueObject: Map[IRI, Seq[ValueRdfData]] = valuePropertyToObjectIris.map {
                     case (property: IRI, valObjIris: Seq[IRI]) =>
 
                         // make the property the key of the map, return all its value objects by mapping over the value object Iris
@@ -181,7 +181,7 @@ object ConstructResponseUtilV2 {
                                 val predicateMapForValueAssertions: ErrorHandlingMap[IRI, String] = new ErrorHandlingMap(valueAssertions(valObjIri).toMap, { key: IRI => s"Predicate $key not found for ${valObjIri} (value object)" })
 
                                 // create a value object
-                                ValueObject(
+                                ValueRdfData(
                                     valueObjectIri = valObjIri,
                                     valueObjectClass = predicateMapForValueAssertions(OntologyConstants.Rdf.Type),
                                     assertionsAsMap = predicateMapForValueAssertions,
@@ -193,7 +193,7 @@ object ConstructResponseUtilV2 {
 
                         })
                 }.filterNot { // filter out those properties that do not have value objects (they may have been filtered out because the user does not have sufficient permissions to see them)
-                    case (property: IRI, valObj: Seq[ValueObject]) =>
+                    case (property: IRI, valObj: Seq[ValueRdfData]) =>
                         valObj.isEmpty
                 }
 
@@ -211,8 +211,8 @@ object ConstructResponseUtilV2 {
                         }
                 }.toMap
 
-                // create a map of resource Iris to a `ResourceWithValues`
-                (resourceIri, ResourceWithValues(resourceAssertions = assertionsExplicit, valuePropertyAssertions = valuePropertyToValueObject, linkPropertyAssertions = linkPropToTargets))
+                // create a map of resource Iris to a `ResourceWithValueRdfData`
+                (resourceIri, ResourceWithValueRdfData(resourceAssertions = assertionsExplicit, valuePropertyAssertions = valuePropertyToValueObject, linkPropertyAssertions = linkPropToTargets))
 
 
         }
@@ -225,14 +225,14 @@ object ConstructResponseUtilV2 {
       * @param valuePropertyAssertions the given assertions (property -> value object).
       * @return a set of mapping Iris.
       */
-    def getMappingIrisFromValuePropertyAssertions(valuePropertyAssertions: Map[IRI, Seq[ValueObject]]): Set[IRI] = {
+    def getMappingIrisFromValuePropertyAssertions(valuePropertyAssertions: Map[IRI, Seq[ValueRdfData]]): Set[IRI] = {
         valuePropertyAssertions.foldLeft(Set.empty[IRI]) {
-            case (acc: Set[IRI], (valueObjIri: IRI, valObjs: Seq[ValueObject])) =>
+            case (acc: Set[IRI], (valueObjIri: IRI, valObjs: Seq[ValueRdfData])) =>
                 val mappings: Seq[String] = valObjs.filter {
-                    (valObj: ValueObject) =>
+                    (valObj: ValueRdfData) =>
                         valObj.valueObjectClass == OntologyConstants.KnoraBase.TextValue && valObj.assertionsAsMap.get(OntologyConstants.KnoraBase.ValueHasMapping).nonEmpty
                 }.map {
-                    case (textValObj: ValueObject) =>
+                    case (textValObj: ValueRdfData) =>
                         textValObj.assertionsAsMap(OntologyConstants.KnoraBase.ValueHasMapping)
                 }
 
@@ -241,13 +241,13 @@ object ConstructResponseUtilV2 {
     }
 
     /**
-      * Given a [[ValueObject]], create a [[ValueObjectV2]], considering the specific type of the given [[ValueObject]].
+      * Given a [[ValueRdfData]], create a [[ValueContentV2]], considering the specific type of the given [[ValueRdfData]].
       *
-      * @param valueObject the given [[ValueObject]].
+      * @param valueObject the given [[ValueRdfData]].
       * @param queryResult complete results of the SPARQL Construct query, needed in case an Iri of a referred resource has to be resolved.
-      * @return a [[ValueObjectV2]] representing a value.
+      * @return a [[ValueContentV2]] representing a value.
       */
-    def createValueV2FromValueObject(valueObject: ValueObject, mappings: Map[IRI, MappingAndXSLTransformation], queryResult: Option[Map[IRI, ResourceWithValues]] = None): ValueObjectV2 = {
+    def createValueV2FromValueRdfData(valueObject: ValueRdfData, mappings: Map[IRI, MappingAndXSLTransformation], queryResult: Option[Map[IRI, ResourceWithValueRdfData]] = None): ValueContentV2 = {
 
         // every knora-base:Value (any of its subclasses) has a string representation
         val valueObjectValueHasString: String = valueObject.assertionsAsMap(OntologyConstants.KnoraBase.ValueHasString)
@@ -267,17 +267,17 @@ object ConstructResponseUtilV2 {
 
                     val standoffTags: Vector[StandoffTagV1] = StandoffTagUtilV1.createStandoffTagsV1FromSparqlResults(mapping.standoffEntities, valueObject.standoff)
 
-                    TextValueObjectV2(valueHasString = valueObjectValueHasString, standoff = Some(StandoffAndMapping(standoff = standoffTags, mappingIri = mappingIri, mapping = mapping.mapping, XSLT = mapping.XSLTransformation)), comment = valueCommentOption)
+                    TextValueContentV2(valueHasString = valueObjectValueHasString, standoff = Some(StandoffAndMapping(standoff = standoffTags, mappingIri = mappingIri, mapping = mapping.mapping, XSLT = mapping.XSLTransformation)), comment = valueCommentOption)
 
                 } else {
                     // no standoff nodes given
-                    TextValueObjectV2(valueHasString = valueObjectValueHasString, standoff = None, comment = valueCommentOption)
+                    TextValueContentV2(valueHasString = valueObjectValueHasString, standoff = None, comment = valueCommentOption)
                 }
 
 
             case OntologyConstants.KnoraBase.DateValue =>
 
-                DateValueObjectV2(
+                DateValueContentV2(
                     valueHasString = valueObjectValueHasString,
                     valueHasStartJDN = valueObject.assertionsAsMap(OntologyConstants.KnoraBase.ValueHasStartJDN).toInt,
                     valueHasEndJDN = valueObject.assertionsAsMap(OntologyConstants.KnoraBase.ValueHasEndJDN).toInt,
@@ -288,10 +288,10 @@ object ConstructResponseUtilV2 {
                 )
 
             case OntologyConstants.KnoraBase.IntValue =>
-                IntegerValueObjectV2(valueHasString = valueObjectValueHasString, valueHasInteger = valueObject.assertionsAsMap(OntologyConstants.KnoraBase.ValueHasInteger).toInt, comment = valueCommentOption)
+                IntegerValueContentV2(valueHasString = valueObjectValueHasString, valueHasInteger = valueObject.assertionsAsMap(OntologyConstants.KnoraBase.ValueHasInteger).toInt, comment = valueCommentOption)
 
             case OntologyConstants.KnoraBase.DecimalValue =>
-                DecimalValueObjectV2(valueHasString = valueObjectValueHasString, valueHasDecimal = BigDecimal(valueObject.assertionsAsMap(OntologyConstants.KnoraBase.ValueHasDecimal)), comment = valueCommentOption)
+                DecimalValueContentV2(valueHasString = valueObjectValueHasString, valueHasDecimal = BigDecimal(valueObject.assertionsAsMap(OntologyConstants.KnoraBase.ValueHasDecimal)), comment = valueCommentOption)
 
             case OntologyConstants.KnoraBase.LinkValue =>
                 val referredResourceIri = valueObject.assertionsAsMap(OntologyConstants.Rdf.Object)
@@ -309,7 +309,7 @@ object ConstructResponseUtilV2 {
                     None
                 }
 
-                LinkValueObjectV2(
+                LinkValueContentV2(
                     valueHasString = valueObjectValueHasString,
                     subject = valueObject.assertionsAsMap(OntologyConstants.Rdf.Subject),
                     predicate = valueObject.assertionsAsMap(OntologyConstants.Rdf.Predicate),
@@ -320,7 +320,7 @@ object ConstructResponseUtilV2 {
 
             // TODO: implement all value object classes
             case other =>
-                TextValueObjectV2(valueHasString = valueObjectValueHasString, standoff = None, comment = valueCommentOption)
+                TextValueContentV2(valueHasString = valueObjectValueHasString, standoff = None, comment = valueCommentOption)
         }
 
     }
@@ -332,7 +332,7 @@ object ConstructResponseUtilV2 {
       * @param resourceResults the results returned by the triplestore.
       * @return a [[ReadResourceV2]].
       */
-    def createFullResourceResponse(resourceIri: IRI, mappings: Map[IRI, MappingAndXSLTransformation], resourceResults: Map[IRI, ResourceWithValues]): ReadResourceV2 = {
+    def createFullResourceResponse(resourceIri: IRI, mappings: Map[IRI, MappingAndXSLTransformation], resourceResults: Map[IRI, ResourceWithValueRdfData]): ReadResourceV2 = {
 
         // a full resource query also returns the resources referred to by the requested resource
         // however, the should not be included as resources, but as the target og a linking property
@@ -344,10 +344,10 @@ object ConstructResponseUtilV2 {
 
         // get the resource's values
         val valueObjects: Map[IRI, Seq[ReadValueV2]] = resourceResults(resourceIri).valuePropertyAssertions.map {
-            case (property: IRI, valObjs: Seq[ValueObject]) =>
+            case (property: IRI, valObjs: Seq[ValueRdfData]) =>
                 (property, valObjs.map {
                     valObj =>
-                        val readValue: ValueObjectV2 = createValueV2FromValueObject(valObj, mappings = mappings, Some(resourceResults))
+                        val readValue: ValueContentV2 = createValueV2FromValueRdfData(valObj, mappings = mappings, Some(resourceResults))
 
                         ReadValueV2(valObj.valueObjectIri, readValue)
                 })
@@ -357,7 +357,7 @@ object ConstructResponseUtilV2 {
             resourceIri = resourceIri,
             resourceClass = resourceClass,
             label = rdfLabel,
-            valueObjects = valueObjects,
+            values = valueObjects,
             resourceInfos = Map.empty[IRI, LiteralV2]
         )
 
@@ -369,7 +369,7 @@ object ConstructResponseUtilV2 {
       * @param searchResults the results returned by the triplestore.
       * @return a collection of [[ReadResourceV2]], representing the search results.
       */
-    def createFulltextSearchResponse(searchResults: Map[IRI, ResourceWithValues]): Vector[ReadResourceV2] = {
+    def createFulltextSearchResponse(searchResults: Map[IRI, ResourceWithValueRdfData]): Vector[ReadResourceV2] = {
 
         // each entry represents a resource that matches the search criteria
         // this is because linking properties are excluded from fulltext search
@@ -384,10 +384,10 @@ object ConstructResponseUtilV2 {
 
                 // get the resource's values
                 val valueObjects: Map[IRI, Seq[ReadValueV2]] = assertions.valuePropertyAssertions.map {
-                    case (property: IRI, valObjs: Seq[ValueObject]) =>
+                    case (property: IRI, valObjs: Seq[ValueRdfData]) =>
                         (property, valObjs.map {
                             valObj =>
-                                val readValue = createValueV2FromValueObject(valObj, mappings = Map.empty[IRI, MappingAndXSLTransformation])
+                                val readValue = createValueV2FromValueRdfData(valObj, mappings = Map.empty[IRI, MappingAndXSLTransformation])
 
                                 ReadValueV2(valObj.valueObjectIri, readValue)
                         })
@@ -397,7 +397,7 @@ object ConstructResponseUtilV2 {
                     resourceIri = resourceIri,
                     resourceClass = resourceClass,
                     label = rdfLabel,
-                    valueObjects = valueObjects,
+                    values = valueObjects,
                     resourceInfos = Map.empty[IRI, LiteralV2]
                 )
         }.toVector
