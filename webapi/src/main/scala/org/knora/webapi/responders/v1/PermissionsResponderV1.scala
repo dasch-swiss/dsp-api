@@ -23,7 +23,7 @@ import org.knora.webapi.messages.v1.responder.permissionmessages.{Administrative
 import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.messages.v1.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
 import org.knora.webapi.util.ActorUtil._
-import org.knora.webapi.util.{KnoraIdUtil, MessageUtil, PermissionUtilV1}
+import org.knora.webapi.util.{KnoraIdUtil, PermissionUtilV1}
 
 import scala.collection.immutable.Iterable
 import scala.collection.mutable.ListBuffer
@@ -101,7 +101,7 @@ class PermissionsResponderV1 extends ResponderV1 {
 
         for {
             groups: Vector[(IRI, IRI)] <- groupsFuture
-            //_ = log.debug(s"permissionsProfileGetV1 - groups: ${MessageUtil.toSource(groups)}")
+            //_ = log.debug(s"permissionsProfileGetV1 - groups: {}", MessageUtil.toSource(groups))
 
             /* materialize implicit membership in 'http://www.knora.org/ontology/knora-base#ProjectMember' group for each project */
             projectMembers: Vector[(IRI, IRI)] = if (projectIris.nonEmpty) {
@@ -112,7 +112,7 @@ class PermissionsResponderV1 extends ResponderV1 {
             } else {
                 Vector.empty[(IRI, IRI)]
             }
-            //_ = log.debug(s"permissionsProfileGetV1 - projectMembers: ${MessageUtil.toSource(projectMembers)}")
+            //_ = log.debug(s"permissionsProfileGetV1 - projectMembers: {}", MessageUtil.toSource(projectMembers))
 
 
             /* materialize implicit membership in 'http://www.knora.org/ontology/knora-base#ProjectAdmin' group for each project */
@@ -124,7 +124,7 @@ class PermissionsResponderV1 extends ResponderV1 {
             } else {
                 Vector.empty[(IRI, IRI)]
             }
-            _ = log.debug(s"permissionsProfileGetV1 - projectAdmins: ${MessageUtil.toSource(projectAdmins)}")
+            //_ = log.debug("permissionsProfileGetV1 - projectAdmins: {}", MessageUtil.toSource(projectAdmins))
 
 
             /* materialize implicit membership in 'http://www.knora.org/ontology/knora-base#SystemAdmin' group */
@@ -133,14 +133,14 @@ class PermissionsResponderV1 extends ResponderV1 {
             } else {
                 Vector.empty[(IRI, IRI)]
             }
-            //_ = log.debug(s"permissionsProfileGetV1 - systemAdmin: ${MessageUtil.toSource(systemAdmin)}")
+            //_ = log.debug(s"permissionsProfileGetV1 - systemAdmin: {}", MessageUtil.toSource(systemAdmin))
 
             /* combine explicit groups with materialized implicit groups */
             /* here we don't add the KnownUser group, as this would inflate the whole thing. */
             /* we instead inject the relevant information in defaultObjectAccessPermissionsStringForEntityGetV1 */
             allGroups = groups ++ projectMembers ++ projectAdmins ++ systemAdmin
             groupsPerProject = allGroups.groupBy(_._1).map { case (k, v) => (k, v.map(_._2)) }
-            // _ = log.debug(s"permissionsProfileGetV1 - groupsPerProject: ${MessageUtil.toSource(groupsPerProject)}")
+            // _ = log.debug(s"permissionsProfileGetV1 - groupsPerProject: {}", MessageUtil.toSource(groupsPerProject))
 
             /* retrieve the administrative permissions for each group per project the user is member of */
             administrativePermissionsPerProjectFuture: Future[Map[IRI, Set[PermissionV1]]] = if (projectIris.nonEmpty) {
@@ -156,7 +156,7 @@ class PermissionsResponderV1 extends ResponderV1 {
                 administrativePermissionsPerProject = administrativePermissionsPerProject,
                 anonymousUser = false
             )
-        //_ = log.debug(s"permissionsDataGetV1 - resulting permissionData: $result")
+        //_ = log.debug(s"permissionsDataGetV1 - resulting permissionData: {}", result)
 
         } yield result
     }

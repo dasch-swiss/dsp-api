@@ -17,7 +17,6 @@
 package org.knora.webapi.messages.v1.responder.permissionmessages
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import net.sf.saxon.functions.ConstantFunction.True
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.permissionmessages.PermissionDataType.PermissionProfileType
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectV1JsonProtocol
@@ -477,8 +476,8 @@ case class PermissionDataV1(groupsPerProject: Map[IRI, Seq[IRI]] = Map.empty[IRI
 
     def toSourceString: String = {
         "PermissionDataV1( \n" +
-            s"\t groupsPerProject = ${MessageUtil.toSource(groupsPerProject)} \n" +
-            s"\t administrativePermissionsPerProject = ${MessageUtil.toSource(administrativePermissionsPerProject)} \n" +
+            s"\t groupsPerProject = ${groupsPerProject.toString} \n" +
+            s"\t administrativePermissionsPerProject = ${administrativePermissionsPerProject.toString} \n" +
             ")"
     }
 }

@@ -674,9 +674,19 @@ Example Data stored in the permissions graph
        knora-base:forProperty <http://www.knora.org/ontology/images#lastname> ;
        knora-base:hasPermissions "D knora-base:ProjectMember,knora-base:Creator|
                                   V knora-base:KnownUser,knora-base:UnknownUser"^^ .
-       
-       
-       
+
+
+**Default object access permission on a resource class and property:**
+::
+
+  <http://data.knora.org/permissions/[UUID]> rdf:type knora-base:DefaultObjectAccessPermission ;
+       knora-base:forProject <http://data.knora.org/projects/[UUID]> ;
+       knora-base:forResourceClass <http://www.knora.org/ontology/images#person> ;
+       knora-base:forProperty <http://www.knora.org/ontology/images#lastname> ;
+       knora-base:hasPermissions "CR knora-base:Creator,knora-base:ProjectMember|
+                                   V knora-base:KnownUser,knora-base:UnknownUser"^^xsd:string .
+
+
 **Default object access permission on a knora-base property:**
 ::
 
