@@ -209,7 +209,7 @@ case class TextValueObjectV2(valueHasString: String, standoff: Option[StandoffAn
             }
 
         } else {
-            Map(OntologyConstants.KnoraBase.ValueHasString -> JsString(valueHasString))
+            Map("html" -> JsString(valueHasString))
         }
 
     }

@@ -65,7 +65,7 @@ CONSTRUCT {
 WHERE {
     {
 
-        # make a subquery to find triples mactiing the query string
+        # make a subquery to find triples matching the query string
         # limit the number of results in order to prevent an error when writing the results back (may be too many)
         SELECT DISTINCT ?matchingSubject ?matchingProperty ?literal WHERE {
 
