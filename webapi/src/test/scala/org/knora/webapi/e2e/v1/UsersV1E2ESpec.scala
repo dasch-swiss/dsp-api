@@ -173,8 +173,25 @@ class UsersV1E2ESpec extends E2ESpec(UsersV1E2ESpec.config) with SessionJsonProt
                 response2.status should be (StatusCodes.OK)
             }
 
-            "deleting the user by making him inactive" ignore {
+            "deleting the user by making him inactive" in {
 
+                val userIriEncoded = java.net.URLEncoder.encode(donaldIri.get, "utf-8")
+
+                val params =
+                    s"""
+                    {
+                        "newUserStatus": "false"
+                    }
+                    """.stripMargin
+
+
+                val request = Put(baseApiUrl + s"/v1/users/" + userIriEncoded, HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
+                val response: HttpResponse = singleAwaitingRequest(request)
+                println(s"response: ${response.toString}")
+                response.status should be (StatusCodes.OK)
+
+                val jsonResult: Map[String, JsValue] = AkkaHttpUtils.httpResponseToJson(response).fields("userProfile").asJsObject.fields("userData").asJsObject.fields
+                jsonResult("isActiveUser").convertTo[Boolean] should be (false)
             }
 
             "update the user's system admin membership status" ignore {

@@ -328,7 +328,7 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
             "update the user, (deleting) making him inactive " in {
                 actorUnderTest ! UserChangeStatusRequestV1(
                     userIri = SharedAdminTestData.normalUser.userData.user_id.get,
-                    changeStatusRequest = ChangeUserStatusApiRequestV1(newStatus = false),
+                    changeStatusRequest = ChangeUserStatusApiRequestV1(newUserStatus = false),
                     userProfile = SharedAdminTestData.superUser,
                     UUID.randomUUID
                 )

@@ -90,9 +90,9 @@ case class ChangeUserPasswordApiRequestV1(oldPassword: String,
   * Represents an API request payload that asks the Knora API server to update an existing user. Information that
   * can be changed is the user's activity status.
   *
-  * @param newStatus the new system admin membership status.
+  * @param newUserStatus the new user status (active = true, inactive = false).
   */
-case class ChangeUserStatusApiRequestV1(newStatus: Boolean) {
+case class ChangeUserStatusApiRequestV1(newUserStatus: Boolean) {
 
     def toJsValue = UserV1JsonProtocol.changeUserStatusApiRequestV1Format.write(this)
 }
