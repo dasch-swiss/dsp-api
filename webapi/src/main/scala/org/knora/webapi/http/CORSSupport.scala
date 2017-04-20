@@ -28,14 +28,17 @@ import ch.megard.akka.http.cors.CorsDirectives._
 import ch.megard.akka.http.cors.{CorsDirectives, CorsSettings, HttpHeaderRange}
 import org.knora.webapi.{KnoraExceptionHandler, SettingsImpl}
 
+import scala.collection.immutable.Seq
+
 object CORSSupport extends Directives {
 
-    val corsSettings = CorsSettings.defaultSettings.copy(
+    val corsSettings = CorsSettings.Default(
         allowGenericHttpRequests = true,
         allowCredentials = true,
         allowedOrigins = HttpOriginRange.*,
         allowedHeaders = HttpHeaderRange.*,
-        allowedMethods = List(GET, PUT, POST, DELETE, HEAD, OPTIONS),
+        allowedMethods = Seq(GET, PUT, POST, DELETE, HEAD, OPTIONS),
+        exposedHeaders = Seq.empty,
         maxAge = Some(30 * 60)
     )
 

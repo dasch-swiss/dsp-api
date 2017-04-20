@@ -1,6 +1,6 @@
 @*
  * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
+ * Tobias Schweizer, André Kilchenmann, and André Fatton.
  *
  * This file is part of Knora.
  *
@@ -21,51 +21,26 @@
 @import org.knora.webapi.IRI
 
 @**
- * Gets the administrative permission object identified by project and either group / resource class / property.
+ * Gets all members of a project, given the project's IRI.
  *
  * @param triplestore the name of the triplestore being used.
  * @param projectIri the project's IRI.
- * @param groupIri the group's IRI.
- * @param resourceClassIri the resource's class IRI.
- * @param propertyIri the property's IRI.
  *@
 @(triplestore: String,
-  projectIri: IRI,
-  maybeGroupIri: Option[IRI],
-  maybeResourceClassIri: Option[IRI],
-  maybePropertyIri: Option[IRI])
+  projectIri: IRI)
 
 prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 prefix knora-base: <http://www.knora.org/ontology/knora-base#>
 
-SELECT ?s ?p ?o
-
+SELECT ?s
 @* Ensure that inference is not used in this query. *@
 @if(triplestore.startsWith("graphdb")) {
     FROM <http://www.ontotext.com/explicit>
 }
-
 WHERE {
-    ?s rdf:type knora-base:DefaultObjectAccessPermission .
-    ?s knora-base:forProject <@projectIri> .
+    BIND(IRI("@projectIri") as ?projectIri)
 
-    @if(maybeGroupIri.nonEmpty) {
-        ?s knora-base:forGroup <@maybeGroupIri.get> .
-    }
-
-    @if(maybeResourceClassIri.nonEmpty) {
-        ?s knora-base:forResourceClass <@maybeResourceClassIri.get> .
-    } else {
-        OPTIONAL { ?s knora-base:forResourceClass ?class } .
-        FILTER ( !bound(?class) )
-    }
-
-    @if(maybePropertyIri.nonEmpty) {
-        ?s knora-base:forProperty <@maybePropertyIri.get> .
-    } else {
-        OPTIONAL { ?s knora-base:forProperty ?prop } .
-        FILTER ( !bound(?prop) )
-    }
-
-    ?s ?p ?o .
+    ?projectIri rdf:type knora-base:knoraProject .
+    ?s knora-base:isInProject ?projectIri .
+    ?s rdf:type knora-base:User .
 }

@@ -14,7 +14,7 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.e2e.v1
+package org.knora.webapi.other.v1
 
 import java.net.URLEncoder
 
@@ -28,7 +28,7 @@ import spray.json._
 
 import scala.concurrent.duration._
 
-object ResourceValuePermissionsV1E2ESpec {
+object DrawingsGodsV1E2ESpec {
     val config = ConfigFactory.parseString(
         """
           akka.loglevel = "DEBUG"
@@ -37,17 +37,19 @@ object ResourceValuePermissionsV1E2ESpec {
 }
 
 /**
-  * End-to-End (E2E) test specification for testing the 'v1/permissions' route.
-  *
-  * This spec tests the 'v1/store' route.
+  * End-to-End (E2E) test specification for additional testing of permissions.
   */
-class ResourceValuePermissionsV1E2ESpec extends E2ESpec(StoreRouteV1E2ESpec.config) with TriplestoreJsonProtocol {
+class DrawingsGodsV1E2ESpec extends E2ESpec(DrawingsGodsV1E2ESpec.config) with TriplestoreJsonProtocol {
 
     implicit override val log = akka.event.Logging(system, this.getClass())
 
     private val rdfDataObjects: List[RdfDataObject] = List(
-        RdfDataObject(path = "_test_data/e2e.v1.ResourceValuePermissionsV1E2ESpec/rvp-admin-data.ttl", name = "http://www.knora.org/data/admin"),
-        RdfDataObject(path = "_test_data/e2e.v1.ResourceValuePermissionsV1E2ESpec/rvp-permissions-data.ttl", name = "http://www.knora.org/data/permissions")
+        RdfDataObject(path = "_test_data/other.v1.DrawingsGodsV1E2ESpec/rvp-admin-data.ttl", name = "http://www.knora.org/data/admin"),
+        RdfDataObject(path = "_test_data/other.v1.DrawingsGodsV1E2ESpec/rvp-permissions-data.ttl", name = "http://www.knora.org/data/permissions"),
+        RdfDataObject(path = "_test_data/other.v1.DrawingsGodsV1Spec/drawings-gods_admin-data.ttl", name = "http://www.knora.org/data/admin"),
+        RdfDataObject(path = "_test_data/other.v1.DrawingsGodsV1Spec/drawings-gods_permissions-data.ttl", name = "http://www.knora.org/data/permissions"),
+        RdfDataObject(path = "_test_data/other.v1.DrawingsGodsV1Spec/drawings-gods_ontology.ttl", name = "http://www.knora.org/ontology/drawings-gods"),
+        RdfDataObject(path = "_test_data/other.v1.DrawingsGodsV1Spec/drawings-gods_data.ttl", name = "http://www.knora.org/data/drawings-gods")
     )
 
     "Load test data" in {
@@ -64,7 +66,7 @@ class ResourceValuePermissionsV1E2ESpec extends E2ESpec(StoreRouteV1E2ESpec.conf
       */
     "issue: https://github.com/dhlab-basel/Knora/issues/408" should {
 
-        val drawingsOfGodsUserEmail = "drawings-gods-test-user@example.com"
+        val drawingsOfGodsUserEmail = "ddd1@unil.ch"
         val paroleReligieuseUserEmail = "parole@unil.ch"
         val testPass = "test"
         val thingIri = new MutableTestIri
@@ -156,4 +158,5 @@ class ResourceValuePermissionsV1E2ESpec extends E2ESpec(StoreRouteV1E2ESpec.conf
             log.debug(s"2b. secondValueIri: ${secondValueIri.get}")
         }
     }
+
 }

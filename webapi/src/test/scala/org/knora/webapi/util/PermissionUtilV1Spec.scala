@@ -151,7 +151,7 @@ class PermissionUtilV1Spec extends CoreSpec("PermissionUtilSpec") with ImplicitS
         }
 
 
-        "return parsed permissions string as 'Set[PermissionV1]'" in {
+        "return parsed permissions string as 'Set[PermissionV1]' (object access permissions)" in {
             val hasPermissionsString = "M knora-base:Creator,knora-base:ProjectMember|V knora-base:KnownUser,http://data.knora.org/groups/customgroup|RV knora-base:UnknownUser"
 
             val permissionsSet = Set(
@@ -162,7 +162,20 @@ class PermissionUtilV1Spec extends CoreSpec("PermissionUtilSpec") with ImplicitS
                 PermissionV1.restrictedViewPermission(OntologyConstants.KnoraBase.UnknownUser)
             )
 
-            PermissionUtilV1.parsePermissionsWithType(Some(hasPermissionsString), PermissionType.OAP) should equal(permissionsSet)
+            PermissionUtilV1.parsePermissionsWithType(Some(hasPermissionsString), PermissionType.OAP) should contain allElementsOf permissionsSet
+        }
+
+        "return parsed permissions string as 'Set[PermissionV1]' (administrative permissions)" in {
+            val hasPermissionsString = "ProjectResourceCreateAllPermission|ProjectAdminAllPermission|ProjectResourceCreateRestrictedPermission <http://www.knora.org/ontology/images#bild>,<http://www.knora.org/ontology/images#bildformat>"
+
+            val permissionsSet = Set(
+                PermissionV1.ProjectResourceCreateAllPermission,
+                PermissionV1.ProjectAdminAllPermission,
+                PermissionV1.projectResourceCreateRestrictedPermission("http://www.knora.org/ontology/images#bild"),
+                PermissionV1.projectResourceCreateRestrictedPermission("http://www.knora.org/ontology/images#bildformat")
+            )
+
+            PermissionUtilV1.parsePermissionsWithType(Some(hasPermissionsString), PermissionType.AP) should contain allElementsOf permissionsSet
         }
 
         "build a 'PermissionV1' object" in {

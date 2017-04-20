@@ -29,6 +29,7 @@ import org.knora.webapi
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.ckanmessages._
 import org.knora.webapi.messages.v1.responder.listmessages.{NodePathGetRequestV1, NodePathGetResponseV1}
+import org.knora.webapi.messages.v1.responder.permissionmessages.PermissionDataV1
 import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoByShortnameGetRequestV1, ProjectInfoResponseV1, ProjectInfoV1}
 import org.knora.webapi.messages.v1.responder.resourcemessages._
 import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
@@ -46,6 +47,15 @@ import scala.concurrent.{Await, Future}
   */
 class CkanResponderV1 extends Responder {
 
+
+    /**
+      * A user representing the Knora API server, used in those cases where a user is required.
+      */
+    private val systemUser = UserProfileV1(
+        userData = UserDataV1(lang = "en"),
+        isSystemUser = true,
+        permissionData = PermissionDataV1(anonymousUser = false)
+    )
 
     def receive = {
         case CkanRequestV1(projects, limit, info, userProfile) => future2Message(sender(), getCkanResponseV1(projects, limit, info, userProfile), log)
@@ -458,7 +468,7 @@ class CkanResponderV1 extends Responder {
     private def listValue2String(list: HierarchicalListValueV1, responderManager: ActorSelection): String = {
 
 
-        val resultFuture = responderManager ? NodePathGetRequestV1(list.hierarchicalListIri, UserProfileV1(UserDataV1("en")))
+        val resultFuture = responderManager ? NodePathGetRequestV1(list.hierarchicalListIri, systemUser)
         val nodePath = Await.result(resultFuture, Duration(3, SECONDS)).asInstanceOf[NodePathGetResponseV1]
 
         val labels = nodePath.nodelist map {

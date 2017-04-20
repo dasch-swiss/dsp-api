@@ -62,6 +62,13 @@ class UsersRouteV1E2ESpec extends E2ESpec(UsersRouteV1E2ESpec.config) with Sessi
 
     "The Users Route ('v1/users') with credentials supplied via Basic Auth" should {
 
+        "return all users" in {
+            val request = Get(baseApiUrl + s"/v1/users") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
+            val response: HttpResponse = singleAwaitingRequest(request)
+            println(s"response: ${response.toString}")
+            assert(response.status === StatusCodes.OK)
+        }
+
         "return the user's profile" in {
             /* Correct username and password */
             val request = Get(baseApiUrl + s"/v1/users/email/$rootEmailEnc") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))

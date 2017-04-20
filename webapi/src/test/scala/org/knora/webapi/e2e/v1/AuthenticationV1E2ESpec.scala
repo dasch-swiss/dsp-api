@@ -182,8 +182,7 @@ class AuthenticationV1E2ESpec extends E2ESpec(AuthenticationV1E2ESpec.config) wi
             val request = Get(baseApiUrl + s"/v1/session?login&email=$wrongEmailEnc&password=$testPass")
             val response = singleAwaitingRequest(request)
             //log.debug("==>> " + responseAs[String])
-            // FIXME: This does not work as expected (#372). Want 'Unauthorized'.
-            assert(response.status === StatusCodes.NotFound)
+            assert(response.status === StatusCodes.Unauthorized)
         }
 
         "fail with authentication when using wrong session id in cookie" in {
@@ -239,8 +238,7 @@ class AuthenticationV1E2ESpec extends E2ESpec(AuthenticationV1E2ESpec.config) wi
             val request = Get(baseApiUrl + "/v1/session?login") ~> addCredentials(BasicHttpCredentials(wrongEmail, testPass))
             val response = singleAwaitingRequest(request)
             //log.debug("==>> " + responseAs[String])
-            // FIXME: This does not work as expected (#372). Want 'Unauthorized'.
-            assert(response.status === StatusCodes.NotFound)
+            assert(response.status === StatusCodes.Unauthorized)
         }
     }
 

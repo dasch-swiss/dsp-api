@@ -33,6 +33,7 @@ import akka.pattern._
 import akka.stream.ActorMaterializer
 import org.knora.webapi.http.CORSSupport.CORS
 import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse}
+import org.knora.webapi.messages.v1.responder.permissionmessages.PermissionDataV1
 import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
 import org.knora.webapi.messages.v1.store.triplestoremessages.{Initialized, InitializedResponse, ResetTriplestoreContent, ResetTriplestoreContentACK}
 import org.knora.webapi.responders._
@@ -97,7 +98,11 @@ trait KnoraService {
     /**
       * A user representing the Knora API server, used for initialisation on startup.
       */
-    private val systemUser = UserProfileV1(userData = UserDataV1(lang = "en"), isSystemUser = true)
+    private val systemUser = UserProfileV1(
+        userData = UserDataV1(lang = "en"),
+        isSystemUser = true,
+        permissionData = PermissionDataV1(anonymousUser = false)
+    )
 
     /**
       * All routes composed together and CORS activated.

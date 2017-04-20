@@ -51,6 +51,27 @@ class PermissionMessagesV1Spec extends WordSpecLike with Matchers {
 
             result should be(false)
         }
+
+        "return true if the user is allowed to create a resource (ProjectResourceCreateRestrictedPermission)" in {
+            val projectIri = SharedAdminTestData.IMAGES_PROJECT_IRI
+            val allowedResourceClassIri01 = "http://www.knora.org/ontology/images#bild"
+            val allowedResourceClassIri02 = "http://www.knora.org/ontology/images#bildformat"
+            val notAllowedResourceClassIri = "http://www.knora.org/ontology/images#person"
+
+            val result1 = SharedAdminTestData.imagesReviewerUser.permissionData.hasPermissionFor(ResourceCreateOperation(allowedResourceClassIri01), projectIri, None)
+            result1 should be(true)
+
+            val result2 = SharedAdminTestData.imagesReviewerUser.permissionData.hasPermissionFor(ResourceCreateOperation(allowedResourceClassIri02), projectIri, None)
+            result2 should be(true)
+        }
+
+        "return false if the user is not allowed to create a resource (ProjectResourceCreateRestrictedPermission)" in {
+            val projectIri = SharedAdminTestData.IMAGES_PROJECT_IRI
+            val notAllowedResourceClassIri = "http://www.knora.org/ontology/images#person"
+
+            val result = SharedAdminTestData.imagesReviewerUser.permissionData.hasPermissionFor(ResourceCreateOperation(notAllowedResourceClassIri), projectIri, None)
+            result should be(false)
+        }
     }
 
     "querying the user's 'PermissionsProfileV1' with 'hasProjectAdminAllPermissionFor'" should {

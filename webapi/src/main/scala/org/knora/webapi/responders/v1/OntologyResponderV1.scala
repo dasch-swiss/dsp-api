@@ -204,7 +204,7 @@ class OntologyResponderV1 extends Responder {
         }
 
         for {
-        // Get all resource class definitions.
+            // Get all resource class definitions.
             resourceDefsSparql <- Future(queries.sparql.v1.txt.getResourceClassDefinitions(triplestore = settings.triplestoreType).toString())
             resourceDefsResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(resourceDefsSparql)).mapTo[SparqlSelectResponse]
             resourceDefsRows: Seq[VariableResultsRow] = resourceDefsResponse.results.bindings

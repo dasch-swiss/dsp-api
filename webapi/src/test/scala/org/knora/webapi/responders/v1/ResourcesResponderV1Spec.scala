@@ -875,7 +875,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
             }
         }
 
-        "return a region with a comment containing standoff information (disabled because of issue 17)" ignore {
+        "return a region with a comment containing standoff information" in {
             // http://localhost:3333/v1/resources/http%3A%2F%2Fdata.knora.org%2F047db418ae06
             actorUnderTest ! ResourceFullGetRequestV1(iri = "http://data.knora.org/047db418ae06", userProfile = SharedAdminTestData.incunabulaMemberUser)
 

@@ -19,8 +19,9 @@ package org.knora.webapi.responders.v1
 import akka.pattern._
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse}
+import org.knora.webapi.messages.v1.responder.permissionmessages.PermissionDataV1
 import org.knora.webapi.messages.v1.responder.storemessages.{ResetTriplestoreContentRequestV1, ResetTriplestoreContentResponseV1}
-import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
+import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
 import org.knora.webapi.messages.v1.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent, ResetTriplestoreContentACK}
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.util.ActorUtil._
@@ -32,6 +33,15 @@ import scala.concurrent.Future
   * 'Store Module'
   */
 class StoreResponderV1 extends Responder {
+
+    /**
+      * A user representing the Knora API server, used in those cases where a user is required.
+      */
+    private val systemUser = UserProfileV1(
+        userData = UserDataV1(lang = "en"),
+        isSystemUser = true,
+        permissionData = PermissionDataV1(anonymousUser = false)
+    )
 
     def receive = {
         case ResetTriplestoreContentRequestV1(rdfDataObjects: Seq[RdfDataObject]) => future2Message(sender(), resetTriplestoreContent(rdfDataObjects), log)
@@ -59,7 +69,7 @@ class StoreResponderV1 extends Responder {
             resetResponse <- (storeManager ? ResetTriplestoreContent(rdfDataObjects)).mapTo[ResetTriplestoreContentACK]
             _ = log.debug(s"resetTriplestoreContent - triplestore reset done ${resetResponse.toString}")
 
-            loadOntologiesResponse <- (responderManager ? LoadOntologiesRequest(UserProfileV1())).mapTo[LoadOntologiesResponse]
+            loadOntologiesResponse <- (responderManager ? LoadOntologiesRequest(systemUser)).mapTo[LoadOntologiesResponse]
             _ = log.debug(s"resetTriplestoreContent - load ontology done ${loadOntologiesResponse.toString}")
 
             result = ResetTriplestoreContentResponseV1(message = "success")

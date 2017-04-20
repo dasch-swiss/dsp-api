@@ -77,7 +77,18 @@ object UsersRouteV1 extends Authenticator {
             }
         } ~
         path("v1" / "users") {
-            post {
+            get {
+                requestContext =>
+                    val userProfile = getUserProfileV1(requestContext)
+                    val requestMessage = UsersGetRequestV1(userProfile)
+                    RouteUtilV1.runJsonRoute(
+                        requestMessage,
+                        requestContext,
+                        settings,
+                        responderManager,
+                        log
+                    )
+            } ~  post {
                 /* create a new user */
                 entity(as[CreateUserApiRequestV1]) { apiRequest => requestContext =>
                     val userProfile = getUserProfileV1(requestContext)

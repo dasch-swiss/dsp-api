@@ -24,7 +24,7 @@ import java.util.UUID
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi.IRI
-import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
+import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
 import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
 import spray.json.{DefaultJsonProtocol, JsonFormat, NullOptions, RootJsonFormat}
 
@@ -120,7 +120,23 @@ case class ProjectInfoByIRIGetV1(iri: IRI, userProfileV1: Option[UserProfileV1])
 case class ProjectInfoByShortnameGetRequestV1(shortname: String, userProfileV1: Option[UserProfileV1]) extends ProjectsResponderRequestV1
 
 /**
-  * Requests the cration of a new project.
+  * Returns all users belonging to a project.
+  *
+  * @param iri           the IRI of the project.
+  * @param userProfileV1 the profile of the user making the request.
+  */
+case class ProjectMembersByIRIGetRequestV1(iri: IRI, userProfileV1: UserProfileV1) extends ProjectsResponderRequestV1
+
+/**
+  * Returns all users belonging to a project.
+  *
+  * @param shortname     of the project
+  * @param userProfileV1 the profile of the user making the request.
+  */
+case class ProjectMembersByShortnameGetRequestV1(shortname: String, userProfileV1: UserProfileV1) extends ProjectsResponderRequestV1
+
+/**
+  * Requests the creation of a new project.
   *
   * @param createRequest the [[CreateProjectApiRequestV1]] information for creation a new project.
   * @param userProfileV1 the user profile of the user creating the new project.
@@ -163,6 +179,18 @@ case class ProjectInfoResponseV1(project_info: ProjectInfoV1) extends KnoraRespo
 }
 
 /**
+  * Represents the Knora API v1 JSON response to a request for a list of members inside a single project.
+  *
+  * @param members    a list of members.
+  * @param userDataV1 information about the user that made the request.
+  */
+case class ProjectMembersGetResponseV1(members: Seq[UserDataV1],
+                                       userDataV1: UserDataV1) extends KnoraResponseV1 with ProjectV1JsonProtocol {
+
+    def toJsValue = projectMembersGetRequestV1Format.write(this)
+}
+
+/**
   * Represents an answer to a project creating/modifying operation.
   *
   * @param project_info the new project info of the created/modified project.
@@ -195,10 +223,13 @@ case class ProjectInfoV1(id: IRI,
   */
 trait ProjectV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with NullOptions {
 
+    import org.knora.webapi.messages.v1.responder.usermessages.UserV1JsonProtocol._
+
     // Some of these formatters have to use lazyFormat because there is a recursive dependency between this
     // protocol and UserV1JsonProtocol. See ttps://github.com/spray/spray-json#jsonformats-for-recursive-types.
     // rootFormat makes it return the expected type again.
-
+    // https://github.com/spray/spray-json#jsonformats-for-recursive-types
+    implicit val projectMembersGetRequestV1Format: RootJsonFormat[ProjectMembersGetResponseV1] = rootFormat(lazyFormat(jsonFormat(ProjectMembersGetResponseV1, "members", "userdata")))
     implicit val projectInfoV1Format: JsonFormat[ProjectInfoV1] = jsonFormat11(ProjectInfoV1)
     implicit val projectsResponseV1Format: RootJsonFormat[ProjectsResponseV1] = rootFormat(lazyFormat(jsonFormat(ProjectsResponseV1, "projects")))
     implicit val projectInfoResponseV1Format: RootJsonFormat[ProjectInfoResponseV1] = rootFormat(lazyFormat(jsonFormat(ProjectInfoResponseV1, "project_info")))

@@ -175,8 +175,7 @@ class AuthenticationV1R2RSpec extends R2RSpec with SessionJsonProtocol {
             /* wrong username */
             Get(s"/v1/session?login&email=$wrongEmailEnc&password=$testPass") ~> authenticatePath ~> check {
                 //log.debug("==>> " + responseAs[String])
-                // FIXME: This does not work as expected (#372). Want 'Unauthorized'.
-                status should equal(StatusCodes.NotFound)
+                status should equal(StatusCodes.Unauthorized)
             }
         }
 
@@ -211,8 +210,7 @@ class AuthenticationV1R2RSpec extends R2RSpec with SessionJsonProtocol {
             /* wrong email */
             Get("/v1/session?login") ~> addCredentials(BasicHttpCredentials(wrongEmail, testPass)) ~> authenticatePath ~> check {
                 //log.debug("==>> " + responseAs[String])
-                // FIXME: This does not work as expected (#372). Want 'Unauthorized'.
-                status should equal(StatusCodes.NotFound)
+                status should equal(StatusCodes.Unauthorized)
             }
         }
 
