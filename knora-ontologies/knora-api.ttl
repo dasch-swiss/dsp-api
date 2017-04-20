@@ -28,9 +28,30 @@
 <http://www.knora.org/ontology/knora-api> rdf:type owl:Ontology .
 
 
-### http://www.knora.org/ontology/knora-api#textValueHasXml
+### http://www.knora.org/ontology/knora-api#isMainResource
 
-:textValueHasXml rdf:type owl:DatatypeProperty ;
+:isMainResource rdf:type owl:DatatypeProperty ;
+
+    rdfs:comment "Indicates if the given resource is the main resource of a request or a resource referred to by a link property."@en;
+
+    knora-base:subjectClassConstraint knora-base:Resource ;
+
+    knora-base:objectDatatypeConstraint xsd:boolean .
+
+### http://www.knora.org/ontology/knora-api#valueAsString
+
+:valueAsString rdf:type owl:DatatypeProperty ;
+
+    rdfs:comment "A plain string representation of a value"@en ;
+
+    knora-base:objectDatatypeConstraint xsd:string .
+
+
+### Text value
+
+### http://www.knora.org/ontology/knora-api#textValueAsXml
+
+:textValueAsXml rdf:type owl:DatatypeProperty ;
 
     rdfs:comment "A text value represented in XML."@en ;
 
@@ -43,17 +64,19 @@
 
     rdfs:comment "The mapping used to turn standoff into XML and vice versa."@en ;
 
-    knora-base:objectDatatypeConstraint xsd:string .
+    knora-base:objectClassConstraint :XMLToStandoffMapping .
 
 
 ### http://www.knora.org/ontology/knora-api#textValueAsHtml
 
-:textValueHasHtml rdf:type owl:DatatypeProperty ;
+:textValueAsHtml rdf:type owl:DatatypeProperty ;
 
     rdfs:comment "A text value represented in HTML."@en ;
 
     knora-base:objectClassConstraint knora-base:XMLToStandoffMapping .
 
+
+### Date value
 
 ### http://www.knora.org/ontology/knora-api#dateValueHasStartYear
 
@@ -63,3 +86,63 @@
 
     knora-base:objectDatatypeConstraint xsd:integer .
 
+
+### http://www.knora.org/ontology/knora-api#dateValueHasEndYear
+
+:dateValueHasEndYear rdf:type owl:DatatypeProperty ;
+
+    rdfs:comment "The closing year of a date value"@en ;
+
+    knora-base:objectDatatypeConstraint xsd:integer .
+
+
+### http://www.knora.org/ontology/knora-api#dateValueHasStartMonth
+
+:dateValueHasStartMonth rdf:type owl:DatatypeProperty ;
+
+    rdfs:comment "The opening month of a date value"@en ;
+
+    knora-base:objectDatatypeConstraint xsd:integer .
+
+
+### http://www.knora.org/ontology/knora-api#dateValueHasEndMonth
+
+:dateValueHasEndMonth rdf:type owl:DatatypeProperty ;
+
+    rdfs:comment "The closing month of a date value"@en ;
+
+    knora-base:objectDatatypeConstraint xsd:integer .
+
+
+### http://www.knora.org/ontology/knora-api#dateValueHasStartDay
+
+:dateValueHasStartDay rdf:type owl:DatatypeProperty ;
+
+    rdfs:comment "The opening day of a date value"@en ;
+
+    knora-base:objectDatatypeConstraint xsd:integer .
+
+
+### http://www.knora.org/ontology/knora-api#dateValueHasEndDay
+
+:dateValueHasEndDay rdf:type owl:DatatypeProperty ;
+
+    rdfs:comment "The clsong day of a date value"@en ;
+
+    knora-base:objectDatatypeConstraint xsd:integer .
+
+
+### http://www.knora.org/ontology/knora-api#dateValueHasCalendar
+
+:dateValueHasCalendar rdf:type owl:DatatypeProperty ;
+
+    rdfs:comment "The calendar of a date value"@en ;
+
+    knora-base:objectDatatypeConstraint xsd:string .
+
+
+### Link value
+
+### http://www.knora.org/ontology/knora-api#linkValueRefersTo
+
+#:linkValueRefersTo
