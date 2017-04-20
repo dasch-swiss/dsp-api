@@ -33,18 +33,18 @@ import org.knora.webapi.{IRI, Jsonable, OntologyConstants, StandoffConversionExc
 import spray.json._
 
 /**
-  * The value of a Knora property in the context of some particular operation (reading, modifying, etc.).
-  * Any implementation of `ValueV2` is an API operation-specific wrapper of a `ValueContentV2`.
+  * The value of a Knora property in the context of some particular input or output operation.
+  * Any implementation of `IOValueV2` is an API operation-specific wrapper of a `ValueContentV2`.
   */
-sealed trait ValueV2
+sealed trait IOValueV2
 
 /**
   * The value of a Knora property read back from the triplestore.
   *
-  * @param valueIri the IRI of the value.
-  * @param value    the content of the value.
+  * @param valueIri     the IRI of the value.
+  * @param valueContent the content of the value.
   */
-case class ReadValueV2(valueIri: IRI, value: ValueContentV2) extends ValueV2
+case class ReadValueV2(valueIri: IRI, valueContent: ValueContentV2) extends IOValueV2
 
 /**
   * The value of a Knora property sent to Knora to be created.
@@ -53,15 +53,15 @@ case class ReadValueV2(valueIri: IRI, value: ValueContentV2) extends ValueV2
   * @param propertyIri  the property of the new value.
   * @param valueContent the content of the new value.
   */
-case class CreateValueV2(resourceIri: IRI, propertyIri: IRI, valueContent: ValueContentV2) extends ValueV2
+case class CreateValueV2(resourceIri: IRI, propertyIri: IRI, valueContent: ValueContentV2) extends IOValueV2
 
 /**
-  * The new version of a value of a Knora property to be created.
+  * A new version of a value of a Knora property to be created.
   *
   * @param valueIri     the IRI of the value to be updated.
   * @param valueContent the content of the new version of the value.
   */
-case class UpdateValueV2(valueIri: IRI, valueContent: ValueContentV2) extends ValueV2
+case class UpdateValueV2(valueIri: IRI, valueContent: ValueContentV2) extends IOValueV2
 
 /**
   * The content of the value of a Knora property.
@@ -314,9 +314,9 @@ sealed trait ResourceV2 {
     def label: String
 
     /**
-      * A map of property IRIs to [[ValueV2]] objects.
+      * A map of property IRIs to [[IOValueV2]] objects.
       */
-    def values: Map[IRI, Seq[ValueV2]]
+    def values: Map[IRI, Seq[IOValueV2]]
 
     def resourceInfos: Map[IRI, LiteralV2]
 
@@ -412,9 +412,9 @@ object ResourcesV2JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol
                         case (propIri: IRI, readValues: Seq[ReadValueV2]) =>
                             val valuesMap: JsValue = readValues.map {
                                 readValue =>
-                                    val valAsMap: Map[IRI, JsValue] = readValue.value.toJsValueMap
+                                    val valAsMap: Map[IRI, JsValue] = readValue.valueContent.toJsValueMap
                                     Map("@id" -> JsString(readValue.valueIri),
-                                        "@type" -> JsString(readValue.value.valueTypeIri)) ++ valAsMap
+                                        "@type" -> JsString(readValue.valueContent.valueTypeIri)) ++ valAsMap
                             }.toJson
 
                             (propIri, valuesMap)
