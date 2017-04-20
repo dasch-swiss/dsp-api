@@ -1,7 +1,8 @@
 import sbt._
-import sbt.Keys._
+import sbt.Keys.{licenses, mainClass, mappings, _}
 import spray.revolver.RevolverPlugin._
 import com.typesafe.sbt.SbtNativePackager.autoImport._
+import com.typesafe.sbt.packager.MappingsHelper.{contentOf, directory}
 
 lazy val salsah = (project in file(".")).
         settings(salsahCommonSettings:  _*).
@@ -17,7 +18,21 @@ lazy val salsah = (project in file(".")).
             /* show full stack traces and test case durations */
             testOptions in Test += Tests.Argument("-oDF")
         ).
-        settings(Revolver.settings: _*)
+        settings( // enable deployment staging with `sbt stage`
+            mappings in Universal ++= {
+                // copy the public folder
+                directory("src/public") ++
+                // copy configuration files to config directory
+                contentOf("src/main/resources").toMap.mapValues("config/" + _)
+            },
+            // add 'config' directory first in the classpath of the start script,
+            scriptClasspath := Seq("../config/") ++ scriptClasspath.value,
+            // add license
+            licenses := Seq(("GNU AGPL", url("https://www.gnu.org/licenses/agpl-3.0"))),
+            // need this here, but why?
+            mainClass in Compile := Some("org.knora.salsah.Main")).
+        settings(Revolver.settings: _*).
+        enablePlugins(JavaAppPackaging) // Enable the sbt-native-packager plugin
 
 lazy val salsahCommonSettings = Seq(
     organization := "org.knora",
