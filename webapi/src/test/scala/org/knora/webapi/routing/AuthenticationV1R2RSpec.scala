@@ -135,7 +135,7 @@ class AuthenticationV1R2RSpec extends R2RSpec with SessionJsonProtocol {
                 status should equal(StatusCodes.OK)
                 /* store session */
                 sid = Await.result(Unmarshal(response.entity).to[SessionResponse], 1.seconds).sid
-                header[`Set-Cookie`] should equal(Some(`Set-Cookie`(HttpCookie(KNORA_AUTHENTICATION_COOKIE_NAME, sid))))
+                header[`Set-Cookie`] should equal(Some(`Set-Cookie`(HttpCookie(KNORA_AUTHENTICATION_COOKIE_NAME, value = sid, path = Some("/")))))
             }
         }
 
