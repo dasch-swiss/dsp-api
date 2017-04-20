@@ -170,7 +170,8 @@ lazy val webApiLibs = Seq(
     "org.eclipse.rdf4j" % "rdf4j-rio-turtle" % "2.0M3",
     "org.rogach" %% "scallop" % "2.0.5",
     "com.google.gwt" % "gwt-servlet" % "2.8.0",
-    "net.sf.saxon" % "Saxon-HE" % "9.7.0-14"
+    "net.sf.saxon" % "Saxon-HE" % "9.7.0-14",
+    "com.github.jsonld-java" % "jsonld-java" % "0.10.0"
 )
 
 lazy val javaRunOptions = Seq(
