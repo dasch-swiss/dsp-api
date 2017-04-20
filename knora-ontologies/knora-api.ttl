@@ -38,6 +38,17 @@
 
     knora-base:objectDatatypeConstraint xsd:boolean .
 
+
+### http://www.knora.org/ontology/knora-api#Value
+
+:Value rdf:type owl:Class ;
+
+    rdfs:subClassOf [ rdf:type owl:Restriction ;
+                      owl:onProperty :valueAsString ;
+                      owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                    ] .
+
+
 ### http://www.knora.org/ontology/knora-api#valueAsString
 
 :valueAsString rdf:type owl:DatatypeProperty ;
@@ -48,6 +59,24 @@
 
 
 ### Text value
+
+###  http://www.knora.org/ontology/knora-base#TextValue
+
+:TextValue rdf:type owl:Class ;
+
+           rdfs:subClassOf :Value ,
+                           [ rdf:type owl:Restriction ;
+                             owl:onProperty :textValueAsXml ;
+                             owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                           ],
+                           [ rdf:type owl:Restriction ;
+                             owl:onProperty :textValueHasMapping ;
+                             owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                           ],
+                           [ rdf:type owl:Restriction ;
+                             owl:onProperty :textValueAsHtml ;
+                             owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                           ] .
 
 ### http://www.knora.org/ontology/knora-api#textValueAsXml
 
@@ -64,7 +93,7 @@
 
     rdfs:comment "The mapping used to turn standoff into XML and vice versa."@en ;
 
-    knora-base:objectClassConstraint :XMLToStandoffMapping .
+    knora-base:objectClassConstraint knora-base:XMLToStandoffMapping .
 
 
 ### http://www.knora.org/ontology/knora-api#textValueAsHtml
@@ -75,8 +104,41 @@
 
     knora-base:objectClassConstraint knora-base:XMLToStandoffMapping .
 
-
 ### Date value
+
+###  http://www.knora.org/ontology/knora-base#TextValue
+
+:DateValue rdf:type owl:Class ;
+
+           rdfs:subClassOf :Value ,
+                           [ rdf:type owl:Restriction ;
+                             owl:onProperty :dateValueHasStartYear ;
+                             owl:cardinality "1"^^xsd:nonNegativeInteger
+                           ],
+                           [ rdf:type owl:Restriction ;
+                             owl:onProperty :dateValueHasEndYear ;
+                             owl:cardinality "1"^^xsd:nonNegativeInteger
+                           ] ,
+                           [ rdf:type owl:Restriction ;
+                             owl:onProperty :dateValueHasStartMonth ;
+                             owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                           ],
+                           [ rdf:type owl:Restriction ;
+                             owl:onProperty :dateValueHasEndMonth ;
+                             owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                           ] ,
+                           [ rdf:type owl:Restriction ;
+                             owl:onProperty :dateValueHasStartDay ;
+                             owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                           ],
+                           [ rdf:type owl:Restriction ;
+                             owl:onProperty :dateValueHasEndDay ;
+                             owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                           ],
+                           [ rdf:type owl:Restriction ;
+                             owl:onProperty :dateValueHasCalendar ;
+                             owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                           ] .
 
 ### http://www.knora.org/ontology/knora-api#dateValueHasStartYear
 
@@ -143,6 +205,37 @@
 
 ### Link value
 
-### http://www.knora.org/ontology/knora-api#linkValueRefersTo
+### http://www.knora.org/ontology/knora-api#linkValueHasSource
 
-#:linkValueRefersTo
+:linkValueHasSource rdf:type owl:ObjectProperty ;
+
+    rdfs:comment "The target of the link value (the referred resource)"@en ;
+
+    knora-base:objectClassConstraint knora-base:Resource .
+
+
+### http://www.knora.org/ontology/knora-api#linkValueHasProperty
+
+:linkValueHasProperty rdf:type owl:ObjectProperty ;
+
+    rdfs:comment "The property pointing to the target resource"@en ;
+
+    knora-base:objectClassConstraint owl:ObjectProperty .
+
+
+### http://www.knora.org/ontology/knora-api#linkValueHasTarget
+
+:linkValueHasTarget rdf:type owl:ObjectProperty ;
+
+    rdfs:comment "The target of the link value (the referred resource)"@en ;
+
+    knora-base:objectClassConstraint knora-base:Resource .
+
+
+### http://www.knora.org/ontology/knora-api#linkValueHasReferredResource
+
+:linkValueHasReferredResource rdf:type owl:ObjectProperty ;
+
+    rdfs:comment "Representation of the referred resource"@en ;
+
+    knora-base:objectClassConstraint knora-base:Resource .
