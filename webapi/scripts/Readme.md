@@ -2,22 +2,37 @@
 
 ## GraphDB
 
-### Initialize for unit testing (running tests inside sbt)
+### Initialize for CI (continuous integration) and unit testing (running tests inside sbt)
+
+This script will create the ``knora-test-unit`` repository and not load any data. Data will be loaded during testing.
 
  - with GraphDB running inside a docker container:
- ```$ graphdb-se-docker-prepare.sh````
+ ```$ graphdb-se-docker-init-knora-test-unit.sh```
  
- - with GraphDB running locally, e.g., local tomcat server:
- ```$ graphdb-se-local-prepare.sh ```
+ - with GraphDB running locally, e.g., graphdb distribution:
+ ```$ graphdb-se-local-init-knora-test-unit.sh ```
  
  
-### Initialize for using with the ``webapi`` 
+### Initialize for using in the test / staging environment 
+
+This script will create the ``knora-test`` repository and load data specified in ``graphdb-se-knora-test-data.ttl``.
 
  - with GraphDB running inside a docker container:
- ```$ graphdb-se-docker-load-test-data.sh````
+ ```$ graphdb-se-docker-init-knora-test.sh```
  
- - with GraphDB running locally, e.g., local tomcat server:
- ```$ graphdb-se-local-load-test-data.sh ```
+ - with GraphDB running locally, e.g., graphdb distribution:
+ ```$ graphdb-se-local-init-knora-test.sh ```
+ 
+
+### Initialize for using in the production environment 
+
+This script will create the ``knora-prod`` repository and load data specified in ``graphdb-se-knora-prod-data.ttl``.
+
+ - with GraphDB running inside a docker container:
+ ```$ graphdb-se-docker-init-knora-prod.sh```
+ 
+ - with GraphDB running locally, e.g., graphdb distribution:
+ ```$ graphdb-se-local-init-knora-prod.sh ```
  
 
 ## Fuseki
