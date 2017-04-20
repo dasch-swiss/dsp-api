@@ -28,7 +28,7 @@ import org.knora.webapi.messages.v1.responder.standoffmessages.MappingXMLtoStand
 import org.knora.webapi.messages.v1.responder.valuemessages.{JulianDayNumberValueV1, KnoraCalendarV1, KnoraPrecisionV1}
 import org.knora.webapi.twirl.StandoffTagV1
 import org.knora.webapi.util.standoff.StandoffTagUtilV1
-import org.knora.webapi.util.{DateUtilV1, InputValidation}
+import org.knora.webapi.util.{DateUtilV1, DateUtilV2, InputValidation}
 import org.knora.webapi.{IRI, Jsonable, OntologyConstants, StandoffConversionException}
 import spray.json._
 
@@ -89,6 +89,8 @@ sealed trait ValueContentV2 {
 
 }
 
+case class DateValueApiV2(year: Int, month: Option[Int], day: Option[Int])
+
 /**
   * Represents a Knora date value.
   *
@@ -109,6 +111,13 @@ case class DateValueContentV2(valueHasString: String,
                               comment: Option[String]) extends ValueContentV2 {
 
     def valueTypeIri = OntologyConstants.KnoraBase.DateValue
+
+    def toKnoraApiDateValue: (DateValueApiV2, DateValueApiV2) = {
+        val dateStart = DateUtilV2.convertJulianDayNumberToKnraApiDate(valueHasStartJDN, valueHasStartPrecision, valueHasCalendar)
+        val dateEnd = DateUtilV2.convertJulianDayNumberToKnraApiDate(valueHasEndJDN, valueHasEndPrecision, valueHasCalendar)
+
+        (dateStart, dateEnd)
+    }
 
     /**
       * Represents the JDN format in a string format representing the precision.
@@ -146,13 +155,13 @@ case class DateValueContentV2(valueHasString: String,
     }
 
     def toJsValueMap: Map[IRI, JsString] = {
-        val dateStrings = toDateStr
+        val dateStr = toDateStr
 
         Map(
             OntologyConstants.KnoraBase.ValueHasString -> JsString(valueHasString),
             OntologyConstants.KnoraBase.ValueHasCalendar -> JsString(valueHasCalendar.toString),
-            "valueHasStartDate" -> JsString(dateStrings._1),
-            "valueHasEndDate" -> JsString(dateStrings._2)
+            "valueHasStartDate" -> JsString(dateStr._1),
+            "valueHasEndDate" -> JsString(dateStr._2)
         )
     }
 
