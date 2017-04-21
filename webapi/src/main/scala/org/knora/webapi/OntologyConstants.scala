@@ -98,6 +98,8 @@ object OntologyConstants {
         val XSLTransformation = "http://www.knora.org/ontology/knora-base#XSLTransformation"
         val mappingHasDefaultXSLTransformation = "http://www.knora.org/ontology/knora-base#mappingHasDefaultXSLTransformation"
 
+        val IsMainResource = "http://www.knora.org/ontology/knora-base#isMainResource"
+
 
         val AbstractResourceClasses = Set(
             Resource,

@@ -37,6 +37,7 @@ PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 CONSTRUCT {
     # include this inferred information in the results, needed to identify resources
     ?resource a knora-base:Resource .
+    ?resource knora-base:isMainResource true .
     ?resource knora-base:attachedToProject ?resourceProject .
     ?resource rdfs:label ?label .
     ?resource a ?resourceType .
@@ -57,6 +58,7 @@ CONSTRUCT {
 
     ?referredResource rdfs:label ?referredResourceLabel .
     ?referredResource a ?referredResourceType .
+    ?referredResource knora-base:isMainResource false .
 
     ?referredResource knora-base:attachedToUser ?referredResourceCreator ;
         knora-base:hasPermissions ?referredResourcePermissions ;

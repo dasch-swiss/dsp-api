@@ -46,10 +46,11 @@ object ConstructResponseUtilV2 {
       * Represents a resource and its values.
       *
       * @param resourceAssertions      assertions about the resource (direct statements).
+      * @param isMainResource          indicates if this represents a top level resource or a referred resource (depending on the query the query).
       * @param valuePropertyAssertions assertions about value properties.
       * @param linkPropertyAssertions  assertions about linking properties.
       */
-    case class ResourceWithValueRdfData(resourceAssertions: Seq[(IRI, String)], valuePropertyAssertions: Map[IRI, Seq[ValueRdfData]], linkPropertyAssertions: Map[IRI, IRI])
+    case class ResourceWithValueRdfData(resourceAssertions: Seq[(IRI, String)], isMainResource: Boolean, valuePropertyAssertions: Map[IRI, Seq[ValueRdfData]], linkPropertyAssertions: Map[IRI, IRI])
 
     /**
       * Represents a mapping including information about the standoff entities.
@@ -94,10 +95,23 @@ object ConstructResponseUtilV2 {
                 // - every resource is a knora-base:Resource
                 // - every value property is a subproperty of knora-base:hasValue
                 // - every linking property is a subproperty of knora-base:hasLinkTo
+                // - every resource is flagged as being the main resource or a referred resource (knora-base:isMainResource)
                 val assertionsExplicit: Seq[(IRI, String)] = assertions.filterNot {
                     case (pred, obj) =>
-                        (pred == OntologyConstants.Rdf.Type && obj == OntologyConstants.KnoraBase.Resource) || pred == OntologyConstants.KnoraBase.HasValue || pred == OntologyConstants.KnoraBase.HasLinkTo
+                        (pred == OntologyConstants.Rdf.Type && obj == OntologyConstants.KnoraBase.Resource) || pred == OntologyConstants.KnoraBase.HasValue || pred == OntologyConstants.KnoraBase.HasLinkTo || pred == OntologyConstants.KnoraBase.IsMainResource
                 }
+
+                // check for the knora-base:isMainResource flag created by the SPARQL CONTSRUCT query
+                val isMainResourceOption: Option[Boolean] = assertions.find {
+                    case (pred, obj) =>
+                        pred == OntologyConstants.KnoraBase.IsMainResource
+                }.map {
+                    // convert the flag to a Boolean value
+                    case (isMainResourcePred, booleanFlag) => booleanFlag.toBoolean
+                }
+
+                // every resource is expected to have a knora-base:isMainResource flag created by the SPARQL CONSTRUCT query
+                if (isMainResourceOption.isEmpty) throw InconsistentTriplestoreDataException(s"Expected ${OntologyConstants.KnoraBase.IsMainResource} to be in assertions for resource $resourceIri")
 
                 // make the objects keys of a map, using only explicit assertions
                 // this only works for value properties because value object Iris are only referred to once by a value property
@@ -212,7 +226,7 @@ object ConstructResponseUtilV2 {
                 }.toMap
 
                 // create a map of resource Iris to a `ResourceWithValueRdfData`
-                (resourceIri, ResourceWithValueRdfData(resourceAssertions = assertionsExplicit, valuePropertyAssertions = valuePropertyToValueObject, linkPropertyAssertions = linkPropToTargets))
+                (resourceIri, ResourceWithValueRdfData(resourceAssertions = assertionsExplicit, isMainResource = isMainResourceOption.get, valuePropertyAssertions = valuePropertyToValueObject, linkPropertyAssertions = linkPropToTargets))
 
 
         }
