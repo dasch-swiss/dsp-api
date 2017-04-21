@@ -78,18 +78,21 @@ To shut down the SALSAH server:
 Run the automated tests
 ------------------------
 
-Make sure you've started Fuseki and the API server as shown above.
 In order to run the tests, the Selenium driver for Chrome has to be installed.
-Please download it from `here <https://sites.google.com/a/chromium.org/chromedriver/downloads>`_ and save it
-as ``salsah/lib/chromedriver``. Also, please make sure to start the API server with the
-``allowResetTriplestoreContentOperationOverHTTP`` flag. For more information about this flag, see :ref:`webapi-server-startup-flags`
 
-Then at the SBT prompt:
+It is architecture-dependant, please go to ``salsah/lib/chromedriver`` directory and unzip the distribution that matches your architecture, or download it from `here <https://sites.google.com/a/chromium.org/chromedriver/downloads>`_ and install it in this directory.
+
+Then, launch the services as described above; the triple store with the test data, the api server with the ``allowResetTriplestoreContentOperationOverHTTP`` option, sipi with the test configuration and salsah where you can run the tests in the same SBT session:
 
 ::
 
+    $ cd KNORA_PROJECT_DIRECTORY/salsah
+    $ sbt
+    > compile
+    > re-start
     > test
 
+Note: please be patient as salsah can take up to one mimute (end of a time-out) before reporting some errors.
 
 SBT Build Configuration
 ------------------------
