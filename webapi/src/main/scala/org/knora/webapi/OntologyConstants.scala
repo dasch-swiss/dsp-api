@@ -429,7 +429,9 @@ object OntologyConstants {
         val DateValueHasEndDay = "http://www.knora.org/ontology/knora-api#dateValueHasEndDay"
         val DateValueHasCalendar = "http://www.knora.org/ontology/knora-api#dateValueHasCalendar"
 
-
+        val TextValueAsHtml = "http://www.knora.org/ontology/knora-api#textValueAsHtml"
+        val TextValueAsXml = "http://www.knora.org/ontology/knora-api#textValueAsXml"
+        val TextValueHasMapping = "http://www.knora.org/ontology/knora-api#textValueHasMapping"
 
     }
 

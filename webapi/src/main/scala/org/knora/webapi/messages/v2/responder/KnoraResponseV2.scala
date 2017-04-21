@@ -186,17 +186,17 @@ case class TextValueContentV2(valueHasString: String, standoff: Option[StandoffA
                 trans.transform()
 
                 // the xml was converted to HTML
-                Map("html" -> JsString(xmlTransformedStr.toString))
+                Map(OntologyConstants.KnoraApi.TextValueAsHtml -> JsString(xmlTransformedStr.toString))
             } else {
                 // xml is returned
                 Map(
-                    "xml" -> JsString(xmlFromStandoff),
-                    "mapping_id" -> JsString(standoff.get.mappingIri)
+                    OntologyConstants.KnoraApi.TextValueAsXml -> JsString(xmlFromStandoff),
+                    OntologyConstants.KnoraApi.TextValueHasMapping -> JsString(standoff.get.mappingIri)
                 )
             }
 
         } else {
-            Map("html" -> JsString(valueHasString))
+            Map(OntologyConstants.KnoraApi.ValueAsString -> JsString(valueHasString))
         }
 
     }
