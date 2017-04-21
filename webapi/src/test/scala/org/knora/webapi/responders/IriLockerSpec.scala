@@ -5,13 +5,14 @@ import java.util.UUID
 import org.knora.webapi.{ApplicationLockException, IRI}
 import org.scalatest.{Matchers, WordSpec}
 
-import scala.concurrent.{Await, Future}
 import scala.concurrent.duration._
+import scala.concurrent.{Await, Future}
 
 /**
   * Tests [[IriLocker]].
   */
 class IriLockerSpec extends WordSpec with Matchers {
+
     import scala.concurrent.ExecutionContext.Implicits.global
 
     val SUCCESS = "success"
@@ -20,7 +21,7 @@ class IriLockerSpec extends WordSpec with Matchers {
     "IriLocker" should {
         "not allow a request to acquire a lock when another request already has it" in {
             def runLongTask(): Future[String] = Future {
-                Thread.sleep(3000)
+                Thread.sleep(3500)
                 SUCCESS
             }
 
@@ -37,7 +38,7 @@ class IriLockerSpec extends WordSpec with Matchers {
             )
 
             // Wait a bit to allow the first request to get the lock.
-            Thread.sleep(500)
+            Thread.sleep(200)
 
             val secondApiRequestID = UUID.randomUUID
 
@@ -54,7 +55,7 @@ class IriLockerSpec extends WordSpec with Matchers {
                 case ale: ApplicationLockException => true
             }
 
-            assert(secondTaskFailedWithLockTimeout,"Second task did not get a lock timeout")
+            assert(secondTaskFailedWithLockTimeout, "Second task did not get a lock timeout")
         }
 
         "provide reentrant locks" in {
