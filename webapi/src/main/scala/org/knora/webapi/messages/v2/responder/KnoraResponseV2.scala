@@ -260,36 +260,29 @@ case class DecimalValueContentV2(valueHasString: String, valueHasDecimal: BigDec
   * @param comment             a comment on the link.
   * @param referredResource    information about the referred resource, if given.
   */
-case class LinkValueContentV2(valueHasString: String, subject: IRI, predicate: IRI, referredResourceIri: IRI, comment: Option[String], referredResource: Option[ReferredResourceV2] = None) extends ValueContentV2 {
+case class LinkValueContentV2(valueHasString: String, subject: IRI, predicate: IRI, referredResourceIri: IRI, comment: Option[String], referredResource: Option[ReadResourceV2]) extends ValueContentV2 {
+    // TODO: the referred resource should be made non optional (if the referred resource cannot be shown, the whole link value should not be shown)
 
     def valueTypeIri = OntologyConstants.KnoraBase.LinkValue
 
     def toJsValueMap: Map[IRI, JsValue] = {
 
-        // if given, include information about the referred resource
-        val referredResourceInfoOption: Map[IRI, JsValue] = if (referredResource.nonEmpty) {
-            Map("referredResource" -> JsObject(Map("ReferredResourceType" -> JsString(referredResource.get.resourceClass),
-                "ReferredResourceLabel" -> JsString(referredResource.get.label))))
-        } else {
-            Map.empty[IRI, JsValue]
-        }
 
-        Map(OntologyConstants.KnoraBase.ValueHasString -> JsString(valueHasString),
-            OntologyConstants.Rdf.Subject -> JsString(subject),
-            OntologyConstants.Rdf.Predicate -> JsString(predicate),
-            OntologyConstants.KnoraBase.HasLinkTo -> JsString(referredResourceIri)
-        ) ++ referredResourceInfoOption
+        // TODO: add support for recursion (a resource might point to a resource that may point to another resource)
+        if (referredResource.nonEmpty) {
+            Map(OntologyConstants.KnoraApi.LinkValueHasTarget -> JsObject(
+                Map(
+                    "@id" -> JsString(referredResourceIri),
+                    "@type" -> JsString(referredResource.get.resourceClass),
+                    "name" -> JsString(referredResource.get.label)
+                )
+            ))
+        } else {
+            Map(OntologyConstants.KnoraApi.ValueAsString -> JsString(referredResourceIri))
+        }
     }
 
 }
-
-/**
-  * Represents information about a resource referred to.
-  *
-  * @param label         the label of the referred resource.
-  * @param resourceClass the resource class of the referred resource.
-  */
-case class ReferredResourceV2(label: String, resourceClass: IRI)
 
 /**
   * Represents a Knora resource.

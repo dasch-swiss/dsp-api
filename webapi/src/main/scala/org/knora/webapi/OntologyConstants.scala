@@ -437,6 +437,8 @@ object OntologyConstants {
 
         val DecimalValueAsDecimal = "http://www.knora.org/ontology/knora-api#decimalValueAsDecimal"
 
+        val LinkValueHasTarget = "http://www.knora.org/ontology/knora-api#linkValueHasTarget"
+
     }
 
 }

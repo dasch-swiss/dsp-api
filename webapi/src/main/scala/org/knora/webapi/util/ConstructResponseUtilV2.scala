@@ -298,12 +298,16 @@ object ConstructResponseUtilV2 {
 
                 // check if the referred resource's Iri can be resolved:
                 // check if `queryResult` is given (it's optional) and if it contains the referred resource's Iri as a key (the user may not have sufficient permission to see the referred resource)
-                val referredResourceOption: Option[ReferredResourceV2] = if (queryResult.nonEmpty && queryResult.get.get(referredResourceIri).nonEmpty) {
+
+                // TODO: only return the link when the user has permissions to se the referred resource
+
+                // TODO: follow links recursively and build nested structures of `ReadResourceV2` (a resource might point to a resource that may point to another resource)
+                val referredResourceOption: Option[ReadResourceV2] = if (queryResult.nonEmpty && queryResult.get.get(referredResourceIri).nonEmpty) {
 
                     // access the assertions about the referred resource
                     val referredResourceInfoMap: ErrorHandlingMap[IRI, String] = new ErrorHandlingMap(queryResult.get(referredResourceIri).resourceAssertions.toMap, { key: IRI => s"Predicate $key not found for ${referredResourceIri} (referred resource)" })
 
-                    Some(ReferredResourceV2(label = referredResourceInfoMap(OntologyConstants.Rdfs.Label), resourceClass = referredResourceInfoMap(OntologyConstants.Rdf.Type)))
+                    Some(ReadResourceV2(resourceIri = valueObject.assertionsAsMap(OntologyConstants.Rdf.Object), label = referredResourceInfoMap(OntologyConstants.Rdfs.Label), resourceClass = referredResourceInfoMap(OntologyConstants.Rdf.Type), resourceInfos = Map.empty[IRI, LiteralV2], values = Map.empty[IRI, Seq[ReadValueV2]]))
 
                 } else {
                     None
