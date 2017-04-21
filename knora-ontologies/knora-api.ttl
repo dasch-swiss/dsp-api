@@ -254,13 +254,23 @@
 
 ### Link value
 
+###  http://www.knora.org/ontology/knora-base#LinkValue
+
+:LinkValue rdf:type owl:Class ;
+
+           rdfs:subClassOf :Value ,
+                           [ rdf:type owl:Restriction ;
+                             owl:onProperty :linkValueHasTarget ;
+                             owl:cardinality "1"^^xsd:nonNegativeInteger
+                           ] .
+
 ### http://www.knora.org/ontology/knora-api#linkValueHasTarget
 
 :linkValueHasTarget rdf:type owl:ObjectProperty ;
 
     rdfs:comment "The target of the link property (the referred resource)"@en ;
 
-    knora-base:subjectClassConstraint :Resource ;
+    knora-base:subjectClassConstraint :LinkValue ;
 
     knora-base:objectClassConstraint :Resource .
 
