@@ -1,7 +1,7 @@
 import sbt._
 import sbt.Keys._
 import spray.revolver.RevolverPlugin._
-import com.typesafe.sbt.SbtNativePackager.autoImport._
+import NativePackagerHelper._
 
 connectInput in run := true
 
@@ -69,15 +69,6 @@ lazy val webapi = (project in file(".")).
             )
         ): _*).
         settings(
-            //javaOptions in FusekiTest ++= javaFusekiTestOptions,
-            //javaOptions in FusekiTomcatTest ++= javaFusekiTomcatTestOptions,
-            //javaOptions in GraphDBTest ++= javaGraphDBTestOptions,
-            //javaOptions in EmbeddedJenaTDBTest ++= javaEmbeddedJenaTDBTestOptions,
-            //fork in FusekiTest := true,
-            //parallelExecution in FusekiTest := false,
-            //testOptions in FusekiTest += Tests.Argument("-oDF")
-        ).
-        settings(
             libraryDependencies ++= webApiLibs,
             scalacOptions ++= Seq("-feature", "-unchecked", "-deprecation", "-Yresolve-term-conflict:package"),
             logLevel := Level.Info,
@@ -88,15 +79,32 @@ lazy val webapi = (project in file(".")).
             mainClass in (Compile, run) := Some("org.knora.webapi.Main"),
             fork in Test := true,
             javaOptions in Test ++= javaTestOptions,
-            parallelExecution in Test := false
+            parallelExecution in Test := false,
+            // enable publishing the jar produced by `sbt it:package`
+            publishArtifact in (IntegrationTest, packageBin) := true
+        ).
+        settings( // enable deployment staging with `sbt stage`
+          mappings in Universal ++= {
+            // copy the scripts folder
+            directory("scripts") ++
+            // copy configuration files to config directory
+            contentOf("src/main/resources").toMap.mapValues("config/" + _)
+          },
+          // add 'config' directory first in the classpath of the start script,
+          scriptClasspath := Seq("../config/") ++ scriptClasspath.value,
+          // add license
+          licenses := Seq(("GNU AGPL", url("https://www.gnu.org/licenses/agpl-3.0"))),
+          // need this here, but why?
+          mainClass in Compile := Some("org.knora.webapi.Main")
         ).
         settings(Revolver.settings: _*).
-        enablePlugins(SbtTwirl) // Enable the SbtTwirl plugin
+        enablePlugins(SbtTwirl). // Enable the SbtTwirl plugin
+        enablePlugins(JavaAppPackaging) // Enable the sbt-native-packager plugin
 
 lazy val webApiCommonSettings = Seq(
     organization := "org.knora",
     name := "webapi",
-    version := "0.1.0",
+    version := "0.1.0-beta",
     ivyScala := ivyScala.value map { _.copy(overrideScalaVersion = true) },
     scalaVersion := "2.12.1"
 )
@@ -220,32 +228,3 @@ lazy val javaEmbeddedJenaTDBTestOptions = Seq(
 lazy val javaIntegrationTestOptions = Seq(
     "-Dconfig.resource=graphdb.conf"
 ) ++ javaTestOptions
-
-// skip test before creating fat-jar
-test in assembly := {}
-
-// set fat-jar main class
-mainClass in assembly := Some("org.knora.webapi.Main")
-
-// change merge strategy for fat-jar
-assemblyMergeStrategy in assembly := {
-    case PathList("org", "apache", "commons", "logging", xs @ _*)   => MergeStrategy.first
-    case PathList("META-INF", xs @ _*) =>
-    xs.map(_.toLowerCase) match {
-        case ("manifest.mf" :: Nil) | ("index.list" :: Nil) | ("dependencies" :: Nil) =>
-        MergeStrategy.discard
-        case ps @ (x :: xs) if ps.last.endsWith(".sf") || ps.last.endsWith(".dsa") || ps.last.endsWith("license") || ps.last.endsWith("license.txt") || ps.last.endsWith("notice") || ps.last.endsWith("notice.txt") =>
-        MergeStrategy.discard
-        case "plexus" :: xs =>
-        MergeStrategy.discard
-        case "services" :: xs =>
-        MergeStrategy.filterDistinctLines
-        case ("spring.schemas" :: Nil) | ("spring.handlers" :: Nil) =>
-        MergeStrategy.filterDistinctLines
-        case ps@(x :: xs) if ps.last.endsWith("aop.xml") => MergeStrategy.first
-        case _ => MergeStrategy.deduplicate
-    }
-    case x =>
-    val oldStrategy = (assemblyMergeStrategy in assembly).value
-    oldStrategy(x)
-}
