@@ -226,8 +226,8 @@ case class IntegerValueContentV2(valueHasString: String, valueHasInteger: Int, c
     def valueTypeIri = OntologyConstants.KnoraBase.ValueHasInteger
 
     def toJsValueMap: Map[IRI, JsValue] = {
-        Map(OntologyConstants.KnoraBase.ValueHasString -> JsString(valueHasString),
-            OntologyConstants.KnoraBase.ValueHasInteger -> JsNumber(valueHasInteger))
+        Map(OntologyConstants.KnoraApi.ValueAsString -> JsString(valueHasString),
+            OntologyConstants.KnoraApi.IntegerValueAsInteger -> JsNumber(valueHasInteger))
     }
 
 }
@@ -244,8 +244,8 @@ case class DecimalValueContentV2(valueHasString: String, valueHasDecimal: BigDec
     def valueTypeIri = OntologyConstants.KnoraBase.DecimalValue
 
     def toJsValueMap: Map[IRI, JsValue] = {
-        Map(OntologyConstants.KnoraBase.ValueHasString -> JsString(valueHasString),
-            OntologyConstants.KnoraBase.ValueHasInteger -> JsNumber(valueHasDecimal))
+        Map(OntologyConstants.KnoraApi.ValueAsString -> JsString(valueHasString),
+            OntologyConstants.KnoraApi.DecimalValueAsDecimal -> JsNumber(valueHasDecimal))
     }
 
 }

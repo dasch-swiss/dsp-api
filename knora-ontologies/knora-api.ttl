@@ -113,7 +113,7 @@
 
     rdfs:comment "A text value represented in XML."@en ;
 
-    knora-base:subjectClassConstraint :Value ;
+    knora-base:subjectClassConstraint :TextValue ;
 
     knora-base:objectDatatypeConstraint xsd:string .
 
@@ -124,7 +124,7 @@
 
     rdfs:comment "The mapping used to turn standoff into XML and vice versa."@en ;
 
-    knora-base:subjectClassConstraint :Value ;
+    knora-base:subjectClassConstraint :TextValue ;
 
     knora-base:objectClassConstraint knora-base:XMLToStandoffMapping .
 
@@ -135,7 +135,7 @@
 
     rdfs:comment "A text value represented in HTML."@en ;
 
-    knora-base:subjectClassConstraint :Value ;
+    knora-base:subjectClassConstraint :TextValue ;
 
     knora-base:objectClassConstraint knora-base:XMLToStandoffMapping .
 
@@ -181,7 +181,7 @@
 
     rdfs:comment "The opening year of a date value"@en ;
 
-    knora-base:subjectClassConstraint :Value ;
+    knora-base:subjectClassConstraint :DateValue ;
 
     knora-base:objectDatatypeConstraint xsd:integer .
 
@@ -192,7 +192,7 @@
 
     rdfs:comment "The closing year of a date value"@en ;
 
-    knora-base:subjectClassConstraint :Value ;
+    knora-base:subjectClassConstraint :DateValue ;
 
     knora-base:objectDatatypeConstraint xsd:integer .
 
@@ -203,7 +203,7 @@
 
     rdfs:comment "The opening month of a date value"@en ;
 
-    knora-base:subjectClassConstraint :Value ;
+    knora-base:subjectClassConstraint :DateValue ;
 
     knora-base:objectDatatypeConstraint xsd:integer .
 
@@ -214,7 +214,7 @@
 
     rdfs:comment "The closing month of a date value"@en ;
 
-    knora-base:subjectClassConstraint :Value ;
+    knora-base:subjectClassConstraint :DateValue ;
 
     knora-base:objectDatatypeConstraint xsd:integer .
 
@@ -225,7 +225,7 @@
 
     rdfs:comment "The opening day of a date value"@en ;
 
-    knora-base:subjectClassConstraint :Value ;
+    knora-base:subjectClassConstraint :DateValue ;
 
     knora-base:objectDatatypeConstraint xsd:integer .
 
@@ -236,7 +236,7 @@
 
     rdfs:comment "The clsong day of a date value"@en ;
 
-    knora-base:subjectClassConstraint :Value ;
+    knora-base:subjectClassConstraint :DateValue ;
 
     knora-base:objectDatatypeConstraint xsd:integer .
 
@@ -247,7 +247,7 @@
 
     rdfs:comment "The calendar of a date value"@en ;
 
-    knora-base:subjectClassConstraint :Value ;
+    knora-base:subjectClassConstraint :DateValue ;
 
     knora-base:objectDatatypeConstraint xsd:string .
 
@@ -263,3 +263,50 @@
     knora-base:subjectClassConstraint :Resource ;
 
     knora-base:objectClassConstraint :Resource .
+
+
+### Integer Value
+
+###  http://www.knora.org/ontology/knora-base#IntegerValue
+
+:IntegerValue rdf:type owl:Class ;
+
+           rdfs:subClassOf :Value ,
+                           [ rdf:type owl:Restriction ;
+                             owl:onProperty :integerValueAsInteger ;
+                             owl:cardinality "1"^^xsd:nonNegativeInteger
+                           ] .
+
+### http://www.knora.org/ontology/knora-api#integerValueAsInteger
+
+:integerValueAsInteger rdf:type owl:ObjectProperty ;
+
+    rdfs:comment "The integer value as an integer"@en ;
+
+    knora-base:subjectClassConstraint :IntegerValue ;
+
+    knora-base:objectDatatypeConstraint xsd:integer .
+
+
+### Decimal Value
+
+###  http://www.knora.org/ontology/knora-base#IntegerValue
+
+:DecimalValue rdf:type owl:Class ;
+
+           rdfs:subClassOf :Value ,
+                           [ rdf:type owl:Restriction ;
+                             owl:onProperty :decimalValueAsDecimal ;
+                             owl:cardinality "1"^^xsd:nonNegativeInteger
+                           ] .
+
+### http://www.knora.org/ontology/knora-api#decimalValueAsDecimal
+
+:decimalValueAsDecimal rdf:type owl:ObjectProperty ;
+
+    rdfs:comment "The decimal value as a decimal"@en ;
+
+    knora-base:subjectClassConstraint :DecimalValue ;
+
+    knora-base:objectDatatypeConstraint xsd:decimal .
+

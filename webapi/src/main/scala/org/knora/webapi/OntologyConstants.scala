@@ -433,6 +433,10 @@ object OntologyConstants {
         val TextValueAsXml = "http://www.knora.org/ontology/knora-api#textValueAsXml"
         val TextValueHasMapping = "http://www.knora.org/ontology/knora-api#textValueHasMapping"
 
+        val IntegerValueAsInteger = "http://www.knora.org/ontology/knora-api#integerValueAsInteger"
+
+        val DecimalValueAsDecimal = "http://www.knora.org/ontology/knora-api#decimalValueAsDecimal"
+
     }
 
 }
