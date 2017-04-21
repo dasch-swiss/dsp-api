@@ -44,7 +44,18 @@ sealed trait IOValueV2
   * @param valueIri     the IRI of the value.
   * @param valueContent the content of the value.
   */
-case class ReadValueV2(valueIri: IRI, valueContent: ValueContentV2) extends IOValueV2
+case class ReadValueV2(valueIri: IRI, valueContent: ValueContentV2) extends IOValueV2 {
+
+    /**
+      * Converts the given knora-base value type Iri to a knora-api value type Iri.
+      *
+      * @return a knora-api value type Iri.
+      */
+    def toKnoraApiValueTypeIri: IRI = {
+        valueContent.valueTypeIri.replace(OntologyConstants.KnoraBase.KnoraBasePathSegment, OntologyConstants.KnoraApi.KnoraApiPathSegment)
+    }
+
+}
 
 /**
   * The value of a Knora property sent to Knora to be created.
@@ -89,8 +100,6 @@ sealed trait ValueContentV2 {
 
 }
 
-case class DateValueApiV2(year: Int, month: Option[Int], day: Option[Int])
-
 /**
   * Represents a Knora date value.
   *
@@ -112,57 +121,26 @@ case class DateValueContentV2(valueHasString: String,
 
     def valueTypeIri = OntologyConstants.KnoraBase.DateValue
 
-    def toKnoraApiDateValue: (DateValueApiV2, DateValueApiV2) = {
-        val dateStart = DateUtilV2.convertJulianDayNumberToKnraApiDate(valueHasStartJDN, valueHasStartPrecision, valueHasCalendar)
-        val dateEnd = DateUtilV2.convertJulianDayNumberToKnraApiDate(valueHasEndJDN, valueHasEndPrecision, valueHasCalendar)
-
-        (dateStart, dateEnd)
-    }
-
     /**
-      * Represents the JDN format in a string format representing the precision.
+      * Create knora-api assertions.
       *
-      * @return a tuple (dateStartString, dateEndString)
+      * @return a Map of knora-api value properties to numbers (year, month, day) representing the date value.
       */
-    def toDateStr: (String, String) = {
-
-        val dateStart: String = DateUtilV1.julianDayNumber2DateString(valueHasStartJDN, valueHasCalendar, valueHasStartPrecision)
-        val dateEnd: String = DateUtilV1.julianDayNumber2DateString(valueHasEndJDN, valueHasCalendar, valueHasEndPrecision)
-
-        (dateStart, dateEnd)
+    def toKnoraApiDateValueAssertions: Map[IRI, Int] = {
+        DateUtilV2.convertDateValueContentV2ToKnoraApiDateAssertions(this)
     }
 
-    /**
-      *
-      * Generate JDN format from date strings (containing precision).
-      *
-      * @param dateStartStr the begin of the period.
-      * @param dateEndStr   the end of the period.
-      * @param calendarStr  the calendar being used.
-      * @return a tuple (dateStartJDN, dateEndJDN).
-      */
-    def fromDateStr(dateStartStr: String, dateEndStr: String, calendarStr: String): (JulianDayNumberValueV1, JulianDayNumberValueV1) = {
+    def toJsValueMap: Map[IRI, JsValue] = {
 
-        val calendar: KnoraCalendarV1.Value = KnoraCalendarV1.lookup(calendarStr)
-
-        val dateStart: JulianDayNumberValueV1 = DateUtilV1.createJDNValueV1FromDateString(calendar.toString + InputValidation.calendar_separator + dateStartStr)
-
-        val dateEnd: JulianDayNumberValueV1 = DateUtilV1.createJDNValueV1FromDateString(calendar.toString + InputValidation.calendar_separator + dateEndStr)
-
-
-        (dateStart, dateEnd)
-
-    }
-
-    def toJsValueMap: Map[IRI, JsString] = {
-        val dateStr = toDateStr
+        val knoraApiDateAssertions: Map[IRI, Int] = toKnoraApiDateValueAssertions
 
         Map(
-            OntologyConstants.KnoraBase.ValueHasString -> JsString(valueHasString),
-            OntologyConstants.KnoraBase.ValueHasCalendar -> JsString(valueHasCalendar.toString),
-            "valueHasStartDate" -> JsString(dateStr._1),
-            "valueHasEndDate" -> JsString(dateStr._2)
-        )
+            OntologyConstants.KnoraApi.ValueAsString -> JsString(valueHasString),
+            OntologyConstants.KnoraApi.DateValueHasCalendar -> JsString(valueHasCalendar.toString)
+        ) ++ knoraApiDateAssertions.map {
+            case (valueProp, value) =>
+                valueProp -> JsNumber(value)
+        }
     }
 
 }
@@ -423,7 +401,7 @@ object ResourcesV2JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol
                                 readValue =>
                                     val valAsMap: Map[IRI, JsValue] = readValue.valueContent.toJsValueMap
                                     Map("@id" -> JsString(readValue.valueIri),
-                                        "@type" -> JsString(readValue.valueContent.valueTypeIri)) ++ valAsMap
+                                        "@type" -> JsString(readValue.toKnoraApiValueTypeIri)) ++ valAsMap
                             }.toJson
 
                             (propIri, valuesMap)

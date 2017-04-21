@@ -69,6 +69,7 @@ object OntologyConstants {
     }
 
     object KnoraBase {
+        val KnoraBasePathSegment = "knora-base"
         val KnoraBasePrefix = "knora-base:"
         val KnoraBasePrefixExpansion = "http://www.knora.org/ontology/knora-base#"
 
@@ -412,6 +413,23 @@ object OntologyConstants {
             val resourceClass = "restypeid"
             val assignmentOperator = "="
         }
+
+    }
+
+    object KnoraApi {
+        val KnoraApiPathSegment = "knora-api"
+
+        val ValueAsString = "http://www.knora.org/ontology/knora-api#valueAsString"
+
+        val DateValueHasStartYear = "http://www.knora.org/ontology/knora-api#dateValueHasStartYear"
+        val DateValueHasEndYear = "http://www.knora.org/ontology/knora-api#dateValueHasEndYear"
+        val DateValueHasStartMonth = "http://www.knora.org/ontology/knora-api#dateValueHasStartMonth"
+        val DateValueHasEndMonth = "http://www.knora.org/ontology/knora-api#dateValueHasEndMonth"
+        val DateValueHasStartDay = "http://www.knora.org/ontology/knora-api#dateValueHasStartDay"
+        val DateValueHasEndDay = "http://www.knora.org/ontology/knora-api#dateValueHasEndDay"
+        val DateValueHasCalendar = "http://www.knora.org/ontology/knora-api#dateValueHasCalendar"
+
+
 
     }
 

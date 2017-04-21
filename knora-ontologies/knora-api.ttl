@@ -141,7 +141,7 @@
 
 ### Date value
 
-###  http://www.knora.org/ontology/knora-base#TextValue
+###  http://www.knora.org/ontology/knora-base#DateValue
 
 :DateValue rdf:type owl:Class ;
 
