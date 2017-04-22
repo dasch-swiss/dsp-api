@@ -232,7 +232,7 @@
 
         knora-base:subjectClassConstraint :page ;
 
-        knora-base:objectClassConstraint :manuscript ;
+        knora-base:objectClassConstraint :writtenSource ;
 
         salsah-gui:guiOrder "7"^^xsd:integer ;
 
@@ -580,6 +580,8 @@
                           owl:minCardinality "0"^^xsd:nonNegativeInteger
                         ];
 
+        knora-base:resourceIcon "letter.png" ;
+
         rdfs:label "Brief"@de ,
                    "Lettre"@fr ,
                    "Letter"@en ;
@@ -668,6 +670,9 @@
                       owl:minCardinality "0"^^xsd:nonNegativeInteger
                     ] ;
 
+    knora-base:resourceIcon "person.png" ;
+
+
     rdfs:label "Person"@de ,
                "Personne"@fr ,
                "Person"@en ;
@@ -743,7 +748,13 @@
 
               rdfs:comment "represents a break"@en .
 
-              ###  http://www.knora.org/ontology/beol#StandoffBrTag
+###  http://www.knora.org/ontology/beol#StandoffPbTag
+
+:StandoffPbTag rdf:type owl:Class ;
+
+              rdfs:subClassOf knora-base:StandoffTag ;
+
+              rdfs:comment "represents a page break"@en .
 
 
 :StandoffHtmlTag rdf:type owl:Class ;

@@ -27,13 +27,16 @@ import javax.xml.transform.stream.StreamSource
 import javax.xml.validation.{Schema, SchemaFactory, Validator => JValidator}
 
 import akka.actor.Status
+import akka.http.scaladsl.Http
+import akka.http.scaladsl.model.{StatusCodes, _}
 import akka.pattern._
 import akka.stream.ActorMaterializer
 import org.knora.webapi.messages.v1.responder.ontologymessages._
 import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoByIRIGetRequestV1, ProjectInfoResponseV1}
+import org.knora.webapi.messages.v1.responder.resourcemessages.{LocationV1, ResourceFullGetRequestV1, ResourceFullResponseV1}
 import org.knora.webapi.messages.v1.responder.standoffmessages._
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
-import org.knora.webapi.messages.v1.responder.valuemessages._
+import org.knora.webapi.messages.v1.responder.valuemessages.{ValueGetRequestV1, _}
 import org.knora.webapi.messages.v1.store.triplestoremessages._
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.twirl.{MappingElement, MappingStandoffDatatypeClass, MappingXMLAttribute}
@@ -45,6 +48,7 @@ import org.knora.webapi.{BadRequestException, _}
 import org.xml.sax.SAXException
 
 import scala.concurrent.Future
+import scala.concurrent.duration._
 import scala.xml.{Node, NodeSeq, XML}
 
 
@@ -66,9 +70,122 @@ class StandoffResponderV1 extends ResponderV1 {
     def receive = {
         case CreateMappingRequestV1(xml, label, projectIri, mappingName, userProfile, uuid) => future2Message(sender(), createMappingV1(xml, label, projectIri, mappingName, userProfile, uuid), log)
         case GetMappingRequestV1(mappingIri, userProfile) => future2Message(sender(), getMappingV1(mappingIri, userProfile), log)
+        case GetXSLTransformationRequestV1(textValIri, xsltTextReprIri, userProfile) => future2Message(sender(), applyXSLTransformation(textValIri, xsltTextReprIri, userProfile), log)
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }
 
+    val xsltCacheName = "xsltCache"
+
+    /**
+      * Applies an XSL transformation to an XML document created from a [[TextValueWithStandoffV1]] and returns the resulting XML.
+      *
+      * @param textValueIri              The IRI of the [[TextValueWithStandoffV1]] to be transformed.
+      * @param xsltTextRepresentationIri The IRI of the resource representing the XSL Transformation (a [[OntologyConstants.KnoraBase.XSLTransformation]]).
+      * @param userProfile               The client making the request.
+      * @return a [[GetXSLTransformationResponseV1]].
+      */
+    private def applyXSLTransformation(textValueIri: IRI, xsltTextRepresentationIri: IRI, userProfile: UserProfileV1) = {
+
+        val xmlStrFuture: Future[String] = for {
+        // get the TextValue
+            textValueResponse: ValueGetResponseV1 <- (responderManager ? ValueGetRequestV1(textValueIri, userProfile)).mapTo[ValueGetResponseV1]
+
+            xmlStr: String = textValueResponse.value match {
+                case textValueWithStandoff: TextValueWithStandoffV1 =>
+
+                    // convert `TextValueWithStandoffV1` to an XML.
+                    StandoffTagUtilV1.convertStandoffTagV1ToXML(textValueWithStandoff.utf8str, textValueWithStandoff.standoff, textValueWithStandoff.mapping)
+
+                case textValueSimple: TextValueSimpleV1 => throw BadRequestException("the requested text value has no standoff")
+                case other => throw BadRequestException(s"the requested value is not a TextValueV1, but a ${other.valueTypeIri}")
+            }
+
+        } yield xmlStr
+
+        val textLocationFuture: Future[LocationV1] = for {
+        // get the `LocationV1` representing XSL transformation
+            textRepresentationResponse: ResourceFullResponseV1 <- (responderManager ? ResourceFullGetRequestV1(iri = xsltTextRepresentationIri, userProfile = userProfile, getIncoming = false)).mapTo[ResourceFullResponseV1]
+
+            textLocation: LocationV1 = textRepresentationResponse match {
+                case textRepr: ResourceFullResponseV1 if textRepr.resinfo.isDefined && textRepr.resinfo.get.restype_id == OntologyConstants.KnoraBase.XSLTransformation =>
+                    val locations: Seq[LocationV1] = textRepr.resinfo.get.locations.getOrElse(throw BadRequestException(s"no location given for $xsltTextRepresentationIri"))
+
+                    locations.headOption.getOrElse(throw BadRequestException(s"no location given for $xsltTextRepresentationIri"))
+
+                case other => throw BadRequestException(s"$xsltTextRepresentationIri is not an ${OntologyConstants.KnoraBase.XSLTransformation}")
+            }
+
+            // check if `textLocation` represents an XML transformation
+            _ = if (!(textLocation.format_name == "XML" && textLocation.origname.endsWith(".xsl"))) {
+                throw BadRequestException(s"$xsltTextRepresentationIri does not have a file value referring to a XSL transformation")
+            }
+        } yield textLocation
+
+        for {
+
+            xmlStr <- xmlStrFuture
+
+            // check if the XSL transformation is in the cache
+            textLocation <- textLocationFuture
+
+            xsltMaybe: Option[String] = CacheUtil.get[String](cacheName = xsltCacheName, key = textLocation.path)
+
+            xslt: String <- if (xsltMaybe.nonEmpty) {
+                // XSL transformation is cached
+                Future(xsltMaybe.get)
+            } else {
+                // ask SIPI to return the XSL transformation
+                val sipiResponseFuture: Future[HttpResponse] = for {
+
+                    textLocation <- textLocationFuture
+
+                    // ask Sipi to return the XSL transformation file
+                    response: HttpResponse <- Http().singleRequest(
+                        HttpRequest(
+                            method = HttpMethods.GET,
+                            uri = textLocation.path
+                        )
+                    )
+
+                } yield response
+
+                val sipiResponseFutureRecovered: Future[HttpResponse] = sipiResponseFuture.recoverWith {
+
+                    case noResponse: akka.http.impl.engine.HttpConnectionTimeoutException =>
+                        // this problem is hardly the user's fault. Create a SipiException
+                        throw SipiException(message = "Sipi not reachable", e = noResponse, log = log)
+
+
+                    // TODO: what other exceptions have to be handled here?
+                    // if Exception is used, also previous errors are caught here
+
+                }
+
+                for {
+
+                    sipiResponseRecovered: HttpResponse <- sipiResponseFutureRecovered
+
+                    httpStatusCode: StatusCode = sipiResponseRecovered.status
+
+                    messageBody <- sipiResponseRecovered.entity.toStrict(5.seconds)
+
+                    _ = if (httpStatusCode != StatusCodes.OK) {
+                        throw SipiException(s"Sipi returned status code ${httpStatusCode.intValue} with msg '${messageBody.data.decodeString("UTF-8")}'")
+                    }
+
+                    // get the XSL transformation
+                    xslt: String = messageBody.data.decodeString("UTF-8")
+
+                    textLocation <- textLocationFuture
+
+                    _ = CacheUtil.put(cacheName = xsltCacheName, key = textLocation.path, value = xslt)
+
+                } yield xslt
+            }
+
+        } yield GetXSLTransformationResponseV1(xml = xmlStr, xslt = xslt)
+
+    }
 
     /**
       * Creates a mapping between XML elements and attributes to standoff classes and properties.
@@ -401,7 +518,7 @@ class StandoffResponderV1 extends ResponderV1 {
     /**
       * The name of the mapping cache.
       */
-    val MappingCacheName = "mappingCache"
+    val mappingCacheName = "mappingCache"
 
     /**
       * Gets a mapping either from the cache or by making a requests to the triplestore.
@@ -414,7 +531,7 @@ class StandoffResponderV1 extends ResponderV1 {
 
         for {
 
-            mapping: GetMappingResponseV1 <- CacheUtil.get[MappingXMLtoStandoff](cacheName = MappingCacheName, key = mappingIri) match {
+            mapping: GetMappingResponseV1 <- CacheUtil.get[MappingXMLtoStandoff](cacheName = mappingCacheName, key = mappingIri) match {
                 case Some(mapping: MappingXMLtoStandoff) =>
 
                     for {
@@ -525,7 +642,7 @@ class StandoffResponderV1 extends ResponderV1 {
             mappingXMLToStandoff = transformMappingElementsToMappingXMLtoStandoff(mappingElements)
 
             // add the mapping to the cache
-            _ = CacheUtil.put(cacheName = MappingCacheName, key = mappingIri, value = mappingXMLToStandoff)
+            _ = CacheUtil.put(cacheName = mappingCacheName, key = mappingIri, value = mappingXMLToStandoff)
 
         } yield mappingXMLToStandoff
 

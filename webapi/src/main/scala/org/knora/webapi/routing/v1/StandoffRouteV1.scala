@@ -31,8 +31,10 @@ import akka.http.scaladsl.server.Route
 import akka.stream.ActorMaterializer
 import org.knora.webapi.messages.v1.responder.standoffmessages.RepresentationV1JsonProtocol.createMappingApiRequestV1Format
 import org.knora.webapi.messages.v1.responder.standoffmessages._
+import org.knora.webapi.routing.v1.ValuesRouteV1.getUserProfileV1
 import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
 import org.knora.webapi.util.InputValidation
+import org.knora.webapi.viewhandlers.StandoffHtmlView
 import org.knora.webapi.{BadRequestException, SettingsImpl}
 import spray.json._
 
@@ -125,6 +127,34 @@ object StandoffRouteV1 extends Authenticator {
                             responderManager,
                             loggingAdapter
                         )
+                }
+            }
+        } ~path("v1" / "xslt" / Segments ) { iris =>
+            // two IRIs expected: the first referring to a TextValue with standoff, the second to a TextRepresentation representing an XSL transformation.
+            get {
+
+                // handle IRIs
+                if (iris.length != 2) throw BadRequestException("xslt request require two IRIs: the Iri of a text value with standoff and the IRI of a TextRepresentation representing an XSL Transformation")
+
+                val Seq(textValueIriStr, textRepresentationIriStr) = iris
+
+                val textValueIri = InputValidation.toIri(textValueIriStr, () => throw BadRequestException(s"Invalid TextValue IRI: $textValueIriStr"))
+                val textReprIri = InputValidation.toIri(textRepresentationIriStr, () => throw BadRequestException(s"Invalid TextRepresentation IRI: $textRepresentationIriStr"))
+
+
+
+                requestContext => {
+                    val userProfile = getUserProfileV1(requestContext)
+                    val requestMessage = GetXSLTransformationRequestV1(textValueIri = textValueIri, xsltTextRepresentationIri = textReprIri, userProfile = userProfile)
+
+                    RouteUtilV1.runHtmlRoute[GetXSLTransformationRequestV1, GetXSLTransformationResponseV1](
+                        requestMessage,
+                        StandoffHtmlView.standoffAsHtml,
+                        requestContext,
+                        settings,
+                        responderManager,
+                        loggingAdapter
+                    )
                 }
             }
         }

@@ -2351,6 +2351,21 @@
                     rdfs:comment "A resource containing text files"@en .
 
 
+### http://www.knora.org/ontology/knora-base#XSLTransformation
+
+:XSLTransformation  rdf:type owl:Class ;
+
+                    rdfs:subClassOf :TextRepresentation ,
+                                    [ rdf:type owl:Restriction ;
+                                      owl:onProperty :hasTextFileValue ;
+                                      owl:cardinality "1"^^xsd:nonNegativeInteger
+                                    ] ;
+
+                    rdfs:label "a TextRepresentation representing an XSL transformation"@en ;
+
+                    rdfs:comment "a TextRepresentation representing an XSL transformation"@en .
+
+
 ### http://www.knora.org/ontology/knora-base#MappingComponent
 
 :MappingComponent rdf:type owl:Class ;

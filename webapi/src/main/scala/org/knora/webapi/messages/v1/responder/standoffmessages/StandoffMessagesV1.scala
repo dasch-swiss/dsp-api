@@ -24,6 +24,8 @@ import java.util.UUID
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi.messages.v1.responder.ontologymessages.StandoffEntityInfoGetResponseV1
+import org.knora.webapi.messages.v1.responder.valuemessages._
+import org.knora.webapi.{IRI, OntologyConstants}
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
 import org.knora.webapi.{IRI, OntologyConstants}
@@ -73,6 +75,27 @@ case class GetMappingRequestV1(mappingIri: IRI, userProfile: UserProfileV1) exte
   * @param standoffEntities the standoff entities referred to in the mapping.
   */
 case class GetMappingResponseV1(mappingIri: IRI, mapping: MappingXMLtoStandoff, standoffEntities: StandoffEntityInfoGetResponseV1)
+
+/**
+  * Represents a request to transform a [[TextValueWithStandoffV1]] to XML and then apply an XSL transformation to it
+  * which is then sent back to the client.
+  *
+  * @param textValueIri                 the IRI of the [[TextValueWithStandoffV1]] to be transformed.
+  * @param xsltTextRepresentationIri    the IRI of the [[OntologyConstants.KnoraBase.XSLTransformation]] representing the XSL transformation.
+  * @param userProfile                  the profile of the user making the request.
+  */
+case class GetXSLTransformationRequestV1(textValueIri: IRI, xsltTextRepresentationIri: IRI, userProfile: UserProfileV1) extends StandoffResponderRequestV1
+
+/**
+  * Represents a response to a [[GetXSLTransformationRequestV1]].
+  *
+  * @param xml       the XML representing a [[TextValueWithStandoffV1]].
+  * @param xslt      the XSLT to apply to the XML.
+  * @param userdata  information about the user that made the request.
+  */
+case class GetXSLTransformationResponseV1(xml: String, xslt: String) extends KnoraResponseV1 {
+    def toJsValue = RepresentationV1JsonProtocol.getXSLTransformationResponseV1Format.write(this)
+}
 
 /**
   * Represents a mapping between XML tags and standoff entities (classes and properties).
@@ -241,4 +264,6 @@ object RepresentationV1JsonProtocol extends DefaultJsonProtocol with NullOptions
 
     implicit val createMappingApiRequestV1Format: RootJsonFormat[CreateMappingApiRequestV1] = jsonFormat3(CreateMappingApiRequestV1)
     implicit val createMappingResponseV1Format: RootJsonFormat[CreateMappingResponseV1] = jsonFormat1(CreateMappingResponseV1)
+    implicit val getXSLTransformationResponseV1Format: RootJsonFormat[GetXSLTransformationResponseV1] = jsonFormat2(GetXSLTransformationResponseV1)
+
 }
