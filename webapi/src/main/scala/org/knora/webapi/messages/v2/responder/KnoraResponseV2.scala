@@ -223,10 +223,10 @@ case class StandoffAndMapping(standoff: Seq[StandoffTagV1], mappingIri: IRI, map
   */
 case class IntegerValueContentV2(valueHasString: String, valueHasInteger: Int, comment: Option[String]) extends ValueContentV2 {
 
-    def valueTypeIri = OntologyConstants.KnoraBase.ValueHasInteger
+    def valueTypeIri = OntologyConstants.KnoraBase.IntValue
 
     def toJsValueMap: Map[IRI, JsValue] = {
-        Map(OntologyConstants.KnoraApi.ValueAsString -> JsString(valueHasString),
+        Map(
             OntologyConstants.KnoraApi.IntegerValueAsInteger -> JsNumber(valueHasInteger))
     }
 
@@ -244,8 +244,9 @@ case class DecimalValueContentV2(valueHasString: String, valueHasDecimal: BigDec
     def valueTypeIri = OntologyConstants.KnoraBase.DecimalValue
 
     def toJsValueMap: Map[IRI, JsValue] = {
-        Map(OntologyConstants.KnoraApi.ValueAsString -> JsString(valueHasString),
-            OntologyConstants.KnoraApi.DecimalValueAsDecimal -> JsNumber(valueHasDecimal))
+        Map(
+            OntologyConstants.KnoraApi.DecimalValueAsDecimal -> JsNumber(valueHasDecimal)
+        )
     }
 
 }
