@@ -95,7 +95,7 @@ class ResourcesResponderV2 extends Responder {
             mappings: Vector[(IRI, MappingAndXSLTransformation)] <- Future.sequence(mappingsWithFuture)
 
             // TODO: possibly more than one resource was requested!
-        }  yield ReadResourcesSequenceV2(numberOfResources = 1, resources = Vector(ConstructResponseUtilV2.createFullResourceResponse(resourceIri, mappings = mappings.toMap, queryResultsSeparated)))
+        }  yield ReadResourcesSequenceV2(numberOfResources = 1, resources = Vector(ConstructResponseUtilV2.createFullResourceResponse(resourceIri, mappings = mappings.toMap, queryResultsSeparated, settings)))
 
     }
 

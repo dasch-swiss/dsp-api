@@ -29,7 +29,7 @@ import org.knora.webapi.messages.v1.responder.valuemessages.{JulianDayNumberValu
 import org.knora.webapi.twirl.StandoffTagV1
 import org.knora.webapi.util.standoff.StandoffTagUtilV1
 import org.knora.webapi.util.{DateUtilV1, DateUtilV2, InputValidation}
-import org.knora.webapi.{IRI, Jsonable, OntologyConstants, StandoffConversionException}
+import org.knora.webapi._
 import spray.json._
 
 /**
@@ -78,6 +78,7 @@ case class UpdateValueV2(valueIri: IRI, valueContent: ValueContentV2) extends IO
   * The content of the value of a Knora property.
   */
 sealed trait ValueContentV2 {
+
     /**
       * The IRI of the Knora value type corresponding to the type of this `ValueContentV2`.
       */
@@ -109,7 +110,7 @@ sealed trait ValueContentV2 {
   * @param valueHasStartPrecision the precision of the start date.
   * @param valueHasEndPrecision   the precision of the end date.
   * @param valueHasCalendar       the calendar of the date.
-  * @param comment                a comment on this `ValueContentV2`, if any.
+  * @param comment                a comment on this `DateValueContentV2`, if any.
   */
 case class DateValueContentV2(valueHasString: String,
                               valueHasStartJDN: Int,
@@ -150,7 +151,7 @@ case class DateValueContentV2(valueHasString: String,
   *
   * @param valueHasString the string representation of the text (without markup).
   * @param standoff       a [[StandoffAndMapping]], if any.
-  * @param comment        a comment on this `ValueContentV2`, if any.
+  * @param comment        a comment on this `TextValueContentV2`, if any.
   */
 case class TextValueContentV2(valueHasString: String, standoff: Option[StandoffAndMapping], comment: Option[String]) extends ValueContentV2 {
 
@@ -219,7 +220,7 @@ case class StandoffAndMapping(standoff: Seq[StandoffTagV1], mappingIri: IRI, map
   *
   * @param valueHasString  the string representation of the integer.
   * @param valueHasInteger the integer value.
-  * @param comment         a comment on this `ValueContentV2`, if any.
+  * @param comment         a comment on this `IntegerValueContentV2`, if any.
   */
 case class IntegerValueContentV2(valueHasString: String, valueHasInteger: Int, comment: Option[String]) extends ValueContentV2 {
 
@@ -237,7 +238,7 @@ case class IntegerValueContentV2(valueHasString: String, valueHasInteger: Int, c
   *
   * @param valueHasString  the string representation of the decimal.
   * @param valueHasDecimal the decimal value.
-  * @param comment         a comment on this `ValueContentV2`, if any.
+  * @param comment         a comment on this `DecimalValueContentV2`, if any.
   */
 case class DecimalValueContentV2(valueHasString: String, valueHasDecimal: BigDecimal, comment: Option[String]) extends ValueContentV2 {
 
@@ -246,6 +247,73 @@ case class DecimalValueContentV2(valueHasString: String, valueHasDecimal: BigDec
     def toJsValueMap: Map[IRI, JsValue] = {
         Map(
             OntologyConstants.KnoraApi.DecimalValueAsDecimal -> JsNumber(valueHasDecimal)
+        )
+    }
+
+}
+
+/**
+  * An abstract trait representing any file value.
+  *
+  */
+sealed trait FileValueContentV2 {
+    val internalMimeType: String
+    val internalFilename: String
+    val originalFilename: String
+    val originalMimeType: Option[String]
+
+    /**
+      * Creates the path to retrieve the file value on the web.
+      *
+      * @return the path to the file as an absolute URL.
+      */
+    def toURL(): String
+}
+
+/**
+  * Represents an image file.
+  *
+  * @param internalMimeType the mime type of the file corresponding to this image file value.
+  * @param internalFilename the name of the file corresponding to this image file value.
+  * @param originalFilename the original mime type of the image file before importing it.
+  * @param originalMimeType the original name of the image file before importing it.
+  * @param dimX the with of the the image file corresponding to this file value in pixels.
+  * @param dimY the height of the the image file corresponding to this file value in pixels.
+  * @param qualityLevel the quality (resolution) of the the image file corresponding to this file value (scale 10-100)
+  * @param isPreview indicates if the file value represents a preview image (thumbnail).
+  * @param valueHasString the string representation of the image file value.
+  * @param comment a comment on this `StillImageFileValueContentV2`, if any.
+  * @param settings settings object to access configurations.
+  */
+case class StillImageFileValueContentV2(internalMimeType: String,
+                                        internalFilename: String,
+                                        originalFilename: String,
+                                        originalMimeType: Option[String],
+                                        dimX: Int,
+                                        dimY: Int,
+                                        qualityLevel: Int,
+                                        isPreview: Boolean,
+                                        valueHasString: String,
+                                        comment: Option[String],
+                                        settings: SettingsImpl) extends FileValueContentV2 with ValueContentV2 {
+
+    def valueTypeIri = OntologyConstants.KnoraBase.StillImageFileValue
+
+    /**
+      * Creates the URL to retrieve the file.
+      *
+      * @return the path to file value as an absolute URL.
+      */
+    def toURL: String = {
+        s"${settings.sipiIIIFGetUrl}/${internalFilename}/full/${dimX},${dimY}/0/default.jpg"
+    }
+
+    def toJsValueMap: Map[IRI, JsValue] = {
+        val imagePath: String = toURL
+
+        Map(
+            OntologyConstants.KnoraApi.FileValueAsUrl -> JsString(imagePath),
+            OntologyConstants.KnoraApi.FileValueIsPreview -> JsBoolean(isPreview)
         )
     }
 

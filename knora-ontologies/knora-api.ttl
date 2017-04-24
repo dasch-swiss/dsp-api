@@ -320,3 +320,42 @@
 
     knora-base:objectDatatypeConstraint xsd:decimal .
 
+### FileValue
+
+:FileValue rdfs:subClassOf :Value,
+                           [ rdf:type owl:Restriction ;
+                             owl:onProperty :fileValueIsPreview ;
+                             owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                           ],
+                           [ rdf:type owl:Restriction ;
+                             owl:onProperty :fileValueAsUrl ;
+                             owl:cardinality "1"^^xsd:nonNegativeInteger
+                           ] .
+
+### http://www.knora.org/ontology/knora-api#fileValueIsPreview
+
+:fileValueIsPreview rdf:type owl:ObjectProperty ;
+
+    rdfs:comment "Indicates if this is file value is a preview"@en ;
+
+    knora-base:subjectClassConstraint :FileValue ;
+
+    knora-base:objectDatatypeConstraint xsd:boolean .
+
+
+### http://www.knora.org/ontology/knora-api#fileValueAsUrl
+
+:fileValueAsUrl rdf:type owl:ObjectProperty ;
+
+    rdfs:comment "The path to retrieve the file value"@en ;
+
+    knora-base:subjectClassConstraint :FileValue ;
+
+    knora-base:objectDatatypeConstraint xsd:anyURI .
+
+
+### StillImageFileValue
+
+:StillImageFileValue rdfs:subClassOf :FileValue .
+
+### http://www.knora.org/ontology/knora-api#fileValueIsPreview

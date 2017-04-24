@@ -167,6 +167,7 @@ object OntologyConstants {
         val InternalMimeType = "http://www.knora.org/ontology/knora-base#internalMimeType"
         val InternalFilename = "http://www.knora.org/ontology/knora-base#internalFilename"
         val OriginalFilename = "http://www.knora.org/ontology/knora-base#originalFilename"
+        val OriginalMimeType = "http://www.knora.org/ontology/knora-base#originalMimeType"
         val DimX = "http://www.knora.org/ontology/knora-base#dimX"
         val DimY = "http://www.knora.org/ontology/knora-base#dimY"
         val QualityLevel = "http://www.knora.org/ontology/knora-base#qualityLevel"
@@ -440,6 +441,9 @@ object OntologyConstants {
         val DecimalValueAsDecimal = "http://www.knora.org/ontology/knora-api#decimalValueAsDecimal"
 
         val LinkValueHasTarget = "http://www.knora.org/ontology/knora-api#linkValueHasTarget"
+
+        val FileValueAsUrl = "http://www.knora.org/ontology/knora-api#fileValueAsUrl"
+        val FileValueIsPreview = "http://www.knora.org/ontology/knora-api#fileValueIsPreview"
 
     }
 

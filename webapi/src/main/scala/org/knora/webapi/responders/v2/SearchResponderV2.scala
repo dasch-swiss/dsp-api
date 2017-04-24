@@ -50,7 +50,7 @@ class SearchResponderV2 extends Responder {
             // separate resources and value objects
             queryResultsSeparated = ConstructResponseUtilV2.splitResourcesAndValueRdfData(constructQueryResults = searchResponse, userProfile = userProfile)
 
-        } yield ReadResourcesSequenceV2(numberOfResources = queryResultsSeparated.size, resources = ConstructResponseUtilV2.createFulltextSearchResponse(queryResultsSeparated))
+        } yield ReadResourcesSequenceV2(numberOfResources = queryResultsSeparated.size, resources = ConstructResponseUtilV2.createFulltextSearchResponse(queryResultsSeparated, settings))
 
     }
 }

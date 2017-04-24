@@ -28,7 +28,7 @@ import org.knora.webapi.messages.v1.store.triplestoremessages.SparqlConstructRes
 import org.knora.webapi.messages.v2.responder._
 import org.knora.webapi.twirl._
 import org.knora.webapi.util.standoff.StandoffTagUtilV1
-import org.knora.webapi.{IRI, InconsistentTriplestoreDataException, NotFoundException, OntologyConstants}
+import org.knora.webapi._
 
 
 object ConstructResponseUtilV2 {
@@ -255,7 +255,7 @@ object ConstructResponseUtilV2 {
       * @param queryResult complete results of the SPARQL Construct query, needed in case an Iri of a referred resource has to be resolved.
       * @return a [[ValueContentV2]] representing a value.
       */
-    def createValueV2FromValueRdfData(valueObject: ValueRdfData, mappings: Map[IRI, MappingAndXSLTransformation], queryResult: Option[Map[IRI, ResourceWithValueRdfData]] = None): ValueContentV2 = {
+    def createValueV2FromValueRdfData(valueObject: ValueRdfData, mappings: Map[IRI, MappingAndXSLTransformation], settings: SettingsImpl, queryResult: Option[Map[IRI, ResourceWithValueRdfData]] = None): ValueContentV2 = {
 
         // every knora-base:Value (any of its subclasses) has a string representation
         val valueObjectValueHasString: String = valueObject.assertionsAsMap(OntologyConstants.KnoraBase.ValueHasString)
@@ -330,6 +330,24 @@ object ConstructResponseUtilV2 {
                     referredResourceOption // may be non in case the referred resource's Iri could not be resolved
                 )
 
+            case OntologyConstants.KnoraBase.StillImageFileValue =>
+
+                StillImageFileValueContentV2(
+                    internalMimeType = valueObject.assertionsAsMap(OntologyConstants.KnoraBase.InternalMimeType),
+                    internalFilename = valueObject.assertionsAsMap(OntologyConstants.KnoraBase.InternalFilename),
+                    originalFilename = valueObject.assertionsAsMap(OntologyConstants.KnoraBase.OriginalFilename),
+                    originalMimeType = valueObject.assertionsAsMap.get(OntologyConstants.KnoraBase.OriginalMimeType),
+                    dimX = valueObject.assertionsAsMap(OntologyConstants.KnoraBase.DimX).toInt,
+                    dimY = valueObject.assertionsAsMap(OntologyConstants.KnoraBase.DimY).toInt,
+                    qualityLevel = valueObject.assertionsAsMap(OntologyConstants.KnoraBase.QualityLevel).toInt,
+                    isPreview = InputValidation.optionStringToBoolean(valueObject.assertionsAsMap.get(OntologyConstants.KnoraBase.IsPreview)),
+                    valueHasString = valueObject.assertionsAsMap(OntologyConstants.KnoraBase.ValueHasString),
+                    comment = valueCommentOption,
+                    settings = settings
+                )
+
+
+
             // TODO: implement all value object classes
             case other =>
                 TextValueContentV2(valueHasString = valueObjectValueHasString, standoff = None, comment = valueCommentOption)
@@ -344,7 +362,7 @@ object ConstructResponseUtilV2 {
       * @param resourceResults the results returned by the triplestore.
       * @return a [[ReadResourceV2]].
       */
-    def createFullResourceResponse(resourceIri: IRI, mappings: Map[IRI, MappingAndXSLTransformation], resourceResults: Map[IRI, ResourceWithValueRdfData]): ReadResourceV2 = {
+    def createFullResourceResponse(resourceIri: IRI, mappings: Map[IRI, MappingAndXSLTransformation], resourceResults: Map[IRI, ResourceWithValueRdfData], settings: SettingsImpl): ReadResourceV2 = {
 
         // a full resource query also returns the resources referred to by the requested resource
         // however, the should not be included as resources, but as the target og a linking property
@@ -359,7 +377,7 @@ object ConstructResponseUtilV2 {
             case (property: IRI, valObjs: Seq[ValueRdfData]) =>
                 (property, valObjs.map {
                     valObj =>
-                        val readValue: ValueContentV2 = createValueV2FromValueRdfData(valObj, mappings = mappings, Some(resourceResults))
+                        val readValue: ValueContentV2 = createValueV2FromValueRdfData(valObj, mappings = mappings, settings, Some(resourceResults))
 
                         ReadValueV2(valObj.valueObjectIri, readValue)
                 })
@@ -381,7 +399,7 @@ object ConstructResponseUtilV2 {
       * @param searchResults the results returned by the triplestore.
       * @return a collection of [[ReadResourceV2]], representing the search results.
       */
-    def createFulltextSearchResponse(searchResults: Map[IRI, ResourceWithValueRdfData]): Vector[ReadResourceV2] = {
+    def createFulltextSearchResponse(searchResults: Map[IRI, ResourceWithValueRdfData], settings: SettingsImpl): Vector[ReadResourceV2] = {
 
         // each entry represents a resource that matches the search criteria
         // this is because linking properties are excluded from fulltext search
@@ -399,7 +417,7 @@ object ConstructResponseUtilV2 {
                     case (property: IRI, valObjs: Seq[ValueRdfData]) =>
                         (property, valObjs.map {
                             valObj =>
-                                val readValue = createValueV2FromValueRdfData(valObj, mappings = Map.empty[IRI, MappingAndXSLTransformation])
+                                val readValue = createValueV2FromValueRdfData(valObj, mappings = Map.empty[IRI, MappingAndXSLTransformation], settings)
 
                                 ReadValueV2(valObj.valueObjectIri, readValue)
                         })
