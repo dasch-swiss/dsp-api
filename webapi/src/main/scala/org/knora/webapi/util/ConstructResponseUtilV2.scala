@@ -33,6 +33,12 @@ import org.knora.webapi._
 
 object ConstructResponseUtilV2 {
 
+    val InferredPredicates = Set(
+        OntologyConstants.KnoraBase.HasValue,
+        OntologyConstants.KnoraBase.HasLinkTo,
+        OntologyConstants.KnoraBase.IsMainResource
+    )
+
     /**
       * Represents the RDF data about a value, possibly including standoff.
       *
@@ -48,9 +54,8 @@ object ConstructResponseUtilV2 {
       * @param resourceAssertions      assertions about the resource (direct statements).
       * @param isMainResource          indicates if this represents a top level resource or a referred resource (depending on the query).
       * @param valuePropertyAssertions assertions about value properties.
-      * @param linkPropertyAssertions  assertions about linking properties.
       */
-    case class ResourceWithValueRdfData(resourceAssertions: Seq[(IRI, String)], isMainResource: Boolean, valuePropertyAssertions: Map[IRI, Seq[ValueRdfData]], linkPropertyAssertions: Map[IRI, IRI])
+    case class ResourceWithValueRdfData(resourceAssertions: Seq[(IRI, String)], isMainResource: Boolean, valuePropertyAssertions: Map[IRI, Seq[ValueRdfData]])
 
     /**
       * Represents a mapping including information about the standoff entities.
@@ -73,7 +78,7 @@ object ConstructResponseUtilV2 {
 
         // split statements about resources and other statements (value objects and standoff)
         // resources are identified by the triple "resourceIri a knora-base:Resource" which is an inferred information returned by the SPARQL Construct query.
-        val (resourceStatements: Map[IRI, Seq[(IRI, String)]], otherStatements: Map[IRI, Seq[(IRI, String)]]) = constructQueryResults.statements.partition {
+        val (resourceStatements: Map[IRI, Seq[(IRI, String)]], nonResourceStatements: Map[IRI, Seq[(IRI, String)]]) = constructQueryResults.statements.partition {
 
             case (subjectIri: IRI, assertions: Seq[(IRI, String)]) =>
 
@@ -95,10 +100,10 @@ object ConstructResponseUtilV2 {
                 // - every resource is a knora-base:Resource
                 // - every value property is a subproperty of knora-base:hasValue
                 // - every linking property is a subproperty of knora-base:hasLinkTo
-                // - every resource is flagged as being the main resource or a referred resource (knora-base:isMainResource)
+                // - every resource that's a main resource (not a dependent resource) in the query result has knora-base:isMainResource true
                 val assertionsExplicit: Seq[(IRI, String)] = assertions.filterNot {
                     case (pred, obj) =>
-                        (pred == OntologyConstants.Rdf.Type && obj == OntologyConstants.KnoraBase.Resource) || pred == OntologyConstants.KnoraBase.HasValue || pred == OntologyConstants.KnoraBase.HasLinkTo || pred == OntologyConstants.KnoraBase.IsMainResource
+                        (pred == OntologyConstants.Rdf.Type && obj == OntologyConstants.KnoraBase.Resource) || InferredPredicates(pred)
                 }
 
                 // check for the knora-base:isMainResource flag created by the SPARQL CONSTRUCT query
@@ -107,42 +112,31 @@ object ConstructResponseUtilV2 {
                         pred == OntologyConstants.KnoraBase.IsMainResource && obj.toBoolean
                 }
 
-                // make the objects keys of a map, using only explicit assertions
-                // this only works for value properties because value object Iris are only referred to once by a value property
-                // (unlike linking properties' targets: the same resource may be referred to several times by different linking properties)
-                val objectMap: ErrorHandlingMap[String, IRI] = new ErrorHandlingMap(assertionsExplicit.map {
-                    case (pred, obj) =>
-                        (obj, pred)
-                }.toMap, { key: IRI => s"object $key not found for $resourceIri" })
+                // Make a set of all the value object IRIs, because we're going to associate them with their properties.
+                val valueObjectIris: Set[String] = assertions.filter {
+                    case (pred, obj) => pred == OntologyConstants.KnoraBase.HasValue
+                }.map {
+                    case (pred, obj) => obj
+                }.toSet
 
-                // create a map of (value) property Iris to value object Iris (the same property may have several instances)
-                val valuePropertyToObjectIris: Map[IRI, Seq[IRI]] = assertions.filter {
-                    case (pred, obj) =>
-                        // collect all the statements that refer to value objects,
-                        // using inferred statements
-                        pred == OntologyConstants.KnoraBase.HasValue
-                }.foldLeft(Map.empty[IRI, Seq[IRI]]) {
-                    // make a map of properties to a collection of the value objects they refer to
-                    case (acc: Map[IRI, Seq[IRI]], (hasValue: IRI, valObjIri: IRI)) =>
-                        // get the property that points to the value object
-                        val propIri = objectMap(valObjIri)
 
-                        // add the value object Iri to this property's collection
-                        // check if there already exist value object Iris for the property
-                        if (acc.keySet.contains(propIri)) {
-                            // the property already exists, add to its collection of value object Iris
-
-                            // get the existing value object Iris for the property in order to preserve them
-                            val existingValsForProp = acc(propIri)
-
-                            // prepend the value object Iri to the existing ones and set the property (overwriting it)
-                            acc + (propIri -> (valObjIri +: existingValsForProp))
-
-                        } else {
-                            // the property does not exist yet, create it and its collection
-                            acc + (propIri -> Vector(valObjIri))
+                // create a map of (value) property IRIs to value object Iris (the same property may have several instances)
+                val valuePropertyToObjectIris: Map[IRI, Seq[IRI]] = assertionsExplicit.filter {
+                    case (_, obj: String) =>
+                        // Get only the assertions in which the object is a value object IRI.
+                        valueObjectIris(obj)
+                }.groupBy {
+                    case (pred: IRI, _) =>
+                        // Turn the sequence of assertions into a Map of predicate IRIs to assertions.
+                        pred
+                }.map {
+                    case (pred, assertions: Seq[(IRI, IRI)]) =>
+                        // Replace the assertions with their objects, i.e. the value object IRIs.
+                        val objs = assertions.map {
+                            case (_, obj) => obj
                         }
 
+                        pred -> objs
                 }
 
                 val predicateMap: ErrorHandlingMap[IRI, String] = new ErrorHandlingMap(assertionsExplicit.toMap, { key: IRI => s"predicate $key not found for $resourceIri" })
@@ -152,41 +146,41 @@ object ConstructResponseUtilV2 {
                 val valuePropertyToValueObject: Map[IRI, Seq[ValueRdfData]] = valuePropertyToObjectIris.map {
                     case (property: IRI, valObjIris: Seq[IRI]) =>
 
-                        // make the property the key of the map, return all its value objects by mapping over the value object Iris
-                        (property, valObjIris.filterNot {
+                        // build all the property's value objects by mapping over the value object Iris
+                        val valueRdfData = valObjIris.filter {
                             // check if the user has sufficient permissions to see the value object
-                            case (valObjIri) =>
-                                val assertions = otherStatements(valObjIri)
+                            valObjIri =>
+                                val valueObjAssertions: Seq[(IRI, String)] = nonResourceStatements(valObjIri)
 
                                 // get the resource's project
                                 // value objects belong to the parent resource's project
                                 val resourceProject: String = predicateMap(OntologyConstants.KnoraBase.AttachedToProject)
 
                                 // prepend the resource's project to the value's assertions
-                                PermissionUtilV1.getUserPermissionV1FromAssertions(valObjIri, (OntologyConstants.KnoraBase.AttachedToProject, resourceProject) +: assertions, userProfile).isEmpty
+                                PermissionUtilV1.getUserPermissionV1FromAssertions(valObjIri, (OntologyConstants.KnoraBase.AttachedToProject, resourceProject) +: valueObjAssertions, userProfile).nonEmpty
                         }.map {
-                            (valObjIri: IRI) =>
+                            valObjIri: IRI =>
 
                                 // get all the standoff node Iris possibly belonging to this value object
                                 // do so by accessing the non resource statements using the value object Iri as a key
-                                val standoffNodeIris: Seq[String] = otherStatements(valObjIri).filter {
-                                    case (pred: IRI, obj: String) =>
+                                val standoffNodeIris: Set[IRI] = nonResourceStatements(valObjIri).filter {
+                                    case (pred: IRI, _) =>
                                         pred == OntologyConstants.KnoraBase.ValueHasStandoff
                                 }.map {
-                                    case (pred: IRI, obj: String) =>
+                                    case (_, obj: IRI) =>
                                         // we are only interested in the standoff node Iri
                                         obj
-                                }
+                                }.toSet
 
                                 // given the standoff node Iris, get the standoff assertions
                                 // do so by accessing the non resource statements using the standoff node Iri as a key
-                                val (standoffAssertions: Map[IRI, Seq[(IRI, String)]], valueAssertions: Map[IRI, Seq[(IRI, String)]]) = otherStatements.partition {
-                                    case (subjIri: IRI, assertions: Seq[(IRI, String)]) =>
-                                        standoffNodeIris.contains(subjIri)
-
+                                val (standoffAssertions: Map[IRI, Seq[(IRI, String)]], valueAssertions: Map[IRI, Seq[(IRI, String)]]) = nonResourceStatements.partition {
+                                    case (subjIri: IRI, _) =>
+                                        standoffNodeIris(subjIri)
                                 }
 
-                                val predicateMapForValueAssertions: ErrorHandlingMap[IRI, String] = new ErrorHandlingMap(valueAssertions(valObjIri).toMap, { key: IRI => s"Predicate $key not found for ${valObjIri} (value object)" })
+                                val predicateMapForValueAssertions: ErrorHandlingMap[IRI, String] =
+                                    new ErrorHandlingMap(valueAssertions(valObjIri).toMap, { key: IRI => s"Predicate $key not found for $valObjIri (value object)" })
 
                                 // create a value object
                                 ValueRdfData(
@@ -199,32 +193,19 @@ object ConstructResponseUtilV2 {
                                             (standoffNodeIri, standoffAssertions.toMap)
                                     })
 
-                        })
+                        }
+
+                        property -> valueRdfData
                 }.filterNot { // filter out those properties that do not have value objects (they may have been filtered out because the user does not have sufficient permissions to see them)
-                    case (property: IRI, valObj: Seq[ValueRdfData]) =>
+                    case (_, valObj: Seq[ValueRdfData]) =>
                         valObj.isEmpty
                 }
 
-                // create a map of linking properties to their targets
-                val linkPropToTargets: Map[IRI, IRI] = assertions.filter {
-                    case (pred, obj) =>
-                        pred == OntologyConstants.KnoraBase.HasLinkTo
-                }.flatMap {
-                    case (hasLinkTo: IRI, referredRes: IRI) =>
-                        // get all the assertions in which the referred resource is the object (using explicit statements only)
-                        // like this, we get the linking property
-                        assertionsExplicit.filter {
-                            case (pred, obj) =>
-                                obj == referredRes
-                        }
-                }.toMap
+                // TODO: filter out the link values that point to resources that the user didn't have permission to see
 
                 // create a map of resource Iris to a `ResourceWithValueRdfData`
-                (resourceIri, ResourceWithValueRdfData(resourceAssertions = assertionsExplicit, isMainResource = isMainResource, valuePropertyAssertions = valuePropertyToValueObject, linkPropertyAssertions = linkPropToTargets))
-
-
+                (resourceIri, ResourceWithValueRdfData(resourceAssertions = assertionsExplicit, isMainResource = isMainResource, valuePropertyAssertions = valuePropertyToValueObject))
         }
-
     }
 
     /**
@@ -255,7 +236,7 @@ object ConstructResponseUtilV2 {
       * @param queryResult complete results of the SPARQL Construct query, needed in case an Iri of a referred resource has to be resolved.
       * @return a [[ValueContentV2]] representing a value.
       */
-    def createValueV2FromValueRdfData(valueObject: ValueRdfData, mappings: Map[IRI, MappingAndXSLTransformation], settings: SettingsImpl, queryResult: Option[Map[IRI, ResourceWithValueRdfData]] = None): ValueContentV2 = {
+    def createValueContentV2FromValueRdfData(valueObject: ValueRdfData, mappings: Map[IRI, MappingAndXSLTransformation], settings: SettingsImpl, queryResult: Option[Map[IRI, ResourceWithValueRdfData]] = None): ValueContentV2 = {
 
         // every knora-base:Value (any of its subclasses) has a string representation
         val valueObjectValueHasString: String = valueObject.assertionsAsMap(OntologyConstants.KnoraBase.ValueHasString)
@@ -377,7 +358,7 @@ object ConstructResponseUtilV2 {
             case (property: IRI, valObjs: Seq[ValueRdfData]) =>
                 (property, valObjs.map {
                     valObj =>
-                        val readValue: ValueContentV2 = createValueV2FromValueRdfData(valObj, mappings = mappings, settings, Some(resourceResults))
+                        val readValue: ValueContentV2 = createValueContentV2FromValueRdfData(valObj, mappings = mappings, settings, Some(resourceResults))
 
                         ReadValueV2(valObj.valueObjectIri, readValue)
                 })
@@ -417,7 +398,7 @@ object ConstructResponseUtilV2 {
                     case (property: IRI, valObjs: Seq[ValueRdfData]) =>
                         (property, valObjs.map {
                             valObj =>
-                                val readValue = createValueV2FromValueRdfData(valObj, mappings = Map.empty[IRI, MappingAndXSLTransformation], settings)
+                                val readValue = createValueContentV2FromValueRdfData(valObj, mappings = Map.empty[IRI, MappingAndXSLTransformation], settings)
 
                                 ReadValueV2(valObj.valueObjectIri, readValue)
                         })
