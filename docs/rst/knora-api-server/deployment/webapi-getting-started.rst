@@ -47,8 +47,8 @@ chosen.
 
 * For Fuseki, run ``fuseki-load-test-data.sh``.
 * For GraphDB:
-    * If you are running GraphDB directly from its installation directory (using its ``graphdb`` script), run ``graphdb-se-local-load-test-data.sh``.
-    * If you are running GraphDB from a Docker image, run ``graphdb-se-docker-load-test-data.sh``.
+    * If you are running GraphDB directly from its installation directory (using its ``graphdb`` script), run ``graphdb-se-local-init-knora-test.sh``.
+    * If you are running GraphDB from a Docker image, run ``graphdb-se-docker-init-knora-test.sh``.
 
 You can create your own scripts based on these scripts, to create new
 repositories and optionally to load existing Knora-compliant RDF data into
