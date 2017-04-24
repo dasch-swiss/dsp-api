@@ -1263,24 +1263,24 @@ class ResourcesV1R2RSpec extends R2RSpec {
                 s"""<xml xmlns:beol="http://www.knora.org/ontology/beol"
                     |   xmlns:biblio="http://www.knora.org/ontology/biblio">
                     |   <beol:person id="abel">
-                    | 	    <beol:hasGivenName>Niels Henrik</beol:hasGivenName>
-                    |	      <beol:hasFamilyName>Abel</beol:hasFamilyName>
+                    | 	    <beol:hasGivenName knoraType="richtext_value">Niels Henrik</beol:hasGivenName>
+                    |	      <beol:hasFamilyName knoraType="richtext_value">Abel</beol:hasFamilyName>
                     |	  </beol:person>
-                    |   <biblio:Journal id="math_intelligencer_">
-                    |		    <biblio:hasName>math intelligencer </biblio:hasName>
+                    |   <biblio:Journal id="math_intelligencer">
+                    |		    <biblio:hasName knoraType="richtext_value">math intelligencer</biblio:hasName>
                     |   </biblio:Journal>
                     |   <biblio:JournalArticle id="strings_in_the_16th_and_17th_centuries" >
-                    |       <biblio:publicationHasTitle>Strings in the 16th and 17th Centuries</biblio:publicationHasTitle>
+                    |       <biblio:publicationHasTitle knoraType="richtext_value">Strings in the 16th and 17th Centuries</biblio:publicationHasTitle>
                     |       <biblio:publicationHasAuthor>
-                    |           <beol:person ref="abel"/>
+                    |           <beol:person knoraType="link_value" ref="abel"/>
                     |       </biblio:publicationHasAuthor>
                     |       <biblio:isPartOfJournal>
-                    |           <biblio:Journal ref="math_intelligencer_"/>
+                    |           <biblio:Journal knoraType="link_value" ref="math_intelligencer"/>
                     |       </biblio:isPartOfJournal>
-                    |       <biblio:journalVolume>27</biblio:journalVolume>
-                    |       <biblio:startPage>48</biblio:startPage>
-                    |       <biblio:endPage>73</biblio:endPage>
-                    |       <biblio:publicationHasDate>GREGORIAN:1974</biblio:publicationHasDate>
+                    |       <biblio:journalVolume knoraType="richtext_value">27</biblio:journalVolume>
+                    |       <biblio:startPage knoraType="richtext_value">48</biblio:startPage>
+                    |       <biblio:endPage knoraType="richtext_value">73</biblio:endPage>
+                    |       <biblio:publicationHasDate knoraType="date_value">GREGORIAN:1976</biblio:publicationHasDate>
                     |    </biblio:JournalArticle>
                     |</xml>""".stripMargin
 
