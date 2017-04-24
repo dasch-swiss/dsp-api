@@ -58,7 +58,6 @@ CONSTRUCT {
 
     ?referredResource rdfs:label ?referredResourceLabel .
     ?referredResource a ?referredResourceType .
-    ?referredResource knora-base:isMainResource false .
 
     ?referredResource knora-base:attachedToUser ?referredResourceCreator ;
         knora-base:hasPermissions ?referredResourcePermissions ;
