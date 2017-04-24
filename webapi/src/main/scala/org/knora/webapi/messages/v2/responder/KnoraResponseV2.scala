@@ -197,6 +197,7 @@ case class TextValueContentV2(valueHasString: String, standoff: Option[StandoffA
             }
 
         } else {
+            // no markup given
             Map(OntologyConstants.KnoraApi.ValueAsString -> JsString(valueHasString))
         }
 
@@ -205,7 +206,7 @@ case class TextValueContentV2(valueHasString: String, standoff: Option[StandoffA
 }
 
 /**
-  * Represents standoff and the corresponsing mapping.
+  * Represents standoff and the corresponding mapping.
   * May include an XSL transformation.
   *
   * @param standoff   a sequence of [[StandoffTagV1]].
@@ -253,6 +254,139 @@ case class DecimalValueContentV2(valueHasString: String, valueHasDecimal: BigDec
 }
 
 /**
+  * Represents a Boolean value.
+  *
+  * @param valueHasString  the string representation of the Boolean.
+  * @param valueHasBoolean the Boolean value.
+  * @param comment         a comment on this `BooleanValueContentV2`, if any.
+  */
+case class BooleanValueContentV2(valueHasString: String, valueHasBoolean: Boolean, comment: Option[String]) extends ValueContentV2 {
+
+    def valueTypeIri = OntologyConstants.KnoraBase.BooleanValue
+
+    def toJsValueMap: Map[IRI, JsValue] = {
+        Map(
+            OntologyConstants.KnoraApi.BooleanValueAsBoolean -> JsBoolean(valueHasBoolean)
+        )
+    }
+}
+
+/**
+  * Represents a Knora geometry value (a 2D-shape).
+  *
+  * @param valueHasString   a stringified JSON representing a 2D-geometrical shape.
+  * @param valueHasGeometry a stringified JSON representing a 2D-geometrical shape.
+  * @param comment          a comment on this `GeomValueContentV2`, if any.
+  */
+case class GeomValueContentV2(valueHasString: String, valueHasGeometry: String, comment: Option[String]) extends ValueContentV2 {
+
+    def valueTypeIri = OntologyConstants.KnoraBase.GeomValue
+
+    def toJsValueMap: Map[IRI, JsValue] = {
+        Map(
+            OntologyConstants.KnoraApi.GeometryValueAsGeometry -> JsString(valueHasGeometry)
+        )
+    }
+}
+
+
+/**
+  * Represents a Knora time interval value.
+  *
+  * @param valueHasString        the string representation of the time interval.
+  * @param valueHasIntervalStart the start of the time interval.
+  * @param valueHasIntervalEnd   the end of the time interval.
+  * @param comment               a comment on this `GeomValueContentV2`, if any.
+  */
+case class IntervalValueContentV2(valueHasString: String, valueHasIntervalStart: BigDecimal, valueHasIntervalEnd: BigDecimal, comment: Option[String]) extends ValueContentV2 {
+
+    def valueTypeIri = OntologyConstants.KnoraBase.IntervalValue
+
+    def toJsValueMap: Map[IRI, JsValue] = {
+        Map(
+            OntologyConstants.KnoraApi.IntervalValueHasStart -> JsNumber(valueHasIntervalStart),
+            OntologyConstants.KnoraApi.IntervalValueHasEnd -> JsNumber(valueHasIntervalEnd)
+        )
+    }
+
+}
+
+/**
+  * Represents a value pointing to a Knora hierarchical list node.
+  *
+  * @param valueHasString   the string representation of the hierarchical list node value.
+  * @param valueHasListNode the Iri of the hierarchical list node pointed to.
+  * @param comment          a comment on this `GeomValueContentV2`, if any.
+  */
+case class HierarchicalListValueContentV2(valueHasString: String, valueHasListNode: IRI, comment: Option[String]) extends ValueContentV2 {
+
+    def valueTypeIri = OntologyConstants.KnoraBase.ListValue
+
+    def toJsValueMap: Map[IRI, JsValue] = {
+        Map(
+            OntologyConstants.KnoraApi.HierarchicalListValueAsListNode -> JsString(valueHasListNode)
+        )
+    }
+
+}
+
+/**
+  * Represents a Knora color value.
+  *
+  * @param valueHasString the string representation of the color value.
+  * @param valueHasColor  a hexadecimal string containing the RGB color value
+  * @param comment        a comment on this `ColorValueContentV2`, if any.
+  */
+case class ColorValueContentV2(valueHasString: String, valueHasColor: String, comment: Option[String]) extends ValueContentV2 {
+
+    def valueTypeIri = OntologyConstants.KnoraBase.ColorValue
+
+    def toJsValueMap: Map[IRI, JsValue] = {
+        Map(
+            OntologyConstants.KnoraApi.ColorValueAsColor -> JsString(valueHasColor)
+        )
+    }
+
+}
+
+/**
+  * Represents a Knora URI value.
+  *
+  * @param valueHasString the string representation of the URI value.
+  * @param valueHasUri    the URI value.
+  * @param comment        a comment on this `UriValueContentV2`, if any.
+  */
+case class UriValueContentV2(valueHasString: String, valueHasUri: String, comment: Option[String]) extends ValueContentV2 {
+
+    def valueTypeIri = OntologyConstants.KnoraBase.UriValue
+
+    def toJsValueMap: Map[IRI, JsValue] = {
+        Map(
+            OntologyConstants.KnoraApi.UriValueAsUri -> JsString(valueHasUri)
+        )
+    }
+}
+
+/**
+  *
+  * Represnts a Knora geoname value.
+  *
+  * @param valueHasString      the string representation of the geoname value.
+  * @param valueHasGeonameCode the geoname code.
+  * @param comment             a comment on this `GeonameValueContentV2`, if any.
+  */
+case class GeonameValueContentV2(valueHasString: String, valueHasGeonameCode: String, comment: Option[String]) extends ValueContentV2 {
+
+    def valueTypeIri = OntologyConstants.KnoraBase.GeonameValue
+
+    def toJsValueMap: Map[IRI, JsValue] = {
+        Map(
+            OntologyConstants.KnoraApi.GeonameValueAsGeonameCode -> JsString(valueHasGeonameCode)
+        )
+    }
+}
+
+/**
   * An abstract trait representing any file value.
   *
   */
@@ -271,21 +405,22 @@ sealed trait FileValueContentV2 {
 }
 
 /**
-  * Represents an image file.
+  * Represents an image file. Please note that the file itself is managed by Sipi.
   *
+  * @param valueHasString   the string representation of the image file value.
   * @param internalMimeType the mime type of the file corresponding to this image file value.
   * @param internalFilename the name of the file corresponding to this image file value.
   * @param originalFilename the original mime type of the image file before importing it.
   * @param originalMimeType the original name of the image file before importing it.
-  * @param dimX the with of the the image file corresponding to this file value in pixels.
-  * @param dimY the height of the the image file corresponding to this file value in pixels.
-  * @param qualityLevel the quality (resolution) of the the image file corresponding to this file value (scale 10-100)
-  * @param isPreview indicates if the file value represents a preview image (thumbnail).
-  * @param valueHasString the string representation of the image file value.
-  * @param comment a comment on this `StillImageFileValueContentV2`, if any.
-  * @param settings settings object to access configurations.
+  * @param dimX             the with of the the image file corresponding to this file value in pixels.
+  * @param dimY             the height of the the image file corresponding to this file value in pixels.
+  * @param qualityLevel     the quality (resolution) of the the image file corresponding to this file value (scale 10-100)
+  * @param isPreview        indicates if the file value represents a preview image (thumbnail).
+  * @param comment          a comment on this `StillImageFileValueContentV2`, if any.
+  * @param settings         settings object to access configurations.
   */
-case class StillImageFileValueContentV2(internalMimeType: String,
+case class StillImageFileValueContentV2(valueHasString: String,
+                                        internalMimeType: String,
                                         internalFilename: String,
                                         originalFilename: String,
                                         originalMimeType: Option[String],
@@ -293,7 +428,6 @@ case class StillImageFileValueContentV2(internalMimeType: String,
                                         dimY: Int,
                                         qualityLevel: Int,
                                         isPreview: Boolean,
-                                        valueHasString: String,
                                         comment: Option[String],
                                         settings: SettingsImpl) extends FileValueContentV2 with ValueContentV2 {
 
@@ -314,6 +448,45 @@ case class StillImageFileValueContentV2(internalMimeType: String,
         Map(
             OntologyConstants.KnoraApi.FileValueAsUrl -> JsString(imagePath),
             OntologyConstants.KnoraApi.FileValueIsPreview -> JsBoolean(isPreview)
+        )
+    }
+
+}
+
+/**
+  * Represents a text file value. Please note that the file itself is managed by Sipi.  
+  *
+  * @param valueHasString   the string representation of the text file value.
+  * @param internalMimeType the mime type of the file corresponding to this text file value.
+  * @param internalFilename the name of the file corresponding to this text file value.
+  * @param originalFilename the original mime type of the text file before importing it.
+  * @param originalMimeType the original name of the text file before importing it.
+  * @param comment          a comment on this `TextFileValueContentV2`, if any.
+  * @param settings         settings object to access configurations.
+  */
+case class TextFileValueContentV2(valueHasString: String, internalMimeType: String,
+                                  internalFilename: String,
+                                  originalFilename: String,
+                                  originalMimeType: Option[String],
+                                  comment: Option[String],
+                                  settings: SettingsImpl) extends ValueContentV2 {
+
+    def valueTypeIri = OntologyConstants.KnoraBase.TextFileValue
+
+    /**
+      * Creates the URL to retrieve the file.
+      *
+      * @return the path to file value as an absolute URL.
+      */
+    def toURL: String = {
+        s"${settings.sipiFileServerGetUrl}/${internalFilename}"
+    }
+
+    def toJsValueMap: Map[IRI, JsValue] = {
+        val imagePath: String = toURL
+
+        Map(
+            OntologyConstants.KnoraApi.FileValueAsUrl -> JsString(imagePath)
         )
     }
 

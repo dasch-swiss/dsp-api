@@ -2385,9 +2385,9 @@
                                       owl:cardinality "1"^^xsd:nonNegativeInteger
                                     ] ;
 
-                    rdfs:label "a TextRepresentation representing an XSL transformation that can be applied to an XML created from standoff"@en ;
+                    rdfs:label "a TextRepresentation representing an XSL transformation that can be applied to an XML created from standoff. The transformation's result is ecptected to be HTML."@en ;
 
-                    rdfs:comment "a TextRepresentation representing an XSL transformation that can be applied to an XML created from standoff"@en .
+                    rdfs:comment "a TextRepresentation representing an XSL transformation that can be applied to an XML created from standoff.  The transformation's result is ecptected to be HTML."@en .
 
 
 ### http://www.knora.org/ontology/knora-base#MappingComponent

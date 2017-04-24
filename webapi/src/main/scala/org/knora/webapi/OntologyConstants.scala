@@ -440,11 +440,25 @@ object OntologyConstants {
 
         val DecimalValueAsDecimal = "http://www.knora.org/ontology/knora-api#decimalValueAsDecimal"
 
+        val GeometryValueAsGeometry = "http://www.knora.org/ontology/knora-api#GeometryValueAsGeometry"
+
         val LinkValueHasTarget = "http://www.knora.org/ontology/knora-api#linkValueHasTarget"
 
         val FileValueAsUrl = "http://www.knora.org/ontology/knora-api#fileValueAsUrl"
         val FileValueIsPreview = "http://www.knora.org/ontology/knora-api#fileValueIsPreview"
 
+        val IntervalValueHasStart = "http://www.knora.org/ontology/knora-api#intervalValueHasStart"
+        val IntervalValueHasEnd = "http://www.knora.org/ontology/knora-api#intervalValueHasEnd"
+
+        val BooleanValueAsBoolean = "http://www.knora.org/ontology/knora-api#booleanValueAsBoolean"
+
+        val HierarchicalListValueAsListNode = "http://www.knora.org/ontology/knora-api#hierarchicalListValueAsListNode"
+
+        val ColorValueAsColor = "http://www.knora.org/ontology/knora-api#colorValueAsColor"
+
+        val UriValueAsUri = "http://www.knora.org/ontology/knora-api#uriValueAsUri"
+
+        val GeonameValueAsGeonameCode = "http://www.knora.org/ontology/knora-api#geonameValueAsGeonameCode"
     }
 
 }

@@ -358,4 +358,4 @@
 
 :StillImageFileValue rdfs:subClassOf :FileValue .
 
-### http://www.knora.org/ontology/knora-api#fileValueIsPreview
+
