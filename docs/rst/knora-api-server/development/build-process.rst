@@ -68,34 +68,40 @@ Using GraphDB
 ^^^^^^^^^^^^^
 
 The archive with the newest supported version of the GraphDB-SE triplestore is provided under
-```triplestores/graphdb-se-7```. Please keep in mind, that GraphDB-SE must be licensed separately by the user, and that
+```triplestores/graphdb-se```. Please keep in mind, that GraphDB-SE must be licensed separately by the user, and that
 no license file is provided in the repository. GraphDB-SE will not run without a license file.
 
-To be able to successfully run GraphDB inside docker three important steps need to be done beforhand:
+Unzip ``graphdb-se-x.x.x-dist.zip`` to a place of your choosing and run the following, to start graphdb:
 
-  1. Install Docker from http://docker.com.
-  2. Copy the GraphDB-SE license file into this folder and name it ``GRAPHDB_SE.license``. It is already added to a
-     local ``.gitignore`` file which can be found inside this folder. Under no circumstance should the license file be
-     committed to Github.
-  3. (optional) The current version of ``KnoraRules.pie`` from the ``webapi/scripts`` needs to be copied to this folder
-     each time it was changed. This file needs to be copied into the docker image, which can only be done if it is found
-     inside this folder.
+::
 
-From inside this folder, type:
-
-```
-$ docker build -t graphdb .
-$ docker run --rm -it -p 7200:7200 graphdb
-```
-
-Do not forget the '.' in the first command.
-
- - ```--rm``` removes the container as soon as you stop it
- - ```-p``` forwards the exposed port to your host (or if you use boot2docker to this IP)
- - ```-it``` allows interactive mode, so you see if something get's deployed
+  $ cd /to/unziped/location
+  $ ./bin/graphdb -Dgraphdb.license.file=/path/to/GRAPHDB_SE.license
 
 After the GraphDB inside the docker container has started, you can find the GraphDB workbench here: http://localhost:7200
 
+Then in another terminal, load some test data into the triplestore:
+
+::
+
+    $ cd KNORA_PROJECT_DIRECTORY/webapi/scripts
+    $ ./graphdb-se-local-init-knora-test.sh
+
+
+Then go back to the webapi root directory and use SBT to start the API server:
+
+::
+
+    $ cd KNORA_PROJECT_DIRECTORY/webapi
+    $ sbt
+    > compile
+    > re-start
+
+To shut down the Knora API server:
+
+::
+  
+  > re-stop
 
 
 Running the automated tests
@@ -114,7 +120,17 @@ Make sure you've started Fuseki as shown above. Then at the SBT prompt:
 Running Tests with GraphDB
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Make sure GraphDB is running. Then at the SBT prompt:
+Make sure GraphDB is running (as described earlier).
+
+Then in another terminal, initialise the repository used for automated testing:
+
+::
+
+    $ cd KNORA_PROJECT_DIRECTORY/webapi/scripts
+    $ ./graphdb-se-local-init-knora-test-unit.sh
+
+
+Run the automated tests from sbt:
 
 ::
 
