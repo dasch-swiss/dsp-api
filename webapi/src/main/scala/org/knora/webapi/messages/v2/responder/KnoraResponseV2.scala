@@ -510,14 +510,11 @@ case class LinkValueContentV2(valueHasString: String, subject: IRI, predicate: I
 
     def toJsValueMap: Map[IRI, JsValue] = {
 
-        Map(OntologyConstants.KnoraApi.ValueAsString -> JsString(referredResourceIri),
-            OntologyConstants.KnoraApi.LinkValueHasTarget -> JsObject(
-                Map(
-                    "@id" -> JsString(referredResourceIri),
-                    "@type" -> JsString(referredResource.resourceClass),
-                    "name" -> JsString(referredResource.label)
-                )
-            ))
+        val referredResourceAsJsValue: Map[IRI, JsValue] = ResourcesV2JsonProtocol.createJsValueFromReadResourceV2(referredResource)
+
+        Map(
+            OntologyConstants.KnoraApi.LinkValueHasTarget -> JsObject(referredResourceAsJsValue)
+        )
 
     }
 
@@ -614,9 +611,38 @@ case class ReadResourcesSequenceV2(numberOfResources: Int, resources: Seq[ReadRe
 // JSON formatting
 
 /**
-  * A spray-json protocol for generating Knora API v1 JSON providing data about representations of a resource.
+  * A spray-json protocol for generating Knora API v2 JSON-LD providing data about representations of a resource.
   */
 object ResourcesV2JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with NullOptions {
+
+    /**
+      * Creates a map of value properties to [[JsValue]] from a [[ReadResourceV2]].
+      *
+      * @param resource the resource to be turned into `JsValue`.
+      * @return a map of value properties to `JsValue`.
+      */
+    def createJsValueFromReadResourceV2(resource: ReadResourceV2): Map[IRI, JsValue] = {
+
+        val valuesAsJson: Map[IRI, JsValue] = resource.values.map {
+            case (propIri: IRI, readValues: Seq[ReadValueV2]) =>
+                val valuesMap: JsValue = readValues.map {
+                    readValue =>
+                        val valAsMap: Map[IRI, JsValue] = readValue.valueContent.toJsValueMap
+                        Map("@id" -> JsString(readValue.valueIri),
+                            "@type" -> JsString(readValue.toKnoraApiValueTypeIri)) ++ valAsMap
+                }.toJson
+
+                (propIri, valuesMap)
+
+        }
+
+        Map(
+            "@type" -> resource.resourceClass.toJson,
+            "name" -> resource.label.toJson,
+            "@id" -> resource.resourceIri.toJson
+        ) ++ valuesAsJson
+
+    }
 
     implicit object readResourcesSequenceV2Format extends JsonFormat[ReadResourcesSequenceV2] {
 
@@ -627,24 +653,7 @@ object ResourcesV2JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol
             val resources: JsValue = resourcesSequenceV2.resources.map {
                 (resource: ReadResourceV2) =>
 
-                    val valuesAsJson: Map[IRI, JsValue] = resource.values.map {
-                        case (propIri: IRI, readValues: Seq[ReadValueV2]) =>
-                            val valuesMap: JsValue = readValues.map {
-                                readValue =>
-                                    val valAsMap: Map[IRI, JsValue] = readValue.valueContent.toJsValueMap
-                                    Map("@id" -> JsString(readValue.valueIri),
-                                        "@type" -> JsString(readValue.toKnoraApiValueTypeIri)) ++ valAsMap
-                            }.toJson
-
-                            (propIri, valuesMap)
-
-                    }
-
-                    Map(
-                        "@type" -> resource.resourceClass.toJson,
-                        "name" -> resource.label.toJson,
-                        "@id" -> resource.resourceIri.toJson
-                    ) ++ valuesAsJson
+                    createJsValueFromReadResourceV2(resource)
 
             }.toJson
 
