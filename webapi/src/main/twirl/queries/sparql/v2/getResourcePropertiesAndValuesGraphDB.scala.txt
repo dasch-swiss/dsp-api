@@ -85,14 +85,14 @@ CONSTRUCT {
             ?valueObject a knora-base:Value ;
                 knora-base:isDeleted false .
 
-            GRAPH <http://www.ontotext.com/explicit> {
-                ?resource ?resourceValueProperty ?valueObject .
+            {
+                GRAPH <http://www.ontotext.com/explicit> {
+                    ?resource ?resourceValueProperty ?valueObject .
 
-                ?valueObject a ?valueObjectType ;
-                    ?valueObjectProperty ?valueObjectValue .
-            }
-
-            OPTIONAL {
+                    ?valueObject a ?valueObjectType ;
+                        ?valueObjectProperty ?valueObjectValue .
+                }
+            } UNION {
                 GRAPH <http://www.ontotext.com/explicit> {
                     ?valueObject knora-base:valueHasStandoff ?standoffNode .
                     ?standoffNode ?standoffProperty ?standoffValue .

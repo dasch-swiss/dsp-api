@@ -447,7 +447,9 @@ case class StillImageFileValueContentV2(valueHasString: String,
 
         Map(
             OntologyConstants.KnoraApi.FileValueAsUrl -> JsString(imagePath),
-            OntologyConstants.KnoraApi.FileValueIsPreview -> JsBoolean(isPreview)
+            OntologyConstants.KnoraApi.FileValueIsPreview -> JsBoolean(isPreview),
+            OntologyConstants.KnoraApi.StillImageFileValueHasDimX -> JsNumber(dimX),
+            OntologyConstants.KnoraApi.StillImageFileValueHasDimY -> JsNumber(dimY)
         )
     }
 
