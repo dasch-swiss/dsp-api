@@ -504,26 +504,21 @@ case class TextFileValueContentV2(valueHasString: String, internalMimeType: Stri
   * @param comment             a comment on the link.
   * @param referredResource    information about the referred resource, if given.
   */
-case class LinkValueContentV2(valueHasString: String, subject: IRI, predicate: IRI, referredResourceIri: IRI, comment: Option[String], referredResource: Option[ReadResourceV2]) extends ValueContentV2 {
-    // TODO: the referred resource should be made non optional (if the referred resource cannot be shown, the whole link value should not be shown)
+case class LinkValueContentV2(valueHasString: String, subject: IRI, predicate: IRI, referredResourceIri: IRI, comment: Option[String], referredResource: ReadResourceV2) extends ValueContentV2 {
 
     def valueTypeIri = OntologyConstants.KnoraBase.LinkValue
 
     def toJsValueMap: Map[IRI, JsValue] = {
 
-
-        // TODO: add support for recursion (a resource might point to a resource that may point to another resource)
-        if (referredResource.nonEmpty) {
-            Map(OntologyConstants.KnoraApi.LinkValueHasTarget -> JsObject(
+        Map(OntologyConstants.KnoraApi.ValueAsString -> JsString(referredResourceIri),
+            OntologyConstants.KnoraApi.LinkValueHasTarget -> JsObject(
                 Map(
                     "@id" -> JsString(referredResourceIri),
-                    "@type" -> JsString(referredResource.get.resourceClass),
-                    "name" -> JsString(referredResource.get.label)
+                    "@type" -> JsString(referredResource.resourceClass),
+                    "name" -> JsString(referredResource.label)
                 )
             ))
-        } else {
-            Map(OntologyConstants.KnoraApi.ValueAsString -> JsString(referredResourceIri))
-        }
+
     }
 
 }

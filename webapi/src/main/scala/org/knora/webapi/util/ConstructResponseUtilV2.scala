@@ -31,8 +31,6 @@ import org.knora.webapi.util.standoff.StandoffTagUtilV1
 import org.knora.webapi._
 
 
-
-
 object ConstructResponseUtilV2 {
 
     val InferredPredicates = Set(
@@ -44,9 +42,9 @@ object ConstructResponseUtilV2 {
     /**
       * Represents the RDF data about a value, possibly including standoff.
       *
-      * @param valueObjectIri  the value object's Iri.
-      * @param assertions the value objects assertions.
-      * @param standoff        standoff assertions, if any.
+      * @param valueObjectIri the value object's Iri.
+      * @param assertions     the value objects assertions.
+      * @param standoff       standoff assertions, if any.
       */
     case class ValueRdfData(valueObjectIri: IRI, valueObjectClass: IRI, targetResource: Option[ResourceWithValueRdfData] = None, assertions: Map[IRI, String], standoff: Map[IRI, Map[IRI, String]])
 
@@ -226,7 +224,8 @@ object ConstructResponseUtilV2 {
                         }
 
                         property -> valueRdfData
-                }.filterNot { // filter out those properties that do not have value objects (they may have been filtered out because the user does not have sufficient permissions to see them)
+                }.filterNot {
+                    // filter out those properties that do not have value objects (they may have been filtered out because the user does not have sufficient permissions to see them)
                     case (_, valObj: Seq[ValueRdfData]) =>
                         valObj.isEmpty
                 }
@@ -237,6 +236,7 @@ object ConstructResponseUtilV2 {
 
         /**
           * Given a set of resource IRIs, finds any link values in each resource, and recursively embeds the target resource in each link value.
+          *
           * @param irisOfResourcesToBuild the IRIs of the resources to start with.
           * @return a map of resource IRIs to resources.
           */
@@ -307,10 +307,11 @@ object ConstructResponseUtilV2 {
       * Given a [[ValueRdfData]], create a [[ValueContentV2]], considering the specific type of the given [[ValueRdfData]].
       *
       * @param valueObject the given [[ValueRdfData]].
-      * @param queryResult complete results of the SPARQL Construct query, needed in case an Iri of a referred resource has to be resolved.
+      * @param mappings    the mappings needed for standoff conversions and XSL transformations.
+      * @param settings    configuration parameters
       * @return a [[ValueContentV2]] representing a value.
       */
-    def createValueContentV2FromValueRdfData(valueObject: ValueRdfData, mappings: Map[IRI, MappingAndXSLTransformation], settings: SettingsImpl, queryResult: Option[Map[IRI, ResourceWithValueRdfData]] = None): ValueContentV2 = {
+    def createValueContentV2FromValueRdfData(valueObject: ValueRdfData, mappings: Map[IRI, MappingAndXSLTransformation], settings: SettingsImpl): ValueContentV2 = {
 
         // every knora-base:Value (any of its subclasses) has a string representation
         val valueObjectValueHasString: String = valueObject.assertions(OntologyConstants.KnoraBase.ValueHasString)
@@ -380,30 +381,25 @@ object ConstructResponseUtilV2 {
             case OntologyConstants.KnoraBase.LinkValue =>
                 val referredResourceIri = valueObject.assertions(OntologyConstants.Rdf.Object)
 
-                if (valueObject.targetResource.isEmpty) throw InconsistentTriplestoreDataException(s"ValueRdfData representing link value without referred resource")
+                valueObject.targetResource match {
 
-                // check if the referred resource's Iri can be resolved:
-                // check if `queryResult` is given (it's optional) and if it contains the referred resource's Iri as a key (the user may not have sufficient permission to see the referred resource)
+                    case Some(referredResourceAssertions: ResourceWithValueRdfData) =>
 
-                val referredResourceOption: Option[ReadResourceV2] = if (queryResult.nonEmpty && queryResult.get.get(referredResourceIri).nonEmpty) {
+                        val referredResourceIri = valueObject.assertions(OntologyConstants.Rdf.Object)
 
-                    // access the assertions about the referred resource
-                    val referredResourceInfoMap: ErrorHandlingMap[IRI, String] = new ErrorHandlingMap(queryResult.get(referredResourceIri).resourceAssertions.toMap, { key: IRI => s"Predicate $key not found for ${referredResourceIri} (referred resource)" })
+                        LinkValueContentV2(
+                            valueHasString = valueObjectValueHasString,
+                            subject = valueObject.assertions(OntologyConstants.Rdf.Subject),
+                            predicate = valueObject.assertions(OntologyConstants.Rdf.Predicate),
+                            referredResourceIri = referredResourceIri,
+                            comment = valueCommentOption,
+                            referredResource = constructReadResourceV2(referredResourceIri, referredResourceAssertions, mappings, settings) // construct a `ReadResourceV2`
+                        )
 
-                    Some(ReadResourceV2(resourceIri = valueObject.assertions(OntologyConstants.Rdf.Object), label = referredResourceInfoMap(OntologyConstants.Rdfs.Label), resourceClass = referredResourceInfoMap(OntologyConstants.Rdf.Type), resourceInfos = Map.empty[IRI, LiteralV2], values = Map.empty[IRI, Seq[ReadValueV2]]))
+                    case None => throw InconsistentTriplestoreDataException(s"ValueRdfData representing link value without referred resource")
 
-                } else {
-                    None
                 }
 
-                LinkValueContentV2(
-                    valueHasString = valueObjectValueHasString,
-                    subject = valueObject.assertions(OntologyConstants.Rdf.Subject),
-                    predicate = valueObject.assertions(OntologyConstants.Rdf.Predicate),
-                    referredResourceIri = valueObject.assertions(OntologyConstants.Rdf.Object),
-                    comment = valueCommentOption,
-                    referredResourceOption // may be non in case the referred resource's Iri could not be resolved
-                )
 
             case OntologyConstants.KnoraBase.StillImageFileValue =>
 
@@ -433,39 +429,35 @@ object ConstructResponseUtilV2 {
                     settings = settings
                 )
 
-
-
-
-            // TODO: implement all value object classes
             case other =>
-                TextValueContentV2(valueHasString = valueObjectValueHasString, standoff = None, comment = valueCommentOption)
+                throw NotImplementedException(s"not implemented yet: $other")
         }
 
     }
 
     /**
-      * Creates a response to a full resource request.
       *
-      * @param resourceIri     the Iri of the requested resource.
-      * @param resourceResults the results returned by the triplestore.
+      * Creates a [[ReadResourceV2]] from a [[ResourceWithValueRdfData]].
+      *
+      * @param resourceIri              the Iri of the resource.
+      * @param resourceWithValueRdfData the Rdf data belonging to the resource.
+      * @param settings                 configuration parameters
       * @return a [[ReadResourceV2]].
       */
-    def createFullResourceResponse(resourceIri: IRI, mappings: Map[IRI, MappingAndXSLTransformation], resourceResults: Map[IRI, ResourceWithValueRdfData], settings: SettingsImpl): ReadResourceV2 = {
+    def constructReadResourceV2(resourceIri: IRI, resourceWithValueRdfData: ResourceWithValueRdfData, mappings: Map[IRI, MappingAndXSLTransformation], settings: SettingsImpl): ReadResourceV2 = {
 
-        // a full resource query also returns the resources referred to by the requested resource
-        // however, the should not be included as resources, but as the target og a linking property
-        val resourceAssertionsMap = resourceResults(resourceIri).resourceAssertions.toMap
+        val resourceAssertionsMap = resourceWithValueRdfData.resourceAssertions.toMap
 
         val rdfLabel: String = resourceAssertionsMap(OntologyConstants.Rdfs.Label)
 
         val resourceClass = resourceAssertionsMap(OntologyConstants.Rdf.Type)
 
         // get the resource's values
-        val valueObjects: Map[IRI, Seq[ReadValueV2]] = resourceResults(resourceIri).valuePropertyAssertions.map {
+        val valueObjects: Map[IRI, Seq[ReadValueV2]] = resourceWithValueRdfData.valuePropertyAssertions.map {
             case (property: IRI, valObjs: Seq[ValueRdfData]) =>
                 (property, valObjs.map {
                     valObj =>
-                        val readValue: ValueContentV2 = createValueContentV2FromValueRdfData(valObj, mappings = mappings, settings, Some(resourceResults))
+                        val readValue = createValueContentV2FromValueRdfData(valObj, mappings = mappings, settings)
 
                         ReadValueV2(valObj.valueObjectIri, readValue)
                 })
@@ -482,6 +474,20 @@ object ConstructResponseUtilV2 {
     }
 
     /**
+      * Creates a response to a full resource request.
+      *
+      * @param resourceIri     the Iri of the requested resource.
+      * @param resourceRdfData the results returned by the triplestore.
+      * @param mappings        the mappings needed for standoff conversions and XSL transformations.
+      * @return a [[ReadResourceV2]].
+      */
+    def createFullResourceResponse(resourceIri: IRI, resourceRdfData: ResourceWithValueRdfData, mappings: Map[IRI, MappingAndXSLTransformation], settings: SettingsImpl): ReadResourceV2 = {
+
+        constructReadResourceV2(resourceIri, resourceRdfData, mappings = mappings, settings: SettingsImpl)
+
+    }
+
+    /**
       * Creates a response to a fulltext search.
       *
       * @param searchResults the results returned by the triplestore.
@@ -492,32 +498,11 @@ object ConstructResponseUtilV2 {
         // each entry represents a resource that matches the search criteria
         // this is because linking properties are excluded from fulltext search
         searchResults.map {
-            case (resourceIri, assertions) =>
+            case (resourceIri: IRI, assertions: ResourceWithValueRdfData) =>
 
-                val resourceAssertionsMap = assertions.resourceAssertions.toMap
+                // TODO: check if the query path is represented by the resource's values the user has permissions to see
 
-                val rdfLabel: String = resourceAssertionsMap(OntologyConstants.Rdfs.Label)
-
-                val resourceClass = resourceAssertionsMap(OntologyConstants.Rdf.Type)
-
-                // get the resource's values
-                val valueObjects: Map[IRI, Seq[ReadValueV2]] = assertions.valuePropertyAssertions.map {
-                    case (property: IRI, valObjs: Seq[ValueRdfData]) =>
-                        (property, valObjs.map {
-                            valObj =>
-                                val readValue = createValueContentV2FromValueRdfData(valObj, mappings = Map.empty[IRI, MappingAndXSLTransformation], settings)
-
-                                ReadValueV2(valObj.valueObjectIri, readValue)
-                        })
-                }
-
-                ReadResourceV2(
-                    resourceIri = resourceIri,
-                    resourceClass = resourceClass,
-                    label = rdfLabel,
-                    values = valueObjects,
-                    resourceInfos = Map.empty[IRI, LiteralV2]
-                )
+                constructReadResourceV2(resourceIri, assertions, mappings = Map.empty[IRI, MappingAndXSLTransformation], settings)
         }.toVector
     }
 }
