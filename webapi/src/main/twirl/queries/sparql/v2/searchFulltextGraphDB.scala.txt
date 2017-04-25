@@ -44,20 +44,25 @@ CONSTRUCT {
 
     # include this inferred information in the results, needed to identify value properties
 	?resource knora-base:hasValue ?valueObject .
+
     ?valueObject knora-base:attachedToUser ?valueObjectCreator ;
-            knora-base:hasPermissions ?valueObjectPermissions .
-    ?valueObject a ?valueObjectType ;
+        knora-base:hasPermissions ?valueObjectPermissions ;
+        a ?valueObjectType ;
         ?valueObjectProperty ?valueObjectValue .
 
     # include this inferred information in the results, needed to identify resources
-    ?resource a knora-base:Resource .
-    ?resource knora-base:isMainResource true .
-    ?resource ?resourceProperty ?matchingSubject .
-    ?resource rdfs:label ?label .
-    ?resource a ?resourceType .
-    ?resource knora-base:attachedToUser ?resourceCreator ;
-            knora-base:hasPermissions ?resourcePermissions ;
-            knora-base:attachedToProject ?referredResourceProject .
+    ?resource a knora-base:Resource ;
+        knora-base:isMainResource true ;
+        ?resourceProperty ?matchingSubject ;
+        rdfs:label ?label .
+
+    # indicates if the resource's label matched the search pattern
+    ?resource knora-base:labelMatched ?labelMatched .
+
+    ?resource a ?resourceType ;
+        knora-base:attachedToUser ?resourceCreator ;
+        knora-base:hasPermissions ?resourcePermissions ;
+        knora-base:attachedToProject ?referredResourceProject .
 }
 
 WHERE {
@@ -73,6 +78,11 @@ WHERE {
 
             ?literal <http://www.ontotext.com/owlim/lucene#fullTextSearchIndex> '@searchTerms' .
         } LIMIT 500
+    }
+
+    OPTIONAL {
+        ?matchingSubject a knora-base:Resource .
+        BIND(true AS ?labelMatched)
     }
 
     OPTIONAL {

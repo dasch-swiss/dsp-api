@@ -76,6 +76,13 @@
       knora-base:subjectClassConstraint :Resource .
 
 
+###  http://www.knora.org/ontology/knora-api#valueHas
+
+:valueHas rdf:type rdf:Property ;
+
+          :subjectClassConstraint :Value .
+
+
 ### http://www.knora.org/ontology/knora-api#valueAsString
 
 :valueAsString rdf:type owl:DatatypeProperty ;
@@ -113,6 +120,8 @@
 
     rdfs:comment "A text value represented in XML."@en ;
 
+    rdfs:subPropertyOf :valueHas ;
+
     knora-base:subjectClassConstraint :TextValue ;
 
     knora-base:objectDatatypeConstraint xsd:string .
@@ -134,6 +143,8 @@
 :textValueAsHtml rdf:type owl:DatatypeProperty ;
 
     rdfs:comment "A text value represented in HTML."@en ;
+
+    rdfs:subPropertyOf :valueHas ;
 
     knora-base:subjectClassConstraint :TextValue ;
 
@@ -181,6 +192,8 @@
 
     rdfs:comment "The opening year of a date value"@en ;
 
+    rdfs:subPropertyOf :valueHas ;
+
     knora-base:subjectClassConstraint :DateValue ;
 
     knora-base:objectDatatypeConstraint xsd:integer .
@@ -191,6 +204,8 @@
 :dateValueHasEndYear rdf:type owl:DatatypeProperty ;
 
     rdfs:comment "The closing year of a date value"@en ;
+
+    rdfs:subPropertyOf :valueHas ;
 
     knora-base:subjectClassConstraint :DateValue ;
 
@@ -203,6 +218,8 @@
 
     rdfs:comment "The opening month of a date value"@en ;
 
+    rdfs:subPropertyOf :valueHas ;
+
     knora-base:subjectClassConstraint :DateValue ;
 
     knora-base:objectDatatypeConstraint xsd:integer .
@@ -213,6 +230,8 @@
 :dateValueHasEndMonth rdf:type owl:DatatypeProperty ;
 
     rdfs:comment "The closing month of a date value"@en ;
+
+    rdfs:subPropertyOf :valueHas ;
 
     knora-base:subjectClassConstraint :DateValue ;
 
@@ -225,6 +244,8 @@
 
     rdfs:comment "The opening day of a date value"@en ;
 
+    rdfs:subPropertyOf :valueHas ;
+
     knora-base:subjectClassConstraint :DateValue ;
 
     knora-base:objectDatatypeConstraint xsd:integer .
@@ -236,6 +257,8 @@
 
     rdfs:comment "The clsong day of a date value"@en ;
 
+    rdfs:subPropertyOf :valueHas ;
+
     knora-base:subjectClassConstraint :DateValue ;
 
     knora-base:objectDatatypeConstraint xsd:integer .
@@ -246,6 +269,8 @@
 :dateValueHasCalendar rdf:type owl:DatatypeProperty ;
 
     rdfs:comment "The calendar of a date value"@en ;
+
+    rdfs:subPropertyOf :valueHas ;
 
     knora-base:subjectClassConstraint :DateValue ;
 
@@ -293,6 +318,8 @@
 
     rdfs:comment "The integer value as an integer"@en ;
 
+    rdfs:subPropertyOf :valueHas ;
+
     knora-base:subjectClassConstraint :IntegerValue ;
 
     knora-base:objectDatatypeConstraint xsd:integer .
@@ -316,6 +343,8 @@
 
     rdfs:comment "The decimal value as a decimal"@en ;
 
+    rdfs:subPropertyOf :valueHas ;
+
     knora-base:subjectClassConstraint :DecimalValue ;
 
     knora-base:objectDatatypeConstraint xsd:decimal .
@@ -338,6 +367,8 @@
 
                        rdfs:comment "Represents a Boolean value."@en ;
 
+                       rdfs:subPropertyOf :valueHas ;
+
                        knora-base:subjectClassConstraint :BooleanValue ;
 
                        knora-base:objectDatatypeConstraint xsd:boolean .
@@ -357,6 +388,8 @@
 :geomValueAsGeometry rdf:type owl:DatatypeProperty ;
 
                      rdfs:comment "Represents a 2D-geometry value as a stringified JSON."@en ;
+
+                     rdfs:subPropertyOf :valueHas ;
 
                      knora-base:subjectClassConstraint :GeomValue ;
 
@@ -382,6 +415,8 @@
 
                      rdfs:comment "Represents the begin of a time interval"@en ;
 
+                     rdfs:subPropertyOf :valueHas ;
+
                      knora-base:subjectClassConstraint :IntervalValue ;
 
                      knora-base:objectDatatypeConstraint xsd:decimal .
@@ -392,6 +427,8 @@
 :intervalValueHasEnd rdf:type owl:DatatypeProperty ;
 
                      rdfs:comment "Represents the end of a time interval"@en ;
+
+                     rdfs:subPropertyOf :valueHas ;
 
                      knora-base:subjectClassConstraint :IntervalValue ;
 
@@ -415,6 +452,8 @@
 
                        rdfs:comment "Reference to a hierarchical list node."@en ;
 
+                       rdfs:subPropertyOf :valueHas ;
+
                        knora-base:subjectClassConstraint :ListValue ;
 
                        knora-base:objectClassConstraint knora-base:ListNode .
@@ -435,6 +474,8 @@
 :colorValueAsColor rdf:type owl:DatatypeProperty ;
 
                     rdfs:comment "Represents a RGB color."@en ;
+
+                    rdfs:subPropertyOf :valueHas ;
 
                     knora-base:subjectClassConstraint :ColorValue ;
 
@@ -457,6 +498,8 @@
 
                rdfs:comment "Represents a URI."@en ;
 
+               rdfs:subPropertyOf :valueHas ;
+
                knora-base:subjectClassConstraint :UriValue ;
 
                knora-base:objectDatatypeConstraint xsd:anyURI .
@@ -477,6 +520,8 @@
 :geonameValueAsGeonameCode rdf:type owl:DatatypeProperty ;
 
                            rdfs:comment "Reference to a Geoname code."@en ;
+
+                           rdfs:subPropertyOf :valueHas ;
 
                            knora-base:subjectClassConstraint :GeonameValue ;
 
@@ -503,6 +548,8 @@
 
     rdfs:comment "Indicates if this is file value is a preview"@en ;
 
+    rdfs:subPropertyOf :valueHas ;
+
     knora-base:subjectClassConstraint :FileValue ;
 
     knora-base:objectDatatypeConstraint xsd:boolean .
@@ -513,6 +560,8 @@
 :fileValueAsUrl rdf:type owl:DatatypeProperty ;
 
     rdfs:comment "The path to retrieve the file value"@en ;
+
+    rdfs:subPropertyOf :valueHas ;
 
     knora-base:subjectClassConstraint :FileValue ;
 
@@ -545,6 +594,8 @@
 
     rdfs:comment "The image file's width in pixels"@en ;
 
+    rdfs:subPropertyOf :valueHas ;
+
     knora-base:subjectClassConstraint :StillImageFileValue ;
 
     knora-base:objectDatatypeConstraint xsd:integer .
@@ -555,6 +606,8 @@
 :stillImageFileValueHasDimY rdf:type owl:DatatypeProperty ;
 
     rdfs:comment "The image file's height in pixels"@en ;
+
+    rdfs:subPropertyOf :valueHas ;
 
     knora-base:subjectClassConstraint :StillImageFileValue ;
 

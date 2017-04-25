@@ -203,6 +203,8 @@ object ConstructResponseUtilV2 {
 
                 // TODO: filter out the link values that point to resources that the user didn't have permission to see
 
+                // TODO: garbage collect dependent resources that nothing points to anymore
+
                 // create a map of resource Iris to a `ResourceWithValueRdfData`
                 (resourceIri, ResourceWithValueRdfData(resourceAssertions = assertionsExplicit, isMainResource = isMainResource, valuePropertyAssertions = valuePropertyToValueObject))
         }
@@ -282,6 +284,27 @@ object ConstructResponseUtilV2 {
             case OntologyConstants.KnoraBase.DecimalValue =>
                 DecimalValueContentV2(valueHasString = valueObjectValueHasString, valueHasDecimal = BigDecimal(valueObject.assertionsAsMap(OntologyConstants.KnoraBase.ValueHasDecimal)), comment = valueCommentOption)
 
+            case OntologyConstants.KnoraBase.BooleanValue =>
+                BooleanValueContentV2(valueHasString = valueObjectValueHasString, valueHasBoolean = valueObject.assertionsAsMap(OntologyConstants.KnoraBase.ValueHasBoolean).toBoolean, comment = valueCommentOption)
+
+            case OntologyConstants.KnoraBase.UriValue =>
+                UriValueContentV2(valueHasString = valueObjectValueHasString, valueHasUri = valueObject.assertionsAsMap(OntologyConstants.KnoraBase.ValueHasUri), comment = valueCommentOption)
+
+            case OntologyConstants.KnoraBase.ColorValue =>
+                ColorValueContentV2(valueHasString = valueObjectValueHasString, valueHasColor = valueObject.assertionsAsMap(OntologyConstants.KnoraBase.ValueHasColor), comment = valueCommentOption)
+
+            case OntologyConstants.KnoraBase.GeomValue =>
+                GeomValueContentV2(valueHasString = valueObjectValueHasString, valueHasGeometry = valueObject.assertionsAsMap(OntologyConstants.KnoraBase.ValueHasGeometry), comment = valueCommentOption)
+
+            case OntologyConstants.KnoraBase.GeonameValue =>
+                GeonameValueContentV2(valueHasString = valueObjectValueHasString, valueHasGeonameCode = valueObject.assertionsAsMap(OntologyConstants.KnoraBase.ValueHasGeonameCode), comment = valueCommentOption)
+
+            case OntologyConstants.KnoraBase.ListValue =>
+                HierarchicalListValueContentV2(valueHasString = valueObjectValueHasString, valueHasListNode = valueObject.assertionsAsMap(OntologyConstants.KnoraBase.ValueHasListNode), comment = valueCommentOption)
+
+            case OntologyConstants.KnoraBase.IntervalValue =>
+                IntervalValueContentV2(valueHasString = valueObjectValueHasString, valueHasIntervalStart = BigDecimal(valueObject.assertionsAsMap(OntologyConstants.KnoraBase.ValueHasIntervalStart)), valueHasIntervalEnd = BigDecimal(valueObject.assertionsAsMap(OntologyConstants.KnoraBase.ValueHasIntervalEnd)), comment = valueCommentOption)
+
             case OntologyConstants.KnoraBase.LinkValue =>
                 val referredResourceIri = valueObject.assertionsAsMap(OntologyConstants.Rdf.Object)
 
@@ -326,6 +349,19 @@ object ConstructResponseUtilV2 {
                     comment = valueCommentOption,
                     settings = settings
                 )
+
+            case OntologyConstants.KnoraBase.TextFileValue =>
+
+                TextFileValueContentV2(
+                    internalMimeType = valueObject.assertionsAsMap(OntologyConstants.KnoraBase.InternalMimeType),
+                    internalFilename = valueObject.assertionsAsMap(OntologyConstants.KnoraBase.InternalFilename),
+                    originalFilename = valueObject.assertionsAsMap(OntologyConstants.KnoraBase.OriginalFilename),
+                    originalMimeType = valueObject.assertionsAsMap.get(OntologyConstants.KnoraBase.OriginalMimeType),
+                    valueHasString = valueObject.assertionsAsMap(OntologyConstants.KnoraBase.ValueHasString),
+                    comment = valueCommentOption,
+                    settings = settings
+                )
+
 
 
 
