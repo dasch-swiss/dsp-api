@@ -286,7 +286,11 @@
            rdfs:subClassOf :Value ,
                            [ rdf:type owl:Restriction ;
                              owl:onProperty :linkValueHasTarget ;
-                             owl:cardinality "1"^^xsd:nonNegativeInteger
+                             owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                           ] ,
+                           [ rdf:type owl:Restriction ;
+                             owl:onProperty :linkValueHasTargetIri ;
+                             owl:maxCardinality "1"^^xsd:nonNegativeInteger
                            ] .
 
 ### http://www.knora.org/ontology/knora-api#linkValueHasTarget
@@ -298,6 +302,17 @@
     knora-base:subjectClassConstraint :LinkValue ;
 
     knora-base:objectClassConstraint :Resource .
+
+
+### http://www.knora.org/ontology/knora-api#linkValueHasTargetIri
+
+:linkValueHasTargetIri rdf:type owl:DatatypeProperty ;
+
+    rdfs:comment "The target IRI of the link property (the referred resource)"@en ;
+
+    knora-base:subjectClassConstraint :LinkValue ;
+
+    knora-base:objectDatatypeConstraint xsd:anyURI .
 
 
 ### Integer Value

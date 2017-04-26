@@ -235,42 +235,43 @@ object ConstructResponseUtilV2 {
         }
 
         /**
-          * Given a set of resource IRIs, finds any link values in each resource, and recursively embeds the target resource in each link value.
+          * Given a resource IRI, finds any link values in the resource, and recursively embeds the target resource in each link value.
           *
-          * @param irisOfResourcesToBuild the IRIs of the resources to start with.
-          * @return a map of resource IRIs to resources.
+          * @param resourceIri      the IRI of the resource to start with.
+          * @param alreadyTraversed a set (initially empty) of the IRIs of resources that this function has already
+          *                         traversed, to prevent an infinite loop if a cycle is encountered.
+          * @return the same resource, with any nested resources attached to it.
           */
-        def nestResources(irisOfResourcesToBuild: Set[IRI]): Map[IRI, ResourceWithValueRdfData] = {
-            irisOfResourcesToBuild.map {
-                case resourceIri =>
-                    val resource = flatResourcesWithValues(resourceIri)
+        def nestResources(resourceIri: IRI, alreadyTraversed: Set[IRI] = Set.empty[IRI]): ResourceWithValueRdfData = {
+            val resource = flatResourcesWithValues(resourceIri)
 
-                    val transformedValuePropertyAssertions = resource.valuePropertyAssertions.map {
-                        case (propIri, values) =>
-                            val transformedValues = values.map {
-                                value =>
-                                    if (value.valueObjectClass == OntologyConstants.KnoraBase.LinkValue) {
-                                        val dependentResourceIri: String = value.assertions(OntologyConstants.Rdf.Object)
-                                        val dependentResources: Map[IRI, ResourceWithValueRdfData] = nestResources(Set(dependentResourceIri))
-                                        val dependentResource: ResourceWithValueRdfData = dependentResources.getOrElse(dependentResourceIri, throw InconsistentTriplestoreDataException(s"Resource $dependentResourceIri not found in query results"))
+            val transformedValuePropertyAssertions = resource.valuePropertyAssertions.map {
+                case (propIri, values) =>
+                    val transformedValues = values.map {
+                        value =>
+                            if (value.valueObjectClass == OntologyConstants.KnoraBase.LinkValue) {
+                                val dependentResourceIri: String = value.assertions(OntologyConstants.Rdf.Object)
 
-                                        value.copy(
-                                            targetResource = Some(dependentResource)
-                                        )
-                                    } else {
-                                        value
-                                    }
+                                if (alreadyTraversed(dependentResourceIri)) {
+                                    value
+                                } else {
+                                    val dependentResource = nestResources(dependentResourceIri, alreadyTraversed + resourceIri)
+
+                                    value.copy(
+                                        targetResource = Some(dependentResource)
+                                    )
+                                }
+                            } else {
+                                value
                             }
-
-                            propIri -> transformedValues
                     }
 
-                    val transformedResource = resource.copy(
-                        valuePropertyAssertions = transformedValuePropertyAssertions
-                    )
+                    propIri -> transformedValues
+            }
 
-                    resourceIri -> transformedResource
-            }.toMap
+            resource.copy(
+                valuePropertyAssertions = transformedValuePropertyAssertions
+            )
         }
 
         val mainResourceIris: Set[IRI] = flatResourcesWithValues.filter {
@@ -279,7 +280,11 @@ object ConstructResponseUtilV2 {
             case (resourceIri, _) => resourceIri
         }.toSet
 
-        nestResources(mainResourceIris)
+        mainResourceIris.map {
+            resourceIri =>
+                val transformedResource = nestResources(resourceIri)
+                resourceIri -> transformedResource
+        }.toMap
     }
 
     /**
@@ -381,22 +386,25 @@ object ConstructResponseUtilV2 {
             case OntologyConstants.KnoraBase.LinkValue =>
                 val referredResourceIri = valueObject.assertions(OntologyConstants.Rdf.Object)
 
+                val linkValue = LinkValueContentV2(
+                    valueHasString = valueObjectValueHasString,
+                    subject = valueObject.assertions(OntologyConstants.Rdf.Subject),
+                    predicate = valueObject.assertions(OntologyConstants.Rdf.Predicate),
+                    referredResourceIri = referredResourceIri,
+                    comment = valueCommentOption,
+                    referredResource = None
+                )
+
                 valueObject.targetResource match {
 
                     case Some(referredResourceAssertions: ResourceWithValueRdfData) =>
 
-                        val referredResourceIri = valueObject.assertions(OntologyConstants.Rdf.Object)
-
-                        LinkValueContentV2(
-                            valueHasString = valueObjectValueHasString,
-                            subject = valueObject.assertions(OntologyConstants.Rdf.Subject),
-                            predicate = valueObject.assertions(OntologyConstants.Rdf.Predicate),
-                            referredResourceIri = referredResourceIri,
-                            comment = valueCommentOption,
-                            referredResource = constructReadResourceV2(referredResourceIri, referredResourceAssertions, mappings, settings) // construct a `ReadResourceV2`
+                        // add information about the referred resource
+                        linkValue.copy(
+                            referredResource = Some(constructReadResourceV2(referredResourceIri, referredResourceAssertions, mappings, settings)) // construct a `ReadResourceV2`
                         )
 
-                    case None => throw InconsistentTriplestoreDataException(s"ValueRdfData representing link value without referred resource")
+                    case None => linkValue // do not include information about the referred resource
 
                 }
 

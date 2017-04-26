@@ -504,20 +504,21 @@ case class TextFileValueContentV2(valueHasString: String, internalMimeType: Stri
   * @param comment             a comment on the link.
   * @param referredResource    information about the referred resource, if given.
   */
-case class LinkValueContentV2(valueHasString: String, subject: IRI, predicate: IRI, referredResourceIri: IRI, comment: Option[String], referredResource: ReadResourceV2) extends ValueContentV2 {
+case class LinkValueContentV2(valueHasString: String, subject: IRI, predicate: IRI, referredResourceIri: IRI, comment: Option[String], referredResource: Option[ReadResourceV2]) extends ValueContentV2 {
 
     def valueTypeIri = OntologyConstants.KnoraBase.LinkValue
 
     def toJsValueMap: Map[IRI, JsValue] = {
+        // check if the referred resource has to be included in the JSON response
+        referredResource match {
+            case Some(targetResource) =>
+                val referredResourceAsJsValue: Map[IRI, JsValue] = ResourcesV2JsonProtocol.createJsValueFromReadResourceV2(targetResource)
+                Map(OntologyConstants.KnoraApi.LinkValueHasTarget -> JsObject(referredResourceAsJsValue))
 
-        val referredResourceAsJsValue: Map[IRI, JsValue] = ResourcesV2JsonProtocol.createJsValueFromReadResourceV2(referredResource)
-
-        Map(
-            OntologyConstants.KnoraApi.LinkValueHasTarget -> JsObject(referredResourceAsJsValue)
-        )
-
+            case None =>
+                Map(OntologyConstants.KnoraApi.LinkValueHasTargetIri -> JsString(referredResourceIri))
+        }
     }
-
 }
 
 /**

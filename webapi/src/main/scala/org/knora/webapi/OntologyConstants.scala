@@ -443,6 +443,7 @@ object OntologyConstants {
         val GeometryValueAsGeometry = "http://www.knora.org/ontology/knora-api#GeometryValueAsGeometry"
 
         val LinkValueHasTarget = "http://www.knora.org/ontology/knora-api#linkValueHasTarget"
+        val LinkValueHasTargetIri = "http://www.knora.org/ontology/knora-api#linkValueHasTargetIri"
 
         val FileValueAsUrl = "http://www.knora.org/ontology/knora-api#fileValueAsUrl"
         val FileValueIsPreview = "http://www.knora.org/ontology/knora-api#fileValueIsPreview"
