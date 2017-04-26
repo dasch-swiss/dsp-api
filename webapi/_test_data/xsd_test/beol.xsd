@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<xs:schema elementFormDefault="qualified" targetNamespace="http://www.knora.org/ontology/beol#"
+    xmlns="http://www.knora.org/ontology/beol#" xmlns:xs="http://www.w3.org/2001/XMLSchema"
+    xmlns:knoraXmlImport="http://www.knora.org/XmlImport/v1#"
+    xmlns:vc="http://www.w3.org/2007/XMLSchema-versioning" vc:minVersion="1.1">
+    <xs:import namespace="http://www.knora.org/XmlImport/v1#" schemaLocation="knora-xml-v1.xsd"/>
+
+    <xs:element name="person">
+        <xs:complexType>
+            <xs:complexContent>
+                <xs:extension base="knoraXmlImport:resourceType">
+                    <xs:sequence>
+                        <xs:element name="hasGivenName" minOccurs="0" maxOccurs="1"
+                            type="knoraXmlImport:richtextValueType"/>
+                        <xs:element name="hasFamilyName" minOccurs="0" maxOccurs="1"
+                            type="knoraXmlImport:richtextValueType"/>
+                    </xs:sequence>
+                </xs:extension>
+            </xs:complexContent>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:complexType name="person_linkValueType">
+        <xs:sequence>
+            <xs:element name="person" type="knoraXmlImport:linkValueType"/>
+        </xs:sequence>
+    </xs:complexType>
+</xs:schema>

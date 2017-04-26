@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<knoraXmlImport:resources xmlns="http://www.knora.org/ontology/biblio#"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.knora.org/ontology/biblio# biblio.xsd"
+    xmlns:biblio="http://www.knora.org/ontology/biblio#"
+    xmlns:beol="http://www.knora.org/ontology/beol#"
+    xmlns:knoraXmlImport="http://www.knora.org/XmlImport/v1#">
+    <beol:person id="abel">
+        <beol:hasGivenName knoraType="richtext_value">Niels Henrik</beol:hasGivenName>
+        <beol:hasFamilyName knoraType="richtext_value">Abel</beol:hasFamilyName>
+    </beol:person>
+    <biblio:Journal id="math_intelligencer">
+        <biblio:hasName knoraType="richtext_value">math intelligencer</biblio:hasName>
+    </biblio:Journal>
+    <biblio:JournalArticle id="strings_in_the_16th_and_17th_centuries">
+        <biblio:publicationHasTitle knoraType="richtext_value">Strings in the 16th and 17th
+            Centuries</biblio:publicationHasTitle>
+        <biblio:publicationHasAuthor>
+            <beol:person knoraType="link_value" ref="abel"/>
+        </biblio:publicationHasAuthor>
+        <biblio:isPartOfJournal>
+            <biblio:Journal knoraType="link_value" ref="math_intelligencer"/>
+        </biblio:isPartOfJournal>
+        <biblio:journalVolume knoraType="richtext_value">27</biblio:journalVolume>
+        <biblio:startPage knoraType="richtext_value">48</biblio:startPage>
+        <biblio:endPage knoraType="richtext_value">73</biblio:endPage>
+        <biblio:publicationHasDate knoraType="date_value">GREGORIAN:1976</biblio:publicationHasDate>
+    </biblio:JournalArticle>
+</knoraXmlImport:resources>

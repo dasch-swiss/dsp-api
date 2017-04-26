@@ -1,0 +1,59 @@
+<?xml version="1.0"?>
+<xs:schema elementFormDefault="qualified" targetNamespace="http://www.knora.org/ontology/biblio#"
+    xmlns="http://www.knora.org/ontology/biblio#" xmlns:xs="http://www.w3.org/2001/XMLSchema"
+    xmlns:knoraXmlImport="http://www.knora.org/XmlImport/v1#"
+    xmlns:beol="http://www.knora.org/ontology/beol#"
+    xmlns:vc="http://www.w3.org/2007/XMLSchema-versioning" vc:minVersion="1.1">
+    <xs:import namespace="http://www.knora.org/XmlImport/v1#" schemaLocation="knora-xml-v1.xsd"/>
+    <xs:import namespace="http://www.knora.org/ontology/beol#" schemaLocation="beol.xsd"/>
+
+    <xs:element name="Journal">
+        <xs:complexType>
+            <xs:complexContent>
+                <xs:extension base="knoraXmlImport:resourceType">
+                    <xs:sequence>
+                        <xs:element name="hasName" minOccurs="1" maxOccurs="unbounded"
+                            type="knoraXmlImport:richtextValueType"/>
+                    </xs:sequence>
+                </xs:extension>
+            </xs:complexContent>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:complexType name="Journal_linkValueType">
+        <xs:sequence>
+            <xs:element name="Journal" type="knoraXmlImport:linkValueType"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:element name="JournalArticle">
+        <xs:complexType>
+            <xs:complexContent>
+                <xs:extension base="knoraXmlImport:resourceType">
+                    <xs:sequence>
+                        <xs:element name="publicationHasTitle" minOccurs="1" maxOccurs="unbounded"
+                            type="knoraXmlImport:richtextValueType"/>
+                        <xs:element name="publicationHasAuthor" minOccurs="0" maxOccurs="unbounded"
+                            type="beol:person_linkValueType"/>
+                        <xs:element name="isPartOfJournal" minOccurs="0" maxOccurs="unbounded"
+                            type="Journal_linkValueType"/>
+                        <xs:element name="journalVolume" minOccurs="0" maxOccurs="unbounded"
+                            type="knoraXmlImport:richtextValueType"/>
+                        <xs:element name="startPage" minOccurs="0" maxOccurs="unbounded"
+                            type="knoraXmlImport:richtextValueType"/>
+                        <xs:element name="endPage" minOccurs="0" maxOccurs="unbounded"
+                            type="knoraXmlImport:richtextValueType"/>
+                        <xs:element name="publicationHasDate" minOccurs="1" maxOccurs="unbounded"
+                            type="knoraXmlImport:dateValueType"/>
+                    </xs:sequence>
+                </xs:extension>
+            </xs:complexContent>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:complexType name="JournalArticle_linkValueType">
+        <xs:sequence>
+            <xs:element name="JournalArticle" type="knoraXmlImport:linkValueType"/>
+        </xs:sequence>
+    </xs:complexType>
+</xs:schema>
