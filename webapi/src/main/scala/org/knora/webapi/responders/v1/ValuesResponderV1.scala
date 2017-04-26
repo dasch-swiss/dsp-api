@@ -2534,7 +2534,8 @@ class ValuesResponderV1 extends Responder {
                         propertyIri = propertyIri,
                         propertyObjectClassConstraint = propertyObjectClassConstraint,
                         valueType = otherValue.valueTypeIri,
-                        responderManager = responderManager)
+                        responderManager = responderManager,
+                        userProfile = userProfile)
             }
         } yield result
     }

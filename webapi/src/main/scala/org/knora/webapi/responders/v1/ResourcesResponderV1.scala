@@ -1209,7 +1209,8 @@ class ResourcesResponderV1 extends Responder {
                         propertyIri = propertyIri,
                         propertyObjectClassConstraint = propertyObjectClassConstraint,
                         valueType = otherValue.valueTypeIri,
-                        responderManager = responderManager)
+                        responderManager = responderManager,
+                        userProfile = userProfile)
             }
         } yield result
     }
@@ -1423,7 +1424,8 @@ class ResourcesResponderV1 extends Responder {
                                         val targetVal = valueV1WithComment.updateValueV1.toString.split("#")
                                         val checkSubClassRequest = CheckSubClassRequestV1(
                                             subClassIri = resourceClasses(targetVal(1)),
-                                            superClassIri = propertyObjectClassConstraint
+                                            superClassIri = propertyObjectClassConstraint,
+                                            userProfile = userProfile
                                         )
 
                                         for {
@@ -1439,7 +1441,8 @@ class ResourcesResponderV1 extends Responder {
                                             propertyIri = propertyIri,
                                             propertyObjectClassConstraint = propertyObjectClassConstraint,
                                             valueType = valueV1WithComment.updateValueV1.valueTypeIri,
-                                            responderManager = responderManager)
+                                            responderManager = responderManager,
+                                            userProfile = userProfile)
                                     }
                                 }
                         }
@@ -1865,7 +1868,8 @@ class ResourcesResponderV1 extends Responder {
 
             checkSubClassRequest = CheckSubClassRequestV1(
                 subClassIri = resourceInfo.restype_id,
-                superClassIri = owlClass
+                superClassIri = owlClass,
+                userProfile = userProfile
             )
 
             subClassResponse <- (responderManager ? checkSubClassRequest).mapTo[CheckSubClassResponseV1]

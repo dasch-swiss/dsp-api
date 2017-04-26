@@ -240,7 +240,8 @@ class ValueUtilV1(private val settings: SettingsImpl) {
     def checkValueTypeForPropertyObjectClassConstraint(propertyIri: IRI,
                                                        valueType: IRI,
                                                        propertyObjectClassConstraint: IRI,
-                                                       responderManager: ActorSelection)
+                                                       responderManager: ActorSelection,
+                                                       userProfile: UserProfileV1)
                                                       (implicit timeout: Timeout, executionContext: ExecutionContext): Future[Unit] = {
         if (propertyObjectClassConstraint == valueType) {
             Future.successful(())
@@ -248,7 +249,8 @@ class ValueUtilV1(private val settings: SettingsImpl) {
             for {
                 checkSubClassResponse <- (responderManager ? CheckSubClassRequestV1(
                     subClassIri = valueType,
-                    superClassIri = propertyObjectClassConstraint
+                    superClassIri = propertyObjectClassConstraint,
+                    userProfile = userProfile
                 )).mapTo[CheckSubClassResponseV1]
 
                 _ = if (!checkSubClassResponse.isSubClass) {

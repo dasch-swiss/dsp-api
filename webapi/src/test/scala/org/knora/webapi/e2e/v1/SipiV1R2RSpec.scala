@@ -24,7 +24,7 @@ import java.io.File
 import java.net.URLEncoder
 import java.nio.file.{Files, Paths}
 
-import akka.actor._
+import akka.actor.{Props, _}
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.server.Route
@@ -38,6 +38,7 @@ import org.knora.webapi.messages.v1.responder.valuemessages.{ChangeFileValueApiR
 import org.knora.webapi.messages.v1.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent}
 import org.knora.webapi.responders._
 import org.knora.webapi.responders.v1._
+import org.knora.webapi.responders.v2.ResponderManagerV2
 import org.knora.webapi.routing.v1.{ResourcesRouteV1, ValuesRouteV1}
 import org.knora.webapi.store._
 import org.knora.webapi.{FileWriteException, LiveActorMaker, R2RSpec, SharedAdminTestData}
@@ -61,6 +62,7 @@ class SipiV1R2RSpec extends R2RSpec {
 
 
     private val responderManager = system.actorOf(Props(new TestResponderManagerV1(Map(SIPI_ROUTER_ACTOR_NAME -> system.actorOf(Props(new MockSipiResponderV1))))), name = RESPONDER_MANAGER_ACTOR_NAME)
+    private val responderManager2 = system.actorOf(Props(new ResponderManagerV2 with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME2)
 
     private val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
 

@@ -36,6 +36,8 @@ import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRe
 import org.knora.webapi.messages.v1.responder.permissionmessages.PermissionDataV1
 import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
 import org.knora.webapi.messages.v1.store.triplestoremessages.{Initialized, InitializedResponse, ResetTriplestoreContent, ResetTriplestoreContentACK}
+import org.knora.webapi.messages.v2.responder.LoadOntologiesResponseV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.LoadOntologiesRequestV2
 import org.knora.webapi.responders._
 import org.knora.webapi.responders.v1.ResponderManagerV1
 import org.knora.webapi.responders.v2.ResponderManagerV2
@@ -168,8 +170,8 @@ trait KnoraService {
 
         // TODO: make a generic V2 ontology responder that handles this and is called by V1 ontology responder
         // TODO: forward LoadOntologies to V2 (V1 can still be called)
-        val ontologyCacheFuture = responderManager ? LoadOntologiesRequest(systemUser)
-        Await.result(ontologyCacheFuture, timeout.duration).asInstanceOf[LoadOntologiesResponse]
+        val ontologyCacheFuture = responderManager2 ? LoadOntologiesRequestV2(systemUser)
+        Await.result(ontologyCacheFuture, timeout.duration).asInstanceOf[LoadOntologiesResponseV2]
 
         if (StartupFlags.allowResetTriplestoreContentOperationOverHTTP.get) {
             println("WARNING: Resetting Triplestore Content over HTTP is turned ON.")
