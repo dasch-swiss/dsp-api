@@ -27,7 +27,7 @@ import akka.http.scaladsl.server.Route
 import org.knora.webapi.messages.v2.responder.resourcemessages.ResourcesGetRequestV2
 import org.knora.webapi.routing.{Authenticator, RouteUtilV2}
 import org.knora.webapi.util.InputValidation
-import org.knora.webapi.{BadRequestException, SettingsImpl}
+import org.knora.webapi.{BadRequestException, IRI, SettingsImpl}
 
 import scala.language.postfixOps
 
@@ -43,14 +43,17 @@ object ResourcesRouteV2 extends Authenticator {
         implicit val timeout = settings.defaultTimeout
         val responderManager = system.actorSelection("/user/responderManager2")
 
-        path("v2" / "resources" / Segment) { resIri =>
+        path("v2" / "resources" / Segments) { (resIris: List[String]) =>
             get {
                 requestContext => {
                     val userProfile = getUserProfileV1(requestContext)
 
-                    val resourceIri = InputValidation.toIri(resIri, () => throw BadRequestException(s"Invalid search string: '$resIri'"))
+                    val resourceIris: Set[IRI] = resIris.map {
+                        resIri: String =>
+                            InputValidation.toIri(resIri, () => throw BadRequestException(s"Invalid resource Iri: '$resIri'"))
+                    }.toSet
 
-                    val requestMessage = ResourcesGetRequestV2(resourceIris = Set(resourceIri), userProfile = userProfile)
+                    val requestMessage = ResourcesGetRequestV2(resourceIris = resourceIris, userProfile = userProfile)
 
                     RouteUtilV2.runJsonRoute(
                         requestMessage,
