@@ -180,7 +180,7 @@ object ResourcesRouteV1 extends Authenticator {
 
                                     if (timeVals.length != 2) throw BadRequestException("parameters for interval_value invalid")
 
-                                    Future(CreateValueV1WithComment(IntervalValueV1(timeVals(0), timeVals(1)), givenValue.comment))
+                                    Future(CreateValueV1WithComment(IntervalValueV1(timeVals.head, timeVals(1)), givenValue.comment))
 
                                 case OntologyConstants.KnoraBase.GeonameValue =>
                                     Future(CreateValueV1WithComment(GeonameValueV1(givenValue.geoname_value.get), givenValue.comment))
@@ -301,7 +301,7 @@ object ResourcesRouteV1 extends Authenticator {
           * @return
           *
           */
-       def knoraDataTypeXML(node:Node): CreateResourceValueV1 ={
+        def knoraDataTypeXML(node: Node): CreateResourceValueV1 = {
 
             val knoraType: Seq[Node] = node.attribute("knoraType").get
             val element_value = node.text
@@ -319,7 +319,6 @@ object ResourcesRouteV1 extends Authenticator {
 
 
                     case "link_value" =>
-                        // xml elements with ref attribute are links
                         val ref_att: Seq[Node] = node.attribute("ref").get
                         if (ref_att.nonEmpty) {
                             val linkRef = node.getNamespace(node.prefix) + "/" + node.label + "#" + ref_att
@@ -327,23 +326,31 @@ object ResourcesRouteV1 extends Authenticator {
                         } else {
                             throw BadRequestException(s"the ref attribute not specified for node: $node.label")
                         }
+
                     case "int_value" =>
                         CreateResourceValueV1(int_value = Some(InputValidation.toInt(element_value, () => throw BadRequestException(s"Invalid int_value: '$element_value'"))))
-                    case "decimal_value" =>
 
+                    case "decimal_value" =>
                         CreateResourceValueV1(decimal_value = Some(InputValidation.toBigDecimal(element_value, () => throw BadRequestException(s"Invalid decimal_value: '$element_value'"))))
+
                     case "boolean_value" =>
                         CreateResourceValueV1(boolean_value = Some(InputValidation.toBoolean(element_value, () => throw BadRequestException(s"Invalid boolean_value: '$element_value'"))))
+
                     case "uri_value" =>
                         CreateResourceValueV1(uri_value = Some(InputValidation.toIri(element_value, () => throw BadRequestException(s"Invalid uri_value: '$element_value'"))))
+
                     case "date_value" =>
                         CreateResourceValueV1(date_value = Some(InputValidation.toDate(element_value, () => throw BadRequestException(s"Invalid date_value: '$element_value'"))))
+
                     case "color_value" =>
                         CreateResourceValueV1(color_value = Some(InputValidation.toColor(element_value, () => throw BadRequestException(s"Invalid date_value: '$element_value'"))))
+
                     case "geom_value" =>
                         CreateResourceValueV1(geom_value = Some(InputValidation.toGeometryString(element_value, () => throw BadRequestException(s"Invalid geom_value: '$element_value'"))))
+
                     case "hlist_value" =>
                         CreateResourceValueV1(hlist_value = Some(InputValidation.toIri(element_value, () => throw BadRequestException(s"Invalid hlist value: '$element_value'"))))
+
                     case "interval_value" =>
                         Try(element_value.split(",")) match {
                             case Success(timeVals) =>
@@ -365,7 +372,7 @@ object ResourcesRouteV1 extends Authenticator {
                 throw BadRequestException(s"Invalid Knora data type is not specified ")
 
             }
-       }
+        }
 
 
         /**
@@ -408,7 +415,7 @@ object ResourcesRouteV1 extends Authenticator {
                                 } else {
 
                                     child.getNamespace(child.prefix) + "#" + child.label ->
-                                                List(knoraDataTypeXML(child))
+                                        List(knoraDataTypeXML(child))
                                 }
                         }
                     CreateResourceRequestV1(restype_id, resLabel, properties.toMap)

@@ -1286,7 +1286,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
 
             val projectIRI = URLEncoder.encode("http://data.knora.org/projects/DczxPs-sR6aZN91qV92ZmQ", "utf-8")
 
-            Post(s"/v1/resources/xml/$projectIRI", HttpEntity(ContentTypes.`text/xml(UTF-8)`, params)) ~> addCredentials(BasicHttpCredentials(biblioUserEmail, password)) ~> resourcesPath ~> check {
+            Post(s"/v1/resources/xml/$projectIRI", HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), params)) ~> addCredentials(BasicHttpCredentials(biblioUserEmail, password)) ~> resourcesPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)
                 responseAs[String] should include("createdResources")
             }
