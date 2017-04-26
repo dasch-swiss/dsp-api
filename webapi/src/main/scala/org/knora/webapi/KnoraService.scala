@@ -123,6 +123,7 @@ trait KnoraService {
             ProjectsRouteV1.knoraApiPath(system, settings, log) ~
             GroupsRouteV1.knoraApiPath(system, settings, log) ~
             PermissionsRouteV1.knoraApiPath(system, settings, log) ~
+            OntologiesRouteV2.knoraApiPath(system, settings, log) ~ // This is a V2 responder !
             SearchRouteV2.knoraApiPath(system, settings, log) ~  // This is a V2 responder !
             ResourcesRouteV2.knoraApiPath(system, settings, log), // This is a V2 responder !
         settings,
@@ -165,6 +166,8 @@ trait KnoraService {
             println("... loading of demo data finished.")
         }
 
+        // TODO: make a generic V2 ontology responder that handles this and is called by V1 ontology responder
+        // TODO: forward LoadOntologies to V2 (V1 can still be called)
         val ontologyCacheFuture = responderManager ? LoadOntologiesRequest(systemUser)
         Await.result(ontologyCacheFuture, timeout.duration).asInstanceOf[LoadOntologiesResponse]
 

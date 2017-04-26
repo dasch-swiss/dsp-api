@@ -18,24 +18,33 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.messages.v2.responder.searchmessages
+package org.knora.webapi.messages.v2.responder.ontologymessages
 
+import org.knora.webapi.IRI
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v2.responder._
 
 /**
-  * An abstract trait for messages that can be sent to `SearchResponderV2`.
+  * An abstract trait for messages that can be sent to `ResourcesResponderV2`.
   */
-sealed trait SearchResponderRequestV2 extends KnoraRequestV2 {
+sealed trait OntologiesResponderRequestV2 extends KnoraRequestV2 {
 
     def userProfile: UserProfileV1
 }
 
+
 /**
-  * Requests a fulltext search. A successful response will be a [[ReadResourcesSequenceV2]].
+  * Requests that all ontologies in the repository are loaded. This message must be sent only once, when the application
+  * starts, before it accepts any API requests.
   *
   * @param userProfile the profile of the user making the request.
   */
-case class FulltextSearchGetRequestV2(searchValue: String,
-                                      userProfile: UserProfileV1) extends SearchResponderRequestV2
+case class LoadOntologiesRequestV2(userProfile: UserProfileV1) extends OntologiesResponderRequestV2
 
+/**
+  * Requests the entity definitions for the given resource class Iris.
+  *
+  * @param resourceClassIris the IRIs of the resource classes to be queried.
+  * @param userProfile the profile of the user making the request.
+  */
+case class ResourceClassesGetRequestV2(resourceClassIris: Set[IRI], userProfile: UserProfileV1) extends OntologiesResponderRequestV2

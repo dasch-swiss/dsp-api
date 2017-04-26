@@ -18,24 +18,25 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.messages.v2.responder.searchmessages
+package org.knora.webapi.responders.v2
 
+import org.knora.webapi.IRI
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
+import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.messages.v2.responder._
+import org.knora.webapi.responders.Responder
+import org.knora.webapi.util.ActorUtil.future2Message
 
-/**
-  * An abstract trait for messages that can be sent to `SearchResponderV2`.
-  */
-sealed trait SearchResponderRequestV2 extends KnoraRequestV2 {
+import scala.concurrent.Future
 
-    def userProfile: UserProfileV1
+class OntologiesResponderV2 extends Responder {
+
+    def receive = {
+        case LoadOntologiesRequestV2(userProfile) => future2Message(sender(), loadOntologies(userProfile), log)
+        //case resourceClassesRequest: ResourceClassesGetRequestV2 => future2Message(sender(), getResourceClasses(resourceClassesRequest.resourceClassIris, resourceClassesRequest.userProfile), log)
+    }
+
+    private def loadOntologies(userProfile: UserProfileV1): Future[LoadOntologiesResponseV2] = ???
+
+    private def getResourceClasses(resourceClassIris: Set[IRI], userProfile: UserProfileV1) = ???
 }
-
-/**
-  * Requests a fulltext search. A successful response will be a [[ReadResourcesSequenceV2]].
-  *
-  * @param userProfile the profile of the user making the request.
-  */
-case class FulltextSearchGetRequestV2(searchValue: String,
-                                      userProfile: UserProfileV1) extends SearchResponderRequestV2
-

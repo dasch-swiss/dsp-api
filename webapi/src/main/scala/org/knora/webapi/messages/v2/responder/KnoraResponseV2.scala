@@ -598,6 +598,13 @@ case class BooleanLiteralV2(value: Boolean) extends LiteralV2
 trait KnoraResponseV2 extends Jsonable
 
 /**
+  * Indicates that all ontologies were loaded.
+  */
+case class LoadOntologiesResponseV2() extends KnoraResponseV2 {
+    def toJsValue = JsObject(Map("result" -> JsString("Ontologies loaded.")))
+}
+
+/**
   * Represents a sequence of resources read back from Knora.
   *
   * @param numberOfResources the amount of resources returned.
