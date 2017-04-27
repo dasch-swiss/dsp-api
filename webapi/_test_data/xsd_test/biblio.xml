@@ -1,10 +1,10 @@
-<?xml version="1.0"?>
-<knoraXmlImport:resources xmlns="http://www.knora.org/ontology/biblio#"
+<?xml version="1.0" encoding="UTF-8"?>
+<knoraXmlImport:resources xmlns="http://api.knora.org/ontology/biblio/v1/xml#"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://www.knora.org/ontology/biblio# biblio.xsd"
-    xmlns:biblio="http://www.knora.org/ontology/biblio#"
-    xmlns:beol="http://www.knora.org/ontology/beol#"
-    xmlns:knoraXmlImport="http://www.knora.org/XmlImport/v1#">
+    xsi:schemaLocation="http://api.knora.org/ontology/biblio/v1/xml# biblio.xsd"
+    xmlns:biblio="http://api.knora.org/ontology/biblio/v1/xml#"
+    xmlns:beol="http://api.knora.org/ontology/beol/v1/xml#"
+    xmlns:knoraXmlImport="http://api.knora.org/ontology/bulk-import/v1/xml#">
     <beol:person id="abel">
         <beol:hasGivenName knoraType="richtext_value">Niels Henrik</beol:hasGivenName>
         <beol:hasFamilyName knoraType="richtext_value">Abel</beol:hasFamilyName>

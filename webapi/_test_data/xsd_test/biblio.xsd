@@ -1,11 +1,11 @@
-<?xml version="1.0"?>
-<xs:schema elementFormDefault="qualified" targetNamespace="http://www.knora.org/ontology/biblio#"
-    xmlns="http://www.knora.org/ontology/biblio#" xmlns:xs="http://www.w3.org/2001/XMLSchema"
-    xmlns:knoraXmlImport="http://www.knora.org/XmlImport/v1#"
-    xmlns:beol="http://www.knora.org/ontology/beol#"
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema elementFormDefault="qualified" targetNamespace="http://api.knora.org/ontology/biblio/v1/xml#"
+    xmlns="http://api.knora.org/ontology/biblio/v1/xml#" xmlns:xs="http://www.w3.org/2001/XMLSchema"
+    xmlns:knoraXmlImport="http://api.knora.org/ontology/bulk-import/v1/xml#"
+    xmlns:beol="http://api.knora.org/ontology/beol/v1/xml#"
     xmlns:vc="http://www.w3.org/2007/XMLSchema-versioning" vc:minVersion="1.1">
-    <xs:import namespace="http://www.knora.org/XmlImport/v1#" schemaLocation="knora-xml-v1.xsd"/>
-    <xs:import namespace="http://www.knora.org/ontology/beol#" schemaLocation="beol.xsd"/>
+    <xs:import namespace="http://api.knora.org/ontology/bulk-import/v1/xml#" schemaLocation="knora-bulk-import-v1-xml.xsd"/>
+    <xs:import namespace="http://api.knora.org/ontology/beol/v1/xml#" schemaLocation="beol.xsd"/>
 
     <xs:element name="Journal">
         <xs:complexType>
