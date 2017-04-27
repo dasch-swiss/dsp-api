@@ -222,11 +222,8 @@ class OntologyResponderV1 extends Responder {
       */
     private def checkSubClass(checkSubClassRequest: CheckSubClassRequestV1): Future[CheckSubClassResponseV1] = {
         for {
-            subClassOfRelations: ResourceAndValueSubClassOfRelationsResponseV1 <- (responderManager2 ? ResourceAndValueSubClassOfRelationsRequestV2(checkSubClassRequest.subClassIri, checkSubClassRequest.userProfile)).mapTo[ResourceAndValueSubClassOfRelationsResponseV1]
+            response <- (responderManager2 ? CheckSubClassRequestV2(subClassIri = checkSubClassRequest.subClassIri, superClassIri = checkSubClassRequest.superClassIri, checkSubClassRequest.userProfile)).mapTo[CheckSubClassResponseV1]
 
-            response = CheckSubClassResponseV1(
-                isSubClass = subClassOfRelations.subClassIris.contains(checkSubClassRequest.superClassIri)
-            )
         } yield response
     }
 
@@ -239,33 +236,8 @@ class OntologyResponderV1 extends Responder {
     private def getSubClasses(getSubClassesRequest: SubClassesGetRequestV1): Future[SubClassesGetResponseV1] = {
         for {
 
-            superClassesResponse: ResourceSuperclassOfRelationsResponseV1 <- (responderManager2 ? ResourceSuperClassOfRelationsRequestV2(getSubClassesRequest.resourceClassIri, getSubClassesRequest.userProfile)).mapTo[ResourceSuperclassOfRelationsResponseV1]
+            response <- (responderManager2 ? SubClassesGetRequestV2(getSubClassesRequest.resourceClassIri, getSubClassesRequest.userProfile)).mapTo[SubClassesGetResponseV1]
 
-            subClassIris = superClassesResponse.superClassIris.toVector.sorted
-
-            subClassesWithFuture: Vector[Future[SubClassInfoV1]] = subClassIris.map {
-                resourceClassIri =>
-
-                    for {
-
-                        resourceClassResponse: EntityInfoGetResponseV1 <- getEntityInfoResponseV1(resourceClassIris = Set(resourceClassIri), propertyIris = Set.empty[IRI], getSubClassesRequest.userProfile).mapTo[EntityInfoGetResponseV1]
-
-                        resourceClassInfo: ResourceEntityInfoV1 = resourceClassResponse.resourceEntityInfoMap(resourceClassIri)
-
-                    } yield SubClassInfoV1(
-                        id = resourceClassIri,
-                        label = resourceClassInfo.getPredicateObject(
-                            predicateIri = OntologyConstants.Rdfs.Label,
-                            preferredLangs = Some(getSubClassesRequest.userProfile.userData.lang, settings.fallbackLanguage)
-                        ).getOrElse(throw InconsistentTriplestoreDataException(s"Resource class $resourceClassIri has no rdfs:label"))
-                    )
-            }
-
-            subClasses: Vector[SubClassInfoV1] <- Future.sequence(subClassesWithFuture)
-
-            response = SubClassesGetResponseV1(
-                subClasses = subClasses
-            )
         } yield response
     }
 

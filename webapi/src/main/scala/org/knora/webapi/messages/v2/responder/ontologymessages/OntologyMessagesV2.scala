@@ -53,21 +53,22 @@ case class LoadOntologiesRequestV2(userProfile: UserProfileV1) extends Ontologie
 case class EntityInfoGetRequestV2(resourceClassIris: Set[IRI] = Set.empty[IRI], propertyIris: Set[IRI] = Set.empty[IRI], userProfile: UserProfileV1) extends OntologiesResponderRequestV2
 
 /**
-  * Requests information to determine whether a certain Knora resource or value class is a subclass of another class.
-  * A succesful response will be a [[ResourceAndValueSubClassOfRelationsResponseV1]].
+  * Checks whether a Knora resource or value class is a subclass of (or identical to) another class.
+  * A successful response will be a [[CheckSubClassResponseV1]].
   *
-  * @param classIri    the Iri of the given resource or value class.
+  * @param subClassIri   the IRI of the subclass.
+  * @param superClassIri the IRI of the superclass.
   */
-case class ResourceAndValueSubClassOfRelationsRequestV2(classIri: IRI, userProfile: UserProfileV1) extends OntologiesResponderRequestV2
+case class CheckSubClassRequestV2(subClassIri: IRI, superClassIri: IRI, userProfile: UserProfileV1) extends OntologiesResponderRequestV2
 
 /**
-  * Requests information to determine whether a certain Knora resource class is a superclass of another class.
-  * A succesful response will be a [[ResourceSuperclassOfRelationsResponseV1]].
+  * Requests information about the subclasses of a Knora resource class. A successful response will be
+  * a [[SubClassesGetResponseV1]].
   *
   * @param resourceClassIri    the Iri of the given resource class.
   * @param userProfile       the profile of the user making the request.
   */
-case class ResourceSuperClassOfRelationsRequestV2(resourceClassIri: IRI, userProfile: UserProfileV1) extends OntologiesResponderRequestV2
+case class SubClassesGetRequestV2(resourceClassIri: IRI, userProfile: UserProfileV1) extends OntologiesResponderRequestV2
 
 /**
   *

@@ -51,21 +51,6 @@ case class LoadOntologiesResponse() extends KnoraResponseV1 {
 }
 
 /**
-  * Represents the subclass relations of the given resource or value class.
-  *
-  * @param subClassIris the subclasses.
-  */
-case class ResourceAndValueSubClassOfRelationsResponseV1(subClassIris: Set[IRI])
-
-
-/**
-  * Represents the superclass relations of the given resource class.
-  *
-  * @param superClassIris the superclasses.
-  */
-case class ResourceSuperclassOfRelationsResponseV1(superClassIris: Set[IRI])
-
-/**
   * Requests all available information about a list of ontology entities (resource classes and/or properties). A successful response will be an
   * [[EntityInfoGetResponseV1]].
   *

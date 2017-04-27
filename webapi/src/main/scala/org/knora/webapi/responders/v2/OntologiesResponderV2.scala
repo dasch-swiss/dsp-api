@@ -22,14 +22,13 @@ package org.knora.webapi.responders.v2
 
 import akka.pattern._
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory
-import org.knora.webapi.messages.v1.responder.ontologymessages.{ResourceAndValueSubClassOfRelationsResponseV1, _}
+import org.knora.webapi.messages.v1.responder.ontologymessages._
 import org.knora.webapi.messages.v1.responder.standoffmessages.StandoffDataTypeClasses
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
 import org.knora.webapi.messages.v2.responder._
 import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.responders.Responder
-import org.knora.webapi.responders.v1.ValueUtilV1
 import org.knora.webapi.util.ActorUtil.{future2Message, handleUnexpectedMessage}
 import org.knora.webapi.util.{CacheUtil, ErrorHandlingMap, KnoraIdUtil}
 import org.knora.webapi.{ApplicationCacheException, IRI, InconsistentTriplestoreDataException, OntologyConstants}
@@ -61,6 +60,7 @@ class OntologiesResponderV2 extends Responder {
       * @param resourceSuperClassOfRelations       a map of IRIs of resource classes to sets of the IRIs of their subclasses.
       * @param propertyDefs                        a map of property IRIs to property definitions.
       */
+    // TODO: rename and move v1 case classes to v2 (v1 may use V2, but not vice versa)
     case class OntologyCacheData(namedGraphResourceClasses: Map[IRI, Set[IRI]],
                                  namedGraphProperties: Map[IRI, Set[IRI]],
                                  resourceClassDefs: Map[IRI, ResourceEntityInfoV1],
@@ -77,8 +77,8 @@ class OntologiesResponderV2 extends Responder {
         case StandoffEntityInfoGetRequestV2(standoffClassIris, standoffPropertyIris, userProfile) => future2Message(sender(), getStandoffEntityInfoResponseV2(standoffClassIris, standoffPropertyIris, userProfile), log)
         case StandoffClassesWithDataTypeGetRequestV2(userProfile) => future2Message(sender(), getStandoffStandoffClassesWithDataTypeV2(userProfile), log)
         case StandoffAllPropertyEntitiesGetRequestV2(userProfile) => future2Message(sender(), getAllStandoffPropertyEntitiesV2(userProfile), log)
-        case ResourceAndValueSubClassOfRelationsRequestV2(classIri, userProfile) => future2Message(sender(), getResourceAndValueSubClassOfRelations(classIri, userProfile), log)
-        case ResourceSuperClassOfRelationsRequestV2(resourceClassIri, userProfile) => future2Message(sender(), getResourceSuperClassOfRelations(resourceClassIri, userProfile), log)
+        case CheckSubClassRequestV2(subClassIri, superClassIri, userProfile) => future2Message(sender(), checkSubClassV2(subClassIri, superClassIri, userProfile), log)
+        case SubClassesGetRequestV2(resourceClassIri, userProfile) => future2Message(sender(), getSubClassesV2(resourceClassIri, userProfile), log)
         case NamedGraphEntitiesRequestV2(namedGraphIri, userProfile) => future2Message(sender(), getNamedGraphEntityInfoV1ForNamedGraph(namedGraphIri, userProfile), log)
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
         //case resourceClassesRequest: ResourceClassesGetRequestV2 => future2Message(sender(), getResourceClasses(resourceClassesRequest.resourceClassIris, resourceClassesRequest.userProfile), log)
@@ -739,33 +739,48 @@ class OntologiesResponderV2 extends Responder {
     }
 
     /**
-      * Gets all subclass relations for a given resource or value class.
+      * Checks whether a certain Knora resource or value class is a subclass of another class.
       *
-      * @param classIri     the given resource or value class.
-      * @param userProfile  the profile of the user making the request.
-      * @return a [[ResourceAndValueSubClassOfRelationsResponseV1]].
+      * @param subClassIri the Iri of the resource or value class whose subclassOf relations have to be checked.
+      * @param superClassIri the Iri of the resource or value class to check for (whether it is a a super class of `subClassIri` or not).
+      * @return a [[CheckSubClassResponseV1]].
       */
-    private def getResourceAndValueSubClassOfRelations(classIri: IRI, userProfile: UserProfileV1): Future[ResourceAndValueSubClassOfRelationsResponseV1] = {
+    private def checkSubClassV2(subClassIri: IRI, superClassIri: IRI, userProfile: UserProfileV1): Future[CheckSubClassResponseV1] = {
         for {
             cacheData <- getCacheData
-            response = ResourceAndValueSubClassOfRelationsResponseV1(
-                subClassIris = cacheData.resourceAndValueSubClassOfRelations(classIri)
+            response = CheckSubClassResponseV1(
+                isSubClass = cacheData.resourceAndValueSubClassOfRelations(subClassIri).contains(superClassIri)
             )
         } yield response
     }
 
     /**
-      * Gets all subclass relations for a given resource or value class.
+      * Gets the IRIs of the subclasses of a resource class.
       *
-      * @param resourceClassIri     the given resource or value class.
-      * @param userProfile  the profile of the user making the request.
-      * @return a [[ResourceAndValueSubClassOfRelationsResponseV1]].
+      * @param resourceClassIri the Iri of the resource class whose subclasses should be returned.
+      * @return a [[SubClassesGetResponseV1]].
       */
-    private def getResourceSuperClassOfRelations(resourceClassIri: IRI, userProfile: UserProfileV1): Future[ResourceSuperclassOfRelationsResponseV1] = {
+    private def getSubClassesV2(resourceClassIri: IRI, userProfile: UserProfileV1): Future[SubClassesGetResponseV1] = {
         for {
             cacheData <- getCacheData
-            response = ResourceSuperclassOfRelationsResponseV1(
-                superClassIris = cacheData.resourceSuperClassOfRelations(resourceClassIri)
+
+            subClassIris = cacheData.resourceSuperClassOfRelations(resourceClassIri).toVector.sorted
+
+            subClasses = subClassIris.map {
+                subClassIri =>
+                    val resourceClassInfo: ResourceEntityInfoV1 = cacheData.resourceClassDefs(subClassIri)
+
+                    SubClassInfoV1(
+                        id = subClassIri,
+                        label = resourceClassInfo.getPredicateObject(
+                            predicateIri = OntologyConstants.Rdfs.Label,
+                            preferredLangs = Some(userProfile.userData.lang, settings.fallbackLanguage)
+                        ).getOrElse(throw InconsistentTriplestoreDataException(s"Resource class $subClassIri has no rdfs:label"))
+                    )
+            }
+
+            response = SubClassesGetResponseV1(
+                subClasses = subClasses
             )
         } yield response
     }
