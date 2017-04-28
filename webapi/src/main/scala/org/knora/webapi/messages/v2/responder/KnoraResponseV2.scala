@@ -449,7 +449,9 @@ case class StillImageFileValueContentV2(valueHasString: String,
             OntologyConstants.KnoraApi.FileValueAsUrl -> JsString(imagePath),
             OntologyConstants.KnoraApi.FileValueIsPreview -> JsBoolean(isPreview),
             OntologyConstants.KnoraApi.StillImageFileValueHasDimX -> JsNumber(dimX),
-            OntologyConstants.KnoraApi.StillImageFileValueHasDimY -> JsNumber(dimY)
+            OntologyConstants.KnoraApi.StillImageFileValueHasDimY -> JsNumber(dimY),
+            OntologyConstants.KnoraApi.FileValueHasFilename -> JsString(internalFilename),
+            OntologyConstants.KnoraApi.StillImageFileValueHasIIIFBaseUrl -> JsString(settings.sipiIIIFGetUrl)
         )
     }
 
@@ -488,6 +490,7 @@ case class TextFileValueContentV2(valueHasString: String, internalMimeType: Stri
         val imagePath: String = toURL
 
         Map(
+            OntologyConstants.KnoraApi.FileValueHasFilename -> JsString(internalFilename),
             OntologyConstants.KnoraApi.FileValueAsUrl -> JsString(imagePath)
         )
     }

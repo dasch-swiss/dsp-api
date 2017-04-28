@@ -447,9 +447,12 @@ object OntologyConstants {
 
         val FileValueAsUrl = "http://www.knora.org/ontology/knora-api#fileValueAsUrl"
         val FileValueIsPreview = "http://www.knora.org/ontology/knora-api#fileValueIsPreview"
+        val FileValueHasFilename = "http://www.knora.org/ontology/knora-api#fileValueHasFilename"
 
         val StillImageFileValueHasDimX = "http://www.knora.org/ontology/knora-api#stillImageFileValueHasDimX"
         val StillImageFileValueHasDimY = "http://www.knora.org/ontology/knora-api#stillImageFileValueHasDimY"
+        val StillImageFileValueHasIIIFBaseUrl = "http://www.knora.org/ontology/knora-api#stillImageFileValueHasIIIFBaseUrl"
+
 
         val IntervalValueHasStart = "http://www.knora.org/ontology/knora-api#intervalValueHasStart"
         val IntervalValueHasEnd = "http://www.knora.org/ontology/knora-api#intervalValueHasEnd"

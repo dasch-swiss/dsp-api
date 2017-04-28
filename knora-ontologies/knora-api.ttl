@@ -555,6 +555,10 @@
                            [ rdf:type owl:Restriction ;
                              owl:onProperty :fileValueAsUrl ;
                              owl:cardinality "1"^^xsd:nonNegativeInteger
+                           ],
+                           [ rdf:type owl:Restriction ;
+                             owl:onProperty :fileValueHasFilename ;
+                             owl:cardinality "1"^^xsd:nonNegativeInteger
                            ] .
 
 ### http://www.knora.org/ontology/knora-api#fileValueIsPreview
@@ -583,6 +587,19 @@
     knora-base:objectDatatypeConstraint xsd:anyURI .
 
 
+### http://www.knora.org/ontology/knora-api#fileValueHasFilename
+
+:fileValueHasFilename rdf:type owl:DatatypeProperty ;
+
+    rdfs:comment "The name of the file this file value represents"@en ;
+
+    rdfs:subPropertyOf :valueHas ;
+
+    knora-base:subjectClassConstraint :FileValue ;
+
+    knora-base:objectDatatypeConstraint xsd:string .
+
+
 ### TextFileValue
 
 ### http://www.knora.org/ontology/knora-api#TextFileValue
@@ -600,6 +617,10 @@
                                      ] ,
                                      [ rdf:type owl:Restriction ;
                                        owl:onProperty :stillImageFileValueHasDimY ;
+                                       owl:cardinality "1"^^xsd:nonNegativeInteger
+                                     ],
+                                     [ rdf:type owl:Restriction ;
+                                       owl:onProperty :stillImageFileValueHasIIIFBaseUrl ;
                                        owl:cardinality "1"^^xsd:nonNegativeInteger
                                      ] .
 
@@ -627,6 +648,19 @@
     knora-base:subjectClassConstraint :StillImageFileValue ;
 
     knora-base:objectDatatypeConstraint xsd:integer .
+
+
+### http://www.knora.org/ontology/knora-api#stillImageFileValueHasIIIFBaseUrl
+
+:stillImageFileValueHasIIIFBaseUrl rdf:type owl:DatatypeProperty ;
+
+    rdfs:comment "The IIIF image server's base url"@en ;
+
+    rdfs:subPropertyOf :valueHas ;
+
+    knora-base:subjectClassConstraint :StillImageFileValue ;
+
+    knora-base:objectDatatypeConstraint xsd:anyURI .
 
 
 
