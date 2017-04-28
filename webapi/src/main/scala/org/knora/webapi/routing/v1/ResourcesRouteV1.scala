@@ -388,8 +388,11 @@ object ResourcesRouteV1 extends Authenticator {
                 .map(node => {
                     val entityType = node.label
 
-                    // the id attribute of the xml element is the resource label
-                    val resLabel = (node \ "@id").toString
+                    // Get the client's ID for the resource
+                    val resClientID = (node \ "@id").toString
+
+                    // Get the resource's label
+                    val resLabel = (node \ "@label").toString
 
                     // namespaces of xml
                     val elemNS = node.getNamespace(node.prefix)
@@ -418,7 +421,12 @@ object ResourcesRouteV1 extends Authenticator {
                                         List(knoraDataTypeXML(child))
                                 }
                         }
-                    CreateResourceRequestV1(restype_id, resLabel, properties.toMap)
+                    CreateResourceRequestV1(
+                        restype_id = restype_id,
+                        client_id = resClientID,
+                        label = resLabel,
+                        properties = properties.toMap
+                    )
                 })
         }
 

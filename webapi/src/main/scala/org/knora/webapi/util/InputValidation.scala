@@ -34,6 +34,8 @@ import org.knora.webapi.messages.v1.responder.standoffmessages.StandoffDataTypeC
 import org.knora.webapi.twirl.StandoffTagV1
 import spray.json.JsonParser
 
+import scala.util.matching.Regex
+
 
 /**
   * Do save String to expected value type conversions (to be inserted in the SPARQL template).
@@ -41,13 +43,90 @@ import spray.json.JsonParser
   */
 object InputValidation {
 
-    val calendar_separator = ":"
-    val precision_separator = "-"
-    val dateTimeFormat = "yyyy-MM-dd'T'HH:mm:ss"
+    /**
+      * Separates the calendar name from the rest of a Knora date.
+      */
+    val CalendarSeparator: String = ":"
 
+    /**
+      * Separates year, month, and day in a Knora date.
+      */
+    val PrecisionSeparator: String = "-"
+
+    // The expected format of a Knora date.
+    // Calendar:YYYY[-MM[-DD]][:YYYY[-MM[-DD]]]
+    private val KnoraDateRegex: Regex = ("""^(GREGORIAN|JULIAN)""" +
+        CalendarSeparator + // calendar name
+        """\d{1,4}(""" + // year
+        PrecisionSeparator +
+        """\d{1,2}(""" + // month
+        PrecisionSeparator +
+        """\d{1,2})?)?(""" + // day
+        CalendarSeparator + // separator if a period is given
+        """\d{1,4}(""" + // year 2
+        PrecisionSeparator +
+        """\d{1,2}(""" + // month 2
+        PrecisionSeparator +
+        """\d{1,2})?)?)?$""").r // day 2
+
+    // The expected format of a datetime.
+    private val dateTimeFormat = "yyyy-MM-dd'T'HH:mm:ss"
+
+    // Characters that are escaped in strings that will be used in SPARQL.
+    private val SparqlEscapeInput = Array(
+        "\\",
+        "\"",
+        "'",
+        "\t",
+        "\n"
+    )
+
+    // Escaped characters as they are used in SPARQL.
+    private val SparqlEscapeOutput = Array(
+        "\\\\",
+        "\\\"",
+        "\\'",
+        "\\t",
+        "\\n"
+    )
+
+    // A regex for matching hexadecimal color codes.
+    // http://stackoverflow.com/questions/1636350/how-to-identify-a-given-string-is-hex-color-format
+    private val ColorRegex = "^#(?:[0-9a-fA-F]{3}){1,2}$".r
+
+    // The start and end of an internal Knora ontology IRI.
+    private val InternalOntologyStart = "http://www.knora.org/ontology/"
+    private val InternalOntologyEnd = "#"
+
+    // The start and end of an XML import namespace.
+    private val XmlImportNamespaceStart = "http://api.knora.org/ontology/"
+    private val XmlImportNamespaceEnd = "/import/v1#"
+
+    // A regex pattern for ontology prefixes, following <https://www.w3.org/TR/turtle/#prefixed-name>,
+    // in which a prefix label is defined as an XML NCName <https://www.w3.org/TR/1999/REC-xml-names-19990114/#NT-NCName>.
+    private val OntologyPrefixPattern =
+    """[\p{L}_][\p{L}0-9_.-]*"""
+
+    // A regex for internal ontologies.
+    private val InternalOntologyRegex: Regex = (InternalOntologyStart + OntologyPrefixPattern + InternalOntologyEnd).r
+
+    // A regex for XML import namespaces.
+    private val XmlImportNamespaceRegex: Regex = (XmlImportNamespaceStart + OntologyPrefixPattern + XmlImportNamespaceEnd).r
+
+    // Valid URL schemes.
     private val schemes = Array("http", "https")
+
+    // A validator for URLs.
     private val urlValidator = new UrlValidator(schemes, UrlValidator.ALLOW_LOCAL_URLS) // local urls are url encoded Knora Iris as part of the whole URL
 
+    /**
+      * Checks that a string represents a valid integer.
+      *
+      * @param s        the string to be checked.
+      * @param errorFun a function that throws an exception. It will be called if the string does not represent a
+      *                 valid integer.
+      * @return the integer value of the string.
+      */
     def toInt(s: String, errorFun: () => Nothing): Int = {
         try {
             s.toInt
@@ -56,15 +135,31 @@ object InputValidation {
         }
     }
 
+    /**
+      * Checks that a string represents a valid decimal number.
+      *
+      * @param s        the string to be checked.
+      * @param errorFun a function that throws an exception. It will be called if the string does not represent a
+      *                 valid decimal number.
+      * @return the decimal value of the string.
+      */
     def toBigDecimal(s: String, errorFun: () => Nothing): BigDecimal = {
         try {
             BigDecimal(s)
         } catch {
-            case e: Exception => errorFun() // value could not be converted to an Float
+            case e: Exception => errorFun() // value could not be converted to a decimal
         }
     }
 
-    def toDateTime(s: String, errorFun: () => Nothing) = {
+    /**
+      * Checks that a string represents a valid datetime.
+      *
+      * @param s        the string to be checked.
+      * @param errorFun a function that throws an exception. It will be called if the string does not represent
+      *                 a valid datetime.
+      * @return the same string.
+      */
+    def toDateTime(s: String, errorFun: () => Nothing): String = {
         // check if a string corresponds to the expected format `dateTimeFormat`
 
         try {
@@ -75,6 +170,14 @@ object InputValidation {
         }
     }
 
+    /**
+      * Checks that a string represents a valid IRI.
+      *
+      * @param s        the string to be checked.
+      * @param errorFun a function that throws an exception. It will be called if the string does not represent a valid
+      *                 IRI.
+      * @return the same string.
+      */
     def toIri(s: String, errorFun: () => Nothing): IRI = {
         val urlEncodedStr = encodeAllowEscapes(s)
 
@@ -86,52 +189,44 @@ object InputValidation {
     }
 
     /**
-      *
       * Makes a string safe to be entered in the triplestore by escaping special chars.
       *
-      * If the param `revert` is set to `true`, this operation is reverted.
+      * If the param `revert` is set to `true`, the string is unescaped.
       *
-      * @param s        the string to be entered in the triplestore.
-      * @param errorFun the error
+      * @param s        a string.
+      * @param errorFun a function that throws an exception. It will be called if the string is empty or contains
+      *                 a carriage return (`\r`).
       * @param revert   if set to `true`, the escaping is reverted. This is useful when a string is read back from the triplestore.
-      * @return a [[String]].
+      * @return the same string, escaped or unescaped as requested.
       */
     def toSparqlEncodedString(s: String, errorFun: () => Nothing, revert: Boolean = false): String = {
         if (s.isEmpty || s.contains("\r")) errorFun()
 
         // http://www.morelab.deusto.es/code_injection/
 
-        val input = Array(
-            "\\",
-            "\"",
-            "'",
-            "\t",
-            "\n"
-        )
-
-        val output = Array(
-            "\\\\",
-            "\\\"",
-            "\\'",
-            "\\t",
-            "\\n"
-        )
-
         if (!revert) {
             StringUtils.replaceEach(
                 s,
-                input,
-                output
+                SparqlEscapeInput,
+                SparqlEscapeOutput
             )
         } else {
             StringUtils.replaceEach(
                 s,
-                output,
-                input
+                SparqlEscapeOutput,
+                SparqlEscapeInput
             )
         }
     }
 
+    /**
+      * Checks that a geometry string contains valid JSON.
+      *
+      * @param s        a geometry string.
+      * @param errorFun a function that throws an exception. It will be called if the string does not contain valid
+      *                 JSON.
+      * @return the same string.
+      */
     def toGeometryString(s: String, errorFun: () => Nothing): String = {
         // TODO: For now, we just make sure that the string is valid JSON. We should stop JSON in the triplestore, and represent geometry in RDF instead (issue 169).
 
@@ -143,45 +238,50 @@ object InputValidation {
         }
     }
 
+    /**
+      * Checks that a hexadecimal color code string is valid.
+      *
+      * @param s        a string containing a hexadecimal color code.
+      * @param errorFun a function that throws an exception. It will be called if the string does not contain a valid
+      *                 hexadecimal color code.
+      * @return the same string.
+      */
     def toColor(s: String, errorFun: () => Nothing): String = {
-
-        val pattern = "^#(?:[0-9a-fA-F]{3}){1,2}$".r // http://stackoverflow.com/questions/1636350/how-to-identify-a-given-string-is-hex-color-format
-
-        pattern.findFirstIn(s) match {
+        ColorRegex.findFirstIn(s) match {
             case Some(datestr) => datestr
             case None => errorFun() // not a valid color hex value string
         }
     }
 
+    /**
+      * Checks that the format of a Knora date string is valid.
+      *
+      * @param s        a Knora date string.
+      * @param errorFun a function that throws an exception. It will be called if the date's format is invalid.
+      * @return the same string.
+      */
     def toDate(s: String, errorFun: () => Nothing): String = {
         // TODO: how to deal with dates BC -> ERA
 
         // TODO: import calendars instead of hardcoding them
 
-        // Calendar:YYYY[-MM[-DD]][:YYYY[-MM[-DD]]]
-        val pattern = "^(GREGORIAN|JULIAN)" +
-            calendar_separator + // calendar name
-            "\\d{1,4}(" + // year
-            precision_separator +
-            "\\d{1,2}(" + // month
-            precision_separator +
-            "\\d{1,2})?)?(" + // day
-            calendar_separator + // separator if a period is given
-            "\\d{1,4}(" + // year 2
-            precision_separator +
-            "\\d{1,2}(" + // month 2
-            precision_separator +
-            "\\d{1,2})?)?)?$" // day 2
-
         // if the pattern doesn't match (=> None), the date string is formally invalid
         // Please note that this is a mere formal validation,
         // the actual validity check is done in `DateUtilV1.dateString2DateRange`
-        pattern.r.findFirstIn(s) match {
+        KnoraDateRegex.findFirstIn(s) match {
             case Some(value) => value
             case None => errorFun() // calling this function throws an error
         }
     }
 
+    /**
+      * Checks that a string contains a valid boolean value.
+      *
+      * @param s        a string containing a boolean value.
+      * @param errorFun a function that throws an exception. It will be called if the string does not contain
+      *                 a boolean value.
+      * @return the boolean value of the string.
+      */
     def toBoolean(s: String, errorFun: () => Nothing): Boolean = {
         try {
             s.toBoolean
@@ -269,9 +369,9 @@ object InputValidation {
     }
 
     /**
-      * Creates an empty file in the default temporary-file directory specified in the 'settings'.
+      * Creates an empty file in the default temporary-file directory specified in Knora's application settings.
       *
-      * @param settings
+      * @param settings Knora's application settings.
       * @return the location where the file has been written to.
       */
     def createTempFile(settings: SettingsImpl): File = {
@@ -286,7 +386,7 @@ object InputValidation {
         val file: File = File.createTempFile("tmp_", ".bin", new File(settings.tmpDataDir))
 
         if (!file.canWrite)
-            throw FileWriteException(s"File ${file} cannot be written.")
+            throw FileWriteException(s"File $file cannot be written.")
         file
     }
 
@@ -300,5 +400,37 @@ object InputValidation {
         }
 
         Files.deleteIfExists(path)
+    }
+
+    /**
+      * Converts the IRI of an internal ontology (used in the triplestore) to an XML namespace for
+      * use in data import.
+      *
+      * @param internalIri the IRI of the internal ontology.
+      * @param errorFun    a function that throws an exception. It will be called if the form of the IRI is not
+      *                    valid for an internal ontology IRI.
+      * @return the corresponding XML import namespace.
+      */
+    def internalOntologyIriToXmlImportNamespaceV1(internalIri: IRI, errorFun: () => Nothing): String = {
+        internalIri match {
+            case InternalOntologyRegex(prefix) => XmlImportNamespaceStart + prefix + XmlImportNamespaceEnd
+            case _ => errorFun()
+        }
+    }
+
+    /**
+      * Converts an XML namespace (used in XML data import) to the IRI of an internal ontology (used
+      * in the triplestore).
+      *
+      * @param namespace the XML namespace.
+      * @param errorFun  a function that throws an exception. It will be called if the form of the string is not
+      *                  valid for a Knora XML import namespace.
+      * @return the corresponding internal ontology IRI.
+      */
+    def xmlImportNamespaceToInternalOntologyIriV1(namespace: String, errorFun: () => Nothing): IRI = {
+        namespace match {
+            case XmlImportNamespaceRegex(prefix) => InternalOntologyStart + prefix + InternalOntologyEnd
+            case _ => errorFun()
+        }
     }
 }

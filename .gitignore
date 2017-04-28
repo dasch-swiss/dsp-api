@@ -25,6 +25,7 @@ target/
 *.synctex.gz
 *.tdo
 *.toc
+*.bak
 .sbtrc
 webapi/_fuseki/run
 triplestores/graphdb-se-7

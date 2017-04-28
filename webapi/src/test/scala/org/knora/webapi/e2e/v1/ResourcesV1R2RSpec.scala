@@ -1260,29 +1260,34 @@ class ResourcesV1R2RSpec extends R2RSpec {
 
         "create resources from simple xml" in {
             val params =
-                s"""<xml xmlns:beol="http://www.knora.org/ontology/beol"
-                    |   xmlns:biblio="http://www.knora.org/ontology/biblio">
-                    |   <beol:person id="abel">
-                    | 	    <beol:hasGivenName knoraType="richtext_value">Niels Henrik</beol:hasGivenName>
-                    |	      <beol:hasFamilyName knoraType="richtext_value">Abel</beol:hasFamilyName>
-                    |	  </beol:person>
-                    |   <biblio:Journal id="math_intelligencer">
-                    |		    <biblio:hasName knoraType="richtext_value">math intelligencer</biblio:hasName>
-                    |   </biblio:Journal>
-                    |   <biblio:JournalArticle id="strings_in_the_16th_and_17th_centuries" >
-                    |       <biblio:publicationHasTitle knoraType="richtext_value">Strings in the 16th and 17th Centuries</biblio:publicationHasTitle>
-                    |       <biblio:publicationHasAuthor>
-                    |           <beol:person knoraType="link_value" ref="abel"/>
-                    |       </biblio:publicationHasAuthor>
-                    |       <biblio:isPartOfJournal>
-                    |           <biblio:Journal knoraType="link_value" ref="math_intelligencer"/>
-                    |       </biblio:isPartOfJournal>
-                    |       <biblio:journalVolume knoraType="richtext_value">27</biblio:journalVolume>
-                    |       <biblio:startPage knoraType="richtext_value">48</biblio:startPage>
-                    |       <biblio:endPage knoraType="richtext_value">73</biblio:endPage>
-                    |       <biblio:publicationHasDate knoraType="date_value">GREGORIAN:1976</biblio:publicationHasDate>
-                    |    </biblio:JournalArticle>
-                    |</xml>""".stripMargin
+                s"""<?xml version="1.0" encoding="UTF-8"?>
+                   |<knoraImport:resources xmlns="http://api.knora.org/ontology/biblio/import/v1#"
+                   |    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   |    xsi:schemaLocation="http://api.knora.org/ontology/biblio/import/v1# biblio.xsd"
+                   |    xmlns:biblio="http://api.knora.org/ontology/biblio/import/v1#"
+                   |    xmlns:beol="http://api.knora.org/ontology/beol/import/v1#"
+                   |    xmlns:knoraImport="http://api.knora.org/ontology/import/v1#">
+                   |    <beol:person id="abel" label="Niels Henrik Abel">
+                   |        <beol:hasGivenName knoraType="richtext_value">Niels Henrik</beol:hasGivenName>
+                   |        <beol:hasFamilyName knoraType="richtext_value">Abel</beol:hasFamilyName>
+                   |    </beol:person>
+                   |    <biblio:Journal id="math_intelligencer" label="math intelligencer">
+                   |        <biblio:hasName knoraType="richtext_value">math intelligencer</biblio:hasName>
+                   |    </biblio:Journal>
+                   |    <biblio:JournalArticle id="strings_in_the_16th_and_17th_centuries" label="Strings in the 16th and 17th Centuries">
+                   |        <biblio:publicationHasTitle knoraType="richtext_value">Strings in the 16th and 17th Centuries</biblio:publicationHasTitle>
+                   |        <biblio:publicationHasAuthor>
+                   |            <beol:person knoraType="link_value" ref="abel"/>
+                   |        </biblio:publicationHasAuthor>
+                   |        <biblio:isPartOfJournal>
+                   |            <biblio:Journal knoraType="link_value" ref="math_intelligencer"/>
+                   |        </biblio:isPartOfJournal>
+                   |        <biblio:journalVolume knoraType="richtext_value">27</biblio:journalVolume>
+                   |        <biblio:startPage knoraType="richtext_value">48</biblio:startPage>
+                   |        <biblio:endPage knoraType="richtext_value">73</biblio:endPage>
+                   |        <biblio:publicationHasDate knoraType="date_value">GREGORIAN:1976</biblio:publicationHasDate>
+                   |    </biblio:JournalArticle>
+                   |</knoraImport:resources>""".stripMargin
 
             val projectIRI = URLEncoder.encode("http://data.knora.org/projects/DczxPs-sR6aZN91qV92ZmQ", "utf-8")
 

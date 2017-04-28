@@ -56,9 +56,19 @@ case class CreateResourceApiRequestV1(restype_id: IRI,
 
 }
 
+/**
+  * Used internally to represent a request to create a resource.
+  *
+  * @param restype_id the IRI of the resource class.
+  * @param label the resource's label.
+  * @param client_id the client's unique ID for the resource.
+  * @param properties the resource's properties.
+  */
 case class CreateResourceRequestV1(restype_id: IRI,
-                                      label: String,
-                                      properties: Map[IRI, Seq[CreateResourceValueV1]])
+                                   client_id: String,
+                                   label: String,
+                                   properties: Map[IRI, Seq[CreateResourceValueV1]])
+
 /**
   * Represents a property value to be created.
   *
@@ -66,7 +76,7 @@ case class CreateResourceRequestV1(restype_id: IRI,
   * @param int_value      an integer literal to be used in the value.
   */
 case class CreateResourceValueV1(richtext_value: Option[CreateRichtextV1] = None,
-                                 link_value: Option[IRI]= None,
+                                 link_value: Option[IRI] = None,
                                  int_value: Option[Int] = None,
                                  decimal_value: Option[BigDecimal] = None,
                                  boolean_value: Option[Boolean] = None,
@@ -206,19 +216,19 @@ case class ResourceCreateRequestV1(resourceTypeIri: IRI,
   * @param values          the properties to add: type and value(s): a Map of propertyIris to ApiValueV1.
   */
 case class OneOfMultipleResourceCreateRequestV1(resourceTypeIri: IRI,
-                                                 label: String,
-                                                 values: Map[IRI, Seq[CreateValueV1WithComment]])
+                                                label: String,
+                                                values: Map[IRI, Seq[CreateValueV1WithComment]])
 
 /**
   * Requests the creation of multiple new resources.
   *
   * @param resourcesToCreate the collection of requests for creation of new resources.
-  * @param projectIri      the IRI of the project the resources are added to.
-  * @param userProfile     the profile of the user making the request.
-  * @param apiRequestID    the ID of the API request.
+  * @param projectIri        the IRI of the project the resources are added to.
+  * @param userProfile       the profile of the user making the request.
+  * @param apiRequestID      the ID of the API request.
   */
 case class MultipleResourceCreateRequestV1(resourcesToCreate: Seq[OneOfMultipleResourceCreateRequestV1],
-                                           projectIri : IRI,
+                                           projectIri: IRI,
                                            userProfile: UserProfileV1,
                                            apiRequestID: UUID) extends ResourcesResponderRequestV1
 
@@ -227,7 +237,7 @@ case class MultipleResourceCreateRequestV1(resourcesToCreate: Seq[OneOfMultipleR
   * describes the answer to creation of multiple resources
   *
   * @param createdResources created resources
-
+  *
   */
 case class MultipleResourceCreateResponseV1(createdResources: Seq[JsValue]) extends KnoraResponseV1 {
 

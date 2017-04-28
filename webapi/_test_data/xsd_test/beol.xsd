@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<xs:schema elementFormDefault="qualified" targetNamespace="http://api.knora.org/ontology/beol/v1/xml#"
-    xmlns="http://api.knora.org/ontology/beol/v1/xml#" xmlns:xs="http://www.w3.org/2001/XMLSchema"
-    xmlns:knoraXmlImport="http://api.knora.org/ontology/bulk-import/v1/xml#"
+<xs:schema elementFormDefault="qualified" targetNamespace="http://api.knora.org/ontology/beol/import/v1#"
+    xmlns="http://api.knora.org/ontology/beol/import/v1#" xmlns:xs="http://www.w3.org/2001/XMLSchema"
+    xmlns:knoraImport="http://api.knora.org/ontology/import/v1#"
     xmlns:vc="http://www.w3.org/2007/XMLSchema-versioning" vc:minVersion="1.1">
-    <xs:import namespace="http://api.knora.org/ontology/bulk-import/v1/xml#" schemaLocation="knora-bulk-import-v1-xml.xsd"/>
+    <xs:import namespace="http://api.knora.org/ontology/import/v1#" schemaLocation="knora-import-v1-xml.xsd"/>
 
     <xs:element name="person">
         <xs:complexType>
             <xs:complexContent>
-                <xs:extension base="knoraXmlImport:resourceType">
+                <xs:extension base="knoraImport:resourceType">
                     <xs:sequence>
                         <xs:element name="hasGivenName" minOccurs="0" maxOccurs="1"
-                            type="knoraXmlImport:richtextValueType"/>
+                            type="knoraImport:richtextValueType"/>
                         <xs:element name="hasFamilyName" minOccurs="0" maxOccurs="1"
-                            type="knoraXmlImport:richtextValueType"/>
+                            type="knoraImport:richtextValueType"/>
                     </xs:sequence>
                 </xs:extension>
             </xs:complexContent>
@@ -22,7 +22,7 @@
 
     <xs:complexType name="person_linkValueType">
         <xs:sequence>
-            <xs:element name="person" type="knoraXmlImport:linkValueType"/>
+            <xs:element name="person" type="knoraImport:linkValueType"/>
         </xs:sequence>
     </xs:complexType>
 </xs:schema>
