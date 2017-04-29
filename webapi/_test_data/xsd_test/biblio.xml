@@ -4,7 +4,7 @@
     xsi:schemaLocation="http://api.knora.org/ontology/biblio/import/v1# biblio.xsd"
     xmlns:biblio="http://api.knora.org/ontology/biblio/import/v1#"
     xmlns:beol="http://api.knora.org/ontology/beol/import/v1#"
-    xmlns:knoraImport="http://api.knora.org/ontology/import/v1#">
+    xmlns:knoraImport="http://api.knora.org/ontology/knora-import/v1#">
     <beol:person id="abel" label="Niels Henrik Abel">
         <beol:hasGivenName knoraType="richtext_value">Niels Henrik</beol:hasGivenName>
         <beol:hasFamilyName knoraType="richtext_value">Abel</beol:hasFamilyName>

@@ -102,16 +102,19 @@ object InputValidation {
     private val XmlImportNamespaceStart = "http://api.knora.org/ontology/"
     private val XmlImportNamespaceEnd = "/import/v1#"
 
-    // A regex pattern for ontology prefixes, following <https://www.w3.org/TR/turtle/#prefixed-name>,
+    // A regex sub-pattern for ontology prefix labels, following <https://www.w3.org/TR/turtle/#prefixed-name>,
     // in which a prefix label is defined as an XML NCName <https://www.w3.org/TR/1999/REC-xml-names-19990114/#NT-NCName>.
-    private val OntologyPrefixPattern =
+    private val OntologyPrefixLabelPattern =
     """[\p{L}_][\p{L}0-9_.-]*"""
 
+    // A regex for matching a string containing only an ontology prefix label.
+    private val OntologyPrefixLabelRegex = ("^" + OntologyPrefixLabelPattern + "$").r
+
     // A regex for internal ontologies.
-    private val InternalOntologyRegex: Regex = (InternalOntologyStart + OntologyPrefixPattern + InternalOntologyEnd).r
+    private val InternalOntologyRegex: Regex = (InternalOntologyStart + OntologyPrefixLabelPattern + InternalOntologyEnd).r
 
     // A regex for XML import namespaces.
-    private val XmlImportNamespaceRegex: Regex = (XmlImportNamespaceStart + OntologyPrefixPattern + XmlImportNamespaceEnd).r
+    private val XmlImportNamespaceRegex: Regex = (XmlImportNamespaceStart + OntologyPrefixLabelPattern + XmlImportNamespaceEnd).r
 
     // Valid URL schemes.
     private val schemes = Array("http", "https")
@@ -400,6 +403,26 @@ object InputValidation {
         }
 
         Files.deleteIfExists(path)
+    }
+
+    /**
+      * Checks that a project-specific ontology prefix label is valid according to
+      * https://www.w3.org/TR/turtle/#prefixed-name and does not start with the reserved token `knora`.
+      *
+      * @param prefixLabel the prefix label to be checked.
+      * @param errorFun    a function that throws an exception. It will be called if the prefix label is invalid.
+      * @return the same prefix label.
+      */
+    def toProjectOntologyPrefixLabel(prefixLabel: String, errorFun: () => Nothing): String = {
+        if (prefixLabel.startsWith("knora")) {
+            errorFun()
+        } else {
+            OntologyPrefixLabelRegex.findFirstIn(prefixLabel) match {
+                case Some(value) => value
+                case None => errorFun()
+            }
+
+        }
     }
 
     /**
