@@ -2873,7 +2873,8 @@
 									<http://data.knora.org/lists/drawings-gods-2016-list-ReligiousIdentityHList-muslim> ,
 									<http://data.knora.org/lists/drawings-gods-2016-list-ReligiousIdentityHList-shamanist> ,
 									<http://data.knora.org/lists/drawings-gods-2016-list-ReligiousIdentityHList-shintoist> ,
-									<http://data.knora.org/lists/drawings-gods-2016-list-ReligiousIdentityHList-taoist> .
+									<http://data.knora.org/lists/drawings-gods-2016-list-ReligiousIdentityHList-taoist> ,
+									<http://data.knora.org/lists/drawings-gods-2016-list-ReligiousIdentityHList-zoroastrian> .
 	
 		<http://data.knora.org/lists/drawings-gods-2016-list-ReligiousIdentityHList-buddhist> a knora-base:ListNode ;
 			knora-base:listNodeName "buddhist" ;
@@ -2902,20 +2903,26 @@
 		<http://data.knora.org/lists/drawings-gods-2016-list-ReligiousIdentityHList-shamanist> a knora-base:ListNode ;
 			knora-base:listNodeName "shamanist" ;
 			knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-ReligiousIdentityHList> ;
-			knora-base:listNodePosition 3 ;
+			knora-base:listNodePosition 4 ;
 			rdfs:label "Shamaniste"@fr , "Shamanist"@en .
 			
 		<http://data.knora.org/lists/drawings-gods-2016-list-ReligiousIdentityHList-shintoist> a knora-base:ListNode ;
 			knora-base:listNodeName "shintoist" ;
 			knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-ReligiousIdentityHList> ;
-			knora-base:listNodePosition 3 ;
+			knora-base:listNodePosition 5 ;
 			rdfs:label "Shintoiste"@fr , "Shintoist"@en .
 			
 		<http://data.knora.org/lists/drawings-gods-2016-list-ReligiousIdentityHList-taoist> a knora-base:ListNode ;
 			knora-base:listNodeName "taoist" ;
 			knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-ReligiousIdentityHList> ;
-			knora-base:listNodePosition 3 ;
+			knora-base:listNodePosition 6 ;
 			rdfs:label "Taoiste"@fr , "Taoist"@en .
+
+		<http://data.knora.org/lists/drawings-gods-2016-list-ReligiousIdentityHList-zoroastrian> a knora-base:ListNode ;
+			knora-base:listNodeName "zoroastrian" ;
+			knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-ReligiousIdentityHList> ;
+			knora-base:listNodePosition 7 ;
+			rdfs:label "Zoroastrien"@fr , "Zoroastrian"@en .
 	
 	<http://data.knora.org/lists/drawings-gods-2016-list-ReligiousIdentityHList-other1> a knora-base:ListNode ;
 		knora-base:listNodeName "other" ;
@@ -2926,7 +2933,8 @@
 									<http://data.knora.org/lists/drawings-gods-2016-list-ReligiousIdentityHList-doesnotknow> ,
 									<http://data.knora.org/lists/drawings-gods-2016-list-ReligiousIdentityHList-noreply> ,
 									<http://data.knora.org/lists/drawings-gods-2016-list-ReligiousIdentityHList-replyunusable> ,
-									<http://data.knora.org/lists/drawings-gods-2016-list-ReligiousIdentityHList-other2> .
+									<http://data.knora.org/lists/drawings-gods-2016-list-ReligiousIdentityHList-other2> ,
+									<http://data.knora.org/lists/drawings-gods-2016-list-ReligiousIdentityHList-irrelevant> .
 	
 		<http://data.knora.org/lists/drawings-gods-2016-list-ReligiousIdentityHList-atheist> a knora-base:ListNode ;
 			knora-base:listNodeName "atheist" ;
@@ -2955,8 +2963,14 @@
 		<http://data.knora.org/lists/drawings-gods-2016-list-ReligiousIdentityHList-other2> a knora-base:ListNode ;
 			knora-base:listNodeName "other" ;
 			knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-ReligiousIdentityHList> ;
-			knora-base:listNodePosition 3 ;
+			knora-base:listNodePosition 4 ;
 			rdfs:label "Autre (voir original)"@fr , "Other (see original)"@en .		
+			
+		<http://data.knora.org/lists/drawings-gods-2016-list-ReligiousIdentityHList-irrelevant> a knora-base:ListNode ;
+			knora-base:listNodeName "irrelevant" ;
+			knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-ReligiousIdentityHList> ;
+			knora-base:listNodePosition 5 ;
+			rdfs:label "Non-pertinent"@fr , "Irrelevant"@en .		
 
 ###   StorageList
 
@@ -3901,10 +3915,14 @@
 	<http://data.knora.org/lists/drawings-gods-2016-list-TimeRelatedListQ-yearly> ,
 	<http://data.knora.org/lists/drawings-gods-2016-list-TimeRelatedListQ-fewtimesayear> ,
 	<http://data.knora.org/lists/drawings-gods-2016-list-TimeRelatedListQ-once> ,
+	<http://data.knora.org/lists/drawings-gods-2016-list-TimeRelatedListQ-afterlunch> ,
+	<http://data.knora.org/lists/drawings-gods-2016-list-TimeRelatedListQ-threetimesday> ,
+	<http://data.knora.org/lists/drawings-gods-2016-list-TimeRelatedListQ-fivetimesday> ,
 	<http://data.knora.org/lists/drawings-gods-2016-list-TimeRelatedListQ-other> ,
 	<http://data.knora.org/lists/drawings-gods-2016-list-TimeRelatedListQ-never> ,
 	<http://data.knora.org/lists/drawings-gods-2016-list-TimeRelatedListQ-noanswer> ,
-	<http://data.knora.org/lists/drawings-gods-2016-list-TimeRelatedListQ-notasked> .
+	<http://data.knora.org/lists/drawings-gods-2016-list-TimeRelatedListQ-notasked> ,
+	<http://data.knora.org/lists/drawings-gods-2016-list-TimeRelatedListQ-irrelevant> .
 
 	<http://data.knora.org/lists/drawings-gods-2016-list-TimeRelatedListQ-awake> a knora-base:ListNode ;
 		knora-base:listNodeName "awake" ;
@@ -3960,29 +3978,53 @@
 		knora-base:listNodePosition 8 ;
 		rdfs:label "Une fois"@fr , "Once"@en .
 		
+	<http://data.knora.org/lists/drawings-gods-2016-list-TimeRelatedListQ-afterlunch> a knora-base:ListNode ;
+		knora-base:listNodeName "afterlunch" ;
+		knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-TimeRelatedListQ> ;
+		knora-base:listNodePosition 9 ;
+		rdfs:label "Après le diner"@fr , "After Lunch"@en .
+		
+	<http://data.knora.org/lists/drawings-gods-2016-list-TimeRelatedListQ-threetimesday> a knora-base:ListNode ;
+		knora-base:listNodeName "threetimesday" ;
+		knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-TimeRelatedListQ> ;
+		knora-base:listNodePosition 10 ;
+		rdfs:label "Trois fois par jour fois"@fr , "Three times a day"@en .
+		
+	<http://data.knora.org/lists/drawings-gods-2016-list-TimeRelatedListQ-fivetimesday> a knora-base:ListNode ;
+		knora-base:listNodeName "fivetimesday" ;
+		knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-TimeRelatedListQ> ;
+		knora-base:listNodePosition 11 ;
+		rdfs:label "Cinq fois par jour fois"@fr , "Five times a day"@en .
+				
 	<http://data.knora.org/lists/drawings-gods-2016-list-TimeRelatedListQ-other> a knora-base:ListNode ;
 		knora-base:listNodeName "other" ;
 		knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-TimeRelatedListQ> ;
-		knora-base:listNodePosition 9 ;
+		knora-base:listNodePosition 12 ;
 		rdfs:label "Autre"@fr , "Other"@en .
 		
 	<http://data.knora.org/lists/drawings-gods-2016-list-TimeRelatedListQ-never> a knora-base:ListNode ;
 		knora-base:listNodeName "never" ;
 		knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-TimeRelatedListQ> ;
-		knora-base:listNodePosition 10 ;
+		knora-base:listNodePosition 13 ;
 		rdfs:label "Jamais"@fr , "Never"@en .
 		
 	<http://data.knora.org/lists/drawings-gods-2016-list-TimeRelatedListQ-noanswer> a knora-base:ListNode ;
 		knora-base:listNodeName "noanswer" ;
 		knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-TimeRelatedListQ> ;
-		knora-base:listNodePosition 11 ;
+		knora-base:listNodePosition 14 ;
 		rdfs:label "Pas de réponse"@fr , "No answer"@en .
 		
 	<http://data.knora.org/lists/drawings-gods-2016-list-TimeRelatedListQ-notasked> a knora-base:ListNode ;
 		knora-base:listNodeName "notasked" ;
 		knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-TimeRelatedListQ> ;
-		knora-base:listNodePosition 12 ;
+		knora-base:listNodePosition 15 ;
 		rdfs:label "Pas demandé"@fr , "Not asked"@en .
+		
+	<http://data.knora.org/lists/drawings-gods-2016-list-TimeRelatedListQ-irrelevant> a knora-base:ListNode ;
+		knora-base:listNodeName "irrelevant" ;
+		knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-TimeRelatedListQ> ;
+		knora-base:listNodePosition 16 ;
+		rdfs:label "Non pertinent"@fr , "Irrelevant"@en .
 
 ###   GodAgeListQ
 
@@ -5039,24 +5081,1585 @@
 				knora-base:listNodePosition 0 ;
 				rdfs:label "Tiffin"@fr , "Tiffin"@en .
 
-###    KeywordsList
-<http://data.knora.org/lists/drawings-gods-2016-list-KeywordsList> a knora-base:ListNode ;
+###    DrawingPartsHList
+<http://data.knora.org/lists/drawings-gods-2016-list-DrawingPartsHList> a knora-base:ListNode ;
 	knora-base:isRootNode true ;
-	rdfs:comment "Liste de mots-clés"@fr ;
+	rdfs:comment "Liste hiérarchique de choix : les representations sont-elles composées d'un seul élément ou de multiples éléments"@fr ;
+	rdfs:label "Représentation seule ou multiple"@fr , "Single or multiple representation"@en ;
+	knora-base:hasSubListNode <http://data.knora.org/lists/drawings-gods-2016-list-DrawingPartsHList-single> ,
+									<http://data.knora.org/lists/drawings-gods-2016-list-DrawingPartsHList-multiple> .
+	
+		<http://data.knora.org/lists/drawings-gods-2016-list-DrawingPartsHList-single> a knora-base:ListNode ;
+			knora-base:listNodeName "single" ;
+			knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-DrawingPartsHList> ;
+			knora-base:listNodePosition 0 ;
+			rdfs:label "Figure seule"@fr , "Single figure"@en .
+			
+		<http://data.knora.org/lists/drawings-gods-2016-list-DrawingPartsHList-multiple> a knora-base:ListNode ;
+			knora-base:listNodeName "multiple" ;
+			knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-DrawingPartsHList> ;
+			knora-base:listNodePosition 1 ;
+			rdfs:label "Figures multiples"@fr , "Multiple figures"@en ;
+			knora-base:hasSubListNode <http://data.knora.org/lists/drawings-gods-2016-list-DrawingPartsHList-MFhistory> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-DrawingPartsHList-MFrandom> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-DrawingPartsHList-MFcombination> .
+						
+			<http://data.knora.org/lists/drawings-gods-2016-list-DrawingPartsHList-MFhistory> a knora-base:ListNode ;
+				knora-base:listNodeName "MFhistory" ;
+				knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-DrawingPartsHList> ;
+				knora-base:listNodePosition 0 ;
+				rdfs:label "Image reflète une histoire"@fr , "Image reflects a particular history"@en ;
+				knora-base:hasSubListNode <http://data.knora.org/lists/drawings-gods-2016-list-DrawingPartsHList-histevent> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-DrawingPartsHList-worship> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-DrawingPartsHList-gifts> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-DrawingPartsHList-otherstory> .
+										
+				<http://data.knora.org/lists/drawings-gods-2016-list-DrawingPartsHList-histevent> a knora-base:ListNode ;
+					knora-base:listNodeName "histevent" ;
+					knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-DrawingPartsHList> ;
+					knora-base:listNodePosition 0 ;
+					rdfs:label "Image reflète un événement historique"@fr , "Image reflects a particular historical event"@en ;
+					knora-base:hasSubListNode <http://data.knora.org/lists/drawings-gods-2016-list-DrawingPartsHList-crucifixion> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-DrawingPartsHList-ascension> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-DrawingPartsHList-revelation> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-DrawingPartsHList-killingAli> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-DrawingPartsHList-other2> .
+										
+					<http://data.knora.org/lists/drawings-gods-2016-list-DrawingPartsHList-crucifixion> a knora-base:ListNode ;
+						knora-base:listNodeName "crucifixion" ;
+						knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-DrawingPartsHList> ;
+						knora-base:listNodePosition 0 ;
+						rdfs:label "Crucifixion"@fr , "Crucifixion"@en .
+						
+					<http://data.knora.org/lists/drawings-gods-2016-list-DrawingPartsHList-ascension> a knora-base:ListNode ;
+						knora-base:listNodeName "ascension" ;
+						knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-DrawingPartsHList> ;
+						knora-base:listNodePosition 1 ;
+						rdfs:label "Ascension"@fr , "Ascension"@en .
+						
+					<http://data.knora.org/lists/drawings-gods-2016-list-DrawingPartsHList-revelation> a knora-base:ListNode ;
+						knora-base:listNodeName "revelation" ;
+						knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-DrawingPartsHList> ;
+						knora-base:listNodePosition 2 ;
+						rdfs:label "Révélation"@fr , "Revelation"@en .
+						
+					<http://data.knora.org/lists/drawings-gods-2016-list-DrawingPartsHList-killingAli> a knora-base:ListNode ;
+						knora-base:listNodeName "killingAli" ;
+						knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-DrawingPartsHList> ;
+						knora-base:listNodePosition 3 ;
+						rdfs:label "Mort d'Ali"@fr , "Killing of Ali"@en .
+						
+					<http://data.knora.org/lists/drawings-gods-2016-list-DrawingPartsHList-other2> a knora-base:ListNode ;
+						knora-base:listNodeName "other" ;
+						knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-DrawingPartsHList> ;
+						knora-base:listNodePosition 4 ;
+						rdfs:label "Autre"@fr , "Other"@en .
+						
+				<http://data.knora.org/lists/drawings-gods-2016-list-DrawingPartsHList-worship> a knora-base:ListNode ;
+					knora-base:listNodeName "worship" ;
+					knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-DrawingPartsHList> ;
+					knora-base:listNodePosition 1 ;
+					rdfs:label "Image reflète un rituel"@fr , "Image reflects a ritual"@en ;
+					knora-base:hasSubListNode <http://data.knora.org/lists/drawings-gods-2016-list-DrawingPartsHList-prayer> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-DrawingPartsHList-sacrifice> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-DrawingPartsHList-otherrit> .
+										
+					<http://data.knora.org/lists/drawings-gods-2016-list-DrawingPartsHList-prayer> a knora-base:ListNode ;
+						knora-base:listNodeName "prayer" ;
+						knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-DrawingPartsHList> ;
+						knora-base:listNodePosition 0 ;
+						rdfs:label "Image reflète une prière"@fr , "Image reflects a prayer"@en .
+					
+					<http://data.knora.org/lists/drawings-gods-2016-list-DrawingPartsHList-sacrifice> a knora-base:ListNode ;
+						knora-base:listNodeName "sacrifice" ;
+						knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-DrawingPartsHList> ;
+						knora-base:listNodePosition 1 ;
+						rdfs:label "Image reflète un sacrifice"@fr , "Image reflects a sacrifice"@en .
+						
+					<http://data.knora.org/lists/drawings-gods-2016-list-DrawingPartsHList-otherrit> a knora-base:ListNode ;
+						knora-base:listNodeName "otherrit" ;
+						knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-DrawingPartsHList> ;
+						knora-base:listNodePosition 2 ;
+						rdfs:label "Image reflète un autre rite"@fr , "Image reflects other ritual"@en .
+						
+				<http://data.knora.org/lists/drawings-gods-2016-list-DrawingPartsHList-gifts> a knora-base:ListNode ;
+					knora-base:listNodeName "gifts" ;
+					knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-DrawingPartsHList> ;
+					knora-base:listNodePosition 2 ;
+					rdfs:label "Image reflète que quelqu'un reçoit les cadeaux de dieu"@fr , "Image reflects god's gifts to someone"@en .
+					
+				<http://data.knora.org/lists/drawings-gods-2016-list-DrawingPartsHList-otherstory> a knora-base:ListNode ;
+					knora-base:listNodeName "otherstory " ;
+					knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-DrawingPartsHList> ;
+					knora-base:listNodePosition 3 ;
+					rdfs:label "Image reflète une autre histore avec dieu"@fr , "Image reflects another history related to god"@en .
+										
+			<http://data.knora.org/lists/drawings-gods-2016-list-DrawingPartsHList-MFrandom> a knora-base:ListNode ;
+				knora-base:listNodeName "MFrandom" ;
+				knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-DrawingPartsHList> ;
+				knora-base:listNodePosition 1 ;
+				rdfs:label "Image reflète un arrangement chaotique des éléments"@fr , "Image reflects chaotic arrangement of its parts"@en .
+				
+			<http://data.knora.org/lists/drawings-gods-2016-list-DrawingPartsHList-MFcombination> a knora-base:ListNode ;
+				knora-base:listNodeName "MFcombination" ;
+				knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-DrawingPartsHList> ;
+				knora-base:listNodePosition 2 ;
+				rdfs:label "Image reflète un arrangement non-chaotique des éléments"@fr , "Image reflects meaningful arrangement of its parts"@en ;
+				knora-base:hasSubListNode <http://data.knora.org/lists/drawings-gods-2016-list-DrawingPartsHList-doubling> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-DrawingPartsHList-hierarchy> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-DrawingPartsHList-mandala> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-DrawingPartsHList-progression> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-DrawingPartsHList-onetomulti> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-DrawingPartsHList-opposition> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-DrawingPartsHList-reflection> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-DrawingPartsHList-tiles> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-DrawingPartsHList-otherarr> .
+
+				<http://data.knora.org/lists/drawings-gods-2016-list-DrawingPartsHList-doubling> a knora-base:ListNode ;
+					knora-base:listNodeName "doubling" ;
+					knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-DrawingPartsHList> ;
+					knora-base:listNodePosition 0 ;
+					rdfs:label "Deux figures"@fr , "Doubled figures"@en .
+					
+				<http://data.knora.org/lists/drawings-gods-2016-list-DrawingPartsHList-hierarchy> a knora-base:ListNode ;
+					knora-base:listNodeName "hierarchy" ;
+					knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-DrawingPartsHList> ;
+					knora-base:listNodePosition 1 ;
+					rdfs:label "Figures sont dans des relations hiérarchiques"@fr , "Figures are in hierarchical relations"@en .
+					
+				<http://data.knora.org/lists/drawings-gods-2016-list-DrawingPartsHList-mandala> a knora-base:ListNode ;
+					knora-base:listNodeName "mandala" ;
+					knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-DrawingPartsHList> ;
+					knora-base:listNodePosition 2 ;
+					rdfs:label "Figures forment un mandala"@fr , "Figures form a mandala"@en .
+					
+				<http://data.knora.org/lists/drawings-gods-2016-list-DrawingPartsHList-progression> a knora-base:ListNode ;
+					knora-base:listNodeName "progression" ;
+					knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-DrawingPartsHList> ;
+					knora-base:listNodePosition 3 ;
+					rdfs:label "Figures reflètent la progression ou le développement"@fr , "Figures reflect progression or development from one state to another"@en .
+					
+				<http://data.knora.org/lists/drawings-gods-2016-list-DrawingPartsHList-onetomulti> a knora-base:ListNode ;
+					knora-base:listNodeName "onetomulti" ;
+					knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-DrawingPartsHList> ;
+					knora-base:listNodePosition 4 ;
+					rdfs:label "Image reflète la manifestation de multitude à partir d'un seul"@fr , "Image reflects the apparition of multitude from one"@en .
+					
+				<http://data.knora.org/lists/drawings-gods-2016-list-DrawingPartsHList-opposition> a knora-base:ListNode ;
+					knora-base:listNodeName "opposition" ;
+					knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-DrawingPartsHList> ;
+					knora-base:listNodePosition 5 ;
+					rdfs:label "Image reflète une opposition entre ses parties"@fr , "Image reflects an opposition between its parts"@en .
+					
+				<http://data.knora.org/lists/drawings-gods-2016-list-DrawingPartsHList-reflection> a knora-base:ListNode ;
+					knora-base:listNodeName "reflection" ;
+					knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-DrawingPartsHList> ;
+					knora-base:listNodePosition 6 ;
+					rdfs:label "Les parties d'image se reflètent"@fr , "Image's parts reflects each other"@en .
+					
+				<http://data.knora.org/lists/drawings-gods-2016-list-DrawingPartsHList-tiles> a knora-base:ListNode ;
+					knora-base:listNodeName "tiles" ;
+					knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-DrawingPartsHList> ;
+					knora-base:listNodePosition 7 ;
+					rdfs:label "Image est formée de cases (comme pour les mangas)"@fr , "Image is formed by tiles (manga style)"@en .
+					
+				<http://data.knora.org/lists/drawings-gods-2016-list-DrawingPartsHList-otherarr> a knora-base:ListNode ;
+					knora-base:listNodeName "otherarr" ;
+					knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-DrawingPartsHList> ;
+					knora-base:listNodePosition 8 ;
+					rdfs:label "Image a un autre arrangement des éléments"@fr , "Image has another meaningful arrangement of elements"@en .
+					
+
+###    FiguresHList
+<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> a knora-base:ListNode ;
+	knora-base:isRootNode true ;
+	rdfs:comment "Liste hiérarchique de choix pour les motifs principaux"@fr ;
+	rdfs:label "Qu'est-ce qui est représenté?"@fr , "What is represented?"@en ;
+	knora-base:hasSubListNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-humanoid> ,
+									<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-passage> ,
+									<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-plantortree> ,
+									<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-sunlightrays> ,
+									<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-symbol> ,
+									<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-wordtext> ,
+									<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-animalbirdinsect> ,
+									<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-abstract> ,
+									<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-cloudsrainbowrain> ,
+									<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-cosmos> ,
+									<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-elements> ,
+									<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-empty> ,
+									<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-othermotif> .
+
+		<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-humanoid> a knora-base:ListNode ;
+			knora-base:listNodeName "humanoid" ;
+			knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+			knora-base:listNodePosition 0 ;
+			rdfs:label "Figure humanoide"@fr , "humanoid figure"@en ;
+			knora-base:hasSubListNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-normalhuman> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-culturalfigure> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-religiousfigure> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-specialbody> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-specialapara> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-specialposture> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-gender> .
+										
+			<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-normalhuman> a knora-base:ListNode ;
+				knora-base:listNodeName "normalhuman" ;
+				knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+				knora-base:listNodePosition 0 ;
+				rdfs:label "Figure humaine ordinaire"@fr , "Usual human figure"@en .
+				
+			<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-culturalfigure> a knora-base:ListNode ;
+				knora-base:listNodeName "culturalfigure" ;
+				knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+				knora-base:listNodePosition 1 ;
+				rdfs:label "Figure culturelle qu'on peut reconnaître"@fr , "Cultural figure which one can recognize"@en .
+								
+			<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-religiousfigure> a knora-base:ListNode ;
+				knora-base:listNodeName "religiousfigure" ;
+				knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+				knora-base:listNodePosition 2 ;
+				rdfs:label "Figure religieuse qu'on peut reconnaître"@fr , "Religious figure which one can recognize"@en ;
+				knora-base:hasSubListNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-angel> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-buddha> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-otherbuddhist> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-devil> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-ganesha> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-jesus> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-trinity> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-holyspirit> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-christiansaint> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-jinn> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-kaminari> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-krishna> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-marie> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-mohammed> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-shiva> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-linga> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-sacredSpirit> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-surya> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-tara> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-vishnu> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-greekgod> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-egyptiangod> .
+										
+				<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-angel> a knora-base:ListNode ;
+					knora-base:listNodeName "angel" ;
+					knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+					knora-base:listNodePosition 0 ;
+					rdfs:label "Ange"@fr , "Angel"@en .
+					
+				<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-buddha> a knora-base:ListNode ;
+					knora-base:listNodeName "buddha" ;
+					knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+					knora-base:listNodePosition 1 ;
+					rdfs:label "Bouddha"@fr , "Buddha"@en .
+					
+				<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-otherbuddhist> a knora-base:ListNode ;
+					knora-base:listNodeName "otherbuddhist" ;
+					knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+					knora-base:listNodePosition 2 ;
+					rdfs:label "Autre divinité bouddhiste"@fr , "Other buddhist divinity"@en .
+
+				<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-devil> a knora-base:ListNode ;
+					knora-base:listNodeName "devil" ;
+					knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+					knora-base:listNodePosition 3 ;
+					rdfs:label "Diable"@fr , "Devil"@en .
+					
+				<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-ganesha> a knora-base:ListNode ;
+					knora-base:listNodeName "ganesha" ;
+					knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+					knora-base:listNodePosition 4 ;
+					rdfs:label "Ganesh"@fr , "Ganesha"@en .
+
+				<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-jesus> a knora-base:ListNode ;
+					knora-base:listNodeName "jesus" ;
+					knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+					knora-base:listNodePosition 5 ;
+					rdfs:label "Jésus"@fr , "Jesus"@en .
+					
+				<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-trinity> a knora-base:ListNode ;
+					knora-base:listNodeName "jesus" ;
+					knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+					knora-base:listNodePosition 6 ;
+					rdfs:label "Trinité"@fr , "Trinity"@en .
+					
+				<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-holyspirit> a knora-base:ListNode ;
+					knora-base:listNodeName "holyspirit" ;
+					knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+					knora-base:listNodePosition 7 ;
+					rdfs:label "Saint Esprit"@fr , "Holy Spirit"@en .
+					
+				<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-christiansaint> a knora-base:ListNode ;
+					knora-base:listNodeName "christiansaint" ;
+					knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+					knora-base:listNodePosition 8 ;
+					rdfs:label "Prophète ou saint chrétien"@fr , "Christian prophet or saint"@en .
+					
+				<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-jinn> a knora-base:ListNode ;
+					knora-base:listNodeName "jinn" ;
+					knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+					knora-base:listNodePosition 9 ;
+					rdfs:label "Djinn"@fr , "Jinn"@en .
+					
+				<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-kaminari> a knora-base:ListNode ;
+					knora-base:listNodeName "kaminari" ;
+					knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+					knora-base:listNodePosition 10 ;
+					rdfs:label "Kaminari"@fr , "Kaminari"@en .
+					
+				<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-krishna> a knora-base:ListNode ;
+					knora-base:listNodeName "krishna" ;
+					knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+					knora-base:listNodePosition 11 ;
+					rdfs:label "Krishna"@fr , "Krishna"@en .
+					
+				<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-marie> a knora-base:ListNode ;
+					knora-base:listNodeName "marie" ;
+					knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+					knora-base:listNodePosition 12 ;
+					rdfs:label "Marie"@fr , "Mary"@en .
+					
+				<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-mohammed> a knora-base:ListNode ;
+					knora-base:listNodeName "mohammed" ;
+					knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+					knora-base:listNodePosition 13 ;
+					rdfs:label "Mohammed"@fr , "Mohammed"@en .
+					
+				<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-shiva> a knora-base:ListNode ;
+					knora-base:listNodeName "shiva" ;
+					knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+					knora-base:listNodePosition 14 ;
+					rdfs:label "Shiva"@fr , "Shiva"@en .
+					
+				<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-linga> a knora-base:ListNode ;
+					knora-base:listNodeName "linga" ;
+					knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+					knora-base:listNodePosition 15 ;
+					rdfs:label "Linga"@fr , "Linga"@en .
+					
+				<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-sacredSpirit> a knora-base:ListNode ;
+					knora-base:listNodeName "sacredSpirit" ;
+					knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+					knora-base:listNodePosition 16 ;
+					rdfs:label "Esprit sacré"@fr , "Sacred Spirit"@en .
+					
+				<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-surya> a knora-base:ListNode ;
+					knora-base:listNodeName "surya" ;
+					knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+					knora-base:listNodePosition 17 ;
+					rdfs:label "Surya"@fr , "Surya"@en .
+					
+				<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-tara> a knora-base:ListNode ;
+					knora-base:listNodeName "tara" ;
+					knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+					knora-base:listNodePosition 18 ;
+					rdfs:label "Tara"@fr , "Tara"@en .
+					
+				<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-vishnu> a knora-base:ListNode ;
+					knora-base:listNodeName "vishnu" ;
+					knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+					knora-base:listNodePosition 19 ;
+					rdfs:label "Vishnu"@fr , "Vishnou"@en .
+					
+				<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-greekgod> a knora-base:ListNode ;
+					knora-base:listNodeName "greekgod" ;
+					knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+					knora-base:listNodePosition 20 ;
+					rdfs:label "Dieu ou déesse de la Grèce antique"@fr , "Greek god or goddess"@en .
+					
+				<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-egyptiangod> a knora-base:ListNode ;
+					knora-base:listNodeName "egyptiangod" ;
+					knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+					knora-base:listNodePosition 21 ;
+					rdfs:label "Dieu ou déesse de l'Egypte"@fr , "Egyptian god or goddess"@en .
+																
+			<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-specialbody> a knora-base:ListNode ;
+				knora-base:listNodeName "specialbody" ;
+				knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+				knora-base:listNodePosition 3 ;
+				rdfs:label "Figure humaine, mais avec des particularités corporelles"@fr , "Usual human figure, but having some physical particularities"@en ;
+				knora-base:hasSubListNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-addlimbs> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-animalparts> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-aura> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-beard> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-bodyoflight> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-demesuredparts> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-eyesclosed> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-figureuclear> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-missinglimbs> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-nimb> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-noface> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-nofeet> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-onlyeyes> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-manyeyes> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-onlyface> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-manyfaces> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-onlyhands> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-specialcolor> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-specialhair> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-splitintwo> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-sunfaced> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-symmetrical> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-assymetrical> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-unhumanshape> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-wings> .
+										
+				<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-addlimbs> a knora-base:ListNode ;
+					knora-base:listNodeName "addlimbs" ;
+					knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+					knora-base:listNodePosition 0 ;
+					rdfs:label "Des parties du corps additionnelles"@fr , "Additional body limbs"@en .
+					
+				<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-animalparts> a knora-base:ListNode ;
+					knora-base:listNodeName "animalparts" ;
+					knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+					knora-base:listNodePosition 1 ;
+					rdfs:label "Parties animales"@fr , "Animal body parts"@en .
+					
+				<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-aura> a knora-base:ListNode ;
+					knora-base:listNodeName "aura" ;
+					knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+					knora-base:listNodePosition 2 ;
+					rdfs:label "Aura"@fr , "Aura"@en .
+					
+				<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-beard> a knora-base:ListNode ;
+					knora-base:listNodeName "beard" ;
+					knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+					knora-base:listNodePosition 3 ;
+					rdfs:label "Barbe"@fr , "Beard"@en .
+					
+				<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-bodyoflight> a knora-base:ListNode ;
+					knora-base:listNodeName "bodyoflight" ;
+					knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+					knora-base:listNodePosition 4 ;
+					rdfs:label "Corps de lumière"@fr , "Body of light"@en .
+					
+				<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-demesuredparts> a knora-base:ListNode ;
+					knora-base:listNodeName "demesuredparts" ;
+					knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+					knora-base:listNodePosition 5 ;
+					rdfs:label "Parties démesurées"@fr , "Demesured parts"@en .
+					
+				<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-eyesclosed> a knora-base:ListNode ;
+					knora-base:listNodeName "eyesclosed" ;
+					knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+					knora-base:listNodePosition 6 ;
+					rdfs:label "Les yeux fermés"@fr , "Eyes closed"@en .
+					
+				<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-figureuclear> a knora-base:ListNode ;
+					knora-base:listNodeName "figureuclear" ;
+					knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+					knora-base:listNodePosition 7 ;
+					rdfs:label "Silhouette disparaissant"@fr , "Figure unclear or dissapearing"@en .
+					
+				<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-missinglimbs> a knora-base:ListNode ;
+					knora-base:listNodeName "missinglimbs" ;
+					knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+					knora-base:listNodePosition 8 ;
+					rdfs:label "Des parties du corps manquantes"@fr , "Missing limbs"@en .
+					
+				<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-nimb> a knora-base:ListNode ;
+					knora-base:listNodeName "nimb" ;
+					knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+					knora-base:listNodePosition 9 ;
+					rdfs:label "Nimbe"@fr , "Nimb"@en .
+					
+				<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-noface> a knora-base:ListNode ;
+					knora-base:listNodeName "noface" ;
+					knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+					knora-base:listNodePosition 10 ;
+					rdfs:label "Pas de visage"@fr , "No face"@en .
+					
+				<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-nofeet> a knora-base:ListNode ;
+					knora-base:listNodeName "nofeet" ;
+					knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+					knora-base:listNodePosition 11 ;
+					rdfs:label "Pas de pieds"@fr , "No feet"@en .
+					
+				<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-onlyeyes> a knora-base:ListNode ;
+					knora-base:listNodeName "onlyeyes" ;
+					knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+					knora-base:listNodePosition 12 ;
+					rdfs:label "Ques des yeux (un oeil)"@fr , "Only eyes (or eye)"@en .
+					
+				<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-manyeyes> a knora-base:ListNode ;
+					knora-base:listNodeName "manyeyes" ;
+					knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+					knora-base:listNodePosition 13 ;
+					rdfs:label "Pluesieurs yeux"@fr , "Multiple eyes"@en .
+					
+				<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-onlyface> a knora-base:ListNode ;
+					knora-base:listNodeName "onlyface" ;
+					knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+					knora-base:listNodePosition 14 ;
+					rdfs:label "Seulement le visage"@fr , "Only face"@en .
+					
+				<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-manyfaces> a knora-base:ListNode ;
+					knora-base:listNodeName "manyfaces" ;
+					knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+					knora-base:listNodePosition 15 ;
+					rdfs:label "Plusieurs visages"@fr , "Multiple faces"@en .
+					
+				<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-onlyhands> a knora-base:ListNode ;
+					knora-base:listNodeName "onlyhands" ;
+					knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+					knora-base:listNodePosition 16 ;
+					rdfs:label "Seulement les mains"@fr , "Only hands"@en .
+					
+				<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-specialcolor> a knora-base:ListNode ;
+					knora-base:listNodeName "specialcolor" ;
+					knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+					knora-base:listNodePosition 17 ;
+					rdfs:label "Couleur particulière"@fr , "Special color"@en .
+					
+				<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-specialhair> a knora-base:ListNode ;
+					knora-base:listNodeName "specialhair" ;
+					knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+					knora-base:listNodePosition 18 ;
+					rdfs:label "Des cheveux particuliers"@fr , "Special hair"@en .
+					
+				<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-splitintwo> a knora-base:ListNode ;
+					knora-base:listNodeName "splitintwo" ;
+					knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+					knora-base:listNodePosition 19 ;
+					rdfs:label "Corps partagés en deux"@fr , "Body split in two"@en .
+					
+				<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-sunfaced> a knora-base:ListNode ;
+					knora-base:listNodeName "sunfaced" ;
+					knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+					knora-base:listNodePosition 20 ;
+					rdfs:label "Visage en soleil"@fr , "Sun-faced"@en .
+					
+				<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-symmetrical> a knora-base:ListNode ;
+					knora-base:listNodeName "symmetrical" ;
+					knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+					knora-base:listNodePosition 21 ;
+					rdfs:label "Corps symmétrique"@fr , "Symmetrical body"@en .
+					
+				<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-assymetrical> a knora-base:ListNode ;
+					knora-base:listNodeName "assymetrical" ;
+					knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+					knora-base:listNodePosition 22 ;
+					rdfs:label "Corps assymétrique"@fr , "Asymmetrical body"@en .
+					
+				<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-unhumanshape> a knora-base:ListNode ;
+					knora-base:listNodeName "unhumanshape" ;
+					knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+					knora-base:listNodePosition 23 ;
+					rdfs:label "Forme non-humaine"@fr , "Unhuman shape"@en .
+					
+				<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-wings> a knora-base:ListNode ;
+					knora-base:listNodeName "wings" ;
+					knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+					knora-base:listNodePosition 24 ;
+					rdfs:label "Ailes"@fr , "Wings"@en .
+																			
+			<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-specialapara> a knora-base:ListNode ;
+				knora-base:listNodeName "specialapara" ;
+				knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+				knora-base:listNodePosition 4 ;
+				rdfs:label "Figure humaine, mais avec des particularités pour les habits ou des decorations"@fr , "Usual human figure, but having particularities in clothing or decor"@en ;
+				knora-base:hasSubListNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-ayudhas> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-clothes> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-decorations> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-royal> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-religious> .
+				
+				<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-ayudhas> a knora-base:ListNode ;
+					knora-base:listNodeName "ayudhas" ;
+					knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+					knora-base:listNodePosition 0 ;
+					rdfs:label "La figures tient des armes"@fr , "The figure holds arms"@en .
+					
+				<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-clothes> a knora-base:ListNode ;
+					knora-base:listNodeName "clothes" ;
+					knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+					knora-base:listNodePosition 1 ;
+					rdfs:label "Habits particulers"@fr , "Special clothes"@en ;
+					knora-base:hasSubListNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-whiterobe> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-religiousclothes> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-modernclothes> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-star> .
+
+					<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-whiterobe> a knora-base:ListNode ;
+						knora-base:listNodeName "whiterobe" ;
+						knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+						knora-base:listNodePosition 0 ;
+						rdfs:label "Robe blanche"@fr , "White gown"@en .
+						
+					<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-religiousclothes> a knora-base:ListNode ;
+						knora-base:listNodeName "religiousclothes" ;
+						knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+						knora-base:listNodePosition 1 ;
+						rdfs:label "Habits religieux, rituels"@fr , "Ceremonial or ritual dress"@en .
+						
+					<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-modernclothes> a knora-base:ListNode ;
+						knora-base:listNodeName "modernclothes" ;
+						knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+						knora-base:listNodePosition 2 ;
+						rdfs:label "Habits modernes"@fr , "Modern dress"@en .
+						
+					<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-star> a knora-base:ListNode ;
+						knora-base:listNodeName "star" ;
+						knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+						knora-base:listNodePosition 3 ;
+						rdfs:label "Habits d'une \"star\""@fr , "Dress of a \"star\""@en .
+
+					
+				<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-decorations> a knora-base:ListNode ;
+					knora-base:listNodeName "decorations" ;
+					knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+					knora-base:listNodePosition 2 ;
+					rdfs:label "Décorations"@fr , "Decorations"@en .
+					
+				<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-royal> a knora-base:ListNode ;
+					knora-base:listNodeName "royal" ;
+					knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+					knora-base:listNodePosition 3 ;
+					rdfs:label "Objets royaux"@fr , "Objects of royal power"@en .
+					
+				<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-religious> a knora-base:ListNode ;
+					knora-base:listNodeName "religious" ;
+					knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+					knora-base:listNodePosition 4 ;
+					rdfs:label "Objets religieux"@fr , "Objects of religious power"@en .
+
+			<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-specialposture> a knora-base:ListNode ;
+				knora-base:listNodeName "specialposture" ;
+				knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+				knora-base:listNodePosition 5 ;
+				rdfs:label "Figure humaine, mais avec des particularités dans la posture"@fr , "Usual human figure, but having particularities in posture"@en ;
+				knora-base:hasSubListNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-arms> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-asana> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-sittingonthrone> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-face> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-profile> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-rear> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-3quarts> .
+				
+				<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-arms> a knora-base:ListNode ;
+					knora-base:listNodeName "arms" ;
+					knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+					knora-base:listNodePosition 0 ;
+					rdfs:label "Position des mains spéciale"@fr , "Special position of the arms and hands"@en .
+					
+				<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-asana> a knora-base:ListNode ;
+					knora-base:listNodeName "asana" ;
+					knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+					knora-base:listNodePosition 1 ;
+					rdfs:label "Position spéciale (asana)"@fr , "Special position (asana)"@en .
+					
+				<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-sittingonthrone> a knora-base:ListNode ;
+					knora-base:listNodeName "sittingonthrone" ;
+					knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+					knora-base:listNodePosition 2 ;
+					rdfs:label "Sur un trône"@fr , "Sitting on the throne"@en .
+					
+				<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-face> a knora-base:ListNode ;
+					knora-base:listNodeName "face" ;
+					knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+					knora-base:listNodePosition 3 ;
+					rdfs:label "De face"@fr , "Face towards the viewer"@en .
+					
+				<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-profile> a knora-base:ListNode ;
+					knora-base:listNodeName "profile" ;
+					knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+					knora-base:listNodePosition 4 ;
+					rdfs:label "De profil"@fr , "Profile towards the viewer"@en .
+					
+				<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-rear> a knora-base:ListNode ;
+					knora-base:listNodeName "rear" ;
+					knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+					knora-base:listNodePosition 5 ;
+					rdfs:label "Derrière de la tête ou de dos"@fr , "Rear side of the head or body is towards the viewer"@en .
+					
+				<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-3quarts> a knora-base:ListNode ;
+					knora-base:listNodeName "3quarts" ;
+					knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+					knora-base:listNodePosition 6 ;
+					rdfs:label "Trois quarts de visage vers le spectateur"@fr , "Three quarters of the face is towards the viewer"@en .
+
+					
+			<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-gender> a knora-base:ListNode ;
+				knora-base:listNodeName "gender" ;
+				knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+				knora-base:listNodePosition 6 ;
+				rdfs:label "Genre"@fr , "Gender"@en ;
+				knora-base:hasSubListNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-female> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-male> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-polysexual> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-asexual> .
+										
+					<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-female> a knora-base:ListNode ;
+					knora-base:listNodeName "female" ;
+					knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+					knora-base:listNodePosition 0 ;
+					rdfs:label "Femme/fille"@fr , "Woman/girl"@en .
+					
+					<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-male> a knora-base:ListNode ;
+					knora-base:listNodeName "male" ;
+					knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+					knora-base:listNodePosition 1 ;
+					rdfs:label "Homme/garçon"@fr , "Man/boy"@en .
+					
+					<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-polysexual> a knora-base:ListNode ;
+					knora-base:listNodeName "polysexual" ;
+					knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+					knora-base:listNodePosition 2 ;
+					rdfs:label "Polysexuel"@fr , "Polysexual"@en .
+					
+					<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-asexual> a knora-base:ListNode ;
+					knora-base:listNodeName "asexual" ;
+					knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+					knora-base:listNodePosition 3 ;
+					rdfs:label "Asexuel"@fr , "Asexual"@en .
+		
+
+		<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-passage> a knora-base:ListNode ;
+			knora-base:listNodeName "passage" ;
+			knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+			knora-base:listNodePosition 1 ;
+			rdfs:label "Passage d'un monde à l'autre"@fr , "Passage from one world to another"@en ;
+			knora-base:hasSubListNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-gate> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-mountain> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-road> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-stairs> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-window> .
+				
+				<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-gate> a knora-base:ListNode ;
+					knora-base:listNodeName "gate" ;
+					knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+					knora-base:listNodePosition 0 ;
+					rdfs:label "Porte"@fr , "Door or gate"@en .
+					
+				<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-mountain> a knora-base:ListNode ;
+					knora-base:listNodeName "mountain" ;
+					knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+					knora-base:listNodePosition 1 ;
+					rdfs:label "Montagne avec un sommet clair"@fr , "Mountain with a clear summit"@en .
+					
+				<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-road> a knora-base:ListNode ;
+					knora-base:listNodeName "road" ;
+					knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+					knora-base:listNodePosition 2 ;
+					rdfs:label "La route"@fr , "Road"@en .
+					
+				<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-stairs> a knora-base:ListNode ;
+					knora-base:listNodeName "stairs" ;
+					knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+					knora-base:listNodePosition 3 ;
+					rdfs:label "Escalier vers le ciel"@fr , "Sky stairs"@en .
+					
+				<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-window> a knora-base:ListNode ;
+					knora-base:listNodeName "window" ;
+					knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+					knora-base:listNodePosition 4 ;
+					rdfs:label "Fenêtre"@fr , "Window"@en .
+			
+		<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-paysage> a knora-base:ListNode ;
+			knora-base:listNodeName "paysage" ;
+			knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+			knora-base:listNodePosition 2 ;
+			rdfs:label "Paysage"@fr , "Paysage"@en ;
+			knora-base:hasSubListNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-normalpaysage> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-orderedpaysage> .
+										
+			<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-normalpaysage> a knora-base:ListNode ;
+				knora-base:listNodeName "normalpaysage" ;
+				knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+				knora-base:listNodePosition 0 ;
+				rdfs:label "Paysage normal"@fr , "Normal paysage"@en .
+					
+			<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-orderedpaysage> a knora-base:ListNode ;
+				knora-base:listNodeName "orderedpaysage" ;
+				knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+				knora-base:listNodePosition 1 ;
+				rdfs:label "Paysage ordonné ou symétrique"@fr , "Ordered or symmetrical paysage"@en .
+			
+		<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-plantortree> a knora-base:ListNode ;
+			knora-base:listNodeName "plantortree" ;
+			knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+			knora-base:listNodePosition 3 ;
+			rdfs:label "Plante ou arbre"@fr , "Plant or tree"@en .
+			
+		<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-sunlightrays> a knora-base:ListNode ;
+			knora-base:listNodeName "sunlightrays" ;
+			knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+			knora-base:listNodePosition 4 ;
+			rdfs:label "Soleil, limière"@fr , "Sun, light, rays"@en ;
+			knora-base:hasSubListNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-light> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-rays> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-stars> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-sun> .
+				
+			<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-light> a knora-base:ListNode ;
+				knora-base:listNodeName "light" ;
+				knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+				knora-base:listNodePosition 0 ;
+				rdfs:label "Lumière"@fr , "Light"@en .
+					
+			<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-rays> a knora-base:ListNode ;
+				knora-base:listNodeName "rays" ;
+				knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+				knora-base:listNodePosition 1 ;
+				rdfs:label "Rayons de lumière"@fr , "Rays of light"@en .
+					
+			<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-stars> a knora-base:ListNode ;
+				knora-base:listNodeName "stars" ;
+				knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+				knora-base:listNodePosition 2 ;
+				rdfs:label "Les étoiles"@fr , "Stars"@en .
+					
+			<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-sun> a knora-base:ListNode ;
+				knora-base:listNodeName "sun" ;
+				knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+				knora-base:listNodePosition 3 ;
+				rdfs:label "Soleil"@fr , "Sun"@en .
+			
+		<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-symbol> a knora-base:ListNode ;
+			knora-base:listNodeName "symbol" ;
+			knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+			knora-base:listNodePosition 5 ;
+			rdfs:label "Symbole"@fr , "Symbol"@en ;
+			knora-base:hasSubListNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-ayudhas> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-Bible> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-carpet> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-church> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-colombe> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-Coran> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-cross> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-golgotha> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-heart> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-Kaaba> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-lion> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-lotus> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-mudra> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-svastika> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-tilak> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-religiousbuilging> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-stupa> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-stick> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-yinyang> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-yantra> .
+				
+			<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-ayudhas> a knora-base:ListNode ;
+				knora-base:listNodeName "ayudhas" ;
+				knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+				knora-base:listNodePosition 0 ;
+				rdfs:label "Les objets ou les armes qui définissent une divinité"@fr , "Arms or object that define a divine being"@en .
+					
+			<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-Bible> a knora-base:ListNode ;
+				knora-base:listNodeName "Bible" ;
+				knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+				knora-base:listNodePosition 1 ;
+				rdfs:label "Bible"@fr , "Bible"@en .
+					
+			<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-carpet> a knora-base:ListNode ;
+				knora-base:listNodeName "carpet" ;
+				knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+				knora-base:listNodePosition 2 ;
+				rdfs:label "Tapis de prières"@fr , "Carpet for prayers"@en .
+					
+			<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-church> a knora-base:ListNode ;
+				knora-base:listNodeName "church" ;
+				knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+				knora-base:listNodePosition 3 ;
+				rdfs:label "Eglise"@fr , "Church"@en .
+				
+			<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-colombe> a knora-base:ListNode ;
+				knora-base:listNodeName "colombe" ;
+				knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+				knora-base:listNodePosition 4 ;
+				rdfs:label "Colombe"@fr , "Colombe"@en .
+					
+			<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-Coran> a knora-base:ListNode ;
+				knora-base:listNodeName "Coran" ;
+				knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+				knora-base:listNodePosition 5 ;
+				rdfs:label "Coran"@fr , "Coran"@en .
+					
+			<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-cross> a knora-base:ListNode ;
+				knora-base:listNodeName "cross" ;
+				knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+				knora-base:listNodePosition 6 ;
+				rdfs:label "Croix"@fr , "Cross"@en .
+					
+			<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-golgotha> a knora-base:ListNode ;
+				knora-base:listNodeName "golgotha" ;
+				knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+				knora-base:listNodePosition 7 ;
+				rdfs:label "Golgotha"@fr , "Golgotha"@en .
+				
+			<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-heart> a knora-base:ListNode ;
+				knora-base:listNodeName "heart" ;
+				knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+				knora-base:listNodePosition 8 ;
+				rdfs:label "Coeur"@fr , "Heart"@en .
+					
+			<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-Kaaba> a knora-base:ListNode ;
+				knora-base:listNodeName "Kaaba" ;
+				knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+				knora-base:listNodePosition 9 ;
+				rdfs:label "Kaaba"@fr , "Kaaba"@en .
+					
+			<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-lion> a knora-base:ListNode ;
+				knora-base:listNodeName "lion" ;
+				knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+				knora-base:listNodePosition 10 ;
+				rdfs:label "Lion"@fr , "Lion"@en .
+					
+			<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-lotus> a knora-base:ListNode ;
+				knora-base:listNodeName "lotus" ;
+				knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+				knora-base:listNodePosition 11 ;
+				rdfs:label "Lotus"@fr , "Lotus"@en .
+				
+			<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-mudra> a knora-base:ListNode ;
+				knora-base:listNodeName "mudra" ;
+				knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+				knora-base:listNodePosition 12 ;
+				rdfs:label "Mudra"@fr , "Mudra"@en .
+					
+			<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-svastika> a knora-base:ListNode ;
+				knora-base:listNodeName "svastika" ;
+				knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+				knora-base:listNodePosition 13 ;
+				rdfs:label "Svastika"@fr , "Svastika"@en .
+					
+			<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-tilak> a knora-base:ListNode ;
+				knora-base:listNodeName "tilak" ;
+				knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+				knora-base:listNodePosition 14 ;
+				rdfs:label "Tilak"@fr , "Tilak"@en .
+					
+			<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-religiousbuilging> a knora-base:ListNode ;
+				knora-base:listNodeName "religiousbuilging" ;
+				knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+				knora-base:listNodePosition 15 ;
+				rdfs:label "Bâtiment religieux"@fr , "Religious builgings"@en .
+				
+			<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-stupa> a knora-base:ListNode ;
+				knora-base:listNodeName "stupa" ;
+				knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+				knora-base:listNodePosition 16 ;
+				rdfs:label "Stoupa"@fr , "Stupa"@en .
+				
+			<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-stick> a knora-base:ListNode ;
+				knora-base:listNodeName "stick" ;
+				knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+				knora-base:listNodePosition 17 ;
+				rdfs:label "Bâton"@fr , "Stick"@en .
+					
+			<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-yinyang> a knora-base:ListNode ;
+				knora-base:listNodeName "yinyang" ;
+				knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+				knora-base:listNodePosition 18 ;
+				rdfs:label "Yinyang"@fr , "Yinyang"@en .
+					
+			<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-yantra> a knora-base:ListNode ;
+				knora-base:listNodeName "yantra" ;
+				knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+				knora-base:listNodePosition 18 ;
+				rdfs:label "Yantra"@fr , "Yantra"@en .
+			
+		<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-wordtext> a knora-base:ListNode ;
+			knora-base:listNodeName "wordtext" ;
+			knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+			knora-base:listNodePosition 6 ;
+			rdfs:label "Texte ou mot"@fr , "Word or text"@en .
+			
+		<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-animalbirdinsect> a knora-base:ListNode ;
+			knora-base:listNodeName "animalbirdinsect" ;
+			knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+			knora-base:listNodePosition 7 ;
+			rdfs:label "Animal, oiseau, insecte"@fr , "Animal, bird, insect"@en .
+			
+		<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-abstract> a knora-base:ListNode ;
+			knora-base:listNodeName "abstract" ;
+			knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+			knora-base:listNodePosition 8 ;
+			rdfs:label "Image abstraite"@fr , "Abstract image"@en .
+			
+		<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-cloudsrainbowrain> a knora-base:ListNode ;
+			knora-base:listNodeName "cloudsrainbowrain" ;
+			knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+			knora-base:listNodePosition 9 ;
+			rdfs:label "Nuages, pluie, arc-en-ciel"@fr , "Clouds, rainbow, rain"@en ;
+			knora-base:hasSubListNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-cloud> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-rainbow> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-rain> .
+										
+			<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-cloud> a knora-base:ListNode ;
+				knora-base:listNodeName "cloud" ;
+				knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+				knora-base:listNodePosition 0 ;
+				rdfs:label "Nuage(s)"@fr , "Cloud(s)"@en .
+					
+			<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-rainbow> a knora-base:ListNode ;
+				knora-base:listNodeName "rainbow" ;
+				knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+				knora-base:listNodePosition 1 ;
+				rdfs:label "Arc-en-ciel"@fr , "Rainbow"@en .
+					
+			<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-rain> a knora-base:ListNode ;
+				knora-base:listNodeName "rain" ;
+				knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+				knora-base:listNodePosition 2 ;
+				rdfs:label "Pluie"@fr , "Rain"@en .
+			
+		<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-cosmos> a knora-base:ListNode ;
+			knora-base:listNodeName "cosmos" ;
+			knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+			knora-base:listNodePosition 10 ;
+			rdfs:label "Cosmos"@fr , "Cosmos"@en ;
+			knora-base:hasSubListNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-earth> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-galaxy> .
+
+			<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-earth> a knora-base:ListNode ;
+				knora-base:listNodeName "earth" ;
+				knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+				knora-base:listNodePosition 0 ;
+				rdfs:label "Terre vue du cosmos"@fr , "Earth seen from cosmos"@en .
+					
+			<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-galaxy> a knora-base:ListNode ;
+				knora-base:listNodeName "galaxy" ;
+				knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+				knora-base:listNodePosition 1 ;
+				rdfs:label "Galaxie"@fr , "Galaxy"@en .
+			
+		<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-elements> a knora-base:ListNode ;
+			knora-base:listNodeName "elements" ;
+			knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+			knora-base:listNodePosition 11 ;
+			rdfs:label "Eléments constituant la totalité (chinois)"@fr , "Elements constituting the whole (chinese)"@en .
+			
+		<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-empty> a knora-base:ListNode ;
+			knora-base:listNodeName "empty" ;
+			knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+			knora-base:listNodePosition 12 ;
+			rdfs:label "Vide"@fr , "Empty"@en ;
+			knora-base:hasSubListNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-emptypaper> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-frame> .
+
+			<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-emptypaper> a knora-base:ListNode ;
+				knora-base:listNodeName "emptypaper" ;
+				knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+				knora-base:listNodePosition 0 ;
+				rdfs:label "Feuille vide"@fr , "Empty paper"@en .
+					
+			<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-frame> a knora-base:ListNode ;
+				knora-base:listNodeName "frame" ;
+				knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+				knora-base:listNodePosition 1 ;
+				rdfs:label "Bordure sur une feuille vide"@fr , "Frame on empty paper"@en .
+			
+		<http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-othermotif> a knora-base:ListNode ;
+			knora-base:listNodeName "othermotif" ;
+			knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList> ;
+			knora-base:listNodePosition 13 ;
+			rdfs:label "Autre motif"@fr , "Other motif"@en .
+
+
+###    GodFunctionList
+<http://data.knora.org/lists/drawings-gods-2016-list-GodFunctionList> a knora-base:ListNode ;
+	knora-base:isRootNode true ;
+	rdfs:comment "Liste de choix pour les fonctions de dieu"@fr ;
+	rdfs:label "Fonction de dieu dans le dessin"@fr , "Function of god in the image"@en ;
+	knora-base:hasSubListNode <http://data.knora.org/lists/drawings-gods-2016-list-GodFunctionList-creator> ,
+									<http://data.knora.org/lists/drawings-gods-2016-list-GodFunctionList-emanator> ,
+									<http://data.knora.org/lists/drawings-gods-2016-list-GodFunctionList-earthholder> ,
+									<http://data.knora.org/lists/drawings-gods-2016-list-GodFunctionList-controller> ,
+									<http://data.knora.org/lists/drawings-gods-2016-list-GodFunctionList-omnipresent> ,
+									<http://data.knora.org/lists/drawings-gods-2016-list-GodFunctionList-masterofelements> ,
+									<http://data.knora.org/lists/drawings-gods-2016-list-GodFunctionList-relatedtosemidivine> ,
+									<http://data.knora.org/lists/drawings-gods-2016-list-GodFunctionList-polarity> ,
+									<http://data.knora.org/lists/drawings-gods-2016-list-GodFunctionList-answersprayers> ,
+									<http://data.knora.org/lists/drawings-gods-2016-list-GodFunctionList-showsway> ,
+									<http://data.knora.org/lists/drawings-gods-2016-list-GodFunctionList-meditating> ,
+									<http://data.knora.org/lists/drawings-gods-2016-list-GodFunctionList-praying> ,
+									<http://data.knora.org/lists/drawings-gods-2016-list-GodFunctionList-judging> ,
+									<http://data.knora.org/lists/drawings-gods-2016-list-GodFunctionList-observing> ,
+									<http://data.knora.org/lists/drawings-gods-2016-list-GodFunctionList-intervenes> ,
+									<http://data.knora.org/lists/drawings-gods-2016-list-GodFunctionList-doesnotintervene> ,
+									<http://data.knora.org/lists/drawings-gods-2016-list-GodFunctionList-withpurpose> ,
+									<http://data.knora.org/lists/drawings-gods-2016-list-GodFunctionList-withoutpurpose> ,
+									<http://data.knora.org/lists/drawings-gods-2016-list-GodFunctionList-intbenevolent> ,
+									<http://data.knora.org/lists/drawings-gods-2016-list-GodFunctionList-intmalevolent> ,
+									<http://data.knora.org/lists/drawings-gods-2016-list-GodFunctionList-intneutral> .
+		
+		<http://data.knora.org/lists/drawings-gods-2016-list-GodFunctionList-creator> a knora-base:ListNode ;
+			knora-base:listNodeName "creator" ;
+			knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-GodFunctionList> ;
+			knora-base:listNodePosition 0 ;
+			rdfs:label "Dieu crée et influence la nature"@fr , "God creates an influences the nature"@en .
+			
+		<http://data.knora.org/lists/drawings-gods-2016-list-GodFunctionList-emanator> a knora-base:ListNode ;
+			knora-base:listNodeName "emanator" ;
+			knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-GodFunctionList> ;
+			knora-base:listNodePosition 1 ;
+			rdfs:label "Dieu emane les éléments de la nature"@fr , "God emanates the elements of nature"@en .
+			
+		<http://data.knora.org/lists/drawings-gods-2016-list-GodFunctionList-earthholder> a knora-base:ListNode ;
+			knora-base:listNodeName "earthholder" ;
+			knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-GodFunctionList> ;
+			knora-base:listNodePosition 2 ;
+			rdfs:label "Dieu garde la terre"@fr , "God holds earth"@en .
+			
+		<http://data.knora.org/lists/drawings-gods-2016-list-GodFunctionList-controller> a knora-base:ListNode ;
+			knora-base:listNodeName "controller" ;
+			knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-GodFunctionList> ;
+			knora-base:listNodePosition 3 ;
+			rdfs:label "Dieu influence les animaux et les humains"@fr , "God influences animals and humans"@en .
+			
+		<http://data.knora.org/lists/drawings-gods-2016-list-GodFunctionList-omnipresent> a knora-base:ListNode ;
+			knora-base:listNodeName "omnipresent" ;
+			knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-GodFunctionList> ;
+			knora-base:listNodePosition 4 ;
+			rdfs:label "Dieu est dissout dans la nature"@fr , "God is dissolved in nature"@en .
+			
+		<http://data.knora.org/lists/drawings-gods-2016-list-GodFunctionList-masterofelements> a knora-base:ListNode ;
+			knora-base:listNodeName "masterofelements" ;
+			knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-GodFunctionList> ;
+			knora-base:listNodePosition 5 ;
+			rdfs:label "Dieu maîtrise les elements"@fr , "God masters the elements"@en .
+			
+		<http://data.knora.org/lists/drawings-gods-2016-list-GodFunctionList-relatedtosemidivine> a knora-base:ListNode ;
+			knora-base:listNodeName "relatedtosemidivine" ;
+			knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-GodFunctionList> ;
+			knora-base:listNodePosition 6 ;
+			rdfs:label "Dieu est en relation avec les êtres semidivins"@fr , "God relates to the semi-divine beings"@en .
+			
+		<http://data.knora.org/lists/drawings-gods-2016-list-GodFunctionList-polarity> a knora-base:ListNode ;
+			knora-base:listNodeName "polarity" ;
+			knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-GodFunctionList> ;
+			knora-base:listNodePosition 7 ;
+			rdfs:label "Dieu représente la polarité"@fr , "God represents polarity"@en .
+			
+		<http://data.knora.org/lists/drawings-gods-2016-list-GodFunctionList-answersprayers> a knora-base:ListNode ;
+			knora-base:listNodeName "answersprayers" ;
+			knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-GodFunctionList> ;
+			knora-base:listNodePosition 8 ;
+			rdfs:label "Dieu répond à des prières"@fr , "God answers the prayers"@en .
+			
+		<http://data.knora.org/lists/drawings-gods-2016-list-GodFunctionList-showsway> a knora-base:ListNode ;
+			knora-base:listNodeName "showsway" ;
+			knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-GodFunctionList> ;
+			knora-base:listNodePosition 9 ;
+			rdfs:label "Dieu montre la voie"@fr , "God shows way"@en .
+			
+		<http://data.knora.org/lists/drawings-gods-2016-list-GodFunctionList-meditating> a knora-base:ListNode ;
+			knora-base:listNodeName "meditating" ;
+			knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-GodFunctionList> ;
+			knora-base:listNodePosition 10 ;
+			rdfs:label "Dieu médite"@fr , "God meditates"@en .
+			
+		<http://data.knora.org/lists/drawings-gods-2016-list-GodFunctionList-praying> a knora-base:ListNode ;
+			knora-base:listNodeName "praying" ;
+			knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-GodFunctionList> ;
+			knora-base:listNodePosition 11 ;
+			rdfs:label "Dieu prie"@fr , "God prays"@en .
+			
+		<http://data.knora.org/lists/drawings-gods-2016-list-GodFunctionList-judging> a knora-base:ListNode ;
+			knora-base:listNodeName "judging" ;
+			knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-GodFunctionList> ;
+			knora-base:listNodePosition 12 ;
+			rdfs:label "Dieu juge les autres"@fr , "God judges the others"@en .
+			
+		<http://data.knora.org/lists/drawings-gods-2016-list-GodFunctionList-observing> a knora-base:ListNode ;
+			knora-base:listNodeName "observing" ;
+			knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-GodFunctionList> ;
+			knora-base:listNodePosition 13 ;
+			rdfs:label "Dieu observe quelque chose"@fr , "God is observing something"@en .
+			
+		<http://data.knora.org/lists/drawings-gods-2016-list-GodFunctionList-intervenes> a knora-base:ListNode ;
+			knora-base:listNodeName "intervenes" ;
+			knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-GodFunctionList> ;
+			knora-base:listNodePosition 14 ;
+			rdfs:label "Dieu intervient"@fr , "God intervenes"@en .
+			
+		<http://data.knora.org/lists/drawings-gods-2016-list-GodFunctionList-doesnotintervene> a knora-base:ListNode ;
+			knora-base:listNodeName "doesnotintervene" ;
+			knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-GodFunctionList> ;
+			knora-base:listNodePosition 15 ;
+			rdfs:label "Dieu n'intervient pas"@fr , "God does not intervene"@en .
+			
+		<http://data.knora.org/lists/drawings-gods-2016-list-GodFunctionList-withpurpose> a knora-base:ListNode ;
+			knora-base:listNodeName "withpurpose" ;
+			knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-GodFunctionList> ;
+			knora-base:listNodePosition 16 ;
+			rdfs:label "Dieu agit avec un but"@fr , "God acts with purpose"@en .
+			
+		<http://data.knora.org/lists/drawings-gods-2016-list-GodFunctionList-withoutpurpose> a knora-base:ListNode ;
+			knora-base:listNodeName "withoutpurpose" ;
+			knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-GodFunctionList> ;
+			knora-base:listNodePosition 17 ;
+			rdfs:label "Dieu agit sans but"@fr , "God acts without purpose"@en .
+			
+		<http://data.knora.org/lists/drawings-gods-2016-list-GodFunctionList-intbenevolent> a knora-base:ListNode ;
+			knora-base:listNodeName "intbenevolent" ;
+			knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-GodFunctionList> ;
+			knora-base:listNodePosition 18 ;
+			rdfs:label "Dieu est bienveillant"@fr , "God is benevolent"@en .
+			
+		<http://data.knora.org/lists/drawings-gods-2016-list-GodFunctionList-intmalevolent> a knora-base:ListNode ;
+			knora-base:listNodeName "intmalevolent" ;
+			knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-GodFunctionList> ;
+			knora-base:listNodePosition 19 ;
+			rdfs:label "Dieu est malveillant"@fr , "God is malevolent"@en .
+			
+		<http://data.knora.org/lists/drawings-gods-2016-list-GodFunctionList-intneutral> a knora-base:ListNode ;
+			knora-base:listNodeName "intneutral" ;
+			knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-GodFunctionList> ;
+			knora-base:listNodePosition 20 ;
+			rdfs:label "L'intention de dieu est neutre"@fr , "Intention of god is neutral"@en .
+
+
+###    GodPositionList
+<http://data.knora.org/lists/drawings-gods-2016-list-GodPositionList> a knora-base:ListNode ;
+	knora-base:isRootNode true ;
+	rdfs:comment "Liste hiérarchique de choix pour la position de dieu et la manière d'apparition"@fr ;
+	rdfs:label "La position de dieu dans l'espace"@fr , "What is the position of god in space?"@en ;
+	knora-base:hasSubListNode <http://data.knora.org/lists/drawings-gods-2016-list-GodPositionList-aboveall> ,
+									<http://data.knora.org/lists/drawings-gods-2016-list-GodPositionList-eruption> ,
+									<http://data.knora.org/lists/drawings-gods-2016-list-GodPositionList-floating> ,
+									<http://data.knora.org/lists/drawings-gods-2016-list-GodPositionList-hidden> ,
+									<http://data.knora.org/lists/drawings-gods-2016-list-GodPositionList-direction> ,
+									<http://data.knora.org/lists/drawings-gods-2016-list-GodPositionList-godevident> ,
+									<http://data.knora.org/lists/drawings-gods-2016-list-GodPositionList-godnotevident> ,
+									<http://data.knora.org/lists/drawings-gods-2016-list-GodPositionList-regardsshowgod> ,
+									<http://data.knora.org/lists/drawings-gods-2016-list-GodPositionList-multiplegods> ,
+									<http://data.knora.org/lists/drawings-gods-2016-list-GodPositionList-symmetryprominent> ,
+									<http://data.knora.org/lists/drawings-gods-2016-list-GodPositionList-inpicture> ,
+									<http://data.knora.org/lists/drawings-gods-2016-list-GodPositionList-paradisecontext> ,
+									<http://data.knora.org/lists/drawings-gods-2016-list-GodPositionList-hellcontext> ,
+									<http://data.knora.org/lists/drawings-gods-2016-list-GodPositionList-templecontext> ,
+									<http://data.knora.org/lists/drawings-gods-2016-list-GodPositionList-celestialcontext> ,
+									<http://data.knora.org/lists/drawings-gods-2016-list-GodPositionList-naturecontext> ,
+									<http://data.knora.org/lists/drawings-gods-2016-list-GodPositionList-citycontext> ,
+									<http://data.knora.org/lists/drawings-gods-2016-list-GodPositionList-amonghumans> ,
+									<http://data.knora.org/lists/drawings-gods-2016-list-GodPositionList-amonganimals> ,
+									<http://data.knora.org/lists/drawings-gods-2016-list-GodPositionList-amongangels> ,
+									<http://data.knora.org/lists/drawings-gods-2016-list-GodPositionList-amongrelbuildings> ,
+									<http://data.knora.org/lists/drawings-gods-2016-list-GodPositionList-amongbuildings> .
+
+		<http://data.knora.org/lists/drawings-gods-2016-list-GodPositionList-aboveall> a knora-base:ListNode ;
+			knora-base:listNodeName "aboveall" ;
+			knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-GodPositionList> ;
+			knora-base:listNodePosition 0 ;
+			rdfs:label "Par-dessus tout"@fr , "Above all"@en .
+			
+		<http://data.knora.org/lists/drawings-gods-2016-list-GodPositionList-eruption> a knora-base:ListNode ;
+			knora-base:listNodeName "eruption" ;
+			knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-GodPositionList> ;
+			knora-base:listNodePosition 1 ;
+			rdfs:label "Eruption"@fr , "Eruption"@en .
+			
+		<http://data.knora.org/lists/drawings-gods-2016-list-GodPositionList-floating> a knora-base:ListNode ;
+			knora-base:listNodeName "floating" ;
+			knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-GodPositionList> ;
+			knora-base:listNodePosition 2 ;
+			rdfs:label "Flottant"@fr , "Floating"@en .
+			
+		<http://data.knora.org/lists/drawings-gods-2016-list-GodPositionList-hidden> a knora-base:ListNode ;
+			knora-base:listNodeName "hidden" ;
+			knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-GodPositionList> ;
+			knora-base:listNodePosition 3 ;
+			rdfs:label "Caché"@fr , "Hidden"@en .
+			
+		<http://data.knora.org/lists/drawings-gods-2016-list-GodPositionList-direction> a knora-base:ListNode ;
+			knora-base:listNodeName "direction" ;
+			knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-GodPositionList> ;
+			knora-base:listNodePosition 4 ;
+			rdfs:label "Image est structurée vers une direction particulière"@fr , "Image is structured towards one special direction"@en .
+			
+		<http://data.knora.org/lists/drawings-gods-2016-list-GodPositionList-godevident> a knora-base:ListNode ;
+			knora-base:listNodeName "godevident" ;
+			knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-GodPositionList> ;
+			knora-base:listNodePosition 5 ;
+			rdfs:label "Dieu est évident"@fr , "God is evident"@en .
+			
+		<http://data.knora.org/lists/drawings-gods-2016-list-GodPositionList-godnotevident> a knora-base:ListNode ;
+			knora-base:listNodeName "godnotevident" ;
+			knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-GodPositionList> ;
+			knora-base:listNodePosition 6 ;
+			rdfs:label "Dieu n'est pas évident"@fr , "God is not evident"@en .
+			
+		<http://data.knora.org/lists/drawings-gods-2016-list-GodPositionList-regardsshowgod> a knora-base:ListNode ;
+			knora-base:listNodeName "regardsshowgod" ;
+			knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-GodPositionList> ;
+			knora-base:listNodePosition 7 ;
+			rdfs:label "Les êtres regardent vers le dieu"@fr , "Other beings have eyes turned towards gods"@en .
+			
+		<http://data.knora.org/lists/drawings-gods-2016-list-GodPositionList-multiplegods> a knora-base:ListNode ;
+			knora-base:listNodeName "multiplegods" ;
+			knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-GodPositionList> ;
+			knora-base:listNodePosition 8 ;
+			rdfs:label "Les dieux sont multiples"@fr , "Multiple gods"@en .
+			
+		<http://data.knora.org/lists/drawings-gods-2016-list-GodPositionList-symmetryprominent> a knora-base:ListNode ;
+			knora-base:listNodeName "symmetryprominent" ;
+			knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-GodPositionList> ;
+			knora-base:listNodePosition 9 ;
+			rdfs:label "Image est très symmetrique"@fr , "Drawing is very symmetrical"@en .
+			
+		<http://data.knora.org/lists/drawings-gods-2016-list-GodPositionList-inpicture> a knora-base:ListNode ;
+			knora-base:listNodeName "inpicture" ;
+			knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-GodPositionList> ;
+			knora-base:listNodePosition 10 ;
+			rdfs:label "Dieu est sur une image ou thangka"@fr , "God is on the image or thangka"@en .
+
+		<http://data.knora.org/lists/drawings-gods-2016-list-GodPositionList-paradisecontext> a knora-base:ListNode ;
+			knora-base:listNodeName "paradisecontext" ;
+			knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-GodPositionList> ;
+			knora-base:listNodePosition 11 ;
+			rdfs:label "Dieu est dans le contexte du paradis"@fr , "God is in paradise context"@en .
+
+		<http://data.knora.org/lists/drawings-gods-2016-list-GodPositionList-hellcontext> a knora-base:ListNode ;
+			knora-base:listNodeName "hellcontext" ;
+			knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-GodPositionList> ;
+			knora-base:listNodePosition 12 ;
+			rdfs:label "Dieu est dans le contexte de l'enfer"@fr , "God is in hell context"@en .
+
+		<http://data.knora.org/lists/drawings-gods-2016-list-GodPositionList-templecontext> a knora-base:ListNode ;
+			knora-base:listNodeName "templecontext" ;
+			knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-GodPositionList> ;
+			knora-base:listNodePosition 13 ;
+			rdfs:label "Dieu est dans le contexte d'un temple"@fr , "Drawing is in temple context"@en .
+
+		<http://data.knora.org/lists/drawings-gods-2016-list-GodPositionList-celestialcontext> a knora-base:ListNode ;
+			knora-base:listNodeName "celestialcontext" ;
+			knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-GodPositionList> ;
+			knora-base:listNodePosition 14 ;
+			rdfs:label "Dieu est dans le contexte céléste"@fr , "God is in celestial context"@en .
+
+		<http://data.knora.org/lists/drawings-gods-2016-list-GodPositionList-naturecontext> a knora-base:ListNode ;
+			knora-base:listNodeName "naturecontext" ;
+			knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-GodPositionList> ;
+			knora-base:listNodePosition 15 ;
+			rdfs:label "Dieu est dans la nature"@fr , "God is in nature context"@en .
+
+		<http://data.knora.org/lists/drawings-gods-2016-list-GodPositionList-citycontext> a knora-base:ListNode ;
+			knora-base:listNodeName "citycontext" ;
+			knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-GodPositionList> ;
+			knora-base:listNodePosition 16 ;
+			rdfs:label "Dieu est dans le contexte d'une ville/village"@fr , "God is in the context of town or village"@en .
+
+		<http://data.knora.org/lists/drawings-gods-2016-list-GodPositionList-amonghumans> a knora-base:ListNode ;
+			knora-base:listNodeName "amonghumans" ;
+			knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-GodPositionList> ;
+			knora-base:listNodePosition 17 ;
+			rdfs:label "Dieu est parmi les gens"@fr , "God is among humans"@en .
+
+		<http://data.knora.org/lists/drawings-gods-2016-list-GodPositionList-amonganimals> a knora-base:ListNode ;
+			knora-base:listNodeName "amonganimals" ;
+			knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-GodPositionList> ;
+			knora-base:listNodePosition 18 ;
+			rdfs:label "Dieu est parmi les animaux"@fr , "God is among animals"@en .
+
+		<http://data.knora.org/lists/drawings-gods-2016-list-GodPositionList-amongangels> a knora-base:ListNode ;
+			knora-base:listNodeName "amongangels" ;
+			knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-GodPositionList> ;
+			knora-base:listNodePosition 19 ;
+			rdfs:label "Dieu est parmi les anges"@fr , "God is among angels"@en .
+
+		<http://data.knora.org/lists/drawings-gods-2016-list-GodPositionList-amongrelbuildings> a knora-base:ListNode ;
+			knora-base:listNodeName "amongrelbuildings" ;
+			knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-GodPositionList> ;
+			knora-base:listNodePosition 20 ;
+			rdfs:label "Dieu est parmi les bâtiments religieux"@fr , "God is among religious buildings"@en .
+
+		<http://data.knora.org/lists/drawings-gods-2016-list-GodPositionList-amongbuildings> a knora-base:ListNode ;
+			knora-base:listNodeName "amongbuildings" ;
+			knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-GodPositionList> ;
+			knora-base:listNodePosition 21 ;
+			rdfs:label "Dieu est parmi les bâtiments normaux"@fr , "God is among usual buildings"@en .
+
+
+###    DrawingReligiousIdentityList
+<http://data.knora.org/lists/drawings-gods-2016-list-DrawingReligiousIdentityList> a knora-base:ListNode ;
+	knora-base:isRootNode true ;
+	rdfs:comment "Liste hiérarchique de choix pour l'identité religieuse de l'image"@fr ;
+	rdfs:label "Identité religieuse du dessin"@fr , "Religious identity of the image"@en ;
+	knora-base:hasSubListNode <http://data.knora.org/lists/drawings-gods-2016-list-DrawingReligiousIdentityList-clear> ,
+									<http://data.knora.org/lists/drawings-gods-2016-list-DrawingReligiousIdentityList-none> ,
+									<http://data.knora.org/lists/drawings-gods-2016-list-DrawingReligiousIdentityList-christian> ,
+									<http://data.knora.org/lists/drawings-gods-2016-list-DrawingReligiousIdentityList-muslim> ,
+									<http://data.knora.org/lists/drawings-gods-2016-list-DrawingReligiousIdentityList-buddhist> ,
+									<http://data.knora.org/lists/drawings-gods-2016-list-DrawingReligiousIdentityList-hindu> ,
+									<http://data.knora.org/lists/drawings-gods-2016-list-DrawingReligiousIdentityList-jewish> ,
+									<http://data.knora.org/lists/drawings-gods-2016-list-DrawingReligiousIdentityList-shinto> ,
+									<http://data.knora.org/lists/drawings-gods-2016-list-DrawingReligiousIdentityList-taoist> ,
+									<http://data.knora.org/lists/drawings-gods-2016-list-DrawingReligiousIdentityList-greek> ,
+									<http://data.knora.org/lists/drawings-gods-2016-list-DrawingReligiousIdentityList-egyptian> ,
+									<http://data.knora.org/lists/drawings-gods-2016-list-DrawingReligiousIdentityList-shamanist> ,
+									<http://data.knora.org/lists/drawings-gods-2016-list-DrawingReligiousIdentityList-other3> .
+		
+		<http://data.knora.org/lists/drawings-gods-2016-list-DrawingReligiousIdentityList-clear> a knora-base:ListNode ;
+			knora-base:listNodeName "clear" ;
+			knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-DrawingReligiousIdentityList> ;
+			knora-base:listNodePosition 0 ;
+			rdfs:label "L'identité religieuse est claire"@fr , "The image has clear religious identity"@en .
+			
+		<http://data.knora.org/lists/drawings-gods-2016-list-DrawingReligiousIdentityList-none> a knora-base:ListNode ;
+			knora-base:listNodeName "none" ;
+			knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-DrawingReligiousIdentityList> ;
+			knora-base:listNodePosition 1 ;
+			rdfs:label "L'image n'a pas d'identité religieuse claire"@fr , "The image has no clear religious identity"@en .
+			
+		<http://data.knora.org/lists/drawings-gods-2016-list-DrawingReligiousIdentityList-christian> a knora-base:ListNode ;
+			knora-base:listNodeName "christian" ;
+			knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-DrawingReligiousIdentityList> ;
+			knora-base:listNodePosition 2 ;
+			rdfs:label "Chrétien"@fr , "Christian"@en .
+			
+		<http://data.knora.org/lists/drawings-gods-2016-list-DrawingReligiousIdentityList-muslim> a knora-base:ListNode ;
+			knora-base:listNodeName "muslim" ;
+			knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-DrawingReligiousIdentityList> ;
+			knora-base:listNodePosition 3 ;
+			rdfs:label "Musulman"@fr , "Muslim"@en .
+			
+		<http://data.knora.org/lists/drawings-gods-2016-list-DrawingReligiousIdentityList-buddhist> a knora-base:ListNode ;
+			knora-base:listNodeName "buddhist" ;
+			knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-DrawingReligiousIdentityList> ;
+			knora-base:listNodePosition 4 ;
+			rdfs:label "Bouddhiste"@fr , "Buddhist"@en .
+			
+		<http://data.knora.org/lists/drawings-gods-2016-list-DrawingReligiousIdentityList-hindu> a knora-base:ListNode ;
+			knora-base:listNodeName "hindu" ;
+			knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-DrawingReligiousIdentityList> ;
+			knora-base:listNodePosition 5 ;
+			rdfs:label "Hindou"@fr , "Hindu"@en .
+			
+		<http://data.knora.org/lists/drawings-gods-2016-list-DrawingReligiousIdentityList-jewish> a knora-base:ListNode ;
+			knora-base:listNodeName "jewish" ;
+			knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-DrawingReligiousIdentityList> ;
+			knora-base:listNodePosition 6 ;
+			rdfs:label "Juif"@fr , "Jewish"@en .
+			
+		<http://data.knora.org/lists/drawings-gods-2016-list-DrawingReligiousIdentityList-shinto> a knora-base:ListNode ;
+			knora-base:listNodeName "shinto" ;
+			knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-DrawingReligiousIdentityList> ;
+			knora-base:listNodePosition 7 ;
+			rdfs:label "Shinto"@fr , "Shinto"@en .
+			
+		<http://data.knora.org/lists/drawings-gods-2016-list-DrawingReligiousIdentityList-taoist> a knora-base:ListNode ;
+			knora-base:listNodeName "taoist" ;
+			knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-DrawingReligiousIdentityList> ;
+			knora-base:listNodePosition 8 ;
+			rdfs:label "Taoist"@fr , "Taoist"@en .
+			
+		<http://data.knora.org/lists/drawings-gods-2016-list-DrawingReligiousIdentityList-greek> a knora-base:ListNode ;
+			knora-base:listNodeName "greek" ;
+			knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-DrawingReligiousIdentityList> ;
+			knora-base:listNodePosition 9 ;
+			rdfs:label "Greque (ancient)"@fr , "Greek"@en .
+			
+		<http://data.knora.org/lists/drawings-gods-2016-list-DrawingReligiousIdentityList-egyptian> a knora-base:ListNode ;
+			knora-base:listNodeName "egyptian" ;
+			knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-DrawingReligiousIdentityList> ;
+			knora-base:listNodePosition 10 ;
+			rdfs:label "Egyptien"@fr , "Egyptian"@en .
+			
+		<http://data.knora.org/lists/drawings-gods-2016-list-DrawingReligiousIdentityList-shamanist> a knora-base:ListNode ;
+			knora-base:listNodeName "shamanist" ;
+			knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-DrawingReligiousIdentityList> ;
+			knora-base:listNodePosition 11 ;
+			rdfs:label "Shamanist, animalist"@fr , "Shamanist, animalist"@en .
+			
+		<http://data.knora.org/lists/drawings-gods-2016-list-DrawingReligiousIdentityList-other3> a knora-base:ListNode ;
+			knora-base:listNodeName "other" ;
+			knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-DrawingReligiousIdentityList> ;
+			knora-base:listNodePosition 12 ;
+			rdfs:label "Autre tradition religieuse"@fr , "Other religious tradition"@en .
+
+			
+### KeywordsHList
+<http://data.knora.org/lists/drawings-gods-2016-list-KeywordsHList> a knora-base:ListNode ;
+	knora-base:isRootNode true ;
+	rdfs:comment "Mot-clés selon le dessin de l'enfant et sa description écrite"@fr ;
 	rdfs:label "Mots-clés"@fr , "Keywords"@en ;
-	knora-base:hasSubListNode <http://data.knora.org/lists/drawings-gods-2016-list-KeywordsList-node1> ,
-							<http://data.knora.org/lists/drawings-gods-2016-list-KeywordsList-node2> .
-
-<http://data.knora.org/lists/drawings-gods-2016-list-KeywordsList-node1> a knora-base:ListNode ;
-		knora-base:listNodeName "keyword1" ;
-		knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-KeywordsList> ;
-		knora-base:listNodePosition 1 ;
-		rdfs:label "Mot-clé 1"@fr , "Keyword 1"@en .
-
-<http://data.knora.org/lists/drawings-gods-2016-list-KeywordsList-node2> a knora-base:ListNode ;
-		knora-base:listNodeName "keyword2" ;
-		knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-KeywordsList> ;
-		knora-base:listNodePosition 1 ;
-		rdfs:label "Mot-clé 2"@fr , "Keyword 2"@en .
-
-
+	knora-base:hasSubListNode <http://data.knora.org/lists/drawings-gods-2016-list-KeywordsHList-foreground> ,
+							<http://data.knora.org/lists/drawings-gods-2016-list-KeywordsHList-background> ,
+							<http://data.knora.org/lists/drawings-gods-2016-list-KeywordsHList-other> .
+		
+		<http://data.knora.org/lists/drawings-gods-2016-list-KeywordsHList-foreground> a knora-base:ListNode ;
+			knora-base:listNodeName "foreground" ;
+			knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-KeywordsHList> ;
+			knora-base:listNodePosition 0 ;
+			rdfs:label "Premier plan"@fr , "Foreground"@en ;
+			knora-base:hasSubListNode <http://data.knora.org/lists/drawings-gods-2016-list-KeywordsHList-crown> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-KeywordsHList-sun> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-KeywordsHList-cane> .
+										
+			<http://data.knora.org/lists/drawings-gods-2016-list-KeywordsHList-crown> a knora-base:ListNode ;
+				knora-base:listNodeName "crown" ;
+				knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-KeywordsHList> ;
+				knora-base:listNodePosition 0 ;
+				rdfs:label "Couronne"@fr , "Crown"@en .
+				
+			<http://data.knora.org/lists/drawings-gods-2016-list-KeywordsHList-sun> a knora-base:ListNode ;
+				knora-base:listNodeName "sun" ;
+				knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-KeywordsHList> ;
+				knora-base:listNodePosition 1 ;
+				rdfs:label "Soleil"@fr , "Sun"@en .
+				
+			<http://data.knora.org/lists/drawings-gods-2016-list-KeywordsHList-cane> a knora-base:ListNode ;
+				knora-base:listNodeName "cane" ;
+				knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-KeywordsHList> ;
+				knora-base:listNodePosition 2 ;
+				rdfs:label "Canne"@fr , "Cane"@en .
+				
+		<http://data.knora.org/lists/drawings-gods-2016-list-KeywordsHList-background> a knora-base:ListNode ;
+			knora-base:listNodeName "background" ;
+			knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-KeywordsHList> ;
+			knora-base:listNodePosition 1 ;
+			rdfs:label "Arrière plan"@fr , "Background"@en ;
+			knora-base:hasSubListNode <http://data.knora.org/lists/drawings-gods-2016-list-KeywordsHList-crown> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-KeywordsHList-sun> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-KeywordsHList-cane> .
+										
+			<http://data.knora.org/lists/drawings-gods-2016-list-KeywordsHList-crown> a knora-base:ListNode ;
+				knora-base:listNodeName "crown" ;
+				knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-KeywordsHList> ;
+				knora-base:listNodePosition 0 ;
+				rdfs:label "Couronne"@fr , "Crown"@en .
+				
+			<http://data.knora.org/lists/drawings-gods-2016-list-KeywordsHList-sun> a knora-base:ListNode ;
+				knora-base:listNodeName "sun" ;
+				knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-KeywordsHList> ;
+				knora-base:listNodePosition 1 ;
+				rdfs:label "Soleil"@fr , "Sun"@en .
+				
+			<http://data.knora.org/lists/drawings-gods-2016-list-KeywordsHList-cane> a knora-base:ListNode ;
+				knora-base:listNodeName "cane" ;
+				knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-KeywordsHList> ;
+				knora-base:listNodePosition 2 ;
+				rdfs:label "Canne"@fr , "Cane"@en .
+				
+		<http://data.knora.org/lists/drawings-gods-2016-list-KeywordsHList-other> a knora-base:ListNode ;
+			knora-base:listNodeName "other" ;
+			knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-KeywordsHList> ;
+			knora-base:listNodePosition 2 ;
+			rdfs:label "Autre"@fr , "Other"@en ;
+			knora-base:hasSubListNode <http://data.knora.org/lists/drawings-gods-2016-list-KeywordsHList-crown> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-KeywordsHList-sun> ,
+										<http://data.knora.org/lists/drawings-gods-2016-list-KeywordsHList-cane> .
+										
+			<http://data.knora.org/lists/drawings-gods-2016-list-KeywordsHList-crown> a knora-base:ListNode ;
+				knora-base:listNodeName "crown" ;
+				knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-KeywordsHList> ;
+				knora-base:listNodePosition 0 ;
+				rdfs:label "Couronne"@fr , "Crown"@en .
+				
+			<http://data.knora.org/lists/drawings-gods-2016-list-KeywordsHList-sun> a knora-base:ListNode ;
+				knora-base:listNodeName "sun" ;
+				knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-KeywordsHList> ;
+				knora-base:listNodePosition 1 ;
+				rdfs:label "Soleil"@fr , "Sun"@en .
+				
+			<http://data.knora.org/lists/drawings-gods-2016-list-KeywordsHList-cane> a knora-base:ListNode ;
+				knora-base:listNodeName "cane" ;
+				knora-base:hasRootNode <http://data.knora.org/lists/drawings-gods-2016-list-KeywordsHList> ;
+				knora-base:listNodePosition 2 ;
+				rdfs:label "Canne"@fr , "Cane"@en .
