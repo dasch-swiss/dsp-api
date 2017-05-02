@@ -41,7 +41,7 @@ object SearchRouteV2 extends Authenticator {
         implicit val system = _system
         implicit val executionContext = system.dispatcher
         implicit val timeout = settings.defaultTimeout
-        val responderManager = system.actorSelection("/user/responderManager2")
+        val responderManager = system.actorSelection("/user/responderManager")
 
         path("v2" / "search" / Segment) { searchval => // TODO: if a space is encoded as a "+", this is not converted back to a space
             get {

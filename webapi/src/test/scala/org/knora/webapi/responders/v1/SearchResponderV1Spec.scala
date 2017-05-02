@@ -27,7 +27,6 @@ import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRe
 import org.knora.webapi.messages.v1.responder.searchmessages._
 import org.knora.webapi.messages.v1.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent, ResetTriplestoreContentACK}
 import org.knora.webapi.responders._
-import org.knora.webapi.responders.v2.ResponderManagerV2
 import org.knora.webapi.store._
 
 import scala.concurrent.duration._
@@ -187,8 +186,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
 
     // Construct the actors needed for this test.
     private val actorUnderTest = TestActorRef[SearchResponderV1]
-    private val responderManager = system.actorOf(Props(new ResponderManagerV1 with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
-    private val responderManager2 = system.actorOf(Props(new ResponderManagerV2 with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME2)
+    private val responderManager = system.actorOf(Props(new ResponderManager with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
     private val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
 
     val rdfDataObjects = List(

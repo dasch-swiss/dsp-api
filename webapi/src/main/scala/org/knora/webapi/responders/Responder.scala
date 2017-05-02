@@ -55,11 +55,6 @@ trait Responder extends Actor with ActorLogging {
     protected val responderManager = context.actorSelection("/user/responderManager")
 
     /**
-      * A reference to the Knora API v2 responder manager.
-      */
-    protected val responderManager2 = context.actorSelection("/user/responderManager2")
-
-    /**
       * A reference to the store manager.
       */
     protected val storeManager = context.actorSelection("/user/storeManager")

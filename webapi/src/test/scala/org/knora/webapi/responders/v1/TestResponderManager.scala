@@ -25,13 +25,13 @@ import org.knora.webapi.responders._
 import org.knora.webapi.{ActorMaker, LiveActorMaker}
 
 /**
-  * A subclass of [[ResponderManagerV1]] that allows tests to substitute custom responders for the standard ones.
+  * A subclass of [[ResponderManager]] that allows tests to substitute custom responders for the standard ones.
   * Currently only supports a mock Sipi responder.
   *
   * @param mockResponders a [[Map]] containing the mock responders to be used instead of the live ones.
   *                       The name of the actor (a constant from [[org.knora.webapi.responders]] is used as the key in the map.
   */
-class TestResponderManagerV1(mockResponders: Map[String, ActorRef]) extends ResponderManagerV1 with LiveActorMaker {
+class TestResponderManager(mockResponders: Map[String, ActorRef]) extends ResponderManager with LiveActorMaker {
     this: ActorMaker =>
 
     /**

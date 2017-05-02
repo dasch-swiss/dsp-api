@@ -77,7 +77,7 @@ class OntologyResponderV1 extends Responder {
 
         for {
             // forward the request to the v2 ontologies responder
-            loadOntologiesResponse: LoadOntologiesResponseV2 <- (responderManager2 ? LoadOntologiesRequestV2(userProfile)).mapTo[LoadOntologiesResponseV2]
+            loadOntologiesResponse: LoadOntologiesResponseV2 <- (responderManager ? LoadOntologiesRequestV2(userProfile)).mapTo[LoadOntologiesResponseV2]
 
         } yield LoadOntologiesResponse()
     }
@@ -92,7 +92,7 @@ class OntologyResponderV1 extends Responder {
       */
     private def getEntityInfoResponseV1(resourceClassIris: Set[IRI] = Set.empty[IRI], propertyIris: Set[IRI] = Set.empty[IRI], userProfile: UserProfileV1): Future[EntityInfoGetResponseV1] = {
         for {
-            response: EntityInfoGetResponseV1 <- (responderManager2 ? EntityInfoGetRequestV2(resourceClassIris, propertyIris, userProfile)).mapTo[EntityInfoGetResponseV1]
+            response: EntityInfoGetResponseV1 <- (responderManager ? EntityInfoGetRequestV2(resourceClassIris, propertyIris, userProfile)).mapTo[EntityInfoGetResponseV1]
         } yield response
     }
 
@@ -107,7 +107,7 @@ class OntologyResponderV1 extends Responder {
       */
     private def getStandoffEntityInfoResponseV1(standoffClassIris: Set[IRI] = Set.empty[IRI], standoffPropertyIris: Set[IRI] = Set.empty[IRI], userProfile: UserProfileV1): Future[StandoffEntityInfoGetResponseV1] = {
         for {
-            response <- (responderManager2 ? StandoffEntityInfoGetRequestV2(standoffClassIris, standoffPropertyIris, userProfile)).mapTo[StandoffEntityInfoGetResponseV1]
+            response <- (responderManager ? StandoffEntityInfoGetRequestV2(standoffClassIris, standoffPropertyIris, userProfile)).mapTo[StandoffEntityInfoGetResponseV1]
         } yield response
     }
 
@@ -119,7 +119,7 @@ class OntologyResponderV1 extends Responder {
       */
     private def getStandoffStandoffClassesWithDataTypeV1(userProfile: UserProfileV1): Future[StandoffClassesWithDataTypeGetResponseV1] = {
         for {
-            response <- (responderManager2 ? StandoffClassesWithDataTypeGetRequestV2(userProfile)).mapTo[StandoffClassesWithDataTypeGetResponseV1]
+            response <- (responderManager ? StandoffClassesWithDataTypeGetRequestV2(userProfile)).mapTo[StandoffClassesWithDataTypeGetResponseV1]
         } yield response
     }
 
@@ -131,7 +131,7 @@ class OntologyResponderV1 extends Responder {
       */
     private def getAllStandoffPropertyEntities(userProfile: UserProfileV1): Future[StandoffAllPropertyEntitiesGetResponseV1] = {
         for {
-            response <- (responderManager2 ? StandoffAllPropertyEntitiesGetRequestV2(userProfile)).mapTo[StandoffAllPropertyEntitiesGetResponseV1]
+            response <- (responderManager ? StandoffAllPropertyEntitiesGetRequestV2(userProfile)).mapTo[StandoffAllPropertyEntitiesGetResponseV1]
         } yield response
     }
 
@@ -222,7 +222,7 @@ class OntologyResponderV1 extends Responder {
       */
     private def checkSubClass(checkSubClassRequest: CheckSubClassRequestV1): Future[CheckSubClassResponseV1] = {
         for {
-            response <- (responderManager2 ? CheckSubClassRequestV2(subClassIri = checkSubClassRequest.subClassIri, superClassIri = checkSubClassRequest.superClassIri, checkSubClassRequest.userProfile)).mapTo[CheckSubClassResponseV1]
+            response <- (responderManager ? CheckSubClassRequestV2(subClassIri = checkSubClassRequest.subClassIri, superClassIri = checkSubClassRequest.superClassIri, checkSubClassRequest.userProfile)).mapTo[CheckSubClassResponseV1]
 
         } yield response
     }
@@ -236,7 +236,7 @@ class OntologyResponderV1 extends Responder {
     private def getSubClasses(getSubClassesRequest: SubClassesGetRequestV1): Future[SubClassesGetResponseV1] = {
         for {
 
-            response <- (responderManager2 ? SubClassesGetRequestV2(getSubClassesRequest.resourceClassIri, getSubClassesRequest.userProfile)).mapTo[SubClassesGetResponseV1]
+            response <- (responderManager ? SubClassesGetRequestV2(getSubClassesRequest.resourceClassIri, getSubClassesRequest.userProfile)).mapTo[SubClassesGetResponseV1]
 
         } yield response
     }
@@ -267,7 +267,7 @@ class OntologyResponderV1 extends Responder {
       */
     private def getNamedGraphEntityInfoV1ForNamedGraph(namedGraphIri: IRI, userProfile: UserProfileV1): Future[NamedGraphEntityInfoV1] = {
         for {
-            response <- (responderManager2 ? NamedGraphEntitiesRequestV2(namedGraphIri, userProfile)).mapTo[NamedGraphEntityInfoV1]
+            response <- (responderManager ? NamedGraphEntitiesRequestV2(namedGraphIri, userProfile)).mapTo[NamedGraphEntityInfoV1]
         } yield response
     }
 

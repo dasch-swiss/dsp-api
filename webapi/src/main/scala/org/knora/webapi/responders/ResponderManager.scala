@@ -18,7 +18,7 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.responders.v1
+package org.knora.webapi.responders
 
 import akka.actor.{Actor, ActorLogging, Props}
 import akka.event.LoggingReceive
@@ -33,17 +33,21 @@ import org.knora.webapi.messages.v1.responder.projectmessages.ProjectsResponderR
 import org.knora.webapi.messages.v1.responder.resourcemessages.ResourcesResponderRequestV1
 import org.knora.webapi.messages.v1.responder.searchmessages.SearchResponderRequestV1
 import org.knora.webapi.messages.v1.responder.sipimessages.SipiResponderRequestV1
+import org.knora.webapi.messages.v1.responder.standoffmessages.StandoffResponderRequestV1
 import org.knora.webapi.messages.v1.responder.storemessages.StoreResponderRequestV1
 import org.knora.webapi.messages.v1.responder.usermessages.UsersResponderRequestV1
 import org.knora.webapi.messages.v1.responder.valuemessages.ValuesResponderRequestV1
-import org.knora.webapi.messages.v1.responder.standoffmessages.StandoffResponderRequestV1
-import org.knora.webapi.responders._
+import org.knora.webapi.messages.v2.responder.ontologymessages.OntologiesResponderRequestV2
+import org.knora.webapi.messages.v2.responder.resourcemessages.ResourcesGetRequestV2
+import org.knora.webapi.messages.v2.responder.searchmessages.SearchResponderRequestV2
+import org.knora.webapi.responders.v1._
+import org.knora.webapi.responders.v2.{OntologiesResponderV2, ResourcesResponderV2, SearchResponderV2}
 import org.knora.webapi.util.ActorUtil.handleUnexpectedMessage
 
 /**
   * This actor receives messages representing client requests, and forwards them to pools specialised actors that it supervises.
   */
-class ResponderManagerV1 extends Actor with ActorLogging {
+class ResponderManager extends Actor with ActorLogging {
     this: ActorMaker =>
 
     /**
@@ -203,6 +207,43 @@ class ResponderManagerV1 extends Actor with ActorLogging {
       */
     protected val groupsRouter = makeDefaultGroupsRouter
 
+    //
+    // V2 responders
+    //
+
+    /**
+      * Constructs the default Akka routing actor that routes messages to [[OntologiesResponderV2]].
+      */
+    protected final def makeDefaultOntologiesRouter2 = makeActor(FromConfig.props(Props[OntologiesResponderV2]), ONTOLOGIES_ROUTER_ACTOR_NAME2)
+
+    /**
+      * Constructs the default Akka routing actor that routes messages to [[SearchResponderV2]].
+      */
+    protected final def makeDefaultSearchRouter2 = makeActor(FromConfig.props(Props[SearchResponderV2]), SEARCH_ROUTER_ACTOR_NAME2)
+
+    /**
+      * Constructs the default Akka routing actor that routes messages to [[ResourcesResponderV2]].
+      */
+    protected final def makeDefaultResourcesRouter2 = makeActor(FromConfig.props(Props[ResourcesResponderV2]), RESOURCES_ROUTER_ACTOR_NAME2)
+
+    /**
+      * The Akka routing actor that should receive messages addressed to the ontologies responder. Subclasses can override this
+      * member to substitute a custom actor instead of the default search responder.
+      */
+    protected val ontologiesRouter2 = makeDefaultOntologiesRouter2
+
+    /**
+      * The Akka routing actor that should receive messages addressed to the search responder. Subclasses can override this
+      * member to substitute a custom actor instead of the default search responder.
+      */
+    protected val searchRouter2 = makeDefaultSearchRouter2
+
+    /**
+      * The Akka routing actor that should receive messages addressed to the resources responder. Subclasses can override this
+      * member to substitute a custom actor instead of the default search responder.
+      */
+    protected val resourcesRouter2 = makeDefaultResourcesRouter2
+
     def receive = LoggingReceive {
         case resourcesResponderRequestV1: ResourcesResponderRequestV1 => resourcesRouter.forward(resourcesResponderRequestV1)
         case valuesResponderRequest: ValuesResponderRequestV1 => valuesRouter.forward(valuesResponderRequest)
@@ -217,6 +258,9 @@ class ResponderManagerV1 extends Actor with ActorLogging {
         case usersResponderRequest: UsersResponderRequestV1 => usersRouter forward usersResponderRequest
         case projectsResponderRequest: ProjectsResponderRequestV1 => projectsRouter forward projectsResponderRequest
         case groupsResponderRequest: GroupsResponderRequestV1 => groupsRouter forward groupsResponderRequest
+        case ontologiesResponderRequest: OntologiesResponderRequestV2 => ontologiesRouter2.forward(ontologiesResponderRequest) // V2
+        case searchResponderRequest: SearchResponderRequestV2 => searchRouter2.forward(searchResponderRequest) // V2
+        case resourcesResponderRequest: ResourcesGetRequestV2 => resourcesRouter2.forward(resourcesResponderRequest) // V2
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }
 }

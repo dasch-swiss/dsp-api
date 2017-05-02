@@ -28,12 +28,12 @@ import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.{CoreSpec, SharedAdminTestData, TestProbeMaker}
 
 /**
-  * Tests [[ResponderManagerV1]].
+  * Tests [[ResponderManager]].
   */
 class ResponderManagerV1Spec extends CoreSpec("ResponderManagerTestSystem") with ImplicitSender with Authenticator {
 
 
-    val actorUnderTest = TestActorRef(Props(new ResponderManagerV1 with TestProbeMaker), RESPONDER_MANAGER_ACTOR_NAME)
+    val actorUnderTest = TestActorRef(Props(new ResponderManager with TestProbeMaker), RESPONDER_MANAGER_ACTOR_NAME)
 
     val mockResourcesRouter = actorUnderTest.underlyingActor.asInstanceOf[TestProbeMaker].probes.getOrElse(RESOURCES_ROUTER_ACTOR_NAME, null)
     val mockValuesRouter = actorUnderTest.underlyingActor.asInstanceOf[TestProbeMaker].probes.getOrElse(VALUES_ROUTER_ACTOR_NAME, null)
