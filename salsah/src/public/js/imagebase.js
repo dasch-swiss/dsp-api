@@ -418,7 +418,7 @@ $(function() {
                 }
             }
             data.props.__label__ = {
-                attributes: "size=64;maxlength=64",
+                attributes: "size=64",
                 comments: [],
                 guielement: "text",
                 guiorder: 0,
