@@ -680,10 +680,10 @@ class OntologiesResponderV2 extends Responder {
       * @param userProfile  the profile of the user making the request.
       * @return an [[EntityInfoGetResponseV1]].
       */
-    private def getEntityInfoResponseV2(resourceIris: Set[IRI] = Set.empty[IRI], propertyIris: Set[IRI] = Set.empty[IRI], userProfile: UserProfileV1): Future[EntityInfoGetResponseV1] = {
+    private def getEntityInfoResponseV2(resourceIris: Set[IRI] = Set.empty[IRI], propertyIris: Set[IRI] = Set.empty[IRI], userProfile: UserProfileV1): Future[EntityInfoGetResponseV2] = {
         for {
             cacheData <- getCacheData
-            response = EntityInfoGetResponseV1(
+            response = EntityInfoGetResponseV2(
                 resourceEntityInfoMap = new ErrorHandlingMap(cacheData.resourceClassDefs.filterKeys(resourceIris), { key => s"Resource class $key not found" }),
                 propertyEntityInfoMap = new ErrorHandlingMap(cacheData.propertyDefs.filterKeys(propertyIris), { key => s"Property $key not found" })
             )
@@ -698,10 +698,10 @@ class OntologiesResponderV2 extends Responder {
       * @param userProfile          the profile of the user making the request.
       * @return an [[EntityInfoGetResponseV1]].
       */
-    private def getStandoffEntityInfoResponseV2(standoffClassIris: Set[IRI] = Set.empty[IRI], standoffPropertyIris: Set[IRI] = Set.empty[IRI], userProfile: UserProfileV1): Future[StandoffEntityInfoGetResponseV1] = {
+    private def getStandoffEntityInfoResponseV2(standoffClassIris: Set[IRI] = Set.empty[IRI], standoffPropertyIris: Set[IRI] = Set.empty[IRI], userProfile: UserProfileV1): Future[StandoffEntityInfoGetResponseV2] = {
         for {
             cacheData <- getCacheData
-            response = StandoffEntityInfoGetResponseV1(
+            response = StandoffEntityInfoGetResponseV2(
                 standoffClassEntityInfoMap = cacheData.standoffClassDefs.filterKeys(standoffClassIris),
                 standoffPropertyEntityInfoMap = cacheData.standoffPropertyDefs.filterKeys(standoffPropertyIris)
             )
@@ -714,10 +714,10 @@ class OntologiesResponderV2 extends Responder {
       * @param userProfile the profile of the user making the request.
       * @return a [[StandoffClassesWithDataTypeGetResponseV1]]
       */
-    private def getStandoffStandoffClassesWithDataTypeV2(userProfile: UserProfileV1): Future[StandoffClassesWithDataTypeGetResponseV1] = {
+    private def getStandoffStandoffClassesWithDataTypeV2(userProfile: UserProfileV1): Future[StandoffClassesWithDataTypeGetResponseV2] = {
         for {
             cacheData <- getCacheData
-            response = StandoffClassesWithDataTypeGetResponseV1(
+            response = StandoffClassesWithDataTypeGetResponseV2(
                 standoffClassEntityInfoMap = cacheData.standoffClassDefsWithDataType
             )
         } yield response
@@ -729,10 +729,10 @@ class OntologiesResponderV2 extends Responder {
       * @param userProfile the profile of the user making the request.
       * @return a [[StandoffAllPropertyEntitiesGetResponseV1]].
       */
-    private def getAllStandoffPropertyEntitiesV2(userProfile: UserProfileV1): Future[StandoffAllPropertyEntitiesGetResponseV1] = {
+    private def getAllStandoffPropertyEntitiesV2(userProfile: UserProfileV1): Future[StandoffAllPropertyEntitiesGetResponseV2] = {
         for {
             cacheData <- getCacheData
-            response = StandoffAllPropertyEntitiesGetResponseV1(
+            response = StandoffAllPropertyEntitiesGetResponseV2(
                 standoffAllPropertiesEntityInfoMap = cacheData.standoffPropertyDefs
             )
         } yield response
@@ -745,10 +745,10 @@ class OntologiesResponderV2 extends Responder {
       * @param superClassIri the Iri of the resource or value class to check for (whether it is a a super class of `subClassIri` or not).
       * @return a [[CheckSubClassResponseV1]].
       */
-    private def checkSubClassV2(subClassIri: IRI, superClassIri: IRI, userProfile: UserProfileV1): Future[CheckSubClassResponseV1] = {
+    private def checkSubClassV2(subClassIri: IRI, superClassIri: IRI, userProfile: UserProfileV1): Future[CheckSubClassResponseV2] = {
         for {
             cacheData <- getCacheData
-            response = CheckSubClassResponseV1(
+            response = CheckSubClassResponseV2(
                 isSubClass = cacheData.resourceAndValueSubClassOfRelations(subClassIri).contains(superClassIri)
             )
         } yield response
@@ -760,7 +760,7 @@ class OntologiesResponderV2 extends Responder {
       * @param resourceClassIri the Iri of the resource class whose subclasses should be returned.
       * @return a [[SubClassesGetResponseV1]].
       */
-    private def getSubClassesV2(resourceClassIri: IRI, userProfile: UserProfileV1): Future[SubClassesGetResponseV1] = {
+    private def getSubClassesV2(resourceClassIri: IRI, userProfile: UserProfileV1): Future[SubClassesGetResponseV2] = {
         for {
             cacheData <- getCacheData
 
@@ -779,7 +779,7 @@ class OntologiesResponderV2 extends Responder {
                     )
             }
 
-            response = SubClassesGetResponseV1(
+            response = SubClassesGetResponseV2(
                 subClasses = subClasses
             )
         } yield response
@@ -792,10 +792,10 @@ class OntologiesResponderV2 extends Responder {
       * @param userProfile   the profile of the user making the request.
       * @return a [[NamedGraphEntityInfoV1]].
       */
-    private def getNamedGraphEntityInfoV1ForNamedGraph(namedGraphIri: IRI, userProfile: UserProfileV1): Future[NamedGraphEntityInfoV1] = {
+    private def getNamedGraphEntityInfoV1ForNamedGraph(namedGraphIri: IRI, userProfile: UserProfileV1): Future[NamedGraphEntityInfoV2] = {
         for {
             cacheData <- getCacheData
-            response = NamedGraphEntityInfoV1(
+            response = NamedGraphEntityInfoV2(
                 namedGraphIri = namedGraphIri,
                 propertyIris = cacheData.namedGraphProperties(namedGraphIri),
                 resourceClasses = cacheData.namedGraphResourceClasses(namedGraphIri)

@@ -27,7 +27,6 @@ import org.knora.webapi.messages.v1.responder.ontologymessages._
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectsNamedGraphGetV1
 import org.knora.webapi.messages.v1.responder.resourcemessages.SalsahGuiConversions
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
-import org.knora.webapi.messages.v2.responder.LoadOntologiesResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.util.ActorUtil._
@@ -92,8 +91,8 @@ class OntologyResponderV1 extends Responder {
       */
     private def getEntityInfoResponseV1(resourceClassIris: Set[IRI] = Set.empty[IRI], propertyIris: Set[IRI] = Set.empty[IRI], userProfile: UserProfileV1): Future[EntityInfoGetResponseV1] = {
         for {
-            response: EntityInfoGetResponseV1 <- (responderManager ? EntityInfoGetRequestV2(resourceClassIris, propertyIris, userProfile)).mapTo[EntityInfoGetResponseV1]
-        } yield response
+            response: EntityInfoGetResponseV2 <- (responderManager ? EntityInfoGetRequestV2(resourceClassIris, propertyIris, userProfile)).mapTo[EntityInfoGetResponseV2]
+        } yield EntityInfoGetResponseV1(resourceEntityInfoMap = response.resourceEntityInfoMap, propertyEntityInfoMap = response.propertyEntityInfoMap) // TODO: use V2 directly
     }
 
 
@@ -107,8 +106,8 @@ class OntologyResponderV1 extends Responder {
       */
     private def getStandoffEntityInfoResponseV1(standoffClassIris: Set[IRI] = Set.empty[IRI], standoffPropertyIris: Set[IRI] = Set.empty[IRI], userProfile: UserProfileV1): Future[StandoffEntityInfoGetResponseV1] = {
         for {
-            response <- (responderManager ? StandoffEntityInfoGetRequestV2(standoffClassIris, standoffPropertyIris, userProfile)).mapTo[StandoffEntityInfoGetResponseV1]
-        } yield response
+            response: StandoffEntityInfoGetResponseV2 <- (responderManager ? StandoffEntityInfoGetRequestV2(standoffClassIris, standoffPropertyIris, userProfile)).mapTo[StandoffEntityInfoGetResponseV2]
+        } yield StandoffEntityInfoGetResponseV1(standoffClassEntityInfoMap = response.standoffClassEntityInfoMap, standoffPropertyEntityInfoMap = response.standoffPropertyEntityInfoMap) // TODO: use V2 directly
     }
 
     /**
@@ -119,8 +118,8 @@ class OntologyResponderV1 extends Responder {
       */
     private def getStandoffStandoffClassesWithDataTypeV1(userProfile: UserProfileV1): Future[StandoffClassesWithDataTypeGetResponseV1] = {
         for {
-            response <- (responderManager ? StandoffClassesWithDataTypeGetRequestV2(userProfile)).mapTo[StandoffClassesWithDataTypeGetResponseV1]
-        } yield response
+            response: StandoffClassesWithDataTypeGetResponseV2 <- (responderManager ? StandoffClassesWithDataTypeGetRequestV2(userProfile)).mapTo[StandoffClassesWithDataTypeGetResponseV2]
+        } yield StandoffClassesWithDataTypeGetResponseV1(standoffClassEntityInfoMap = response.standoffClassEntityInfoMap) // TODO: use V2 directly
     }
 
     /**
@@ -131,8 +130,8 @@ class OntologyResponderV1 extends Responder {
       */
     private def getAllStandoffPropertyEntities(userProfile: UserProfileV1): Future[StandoffAllPropertyEntitiesGetResponseV1] = {
         for {
-            response <- (responderManager ? StandoffAllPropertyEntitiesGetRequestV2(userProfile)).mapTo[StandoffAllPropertyEntitiesGetResponseV1]
-        } yield response
+            response: StandoffAllPropertyEntitiesGetResponseV2 <- (responderManager ? StandoffAllPropertyEntitiesGetRequestV2(userProfile)).mapTo[StandoffAllPropertyEntitiesGetResponseV2]
+        } yield StandoffAllPropertyEntitiesGetResponseV1(standoffAllPropertiesEntityInfoMap = response.standoffAllPropertiesEntityInfoMap) // TODO: use V2 directly
     }
 
     /**
@@ -222,9 +221,9 @@ class OntologyResponderV1 extends Responder {
       */
     private def checkSubClass(checkSubClassRequest: CheckSubClassRequestV1): Future[CheckSubClassResponseV1] = {
         for {
-            response <- (responderManager ? CheckSubClassRequestV2(subClassIri = checkSubClassRequest.subClassIri, superClassIri = checkSubClassRequest.superClassIri, checkSubClassRequest.userProfile)).mapTo[CheckSubClassResponseV1]
+            response: CheckSubClassResponseV2 <- (responderManager ? CheckSubClassRequestV2(subClassIri = checkSubClassRequest.subClassIri, superClassIri = checkSubClassRequest.superClassIri, checkSubClassRequest.userProfile)).mapTo[CheckSubClassResponseV2]
 
-        } yield response
+        } yield CheckSubClassResponseV1(response.isSubClass) // TODO: use V2 directly
     }
 
     /**
@@ -236,9 +235,9 @@ class OntologyResponderV1 extends Responder {
     private def getSubClasses(getSubClassesRequest: SubClassesGetRequestV1): Future[SubClassesGetResponseV1] = {
         for {
 
-            response <- (responderManager ? SubClassesGetRequestV2(getSubClassesRequest.resourceClassIri, getSubClassesRequest.userProfile)).mapTo[SubClassesGetResponseV1]
+            response: SubClassesGetResponseV2 <- (responderManager ? SubClassesGetRequestV2(getSubClassesRequest.resourceClassIri, getSubClassesRequest.userProfile)).mapTo[SubClassesGetResponseV2]
 
-        } yield response
+        } yield SubClassesGetResponseV1(response.subClasses) // TODO: use V2 directly
     }
 
     /**
@@ -267,8 +266,8 @@ class OntologyResponderV1 extends Responder {
       */
     private def getNamedGraphEntityInfoV1ForNamedGraph(namedGraphIri: IRI, userProfile: UserProfileV1): Future[NamedGraphEntityInfoV1] = {
         for {
-            response <- (responderManager ? NamedGraphEntitiesRequestV2(namedGraphIri, userProfile)).mapTo[NamedGraphEntityInfoV1]
-        } yield response
+            response: NamedGraphEntityInfoV2 <- (responderManager ? NamedGraphEntitiesRequestV2(namedGraphIri, userProfile)).mapTo[NamedGraphEntityInfoV2]
+        } yield NamedGraphEntityInfoV1(namedGraphIri = response.namedGraphIri, resourceClasses = response.resourceClasses, propertyIris = response.propertyIris) // TODO: use V2 directly
     }
 
     /**
