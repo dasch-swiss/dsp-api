@@ -143,8 +143,18 @@ object ResourcesRouteV1 extends Authenticator {
 
 
                                 case OntologyConstants.KnoraBase.LinkValue =>
-                                    val linkVal = InputValidation.toIri(givenValue.link_value.get, () => throw BadRequestException(s"Invalid Knora resource IRI: $givenValue.link_value.get"))
-                                    Future(CreateValueV1WithComment(LinkUpdateV1(linkVal), givenValue.comment))
+                                    (givenValue.link_value, givenValue.link_to_client_id) match {
+                                        case (Some(targetIri: IRI), None) =>
+                                            // This is a link to an existing Knora IRI, so make sure the IRI is valid.
+                                            val validatedTargetIri = InputValidation.toIri(targetIri, () => throw BadRequestException(s"Invalid Knora resource IRI: $targetIri"))
+                                            Future(CreateValueV1WithComment(LinkUpdateV1(validatedTargetIri), givenValue.comment))
+
+                                        case (None, Some(clientIDForTargetResource: String)) =>
+                                            // This is a link to the client's ID for a resource that hasn't been created yet.
+                                            Future(CreateValueV1WithComment(LinkToClientIDUpdateV1(clientIDForTargetResource), givenValue.comment))
+
+                                        case (_, _) => throw AssertionException(s"Invalid link: $givenValue")
+                                    }
 
                                 case OntologyConstants.KnoraBase.IntValue =>
                                     Future(CreateValueV1WithComment(IntegerValueV1(givenValue.int_value.get), givenValue.comment))
@@ -177,9 +187,7 @@ object ResourcesRouteV1 extends Authenticator {
 
                                 case OntologyConstants.KnoraBase.IntervalValue =>
                                     val timeVals: Seq[BigDecimal] = givenValue.interval_value.get
-
                                     if (timeVals.length != 2) throw BadRequestException("parameters for interval_value invalid")
-
                                     Future(CreateValueV1WithComment(IntervalValueV1(timeVals.head, timeVals(1)), givenValue.comment))
 
                                 case OntologyConstants.KnoraBase.GeonameValue =>
@@ -200,7 +208,6 @@ object ResourcesRouteV1 extends Authenticator {
 
 
         def makeCreateResourceRequestMessage(apiRequest: CreateResourceApiRequestV1, multipartConversionRequest: Option[SipiResponderConversionPathRequestV1] = None, userProfile: UserProfileV1): Future[ResourceCreateRequestV1] = {
-
             val projectIri = InputValidation.toIri(apiRequest.project_id, () => throw BadRequestException(s"Invalid project IRI: ${apiRequest.project_id}"))
             val resourceTypeIri = InputValidation.toIri(apiRequest.restype_id, () => throw BadRequestException(s"Invalid resource IRI: ${apiRequest.restype_id}"))
             val label = InputValidation.toSparqlEncodedString(apiRequest.label, () => throw BadRequestException(s"Invalid label: '${apiRequest.label}'"))
@@ -228,11 +235,8 @@ object ResourcesRouteV1 extends Authenticator {
             // make the whole Map a Future
                 valuesToBeCreated: Iterable[(IRI, Seq[CreateValueV1WithComment])] <- Future.traverse(valuesToBeCreatedWithFuture) {
                     case (propIri: IRI, valuesFuture: Future[Seq[CreateValueV1WithComment]]) =>
-
                         for {
-
                             values <- valuesFuture
-
                         } yield propIri -> values
                 }
 
@@ -255,24 +259,29 @@ object ResourcesRouteV1 extends Authenticator {
             )
         }
 
-        def formOneResourceRequest(resourceRequest: CreateResourceRequestV1, userProfile: UserProfileV1): Future[OneOfMultipleResourceCreateRequestV1] = {
-            val values = valuesToCreate(resourceRequest.properties, userProfile)
+        def createOneResourceRequest(resourceRequest: CreateResourceRequestV1, userProfile: UserProfileV1): Future[OneOfMultipleResourceCreateRequestV1] = {
+            val values: Map[IRI, Future[Seq[CreateValueV1WithComment]]] = valuesToCreate(resourceRequest.properties, userProfile)
 
             // make the whole Map a Future
 
             for {
-                valuesToBeCreated <- Future.traverse(values) {
+                valuesToBeCreated: Iterable[(IRI, Seq[CreateValueV1WithComment])] <- Future.traverse(values) {
                     case (propIri: IRI, valuesFuture: Future[Seq[CreateValueV1WithComment]]) =>
                         for {
                             values <- valuesFuture
                         } yield propIri -> values
                 }
-            } yield OneOfMultipleResourceCreateRequestV1(resourceRequest.restype_id, resourceRequest.label, valuesToBeCreated.toMap)
+            } yield OneOfMultipleResourceCreateRequestV1(
+                resourceTypeIri = resourceRequest.restype_id,
+                clientResourceID = resourceRequest.client_id,
+                label = resourceRequest.label,
+                values = valuesToBeCreated.toMap
+            )
         }
 
         def makeMultiResourcesRequestMessage(resourceRequest: Seq[CreateResourceRequestV1], projectId: IRI, apiRequestID: UUID, userProfile: UserProfileV1): Future[MultipleResourceCreateRequestV1] = {
             val resourcesToCreate: Seq[Future[OneOfMultipleResourceCreateRequestV1]] =
-                resourceRequest.map(createResourceRequest => formOneResourceRequest(createResourceRequest, userProfile))
+                resourceRequest.map(createResourceRequest => createOneResourceRequest(createResourceRequest, userProfile))
 
             for {
                 resToCreateCollection: Seq[OneOfMultipleResourceCreateRequestV1] <- Future.sequence(resourcesToCreate)
@@ -317,14 +326,10 @@ object ResourcesRouteV1 extends Authenticator {
                             CreateResourceValueV1(richtext_value = Some(CreateRichtextV1(Some(element_value))))
                         }
 
-
                     case "link_value" =>
-                        val ref_att: Seq[Node] = node.attribute("ref").get
-                        if (ref_att.nonEmpty) {
-                            val linkRef = node.getNamespace(node.prefix) + "/" + node.label + "#" + ref_att
-                            CreateResourceValueV1(link_value = Some(InputValidation.toIri(linkRef, () => throw BadRequestException(s"Invalid link_value: '$linkRef'"))))
-                        } else {
-                            throw BadRequestException(s"the ref attribute not specified for node: $node.label")
+                        node.attribute("ref").get.headOption match {
+                            case Some(refNode: Node) => CreateResourceValueV1(link_to_client_id = Some(refNode.text))
+                            case None => throw BadRequestException(s"the ref attribute not specified for node: $node.label")
                         }
 
                     case "int_value" =>
@@ -386,46 +391,44 @@ object ResourcesRouteV1 extends Authenticator {
             xml.head.child
                 .filter(node => node.label != "#PCDATA")
                 .map(node => {
-                    val entityType = node.label
-
                     // Get the client's ID for the resource
-                    val resClientID = (node \ "@id").toString
+                    val clientIDForResource: String = (node \ "@id").toString
 
                     // Get the resource's label
-                    val resLabel = (node \ "@label").toString
+                    val resourceLabel: String = (node \ "@label").toString
 
-                    // namespaces of xml
-                    val elemNS = node.getNamespace(node.prefix)
+                    // Get the resource's XML namespace and convert it to an internal ontology IRI
+                    val elementNamespace: String = node.getNamespace(node.prefix)
+                    val elemInternalOntologyIri = InputValidation.xmlImportNamespaceToInternalOntologyIriV1(elementNamespace, () => throw BadRequestException(s"Invalid XML namespace: $elementNamespace"))
 
-                    // element namespace + # + element tag gives the resource class Id
-                    val restype_id = elemNS + "#" + entityType
+                    // Ontology IRI + XML node label gives the resource class IRI
+                    val restype_id = elemInternalOntologyIri + node.label
 
-                    // traversing the subelements to collect the values of resource
-                    val properties: Seq[(IRI, Seq[CreateResourceValueV1])] = node.child
-                        .filter(child => child.label != "#PCDATA")
+                    // Traverse the child elements to collect the values of the resource
+                    val propertiesWithValues: Map[IRI, Seq[CreateResourceValueV1]] = node.child
+                        .filter(childNode => childNode.label != "#PCDATA")
                         .map {
-                            case (child) =>
-                                val subnodes = scala.xml.Utility.trim(child).descendant
+                            propertyNode =>
+                                val propertyNodeNamespace = propertyNode.getNamespace(propertyNode.prefix)
+                                val propertyOntologyIri = InputValidation.xmlImportNamespaceToInternalOntologyIriV1(propertyNodeNamespace, () => throw BadRequestException(s"Invalid XML namespace: $propertyNodeNamespace"))
+                                val propertyIri = propertyOntologyIri + propertyNode.label
+                                val valueNodes: Seq[Node] = scala.xml.Utility.trim(propertyNode).descendant
 
-                                if (child.descendant.size != 1) {
-
-                                    child.getNamespace(child.prefix) + "#" + child.label ->
-                                        subnodes.map {
-                                            case (subnode) =>
-                                                knoraDataTypeXML(subnode)
-                                        }
-
+                                if (propertyNode.descendant.size == 1) {
+                                    propertyIri -> List(knoraDataTypeXML(propertyNode))
                                 } else {
-
-                                    child.getNamespace(child.prefix) + "#" + child.label ->
-                                        List(knoraDataTypeXML(child))
+                                    propertyIri ->
+                                        valueNodes.map {
+                                            descendant: Node => knoraDataTypeXML(descendant)
+                                        }
                                 }
-                        }
+                        }.toMap
+
                     CreateResourceRequestV1(
                         restype_id = restype_id,
-                        client_id = resClientID,
-                        label = resLabel,
-                        properties = properties.toMap
+                        client_id = clientIDForResource,
+                        label = resourceLabel,
+                        properties = propertiesWithValues
                     )
                 })
         }

@@ -152,14 +152,11 @@ class ResourcesV1R2RSpec extends R2RSpec {
       * @return the value of `res_id`.
       */
     private def getResIriFromJsonResponse(response: HttpResponse) = {
-
         AkkaHttpUtils.httpResponseToJson(response).fields.get("res_id") match {
             case Some(JsString(resourceId)) => resourceId
             case None => throw InvalidApiJsonException(s"The response does not contain a field called 'res_id'")
             case other => throw InvalidApiJsonException(s"The response does not contain a res_id of type JsString, but ${other}")
         }
-
-
     }
 
     /**
@@ -169,13 +166,11 @@ class ResourcesV1R2RSpec extends R2RSpec {
       * @return the value of `res_id`.
       */
     private def getNewValueIriFromJsonResponse(response: HttpResponse) = {
-
         AkkaHttpUtils.httpResponseToJson(response).fields.get("id") match {
             case Some(JsString(resourceId)) => resourceId
             case None => throw InvalidApiJsonException(s"The response does not contain a field called 'res_id'")
             case other => throw InvalidApiJsonException(s"The response does not contain a res_id of type JsString, but $other")
         }
-
     }
 
     /**
@@ -186,9 +181,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
       * @return the property's values.
       */
     private def getValuesForProp(response: HttpResponse, prop: IRI): JsValue = {
-
         AkkaHttpUtils.httpResponseToJson(response).fields("props").asJsObject.fields(prop).asJsObject.fields("values")
-
     }
 
 
@@ -200,9 +193,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
       * @return the property's comments.
       */
     private def getCommentsForProp(response: HttpResponse, prop: IRI): JsValue = {
-
         AkkaHttpUtils.httpResponseToJson(response).fields("props").asJsObject.fields(prop).asJsObject.fields("comments")
-
     }
 
     /**
@@ -212,7 +203,6 @@ class ResourcesV1R2RSpec extends R2RSpec {
       * @return SPARQL query string.
       */
     private def getDirectLinksSPARQL(resIri: IRI): String = {
-
         s"""
           PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
           SELECT ?referredResourceIRI WHERE {
@@ -222,7 +212,6 @@ class ResourcesV1R2RSpec extends R2RSpec {
 
           }
         """
-
     }
 
     /**
@@ -232,7 +221,6 @@ class ResourcesV1R2RSpec extends R2RSpec {
       * @return SPARQL query string.
       */
     private def getRefCountsSPARQL(resIri: IRI): String = {
-
         s"""
            PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
            PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
@@ -248,7 +236,6 @@ class ResourcesV1R2RSpec extends R2RSpec {
 
            }
         """
-
     }
 
 
@@ -308,10 +295,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
 
                     case None => assert(false, "No regions given, but 2 were expected")
                     case _ => assert(false, "No valid regions given")
-
                 }
-
-
             }
         }
 
@@ -333,7 +317,6 @@ class ResourcesV1R2RSpec extends R2RSpec {
             Post("/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(imagesUserEmail, password)) ~> resourcesPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)
             }
-
         }
 
         "get a resource of type 'knora-base:Resource' with text with standoff" in {
@@ -364,10 +347,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
                 val xmlDiff: Diff = DiffBuilder.compare(Input.fromString(expectedXML)).withTest(Input.fromString(xml)).build()
 
                 xmlDiff.hasDifferences should be(false)
-
             }
-
-
         }
 
         "get a resource of type 'anything:thing' with two text with standoff" in {
@@ -422,15 +402,11 @@ class ResourcesV1R2RSpec extends R2RSpec {
 
                 // Compare the original XML with the regenerated XML.
                 val xmlDiff1: Diff = DiffBuilder.compare(Input.fromString(expectedXML1)).withTest(Input.fromString(xmlStrings(dingeOk))).build()
-
                 val xmlDiff2: Diff = DiffBuilder.compare(Input.fromString(expectedXML2)).withTest(Input.fromString(xmlStrings(allesFuerMich))).build()
 
                 xmlDiff1.hasDifferences should be(false)
-
                 xmlDiff2.hasDifferences should be(false)
-
             }
-
         }
 
         "create a first resource of type anything:Thing" in {
@@ -465,7 +441,6 @@ class ResourcesV1R2RSpec extends R2RSpec {
                 val resId = getResIriFromJsonResponse(response)
 
                 firstThingIri.set(resId)
-
             }
         }
 
@@ -491,10 +466,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
                 val xmlDiff: Diff = DiffBuilder.compare(Input.fromString(xml1)).withTest(Input.fromString(xml)).build()
 
                 xmlDiff.hasDifferences should be(false)
-
-
             }
-
         }
 
         "create a new text value for the first thing resource" in {
@@ -532,10 +504,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
                 val resId = getNewValueIriFromJsonResponse(response)
 
                 firstTextValueIRI.set(resId)
-
-
             }
-
         }
 
         "change the created text value above for the first thing resource so it has a standoff link to incunabulaBookBiechlin" in {
@@ -563,9 +532,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
                 val resId = getNewValueIriFromJsonResponse(response)
 
                 firstTextValueIRI.set(resId)
-
             }
-
         }
 
         "make sure that the first thing resource contains a direct standoff link to incunabulaBookBiechlin now" in {
@@ -584,9 +551,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
                     assert(ref, s"No direct link to '$incunabulaBookBiechlin' found")
 
                 case _ => throw TriplestoreResponseException("Expected a SparqlSelectResponse")
-
             }
-
         }
 
         "check that the first thing resource's standoff link reification has the correct reference count" in {
@@ -606,9 +571,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
                     assert(refCnt, s"Ref count for '$incunabulaBookBiechlin' should be 1")
 
                 case _ => throw TriplestoreResponseException("Expected a SparqlSelectResponse")
-
             }
-
         }
 
         "create a second resource of type anything:Thing linking to the first thing via standoff" in {
@@ -644,9 +607,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
                 val resId = getResIriFromJsonResponse(response)
 
                 secondThingIri.set(resId)
-
             }
-
         }
 
         "get the second resource of type anything:Thing, containing the correct standoff link" in {
@@ -676,7 +637,6 @@ class ResourcesV1R2RSpec extends R2RSpec {
                 val target: Seq[Node] = link.head.attributes("href")
 
                 assert(target.nonEmpty && target.head.text == firstThingIri.get)
-
             }
         }
 
@@ -723,9 +683,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
                     case None => throw InvalidApiJsonException("Element in 'incoming' does not have a member 'ext_res_id'")
                     case other => throw InvalidApiJsonException("Element in 'incoming' is not a JsObject")
                 }
-
             }
-
         }
 
         "attempt to create a resource of type thing with an invalid standoff tag name" in {
@@ -759,9 +717,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
 
                 // the route should reject the request because `trong` is not a tag name supported by the standard mapping
                 assert(status == StatusCodes.BadRequest, response.toString)
-
             }
-
         }
 
         "attempt to create a resource of type thing submitting a wrong standoff link" in {
@@ -796,11 +752,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
 
                 // the route should reject the request because an IRI is wrong (formally valid though)
                 assert(status == StatusCodes.NotFound, response.toString)
-
-
-
             }
-
         }
 
 
@@ -843,9 +795,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
                 val resId = getResIriFromJsonResponse(response)
 
                 thirdThingIri.set(resId)
-
             }
-
         }
 
         "check that the third thing resource has two direct standoff links" in {
@@ -871,9 +821,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
                     assert(ref2, s"No direct link to '$incunabulaBookBiechlin' found")
 
                 case _ => throw TriplestoreResponseException("Expected a SparqlSelectResponse")
-
             }
-
         }
 
         "check that the third thing resource's standoff link reifications have the correct reference counts" in {
@@ -901,9 +849,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
                     assert(refCnt2, s"Ref count for '$incunabulaBookBiechlin' should be 1")
 
                 case _ => throw TriplestoreResponseException("Expected a SparqlSelectResponse")
-
             }
-
         }
 
         "mark a resource as deleted" in {
@@ -911,7 +857,6 @@ class ResourcesV1R2RSpec extends R2RSpec {
             Delete("/v1/resources/http%3A%2F%2Fdata.knora.org%2F9d626dc76c03?deleteComment=deleted%20for%20testing") ~> addCredentials(BasicHttpCredentials(incunabulaUserEmail2, password)) ~> resourcesPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)
             }
-
         }
 
 
@@ -950,9 +895,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
                 val resId = getResIriFromJsonResponse(response)
 
                 fourthThingIri.set(resId)
-
             }
-
         }
 
         "get the fourth resource of type anything:Thing, containing the hyperlink in standoff" in {
@@ -982,8 +925,6 @@ class ResourcesV1R2RSpec extends R2RSpec {
                 val target: Seq[Node] = link.head.attributes("href")
 
                 assert(target.nonEmpty && target.head.text == "http://www.google.ch")
-
-
             }
         }
 
@@ -1018,9 +959,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
                 val resId = getResIriFromJsonResponse(response)
 
                 fifthThingIri.set(resId)
-
             }
-
         }
 
         "get the fifth resource of type anything:Thing, containing various standoff markup" in {
@@ -1061,7 +1000,6 @@ class ResourcesV1R2RSpec extends R2RSpec {
                 val xmlDiff: Diff = DiffBuilder.compare(Input.fromString(xmlString)).withTest(Input.fromString(xml3)).build()
 
                 xmlDiff.hasDifferences should be(false)
-
             }
         }
 
@@ -1095,9 +1033,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
                 val resId = getResIriFromJsonResponse(response)
 
                 sixthThingIri.set(resId)
-
             }
-
         }
 
         "get the sixth resource of type anything:Thing with internal links to two different resources" in {
@@ -1143,7 +1079,6 @@ class ResourcesV1R2RSpec extends R2RSpec {
                 val xmlDiff: Diff = DiffBuilder.compare(Input.fromString(xmlString)).withTest(Input.fromString(xml4)).build()
 
                 xmlDiff.hasDifferences should be(false)
-
             }
         }
 
@@ -1168,8 +1103,6 @@ class ResourcesV1R2RSpec extends R2RSpec {
                 }
 
                 assert(label == newLabel, "label has not been updated correctly")
-
-
             }
         }
 
@@ -1250,12 +1183,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
                 }
 
                 assert(utf8str == "another simple text")
-
-
             }
-
-
-
         }
 
         "create resources from simple xml" in {
@@ -1266,7 +1194,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    |    xsi:schemaLocation="http://api.knora.org/ontology/biblio/import/v1# biblio.xsd"
                    |    xmlns:biblio="http://api.knora.org/ontology/biblio/import/v1#"
                    |    xmlns:beol="http://api.knora.org/ontology/beol/import/v1#"
-                   |    xmlns:knoraImport="http://api.knora.org/ontology/import/v1#">
+                   |    xmlns:knoraImport="http://api.knora.org/ontology/knora-import/v1#">
                    |    <beol:person id="abel" label="Niels Henrik Abel">
                    |        <beol:hasGivenName knoraType="richtext_value">Niels Henrik</beol:hasGivenName>
                    |        <beol:hasFamilyName knoraType="richtext_value">Abel</beol:hasFamilyName>

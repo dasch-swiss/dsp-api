@@ -60,8 +60,8 @@ case class CreateResourceApiRequestV1(restype_id: IRI,
   * Used internally to represent a request to create a resource.
   *
   * @param restype_id the IRI of the resource class.
-  * @param label the resource's label.
-  * @param client_id the client's unique ID for the resource.
+  * @param label      the resource's label.
+  * @param client_id  the client's unique ID for the resource.
   * @param properties the resource's properties.
   */
 case class CreateResourceRequestV1(restype_id: IRI,
@@ -77,6 +77,7 @@ case class CreateResourceRequestV1(restype_id: IRI,
   */
 case class CreateResourceValueV1(richtext_value: Option[CreateRichtextV1] = None,
                                  link_value: Option[IRI] = None,
+                                 link_to_client_id: Option[String] = None,
                                  int_value: Option[Int] = None,
                                  decimal_value: Option[BigDecimal] = None,
                                  boolean_value: Option[Boolean] = None,
@@ -93,6 +94,7 @@ case class CreateResourceValueV1(richtext_value: Option[CreateRichtextV1] = None
     if (List(
         richtext_value,
         link_value,
+        link_to_client_id,
         int_value,
         decimal_value,
         boolean_value,
@@ -113,7 +115,7 @@ case class CreateResourceValueV1(richtext_value: Option[CreateRichtextV1] = None
       */
     def getValueClassIri: IRI = {
         if (richtext_value.nonEmpty) OntologyConstants.KnoraBase.TextValue
-        else if (link_value.nonEmpty) OntologyConstants.KnoraBase.LinkValue
+        else if (link_value.nonEmpty || link_to_client_id.nonEmpty) OntologyConstants.KnoraBase.LinkValue
         else if (int_value.nonEmpty) OntologyConstants.KnoraBase.IntValue
         else if (decimal_value.nonEmpty) OntologyConstants.KnoraBase.DecimalValue
         else if (boolean_value.nonEmpty) OntologyConstants.KnoraBase.BooleanValue
@@ -211,11 +213,13 @@ case class ResourceCreateRequestV1(resourceTypeIri: IRI,
 /**
   * Requests the creation of one of multiple new resources.
   *
-  * @param resourceTypeIri the type of the new resource.
-  * @param label           the rdfs:label of the resource.
-  * @param values          the properties to add: type and value(s): a Map of propertyIris to ApiValueV1.
+  * @param resourceTypeIri  the type of the new resource.
+  * @param clientResourceID the client's ID for the resource.
+  * @param label            the rdfs:label of the resource.
+  * @param values           the properties to add: type and value(s): a Map of propertyIris to ApiValueV1.
   */
 case class OneOfMultipleResourceCreateRequestV1(resourceTypeIri: IRI,
+                                                clientResourceID: String,
                                                 label: String,
                                                 values: Map[IRI, Seq[CreateValueV1WithComment]])
 
@@ -241,7 +245,7 @@ case class MultipleResourceCreateRequestV1(resourcesToCreate: Seq[OneOfMultipleR
   */
 case class MultipleResourceCreateResponseV1(createdResources: Seq[JsValue]) extends KnoraResponseV1 {
 
-    def toJsValue = ResourceV1JsonProtocol.multipleResourceCreateResponseV1Format.write(this)
+    def toJsValue: JsValue = ResourceV1JsonProtocol.multipleResourceCreateResponseV1Format.write(this)
 
 }
 
@@ -1115,7 +1119,7 @@ object ResourceV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
         }
     }
 
-    implicit val createResourceValueV1Format: RootJsonFormat[CreateResourceValueV1] = jsonFormat13(CreateResourceValueV1)
+    implicit val createResourceValueV1Format: RootJsonFormat[CreateResourceValueV1] = jsonFormat14(CreateResourceValueV1)
     implicit val createResourceApiRequestV1Format: RootJsonFormat[CreateResourceApiRequestV1] = jsonFormat5(CreateResourceApiRequestV1)
     implicit val ChangeResourceLabelApiRequestV1Format: RootJsonFormat[ChangeResourceLabelApiRequestV1] = jsonFormat1(ChangeResourceLabelApiRequestV1)
     implicit val resourceInfoResponseV1Format: RootJsonFormat[ResourceInfoResponseV1] = jsonFormat2(ResourceInfoResponseV1)

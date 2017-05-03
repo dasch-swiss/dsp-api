@@ -111,10 +111,10 @@ object InputValidation {
     private val OntologyPrefixLabelRegex = ("^" + OntologyPrefixLabelPattern + "$").r
 
     // A regex for internal ontologies.
-    private val InternalOntologyRegex: Regex = (InternalOntologyStart + OntologyPrefixLabelPattern + InternalOntologyEnd).r
+    private val InternalOntologyRegex: Regex = (InternalOntologyStart + "(" + OntologyPrefixLabelPattern + ")" + InternalOntologyEnd).r
 
     // A regex for XML import namespaces.
-    private val XmlImportNamespaceRegex: Regex = (XmlImportNamespaceStart + OntologyPrefixLabelPattern + XmlImportNamespaceEnd).r
+    private val XmlImportNamespaceRegex: Regex = (XmlImportNamespaceStart + "(" + OntologyPrefixLabelPattern + ")" + XmlImportNamespaceEnd).r
 
     // Valid URL schemes.
     private val schemes = Array("http", "https")

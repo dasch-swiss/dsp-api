@@ -895,6 +895,21 @@ case class LinkUpdateV1(targetResourceIri: IRI) extends UpdateValueV1 {
 }
 
 /**
+  * Represents a request to create a link to a resource that hasn't been created yet, and is known only
+  * by the ID that the client has provided for it. Instances of this class will be replaced by instances
+  * of [[LinkUpdateV1]] during the preparation for the update.
+  *
+  * @param clientIDForTargetResource the client's ID for the target resource.
+  */
+case class LinkToClientIDUpdateV1(clientIDForTargetResource: String) extends UpdateValueV1 {
+    def valueTypeIri = OntologyConstants.KnoraBase.LinkValue
+
+    override def isDuplicateOfOtherValue(other: ApiValueV1): Boolean = false
+    override def toString = clientIDForTargetResource
+    override def isRedundant(currentVersion: ApiValueV1): Boolean = false
+}
+
+/**
   * Represents the IRI of a Knora hierarchical list.
   *
   * @param hierarchicalListIri the IRI of the hierarchical list.
