@@ -58,57 +58,29 @@ case class CreateUserApiRequestV1(email: String,
 
 /**
   * Represents an API request payload that asks the Knora API server to update an existing user. Information that can
-  * be changed include the user's email, given name, family name, and language.
+  * be changed include the user's email, given name, family name, language, password, user status, and system admin
+  * membership.
   *
-  * @param email      the new email address. Needs to be unique on the server.
-  * @param givenName  the new given name.
-  * @param familyName the new family name.
-  * @param lang       the new ISO 639-1 code of the new preferred language.
-  */
-case class ChangeBasicUserDataApiRequestV1(email: Option[String] = None,
-                                           givenName: Option[String] = None,
-                                           familyName: Option[String] = None,
-                                           lang: Option[String] = None) {
-
-    def toJsValue = UserV1JsonProtocol.changeBasicUserDataApiRequestV1Format.write(this)
-}
-
-/**
-  * Represents an API request payload that asks the Knora API server to update an existing user. Information that
-  * can be changed is the user's password.
-  *
-  * @param oldPassword the old password.
-  * @param newPassword the new password.
-  */
-case class ChangeUserPasswordApiRequestV1(oldPassword: String,
-                                          newPassword: String) {
-
-    def toJsValue = UserV1JsonProtocol.changeUserPasswordApiRequestV1Format.write(this)
-}
-
-/**
-  * Represents an API request payload that asks the Knora API server to update an existing user. Information that
-  * can be changed is the user's activity status.
-  *
-  * @param newUserStatus the new user status (active = true, inactive = false).
-  */
-case class ChangeUserStatusApiRequestV1(newUserStatus: Boolean) {
-
-    def toJsValue = UserV1JsonProtocol.changeUserStatusApiRequestV1Format.write(this)
-}
-
-
-/**
-  * Represents an API request payload that asks the Knora API server to update an existing user. Information that
-  * can be changed is the user's system admin membership status.
-  *
+  * @param email                          the new email address. Needs to be unique on the server.
+  * @param givenName                      the new given name.
+  * @param familyName                     the new family name.
+  * @param lang                           the new ISO 639-1 code of the new preferred language.
+  * @param oldPassword                    the old password.
+  * @param newPassword                    the new password.
+  * @param newUserStatus                  the new user status (active = true, inactive = false).
   * @param newSystemAdminMembershipStatus the new system admin membership status.
   */
-case class ChangeUserSystemAdminMembershipStatusApiRequestV1(newSystemAdminMembershipStatus: Boolean) {
+case class ChangeUserApiRequestV1(email: Option[String] = None,
+                                  givenName: Option[String] = None,
+                                  familyName: Option[String] = None,
+                                  lang: Option[String] = None,
+                                  oldPassword: Option[String] = None,
+                                  newPassword: Option[String] = None,
+                                  newUserStatus: Option[Boolean] = None,
+                                  newSystemAdminMembershipStatus: Option[Boolean] = None) {
 
-    def toJsValue = UserV1JsonProtocol.changeUserSystemAdminMembershipStatusApiRequestV1Format.write(this)
+    def toJsValue = UserV1JsonProtocol.changeUserApiRequestV1Format.write(this)
 }
-
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Messages
@@ -190,39 +162,39 @@ case class UserCreateRequestV1(createRequest: CreateUserApiRequestV1,
 /**
   * Request updating of an existing user.
   *
-  * @param userIri       the IRI of the user to be updated.
-  * @param updateRequest the data which needs to be update.
-  * @param userProfile   the user profile of the user requesting the update.
-  * @param apiRequestID  the ID of the API request.
+  * @param userIri           the IRI of the user to be updated.
+  * @param changeUserRequest the data which needs to be update.
+  * @param userProfile       the user profile of the user requesting the update.
+  * @param apiRequestID      the ID of the API request.
   */
 case class UserChangeBasicUserDataRequestV1(userIri: IRI,
-                                            updateRequest: ChangeBasicUserDataApiRequestV1,
+                                            changeUserRequest: ChangeUserApiRequestV1,
                                             userProfile: UserProfileV1,
                                             apiRequestID: UUID) extends UsersResponderRequestV1
 
 /**
   * Request updating the users password.
   *
-  * @param userIri               the IRI of the user to be updated.
-  * @param changePasswordRequest the [[ChangeUserPasswordApiRequestV1]] object containing the old and new password.
-  * @param userProfile           the user profile of the user requesting the update.
-  * @param apiRequestID          the ID of the API request.
+  * @param userIri           the IRI of the user to be updated.
+  * @param changeUserRequest the [[ChangeUserApiRequestV1]] object containing the old and new password.
+  * @param userProfile       the user profile of the user requesting the update.
+  * @param apiRequestID      the ID of the API request.
   */
 case class UserChangePasswordRequestV1(userIri: IRI,
-                                       changePasswordRequest: ChangeUserPasswordApiRequestV1,
+                                       changeUserRequest: ChangeUserApiRequestV1,
                                        userProfile: UserProfileV1,
                                        apiRequestID: UUID) extends UsersResponderRequestV1
 
 /**
   * Request updating the users status ('knora-base:isActiveUser' property)
   *
-  * @param userIri             the IRI of the user to be updated.
-  * @param changeStatusRequest the [[ChangeUserStatusApiRequestV1]] containing the new status (true / false).
-  * @param userProfile         the user profile of the user requesting the update.
-  * @param apiRequestID        the ID of the API request.
+  * @param userIri           the IRI of the user to be updated.
+  * @param changeUserRequest the [[ChangeUserApiRequestV1]] containing the new status (true / false).
+  * @param userProfile       the user profile of the user requesting the update.
+  * @param apiRequestID      the ID of the API request.
   */
 case class UserChangeStatusRequestV1(userIri: IRI,
-                                     changeStatusRequest: ChangeUserStatusApiRequestV1,
+                                     changeUserRequest: ChangeUserApiRequestV1,
                                      userProfile: UserProfileV1,
                                      apiRequestID: UUID) extends UsersResponderRequestV1
 
@@ -230,14 +202,14 @@ case class UserChangeStatusRequestV1(userIri: IRI,
 /**
   * Request updating the users system admin status ('knora-base:isInSystemAdminGroup' property)
   *
-  * @param userIri                                  the IRI of the user to be updated.
-  * @param changeSystemAdminMembershipStatusRequest the [[ChangeUserSystemAdminMembershipStatusApiRequestV1]] containing
-  *                                                 the new system admin membership status (true / false).
-  * @param userProfile                              the user profile of the user requesting the update.
-  * @param apiRequestID                             the ID of the API request.
+  * @param userIri           the IRI of the user to be updated.
+  * @param changeUserRequest the [[ChangeUserApiRequestV1]] containing
+  *                          the new system admin membership status (true / false).
+  * @param userProfile       the user profile of the user requesting the update.
+  * @param apiRequestID      the ID of the API request.
   */
 case class UserChangeSystemAdminMembershipStatusRequestV1(userIri: IRI,
-                                                          changeSystemAdminMembershipStatusRequest: ChangeUserSystemAdminMembershipStatusApiRequestV1,
+                                                          changeUserRequest: ChangeUserApiRequestV1,
                                                           userProfile: UserProfileV1,
                                                           apiRequestID: UUID) extends UsersResponderRequestV1
 
@@ -504,10 +476,7 @@ object UserV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
     implicit val userDataV1Format: JsonFormat[UserDataV1] = lazyFormat(jsonFormat8(UserDataV1))
     implicit val userProfileV1Format: JsonFormat[UserProfileV1] = jsonFormat6(UserProfileV1)
     implicit val createUserApiRequestV1Format: RootJsonFormat[CreateUserApiRequestV1] = jsonFormat7(CreateUserApiRequestV1)
-    implicit val changeBasicUserDataApiRequestV1Format: RootJsonFormat[ChangeBasicUserDataApiRequestV1] = jsonFormat4(ChangeBasicUserDataApiRequestV1)
-    implicit val changeUserPasswordApiRequestV1Format: RootJsonFormat[ChangeUserPasswordApiRequestV1] = jsonFormat2(ChangeUserPasswordApiRequestV1)
-    implicit val changeUserStatusApiRequestV1Format: RootJsonFormat[ChangeUserStatusApiRequestV1] = jsonFormat1(ChangeUserStatusApiRequestV1)
-    implicit val changeUserSystemAdminMembershipStatusApiRequestV1Format: RootJsonFormat[ChangeUserSystemAdminMembershipStatusApiRequestV1] = jsonFormat1(ChangeUserSystemAdminMembershipStatusApiRequestV1)
+    implicit val changeUserApiRequestV1Format: RootJsonFormat[ChangeUserApiRequestV1] = jsonFormat8(ChangeUserApiRequestV1)
     implicit val usersGetResponseV1Format: RootJsonFormat[UsersGetResponseV1] = jsonFormat1(UsersGetResponseV1)
     implicit val userProfileResponseV1Format: RootJsonFormat[UserProfileResponseV1] = jsonFormat1(UserProfileResponseV1)
     implicit val userOperationResponseV1Format: RootJsonFormat[UserOperationResponseV1] = jsonFormat1(UserOperationResponseV1)

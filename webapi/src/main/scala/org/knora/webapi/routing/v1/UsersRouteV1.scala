@@ -111,81 +111,46 @@ object UsersRouteV1 extends Authenticator {
         } ~
         path("v1" / "users" / Segment) { value =>
             put {
-                /* update existing user's basic information */
-                entity(as[ChangeBasicUserDataApiRequestV1]) { apiRequest => requestContext =>
+                entity(as[ChangeUserApiRequestV1]) { apiRequest => requestContext =>
 
                     val userIri = InputValidation.toIri(value, () => throw BadRequestException(s"Invalid user IRI $value"))
                     val userProfile = getUserProfileV1(requestContext)
 
-                    val requestMessage = UserChangeBasicUserDataRequestV1(
-                        userIri = userIri,
-                        updateRequest = apiRequest,
-                        userProfile,
-                        apiRequestID = UUID.randomUUID()
-                    )
-                    RouteUtilV1.runJsonRoute(
-                        requestMessage,
-                        requestContext,
-                        settings,
-                        responderManager,
-                        log
-                    )
-                }
-            } ~ put {
-                /* update existing user's password */
-                entity(as[ChangeUserPasswordApiRequestV1]) { apiRequest => requestContext =>
+                    val requestMessage = if (apiRequest.oldPassword.isDefined && apiRequest.newPassword.isDefined) {
+                        /* update existing user's password */
+                        UserChangePasswordRequestV1(
+                            userIri = userIri,
+                            changeUserRequest = apiRequest,
+                            userProfile,
+                            apiRequestID = UUID.randomUUID()
+                        )
+                    } else if (apiRequest.newUserStatus.isDefined) {
+                        /* update existing user's status */
+                        UserChangeStatusRequestV1(
+                            userIri,
+                            changeUserRequest = apiRequest,
+                            userProfile,
+                            apiRequestID = UUID.randomUUID()
+                        )
+                    } else if (apiRequest.newSystemAdminMembershipStatus.isDefined) {
+                        /* update existing user's system admin membership status */
+                        UserChangeSystemAdminMembershipStatusRequestV1(
+                            userIri,
+                            changeUserRequest = apiRequest,
+                            userProfile,
+                            apiRequestID = UUID.randomUUID()
+                        )
+                    } else {
+                        /* update existing user's basic information */
+                        /* not checking anything here as checks will be performed later */
+                        UserChangeBasicUserDataRequestV1(
+                            userIri,
+                            changeUserRequest = apiRequest,
+                            userProfile,
+                            apiRequestID = UUID.randomUUID()
+                        )
+                    }
 
-                    val userIri = InputValidation.toIri(value, () => throw BadRequestException(s"Invalid user IRI $value"))
-                    val userProfile = getUserProfileV1(requestContext)
-
-                    val requestMessage = UserChangePasswordRequestV1(
-                        userIri = userIri,
-                        changePasswordRequest = apiRequest,
-                        userProfile,
-                        apiRequestID = UUID.randomUUID
-                    )
-                    RouteUtilV1.runJsonRoute(
-                        requestMessage,
-                        requestContext,
-                        settings,
-                        responderManager,
-                        log
-                    )
-                }
-            } ~ put {
-                /* update existing user's status */
-                entity(as[ChangeUserStatusApiRequestV1]) { apiRequest => requestContext =>
-
-                    val userIri = InputValidation.toIri(value, () => throw BadRequestException(s"Invalid user IRI $value"))
-                    val userProfile = getUserProfileV1(requestContext)
-
-                    val requestMessage = UserChangeStatusRequestV1(
-                        userIri = userIri,
-                        changeStatusRequest = apiRequest,
-                        userProfile,
-                        apiRequestID = UUID.randomUUID
-                    )
-                    RouteUtilV1.runJsonRoute(
-                        requestMessage,
-                        requestContext,
-                        settings,
-                        responderManager,
-                        log
-                    )
-                }
-            } ~ put {
-                /* update existing user's system admin membership status */
-                entity(as[ChangeUserSystemAdminMembershipStatusApiRequestV1]) { apiRequest => requestContext =>
-
-                    val userIri = InputValidation.toIri(value, () => throw BadRequestException(s"Invalid user IRI $value"))
-                    val userProfile = getUserProfileV1(requestContext)
-
-                    val requestMessage = UserChangeSystemAdminMembershipStatusRequestV1(
-                        userIri = userIri,
-                        changeSystemAdminMembershipStatusRequest = apiRequest,
-                        userProfile,
-                        apiRequestID = UUID.randomUUID
-                    )
                     RouteUtilV1.runJsonRoute(
                         requestMessage,
                         requestContext,
