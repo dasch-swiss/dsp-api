@@ -47,6 +47,7 @@ class UsersV1E2ESpec extends E2ESpec(UsersV1E2ESpec.config) with SessionJsonProt
 
     private val rdfDataObjects = List.empty[RdfDataObject]
 
+    val rootIri = SharedAdminTestData.rootUser.userData.user_id.get
     val rootEmail = SharedAdminTestData.rootUser.userData.email.get
     val rootEmailEnc = java.net.URLEncoder.encode(rootEmail, "utf-8")
     val inactiveUserEmailEnc = java.net.URLEncoder.encode(SharedAdminTestData.inactiveUser.userData.email.get, "utf-8")
@@ -144,7 +145,7 @@ class UsersV1E2ESpec extends E2ESpec(UsersV1E2ESpec.config) with SessionJsonProt
 
             "update the user's password" in {
 
-                val userIriEncoded = java.net.URLEncoder.encode(donaldIri.get, "utf-8")
+                val userIriEncoded = java.net.URLEncoder.encode(rootIri, "utf-8")
 
                 val params01 =
                     s"""
@@ -173,14 +174,14 @@ class UsersV1E2ESpec extends E2ESpec(UsersV1E2ESpec.config) with SessionJsonProt
                 response2.status should be (StatusCodes.OK)
             }
 
-            "deleting the user by making him inactive" in {
+            "delete the user by making him inactive" in {
 
                 val userIriEncoded = java.net.URLEncoder.encode(donaldIri.get, "utf-8")
 
                 val params =
                     s"""
                     {
-                        "newUserStatus": "false"
+                        "newUserStatus": false
                     }
                     """.stripMargin
 

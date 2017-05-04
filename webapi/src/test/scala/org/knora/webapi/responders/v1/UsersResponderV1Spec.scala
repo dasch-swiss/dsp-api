@@ -240,7 +240,7 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
                 /* User information is updated by the user */
                 actorUnderTest ! UserChangeBasicUserDataRequestV1(
                     userIri = SharedAdminTestData.normalUser.userData.user_id.get,
-                    updateRequest = ChangeBasicUserDataApiRequestV1(
+                    changeUserRequest = ChangeUserApiRequestV1(
                         email = None,
                         givenName = Some("Donald"),
                         familyName = None,
@@ -249,16 +249,14 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
                     userProfile = SharedAdminTestData.normalUser,
                     UUID.randomUUID
                 )
-                expectMsgPF(timeout) {
-                    case UserOperationResponseV1(updatedUserProfile) =>
-                        // check if information was changed
-                        assert(updatedUserProfile.userData.firstname.contains("Donald"))
-                }
+
+                val response1 = expectMsgType[UserOperationResponseV1](timeout)
+                response1.userProfile.userData.firstname.get should equal ("Donald")
 
                 /* User information is updated by a system admin */
                 actorUnderTest ! UserChangeBasicUserDataRequestV1(
                     userIri = SharedAdminTestData.normalUser.userData.user_id.get,
-                    updateRequest = ChangeBasicUserDataApiRequestV1(
+                    changeUserRequest = ChangeUserApiRequestV1(
                         email = None,
                         givenName = None,
                         familyName = Some("Duck"),
@@ -267,12 +265,53 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
                     userProfile = SharedAdminTestData.superUser,
                     UUID.randomUUID
                 )
-                expectMsgPF(timeout) {
-                    case UserOperationResponseV1(updatedUserProfile) =>
-                        // check if information was changed
-                        assert(updatedUserProfile.userData.lastname.contains("Duck"))
-                }
 
+                val response2 = expectMsgType[UserOperationResponseV1](timeout)
+                response2.userProfile.userData.lastname.get should equal ("Duck")
+
+            }
+
+            "update the user's password" in {
+                actorUnderTest ! UserChangePasswordRequestV1(
+                    userIri = SharedAdminTestData.normalUser.userData.user_id.get,
+                    changeUserRequest = ChangeUserApiRequestV1(
+                        oldPassword = Some("test"),
+                        newPassword = Some("test123456")
+                    ),
+                    userProfile = SharedAdminTestData.normalUser,
+                    apiRequestID = UUID.randomUUID()
+                )
+
+                // Can't check if password was changed directly, since it will not be returned. If no error message
+                // is returned, then I can assume that the password was successfully changed, as this check is
+                // performed in the responder itself.
+                expectMsgType[UserOperationResponseV1](timeout)
+
+
+                // By doing the change again, I can check if the first change was indeed successful.
+                actorUnderTest ! UserChangePasswordRequestV1(
+                    userIri = SharedAdminTestData.normalUser.userData.user_id.get,
+                    changeUserRequest = ChangeUserApiRequestV1(
+                        oldPassword = Some("test123456"),
+                        newPassword = Some("test")
+                    ),
+                    userProfile = SharedAdminTestData.normalUser,
+                    apiRequestID = UUID.randomUUID()
+                )
+
+                expectMsgType[UserOperationResponseV1](timeout)
+            }
+
+            "update the user's status, (deleting) making him inactive " in {
+                actorUnderTest ! UserChangeStatusRequestV1(
+                    userIri = SharedAdminTestData.normalUser.userData.user_id.get,
+                    changeUserRequest = ChangeUserApiRequestV1(newUserStatus = Some(false)),
+                    userProfile = SharedAdminTestData.superUser,
+                    UUID.randomUUID
+                )
+
+                val response = expectMsgType[UserOperationResponseV1](timeout)
+                response.userProfile.userData.isActiveUser.get should equal (false)
             }
 
             "return a 'ForbiddenException' if the user requesting update is not the user itself or system admin" in {
@@ -280,7 +319,7 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
                 /* User information is updated by other normal user */
                 actorUnderTest ! UserChangeBasicUserDataRequestV1(
                     userIri = SharedAdminTestData.superUser.userData.user_id.get,
-                    updateRequest = ChangeBasicUserDataApiRequestV1(
+                    changeUserRequest = ChangeUserApiRequestV1(
                         email = None,
                         givenName = Some("Donald"),
                         familyName = None,
@@ -291,52 +330,26 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
                 )
                 expectMsg(Failure(ForbiddenException("User information can only be changed by the user itself or a system administrator")))
 
-                /* User information is updated by anonymous */
-                actorUnderTest ! UserChangeBasicUserDataRequestV1(
-                    userIri = SharedAdminTestData.superUser.userData.user_id.get,
-                    updateRequest = ChangeBasicUserDataApiRequestV1(
-                        email = None,
-                        givenName = Some("Donald"),
-                        familyName = None,
-                        lang = None
-                    ),
-                    userProfile = SharedAdminTestData.anonymousUser,
-                    UUID.randomUUID
-                )
-                expectMsg(Failure(ForbiddenException("User information can only be changed by the user itself or a system administrator")))
-
-            }
-
-            "update the user's password" in {
+                /* Password is updated by other normal user */
                 actorUnderTest ! UserChangePasswordRequestV1(
-                    userIri = SharedAdminTestData.normalUser.userData.user_id.get,
-                    changePasswordRequest = ChangeUserPasswordApiRequestV1(
-                        oldPassword = "test",
-                        newPassword = "test123456"
+                    userIri = SharedAdminTestData.superUser.userData.user_id.get,
+                    changeUserRequest = ChangeUserApiRequestV1(
+                        oldPassword = Some("test"),
+                        newPassword = Some("test123456")
                     ),
                     userProfile = SharedAdminTestData.normalUser,
-                    apiRequestID = UUID.randomUUID()
-                )
-                expectMsgPF(timeout) {
-                    case UserOperationResponseV1(_) =>
-                    // Can't check if password was changed, since it will not be returned. but if no error message
-                    // is returned, then I can assume that the password was successfully changed, as this check is
-                    // performed in the responder itself.
-                }
-            }
-
-            "update the user, (deleting) making him inactive " in {
-                actorUnderTest ! UserChangeStatusRequestV1(
-                    userIri = SharedAdminTestData.normalUser.userData.user_id.get,
-                    changeStatusRequest = ChangeUserStatusApiRequestV1(newUserStatus = false),
-                    userProfile = SharedAdminTestData.superUser,
                     UUID.randomUUID
                 )
-                expectMsgPF(timeout) {
-                    case UserOperationResponseV1(updatedUserProfile) =>
-                        // check if information was changed
-                        assert(updatedUserProfile.userData.isActiveUser.contains(false))
-                }
+                expectMsg(Failure(ForbiddenException("User's password can only be changed by the user itself")))
+
+                /* Status is updated by other normal user */
+                actorUnderTest ! UserChangeStatusRequestV1(
+                    userIri = SharedAdminTestData.superUser.userData.user_id.get,
+                    changeUserRequest = ChangeUserApiRequestV1(newUserStatus = Some(false)),
+                    userProfile = SharedAdminTestData.normalUser,
+                    UUID.randomUUID
+                )
+                expectMsg(Failure(ForbiddenException("User's status can only be changed by the user itself or a system administrator")))
 
             }
         }
