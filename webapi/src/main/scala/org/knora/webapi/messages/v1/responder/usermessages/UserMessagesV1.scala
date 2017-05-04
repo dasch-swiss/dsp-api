@@ -378,14 +378,15 @@ case class UserProfileV1(userData: UserDataV1 = UserDataV1(lang = "en"),
 /**
   * Represents basic information about a user.
   *
-  * @param user_id      The user's IRI.
-  * @param email        The user's email address.
-  * @param password     The user's hashed password.
-  * @param token        The API token. Can be used instead of email/password for authentication.
-  * @param firstname    The user's given name.
-  * @param lastname     The user's surname.
-  * @param isActiveUser The user's status.
-  * @param lang         The ISO 639-1 code of the user's preferred language.
+  * @param user_id              The user's IRI.
+  * @param email                The user's email address.
+  * @param password             The user's hashed password.
+  * @param token                The API token. Can be used instead of email/password for authentication.
+  * @param firstname            The user's given name.
+  * @param lastname             The user's surname.
+  * @param isActiveUser         The user's status.
+  * @param isInSystemAdminGroup The user's system admin group membership status.
+  * @param lang                 The ISO 639-1 code of the user's preferred language.
   */
 case class UserDataV1(user_id: Option[IRI] = None,
                       email: Option[String] = None,
@@ -393,7 +394,8 @@ case class UserDataV1(user_id: Option[IRI] = None,
                       token: Option[String] = None,
                       firstname: Option[String] = None,
                       lastname: Option[String] = None,
-                      isActiveUser: Option[Boolean] = None,
+                      isActiveUser: Option[Boolean] = Some(true),
+                      isInSystemAdminGroup: Option[Boolean] = Some(false),
                       lang: String) {
 
     def fullname: Option[String] = {
@@ -473,7 +475,7 @@ case class UserUpdatePayloadV1(email: Option[String] = None,
   */
 object UserV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with NullOptions with ProjectV1JsonProtocol with PermissionV1JsonProtocol {
 
-    implicit val userDataV1Format: JsonFormat[UserDataV1] = lazyFormat(jsonFormat8(UserDataV1))
+    implicit val userDataV1Format: JsonFormat[UserDataV1] = lazyFormat(jsonFormat9(UserDataV1))
     implicit val userProfileV1Format: JsonFormat[UserProfileV1] = jsonFormat6(UserProfileV1)
     implicit val createUserApiRequestV1Format: RootJsonFormat[CreateUserApiRequestV1] = jsonFormat7(CreateUserApiRequestV1)
     implicit val changeUserApiRequestV1Format: RootJsonFormat[ChangeUserApiRequestV1] = jsonFormat8(ChangeUserApiRequestV1)
