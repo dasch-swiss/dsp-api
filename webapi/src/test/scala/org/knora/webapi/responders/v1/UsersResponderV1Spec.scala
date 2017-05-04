@@ -307,12 +307,45 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
                     userIri = SharedAdminTestData.normalUser.userData.user_id.get,
                     changeUserRequest = ChangeUserApiRequestV1(newUserStatus = Some(false)),
                     userProfile = SharedAdminTestData.superUser,
-                    UUID.randomUUID
+                    UUID.randomUUID()
                 )
 
-                val response = expectMsgType[UserOperationResponseV1](timeout)
-                response.userProfile.userData.isActiveUser.get should equal (false)
+                val response1 = expectMsgType[UserOperationResponseV1](timeout)
+                response1.userProfile.userData.isActiveUser.get should equal (false)
+
+                actorUnderTest ! UserChangeStatusRequestV1(
+                    userIri = SharedAdminTestData.normalUser.userData.user_id.get,
+                    changeUserRequest = ChangeUserApiRequestV1(newUserStatus = Some(true)),
+                    userProfile = SharedAdminTestData.superUser,
+                    UUID.randomUUID()
+                )
+
+                val response2 = expectMsgType[UserOperationResponseV1](timeout)
+                response2.userProfile.userData.isActiveUser.get should equal (true)
             }
+
+            "update the user's system admin membership" in {
+                actorUnderTest ! UserChangeSystemAdminMembershipStatusRequestV1(
+                    userIri = SharedAdminTestData.normalUser.userData.user_id.get,
+                    changeUserRequest = ChangeUserApiRequestV1(newSystemAdminMembershipStatus = Some(true)),
+                    userProfile = SharedAdminTestData.superUser,
+                    UUID.randomUUID()
+                )
+
+                val response1 = expectMsgType[UserOperationResponseV1](timeout)
+                response1.userProfile.permissionData.isSystemAdmin should equal (true)
+
+                actorUnderTest ! UserChangeSystemAdminMembershipStatusRequestV1(
+                    userIri = SharedAdminTestData.normalUser.userData.user_id.get,
+                    changeUserRequest = ChangeUserApiRequestV1(newSystemAdminMembershipStatus = Some(false)),
+                    userProfile = SharedAdminTestData.superUser,
+                    UUID.randomUUID()
+                )
+
+                val response2 = expectMsgType[UserOperationResponseV1](timeout)
+                response2.userProfile.permissionData.isSystemAdmin should equal (false)
+            }
+
 
             "return a 'ForbiddenException' if the user requesting update is not the user itself or system admin" in {
 
@@ -351,6 +384,14 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
                 )
                 expectMsg(Failure(ForbiddenException("User's status can only be changed by the user itself or a system administrator")))
 
+                /* System admin group membership */
+                actorUnderTest ! UserChangeSystemAdminMembershipStatusRequestV1(
+                    userIri = SharedAdminTestData.normalUser.userData.user_id.get,
+                    changeUserRequest = ChangeUserApiRequestV1(newSystemAdminMembershipStatus = Some(true)),
+                    userProfile = SharedAdminTestData.normalUser,
+                    UUID.randomUUID()
+                )
+                expectMsg(Failure(ForbiddenException("User's system admin membership can only be changed by a system administrator")))
             }
         }
     }

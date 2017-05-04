@@ -211,8 +211,9 @@ class UsersV1E2ESpec extends E2ESpec(UsersV1E2ESpec.config) with SessionJsonProt
                 println(s"response: ${response.toString}")
                 response.status should be (StatusCodes.OK)
 
-                val jsonResult: Map[String, JsValue] = AkkaHttpUtils.httpResponseToJson(response).fields("userProfile").asJsObject.fields("userData").asJsObject.fields
-                jsonResult("isActiveUser").convertTo[Boolean] should be (false)
+                val jsonResult: Map[String, JsValue] = AkkaHttpUtils.httpResponseToJson(response).fields("userProfile").asJsObject.fields("permissionData").asJsObject.fields("groupsPerProject").asJsObject.fields
+                jsonResult("http://www.knora.org/ontology/knora-base#SystemProject").convertTo[List[String]].head should equal ("http://www.knora.org/ontology/knora-base#SystemAdmin")
+                //println(jsonResult)
 
             }
 
