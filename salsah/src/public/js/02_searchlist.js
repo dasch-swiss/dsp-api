@@ -26,6 +26,8 @@
 */
 SALSAH.searchlist = function(ele, pele, data, params, searchtype) {
 
+	var defaultresicon = "app/icons/16x16/help.png";
+
 	//
 	// Create the paging
 	//
@@ -286,8 +288,9 @@ SALSAH.searchlist = function(ele, pele, data, params, searchtype) {
 						}))
 				);
 				tr.append($('<td>')
-						.append($('<img>').attr({src: arrele.iconsrc, title: arrele.icontitle}))
-						.append(arrele.iconlabel)
+					.append($('<img>').attr({src: arrele.iconsrc? arrele.iconsrc : defaultresicon, title: arrele.icontitle}))
+					.append(arrele.iconlabel)
+					.dragndrop('makeDraggable', 'RESID', {resid: arrele.obj_id})
 				);
 				var idx;
 				if (arrele.value.length > max_n_vals) max_n_vals = arrele.value.length;
