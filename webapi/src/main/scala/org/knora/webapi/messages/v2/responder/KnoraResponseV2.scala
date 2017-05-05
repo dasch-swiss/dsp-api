@@ -24,13 +24,15 @@ import java.io.{StringReader, StringWriter}
 import javax.xml.transform.stream.StreamSource
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import org.knora.webapi.messages.v1.responder.standoffmessages.MappingXMLtoStandoff
-import org.knora.webapi.messages.v1.responder.valuemessages.{JulianDayNumberValueV1, KnoraCalendarV1, KnoraPrecisionV1}
-import org.knora.webapi.twirl.StandoffTagV1
-import org.knora.webapi.util.standoff.StandoffTagUtilV1
-import org.knora.webapi.util.{DateUtilV1, DateUtilV2, InputValidation}
 import org.knora.webapi._
+import org.knora.webapi.messages.v1.responder.ontologymessages._
+import org.knora.webapi.messages.v1.responder.standoffmessages.MappingXMLtoStandoff
+import org.knora.webapi.messages.v1.responder.valuemessages.{KnoraCalendarV1, KnoraPrecisionV1}
+import org.knora.webapi.twirl.StandoffTagV1
+import org.knora.webapi.util.DateUtilV2
+import org.knora.webapi.util.standoff.StandoffTagUtilV1
 import spray.json._
+
 
 /**
   * The value of a Knora property in the context of some particular input or output operation.
@@ -515,7 +517,7 @@ case class LinkValueContentV2(valueHasString: String, subject: IRI, predicate: I
         // check if the referred resource has to be included in the JSON response
         referredResource match {
             case Some(targetResource) =>
-                val referredResourceAsJsValue: Map[IRI, JsValue] = ResourcesV2JsonProtocol.createJsValueFromReadResourceV2(targetResource)
+                val referredResourceAsJsValue: Map[IRI, JsValue] = ResourcesV2JsonProtocol.readResourcesSequenceV2Format.createJsValueFromReadResourceV2(targetResource)
                 Map(OntologyConstants.KnoraApi.LinkValueHasTarget -> JsObject(referredResourceAsJsValue))
 
             case None =>
@@ -608,8 +610,20 @@ trait KnoraResponseV2 extends Jsonable
   * @param resources         a sequence of resources.
   */
 case class ReadResourcesSequenceV2(numberOfResources: Int, resources: Seq[ReadResourceV2]) extends KnoraResponseV2 {
-    override def toJsValue: JsObject = ResourcesV2JsonProtocol.readResourcesSequenceV2Format.write(this)
+    def toJsValue: JsObject = ResourcesV2JsonProtocol.readResourcesSequenceV2Format.write(this)
 }
+
+/**
+  * Return information about ontology entities.
+  *
+  * @param resourceClasses information about resource classes.
+  * @param subClassOfRelations information about subclass relations of resource classes.
+  * @param properties information about properties.
+  */
+case class ReadEntityDefinitionsV2(resourceClasses: Map[IRI, ResourceEntityInfoV1], subClassOfRelations: Map[IRI, Set[IRI]], properties: Map[IRI, PropertyEntityInfoV1]) extends KnoraResponseV2 {
+    override def toJsValue = ResourcesV2JsonProtocol.readEntityDefinitionsSequence.write(this)
+}
+
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // JSON formatting
@@ -619,60 +633,183 @@ case class ReadResourcesSequenceV2(numberOfResources: Int, resources: Seq[ReadRe
   */
 object ResourcesV2JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with NullOptions {
 
-    /**
-      * Creates a map of value properties to [[JsValue]] from a [[ReadResourceV2]].
-      *
-      * @param resource the resource to be turned into `JsValue`.
-      * @return a map of value properties to `JsValue`.
-      */
-    def createJsValueFromReadResourceV2(resource: ReadResourceV2): Map[IRI, JsValue] = {
+    implicit object readResourcesSequenceV2Format extends JsonFormat[ReadResourcesSequenceV2] {
 
-        val valuesAsJson: Map[IRI, JsValue] = resource.values.map {
-            case (propIri: IRI, readValues: Seq[ReadValueV2]) =>
-                val valuesMap: JsValue = readValues.map {
-                    readValue =>
-                        val valAsMap: Map[IRI, JsValue] = readValue.valueContent.toJsValueMap
-                        Map("@id" -> JsString(readValue.valueIri),
-                            "@type" -> JsString(readValue.toKnoraApiValueTypeIri)) ++ valAsMap
-                }.toJson
+        /**
+          * Creates a map of value properties to [[JsValue]] from a [[ReadResourceV2]].
+          *
+          * @param resource the resource to be turned into `JsValue`.
+          * @return a map of value properties to `JsValue`.
+          */
+        def createJsValueFromReadResourceV2(resource: ReadResourceV2): Map[IRI, JsValue] = {
 
-                (propIri, valuesMap)
+            val valuesAsJson: Map[IRI, JsValue] = resource.values.map {
+                case (propIri: IRI, readValues: Seq[ReadValueV2]) =>
+                    val valuesMap: JsValue = readValues.map {
+                        readValue =>
+                            val valAsMap: Map[IRI, JsValue] = readValue.valueContent.toJsValueMap
+                            Map("@id" -> JsString(readValue.valueIri),
+                                "@type" -> JsString(readValue.toKnoraApiValueTypeIri)) ++ valAsMap
+                    }.toJson
+
+                    (propIri, valuesMap)
+
+            }
+
+            Map(
+                "@type" -> resource.resourceClass.toJson,
+                "name" -> resource.label.toJson,
+                "@id" -> resource.resourceIri.toJson
+            ) ++ valuesAsJson
 
         }
 
-        Map(
-            "@type" -> resource.resourceClass.toJson,
-            "name" -> resource.label.toJson,
-            "@id" -> resource.resourceIri.toJson
-        ) ++ valuesAsJson
-
-    }
-
-    implicit object readResourcesSequenceV2Format extends JsonFormat[ReadResourcesSequenceV2] {
-
         def read(jsonVal: JsValue) = ???
 
-        def write(resourcesSequenceV2: ReadResourcesSequenceV2): JsObject = {
+        def write(resourcesSequence: ReadResourcesSequenceV2): JsObject = {
 
-            val resources: JsValue = resourcesSequenceV2.resources.map {
+            val resources: JsValue = resourcesSequence.resources.map {
                 (resource: ReadResourceV2) =>
 
                     createJsValueFromReadResourceV2(resource)
 
             }.toJson
 
-            val fields = Map(
+            val fields: Map[String, JsValue] = Map(
                 "@context" -> Map(
                     "@vocab" -> "http://schema.org/".toJson
                 ).toJson,
                 "@type" -> "ItemList".toJson,
-                "numberOfItems" -> resourcesSequenceV2.numberOfResources.toJson,
+                "numberOfItems" -> resourcesSequence.numberOfResources.toJson,
                 "itemListElement" -> resources
             )
 
             JsObject(fields)
 
         }
+
+    }
+
+    implicit object readEntityDefinitionsSequence extends JsonFormat[ReadEntityDefinitionsV2] {
+
+
+        /**
+          * Gets an object from predicate infos.
+          *
+          * @param predicateInfos information about predicates.
+          * @param predicateIri the Iri of the predicate whose object should be returned.
+          * @param lang the language in which the object has to be returned.
+          * @return the requested object.
+          */
+        // TODO: use fallback language
+        def getObjectFromPredicateInfo(predicateInfos: Map[IRI, PredicateInfoV1], predicateIri: IRI, lang: Option[String] = None): Option[String] = {
+
+            predicateInfos.get(predicateIri) match {
+                case Some(pred: PredicateInfoV1) =>
+                    if (lang.nonEmpty) {
+                        pred.objectsWithLang.get(lang.get) match {
+                            case Some(obj: String) =>
+                                Some(obj)
+                            case None => None
+                        }
+                    } else {
+                        pred.objects.headOption
+                    }
+
+                case None => None
+            }
+
+
+        }
+
+        /**
+          * Converts information about resource classes to JSON-LD.
+          *
+          * @param resourceEntities information about resource classes.
+          * @param subClassOfRelations information about subclass relations of resource classes.
+          * @return information about resource classes as JSON-LD.
+          */
+        def createJsValueFromResourceEntities(resourceEntities: Map[IRI, ResourceEntityInfoV1], subClassOfRelations: Map[IRI, Set[IRI]]): Map[IRI, JsObject] = {
+            resourceEntities.map {
+                case (resClassIri: IRI, resourceEntity: ResourceEntityInfoV1) =>
+
+                    val cardinalities: Seq[Map[IRI, JsValue]] = resourceEntity.cardinalities.map {
+
+                        case (propertyIri: IRI, cardinality: Cardinality.Value) =>
+
+                            val prop2card: (IRI, JsNumber) = cardinality match {
+                                case Cardinality.MayHaveMany =>
+                                    OntologyConstants.Owl.MinCardinality -> JsNumber(0)
+
+                                case Cardinality.MayHaveOne =>
+                                    OntologyConstants.Owl.MaxCardinality -> JsNumber(1)
+
+                                case Cardinality.MustHaveOne =>
+                                    OntologyConstants.Owl.Cardinality -> JsNumber(1)
+
+                                case Cardinality.MustHaveSome =>
+                                    OntologyConstants.Owl.MinCardinality -> JsNumber(1)
+                            }
+
+                            Map(
+                                "@type" -> OntologyConstants.Owl.Restriction.toJson,
+                                OntologyConstants.Owl.OnProperty -> propertyIri.toJson,
+                                prop2card
+                            )
+                    }.toSeq
+
+
+                    resClassIri -> JsObject(
+                        "@id" -> resourceEntity.resourceClassIri.toJson,
+                        "ontology" -> resourceEntity.ontologyIri.toJson,
+                        "icon" -> getObjectFromPredicateInfo(resourceEntity.predicates, OntologyConstants.KnoraBase.ResourceIcon).toJson,
+                        OntologyConstants.Rdfs.Label -> getObjectFromPredicateInfo(resourceEntity.predicates, OntologyConstants.Rdfs.Label, Some("en")).toJson,
+                        OntologyConstants.Rdfs.Comment -> getObjectFromPredicateInfo(resourceEntity.predicates, OntologyConstants.Rdfs.Comment, Some("en")).toJson,
+                        OntologyConstants.Rdfs.SubClassOf -> cardinalities.toJson
+                    )
+            }
+        }
+
+        /**
+          * Converts information about properties to JSON-LD.
+          *
+          * @param propertyEntities information about properties.
+          * @return information about properties as JSON-LD.
+          */
+        def createJsValueFromPropertyEntities(propertyEntities: Map[IRI, PropertyEntityInfoV1]): Map[IRI, JsObject] = {
+
+            propertyEntities.map {
+                case (propIri: IRI, propEntity: PropertyEntityInfoV1) =>
+
+                propIri -> JsObject(
+                    "@id" -> propEntity.propertyIri.toJson,
+                    "ontology" -> propEntity.ontologyIri.toJson,
+                    "@type" -> getObjectFromPredicateInfo(propEntity.predicates, OntologyConstants.Rdf.Type).toJson,
+                    OntologyConstants.Rdfs.Label -> getObjectFromPredicateInfo(propEntity.predicates, OntologyConstants.Rdfs.Label, Some("en")).toJson,
+                    OntologyConstants.Rdfs.Comment -> getObjectFromPredicateInfo(propEntity.predicates, OntologyConstants.Rdfs.Comment, Some("en")).toJson,
+                    //OntologyConstants.KnoraBase.SubjectClassConstraint -> getPredicate(propEntity.predicates, OntologyConstants.KnoraBase.SubjectClassConstraint).toJson,
+                    OntologyConstants.KnoraBase.ObjectClassConstraint -> getObjectFromPredicateInfo(propEntity.predicates, OntologyConstants.KnoraBase.ObjectClassConstraint).toJson
+                )
+            }
+
+        }
+
+        def read(jsonVal: JsValue) = ???
+
+        def write(entitiesSequence: ReadEntityDefinitionsV2) = {
+
+            val fields: Map[String, JsValue] = Map(
+                "@context" -> Map(
+                    "@vocab" -> "http://schema.org/".toJson
+                ).toJson,
+                "resourceClasses" -> createJsValueFromResourceEntities(entitiesSequence.resourceClasses, entitiesSequence.subClassOfRelations).toJson,
+                "properties" -> createJsValueFromPropertyEntities(entitiesSequence.properties).toJson
+            )
+
+            JsObject(fields)
+        }
+
+
 
     }
 

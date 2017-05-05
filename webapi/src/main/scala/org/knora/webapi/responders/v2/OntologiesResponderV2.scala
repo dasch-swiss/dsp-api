@@ -80,8 +80,8 @@ class OntologiesResponderV2 extends Responder {
         case CheckSubClassRequestV2(subClassIri, superClassIri, userProfile) => future2Message(sender(), checkSubClassV2(subClassIri, superClassIri, userProfile), log)
         case SubClassesGetRequestV2(resourceClassIri, userProfile) => future2Message(sender(), getSubClassesV2(resourceClassIri, userProfile), log)
         case NamedGraphEntitiesRequestV2(namedGraphIri, userProfile) => future2Message(sender(), getNamedGraphEntityInfoV1ForNamedGraph(namedGraphIri, userProfile), log)
+        case resourceClassesRequest: ResourceClassesGetRequestV2 => future2Message(sender(), getResourceClassDefinitionsWithCardinalities(resourceClassesRequest.resourceClassIris, resourceClassesRequest.userProfile), log)
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
-        //case resourceClassesRequest: ResourceClassesGetRequestV2 => future2Message(sender(), getResourceClasses(resourceClassesRequest.resourceClassIris, resourceClassesRequest.userProfile), log)
     }
 
     /**
@@ -675,16 +675,16 @@ class OntologiesResponderV2 extends Responder {
     /**
       * Given a list of resource IRIs and a list of property IRIs (ontology entities), returns an [[EntityInfoGetResponseV1]] describing both resource and property entities.
       *
-      * @param resourceIris the IRIs of the resource entities to be queried.
-      * @param propertyIris the IRIs of the property entities to be queried.
-      * @param userProfile  the profile of the user making the request.
+      * @param resourceClassIris the IRIs of the resource entities to be queried.
+      * @param propertyIris      the IRIs of the property entities to be queried.
+      * @param userProfile       the profile of the user making the request.
       * @return an [[EntityInfoGetResponseV1]].
       */
-    private def getEntityInfoResponseV2(resourceIris: Set[IRI] = Set.empty[IRI], propertyIris: Set[IRI] = Set.empty[IRI], userProfile: UserProfileV1): Future[EntityInfoGetResponseV2] = {
+    private def getEntityInfoResponseV2(resourceClassIris: Set[IRI] = Set.empty[IRI], propertyIris: Set[IRI] = Set.empty[IRI], userProfile: UserProfileV1): Future[EntityInfoGetResponseV2] = {
         for {
             cacheData <- getCacheData
             response = EntityInfoGetResponseV2(
-                resourceEntityInfoMap = new ErrorHandlingMap(cacheData.resourceClassDefs.filterKeys(resourceIris), { key => s"Resource class $key not found" }),
+                resourceEntityInfoMap = new ErrorHandlingMap(cacheData.resourceClassDefs.filterKeys(resourceClassIris), { key => s"Resource class $key not found" }),
                 propertyEntityInfoMap = new ErrorHandlingMap(cacheData.propertyDefs.filterKeys(propertyIris), { key => s"Property $key not found" })
             )
         } yield response
@@ -741,7 +741,7 @@ class OntologiesResponderV2 extends Responder {
     /**
       * Checks whether a certain Knora resource or value class is a subclass of another class.
       *
-      * @param subClassIri the Iri of the resource or value class whose subclassOf relations have to be checked.
+      * @param subClassIri   the Iri of the resource or value class whose subclassOf relations have to be checked.
       * @param superClassIri the Iri of the resource or value class to check for (whether it is a a super class of `subClassIri` or not).
       * @return a [[CheckSubClassResponseV1]].
       */
@@ -804,5 +804,38 @@ class OntologiesResponderV2 extends Responder {
     }
 
 
-    private def getResourceClasses(resourceClassIris: Set[IRI], userProfile: UserProfileV1) = ???
+    /**
+      * Gets information about resource entities and their properties.
+      *
+      * @param resourceClassIris
+      * @param userProfile
+      * @return
+      */
+    private def getResourceClassDefinitionsWithCardinalities(resourceClassIris: Set[IRI], userProfile: UserProfileV1) = {
+        for {
+
+            // request information about the given resource class Iris
+            resourceClassResponse: EntityInfoGetResponseV2 <- getEntityInfoResponseV2(resourceClassIris = resourceClassIris, userProfile = userProfile)
+
+            cacheData <- getCacheData
+
+            // get the subclassOf relations of the given resource classes
+            subClassOfRelations: Map[IRI, Set[IRI]] = resourceClassIris.map {
+                resClass =>
+                    resClass -> cacheData.resourceAndValueSubClassOfRelations(resClass)
+            }.toMap
+
+            // get all property Iris from cardinalities
+            propertyIris: Set[IRI] = resourceClassResponse.resourceEntityInfoMap.values.foldLeft(Set.empty[IRI]) {
+                case (acc: Set[IRI], resourceEntityInfo: ResourceEntityInfoV1) =>
+                    acc ++ resourceEntityInfo.cardinalities.keySet
+            }
+
+            // request information about the properties for which cardinalities are defined
+            propertiesResponse: EntityInfoGetResponseV2 <- getEntityInfoResponseV2(propertyIris = propertyIris, userProfile = userProfile)
+
+        } yield ReadEntityDefinitionsV2(resourceClasses = resourceClassResponse.resourceEntityInfoMap, subClassOfRelations = subClassOfRelations, properties = propertiesResponse.propertyEntityInfoMap)
+
+
+    }
 }
