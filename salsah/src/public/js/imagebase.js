@@ -17,6 +17,8 @@
 
 $(function() {
 
+	var defaultresicon = "app/icons/16x16/help.png"
+
 	//var metadataAreaDomCreate = function(topele, winid, tabid, regnum, resource)
 	var metadataAreaDomCreate = function(topele, resource, options)
 	{
@@ -37,13 +39,12 @@ $(function() {
 		{
             //debugger;
 			propedit = $('<div>').addClass('propedit');
-			if (resource.resinfo.restype_iconsrc)
-			{
-				propedit
-				.append(
-					$('<img>').attr({src: resource.resinfo.restype_iconsrc, title: 'DRAG TO DESTINATION'}).addClass('propedit resicon').dragndrop('makeDraggable', 'RESID', {resid: resource.resdata.res_id})
-				);
-			}
+			propedit.append(
+				$('<img>')
+					.attr({src: resource.resinfo.restype_iconsrc ? resource.resinfo.restype_iconsrc : defaultresicon, title: 'DRAG TO DESTINATION'})
+					.addClass('propedit resicon')
+					.dragndrop('makeDraggable', 'RESID', {resid: resource.resdata.res_id})
+			);
 			propedit.append($('<em>').attr({title: 'resource_id=' + resource.resdata.res_id + ' person_id=' + resource.resinfo.person_id + ' lastmod=' + resource.resinfo.lastmod}).addClass('propedit label').text(resource.resinfo.restype_label + ':'));
 
 			propedit.append('&nbsp;&nbsp;');
@@ -418,7 +419,7 @@ $(function() {
                 }
             }
             data.props.__label__ = {
-                attributes: "size=64;maxlength=64",
+                attributes: "size=64",
                 comments: [],
                 guielement: "text",
                 guiorder: 0,
