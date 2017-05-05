@@ -24,7 +24,7 @@ import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
-import org.knora.webapi.messages.v2.responder.ontologymessages.ResourceClassesGetRequestV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.{PropertyEntitiesGetRequestV2, ResourceClassesGetRequestV2}
 import org.knora.webapi.routing.{Authenticator, RouteUtilV2}
 import org.knora.webapi.util.InputValidation
 import org.knora.webapi.{BadRequestException, IRI, SettingsImpl}
@@ -54,6 +54,28 @@ object OntologiesRouteV2 extends Authenticator {
                     }.toSet
 
                     val requestMessage = ResourceClassesGetRequestV2(resourceClassIris, userProfile = userProfile)
+
+                    RouteUtilV2.runJsonRoute(
+                        requestMessage,
+                        requestContext,
+                        settings,
+                        responderManager,
+                        log
+                    )
+                }
+            }
+        } ~
+        path("v2" / "ontologies" / "properties" / Segments) { (entityIris: List[String]) =>
+            get {
+                requestContext => {
+                    val userProfile = getUserProfileV1(requestContext)
+
+                    val propertyIris: Set[IRI] = entityIris.map {
+                        (propIri: String) =>
+                            InputValidation.toIri(propIri, () => throw BadRequestException(s"Invalid property Iri: '$propIri'"))
+                    }.toSet
+
+                    val requestMessage = PropertyEntitiesGetRequestV2(propertyIris, userProfile = userProfile)
 
                     RouteUtilV2.runJsonRoute(
                         requestMessage,

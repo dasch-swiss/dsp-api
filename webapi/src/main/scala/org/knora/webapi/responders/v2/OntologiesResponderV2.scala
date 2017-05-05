@@ -80,7 +80,8 @@ class OntologiesResponderV2 extends Responder {
         case CheckSubClassRequestV2(subClassIri, superClassIri, userProfile) => future2Message(sender(), checkSubClassV2(subClassIri, superClassIri, userProfile), log)
         case SubClassesGetRequestV2(resourceClassIri, userProfile) => future2Message(sender(), getSubClassesV2(resourceClassIri, userProfile), log)
         case NamedGraphEntitiesRequestV2(namedGraphIri, userProfile) => future2Message(sender(), getNamedGraphEntityInfoV1ForNamedGraph(namedGraphIri, userProfile), log)
-        case resourceClassesRequest: ResourceClassesGetRequestV2 => future2Message(sender(), getResourceClassDefinitionsWithCardinalities(resourceClassesRequest.resourceClassIris, resourceClassesRequest.userProfile), log)
+        case ResourceClassesGetRequestV2(resourceClassIris, userProfile) => future2Message(sender(), getResourceClassDefinitionsWithCardinalities(resourceClassIris, userProfile), log)
+        case PropertyEntitiesGetRequestV2(propertyIris, userProfile) => future2Message(sender(), getPropertyDefinitions(propertyIris, userProfile), log)
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }
 
@@ -805,11 +806,11 @@ class OntologiesResponderV2 extends Responder {
 
 
     /**
-      * Gets information about resource entities and their properties.
+      * Requests information about resource classes and their properties.
       *
-      * @param resourceClassIris
-      * @param userProfile
-      * @return
+      * @param resourceClassIris the Iris of the resource classes to query for.
+      * @param userProfile the profile of the user making the request.
+      * @return a [[ReadEntityDefinitionsV2]].
       */
     private def getResourceClassDefinitionsWithCardinalities(resourceClassIris: Set[IRI], userProfile: UserProfileV1) = {
         for {
@@ -836,6 +837,23 @@ class OntologiesResponderV2 extends Responder {
 
         } yield ReadEntityDefinitionsV2(resourceClasses = resourceClassResponse.resourceEntityInfoMap, subClassOfRelations = subClassOfRelations, properties = propertiesResponse.propertyEntityInfoMap)
 
+    }
+
+    /**
+      * Requests information about property entities.
+      *
+      * @param propertyIris the Iris of the properties to query for.
+      * @param userProfile  the profile of the user making the request.
+      * @return a [[ReadEntityDefinitionsV2]].
+      */
+    private def getPropertyDefinitions(propertyIris: Set[IRI], userProfile: UserProfileV1) = {
+
+        for {
+
+            propertiesResponse: EntityInfoGetResponseV2 <- getEntityInfoResponseV2(propertyIris = propertyIris, userProfile = userProfile)
+
+
+        } yield ReadEntityDefinitionsV2(properties = propertiesResponse.propertyEntityInfoMap)
 
     }
 }

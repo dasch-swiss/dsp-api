@@ -620,7 +620,7 @@ case class ReadResourcesSequenceV2(numberOfResources: Int, resources: Seq[ReadRe
   * @param subClassOfRelations information about subclass relations of resource classes.
   * @param properties information about properties.
   */
-case class ReadEntityDefinitionsV2(resourceClasses: Map[IRI, ResourceEntityInfoV1], subClassOfRelations: Map[IRI, Set[IRI]], properties: Map[IRI, PropertyEntityInfoV1]) extends KnoraResponseV2 {
+case class ReadEntityDefinitionsV2(resourceClasses: Map[IRI, ResourceEntityInfoV1] = Map.empty[IRI, ResourceEntityInfoV1], subClassOfRelations: Map[IRI, Set[IRI]] = Map.empty[IRI, Set[IRI]], properties: Map[IRI, PropertyEntityInfoV1] = Map.empty[IRI, PropertyEntityInfoV1]) extends KnoraResponseV2 {
     override def toJsValue = ResourcesV2JsonProtocol.readEntityDefinitionsSequence.write(this)
 }
 
@@ -758,10 +758,10 @@ object ResourcesV2JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol
                             )
                     }.toSeq
 
-
                     resClassIri -> JsObject(
                         "@id" -> resourceEntity.resourceClassIri.toJson,
                         "ontology" -> resourceEntity.ontologyIri.toJson,
+                        "@type" -> OntologyConstants.Owl.Class.toJson, // TODO: does this need to be coming from the triplestore?
                         "icon" -> getObjectFromPredicateInfo(resourceEntity.predicates, OntologyConstants.KnoraBase.ResourceIcon).toJson,
                         OntologyConstants.Rdfs.Label -> getObjectFromPredicateInfo(resourceEntity.predicates, OntologyConstants.Rdfs.Label, Some("en")).toJson,
                         OntologyConstants.Rdfs.Comment -> getObjectFromPredicateInfo(resourceEntity.predicates, OntologyConstants.Rdfs.Comment, Some("en")).toJson,

@@ -48,6 +48,8 @@ object OntologyConstants {
         val MinCardinality = "http://www.w3.org/2002/07/owl#minCardinality"
         val MaxCardinality = "http://www.w3.org/2002/07/owl#maxCardinality"
 
+        val Class = "http://www.w3.org/2002/07/owl#Class"
+
 
         /**
           * Cardinality IRIs expressed as OWL restrictions, which specify the properties that resources of
