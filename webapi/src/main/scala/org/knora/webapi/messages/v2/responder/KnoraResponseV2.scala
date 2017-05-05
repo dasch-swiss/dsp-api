@@ -616,11 +616,11 @@ case class ReadResourcesSequenceV2(numberOfResources: Int, resources: Seq[ReadRe
 /**
   * Return information about ontology entities.
   *
+  * @param ontologies named graphs and their resource classes.
   * @param resourceClasses information about resource classes.
-  * @param subClassOfRelations information about subclass relations of resource classes.
   * @param properties information about properties.
   */
-case class ReadEntityDefinitionsV2(resourceClasses: Map[IRI, ResourceEntityInfoV1] = Map.empty[IRI, ResourceEntityInfoV1], subClassOfRelations: Map[IRI, Set[IRI]] = Map.empty[IRI, Set[IRI]], properties: Map[IRI, PropertyEntityInfoV1] = Map.empty[IRI, PropertyEntityInfoV1]) extends KnoraResponseV2 {
+case class ReadEntityDefinitionsV2(ontologies: Map[IRI, Set[IRI]] = Map.empty[IRI, Set[IRI]], resourceClasses: Map[IRI, ResourceEntityInfoV1] = Map.empty[IRI, ResourceEntityInfoV1], properties: Map[IRI, PropertyEntityInfoV1] = Map.empty[IRI, PropertyEntityInfoV1]) extends KnoraResponseV2 {
     override def toJsValue = ResourcesV2JsonProtocol.readEntityDefinitionsSequence.write(this)
 }
 
@@ -726,10 +726,9 @@ object ResourcesV2JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol
           * Converts information about resource classes to JSON-LD.
           *
           * @param resourceEntities information about resource classes.
-          * @param subClassOfRelations information about subclass relations of resource classes.
           * @return information about resource classes as JSON-LD.
           */
-        def createJsValueFromResourceEntities(resourceEntities: Map[IRI, ResourceEntityInfoV1], subClassOfRelations: Map[IRI, Set[IRI]]): Map[IRI, JsObject] = {
+        def createJsValueFromResourceEntities(resourceEntities: Map[IRI, ResourceEntityInfoV1]): Map[IRI, JsObject] = {
             resourceEntities.map {
                 case (resClassIri: IRI, resourceEntity: ResourceEntityInfoV1) =>
 
@@ -802,7 +801,8 @@ object ResourcesV2JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol
                 "@context" -> Map(
                     "@vocab" -> "http://schema.org/".toJson
                 ).toJson,
-                "resourceClasses" -> createJsValueFromResourceEntities(entitiesSequence.resourceClasses, entitiesSequence.subClassOfRelations).toJson,
+                "ontologies" -> entitiesSequence.ontologies.toJson,
+                "resourceClasses" -> createJsValueFromResourceEntities(entitiesSequence.resourceClasses).toJson,
                 "properties" -> createJsValueFromPropertyEntities(entitiesSequence.properties).toJson
             )
 

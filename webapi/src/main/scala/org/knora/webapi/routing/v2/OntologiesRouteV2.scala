@@ -24,7 +24,7 @@ import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
-import org.knora.webapi.messages.v2.responder.ontologymessages.{PropertyEntitiesGetRequestV2, ResourceClassesGetRequestV2}
+import org.knora.webapi.messages.v2.responder.ontologymessages.{NamedGraphEntitiesGetRequestV2, PropertyEntitiesGetRequestV2, ResourceClassesGetRequestV2}
 import org.knora.webapi.routing.{Authenticator, RouteUtilV2}
 import org.knora.webapi.util.InputValidation
 import org.knora.webapi.{BadRequestException, IRI, SettingsImpl}
@@ -43,7 +43,28 @@ object OntologiesRouteV2 extends Authenticator {
         implicit val timeout = settings.defaultTimeout
         val responderManager = system.actorSelection("/user/responderManager")
 
-        path("v2" / "ontologies" / "resourceclasses" / Segments) { (entityIris: List[String]) =>
+        path("v2" / "ontologies" / "namedgraphs" / Segments) { (entityIris: List[String]) =>
+            get {
+                requestContext => {
+                    val userProfile = getUserProfileV1(requestContext)
+
+                    val namedGraphIris: Set[IRI] = entityIris.map {
+                        (propIri: String) =>
+                            InputValidation.toIri(propIri, () => throw BadRequestException(s"Invalid property Iri: '$propIri'"))
+                    }.toSet
+
+                    val requestMessage = NamedGraphEntitiesGetRequestV2(namedGraphIris, userProfile = userProfile)
+
+                    RouteUtilV2.runJsonRoute(
+                        requestMessage,
+                        requestContext,
+                        settings,
+                        responderManager,
+                        log
+                    )
+                }
+            }
+        } ~ path("v2" / "ontologies" / "resourceclasses" / Segments) { (entityIris: List[String]) =>
             get {
                 requestContext => {
                     val userProfile = getUserProfileV1(requestContext)
@@ -64,8 +85,7 @@ object OntologiesRouteV2 extends Authenticator {
                     )
                 }
             }
-        } ~
-        path("v2" / "ontologies" / "properties" / Segments) { (entityIris: List[String]) =>
+        } ~ path("v2" / "ontologies" / "properties" / Segments) { (entityIris: List[String]) =>
             get {
                 requestContext => {
                     val userProfile = getUserProfileV1(requestContext)

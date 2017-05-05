@@ -33,6 +33,7 @@ import org.knora.webapi.util.ActorUtil.{future2Message, handleUnexpectedMessage}
 import org.knora.webapi.util.{CacheUtil, ErrorHandlingMap, KnoraIdUtil}
 import org.knora.webapi.{ApplicationCacheException, IRI, InconsistentTriplestoreDataException, OntologyConstants}
 
+import scala.collection.immutable
 import scala.concurrent.Future
 
 class OntologiesResponderV2 extends Responder {
@@ -79,7 +80,8 @@ class OntologiesResponderV2 extends Responder {
         case StandoffAllPropertyEntitiesGetRequestV2(userProfile) => future2Message(sender(), getAllStandoffPropertyEntitiesV2(userProfile), log)
         case CheckSubClassRequestV2(subClassIri, superClassIri, userProfile) => future2Message(sender(), checkSubClassV2(subClassIri, superClassIri, userProfile), log)
         case SubClassesGetRequestV2(resourceClassIri, userProfile) => future2Message(sender(), getSubClassesV2(resourceClassIri, userProfile), log)
-        case NamedGraphEntitiesRequestV2(namedGraphIri, userProfile) => future2Message(sender(), getNamedGraphEntityInfoV1ForNamedGraph(namedGraphIri, userProfile), log)
+        case NamedGraphEntitiesRequestV2(namedGraphIri, userProfile) => future2Message(sender(), getNamedGraphEntityInfoV2ForNamedGraph(namedGraphIri, userProfile), log)
+        case NamedGraphEntitiesGetRequestV2(namedGraphIris, userProfile) => future2Message(sender(), getEntitiesForNamedGraph(namedGraphIris, userProfile), log)
         case ResourceClassesGetRequestV2(resourceClassIris, userProfile) => future2Message(sender(), getResourceClassDefinitionsWithCardinalities(resourceClassIris, userProfile), log)
         case PropertyEntitiesGetRequestV2(propertyIris, userProfile) => future2Message(sender(), getPropertyDefinitions(propertyIris, userProfile), log)
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
@@ -793,7 +795,7 @@ class OntologiesResponderV2 extends Responder {
       * @param userProfile   the profile of the user making the request.
       * @return a [[NamedGraphEntityInfoV1]].
       */
-    private def getNamedGraphEntityInfoV1ForNamedGraph(namedGraphIri: IRI, userProfile: UserProfileV1): Future[NamedGraphEntityInfoV2] = {
+    private def getNamedGraphEntityInfoV2ForNamedGraph(namedGraphIri: IRI, userProfile: UserProfileV1): Future[NamedGraphEntityInfoV2] = {
         for {
             cacheData <- getCacheData
             response = NamedGraphEntityInfoV2(
@@ -805,26 +807,58 @@ class OntologiesResponderV2 extends Responder {
     }
 
 
+    private def getEntitiesForNamedGraph(namedGraphIris: Set[IRI], userProfile: UserProfileV1) = {
+
+        for {
+
+        // collect resource class Iris fro given named graphs
+            resourceClassesForNamedGraphWithFuture: Map[IRI, Future[Set[IRI]]] <- Future(namedGraphIris.foldLeft(Map.empty[IRI, Future[Set[IRI]]]) {
+                case (acc: Map[IRI, Future[Set[IRI]]], namedGraphIri: IRI) =>
+                    val resourceClassesFuture: Future[Set[IRI]] = for {
+                        namedGraphEntities <- getNamedGraphEntityInfoV2ForNamedGraph(namedGraphIri = namedGraphIri, userProfile = userProfile)
+                    } yield namedGraphEntities.resourceClasses
+                    acc + (namedGraphIri -> resourceClassesFuture)
+            })
+
+            // get rid of the Future
+            resourceClassesForNamedGraph: Iterable[(IRI, Set[IRI])] <- Future.traverse(resourceClassesForNamedGraphWithFuture) {
+                case (namedGraph, resourceClassesWithFuture) =>
+                for {
+                    resourceClasses <- resourceClassesWithFuture
+
+                } yield namedGraph -> resourceClasses
+            }
+
+            // collect all resource class Iris
+            resourceClassIris: Set[IRI] = resourceClassesForNamedGraph.toMap.values.flatten.toSet
+
+            readEntityDefs: ReadEntityDefinitionsV2 <- getResourceClassDefinitionsWithCardinalities(resourceClassIris, userProfile = userProfile)
+
+        } yield readEntityDefs.copy(
+            ontologies = resourceClassesForNamedGraph.toMap
+        )
+    }
+
     /**
       * Requests information about resource classes and their properties.
       *
       * @param resourceClassIris the Iris of the resource classes to query for.
-      * @param userProfile the profile of the user making the request.
+      * @param userProfile       the profile of the user making the request.
       * @return a [[ReadEntityDefinitionsV2]].
       */
     private def getResourceClassDefinitionsWithCardinalities(resourceClassIris: Set[IRI], userProfile: UserProfileV1) = {
         for {
 
-            // request information about the given resource class Iris
+        // request information about the given resource class Iris
             resourceClassResponse: EntityInfoGetResponseV2 <- getEntityInfoResponseV2(resourceClassIris = resourceClassIris, userProfile = userProfile)
 
             cacheData <- getCacheData
 
             // get the subclassOf relations of the given resource classes
-            subClassOfRelations: Map[IRI, Set[IRI]] = resourceClassIris.map {
+            /*subClassOfRelations: Map[IRI, Set[IRI]] = resourceClassIris.map {
                 resClass =>
                     resClass -> cacheData.resourceAndValueSubClassOfRelations(resClass)
-            }.toMap
+            }.toMap*/
 
             // get all property Iris from cardinalities
             propertyIris: Set[IRI] = resourceClassResponse.resourceEntityInfoMap.values.foldLeft(Set.empty[IRI]) {
@@ -835,7 +869,7 @@ class OntologiesResponderV2 extends Responder {
             // request information about the properties for which cardinalities are defined
             propertiesResponse: EntityInfoGetResponseV2 <- getEntityInfoResponseV2(propertyIris = propertyIris, userProfile = userProfile)
 
-        } yield ReadEntityDefinitionsV2(resourceClasses = resourceClassResponse.resourceEntityInfoMap, subClassOfRelations = subClassOfRelations, properties = propertiesResponse.propertyEntityInfoMap)
+        } yield ReadEntityDefinitionsV2(resourceClasses = resourceClassResponse.resourceEntityInfoMap, properties = propertiesResponse.propertyEntityInfoMap)
 
     }
 
@@ -856,4 +890,5 @@ class OntologiesResponderV2 extends Responder {
         } yield ReadEntityDefinitionsV2(properties = propertiesResponse.propertyEntityInfoMap)
 
     }
+
 }

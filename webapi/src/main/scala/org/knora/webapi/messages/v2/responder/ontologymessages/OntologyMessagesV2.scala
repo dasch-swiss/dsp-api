@@ -172,6 +172,15 @@ case class NamedGraphEntityInfoV2(namedGraphIri: IRI,
                                   resourceClasses: Set[IRI],
                                   propertyIris: Set[IRI])
 
+
+/**
+  * Requests entity definitions for the given named graphs.
+  *
+  * @param namedGraphIris the named graphs to query for.
+  * @param userProfile the profile of the user making the request.
+  */
+case class NamedGraphEntitiesGetRequestV2(namedGraphIris: Set[IRI], userProfile: UserProfileV1) extends OntologiesResponderRequestV2
+
 /**
   * Requests the entity definitions for the given resource class Iris. A successful response will be a [[ReadEntityDefinitionsV2]].
   *
