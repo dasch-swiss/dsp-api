@@ -1,9 +1,10 @@
+dist: trusty
 sudo: required
 git:
-    depth: 5
+    depth: 1
 language: scala
 scala:
-- 2.11.7
+- 2.12.1
 jdk:
 - oraclejdk8
 cache:
