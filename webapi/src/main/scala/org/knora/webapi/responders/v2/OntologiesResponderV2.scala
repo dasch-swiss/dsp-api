@@ -23,6 +23,7 @@ package org.knora.webapi.responders.v2
 import akka.pattern._
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory
 import org.knora.webapi.messages.v1.responder.ontologymessages._
+import org.knora.webapi.messages.v1.responder.projectmessages.ProjectsNamedGraphGetV1
 import org.knora.webapi.messages.v1.responder.standoffmessages.StandoffDataTypeClasses
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
@@ -33,7 +34,6 @@ import org.knora.webapi.util.ActorUtil.{future2Message, handleUnexpectedMessage}
 import org.knora.webapi.util.{CacheUtil, ErrorHandlingMap, KnoraIdUtil}
 import org.knora.webapi.{ApplicationCacheException, IRI, InconsistentTriplestoreDataException, OntologyConstants}
 
-import scala.collection.immutable
 import scala.concurrent.Future
 
 class OntologiesResponderV2 extends Responder {
@@ -80,10 +80,11 @@ class OntologiesResponderV2 extends Responder {
         case StandoffAllPropertyEntitiesGetRequestV2(userProfile) => future2Message(sender(), getAllStandoffPropertyEntitiesV2(userProfile), log)
         case CheckSubClassRequestV2(subClassIri, superClassIri, userProfile) => future2Message(sender(), checkSubClassV2(subClassIri, superClassIri, userProfile), log)
         case SubClassesGetRequestV2(resourceClassIri, userProfile) => future2Message(sender(), getSubClassesV2(resourceClassIri, userProfile), log)
-        case NamedGraphEntitiesRequestV2(namedGraphIri, userProfile) => future2Message(sender(), getNamedGraphEntityInfoV2ForNamedGraph(namedGraphIri, userProfile), log)
-        case NamedGraphEntitiesGetRequestV2(namedGraphIris, userProfile) => future2Message(sender(), getEntitiesForNamedGraph(namedGraphIris, userProfile), log)
-        case ResourceClassesGetRequestV2(resourceClassIris, userProfile) => future2Message(sender(), getResourceClassDefinitionsWithCardinalities(resourceClassIris, userProfile), log)
-        case PropertyEntitiesGetRequestV2(propertyIris, userProfile) => future2Message(sender(), getPropertyDefinitions(propertyIris, userProfile), log)
+        case NamedGraphEntitiesRequestV2(namedGraphIri, userProfile) => future2Message(sender(), getNamedGraphEntityInfoV2ForNamedGraphV2(namedGraphIri, userProfile), log)
+        case NamedGraphEntitiesGetRequestV2(namedGraphIris, userProfile) => future2Message(sender(), getEntitiesForNamedGraphV2(namedGraphIris, userProfile), log)
+        case ResourceClassesGetRequestV2(resourceClassIris, userProfile) => future2Message(sender(), getResourceClassDefinitionsWithCardinalitiesV2(resourceClassIris, userProfile), log)
+        case PropertyEntitiesGetRequestV2(propertyIris, userProfile) => future2Message(sender(), getPropertyDefinitionsV2(propertyIris, userProfile), log)
+        case NamedGraphsGetRequestV2(userProfile) => future2Message(sender(), getNamedGraphsV2(userProfile), log)
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }
 
@@ -795,7 +796,7 @@ class OntologiesResponderV2 extends Responder {
       * @param userProfile   the profile of the user making the request.
       * @return a [[NamedGraphEntityInfoV1]].
       */
-    private def getNamedGraphEntityInfoV2ForNamedGraph(namedGraphIri: IRI, userProfile: UserProfileV1): Future[NamedGraphEntityInfoV2] = {
+    private def getNamedGraphEntityInfoV2ForNamedGraphV2(namedGraphIri: IRI, userProfile: UserProfileV1): Future[NamedGraphEntityInfoV2] = {
         for {
             cacheData <- getCacheData
             response = NamedGraphEntityInfoV2(
@@ -806,8 +807,25 @@ class OntologiesResponderV2 extends Responder {
         } yield response
     }
 
+    private def getNamedGraphsV2(userProfile: UserProfileV1) = {
+        for {
+            // TODO: refactor this for V2
+            projectsNamedGraph: Seq[NamedGraphV1] <- (responderManager ? ProjectsNamedGraphGetV1(userProfile)).mapTo[Seq[NamedGraphV1]]
 
-    private def getEntitiesForNamedGraph(namedGraphIris: Set[IRI], userProfile: UserProfileV1) = {
+            response = ReadNamedGraphsV2(
+                namedGraphs = projectsNamedGraph.map(_.id).toSet
+            )
+        } yield response
+    }
+
+    /**
+      * Requests the resource classes defined in the given named graphs.
+      *
+      * @param namedGraphIris the Iris of the named graphs to be queried.
+      * @param userProfile the profile of the user making the request.
+      * @return a [[ReadEntityDefinitionsV2]].
+      */
+    private def getEntitiesForNamedGraphV2(namedGraphIris: Set[IRI], userProfile: UserProfileV1): Future[ReadEntityDefinitionsV2] = {
 
         for {
 
@@ -815,7 +833,7 @@ class OntologiesResponderV2 extends Responder {
             resourceClassesForNamedGraphWithFuture: Map[IRI, Future[Set[IRI]]] <- Future(namedGraphIris.foldLeft(Map.empty[IRI, Future[Set[IRI]]]) {
                 case (acc: Map[IRI, Future[Set[IRI]]], namedGraphIri: IRI) =>
                     val resourceClassesFuture: Future[Set[IRI]] = for {
-                        namedGraphEntities <- getNamedGraphEntityInfoV2ForNamedGraph(namedGraphIri = namedGraphIri, userProfile = userProfile)
+                        namedGraphEntities <- getNamedGraphEntityInfoV2ForNamedGraphV2(namedGraphIri = namedGraphIri, userProfile = userProfile)
                     } yield namedGraphEntities.resourceClasses
                     acc + (namedGraphIri -> resourceClassesFuture)
             })
@@ -832,7 +850,7 @@ class OntologiesResponderV2 extends Responder {
             // collect all resource class Iris
             resourceClassIris: Set[IRI] = resourceClassesForNamedGraph.toMap.values.flatten.toSet
 
-            readEntityDefs: ReadEntityDefinitionsV2 <- getResourceClassDefinitionsWithCardinalities(resourceClassIris, userProfile = userProfile)
+            readEntityDefs: ReadEntityDefinitionsV2 <- getResourceClassDefinitionsWithCardinalitiesV2(resourceClassIris, userProfile = userProfile)
 
         } yield readEntityDefs.copy(
             ontologies = resourceClassesForNamedGraph.toMap
@@ -846,7 +864,7 @@ class OntologiesResponderV2 extends Responder {
       * @param userProfile       the profile of the user making the request.
       * @return a [[ReadEntityDefinitionsV2]].
       */
-    private def getResourceClassDefinitionsWithCardinalities(resourceClassIris: Set[IRI], userProfile: UserProfileV1) = {
+    private def getResourceClassDefinitionsWithCardinalitiesV2(resourceClassIris: Set[IRI], userProfile: UserProfileV1) = {
         for {
 
         // request information about the given resource class Iris
@@ -880,7 +898,7 @@ class OntologiesResponderV2 extends Responder {
       * @param userProfile  the profile of the user making the request.
       * @return a [[ReadEntityDefinitionsV2]].
       */
-    private def getPropertyDefinitions(propertyIris: Set[IRI], userProfile: UserProfileV1) = {
+    private def getPropertyDefinitionsV2(propertyIris: Set[IRI], userProfile: UserProfileV1) = {
 
         for {
 

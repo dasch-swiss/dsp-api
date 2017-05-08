@@ -614,6 +614,15 @@ case class ReadResourcesSequenceV2(numberOfResources: Int, resources: Seq[ReadRe
 }
 
 /**
+  * Represents the existing named graphs.
+  *
+  * @param namedGraphs the Iris of the existing named graphs.
+  */
+case class ReadNamedGraphsV2(namedGraphs: Set[IRI]) extends KnoraResponseV2 {
+    def toJsValue = ResourcesV2JsonProtocol.readNamedGraphs.write(this)
+}
+
+/**
   * Return information about ontology entities.
   *
   * @param ontologies named graphs and their resource classes.
@@ -632,6 +641,25 @@ case class ReadEntityDefinitionsV2(ontologies: Map[IRI, Set[IRI]] = Map.empty[IR
   * A spray-json protocol for generating Knora API v2 JSON-LD providing data about representations of a resource.
   */
 object ResourcesV2JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with NullOptions {
+
+    implicit object readNamedGraphs extends JsonFormat[ReadNamedGraphsV2] {
+
+        def read(jsonVal: JsValue) = ???
+
+        def write(namedGraphs: ReadNamedGraphsV2) = {
+
+            val fields = Map(
+                "@context" -> Map(
+                    "@vocab" -> "http://schema.org/".toJson
+                ).toJson,
+                "namedGraphs" -> namedGraphs.namedGraphs.toJson
+            )
+
+            JsObject(fields)
+
+        }
+
+    }
 
     implicit object readResourcesSequenceV2Format extends JsonFormat[ReadResourcesSequenceV2] {
 
