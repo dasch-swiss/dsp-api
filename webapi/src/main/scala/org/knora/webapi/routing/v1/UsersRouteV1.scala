@@ -159,6 +159,27 @@ object UsersRouteV1 extends Authenticator {
                         log
                     )
                 }
+            } ~ delete {
+                requestContext => {
+                    val userIri = InputValidation.toIri(value, () => throw BadRequestException(s"Invalid user IRI $value"))
+                    val userProfile = getUserProfileV1(requestContext)
+
+                    /* update existing user's status to false */
+                    val requestMessage = UserChangeStatusRequestV1(
+                        userIri,
+                        changeUserRequest = ChangeUserApiRequestV1(newUserStatus = Some(false)),
+                        userProfile,
+                        apiRequestID = UUID.randomUUID()
+                    )
+
+                    RouteUtilV1.runJsonRoute(
+                        requestMessage,
+                        requestContext,
+                        settings,
+                        responderManager,
+                        log
+                    )
+                }
             }
         }
     }

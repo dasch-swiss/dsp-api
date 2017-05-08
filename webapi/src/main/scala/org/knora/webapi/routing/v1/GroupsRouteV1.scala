@@ -16,12 +16,14 @@
 
 package org.knora.webapi.routing.v1
 
+import java.util.UUID
+
 import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import org.apache.commons.validator.routines.UrlValidator
-import org.knora.webapi.messages.v1.responder.groupmessages.{GroupInfoByIRIGetRequest, GroupInfoByNameGetRequest, GroupsGetRequestV1}
+import org.knora.webapi.messages.v1.responder.groupmessages._
 import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
 import org.knora.webapi.util.InputValidation
 import org.knora.webapi.{BadRequestException, SettingsImpl}
@@ -51,6 +53,24 @@ object GroupsRouteV1 extends Authenticator {
                         responderManager,
                         log
                     )
+            } ~ post {
+                entity(as[CreateGroupApiRequestV1]) { apiRequest => requestContext =>
+                    val userProfile = getUserProfileV1(requestContext)
+
+                    val requestMessage = GroupCreateRequestV1(
+                        createRequest = apiRequest,
+                        userProfile,
+                        apiRequestID = UUID.randomUUID()
+                    )
+
+                    RouteUtilV1.runJsonRoute(
+                        requestMessage,
+                        requestContext,
+                        settings,
+                        responderManager,
+                        log
+                    )
+                }
             }
         } ~ path("v1" / "groups" / "iri" / Segment) { value =>
             get {
@@ -83,6 +103,20 @@ object GroupsRouteV1 extends Authenticator {
                         responderManager,
                         log
                     )
+            }
+        } ~ path("v1" / "groups" / Segment)  { value =>
+            put {
+                /* change group */
+            }
+        } ~ path("v1" / "groups" / "members" / Segment) { value =>
+            get {
+                /* get members for the supplied group IRI */
+            }
+        } ~ path ("v1" / "groups" / "members" / Segment / Segment) { groupIri => userIri =>
+            post {
+                /* add user to  group  */
+            } ~ delete {
+                /* remove user from project member group*/
             }
         }
     }
