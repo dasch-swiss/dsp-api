@@ -2,7 +2,7 @@
 <xs:schema elementFormDefault="qualified" targetNamespace="http://api.knora.org/ontology/beol/import/v1#"
     xmlns="http://api.knora.org/ontology/beol/import/v1#" xmlns:xs="http://www.w3.org/2001/XMLSchema"
     xmlns:knoraImport="http://api.knora.org/ontology/knora-import/v1#"
-    xmlns:vc="http://www.w3.org/2007/XMLSchema-versioning" vc:minVersion="1.1">
+    xmlns:vc="http://www.w3.org/2007/XMLSchema-versioning" vc:minVersion="1.0">
     <xs:import namespace="http://api.knora.org/ontology/knora-import/v1#" schemaLocation="knora-import-v1-xml.xsd"/>
 
     <xs:element name="person">

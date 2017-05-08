@@ -21,12 +21,15 @@
 
 package org.knora.webapi.routing.v1
 
-import java.io.File
+import java.io._
 import java.util.UUID
+import javax.xml.XMLConstants
+import javax.xml.transform.Source
+import javax.xml.transform.stream.StreamSource
+import javax.xml.validation.{Schema, SchemaFactory, Validator => JValidator}
 
 import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
-import akka.http.scaladsl.marshallers.xml.ScalaXmlSupport._
 import akka.http.scaladsl.model.Multipart
 import akka.http.scaladsl.model.Multipart.BodyPart
 import akka.http.scaladsl.server.Directives._
@@ -46,12 +49,13 @@ import org.knora.webapi.util.standoff.StandoffTagUtilV1.TextWithStandoffTagsV1
 import org.knora.webapi.util.{DateUtilV1, InputValidation}
 import org.knora.webapi.viewhandlers.ResourceHtmlView
 import org.slf4j.LoggerFactory
+import org.w3c.dom.ls.{LSInput, LSResourceResolver}
 import spray.json._
 
 import scala.concurrent.duration._
 import scala.concurrent.{Future, Promise}
 import scala.util.{Failure, Success, Try}
-import scala.xml.{Node, NodeSeq}
+import scala.xml.{Node, XML}
 
 
 /**
@@ -379,6 +383,29 @@ object ResourcesRouteV1 extends Authenticator {
             }
         }
 
+        /**
+          * Validates bulk import XML using project-specific XML schemas and the Knora XML import schema version 1.
+          *
+          * @param xml the XML to be validated.
+          */
+        def validateImportXml(xml: String): Unit = {
+            // TODO: generate schemas from ontologies.
+
+            // The schema for the project into which we're importing data.
+            val mainSchemaFile = new File("_test_data/xsd_test/biblio.xsd")
+
+            // A map of XML namespaces to files containing XML schemas that are imported by the main schema.
+            val importedSchemaFiles = Map(
+                "http://api.knora.org/ontology/beol/import/v1#" -> new File("_test_data/xsd_test/beol.xsd"),
+                "http://api.knora.org/ontology/knora-import/v1#" -> new File("_test_data/xsd_test/knora-import-v1-xml.xsd")
+            )
+
+            val schemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI)
+            schemaFactory.setResourceResolver(new FileResourceResolver(importedSchemaFiles))
+            val schemaInstance: Schema = schemaFactory.newSchema(new StreamSource(new FileInputStream(mainSchemaFile)))
+            val schemaValidator = schemaInstance.newValidator()
+            schemaValidator.validate(new StreamSource(new StringReader(xml)))
+        }
 
         /**
           * Parses XML for bulk resource creation, and creates a [[CreateResourceRequestV1]] for each resource
@@ -387,8 +414,9 @@ object ResourcesRouteV1 extends Authenticator {
           * @param xml XML describing multiple resources to be created.
           * @return Seq[CreateResourceRequestV1] a collection of resource creation requests.
           */
-        def parseXml(xml: NodeSeq): Seq[CreateResourceRequestV1] = {
-            xml.head.child
+        def parseImportXml(xml: String): Seq[CreateResourceRequestV1] = {
+            val nodes = XML.loadString(xml)
+            nodes.head.child
                 .filter(node => node.label != "#PCDATA")
                 .map(node => {
                     // Get the client's ID for the resource
@@ -723,12 +751,15 @@ object ResourcesRouteV1 extends Authenticator {
 
         } ~ path("v1" / "resources" / "xml" / Segment) { (projectId) =>
             post {
-                entity(as[NodeSeq]) { xml =>
+                entity(as[String]) { xml =>
                     requestContext =>
                         val userProfile = getUserProfileV1(requestContext)
 
+                        // Validate and parse the XML.
+                        validateImportXml(xml)
+                        val resourcesToCreate = parseImportXml(xml)
+
                         val apiRequestID = UUID.randomUUID
-                        val resourcesToCreate = parseXml(xml)
                         val request1 = makeMultiResourcesRequestMessage(resourcesToCreate, projectId, apiRequestID, userProfile)
 
                         RouteUtilV1.runJsonRouteWithFuture(
@@ -743,5 +774,50 @@ object ResourcesRouteV1 extends Authenticator {
             }
         }
 
+    }
+}
+
+/**
+  * An implementation of [[LSResourceResolver]] that resolves resources from a map of XML namespace URIs to XML files.
+  *
+  * @param resourceFiles a map of XML namespace URIs to XML files.
+  */
+class FileResourceResolver(resourceFiles: Map[IRI, File]) extends LSResourceResolver {
+    private class FileLSInput(file: File) extends LSInput {
+        override def getSystemId: String = null
+
+        override def setEncoding(encoding: String): Unit = ()
+
+        override def getCertifiedText: Boolean = false
+
+        override def setStringData(stringData: String): Unit = ()
+
+        override def setPublicId(publicId: String): Unit = ()
+
+        override def getByteStream: InputStream = new FileInputStream(file)
+
+        override def getEncoding: String = null
+
+        override def setCharacterStream(characterStream: Reader): Unit = ()
+
+        override def setByteStream(byteStream: InputStream): Unit = ()
+
+        override def getBaseURI: String = null
+
+        override def setCertifiedText(certifiedText: Boolean): Unit = ()
+
+        override def getStringData: String = null
+
+        override def getCharacterStream: Reader = null
+
+        override def getPublicId: String = null
+
+        override def setBaseURI(baseURI: String): Unit = ()
+
+        override def setSystemId(systemId: String): Unit = ()
+    }
+
+    override def resolveResource(`type`: String, namespaceURI: String, publicId: String, systemId: String, baseURI: String): LSInput = {
+        new FileLSInput(resourceFiles(namespaceURI))
     }
 }
