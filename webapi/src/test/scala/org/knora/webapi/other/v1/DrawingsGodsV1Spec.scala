@@ -22,9 +22,9 @@ import akka.actor.Props
 import com.typesafe.config.ConfigFactory
 import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse}
 import org.knora.webapi.messages.v1.responder.permissionmessages.{DefaultObjectAccessPermissionsStringForPropertyGetV1, DefaultObjectAccessPermissionsStringForResourceClassGetV1, DefaultObjectAccessPermissionsStringResponseV1}
-import org.knora.webapi.messages.v1.responder.resourcemessages.{ResourceCreateRequestV1, ResourceCreateResponseV1}
+import org.knora.webapi.messages.v1.responder.resourcemessages.{ResourceCreateRequestV1, ResourceCreateResponseV1, _}
 import org.knora.webapi.messages.v1.responder.usermessages.{UserProfileByIRIGetV1, UserProfileType, UserProfileV1}
-import org.knora.webapi.messages.v1.responder.valuemessages.{CreateValueV1WithComment, TextValueSimpleV1}
+import org.knora.webapi.messages.v1.responder.valuemessages.{CreateValueV1WithComment, TextValueSimpleV1, _}
 import org.knora.webapi.messages.v1.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent, ResetTriplestoreContentACK, TriplestoreJsonProtocol}
 import org.knora.webapi.responders.{RESPONDER_MANAGER_ACTOR_NAME, ResponderManager}
 import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
@@ -126,7 +126,7 @@ class DrawingsGodsV1Spec extends CoreSpec(DrawingsGodsV1Spec.config) with Triple
             expectMsg(DefaultObjectAccessPermissionsStringResponseV1("CR http://data.knora.org/groups/drawings-gods-admin|D http://data.knora.org/groups/drawings-gods-snf-team|M http://data.knora.org/groups/drawings-gods-add-drawings,http://data.knora.org/groups/drawings-gods-meta-annotators|V knora-base:ProjectMember"))
         }
 
-        "allow drawings-gods-test-ddd1 user to see newly created resource and all properties" in {
+        "allow drawings-gods-test-ddd1 user to create a resource, then query it and see its label and properties" in {
 
             val valuesToBeCreated = Map(
                 "http://www.knora.org/ontology/drawings-gods#hasLastname" -> Vector(CreateValueV1WithComment(TextValueSimpleV1("PersonTest DDD1"))),
@@ -143,7 +143,20 @@ class DrawingsGodsV1Spec extends CoreSpec(DrawingsGodsV1Spec.config) with Triple
                 apiRequestID = UUID.randomUUID
             )
 
-            val response = expectMsgType[ResourceCreateResponseV1](timeout)
+            val createResponse = expectMsgType[ResourceCreateResponseV1](timeout)
+            val resourceIri = createResponse.res_id
+
+            responderManager ! ResourceFullGetRequestV1(iri = resourceIri, userProfile = ddd1.get)
+
+            val getResponse = expectMsgType[ResourceFullResponseV1](timeout)
+
+            val maybeLabel: Option[String] = getResponse.resinfo.get.firstproperty
+            assert(maybeLabel.isDefined, "Response returned no resource label")
+            assert(maybeLabel.get == "Test-Person")
+
+            val maybeLastNameProp: Option[PropertyV1] = getResponse.props.get.properties.find(prop => prop.pid == "http://www.knora.org/ontology/drawings-gods#hasLastname")
+            assert(maybeLastNameProp.isDefined, "Response returned no property hasLastname")
+            assert(maybeLastNameProp.get.values.head.asInstanceOf[TextValueV1].utf8str == "PersonTest DDD1")
         }
     }
 }
