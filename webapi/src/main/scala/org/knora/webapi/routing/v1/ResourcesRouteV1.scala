@@ -24,9 +24,8 @@ package org.knora.webapi.routing.v1
 import java.io._
 import java.util.UUID
 import javax.xml.XMLConstants
-import javax.xml.transform.Source
 import javax.xml.transform.stream.StreamSource
-import javax.xml.validation.{Schema, SchemaFactory, Validator => JValidator}
+import javax.xml.validation.{Schema, SchemaFactory}
 
 import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
@@ -55,7 +54,7 @@ import spray.json._
 import scala.concurrent.duration._
 import scala.concurrent.{Future, Promise}
 import scala.util.{Failure, Success, Try}
-import scala.xml.{Node, XML}
+import scala.xml.{Elem, Node, Utility, XML}
 
 
 /**
@@ -324,7 +323,7 @@ object ResourcesRouteV1 extends Authenticator {
                         val mapping_id: Option[Seq[Node]] = node.attributes.get("mapping_id")
 
                         if (mapping_id.nonEmpty) {
-                            val mapping_IRI: Option[IRI] = Some(InputValidation.toIri(mapping_id.toString, () => throw BadRequestException(s"Invalid mapping_id: '$mapping_id")))
+                            val mapping_IRI: Option[IRI] = Some(InputValidation.toIri(mapping_id.toString, () => throw BadRequestException(s"Invalid mapping ID in element '${node.label}: '$mapping_id")))
                             CreateResourceValueV1(richtext_value = Some(CreateRichtextV1(None, Some(element_value), mapping_IRI)))
                         } else {
                             CreateResourceValueV1(richtext_value = Some(CreateRichtextV1(Some(element_value))))
@@ -333,52 +332,55 @@ object ResourcesRouteV1 extends Authenticator {
                     case "link_value" =>
                         node.attribute("ref").get.headOption match {
                             case Some(refNode: Node) => CreateResourceValueV1(link_to_client_id = Some(refNode.text))
-                            case None => throw BadRequestException(s"the ref attribute not specified for node: $node.label")
+                            case None => throw BadRequestException(s"Attribute 'ref' missing in element '${node.label}'")
                         }
 
                     case "int_value" =>
-                        CreateResourceValueV1(int_value = Some(InputValidation.toInt(element_value, () => throw BadRequestException(s"Invalid int_value: '$element_value'"))))
+                        CreateResourceValueV1(int_value = Some(InputValidation.toInt(element_value, () => throw BadRequestException(s"Invalid integer value in element '${node.label}: '$element_value'"))))
 
                     case "decimal_value" =>
-                        CreateResourceValueV1(decimal_value = Some(InputValidation.toBigDecimal(element_value, () => throw BadRequestException(s"Invalid decimal_value: '$element_value'"))))
+                        CreateResourceValueV1(decimal_value = Some(InputValidation.toBigDecimal(element_value, () => throw BadRequestException(s"Invalid decimal value in element '${node.label}: '$element_value'"))))
 
                     case "boolean_value" =>
-                        CreateResourceValueV1(boolean_value = Some(InputValidation.toBoolean(element_value, () => throw BadRequestException(s"Invalid boolean_value: '$element_value'"))))
+                        CreateResourceValueV1(boolean_value = Some(InputValidation.toBoolean(element_value, () => throw BadRequestException(s"Invalid boolean value in element '${node.label}: '$element_value'"))))
 
                     case "uri_value" =>
-                        CreateResourceValueV1(uri_value = Some(InputValidation.toIri(element_value, () => throw BadRequestException(s"Invalid uri_value: '$element_value'"))))
+                        CreateResourceValueV1(uri_value = Some(InputValidation.toIri(element_value, () => throw BadRequestException(s"Invalid URI value in element '${node.label}: '$element_value'"))))
 
                     case "date_value" =>
-                        CreateResourceValueV1(date_value = Some(InputValidation.toDate(element_value, () => throw BadRequestException(s"Invalid date_value: '$element_value'"))))
+                        CreateResourceValueV1(date_value = Some(InputValidation.toDate(element_value, () => throw BadRequestException(s"Invalid date value in element '${node.label}: '$element_value'"))))
 
                     case "color_value" =>
-                        CreateResourceValueV1(color_value = Some(InputValidation.toColor(element_value, () => throw BadRequestException(s"Invalid date_value: '$element_value'"))))
+                        CreateResourceValueV1(color_value = Some(InputValidation.toColor(element_value, () => throw BadRequestException(s"Invalid date value in element '${node.label}: '$element_value'"))))
 
                     case "geom_value" =>
-                        CreateResourceValueV1(geom_value = Some(InputValidation.toGeometryString(element_value, () => throw BadRequestException(s"Invalid geom_value: '$element_value'"))))
+                        CreateResourceValueV1(geom_value = Some(InputValidation.toGeometryString(element_value, () => throw BadRequestException(s"Invalid geometry value in element '${node.label}: '$element_value'"))))
 
                     case "hlist_value" =>
-                        CreateResourceValueV1(hlist_value = Some(InputValidation.toIri(element_value, () => throw BadRequestException(s"Invalid hlist value: '$element_value'"))))
+                        CreateResourceValueV1(hlist_value = Some(InputValidation.toIri(element_value, () => throw BadRequestException(s"Invalid hlist value in element '${node.label}: '$element_value'"))))
 
                     case "interval_value" =>
                         Try(element_value.split(",")) match {
                             case Success(timeVals) =>
-                                if (timeVals.length != 2) throw BadRequestException("parameters for interval_value invalid")
+                                if (timeVals.length != 2) throw BadRequestException(s"Invalid interval value in element '${node.label}: '$element_value'")
+
                                 val tVals: Seq[BigDecimal] = timeVals.map {
                                     timeVal =>
-                                        InputValidation.toBigDecimal(timeVal, () => throw BadRequestException(s"Invalid decimal_value: '$element_value'"))
+                                        InputValidation.toBigDecimal(timeVal, () => throw BadRequestException(s"Invalid decimal value in element '${node.label}: '$timeVal'"))
                                 }
+
                                 CreateResourceValueV1(interval_value = Some(tVals))
+
                             case Failure(f) =>
-                                throw BadRequestException(s"Invalid interval_value: '$element_value', missing comma")
+                                throw BadRequestException(s"Invalid interval value in element '${node.label}: '$element_value'")
                         }
 
                     case "geoname_value" =>
                         CreateResourceValueV1(geoname_value = Some(element_value))
-                    case other => throw BadRequestException(s"Invalid Knora type: $knoraType")
+                    case other => throw BadRequestException(s"Invalid 'knoraType' in element '${node.label}': '$other'")
                 }
             } else {
-                throw BadRequestException(s"Invalid Knora data type is not specified ")
+                throw BadRequestException(s"Attribute 'knoraType' missing in element '${node.label}'")
 
             }
         }
@@ -388,7 +390,7 @@ object ResourcesRouteV1 extends Authenticator {
           *
           * @param xml the XML to be validated.
           */
-        def validateImportXml(xml: String): Unit = {
+        def validateImportXml(xml: String, defaultNamespace: IRI, otherApiNamespaces: Set[IRI]): Unit = {
             // TODO: generate schemas from ontologies.
 
             // The schema for the project into which we're importing data.
@@ -408,15 +410,14 @@ object ResourcesRouteV1 extends Authenticator {
         }
 
         /**
-          * Parses XML for bulk resource creation, and creates a [[CreateResourceRequestV1]] for each resource
+          * Converts parsed import XML into a sequence of [[CreateResourceRequestV1]] for each resource
           * described in the XML.
           *
-          * @param xml XML describing multiple resources to be created.
+          * @param rootElement the root element of an XML document describing multiple resources to be created.
           * @return Seq[CreateResourceRequestV1] a collection of resource creation requests.
           */
-        def parseImportXml(xml: String): Seq[CreateResourceRequestV1] = {
-            val nodes = XML.loadString(xml)
-            nodes.head.child
+        def importXmlToCreateResourceRequests(rootElement: Elem): Seq[CreateResourceRequestV1] = {
+            rootElement.head.child
                 .filter(node => node.label != "#PCDATA")
                 .map(node => {
                     // Get the client's ID for the resource
@@ -439,6 +440,7 @@ object ResourcesRouteV1 extends Authenticator {
                             propertyNode =>
                                 val propertyNodeNamespace = propertyNode.getNamespace(propertyNode.prefix)
                                 val propertyOntologyIri = InputValidation.xmlImportNamespaceToInternalOntologyIriV1(propertyNodeNamespace, () => throw BadRequestException(s"Invalid XML namespace: $propertyNodeNamespace"))
+
                                 val propertyIri = propertyOntologyIri + propertyNode.label
                                 val valueNodes: Seq[Node] = scala.xml.Utility.trim(propertyNode).descendant
 
@@ -755,9 +757,25 @@ object ResourcesRouteV1 extends Authenticator {
                     requestContext =>
                         val userProfile = getUserProfileV1(requestContext)
 
+                        val rootElement: Elem = XML.loadString(xml)
+
+                        if (rootElement.namespace + rootElement.label != OntologyConstants.KnoraXmlImportV1.Resources) {
+                            throw BadRequestException(s"Root XML element must be ${OntologyConstants.KnoraXmlImportV1.Resources}")
+                        }
+
+                        val defaultNamespace = rootElement.getNamespace(null)
+                        val otherApiNamespaces = Utility.collectNamespaces(rootElement).toSet.filter {
+                            namespace => namespace != defaultNamespace && namespace.startsWith(OntologyConstants.KnoraApi.ApiOntologyStart)
+                        }
+
                         // Validate and parse the XML.
-                        validateImportXml(xml)
-                        val resourcesToCreate = parseImportXml(xml)
+                        validateImportXml(
+                            xml = xml,
+                            defaultNamespace = defaultNamespace,
+                            otherApiNamespaces = otherApiNamespaces
+                        )
+
+                        val resourcesToCreate = importXmlToCreateResourceRequests(rootElement)
 
                         val apiRequestID = UUID.randomUUID
                         val request1 = makeMultiResourcesRequestMessage(resourcesToCreate, projectId, apiRequestID, userProfile)

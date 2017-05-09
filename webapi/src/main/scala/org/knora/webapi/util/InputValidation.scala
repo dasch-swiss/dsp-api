@@ -94,14 +94,6 @@ object InputValidation {
     // http://stackoverflow.com/questions/1636350/how-to-identify-a-given-string-is-hex-color-format
     private val ColorRegex = "^#(?:[0-9a-fA-F]{3}){1,2}$".r
 
-    // The start and end of an internal Knora ontology IRI.
-    private val InternalOntologyStart = "http://www.knora.org/ontology/"
-    private val InternalOntologyEnd = "#"
-
-    // The start and end of an XML import namespace.
-    private val XmlImportNamespaceStart = "http://api.knora.org/ontology/"
-    private val XmlImportNamespaceEnd = "/import/v1#"
-
     // A regex sub-pattern for ontology prefix labels, following <https://www.w3.org/TR/turtle/#prefixed-name>,
     // in which a prefix label is defined as an XML NCName <https://www.w3.org/TR/1999/REC-xml-names-19990114/#NT-NCName>.
     private val OntologyPrefixLabelPattern =
@@ -110,11 +102,19 @@ object InputValidation {
     // A regex for matching a string containing only an ontology prefix label.
     private val OntologyPrefixLabelRegex = ("^" + OntologyPrefixLabelPattern + "$").r
 
-    // A regex for internal ontologies.
-    private val InternalOntologyRegex: Regex = (InternalOntologyStart + "(" + OntologyPrefixLabelPattern + ")" + InternalOntologyEnd).r
+    // A regex for project-specific internal ontologies.
+    private val ProjectSpecificInternalOntologyRegex: Regex = (
+        OntologyConstants.KnoraInternal.InternalOntologyStart +
+            "(" + OntologyPrefixLabelPattern + ")" +
+            OntologyConstants.KnoraInternal.InternalOntologyEnd
+        ).r
 
     // A regex for XML import namespaces.
-    private val XmlImportNamespaceRegex: Regex = (XmlImportNamespaceStart + "(" + OntologyPrefixLabelPattern + ")" + XmlImportNamespaceEnd).r
+    private val ProjectSpecificXmlImportNamespaceRegex: Regex = (
+        OntologyConstants.KnoraXmlImportV1.ProjectSpecificXmlImportNamespace.XmlImportNamespaceStart +
+            "(" + OntologyPrefixLabelPattern + ")" +
+            OntologyConstants.KnoraXmlImportV1.ProjectSpecificXmlImportNamespace.XmlImportNamespaceEnd
+        ).r
 
     // Valid URL schemes.
     private val schemes = Array("http", "https")
@@ -426,33 +426,41 @@ object InputValidation {
     }
 
     /**
-      * Converts the IRI of an internal ontology (used in the triplestore) to an XML namespace for
+      * Converts the IRI of a project-specific internal ontology (used in the triplestore) to an XML namespace for
       * use in data import.
       *
-      * @param internalIri the IRI of the internal ontology.
+      * @param internalIri the IRI of the project-specific internal ontology.
       * @param errorFun    a function that throws an exception. It will be called if the form of the IRI is not
       *                    valid for an internal ontology IRI.
       * @return the corresponding XML import namespace.
       */
     def internalOntologyIriToXmlImportNamespaceV1(internalIri: IRI, errorFun: () => Nothing): String = {
         internalIri match {
-            case InternalOntologyRegex(prefix) => XmlImportNamespaceStart + prefix + XmlImportNamespaceEnd
+            case ProjectSpecificInternalOntologyRegex(prefix) =>
+                OntologyConstants.KnoraXmlImportV1.ProjectSpecificXmlImportNamespace.XmlImportNamespaceStart +
+                    prefix +
+                    OntologyConstants.KnoraXmlImportV1.ProjectSpecificXmlImportNamespace.XmlImportNamespaceEnd
+
             case _ => errorFun()
         }
     }
 
     /**
-      * Converts an XML namespace (used in XML data import) to the IRI of an internal ontology (used
+      * Converts an XML namespace (used in XML data import) to the IRI of a project-specific internal ontology (used
       * in the triplestore).
       *
       * @param namespace the XML namespace.
       * @param errorFun  a function that throws an exception. It will be called if the form of the string is not
       *                  valid for a Knora XML import namespace.
-      * @return the corresponding internal ontology IRI.
+      * @return the corresponding project-specific internal ontology IRI.
       */
     def xmlImportNamespaceToInternalOntologyIriV1(namespace: String, errorFun: () => Nothing): IRI = {
         namespace match {
-            case XmlImportNamespaceRegex(prefix) => InternalOntologyStart + prefix + InternalOntologyEnd
+            case ProjectSpecificXmlImportNamespaceRegex(prefix) =>
+                OntologyConstants.KnoraInternal.InternalOntologyStart +
+                    prefix +
+                    OntologyConstants.KnoraInternal.InternalOntologyEnd
+
             case _ => errorFun()
         }
     }
