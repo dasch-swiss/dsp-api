@@ -84,7 +84,7 @@ class UsersV1E2ESpec extends E2ESpec(UsersV1E2ESpec.config) with SessionJsonProt
 
             "return a single user profile identified by email" in {
                 /* Correct username and password */
-                val request = Get(baseApiUrl + s"/v1/users/$rootEmailEnc?email=true") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
+                val request = Get(baseApiUrl + s"/v1/users/$rootEmailEnc?identifier=email") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
                 val response: HttpResponse = singleAwaitingRequest(request)
                 // println(s"response: ${response.toString}")
                 response.status should be (StatusCodes.OK)

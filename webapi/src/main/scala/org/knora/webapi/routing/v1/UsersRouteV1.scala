@@ -85,12 +85,12 @@ object UsersRouteV1 extends Authenticator {
         path("v1" / "users" / Segment) { value =>
             get {
                 /* return a single user identified by iri or email */
-                parameters('email ? false) { (email: Boolean) =>
+                parameters("identifier" ? "iri") { (identifier: String) =>
                     requestContext =>
                         val userProfile = getUserProfileV1(requestContext)
 
                         /* check if email or iri was supplied */
-                        val requestMessage = if (email) {
+                        val requestMessage = if (identifier == "email") {
                             UserProfileByEmailGetRequestV1(value, UserProfileType.RESTRICTED, userProfile)
                         } else  {
                             val userIri = InputValidation.toIri(value, () => throw BadRequestException(s"Invalid user IRI $value"))

@@ -29,7 +29,7 @@ import spray.json._
 import scala.concurrent.duration._
 
 
-object GroupsRouteV1E2ESpec {
+object GroupsV1E2ESpec {
     val config = ConfigFactory.parseString(
         """
           akka.loglevel = "DEBUG"
@@ -40,7 +40,7 @@ object GroupsRouteV1E2ESpec {
 /**
   * End-to-End (E2E) test specification for testing groups endpoint.
   */
-class GroupsRouteV1E2ESpec extends E2ESpec(GroupsRouteV1E2ESpec.config) with SessionJsonProtocol with TriplestoreJsonProtocol {
+class GroupsV1E2ESpec extends E2ESpec(GroupsV1E2ESpec.config) with SessionJsonProtocol with TriplestoreJsonProtocol {
 
     implicit def default(implicit system: ActorSystem) = RouteTestTimeout(5.seconds)
 
@@ -50,7 +50,12 @@ class GroupsRouteV1E2ESpec extends E2ESpec(GroupsRouteV1E2ESpec.config) with Ses
     val rootEmailEnc = java.net.URLEncoder.encode(rootEmail, "utf-8")
     val testPass = java.net.URLEncoder.encode("test", "utf-8")
 
-    val groupIriEnc = java.net.URLEncoder.encode("http://data.knora.org/groups/images-reviewer", "utf-8")
+    val groupIri = SharedAdminTestData.imageReviewerGroupInfo.id
+    val groupIriEnc = java.net.URLEncoder.encode(groupIri, "utf-8")
+    val groupName = SharedAdminTestData.imageReviewerGroupInfo.name
+    val groupNameEnc = java.net.URLEncoder.encode(groupName, "utf-8")
+    val projectIri = SharedAdminTestData.imageReviewerGroupInfo.belongsToProject
+    val projectIriEnc = java.net.URLEncoder.encode(projectIri, "utf-8")
 
     "Load test data" in {
         // send POST to 'v1/store/ResetTriplestoreContent'
@@ -60,9 +65,17 @@ class GroupsRouteV1E2ESpec extends E2ESpec(GroupsRouteV1E2ESpec.config) with Ses
 
     "The Groups Route ('v1/groups') with credentials supplied via Basic Auth" should {
 
-        "return the group's information" in {
+        "return the group's information (identified by iri)" in {
             /* Correct username and password */
-            val request = Get(baseApiUrl + s"/v1/groups/iri/$groupIriEnc") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
+            val request = Get(baseApiUrl + s"/v1/groups/$groupIriEnc") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
+            val response: HttpResponse = singleAwaitingRequest(request)
+            println(s"response: ${response.toString}")
+            assert(response.status === StatusCodes.OK)
+        }
+
+        "return the group's information (identified by project and groupname)" in {
+            /* Correct username and password */
+            val request = Get(baseApiUrl + s"/v1/groups/$groupNameEnc?projectIri=$projectIriEnc&identifier=groupname") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
             val response: HttpResponse = singleAwaitingRequest(request)
             println(s"response: ${response.toString}")
             assert(response.status === StatusCodes.OK)

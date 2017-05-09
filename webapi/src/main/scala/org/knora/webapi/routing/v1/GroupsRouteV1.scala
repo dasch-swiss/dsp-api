@@ -76,20 +76,24 @@ object GroupsRouteV1 extends Authenticator {
             }
         } ~ path("v1" / "groups" / Segment) { value =>
             get {
-                parameters('groupname ? false, 'projectIri.as[IRI].?) { (groupname: Boolean, maybeProjectIri: Option[IRI]) =>
+                parameters("identifier" ? "iri", 'projectIri.as[IRI].?) { (identifier: String, maybeProjectIri: Option[IRI]) =>
                     requestContext =>
 
                         val userProfile = getUserProfileV1(requestContext)
-                        val requestMessage = if (groupname){
+
+                        val requestMessage = if (identifier == "groupname"){ // identify group by groupname/projectIri
                             maybeProjectIri match {
                                 case Some(projectIri) => {
+
                                     val ckeckedProjectIri = InputValidation.toIri(projectIri, () => throw BadRequestException(s"Invalid project IRI $projectIri"))
+                                    println(s"groupname case - value: $value, projectIri: ${ckeckedProjectIri}")
                                     GroupInfoByNameGetRequest(ckeckedProjectIri, value, Some(userProfile))
                                 }
                                 case None => throw BadRequestException("Missing project IRI")
                             }
 
-                        } else {
+                        } else { // identify group by iri. this is the default case
+                            println(s"iri case: $value")
                             val checkedGroupIri = InputValidation.toIri(value, () => throw BadRequestException(s"Invalid group IRI $value"))
                             GroupInfoByIRIGetRequest(checkedGroupIri, Some(userProfile))
                         }

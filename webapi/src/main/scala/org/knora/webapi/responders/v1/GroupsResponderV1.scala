@@ -53,9 +53,9 @@ class GroupsResponderV1 extends ResponderV1 {
       * method first returns `Failure` to the sender, then throws an exception.
       */
     def receive = {
-        case GroupsGetRequestV1(userProfile) => future2Message(sender(), getGroupsResponseV1(userProfile), log)
-        case GroupInfoByIRIGetRequest(iri, userProfile) => future2Message(sender(), getGroupInfoByIRIGetRequest(iri, userProfile), log)
-        case GroupInfoByNameGetRequest(projectIri, groupName, userProfile) => future2Message(sender(), getGroupInfoByNameGetRequest(projectIri, groupName, userProfile), log)
+        case GroupsGetRequestV1(userProfile) => future2Message(sender(), groupsGetRequestV1(userProfile), log)
+        case GroupInfoByIRIGetRequest(iri, userProfile) => future2Message(sender(), groupInfoByIRIGetRequest(iri, userProfile), log)
+        case GroupInfoByNameGetRequest(projectIri, groupName, userProfile) => future2Message(sender(), groupInfoByNameGetRequest(projectIri, groupName, userProfile), log)
         case GroupCreateRequestV1(newGroupInfo, userProfile, apiRequestID) => future2Message(sender(), createGroupV1(newGroupInfo, userProfile, apiRequestID), log)
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }
@@ -66,7 +66,7 @@ class GroupsResponderV1 extends ResponderV1 {
       * @param userProfile the profile of the user that is making the request.
       * @return all the groups as a [[GroupsResponseV1]].
       */
-    private def getGroupsResponseV1(userProfile: Option[UserProfileV1]): Future[GroupsResponseV1] = {
+    private def groupsGetRequestV1(userProfile: Option[UserProfileV1]): Future[GroupsResponseV1] = {
 
         for {
             sparqlQuery <- Future(queries.sparql.v1.txt.getGroups(
@@ -105,7 +105,7 @@ class GroupsResponderV1 extends ResponderV1 {
       * @param userProfile the profile of user that is making the request.
       * @return information about the group as a [[GroupInfoResponseV1]].
       */
-    private def getGroupInfoByIRIGetRequest(groupIRI: IRI, userProfile: Option[UserProfileV1] = None): Future[GroupInfoResponseV1] = {
+    private def groupInfoByIRIGetRequest(groupIRI: IRI, userProfile: Option[UserProfileV1] = None): Future[GroupInfoResponseV1] = {
         for {
             sparqlQuery <- Future(queries.sparql.v1.txt.getGroupByIri(
                 triplestore = settings.triplestoreType,
@@ -134,18 +134,18 @@ class GroupsResponderV1 extends ResponderV1 {
       * @param userProfile the profile of user that is making the request.
       * @return information about the group as a [[GroupInfoResponseV1]].
       */
-    private def getGroupInfoByNameGetRequest(projectIRI: IRI, groupName: String, userProfile: Option[UserProfileV1]): Future[GroupInfoResponseV1] = {
+    private def groupInfoByNameGetRequest(projectIRI: IRI, groupName: String, userProfile: Option[UserProfileV1]): Future[GroupInfoResponseV1] = {
 
         /* Check to see if it is a built-in implicit group and skip sparql query */
 
         groupName match {
-            case PROJECT_MEMBER => getGroupInfoForProjectMemberGroup(projectIRI, userProfile)
-            case PROJECT_ADMIN => getGroupInfoForProjectAdminGroup(projectIRI, userProfile)
-            case _ => getGroupInfoByNameFromTriplestore(projectIRI, groupName, userProfile)
+            case PROJECT_MEMBER => groupInfoForProjectMemberGroupV1(projectIRI, userProfile)
+            case PROJECT_ADMIN => groupInfoForProjectAdminGroupV1(projectIRI, userProfile)
+            case _ => groupInfoByNameFromTriplestoreV1(projectIRI, groupName, userProfile)
         }
     }
 
-    private def getGroupInfoForProjectMemberGroup(projectIRI: IRI, userProfile: Option[UserProfileV1]): Future[GroupInfoResponseV1] = {
+    private def groupInfoForProjectMemberGroupV1(projectIRI: IRI, userProfile: Option[UserProfileV1]): Future[GroupInfoResponseV1] = {
 
         val groupInfo = GroupInfoV1(
             id = "-",
@@ -162,7 +162,7 @@ class GroupsResponderV1 extends ResponderV1 {
         Future(groupInfoResponse)
     }
 
-    private def getGroupInfoForProjectAdminGroup(projectIRI: IRI, userProfile: Option[UserProfileV1]): Future[GroupInfoResponseV1] = {
+    private def groupInfoForProjectAdminGroupV1(projectIRI: IRI, userProfile: Option[UserProfileV1]): Future[GroupInfoResponseV1] = {
 
         val groupInfo = GroupInfoV1(
             id = "-",
@@ -179,14 +179,17 @@ class GroupsResponderV1 extends ResponderV1 {
         Future(groupInfoResponse)
     }
 
-    private def getGroupInfoByNameFromTriplestore(projectIRI: IRI, groupName: String, userProfile: Option[UserProfileV1]): Future[GroupInfoResponseV1] = {
+    private def groupInfoByNameFromTriplestoreV1(projectIRI: IRI, groupName: String, userProfile: Option[UserProfileV1]): Future[GroupInfoResponseV1] = {
         for {
+
+            _ <- Future(if (projectIRI.isEmpty || groupName.isEmpty) throw BadRequestException("Both projectIri and group name are required parameters."))
+
             sparqlQuery <- Future(queries.sparql.v1.txt.getGroupByName(
                 triplestore = settings.triplestoreType,
                 name = groupName,
                 projectIri = projectIRI
             ).toString())
-            _ = log.debug(s"getGroupInfoByNameGetRequest - getGroupByName: $sparqlQuery")
+            _ = log.debug(s"groupInfoByNameGetRequest - getGroupByName: $sparqlQuery")
             groupResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
 
             _ = log.debug(s"group response: ${groupResponse.toString}")
