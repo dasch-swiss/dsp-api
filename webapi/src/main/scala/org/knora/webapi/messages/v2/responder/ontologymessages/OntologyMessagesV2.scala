@@ -20,7 +20,7 @@
 
 package org.knora.webapi.messages.v2.responder.ontologymessages
 
-import org.knora.webapi.IRI
+import org.knora.webapi.{IRI, SettingsImpl}
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v2.responder._
 import org.knora.webapi.messages.v1.responder.ontologymessages._
@@ -46,7 +46,7 @@ case class LoadOntologiesRequestV2(userProfile: UserProfileV1) extends Ontologie
 /**
   * Indicates that all ontologies were loaded.
   */
-case class LoadOntologiesResponseV2() extends KnoraResponseV2 {
+case class LoadOntologiesResponseV2(settings: SettingsImpl) extends KnoraResponseV2 {
     def toJSONLD = """{"result": "Ontologies loaded."}"""
 
     def toXML = ???

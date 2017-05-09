@@ -370,7 +370,7 @@ case class UriValueContentV2(valueHasString: String, valueHasUri: String, commen
 
 /**
   *
-  * Represnts a Knora geoname value.
+  * Represents a Knora geoname value.
   *
   * @param valueHasString      the string representation of the geoname value.
   * @param valueHasGeonameCode the geoname code.
@@ -619,9 +619,14 @@ trait KnoraResponseV2 {
       * @return a string in XML format.
       */
     def toXML: String
+
+    /**
+      * The Knora webapi settings.
+      */
+    def settings: SettingsImpl
 }
 
-case class ReadNamedGraphsV2(namedGraphs: Set[IRI]) extends KnoraResponseV2 {
+case class ReadNamedGraphsV2(namedGraphs: Set[IRI], settings: SettingsImpl) extends KnoraResponseV2 {
 
     def toJSONLD: String = {
 
@@ -649,10 +654,12 @@ case class ReadNamedGraphsV2(namedGraphs: Set[IRI]) extends KnoraResponseV2 {
   * @param ontologies      named graphs and their resource classes.
   * @param resourceClasses information about resource classes.
   * @param properties      information about properties.
+  * @param language        the preferred language in which the information should be returned.
+  *
   */
 case class ReadEntityDefinitionsV2(ontologies: Map[IRI, Set[IRI]] = Map.empty[IRI, Set[IRI]],
                                    resourceClasses: Map[IRI, ResourceEntityInfoV1] = Map.empty[IRI, ResourceEntityInfoV1],
-                                   properties: Map[IRI, PropertyEntityInfoV1] = Map.empty[IRI, PropertyEntityInfoV1]) extends KnoraResponseV2 {
+                                   properties: Map[IRI, PropertyEntityInfoV1] = Map.empty[IRI, PropertyEntityInfoV1], language: String, settings: SettingsImpl) extends KnoraResponseV2 {
 
     /**
       * Gets an object from predicate infos.
@@ -665,15 +672,27 @@ case class ReadEntityDefinitionsV2(ontologies: Map[IRI, Set[IRI]] = Map.empty[IR
     // TODO: use fallback language
     private def getObjectFromPredicateInfo(predicateInfos: Map[IRI, PredicateInfoV1], predicateIri: IRI, lang: Option[String] = None): Map[IRI, String] = {
 
+        val fallbackLang: String = settings.fallbackLanguage
+
         predicateInfos.get(predicateIri) match {
             case Some(pred: PredicateInfoV1) =>
                 if (lang.nonEmpty) {
+                    // search for information in the given language
+
                     pred.objectsWithLang.get(lang.get) match {
                         case Some(obj: String) =>
                             Map(predicateIri -> obj)
-                        case None => Map.empty[IRI, String]
+                        case None =>
+                            // information does not exist in the given language, try fallback language
+                            pred.objectsWithLang.get(fallbackLang) match {
+                                case Some(obj: String) =>
+                                    Map(predicateIri -> obj)
+                                case None => Map.empty[IRI, String]
+                            }
+
                     }
                 } else {
+
                     pred.objects.headOption match {
                         case Some(obj: String) =>
                             Map(predicateIri -> obj)
@@ -744,8 +763,8 @@ case class ReadEntityDefinitionsV2(ontologies: Map[IRI, Set[IRI]] = Map.empty[IR
                     "@type" -> OntologyConstants.Owl.Class, // TODO: does this need to be coming from the triplestore?
                     OntologyConstants.Rdfs.SubClassOf -> cardinalities
                 ) ++ getObjectFromPredicateInfo(resourceEntity.predicates, OntologyConstants.KnoraBase.ResourceIcon)
-                    ++ getObjectFromPredicateInfo(resourceEntity.predicates, OntologyConstants.Rdfs.Label, Some("en"))
-                    ++ getObjectFromPredicateInfo(resourceEntity.predicates, OntologyConstants.Rdfs.Comment, Some("en"))).asJava
+                    ++ getObjectFromPredicateInfo(resourceEntity.predicates, OntologyConstants.Rdfs.Label, Some(language))
+                    ++ getObjectFromPredicateInfo(resourceEntity.predicates, OntologyConstants.Rdfs.Comment, Some(language))).asJava
         }.asJava
 
         json.put("http://www.knora.org/ontology/knora-api#resourceClasses", resClasses)
@@ -759,8 +778,8 @@ case class ReadEntityDefinitionsV2(ontologies: Map[IRI, Set[IRI]] = Map.empty[IR
                     "@id" -> propEntity.propertyIri,
                     "ontology" -> propEntity.ontologyIri
                 ) ++ getObjectFromPredicateInfo(propEntity.predicates, OntologyConstants.Rdf.Type)
-                    ++ getObjectFromPredicateInfo(propEntity.predicates, OntologyConstants.Rdfs.Label, Some("en"))
-                    ++ getObjectFromPredicateInfo(propEntity.predicates, OntologyConstants.Rdfs.Comment, Some("en"))
+                    ++ getObjectFromPredicateInfo(propEntity.predicates, OntologyConstants.Rdfs.Label, Some(language))
+                    ++ getObjectFromPredicateInfo(propEntity.predicates, OntologyConstants.Rdfs.Comment, Some(language))
                     ++ getObjectFromPredicateInfo(propEntity.predicates, OntologyConstants.KnoraBase.ObjectClassConstraint)).asJava
 
 
@@ -818,7 +837,7 @@ object ReadResourceUtil {
   * @param numberOfResources the amount of resources returned.
   * @param resources         a sequence of resources.
   */
-case class ReadResourcesSequenceV2(numberOfResources: Int, resources: Seq[ReadResourceV2]) extends KnoraResponseV2 {
+case class ReadResourcesSequenceV2(numberOfResources: Int, resources: Seq[ReadResourceV2], settings: SettingsImpl) extends KnoraResponseV2 {
 
     def toJSONLD = {
 
