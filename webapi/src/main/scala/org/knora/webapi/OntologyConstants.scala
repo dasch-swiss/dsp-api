@@ -437,10 +437,10 @@ object OntologyConstants {
     object KnoraXmlImportV1 {
         object ProjectSpecificXmlImportNamespace {
             val XmlImportNamespaceStart: String = KnoraApi.ApiOntologyStart
-            val XmlImportNamespaceEnd: String = "/import/v1" + KnoraApi.ApiOntologyEnd
+            val XmlImportNamespaceEnd: String = "/xml-import/v1" + KnoraApi.ApiOntologyEnd
         }
 
-        val KnoraXmlImportV1PrefixExpansion: IRI = KnoraApi.ApiOntologyStart + "knora-import/v1" + KnoraApi.ApiOntologyEnd
+        val KnoraXmlImportV1PrefixExpansion: IRI = KnoraApi.ApiOntologyStart + "knora-xml-import/v1" + KnoraApi.ApiOntologyEnd
 
         val Resources: IRI = KnoraXmlImportV1PrefixExpansion + "resources"
     }

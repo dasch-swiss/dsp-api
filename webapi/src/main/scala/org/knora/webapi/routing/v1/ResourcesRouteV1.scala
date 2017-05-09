@@ -398,8 +398,8 @@ object ResourcesRouteV1 extends Authenticator {
 
             // A map of XML namespaces to files containing XML schemas that are imported by the main schema.
             val importedSchemaFiles = Map(
-                "http://api.knora.org/ontology/beol/import/v1#" -> new File("_test_data/xsd_test/beol.xsd"),
-                "http://api.knora.org/ontology/knora-import/v1#" -> new File("_test_data/xsd_test/knora-import-v1-xml.xsd")
+                "http://api.knora.org/ontology/beol/xml-import/v1#" -> new File("_test_data/xsd_test/beol.xsd"),
+                "http://api.knora.org/ontology/knora-xml-import/v1#" -> new File("_test_data/xsd_test/knora-xml-import-v1.xsd")
             )
 
             val schemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI)

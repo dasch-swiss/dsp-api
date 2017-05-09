@@ -96,7 +96,7 @@ object InputValidation {
 
     // A regex sub-pattern for ontology prefix labels, following <https://www.w3.org/TR/turtle/#prefixed-name>,
     // in which a prefix label is defined as an XML NCName <https://www.w3.org/TR/1999/REC-xml-names-19990114/#NT-NCName>.
-    private val OntologyPrefixLabelPattern =
+    private val OntologyPrefixLabelPattern: String =
     """[\p{L}_][\p{L}0-9_.-]*"""
 
     // A regex for matching a string containing only an ontology prefix label.
