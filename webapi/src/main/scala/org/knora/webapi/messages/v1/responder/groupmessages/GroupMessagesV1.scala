@@ -52,9 +52,11 @@ case class CreateGroupApiRequestV1(name: String,
   * @param propertyIri the property of the group to be updated.
   * @param newValue    the new value for the property of the group to be updated.
   */
-case class UpdateGroupApiRequestV1(propertyIri: String,
-                                   newValue: String) {
-    def toJsValue = GroupV1JsonProtocol.updateGroupApiRequestV1Format.write(this)
+case class ChangeGroupApiRequestV1(name: Option[String] = None,
+                                   description: Option[String] = None,
+                                   status: Option[Boolean] = None,
+                                   hasSelfJoinEnabled: Option[Boolean] = None) {
+    def toJsValue = GroupV1JsonProtocol.changeGroupApiRequestV1Format.write(this)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -108,17 +110,15 @@ case class GroupCreateRequestV1(createRequest: CreateGroupApiRequestV1,
 /**
   * Request updating of an existing group.
   *
-  * @param groupIri     the IRI of the group to be updated.
-  * @param propertyIri  the IRI of the property to be updated.
-  * @param newValue     the new value for the property.
-  * @param userProfile  the user profile of the user requesting the update.
-  * @param apiRequestID the ID of the API request.
+  * @param groupIri           the IRI of the group to be updated.
+  * @param changeGroupRequest the data which needs to be update.
+  * @param userProfile        the user profile of the user requesting the update.
+  * @param apiRequestID       the ID of the API request.
   */
-case class GroupInfoUpdateRequestV1(groupIri: webapi.IRI,
-                                    propertyIri: webapi.IRI,
-                                    newValue: Any,
-                                    userProfile: UserProfileV1,
-                                    apiRequestID: UUID) extends GroupsResponderRequestV1
+case class GroupChangeRequestV1(groupIri: webapi.IRI,
+                                changeGroupRequest: ChangeGroupApiRequestV1,
+                                userProfile: UserProfileV1,
+                                apiRequestID: UUID) extends GroupsResponderRequestV1
 
 /**
   * Request updating the group's permissions.
@@ -191,6 +191,6 @@ object GroupV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol wit
     implicit val groupsResponseV1Format: RootJsonFormat[GroupsResponseV1] = jsonFormat1(GroupsResponseV1)
     implicit val groupInfoResponseV1Format: RootJsonFormat[GroupInfoResponseV1] = jsonFormat1(GroupInfoResponseV1)
     implicit val createGroupApiRequestV1Format: RootJsonFormat[CreateGroupApiRequestV1] = jsonFormat5(CreateGroupApiRequestV1)
-    implicit val updateGroupApiRequestV1Format: RootJsonFormat[UpdateGroupApiRequestV1] = jsonFormat2(UpdateGroupApiRequestV1)
+    implicit val changeGroupApiRequestV1Format: RootJsonFormat[ChangeGroupApiRequestV1] = jsonFormat4(ChangeGroupApiRequestV1)
     implicit val groupOperationResponseV1Format: RootJsonFormat[GroupOperationResponseV1] = jsonFormat1(GroupOperationResponseV1)
 }

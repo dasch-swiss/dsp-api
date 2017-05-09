@@ -48,6 +48,7 @@ class UsersV1E2ESpec extends E2ESpec(UsersV1E2ESpec.config) with SessionJsonProt
     private val rdfDataObjects = List.empty[RdfDataObject]
 
     val rootIri = SharedAdminTestData.rootUser.userData.user_id.get
+    val rootIriEnc = java.net.URLEncoder.encode(rootIri, "utf-8")
     val rootEmail = SharedAdminTestData.rootUser.userData.email.get
     val rootEmailEnc = java.net.URLEncoder.encode(rootEmail, "utf-8")
     val inactiveUserEmailEnc = java.net.URLEncoder.encode(SharedAdminTestData.inactiveUser.userData.email.get, "utf-8")
@@ -73,9 +74,17 @@ class UsersV1E2ESpec extends E2ESpec(UsersV1E2ESpec.config) with SessionJsonProt
                 response.status should be (StatusCodes.OK)
             }
 
-            "return a single user profile" in {
+            "return a single user profile identified by iri" in {
                 /* Correct username and password */
-                val request = Get(baseApiUrl + s"/v1/users/email/$rootEmailEnc") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
+                val request = Get(baseApiUrl + s"/v1/users/$rootIriEnc") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
+                val response: HttpResponse = singleAwaitingRequest(request)
+                // println(s"response: ${response.toString}")
+                response.status should be (StatusCodes.OK)
+            }
+
+            "return a single user profile identified by email" in {
+                /* Correct username and password */
+                val request = Get(baseApiUrl + s"/v1/users/$rootEmailEnc?email=true") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
                 val response: HttpResponse = singleAwaitingRequest(request)
                 // println(s"response: ${response.toString}")
                 response.status should be (StatusCodes.OK)

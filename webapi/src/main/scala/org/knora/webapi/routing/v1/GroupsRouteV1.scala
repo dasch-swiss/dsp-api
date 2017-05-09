@@ -26,9 +26,11 @@ import org.apache.commons.validator.routines.UrlValidator
 import org.knora.webapi.messages.v1.responder.groupmessages._
 import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
 import org.knora.webapi.util.InputValidation
-import org.knora.webapi.{BadRequestException, SettingsImpl}
+import org.knora.webapi.{BadRequestException, IRI, SettingsImpl}
 
 object GroupsRouteV1 extends Authenticator {
+
+    import GroupV1JsonProtocol._
 
     private val schemes = Array("http", "https")
     private val urlValidator = new UrlValidator(schemes)
@@ -72,52 +74,75 @@ object GroupsRouteV1 extends Authenticator {
                     )
                 }
             }
-        } ~ path("v1" / "groups" / "iri" / Segment) { value =>
+        } ~ path("v1" / "groups" / Segment) { value =>
             get {
-                requestContext =>
-                    val groupIri = InputValidation.toIri(value, () => throw BadRequestException(s"Invalid group IRI $value"))
-                    val userProfile = getUserProfileV1(requestContext)
-                    val requestMessage = GroupInfoByIRIGetRequest(value, Some(userProfile))
+                parameters('groupname ? false, 'projectIri.as[IRI].?) { (groupname: Boolean, maybeProjectIri: Option[IRI]) =>
+                    requestContext =>
 
-                    RouteUtilV1.runJsonRoute(
-                        requestMessage,
-                        requestContext,
-                        settings,
-                        responderManager,
-                        log
-                    )
-            }
-        } ~ path("v1" / "groups" / "groupname" / Segment) { value =>
-            get {
-                requestContext =>
-                    val userProfile = getUserProfileV1(requestContext)
-                    val params = requestContext.request.uri.query().toMap
-                    val projectIriValue = params.getOrElse("projectIri", "")
-                    val projectIri = InputValidation.toIri(projectIriValue, () => throw BadRequestException(s"Invalid project IRI supplied: $projectIriValue"))
-                    val requestMessage = GroupInfoByNameGetRequest(projectIri, value, Some(userProfile))
+                        val userProfile = getUserProfileV1(requestContext)
+                        val requestMessage = if (groupname){
+                            maybeProjectIri match {
+                                case Some(projectIri) => {
+                                    val ckeckedProjectIri = InputValidation.toIri(projectIri, () => throw BadRequestException(s"Invalid project IRI $projectIri"))
+                                    GroupInfoByNameGetRequest(ckeckedProjectIri, value, Some(userProfile))
+                                }
+                                case None => throw BadRequestException("Missing project IRI")
+                            }
 
-                    RouteUtilV1.runJsonRoute(
-                        requestMessage,
-                        requestContext,
-                        settings,
-                        responderManager,
-                        log
-                    )
-            }
-        } ~ path("v1" / "groups" / Segment)  { value =>
+                        } else {
+                            val checkedGroupIri = InputValidation.toIri(value, () => throw BadRequestException(s"Invalid group IRI $value"))
+                            GroupInfoByIRIGetRequest(checkedGroupIri, Some(userProfile))
+                        }
+
+                        RouteUtilV1.runJsonRoute(
+                            requestMessage,
+                            requestContext,
+                            settings,
+                            responderManager,
+                            log
+                        )
+                }
+            } ~
             put {
                 /* change group */
+                entity(as[ChangeGroupApiRequestV1]) { apiRequest =>
+                    requestContext =>
+                        val userProfile = getUserProfileV1(requestContext)
+                        val checkedGroupIri = InputValidation.toIri(value, () => throw BadRequestException(s"Invalid group IRI $value"))
+                        val requestMessage = GroupChangeRequestV1(
+                            groupIri = checkedGroupIri,
+                            changeGroupRequest = apiRequest,
+                            userProfile = userProfile,
+                            apiRequestID = UUID.randomUUID()
+                        )
+                        RouteUtilV1.runJsonRoute(
+                            requestMessage,
+                            requestContext,
+                            settings,
+                            responderManager,
+                            log
+                        )
+                }
             }
-        } ~ path("v1" / "groups" / "members" / Segment) { value =>
+        } ~
+        path("v1" / "groups" / "members" / Segment) { value =>
             get {
                 /* get members for the supplied group IRI */
-            }
-        } ~ path ("v1" / "groups" / "members" / Segment / Segment) { groupIri => userIri =>
-            post {
-                /* add user to  group  */
-            } ~ delete {
-                /* remove user from project member group*/
+                complete("not implemented")
             }
         }
+            /*
+            ~
+        path ("v1" / "groups" / "members" / Segment / Segment) { groupIri => userIri =>
+            post {
+                /* add user to  group */
+                complete("not implemented")
+            } ~
+            delete {
+                /* remove user from project member group */
+                complete("not implemented")
+            }
+        }
+        */
     }
 }

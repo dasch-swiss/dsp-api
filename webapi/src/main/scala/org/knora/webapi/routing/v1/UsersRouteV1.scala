@@ -47,37 +47,9 @@ object UsersRouteV1 extends Authenticator {
         implicit val timeout = settings.defaultTimeout
         val responderManager = system.actorSelection("/user/responderManager")
 
-        path("v1" / "users" / "iri" / Segment) {value =>
-            get {
-                requestContext =>
-                    val userProfile = getUserProfileV1(requestContext)
-                    val userIri = InputValidation.toIri(value, () => throw BadRequestException(s"Invalid user IRI $value"))
-                    val requestMessage = UserProfileByIRIGetRequestV1(userIri, UserProfileType.RESTRICTED, userProfile)
-                    RouteUtilV1.runJsonRoute(
-                        requestMessage,
-                        requestContext,
-                        settings,
-                        responderManager,
-                        log
-                    )
-            }
-        } ~
-        path("v1" / "users" / "email" / Segment) {value =>
-            get {
-                requestContext =>
-                    val userProfile = getUserProfileV1(requestContext)
-                    val requestMessage = UserProfileByEmailGetRequestV1(value, UserProfileType.RESTRICTED, userProfile)
-                    RouteUtilV1.runJsonRoute(
-                        requestMessage,
-                        requestContext,
-                        settings,
-                        responderManager,
-                        log
-                    )
-            }
-        } ~
         path("v1" / "users") {
             get {
+                /* return all users */
                 requestContext =>
                     val userProfile = getUserProfileV1(requestContext)
                     val requestMessage = UsersGetRequestV1(userProfile)
@@ -88,7 +60,8 @@ object UsersRouteV1 extends Authenticator {
                         responderManager,
                         log
                     )
-            } ~  post {
+            } ~
+            post {
                 /* create a new user */
                 entity(as[CreateUserApiRequestV1]) { apiRequest => requestContext =>
                     val userProfile = getUserProfileV1(requestContext)
@@ -110,7 +83,30 @@ object UsersRouteV1 extends Authenticator {
             }
         } ~
         path("v1" / "users" / Segment) { value =>
+            get {
+                /* return a single user identified by iri or email */
+                parameters('email ? false) { (email: Boolean) =>
+                    requestContext =>
+                        val userProfile = getUserProfileV1(requestContext)
+
+                        /* check if email or iri was supplied */
+                        val requestMessage = if (email) {
+                            UserProfileByEmailGetRequestV1(value, UserProfileType.RESTRICTED, userProfile)
+                        } else  {
+                            val userIri = InputValidation.toIri(value, () => throw BadRequestException(s"Invalid user IRI $value"))
+                            UserProfileByIRIGetRequestV1(userIri, UserProfileType.RESTRICTED, userProfile)
+                        }
+                        RouteUtilV1.runJsonRoute(
+                            requestMessage,
+                            requestContext,
+                            settings,
+                            responderManager,
+                            log
+                        )
+                }
+            } ~
             put {
+                /* update a user identified by iri */
                 entity(as[ChangeUserApiRequestV1]) { apiRequest => requestContext =>
 
                     val userIri = InputValidation.toIri(value, () => throw BadRequestException(s"Invalid user IRI $value"))
@@ -160,6 +156,7 @@ object UsersRouteV1 extends Authenticator {
                     )
                 }
             } ~ delete {
+                /* delete a user identified by iri */
                 requestContext => {
                     val userIri = InputValidation.toIri(value, () => throw BadRequestException(s"Invalid user IRI $value"))
                     val userProfile = getUserProfileV1(requestContext)
