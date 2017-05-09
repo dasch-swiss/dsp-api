@@ -47,7 +47,9 @@ case class LoadOntologiesRequestV2(userProfile: UserProfileV1) extends Ontologie
   * Indicates that all ontologies were loaded.
   */
 case class LoadOntologiesResponseV2() extends KnoraResponseV2 {
-    def toJsValue = JsObject(Map("result" -> JsString("Ontologies loaded.")))
+    def toJSONLD = """{"result": "Ontologies loaded."}"""
+
+    def toXML = ???
 }
 
 /**
@@ -148,9 +150,7 @@ case class SubClassesGetRequestV2(resourceClassIri: IRI, userProfile: UserProfil
   *
   * @param subClasses a list of [[SubClassInfoV1]] representing the subclasses of the specified class.
   */
-case class SubClassesGetResponseV2(subClasses: Seq[SubClassInfoV1]) extends KnoraResponseV2 {
-    def toJsValue = ??? // TODO: implement this
-}
+case class SubClassesGetResponseV2(subClasses: Seq[SubClassInfoV1])
 
 /**
   *

@@ -28,7 +28,6 @@ import akka.pattern._
 import akka.util.Timeout
 import org.knora.webapi._
 import org.knora.webapi.messages.v2.responder.{KnoraRequestV2, KnoraResponseV2}
-import spray.json.JsObject
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -76,14 +75,16 @@ object RouteUtilV2 {
                 log.debug(knoraResponse.toString)
             }
 
+            // TODO: check whether to send back JSON-LD or XML (content negotiation: HTTP accept header)
+
             // The request was successful
-            jsonResponseWithStatus = JsObject(knoraResponse.toJsValue.asJsObject.fields)
+            jsonResponseWithStatus = knoraResponse.toJSONLD
 
         } yield HttpResponse(
             status = StatusCodes.OK,
             entity = HttpEntity(
                 ContentTypes.`application/json`,
-                jsonResponseWithStatus.compactPrint
+                jsonResponseWithStatus
             )
         )
 

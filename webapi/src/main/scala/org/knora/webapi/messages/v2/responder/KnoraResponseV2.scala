@@ -21,9 +21,11 @@
 package org.knora.webapi.messages.v2.responder
 
 import java.io.{StringReader, StringWriter}
+import java.{lang, util}
 import javax.xml.transform.stream.StreamSource
 
-import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
+import com.github.jsonldjava.core._
+import com.github.jsonldjava.utils._
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.ontologymessages._
 import org.knora.webapi.messages.v1.responder.standoffmessages.MappingXMLtoStandoff
@@ -31,8 +33,8 @@ import org.knora.webapi.messages.v1.responder.valuemessages.{KnoraCalendarV1, Kn
 import org.knora.webapi.twirl.StandoffTagV1
 import org.knora.webapi.util.DateUtilV2
 import org.knora.webapi.util.standoff.StandoffTagUtilV1
-import spray.json._
 
+import scala.collection.JavaConverters._
 
 /**
   * The value of a Knora property in the context of some particular input or output operation.
@@ -97,9 +99,9 @@ sealed trait ValueContentV2 {
     def comment: Option[String]
 
     /**
-      * A representation of the `ValueContentV2` in JSON.
+      * A representation of the `ValueContentV2` as a Map value property Iri to typed value.
       */
-    def toJsValueMap: Map[IRI, JsValue]
+    def toTypedValueMap: Map[IRI, Any]
 
 }
 
@@ -133,17 +135,14 @@ case class DateValueContentV2(valueHasString: String,
         DateUtilV2.convertDateValueContentV2ToKnoraApiDateAssertions(this)
     }
 
-    def toJsValueMap: Map[IRI, JsValue] = {
+    def toTypedValueMap: Map[IRI, Any] = {
 
         val knoraApiDateAssertions: Map[IRI, Int] = toKnoraApiDateValueAssertions
 
         Map(
-            OntologyConstants.KnoraApi.ValueAsString -> JsString(valueHasString),
-            OntologyConstants.KnoraApi.DateValueHasCalendar -> JsString(valueHasCalendar.toString)
-        ) ++ knoraApiDateAssertions.map {
-            case (valueProp, value) =>
-                valueProp -> JsNumber(value)
-        }
+            OntologyConstants.KnoraApi.ValueAsString -> valueHasString,
+            OntologyConstants.KnoraApi.DateValueHasCalendar -> valueHasCalendar.toString
+        ) ++ knoraApiDateAssertions
     }
 
 }
@@ -159,7 +158,7 @@ case class TextValueContentV2(valueHasString: String, standoff: Option[StandoffA
 
     def valueTypeIri = OntologyConstants.KnoraBase.TextValue
 
-    def toJsValueMap: Map[IRI, JsValue] = {
+    def toTypedValueMap: Map[IRI, String] = {
 
         if (standoff.nonEmpty) {
 
@@ -189,18 +188,18 @@ case class TextValueContentV2(valueHasString: String, standoff: Option[StandoffA
                 trans.transform()
 
                 // the xml was converted to HTML
-                Map(OntologyConstants.KnoraApi.TextValueAsHtml -> JsString(xmlTransformedStr.toString))
+                Map(OntologyConstants.KnoraApi.TextValueAsHtml -> xmlTransformedStr.toString)
             } else {
                 // xml is returned
                 Map(
-                    OntologyConstants.KnoraApi.TextValueAsXml -> JsString(xmlFromStandoff),
-                    OntologyConstants.KnoraApi.TextValueHasMapping -> JsString(standoff.get.mappingIri)
+                    OntologyConstants.KnoraApi.TextValueAsXml -> xmlFromStandoff,
+                    OntologyConstants.KnoraApi.TextValueHasMapping -> standoff.get.mappingIri
                 )
             }
 
         } else {
             // no markup given
-            Map(OntologyConstants.KnoraApi.ValueAsString -> JsString(valueHasString))
+            Map(OntologyConstants.KnoraApi.ValueAsString -> valueHasString)
         }
 
     }
@@ -229,9 +228,9 @@ case class IntegerValueContentV2(valueHasString: String, valueHasInteger: Int, c
 
     def valueTypeIri = OntologyConstants.KnoraBase.IntValue
 
-    def toJsValueMap: Map[IRI, JsValue] = {
+    def toTypedValueMap: Map[IRI, Int] = {
         Map(
-            OntologyConstants.KnoraApi.IntegerValueAsInteger -> JsNumber(valueHasInteger))
+            OntologyConstants.KnoraApi.IntegerValueAsInteger -> valueHasInteger)
     }
 
 }
@@ -247,9 +246,9 @@ case class DecimalValueContentV2(valueHasString: String, valueHasDecimal: BigDec
 
     def valueTypeIri = OntologyConstants.KnoraBase.DecimalValue
 
-    def toJsValueMap: Map[IRI, JsValue] = {
+    def toTypedValueMap: Map[IRI, BigDecimal] = {
         Map(
-            OntologyConstants.KnoraApi.DecimalValueAsDecimal -> JsNumber(valueHasDecimal)
+            OntologyConstants.KnoraApi.DecimalValueAsDecimal -> valueHasDecimal
         )
     }
 
@@ -266,9 +265,9 @@ case class BooleanValueContentV2(valueHasString: String, valueHasBoolean: Boolea
 
     def valueTypeIri = OntologyConstants.KnoraBase.BooleanValue
 
-    def toJsValueMap: Map[IRI, JsValue] = {
+    def toTypedValueMap: Map[IRI, Boolean] = {
         Map(
-            OntologyConstants.KnoraApi.BooleanValueAsBoolean -> JsBoolean(valueHasBoolean)
+            OntologyConstants.KnoraApi.BooleanValueAsBoolean -> valueHasBoolean
         )
     }
 }
@@ -284,9 +283,9 @@ case class GeomValueContentV2(valueHasString: String, valueHasGeometry: String, 
 
     def valueTypeIri = OntologyConstants.KnoraBase.GeomValue
 
-    def toJsValueMap: Map[IRI, JsValue] = {
+    def toTypedValueMap: Map[IRI, String] = {
         Map(
-            OntologyConstants.KnoraApi.GeometryValueAsGeometry -> JsString(valueHasGeometry)
+            OntologyConstants.KnoraApi.GeometryValueAsGeometry -> valueHasGeometry
         )
     }
 }
@@ -304,10 +303,10 @@ case class IntervalValueContentV2(valueHasString: String, valueHasIntervalStart:
 
     def valueTypeIri = OntologyConstants.KnoraBase.IntervalValue
 
-    def toJsValueMap: Map[IRI, JsValue] = {
+    def toTypedValueMap: Map[IRI, BigDecimal] = {
         Map(
-            OntologyConstants.KnoraApi.IntervalValueHasStart -> JsNumber(valueHasIntervalStart),
-            OntologyConstants.KnoraApi.IntervalValueHasEnd -> JsNumber(valueHasIntervalEnd)
+            OntologyConstants.KnoraApi.IntervalValueHasStart -> valueHasIntervalStart,
+            OntologyConstants.KnoraApi.IntervalValueHasEnd -> valueHasIntervalEnd
         )
     }
 
@@ -324,9 +323,9 @@ case class HierarchicalListValueContentV2(valueHasString: String, valueHasListNo
 
     def valueTypeIri = OntologyConstants.KnoraBase.ListValue
 
-    def toJsValueMap: Map[IRI, JsValue] = {
+    def toTypedValueMap: Map[IRI, IRI] = {
         Map(
-            OntologyConstants.KnoraApi.HierarchicalListValueAsListNode -> JsString(valueHasListNode)
+            OntologyConstants.KnoraApi.HierarchicalListValueAsListNode -> valueHasListNode
         )
     }
 
@@ -343,9 +342,9 @@ case class ColorValueContentV2(valueHasString: String, valueHasColor: String, co
 
     def valueTypeIri = OntologyConstants.KnoraBase.ColorValue
 
-    def toJsValueMap: Map[IRI, JsValue] = {
+    def toTypedValueMap: Map[IRI, String] = {
         Map(
-            OntologyConstants.KnoraApi.ColorValueAsColor -> JsString(valueHasColor)
+            OntologyConstants.KnoraApi.ColorValueAsColor -> valueHasColor
         )
     }
 
@@ -362,9 +361,9 @@ case class UriValueContentV2(valueHasString: String, valueHasUri: String, commen
 
     def valueTypeIri = OntologyConstants.KnoraBase.UriValue
 
-    def toJsValueMap: Map[IRI, JsValue] = {
+    def toTypedValueMap: Map[IRI, String] = {
         Map(
-            OntologyConstants.KnoraApi.UriValueAsUri -> JsString(valueHasUri)
+            OntologyConstants.KnoraApi.UriValueAsUri -> valueHasUri
         )
     }
 }
@@ -381,9 +380,9 @@ case class GeonameValueContentV2(valueHasString: String, valueHasGeonameCode: St
 
     def valueTypeIri = OntologyConstants.KnoraBase.GeonameValue
 
-    def toJsValueMap: Map[IRI, JsValue] = {
+    def toTypedValueMap: Map[IRI, String] = {
         Map(
-            OntologyConstants.KnoraApi.GeonameValueAsGeonameCode -> JsString(valueHasGeonameCode)
+            OntologyConstants.KnoraApi.GeonameValueAsGeonameCode -> valueHasGeonameCode
         )
     }
 }
@@ -444,23 +443,23 @@ case class StillImageFileValueContentV2(valueHasString: String,
         s"${settings.sipiIIIFGetUrl}/${internalFilename}/full/${dimX},${dimY}/0/default.jpg"
     }
 
-    def toJsValueMap: Map[IRI, JsValue] = {
+    def toTypedValueMap: Map[IRI, Any] = {
         val imagePath: String = toURL
 
         Map(
-            OntologyConstants.KnoraApi.FileValueAsUrl -> JsString(imagePath),
-            OntologyConstants.KnoraApi.FileValueIsPreview -> JsBoolean(isPreview),
-            OntologyConstants.KnoraApi.StillImageFileValueHasDimX -> JsNumber(dimX),
-            OntologyConstants.KnoraApi.StillImageFileValueHasDimY -> JsNumber(dimY),
-            OntologyConstants.KnoraApi.FileValueHasFilename -> JsString(internalFilename),
-            OntologyConstants.KnoraApi.StillImageFileValueHasIIIFBaseUrl -> JsString(settings.sipiIIIFGetUrl)
+            OntologyConstants.KnoraApi.FileValueAsUrl -> imagePath,
+            OntologyConstants.KnoraApi.FileValueIsPreview -> isPreview,
+            OntologyConstants.KnoraApi.StillImageFileValueHasDimX -> dimX,
+            OntologyConstants.KnoraApi.StillImageFileValueHasDimY -> dimY,
+            OntologyConstants.KnoraApi.FileValueHasFilename -> internalFilename,
+            OntologyConstants.KnoraApi.StillImageFileValueHasIIIFBaseUrl -> settings.sipiIIIFGetUrl
         )
     }
 
 }
 
 /**
-  * Represents a text file value. Please note that the file itself is managed by Sipi.  
+  * Represents a text file value. Please note that the file itself is managed by Sipi.
   *
   * @param valueHasString   the string representation of the text file value.
   * @param internalMimeType the mime type of the file corresponding to this text file value.
@@ -488,12 +487,12 @@ case class TextFileValueContentV2(valueHasString: String, internalMimeType: Stri
         s"${settings.sipiFileServerGetUrl}/${internalFilename}"
     }
 
-    def toJsValueMap: Map[IRI, JsValue] = {
+    def toTypedValueMap: Map[IRI, String] = {
         val imagePath: String = toURL
 
         Map(
-            OntologyConstants.KnoraApi.FileValueHasFilename -> JsString(internalFilename),
-            OntologyConstants.KnoraApi.FileValueAsUrl -> JsString(imagePath)
+            OntologyConstants.KnoraApi.FileValueHasFilename -> internalFilename,
+            OntologyConstants.KnoraApi.FileValueAsUrl -> imagePath
         )
     }
 
@@ -513,15 +512,17 @@ case class LinkValueContentV2(valueHasString: String, subject: IRI, predicate: I
 
     def valueTypeIri = OntologyConstants.KnoraBase.LinkValue
 
-    def toJsValueMap: Map[IRI, JsValue] = {
+    def toTypedValueMap: Map[IRI, Object] = {
         // check if the referred resource has to be included in the JSON response
         referredResource match {
-            case Some(targetResource) =>
-                val referredResourceAsJsValue: Map[IRI, JsValue] = ResourcesV2JsonProtocol.readResourcesSequenceV2Format.createJsValueFromReadResourceV2(targetResource)
-                Map(OntologyConstants.KnoraApi.LinkValueHasTarget -> JsObject(referredResourceAsJsValue))
+            case Some(targetResource: ReadResourceV2) =>
+                // include the referred resource as a nested structure
+                val referredResourceAsJsValue: util.Map[IRI, Object] = ReadResourceUtil.createValueMapFromReadResourceV2(targetResource)
+                Map(OntologyConstants.KnoraApi.LinkValueHasTarget -> referredResourceAsJsValue)
 
             case None =>
-                Map(OntologyConstants.KnoraApi.LinkValueHasTargetIri -> JsString(referredResourceIri))
+                // just include the referred resource's Iri
+                Map(OntologyConstants.KnoraApi.LinkValueHasTargetIri -> referredResourceIri)
         }
     }
 }
@@ -599,9 +600,217 @@ case class DecimalLiteralV2(value: BigDecimal) extends LiteralV2
 case class BooleanLiteralV2(value: Boolean) extends LiteralV2
 
 /**
-  * A trait for Knora API v2 response messages. Any response message can be converted into JSON.
+  *
+  * A trait for Knora API V2 response messages. Any response can be converted into JSON or XML.
+  *
   */
-trait KnoraResponseV2 extends Jsonable
+trait KnoraResponseV2 {
+
+    /**
+      * Serialize the response to JSON-LD.
+      *
+      * @return a string in JSON-LD format.
+      */
+    def toJSONLD: String
+
+    /**
+      * Serialize the response to XML.
+      *
+      * @return a string in XML format.
+      */
+    def toXML: String
+}
+
+case class ReadNamedGraphsV2(namedGraphs: Set[IRI]) extends KnoraResponseV2 {
+
+    def toJSONLD: String = {
+
+        val context = new util.HashMap[String, String]()
+        context.put(OntologyConstants.KnoraApi.KnoraApiPathSegment, OntologyConstants.KnoraApi.KnoraApiPrefixExpansion)
+
+        val json: util.HashMap[String, Object] = new util.HashMap[String, Object]()
+
+        val namedGraphIris: util.List[IRI] = namedGraphs.toSeq.asJava
+
+        json.put("http://www.knora.org/ontology/knora-api#namedGraphs", namedGraphIris)
+
+        val compacted = JsonLdProcessor.compact(json, context, new JsonLdOptions())
+
+        JsonUtils.toPrettyString(compacted)
+
+    }
+
+    def toXML = ???
+}
+
+/**
+  * Return information about ontology entities.
+  *
+  * @param ontologies      named graphs and their resource classes.
+  * @param resourceClasses information about resource classes.
+  * @param properties      information about properties.
+  */
+case class ReadEntityDefinitionsV2(ontologies: Map[IRI, Set[IRI]] = Map.empty[IRI, Set[IRI]],
+                                   resourceClasses: Map[IRI, ResourceEntityInfoV1] = Map.empty[IRI, ResourceEntityInfoV1],
+                                   properties: Map[IRI, PropertyEntityInfoV1] = Map.empty[IRI, PropertyEntityInfoV1]) extends KnoraResponseV2 {
+
+    /**
+      * Gets an object from predicate infos.
+      *
+      * @param predicateInfos information about predicates.
+      * @param predicateIri   the Iri of the predicate whose object should be returned.
+      * @param lang           the language in which the object has to be returned.
+      * @return the requested object.
+      */
+    // TODO: use fallback language
+    private def getObjectFromPredicateInfo(predicateInfos: Map[IRI, PredicateInfoV1], predicateIri: IRI, lang: Option[String] = None): Map[IRI, String] = {
+
+        predicateInfos.get(predicateIri) match {
+            case Some(pred: PredicateInfoV1) =>
+                if (lang.nonEmpty) {
+                    pred.objectsWithLang.get(lang.get) match {
+                        case Some(obj: String) =>
+                            Map(predicateIri -> obj)
+                        case None => Map.empty[IRI, String]
+                    }
+                } else {
+                    pred.objects.headOption match {
+                        case Some(obj: String) =>
+                            Map(predicateIri -> obj)
+
+                        case None => Map.empty[IRI, String]
+                    }
+                }
+
+            case None => Map.empty[IRI, String]
+        }
+
+    }
+
+    def toJSONLD = {
+
+        val context = new util.HashMap[String, String]()
+        context.put(OntologyConstants.KnoraApi.KnoraApiPathSegment, OntologyConstants.KnoraApi.KnoraApiPrefixExpansion)
+        context.put("rdfs", "http://www.w3.org/2000/01/rdf-schema#")
+
+        val json: util.HashMap[String, Object] = new util.HashMap[String, Object]()
+
+        // ontologies
+
+        val ontos: util.Map[IRI, util.List[IRI]] = ontologies.map {
+            case (namedGraphIri: IRI, resourceClassIris: Set[IRI]) =>
+
+                val resClassIris = seqAsJavaList(resourceClassIris.toSeq)
+
+                namedGraphIri -> resClassIris
+
+        }.asJava
+
+        json.put("http://www.knora.org/ontology/knora-api#ontologies", ontos)
+
+        // resource classes
+
+        val resClasses = resourceClasses.map {
+            case (resClassIri: IRI, resourceEntity: ResourceEntityInfoV1) =>
+
+                val cardinalities = resourceEntity.cardinalities.map {
+
+                    case (propertyIri: IRI, cardinality: Cardinality.Value) =>
+
+                        val prop2card: (IRI, Int) = cardinality match {
+                            case Cardinality.MayHaveMany =>
+                                OntologyConstants.Owl.MinCardinality -> 0
+
+                            case Cardinality.MayHaveOne =>
+                                OntologyConstants.Owl.MaxCardinality -> 1
+
+                            case Cardinality.MustHaveOne =>
+                                OntologyConstants.Owl.Cardinality -> 1
+
+                            case Cardinality.MustHaveSome =>
+                                OntologyConstants.Owl.MinCardinality -> 1
+                        }
+
+                        Map(
+                            "@type" -> OntologyConstants.Owl.Restriction,
+                            OntologyConstants.Owl.OnProperty -> propertyIri,
+                            prop2card
+                        ).asJava
+                }.toSeq.asJava
+
+                resClassIri -> (Map(
+                    "@id" -> resourceEntity.resourceClassIri,
+                    "http://www.knora.org/ontology/knora-api#ontology" -> resourceEntity.ontologyIri,
+                    "@type" -> OntologyConstants.Owl.Class, // TODO: does this need to be coming from the triplestore?
+                    OntologyConstants.Rdfs.SubClassOf -> cardinalities
+                ) ++ getObjectFromPredicateInfo(resourceEntity.predicates, OntologyConstants.KnoraBase.ResourceIcon)
+                    ++ getObjectFromPredicateInfo(resourceEntity.predicates, OntologyConstants.Rdfs.Label, Some("en"))
+                    ++ getObjectFromPredicateInfo(resourceEntity.predicates, OntologyConstants.Rdfs.Comment, Some("en"))).asJava
+        }.asJava
+
+        json.put("http://www.knora.org/ontology/knora-api#resourceClasses", resClasses)
+
+        // properties
+
+        val props: util.Map[IRI, util.Map[IRI, IRI]] = properties.map {
+            case (propIri: IRI, propEntity: PropertyEntityInfoV1) =>
+
+                propIri -> (Map(
+                    "@id" -> propEntity.propertyIri,
+                    "ontology" -> propEntity.ontologyIri
+                ) ++ getObjectFromPredicateInfo(propEntity.predicates, OntologyConstants.Rdf.Type)
+                    ++ getObjectFromPredicateInfo(propEntity.predicates, OntologyConstants.Rdfs.Label, Some("en"))
+                    ++ getObjectFromPredicateInfo(propEntity.predicates, OntologyConstants.Rdfs.Comment, Some("en"))
+                    ++ getObjectFromPredicateInfo(propEntity.predicates, OntologyConstants.KnoraBase.ObjectClassConstraint)).asJava
+
+
+        }.asJava
+
+        json.put("http://www.knora.org/ontology/knora-api#properties", props)
+
+        val compacted = JsonLdProcessor.compact(json, context, new JsonLdOptions())
+
+        JsonUtils.toPrettyString(compacted)
+
+
+    }
+
+    def toXML = ???
+
+}
+
+object ReadResourceUtil {
+    /**
+      * Creates a map of value properties to [[Object]] from a [[ReadResourceV2]].
+      * This function is also used to provide bested structures (resources refer to other resources).
+      *
+      * @param resource the resource to be turned into `JsValue`.
+      * @return a map of value properties to `JsValue`.
+      */
+    def createValueMapFromReadResourceV2(resource: ReadResourceV2): util.Map[IRI, Object] = {
+
+        val values: Map[IRI, util.List[util.Map[IRI, Any]]] = resource.values.map {
+            case (propIri: IRI, readValues: Seq[ReadValueV2]) =>
+                val valuesMap: util.List[util.Map[IRI, Any]] = readValues.map {
+                    (readValue: ReadValueV2) =>
+                        val valAsMap: Map[IRI, Any] = readValue.valueContent.toTypedValueMap
+
+                        (Map("@id" -> readValue.valueIri,
+                            "@type" -> readValue.toKnoraApiValueTypeIri) ++ valAsMap).asJava
+                }.asJava
+
+                (propIri, valuesMap)
+
+        }
+
+        (Map(
+            "@type" -> resource.resourceClass,
+            "http://schema.org/name" -> resource.label,
+            "@id" -> resource.resourceIri
+        ) ++ values).asJava
+
+    }
+}
 
 /**
   * Represents a sequence of resources read back from Knora.
@@ -610,235 +819,37 @@ trait KnoraResponseV2 extends Jsonable
   * @param resources         a sequence of resources.
   */
 case class ReadResourcesSequenceV2(numberOfResources: Int, resources: Seq[ReadResourceV2]) extends KnoraResponseV2 {
-    def toJsValue: JsObject = ResourcesV2JsonProtocol.readResourcesSequenceV2Format.write(this)
-}
 
-/**
-  * Represents the existing named graphs.
-  *
-  * @param namedGraphs the Iris of the existing named graphs.
-  */
-case class ReadNamedGraphsV2(namedGraphs: Set[IRI]) extends KnoraResponseV2 {
-    def toJsValue = ResourcesV2JsonProtocol.readNamedGraphs.write(this)
-}
+    def toJSONLD = {
 
-/**
-  * Return information about ontology entities.
-  *
-  * @param ontologies named graphs and their resource classes.
-  * @param resourceClasses information about resource classes.
-  * @param properties information about properties.
-  */
-case class ReadEntityDefinitionsV2(ontologies: Map[IRI, Set[IRI]] = Map.empty[IRI, Set[IRI]], resourceClasses: Map[IRI, ResourceEntityInfoV1] = Map.empty[IRI, ResourceEntityInfoV1], properties: Map[IRI, PropertyEntityInfoV1] = Map.empty[IRI, PropertyEntityInfoV1]) extends KnoraResponseV2 {
-    override def toJsValue = ResourcesV2JsonProtocol.readEntityDefinitionsSequence.write(this)
-}
+        val context = new util.HashMap[String, String]()
+        context.put("@vocab", "http://schema.org/")
+        context.put(OntologyConstants.KnoraApi.KnoraApiPathSegment, OntologyConstants.KnoraApi.KnoraApiPrefixExpansion)
+        context.put("rdfs", "http://www.w3.org/2000/01/rdf-schema#")
 
+        val json: util.HashMap[String, Object] = new util.HashMap[String, Object]()
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// JSON formatting
+        val resSeq: util.List[util.Map[IRI, Object]] = resources.map {
+            (resource: ReadResourceV2) =>
 
-/**
-  * A spray-json protocol for generating Knora API v2 JSON-LD providing data about representations of a resource.
-  */
-object ResourcesV2JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with NullOptions {
+                ReadResourceUtil.createValueMapFromReadResourceV2(resource)
 
-    implicit object readNamedGraphs extends JsonFormat[ReadNamedGraphsV2] {
+        }.asJava
 
-        def read(jsonVal: JsValue) = ???
+        json.put("@type", "ItemList")
 
-        def write(namedGraphs: ReadNamedGraphsV2) = {
+        json.put("http://schema.org/numberOfItems", new lang.Integer(numberOfResources))
 
-            val fields = Map(
-                "@context" -> Map(
-                    "@vocab" -> "http://schema.org/".toJson
-                ).toJson,
-                "namedGraphs" -> namedGraphs.namedGraphs.toJson
-            )
+        json.put("http://schema.org/itemListElement", resSeq)
 
-            JsObject(fields)
+        val compacted = JsonLdProcessor.compact(json, context, new JsonLdOptions())
 
-        }
+        JsonUtils.toPrettyString(compacted)
 
     }
 
-    implicit object readResourcesSequenceV2Format extends JsonFormat[ReadResourcesSequenceV2] {
-
-        /**
-          * Creates a map of value properties to [[JsValue]] from a [[ReadResourceV2]].
-          *
-          * @param resource the resource to be turned into `JsValue`.
-          * @return a map of value properties to `JsValue`.
-          */
-        def createJsValueFromReadResourceV2(resource: ReadResourceV2): Map[IRI, JsValue] = {
-
-            val valuesAsJson: Map[IRI, JsValue] = resource.values.map {
-                case (propIri: IRI, readValues: Seq[ReadValueV2]) =>
-                    val valuesMap: JsValue = readValues.map {
-                        readValue =>
-                            val valAsMap: Map[IRI, JsValue] = readValue.valueContent.toJsValueMap
-                            Map("@id" -> JsString(readValue.valueIri),
-                                "@type" -> JsString(readValue.toKnoraApiValueTypeIri)) ++ valAsMap
-                    }.toJson
-
-                    (propIri, valuesMap)
-
-            }
-
-            Map(
-                "@type" -> resource.resourceClass.toJson,
-                "name" -> resource.label.toJson,
-                "@id" -> resource.resourceIri.toJson
-            ) ++ valuesAsJson
-
-        }
-
-        def read(jsonVal: JsValue) = ???
-
-        def write(resourcesSequence: ReadResourcesSequenceV2): JsObject = {
-
-            val resources: JsValue = resourcesSequence.resources.map {
-                (resource: ReadResourceV2) =>
-
-                    createJsValueFromReadResourceV2(resource)
-
-            }.toJson
-
-            val fields: Map[String, JsValue] = Map(
-                "@context" -> Map(
-                    "@vocab" -> "http://schema.org/".toJson
-                ).toJson,
-                "@type" -> "ItemList".toJson,
-                "numberOfItems" -> resourcesSequence.numberOfResources.toJson,
-                "itemListElement" -> resources
-            )
-
-            JsObject(fields)
-
-        }
-
-    }
-
-    implicit object readEntityDefinitionsSequence extends JsonFormat[ReadEntityDefinitionsV2] {
-
-
-        /**
-          * Gets an object from predicate infos.
-          *
-          * @param predicateInfos information about predicates.
-          * @param predicateIri the Iri of the predicate whose object should be returned.
-          * @param lang the language in which the object has to be returned.
-          * @return the requested object.
-          */
-        // TODO: use fallback language
-        def getObjectFromPredicateInfo(predicateInfos: Map[IRI, PredicateInfoV1], predicateIri: IRI, lang: Option[String] = None): Option[String] = {
-
-            predicateInfos.get(predicateIri) match {
-                case Some(pred: PredicateInfoV1) =>
-                    if (lang.nonEmpty) {
-                        pred.objectsWithLang.get(lang.get) match {
-                            case Some(obj: String) =>
-                                Some(obj)
-                            case None => None
-                        }
-                    } else {
-                        pred.objects.headOption
-                    }
-
-                case None => None
-            }
-
-
-        }
-
-        /**
-          * Converts information about resource classes to JSON-LD.
-          *
-          * @param resourceEntities information about resource classes.
-          * @return information about resource classes as JSON-LD.
-          */
-        def createJsValueFromResourceEntities(resourceEntities: Map[IRI, ResourceEntityInfoV1]): Map[IRI, JsObject] = {
-            resourceEntities.map {
-                case (resClassIri: IRI, resourceEntity: ResourceEntityInfoV1) =>
-
-                    val cardinalities: Seq[Map[IRI, JsValue]] = resourceEntity.cardinalities.map {
-
-                        case (propertyIri: IRI, cardinality: Cardinality.Value) =>
-
-                            val prop2card: (IRI, JsNumber) = cardinality match {
-                                case Cardinality.MayHaveMany =>
-                                    OntologyConstants.Owl.MinCardinality -> JsNumber(0)
-
-                                case Cardinality.MayHaveOne =>
-                                    OntologyConstants.Owl.MaxCardinality -> JsNumber(1)
-
-                                case Cardinality.MustHaveOne =>
-                                    OntologyConstants.Owl.Cardinality -> JsNumber(1)
-
-                                case Cardinality.MustHaveSome =>
-                                    OntologyConstants.Owl.MinCardinality -> JsNumber(1)
-                            }
-
-                            Map(
-                                "@type" -> OntologyConstants.Owl.Restriction.toJson,
-                                OntologyConstants.Owl.OnProperty -> propertyIri.toJson,
-                                prop2card
-                            )
-                    }.toSeq
-
-                    resClassIri -> JsObject(
-                        "@id" -> resourceEntity.resourceClassIri.toJson,
-                        "ontology" -> resourceEntity.ontologyIri.toJson,
-                        "@type" -> OntologyConstants.Owl.Class.toJson, // TODO: does this need to be coming from the triplestore?
-                        "icon" -> getObjectFromPredicateInfo(resourceEntity.predicates, OntologyConstants.KnoraBase.ResourceIcon).toJson,
-                        OntologyConstants.Rdfs.Label -> getObjectFromPredicateInfo(resourceEntity.predicates, OntologyConstants.Rdfs.Label, Some("en")).toJson,
-                        OntologyConstants.Rdfs.Comment -> getObjectFromPredicateInfo(resourceEntity.predicates, OntologyConstants.Rdfs.Comment, Some("en")).toJson,
-                        OntologyConstants.Rdfs.SubClassOf -> cardinalities.toJson
-                    )
-            }
-        }
-
-        /**
-          * Converts information about properties to JSON-LD.
-          *
-          * @param propertyEntities information about properties.
-          * @return information about properties as JSON-LD.
-          */
-        def createJsValueFromPropertyEntities(propertyEntities: Map[IRI, PropertyEntityInfoV1]): Map[IRI, JsObject] = {
-
-            propertyEntities.map {
-                case (propIri: IRI, propEntity: PropertyEntityInfoV1) =>
-
-                propIri -> JsObject(
-                    "@id" -> propEntity.propertyIri.toJson,
-                    "ontology" -> propEntity.ontologyIri.toJson,
-                    "@type" -> getObjectFromPredicateInfo(propEntity.predicates, OntologyConstants.Rdf.Type).toJson,
-                    OntologyConstants.Rdfs.Label -> getObjectFromPredicateInfo(propEntity.predicates, OntologyConstants.Rdfs.Label, Some("en")).toJson,
-                    OntologyConstants.Rdfs.Comment -> getObjectFromPredicateInfo(propEntity.predicates, OntologyConstants.Rdfs.Comment, Some("en")).toJson,
-                    //OntologyConstants.KnoraBase.SubjectClassConstraint -> getPredicate(propEntity.predicates, OntologyConstants.KnoraBase.SubjectClassConstraint).toJson,
-                    OntologyConstants.KnoraBase.ObjectClassConstraint -> getObjectFromPredicateInfo(propEntity.predicates, OntologyConstants.KnoraBase.ObjectClassConstraint).toJson
-                )
-            }
-
-        }
-
-        def read(jsonVal: JsValue) = ???
-
-        def write(entitiesSequence: ReadEntityDefinitionsV2) = {
-
-            val fields: Map[String, JsValue] = Map(
-                "@context" -> Map(
-                    "@vocab" -> "http://schema.org/".toJson
-                ).toJson,
-                "ontologies" -> entitiesSequence.ontologies.toJson,
-                "resourceClasses" -> createJsValueFromResourceEntities(entitiesSequence.resourceClasses).toJson,
-                "properties" -> createJsValueFromPropertyEntities(entitiesSequence.properties).toJson
-            )
-
-            JsObject(fields)
-        }
-
-
-
-    }
+    def toXML = ???
 
 }
+
+

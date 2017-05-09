@@ -423,6 +423,8 @@ object OntologyConstants {
 
     object KnoraApi {
         val KnoraApiPathSegment = "knora-api"
+        val KnoraApiPrefix = "knora-api:"
+        val KnoraApiPrefixExpansion = "http://www.knora.org/ontology/knora-api#"
 
         val ValueAsString = "http://www.knora.org/ontology/knora-api#valueAsString"
 

@@ -864,7 +864,7 @@ class OntologiesResponderV2 extends Responder {
       * @param userProfile       the profile of the user making the request.
       * @return a [[ReadEntityDefinitionsV2]].
       */
-    private def getResourceClassDefinitionsWithCardinalitiesV2(resourceClassIris: Set[IRI], userProfile: UserProfileV1) = {
+    private def getResourceClassDefinitionsWithCardinalitiesV2(resourceClassIris: Set[IRI], userProfile: UserProfileV1): Future[ReadEntityDefinitionsV2] = {
         for {
 
         // request information about the given resource class Iris
