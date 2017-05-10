@@ -53,6 +53,7 @@ object UsersRouteV1 extends Authenticator {
                 requestContext =>
                     val userProfile = getUserProfileV1(requestContext)
                     val requestMessage = UsersGetRequestV1(userProfile)
+
                     RouteUtilV1.runJsonRoute(
                         requestMessage,
                         requestContext,

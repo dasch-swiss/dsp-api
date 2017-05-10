@@ -63,23 +63,76 @@ class GroupsV1E2ESpec extends E2ESpec(GroupsV1E2ESpec.config) with SessionJsonPr
         singleAwaitingRequest(request, 300.seconds)
     }
 
-    "The Groups Route ('v1/groups') with credentials supplied via Basic Auth" should {
+    "The Groups Route ('v1/groups')" when {
+        "used to query for group information" should {
 
-        "return the group's information (identified by iri)" in {
-            /* Correct username and password */
-            val request = Get(baseApiUrl + s"/v1/groups/$groupIriEnc") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
-            val response: HttpResponse = singleAwaitingRequest(request)
-            println(s"response: ${response.toString}")
-            assert(response.status === StatusCodes.OK)
+            "return all groups" in {
+                val request = Get(baseApiUrl + s"/v1/groups") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
+                val response: HttpResponse = singleAwaitingRequest(request)
+                println(s"response: ${response.toString}")
+                assert(response.status === StatusCodes.OK)
+            }
+
+            "return the group's information (identified by iri)" in {
+                val request = Get(baseApiUrl + s"/v1/groups/$groupIriEnc") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
+                val response: HttpResponse = singleAwaitingRequest(request)
+                println(s"response: ${response.toString}")
+                assert(response.status === StatusCodes.OK)
+            }
+
+            "return the group's information (identified by project and groupname)" in {
+                val request = Get(baseApiUrl + s"/v1/groups/$groupNameEnc?projectIri=$projectIriEnc&identifier=groupname") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
+                val response: HttpResponse = singleAwaitingRequest(request)
+                println(s"response: ${response.toString}")
+                assert(response.status === StatusCodes.OK)
+            }
         }
 
-        "return the group's information (identified by project and groupname)" in {
-            /* Correct username and password */
-            val request = Get(baseApiUrl + s"/v1/groups/$groupNameEnc?projectIri=$projectIriEnc&identifier=groupname") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
-            val response: HttpResponse = singleAwaitingRequest(request)
-            println(s"response: ${response.toString}")
-            assert(response.status === StatusCodes.OK)
+        "used to modify group information" should {
+
+            "create a new project" in {
+                fail("test not implemented")
+            }
+
+            "update a project" in {
+                fail("test not implemented")
+            }
+
+            "return a 'DuplicateValueException' if the supplied group name is not unique (inside project)" in {
+                fail("test not implemented")
+            }
+
+            "return 'BadRequestException' if 'name' is missing" in {
+                fail("test not implemented")
+            }
         }
 
+        "used to query members" should {
+
+            "return all members of a group identified by IRI" in {
+                val request = Get(baseApiUrl + s"/v1/groups/members/$groupIriEnc") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
+                val response: HttpResponse = singleAwaitingRequest(request)
+                println(s"response: ${response.toString}")
+                assert(response.status === StatusCodes.OK)
+            }
+
+            "return all members of a group identified by group name and project IRI" in {
+                val request = Get(baseApiUrl + s"/v1/groups/members/$groupNameEnc?projectIri=$projectIriEnc&identifier=groupname") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
+                val response: HttpResponse = singleAwaitingRequest(request)
+                println(s"response: ${response.toString}")
+                assert(response.status === StatusCodes.OK)
+            }
+        }
+
+        "used to modify members" should {
+
+            "add user to group" in {
+                fail("test not implemented")
+            }
+
+            "remove user from group" in {
+                fail("test not implemented")
+            }
+        }
     }
 }

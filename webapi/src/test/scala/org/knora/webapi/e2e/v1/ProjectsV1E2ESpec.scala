@@ -49,8 +49,10 @@ class ProjectsV1E2ESpec extends E2ESpec(ProjectsV1E2ESpec.config) with SessionJs
     val rootEmail = SharedAdminTestData.rootUser.userData.email.get
     val rootEmailEnc = java.net.URLEncoder.encode(rootEmail, "utf-8")
     val testPass = java.net.URLEncoder.encode("test", "utf-8")
-    val imagesShortName = SharedAdminTestData.imagesProjectInfo.shortname
-    val projectShortnameEnc = java.net.URLEncoder.encode(imagesShortName, "utf-8")
+    val projectIri = SharedAdminTestData.imagesProjectInfo.id
+    val projectIriEnc = java.net.URLEncoder.encode(projectIri, "utf-8")
+    val projectShortName = SharedAdminTestData.imagesProjectInfo.shortname
+    val projectShortnameEnc = java.net.URLEncoder.encode(projectShortName, "utf-8")
 
 
     "Load test data" in {
@@ -61,19 +63,24 @@ class ProjectsV1E2ESpec extends E2ESpec(ProjectsV1E2ESpec.config) with SessionJs
 
     "The Projects Route ('v1/projects')" when {
 
-        "queried for project information" should {
+        "used to query for project information" should {
 
-            "return all project's information" in {
-                /* Correct username and password */
+            "return all projects" in {
                 val request = Get(baseApiUrl + s"/v1/projects") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
                 val response: HttpResponse = singleAwaitingRequest(request)
                 log.debug(s"response: ${response.toString}")
                 assert(response.status === StatusCodes.OK)
             }
 
-            "return the project's information" in {
-                /* Correct username and password */
-                val request = Get(baseApiUrl + s"/v1/projects/shortname/$projectShortnameEnc") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
+            "return the information for a single project identified by iri" in {
+                val request = Get(baseApiUrl + s"/v1/projects/$projectIriEnc") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
+                val response: HttpResponse = singleAwaitingRequest(request)
+                log.debug(s"response: ${response.toString}")
+                assert(response.status === StatusCodes.OK)
+            }
+
+            "return the information for a single project identified by shortname" in {
+                val request = Get(baseApiUrl + s"/v1/projects/$projectShortnameEnc?identifier=shortname") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
                 val response: HttpResponse = singleAwaitingRequest(request)
                 log.debug(s"response: ${response.toString}")
                 assert(response.status === StatusCodes.OK)
@@ -83,15 +90,47 @@ class ProjectsV1E2ESpec extends E2ESpec(ProjectsV1E2ESpec.config) with SessionJs
         "used to modify project information" should {
 
             "create a new project and return the 'full' project info if the supplied shortname is unique" in {
+                fail("test not implemented")
+            }
 
+            "update a project" in {
+                fail("test not implemented")
             }
 
             "return a 'DuplicateValueException' if the supplied project shortname is not unique" in {
-
+                fail("test not implemented")
             }
 
             "return 'BadRequestException' if 'shortname' is missing" in {
+                fail("test not implemented")
+            }
+        }
 
+        "used to query members" should {
+
+            "return all members of a project identified by iri" in {
+                val request = Get(baseApiUrl + s"/v1/projects/members/$projectIriEnc") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
+                val response: HttpResponse = singleAwaitingRequest(request)
+                log.debug(s"response: ${response.toString}")
+                assert(response.status === StatusCodes.OK)
+            }
+
+            "return all members of a project identified by shortname" in {
+                val request = Get(baseApiUrl + s"/v1/projects/members/$projectShortnameEnc?identifier=shortname") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
+                val response: HttpResponse = singleAwaitingRequest(request)
+                log.debug(s"response: ${response.toString}")
+                assert(response.status === StatusCodes.OK)
+            }
+        }
+
+        "used to modify members" should {
+
+            "add user to project" in {
+                fail("test not implemented")
+            }
+
+            "remove user from project" in {
+                fail("test not implemented")
             }
         }
     }

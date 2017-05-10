@@ -52,14 +52,28 @@ case class CreateProjectApiRequestV1(shortname: String,
 }
 
 /**
-  * Represents an API request payload that asks the Knora API server to update one property of an existing project.
+  * Represents an API request payload that asks the Knora API server to update an existing project.
   *
-  * @param propertyIri the property of the project to be updated.
-  * @param newValue    the new value for the property of the project to be updated.
+  * @param shortname          the new project's shortname.
+  * @param longname           the new project's longname.
+  * @param description        the new project's description.
+  * @param keywords           the new project's keywords.
+  * @param ontologyGraph      the new project's ontology graph.
+  * @param dataGraph          the new project's data graph.
+  * @param logo               the new project's logo.
+  * @param status             the new project's status.
+  * @param hasSelfJoinEnabled the new project's self-join status.
   */
-case class UpdateProjectApiRequestV1(propertyIri: String,
-                                     newValue: String) extends ProjectV1JsonProtocol {
-    def toJsValue = updateProjectApiRequestV1Format.write(this)
+case class ChangeProjectApiRequestV1(shortname: Option[String] = None,
+                                     longname: Option[String] = None,
+                                     description: Option[String] = None,
+                                     keywords: Option[String] = None,
+                                     ontologyGraph: Option[String] = None,
+                                     dataGraph: Option[String] = None,
+                                     logo: Option[String] = None,
+                                     status: Option[Boolean] = None,
+                                     hasSelfJoinEnabled: Option[Boolean] = None) extends ProjectV1JsonProtocol {
+    def toJsValue = changeProjectApiRequestV1Format.write(this)
 }
 
 
@@ -147,17 +161,44 @@ case class ProjectCreateRequestV1(createRequest: CreateProjectApiRequestV1,
                                   apiRequestID: UUID) extends ProjectsResponderRequestV1
 
 /**
-  * Requests updating an existing project
+  * Requests updating an existing project.
   *
-  * @param projectIri    the IRI of the project to be updated.
-  * @param propertyIri   the IRI of the property to be updated.
-  * @param newValue      the new value for the property.
-  * @param userProfileV1 the user profile of the user requesting the update.
+  * @param projectIri           the IRI of the project to be updated.
+  * @param changeProjectRequest the data which needs to be update.
+  * @param userProfileV1        the user profile of the user requesting the update.
+  * @param apiRequestID         the ID of the API request.
   */
-case class ProjectUpdateRequestV1(projectIri: IRI,
-                                  propertyIri: IRI,
-                                  newValue: Any,
-                                  userProfileV1: UserProfileV1) extends ProjectsResponderRequestV1
+case class ProjectChangeRequestV1(projectIri: IRI,
+                                  changeProjectRequest: ChangeProjectApiRequestV1,
+                                  userProfileV1: UserProfileV1,
+                                  apiRequestID: UUID) extends ProjectsResponderRequestV1
+
+/**
+  * Request adding a user to a project.
+  *
+  * @param projectIri    the iri of the project the user is to be added to.
+  * @param userIri       the iri of the user that is added to the project.
+  * @param userProfileV1 the user profile of the user requesting the update.
+  * @param apiRequestID  the ID of the API request.
+  */
+case class ProjectAddUserRequestV1(projectIri: IRI,
+                                   userIri: IRI,
+                                   userProfileV1: UserProfileV1,
+                                   apiRequestID: UUID) extends ProjectsResponderRequestV1
+
+/**
+  * Request removing a user from a project.
+  *
+  * @param projectIri    the iri of the project the user is to be removed from.
+  * @param userIri       the iri of the user that is to be removed from the project.
+  * @param userProfileV1 the user profile of the user requesting the update.
+  * @param apiRequestID  the ID of the API request.
+  */
+case class ProjectRemoveUserRequestV1(projectIri: IRI,
+                                      userIri: IRI,
+                                      userProfileV1: UserProfileV1,
+                                      apiRequestID: UUID) extends ProjectsResponderRequestV1
+
 
 // Responses
 /**
@@ -234,7 +275,7 @@ trait ProjectV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol wi
     implicit val projectsResponseV1Format: RootJsonFormat[ProjectsResponseV1] = rootFormat(lazyFormat(jsonFormat(ProjectsResponseV1, "projects")))
     implicit val projectInfoResponseV1Format: RootJsonFormat[ProjectInfoResponseV1] = rootFormat(lazyFormat(jsonFormat(ProjectInfoResponseV1, "project_info")))
     implicit val createProjectApiRequestV1Format: RootJsonFormat[CreateProjectApiRequestV1] = rootFormat(lazyFormat(jsonFormat8(CreateProjectApiRequestV1)))
-    implicit val updateProjectApiRequestV1Format: RootJsonFormat[UpdateProjectApiRequestV1] = rootFormat(lazyFormat(jsonFormat2(UpdateProjectApiRequestV1)))
+    implicit val changeProjectApiRequestV1Format: RootJsonFormat[ChangeProjectApiRequestV1] = rootFormat(lazyFormat(jsonFormat9(ChangeProjectApiRequestV1)))
     implicit val projectOperationResponseV1Format: RootJsonFormat[ProjectOperationResponseV1] = rootFormat(lazyFormat(jsonFormat1(ProjectOperationResponseV1)))
 
 }

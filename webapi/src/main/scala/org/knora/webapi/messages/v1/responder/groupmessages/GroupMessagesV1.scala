@@ -22,6 +22,7 @@ import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.v1.responder._
+import org.knora.webapi.messages.v1.responder.projectmessages.ProjectsResponderRequestV1
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.responders.v1.GroupsResponderV1
 import spray.json.{DefaultJsonProtocol, JsonFormat, NullOptions, RootJsonFormat}
@@ -47,10 +48,12 @@ case class CreateGroupApiRequestV1(name: String,
 }
 
 /**
-  * Represents an API request payload that asks the Knora API server to update one property of an existing group.
+  * Represents an API request payload that asks the Knora API server to update an existing group.
   *
-  * @param propertyIri the property of the group to be updated.
-  * @param newValue    the new value for the property of the group to be updated.
+  * @param name               the new group's name.
+  * @param description        the new group's description.
+  * @param status             the new group's status.
+  * @param hasSelfJoinEnabled the new group's self-join status.
   */
 case class ChangeGroupApiRequestV1(name: Option[String] = None,
                                    description: Option[String] = None,
@@ -75,15 +78,13 @@ sealed trait GroupsResponderRequestV1 extends KnoraRequestV1
   */
 case class GroupsGetRequestV1(userProfile: Option[UserProfileV1]) extends GroupsResponderRequestV1
 
-
 /**
   * Get everything about a single group identified through it's IRI.
   *
-  * @param iri           Iri of the group.
+  * @param groupIri      Iri of the group.
   * @param userProfileV1 the profile of the user making the request.
   */
-case class GroupInfoByIRIGetRequest(iri: IRI, userProfileV1: Option[UserProfileV1]) extends GroupsResponderRequestV1
-
+case class GroupInfoByIRIGetRequest(groupIri: IRI, userProfileV1: Option[UserProfileV1]) extends GroupsResponderRequestV1
 
 /**
   * Find everything about a single group identified through it's shortname. Because it is only required to have unique
@@ -95,6 +96,22 @@ case class GroupInfoByIRIGetRequest(iri: IRI, userProfileV1: Option[UserProfileV
   */
 case class GroupInfoByNameGetRequest(projectIri: IRI, groupName: String, userProfileV1: Option[UserProfileV1]) extends GroupsResponderRequestV1
 
+/**
+  * Returns all members of the group identified by iri.
+  *
+  * @param groupIri      the IRI of th group.
+  * @param userProfileV1 the profile of the user making the request.
+  */
+case class GroupMembersByIRIGetRequestV1(groupIri: IRI, userProfileV1: UserProfileV1) extends GroupsResponderRequestV1
+
+/**
+  * Returns all members of the group identified by group name / project IRI.
+  *
+  * @param projectIri    the IRI of the project the group is part of.
+  * @param groupName     the name of the group.
+  * @param userProfileV1 the profile of the user making the request.
+  */
+case class GroupMembersByNameGetRequestV1(projectIri: IRI, groupName: String, userProfileV1: UserProfileV1) extends GroupsResponderRequestV1
 
 /**
   * Requests the creation of a new group.
@@ -115,10 +132,36 @@ case class GroupCreateRequestV1(createRequest: CreateGroupApiRequestV1,
   * @param userProfile        the user profile of the user requesting the update.
   * @param apiRequestID       the ID of the API request.
   */
-case class GroupChangeRequestV1(groupIri: webapi.IRI,
+case class GroupChangeRequestV1(groupIri: IRI,
                                 changeGroupRequest: ChangeGroupApiRequestV1,
                                 userProfile: UserProfileV1,
                                 apiRequestID: UUID) extends GroupsResponderRequestV1
+
+/**
+  * Request adding a user to a group.
+  *
+  * @param groupIri      the iri of the group the user is to be added to.
+  * @param userIri       the iri of the user that is added to the group.
+  * @param userProfileV1 the user profile of the user requesting the update.
+  * @param apiRequestID  the ID of the API request.
+  */
+case class GroupAddUserRequestV1(groupIri: IRI,
+                                 userIri: IRI,
+                                 userProfileV1: UserProfileV1,
+                                 apiRequestID: UUID) extends GroupsResponderRequestV1
+
+/**
+  * Request removing a user from a group.
+  *
+  * @param groupIri      the iri of the group the user is to be removed from.
+  * @param userIri       the iri of the user that is to be removed from the group.
+  * @param userProfileV1 the user profile of the user requesting the update.
+  * @param apiRequestID  the ID of the API request.
+  */
+case class GroupRemoveUserRequestV1(groupIri: IRI,
+                                    userIri: IRI,
+                                    userProfileV1: UserProfileV1,
+                                    apiRequestID: UUID) extends GroupsResponderRequestV1
 
 /**
   * Request updating the group's permissions.
