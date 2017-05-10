@@ -421,55 +421,55 @@ object OntologyConstants {
 
     }
 
-    object KnoraApi {
+    object KnoraApiV2WithValueObject {
         val KnoraApiPathSegment = "knora-api"
         val KnoraApiPrefix = "knora-api:"
-        val KnoraApiPrefixExpansion = "http://www.knora.org/ontology/knora-api#"
+        val KnoraApiPrefixExpansion = "http://api.knora.org/ontology/knora-api/v2#"
 
-        val ValueAsString = "http://www.knora.org/ontology/knora-api#valueAsString"
+        val ValueAsString = "http://api.knora.org/ontology/knora-api/v2#valueAsString"
 
-        val DateValueHasStartYear = "http://www.knora.org/ontology/knora-api#dateValueHasStartYear"
-        val DateValueHasEndYear = "http://www.knora.org/ontology/knora-api#dateValueHasEndYear"
-        val DateValueHasStartMonth = "http://www.knora.org/ontology/knora-api#dateValueHasStartMonth"
-        val DateValueHasEndMonth = "http://www.knora.org/ontology/knora-api#dateValueHasEndMonth"
-        val DateValueHasStartDay = "http://www.knora.org/ontology/knora-api#dateValueHasStartDay"
-        val DateValueHasEndDay = "http://www.knora.org/ontology/knora-api#dateValueHasEndDay"
-        val DateValueHasCalendar = "http://www.knora.org/ontology/knora-api#dateValueHasCalendar"
+        val DateValueHasStartYear = "http://api.knora.org/ontology/knora-api/v2#dateValueHasStartYear"
+        val DateValueHasEndYear = "http://api.knora.org/ontology/knora-api/v2#dateValueHasEndYear"
+        val DateValueHasStartMonth = "http://api.knora.org/ontology/knora-api/v2#dateValueHasStartMonth"
+        val DateValueHasEndMonth = "http://api.knora.org/ontology/knora-api/v2#dateValueHasEndMonth"
+        val DateValueHasStartDay = "http://api.knora.org/ontology/knora-api/v2#dateValueHasStartDay"
+        val DateValueHasEndDay = "http://api.knora.org/ontology/knora-api/v2#dateValueHasEndDay"
+        val DateValueHasCalendar = "http://api.knora.org/ontology/knora-api/v2#dateValueHasCalendar"
 
-        val TextValueAsHtml = "http://www.knora.org/ontology/knora-api#textValueAsHtml"
-        val TextValueAsXml = "http://www.knora.org/ontology/knora-api#textValueAsXml"
-        val TextValueHasMapping = "http://www.knora.org/ontology/knora-api#textValueHasMapping"
+        val TextValueAsHtml = "http://api.knora.org/ontology/knora-api/v2#textValueAsHtml"
+        val TextValueAsXml = "http://api.knora.org/ontology/knora-api/v2#textValueAsXml"
+        val TextValueHasMapping = "http://api.knora.org/ontology/knora-api/v2#textValueHasMapping"
 
-        val IntegerValueAsInteger = "http://www.knora.org/ontology/knora-api#integerValueAsInteger"
+        val IntegerValueAsInteger = "http://api.knora.org/ontology/knora-api/v2#integerValueAsInteger"
 
-        val DecimalValueAsDecimal = "http://www.knora.org/ontology/knora-api#decimalValueAsDecimal"
+        val DecimalValueAsDecimal = "http://api.knora.org/ontology/knora-api/v2#decimalValueAsDecimal"
 
-        val GeometryValueAsGeometry = "http://www.knora.org/ontology/knora-api#GeometryValueAsGeometry"
+        val GeometryValueAsGeometry = "http://api.knora.org/ontology/knora-api/v2#GeometryValueAsGeometry"
 
-        val LinkValueHasTarget = "http://www.knora.org/ontology/knora-api#linkValueHasTarget"
-        val LinkValueHasTargetIri = "http://www.knora.org/ontology/knora-api#linkValueHasTargetIri"
+        val LinkValueHasTarget = "http://api.knora.org/ontology/knora-api/v2#linkValueHasTarget"
+        val LinkValueHasTargetIri = "http://api.knora.org/ontology/knora-api/v2#linkValueHasTargetIri"
 
-        val FileValueAsUrl = "http://www.knora.org/ontology/knora-api#fileValueAsUrl"
-        val FileValueIsPreview = "http://www.knora.org/ontology/knora-api#fileValueIsPreview"
-        val FileValueHasFilename = "http://www.knora.org/ontology/knora-api#fileValueHasFilename"
+        val FileValueAsUrl = "http://api.knora.org/ontology/knora-api/v2#fileValueAsUrl"
+        val FileValueIsPreview = "http://api.knora.org/ontology/knora-api/v2#fileValueIsPreview"
+        val FileValueHasFilename = "http://api.knora.org/ontology/knora-api/v2#fileValueHasFilename"
 
-        val StillImageFileValueHasDimX = "http://www.knora.org/ontology/knora-api#stillImageFileValueHasDimX"
-        val StillImageFileValueHasDimY = "http://www.knora.org/ontology/knora-api#stillImageFileValueHasDimY"
-        val StillImageFileValueHasIIIFBaseUrl = "http://www.knora.org/ontology/knora-api#stillImageFileValueHasIIIFBaseUrl"
+        val StillImageFileValueHasDimX = "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimX"
+        val StillImageFileValueHasDimY = "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimY"
+        val StillImageFileValueHasIIIFBaseUrl = "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasIIIFBaseUrl"
 
 
-        val IntervalValueHasStart = "http://www.knora.org/ontology/knora-api#intervalValueHasStart"
-        val IntervalValueHasEnd = "http://www.knora.org/ontology/knora-api#intervalValueHasEnd"
+        val IntervalValueHasStart = "http://api.knora.org/ontology/knora-api/v2#intervalValueHasStart"
+        val IntervalValueHasEnd = "http://api.knora.org/ontology/knora-api/v2#intervalValueHasEnd"
 
-        val BooleanValueAsBoolean = "http://www.knora.org/ontology/knora-api#booleanValueAsBoolean"
+        val BooleanValueAsBoolean = "http://api.knora.org/ontology/knora-api/v2#booleanValueAsBoolean"
 
-        val HierarchicalListValueAsListNode = "http://www.knora.org/ontology/knora-api#hierarchicalListValueAsListNode"
+        val HierarchicalListValueAsListNode = "http://api.knora.org/ontology/knora-api/v2#hierarchicalListValueAsListNode"
 
-        val ColorValueAsColor = "http://www.knora.org/ontology/knora-api#colorValueAsColor"
+        val ColorValueAsColor = "http://api.knora.org/ontology/knora-api/v2#colorValueAsColor"
 
-        val UriValueAsUri = "http://www.knora.org/ontology/knora-api#uriValueAsUri"
+        val UriValueAsUri = "http://api.knora.org/ontology/knora-api/v2#uriValueAsUri"
 
-        val GeonameValueAsGeonameCode = "http://www.knora.org/ontology/knora-api#geonameValueAsGeonameCode"
+        val GeonameValueAsGeonameCode = "http://api.knora.org/ontology/knora-api/v2#geonameValueAsGeonameCode"
     }
 
 }
