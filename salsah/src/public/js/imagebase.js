@@ -409,7 +409,7 @@ $(function() {
                     break;
                 }
                 case Rights.RESOURCE_ACCESS_MODIFY:
-                case Rights.VALUE_ACCESS_DELETE:
+                case Rights.RESOURCE_ACCESS_DELETE:
                 case Rights.RESOURCE_ACCESS_RIGHTS: {
                     rights = Rights.VALUE_ACCESS_MODIFY;
                     break;
