@@ -76,20 +76,18 @@ object OntologyConstants {
     object KnoraInternal {
         // The start and end of an internal Knora ontology IRI.
         val InternalOntologyStart = "http://www.knora.org/ontology/"
-        val InternalOntologyEnd = "#"
     }
 
     object KnoraApi {
         // The start and end of a Knora API ontology IRI.
         val ApiOntologyStart = "http://api.knora.org/ontology/"
-        val ApiOntologyEnd = "#"
 
         // TODO: add constants here for the actual IRIs of Knora API v2 ontologies.
     }
 
     object KnoraBase {
         val KnoraBasePrefix: String = "knora-base:"
-        val KnoraBasePrefixExpansion: String = KnoraInternal.InternalOntologyStart + "knora-base" + KnoraInternal.InternalOntologyEnd
+        val KnoraBasePrefixExpansion: String = KnoraInternal.InternalOntologyStart + "knora-base#"
 
         val Resource: IRI = KnoraBasePrefixExpansion + "Resource"
         val ExternalResource: IRI = KnoraBasePrefixExpansion + "ExternalResource"
@@ -381,7 +379,7 @@ object OntologyConstants {
     }
 
     object Standoff {
-        val StandoffPrefixExpansion: IRI = KnoraInternal.InternalOntologyStart + "standoff" + KnoraInternal.InternalOntologyEnd
+        val StandoffPrefixExpansion: IRI = KnoraInternal.InternalOntologyStart + "standoff#"
 
         val StandoffRootTag: IRI = StandoffPrefixExpansion + "StandoffRootTag"
         val StandoffParagraphTag: IRI = StandoffPrefixExpansion + "StandoffParagraphTag"
@@ -406,7 +404,7 @@ object OntologyConstants {
     }
 
     object SalsahGui {
-        val SalsahGuiPrefixExpansion: IRI = KnoraInternal.InternalOntologyStart + "salsah-gui" + KnoraInternal.InternalOntologyEnd
+        val SalsahGuiPrefixExpansion: IRI = KnoraInternal.InternalOntologyStart + "salsah-gui#"
         
         val GuiAttribute: IRI = SalsahGuiPrefixExpansion + "guiAttribute"
         val GuiOrder: IRI = SalsahGuiPrefixExpansion + "guiOrder"
@@ -437,10 +435,10 @@ object OntologyConstants {
     object KnoraXmlImportV1 {
         object ProjectSpecificXmlImportNamespace {
             val XmlImportNamespaceStart: String = KnoraApi.ApiOntologyStart
-            val XmlImportNamespaceEnd: String = "/xml-import/v1" + KnoraApi.ApiOntologyEnd
+            val XmlImportNamespaceEnd: String = "/xml-import/v1#"
         }
 
-        val KnoraXmlImportV1PrefixExpansion: IRI = KnoraApi.ApiOntologyStart + "knora-xml-import/v1" + KnoraApi.ApiOntologyEnd
+        val KnoraXmlImportV1PrefixExpansion: IRI = KnoraApi.ApiOntologyStart + "knora-xml-import/v1#"
 
         val Resources: IRI = KnoraXmlImportV1PrefixExpansion + "resources"
     }

@@ -27,6 +27,7 @@ import javax.xml.XMLConstants
 import javax.xml.transform.stream.StreamSource
 import javax.xml.validation.{Schema, SchemaFactory}
 
+import akka.pattern._
 import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.model.Multipart
@@ -38,6 +39,7 @@ import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.FileIO
 import com.typesafe.scalalogging.Logger
 import org.knora.webapi._
+import org.knora.webapi.messages.v1.responder.ontologymessages._
 import org.knora.webapi.messages.v1.responder.resourcemessages.ResourceV1JsonProtocol._
 import org.knora.webapi.messages.v1.responder.resourcemessages._
 import org.knora.webapi.messages.v1.responder.sipimessages.{SipiResponderConversionFileRequestV1, SipiResponderConversionPathRequestV1}
@@ -46,11 +48,13 @@ import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
 import org.knora.webapi.util.standoff.StandoffTagUtilV1.TextWithStandoffTagsV1
 import org.knora.webapi.util.{DateUtilV1, InputValidation}
+import org.knora.webapi.util.InputValidation.XmlImportNamespaceInfoV1
 import org.knora.webapi.viewhandlers.ResourceHtmlView
 import org.slf4j.LoggerFactory
 import org.w3c.dom.ls.{LSInput, LSResourceResolver}
 import spray.json._
 
+import scala.collection.immutable
 import scala.concurrent.duration._
 import scala.concurrent.{Future, Promise}
 import scala.util.{Failure, Success, Try}
@@ -386,12 +390,147 @@ object ResourcesRouteV1 extends Authenticator {
         }
 
         /**
+          * Represents an XML import schema generated from a project-specific ontology.
+          *
+          * @param namespaceInfo information about the schema's namespace.
+          * @param schemaXml     the XML text of the schema.
+          */
+        case class XmlImportSchemaV1(namespaceInfo: XmlImportNamespaceInfoV1, schemaXml: String)
+
+        /**
+          * Represents a bundle of XML import schemas generated from a set of project-specific ontologies.
+          *
+          * @param mainNamespace the XML namespace corresponding to the main ontology to be used in the XML import.
+          * @param schemas       a map of XML namespaces to schemas.
+          */
+        case class XmlImportSchemaBundleV1(mainNamespace: IRI, schemas: Map[IRI, XmlImportSchemaV1])
+
+        /**
+          * Given the IRI of an internal project-specific ontology, recursively gets a [[NamedGraphEntityInfoV1]] for that ontology
+          * and for any other ontologies containing class definitions used as property objects in the initial ontology.
+          *
+          * @param startOntologyIri     the IRI of the internal project-specific ontology to start with.
+          * @param userProfile          the profile of the user making the request.
+          * @param namedGraphInfosSoFar intermediate results.
+          * @return a map of internal ontology IRIs to [[NamedGraphEntityInfoV1]] objects.
+          */
+        def getNamedGraphInfos(startOntologyIri: IRI, userProfile: UserProfileV1, namedGraphInfosSoFar: Map[IRI, NamedGraphEntityInfoV1] = Map.empty[IRI, NamedGraphEntityInfoV1]): Future[Map[IRI, NamedGraphEntityInfoV1]] = {
+            for {
+                startNamedGraphEntityInfo <- (responderManager ? NamedGraphEntityInfoRequestV1(startOntologyIri, userProfile)).mapTo[NamedGraphEntityInfoV1]
+                propertyInfoResponse: EntityInfoGetResponseV1 <- (responderManager ? EntityInfoGetRequestV1(propertyIris = startNamedGraphEntityInfo.propertyIris, userProfile = userProfile)).mapTo[EntityInfoGetResponseV1]
+
+                ontologyIrisFromObjectClassConstraints: Set[IRI] = propertyInfoResponse.propertyEntityInfoMap.map {
+                    case (propertyIri, propertyInfo) =>
+                        val propertyObjectClassConstraint = propertyInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint).getOrElse {
+                            throw InconsistentTriplestoreDataException(s"Property $propertyIri has no knora-base:objectClassConstraint")
+                        }
+
+                        InputValidation.getInternalOntologyIriFromInternalEntityIri(
+                            internalEntityIri = propertyObjectClassConstraint,
+                            errorFun = () => throw InconsistentTriplestoreDataException(s"Property $propertyIri has an invalid knora-base:objectClassConstraint: $propertyObjectClassConstraint")
+                        )
+                }.toSet
+
+                namedGraphInfoFutures: Set[Future[Map[IRI, NamedGraphEntityInfoV1]]] = ontologyIrisFromObjectClassConstraints.map {
+                    ontologyIri =>
+                        if (!namedGraphInfosSoFar.contains(ontologyIri)) {
+                            getNamedGraphInfos(
+                                startOntologyIri = ontologyIri,
+                                userProfile = userProfile,
+                                namedGraphInfosSoFar = namedGraphInfosSoFar + (ontologyIri -> startNamedGraphEntityInfo)
+                            )
+                        } else {
+                            Future(Map.empty[IRI, NamedGraphEntityInfoV1])
+                        }
+                }
+
+                setOfNewNamedGraphInfos: Set[Map[IRI, NamedGraphEntityInfoV1]] <- Future.sequence(namedGraphInfoFutures)
+                setOfNamedGraphInfoSoFar: Set[Map[IRI, NamedGraphEntityInfoV1]] = setOfNewNamedGraphInfos + namedGraphInfosSoFar
+            } yield setOfNamedGraphInfoSoFar.flatten.toMap
+        }
+
+        /**
+          * Given the IRI of an internal project-specific ontology, generates an [[XmlImportSchemaBundleV1]] for validating
+          * XML imports for that ontology and any other ontologies it depends on.
+          *
+          * @param internalOntologyIri the IRI of the main internal project-specific ontology to be used in the XML import.
+          * @param userProfile the profile of the user making the request.
+          * @return an [[XmlImportSchemaBundleV1]] for validating the import.
+          */
+        def generateSchemasFromOntology(internalOntologyIri: IRI, userProfile: UserProfileV1): Future[XmlImportSchemaBundleV1] = {
+            def getNamespacePrefix(internalEntityIri: IRI): String = {
+                InputValidation.getOntologyPrefixFromInternalEntityIri(
+                    internalEntityIri = internalEntityIri,
+                    errorFun = () => throw InconsistentTriplestoreDataException(s"Invalid entity IRI: $internalEntityIri")
+                )
+            }
+
+            def getEntityName(internalEntityIri: IRI): String = {
+                InputValidation.getEntityNameFromInternalEntityIri(
+                    internalEntityIri = internalEntityIri,
+                    errorFun = () => throw InconsistentTriplestoreDataException(s"Invalid entity IRI: $internalEntityIri")
+                )
+            }
+
+            for {
+                namedGraphInfos: Map[IRI, NamedGraphEntityInfoV1] <- getNamedGraphInfos(startOntologyIri = internalOntologyIri, userProfile = userProfile)
+
+                entityInfoResponseFutures: immutable.Iterable[Future[(IRI, EntityInfoGetResponseV1)]] = namedGraphInfos.map {
+                    case (ontologyIri: IRI, namedGraphInfo: NamedGraphEntityInfoV1) =>
+                        for {
+                            entityInfoResponse: EntityInfoGetResponseV1 <- (responderManager ? EntityInfoGetRequestV1(
+                                resourceClassIris = namedGraphInfo.resourceClasses,
+                                propertyIris = namedGraphInfo.propertyIris,
+                                userProfile = userProfile
+                            )).mapTo[EntityInfoGetResponseV1]
+                        } yield ontologyIri -> entityInfoResponse
+                }
+
+                entityInfoResponses: immutable.Iterable[(IRI, EntityInfoGetResponseV1)] <- Future.sequence(entityInfoResponseFutures)
+                entityInfoResponsesMap: Map[IRI, EntityInfoGetResponseV1] = entityInfoResponses.toMap
+                propertyEntityInfoMap = entityInfoResponsesMap.values.flatMap(_.propertyEntityInfoMap).toMap
+
+                ontologyIrisToNamespaceInfos: Map[IRI, XmlImportNamespaceInfoV1] = namedGraphInfos.keySet.map {
+                    ontologyIri =>
+                        val namespaceInfo = InputValidation.internalOntologyIriToXmlNamespaceInfoV1(
+                            internalOntologyIri = internalOntologyIri,
+                            errorFun = () => throw BadRequestException(s"Invalid ontology IRI: $internalOntologyIri")
+                        )
+
+                        ontologyIri -> namespaceInfo
+                }.toMap
+
+                schemas: Map[IRI, XmlImportSchemaV1] = ontologyIrisToNamespaceInfos.map {
+                    case (ontologyIri, namespaceInfo) =>
+                        val schemaXml = xsd.v1.xml.xmlImport(
+                            targetNamespaceInfo = namespaceInfo,
+                            importedNamespaces = (ontologyIrisToNamespaceInfos - ontologyIri).toArray.sortBy(_._1).map(_._2),
+                            resourceEntityInfoMap = entityInfoResponsesMap(ontologyIri).resourceEntityInfoMap,
+                            propertyEntityInfoMap = propertyEntityInfoMap,
+                            getNamespacePrefix = internalEntityIri => getNamespacePrefix(internalEntityIri),
+                            getEntityName = internalEntityIri => getEntityName(internalEntityIri)
+                        ).toString()
+
+                        val schema = XmlImportSchemaV1(
+                            namespaceInfo = namespaceInfo,
+                            schemaXml = schemaXml
+                        )
+
+                        namespaceInfo.namespace -> schema
+                }
+            } yield XmlImportSchemaBundleV1(
+                mainNamespace = ontologyIrisToNamespaceInfos(internalOntologyIri).namespace,
+                schemas = schemas
+            )
+        }
+
+        /**
           * Validates bulk import XML using project-specific XML schemas and the Knora XML import schema version 1.
           *
           * @param xml the XML to be validated.
           */
         def validateImportXml(xml: String, defaultNamespace: IRI, otherApiNamespaces: Set[IRI]): Unit = {
-            // TODO: generate schemas from ontologies.
+            // TODO: call generateSchemasFromOntology() and use the resulting schemas.
 
             // The schema for the project into which we're importing data.
             val mainSchemaFile = new File("_test_data/xsd_test/biblio.xsd")
@@ -419,29 +558,37 @@ object ResourcesRouteV1 extends Authenticator {
         def importXmlToCreateResourceRequests(rootElement: Elem): Seq[CreateResourceRequestV1] = {
             rootElement.head.child
                 .filter(node => node.label != "#PCDATA")
-                .map(node => {
+                .map(resourceNode => {
                     // Get the client's ID for the resource
-                    val clientIDForResource: String = (node \ "@id").toString
+                    val clientIDForResource: String = (resourceNode \ "@id").toString
 
-                    // Get the resource's label
-                    val resourceLabel: String = (node \ "@label").toString
+                    // Get the resource's rdfs:label
+                    val resourceLabel: String = (resourceNode \ "@label").toString
 
-                    // Get the resource's XML namespace and convert it to an internal ontology IRI
-                    val elementNamespace: String = node.getNamespace(node.prefix)
-                    val elemInternalOntologyIri = InputValidation.xmlImportNamespaceToInternalOntologyIriV1(elementNamespace, () => throw BadRequestException(s"Invalid XML namespace: $elementNamespace"))
+                    // Convert the XML element's label and namespace to an internal resource class IRI.
 
-                    // Ontology IRI + XML node label gives the resource class IRI
-                    val restype_id = elemInternalOntologyIri + node.label
+                    val elementNamespace: String = resourceNode.getNamespace(resourceNode.prefix)
+
+                    val restype_id = InputValidation.xmlImportElementNameToInternalOntologyIriV1(
+                        namespace = elementNamespace,
+                        elementLabel = resourceNode.label,
+                        errorFun = () => throw BadRequestException(s"Invalid XML namespace: $elementNamespace")
+                    )
 
                     // Traverse the child elements to collect the values of the resource
-                    val propertiesWithValues: Map[IRI, Seq[CreateResourceValueV1]] = node.child
+                    val propertiesWithValues: Map[IRI, Seq[CreateResourceValueV1]] = resourceNode.child
                         .filter(childNode => childNode.label != "#PCDATA")
                         .map {
                             propertyNode =>
-                                val propertyNodeNamespace = propertyNode.getNamespace(propertyNode.prefix)
-                                val propertyOntologyIri = InputValidation.xmlImportNamespaceToInternalOntologyIriV1(propertyNodeNamespace, () => throw BadRequestException(s"Invalid XML namespace: $propertyNodeNamespace"))
+                                // Convert the XML element's label and namespace to an internal property IRI.
 
-                                val propertyIri = propertyOntologyIri + propertyNode.label
+                                val propertyNodeNamespace = propertyNode.getNamespace(propertyNode.prefix)
+
+                                val propertyIri = InputValidation.xmlImportElementNameToInternalOntologyIriV1(
+                                    namespace = propertyNodeNamespace,
+                                    elementLabel = propertyNode.label,
+                                    errorFun = () => throw BadRequestException(s"Invalid XML namespace: $propertyNodeNamespace"))
+
                                 val valueNodes: Seq[Node] = scala.xml.Utility.trim(propertyNode).descendant
 
                                 if (propertyNode.descendant.size == 1) {
@@ -801,6 +948,7 @@ object ResourcesRouteV1 extends Authenticator {
   * @param resourceFiles a map of XML namespace URIs to XML files.
   */
 class FileResourceResolver(resourceFiles: Map[IRI, File]) extends LSResourceResolver {
+
     private class FileLSInput(file: File) extends LSInput {
         override def getSystemId: String = null
 

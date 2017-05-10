@@ -104,16 +104,21 @@ object InputValidation {
 
     // A regex for project-specific internal ontologies.
     private val ProjectSpecificInternalOntologyRegex: Regex = (
-        OntologyConstants.KnoraInternal.InternalOntologyStart +
-            "(" + OntologyPrefixLabelPattern + ")" +
-            OntologyConstants.KnoraInternal.InternalOntologyEnd
+        "^" + OntologyConstants.KnoraInternal.InternalOntologyStart +
+            "(" + OntologyPrefixLabelPattern + ")$"
         ).r
+
+    // A regex for entity IRIs in project-specific internal ontologies.
+    private val ProjectSpecificInternalOntologyEntityRegex: Regex = (
+        "^" + OntologyConstants.KnoraInternal.InternalOntologyStart +
+            "(" + OntologyPrefixLabelPattern + ")#(" + OntologyPrefixLabelPattern + ")$"
+    ).r
 
     // A regex for XML import namespaces.
     private val ProjectSpecificXmlImportNamespaceRegex: Regex = (
-        OntologyConstants.KnoraXmlImportV1.ProjectSpecificXmlImportNamespace.XmlImportNamespaceStart +
+        "^" + OntologyConstants.KnoraXmlImportV1.ProjectSpecificXmlImportNamespace.XmlImportNamespaceStart +
             "(" + OntologyPrefixLabelPattern + ")" +
-            OntologyConstants.KnoraXmlImportV1.ProjectSpecificXmlImportNamespace.XmlImportNamespaceEnd
+            OntologyConstants.KnoraXmlImportV1.ProjectSpecificXmlImportNamespace.XmlImportNamespaceEnd + "$"
         ).r
 
     // Valid URL schemes.
@@ -426,20 +431,30 @@ object InputValidation {
     }
 
     /**
-      * Converts the IRI of a project-specific internal ontology (used in the triplestore) to an XML namespace for
-      * use in data import.
+      * A container for an XML import namespace and its prefix label.
       *
-      * @param internalIri the IRI of the project-specific internal ontology.
+      * @param namespace the namespace.
+      * @param prefix the prefix label.
+      */
+    case class XmlImportNamespaceInfoV1(namespace: IRI, prefix: String)
+
+    /**
+      * Converts the IRI of a project-specific internal ontology (used in the triplestore) to an XML prefix label and
+      * namespace for use in data import.
+      *
+      * @param internalOntologyIri the IRI of the project-specific internal ontology. Any trailing # character will be
+      *                    stripped before the conversion.
       * @param errorFun    a function that throws an exception. It will be called if the form of the IRI is not
       *                    valid for an internal ontology IRI.
-      * @return the corresponding XML import namespace.
+      * @return the corresponding XML prefix label and import namespace.
       */
-    def internalOntologyIriToXmlImportNamespaceV1(internalIri: IRI, errorFun: () => Nothing): String = {
-        internalIri match {
+    def internalOntologyIriToXmlNamespaceInfoV1(internalOntologyIri: IRI, errorFun: () => Nothing): XmlImportNamespaceInfoV1 = {
+        internalOntologyIri.stripSuffix("#") match {
             case ProjectSpecificInternalOntologyRegex(prefix) =>
-                OntologyConstants.KnoraXmlImportV1.ProjectSpecificXmlImportNamespace.XmlImportNamespaceStart +
+                val namespace = OntologyConstants.KnoraXmlImportV1.ProjectSpecificXmlImportNamespace.XmlImportNamespaceStart +
                     prefix +
                     OntologyConstants.KnoraXmlImportV1.ProjectSpecificXmlImportNamespace.XmlImportNamespaceEnd
+                XmlImportNamespaceInfoV1(namespace = namespace, prefix = prefix)
 
             case _ => errorFun()
         }
@@ -447,7 +462,7 @@ object InputValidation {
 
     /**
       * Converts an XML namespace (used in XML data import) to the IRI of a project-specific internal ontology (used
-      * in the triplestore).
+      * in the triplestore). The resulting IRI will not end in a # character.
       *
       * @param namespace the XML namespace.
       * @param errorFun  a function that throws an exception. It will be called if the form of the string is not
@@ -457,11 +472,70 @@ object InputValidation {
     def xmlImportNamespaceToInternalOntologyIriV1(namespace: String, errorFun: () => Nothing): IRI = {
         namespace match {
             case ProjectSpecificXmlImportNamespaceRegex(prefix) =>
-                OntologyConstants.KnoraInternal.InternalOntologyStart +
-                    prefix +
-                    OntologyConstants.KnoraInternal.InternalOntologyEnd
+                OntologyConstants.KnoraInternal.InternalOntologyStart + prefix
 
             case _ => errorFun()
         }
     }
+
+    /**
+      * Converts a XML element name in a particular namespace (used in XML data import) to the IRI of a
+      * project-specific internal ontology entity (used in the triplestore).
+      *
+      * @param namespace the XML namespace.
+      * @param elementLabel the XML element label.
+      * @param errorFun a function that throws an exception. It will be called if the form of the namespace is not
+      *                 valid for a Knora XML import namespace.
+      * @return the corresponding project-specific internal ontology entity IRI.
+      */
+    def xmlImportElementNameToInternalOntologyIriV1(namespace: String, elementLabel: String, errorFun: () => Nothing): IRI = {
+        val ontologyIri = xmlImportNamespaceToInternalOntologyIriV1(namespace, errorFun)
+        ontologyIri + "#" + elementLabel
+    }
+
+    /**
+      * Given the IRI of an internal ontology entity, returns the ontology prefix label.
+      *
+      * @param internalEntityIri the ontology entity IRI.
+      * @param errorFun a function that throws an exception. It will be called if the form of the string is not
+      *                 valid for an internal ontology entity IRI.
+      * @return the ontology prefix label specified in the entity IRI.
+      */
+    def getOntologyPrefixFromInternalEntityIri(internalEntityIri: IRI, errorFun: () => Nothing): String = {
+        internalEntityIri match {
+            case ProjectSpecificInternalOntologyEntityRegex(prefix, _) => prefix
+            case _ => errorFun()
+        }
+    }
+
+    /**
+      * Given the IRI of an internal ontology entity, returns the internal ontology IRI.
+      *
+      * @param internalEntityIri the ontology entity IRI.
+      * @param errorFun a function that throws an exception. It will be called if the form of the string is not
+      *                 valid for an internal ontology entity IRI.
+      * @return the ontology IRI portion of the entity IRI.
+      */
+    def getInternalOntologyIriFromInternalEntityIri(internalEntityIri: IRI, errorFun: () => Nothing): IRI = {
+        internalEntityIri match {
+            case ProjectSpecificInternalOntologyEntityRegex(prefix, _) => OntologyConstants.KnoraInternal.InternalOntologyStart + prefix
+            case _ => errorFun()
+        }
+    }
+
+    /**
+      * Given the IRI of an internal ontology entity, returns the local name of the entity.
+      *
+      * @param internalEntityIri the ontology entity IRI.
+      * @param errorFun a function that throws an exception. It will be called if the form of the string is not
+      *                 valid for an internal ontology entity IRI.
+      * @return the local name specified in the entity IRI.
+      */
+    def getEntityNameFromInternalEntityIri(internalEntityIri: IRI, errorFun: () => Nothing): String = {
+        internalEntityIri match {
+            case ProjectSpecificInternalOntologyEntityRegex(_, entityName) => entityName
+            case _ => errorFun()
+        }
+    }
+
 }

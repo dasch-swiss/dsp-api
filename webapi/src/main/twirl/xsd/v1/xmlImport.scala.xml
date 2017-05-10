@@ -20,37 +20,36 @@
 
 @import org.knora.webapi._
 @import org.knora.webapi.messages.v1.responder.ontologymessages._
+@import org.knora.webapi.util.InputValidation.XmlImportNamespaceInfoV1
 
 @**
  * Generates an XML schema based on ontology definitions.
  *
- * @param targetNamespace the target XML namespace of the schema.
- * @param targetNamespacePrefix the prefix label of the target namespace.
- * @param importedNamespaces the prefix labels and IRIs of any other project-specific namespaces to be imported.
+ * @param targetNamespaceInfo information about the target XML namespace of the schema.
+ * @param importedNamespaces information about any other project-specific namespaces to be imported.
  * @param information about the resource classes defined in the internal ontology.
  * @param information about the properties defined in the internal ontology.
- * @param getNamespacePrefix a function that takes an ontology entity IRI and returns the corresponding XML namespace prefix label.
- * @param getEntityName a function that takes an ontology IRI and returns the corresponding XML element label.
+ * @param getNamespacePrefix a function that takes an internal ontology entity IRI and returns the corresponding XML namespace prefix label.
+ * @param getEntityName a function that takes an internal ontology entity IRI and returns the corresponding XML element label.
  *@
-@(targetNamespace: String,
-  targetNamespacePrefix: String,
-  importedNamespaces: Seq[(String, IRI)],
+@(targetNamespaceInfo: XmlImportNamespaceInfoV1,
+  importedNamespaces: Seq[XmlImportNamespaceInfoV1],
   resourceEntityInfoMap: Map[IRI, ResourceEntityInfoV1],
   propertyEntityInfoMap: Map[IRI, PropertyEntityInfoV1],
   getNamespacePrefix: IRI => String,
   getEntityName: IRI => String)
 
 <?xml version="1.0" encoding="UTF-8"?>
-<xs:schema elementFormDefault="qualified" targetNamespace="@targetNamespace"
-           xmlns="@targetNamespace" xmlns:xs="http://www.w3.org/2001/XMLSchema"
+<xs:schema elementFormDefault="qualified" targetNamespace="@{targetNamespaceInfo.namespace}"
+           xmlns="@{targetNamespaceInfo.namespace}" xmlns:xs="http://www.w3.org/2001/XMLSchema"
            xmlns:knoraXmlImport="http://api.knora.org/ontology/knora-xml-import/v1#"
-           @for((prefix, namespace) <- importedNamespaces) {
-               xmlns:@prefix="@namespace"
+           @for(namespaceInfo <- importedNamespaces) {
+               xmlns:@{namespaceInfo.prefix}="@{namespaceInfo.namespace}"
            }
            xmlns:vc="http://www.w3.org/2007/XMLSchema-versioning" vc:minVersion="1.0">
     <xs:import namespace="http://api.knora.org/ontology/knora-xml-import/v1#" schemaLocation="knora-xml-import-v1.xsd"/>
-    @for((prefix, namespace) <- importedNamespaces) {
-        <xs:import namespace="@namespace" schemaLocation="@{prefix}.xsd"/>
+    @for(namespaceInfo <- importedNamespaces) {
+        <xs:import namespace="@{namespaceInfo.namespace}" schemaLocation="@{namespaceInfo.prefix}.xsd"/>
     }
 
     @for((resourceClassIri, resourceClassInfo) <- resourceEntityInfoMap.toArray.sortBy(_._1)) {
@@ -77,7 +76,7 @@
 
                                                 @defining(getNamespacePrefix(propertyIri)) { propertyNamespacePrefix =>
 
-                                                    @if(propertyNamespacePrefix == targetNamespacePrefix) {
+                                                    @if(propertyNamespacePrefix == targetNamespaceInfo.prefix) {
 
                                                         name="@{getEntityName(propertyIri)}"
 
@@ -115,13 +114,13 @@
                                                     }
                                                 }
 
-                                                @defining(propertyInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint).getOrElse(throw InconsistentTriplestoreDataException(s"Property ${propertyIri} has no knora-base:objectClassConstraint"))) { propertyObjectClassConstraint =>
+                                                @defining(propertyInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint).getOrElse(throw InconsistentTriplestoreDataException(s"Property $propertyIri has no knora-base:objectClassConstraint"))) { propertyObjectClassConstraint =>
 
                                                     @if(propertyInfo.isLinkProp) {
 
                                                             @defining(getNamespacePrefix(propertyObjectClassConstraint)) { targetResourceClassNamespacePrefix =>
 
-                                                                @if(targetResourceClassNamespacePrefix == targetNamespacePrefix) {
+                                                                @if(targetResourceClassNamespacePrefix == targetNamespaceInfo.prefix) {
 
                                                                     type="@{getEntityName(propertyObjectClassConstraint)}_linkValueType"
 
