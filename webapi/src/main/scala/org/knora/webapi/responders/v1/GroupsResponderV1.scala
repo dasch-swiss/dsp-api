@@ -19,6 +19,7 @@ package org.knora.webapi.responders.v1
 import java.util.UUID
 
 import akka.actor.Status
+import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi
 import org.knora.webapi.messages.v1.responder.groupmessages._
@@ -44,8 +45,12 @@ class GroupsResponderV1 extends ResponderV1 {
     // Global lock IRI used for group creation and updating
     val GROUPS_GLOBAL_LOCK_IRI = "http://data.knora.org/users"
 
+    val UNKNOWN_USER = "UnknownUser"
+    val KNOWN_USER = "KnownUser"
+    val CREATOR = "Creator"
     val PROJECT_MEMBER = "ProjectMember"
     val PROJECT_ADMIN = "ProjectAdmin"
+    val SYSTEM_ADMIN = "SystemAdmin"
 
     /**
       * Receives a message extending [[ProjectsResponderRequestV1]], and returns an appropriate response message, or
@@ -61,7 +66,7 @@ class GroupsResponderV1 extends ResponderV1 {
     }
 
     /**
-      * Gets all the groups and returns them as a [[GroupsResponseV1]].
+      * Gets all the groups (without built-in groups) and returns them as a [[GroupsResponseV1]].
       *
       * @param userProfile the profile of the user that is making the request.
       * @return all the groups as a [[GroupsResponseV1]].
@@ -139,44 +144,74 @@ class GroupsResponderV1 extends ResponderV1 {
         /* Check to see if it is a built-in implicit group and skip sparql query */
 
         groupName match {
-            case PROJECT_MEMBER => groupInfoForProjectMemberGroupV1(projectIRI, userProfile)
-            case PROJECT_ADMIN => groupInfoForProjectAdminGroupV1(projectIRI, userProfile)
+            case UNKNOWN_USER => {
+                FastFuture.successful(
+                    GroupInfoResponseV1(GroupInfoV1(
+                        id = "-",
+                        name = UNKNOWN_USER,
+                        description = Some("Built-in Unknowmn User Group"),
+                        belongsToProject = "-",
+                        status = true,
+                        hasSelfJoinEnabled = false))
+                )
+            }
+            case KNOWN_USER => {
+                FastFuture.successful(
+                    GroupInfoResponseV1(GroupInfoV1(
+                        id = "-",
+                        name = KNOWN_USER,
+                        description = Some("Built-in Known User Group"),
+                        belongsToProject = "-",
+                        status = true,
+                        hasSelfJoinEnabled = false))
+                )
+            }
+            case CREATOR => {
+                FastFuture.successful(
+                    GroupInfoResponseV1(GroupInfoV1(
+                        id = "-",
+                        name = CREATOR,
+                        description = Some("Built-in Creator Group"),
+                        belongsToProject = "-",
+                        status = true,
+                        hasSelfJoinEnabled = false))
+                )
+            }
+            case PROJECT_MEMBER => {
+                FastFuture.successful(
+                    GroupInfoResponseV1(GroupInfoV1(
+                        id = "-",
+                        name = "ProjectMember",
+                        description = Some("Built-in Project Member Group"),
+                        belongsToProject = projectIRI,
+                        status = true,
+                        hasSelfJoinEnabled = false))
+                )
+            }
+            case PROJECT_ADMIN => {
+                FastFuture.successful(
+                    GroupInfoResponseV1(GroupInfoV1(
+                        id = "-",
+                        name = "ProjectAdmin",
+                        description = Some("Default Project Admin Group"),
+                        belongsToProject = projectIRI,
+                        status = true,
+                        hasSelfJoinEnabled = false))
+                )
+            }
+            case SYSTEM_ADMIN => {
+                FastFuture.successful(
+                    GroupInfoResponseV1(GroupInfoV1(
+                        id = "-",
+                        name = "SystemAdmin",
+                        description = Some("Default System Admin Group"),
+                        belongsToProject = projectIRI,
+                        status = true,
+                        hasSelfJoinEnabled = false))
+                )
+            }
             case _ => groupInfoByNameFromTriplestoreV1(projectIRI, groupName, userProfile)
         }
-    }
-
-    private def groupInfoForProjectMemberGroupV1(projectIRI: IRI, userProfile: Option[UserProfileV1]): Future[GroupInfoResponseV1] = {
-
-        val groupInfo = GroupInfoV1(
-            id = "-",
-            name = "ProjectMember",
-            description = Some("Default Project Member Group"),
-            belongsToProject = projectIRI,
-            status = true,
-            hasSelfJoinEnabled = false)
-
-        val groupInfoResponse = GroupInfoResponseV1(
-            group_info = groupInfo
-        )
-
-        Future(groupInfoResponse)
-    }
-
-    private def groupInfoForProjectAdminGroupV1(projectIRI: IRI, userProfile: Option[UserProfileV1]): Future[GroupInfoResponseV1] = {
-
-        val groupInfo = GroupInfoV1(
-            id = "-",
-            name = "ProjectAdmin",
-            description = Some("Default Project Admin Group"),
-            belongsToProject = projectIRI,
-            status = true,
-            hasSelfJoinEnabled = false)
-
-        val groupInfoResponse = GroupInfoResponseV1(
-            group_info = groupInfo
-        )
-
-        Future(groupInfoResponse)
     }
 
     private def groupInfoByNameFromTriplestoreV1(projectIRI: IRI, groupName: String, userProfile: Option[UserProfileV1]): Future[GroupInfoResponseV1] = {

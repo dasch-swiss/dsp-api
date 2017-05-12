@@ -23,6 +23,7 @@ import akka.http.scaladsl.testkit.RouteTestTimeout
 import com.typesafe.config.ConfigFactory
 import org.knora.webapi.messages.v1.responder.sessionmessages.SessionJsonProtocol
 import org.knora.webapi.messages.v1.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
+import org.knora.webapi.util.{AkkaHttpUtils, MutableTestIri}
 import org.knora.webapi.{E2ESpec, SharedAdminTestData}
 import spray.json._
 
@@ -89,20 +90,114 @@ class ProjectsV1E2ESpec extends E2ESpec(ProjectsV1E2ESpec.config) with SessionJs
 
         "used to modify project information" should {
 
-            "create a new project and return the 'full' project info if the supplied shortname is unique" in {
-                fail("test not implemented")
+            val newProjectIri = new MutableTestIri
+
+            "create a new project and return the project info if the supplied shortname is unique" in {
+
+                val params =
+                    s"""
+                       |{
+                       |    "shortname": "newproject",
+                       |    "longname": "project longname",
+                       |    "description": "project description",
+                       |    "keywords": "keywords",
+                       |    "logo": "/fu/bar/baz.jpg",
+                       |    "status": true,
+                       |    "selfjoin": false
+                       |}
+                """.stripMargin
+
+
+                val request = Post(baseApiUrl + s"/v1/projects", HttpEntity(ContentTypes.`application/json`, params))
+                val response: HttpResponse = singleAwaitingRequest(request)
+                //println(s"response: ${response.toString}")
+                response.status should be (StatusCodes.OK)
+
+                val jsonResult: Map[String, JsValue] = AkkaHttpUtils.httpResponseToJson(response).fields("project_info").asJsObject.fields
+                jsonResult("shortname").convertTo[String] should be ("newproject")
+                jsonResult("longname").convertTo[String] should be ("project longname")
+                jsonResult("description").convertTo[String] should be ("project description")
+                jsonResult("keywords").convertTo[String] should be ("keywords")
+                jsonResult("logo").convertTo[String] should be ("/fu/bar/baz.jpg")
+                jsonResult("status").convertTo[Boolean] should be (true)
+                jsonResult("selfjoin").convertTo[Boolean] should be (false)
+
+                val iri = jsonResult("id").convertTo[String]
+                newProjectIri.set(iri)
+                //println(s"iri: ${newProjectIri.get}")
+
+            }
+
+            "return a 'BadRequest' if the supplied project shortname during creation is not unique" in {
+                val params =
+                    s"""
+                       |{
+                       |    "shortname": "newproject",
+                       |    "longname": "project longname",
+                       |    "description": "project description",
+                       |    "keywords": "keywords",
+                       |    "logo": "/fu/bar/baz.jpg",
+                       |    "status": true,
+                       |    "selfjoin": false
+                       |}
+                """.stripMargin
+
+
+                val request = Post(baseApiUrl + s"/v1/projects", HttpEntity(ContentTypes.`application/json`, params))
+                val response: HttpResponse = singleAwaitingRequest(request)
+                println(s"response: ${response.toString}")
+                response.status should be (StatusCodes.BadRequest)
+            }
+
+            "return 'BadRequest' if 'shortname' during creation is missing" in {
+                val params =
+                    s"""
+                       |{
+                       |    "longname": "project longname",
+                       |    "description": "project description",
+                       |    "keywords": "keywords",
+                       |    "logo": "/fu/bar/baz.jpg",
+                       |    "status": true,
+                       |    "selfjoin": false
+                       |}
+                """.stripMargin
+
+
+                val request = Post(baseApiUrl + s"/v1/projects", HttpEntity(ContentTypes.`application/json`, params))
+                val response: HttpResponse = singleAwaitingRequest(request)
+                println(s"response: ${response.toString}")
+                response.status should be (StatusCodes.BadRequest)
             }
 
             "update a project" in {
-                fail("test not implemented")
-            }
 
-            "return a 'DuplicateValueException' if the supplied project shortname is not unique" in {
-                fail("test not implemented")
-            }
+                val params =
+                    s"""
+                       |{
+                       |    "shortname": "newproject",
+                       |    "longname": "updated project longname",
+                       |    "description": "updated project description",
+                       |    "keywords": "updated keywords",
+                       |    "logo": "/fu/bar/baz-updated.jpg",
+                       |    "status": false,
+                       |    "selfjoin": true
+                       |}
+                """.stripMargin
 
-            "return 'BadRequestException' if 'shortname' is missing" in {
-                fail("test not implemented")
+                val projectIriEncoded = java.net.URLEncoder.encode(newProjectIri.get, "utf-8")
+                val request = Put(baseApiUrl + s"/v1/projects/" + projectIriEncoded, HttpEntity(ContentTypes.`application/json`, params))
+                val response: HttpResponse = singleAwaitingRequest(request)
+                //println(s"response: ${response.toString}")
+                response.status should be (StatusCodes.OK)
+
+                val jsonResult: Map[String, JsValue] = AkkaHttpUtils.httpResponseToJson(response).fields("project_info").asJsObject.fields
+                jsonResult("shortname").convertTo[String] should be ("newproject")
+                jsonResult("longname").convertTo[String] should be ("updated project longname")
+                jsonResult("description").convertTo[String] should be ("updated project description")
+                jsonResult("keywords").convertTo[String] should be ("updated keywords")
+                jsonResult("logo").convertTo[String] should be ("/fu/bar/baz-updated.jpg")
+                jsonResult("status").convertTo[Boolean] should be (false)
+                jsonResult("selfjoin").convertTo[Boolean] should be (true)
             }
         }
 

@@ -76,13 +76,15 @@ class UsersResponderV1 extends ResponderV1 {
       * @return all the users as a sequence of [[UserDataV1]].
       */
     private def usersGetV1: Future[Seq[UserDataV1]] = {
+
+        log.debug("usersGetV1")
+
         for {
             sparqlQueryString <- Future(queries.sparql.v1.txt.getUsers(
                 triplestore = settings.triplestoreType
             ).toString())
 
             usersResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResponse]
-
 
             usersResponseRows: Seq[VariableResultsRow] = usersResponse.results.bindings
 

@@ -31,7 +31,7 @@ import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.messages.v1.store.triplestoremessages._
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.util.ActorUtil._
-import org.knora.webapi.util.{KnoraIdUtil, PermissionUtilV1}
+import org.knora.webapi.util.KnoraIdUtil
 
 import scala.concurrent.Future
 
@@ -60,31 +60,9 @@ class ProjectsResponderV1 extends ResponderV1 {
         case ProjectInfoByShortnameGetRequestV1(shortname, userProfile) => future2Message(sender(), projectInfoByShortnameGetRequestV1(shortname, userProfile), log)
         case ProjectMembersByIRIGetRequestV1(iri, userProfileV1) => future2Message(sender(), projectMembersByIRIGetRequestV1(iri, userProfileV1), log)
         case ProjectMembersByShortnameGetRequestV1(shortname, userProfileV1) => future2Message(sender(), projectMembersByShortnameGetRequestV1(shortname, userProfileV1), log)
-        case ProjectCreateRequestV1(createRequest: CreateProjectApiRequestV1, userProfileV1, apiRequestID) => future2Message(sender(), projectCreateRequestV1(createRequest, userProfileV1, apiRequestID), log)
+        case ProjectCreateRequestV1(createRequest, userProfileV1, apiRequestID) => future2Message(sender(), projectCreateRequestV1(createRequest, userProfileV1, apiRequestID), log)
+        case ProjectChangeRequestV1(projectIri, changeProjectRequest, userProfileV1, apiRequestID) => future2Message(sender(), changeBasicInformationRequestV1(projectIri, changeProjectRequest, userProfileV1, apiRequestID), log)
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
-    }
-
-    /**
-      * Gets permissions for the current user on the given project.
-      *
-      * @param projectIRI           the Iri of the project.
-      * @param propertiesForProject assertions containing permissions on the project.
-      * @param userProfile          the user that is making the request.
-      * @return permission level of the current user on the project.
-      */
-    private def getUserPermissionV1ForProject(projectIRI: IRI, propertiesForProject: Map[IRI, String], userProfile: UserProfileV1): Option[Int] = {
-
-        // propertiesForProject must contain an owner for the project (knora-base:attachedToUser).
-        propertiesForProject.get(OntologyConstants.KnoraBase.AttachedToUser) match {
-            case Some(user) => // add statement that `PermissionUtil.getUserPermissionV1` requires but is not present in the data for projects.
-                val assertionsForProject: Seq[(IRI, IRI)] = (OntologyConstants.KnoraBase.AttachedToProject, projectIRI) +: propertiesForProject.toVector
-                PermissionUtilV1.getUserPermissionV1FromAssertions(
-                    subjectIri = projectIRI,
-                    assertions = assertionsForProject,
-                    userProfile = userProfile
-                )
-            case None => None // TODO: this is temporary to prevent PermissionUtil.getUserPermissionV1 from failing because owner id is missing in the data for project. See issue 1.
-        }
     }
 
     /**
@@ -94,6 +72,8 @@ class ProjectsResponderV1 extends ResponderV1 {
       * @return all the projects as a [[ProjectsResponseV1]].
       */
     private def projectsGetRequestV1(userProfile: Option[UserProfileV1]): Future[ProjectsResponseV1] = {
+
+        //log.debug("projectsGetRequestV1")
 
         for {
             projects <- projectsGetV1(userProfile)
@@ -143,11 +123,11 @@ class ProjectsResponderV1 extends ResponderV1 {
                         description = propsMap.get(OntologyConstants.KnoraBase.ProjectDescription),
                         keywords = propsMap.get(OntologyConstants.KnoraBase.ProjectKeywords),
                         logo = propsMap.get(OntologyConstants.KnoraBase.ProjectLogo),
-                        belongsToInstitution = propsMap.get(OntologyConstants.KnoraBase.BelongsToProject),
+                        institution = propsMap.get(OntologyConstants.KnoraBase.BelongsToProject),
                         ontologyNamedGraph = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectOntologyGraph, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no projectOntologyGraph defined.")),
                         dataNamedGraph = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectDataGraph, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no projectDataGraph defined.")),
                         status = propsMap.getOrElse(OntologyConstants.KnoraBase.Status, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no status defined.")).toBoolean,
-                        hasSelfJoinEnabled = propsMap.getOrElse(OntologyConstants.KnoraBase.HasSelfJoinEnabled, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no hasSelfJoinEnabled defined.")).toBoolean
+                        selfjoin = propsMap.getOrElse(OntologyConstants.KnoraBase.HasSelfJoinEnabled, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no hasSelfJoinEnabled defined.")).toBoolean
                     )
             }.toSeq
 
@@ -156,6 +136,7 @@ class ProjectsResponderV1 extends ResponderV1 {
 
     /**
       * Gets all the named graphs from all projects and returns them as a sequence of [[NamedGraphV1]]
+      *
       * @param userProfile
       * @return a sequence of [[NamedGraphV1]]
       */
@@ -196,16 +177,20 @@ class ProjectsResponderV1 extends ResponderV1 {
     /**
       * Gets the project with the given project Iri and returns the information as a [[ProjectInfoResponseV1]].
       *
-      * @param projectIRI the Iri of the project requested.
+      * @param projectIri  the Iri of the project requested.
       * @param userProfile the profile of user that is making the request.
       * @return information about the project as a [[ProjectInfoResponseV1]].
       */
-    private def projectInfoByIRIGetRequestV1(projectIRI: IRI, userProfile: Option[UserProfileV1] = None): Future[ProjectInfoResponseV1] = {
+    private def projectInfoByIRIGetRequestV1(projectIri: IRI, userProfile: Option[UserProfileV1] = None): Future[ProjectInfoResponseV1] = {
 
-        log.debug(s"projectInfoByIRIGetRequestV1 - projectIRI: $projectIRI")
+        //log.debug("projectInfoByIRIGetRequestV1 - projectIRI: {}", projectIRI)
 
         for {
-            projectInfo <- projectInfoByIRIGetV1(projectIRI, userProfile)
+            maybeProjectInfo: Option[ProjectInfoV1] <- projectInfoByIRIGetV1(projectIri, userProfile)
+            projectInfo = maybeProjectInfo match {
+                case Some(pi) => pi
+                case None => throw NotFoundException(s"Project '$projectIri' not found")
+            }
         } yield ProjectInfoResponseV1(
             project_info = projectInfo
         )
@@ -214,13 +199,13 @@ class ProjectsResponderV1 extends ResponderV1 {
     /**
       * Gets the project with the given project Iri and returns the information as a [[ProjectInfoV1]].
       *
-      * @param projectIri the Iri of the project requested.
+      * @param projectIri  the Iri of the project requested.
       * @param userProfile the profile of user that is making the request.
       * @return information about the project as a [[ProjectInfoResponseV1]].
       */
-    private def projectInfoByIRIGetV1(projectIri: IRI, userProfile: Option[UserProfileV1] = None): Future[ProjectInfoV1] = {
+    private def projectInfoByIRIGetV1(projectIri: IRI, userProfile: Option[UserProfileV1] = None): Future[Option[ProjectInfoV1]] = {
 
-        log.debug(s"projectInfoByIRIGetV1 - projectIRI: $projectIri")
+        //log.debug("projectInfoByIRIGetV1 - projectIRI: {}", projectIri)
 
         for {
             sparqlQuery <- Future(queries.sparql.v1.txt.getProjectByIri(
@@ -229,13 +214,13 @@ class ProjectsResponderV1 extends ResponderV1 {
             ).toString())
             projectResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
 
-            _ = if (projectResponse.results.bindings.isEmpty) {
-                throw NotFoundException(s"Project '$projectIri' not found")
+            projectInfo = if (projectResponse.results.bindings.isEmpty) {
+                None
+            } else {
+                Some(createProjectInfoV1(projectResponse = projectResponse.results.bindings, projectIri = projectIri, userProfile))
             }
 
-            projectInfo = createProjectInfoV1(projectResponse = projectResponse.results.bindings, projectIri = projectIri, userProfile)
-
-            _ = log.debug(s"projectInfoByIRIGetV1 - projectInfo: $projectInfo")
+            _ = log.debug("projectInfoByIRIGetV1 - projectInfo: {}", projectInfo)
 
         } yield projectInfo
     }
@@ -248,6 +233,9 @@ class ProjectsResponderV1 extends ResponderV1 {
       * @return information about the project as a [[ProjectInfoResponseV1]].
       */
     private def projectInfoByShortnameGetRequestV1(shortName: String, userProfile: Option[UserProfileV1]): Future[ProjectInfoResponseV1] = {
+
+        //log.debug("projectInfoByShortnameGetRequestV1 - shortName: {}", shortName)
+
         for {
             sparqlQueryString <- Future(queries.sparql.v1.txt.getProjectByShortname(
                 triplestore = settings.triplestoreType,
@@ -276,15 +264,13 @@ class ProjectsResponderV1 extends ResponderV1 {
     /**
       * Gets the members of a project with the given IRI.
       *
-      * @param projectIri the IRI of the project.
+      * @param projectIri    the IRI of the project.
       * @param userProfileV1 the profile of the user that is making the request.
       * @return the members of a project as a [[ProjectMembersGetResponseV1]]
       */
     private def projectMembersByIRIGetRequestV1(projectIri: IRI, userProfileV1: UserProfileV1): Future[ProjectMembersGetResponseV1] = {
 
-        log.debug(s"projectMembersByIRIGetRequestV1 - projectIRI: $projectIri")
-
-
+        log.debug("projectMembersByIRIGetRequestV1 - projectIRI: {}", projectIri)
 
         for {
             sparqlQueryString <- Future(queries.sparql.v1.txt.getProjectMembersByIri(
@@ -313,11 +299,13 @@ class ProjectsResponderV1 extends ResponderV1 {
     /**
       * Gets the members of a project with the given shortname.
       *
-      * @param shortname the IRI of the project.
+      * @param shortname     the IRI of the project.
       * @param userProfileV1 the profile of the user that is making the request.
       * @return the members of a project as a [[ProjectMembersGetResponseV1]]
       */
     private def projectMembersByShortnameGetRequestV1(shortname: String, userProfileV1: UserProfileV1): Future[ProjectMembersGetResponseV1] = {
+
+        log.debug("projectMembersByShortnameGetRequestV1 - shortname: {}", shortname)
 
         for {
             sparqlQueryString <- Future(queries.sparql.v1.txt.getProjectMembersByShortname(
@@ -345,8 +333,10 @@ class ProjectsResponderV1 extends ResponderV1 {
 
     private def projectCreateRequestV1(createRequest: CreateProjectApiRequestV1, userProfile: UserProfileV1, apiRequestID: UUID): Future[ProjectOperationResponseV1] = {
 
+        //log.debug("projectCreateRequestV1 - createRequest: {}", createRequest)
+
         def projectCreateTask(createRequest: CreateProjectApiRequestV1, userProfile: UserProfileV1, apiRequestID: UUID): Future[ProjectOperationResponseV1] = for {
-            // check if required properties are not empty
+        // check if required properties are not empty
             _ <- Future(if (createRequest.shortname.isEmpty) throw BadRequestException("'Shortname' cannot be empty"))
 
             // check if the supplied 'shortname' for the new project is unique, i.e. not already registered
@@ -379,15 +369,14 @@ class ProjectsResponderV1 extends ResponderV1 {
                 maybeDescription = createRequest.description,
                 maybeKeywords = createRequest.keywords,
                 maybeLogo = createRequest.logo,
-                basepath = createRequest.basepath,
                 status = createRequest.status,
-                hasSelfJoinEnabled = createRequest.hasSelfJoinEnabled,
+                hasSelfJoinEnabled = createRequest.selfjoin,
                 projectOntologyGraph = projectOntologyGraphString,
                 projectDataGraph = projectDataGraphString
             ).toString
-            //_ = log.debug(s"createNewProjectV1 - update query: $createNewProjectSparqlString")
+            //_ = log.debug("createNewProjectV1 - update query: {}", createNewProjectSparqlString)
 
-            createResourceResponse <- (storeManager ? SparqlUpdateRequest(createNewProjectSparqlString)).mapTo[SparqlUpdateResponse]
+            createProjectResponse <- (storeManager ? SparqlUpdateRequest(createNewProjectSparqlString)).mapTo[SparqlUpdateResponse]
 
 
             // Verify that the project was created.
@@ -397,7 +386,7 @@ class ProjectsResponderV1 extends ResponderV1 {
             ).toString
             projectInfoQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
             projectResponse = projectInfoQueryResponse.results.bindings
-            //_ = log.debug(s"createNewProjectV1 - verify query response: $projectResponse")
+            //_ = log.debug("createNewProjectV1 - verify query response: {}", projectResponse)
 
             _ = if (projectResponse.isEmpty) {
                 throw UpdateNotPerformedException(s"Project $newProjectIRI was not created. Please report this as a possible bug.")
@@ -421,7 +410,141 @@ class ProjectsResponderV1 extends ResponderV1 {
         } yield taskResult
     }
 
-    private def projectUpdateRequestV1(userProfileV1: UserProfileV1): Future[ProjectInfoResponseV1] = ???
+    private def changeBasicInformationRequestV1(projectIri: IRI, changeProjectRequest: ChangeProjectApiRequestV1, userProfileV1: UserProfileV1, apiRequestID: UUID): Future[ProjectOperationResponseV1] = {
+
+        log.debug(s"changeBasicInformationRequestV1: changeProjectRequest: {}", changeProjectRequest)
+
+        /**
+          * The actual change project task run with an IRI lock.
+          */
+        def changeProjectTask(projectIri: IRI, changeProjectRequest: ChangeProjectApiRequestV1, userProfileV1: UserProfileV1, apiRequestID: UUID): Future[ProjectOperationResponseV1] = for {
+
+            _ <- Future(
+                // check if necessary information is present
+                if (projectIri.isEmpty) throw BadRequestException("Project IRI cannot be empty")
+            )
+
+            // check if the requesting user is allowed to perform updates
+            _ = if (!userProfileV1.permissionData.isProjectAdmin(projectIri) && !userProfileV1.permissionData.isSystemAdmin) {
+                // not a project admin and not a system admin
+                throw ForbiddenException("Project's information can only be changed by a project or system admin.")
+            }
+
+            // create the update request
+            projectUpdatePayload = ProjectUpdatePayloadV1(
+                longname = changeProjectRequest.longname,
+                description = changeProjectRequest.description,
+                keywords = changeProjectRequest.keywords,
+                logo = changeProjectRequest.logo,
+                status = changeProjectRequest.status,
+                selfjoin = changeProjectRequest.selfjoin
+            )
+
+            result <- updateProjectV1(projectIri, projectUpdatePayload, userProfileV1)
+
+        } yield result
+
+        for {
+        // run the change status task with an IRI lock
+            taskResult <- IriLocker.runWithIriLock(
+                apiRequestID,
+                projectIri,
+                () => changeProjectTask(projectIri, changeProjectRequest, userProfileV1, apiRequestID)
+            )
+        } yield taskResult
+
+    }
+
+    private def updateProjectV1(projectIri: IRI, projectUpdatePayload: ProjectUpdatePayloadV1, userProfile: UserProfileV1): Future[ProjectOperationResponseV1] = {
+
+        log.debug("updateProjectV1 - projectUpdatePayload: {}", projectUpdatePayload)
+
+        val parametersCount = List(
+            projectUpdatePayload.shortname,
+            projectUpdatePayload.longname,
+            projectUpdatePayload.description,
+            projectUpdatePayload.keywords,
+            projectUpdatePayload.logo,
+            projectUpdatePayload.institution,
+            projectUpdatePayload.ontologyNamedGraph,
+            projectUpdatePayload.dataNamedGraph,
+            projectUpdatePayload.status,
+            projectUpdatePayload.selfjoin).flatten.size
+
+        if (parametersCount == 0) throw BadRequestException("No data would be changed. Aborting request.")
+
+        for {
+            /* Update project */
+            updateProjectSparqlString <- Future(queries.sparql.v1.txt.updateProject(
+                adminNamedGraphIri = "http://www.knora.org/data/admin",
+                triplestore = settings.triplestoreType,
+                projectIri = projectIri,
+                maybeShortname = projectUpdatePayload.shortname,
+                maybeLongname = projectUpdatePayload.longname,
+                maybeDescription = projectUpdatePayload.description,
+                maybeKeywords = projectUpdatePayload.keywords,
+                maybeLogo = projectUpdatePayload.logo,
+                maybeInstitution = projectUpdatePayload.institution,
+                maybeOntologyGraph = projectUpdatePayload.ontologyNamedGraph,
+                maybeDataGraph = projectUpdatePayload.ontologyNamedGraph,
+                maybeStatus = projectUpdatePayload.status,
+                maybeSelfjoin = projectUpdatePayload.selfjoin
+            ).toString)
+            _ = log.debug(s"updateProjectV1 - query: {}",updateProjectSparqlString)
+
+            updateProjectResponse <- (storeManager ? SparqlUpdateRequest(updateProjectSparqlString)).mapTo[SparqlUpdateResponse]
+
+            /* Verify that the project was updated. */
+            maybeUpdatedProject <- projectInfoByIRIGetV1(projectIri, Some(userProfile))
+            updatedProject: ProjectInfoV1 = maybeUpdatedProject.getOrElse(throw UpdateNotPerformedException("Project was not updated. Please report this as a possible bug."))
+
+            _ = log.debug("updateProjectV1 - projectUpdatePayload: {} /  updatedProject: {}", projectUpdatePayload, updatedProject)
+
+            _ = if (projectUpdatePayload.shortname.isDefined) {
+                if (updatedProject.shortname != projectUpdatePayload.shortname.get) throw UpdateNotPerformedException("Project's 'shortname' was not updated. Please report this as a possible bug.")
+            }
+
+            _ = if (projectUpdatePayload.longname.isDefined) {
+                if (updatedProject.longname != projectUpdatePayload.longname) throw UpdateNotPerformedException("Project's 'longname' was not updated. Please report this as a possible bug.")
+            }
+
+            _ = if (projectUpdatePayload.description.isDefined) {
+                if (updatedProject.description != projectUpdatePayload.description) throw UpdateNotPerformedException("Project's 'description' was not updated. Please report this as a possible bug.")
+            }
+
+            _ = if (projectUpdatePayload.keywords.isDefined) {
+                if (updatedProject.keywords != projectUpdatePayload.keywords) throw UpdateNotPerformedException("Project's 'keywords' was not updated. Please report this as a possible bug.")
+            }
+
+            _ = if (projectUpdatePayload.logo.isDefined) {
+                if (updatedProject.logo != projectUpdatePayload.logo) throw UpdateNotPerformedException("Project's 'logo' was not updated. Please report this as a possible bug.")
+            }
+
+            _ = if (projectUpdatePayload.institution.isDefined) {
+                if (updatedProject.institution != projectUpdatePayload.institution) throw UpdateNotPerformedException("Project's 'institution' was not updated. Please report this as a possible bug.")
+            }
+
+            _ = if (projectUpdatePayload.ontologyNamedGraph.isDefined) {
+                if (updatedProject.ontologyNamedGraph != projectUpdatePayload.ontologyNamedGraph.get) throw UpdateNotPerformedException("Project's 'ontologyGraph' was not updated. Please report this as a possible bug.")
+            }
+
+            _ = if (projectUpdatePayload.dataNamedGraph.isDefined) {
+                if (updatedProject.dataNamedGraph != projectUpdatePayload.dataNamedGraph.get) throw UpdateNotPerformedException("Project's 'dataGraph' was not updated. Please report this as a possible bug.")
+            }
+
+            _ = if (projectUpdatePayload.status.isDefined) {
+                if (updatedProject.status != projectUpdatePayload.status.get) throw UpdateNotPerformedException("Project's 'status' was not updated. Please report this as a possible bug.")
+            }
+
+            _ = if (projectUpdatePayload.selfjoin.isDefined) {
+                if (updatedProject.selfjoin != projectUpdatePayload.selfjoin.get) throw UpdateNotPerformedException("Project's 'selfjoin' status was not updated. Please report this as a possible bug.")
+            }
+
+            // create the user operation response
+            projectOperationResponseV1 = ProjectOperationResponseV1(project_info = updatedProject)
+        } yield projectOperationResponseV1
+
+    }
 
     ////////////////////
     // Helper Methods //
@@ -431,13 +554,13 @@ class ProjectsResponderV1 extends ResponderV1 {
       * Helper method that turns SPARQL result rows into a [[ProjectInfoV1]].
       *
       * @param projectResponse results from the SPARQL query representing information about the project.
-      * @param projectIri the Iri of the project the querid information belong to.
-      * @param userProfile the profile of user that is making the request.
+      * @param projectIri      the Iri of the project the querid information belong to.
+      * @param userProfile     the profile of user that is making the request.
       * @return a [[ProjectInfoV1]] representing information about project.
       */
     private def createProjectInfoV1(projectResponse: Seq[VariableResultsRow], projectIri: IRI, userProfile: Option[UserProfileV1]): ProjectInfoV1 = {
 
-        // log.debug(s"createProjectInfoV1FromProjectResponse - projectResponse: $projectResponse")
+        //log.debug("createProjectInfoV1 - projectResponse: {}", projectResponse)
 
         if (projectResponse.nonEmpty) {
 
@@ -456,11 +579,11 @@ class ProjectsResponderV1 extends ResponderV1 {
                 description = projectProperties.get(OntologyConstants.KnoraBase.ProjectDescription),
                 keywords = projectProperties.get(OntologyConstants.KnoraBase.ProjectKeywords),
                 logo = projectProperties.get(OntologyConstants.KnoraBase.ProjectLogo),
-                belongsToInstitution = projectProperties.get(OntologyConstants.KnoraBase.BelongsToProject),
+                institution = projectProperties.get(OntologyConstants.KnoraBase.BelongsToProject),
                 ontologyNamedGraph = projectProperties.getOrElse(OntologyConstants.KnoraBase.ProjectOntologyGraph, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no projectOntologyGraph defined.")),
                 dataNamedGraph = projectProperties.getOrElse(OntologyConstants.KnoraBase.ProjectDataGraph, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no projectDataGraph defined.")),
                 status = projectProperties.getOrElse(OntologyConstants.KnoraBase.Status, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no status defined.")).toBoolean,
-                hasSelfJoinEnabled = projectProperties.getOrElse(OntologyConstants.KnoraBase.HasSelfJoinEnabled, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no hasSelfJoinEnabled defined.")).toBoolean
+                selfjoin = projectProperties.getOrElse(OntologyConstants.KnoraBase.HasSelfJoinEnabled, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no hasSelfJoinEnabled defined.")).toBoolean
             )
 
         } else {
@@ -472,7 +595,8 @@ class ProjectsResponderV1 extends ResponderV1 {
 
     /**
       * Helper method that turns a sequence of user IRIs into a [[ProjectMembersGetResponseV1]]
-      * @param memberIris the user IRIs
+      *
+      * @param memberIris  the user IRIs
       * @param userProfile the profile of the user that is making the request
       * @return a [[ProjectMembersGetResponseV1]]
       */

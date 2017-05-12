@@ -90,11 +90,11 @@ class GroupsV1E2ESpec extends E2ESpec(GroupsV1E2ESpec.config) with SessionJsonPr
 
         "used to modify group information" should {
 
-            "create a new project" in {
+            "create a new group" in {
                 fail("test not implemented")
             }
 
-            "update a project" in {
+            "update a group" in {
                 fail("test not implemented")
             }
 
