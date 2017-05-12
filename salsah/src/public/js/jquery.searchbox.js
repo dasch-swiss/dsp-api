@@ -48,6 +48,7 @@
 					}
 				});
 				var content = localdata.ele.sel.dialog('content');
+				content.addClass('propedit_frame');
 				if (localdata.settings.restype_id == -1) {
 					content.resadd({
 						on_submit_cb: function(data) {
