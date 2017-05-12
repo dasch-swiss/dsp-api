@@ -59,13 +59,15 @@ import scala.collection.immutable
 import scala.concurrent.duration._
 import scala.concurrent.{Future, Promise}
 import scala.util.{Failure, Success, Try}
-import scala.xml.{Elem, Node, Utility, XML}
+import scala.xml.{Elem, Node, Utility, XML, PrettyPrinter}
 
 
 /**
   * Provides a spray-routing function for API routes that deal with resources.
   */
 object ResourcesRouteV1 extends Authenticator {
+    // A scala.xml.PrettyPrinter for formatting generated XML import schemas.
+    private val xmlPrettyPrinter = new PrettyPrinter(width = 80, step = 4)
 
     def knoraApiPath(_system: ActorSystem, settings: SettingsImpl, loggingAdapter: LoggingAdapter): Route = {
 
@@ -532,7 +534,7 @@ object ResourcesRouteV1 extends Authenticator {
                         }
 
                         // Generate the schema using a Twirl template.
-                        val schemaXml = xsd.v1.xml.xmlImport(
+                        val unformattedSchemaXml = xsd.v1.xml.xmlImport(
                             targetNamespaceInfo = namespaceInfo,
                             importedNamespaces = importedNamespaces,
                             resourceEntityInfoMap = entityInfoResponsesMap(ontologyIri).resourceEntityInfoMap,
@@ -541,10 +543,16 @@ object ResourcesRouteV1 extends Authenticator {
                             getEntityName = internalEntityIri => getEntityName(internalEntityIri)
                         ).toString().trim
 
+                        // Parse the generated XML schema.
+                        val parsedSchemaXml = XML.loadString(unformattedSchemaXml)
+
+                        // Format the generated XML schema nicely.
+                        val formattedSchemaXml = xmlPrettyPrinter.format(parsedSchemaXml)
+
                         // Wrap it in an XmlImportSchemaV1 object along with its XML namespace information.
                         val schema = XmlImportSchemaV1(
                             namespaceInfo = namespaceInfo,
-                            schemaXml = schemaXml
+                            schemaXml = formattedSchemaXml
                         )
 
                         namespaceInfo.namespace -> schema
