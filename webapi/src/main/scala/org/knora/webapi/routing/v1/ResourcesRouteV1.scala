@@ -523,6 +523,20 @@ object ResourcesRouteV1 extends Authenticator {
                         ontologyIri -> namespaceInfo
                 }.toMap
 
+                // Construct an XmlImportSchemaV1 for the standard Knora XML import schema.
+
+                knoraXmlImportSchemaNamespaceInfo: XmlImportNamespaceInfoV1 = XmlImportNamespaceInfoV1(
+                    namespace = OntologyConstants.KnoraXmlImportV1.KnoraXmlImportV1PrefixExpansion,
+                    prefix = "knoraXmlImport"
+                )
+
+                knoraXmlImportSchemaXml: String = FileUtil.readTextFile(new File("src/main/resources/knora-xml-import-v1.xsd"))
+
+                knoraXmlImportSchema: XmlImportSchemaV1 = XmlImportSchemaV1(
+                    namespaceInfo = knoraXmlImportSchemaNamespaceInfo,
+                    schemaXml = knoraXmlImportSchemaXml
+                )
+
                 // Generate a schema for each ontology.
                 schemas: Map[IRI, XmlImportSchemaV1] = ontologyIrisToNamespaceInfos.map {
                     case (ontologyIri, namespaceInfo) =>
@@ -556,7 +570,7 @@ object ResourcesRouteV1 extends Authenticator {
                         )
 
                         namespaceInfo.namespace -> schema
-                }
+                } + (OntologyConstants.KnoraBase.KnoraBasePrefixExpansion -> knoraXmlImportSchema)
             } yield XmlImportSchemaBundleV1(
                 mainNamespace = ontologyIrisToNamespaceInfos(internalOntologyIri).namespace,
                 schemas = schemas
