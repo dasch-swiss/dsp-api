@@ -403,10 +403,11 @@ object ResourcesRouteV1 extends Authenticator {
         /**
           * Represents a bundle of XML import schemas generated from a set of project-specific ontologies.
           *
-          * @param mainNamespace the XML namespace corresponding to the main ontology to be used in the XML import.
-          * @param schemas       a map of XML namespaces to schemas.
+          * @param mainNamespace        the XML namespace corresponding to the main ontology to be used in the XML import.
+          * @param knoraXmlImportSchema the standard Knora XML import V1 schema.
+          * @param generatedSchemas     a map of XML namespaces to generated schemas.
           */
-        case class XmlImportSchemaBundleV1(mainNamespace: IRI, schemas: Map[IRI, XmlImportSchemaV1])
+        case class XmlImportSchemaBundleV1(mainNamespace: IRI, knoraXmlImportSchema: XmlImportSchemaV1, generatedSchemas: Map[IRI, XmlImportSchemaV1])
 
         /**
           * Given the IRI of an internal project-specific ontology, recursively gets a [[NamedGraphEntityInfoV1]] for that ontology
@@ -538,7 +539,7 @@ object ResourcesRouteV1 extends Authenticator {
                 )
 
                 // Generate a schema for each ontology.
-                schemas: Map[IRI, XmlImportSchemaV1] = ontologyIrisToNamespaceInfos.map {
+                generatedSchemas: Map[IRI, XmlImportSchemaV1] = ontologyIrisToNamespaceInfos.map {
                     case (ontologyIri, namespaceInfo) =>
                         // Each schema imports all the other schemas.
                         val importedNamespaces: Seq[XmlImportNamespaceInfoV1] = (ontologyIrisToNamespaceInfos - ontologyIri).map {
@@ -570,10 +571,11 @@ object ResourcesRouteV1 extends Authenticator {
                         )
 
                         namespaceInfo.namespace -> schema
-                } + (OntologyConstants.KnoraBase.KnoraBasePrefixExpansion -> knoraXmlImportSchema)
+                }
             } yield XmlImportSchemaBundleV1(
                 mainNamespace = ontologyIrisToNamespaceInfos(internalOntologyIri).namespace,
-                schemas = schemas
+                knoraXmlImportSchema = knoraXmlImportSchema,
+                generatedSchemas = generatedSchemas
             )
         }
 
@@ -592,12 +594,12 @@ object ResourcesRouteV1 extends Authenticator {
                     userProfile = userProfile
                 )
 
-                zipFileContents: Map[String, Array[Byte]] = schemaBundle.schemas.values.map {
+                zipFileContents: Map[String, Array[Byte]] = schemaBundle.generatedSchemas.values.map {
                     schema: XmlImportSchemaV1 =>
                         val schemaFilename: String = schema.namespaceInfo.prefix + ".xsd"
                         val schemaXmlBytes: Array[Byte] = schema.schemaXml.getBytes(StandardCharsets.UTF_8)
                         schemaFilename -> schemaXmlBytes
-                }.toMap
+                }.toMap + ("knora-xml-import-v1.xsd" -> schemaBundle.knoraXmlImportSchema.schemaXml.getBytes(StandardCharsets.UTF_8))
             } yield FileUtil.createZipFileBytes(contents = zipFileContents)
         }
 
