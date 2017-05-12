@@ -52,7 +52,7 @@
         <xs:import namespace="@{namespaceInfo.namespace}" schemaLocation="@{namespaceInfo.prefix}.xsd"/>
     }
 
-    @for((resourceClassIri, resourceClassInfo) <- resourceEntityInfoMap.toArray.sortBy(_._1)) {
+    @for((resourceClassIri, resourceClassInfo) <- resourceEntityInfoMap.toVector.sortBy(_._1)) {
 
         @defining(getEntityName(resourceClassIri)) { resourceClassName =>
 
@@ -62,7 +62,7 @@
                         <xs:extension base="knoraXmlImport:resourceType">
                             <xs:sequence>
 
-                                @for((propertyIri, cardinality) <- resourceClassInfo.cardinalities.toArray.sortBy(_._1)) {
+                                @for((propertyIri, cardinality) <- resourceClassInfo.cardinalities.toVector.sortBy(_._1)) {
 
                                     @defining(propertyEntityInfoMap(propertyIri)) { propertyInfo =>
 
