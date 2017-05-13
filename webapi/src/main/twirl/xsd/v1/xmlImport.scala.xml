@@ -26,7 +26,8 @@
  * Generates an XML schema based on ontology definitions.
  *
  * @param targetNamespaceInfo information about the target XML namespace of the schema.
- * @param importedNamespaces information about any other project-specific namespaces to be imported.
+ * @param importedNamespaces information about other namespaces to be imported, including the standard Knora XML import V1 namespace.
+ * @param knoraXmlImportNamespacePrefix the prefix label to be used for the standard Knora XML import V1 namespace.
  * @param information about the resource classes defined in the internal ontology.
  * @param information about the properties defined in the internal ontology.
  * @param getNamespacePrefix a function that takes an internal ontology entity IRI and returns the corresponding XML namespace prefix label.
@@ -34,6 +35,7 @@
  *@
 @(targetNamespaceInfo: XmlImportNamespaceInfoV1,
   importedNamespaces: Seq[XmlImportNamespaceInfoV1],
+  knoraXmlImportNamespacePrefix: String,
   resourceEntityInfoMap: Map[IRI, ResourceEntityInfoV1],
   propertyEntityInfoMap: Map[IRI, PropertyEntityInfoV1],
   getNamespacePrefix: IRI => String,
@@ -42,12 +44,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xs:schema elementFormDefault="qualified" targetNamespace="@{targetNamespaceInfo.namespace}"
            xmlns="@{targetNamespaceInfo.namespace}" xmlns:xs="http://www.w3.org/2001/XMLSchema"
-           xmlns:knoraXmlImport="http://api.knora.org/ontology/knora-xml-import/v1#"
            @for(namespaceInfo <- importedNamespaces) {
                xmlns:@{namespaceInfo.prefix}="@{namespaceInfo.namespace}"
            }
            xmlns:vc="http://www.w3.org/2007/XMLSchema-versioning" vc:minVersion="1.0">
-    <xs:import namespace="http://api.knora.org/ontology/knora-xml-import/v1#" schemaLocation="knora-xml-import-v1.xsd"/>
     @for(namespaceInfo <- importedNamespaces) {
         <xs:import namespace="@{namespaceInfo.namespace}" schemaLocation="@{namespaceInfo.prefix}.xsd"/>
     }
@@ -59,7 +59,7 @@
             <xs:element name="@resourceClassName">
                 <xs:complexType>
                     <xs:complexContent>
-                        <xs:extension base="knoraXmlImport:resourceType">
+                        <xs:extension base="@{knoraXmlImportNamespacePrefix}:resourceType">
                             <xs:sequence>
 
                                 @for((propertyIri, cardinality) <- resourceClassInfo.cardinalities.toVector.sortBy(_._1)) {
@@ -138,67 +138,67 @@
 
                                                             case OntologyConstants.KnoraBase.TextValue => {
 
-                                                                type="knoraXmlImport:richtextValueType"
+                                                                type="@{knoraXmlImportNamespacePrefix}:richtextValueType"
 
                                                             }
 
                                                             case OntologyConstants.KnoraBase.IntValue => {
 
-                                                                type="knoraXmlImport:intValueType"
+                                                                type="@{knoraXmlImportNamespacePrefix}:intValueType"
 
                                                             }
 
                                                             case OntologyConstants.KnoraBase.BooleanValue => {
 
-                                                                type="knoraXmlImport:booleanValueType"
+                                                                type="@{knoraXmlImportNamespacePrefix}:booleanValueType"
 
                                                             }
 
                                                             case OntologyConstants.KnoraBase.UriValue => {
 
-                                                                type="knoraXmlImport:uriValueType"
+                                                                type="@{knoraXmlImportNamespacePrefix}:uriValueType"
 
                                                             }
 
                                                             case OntologyConstants.KnoraBase.DecimalValue => {
 
-                                                                type="knoraXmlImport:decimalValueType"
+                                                                type="@{knoraXmlImportNamespacePrefix}:decimalValueType"
 
                                                             }
 
                                                             case OntologyConstants.KnoraBase.DateValue => {
 
-                                                                type="knoraXmlImport:dateValueType"
+                                                                type="@{knoraXmlImportNamespacePrefix}:dateValueType"
 
                                                             }
 
                                                             case OntologyConstants.KnoraBase.ColorValue => {
 
-                                                                type="knoraXmlImport:colorValueType"
+                                                                type="@{knoraXmlImportNamespacePrefix}:colorValueType"
 
                                                             }
 
                                                             case OntologyConstants.KnoraBase.GeomValue => {
 
-                                                                type="knoraXmlImport:geomValueType"
+                                                                type="@{knoraXmlImportNamespacePrefix}:geomValueType"
 
                                                             }
 
                                                             case OntologyConstants.KnoraBase.ListValue => {
 
-                                                                type="knoraXmlImport:hlistValueType"
+                                                                type="@{knoraXmlImportNamespacePrefix}:hlistValueType"
 
                                                             }
 
                                                             case OntologyConstants.KnoraBase.IntervalValue => {
 
-                                                                type="knoraXmlImport:intervalValueType"
+                                                                type="@{knoraXmlImportNamespacePrefix}:intervalValueType"
 
                                                             }
 
                                                             case OntologyConstants.KnoraBase.GeonameValue => {
 
-                                                                type="knoraXmlImport:geonameValueType"
+                                                                type="@{knoraXmlImportNamespacePrefix}:geonameValueType"
 
                                                             }
 
@@ -231,7 +231,7 @@
 
             <xs:complexType name="@{resourceClassName}_linkValueType">
                 <xs:sequence>
-                    <xs:element name="@resourceClassName" type="knoraXmlImport:linkValueType"/>
+                    <xs:element name="@resourceClassName" type="@{knoraXmlImportNamespacePrefix}:linkValueType"/>
                 </xs:sequence>
             </xs:complexType>
 
