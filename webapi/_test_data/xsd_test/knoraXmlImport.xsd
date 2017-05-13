@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<xs:schema elementFormDefault="qualified" targetNamespace="http://api.knora.org/ontology/knora-xml-import/v1#"
-    xmlns="http://api.knora.org/ontology/knora-xml-import/v1#" xmlns:xs="http://www.w3.org/2001/XMLSchema"
+<xs:schema elementFormDefault="qualified" targetNamespace="http://api.knora.org/ontology/knoraXmlImport/v1#"
+    xmlns="http://api.knora.org/ontology/knoraXmlImport/v1#" xmlns:xs="http://www.w3.org/2001/XMLSchema"
     vc:minVersion="1.0" xmlns:vc="http://www.w3.org/2007/XMLSchema-versioning">
     <!-- Resource types -->
 

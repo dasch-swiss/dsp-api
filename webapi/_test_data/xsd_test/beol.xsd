@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xs:schema elementFormDefault="qualified" targetNamespace="http://api.knora.org/ontology/beol/xml-import/v1#"
     xmlns="http://api.knora.org/ontology/beol/xml-import/v1#" xmlns:xs="http://www.w3.org/2001/XMLSchema"
-    xmlns:knoraXmlImport="http://api.knora.org/ontology/knora-xml-import/v1#"
+    xmlns:knoraXmlImport="http://api.knora.org/ontology/knoraXmlImport/v1#"
     xmlns:vc="http://www.w3.org/2007/XMLSchema-versioning" vc:minVersion="1.0">
-    <xs:import namespace="http://api.knora.org/ontology/knora-xml-import/v1#" schemaLocation="knora-xml-import-v1.xsd"/>
+    <xs:import namespace="http://api.knora.org/ontology/knoraXmlImport/v1#" schemaLocation="knoraXmlImport.xsd"/>
     <xs:import namespace="http://api.knora.org/ontology/biblio/xml-import/v1#" schemaLocation="biblio.xsd"/>
     
     <xs:element name="person">

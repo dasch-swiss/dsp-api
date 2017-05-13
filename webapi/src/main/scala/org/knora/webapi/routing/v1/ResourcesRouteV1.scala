@@ -28,14 +28,14 @@ import javax.xml.XMLConstants
 import javax.xml.transform.stream.StreamSource
 import javax.xml.validation.{Schema, SchemaFactory}
 
-import akka.pattern._
 import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
-import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.Multipart.BodyPart
+import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.server.directives.FileInfo
+import akka.pattern._
 import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.FileIO
 import com.typesafe.scalalogging.Logger
@@ -47,9 +47,9 @@ import org.knora.webapi.messages.v1.responder.sipimessages.{SipiResponderConvers
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
+import org.knora.webapi.util.InputValidation.XmlImportNamespaceInfoV1
 import org.knora.webapi.util.standoff.StandoffTagUtilV1.TextWithStandoffTagsV1
 import org.knora.webapi.util.{DateUtilV1, FileUtil, InputValidation}
-import org.knora.webapi.util.InputValidation.XmlImportNamespaceInfoV1
 import org.knora.webapi.viewhandlers.ResourceHtmlView
 import org.slf4j.LoggerFactory
 import org.w3c.dom.ls.{LSInput, LSResourceResolver}
@@ -59,7 +59,7 @@ import scala.collection.immutable
 import scala.concurrent.duration._
 import scala.concurrent.{Future, Promise}
 import scala.util.{Failure, Success, Try}
-import scala.xml.{Elem, Node, Utility, XML, PrettyPrinter}
+import scala.xml._
 
 
 /**
@@ -67,7 +67,7 @@ import scala.xml.{Elem, Node, Utility, XML, PrettyPrinter}
   */
 object ResourcesRouteV1 extends Authenticator {
     // A scala.xml.PrettyPrinter for formatting generated XML import schemas.
-    private val xmlPrettyPrinter = new PrettyPrinter(width = 80, step = 4)
+    private val xmlPrettyPrinter = new scala.xml.PrettyPrinter(width = 80, step = 4)
 
     def knoraApiPath(_system: ActorSystem, settings: SettingsImpl, loggingAdapter: LoggingAdapter): Route = {
 
@@ -403,11 +403,10 @@ object ResourcesRouteV1 extends Authenticator {
         /**
           * Represents a bundle of XML import schemas generated from a set of project-specific ontologies.
           *
-          * @param mainNamespace        the XML namespace corresponding to the main ontology to be used in the XML import.
-          * @param knoraXmlImportSchema the standard Knora XML import V1 schema.
-          * @param generatedSchemas     a map of XML namespaces to generated schemas.
+          * @param mainNamespace    the XML namespace corresponding to the main ontology to be used in the XML import.
+          * @param generatedSchemas a map of XML namespaces to generated schemas.
           */
-        case class XmlImportSchemaBundleV1(mainNamespace: IRI, knoraXmlImportSchema: XmlImportSchemaV1, generatedSchemas: Map[IRI, XmlImportSchemaV1])
+        case class XmlImportSchemaBundleV1(mainNamespace: IRI, generatedSchemas: Map[IRI, XmlImportSchemaV1])
 
         /**
           * Given the IRI of an internal project-specific ontology, recursively gets a [[NamedGraphEntityInfoV1]] for that ontology
@@ -527,11 +526,11 @@ object ResourcesRouteV1 extends Authenticator {
                 // Construct an XmlImportSchemaV1 for the standard Knora XML import schema.
 
                 knoraXmlImportSchemaNamespaceInfo: XmlImportNamespaceInfoV1 = XmlImportNamespaceInfoV1(
-                    namespace = OntologyConstants.KnoraXmlImportV1.KnoraXmlImportV1PrefixExpansion,
-                    prefix = "knoraXmlImport"
+                    namespace = OntologyConstants.KnoraXmlImportV1.KnoraXmlImportNamespaceV1,
+                    prefix = OntologyConstants.KnoraXmlImportV1.KnoraXmlImportPrefix
                 )
 
-                knoraXmlImportSchemaXml: String = FileUtil.readTextFile(new File("src/main/resources/knora-xml-import-v1.xsd"))
+                knoraXmlImportSchemaXml: String = FileUtil.readTextFile(new File("src/main/resources/" + OntologyConstants.KnoraXmlImportV1.KnoraXmlImportPrefix + ".xsd"))
 
                 knoraXmlImportSchema: XmlImportSchemaV1 = XmlImportSchemaV1(
                     namespaceInfo = knoraXmlImportSchemaNamespaceInfo,
@@ -572,10 +571,11 @@ object ResourcesRouteV1 extends Authenticator {
 
                         namespaceInfo.namespace -> schema
                 }
+
+                allSchemas: Map[IRI, XmlImportSchemaV1] = generatedSchemas + (OntologyConstants.KnoraXmlImportV1.KnoraXmlImportNamespaceV1 -> knoraXmlImportSchema)
             } yield XmlImportSchemaBundleV1(
                 mainNamespace = ontologyIrisToNamespaceInfos(internalOntologyIri).namespace,
-                knoraXmlImportSchema = knoraXmlImportSchema,
-                generatedSchemas = generatedSchemas
+                generatedSchemas = allSchemas
             )
         }
 
@@ -599,7 +599,7 @@ object ResourcesRouteV1 extends Authenticator {
                         val schemaFilename: String = schema.namespaceInfo.prefix + ".xsd"
                         val schemaXmlBytes: Array[Byte] = schema.schemaXml.getBytes(StandardCharsets.UTF_8)
                         schemaFilename -> schemaXmlBytes
-                }.toMap + ("knora-xml-import-v1.xsd" -> schemaBundle.knoraXmlImportSchema.schemaXml.getBytes(StandardCharsets.UTF_8))
+                }.toMap
             } yield FileUtil.createZipFileBytes(contents = zipFileContents)
         }
 
