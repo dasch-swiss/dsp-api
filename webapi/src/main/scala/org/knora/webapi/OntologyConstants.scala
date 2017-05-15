@@ -86,8 +86,11 @@ object OntologyConstants {
     }
 
     object KnoraBase {
-        val KnoraBasePrefix: String = "knora-base:"
-        val KnoraBasePrefixExpansion: String = KnoraInternal.InternalOntologyStart + "knora-base#"
+        val KnoraBaseOntologyLabel: String = "knora-base"
+        val KnoraBaseOntologyIri: IRI = KnoraInternal.InternalOntologyStart + KnoraBaseOntologyLabel
+
+        val KnoraBasePrefix: String = KnoraBaseOntologyLabel + ":"
+        val KnoraBasePrefixExpansion: IRI = KnoraBaseOntologyIri + "#"
 
         val Resource: IRI = KnoraBasePrefixExpansion + "Resource"
         val ExternalResource: IRI = KnoraBasePrefixExpansion + "ExternalResource"
@@ -438,8 +441,8 @@ object OntologyConstants {
             val XmlImportNamespaceEnd: String = "/xml-import/v1#"
         }
 
-        val KnoraXmlImportPrefix: String = "knoraXmlImport"
-        val KnoraXmlImportNamespaceV1: IRI = KnoraApi.ApiOntologyStart + KnoraXmlImportPrefix + "/v1#"
+        val KnoraXmlImportNamespacePrefixLabel: String = "knoraXmlImport"
+        val KnoraXmlImportNamespaceV1: IRI = KnoraApi.ApiOntologyStart + KnoraXmlImportNamespacePrefixLabel + "/v1#"
 
         val Resources: IRI = KnoraXmlImportNamespaceV1 + "resources"
     }

@@ -9,6 +9,12 @@
         <xs:attribute name="label" use="required" type="xs:string"/>
     </xs:complexType>
 
+    <xs:complexType name="Resource_linkValueType">
+        <xs:sequence>
+            <xs:element name="Resource" type="linkValueType"/>
+        </xs:sequence>
+    </xs:complexType>
+
     <xs:element name="resources">
         <xs:complexType>
             <xs:sequence>

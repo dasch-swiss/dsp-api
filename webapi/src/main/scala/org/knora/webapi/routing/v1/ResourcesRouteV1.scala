@@ -32,6 +32,7 @@ import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.model.Multipart.BodyPart
 import akka.http.scaladsl.model._
+import akka.http.scaladsl.model.headers._
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.server.directives.FileInfo
@@ -409,47 +410,55 @@ object ResourcesRouteV1 extends Authenticator {
         case class XmlImportSchemaBundleV1(mainNamespace: IRI, generatedSchemas: Map[IRI, XmlImportSchemaV1])
 
         /**
-          * Given the IRI of an internal project-specific ontology, recursively gets a [[NamedGraphEntityInfoV1]] for that ontology
-          * and for any other ontologies containing class definitions used as property objects in the initial ontology.
+          * Given the IRI of an internal project-specific ontology, recursively gets instances of [[NamedGraphEntityInfoV1]] for that ontology,
+          * for `knora-base`, and for any other ontologies containing class definitions used as property objects in the initial ontology.
           *
-          * @param startOntologyIri     the IRI of the internal project-specific ontology to start with.
-          * @param userProfile          the profile of the user making the request.
-          * @param namedGraphInfosSoFar intermediate results.
+          * @param startOntologyIri the IRI of the internal project-specific ontology to start with.
+          * @param userProfile      the profile of the user making the request.
           * @return a map of internal ontology IRIs to [[NamedGraphEntityInfoV1]] objects.
           */
-        def getNamedGraphInfos(startOntologyIri: IRI, userProfile: UserProfileV1, namedGraphInfosSoFar: Map[IRI, NamedGraphEntityInfoV1] = Map.empty[IRI, NamedGraphEntityInfoV1]): Future[Map[IRI, NamedGraphEntityInfoV1]] = {
-            for {
-                startNamedGraphEntityInfo <- (responderManager ? NamedGraphEntityInfoRequestV1(startOntologyIri, userProfile)).mapTo[NamedGraphEntityInfoV1]
-                propertyInfoResponse: EntityInfoGetResponseV1 <- (responderManager ? EntityInfoGetRequestV1(propertyIris = startNamedGraphEntityInfo.propertyIris, userProfile = userProfile)).mapTo[EntityInfoGetResponseV1]
+        def getNamedGraphInfos(startOntologyIri: IRI, userProfile: UserProfileV1): Future[Map[IRI, NamedGraphEntityInfoV1]] = {
+            def getNamedGraphInfosRec(startOntologyIri: IRI, namedGraphInfosSoFar: Map[IRI, NamedGraphEntityInfoV1], userProfile: UserProfileV1): Future[Map[IRI, NamedGraphEntityInfoV1]] = {
+                for {
+                    startNamedGraphEntityInfo <- (responderManager ? NamedGraphEntityInfoRequestV1(startOntologyIri, userProfile)).mapTo[NamedGraphEntityInfoV1]
+                    propertyInfoResponse: EntityInfoGetResponseV1 <- (responderManager ? EntityInfoGetRequestV1(propertyIris = startNamedGraphEntityInfo.propertyIris, userProfile = userProfile)).mapTo[EntityInfoGetResponseV1]
 
-                ontologyIrisFromObjectClassConstraints: Set[IRI] = propertyInfoResponse.propertyEntityInfoMap.map {
-                    case (propertyIri, propertyInfo) =>
-                        val propertyObjectClassConstraint = propertyInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint).getOrElse {
-                            throw InconsistentTriplestoreDataException(s"Property $propertyIri has no knora-base:objectClassConstraint")
-                        }
+                    ontologyIrisFromObjectClassConstraints: Set[IRI] = propertyInfoResponse.propertyEntityInfoMap.map {
+                        case (propertyIri, propertyInfo) =>
+                            val propertyObjectClassConstraint = propertyInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint).getOrElse {
+                                throw InconsistentTriplestoreDataException(s"Property $propertyIri has no knora-base:objectClassConstraint")
+                            }
 
-                        InputValidation.getInternalOntologyIriFromInternalEntityIri(
-                            internalEntityIri = propertyObjectClassConstraint,
-                            errorFun = () => throw InconsistentTriplestoreDataException(s"Property $propertyIri has an invalid knora-base:objectClassConstraint: $propertyObjectClassConstraint")
-                        )
-                }.toSet
-
-                namedGraphInfoFutures: Set[Future[Map[IRI, NamedGraphEntityInfoV1]]] = ontologyIrisFromObjectClassConstraints.map {
-                    ontologyIri =>
-                        if (!namedGraphInfosSoFar.contains(ontologyIri)) {
-                            getNamedGraphInfos(
-                                startOntologyIri = ontologyIri,
-                                userProfile = userProfile,
-                                namedGraphInfosSoFar = namedGraphInfosSoFar + (ontologyIri -> startNamedGraphEntityInfo)
+                            InputValidation.getInternalOntologyIriFromInternalEntityIri(
+                                internalEntityIri = propertyObjectClassConstraint,
+                                errorFun = () => throw InconsistentTriplestoreDataException(s"Property $propertyIri has an invalid knora-base:objectClassConstraint: $propertyObjectClassConstraint")
                             )
-                        } else {
-                            Future(Map.empty[IRI, NamedGraphEntityInfoV1])
-                        }
-                }
+                    }.toSet -- namedGraphInfosSoFar.keySet - startOntologyIri
 
-                setOfNewNamedGraphInfos: Set[Map[IRI, NamedGraphEntityInfoV1]] <- Future.sequence(namedGraphInfoFutures)
-                setOfNamedGraphInfoSoFar: Set[Map[IRI, NamedGraphEntityInfoV1]] = setOfNewNamedGraphInfos + namedGraphInfosSoFar
-            } yield setOfNamedGraphInfoSoFar.flatten.toMap
+                    namedGraphInfoFutures: Set[Future[Map[IRI, NamedGraphEntityInfoV1]]] = ontologyIrisFromObjectClassConstraints.map {
+                        ontologyIri =>
+                            getNamedGraphInfosRec(
+                                startOntologyIri = ontologyIri,
+                                namedGraphInfosSoFar = namedGraphInfosSoFar + (startOntologyIri -> startNamedGraphEntityInfo),
+                                userProfile = userProfile
+                            )
+                    }
+
+                    setOfNewNamedGraphInfos: Set[Map[IRI, NamedGraphEntityInfoV1]] <- Future.sequence(namedGraphInfoFutures)
+                    setOfNamedGraphInfoSoFar: Set[Map[IRI, NamedGraphEntityInfoV1]] = setOfNewNamedGraphInfos + Map(startOntologyIri -> startNamedGraphEntityInfo) + namedGraphInfosSoFar
+                } yield setOfNamedGraphInfoSoFar.flatten.toMap
+            }
+
+            val knoraBaseGraph: IRI = OntologyConstants.KnoraBase.KnoraBaseOntologyIri
+
+            for {
+                knoraBaseGraphEntityInfo <- (responderManager ? NamedGraphEntityInfoRequestV1(knoraBaseGraph, userProfile)).mapTo[NamedGraphEntityInfoV1]
+                graphInfos <- getNamedGraphInfosRec(
+                    startOntologyIri = startOntologyIri,
+                    namedGraphInfosSoFar = Map(knoraBaseGraph -> knoraBaseGraphEntityInfo),
+                    userProfile = userProfile
+                )
+            } yield graphInfos
         }
 
         /**
@@ -468,11 +477,17 @@ object ResourcesRouteV1 extends Authenticator {
               * @param internalEntityIri an internal ontology entity IRI.
               * @return the prefix label that Knora uses to refer to the ontology.
               */
-            def getNamespacePrefix(internalEntityIri: IRI): String = {
-                InputValidation.getOntologyPrefixFromInternalEntityIri(
+            def getNamespacePrefixLabel(internalEntityIri: IRI): String = {
+                val prefixLabel = InputValidation.getOntologyPrefixLabelFromInternalEntityIri(
                     internalEntityIri = internalEntityIri,
                     errorFun = () => throw InconsistentTriplestoreDataException(s"Invalid entity IRI: $internalEntityIri")
                 )
+
+                if (prefixLabel == OntologyConstants.KnoraBase.KnoraBaseOntologyLabel) {
+                    OntologyConstants.KnoraXmlImportV1.KnoraXmlImportNamespacePrefixLabel
+                } else {
+                    prefixLabel
+                }
             }
 
             /**
@@ -511,55 +526,70 @@ object ResourcesRouteV1 extends Authenticator {
                 // Collect all the property defintions in a single Map, because any schema could use any property.
                 propertyEntityInfoMap: Map[IRI, PropertyEntityInfoV1] = entityInfoResponsesMap.values.flatMap(_.propertyEntityInfoMap).toMap
 
-                // Make a map of ontology IRIs to XmlImportNamespaceInfoV1 objects describing the XML namespace that
-                // will be used for the XML schema corresponding to each ontology.
-                ontologyIrisToNamespaceInfos: Map[IRI, XmlImportNamespaceInfoV1] = namedGraphInfos.keySet.map {
-                    ontologyIri =>
-                        val namespaceInfo = InputValidation.internalOntologyIriToXmlNamespaceInfoV1(
-                            internalOntologyIri = internalOntologyIri,
-                            errorFun = () => throw BadRequestException(s"Invalid ontology IRI: $internalOntologyIri")
-                        )
-
-                        ontologyIri -> namespaceInfo
-                }.toMap
-
                 // Construct an XmlImportSchemaV1 for the standard Knora XML import schema.
 
                 knoraXmlImportSchemaNamespaceInfo: XmlImportNamespaceInfoV1 = XmlImportNamespaceInfoV1(
                     namespace = OntologyConstants.KnoraXmlImportV1.KnoraXmlImportNamespaceV1,
-                    prefix = OntologyConstants.KnoraXmlImportV1.KnoraXmlImportPrefix
+                    prefixLabel = OntologyConstants.KnoraXmlImportV1.KnoraXmlImportNamespacePrefixLabel
                 )
 
-                knoraXmlImportSchemaXml: String = FileUtil.readTextFile(new File("src/main/resources/" + OntologyConstants.KnoraXmlImportV1.KnoraXmlImportPrefix + ".xsd"))
+                knoraXmlImportSchemaXml: String = FileUtil.readTextFile(new File("src/main/resources/" + OntologyConstants.KnoraXmlImportV1.KnoraXmlImportNamespacePrefixLabel + ".xsd"))
 
                 knoraXmlImportSchema: XmlImportSchemaV1 = XmlImportSchemaV1(
                     namespaceInfo = knoraXmlImportSchemaNamespaceInfo,
                     schemaXml = knoraXmlImportSchemaXml
                 )
 
-                // Generate a schema for each ontology.
-                generatedSchemas: Map[IRI, XmlImportSchemaV1] = ontologyIrisToNamespaceInfos.map {
+                // Make a map of ontology IRIs to XmlImportNamespaceInfoV1 objects describing the XML namespace that
+                // will be used for the XML schema corresponding to each ontology.
+                ontologyIrisToNamespaceInfos: Map[IRI, XmlImportNamespaceInfoV1] = namedGraphInfos.keySet.map {
+                    ontologyIri =>
+                        val namespaceInfo: XmlImportNamespaceInfoV1 = if (ontologyIri == OntologyConstants.KnoraBase.KnoraBaseOntologyIri) {
+                            knoraXmlImportSchemaNamespaceInfo
+                        } else {
+                            InputValidation.internalOntologyIriToXmlNamespaceInfoV1(
+                                internalOntologyIri = ontologyIri,
+                                errorFun = () => throw BadRequestException(s"Invalid ontology IRI: $internalOntologyIri")
+                            )
+                        }
+
+                        ontologyIri -> namespaceInfo
+                }.toMap
+
+                // Don't generate a schema for knora-base.
+                schemasToGenerate: Map[IRI, XmlImportNamespaceInfoV1] = ontologyIrisToNamespaceInfos - OntologyConstants.KnoraBase.KnoraBaseOntologyIri
+
+                // Generate a schema for each project-specific ontology.
+                generatedSchemas: Map[IRI, XmlImportSchemaV1] = schemasToGenerate.map {
                     case (ontologyIri, namespaceInfo) =>
+                        val importedNamespaces = ontologyIrisToNamespaceInfos - ontologyIri
+
                         // Each schema imports all the other schemas.
-                        val importedNamespaces: Seq[XmlImportNamespaceInfoV1] = (ontologyIrisToNamespaceInfos - ontologyIri).map {
+                        val importedNamespaceInfos: Seq[XmlImportNamespaceInfoV1] = importedNamespaces.map {
                             case (_, importedNamespaceInfo: XmlImportNamespaceInfoV1) => importedNamespaceInfo
                         }.toVector.sortBy {
-                            importedNamespaceInfo => importedNamespaceInfo.prefix
+                            importedNamespaceInfo => importedNamespaceInfo.prefixLabel
                         }
 
                         // Generate the schema using a Twirl template.
                         val unformattedSchemaXml = xsd.v1.xml.xmlImport(
                             targetNamespaceInfo = namespaceInfo,
-                            importedNamespaces = importedNamespaces,
-                            knoraXmlImportNamespacePrefix = OntologyConstants.KnoraXmlImportV1.KnoraXmlImportPrefix,
+                            importedNamespaces = importedNamespaceInfos,
+                            knoraXmlImportNamespacePrefixLabel = OntologyConstants.KnoraXmlImportV1.KnoraXmlImportNamespacePrefixLabel,
                             resourceEntityInfoMap = entityInfoResponsesMap(ontologyIri).resourceEntityInfoMap,
                             propertyEntityInfoMap = propertyEntityInfoMap,
-                            getNamespacePrefix = internalEntityIri => getNamespacePrefix(internalEntityIri),
+                            getNamespacePrefixLabel = internalEntityIri => getNamespacePrefixLabel(internalEntityIri),
                             getEntityName = internalEntityIri => getEntityName(internalEntityIri)
                         ).toString().trim
 
+                        // println(unformattedSchemaXml)
+
                         // Parse the generated XML schema.
-                        val parsedSchemaXml = XML.loadString(unformattedSchemaXml)
+                        val parsedSchemaXml = try {
+                            XML.loadString(unformattedSchemaXml)
+                        } catch {
+                            case parseEx: org.xml.sax.SAXParseException => throw AssertionException("Generated XML schema is not valid XML. Please report this as a bug.", parseEx, loggingAdapter)
+                        }
 
                         // Format the generated XML schema nicely.
                         val formattedSchemaXml = xmlPrettyPrinter.format(parsedSchemaXml)
@@ -597,7 +627,7 @@ object ResourcesRouteV1 extends Authenticator {
 
                 zipFileContents: Map[String, Array[Byte]] = schemaBundle.generatedSchemas.values.map {
                     schema: XmlImportSchemaV1 =>
-                        val schemaFilename: String = schema.namespaceInfo.prefix + ".xsd"
+                        val schemaFilename: String = schema.namespaceInfo.prefixLabel + ".xsd"
                         val schemaXmlBytes: Array[Byte] = schema.schemaXml.getBytes(StandardCharsets.UTF_8)
                         schemaFilename -> schemaXmlBytes
                 }.toMap
@@ -1019,20 +1049,24 @@ object ResourcesRouteV1 extends Authenticator {
             }
         } ~ path("v1" / "xml-schemas" / Segment) { internalOntologyIri =>
             get {
-                requestContext =>
-                    val userProfile = getUserProfileV1(requestContext)
+                val internalOntologyPrefixLabel: String = InputValidation.getOntologyPrefixLabelFromInternalOntologyIri(internalOntologyIri, () => throw BadRequestException(s"Invalid internal ontology IRI: $internalOntologyIri"))
 
-                    val httpResponseFuture = for {
-                        schemaZipFileBytes: Array[Byte] <- generateSchemaZipFile(
-                            internalOntologyIri = internalOntologyIri,
-                            userProfile = userProfile
+                respondWithHeader(`Content-Disposition`(ContentDispositionTypes.attachment, Map("filename" -> (internalOntologyPrefixLabel + ".zip")))) {
+                    requestContext =>
+                        val userProfile = getUserProfileV1(requestContext)
+
+                        val httpResponseFuture = for {
+                            schemaZipFileBytes: Array[Byte] <- generateSchemaZipFile(
+                                internalOntologyIri = internalOntologyIri,
+                                userProfile = userProfile
+                            )
+                        } yield HttpResponse(
+                            status = StatusCodes.OK,
+                            entity = HttpEntity(bytes = schemaZipFileBytes)
                         )
-                    } yield HttpResponse(
-                        status = StatusCodes.OK,
-                        entity = HttpEntity(bytes = schemaZipFileBytes)
-                    )
 
-                    requestContext.complete(httpResponseFuture)
+                        requestContext.complete(httpResponseFuture)
+                }
             }
         }
     }

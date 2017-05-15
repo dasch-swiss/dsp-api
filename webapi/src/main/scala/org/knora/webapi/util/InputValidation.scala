@@ -434,9 +434,9 @@ object InputValidation {
       * A container for an XML import namespace and its prefix label.
       *
       * @param namespace the namespace.
-      * @param prefix the prefix label.
+      * @param prefixLabel the prefix label.
       */
-    case class XmlImportNamespaceInfoV1(namespace: IRI, prefix: String)
+    case class XmlImportNamespaceInfoV1(namespace: IRI, prefixLabel: String)
 
     /**
       * Converts the IRI of a project-specific internal ontology (used in the triplestore) to an XML prefix label and
@@ -449,15 +449,11 @@ object InputValidation {
       * @return the corresponding XML prefix label and import namespace.
       */
     def internalOntologyIriToXmlNamespaceInfoV1(internalOntologyIri: IRI, errorFun: () => Nothing): XmlImportNamespaceInfoV1 = {
-        internalOntologyIri.stripSuffix("#") match {
-            case ProjectSpecificInternalOntologyRegex(prefix) =>
-                val namespace = OntologyConstants.KnoraXmlImportV1.ProjectSpecificXmlImportNamespace.XmlImportNamespaceStart +
-                    prefix +
-                    OntologyConstants.KnoraXmlImportV1.ProjectSpecificXmlImportNamespace.XmlImportNamespaceEnd
-                XmlImportNamespaceInfoV1(namespace = namespace, prefix = prefix)
-
-            case _ => errorFun()
-        }
+        val prefixLabel = getOntologyPrefixLabelFromInternalOntologyIri(internalOntologyIri, () => errorFun())
+        val namespace = OntologyConstants.KnoraXmlImportV1.ProjectSpecificXmlImportNamespace.XmlImportNamespaceStart +
+            prefixLabel +
+            OntologyConstants.KnoraXmlImportV1.ProjectSpecificXmlImportNamespace.XmlImportNamespaceEnd
+        XmlImportNamespaceInfoV1(namespace = namespace, prefixLabel = prefixLabel)
     }
 
     /**
@@ -471,8 +467,8 @@ object InputValidation {
       */
     def xmlImportNamespaceToInternalOntologyIriV1(namespace: String, errorFun: () => Nothing): IRI = {
         namespace match {
-            case ProjectSpecificXmlImportNamespaceRegex(prefix) =>
-                OntologyConstants.KnoraInternal.InternalOntologyStart + prefix
+            case ProjectSpecificXmlImportNamespaceRegex(prefixLabel) =>
+                OntologyConstants.KnoraInternal.InternalOntologyStart + prefixLabel
 
             case _ => errorFun()
         }
@@ -501,9 +497,25 @@ object InputValidation {
       *                 valid for an internal ontology entity IRI.
       * @return the ontology prefix label specified in the entity IRI.
       */
-    def getOntologyPrefixFromInternalEntityIri(internalEntityIri: IRI, errorFun: () => Nothing): String = {
+    def getOntologyPrefixLabelFromInternalEntityIri(internalEntityIri: IRI, errorFun: () => Nothing): String = {
         internalEntityIri match {
-            case ProjectSpecificInternalOntologyEntityRegex(prefix, _) => prefix
+            case ProjectSpecificInternalOntologyEntityRegex(prefixLabel, _) => prefixLabel
+            case _ => errorFun()
+        }
+    }
+
+    /**
+      * Extracts the prefix label from the IRI of a project-specific internal ontology.
+      *
+      * @param internalOntologyIri the IRI of the project-specific internal ontology. Any trailing # character will be
+      *                    stripped before the conversion.
+      * @param errorFun    a function that throws an exception. It will be called if the form of the IRI is not
+      *                    valid for an internal ontology IRI.
+      * @return the corresponding prefix label.
+      */
+    def getOntologyPrefixLabelFromInternalOntologyIri(internalOntologyIri: IRI, errorFun: () => Nothing): String = {
+        internalOntologyIri.stripSuffix("#") match {
+            case ProjectSpecificInternalOntologyRegex(prefixLabel) => prefixLabel
             case _ => errorFun()
         }
     }

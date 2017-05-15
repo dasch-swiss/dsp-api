@@ -1196,24 +1196,24 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    |    xmlns:beol="http://api.knora.org/ontology/beol/xml-import/v1#"
                    |    xmlns:knoraXmlImport="http://api.knora.org/ontology/knoraXmlImport/v1#">
                    |    <beol:person id="abel" label="Niels Henrik Abel">
-                   |        <beol:hasGivenName knoraType="richtext_value">Niels Henrik</beol:hasGivenName>
                    |        <beol:hasFamilyName knoraType="richtext_value">Abel</beol:hasFamilyName>
+                   |        <beol:hasGivenName knoraType="richtext_value">Niels Henrik</beol:hasGivenName>
                    |    </beol:person>
                    |    <biblio:Journal id="math_intelligencer" label="math intelligencer">
                    |        <biblio:hasName knoraType="richtext_value">math intelligencer</biblio:hasName>
                    |    </biblio:Journal>
                    |    <biblio:JournalArticle id="strings_in_the_16th_and_17th_centuries" label="Strings in the 16th and 17th Centuries">
-                   |        <biblio:publicationHasTitle knoraType="richtext_value">Strings in the 16th and 17th Centuries</biblio:publicationHasTitle>
-                   |        <biblio:publicationHasAuthor>
-                   |            <beol:person knoraType="link_value" ref="abel"/>
-                   |        </biblio:publicationHasAuthor>
+                   |        <biblio:endPage knoraType="richtext_value">73</biblio:endPage>
                    |        <biblio:isPartOfJournal>
                    |            <biblio:Journal knoraType="link_value" ref="math_intelligencer"/>
                    |        </biblio:isPartOfJournal>
                    |        <biblio:journalVolume knoraType="richtext_value">27</biblio:journalVolume>
-                   |        <biblio:startPage knoraType="richtext_value">48</biblio:startPage>
-                   |        <biblio:endPage knoraType="richtext_value">73</biblio:endPage>
+                   |        <biblio:publicationHasAuthor>
+                   |            <beol:person knoraType="link_value" ref="abel"/>
+                   |        </biblio:publicationHasAuthor>
                    |        <biblio:publicationHasDate knoraType="date_value">GREGORIAN:1976</biblio:publicationHasDate>
+                   |        <biblio:publicationHasTitle knoraType="richtext_value">Strings in the 16th and 17th Centuries</biblio:publicationHasTitle>
+                   |        <biblio:startPage knoraType="richtext_value">48</biblio:startPage>
                    |    </biblio:JournalArticle>
                    |</knoraXmlImport:resources>""".stripMargin
 
