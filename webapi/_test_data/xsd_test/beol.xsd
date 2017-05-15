@@ -1,37 +1,19 @@
 <xs:schema 
 vc:minVersion="1.0" targetNamespace="http://api.knora.org/ontology/beol/xml-import/v1#" elementFormDefault="qualified" xmlns:vc="http://www.w3.org/2007/XMLSchema-versioning" xmlns:knoraXmlImport="http://api.knora.org/ontology/knoraXmlImport/v1#" xmlns:biblio="http://api.knora.org/ontology/biblio/xml-import/v1#" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns="http://api.knora.org/ontology/beol/xml-import/v1#">
-    <xs:import 
-    schemaLocation="biblio.xsd" namespace="http://api.knora.org/ontology/biblio/xml-import/v1#">
-</xs:import>
-    <xs:import 
-    schemaLocation="knoraXmlImport.xsd" namespace="http://api.knora.org/ontology/knoraXmlImport/v1#">
-</xs:import>
+    <xs:import schemaLocation="biblio.xsd" namespace="http://api.knora.org/ontology/biblio/xml-import/v1#"/>
+    <xs:import schemaLocation="knoraXmlImport.xsd" namespace="http://api.knora.org/ontology/knoraXmlImport/v1#"/>
     <xs:element name="letter">
         <xs:complexType>
             <xs:complexContent>
                 <xs:extension base="knoraXmlImport:resourceType">
                     <xs:sequence>
-                        <xs:element 
-                        type="knoraXmlImport:dateValueType" maxOccurs="1" minOccurs="0" name="creationDate">
-</xs:element>
-                        <xs:element 
-                        type="person_linkValueType" maxOccurs="unbounded" minOccurs="0" name="hasAuthor">
-</xs:element>
-                        <xs:element 
-                        type="person_linkValueType" maxOccurs="unbounded" minOccurs="0" name="hasRecipient">
-</xs:element>
-                        <xs:element 
-                        type="knoraXmlImport:richtextValueType" maxOccurs="1" minOccurs="0" name="hasText">
-</xs:element>
-                        <xs:element 
-                        type="knoraXmlImport:richtextValueType" maxOccurs="1" minOccurs="0" name="location">
-</xs:element>
-                        <xs:element 
-                        type="person_linkValueType" maxOccurs="unbounded" minOccurs="0" name="mentionsPerson">
-</xs:element>
-                        <xs:element 
-                        type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="1" name="title">
-</xs:element>
+                        <xs:element type="knoraXmlImport:dateValueType" maxOccurs="1" minOccurs="0" name="creationDate"/>
+                        <xs:element type="person_linkValueType" maxOccurs="unbounded" minOccurs="0" name="hasAuthor"/>
+                        <xs:element type="person_linkValueType" maxOccurs="unbounded" minOccurs="0" name="hasRecipient"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="1" minOccurs="0" name="hasText"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="1" minOccurs="0" name="location"/>
+                        <xs:element type="person_linkValueType" maxOccurs="unbounded" minOccurs="0" name="mentionsPerson"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="1" name="title"/>
                     </xs:sequence>
                 </xs:extension>
             </xs:complexContent>
@@ -47,24 +29,12 @@ vc:minVersion="1.0" targetNamespace="http://api.knora.org/ontology/beol/xml-impo
             <xs:complexContent>
                 <xs:extension base="knoraXmlImport:resourceType">
                     <xs:sequence>
-                        <xs:element 
-                        type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="comment">
-</xs:element>
-                        <xs:element 
-                        type="knoraXmlImport:dateValueType" maxOccurs="1" minOccurs="0" name="creationDate">
-</xs:element>
-                        <xs:element 
-                        type="person_linkValueType" maxOccurs="unbounded" minOccurs="0" name="hasAuthor">
-</xs:element>
-                        <xs:element 
-                        type="knoraXmlImport:richtextValueType" maxOccurs="1" minOccurs="0" name="hasText">
-</xs:element>
-                        <xs:element 
-                        type="knoraXmlImport:richtextValueType" maxOccurs="1" minOccurs="0" name="location">
-</xs:element>
-                        <xs:element 
-                        type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="1" name="title">
-</xs:element>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="comment"/>
+                        <xs:element type="knoraXmlImport:dateValueType" maxOccurs="1" minOccurs="0" name="creationDate"/>
+                        <xs:element type="person_linkValueType" maxOccurs="unbounded" minOccurs="0" name="hasAuthor"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="1" minOccurs="0" name="hasText"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="1" minOccurs="0" name="location"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="1" name="title"/>
                     </xs:sequence>
                 </xs:extension>
             </xs:complexContent>
@@ -80,18 +50,10 @@ vc:minVersion="1.0" targetNamespace="http://api.knora.org/ontology/beol/xml-impo
             <xs:complexContent>
                 <xs:extension base="knoraXmlImport:resourceType">
                     <xs:sequence>
-                        <xs:element 
-                        type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="comment">
-</xs:element>
-                        <xs:element 
-                        type="knoraXmlImport:richtextValueType" maxOccurs="1" minOccurs="0" name="pagenum">
-</xs:element>
-                        <xs:element 
-                        type="manuscript_linkValueType" maxOccurs="1" minOccurs="1" name="partOf">
-</xs:element>
-                        <xs:element 
-                        type="knoraXmlImport:intValueType" maxOccurs="1" minOccurs="0" name="seqnum">
-</xs:element>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="comment"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="1" minOccurs="0" name="pagenum"/>
+                        <xs:element type="manuscript_linkValueType" maxOccurs="1" minOccurs="1" name="partOf"/>
+                        <xs:element type="knoraXmlImport:intValueType" maxOccurs="1" minOccurs="0" name="seqnum"/>
                     </xs:sequence>
                 </xs:extension>
             </xs:complexContent>
@@ -107,27 +69,13 @@ vc:minVersion="1.0" targetNamespace="http://api.knora.org/ontology/beol/xml-impo
             <xs:complexContent>
                 <xs:extension base="knoraXmlImport:resourceType">
                     <xs:sequence>
-                        <xs:element 
-                        type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="comment">
-</xs:element>
-                        <xs:element 
-                        type="knoraXmlImport:dateValueType" maxOccurs="1" minOccurs="0" name="hasBirthDate">
-</xs:element>
-                        <xs:element 
-                        type="knoraXmlImport:dateValueType" maxOccurs="1" minOccurs="0" name="hasDeathDate">
-</xs:element>
-                        <xs:element 
-                        type="knoraXmlImport:richtextValueType" maxOccurs="1" minOccurs="0" name="hasFamilyName">
-</xs:element>
-                        <xs:element 
-                        type="knoraXmlImport:richtextValueType" maxOccurs="1" minOccurs="0" name="hasGivenName">
-</xs:element>
-                        <xs:element 
-                        type="knoraXmlImport:richtextValueType" maxOccurs="1" minOccurs="0" name="hasIAFIdentifier">
-</xs:element>
-                        <xs:element 
-                        type="person_linkValueType" maxOccurs="unbounded" minOccurs="0" name="hasSon">
-</xs:element>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="comment"/>
+                        <xs:element type="knoraXmlImport:dateValueType" maxOccurs="1" minOccurs="0" name="hasBirthDate"/>
+                        <xs:element type="knoraXmlImport:dateValueType" maxOccurs="1" minOccurs="0" name="hasDeathDate"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="1" minOccurs="0" name="hasFamilyName"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="1" minOccurs="0" name="hasGivenName"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="1" minOccurs="0" name="hasIAFIdentifier"/>
+                        <xs:element type="person_linkValueType" maxOccurs="unbounded" minOccurs="0" name="hasSon"/>
                     </xs:sequence>
                 </xs:extension>
             </xs:complexContent>
@@ -143,21 +91,11 @@ vc:minVersion="1.0" targetNamespace="http://api.knora.org/ontology/beol/xml-impo
             <xs:complexContent>
                 <xs:extension base="knoraXmlImport:resourceType">
                     <xs:sequence>
-                        <xs:element 
-                        type="knoraXmlImport:dateValueType" maxOccurs="1" minOccurs="0" name="creationDate">
-</xs:element>
-                        <xs:element 
-                        type="person_linkValueType" maxOccurs="unbounded" minOccurs="0" name="hasAuthor">
-</xs:element>
-                        <xs:element 
-                        type="knoraXmlImport:richtextValueType" maxOccurs="1" minOccurs="0" name="hasText">
-</xs:element>
-                        <xs:element 
-                        type="knoraXmlImport:richtextValueType" maxOccurs="1" minOccurs="0" name="location">
-</xs:element>
-                        <xs:element 
-                        type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="1" name="title">
-</xs:element>
+                        <xs:element type="knoraXmlImport:dateValueType" maxOccurs="1" minOccurs="0" name="creationDate"/>
+                        <xs:element type="person_linkValueType" maxOccurs="unbounded" minOccurs="0" name="hasAuthor"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="1" minOccurs="0" name="hasText"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="1" minOccurs="0" name="location"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="1" name="title"/>
                     </xs:sequence>
                 </xs:extension>
             </xs:complexContent>

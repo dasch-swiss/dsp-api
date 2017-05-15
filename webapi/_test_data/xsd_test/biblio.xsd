@@ -1,52 +1,24 @@
 <xs:schema 
 vc:minVersion="1.0" targetNamespace="http://api.knora.org/ontology/biblio/xml-import/v1#" elementFormDefault="qualified" xmlns:vc="http://www.w3.org/2007/XMLSchema-versioning" xmlns:knoraXmlImport="http://api.knora.org/ontology/knoraXmlImport/v1#" xmlns:beol="http://api.knora.org/ontology/beol/xml-import/v1#" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns="http://api.knora.org/ontology/biblio/xml-import/v1#">
-    <xs:import 
-    schemaLocation="beol.xsd" namespace="http://api.knora.org/ontology/beol/xml-import/v1#">
-</xs:import>
-    <xs:import 
-    schemaLocation="knoraXmlImport.xsd" namespace="http://api.knora.org/ontology/knoraXmlImport/v1#">
-</xs:import>
+    <xs:import schemaLocation="beol.xsd" namespace="http://api.knora.org/ontology/beol/xml-import/v1#"/>
+    <xs:import schemaLocation="knoraXmlImport.xsd" namespace="http://api.knora.org/ontology/knoraXmlImport/v1#"/>
     <xs:element name="Article">
         <xs:complexType>
             <xs:complexContent>
                 <xs:extension base="knoraXmlImport:resourceType">
                     <xs:sequence>
-                        <xs:element 
-                        type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="beol__comment">
-</xs:element>
-                        <xs:element 
-                        type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="endPage">
-</xs:element>
-                        <xs:element 
-                        type="beol:person_linkValueType" maxOccurs="unbounded" minOccurs="0" name="publicationHasAuthor">
-</xs:element>
-                        <xs:element 
-                        type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="publicationHasDOI">
-</xs:element>
-                        <xs:element 
-                        type="knoraXmlImport:dateValueType" maxOccurs="unbounded" minOccurs="1" name="publicationHasDate">
-</xs:element>
-                        <xs:element 
-                        type="Publisher_linkValueType" maxOccurs="unbounded" minOccurs="0" name="publicationHasPublisher">
-</xs:element>
-                        <xs:element 
-                        type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="publicationHasSubtitle">
-</xs:element>
-                        <xs:element 
-                        type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="1" name="publicationHasTitle">
-</xs:element>
-                        <xs:element 
-                        type="Edition_linkValueType" maxOccurs="unbounded" minOccurs="0" name="publicationIsEdited">
-</xs:element>
-                        <xs:element 
-                        type="Publication_linkValueType" maxOccurs="unbounded" minOccurs="0" name="publicationIsReprinted">
-</xs:element>
-                        <xs:element 
-                        type="Translation_linkValueType" maxOccurs="unbounded" minOccurs="0" name="publicationIsTranslated">
-</xs:element>
-                        <xs:element 
-                        type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="startPage">
-</xs:element>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="beol__comment"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="endPage"/>
+                        <xs:element type="beol:person_linkValueType" maxOccurs="unbounded" minOccurs="0" name="publicationHasAuthor"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="publicationHasDOI"/>
+                        <xs:element type="knoraXmlImport:dateValueType" maxOccurs="unbounded" minOccurs="1" name="publicationHasDate"/>
+                        <xs:element type="Publisher_linkValueType" maxOccurs="unbounded" minOccurs="0" name="publicationHasPublisher"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="publicationHasSubtitle"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="1" name="publicationHasTitle"/>
+                        <xs:element type="Edition_linkValueType" maxOccurs="unbounded" minOccurs="0" name="publicationIsEdited"/>
+                        <xs:element type="Publication_linkValueType" maxOccurs="unbounded" minOccurs="0" name="publicationIsReprinted"/>
+                        <xs:element type="Translation_linkValueType" maxOccurs="unbounded" minOccurs="0" name="publicationIsTranslated"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="startPage"/>
                     </xs:sequence>
                 </xs:extension>
             </xs:complexContent>
@@ -62,48 +34,20 @@ vc:minVersion="1.0" targetNamespace="http://api.knora.org/ontology/biblio/xml-im
             <xs:complexContent>
                 <xs:extension base="knoraXmlImport:resourceType">
                     <xs:sequence>
-                        <xs:element 
-                        type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="beol__comment">
-</xs:element>
-                        <xs:element 
-                        type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="bookHasISBN">
-</xs:element>
-                        <xs:element 
-                        type="Collection_linkValueType" maxOccurs="unbounded" minOccurs="0" name="isPartOfCollection">
-</xs:element>
-                        <xs:element 
-                        type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="numPages">
-</xs:element>
-                        <xs:element 
-                        type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="numVolumes">
-</xs:element>
-                        <xs:element 
-                        type="beol:person_linkValueType" maxOccurs="unbounded" minOccurs="0" name="publicationHasAuthor">
-</xs:element>
-                        <xs:element 
-                        type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="publicationHasDOI">
-</xs:element>
-                        <xs:element 
-                        type="knoraXmlImport:dateValueType" maxOccurs="unbounded" minOccurs="1" name="publicationHasDate">
-</xs:element>
-                        <xs:element 
-                        type="Publisher_linkValueType" maxOccurs="unbounded" minOccurs="0" name="publicationHasPublisher">
-</xs:element>
-                        <xs:element 
-                        type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="publicationHasSubtitle">
-</xs:element>
-                        <xs:element 
-                        type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="1" name="publicationHasTitle">
-</xs:element>
-                        <xs:element 
-                        type="Edition_linkValueType" maxOccurs="unbounded" minOccurs="0" name="publicationIsEdited">
-</xs:element>
-                        <xs:element 
-                        type="Publication_linkValueType" maxOccurs="unbounded" minOccurs="0" name="publicationIsReprinted">
-</xs:element>
-                        <xs:element 
-                        type="Translation_linkValueType" maxOccurs="unbounded" minOccurs="0" name="publicationIsTranslated">
-</xs:element>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="beol__comment"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="bookHasISBN"/>
+                        <xs:element type="Collection_linkValueType" maxOccurs="unbounded" minOccurs="0" name="isPartOfCollection"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="numPages"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="numVolumes"/>
+                        <xs:element type="beol:person_linkValueType" maxOccurs="unbounded" minOccurs="0" name="publicationHasAuthor"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="publicationHasDOI"/>
+                        <xs:element type="knoraXmlImport:dateValueType" maxOccurs="unbounded" minOccurs="1" name="publicationHasDate"/>
+                        <xs:element type="Publisher_linkValueType" maxOccurs="unbounded" minOccurs="0" name="publicationHasPublisher"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="publicationHasSubtitle"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="1" name="publicationHasTitle"/>
+                        <xs:element type="Edition_linkValueType" maxOccurs="unbounded" minOccurs="0" name="publicationIsEdited"/>
+                        <xs:element type="Publication_linkValueType" maxOccurs="unbounded" minOccurs="0" name="publicationIsReprinted"/>
+                        <xs:element type="Translation_linkValueType" maxOccurs="unbounded" minOccurs="0" name="publicationIsTranslated"/>
                     </xs:sequence>
                 </xs:extension>
             </xs:complexContent>
@@ -119,15 +63,9 @@ vc:minVersion="1.0" targetNamespace="http://api.knora.org/ontology/biblio/xml-im
             <xs:complexContent>
                 <xs:extension base="knoraXmlImport:resourceType">
                     <xs:sequence>
-                        <xs:element 
-                        type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="beol__comment">
-</xs:element>
-                        <xs:element 
-                        type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="collectionNumber">
-</xs:element>
-                        <xs:element 
-                        type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="hasName">
-</xs:element>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="beol__comment"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="collectionNumber"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="hasName"/>
                     </xs:sequence>
                 </xs:extension>
             </xs:complexContent>
@@ -143,45 +81,19 @@ vc:minVersion="1.0" targetNamespace="http://api.knora.org/ontology/biblio/xml-im
             <xs:complexContent>
                 <xs:extension base="knoraXmlImport:resourceType">
                     <xs:sequence>
-                        <xs:element 
-                        type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="beol__comment">
-</xs:element>
-                        <xs:element 
-                        type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="endPage">
-</xs:element>
-                        <xs:element 
-                        type="Collection_linkValueType" maxOccurs="unbounded" minOccurs="0" name="isPartOfCollection">
-</xs:element>
-                        <xs:element 
-                        type="beol:person_linkValueType" maxOccurs="unbounded" minOccurs="0" name="publicationHasAuthor">
-</xs:element>
-                        <xs:element 
-                        type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="publicationHasDOI">
-</xs:element>
-                        <xs:element 
-                        type="knoraXmlImport:dateValueType" maxOccurs="unbounded" minOccurs="1" name="publicationHasDate">
-</xs:element>
-                        <xs:element 
-                        type="Publisher_linkValueType" maxOccurs="unbounded" minOccurs="0" name="publicationHasPublisher">
-</xs:element>
-                        <xs:element 
-                        type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="publicationHasSubtitle">
-</xs:element>
-                        <xs:element 
-                        type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="1" name="publicationHasTitle">
-</xs:element>
-                        <xs:element 
-                        type="Edition_linkValueType" maxOccurs="unbounded" minOccurs="0" name="publicationIsEdited">
-</xs:element>
-                        <xs:element 
-                        type="Publication_linkValueType" maxOccurs="unbounded" minOccurs="0" name="publicationIsReprinted">
-</xs:element>
-                        <xs:element 
-                        type="Translation_linkValueType" maxOccurs="unbounded" minOccurs="0" name="publicationIsTranslated">
-</xs:element>
-                        <xs:element 
-                        type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="startPage">
-</xs:element>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="beol__comment"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="endPage"/>
+                        <xs:element type="Collection_linkValueType" maxOccurs="unbounded" minOccurs="0" name="isPartOfCollection"/>
+                        <xs:element type="beol:person_linkValueType" maxOccurs="unbounded" minOccurs="0" name="publicationHasAuthor"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="publicationHasDOI"/>
+                        <xs:element type="knoraXmlImport:dateValueType" maxOccurs="unbounded" minOccurs="1" name="publicationHasDate"/>
+                        <xs:element type="Publisher_linkValueType" maxOccurs="unbounded" minOccurs="0" name="publicationHasPublisher"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="publicationHasSubtitle"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="1" name="publicationHasTitle"/>
+                        <xs:element type="Edition_linkValueType" maxOccurs="unbounded" minOccurs="0" name="publicationIsEdited"/>
+                        <xs:element type="Publication_linkValueType" maxOccurs="unbounded" minOccurs="0" name="publicationIsReprinted"/>
+                        <xs:element type="Translation_linkValueType" maxOccurs="unbounded" minOccurs="0" name="publicationIsTranslated"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="startPage"/>
                     </xs:sequence>
                 </xs:extension>
             </xs:complexContent>
@@ -197,18 +109,10 @@ vc:minVersion="1.0" targetNamespace="http://api.knora.org/ontology/biblio/xml-im
             <xs:complexContent>
                 <xs:extension base="knoraXmlImport:resourceType">
                     <xs:sequence>
-                        <xs:element 
-                        type="beol:person_linkValueType" maxOccurs="unbounded" minOccurs="0" name="editionHasEditor">
-</xs:element>
-                        <xs:element 
-                        type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="editionHasName">
-</xs:element>
-                        <xs:element 
-                        type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="editionHasNumber">
-</xs:element>
-                        <xs:element 
-                        type="Organization_linkValueType" maxOccurs="unbounded" minOccurs="0" name="editionHasOrganization">
-</xs:element>
+                        <xs:element type="beol:person_linkValueType" maxOccurs="unbounded" minOccurs="0" name="editionHasEditor"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="editionHasName"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="editionHasNumber"/>
+                        <xs:element type="Organization_linkValueType" maxOccurs="unbounded" minOccurs="0" name="editionHasOrganization"/>
                     </xs:sequence>
                 </xs:extension>
             </xs:complexContent>
@@ -224,18 +128,10 @@ vc:minVersion="1.0" targetNamespace="http://api.knora.org/ontology/biblio/xml-im
             <xs:complexContent>
                 <xs:extension base="knoraXmlImport:resourceType">
                     <xs:sequence>
-                        <xs:element 
-                        type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="beol__comment">
-</xs:element>
-                        <xs:element 
-                        type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="1" name="hasName">
-</xs:element>
-                        <xs:element 
-                        type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="numPages">
-</xs:element>
-                        <xs:element 
-                        type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="numVolumes">
-</xs:element>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="beol__comment"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="1" name="hasName"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="numPages"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="numVolumes"/>
                     </xs:sequence>
                 </xs:extension>
             </xs:complexContent>
@@ -251,51 +147,21 @@ vc:minVersion="1.0" targetNamespace="http://api.knora.org/ontology/biblio/xml-im
             <xs:complexContent>
                 <xs:extension base="knoraXmlImport:resourceType">
                     <xs:sequence>
-                        <xs:element 
-                        type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="beol__comment">
-</xs:element>
-                        <xs:element 
-                        type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="endPage">
-</xs:element>
-                        <xs:element 
-                        type="Journal_linkValueType" maxOccurs="unbounded" minOccurs="0" name="isPartOfJournal">
-</xs:element>
-                        <xs:element 
-                        type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="journalIssue">
-</xs:element>
-                        <xs:element 
-                        type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="journalVolume">
-</xs:element>
-                        <xs:element 
-                        type="beol:person_linkValueType" maxOccurs="unbounded" minOccurs="0" name="publicationHasAuthor">
-</xs:element>
-                        <xs:element 
-                        type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="publicationHasDOI">
-</xs:element>
-                        <xs:element 
-                        type="knoraXmlImport:dateValueType" maxOccurs="unbounded" minOccurs="1" name="publicationHasDate">
-</xs:element>
-                        <xs:element 
-                        type="Publisher_linkValueType" maxOccurs="unbounded" minOccurs="0" name="publicationHasPublisher">
-</xs:element>
-                        <xs:element 
-                        type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="publicationHasSubtitle">
-</xs:element>
-                        <xs:element 
-                        type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="1" name="publicationHasTitle">
-</xs:element>
-                        <xs:element 
-                        type="Edition_linkValueType" maxOccurs="unbounded" minOccurs="0" name="publicationIsEdited">
-</xs:element>
-                        <xs:element 
-                        type="Publication_linkValueType" maxOccurs="unbounded" minOccurs="0" name="publicationIsReprinted">
-</xs:element>
-                        <xs:element 
-                        type="Translation_linkValueType" maxOccurs="unbounded" minOccurs="0" name="publicationIsTranslated">
-</xs:element>
-                        <xs:element 
-                        type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="startPage">
-</xs:element>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="beol__comment"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="endPage"/>
+                        <xs:element type="Journal_linkValueType" maxOccurs="unbounded" minOccurs="0" name="isPartOfJournal"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="journalIssue"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="journalVolume"/>
+                        <xs:element type="beol:person_linkValueType" maxOccurs="unbounded" minOccurs="0" name="publicationHasAuthor"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="publicationHasDOI"/>
+                        <xs:element type="knoraXmlImport:dateValueType" maxOccurs="unbounded" minOccurs="1" name="publicationHasDate"/>
+                        <xs:element type="Publisher_linkValueType" maxOccurs="unbounded" minOccurs="0" name="publicationHasPublisher"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="publicationHasSubtitle"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="1" name="publicationHasTitle"/>
+                        <xs:element type="Edition_linkValueType" maxOccurs="unbounded" minOccurs="0" name="publicationIsEdited"/>
+                        <xs:element type="Publication_linkValueType" maxOccurs="unbounded" minOccurs="0" name="publicationIsReprinted"/>
+                        <xs:element type="Translation_linkValueType" maxOccurs="unbounded" minOccurs="0" name="publicationIsTranslated"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="startPage"/>
                     </xs:sequence>
                 </xs:extension>
             </xs:complexContent>
@@ -311,12 +177,8 @@ vc:minVersion="1.0" targetNamespace="http://api.knora.org/ontology/biblio/xml-im
             <xs:complexContent>
                 <xs:extension base="knoraXmlImport:resourceType">
                     <xs:sequence>
-                        <xs:element 
-                        type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="beol__comment">
-</xs:element>
-                        <xs:element 
-                        type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="1" name="hasName">
-</xs:element>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="beol__comment"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="1" name="hasName"/>
                     </xs:sequence>
                 </xs:extension>
             </xs:complexContent>
@@ -332,36 +194,16 @@ vc:minVersion="1.0" targetNamespace="http://api.knora.org/ontology/biblio/xml-im
             <xs:complexContent>
                 <xs:extension base="knoraXmlImport:resourceType">
                     <xs:sequence>
-                        <xs:element 
-                        type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="beol__comment">
-</xs:element>
-                        <xs:element 
-                        type="beol:person_linkValueType" maxOccurs="unbounded" minOccurs="0" name="publicationHasAuthor">
-</xs:element>
-                        <xs:element 
-                        type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="publicationHasDOI">
-</xs:element>
-                        <xs:element 
-                        type="knoraXmlImport:dateValueType" maxOccurs="unbounded" minOccurs="1" name="publicationHasDate">
-</xs:element>
-                        <xs:element 
-                        type="Publisher_linkValueType" maxOccurs="unbounded" minOccurs="0" name="publicationHasPublisher">
-</xs:element>
-                        <xs:element 
-                        type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="publicationHasSubtitle">
-</xs:element>
-                        <xs:element 
-                        type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="1" name="publicationHasTitle">
-</xs:element>
-                        <xs:element 
-                        type="Edition_linkValueType" maxOccurs="unbounded" minOccurs="0" name="publicationIsEdited">
-</xs:element>
-                        <xs:element 
-                        type="Publication_linkValueType" maxOccurs="unbounded" minOccurs="0" name="publicationIsReprinted">
-</xs:element>
-                        <xs:element 
-                        type="Translation_linkValueType" maxOccurs="unbounded" minOccurs="0" name="publicationIsTranslated">
-</xs:element>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="beol__comment"/>
+                        <xs:element type="beol:person_linkValueType" maxOccurs="unbounded" minOccurs="0" name="publicationHasAuthor"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="publicationHasDOI"/>
+                        <xs:element type="knoraXmlImport:dateValueType" maxOccurs="unbounded" minOccurs="1" name="publicationHasDate"/>
+                        <xs:element type="Publisher_linkValueType" maxOccurs="unbounded" minOccurs="0" name="publicationHasPublisher"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="publicationHasSubtitle"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="1" name="publicationHasTitle"/>
+                        <xs:element type="Edition_linkValueType" maxOccurs="unbounded" minOccurs="0" name="publicationIsEdited"/>
+                        <xs:element type="Publication_linkValueType" maxOccurs="unbounded" minOccurs="0" name="publicationIsReprinted"/>
+                        <xs:element type="Translation_linkValueType" maxOccurs="unbounded" minOccurs="0" name="publicationIsTranslated"/>
                     </xs:sequence>
                 </xs:extension>
             </xs:complexContent>
@@ -377,15 +219,9 @@ vc:minVersion="1.0" targetNamespace="http://api.knora.org/ontology/biblio/xml-im
             <xs:complexContent>
                 <xs:extension base="knoraXmlImport:resourceType">
                     <xs:sequence>
-                        <xs:element 
-                        type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="beol__comment">
-</xs:element>
-                        <xs:element 
-                        type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="1" name="hasName">
-</xs:element>
-                        <xs:element 
-                        type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="publisherHasLocation">
-</xs:element>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="beol__comment"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="1" name="hasName"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="publisherHasLocation"/>
                     </xs:sequence>
                 </xs:extension>
             </xs:complexContent>
@@ -401,21 +237,11 @@ vc:minVersion="1.0" targetNamespace="http://api.knora.org/ontology/biblio/xml-im
             <xs:complexContent>
                 <xs:extension base="knoraXmlImport:resourceType">
                     <xs:sequence>
-                        <xs:element 
-                        type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="beol__comment">
-</xs:element>
-                        <xs:element 
-                        type="knoraXmlImport:dateValueType" maxOccurs="unbounded" minOccurs="0" name="translationHasDate">
-</xs:element>
-                        <xs:element 
-                        type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="1" name="translationHasLanguage">
-</xs:element>
-                        <xs:element 
-                        type="beol:person_linkValueType" maxOccurs="unbounded" minOccurs="1" name="translationHasTranslator">
-</xs:element>
-                        <xs:element 
-                        type="Publication_linkValueType" maxOccurs="unbounded" minOccurs="1" name="translationOf">
-</xs:element>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="beol__comment"/>
+                        <xs:element type="knoraXmlImport:dateValueType" maxOccurs="unbounded" minOccurs="0" name="translationHasDate"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="1" name="translationHasLanguage"/>
+                        <xs:element type="beol:person_linkValueType" maxOccurs="unbounded" minOccurs="1" name="translationHasTranslator"/>
+                        <xs:element type="Publication_linkValueType" maxOccurs="unbounded" minOccurs="1" name="translationOf"/>
                     </xs:sequence>
                 </xs:extension>
             </xs:complexContent>

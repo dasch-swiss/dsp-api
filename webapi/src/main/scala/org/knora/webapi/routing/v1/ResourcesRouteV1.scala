@@ -68,7 +68,7 @@ import scala.xml._
   */
 object ResourcesRouteV1 extends Authenticator {
     // A scala.xml.PrettyPrinter for formatting generated XML import schemas.
-    private val xmlPrettyPrinter = new scala.xml.PrettyPrinter(width = 80, step = 4)
+    private val xmlPrettyPrinter = new scala.xml.PrettyPrinter(width = 160, step = 4)
 
     def knoraApiPath(_system: ActorSystem, settings: SettingsImpl, loggingAdapter: LoggingAdapter): Route = {
 
@@ -469,7 +469,7 @@ object ResourcesRouteV1 extends Authenticator {
           * @param userProfile         the profile of the user making the request.
           * @return an [[XmlImportSchemaBundleV1]] for validating the import.
           */
-        def generateSchemasFromOntology(internalOntologyIri: IRI, userProfile: UserProfileV1): Future[XmlImportSchemaBundleV1] = {
+        def generateSchemasFromOntologies(internalOntologyIri: IRI, userProfile: UserProfileV1): Future[XmlImportSchemaBundleV1] = {
             /**
               * Called by the schema generation template to get the prefix label for an internal ontology
               * entity IRI.
@@ -620,7 +620,7 @@ object ResourcesRouteV1 extends Authenticator {
           */
         def generateSchemaZipFile(internalOntologyIri: IRI, userProfile: UserProfileV1): Future[Array[Byte]] = {
             for {
-                schemaBundle: XmlImportSchemaBundleV1 <- generateSchemasFromOntology(
+                schemaBundle: XmlImportSchemaBundleV1 <- generateSchemasFromOntologies(
                     internalOntologyIri = internalOntologyIri,
                     userProfile = userProfile
                 )
@@ -640,7 +640,7 @@ object ResourcesRouteV1 extends Authenticator {
           * @param xml the XML to be validated.
           */
         def validateImportXml(xml: String, defaultNamespace: IRI, otherApiNamespaces: Set[IRI]): Unit = {
-            // TODO: call generateSchemasFromOntology() and use the resulting schemas.
+            // TODO: call generateSchemasFromOntologies() and use the resulting schemas.
 
             // The schema for the project into which we're importing data.
             val mainSchemaFile = new File("_test_data/xsd_test/biblio.xsd")
@@ -655,6 +655,8 @@ object ResourcesRouteV1 extends Authenticator {
             schemaFactory.setResourceResolver(new FileResourceResolver(importedSchemaFiles))
             val schemaInstance: Schema = schemaFactory.newSchema(new StreamSource(new FileInputStream(mainSchemaFile)))
             val schemaValidator = schemaInstance.newValidator()
+
+            // TODO: catch a validation exception and wrap it in a BadRequestException.
             schemaValidator.validate(new StreamSource(new StringReader(xml)))
         }
 
