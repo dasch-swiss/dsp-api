@@ -40,7 +40,7 @@ object FileUtil {
       * @param content the string to write.
       */
     def writeTextFile(file: File, content: String): Unit = {
-        Files.write(Paths.get(file.getCanonicalPath), content.getBytes(StandardCharsets.UTF_8))
+        writeBinaryFile(file, content.getBytes(StandardCharsets.UTF_8))
     }
 
     /**
