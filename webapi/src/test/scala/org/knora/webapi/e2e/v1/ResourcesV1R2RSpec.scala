@@ -20,8 +20,9 @@
 
 package org.knora.webapi.e2e.v1
 
+import java.io.ByteArrayInputStream
 import java.net.URLEncoder
-import java.util.UUID
+import java.util.zip.{ZipEntry, ZipInputStream}
 
 import akka.actor.{ActorSystem, Props}
 import akka.http.scaladsl.model._
@@ -32,7 +33,6 @@ import akka.util.Timeout
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.ontologymessages.LoadOntologiesRequest
 import org.knora.webapi.messages.v1.responder.resourcemessages.PropsGetForRegionV1
-import org.knora.webapi.messages.v1.responder.resourcemessages._
 import org.knora.webapi.messages.v1.responder.resourcemessages.ResourceV1JsonProtocol._
 import org.knora.webapi.messages.v1.store.triplestoremessages._
 import org.knora.webapi.responders._
@@ -42,12 +42,12 @@ import org.knora.webapi.store._
 import org.knora.webapi.util.{AkkaHttpUtils, MutableTestIri}
 import org.xmlunit.builder.{DiffBuilder, Input}
 import org.xmlunit.diff.Diff
+import resource._
 import spray.json._
 
-import scala.concurrent.Await
 import scala.concurrent.duration._
+import scala.concurrent.{Await, Future}
 import scala.xml.{Node, NodeSeq, XML}
-
 
 /**
   * End-to-end test specification for the resources endpoint. This specification uses the Spray Testkit as documented
@@ -239,7 +239,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
     }
 
 
-    "The Resources Endpoint" should { /*
+    "The Resources Endpoint" should {
         "provide a HTML representation of the resource properties " in {
             /* Incunabula resources*/
 
@@ -392,12 +392,12 @@ class ResourcesV1R2RSpec extends R2RSpec {
                 val (dingeOk: Int, allesFuerMich: Int) = if (xmlStrings.head.contains("sind OK")) {
 
                     // expectedXML1 comes first, expectedXML2 comes second
-                    (0,1)
+                    (0, 1)
 
                 } else {
 
                     // expectedXML1 comes second, expectedXML2 comes first
-                    (1,0)
+                    (1, 0)
                 }
 
                 // Compare the original XML with the regenerated XML.
@@ -754,7 +754,6 @@ class ResourcesV1R2RSpec extends R2RSpec {
                 assert(status == StatusCodes.NotFound, response.toString)
             }
         }
-
 
 
         "create a third resource of type thing with two standoff links to the same resource and a standoff link to another one" in {
@@ -1185,8 +1184,8 @@ class ResourcesV1R2RSpec extends R2RSpec {
                 assert(utf8str == "another simple text")
             }
         }
-*/
-        "create resources from simple xml" in {
+
+        "create resources from a simple XML import" in {
             val params =
                 s"""<?xml version="1.0" encoding="UTF-8"?>
                    |<knoraXmlImport:resources xmlns="http://api.knora.org/ontology/biblio/xml-import/v1#"
@@ -1226,7 +1225,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    |    </biblio:JournalArticle>
                    |</knoraXmlImport:resources>""".stripMargin
 
-            val projectIRI = URLEncoder.encode("http://data.knora.org/projects/DczxPs-sR6aZN91qV92ZmQ", "utf-8")
+            val projectIRI = URLEncoder.encode("http://data.knora.org/projects/DczxPs-sR6aZN91qV92ZmQ", "UTF-8")
 
             Post(s"/v1/resources/xmlimport/$projectIRI", HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), params)) ~> addCredentials(BasicHttpCredentials(biblioUserEmail, password)) ~> resourcesPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)
@@ -1274,7 +1273,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    |    </biblio:JournalArticle>
                    |</knoraXmlImport:resources>""".stripMargin
 
-            val projectIRI = URLEncoder.encode("http://data.knora.org/projects/DczxPs-sR6aZN91qV92ZmQ", "utf-8")
+            val projectIRI = URLEncoder.encode("http://data.knora.org/projects/DczxPs-sR6aZN91qV92ZmQ", "UTF-8")
 
             Post(s"/v1/resources/xmlimport/$projectIRI", HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), params)) ~> addCredentials(BasicHttpCredentials(biblioUserEmail, password)) ~> resourcesPath ~> check {
                 assert(status == StatusCodes.BadRequest, response.toString)
@@ -1283,6 +1282,26 @@ class ResourcesV1R2RSpec extends R2RSpec {
             }
         }
 
-        // TODO: test the generation of a Zip file containing an XML schema bundle, e.g. /v1/resources/xmlimportschemas/http%3A%2F%2Fwww.knora.org%2Fontology%2Fbiblio
+        "serve a Zip file containing XML schemas for validating an XML import" in {
+            val ontologyIri = URLEncoder.encode("http://www.knora.org/ontology/biblio", "UTF-8")
+
+            Get(s"/v1/resources/xmlimportschemas/$ontologyIri") ~> addCredentials(BasicHttpCredentials(biblioUserEmail, password)) ~> resourcesPath ~> check {
+                val responseBodyFuture: Future[Array[Byte]] = response.entity.toStrict(5.seconds).map(_.data.toArray)
+                val responseBytes: Array[Byte] = Await.result(responseBodyFuture, 5.seconds)
+                val zippedFilenames = collection.mutable.Set.empty[String]
+
+                for (zipInputStream <- managed(new ZipInputStream(new ByteArrayInputStream(responseBytes)))) {
+                    var zipEntry: ZipEntry = null
+
+                    while ( {
+                        zipEntry = zipInputStream.getNextEntry; zipEntry != null
+                    }) {
+                        zippedFilenames.add(zipEntry.getName)
+                    }
+                }
+
+                assert(zippedFilenames == Set("beol.xsd", "biblio.xsd", "knoraXmlImport.xsd"))
+            }
+        }
     }
 }
