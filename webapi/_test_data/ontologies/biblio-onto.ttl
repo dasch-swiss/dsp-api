@@ -619,6 +619,23 @@
                     rdfs:subPropertyOf knora-base:hasValue , dcterms:language .
 
 
+###  http://www.knora.org/ontology/biblio#translationHasTitle
+
+:translationHasTitle rdf:type owl:ObjectProperty ;
+
+                    rdfs:label "Übersetzungstitle"@de ,
+                               "title of translation"@en ;
+
+                    rdfs:comment """Repräsentiert den Title einer Übersetzung."""@de,
+                               """Represents the title of translation."""@en ;
+
+                    knora-base:objectClassConstraint knora-base:TextValue ;
+
+                    salsah-gui:guiElement salsah-gui:SimpleText ;
+
+                    rdfs:subPropertyOf knora-base:hasValue, dcterms:title .
+
+
 ###  http://www.knora.org/ontology/biblio#translationHasTranslator
 
 :translationHasTranslator rdf:type owl:ObjectProperty ;
@@ -842,7 +859,7 @@
 
 
 
-###  http://www.knora.org/ontology/biblioe#Article
+###  http://www.knora.org/ontology/biblio#Article
 
 :Article rdf:type owl:Class ;
 
@@ -864,7 +881,7 @@
 
                     rdfs:comment "A resource representing an article"@en .
 
-###  http://www.knora.org/ontology/biblioe#JournalArticle
+###  http://www.knora.org/ontology/biblio#JournalArticle
 
 :JournalArticle rdf:type owl:Class ;
 
@@ -892,7 +909,7 @@
 
                     rdfs:comment "A resource representing a journal article"@en .
 
-###  http://www.knora.org/ontology/biblioe#CollectionArticle
+###  http://www.knora.org/ontology/biblio#CollectionArticle
 
 :CollectionArticle rdf:type owl:Class ;
 
@@ -912,12 +929,15 @@
 
                     rdfs:comment "A resource representing a collection article"@en .
 
-###  http://www.knora.org/ontology/biblioe#Translation
+###  http://www.knora.org/ontology/biblio#Translation
 
 :Translation rdf:type owl:Class ;
 
                     rdfs:subClassOf knora-base:Resource,
-
+                                    [ rdf:type owl:Restriction ;
+                                      owl:onProperty :translationHasTitle ;
+                                      owl:minCardinality "1"^^xsd:nonNegativeInteger
+                                    ],
                                     [ rdf:type owl:Restriction ;
                                        owl:onProperty :translationHasLanguage ;
                                        owl:minCardinality "1"^^xsd:nonNegativeInteger

@@ -483,7 +483,79 @@
 
                   rdfs:subPropertyOf knora-base:hasValue .
 
+    ### ###########################################
+    ### beol:hasFloruitDate
 
+    :hasFloruitDate rdf:type owl:ObjectProperty ;
+
+                  rdfs:label "Blühtedataum"@de ,
+                             "Floruit Date"@en ;
+
+                  rdfs:comment """Repräsentiert ein Blühtedataum."""@de,
+                               """Represents a floruit date."""@en ;
+
+                  knora-base:objectClassConstraint knora-base:DateValue ;
+
+                  salsah-gui:guiElement salsah-gui:Date ;
+
+                  knora-base:subjectClassConstraint :person ;
+
+                  rdfs:subPropertyOf knora-base:hasValue .
+
+    ### ###########################################
+    ### beol:hasMarriageDate
+
+    :hasMarriageDate rdf:type owl:ObjectProperty ;
+
+                  rdfs:label "Hochzeitdataum"@de ,
+                             "Marriage Date"@en ;
+
+                  rdfs:comment """Repräsentiert ein Hochzeitdatum."""@de,
+                               """Represents a marriage date."""@en ;
+
+                  knora-base:objectClassConstraint knora-base:DateValue ;
+
+                  salsah-gui:guiElement salsah-gui:Date ;
+
+                  knora-base:subjectClassConstraint :person ;
+
+                  rdfs:subPropertyOf knora-base:hasValue .
+
+    ### ###########################################
+    ### beol:hasBirthPlace
+
+    :hasBirthPlace rdf:type owl:ObjectProperty ;
+
+                   rdfs:label "Geburtsort"@de ,
+                             "Birth Place"@en ;
+
+                   rdfs:comment """Represents a birth place."""@en ;
+
+                   knora-base:objectClassConstraint knora-base:TextValue ;
+
+                   salsah-gui:guiElement salsah-gui:SimpleText ;
+
+                   knora-base:subjectClassConstraint :person ;
+
+                   rdfs:subPropertyOf knora-base:hasValue .
+
+    ### ###########################################
+    ### beol:hasDeathPlace
+
+    :hasDeathPlace rdf:type owl:ObjectProperty ;
+
+                   rdfs:label "Todesort"@de ,
+                             "Place of death"@en ;
+
+                   rdfs:comment """Represents a place of death."""@en ;
+
+                   knora-base:objectClassConstraint knora-base:TextValue ;
+
+                   salsah-gui:guiElement salsah-gui:SimpleText ;
+
+                   knora-base:subjectClassConstraint :person ;
+
+                   rdfs:subPropertyOf knora-base:hasValue .
 
     ##########################################################
     #
@@ -653,6 +725,22 @@
                     ],
                     [ rdf:type owl:Restriction ;
                       owl:onProperty :hasDeathDate ;
+                      owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                    ],
+                    [ rdf:type owl:Restriction ;
+                      owl:onProperty :hasFloruitDate;
+                      owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                    ],
+                    [ rdf:type owl:Restriction ;
+                      owl:onProperty :hasMarriageDate;
+                      owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                    ],
+                    [ rdf:type owl:Restriction ;
+                      owl:onProperty :hasBirthPlace ;
+                      owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                    ],
+                    [ rdf:type owl:Restriction ;
+                      owl:onProperty :hasDeathPlace ;
                       owl:maxCardinality "1"^^xsd:nonNegativeInteger
                     ],
                     [ rdf:type owl:Restriction ;
