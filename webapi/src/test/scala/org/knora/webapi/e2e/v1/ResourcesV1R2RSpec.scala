@@ -1219,9 +1219,49 @@ class ResourcesV1R2RSpec extends R2RSpec {
 
             val projectIRI = URLEncoder.encode("http://data.knora.org/projects/DczxPs-sR6aZN91qV92ZmQ", "utf-8")
 
-            Post(s"/v1/resources/xml/$projectIRI", HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), params)) ~> addCredentials(BasicHttpCredentials(biblioUserEmail, password)) ~> resourcesPath ~> check {
+            Post(s"/v1/resources/xmlimport/$projectIRI", HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), params)) ~> addCredentials(BasicHttpCredentials(biblioUserEmail, password)) ~> resourcesPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)
                 responseAs[String] should include("createdResources")
+            }
+        }
+
+        "reject XML import data that fails schema validation" in {
+            val params =
+                s"""<?xml version="1.0" encoding="UTF-8"?>
+                   |<knoraXmlImport:resources xmlns="http://api.knora.org/ontology/biblio/xml-import/v1#"
+                   |    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   |    xsi:schemaLocation="http://api.knora.org/ontology/biblio/xml-import/v1# biblio.xsd"
+                   |    xmlns:biblio="http://api.knora.org/ontology/biblio/xml-import/v1#"
+                   |    xmlns:beol="http://api.knora.org/ontology/beol/xml-import/v1#"
+                   |    xmlns:knoraXmlImport="http://api.knora.org/ontology/knoraXmlImport/v1#">
+                   |    <beol:person id="abel" label="Niels Henrik Abel">
+                   |        <beol:hasFamilyName knoraType="richtext_value">Abel</beol:hasFamilyName>
+                   |        <beol:hasGivenName knoraType="richtext_value">Niels Henrik</beol:hasGivenName>
+                   |    </beol:person>
+                   |    <biblio:Journal id="math_intelligencer" label="math intelligencer">
+                   |        <biblio:hasName knoraType="richtext_value">math intelligencer</biblio:hasName>
+                   |    </biblio:Journal>
+                   |    <biblio:JournalArticle id="strings_in_the_16th_and_17th_centuries" label="Strings in the 16th and 17th Centuries">
+                   |        <biblio:endPage knoraType="richtext_value">73</biblio:endPage>
+                   |        <biblio:isPartOfJournal>
+                   |            <biblio:Journal knoraType="link_value" ref="math_intelligencer"/>
+                   |        </biblio:isPartOfJournal>
+                   |        <biblio:journalVolume knoraType="richtext_value">27</biblio:journalVolume>
+                   |        <biblio:publicationHasAuthor>
+                   |            <beol:person knoraType="link_value" ref="abel"/>
+                   |        </biblio:publicationHasAuthor>
+                   |        <biblio:publicationHasDate knoraType="date_value">GREGORIAN:19foo76</biblio:publicationHasDate>
+                   |        <biblio:publicationHasTitle knoraType="richtext_value">Strings in the 16th and 17th Centuries</biblio:publicationHasTitle>
+                   |        <biblio:startPage knoraType="richtext_value">48</biblio:startPage>
+                   |    </biblio:JournalArticle>
+                   |</knoraXmlImport:resources>""".stripMargin
+
+            val projectIRI = URLEncoder.encode("http://data.knora.org/projects/DczxPs-sR6aZN91qV92ZmQ", "utf-8")
+
+            Post(s"/v1/resources/xmlimport/$projectIRI", HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), params)) ~> addCredentials(BasicHttpCredentials(biblioUserEmail, password)) ~> resourcesPath ~> check {
+                assert(status == StatusCodes.BadRequest, response.toString)
+                responseAs[String] should include("org.xml.sax.SAXParseException")
+                responseAs[String] should include("cvc-pattern-valid")
             }
         }
     }
