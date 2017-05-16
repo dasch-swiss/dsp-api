@@ -315,27 +315,26 @@ object ResourcesRouteV1 extends Authenticator {
 
 
         /**
-          * knoraDataTypeXMl gets the knoraType specified as attribute in xml element
-          * validates the specified type
+          * Given an XML element representing a property value in an XML import, returns a [[CreateResourceValueV1]]
+          * describing the value to be created.
           *
-          * @param node the xml element
-          * @return
-          *
+          * @param node the XML element.
+          * @return a [[CreateResourceValueV1]] requesting the creation of the value described by the element.
           */
-        def knoraDataTypeXML(node: Node): CreateResourceValueV1 = {
+        def knoraDataTypeXml(node: Node): CreateResourceValueV1 = {
+            val knoraType: Seq[Node] = node.attribute("knoraType").getOrElse(throw BadRequestException(s"Attribute 'knoraType' missing in element '${node.label}'"))
+            val elementValue = node.text
 
-            val knoraType: Seq[Node] = node.attribute("knoraType").get
-            val element_value = node.text
             if (knoraType.nonEmpty) {
                 knoraType.toString match {
                     case "richtext_value" =>
-                        val mapping_id: Option[Seq[Node]] = node.attributes.get("mapping_id")
+                        val mappingID: Option[Seq[Node]] = node.attributes.get("mapping_id")
 
-                        if (mapping_id.nonEmpty) {
-                            val mapping_IRI: Option[IRI] = Some(InputValidation.toIri(mapping_id.toString, () => throw BadRequestException(s"Invalid mapping ID in element '${node.label}: '$mapping_id")))
-                            CreateResourceValueV1(richtext_value = Some(CreateRichtextV1(None, Some(element_value), mapping_IRI)))
+                        if (mappingID.nonEmpty) {
+                            val mapping_IRI: Option[IRI] = Some(InputValidation.toIri(mappingID.toString, () => throw BadRequestException(s"Invalid mapping ID in element '${node.label}: '$mappingID")))
+                            CreateResourceValueV1(richtext_value = Some(CreateRichtextV1(None, Some(elementValue), mapping_IRI)))
                         } else {
-                            CreateResourceValueV1(richtext_value = Some(CreateRichtextV1(Some(element_value))))
+                            CreateResourceValueV1(richtext_value = Some(CreateRichtextV1(Some(elementValue))))
                         }
 
                     case "link_value" =>
@@ -345,33 +344,33 @@ object ResourcesRouteV1 extends Authenticator {
                         }
 
                     case "int_value" =>
-                        CreateResourceValueV1(int_value = Some(InputValidation.toInt(element_value, () => throw BadRequestException(s"Invalid integer value in element '${node.label}: '$element_value'"))))
+                        CreateResourceValueV1(int_value = Some(InputValidation.toInt(elementValue, () => throw BadRequestException(s"Invalid integer value in element '${node.label}: '$elementValue'"))))
 
                     case "decimal_value" =>
-                        CreateResourceValueV1(decimal_value = Some(InputValidation.toBigDecimal(element_value, () => throw BadRequestException(s"Invalid decimal value in element '${node.label}: '$element_value'"))))
+                        CreateResourceValueV1(decimal_value = Some(InputValidation.toBigDecimal(elementValue, () => throw BadRequestException(s"Invalid decimal value in element '${node.label}: '$elementValue'"))))
 
                     case "boolean_value" =>
-                        CreateResourceValueV1(boolean_value = Some(InputValidation.toBoolean(element_value, () => throw BadRequestException(s"Invalid boolean value in element '${node.label}: '$element_value'"))))
+                        CreateResourceValueV1(boolean_value = Some(InputValidation.toBoolean(elementValue, () => throw BadRequestException(s"Invalid boolean value in element '${node.label}: '$elementValue'"))))
 
                     case "uri_value" =>
-                        CreateResourceValueV1(uri_value = Some(InputValidation.toIri(element_value, () => throw BadRequestException(s"Invalid URI value in element '${node.label}: '$element_value'"))))
+                        CreateResourceValueV1(uri_value = Some(InputValidation.toIri(elementValue, () => throw BadRequestException(s"Invalid URI value in element '${node.label}: '$elementValue'"))))
 
                     case "date_value" =>
-                        CreateResourceValueV1(date_value = Some(InputValidation.toDate(element_value, () => throw BadRequestException(s"Invalid date value in element '${node.label}: '$element_value'"))))
+                        CreateResourceValueV1(date_value = Some(InputValidation.toDate(elementValue, () => throw BadRequestException(s"Invalid date value in element '${node.label}: '$elementValue'"))))
 
                     case "color_value" =>
-                        CreateResourceValueV1(color_value = Some(InputValidation.toColor(element_value, () => throw BadRequestException(s"Invalid date value in element '${node.label}: '$element_value'"))))
+                        CreateResourceValueV1(color_value = Some(InputValidation.toColor(elementValue, () => throw BadRequestException(s"Invalid date value in element '${node.label}: '$elementValue'"))))
 
                     case "geom_value" =>
-                        CreateResourceValueV1(geom_value = Some(InputValidation.toGeometryString(element_value, () => throw BadRequestException(s"Invalid geometry value in element '${node.label}: '$element_value'"))))
+                        CreateResourceValueV1(geom_value = Some(InputValidation.toGeometryString(elementValue, () => throw BadRequestException(s"Invalid geometry value in element '${node.label}: '$elementValue'"))))
 
                     case "hlist_value" =>
-                        CreateResourceValueV1(hlist_value = Some(InputValidation.toIri(element_value, () => throw BadRequestException(s"Invalid hlist value in element '${node.label}: '$element_value'"))))
+                        CreateResourceValueV1(hlist_value = Some(InputValidation.toIri(elementValue, () => throw BadRequestException(s"Invalid hlist value in element '${node.label}: '$elementValue'"))))
 
                     case "interval_value" =>
-                        Try(element_value.split(",")) match {
+                        Try(elementValue.split(",")) match {
                             case Success(timeVals) =>
-                                if (timeVals.length != 2) throw BadRequestException(s"Invalid interval value in element '${node.label}: '$element_value'")
+                                if (timeVals.length != 2) throw BadRequestException(s"Invalid interval value in element '${node.label}: '$elementValue'")
 
                                 val tVals: Seq[BigDecimal] = timeVals.map {
                                     timeVal =>
@@ -380,34 +379,55 @@ object ResourcesRouteV1 extends Authenticator {
 
                                 CreateResourceValueV1(interval_value = Some(tVals))
 
-                            case Failure(f) =>
-                                throw BadRequestException(s"Invalid interval value in element '${node.label}: '$element_value'")
+                            case Failure(_) =>
+                                throw BadRequestException(s"Invalid interval value in element '${node.label}: '$elementValue'")
                         }
 
                     case "geoname_value" =>
-                        CreateResourceValueV1(geoname_value = Some(element_value))
+                        CreateResourceValueV1(geoname_value = Some(elementValue))
                     case other => throw BadRequestException(s"Invalid 'knoraType' in element '${node.label}': '$other'")
                 }
             } else {
                 throw BadRequestException(s"Attribute 'knoraType' missing in element '${node.label}'")
-
             }
         }
 
         /**
-          * Given the IRI of an internal project-specific ontology, recursively gets instances of [[NamedGraphEntityInfoV1]] for that ontology,
-          * for `knora-base`, and for any other ontologies containing class definitions used as property objects in the initial ontology.
+          * Given the IRI the main internal ontology to be used in an XML import, recursively gets instances of
+          * [[NamedGraphEntityInfoV1]] for that ontology, for `knora-base`, and for any other ontologies containing
+          * classes used in object class constraints in the main ontology.
           *
-          * @param startOntologyIri the IRI of the internal project-specific ontology to start with.
-          * @param userProfile      the profile of the user making the request.
+          * @param mainOntologyIri the IRI of the main ontology used in the XML import.
+          * @param userProfile     the profile of the user making the request.
           * @return a map of internal ontology IRIs to [[NamedGraphEntityInfoV1]] objects.
           */
-        def getNamedGraphInfos(startOntologyIri: IRI, userProfile: UserProfileV1): Future[Map[IRI, NamedGraphEntityInfoV1]] = {
-            def getNamedGraphInfosRec(startOntologyIri: IRI, namedGraphInfosSoFar: Map[IRI, NamedGraphEntityInfoV1], userProfile: UserProfileV1): Future[Map[IRI, NamedGraphEntityInfoV1]] = {
-                for {
-                    startNamedGraphEntityInfo <- (responderManager ? NamedGraphEntityInfoRequestV1(startOntologyIri, userProfile)).mapTo[NamedGraphEntityInfoV1]
-                    propertyInfoResponse: EntityInfoGetResponseV1 <- (responderManager ? EntityInfoGetRequestV1(propertyIris = startNamedGraphEntityInfo.propertyIris, userProfile = userProfile)).mapTo[EntityInfoGetResponseV1]
+        def getNamedGraphInfos(mainOntologyIri: IRI, userProfile: UserProfileV1): Future[Map[IRI, NamedGraphEntityInfoV1]] = {
+            /**
+              * Does the actual recursion for `getNamedGraphInfos`, loading only information about project-specific
+              * ontologies (i.e. ontologies other than `knora-base`).
+              *
+              * @param initialOntologyIri  the IRI of the internal project-specific ontology to start with.
+              * @param intermediateResults the intermediate results collected so far (a map of internal ontology IRIs to
+              *                            [[NamedGraphEntityInfoV1]] objects). When this method is first called, this
+              *                            collection must already contain a [[NamedGraphEntityInfoV1]] for
+              *                            the `knora-base` ontology. This is an optimisation to avoid getting
+              *                            information about `knora-base` repeatedly, since every project-specific
+              *                            ontology depends on `knora-base`.
+              * @param userProfile         the profile of the user making the request.
+              * @return a map of internal ontology IRIs to [[NamedGraphEntityInfoV1]] objects.
+              */
+            def getNamedGraphInfosRec(initialOntologyIri: IRI, intermediateResults: Map[IRI, NamedGraphEntityInfoV1], userProfile: UserProfileV1): Future[Map[IRI, NamedGraphEntityInfoV1]] = {
+                assert(intermediateResults.contains(OntologyConstants.KnoraBase.KnoraBaseOntologyIri))
 
+                for {
+                // Get a NamedGraphEntityInfoV1 listing the IRIs of the properties defined in the initial ontology.
+                    initialNamedGraphInfo: NamedGraphEntityInfoV1 <- (responderManager ? NamedGraphEntityInfoRequestV1(initialOntologyIri, userProfile)).mapTo[NamedGraphEntityInfoV1]
+
+                    // Get details about those properties.
+                    propertyInfoResponse: EntityInfoGetResponseV1 <- (responderManager ? EntityInfoGetRequestV1(propertyIris = initialNamedGraphInfo.propertyIris, userProfile = userProfile)).mapTo[EntityInfoGetResponseV1]
+
+                    // Look at the object class constraints of those properties. Make a set of the ontologies containing those classes,
+                    // not including the initial ontology itself or any other ontologies we've already looked at.
                     ontologyIrisFromObjectClassConstraints: Set[IRI] = propertyInfoResponse.propertyEntityInfoMap.map {
                         case (propertyIri, propertyInfo) =>
                             val propertyObjectClassConstraint = propertyInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint).getOrElse {
@@ -418,29 +438,34 @@ object ResourcesRouteV1 extends Authenticator {
                                 internalEntityIri = propertyObjectClassConstraint,
                                 errorFun = () => throw InconsistentTriplestoreDataException(s"Property $propertyIri has an invalid knora-base:objectClassConstraint: $propertyObjectClassConstraint")
                             )
-                    }.toSet -- namedGraphInfosSoFar.keySet - startOntologyIri
+                    }.toSet -- intermediateResults.keySet - initialOntologyIri
 
-                    namedGraphInfoFutures: Set[Future[Map[IRI, NamedGraphEntityInfoV1]]] = ontologyIrisFromObjectClassConstraints.map {
+                    // Recursively get NamedGraphEntityInfoV1 instances for each of those ontologies.
+                    futuresOfNamedGraphInfosFromObjectClassConstraints: Set[Future[Map[IRI, NamedGraphEntityInfoV1]]] = ontologyIrisFromObjectClassConstraints.map {
                         ontologyIri =>
                             getNamedGraphInfosRec(
-                                startOntologyIri = ontologyIri,
-                                namedGraphInfosSoFar = namedGraphInfosSoFar + (startOntologyIri -> startNamedGraphEntityInfo),
+                                initialOntologyIri = ontologyIri,
+                                intermediateResults = intermediateResults + (initialOntologyIri -> initialNamedGraphInfo),
                                 userProfile = userProfile
                             )
                     }
 
-                    setOfNewNamedGraphInfos: Set[Map[IRI, NamedGraphEntityInfoV1]] <- Future.sequence(namedGraphInfoFutures)
-                    setOfNamedGraphInfoSoFar: Set[Map[IRI, NamedGraphEntityInfoV1]] = setOfNewNamedGraphInfos + Map(startOntologyIri -> startNamedGraphEntityInfo) + namedGraphInfosSoFar
-                } yield setOfNamedGraphInfoSoFar.flatten.toMap
+                    namedGraphInfosFromObjectClassConstraints: Set[Map[IRI, NamedGraphEntityInfoV1]] <- Future.sequence(futuresOfNamedGraphInfosFromObjectClassConstraints)
+
+                // Return the previous intermediate results, plus the information about the initial ontology
+                // and the ontologies containing classes used in object class constraints.
+                } yield namedGraphInfosFromObjectClassConstraints.flatten.toMap ++ intermediateResults + (initialOntologyIri -> initialNamedGraphInfo)
             }
 
-            val knoraBaseGraph: IRI = OntologyConstants.KnoraBase.KnoraBaseOntologyIri
-
             for {
-                knoraBaseGraphEntityInfo <- (responderManager ? NamedGraphEntityInfoRequestV1(knoraBaseGraph, userProfile)).mapTo[NamedGraphEntityInfoV1]
+            // Get a NamedGraphEntityInfoV1 for the knora-base ontology.
+                knoraBaseGraphEntityInfo <- (responderManager ? NamedGraphEntityInfoRequestV1(OntologyConstants.KnoraBase.KnoraBaseOntologyIri, userProfile)).mapTo[NamedGraphEntityInfoV1]
+
+                // Recursively get NamedGraphEntityInfoV1 instances for the main ontology to be used in the XML import,
+                // as well as any other project-specific ontologies it depends on.
                 graphInfos <- getNamedGraphInfosRec(
-                    startOntologyIri = startOntologyIri,
-                    namedGraphInfosSoFar = Map(knoraBaseGraph -> knoraBaseGraphEntityInfo),
+                    initialOntologyIri = mainOntologyIri,
+                    intermediateResults = Map(OntologyConstants.KnoraBase.KnoraBaseOntologyIri -> knoraBaseGraphEntityInfo),
                     userProfile = userProfile
                 )
             } yield graphInfos
@@ -495,7 +520,7 @@ object ResourcesRouteV1 extends Authenticator {
 
             for {
             // Get a NamedGraphEntityInfoV1 for each ontology that we need to generate an XML schema for.
-                namedGraphInfos: Map[IRI, NamedGraphEntityInfoV1] <- getNamedGraphInfos(startOntologyIri = internalOntologyIri, userProfile = userProfile)
+                namedGraphInfos: Map[IRI, NamedGraphEntityInfoV1] <- getNamedGraphInfos(mainOntologyIri = internalOntologyIri, userProfile = userProfile)
 
                 // Get information about the resource classes and properties in each ontology.
                 entityInfoResponseFutures: immutable.Iterable[Future[(IRI, EntityInfoGetResponseV1)]] = namedGraphInfos.map {
@@ -605,7 +630,7 @@ object ResourcesRouteV1 extends Authenticator {
           */
         def generateSchemaZipFile(internalOntologyIri: IRI, userProfile: UserProfileV1): Future[Array[Byte]] = {
             for {
-                // Generate a bundle of XML schemas.
+            // Generate a bundle of XML schemas.
                 schemaBundle: XmlImportSchemaBundleV1 <- generateSchemasFromOntologies(
                     internalOntologyIri = internalOntologyIri,
                     userProfile = userProfile
@@ -695,40 +720,56 @@ object ResourcesRouteV1 extends Authenticator {
                         errorFun = () => throw BadRequestException(s"Invalid XML namespace: $elementNamespace")
                     )
 
-                    // Traverse the child elements to collect the values of the resource.
-                    val propertiesWithValues: Map[IRI, Seq[CreateResourceValueV1]] = resourceNode.child
+                    // Traverse the child elements to collect the values of the resource. This produces a sequence
+                    // in which the same property IRI could occur multiple times.
+                    val propertiesWithValues: Seq[(IRI, CreateResourceValueV1)] = resourceNode.child
                         .filter(childNode => childNode.label != "#PCDATA")
                         .map {
                             propertyNode =>
-                                // Convert the XML element's label and namespace to an internal property IRI.
+                                // Is this a property from another ontology (in the form prefixLabel__localName)?
+                                val propertyIri = InputValidation.toPropertyIriFromOtherOntologyInXmlImport(propertyNode.label) match {
+                                    case Some(iri) =>
+                                        // Yes. Use the corresponding entity IRI for it.
+                                        iri
 
-                                // TODO: if the element's label is of the form prefix__name (e.g. beol__comment), the
-                                // prefix refers to another ontology.
+                                    case None =>
+                                        // No. Convert the XML element's label and namespace to an internal property IRI.
 
-                                val propertyNodeNamespace = propertyNode.getNamespace(propertyNode.prefix)
+                                        val propertyNodeNamespace = propertyNode.getNamespace(propertyNode.prefix)
 
-                                val propertyIri = InputValidation.xmlImportElementNameToInternalOntologyIriV1(
-                                    namespace = propertyNodeNamespace,
-                                    elementLabel = propertyNode.label,
-                                    errorFun = () => throw BadRequestException(s"Invalid XML namespace: $propertyNodeNamespace"))
+                                        InputValidation.xmlImportElementNameToInternalOntologyIriV1(
+                                            namespace = propertyNodeNamespace,
+                                            elementLabel = propertyNode.label,
+                                            errorFun = () => throw BadRequestException(s"Invalid XML namespace: $propertyNodeNamespace"))
+                                }
+
+                                // If the property element has no children, it's an ordinary value property. If it
+                                // has one child, it's a link property.
 
                                 val valueNodes: Seq[Node] = scala.xml.Utility.trim(propertyNode).descendant
 
                                 if (propertyNode.descendant.size == 1) {
-                                    propertyIri -> List(knoraDataTypeXML(propertyNode))
+                                    propertyIri -> knoraDataTypeXml(propertyNode)
                                 } else {
-                                    propertyIri ->
-                                        valueNodes.map {
-                                            descendant: Node => knoraDataTypeXML(descendant)
-                                        }
+                                    propertyIri -> knoraDataTypeXml(valueNodes.head)
                                 }
-                        }.toMap
+                        }
+
+                    // Group the property values by property IRI.
+                    val groupedPropertiesWithValues: Map[IRI, Seq[CreateResourceValueV1]] = propertiesWithValues.groupBy {
+                        case (propertyIri: IRI, _) => propertyIri
+                    }.map {
+                        case (propertyIri: IRI, resultsForProperty: Seq[(IRI, CreateResourceValueV1)]) =>
+                            propertyIri -> resultsForProperty.map {
+                                case (_, propertyValue: CreateResourceValueV1) => propertyValue
+                            }
+                    }
 
                     CreateResourceRequestV1(
                         restype_id = restype_id,
                         client_id = clientIDForResource,
                         label = resourceLabel,
-                        properties = propertiesWithValues
+                        properties = groupedPropertiesWithValues
                     )
                 })
         }

@@ -94,31 +94,39 @@ object InputValidation {
     // http://stackoverflow.com/questions/1636350/how-to-identify-a-given-string-is-hex-color-format
     private val ColorRegex = "^#(?:[0-9a-fA-F]{3}){1,2}$".r
 
-    // A regex sub-pattern for ontology prefix labels, following <https://www.w3.org/TR/turtle/#prefixed-name>,
-    // in which a prefix label is defined as an XML NCName <https://www.w3.org/TR/1999/REC-xml-names-19990114/#NT-NCName>.
-    private val OntologyPrefixLabelPattern: String =
+    // A regex sub-pattern for ontology prefix labels and local entity names. According to
+    // <https://www.w3.org/TR/turtle/#prefixed-name>, a prefix label in Turtle must be a valid XML NCName
+    // <https://www.w3.org/TR/1999/REC-xml-names-19990114/#NT-NCName>. Knora also requires a local entity name to
+    // be an XML NCName.
+    private val NCNamePattern: String =
     """[\p{L}_][\p{L}0-9_.-]*"""
 
-    // A regex for matching a string containing only an ontology prefix label.
-    private val OntologyPrefixLabelRegex = ("^" + OntologyPrefixLabelPattern + "$").r
+    // A regex for matching a string containing only an ontology prefix label or a local entity name.
+    private val NCNameRegex = ("^" + NCNamePattern + "$").r
 
     // A regex for project-specific internal ontologies.
     private val ProjectSpecificInternalOntologyRegex: Regex = (
         "^" + OntologyConstants.KnoraInternal.InternalOntologyStart +
-            "(" + OntologyPrefixLabelPattern + ")$"
+            "(" + NCNamePattern + ")$"
         ).r
 
     // A regex for entity IRIs in project-specific internal ontologies.
     private val ProjectSpecificInternalOntologyEntityRegex: Regex = (
         "^" + OntologyConstants.KnoraInternal.InternalOntologyStart +
-            "(" + OntologyPrefixLabelPattern + ")#(" + OntologyPrefixLabelPattern + ")$"
-    ).r
+            "(" + NCNamePattern + ")#(" + NCNamePattern + ")$"
+        ).r
 
     // A regex for XML import namespaces.
     private val ProjectSpecificXmlImportNamespaceRegex: Regex = (
         "^" + OntologyConstants.KnoraXmlImportV1.ProjectSpecificXmlImportNamespace.XmlImportNamespaceStart +
-            "(" + OntologyPrefixLabelPattern + ")" +
+            "(" + NCNamePattern + ")" +
             OntologyConstants.KnoraXmlImportV1.ProjectSpecificXmlImportNamespace.XmlImportNamespaceEnd + "$"
+        ).r
+
+    // In XML import data, a property from another ontology is referred to as prefixLabel__localName. This regex parses
+    // that pattern.
+    private val PropertyFromOtherOntologyInXmlImportRegex: Regex = (
+        "^(" + NCNamePattern + ")__(" + NCNamePattern + ")$"
         ).r
 
     // Valid URL schemes.
@@ -411,18 +419,18 @@ object InputValidation {
     }
 
     /**
-      * Checks that a project-specific ontology prefix label is valid according to
-      * https://www.w3.org/TR/turtle/#prefixed-name and does not start with the reserved token `knora`.
+      * Checks that a string is valid as a project-specific ontology prefix label or entity local name, i.e. that it is
+      * a valid XML NCName and does not start with `knora`.
       *
-      * @param prefixLabel the prefix label to be checked.
-      * @param errorFun    a function that throws an exception. It will be called if the prefix label is invalid.
-      * @return the same prefix label.
+      * @param ncName   the string to be checked.
+      * @param errorFun a function that throws an exception. It will be called if the string is invalid.
+      * @return the same string.
       */
-    def toProjectOntologyPrefixLabel(prefixLabel: String, errorFun: () => Nothing): String = {
-        if (prefixLabel.startsWith("knora")) {
+    def toProjectSpecificNCName(ncName: String, errorFun: () => Nothing): String = {
+        if (ncName.startsWith("knora")) {
             errorFun()
         } else {
-            OntologyPrefixLabelRegex.findFirstIn(prefixLabel) match {
+            NCNameRegex.findFirstIn(ncName) match {
                 case Some(value) => value
                 case None => errorFun()
             }
@@ -433,7 +441,7 @@ object InputValidation {
     /**
       * A container for an XML import namespace and its prefix label.
       *
-      * @param namespace the namespace.
+      * @param namespace   the namespace.
       * @param prefixLabel the prefix label.
       */
     case class XmlImportNamespaceInfoV1(namespace: IRI, prefixLabel: String)
@@ -443,9 +451,9 @@ object InputValidation {
       * namespace for use in data import.
       *
       * @param internalOntologyIri the IRI of the project-specific internal ontology. Any trailing # character will be
-      *                    stripped before the conversion.
-      * @param errorFun    a function that throws an exception. It will be called if the form of the IRI is not
-      *                    valid for an internal ontology IRI.
+      *                            stripped before the conversion.
+      * @param errorFun            a function that throws an exception. It will be called if the form of the IRI is not
+      *                            valid for an internal ontology IRI.
       * @return the corresponding XML prefix label and import namespace.
       */
     def internalOntologyIriToXmlNamespaceInfoV1(internalOntologyIri: IRI, errorFun: () => Nothing): XmlImportNamespaceInfoV1 = {
@@ -478,10 +486,10 @@ object InputValidation {
       * Converts a XML element name in a particular namespace (used in XML data import) to the IRI of a
       * project-specific internal ontology entity (used in the triplestore).
       *
-      * @param namespace the XML namespace.
+      * @param namespace    the XML namespace.
       * @param elementLabel the XML element label.
-      * @param errorFun a function that throws an exception. It will be called if the form of the namespace is not
-      *                 valid for a Knora XML import namespace.
+      * @param errorFun     a function that throws an exception. It will be called if the form of the namespace is not
+      *                     valid for a Knora XML import namespace.
       * @return the corresponding project-specific internal ontology entity IRI.
       */
     def xmlImportElementNameToInternalOntologyIriV1(namespace: String, elementLabel: String, errorFun: () => Nothing): IRI = {
@@ -493,8 +501,8 @@ object InputValidation {
       * Given the IRI of an internal ontology entity, returns the ontology prefix label.
       *
       * @param internalEntityIri the ontology entity IRI.
-      * @param errorFun a function that throws an exception. It will be called if the form of the string is not
-      *                 valid for an internal ontology entity IRI.
+      * @param errorFun          a function that throws an exception. It will be called if the form of the string is not
+      *                          valid for an internal ontology entity IRI.
       * @return the ontology prefix label specified in the entity IRI.
       */
     def getOntologyPrefixLabelFromInternalEntityIri(internalEntityIri: IRI, errorFun: () => Nothing): String = {
@@ -508,9 +516,9 @@ object InputValidation {
       * Extracts the prefix label from the IRI of a project-specific internal ontology.
       *
       * @param internalOntologyIri the IRI of the project-specific internal ontology. Any trailing # character will be
-      *                    stripped before the conversion.
-      * @param errorFun    a function that throws an exception. It will be called if the form of the IRI is not
-      *                    valid for an internal ontology IRI.
+      *                            stripped before the conversion.
+      * @param errorFun            a function that throws an exception. It will be called if the form of the IRI is not
+      *                            valid for an internal ontology IRI.
       * @return the corresponding prefix label.
       */
     def getOntologyPrefixLabelFromInternalOntologyIri(internalOntologyIri: IRI, errorFun: () => Nothing): String = {
@@ -524,13 +532,13 @@ object InputValidation {
       * Given the IRI of an internal ontology entity, returns the internal ontology IRI.
       *
       * @param internalEntityIri the ontology entity IRI.
-      * @param errorFun a function that throws an exception. It will be called if the form of the string is not
-      *                 valid for an internal ontology entity IRI.
+      * @param errorFun          a function that throws an exception. It will be called if the form of the string is not
+      *                          valid for an internal ontology entity IRI.
       * @return the ontology IRI portion of the entity IRI.
       */
     def getInternalOntologyIriFromInternalEntityIri(internalEntityIri: IRI, errorFun: () => Nothing): IRI = {
         internalEntityIri match {
-            case ProjectSpecificInternalOntologyEntityRegex(prefix, _) => OntologyConstants.KnoraInternal.InternalOntologyStart + prefix
+            case ProjectSpecificInternalOntologyEntityRegex(prefixLabel, _) => OntologyConstants.KnoraInternal.InternalOntologyStart + prefixLabel
             case _ => errorFun()
         }
     }
@@ -539,8 +547,8 @@ object InputValidation {
       * Given the IRI of an internal ontology entity, returns the local name of the entity.
       *
       * @param internalEntityIri the ontology entity IRI.
-      * @param errorFun a function that throws an exception. It will be called if the form of the string is not
-      *                 valid for an internal ontology entity IRI.
+      * @param errorFun          a function that throws an exception. It will be called if the form of the string is not
+      *                          valid for an internal ontology entity IRI.
       * @return the local name specified in the entity IRI.
       */
     def getEntityNameFromInternalEntityIri(internalEntityIri: IRI, errorFun: () => Nothing): String = {
@@ -550,4 +558,18 @@ object InputValidation {
         }
     }
 
+    /**
+      * In XML import data, a property from another ontology is referred to as `prefixLabel__localName`. This function
+      * attempts to parse a property name in that format.
+      *
+      * @param prefixLabelAndLocalName a string that may refer to a property in the format `prefixLabel__localName`.
+      * @return if successful, a `Some` containing the entity's internal IRI, otherwise `None`.
+      */
+    def toPropertyIriFromOtherOntologyInXmlImport(prefixLabelAndLocalName: String): Option[IRI] = {
+        prefixLabelAndLocalName match {
+            case PropertyFromOtherOntologyInXmlImportRegex(prefixLabel, localName) =>
+                Some(s"${OntologyConstants.KnoraInternal.InternalOntologyStart}$prefixLabel#$localName")
+            case _ => None
+        }
+    }
 }
