@@ -239,7 +239,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
     }
 
 
-    "The Resources Endpoint" should { /*
+    "The Resources Endpoint" should {
         "provide a HTML representation of the resource properties " in {
             /* Incunabula resources*/
 
@@ -1185,7 +1185,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
                 assert(utf8str == "another simple text")
             }
         }
-*/
+
         "create resources from simple xml" in {
             val params =
                 s"""<?xml version="1.0" encoding="UTF-8"?>
@@ -1264,5 +1264,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
                 responseAs[String] should include("cvc-pattern-valid")
             }
         }
+
+        // TODO: test the generation of a Zip file containing an XML schema bundle, e.g. /v1/resources/xmlimportschemas/http%3A%2F%2Fwww.knora.org%2Fontology%2Fbiblio
     }
 }

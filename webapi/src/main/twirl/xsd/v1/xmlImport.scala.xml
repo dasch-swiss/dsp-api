@@ -84,7 +84,7 @@
 
                                                         } else {
 
-                                                            name="@{propertyNamespacePrefixLabel}__@{getEntityName(propertyIri)}" @* TODO: parse these in the route. *@
+                                                            name="@{propertyNamespacePrefixLabel}__@{getEntityName(propertyIri)}"
                                                         }
 
                                                     }

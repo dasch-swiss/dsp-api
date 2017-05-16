@@ -702,6 +702,9 @@ object ResourcesRouteV1 extends Authenticator {
                             propertyNode =>
                                 // Convert the XML element's label and namespace to an internal property IRI.
 
+                                // TODO: if the element's label is of the form prefix__name (e.g. beol__comment), the
+                                // prefix refers to another ontology.
+
                                 val propertyNodeNamespace = propertyNode.getNamespace(propertyNode.prefix)
 
                                 val propertyIri = InputValidation.xmlImportElementNameToInternalOntologyIriV1(
