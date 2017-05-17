@@ -425,6 +425,42 @@
                    rdfs:subPropertyOf knora-base:hasValue .
 
     ### ###########################################
+    ### beol:hasTitle
+
+    :hasTitle rdf:type owl:ObjectProperty ;
+
+                    rdfs:label "Titel"@de ,
+                             "Title"@en ;
+
+                    rdfs:comment """Represents title of person."""@en ;
+
+                    knora-base:objectClassConstraint knora-base:TextValue ;
+
+                    salsah-gui:guiElement salsah-gui:SimpleText ;
+
+                    knora-base:subjectClassConstraint :person ;
+
+                    rdfs:subPropertyOf knora-base:hasValue .
+
+    ### ###########################################
+    ### beol:hasAlternativeName
+
+    :hasAlternativeName rdf:type owl:ObjectProperty ;
+
+                   rdfs:label "Alternative-Name"@de ,
+                            "alternative name"@en ;
+
+                   rdfs:comment """Represents alternative name."""@en ;
+
+                   knora-base:objectClassConstraint knora-base:TextValue ;
+
+                   salsah-gui:guiElement salsah-gui:SimpleText ;
+
+                   knora-base:subjectClassConstraint :person ;
+
+                   rdfs:subPropertyOf knora-base:hasValue .
+
+    ### ###########################################
     ### beol:hasIAFIdentifier
 
     :hasIAFIdentifier rdf:type owl:ObjectProperty ;
@@ -707,13 +743,21 @@
 :person rdf:type owl:Class ;
 
     rdfs:subClassOf knora-base:Resource, foaf:Person ,
-    					[ rdf:type owl:Restriction ;
+    				[ rdf:type owl:Restriction ;
                       owl:onProperty :hasFamilyName ;
                       owl:maxCardinality "1"^^xsd:nonNegativeInteger
                     ],
                     [ rdf:type owl:Restriction ;
                       owl:onProperty :hasGivenName ;
                       owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                    ],
+                    [ rdf:type owl:Restriction ;
+                      owl:onProperty :hasTitle ;
+                      owl:minCardinality "0"^^xsd:nonNegativeInteger
+                    ],
+                    [ rdf:type owl:Restriction ;
+                      owl:onProperty :hasAlternativeName ;
+                      owl:minCardinality "0"^^xsd:nonNegativeInteger
                     ],
                     [ rdf:type owl:Restriction ;
                       owl:onProperty :hasIAFIdentifier ;
