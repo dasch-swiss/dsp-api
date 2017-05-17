@@ -59,10 +59,10 @@ case class CreateProjectApiRequestV1(shortname: String,
   * @param longname      the new project's longname.
   * @param description   the new project's description.
   * @param keywords      the new project's keywords.
-  * @param ontologygraph the new project's ontology graph.
-  * @param datagraph     the new project's data graph.
   * @param logo          the new project's logo.
   * @param institution   the new project's institution.
+  * @param ontologygraph the new project's ontology graph.
+  * @param datagraph     the new project's data graph.
   * @param status        the new project's status.
   * @param selfjoin      the new project's self-join status.
   */
@@ -70,10 +70,10 @@ case class ChangeProjectApiRequestV1(shortname: Option[String] = None,
                                      longname: Option[String] = None,
                                      description: Option[String] = None,
                                      keywords: Option[String] = None,
-                                     ontologygraph: Option[String] = None,
-                                     datagraph: Option[String] = None,
                                      logo: Option[String] = None,
                                      institution: Option[IRI] = None,
+                                     ontologygraph: Option[String] = None,
+                                     datagraph: Option[String] = None,
                                      status: Option[Boolean] = None,
                                      selfjoin: Option[Boolean] = None) extends ProjectV1JsonProtocol {
     def toJsValue = changeProjectApiRequestV1Format.write(this)
@@ -313,12 +313,13 @@ trait ProjectV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol wi
     // protocol and UserV1JsonProtocol. See ttps://github.com/spray/spray-json#jsonformats-for-recursive-types.
     // rootFormat makes it return the expected type again.
     // https://github.com/spray/spray-json#jsonformats-for-recursive-types
+    implicit val projectMembersUpdateResponseV1Format: RootJsonFormat[ProjectMembersUpdateResponseV1] = rootFormat(lazyFormat(jsonFormat(ProjectMembersUpdateResponseV1, "members", "userdata")))
     implicit val projectMembersGetRequestV1Format: RootJsonFormat[ProjectMembersGetResponseV1] = rootFormat(lazyFormat(jsonFormat(ProjectMembersGetResponseV1, "members", "userdata")))
     implicit val projectInfoV1Format: JsonFormat[ProjectInfoV1] = jsonFormat11(ProjectInfoV1)
     implicit val projectsResponseV1Format: RootJsonFormat[ProjectsResponseV1] = rootFormat(lazyFormat(jsonFormat(ProjectsResponseV1, "projects")))
     implicit val projectInfoResponseV1Format: RootJsonFormat[ProjectInfoResponseV1] = rootFormat(lazyFormat(jsonFormat(ProjectInfoResponseV1, "project_info")))
     implicit val createProjectApiRequestV1Format: RootJsonFormat[CreateProjectApiRequestV1] = rootFormat(lazyFormat(jsonFormat(CreateProjectApiRequestV1, "shortname", "longname", "description", "keywords", "logo", "status", "selfjoin")))
-    implicit val changeProjectApiRequestV1Format: RootJsonFormat[ChangeProjectApiRequestV1] = rootFormat(lazyFormat(jsonFormat10(ChangeProjectApiRequestV1)))
+    implicit val changeProjectApiRequestV1Format: RootJsonFormat[ChangeProjectApiRequestV1] = rootFormat(lazyFormat(jsonFormat(ChangeProjectApiRequestV1, "shortname", "longname", "description", "keywords", "logo", "institution", "ontologygraph", "datagraph", "status", "selfjoin")))
     implicit val projectOperationResponseV1Format: RootJsonFormat[ProjectOperationResponseV1] = rootFormat(lazyFormat(jsonFormat(ProjectOperationResponseV1, "project_info")))
 
 }

@@ -145,7 +145,7 @@ class ProjectsV1E2ESpec extends E2ESpec(ProjectsV1E2ESpec.config) with SessionJs
 
                 val request = Post(baseApiUrl + s"/v1/projects", HttpEntity(ContentTypes.`application/json`, params))
                 val response: HttpResponse = singleAwaitingRequest(request)
-                println(s"response: ${response.toString}")
+                //println(s"response: ${response.toString}")
                 response.status should be (StatusCodes.BadRequest)
             }
 
@@ -165,7 +165,7 @@ class ProjectsV1E2ESpec extends E2ESpec(ProjectsV1E2ESpec.config) with SessionJs
 
                 val request = Post(baseApiUrl + s"/v1/projects", HttpEntity(ContentTypes.`application/json`, params))
                 val response: HttpResponse = singleAwaitingRequest(request)
-                println(s"response: ${response.toString}")
+                //println(s"response: ${response.toString}")
                 response.status should be (StatusCodes.BadRequest)
             }
 
@@ -179,13 +179,14 @@ class ProjectsV1E2ESpec extends E2ESpec(ProjectsV1E2ESpec.config) with SessionJs
                        |    "description": "updated project description",
                        |    "keywords": "updated keywords",
                        |    "logo": "/fu/bar/baz-updated.jpg",
+                       |    "institution": "http://data.knora.org/institutions/dhlab-basel",
                        |    "status": false,
                        |    "selfjoin": true
                        |}
                 """.stripMargin
 
                 val projectIriEncoded = java.net.URLEncoder.encode(newProjectIri.get, "utf-8")
-                val request = Put(baseApiUrl + s"/v1/projects/" + projectIriEncoded, HttpEntity(ContentTypes.`application/json`, params))
+                val request = Put(baseApiUrl + s"/v1/projects/" + projectIriEncoded, HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
                 val response: HttpResponse = singleAwaitingRequest(request)
                 //println(s"response: ${response.toString}")
                 response.status should be (StatusCodes.OK)

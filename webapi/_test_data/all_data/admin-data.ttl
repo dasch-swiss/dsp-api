@@ -216,6 +216,10 @@
                                                knora-base:hasSelfJoinEnabled "false"^^xsd:boolean .
 
 
+<http://data.knora.org/institutions/dhlab-basel> rdf:type knora-base:Institution ;
+                                                 knora-base:institutionName "Digital Humanities Lab, Basel" .
+
+
 ##########################################################
 #
 # INCUNABULA PROJECT / USERS / GROUPS

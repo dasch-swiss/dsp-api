@@ -62,6 +62,8 @@ class ProjectsResponderV1 extends ResponderV1 {
         case ProjectMembersByShortnameGetRequestV1(shortname, userProfileV1) => future2Message(sender(), projectMembersByShortnameGetRequestV1(shortname, userProfileV1), log)
         case ProjectCreateRequestV1(createRequest, userProfileV1, apiRequestID) => future2Message(sender(), projectCreateRequestV1(createRequest, userProfileV1, apiRequestID), log)
         case ProjectChangeRequestV1(projectIri, changeProjectRequest, userProfileV1, apiRequestID) => future2Message(sender(), changeBasicInformationRequestV1(projectIri, changeProjectRequest, userProfileV1, apiRequestID), log)
+        case ProjectAddUserRequestV1(projectIri, userIri, userProfile, apiRequestID) => future2Message(sender(), projectAddUserRequestV1(projectIri, userIri, userProfile, apiRequestID), log)
+        case ProjectRemoveUserRequestV1(projectIri, userIri, userProfile, apiRequestID) => future2Message(sender(), projectRemoveUserRequestV1(projectIri, userIri, userProfile, apiRequestID), log)
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }
 
@@ -220,7 +222,7 @@ class ProjectsResponderV1 extends ResponderV1 {
                 Some(createProjectInfoV1(projectResponse = projectResponse.results.bindings, projectIri = projectIri, userProfile))
             }
 
-            _ = log.debug("projectInfoByIRIGetV1 - projectInfo: {}", projectInfo)
+        //_ = log.debug("projectInfoByIRIGetV1 - projectInfo: {}", projectInfo)
 
         } yield projectInfo
     }
@@ -270,7 +272,7 @@ class ProjectsResponderV1 extends ResponderV1 {
       */
     private def projectMembersByIRIGetRequestV1(projectIri: IRI, userProfileV1: UserProfileV1): Future[ProjectMembersGetResponseV1] = {
 
-        log.debug("projectMembersByIRIGetRequestV1 - projectIRI: {}", projectIri)
+        //log.debug("projectMembersByIRIGetRequestV1 - projectIRI: {}", projectIri)
 
         for {
             sparqlQueryString <- Future(queries.sparql.v1.txt.getProjectMembersByIri(
@@ -288,7 +290,7 @@ class ProjectsResponderV1 extends ResponderV1 {
             } else {
                 throw NotFoundException(s"Project '$projectIri' either not found or has no members")
             }
-            _ = log.debug(s"projectMembersByIRIGetRequestV1 - projectMemberIris: $projectMemberIris")
+            //_ = log.debug(s"projectMembersByIRIGetRequestV1 - projectMemberIris: $projectMemberIris")
 
             response <- createProjectMembersGetResponse(projectMemberIris, userProfileV1)
 
@@ -305,7 +307,7 @@ class ProjectsResponderV1 extends ResponderV1 {
       */
     private def projectMembersByShortnameGetRequestV1(shortname: String, userProfileV1: UserProfileV1): Future[ProjectMembersGetResponseV1] = {
 
-        log.debug("projectMembersByShortnameGetRequestV1 - shortname: {}", shortname)
+        //log.debug("projectMembersByShortnameGetRequestV1 - shortname: {}", shortname)
 
         for {
             sparqlQueryString <- Future(queries.sparql.v1.txt.getProjectMembersByShortname(
@@ -324,7 +326,7 @@ class ProjectsResponderV1 extends ResponderV1 {
             } else {
                 throw NotFoundException(s"Project '$shortname' either not found or has no members")
             }
-            _ = log.debug(s"projectMembersByShortnameGetRequestV1 - projectMemberIris: $projectMemberIris")
+            //_ = log.debug(s"projectMembersByShortnameGetRequestV1 - projectMemberIris: $projectMemberIris")
 
             response <- createProjectMembersGetResponse(projectMemberIris, userProfileV1)
 
@@ -335,7 +337,7 @@ class ProjectsResponderV1 extends ResponderV1 {
 
         //log.debug("projectCreateRequestV1 - createRequest: {}", createRequest)
 
-        def projectCreateTask(createRequest: CreateProjectApiRequestV1, userProfile: UserProfileV1, apiRequestID: UUID): Future[ProjectOperationResponseV1] = for {
+        def projectCreateTask(createRequest: CreateProjectApiRequestV1, userProfile: UserProfileV1): Future[ProjectOperationResponseV1] = for {
         // check if required properties are not empty
             _ <- Future(if (createRequest.shortname.isEmpty) throw BadRequestException("'Shortname' cannot be empty"))
 
@@ -405,19 +407,19 @@ class ProjectsResponderV1 extends ResponderV1 {
             taskResult <- IriLocker.runWithIriLock(
                 apiRequestID,
                 PROJECTS_GLOBAL_LOCK_IRI,
-                () => projectCreateTask(createRequest, userProfile, apiRequestID)
+                () => projectCreateTask(createRequest, userProfile)
             )
         } yield taskResult
     }
 
     private def changeBasicInformationRequestV1(projectIri: IRI, changeProjectRequest: ChangeProjectApiRequestV1, userProfileV1: UserProfileV1, apiRequestID: UUID): Future[ProjectOperationResponseV1] = {
 
-        log.debug(s"changeBasicInformationRequestV1: changeProjectRequest: {}", changeProjectRequest)
+        //log.debug(s"changeBasicInformationRequestV1: changeProjectRequest: {}", changeProjectRequest)
 
         /**
           * The actual change project task run with an IRI lock.
           */
-        def changeProjectTask(projectIri: IRI, changeProjectRequest: ChangeProjectApiRequestV1, userProfileV1: UserProfileV1, apiRequestID: UUID): Future[ProjectOperationResponseV1] = for {
+        def changeProjectTask(projectIri: IRI, changeProjectRequest: ChangeProjectApiRequestV1, userProfileV1: UserProfileV1): Future[ProjectOperationResponseV1] = for {
 
             _ <- Future(
                 // check if necessary information is present
@@ -430,12 +432,15 @@ class ProjectsResponderV1 extends ResponderV1 {
                 throw ForbiddenException("Project's information can only be changed by a project or system admin.")
             }
 
+            // check if the project exists
+
             // create the update request
             projectUpdatePayload = ProjectUpdatePayloadV1(
                 longname = changeProjectRequest.longname,
                 description = changeProjectRequest.description,
                 keywords = changeProjectRequest.keywords,
                 logo = changeProjectRequest.logo,
+                institution = changeProjectRequest.institution,
                 status = changeProjectRequest.status,
                 selfjoin = changeProjectRequest.selfjoin
             )
@@ -445,11 +450,11 @@ class ProjectsResponderV1 extends ResponderV1 {
         } yield result
 
         for {
-        // run the change status task with an IRI lock
+            // run the change status task with an IRI lock
             taskResult <- IriLocker.runWithIriLock(
                 apiRequestID,
                 projectIri,
-                () => changeProjectTask(projectIri, changeProjectRequest, userProfileV1, apiRequestID)
+                () => changeProjectTask(projectIri, changeProjectRequest, userProfileV1)
             )
         } yield taskResult
 
@@ -457,7 +462,7 @@ class ProjectsResponderV1 extends ResponderV1 {
 
     private def updateProjectV1(projectIri: IRI, projectUpdatePayload: ProjectUpdatePayloadV1, userProfile: UserProfileV1): Future[ProjectOperationResponseV1] = {
 
-        log.debug("updateProjectV1 - projectUpdatePayload: {}", projectUpdatePayload)
+        //log.debug("updateProjectV1 - projectUpdatePayload: {}", projectUpdatePayload)
 
         val parametersCount = List(
             projectUpdatePayload.shortname,
@@ -474,7 +479,7 @@ class ProjectsResponderV1 extends ResponderV1 {
         if (parametersCount == 0) throw BadRequestException("No data would be changed. Aborting request.")
 
         for {
-            /* Update project */
+        /* Update project */
             updateProjectSparqlString <- Future(queries.sparql.v1.txt.updateProject(
                 adminNamedGraphIri = "http://www.knora.org/data/admin",
                 triplestore = settings.triplestoreType,
@@ -490,7 +495,7 @@ class ProjectsResponderV1 extends ResponderV1 {
                 maybeStatus = projectUpdatePayload.status,
                 maybeSelfjoin = projectUpdatePayload.selfjoin
             ).toString)
-            _ = log.debug(s"updateProjectV1 - query: {}",updateProjectSparqlString)
+            //_ = log.debug(s"updateProjectV1 - query: {}",updateProjectSparqlString)
 
             updateProjectResponse <- (storeManager ? SparqlUpdateRequest(updateProjectSparqlString)).mapTo[SparqlUpdateResponse]
 
@@ -498,7 +503,7 @@ class ProjectsResponderV1 extends ResponderV1 {
             maybeUpdatedProject <- projectInfoByIRIGetV1(projectIri, Some(userProfile))
             updatedProject: ProjectInfoV1 = maybeUpdatedProject.getOrElse(throw UpdateNotPerformedException("Project was not updated. Please report this as a possible bug."))
 
-            _ = log.debug("updateProjectV1 - projectUpdatePayload: {} /  updatedProject: {}", projectUpdatePayload, updatedProject)
+            //_ = log.debug("updateProjectV1 - projectUpdatePayload: {} /  updatedProject: {}", projectUpdatePayload, updatedProject)
 
             _ = if (projectUpdatePayload.shortname.isDefined) {
                 if (updatedProject.shortname != projectUpdatePayload.shortname.get) throw UpdateNotPerformedException("Project's 'shortname' was not updated. Please report this as a possible bug.")
@@ -540,11 +545,59 @@ class ProjectsResponderV1 extends ResponderV1 {
                 if (updatedProject.selfjoin != projectUpdatePayload.selfjoin.get) throw UpdateNotPerformedException("Project's 'selfjoin' status was not updated. Please report this as a possible bug.")
             }
 
-            // create the user operation response
+            // create the project operation response
             projectOperationResponseV1 = ProjectOperationResponseV1(project_info = updatedProject)
         } yield projectOperationResponseV1
 
     }
+
+
+    private def projectAddUserRequestV1(projectIri: IRI, userIri: IRI, userProfileV1: UserProfileV1, apiRequestID: UUID): Future[ProjectOperationResponseV1] = {
+
+        for {
+            _ <- Future(
+                // check if necessary information is present
+                if (projectIri.isEmpty) throw BadRequestException("Project IRI cannot be empty")
+            )
+
+            // check if the requesting user is allowed to perform updates
+            _ = if (!userProfileV1.permissionData.isProjectAdmin(projectIri) && !userProfileV1.permissionData.isSystemAdmin) {
+                // not a project admin and not a system admin
+                throw ForbiddenException("Project's information can only be changed by a project or system admin.")
+            }
+
+            updateUserResult <- (responderManager ? UserAddProjectMembershipV1(userIri, projectIri, userProfileV1, apiRequestID)).mapTo[UserOperationResponseV1]
+
+            maybeUpdatedProject <- projectInfoByIRIGetV1(projectIri, Some(userProfileV1))
+            updatedProject: ProjectInfoV1 = maybeUpdatedProject.getOrElse(throw UpdateNotPerformedException("Project was not updated. Please report this as a possible bug."))
+            projectOperationResponseV1 = ProjectOperationResponseV1(project_info = updatedProject)
+
+        } yield projectOperationResponseV1
+    }
+
+    private def projectRemoveUserRequestV1(projectIri: IRI, userIri: IRI, userProfileV1: UserProfileV1, apiRequestID: UUID): Future[ProjectOperationResponseV1] = {
+
+        for {
+            _ <- Future(
+                // check if necessary information is present
+                if (projectIri.isEmpty) throw BadRequestException("Project IRI cannot be empty")
+            )
+
+            // check if the requesting user is allowed to perform updates
+            _ = if (!userProfileV1.permissionData.isProjectAdmin(projectIri) && !userProfileV1.permissionData.isSystemAdmin) {
+                // not a project admin and not a system admin
+                throw ForbiddenException("Project's information can only be changed by a project or system admin.")
+            }
+
+            updateUserResult <- (responderManager ? UserRemoveProjectMembershipV1(userIri, projectIri, userProfileV1, apiRequestID)).mapTo[UserOperationResponseV1]
+
+            maybeUpdatedProject <- projectInfoByIRIGetV1(projectIri, Some(userProfileV1))
+            updatedProject: ProjectInfoV1 = maybeUpdatedProject.getOrElse(throw UpdateNotPerformedException("Project was not updated. Please report this as a possible bug."))
+            projectOperationResponseV1 = ProjectOperationResponseV1(project_info = updatedProject)
+
+        } yield projectOperationResponseV1
+    }
+
 
     ////////////////////
     // Helper Methods //
@@ -569,7 +622,7 @@ class ProjectsResponderV1 extends ResponderV1 {
                     acc + (row.rowMap("p") -> row.rowMap("o"))
             }
 
-            // log.debug(s"createProjectInfoV1FromProjectResponse - projectProperties: $projectProperties")
+            // log.debug(s"createProjectInfoV1 - projectProperties: $projectProperties")
 
             /* create and return the project info */
             ProjectInfoV1(
@@ -579,7 +632,7 @@ class ProjectsResponderV1 extends ResponderV1 {
                 description = projectProperties.get(OntologyConstants.KnoraBase.ProjectDescription),
                 keywords = projectProperties.get(OntologyConstants.KnoraBase.ProjectKeywords),
                 logo = projectProperties.get(OntologyConstants.KnoraBase.ProjectLogo),
-                institution = projectProperties.get(OntologyConstants.KnoraBase.BelongsToProject),
+                institution = projectProperties.get(OntologyConstants.KnoraBase.BelongsToInstitution),
                 ontologyNamedGraph = projectProperties.getOrElse(OntologyConstants.KnoraBase.ProjectOntologyGraph, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no projectOntologyGraph defined.")),
                 dataNamedGraph = projectProperties.getOrElse(OntologyConstants.KnoraBase.ProjectDataGraph, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no projectDataGraph defined.")),
                 status = projectProperties.getOrElse(OntologyConstants.KnoraBase.Status, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no status defined.")).toBoolean,
@@ -604,10 +657,10 @@ class ProjectsResponderV1 extends ResponderV1 {
 
         def getUserData(userIri: IRI): Future[UserDataV1] = {
             for {
-                userProfile <- (responderManager ? UserProfileByIRIGetV1(userIri, UserProfileType.SHORT)).mapTo[Option[UserProfileV1]]
+                userProfile <- (responderManager ? UserDataByIriGetV1(userIri, true)).mapTo[Option[UserDataV1]]
 
                 result = userProfile match {
-                    case Some(up) => up.userData
+                    case Some(ud) => ud
                     case None => throw InconsistentTriplestoreDataException(s"User $userIri was not found but is member of project. Please report this as a possible bug.")
                 }
             } yield result

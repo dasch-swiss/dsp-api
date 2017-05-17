@@ -165,15 +165,15 @@ WHERE {
 
     ?project knora-base:projectShortname ?currentShortname .
 
-    ?project knora-base:projectLongname ?currentLongname .
+    optional {?project knora-base:projectLongname ?currentLongname .}
 
-    ?project knora-base:projectDescription ?currentDescription .
+    optional {?project knora-base:projectDescription ?currentDescription .}
 
-    ?project knora-base:projectKeywords ?currentKeywords .
+    optional {?project knora-base:projectKeywords ?currentKeywords .}
 
-    ?project knora-base:projectLogo ?currentLogo .
+    optional {?project knora-base:projectLogo ?currentLogo .}
 
-    ?project knora-base:belongsToInstitution ?currentInstitution .
+    optional {?project knora-base:belongsToInstitution ?currentInstitution .}
 
     ?project knora-base:projectOntologyGraph ?currentOntologyGraph .
 

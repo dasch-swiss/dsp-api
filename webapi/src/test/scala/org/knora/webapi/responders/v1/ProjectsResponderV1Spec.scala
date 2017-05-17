@@ -134,7 +134,7 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
 
             val newProjectIri = new MutableTestIri
 
-            "create the project with using a permissions template, and return the 'full' project info if the supplied shortname is unique" in {
+            "create the project and return the project info if the supplied shortname is unique" in {
                 actorUnderTest ! ProjectCreateRequestV1(
                     CreateProjectApiRequestV1(
                         shortname = "newproject",
@@ -156,6 +156,7 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
                 assert(received.project_info.dataNamedGraph.equals("http://www.knora.org/data/newproject"))
 
                 newProjectIri.set(received.project_info.id)
+                //println(s"newProjectIri: ${newProjectIri.get}")
             }
 
             "return a 'DuplicateValueException' if the supplied project shortname during creation is not unique" in {
@@ -202,6 +203,7 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
                         description = Some("updated project description"),
                         keywords = Some("updated keywords"),
                         logo = Some("/fu/bar/baz-updated.jpg"),
+                        institution = Some("http://data.knora.org/institutions/dhlab-basel"),
                         status = Some(false),
                         selfjoin = Some(true)
                     ),
@@ -209,12 +211,25 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
                     UUID.randomUUID()
                 )
                 val received: ProjectOperationResponseV1 = expectMsgType[ProjectOperationResponseV1](timeout)
-                received.project_info.longname should be (Some("project longname"))
-                received.project_info.description should be (Some("project description"))
+                received.project_info.longname should be (Some("updated project longname"))
+                received.project_info.description should be (Some("updated project description"))
+                received.project_info.keywords should be (Some("updated keywords"))
+                received.project_info.logo should be (Some("/fu/bar/baz-updated.jpg"))
+                received.project_info.institution should be (Some("http://data.knora.org/institutions/dhlab-basel"))
                 received.project_info.ontologyNamedGraph should be ("http://www.knora.org/ontology/newproject")
                 received.project_info.dataNamedGraph should be ("http://www.knora.org/data/newproject")
                 received.project_info.status should be (false)
                 received.project_info.selfjoin should be (true)
+            }
+
+            "return 'NotFound' if a not existing project IRI is submitted during update" in {
+                actorUnderTest ! ProjectChangeRequestV1(
+                    projectIri = "http://data.knora.org/projects/notexisting",
+                    changeProjectRequest = ChangeProjectApiRequestV1(),
+                    SharedAdminTestData.rootUser,
+                    UUID.randomUUID()
+                )
+                expectMsg(Failure(NotFoundException(s"Project 'http://data.knora.org/projects/notexisting' not found")))
             }
 
         }
@@ -256,93 +271,18 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
             }
         }
 
+        "used to modify members" should {
 
+            "add user to project" in {
+                fail("test not implemented")
 
-
-        /*
-        "asked to update a project " should {
-            "update the project " in {
-
-                /* User information is updated by the user */
-                actorUnderTest ! UserUpdateRequestV1(
-                    userIri = SharedTestData.normaluserUserProfileV1.userData.user_id.get,
-                    propertyIri = OntologyConstants.Foaf.GivenName,
-                    newValue = "Donald",
-                    userProfile = SharedTestData.normaluserUserProfileV1,
-                    UUID.randomUUID
-                )
-                expectMsgPF(timeout) {
-                    case UserOperationResponseV1(updatedUserProfile, requestingUserData) => {
-                        // check if information was changed
-                        assert(updatedUserProfile.userData.firstname.contains("Donald"))
-
-                        // check if correct and updated userdata is returned
-                        assert(requestingUserData.firstname.contains("Donald"))
-                    }
-                }
-
-                /* User information is updated by a system admin */
-                actorUnderTest ! UserUpdateRequestV1(
-                    userIri = SharedTestData.normaluserUserProfileV1.userData.user_id.get,
-                    propertyIri = OntologyConstants.Foaf.FamilyName,
-                    newValue = "Duck",
-                    userProfile = SharedTestData.superuserUserProfileV1,
-                    UUID.randomUUID
-                )
-                expectMsgPF(timeout) {
-                    case UserOperationResponseV1(updatedUserProfile, requestingUserData) => {
-                        // check if information was changed
-                        assert(updatedUserProfile.userData.lastname.contains("Duck"))
-
-                        // check if the correct userdata is returned
-                        assert(requestingUserData.user_id.contains(SharedTestData.superuserUserProfileV1.userData.user_id.get))
-                    }
-                }
 
             }
 
-            "return a 'ForbiddenException' if the user requesting the update does not have the necessary permission" in {
-
-                /* User information is updated by other normal user */
-                actorUnderTest ! UserUpdateRequestV1(
-                    userIri = SharedTestData.superuserUserProfileV1.userData.user_id.get,
-                    propertyIri = OntologyConstants.Foaf.GivenName,
-                    newValue = "Donald",
-                    userProfile = SharedTestData.normaluserUserProfileV1,
-                    UUID.randomUUID
-                )
-                expectMsg(Failure(ForbiddenException("User information can only be changed by the user itself or a system administrator")))
-
-                /* User information is updated by anonymous */
-                actorUnderTest ! UserUpdateRequestV1(
-                    userIri = SharedTestData.superuserUserProfileV1.userData.user_id.get,
-                    propertyIri = OntologyConstants.Foaf.GivenName,
-                    newValue = ("Donald"),
-                    userProfile = SharedTestData.anonymousUserProfileV1,
-                    UUID.randomUUID
-                )
-                expectMsg(Failure(ForbiddenException("User information can only be changed by the user itself or a system administrator")))
-
-            }
-
-            "update the project, (deleting) making it inactive " in {
-                actorUnderTest ! UserUpdateRequestV1(
-                    userIri = SharedTestData.normaluserUserProfileV1.userData.user_id.get,
-                    propertyIri = OntologyConstants.KnoraBase.IsActiveUser,
-                    newValue = false,
-                    userProfile = SharedTestData.superuserUserProfileV1,
-                    UUID.randomUUID
-                )
-                expectMsgPF(timeout) {
-                    case UserOperationResponseV1(updatedUserProfile, requestingUserData) => {
-                        // check if information was changed
-                        assert(updatedUserProfile.userData.isActiveUser.contains(false))
-                    }
-                }
-
+            "remove user from project" in {
+                fail("test not implemented")
             }
         }
-        */
     }
 
 }

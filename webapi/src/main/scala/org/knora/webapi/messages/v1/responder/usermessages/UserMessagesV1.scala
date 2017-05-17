@@ -108,6 +108,15 @@ case class UsersGetV1() extends UsersResponderRequestV1
 
 
 /**
+  * A message that requests basic user data. A successful response will be a [[UserDataV1]].
+  *
+  * @param userIri the IRI of the user to be queried.
+  * @param short   denotes if all information should be returned. If short == true, then token and password are not returned.
+  */
+case class UserDataByIriGetV1(userIri: IRI, short: Boolean = true) extends UsersResponderRequestV1
+
+
+/**
   * A message that requests a user's profile. A successful response will be a [[UserProfileResponseV1]].
   *
   * @param userIri         the IRI of the user to be queried.
@@ -213,6 +222,32 @@ case class UserChangeSystemAdminMembershipStatusRequestV1(userIri: IRI,
                                                           userProfile: UserProfileV1,
                                                           apiRequestID: UUID) extends UsersResponderRequestV1
 
+/**
+  * Requests adding the user to a project.
+  *
+  * @param userIri       the IRI of the user to be updated.
+  * @param projectIri    the IRI of the project.
+  * @param userProfileV1 the user profile of the user requesting the update.
+  * @param apiRequestID  the ID of the API request.
+  */
+case class UserAddProjectMembershipV1(userIri: IRI,
+                                      projectIri: IRI,
+                                      userProfileV1: UserProfileV1,
+                                      apiRequestID: UUID) extends UsersResponderRequestV1
+
+
+/**
+  * Requests removing the user from a project.
+  *
+  * @param userIri       the IRI of the user to be updated.
+  * @param projectIri    the IRI of the project.
+  * @param userProfileV1 the user profile of the user requesting the update.
+  * @param apiRequestID  the ID of the API request.
+  */
+case class UserRemoveProjectMembershipV1(userIri: IRI,
+                                         projectIri: IRI,
+                                         userProfileV1: UserProfileV1,
+                                         apiRequestID: UUID) extends UsersResponderRequestV1
 
 // Responses
 
@@ -378,14 +413,14 @@ case class UserProfileV1(userData: UserDataV1 = UserDataV1(lang = "en"),
 /**
   * Represents basic information about a user.
   *
-  * @param user_id              The user's IRI.
-  * @param email                The user's email address.
-  * @param password             The user's hashed password.
-  * @param token                The API token. Can be used instead of email/password for authentication.
-  * @param firstname            The user's given name.
-  * @param lastname             The user's surname.
-  * @param isActiveUser         The user's status.
-  * @param lang                 The ISO 639-1 code of the user's preferred language.
+  * @param user_id      The user's IRI.
+  * @param email        The user's email address.
+  * @param password     The user's hashed password.
+  * @param token        The API token. Can be used instead of email/password for authentication.
+  * @param firstname    The user's given name.
+  * @param lastname     The user's surname.
+  * @param isActiveUser The user's status.
+  * @param lang         The ISO 639-1 code of the user's preferred language.
   */
 case class UserDataV1(user_id: Option[IRI] = None,
                       email: Option[String] = None,

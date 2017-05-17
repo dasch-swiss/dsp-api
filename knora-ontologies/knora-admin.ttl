@@ -567,11 +567,15 @@
                                 owl:maxCardinality "1"^^xsd:nonNegativeInteger
                               ] ,
                               [ rdf:type owl:Restriction ;
+                                owl:onProperty :projectKeywords ;
+                                owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                              ] ,
+                              [ rdf:type owl:Restriction ;
                                 owl:onProperty :projectLogo ;
                                 owl:maxCardinality "1"^^xsd:nonNegativeInteger
                               ] ,
                               [ rdf:type owl:Restriction ;
-                                owl:onProperty :projectKeywords ;
+                                owl:onProperty :belongsToInstitution ;
                                 owl:maxCardinality "1"^^xsd:nonNegativeInteger
                               ] ,
                               [ rdf:type owl:Restriction ;
@@ -589,10 +593,6 @@
                               [ rdf:type owl:Restriction ;
                                 owl:onProperty :hasSelfJoinEnabled ;
                                 owl:cardinality "1"^^xsd:nonNegativeInteger
-                              ] ,
-                              [ rdf:type owl:Restriction ;
-                                owl:onProperty :belongsToInstitution ;
-                                owl:maxCardinality "1"^^xsd:nonNegativeInteger
                               ] ;
 
               rdfs:comment "Represents a project that uses Knora"@en .
