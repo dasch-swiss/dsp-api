@@ -149,54 +149,6 @@ object ProjectsRouteV1 extends Authenticator with ProjectV1JsonProtocol {
                         )
                 }
             }
-        } ~
-        path("v1" / "projects" / "members" / Segment / Segment) { (projectIri, userIri) =>
-            post {
-                /* add user to project */
-                requestContext =>
-                    val userProfile = getUserProfileV1(requestContext)
-
-                    val checkedProjectIri = InputValidation.toIri(projectIri, () => throw BadRequestException(s"Invalid project IRI $projectIri"))
-                    val checkedUserIri = InputValidation.toIri(userIri, () => throw BadRequestException(s"Invalid project IRI $userIri"))
-
-                    val requestMessage = ProjectAddUserRequestV1(
-                        projectIri = checkedProjectIri,
-                        userIri = checkedUserIri,
-                        userProfileV1 = userProfile,
-                        apiRequestID = UUID.randomUUID()
-                    )
-
-                    RouteUtilV1.runJsonRoute(
-                        requestMessage,
-                        requestContext,
-                        settings,
-                        responderManager,
-                        log
-                    )
-            } ~
-            delete {
-                /* remove user from project (and all groups belonging to this project) */
-                requestContext =>
-                    val userProfile = getUserProfileV1(requestContext)
-
-                    val checkedProjectIri = InputValidation.toIri(projectIri, () => throw BadRequestException(s"Invalid project IRI $projectIri"))
-                    val checkedUserIri = InputValidation.toIri(userIri, () => throw BadRequestException(s"Invalid project IRI $userIri"))
-
-                    val requestMessage = ProjectRemoveUserRequestV1(
-                        projectIri = checkedProjectIri,
-                        userIri = checkedUserIri,
-                        userProfileV1 = userProfile,
-                        apiRequestID = UUID.randomUUID()
-                    )
-
-                    RouteUtilV1.runJsonRoute(
-                        requestMessage,
-                        requestContext,
-                        settings,
-                        responderManager,
-                        log
-                    )
-            }
         }
     }
 }

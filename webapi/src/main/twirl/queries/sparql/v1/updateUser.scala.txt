@@ -40,6 +40,9 @@
   maybePassword: Option[String],
   maybeStatus: Option[Boolean],
   maybeLang: Option[String],
+  maybeProjects: Option[Seq[IRI]],
+  maybeProjectsAdmin: Option[Seq[IRI]],
+  maybeGroups: Option[Seq[IRI]],
   maybeSystemAdmin: Option[Boolean])
 
 prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>

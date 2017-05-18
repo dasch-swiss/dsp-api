@@ -179,6 +179,148 @@ object UsersRouteV1 extends Authenticator {
                     )
                 }
             }
+        } ~
+        path("v1" / "users" / "projects" / Segment) { userIri =>
+            get {
+                /* get user's project memberships */
+                requestContext =>
+                    val userProfile = getUserProfileV1(requestContext)
+
+                    val checkedUserIri = InputValidation.toIri(userIri, () => throw BadRequestException(s"Invalid user IRI $userIri"))
+
+                    val requestMessage = UserProjectMembershipsGetRequestV1(
+                        userIri = checkedUserIri,
+                        userProfileV1 = userProfile,
+                        apiRequestID = UUID.randomUUID()
+                    )
+
+                    RouteUtilV1.runJsonRoute(
+                        requestMessage,
+                        requestContext,
+                        settings,
+                        responderManager,
+                        log
+                    )
+            }
+        } ~
+        path("v1" / "users" / "projects" / Segment / Segment) { (userIri, projectIri) =>
+            post {
+                /* add user to project */
+                requestContext =>
+                    val userProfile = getUserProfileV1(requestContext)
+
+                    val checkedUserIri = InputValidation.toIri(userIri, () => throw BadRequestException(s"Invalid user IRI $userIri"))
+                    val checkedProjectIri = InputValidation.toIri(projectIri, () => throw BadRequestException(s"Invalid project IRI $projectIri"))
+
+                    val requestMessage = UserProjectMembershipAddRequestV1(
+                        userIri = checkedUserIri,
+                        projectIri = checkedProjectIri,
+                        userProfileV1 = userProfile,
+                        apiRequestID = UUID.randomUUID()
+                    )
+
+                    RouteUtilV1.runJsonRoute(
+                        requestMessage,
+                        requestContext,
+                        settings,
+                        responderManager,
+                        log
+                    )
+            } ~
+            delete {
+                /* remove user from project (and all groups belonging to this project) */
+                requestContext =>
+                    val userProfile = getUserProfileV1(requestContext)
+
+                    val checkedUserIri = InputValidation.toIri(userIri, () => throw BadRequestException(s"Invalid user IRI $userIri"))
+                    val checkedProjectIri = InputValidation.toIri(projectIri, () => throw BadRequestException(s"Invalid project IRI $projectIri"))
+
+                    val requestMessage = UserProjectMembershipRemoveRequestV1(
+                        userIri = checkedUserIri,
+                        projectIri = checkedProjectIri,
+                        userProfileV1 = userProfile,
+                        apiRequestID = UUID.randomUUID()
+                    )
+
+                    RouteUtilV1.runJsonRoute(
+                        requestMessage,
+                        requestContext,
+                        settings,
+                        responderManager,
+                        log
+                    )
+            }
+        } ~
+        path("v1" / "users" / "groups" / Segment) { userIri =>
+            get {
+                /* get user's group memberships */
+                requestContext =>
+                    val userProfile = getUserProfileV1(requestContext)
+
+                    val checkedUserIri = InputValidation.toIri(userIri, () => throw BadRequestException(s"Invalid user IRI $userIri"))
+
+                    val requestMessage = UserGroupMembershipsGetRequestV1(
+                        userIri = checkedUserIri,
+                        userProfileV1 = userProfile,
+                        apiRequestID = UUID.randomUUID()
+                    )
+
+                    RouteUtilV1.runJsonRoute(
+                        requestMessage,
+                        requestContext,
+                        settings,
+                        responderManager,
+                        log
+                    )
+            }
+        } ~
+        path ("v1" / "users" / "groups" / Segment / Segment) { (userIri, groupIri) =>
+            post {
+                /* add user to group */
+                requestContext =>
+                    val userProfile = getUserProfileV1(requestContext)
+
+                    val checkedUserIri = InputValidation.toIri(userIri, () => throw BadRequestException(s"Invalid user IRI $userIri"))
+                    val checkedGroupIri = InputValidation.toIri(groupIri, () => throw BadRequestException(s"Invalid group IRI $groupIri"))
+
+                    val requestMessage = UserGroupMembershipAddRequestV1(
+                        userIri = checkedUserIri,
+                        groupIri = checkedGroupIri,
+                        userProfileV1 = userProfile,
+                        apiRequestID = UUID.randomUUID()
+                    )
+
+                    RouteUtilV1.runJsonRoute(
+                        requestMessage,
+                        requestContext,
+                        settings,
+                        responderManager,
+                        log
+                    )
+            } ~
+            delete {
+                /* remove user from group */
+                requestContext =>
+                    val userProfile = getUserProfileV1(requestContext)
+
+                    val checkedUserIri = InputValidation.toIri(userIri, () => throw BadRequestException(s"Invalid user IRI $userIri"))
+                    val checkedGroupIri = InputValidation.toIri(groupIri, () => throw BadRequestException(s"Invalid group IRI $groupIri"))
+
+                    val requestMessage = UserGroupMembershipRemoveRequestV1(
+                        userIri = checkedUserIri,
+                        groupIri = checkedGroupIri,
+                        userProfileV1 = userProfile,
+                        apiRequestID = UUID.randomUUID()
+                    )
+
+                    RouteUtilV1.runJsonRoute(
+                        requestMessage,
+                        requestContext,
+                        settings,
+                        responderManager,
+                        log
+                    )
+            }
         }
     }
 }

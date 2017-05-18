@@ -24,6 +24,7 @@ import java.util.UUID
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi._
+import org.knora.webapi.messages.v1.responder.groupmessages.{GroupInfoV1, GroupV1JsonProtocol}
 import org.knora.webapi.messages.v1.responder.permissionmessages.{PermissionDataV1, PermissionV1JsonProtocol}
 import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoV1, ProjectV1JsonProtocol}
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileType.UserProfileType
@@ -223,6 +224,17 @@ case class UserChangeSystemAdminMembershipStatusRequestV1(userIri: IRI,
                                                           apiRequestID: UUID) extends UsersResponderRequestV1
 
 /**
+  * Requests user's project memberships.
+  *
+  * @param userIri       the IRI of the user.
+  * @param userProfileV1 the user profile of the user requesting the update.
+  * @param apiRequestID  the ID of the API request.
+  */
+case class UserProjectMembershipsGetRequestV1(userIri: IRI,
+                                              userProfileV1: UserProfileV1,
+                                              apiRequestID: UUID) extends UsersResponderRequestV1
+
+/**
   * Requests adding the user to a project.
   *
   * @param userIri       the IRI of the user to be updated.
@@ -230,11 +242,10 @@ case class UserChangeSystemAdminMembershipStatusRequestV1(userIri: IRI,
   * @param userProfileV1 the user profile of the user requesting the update.
   * @param apiRequestID  the ID of the API request.
   */
-case class UserAddProjectMembershipV1(userIri: IRI,
-                                      projectIri: IRI,
-                                      userProfileV1: UserProfileV1,
-                                      apiRequestID: UUID) extends UsersResponderRequestV1
-
+case class UserProjectMembershipAddRequestV1(userIri: IRI,
+                                             projectIri: IRI,
+                                             userProfileV1: UserProfileV1,
+                                             apiRequestID: UUID) extends UsersResponderRequestV1
 
 /**
   * Requests removing the user from a project.
@@ -244,10 +255,48 @@ case class UserAddProjectMembershipV1(userIri: IRI,
   * @param userProfileV1 the user profile of the user requesting the update.
   * @param apiRequestID  the ID of the API request.
   */
-case class UserRemoveProjectMembershipV1(userIri: IRI,
-                                         projectIri: IRI,
-                                         userProfileV1: UserProfileV1,
-                                         apiRequestID: UUID) extends UsersResponderRequestV1
+case class UserProjectMembershipRemoveRequestV1(userIri: IRI,
+                                                projectIri: IRI,
+                                                userProfileV1: UserProfileV1,
+                                                apiRequestID: UUID) extends UsersResponderRequestV1
+
+/**
+  * Requests user's group memberships.
+  *
+  * @param userIri       the IRI of the user.
+  * @param userProfileV1 the user profile of the user requesting the update.
+  * @param apiRequestID  the ID of the API request.
+  */
+case class UserGroupMembershipsGetRequestV1(userIri: IRI,
+                                            userProfileV1: UserProfileV1,
+                                            apiRequestID: UUID) extends UsersResponderRequestV1
+
+/**
+  * Requests adding the user to a group.
+  *
+  * @param userIri       the IRI of the user to be updated.
+  * @param groupIri      the IRI of the group.
+  * @param userProfileV1 the user profile of the user requesting the update.
+  * @param apiRequestID  the ID of the API request.
+  */
+case class UserGroupMembershipAddRequestV1(userIri: IRI,
+                                           groupIri: IRI,
+                                           userProfileV1: UserProfileV1,
+                                           apiRequestID: UUID) extends UsersResponderRequestV1
+
+/**
+  * Requests removing the user from a group.
+  *
+  * @param userIri       the IRI of the user to be updated.
+  * @param groupIri      the IRI of the group.
+  * @param userProfileV1 the user profile of the user requesting the update.
+  * @param apiRequestID  the ID of the API request.
+  */
+case class UserGroupMembershipRemoveRequestV1(userIri: IRI,
+                                              groupIri: IRI,
+                                              userProfileV1: UserProfileV1,
+                                              apiRequestID: UUID) extends UsersResponderRequestV1
+
 
 // Responses
 
@@ -267,6 +316,24 @@ case class UsersGetResponseV1(users: Seq[UserDataV1]) extends KnoraResponseV1 {
   */
 case class UserProfileResponseV1(userProfile: UserProfileV1) extends KnoraResponseV1 {
     def toJsValue = UserV1JsonProtocol.userProfileResponseV1Format.write(this)
+}
+
+/**
+  * Represents an answer to a request for a list of all projects the user is member of.
+  *
+  * @param projects a sequence of projects the user is member of.
+  */
+case class UserProjectMembershipsGetResponseV1(projects: Seq[IRI]) extends KnoraResponseV1 {
+    def toJsValue = UserV1JsonProtocol.userProjectMembershipsGetResponseV1Format.write(this)
+}
+
+/**
+  * Represents an aswer to a request for a list of all groups the user is member of.
+  *
+  * @param groups a sequence of groups the user is member of.
+  */
+case class UserGroupMembershipsGetResponseV1(groups: Seq[IRI]) extends KnoraResponseV1 {
+    def toJsValue = UserV1JsonProtocol.userGroupMembershipsGetResponseV1Format.write(this)
 }
 
 /**
@@ -484,13 +551,16 @@ object UserProfileType extends Enumeration {
 /**
   * Payload used for updating of an existing user.
   *
-  * @param email       the new email address. Needs to be unique on the server.
-  * @param givenName   the new given name.
-  * @param familyName  the new family name.
-  * @param password    the new password.
-  * @param status      the new status.
-  * @param lang        the new language.
-  * @param systemAdmin the new system admin membership
+  * @param email         the new email address. Needs to be unique on the server.
+  * @param givenName     the new given name.
+  * @param familyName    the new family name.
+  * @param password      the new password.
+  * @param status        the new status.
+  * @param lang          the new language.
+  * @param projects      the new project memberships list.
+  * @param projectsAdmin the new projects admin membership list.
+  * @param groups        the new group memberships list.
+  * @param systemAdmin   the new system admin membership
   */
 case class UserUpdatePayloadV1(email: Option[String] = None,
                                givenName: Option[String] = None,
@@ -498,6 +568,9 @@ case class UserUpdatePayloadV1(email: Option[String] = None,
                                password: Option[String] = None,
                                status: Option[Boolean] = None,
                                lang: Option[String] = None,
+                               projects: Option[Seq[IRI]] = None,
+                               projectsAdmin: Option[Seq[IRI]] = None,
+                               groups: Option[Seq[IRI]] = None,
                                systemAdmin: Option[Boolean] = None)
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -506,7 +579,7 @@ case class UserUpdatePayloadV1(email: Option[String] = None,
 /**
   * A spray-json protocol for formatting objects as JSON.
   */
-object UserV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with NullOptions with ProjectV1JsonProtocol with PermissionV1JsonProtocol {
+object UserV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with NullOptions with ProjectV1JsonProtocol with GroupV1JsonProtocol with PermissionV1JsonProtocol {
 
     implicit val userDataV1Format: JsonFormat[UserDataV1] = lazyFormat(jsonFormat8(UserDataV1))
     implicit val userProfileV1Format: JsonFormat[UserProfileV1] = jsonFormat6(UserProfileV1)
@@ -514,5 +587,7 @@ object UserV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
     implicit val changeUserApiRequestV1Format: RootJsonFormat[ChangeUserApiRequestV1] = jsonFormat8(ChangeUserApiRequestV1)
     implicit val usersGetResponseV1Format: RootJsonFormat[UsersGetResponseV1] = jsonFormat1(UsersGetResponseV1)
     implicit val userProfileResponseV1Format: RootJsonFormat[UserProfileResponseV1] = jsonFormat1(UserProfileResponseV1)
+    implicit val userProjectMembershipsGetResponseV1Format: RootJsonFormat[UserProjectMembershipsGetResponseV1] = jsonFormat1(UserProjectMembershipsGetResponseV1)
+    implicit val userGroupMembershipsGetResponseV1Format: RootJsonFormat[UserGroupMembershipsGetResponseV1] = jsonFormat1(UserGroupMembershipsGetResponseV1)
     implicit val userOperationResponseV1Format: RootJsonFormat[UserOperationResponseV1] = jsonFormat1(UserOperationResponseV1)
 }

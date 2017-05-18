@@ -176,33 +176,6 @@ case class ProjectChangeRequestV1(projectIri: IRI,
                                   userProfileV1: UserProfileV1,
                                   apiRequestID: UUID) extends ProjectsResponderRequestV1
 
-/**
-  * Request adding a user to a project.
-  *
-  * @param projectIri    the iri of the project the user is to be added to.
-  * @param userIri       the iri of the user that is added to the project.
-  * @param userProfileV1 the user profile of the user requesting the update.
-  * @param apiRequestID  the ID of the API request.
-  */
-case class ProjectAddUserRequestV1(projectIri: IRI,
-                                   userIri: IRI,
-                                   userProfileV1: UserProfileV1,
-                                   apiRequestID: UUID) extends ProjectsResponderRequestV1
-
-/**
-  * Request removing a user from a project.
-  *
-  * @param projectIri    the iri of the project the user is to be removed from.
-  * @param userIri       the iri of the user that is to be removed from the project.
-  * @param userProfileV1 the user profile of the user requesting the update.
-  * @param apiRequestID  the ID of the API request.
-  */
-case class ProjectRemoveUserRequestV1(projectIri: IRI,
-                                      userIri: IRI,
-                                      userProfileV1: UserProfileV1,
-                                      apiRequestID: UUID) extends ProjectsResponderRequestV1
-
-
 // Responses
 /**
   * Represents the Knora API v1 JSON response to a request for information about all projects.
@@ -313,7 +286,6 @@ trait ProjectV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol wi
     // protocol and UserV1JsonProtocol. See ttps://github.com/spray/spray-json#jsonformats-for-recursive-types.
     // rootFormat makes it return the expected type again.
     // https://github.com/spray/spray-json#jsonformats-for-recursive-types
-    implicit val projectMembersUpdateResponseV1Format: RootJsonFormat[ProjectMembersUpdateResponseV1] = rootFormat(lazyFormat(jsonFormat(ProjectMembersUpdateResponseV1, "members", "userdata")))
     implicit val projectMembersGetRequestV1Format: RootJsonFormat[ProjectMembersGetResponseV1] = rootFormat(lazyFormat(jsonFormat(ProjectMembersGetResponseV1, "members", "userdata")))
     implicit val projectInfoV1Format: JsonFormat[ProjectInfoV1] = jsonFormat11(ProjectInfoV1)
     implicit val projectsResponseV1Format: RootJsonFormat[ProjectsResponseV1] = rootFormat(lazyFormat(jsonFormat(ProjectsResponseV1, "projects")))

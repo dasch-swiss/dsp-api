@@ -75,6 +75,8 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
 
     "The ProjectsResponderV1 " when {
 
+        val newProjectIri = new MutableTestIri
+
         "used to query for project information" should {
 
             "return information for every project" in {
@@ -132,9 +134,7 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
 
         "used to modify project information" should {
 
-            val newProjectIri = new MutableTestIri
-
-            "create the project and return the project info if the supplied shortname is unique" in {
+            "CREATE the project and return the project info if the supplied shortname is unique" in {
                 actorUnderTest ! ProjectCreateRequestV1(
                     CreateProjectApiRequestV1(
                         shortname = "newproject",
@@ -194,7 +194,7 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
                 expectMsg(Failure(BadRequestException("'Shortname' cannot be empty")))
             }
 
-            "update a project" in {
+            "UPDATE a project" in {
                 actorUnderTest ! ProjectChangeRequestV1(
                     projectIri = newProjectIri.get,
                     changeProjectRequest = ChangeProjectApiRequestV1(
@@ -225,13 +225,22 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
             "return 'NotFound' if a not existing project IRI is submitted during update" in {
                 actorUnderTest ! ProjectChangeRequestV1(
                     projectIri = "http://data.knora.org/projects/notexisting",
+                    changeProjectRequest = ChangeProjectApiRequestV1(longname = Some("new long name")),
+                    SharedAdminTestData.rootUser,
+                    UUID.randomUUID()
+                )
+                expectMsg(Failure(NotFoundException(s"Project 'http://data.knora.org/projects/notexisting' not found. Aborting update request.")))
+            }
+
+            "return 'BadRequest' if nothing would be changed during the update" in {
+                actorUnderTest ! ProjectChangeRequestV1(
+                    projectIri = "http://data.knora.org/projects/notexisting",
                     changeProjectRequest = ChangeProjectApiRequestV1(),
                     SharedAdminTestData.rootUser,
                     UUID.randomUUID()
                 )
-                expectMsg(Failure(NotFoundException(s"Project 'http://data.knora.org/projects/notexisting' not found")))
+                expectMsg(Failure(BadRequestException("No data would be changed. Aborting update request.")))
             }
-
         }
 
         "used to query members" should {
@@ -268,19 +277,6 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
             "return 'NotFound' when the project shortname is unknown" in {
                 actorUnderTest ! ProjectMembersByShortnameGetRequestV1("projectwrong", SharedAdminTestData.rootUser)
                 expectMsg(Failure(NotFoundException(s"Project 'projectwrong' either not found or has no members")))
-            }
-        }
-
-        "used to modify members" should {
-
-            "add user to project" in {
-                fail("test not implemented")
-
-
-            }
-
-            "remove user from project" in {
-                fail("test not implemented")
             }
         }
     }

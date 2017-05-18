@@ -62,8 +62,6 @@ class ProjectsResponderV1 extends ResponderV1 {
         case ProjectMembersByShortnameGetRequestV1(shortname, userProfileV1) => future2Message(sender(), projectMembersByShortnameGetRequestV1(shortname, userProfileV1), log)
         case ProjectCreateRequestV1(createRequest, userProfileV1, apiRequestID) => future2Message(sender(), projectCreateRequestV1(createRequest, userProfileV1, apiRequestID), log)
         case ProjectChangeRequestV1(projectIri, changeProjectRequest, userProfileV1, apiRequestID) => future2Message(sender(), changeBasicInformationRequestV1(projectIri, changeProjectRequest, userProfileV1, apiRequestID), log)
-        case ProjectAddUserRequestV1(projectIri, userIri, userProfile, apiRequestID) => future2Message(sender(), projectAddUserRequestV1(projectIri, userIri, userProfile, apiRequestID), log)
-        case ProjectRemoveUserRequestV1(projectIri, userIri, userProfile, apiRequestID) => future2Message(sender(), projectRemoveUserRequestV1(projectIri, userIri, userProfile, apiRequestID), log)
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }
 
@@ -432,8 +430,6 @@ class ProjectsResponderV1 extends ResponderV1 {
                 throw ForbiddenException("Project's information can only be changed by a project or system admin.")
             }
 
-            // check if the project exists
-
             // create the update request
             projectUpdatePayload = ProjectUpdatePayloadV1(
                 longname = changeProjectRequest.longname,
@@ -476,10 +472,14 @@ class ProjectsResponderV1 extends ResponderV1 {
             projectUpdatePayload.status,
             projectUpdatePayload.selfjoin).flatten.size
 
-        if (parametersCount == 0) throw BadRequestException("No data would be changed. Aborting request.")
+        if (parametersCount == 0) throw BadRequestException("No data would be changed. Aborting update request.")
 
         for {
-        /* Update project */
+            /* Verify that the project exists. */
+            maybeProjectInfo <- projectInfoByIRIGetV1(projectIri, Some(userProfile))
+            projectInfo: ProjectInfoV1 = maybeProjectInfo.getOrElse(throw NotFoundException(s"Project '$projectIri' not found. Aborting update request."))
+
+            /* Update project */
             updateProjectSparqlString <- Future(queries.sparql.v1.txt.updateProject(
                 adminNamedGraphIri = "http://www.knora.org/data/admin",
                 triplestore = settings.triplestoreType,
@@ -549,53 +549,6 @@ class ProjectsResponderV1 extends ResponderV1 {
             projectOperationResponseV1 = ProjectOperationResponseV1(project_info = updatedProject)
         } yield projectOperationResponseV1
 
-    }
-
-
-    private def projectAddUserRequestV1(projectIri: IRI, userIri: IRI, userProfileV1: UserProfileV1, apiRequestID: UUID): Future[ProjectOperationResponseV1] = {
-
-        for {
-            _ <- Future(
-                // check if necessary information is present
-                if (projectIri.isEmpty) throw BadRequestException("Project IRI cannot be empty")
-            )
-
-            // check if the requesting user is allowed to perform updates
-            _ = if (!userProfileV1.permissionData.isProjectAdmin(projectIri) && !userProfileV1.permissionData.isSystemAdmin) {
-                // not a project admin and not a system admin
-                throw ForbiddenException("Project's information can only be changed by a project or system admin.")
-            }
-
-            updateUserResult <- (responderManager ? UserAddProjectMembershipV1(userIri, projectIri, userProfileV1, apiRequestID)).mapTo[UserOperationResponseV1]
-
-            maybeUpdatedProject <- projectInfoByIRIGetV1(projectIri, Some(userProfileV1))
-            updatedProject: ProjectInfoV1 = maybeUpdatedProject.getOrElse(throw UpdateNotPerformedException("Project was not updated. Please report this as a possible bug."))
-            projectOperationResponseV1 = ProjectOperationResponseV1(project_info = updatedProject)
-
-        } yield projectOperationResponseV1
-    }
-
-    private def projectRemoveUserRequestV1(projectIri: IRI, userIri: IRI, userProfileV1: UserProfileV1, apiRequestID: UUID): Future[ProjectOperationResponseV1] = {
-
-        for {
-            _ <- Future(
-                // check if necessary information is present
-                if (projectIri.isEmpty) throw BadRequestException("Project IRI cannot be empty")
-            )
-
-            // check if the requesting user is allowed to perform updates
-            _ = if (!userProfileV1.permissionData.isProjectAdmin(projectIri) && !userProfileV1.permissionData.isSystemAdmin) {
-                // not a project admin and not a system admin
-                throw ForbiddenException("Project's information can only be changed by a project or system admin.")
-            }
-
-            updateUserResult <- (responderManager ? UserRemoveProjectMembershipV1(userIri, projectIri, userProfileV1, apiRequestID)).mapTo[UserOperationResponseV1]
-
-            maybeUpdatedProject <- projectInfoByIRIGetV1(projectIri, Some(userProfileV1))
-            updatedProject: ProjectInfoV1 = maybeUpdatedProject.getOrElse(throw UpdateNotPerformedException("Project was not updated. Please report this as a possible bug."))
-            projectOperationResponseV1 = ProjectOperationResponseV1(project_info = updatedProject)
-
-        } yield projectOperationResponseV1
     }
 
 

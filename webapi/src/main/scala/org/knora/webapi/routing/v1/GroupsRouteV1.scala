@@ -24,15 +24,11 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import org.apache.commons.validator.routines.UrlValidator
 import org.knora.webapi.messages.v1.responder.groupmessages._
-import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectMembersByIRIGetRequestV1, ProjectMembersByShortnameGetRequestV1}
-import org.knora.webapi.routing.v1.ProjectsRouteV1.getUserProfileV1
 import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
 import org.knora.webapi.util.InputValidation
 import org.knora.webapi.{BadRequestException, IRI, SettingsImpl}
 
-object GroupsRouteV1 extends Authenticator {
-
-    import GroupV1JsonProtocol._
+object GroupsRouteV1 extends Authenticator with GroupV1JsonProtocol {
 
     private val schemes = Array("http", "https")
     private val urlValidator = new UrlValidator(schemes)
@@ -177,54 +173,6 @@ object GroupsRouteV1 extends Authenticator {
                             log
                         )
                 }
-            }
-        } ~
-        path ("v1" / "groups" / "members" / Segment / Segment) { (groupIri, userIri) =>
-            post {
-                /* add user to group */
-                requestContext =>
-                    val userProfile = getUserProfileV1(requestContext)
-
-                    val checkedGroupIri = InputValidation.toIri(groupIri, () => throw BadRequestException(s"Invalid group IRI $groupIri"))
-                    val checkedUserIri = InputValidation.toIri(userIri, () => throw BadRequestException(s"Invalid project IRI $userIri"))
-
-                    val requestMessage = GroupAddUserRequestV1(
-                        groupIri = checkedGroupIri,
-                        userIri = checkedUserIri,
-                        userProfileV1 = userProfile,
-                        apiRequestID = UUID.randomUUID()
-                    )
-
-                    RouteUtilV1.runJsonRoute(
-                        requestMessage,
-                        requestContext,
-                        settings,
-                        responderManager,
-                        log
-                    )
-            } ~
-            delete {
-                /* remove user from group */
-                requestContext =>
-                    val userProfile = getUserProfileV1(requestContext)
-
-                    val checkedGroupIri = InputValidation.toIri(groupIri, () => throw BadRequestException(s"Invalid group IRI $groupIri"))
-                    val checkedUserIri = InputValidation.toIri(userIri, () => throw BadRequestException(s"Invalid project IRI $userIri"))
-
-                    val requestMessage = GroupRemoveUserRequestV1(
-                        groupIri = checkedGroupIri,
-                        userIri = checkedUserIri,
-                        userProfileV1 = userProfile,
-                        apiRequestID = UUID.randomUUID()
-                    )
-
-                    RouteUtilV1.runJsonRoute(
-                        requestMessage,
-                        requestContext,
-                        settings,
-                        responderManager,
-                        log
-                    )
             }
         }
     }

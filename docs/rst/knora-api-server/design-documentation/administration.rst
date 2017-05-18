@@ -769,7 +769,14 @@ All information regarding users, projects and groups is stored in the ``http://w
 
 
 Users Endpoint
-^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^
+
+**Get users**
+  - GET: ``/v1/users``
+
+**Get user**
+  - GET:``/v1/users/<userIri>``
+
 **Create user**:
   - Required permission: none, self-registration is allowed
   - Required information: email, given name, family name, password
@@ -814,8 +821,6 @@ Users Endpoint
     "newPassword": "test1234"
   }
 
-
-
 **Delete user (-> update user)**:
   - Required permission: SystemAdmin / User
   - Effects property: ``knora-base:isActiveUser`` with value ``true`` or ``false``
@@ -824,9 +829,52 @@ Users Endpoint
 ::
 
   {
-    "newSystemAdminMembershipStatus": false
+    "newUserStatus": false // true or false
   }
 
+**Get user's project memberships**
+  - GET: ``/v1/users/projects/<userIri>
+
+**Add/remove user to/from project**:
+  - Required permission: SystemAdmin / ProjectAdmin / User (if project self-assignment is enabled)
+  - Required information: project IRI, user IRI
+  - Effects: ``knora-base:isInProject`` user property
+  - POST / DELETE: ``/v1/users/projects/<userIri>/<projectIri>``
+  - BODY: empty
+
+**Add/remove user to/from project admin group**
+  - Required permission: SystemAdmin / ProjectAdmin
+  - Required information: project IRI, user IRI
+  - Effects: ``knora-base:isInProjectAdminGroup`` user property
+  - PUT: ``/v1/users/projects/<userIri>/<projectIri>``
+  - BODY:
+::
+
+  {
+    "projectAdmin": true // true or false
+  }
+
+**Get user's group memberships**
+  - GET: ``/v1/users/groups/<userIri>
+
+**Add/remove user to/from 'normal' group** (not *SystemAdmin* or *ProjectAdmin*):
+  - Required permission: SystemAdmin / hasProjectAllAdminPermission / hasProjectAllGroupAdminPermission /
+    hasProjectRestrictedGroupAdminPermission (for this group) / User (if group self-assignment is enabled)
+  - Required information: group IRI, user IRI
+  - Effects: ``knora-base:isInGroup``
+  - POST / DELETE: ``/v1/users/groups/<userIri>/<groupIri>``
+  - BODY: empty
+
+**Add/remove user to/from system admin group**:
+  - Required permission: SystemAdmin / User
+  - Effects property: ``knora-base:isInSystemAdminGroup`` with value ``true`` or ``false``
+  - PUT: ``/v1/users/userIri``
+  - BODY:
+::
+
+  {
+    "newSystemAdminMembershipStatus": false // true or false
+  }
 
 Example User Information stored in admin graph:
 ::
@@ -866,9 +914,6 @@ Projects Endpoint
   {
   }
 
-
-
-
 **Update project information**:
   - Required permission: SystemAdmin / ProjectAdmin
   - Changeable information: shortname, longname, description
@@ -885,20 +930,6 @@ Projects Endpoint
   - Required permission: SystemAdmin / ProjectAdmin
   - Required information: project IRI
   - GET: ``/v1/projects/members/projectIri``
-
-**Add/remove user to/from project**:
-  - Required permission: SystemAdmin / ProjectAdmin / User (if project self-assignment is enabled)
-  - Required information: project IRI, user IRI
-  - Effects: ``knora-base:isInProject`` user property
-  - POST / DELETE: ``/v1/projects/members/projectIri/userIri``
-  - BODY: empty
-
-**Add/remove user to/from project admin group**
-  - Required permission: SystemAdmin / ProjectAdmin
-  - Required information: project IRI, user IRI
-  - Effects: ``knora-base:isInProjectAdminGroup`` user property
-  - POST / DELETE: ``/v1/projects/admin/projectIri/userIri``
-  - BODY: empty
 
 **Delete / Un-Delete project (-> update project)**:
   - Required permission: SystemAdmin / ProjectAdmin
@@ -954,21 +985,10 @@ Groups Endpoint
   {
   }
 
-
 **Delete / Un-Delete group**:
   - Required permission: SystemAdmin / hasProjectAllAdminPermission
   - Effect: user's ``knora-base:isInGroup`` / group's ``knora-base:status`` / removes group from any object permissions
   - DELETE / POST: ``/v1/groups/status/groupIri``
-
-
-**Add/remove user to/from 'normal' group** (not *SystemAdmin* or *ProjectAdmin*):
-  - Required permission: SystemAdmin / hasProjectAllAdminPermission / hasProjectAllGroupAdminPermission /
-    hasProjectRestrictedGroupAdminPermission (for this group) / User (if group self-assignment is enabled)
-  - Required information: group IRI, user IRI
-  - Effects: ``knora-base:isInGroup``
-  - POST / DELETE: ``/v1/groups/members/groupIri/userIri``
-  - BODY: empty
-
 
 **Enable/disable self-join**:
   - Required permission: SystemAdmin / hasProjectAllAdminPermission / hasProjectAllGroupAdminPermission /

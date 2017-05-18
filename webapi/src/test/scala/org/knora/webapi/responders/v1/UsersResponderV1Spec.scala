@@ -29,6 +29,7 @@ import akka.testkit.{ImplicitSender, TestActorRef}
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse}
+import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectMembersByIRIGetRequestV1, ProjectMembersGetResponseV1, ProjectOperationResponseV1}
 import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.messages.v1.store.triplestoremessages._
 import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_NAME
@@ -58,9 +59,14 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
     private val rootUserIri = rootUser.userData.user_id.get
     private val rootUserEmail = rootUser.userData.email.get
 
+    private val normalUser = SharedAdminTestData.normalUser
+    private val normalUserIri = normalUser.userData.user_id.get
+
     private val incunabulaUser = SharedAdminTestData.incunabulaProjectAdminUser
     private val incunabulaUserIri = incunabulaUser.userData.user_id.get
     private val incunabulaUserEmail = incunabulaUser.userData.email.get
+
+    private val imagesProjectIri = SharedAdminTestData.imagesProjectInfo.id
 
     private val actorUnderTest = TestActorRef[UsersResponderV1]
     private val responderManager = system.actorOf(Props(new ResponderManagerV1 with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
@@ -393,6 +399,35 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
                 )
                 expectMsg(Failure(ForbiddenException("User's system admin membership can only be changed by a system administrator")))
             }
+        }
+
+        "asked to update the user's project membership" should {
+
+            "add user to project" in {
+
+                actorUnderTest ! UserProjectMembershipsGetRequestV1(normalUserIri, rootUser, UUID.randomUUID())
+                val membershipsBeforeUpdate = expectMsgType[UserProjectMembershipsGetResponseV1](timeout)
+                membershipsBeforeUpdate.projects should equal (Seq())
+
+                actorUnderTest ! UserProjectMembershipAddRequestV1(normalUserIri, imagesProjectIri, rootUser, UUID.randomUUID())
+                expectMsgType[UserOperationResponseV1](timeout)
+
+                actorUnderTest ! UserProjectMembershipsGetRequestV1(normalUserIri, rootUser, UUID.randomUUID())
+                val membershipsAfterUpdate = expectMsgType[UserProjectMembershipsGetResponseV1](timeout)
+                membershipsAfterUpdate.projects should equal (Seq())
+
+                responderManager ! ProjectMembersByIRIGetRequestV1(imagesProjectIri, rootUser)
+                val received: ProjectMembersGetResponseV1 = expectMsgType[ProjectMembersGetResponseV1](timeout)
+
+                received.members should contain allElementsOf Seq(
+                    normalUser.ofType(UserProfileType.SHORT).userData
+                )
+            }
+
+            "remove user from project" in {
+                fail("test not implemented")
+            }
+
         }
     }
 }
