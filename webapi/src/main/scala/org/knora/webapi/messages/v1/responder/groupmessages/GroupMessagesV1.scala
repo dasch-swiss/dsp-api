@@ -165,6 +165,15 @@ case class GroupInfoResponseV1(group_info: GroupInfoV1) extends KnoraResponseV1 
 }
 
 /**
+  * Represents an answer to a group membership request.
+  *
+  * @param members the group's members.
+  */
+case class GroupMembersResponseV1(members: IRI) extends KnoraResponseV1 with GroupV1JsonProtocol {
+    def toJsValue = groupMembersResponseV1Format.write(this)
+}
+
+/**
   * Represents an answer to a group creating/modifying operation.
   *
   * @param group_info the new group info of the created/modified group.
@@ -205,6 +214,7 @@ trait GroupV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
     implicit val groupInfoV1Format: JsonFormat[GroupInfoV1] = jsonFormat6(GroupInfoV1)
     implicit val groupsResponseV1Format: RootJsonFormat[GroupsResponseV1] = jsonFormat1(GroupsResponseV1)
     implicit val groupInfoResponseV1Format: RootJsonFormat[GroupInfoResponseV1] = jsonFormat1(GroupInfoResponseV1)
+    implicit val groupMembersResponseV1Format: RootJsonFormat[GroupMembersResponseV1] = jsonFormat1(GroupMembersResponseV1)
     implicit val createGroupApiRequestV1Format: RootJsonFormat[CreateGroupApiRequestV1] = jsonFormat5(CreateGroupApiRequestV1)
     implicit val changeGroupApiRequestV1Format: RootJsonFormat[ChangeGroupApiRequestV1] = jsonFormat4(ChangeGroupApiRequestV1)
     implicit val groupOperationResponseV1Format: RootJsonFormat[GroupOperationResponseV1] = jsonFormat1(GroupOperationResponseV1)

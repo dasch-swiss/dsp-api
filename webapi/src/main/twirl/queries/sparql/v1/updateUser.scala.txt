@@ -79,6 +79,18 @@ DELETE {
         ?user knora-base:preferredLanguage ?currentPreferredLanguage .
     }
 
+    @if(maybeProjects.nonEmpty) {
+        ?user knora-base:isInProject ?currentProjects .
+    }
+
+    @if(maybeProjectsAdmin.nonEmpty) {
+        ?user knora-base:isInProjectAdminGroup ?currentProjectsAdmin .
+    }
+
+    @if(maybeGroups.nonEmpty) {
+        ?user knora-base:isInGroup ?currentGroup .
+    }
+
     @if(maybeSystemAdmin.nonEmpty) {
         ?user knora-base:isInSystemAdminGroup ?currentIsInSystemAdminGroup .
     }
@@ -109,6 +121,24 @@ DELETE {
 
     @if(maybeLang.nonEmpty) {
         ?user knora-base:preferredLanguage "@maybeLang.get"^^xsd:string .
+    }
+
+    @if(maybeProjects.nonEmpty) {
+        @for(project <- maybeProjects.get) {
+          ?user knora-base:isInProject <@project> .
+        }
+    }
+
+    @if(maybeProjectsAdmin.nonEmpty) {
+        @for(project <- maybeProjectsAdmin.get) {
+          ?user knora-base:isInProjectAdminGroup <@project> .
+        }
+    }
+
+    @if(maybeGroups.nonEmpty) {
+        @for(group <- maybeGroups.get) {
+          ?user knora-base:isInGroup <@group> .
+        }
     }
 
     @if(maybeSystemAdmin.nonEmpty) {
@@ -149,6 +179,12 @@ WHERE {
     ?user knora-base:status ?currentStatus .
 
     ?user knora-base:preferredLanguage ?currentPreferredLanguage .
+
+    optional {?user knora-base:isInProject ?currentProjects .}
+
+    optional {?user knora-base:isInProjectAdminGroup ?currentProjectsAdmin .}
+
+    optional {?user knora-base:isInGroup ?currentGroups .}
 
     ?user knora-base:isInSystemAdminGroup ?currentIsInSystemAdminGroup .
 }

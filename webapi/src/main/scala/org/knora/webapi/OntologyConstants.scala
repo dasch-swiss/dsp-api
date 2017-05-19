@@ -247,9 +247,9 @@ object OntologyConstants {
         val Status: IRI = KnoraBasePrefixExpansion                 + "status"
         val PreferredLanguage: IRI = KnoraBasePrefixExpansion      + "preferredLanguage"
         val IsInProject: IRI = KnoraBasePrefixExpansion            + "isInProject"
+        val IsInProjectAdminGroup: IRI = KnoraBasePrefixExpansion  + "isInProjectAdminGroup"
         val IsInGroup: IRI = KnoraBasePrefixExpansion              + "isInGroup"
         val IsInSystemAdminGroup: IRI = KnoraBasePrefixExpansion   + "isInSystemAdminGroup"
-        val IsInProjectAdminGroup: IRI = KnoraBasePrefixExpansion  + "isInProjectAdminGroup"
 
         /* Project */
         val KnoraProject: IRI = KnoraBasePrefixExpansion           + "knoraProject"

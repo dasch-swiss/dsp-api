@@ -63,9 +63,6 @@
     <logger name="org.knora.webapi.routing.v1.ResourcesRouteV1" level="INFO"/>
     <logger name="org.knora.webapi.routing.v1.StandoffRouteV1" level="INFO"/>
     <logger name="org.knora.webapi.routing.v1.ValuesRouteV1" level="INFO"/>
-    <logger name="org.knora.webapi.store.StoreManager" level="INFO"/>
-    <logger name="org.knora.webapi.store.triplestore" level="INFO"/>
-    <logger name="org.knora.webapi.store.triplestore.http.HttpTriplestoreConnector" level="INFO"/>
     <logger name="org.knora.webapi.responders.v1.CkanResponderV1" level="INFO"/>
     <logger name="org.knora.webapi.responders.v1.GroupsResponderV1" level="DEBUG"/>
     <logger name="org.knora.webapi.responders.v1.UsersResponderV1" level="DEBUG"/>
@@ -75,6 +72,9 @@
     <logger name="org.knora.webapi.responders.v1.ValuesResponderV1" level="INFO"/>
     <logger name="org.knora.webapi.responders.v1.StoreResponderV1" level="INFO"/>
     <logger name="org.knora.webapi.responders.v1.OntologyResponderV1" level="INFO"/>
+    <logger name="org.knora.webapi.store.StoreManager" level="INFO"/>
+    <logger name="org.knora.webapi.store.triplestore" level="INFO"/>
+    <logger name="org.knora.webapi.store.triplestore.http.HttpTriplestoreConnector" level="INFO"/>
     <logger name="org.knora.webapi.viewhandlers.ResourceHtmlView" level="INFO"/>
     <logger name="org.knora.webapi.other.v1.DrawingsGodsV1Spec" level="INFO"/>
     <logger name="org.knora.webapi.other.v1.DrawingsGodsV1E2ESpec" level="INFO"/>

@@ -207,7 +207,7 @@ object SharedAdminTestData {
         sessionId = None,
         permissionData = PermissionDataV1(
             groupsPerProject = Map(
-                IMAGES_PROJECT_IRI -> List(s"${OntologyConstants.KnoraBase.ProjectMember}", s"${OntologyConstants.KnoraBase.ProjectAdmin}")
+                IMAGES_PROJECT_IRI -> List(OntologyConstants.KnoraBase.ProjectMember, OntologyConstants.KnoraBase.ProjectAdmin)
             ),
             administrativePermissionsPerProject = Map(
                 "http://data.knora.org/projects/images" -> Set(
@@ -236,7 +236,7 @@ object SharedAdminTestData {
         sessionId = None,
         permissionData = PermissionDataV1(
             groupsPerProject = Map(
-                "http://data.knora.org/projects/images" -> List(s"${OntologyConstants.KnoraBase.ProjectMember}")
+                "http://data.knora.org/projects/images" -> List(OntologyConstants.KnoraBase.ProjectMember)
             ),
             administrativePermissionsPerProject = Map(
                 "http://data.knora.org/projects/images" -> Set(
@@ -312,7 +312,7 @@ object SharedAdminTestData {
     )
 
     /* represents the full GroupInfoV1 of the images project reviewer group */
-    def imageReviewerGroupInfo = GroupInfoV1(
+    def imagesReviewerGroupInfo = GroupInfoV1(
         id = "http://data.knora.org/groups/images-reviewer",
         name = "Image reviewer",
         description = Some("A group for image reviewers."),

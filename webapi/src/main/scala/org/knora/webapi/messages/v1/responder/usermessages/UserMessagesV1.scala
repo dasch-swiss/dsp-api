@@ -261,6 +261,43 @@ case class UserProjectMembershipRemoveRequestV1(userIri: IRI,
                                                 apiRequestID: UUID) extends UsersResponderRequestV1
 
 /**
+  * Requests user's project admin memberships.
+  *
+  * @param userIri       the IRI of the user.
+  * @param userProfileV1 the user profile of the user requesting the update.
+  * @param apiRequestID  the ID of the API request.
+  */
+case class UserProjectAdminMembershipsGetRequestV1(userIri: IRI,
+                                                   userProfileV1: UserProfileV1,
+                                                   apiRequestID: UUID) extends UsersResponderRequestV1
+
+/**
+  * Requests adding the user to a project as project admin.
+  *
+  * @param userIri       the IRI of the user to be updated.
+  * @param projectIri    the IRI of the project.
+  * @param userProfileV1 the user profile of the user requesting the update.
+  * @param apiRequestID  the ID of the API request.
+  */
+case class UserProjectAdminMembershipAddRequestV1(userIri: IRI,
+                                                  projectIri: IRI,
+                                                  userProfileV1: UserProfileV1,
+                                                  apiRequestID: UUID) extends UsersResponderRequestV1
+
+/**
+  * Requests removing the user from a project as project admin.
+  *
+  * @param userIri       the IRI of the user to be updated.
+  * @param projectIri    the IRI of the project.
+  * @param userProfileV1 the user profile of the user requesting the update.
+  * @param apiRequestID  the ID of the API request.
+  */
+case class UserProjectAdminMembershipRemoveRequestV1(userIri: IRI,
+                                                     projectIri: IRI,
+                                                     userProfileV1: UserProfileV1,
+                                                     apiRequestID: UUID) extends UsersResponderRequestV1
+
+/**
   * Requests user's group memberships.
   *
   * @param userIri       the IRI of the user.
@@ -325,6 +362,15 @@ case class UserProfileResponseV1(userProfile: UserProfileV1) extends KnoraRespon
   */
 case class UserProjectMembershipsGetResponseV1(projects: Seq[IRI]) extends KnoraResponseV1 {
     def toJsValue = UserV1JsonProtocol.userProjectMembershipsGetResponseV1Format.write(this)
+}
+
+/**
+  * Represents an answer to a request for a list of all projects the user is member of the project admin group.
+  *
+  * @param projects a sequence of projects the user is member of the project admin group.
+  */
+case class UserProjectAdminMembershipsGetResponseV1(projects: Seq[IRI]) extends KnoraResponseV1 {
+    def toJsValue = UserV1JsonProtocol.userProjectAdminMembershipsGetResponseV1Format.write(this)
 }
 
 /**
@@ -588,6 +634,7 @@ object UserV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
     implicit val usersGetResponseV1Format: RootJsonFormat[UsersGetResponseV1] = jsonFormat1(UsersGetResponseV1)
     implicit val userProfileResponseV1Format: RootJsonFormat[UserProfileResponseV1] = jsonFormat1(UserProfileResponseV1)
     implicit val userProjectMembershipsGetResponseV1Format: RootJsonFormat[UserProjectMembershipsGetResponseV1] = jsonFormat1(UserProjectMembershipsGetResponseV1)
+    implicit val userProjectAdminMembershipsGetResponseV1Format: RootJsonFormat[UserProjectAdminMembershipsGetResponseV1] = jsonFormat1(UserProjectAdminMembershipsGetResponseV1)
     implicit val userGroupMembershipsGetResponseV1Format: RootJsonFormat[UserGroupMembershipsGetResponseV1] = jsonFormat1(UserGroupMembershipsGetResponseV1)
     implicit val userOperationResponseV1Format: RootJsonFormat[UserOperationResponseV1] = jsonFormat1(UserOperationResponseV1)
 }

@@ -23,20 +23,15 @@
 @**
  * Checks if a project exists.
  *
- * @param dataNamedGraph the named graph to use.
  * @param projectIri the IRI of the project we want to check.
  *@
-@(adminNamedGraphIri: IRI,
-  triplestore: String,
-  projectIri: IRI)
+@(shortname: String)
 
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 
-WITH <@adminNamedGraphIri>
 ASK {
-    BIND(IRI("@projectIri") AS ?project)
-
-    ?project rdf:type knora-base:knoraProject
+    ?s rdf:type knora-base:knoraProject .
+    ?s knora-base:projectShortname "@shortname"^^xsd:string .
 }
 

@@ -1,6 +1,6 @@
 @*
  * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
+ * Tobias Schweizer, André Kilchenmann, and André Fatton.
  *
  * This file is part of Knora.
  *
@@ -21,18 +21,26 @@
 @import org.knora.webapi.IRI
 
 @**
- * Checks if a group exists.
+ * Gets all admin members of a project, given the project's IRI.
  *
- * @param groupIri the IRI of the group we want to check.
+ * @param triplestore the name of the triplestore being used.
+ * @param projectIri the project's IRI.
  *@
-@(groupIri: IRI)
+@(triplestore: String,
+  projectIri: IRI)
 
-PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+prefix knora-base: <http://www.knora.org/ontology/knora-base#>
 
-ASK {
-    BIND(IRI("@groupIri") AS ?group)
-
-    ?group rdf:type knora-base:UserGroup
+SELECT ?s
+@* Ensure that inference is not used in this query. *@
+@if(triplestore.startsWith("graphdb")) {
+    FROM <http://www.ontotext.com/explicit>
 }
+WHERE {
+    BIND(IRI("@projectIri") as ?projectIri)
 
+    ?projectIri rdf:type knora-base:knoraProject .
+    ?s knora-base:isInProjectAdminGroup ?projectIri .
+    ?s rdf:type knora-base:User .
+}

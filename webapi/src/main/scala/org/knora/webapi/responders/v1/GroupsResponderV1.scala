@@ -61,6 +61,8 @@ class GroupsResponderV1 extends ResponderV1 {
         case GroupsGetRequestV1(userProfile) => future2Message(sender(), groupsGetRequestV1(userProfile), log)
         case GroupInfoByIRIGetRequest(iri, userProfile) => future2Message(sender(), groupInfoByIRIGetRequest(iri, userProfile), log)
         case GroupInfoByNameGetRequest(projectIri, groupName, userProfile) => future2Message(sender(), groupInfoByNameGetRequest(projectIri, groupName, userProfile), log)
+        case GroupMembersByIRIGetRequestV1(groupIri, userProfileV1) => future2Message(sender(), groupMembersByIRIGetRequestV1(groupIri, userProfileV1), log)
+        case GroupMembersByNameGetRequestV1(projectIri, groupName, userProfileV1) => future2Message(sender(), groupMembersByNameRequestV1(projectIri, groupName, userProfileV1),log)
         case GroupCreateRequestV1(newGroupInfo, userProfile, apiRequestID) => future2Message(sender(), createGroupV1(newGroupInfo, userProfile, apiRequestID), log)
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }
@@ -248,6 +250,10 @@ class GroupsResponderV1 extends ResponderV1 {
             )
         } yield groupInfoResponse
     }
+
+    def groupMembersByIRIGetRequestV1(groupIri: IRI, userProfileV1: UserProfileV1): Future[GroupMembersResponseV1] = ???
+
+    def groupMembersByNameRequestV1(projectIri: IRI, groupName: String, userProfileV1: UserProfileV1) = ???
 
     private def createGroupV1(createRequest: CreateGroupApiRequestV1, userProfile: UserProfileV1, apiRequestID: UUID): Future[GroupOperationResponseV1] = {
 

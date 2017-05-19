@@ -23,17 +23,13 @@
 @**
  * Checks if an user exists.
  *
- * @param dataNamedGraph the named graph to use.
  * @param userIri the IRI of the user we want to check.
  *@
-@(adminNamedGraphIri: IRI,
-  triplestore: String,
-  userIri: IRI)
+@(userIri: IRI)
 
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 
-WITH <@adminNamedGraphIri>
 ASK {
     BIND(IRI("@userIri") AS ?user)
 

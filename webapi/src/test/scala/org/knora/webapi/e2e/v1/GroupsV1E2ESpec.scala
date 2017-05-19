@@ -50,11 +50,11 @@ class GroupsV1E2ESpec extends E2ESpec(GroupsV1E2ESpec.config) with SessionJsonPr
     val rootEmailEnc = java.net.URLEncoder.encode(rootEmail, "utf-8")
     val testPass = java.net.URLEncoder.encode("test", "utf-8")
 
-    val groupIri = SharedAdminTestData.imageReviewerGroupInfo.id
+    val groupIri = SharedAdminTestData.imagesReviewerGroupInfo.id
     val groupIriEnc = java.net.URLEncoder.encode(groupIri, "utf-8")
-    val groupName = SharedAdminTestData.imageReviewerGroupInfo.name
+    val groupName = SharedAdminTestData.imagesReviewerGroupInfo.name
     val groupNameEnc = java.net.URLEncoder.encode(groupName, "utf-8")
-    val projectIri = SharedAdminTestData.imageReviewerGroupInfo.belongsToProject
+    val projectIri = SharedAdminTestData.imagesReviewerGroupInfo.belongsToProject
     val projectIriEnc = java.net.URLEncoder.encode(projectIri, "utf-8")
 
     "Load test data" in {

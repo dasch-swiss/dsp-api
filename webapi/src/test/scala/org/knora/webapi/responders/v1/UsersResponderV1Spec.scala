@@ -29,7 +29,7 @@ import akka.testkit.{ImplicitSender, TestActorRef}
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse}
-import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectMembersByIRIGetRequestV1, ProjectMembersGetResponseV1, ProjectOperationResponseV1}
+import org.knora.webapi.messages.v1.responder.projectmessages._
 import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.messages.v1.store.triplestoremessages._
 import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_NAME
@@ -275,6 +275,23 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
                 val response2 = expectMsgType[UserOperationResponseV1](timeout)
                 response2.userProfile.userData.lastname.get should equal ("Duck")
 
+                /* User information is updated by a system admin */
+                actorUnderTest ! UserChangeBasicUserDataRequestV1(
+                    userIri = SharedAdminTestData.normalUser.userData.user_id.get,
+                    changeUserRequest = ChangeUserApiRequestV1(
+                        email = None,
+                        givenName = Some(SharedAdminTestData.normalUser.userData.firstname.get),
+                        familyName = Some(SharedAdminTestData.normalUser.userData.lastname.get),
+                        lang = None
+                    ),
+                    userProfile = SharedAdminTestData.superUser,
+                    UUID.randomUUID
+                )
+
+                val response3 = expectMsgType[UserOperationResponseV1](timeout)
+                response3.userProfile.userData.firstname.get should equal (SharedAdminTestData.normalUser.userData.firstname.get)
+                response3.userProfile.userData.lastname.get should equal (SharedAdminTestData.normalUser.userData.lastname.get)
+
             }
 
             "update the user's password" in {
@@ -414,17 +431,83 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
 
                 actorUnderTest ! UserProjectMembershipsGetRequestV1(normalUserIri, rootUser, UUID.randomUUID())
                 val membershipsAfterUpdate = expectMsgType[UserProjectMembershipsGetResponseV1](timeout)
+                membershipsAfterUpdate.projects should equal (Seq("http://data.knora.org/projects/images"))
+
+                responderManager ! ProjectMembersByIRIGetRequestV1(imagesProjectIri, rootUser)
+                val received: ProjectMembersGetResponseV1 = expectMsgType[ProjectMembersGetResponseV1](timeout)
+
+                received.members should contain (normalUser.ofType(UserProfileType.SHORT).userData)
+            }
+
+            "remove user from project" in {
+
+                actorUnderTest ! UserProjectMembershipsGetRequestV1(normalUserIri, rootUser, UUID.randomUUID())
+                val membershipsBeforeUpdate = expectMsgType[UserProjectMembershipsGetResponseV1](timeout)
+                membershipsBeforeUpdate.projects should equal (Seq("http://data.knora.org/projects/images"))
+
+                actorUnderTest ! UserProjectMembershipRemoveRequestV1(normalUserIri, imagesProjectIri, rootUser, UUID.randomUUID())
+                expectMsgType[UserOperationResponseV1](timeout)
+
+                actorUnderTest ! UserProjectMembershipsGetRequestV1(normalUserIri, rootUser, UUID.randomUUID())
+                val membershipsAfterUpdate = expectMsgType[UserProjectMembershipsGetResponseV1](timeout)
                 membershipsAfterUpdate.projects should equal (Seq())
 
                 responderManager ! ProjectMembersByIRIGetRequestV1(imagesProjectIri, rootUser)
                 val received: ProjectMembersGetResponseV1 = expectMsgType[ProjectMembersGetResponseV1](timeout)
 
-                received.members should contain allElementsOf Seq(
-                    normalUser.ofType(UserProfileType.SHORT).userData
-                )
+                received.members should not contain normalUser.ofType(UserProfileType.SHORT).userData
             }
 
-            "remove user from project" in {
+        }
+
+        "asked to update the user's project admin group membership" should {
+
+            "add user to project admin group" in {
+
+                actorUnderTest ! UserProjectAdminMembershipsGetRequestV1(normalUserIri, rootUser, UUID.randomUUID())
+                val membershipsBeforeUpdate = expectMsgType[UserProjectAdminMembershipsGetResponseV1](timeout)
+                membershipsBeforeUpdate.projects should equal (Seq())
+
+                actorUnderTest ! UserProjectAdminMembershipAddRequestV1(normalUserIri, imagesProjectIri, rootUser, UUID.randomUUID())
+                expectMsgType[UserOperationResponseV1](timeout)
+
+                actorUnderTest ! UserProjectAdminMembershipsGetRequestV1(normalUserIri, rootUser, UUID.randomUUID())
+                val membershipsAfterUpdate = expectMsgType[UserProjectAdminMembershipsGetResponseV1](timeout)
+                membershipsAfterUpdate.projects should equal (Seq("http://data.knora.org/projects/images"))
+
+                responderManager ! ProjectAdminMembersByIRIGetRequestV1(imagesProjectIri, rootUser)
+                val received: ProjectAdminMembersGetResponseV1 = expectMsgType[ProjectAdminMembersGetResponseV1](timeout)
+
+                received.members should contain (normalUser.ofType(UserProfileType.SHORT).userData)
+            }
+
+            "remove user from project admin group" in {
+                actorUnderTest ! UserProjectAdminMembershipsGetRequestV1(normalUserIri, rootUser, UUID.randomUUID())
+                val membershipsBeforeUpdate = expectMsgType[UserProjectAdminMembershipsGetResponseV1](timeout)
+                membershipsBeforeUpdate.projects should equal (Seq("http://data.knora.org/projects/images"))
+
+                actorUnderTest ! UserProjectAdminMembershipRemoveRequestV1(normalUserIri, imagesProjectIri, rootUser, UUID.randomUUID())
+                expectMsgType[UserOperationResponseV1](timeout)
+
+                actorUnderTest ! UserProjectAdminMembershipsGetRequestV1(normalUserIri, rootUser, UUID.randomUUID())
+                val membershipsAfterUpdate = expectMsgType[UserProjectAdminMembershipsGetResponseV1](timeout)
+                membershipsAfterUpdate.projects should equal (Seq())
+
+                responderManager ! ProjectAdminMembersByIRIGetRequestV1(imagesProjectIri, rootUser)
+                val received: ProjectAdminMembersGetResponseV1 = expectMsgType[ProjectAdminMembersGetResponseV1](timeout)
+
+                received.members should not contain normalUser.ofType(UserProfileType.SHORT).userData
+            }
+
+        }
+
+        "asked to update the user's group membership" should {
+
+            "add user to group" in {
+                fail("test not implemented")
+            }
+
+            "remove user from group" in {
                 fail("test not implemented")
             }
 

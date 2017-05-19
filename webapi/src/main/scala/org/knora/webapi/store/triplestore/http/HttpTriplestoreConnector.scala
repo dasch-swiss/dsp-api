@@ -262,11 +262,9 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
     def sparqlHttpAsk(sparql: String): Future[SparqlAskResponse] = {
         for {
             resultString <- getTriplestoreHttpResponse(sparql, isUpdate = false)
-            result = if (resultString.toLowerCase == "yes") {
-                true
-            } else {
-                false
-            }
+            _ = log.debug("sparqlHttpAsk - resultString: {}", resultString)
+
+            result: Boolean = resultString.parseJson.asJsObject.getFields("boolean").head.convertTo[Boolean]
         } yield SparqlAskResponse(result)
     }
 

@@ -25,12 +25,11 @@ import java.util.UUID
 import akka.actor.Props
 import akka.actor.Status.Failure
 import akka.testkit.{ImplicitSender, TestActorRef}
-import arq.iri
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse}
 import org.knora.webapi.messages.v1.responder.projectmessages._
-import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileType}
+import org.knora.webapi.messages.v1.responder.usermessages.UserProfileType
 import org.knora.webapi.messages.v1.store.triplestoremessages._
 import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_NAME
 import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
@@ -269,14 +268,44 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
                 received.userDataV1 should equal (SharedAdminTestData.rootUser.ofType(UserProfileType.SHORT).userData)
             }
 
-            "return 'NotFound' when the project IRI is unknown" in {
+            "return 'NotFound' when the project IRI is unknown (project membership)" in {
                 actorUnderTest ! ProjectMembersByIRIGetRequestV1("http://data.knora.org/projects/notexisting", SharedAdminTestData.rootUser)
-                expectMsg(Failure(NotFoundException(s"Project 'http://data.knora.org/projects/notexisting' either not found or has no members")))
+                expectMsg(Failure(NotFoundException(s"Project 'http://data.knora.org/projects/notexisting' not found.")))
             }
 
-            "return 'NotFound' when the project shortname is unknown" in {
+            "return 'NotFound' when the project shortname is unknown (project membership)" in {
                 actorUnderTest ! ProjectMembersByShortnameGetRequestV1("projectwrong", SharedAdminTestData.rootUser)
-                expectMsg(Failure(NotFoundException(s"Project 'projectwrong' either not found or has no members")))
+                expectMsg(Failure(NotFoundException(s"Project 'projectwrong' not found.")))
+            }
+
+            "return all project admin members of a project identified by IRI" in {
+                actorUnderTest ! ProjectAdminMembersByIRIGetRequestV1(SharedAdminTestData.IMAGES_PROJECT_IRI, SharedAdminTestData.rootUser)
+                val received: ProjectAdminMembersGetResponseV1 = expectMsgType[ProjectAdminMembersGetResponseV1](timeout)
+                received.members should contain allElementsOf Seq(
+                    SharedAdminTestData.imagesUser01.ofType(UserProfileType.SHORT).userData,
+                    SharedAdminTestData.multiuserUser.ofType(UserProfileType.SHORT).userData
+                )
+                received.userDataV1 should equal (SharedAdminTestData.rootUser.ofType(UserProfileType.SHORT).userData)
+            }
+
+            "return all project admin members of a project identified by shortname" in {
+                actorUnderTest ! ProjectAdminMembersByShortnameGetRequestV1(SharedAdminTestData.imagesProjectInfo.shortname, SharedAdminTestData.rootUser)
+                val received: ProjectAdminMembersGetResponseV1 = expectMsgType[ProjectAdminMembersGetResponseV1](timeout)
+                received.members should contain allElementsOf Seq(
+                    SharedAdminTestData.imagesUser01.ofType(UserProfileType.SHORT).userData,
+                    SharedAdminTestData.multiuserUser.ofType(UserProfileType.SHORT).userData
+                )
+                received.userDataV1 should equal (SharedAdminTestData.rootUser.ofType(UserProfileType.SHORT).userData)
+            }
+
+            "return 'NotFound' when the project IRI is unknown (project admin membership)" in {
+                actorUnderTest ! ProjectAdminMembersByIRIGetRequestV1("http://data.knora.org/projects/notexisting", SharedAdminTestData.rootUser)
+                expectMsg(Failure(NotFoundException(s"Project 'http://data.knora.org/projects/notexisting' not found.")))
+            }
+
+            "return 'NotFound' when the project shortname is unknown (project admin membership)" in {
+                actorUnderTest ! ProjectAdminMembersByShortnameGetRequestV1("projectwrong", SharedAdminTestData.rootUser)
+                expectMsg(Failure(NotFoundException(s"Project 'projectwrong' not found.")))
             }
         }
     }

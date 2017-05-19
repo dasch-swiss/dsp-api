@@ -842,17 +842,15 @@ Users Endpoint
   - POST / DELETE: ``/v1/users/projects/<userIri>/<projectIri>``
   - BODY: empty
 
+**Get user's project admin memberships**
+  - GET: ``/v1/users/projects-admin/<userIri>
+
 **Add/remove user to/from project admin group**
   - Required permission: SystemAdmin / ProjectAdmin
   - Required information: project IRI, user IRI
   - Effects: ``knora-base:isInProjectAdminGroup`` user property
-  - PUT: ``/v1/users/projects/<userIri>/<projectIri>``
-  - BODY:
-::
-
-  {
-    "projectAdmin": true // true or false
-  }
+  - POST / DELETE: ``/v1/users/projects-admin/<userIri>/<projectIri>``
+  - BODY: empty
 
 **Get user's group memberships**
   - GET: ``/v1/users/groups/<userIri>
