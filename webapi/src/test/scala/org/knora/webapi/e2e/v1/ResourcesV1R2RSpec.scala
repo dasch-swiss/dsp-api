@@ -1225,9 +1225,9 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    |    </biblio:JournalArticle>
                    |</knoraXmlImport:resources>""".stripMargin
 
-            val projectIRI = URLEncoder.encode("http://data.knora.org/projects/DczxPs-sR6aZN91qV92ZmQ", "UTF-8")
+            val projectIri = URLEncoder.encode("http://data.knora.org/projects/DczxPs-sR6aZN91qV92ZmQ", "UTF-8")
 
-            Post(s"/v1/resources/xmlimport/$projectIRI", HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), params)) ~> addCredentials(BasicHttpCredentials(biblioUserEmail, password)) ~> resourcesPath ~> check {
+            Post(s"/v1/resources/xmlimport/$projectIri", HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), params)) ~> addCredentials(BasicHttpCredentials(biblioUserEmail, password)) ~> resourcesPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)
                 responseAs[String] should include("createdResources")
             }
@@ -1273,9 +1273,9 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    |    </biblio:JournalArticle>
                    |</knoraXmlImport:resources>""".stripMargin
 
-            val projectIRI = URLEncoder.encode("http://data.knora.org/projects/DczxPs-sR6aZN91qV92ZmQ", "UTF-8")
+            val projectIri = URLEncoder.encode("http://data.knora.org/projects/DczxPs-sR6aZN91qV92ZmQ", "UTF-8")
 
-            Post(s"/v1/resources/xmlimport/$projectIRI", HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), params)) ~> addCredentials(BasicHttpCredentials(biblioUserEmail, password)) ~> resourcesPath ~> check {
+            Post(s"/v1/resources/xmlimport/$projectIri", HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), params)) ~> addCredentials(BasicHttpCredentials(biblioUserEmail, password)) ~> resourcesPath ~> check {
                 assert(status == StatusCodes.BadRequest, response.toString)
                 responseAs[String] should include("org.xml.sax.SAXParseException")
                 responseAs[String] should include("cvc-pattern-valid")

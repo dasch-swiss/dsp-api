@@ -271,7 +271,7 @@ object ResourcesRouteV1 extends Authenticator {
             )
         }
 
-        def createOneResourceRequest(resourceRequest: CreateResourceRequestV1, userProfile: UserProfileV1): Future[OneOfMultipleResourceCreateRequestV1] = {
+        def createOneResourceRequest(resourceRequest: CreateResourceFromXmlImportRequestV1, userProfile: UserProfileV1): Future[OneOfMultipleResourceCreateRequestV1] = {
             val values: Map[IRI, Future[Seq[CreateValueV1WithComment]]] = valuesToCreate(resourceRequest.properties, userProfile)
 
             // make the whole Map a Future
@@ -287,11 +287,20 @@ object ResourcesRouteV1 extends Authenticator {
                 resourceTypeIri = resourceRequest.restype_id,
                 clientResourceID = resourceRequest.client_id,
                 label = resourceRequest.label,
-                values = valuesToBeCreated.toMap
+                values = valuesToBeCreated.toMap,
+                file = resourceRequest.file.map {
+                    fileMetadata =>
+                        SipiResponderConversionFileRequestV1(
+                            originalFilename = InputValidation.toSparqlEncodedString(fileMetadata.originalFilename, () => throw BadRequestException(s"The original filename is invalid: '${fileMetadata.originalFilename}'")),
+                            originalMimeType = InputValidation.toSparqlEncodedString(fileMetadata.originalMimeType, () => throw BadRequestException(s"The original MIME type is invalid: '${fileMetadata.originalMimeType}'")),
+                            filename = InputValidation.toSparqlEncodedString(fileMetadata.filename, () => throw BadRequestException(s"Invalid filename: '${fileMetadata.filename}'")),
+                            userProfile = userProfile
+                        )
+                }
             )
         }
 
-        def makeMultiResourcesRequestMessage(resourceRequest: Seq[CreateResourceRequestV1], projectId: IRI, apiRequestID: UUID, userProfile: UserProfileV1): Future[MultipleResourceCreateRequestV1] = {
+        def makeMultiResourcesRequestMessage(resourceRequest: Seq[CreateResourceFromXmlImportRequestV1], projectId: IRI, apiRequestID: UUID, userProfile: UserProfileV1): Future[MultipleResourceCreateRequestV1] = {
             val resourcesToCreate: Seq[Future[OneOfMultipleResourceCreateRequestV1]] =
                 resourceRequest.map(createResourceRequest => createOneResourceRequest(createResourceRequest, userProfile))
 
@@ -694,13 +703,13 @@ object ResourcesRouteV1 extends Authenticator {
         }
 
         /**
-          * Converts parsed import XML into a sequence of [[CreateResourceRequestV1]] for each resource
+          * Converts parsed import XML into a sequence of [[CreateResourceFromXmlImportRequestV1]] for each resource
           * described in the XML.
           *
           * @param rootElement the root element of an XML document describing multiple resources to be created.
-          * @return Seq[CreateResourceRequestV1] a collection of resource creation requests.
+          * @return Seq[CreateResourceFromXmlImportRequestV1] a collection of resource creation requests.
           */
-        def importXmlToCreateResourceRequests(rootElement: Elem): Seq[CreateResourceRequestV1] = {
+        def importXmlToCreateResourceRequests(rootElement: Elem): Seq[CreateResourceFromXmlImportRequestV1] = {
             rootElement.head.child
                 .filter(node => node.label != "#PCDATA")
                 .map(resourceNode => {
@@ -720,42 +729,67 @@ object ResourcesRouteV1 extends Authenticator {
                         errorFun = () => throw BadRequestException(s"Invalid XML namespace: $elementNamespace")
                     )
 
-                    // Traverse the child elements to collect the values of the resource. This produces a sequence
-                    // in which the same property IRI could occur multiple times.
-                    val propertiesWithValues: Seq[(IRI, CreateResourceValueV1)] = resourceNode.child
-                        .filter(childNode => childNode.label != "#PCDATA")
-                        .map {
-                            propertyNode =>
-                                // Is this a property from another ontology (in the form prefixLabel__localName)?
-                                val propertyIri = InputValidation.toPropertyIriFromOtherOntologyInXmlImport(propertyNode.label) match {
-                                    case Some(iri) =>
-                                        // Yes. Use the corresponding entity IRI for it.
-                                        iri
+                    // Get the child elements of the resource element.
+                    val childElements: Seq[Node] = resourceNode.child.filterNot(_.label == "#PCDATA")
 
-                                    case None =>
-                                        // No. Convert the XML element's label and namespace to an internal property IRI.
+                    // Get the resource's file metadata, if any. This represents a file that has already been stored by Sipi.
+                    // If provided, it must be the first child element of the resource element.
+                    val fileMetadata: Option[CreateFileV1] = childElements.headOption match {
+                        case Some(firstChildElem) =>
+                            if (firstChildElem.label == "file") {
+                                Some(CreateFileV1(
+                                    originalFilename = firstChildElem.attribute("original_filename").get.text,
+                                    originalMimeType = firstChildElem.attribute("original_mimetype").get.text,
+                                    filename = firstChildElem.attribute("filename").get.text
+                                ))
+                            } else {
+                                None
+                            }
 
-                                        val propertyNodeNamespace = propertyNode.getNamespace(propertyNode.prefix)
+                        case None => None
+                    }
 
-                                        InputValidation.xmlImportElementNameToInternalOntologyIriV1(
-                                            namespace = propertyNodeNamespace,
-                                            elementLabel = propertyNode.label,
-                                            errorFun = () => throw BadRequestException(s"Invalid XML namespace: $propertyNodeNamespace"))
-                                }
+                    // Any remaining child elements of the resource element represent property values.
+                    val propertyElements = if (fileMetadata.isDefined) {
+                        childElements.tail
+                    } else {
+                        childElements
+                    }
 
-                                // If the property element has no children, it's an ordinary value property. If it
-                                // has one child, it's a link property.
+                    // Traverse the property value elements. This produces a sequence in which the same property IRI
+                    // can occur multiple times, once for each value.
+                    val propertiesWithValues: Seq[(IRI, CreateResourceValueV1)] = propertyElements.map {
+                        propertyNode =>
+                            // Is this a property from another ontology (in the form prefixLabel__localName)?
+                            val propertyIri = InputValidation.toPropertyIriFromOtherOntologyInXmlImport(propertyNode.label) match {
+                                case Some(iri) =>
+                                    // Yes. Use the corresponding entity IRI for it.
+                                    iri
 
-                                val valueNodes: Seq[Node] = scala.xml.Utility.trim(propertyNode).descendant
+                                case None =>
+                                    // No. Convert the XML element's label and namespace to an internal property IRI.
 
-                                if (propertyNode.descendant.size == 1) {
-                                    propertyIri -> knoraDataTypeXml(propertyNode)
-                                } else {
-                                    propertyIri -> knoraDataTypeXml(valueNodes.head)
-                                }
-                        }
+                                    val propertyNodeNamespace = propertyNode.getNamespace(propertyNode.prefix)
 
-                    // Group the property values by property IRI.
+                                    InputValidation.xmlImportElementNameToInternalOntologyIriV1(
+                                        namespace = propertyNodeNamespace,
+                                        elementLabel = propertyNode.label,
+                                        errorFun = () => throw BadRequestException(s"Invalid XML namespace: $propertyNodeNamespace"))
+                            }
+
+                            // If the property element has no children, it's an ordinary value property. If it
+                            // has one child, it's a link property.
+
+                            val valueNodes: Seq[Node] = scala.xml.Utility.trim(propertyNode).descendant
+
+                            if (propertyNode.descendant.size == 1) {
+                                propertyIri -> knoraDataTypeXml(propertyNode)
+                            } else {
+                                propertyIri -> knoraDataTypeXml(valueNodes.head)
+                            }
+                    }
+
+                    // Group the values by property IRI.
                     val groupedPropertiesWithValues: Map[IRI, Seq[CreateResourceValueV1]] = propertiesWithValues.groupBy {
                         case (propertyIri: IRI, _) => propertyIri
                     }.map {
@@ -765,11 +799,12 @@ object ResourcesRouteV1 extends Authenticator {
                             }
                     }
 
-                    CreateResourceRequestV1(
+                    CreateResourceFromXmlImportRequestV1(
                         restype_id = restype_id,
                         client_id = clientIDForResource,
                         label = resourceLabel,
-                        properties = groupedPropertiesWithValues
+                        properties = groupedPropertiesWithValues,
+                        file = fileMetadata
                     )
                 })
         }
@@ -931,7 +966,6 @@ object ResourcesRouteV1 extends Authenticator {
                 parameters("reqtype".?, "resinfo".as[Boolean].?) { (reqtypeParam, resinfoParam) =>
                     requestContext =>
                         val userProfile = getUserProfileV1(requestContext)
-                        val params = parameterMap
                         val requestType = reqtypeParam.getOrElse("")
                         val resinfo = resinfoParam.getOrElse(false)
                         val requestMessage = makeResourceRequestMessage(resIri = resIri, resinfo = resinfo, requestType = requestType, userProfile = userProfile)
@@ -1086,8 +1120,8 @@ object ResourcesRouteV1 extends Authenticator {
                                 userProfile = userProfile
                             )
 
-                            // Make a CreateResourceRequestV1 for each resource to be created.
-                            resourcesToCreate: Seq[CreateResourceRequestV1] = importXmlToCreateResourceRequests(rootElement)
+                            // Make a CreateResourceFromXmlImportRequestV1 for each resource to be created.
+                            resourcesToCreate: Seq[CreateResourceFromXmlImportRequestV1] = importXmlToCreateResourceRequests(rootElement)
 
                             // Make a MultipleResourceCreateRequestV1 for the creation of all the resources.
                             apiRequestID: UUID = UUID.randomUUID

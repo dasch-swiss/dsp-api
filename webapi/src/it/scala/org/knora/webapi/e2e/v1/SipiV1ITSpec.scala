@@ -336,6 +336,79 @@ class SipiV1ITSpec extends ITSpec(SipiV1ITSpec.config) with TriplestoreJsonProto
             checkResponseOK(knoraPostRequest)
         }
 
+
+        "create an 'incunabula:book' and an 'incunabula:page' with file parameters via XML import" in {
+            // The image to be uploaded.
+            val fileToSend = new File(pathToChlaus)
+            assert(fileToSend.exists(), s"File $pathToChlaus does not exist")
+
+            // A multipart/form-data request containing the image.
+            val sipiFormData = Multipart.FormData(
+                Multipart.FormData.BodyPart(
+                    "file",
+                    HttpEntity.fromPath(MediaTypes.`image/jpeg`, fileToSend.toPath),
+                    Map("filename" -> fileToSend.getName)
+                )
+            )
+
+            // Send a POST request to Sipi, asking it to make a thumbnail of the image.
+            val sipiRequest = Post(baseSipiUrl + "/make_thumbnail", sipiFormData) ~> addCredentials(BasicHttpCredentials(username, password))
+            val sipiResponseJson = getResponseJson(sipiRequest)
+
+            // Request the thumbnail from Sipi.
+            val jsonFields = sipiResponseJson.fields
+            val previewUrl = jsonFields("preview_path").asInstanceOf[JsString].value
+            val sipiGetRequest = Get(previewUrl) ~> addCredentials(BasicHttpCredentials(username, password))
+            checkResponseOK(sipiGetRequest)
+
+            val filename: String = jsonFields("filename").asInstanceOf[JsString].value
+            val originalFilename: String = jsonFields("original_filename").asInstanceOf[JsString].value
+            val originalMimeType: String = jsonFields("original_mimetype").asInstanceOf[JsString].value
+
+            val knoraParams =
+                s"""<?xml version="1.0" encoding="UTF-8"?>
+                   |<knoraXmlImport:resources xmlns="http://api.knora.org/ontology/incunabula/xml-import/v1#"
+                   |    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   |    xsi:schemaLocation="http://api.knora.org/ontology/incunabula/xml-import/v1# incunabula.xsd"
+                   |    xmlns:incunabula="http://api.knora.org/ontology/incunabula/xml-import/v1#"
+                   |    xmlns:knoraXmlImport="http://api.knora.org/ontology/knoraXmlImport/v1#">
+                   |    <incunabula:book id="test_book" label="a book with one page">
+                   |        <incunabula:title knoraType="richtext_value">the title of a book with one page</incunabula:title>
+                   |    </incunabula:book>
+                   |    <incunabula:page id="test_page" label="a page with an image">
+                   |        <incunabula:file filename="$filename" original_filename="$originalFilename" original_mimetype="$originalMimeType"/>
+                   |        <incunabula:origname knoraType="richtext_value">Chlaus</incunabula:origname>
+                   |        <incunabula:pagenum knoraType="richtext_value">1a</incunabula:pagenum>
+                   |        <incunabula:partOf>
+                   |            <incunabula:book knoraType="link_value" ref="test_book"/>
+                   |        </incunabula:partOf>
+                   |        <incunabula:seqnum knoraType="int_value">1</incunabula:seqnum>
+                   |    </incunabula:page>
+                   |</knoraXmlImport:resources>""".stripMargin
+
+            val projectIri = URLEncoder.encode("http://data.knora.org/projects/77275339", "UTF-8")
+
+            // Send the JSON in a POST request to the Knora API server.
+            val knoraPostRequest = Post(baseApiUrl + s"/v1/resources/xmlimport/$projectIri", HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), knoraParams)) ~> addCredentials(BasicHttpCredentials(username, password))
+            val knoraPostResponseJson: JsObject = getResponseJson(knoraPostRequest)
+
+            val createdResources = knoraPostResponseJson.fields("createdResources").asInstanceOf[JsArray].elements
+            assert(createdResources.size == 2)
+
+            val bookResourceIri = createdResources.head.asJsObject.fields("res_id").asInstanceOf[JsString].value
+            val pageResourceIri = createdResources(1).asJsObject.fields("res_id").asInstanceOf[JsString].value
+
+            // Request the book resource from the Knora API server.
+            val knoraRequestNewBookResource = Get(baseApiUrl + "/v1/resources/" + URLEncoder.encode(bookResourceIri, "UTF-8")) ~> addCredentials(BasicHttpCredentials(username, password))
+            checkResponseOK(knoraRequestNewBookResource)
+
+            // Request the page resource from the Knora API server.
+            val knoraRequestNewPageResource = Get(baseApiUrl + "/v1/resources/" + URLEncoder.encode(pageResourceIri, "UTF-8")) ~> addCredentials(BasicHttpCredentials(username, password))
+            val pageJson: JsObject = getResponseJson(knoraRequestNewPageResource)
+            val origname = pageJson.fields("resinfo").asJsObject.fields("locdata").asJsObject.fields("origname").asInstanceOf[JsString].value
+
+            assert(origname == fileToSend.getName)
+        }
     }
 
     /**

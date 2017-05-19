@@ -1177,8 +1177,8 @@ class ResourcesResponderV1 extends ResponderV1 {
 
 
     /**
-      * Implements a pre-update check to ensure that an [[UpdateValueV1]] has the correct type for the `knora-base:objectClassConstraint` of
-      * the property that is supposed to point to it.
+      * Implements a pre-update check to ensure that an [[UpdateValueV1]] (representing a link or an ordinary value)
+      * has the correct type for the `knora-base:objectClassConstraint` of the property that is supposed to point to it.
       *
       * @param propertyIri                   the IRI of the property.
       * @param propertyObjectClassConstraint the IRI of the `knora-base:objectClassConstraint` of the property.
@@ -1186,7 +1186,7 @@ class ResourcesResponderV1 extends ResponderV1 {
       * @param userProfile                   the profile of the user making the request.
       * @return an empty [[Future]] on success, or a failed [[Future]] if the value has the wrong type.
       */
-    def checkPropertyObjectClassConstraintForValue(propertyIri: IRI, propertyObjectClassConstraint: IRI, updateValueV1: UpdateValueV1, userProfile: UserProfileV1): Future[Unit] = {
+    def checkPropertyObjectClassConstraint(propertyIri: IRI, propertyObjectClassConstraint: IRI, updateValueV1: UpdateValueV1, userProfile: UserProfileV1): Future[Unit] = {
         for {
             result <- updateValueV1 match {
                 case linkUpdate: LinkUpdateV1 =>
@@ -1288,7 +1288,7 @@ class ResourcesResponderV1 extends ResponderV1 {
                             resourceClassIri = resourceCreateRequest.resourceTypeIri,
                             propertyIris = propertyIris,
                             values = resourceCreateRequest.values,
-                            sipiConversionRequest = None,
+                            sipiConversionRequest = resourceCreateRequest.file,
                             linkTargetsAlreadyExist = false,
                             clientResourceIDsToResourceClasses = clientResourceIDsToResourceClasses,
                             userProfile = userProfile
@@ -1414,7 +1414,7 @@ class ResourcesResponderV1 extends ResponderV1 {
                                 if (linkTargetsAlreadyExist) {
                                     // The targets of links are expected to be in the triplestore already, and each link
                                     // should be represented by a LinkUpdateV1.
-                                    checkPropertyObjectClassConstraintForValue(
+                                    checkPropertyObjectClassConstraint(
                                         propertyIri = propertyIri,
                                         propertyObjectClassConstraint = propertyObjectClassConstraint,
                                         updateValueV1 = valueV1WithComment.updateValueV1,
@@ -1498,9 +1498,9 @@ class ResourcesResponderV1 extends ResponderV1 {
                 // TODO: in all cases of an error, the tmp file has to be deleted
                 sipiConversionRequest match {
                     case None => Future(None) // expected behaviour
-                    case Some(sipiConversionFileRequest: SipiResponderConversionFileRequestV1) =>
+                    case Some(_: SipiResponderConversionFileRequestV1) =>
                         throw BadRequestException(s"File params (GUI-case) are given but resource class $resourceClassIri does not allow any representation")
-                    case Some(sipiConversionPathRequest: SipiResponderConversionPathRequestV1) =>
+                    case Some(_: SipiResponderConversionPathRequestV1) =>
                         throw BadRequestException(s"A binary file was provided (non GUI-case) but resource class $resourceClassIri does not have any binary representation")
                 }
             }
