@@ -600,14 +600,12 @@ object ResourcesRouteV1 extends Authenticator {
                             getNamespacePrefixLabel = internalEntityIri => getNamespacePrefixLabel(internalEntityIri),
                             getEntityName = internalEntityIri => getEntityName(internalEntityIri)
                         ).toString().trim
-
-                        // println(unformattedSchemaXml)
-
+                        
                         // Parse the generated XML schema.
                         val parsedSchemaXml = try {
                             XML.loadString(unformattedSchemaXml)
                         } catch {
-                            case parseEx: org.xml.sax.SAXParseException => throw AssertionException("Generated XML schema is not valid XML. Please report this as a bug.", parseEx, loggingAdapter)
+                            case parseEx: org.xml.sax.SAXParseException => throw AssertionException(s"Generated XML schema for namespace ${namespaceInfo.namespace} is not valid XML. Please report this as a bug.", parseEx, loggingAdapter)
                         }
 
                         // Format the generated XML schema nicely.
@@ -652,10 +650,7 @@ object ResourcesRouteV1 extends Authenticator {
                         val schemaXmlBytes: Array[Byte] = schema.schemaXml.getBytes(StandardCharsets.UTF_8)
                         schemaFilename -> schemaXmlBytes
                 }.toMap
-
-                // Generate a byte array representing the Zip file.
-                zipFileBytes: Array[Byte] = FileUtil.createZipFileBytes(zipFileContents)
-            } yield zipFileBytes
+            } yield FileUtil.createZipFileBytes(zipFileContents)
         }
 
         /**
