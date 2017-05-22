@@ -9,15 +9,17 @@
         <xs:attribute name="label" use="required" type="xs:string"/>
     </xs:complexType>
 
-    <xs:complexType name="fileType">
-        <xs:simpleContent>
-            <xs:extension base="emptyType">
-                <xs:attribute name="filename" use="required" type="xs:string"/>
-                <xs:attribute name="original_filename" use="required" type="xs:string"/>
-                <xs:attribute name="original_mimetype" use="required" type="xs:string"/>
-            </xs:extension>
-        </xs:simpleContent>
-    </xs:complexType>
+    <xs:element name="file">
+        <xs:complexType>
+            <xs:simpleContent>
+                <xs:extension base="emptyType">
+                    <xs:attribute name="filename" use="required" type="xs:string"/>
+                    <xs:attribute name="original_filename" use="required" type="xs:string"/>
+                    <xs:attribute name="original_mimetype" use="required" type="xs:string"/>
+                </xs:extension>
+            </xs:simpleContent>
+        </xs:complexType>
+    </xs:element>
 
     <xs:complexType name="Resource_linkValueType">
         <xs:sequence>
@@ -52,6 +54,7 @@
             <xs:any minOccurs="0" maxOccurs="unbounded" processContents="lax"/>
         </xs:sequence>
         <xs:attribute name="knoraType" use="required" fixed="richtext_value"/>
+        <xs:attribute name="mapping_id" use="optional" type="xs:string"/>
     </xs:complexType>
 
     <xs:complexType name="intValueType">

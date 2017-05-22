@@ -376,7 +376,7 @@ class SipiV1ITSpec extends ITSpec(SipiV1ITSpec.config) with TriplestoreJsonProto
                    |        <incunabula:title knoraType="richtext_value">the title of a book with one page</incunabula:title>
                    |    </incunabula:book>
                    |    <incunabula:page id="test_page" label="a page with an image">
-                   |        <incunabula:file filename="$filename" original_filename="$originalFilename" original_mimetype="$originalMimeType"/>
+                   |        <knoraXmlImport:file filename="$filename" original_filename="$originalFilename" original_mimetype="$originalMimeType"/>
                    |        <incunabula:origname knoraType="richtext_value">Chlaus</incunabula:origname>
                    |        <incunabula:pagenum knoraType="richtext_value">1a</incunabula:pagenum>
                    |        <incunabula:partOf>

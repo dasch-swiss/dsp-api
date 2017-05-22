@@ -63,7 +63,7 @@
                             <xs:sequence>
 
                                 @if(resourceClassInfo.fileValueProperties.nonEmpty) {
-                                    <xs:element name="file" type="@{knoraXmlImportNamespacePrefixLabel}:fileType" minOccurs="0" maxOccurs="1"/>
+                                    <xs:element ref="@{knoraXmlImportNamespacePrefixLabel}:file" minOccurs="0" maxOccurs="1"/>
                                 }
 
                                 @for((propertyIri, cardinality) <- resourceClassInfo.cardinalities.toVector.sortBy(_._1)) {
