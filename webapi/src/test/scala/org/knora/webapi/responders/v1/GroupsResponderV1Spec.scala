@@ -150,10 +150,8 @@ class GroupsResponderV1Spec extends CoreSpec(GroupsResponderV1Spec.config) with 
                 )
                 val received: GroupMembersResponseV1 = expectMsgType[GroupMembersResponseV1](timeout)
                 received.members should contain allElementsOf Seq(
-                    SharedAdminTestData.imagesUser01.ofType(UserProfileType.SHORT).userData,
-                    SharedAdminTestData.imagesUser02.ofType(UserProfileType.SHORT).userData,
-                    SharedAdminTestData.multiuserUser.ofType(UserProfileType.SHORT).userData,
-                    SharedAdminTestData.imagesReviewerUser.ofType(UserProfileType.SHORT).userData
+                    SharedAdminTestData.multiuserUser.ofType(UserProfileType.SHORT).userData.user_id.get,
+                    SharedAdminTestData.imagesReviewerUser.ofType(UserProfileType.SHORT).userData.user_id.get
                 )
             }
 
@@ -165,21 +163,26 @@ class GroupsResponderV1Spec extends CoreSpec(GroupsResponderV1Spec.config) with 
                 )
                 val received: GroupMembersResponseV1 = expectMsgType[GroupMembersResponseV1](timeout)
                 received.members should contain allElementsOf Seq(
-                    SharedAdminTestData.imagesUser01.ofType(UserProfileType.SHORT).userData,
-                    SharedAdminTestData.imagesUser02.ofType(UserProfileType.SHORT).userData,
-                    SharedAdminTestData.multiuserUser.ofType(UserProfileType.SHORT).userData,
-                    SharedAdminTestData.imagesReviewerUser.ofType(UserProfileType.SHORT).userData
+                    SharedAdminTestData.multiuserUser.ofType(UserProfileType.SHORT).userData.user_id.get,
+                    SharedAdminTestData.imagesReviewerUser.ofType(UserProfileType.SHORT).userData.user_id.get
                 )
             }
 
             "return 'NotFound' when the group IRI is unknown" in {
-                actorUnderTest ! ProjectMembersByIRIGetRequestV1("http://data.knora.org/projects/notexisting", SharedAdminTestData.rootUser)
-                expectMsg(Failure(NotFoundException(s"Project 'http://data.knora.org/projects/notexisting' not found.")))
+                actorUnderTest ! GroupMembersByIRIGetRequestV1(
+                    groupIri = "http://data.knora.org/groups/notexisting",
+                    SharedAdminTestData.rootUser
+                )
+                expectMsg(Failure(NotFoundException(s"Group 'http://data.knora.org/groups/notexisting' not found.")))
             }
 
             "return 'NotFound' when the group shortname / project IRI combination is unknown" in {
-                actorUnderTest ! ProjectMembersByShortnameGetRequestV1("projectwrong", SharedAdminTestData.rootUser)
-                expectMsg(Failure(NotFoundException(s"Project 'projectwrong' not found.")))
+                actorUnderTest ! GroupMembersByNameGetRequestV1(
+                    projectIri = SharedAdminTestData.imagesProjectInfo.id,
+                    groupName = "groupwrong",
+                    SharedAdminTestData.rootUser
+                )
+                expectMsg(Failure(NotFoundException(s"Group 'groupwrong' not found.")))
             }
         }
 

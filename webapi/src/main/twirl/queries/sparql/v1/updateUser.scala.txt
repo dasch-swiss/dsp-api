@@ -88,7 +88,7 @@ DELETE {
     }
 
     @if(maybeGroups.nonEmpty) {
-        ?user knora-base:isInGroup ?currentGroup .
+        ?user knora-base:isInGroup ?currentGroups .
     }
 
     @if(maybeSystemAdmin.nonEmpty) {

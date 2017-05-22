@@ -225,15 +225,38 @@ class UsersV1E2ESpec extends E2ESpec(UsersV1E2ESpec.config) with SessionJsonProt
                 //println(jsonResult)
 
             }
+        }
 
-            "change (adding and removing) project membership" ignore {
+        "used to modify project membership" should {
 
-
-
+            "add user to project" ignore {
+                fail("test not implemented")
             }
 
-            "change (adding and removing) group membership for built in groups (ProjectMember, ProjectAdmin)" ignore {
+            "remove user from project" ignore {
+                fail("test not implemented")
+            }
+        }
 
+        "used to modify project admin group membership" should {
+
+            "add user to project admin group" ignore {
+                fail("test not implemented")
+            }
+
+            "remove user from project admin group" ignore {
+                fail("test not implemented")
+            }
+        }
+
+        "used to modify group membership" should {
+
+            "add user to group" ignore {
+                fail("test not implemented")
+            }
+
+            "remove user from group" ignore {
+                fail("test not implemented")
             }
         }
     }

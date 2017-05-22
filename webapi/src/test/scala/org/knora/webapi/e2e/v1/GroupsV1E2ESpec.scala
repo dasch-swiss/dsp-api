@@ -90,19 +90,19 @@ class GroupsV1E2ESpec extends E2ESpec(GroupsV1E2ESpec.config) with SessionJsonPr
 
         "used to modify group information" should {
 
-            "create a new group" in {
+            "create a new group" ignore {
                 fail("test not implemented")
             }
 
-            "update a group" in {
+            "update a group" ignore {
                 fail("test not implemented")
             }
 
-            "return a 'DuplicateValueException' if the supplied group name is not unique (inside project)" in {
+            "return a 'DuplicateValueException' if the supplied group name is not unique (inside project)" ignore {
                 fail("test not implemented")
             }
 
-            "return 'BadRequestException' if 'name' is missing" in {
+            "return 'BadRequestException' if 'name' is missing" ignore {
                 fail("test not implemented")
             }
         }
@@ -121,17 +121,6 @@ class GroupsV1E2ESpec extends E2ESpec(GroupsV1E2ESpec.config) with SessionJsonPr
                 val response: HttpResponse = singleAwaitingRequest(request)
                 println(s"response: ${response.toString}")
                 assert(response.status === StatusCodes.OK)
-            }
-        }
-
-        "used to modify members" should {
-
-            "add user to group" in {
-                fail("test not implemented")
-            }
-
-            "remove user from group" in {
-                fail("test not implemented")
             }
         }
     }

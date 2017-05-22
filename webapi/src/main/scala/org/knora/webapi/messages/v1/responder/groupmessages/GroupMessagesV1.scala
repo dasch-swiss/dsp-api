@@ -169,7 +169,7 @@ case class GroupInfoResponseV1(group_info: GroupInfoV1) extends KnoraResponseV1 
   *
   * @param members the group's members.
   */
-case class GroupMembersResponseV1(members: IRI) extends KnoraResponseV1 with GroupV1JsonProtocol {
+case class GroupMembersResponseV1(members: Seq[IRI]) extends KnoraResponseV1 with GroupV1JsonProtocol {
     def toJsValue = groupMembersResponseV1Format.write(this)
 }
 
@@ -212,10 +212,10 @@ case class GroupInfoV1(id: IRI,
 trait GroupV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with NullOptions {
 
     implicit val groupInfoV1Format: JsonFormat[GroupInfoV1] = jsonFormat6(GroupInfoV1)
-    implicit val groupsResponseV1Format: RootJsonFormat[GroupsResponseV1] = jsonFormat1(GroupsResponseV1)
-    implicit val groupInfoResponseV1Format: RootJsonFormat[GroupInfoResponseV1] = jsonFormat1(GroupInfoResponseV1)
-    implicit val groupMembersResponseV1Format: RootJsonFormat[GroupMembersResponseV1] = jsonFormat1(GroupMembersResponseV1)
-    implicit val createGroupApiRequestV1Format: RootJsonFormat[CreateGroupApiRequestV1] = jsonFormat5(CreateGroupApiRequestV1)
-    implicit val changeGroupApiRequestV1Format: RootJsonFormat[ChangeGroupApiRequestV1] = jsonFormat4(ChangeGroupApiRequestV1)
-    implicit val groupOperationResponseV1Format: RootJsonFormat[GroupOperationResponseV1] = jsonFormat1(GroupOperationResponseV1)
+    implicit val groupsResponseV1Format: RootJsonFormat[GroupsResponseV1] = jsonFormat(GroupsResponseV1, "groups")
+    implicit val groupInfoResponseV1Format: RootJsonFormat[GroupInfoResponseV1] = jsonFormat(GroupInfoResponseV1, "group_info")
+    implicit val groupMembersResponseV1Format: RootJsonFormat[GroupMembersResponseV1] = jsonFormat(GroupMembersResponseV1, "members")
+    implicit val createGroupApiRequestV1Format: RootJsonFormat[CreateGroupApiRequestV1] = jsonFormat(CreateGroupApiRequestV1, "name", "description", "belongsToProject", "status", "hasSelfJoinEnabled")
+    implicit val changeGroupApiRequestV1Format: RootJsonFormat[ChangeGroupApiRequestV1] = jsonFormat(ChangeGroupApiRequestV1, "name", "description", "status", "hasSelfJoinEnabled")
+    implicit val groupOperationResponseV1Format: RootJsonFormat[GroupOperationResponseV1] = jsonFormat(GroupOperationResponseV1, "group_info")
 }

@@ -28,6 +28,7 @@ import akka.actor.Status.Failure
 import akka.testkit.{ImplicitSender, TestActorRef}
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi._
+import org.knora.webapi.messages.v1.responder.groupmessages.{GroupMembersByIRIGetRequestV1, GroupMembersResponseV1}
 import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse}
 import org.knora.webapi.messages.v1.responder.projectmessages._
 import org.knora.webapi.messages.v1.responder.usermessages._
@@ -67,6 +68,7 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
     private val incunabulaUserEmail = incunabulaUser.userData.email.get
 
     private val imagesProjectIri = SharedAdminTestData.imagesProjectInfo.id
+    private val imagesReviewerGroupIri = SharedAdminTestData.imagesReviewerGroupInfo.id
 
     private val actorUnderTest = TestActorRef[UsersResponderV1]
     private val responderManager = system.actorOf(Props(new ResponderManagerV1 with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
@@ -458,6 +460,17 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
                 received.members should not contain normalUser.ofType(UserProfileType.SHORT).userData
             }
 
+            "return a 'ForbiddenException' if the user requesting update is not the project or system admin" in {
+
+                /* User is added to a project by a normal user */
+                actorUnderTest ! UserProjectMembershipAddRequestV1(normalUserIri, imagesProjectIri, normalUser, UUID.randomUUID())
+                expectMsg(Failure(ForbiddenException("User's project membership can only be changed by a project or system administrator")))
+
+                /* User is removed from a project by a normal user */
+                actorUnderTest ! UserProjectMembershipRemoveRequestV1(normalUserIri, imagesProjectIri, normalUser, UUID.randomUUID())
+                expectMsg(Failure(ForbiddenException("User's project membership can only be changed by a project or system administrator")))
+            }
+
         }
 
         "asked to update the user's project admin group membership" should {
@@ -499,16 +512,66 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
                 received.members should not contain normalUser.ofType(UserProfileType.SHORT).userData
             }
 
+            "return a 'ForbiddenException' if the user requesting update is not the project or system admin" in {
+
+                /* User is added to a project by a normal user */
+                actorUnderTest ! UserProjectAdminMembershipAddRequestV1(normalUserIri, imagesProjectIri, normalUser, UUID.randomUUID())
+                expectMsg(Failure(ForbiddenException("User's project admin membership can only be changed by a project or system administrator")))
+
+                /* User is removed from a project by a normal user */
+                actorUnderTest ! UserProjectAdminMembershipRemoveRequestV1(normalUserIri, imagesProjectIri, normalUser, UUID.randomUUID())
+                expectMsg(Failure(ForbiddenException("User's project admin membership can only be changed by a project or system administrator")))
+            }
+
         }
 
         "asked to update the user's group membership" should {
 
             "add user to group" in {
-                fail("test not implemented")
+                actorUnderTest ! UserGroupMembershipsGetRequestV1(normalUserIri, rootUser, UUID.randomUUID())
+                val membershipsBeforeUpdate = expectMsgType[UserGroupMembershipsGetResponseV1](timeout)
+                membershipsBeforeUpdate.groups should equal (Seq())
+
+                actorUnderTest ! UserGroupMembershipAddRequestV1(normalUserIri, imagesReviewerGroupIri, rootUser, UUID.randomUUID())
+                expectMsgType[UserOperationResponseV1](timeout)
+
+                actorUnderTest ! UserGroupMembershipsGetRequestV1(normalUserIri, rootUser, UUID.randomUUID())
+                val membershipsAfterUpdate = expectMsgType[UserGroupMembershipsGetResponseV1](timeout)
+                membershipsAfterUpdate.groups should equal (Seq(imagesReviewerGroupIri))
+
+                responderManager ! GroupMembersByIRIGetRequestV1(imagesReviewerGroupIri, rootUser)
+                val received: GroupMembersResponseV1 = expectMsgType[GroupMembersResponseV1](timeout)
+
+                received.members should contain (normalUser.ofType(UserProfileType.SHORT).userData.user_id.get)
             }
 
             "remove user from group" in {
-                fail("test not implemented")
+                actorUnderTest ! UserGroupMembershipsGetRequestV1(normalUserIri, rootUser, UUID.randomUUID())
+                val membershipsBeforeUpdate = expectMsgType[UserGroupMembershipsGetResponseV1](timeout)
+                membershipsBeforeUpdate.groups should equal (Seq(imagesReviewerGroupIri))
+
+                actorUnderTest ! UserGroupMembershipRemoveRequestV1(normalUserIri, imagesReviewerGroupIri, rootUser, UUID.randomUUID())
+                expectMsgType[UserOperationResponseV1](timeout)
+
+                actorUnderTest ! UserGroupMembershipsGetRequestV1(normalUserIri, rootUser, UUID.randomUUID())
+                val membershipsAfterUpdate = expectMsgType[UserGroupMembershipsGetResponseV1](timeout)
+                membershipsAfterUpdate.groups should equal (Seq())
+
+                responderManager ! GroupMembersByIRIGetRequestV1(imagesReviewerGroupIri, rootUser)
+                val received: GroupMembersResponseV1 = expectMsgType[GroupMembersResponseV1](timeout)
+
+                received.members should not contain normalUser.ofType(UserProfileType.SHORT).userData.user_id.get
+            }
+
+            "return a 'ForbiddenException' if the user requesting update is not the project or system admin" in {
+
+                /* User is added to a project by a normal user */
+                actorUnderTest ! UserGroupMembershipAddRequestV1(normalUserIri, imagesReviewerGroupIri, normalUser, UUID.randomUUID())
+                expectMsg(Failure(ForbiddenException("User's group membership can only be changed by a project or system administrator")))
+
+                /* User is removed from a project by a normal user */
+                actorUnderTest ! UserGroupMembershipRemoveRequestV1(normalUserIri, imagesReviewerGroupIri, normalUser, UUID.randomUUID())
+                expectMsg(Failure(ForbiddenException("User's group membership can only be changed by a project or system administrator")))
             }
 
         }

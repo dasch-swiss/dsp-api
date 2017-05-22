@@ -202,12 +202,17 @@ class ValuesResponderV1 extends ResponderV1 {
             _ = log.debug(s"createValueV1 - defaultObjectAccessPermissions: $defaultObjectAccessPermissions")
 
             // Get project info
-            projectInfo <- {
+            maybeProjectInfo <- {
                 responderManager ? ProjectInfoByIRIGetV1(
                     iri = projectIri,
                     userProfileV1 = Some(createValueRequest.userProfile)
                 )
-            }.mapTo[ProjectInfoV1]
+            }.mapTo[Option[ProjectInfoV1]]
+
+            projectInfo = maybeProjectInfo match {
+                case Some(pi) => pi
+                case None => throw NotFoundException(s"Project '$projectIri' not found.")
+            }
 
             // Everything seems OK, so create the value.
 
@@ -907,12 +912,17 @@ class ValuesResponderV1 extends ResponderV1 {
                 _ = log.debug(s"changeValueV1 - defaultObjectAccessPermissions: $defaultObjectAccessPermissions")
 
                 // Get project info
-                projectInfo <- {
+                maybeProjectInfo <- {
                     responderManager ? ProjectInfoByIRIGetV1(
                         iri = resourceFullResponse.resinfo.get.project_id,
                         userProfileV1 = Some(changeValueRequest.userProfile)
                     )
-                }.mapTo[ProjectInfoV1]
+                }.mapTo[Option[ProjectInfoV1]]
+
+                projectInfo = maybeProjectInfo match {
+                    case Some(pi) => pi
+                    case None => throw NotFoundException(s"Project '${resourceFullResponse.resinfo.get.project_id}' not found.")
+                }
 
                 // The rest of the preparation for the update depends on whether we're changing a link or an ordinary value.
                 apiResponse <- (changeValueRequest.value, currentValueQueryResult) match {
@@ -1010,13 +1020,17 @@ class ValuesResponderV1 extends ResponderV1 {
                 newValueIri = knoraIdUtil.makeRandomValueIri(findResourceWithValueResult.resourceIri)
 
                 // Get project info
-                projectInfo <- {
+                maybeProjectInfo <- {
                     responderManager ? ProjectInfoByIRIGetV1(
                         findResourceWithValueResult.projectIri,
                         None
                     )
-                }.mapTo[ProjectInfoV1]
+                }.mapTo[Option[ProjectInfoV1]]
 
+                projectInfo = maybeProjectInfo match {
+                    case Some(pi) => pi
+                    case None => throw NotFoundException(s"Project '${findResourceWithValueResult.projectIri}' not found.")
+                }
 
                 // Generate a SPARQL update.
                 sparqlUpdate = queries.sparql.v1.txt.changeComment(
@@ -1109,12 +1123,17 @@ class ValuesResponderV1 extends ResponderV1 {
 
                     for {
                     // Get project info
-                        projectInfo <- {
+                        maybeProjectInfo <- {
                             responderManager ? ProjectInfoByIRIGetV1(
                                 findResourceWithValueResult.projectIri,
                                 None
                             )
-                        }.mapTo[ProjectInfoV1]
+                        }.mapTo[Option[ProjectInfoV1]]
+
+                        projectInfo = maybeProjectInfo match {
+                            case Some(pi) => pi
+                            case None => throw NotFoundException(s"Project '${findResourceWithValueResult.projectIri}' not found.")
+                        }
 
                         sparqlTemplateLinkUpdate <- decrementLinkValue(
                             sourceResourceIri = findResourceWithValueResult.resourceIri,
@@ -1162,12 +1181,17 @@ class ValuesResponderV1 extends ResponderV1 {
                         linkUpdates <- linkUpdatesFuture
 
                         // Get project info
-                        projectInfo <- {
+                        maybeProjectInfo <- {
                             responderManager ? ProjectInfoByIRIGetV1(
                                 findResourceWithValueResult.projectIri,
                                 None
                             )
-                        }.mapTo[ProjectInfoV1]
+                        }.mapTo[Option[ProjectInfoV1]]
+
+                        projectInfo = maybeProjectInfo match {
+                            case Some(pi) => pi
+                            case None => throw NotFoundException(s"Project '${findResourceWithValueResult.projectIri}' not found.")
+                        }
 
                         sparqlUpdate = queries.sparql.v1.txt.deleteValue(
                             dataNamedGraph = projectInfo.dataNamedGraph,
@@ -2149,12 +2173,17 @@ class ValuesResponderV1 extends ResponderV1 {
             )
 
             // Get project info
-            projectInfo <- {
+            maybeProjectInfo <- {
                 responderManager ? ProjectInfoByIRIGetV1(
                     projectIri,
                     None
                 )
-            }.mapTo[ProjectInfoV1]
+            }.mapTo[Option[ProjectInfoV1]]
+
+            projectInfo = maybeProjectInfo match {
+                case Some(pi) => pi
+                case None => throw NotFoundException(s"Project '$projectIri' not found.")
+            }
 
             // Generate a SPARQL update string.
             sparqlUpdate = queries.sparql.v1.txt.changeLink(
@@ -2285,12 +2314,17 @@ class ValuesResponderV1 extends ResponderV1 {
             }
 
             // Get project info
-            projectInfo <- {
+            maybeProjectInfo <- {
                 responderManager ? ProjectInfoByIRIGetV1(
                     projectIri,
                     None
                 )
-            }.mapTo[ProjectInfoV1]
+            }.mapTo[Option[ProjectInfoV1]]
+
+            projectInfo = maybeProjectInfo match {
+                case Some(pi) => pi
+                case None => throw NotFoundException(s"Project '$projectIri' not found.")
+            }
 
             // Generate a SPARQL update.
             sparqlUpdate = queries.sparql.v1.txt.addValueVersion(

@@ -37,7 +37,7 @@ import scala.concurrent.Future
 /**
   * Returns information about Knora projects.
   */
-class GroupsResponderV1 extends ResponderV1 {
+class GroupsResponderV1 extends ResponderV1 with GroupV1JsonProtocol {
 
     // Creates IRIs for new Knora user objects.
     val knoraIdUtil = new KnoraIdUtil
@@ -218,7 +218,6 @@ class GroupsResponderV1 extends ResponderV1 {
 
     private def groupInfoByNameFromTriplestoreV1(projectIRI: IRI, groupName: String, userProfile: Option[UserProfileV1]): Future[GroupInfoResponseV1] = {
         for {
-
             _ <- Future(if (projectIRI.isEmpty || groupName.isEmpty) throw BadRequestException("Both projectIri and group name are required parameters."))
 
             sparqlQuery <- Future(queries.sparql.v1.txt.getGroupByName(
@@ -226,10 +225,10 @@ class GroupsResponderV1 extends ResponderV1 {
                 name = groupName,
                 projectIri = projectIRI
             ).toString())
-            _ = log.debug(s"groupInfoByNameGetRequest - getGroupByName: $sparqlQuery")
+            //_ = log.debug(s"groupInfoByNameGetRequest - getGroupByName: $sparqlQuery")
             groupResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
 
-            _ = log.debug(s"group response: ${groupResponse.toString}")
+            //_ = log.debug(s"group response: ${groupResponse.toString}")
 
             // check group response and get group Iri
             groupIri: IRI = if (groupResponse.results.bindings.nonEmpty) {
@@ -251,9 +250,64 @@ class GroupsResponderV1 extends ResponderV1 {
         } yield groupInfoResponse
     }
 
-    def groupMembersByIRIGetRequestV1(groupIri: IRI, userProfileV1: UserProfileV1): Future[GroupMembersResponseV1] = ???
+    def groupMembersByIRIGetRequestV1(groupIri: IRI, userProfileV1: UserProfileV1): Future[GroupMembersResponseV1] = {
 
-    def groupMembersByNameRequestV1(projectIri: IRI, groupName: String, userProfileV1: UserProfileV1) = ???
+        //log.debug("groupMembersByIRIGetRequestV1 - groupIri: {}", groupIri)
+
+        for {
+            groupExists: Boolean <- groupByIriExists(groupIri)
+
+            _ = if (!groupExists) throw NotFoundException(s"Group '$groupIri' not found.")
+
+            sparqlQueryString <- Future(queries.sparql.v1.txt.getGroupMembersByIri(
+                triplestore = settings.triplestoreType,
+                groupIri = groupIri
+            ).toString())
+            //_ = log.debug(s"groupMembersByIRIGetRequestV1 - query: $sparqlQueryString")
+
+            groupMembersResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResponse]
+            //_ = log.debug(s"groupMembersByIRIGetRequestV1 - result: {}", MessageUtil.toSource(groupMembersResponse))
+
+            // get project member Iri from results rows
+            groupMemberIris: Seq[IRI] = if (groupMembersResponse.results.bindings.nonEmpty) {
+                groupMembersResponse.results.bindings.map(_.rowMap("s"))
+            } else {
+                Seq.empty[IRI]
+            }
+            //_ = log.debug(s"groupMembersByIRIGetRequestV1 - groupMemberIris: $groupMemberIris")
+
+        } yield GroupMembersResponseV1(members = groupMemberIris)
+    }
+
+    def groupMembersByNameRequestV1(projectIri: IRI, groupName: String, userProfileV1: UserProfileV1): Future[GroupMembersResponseV1] = {
+
+        //log.debug("groupMembersByNameRequestV1 - projectIri: {}, shortname: {}", projectIri, groupName)
+
+        for {
+            groupExists: Boolean <- groupByNameExists(projectIri, groupName)
+
+            _ = if (!groupExists) throw NotFoundException(s"Group '$groupName' not found.")
+
+            sparqlQueryString <- Future(queries.sparql.v1.txt.getGroupMembersByName(
+                triplestore = settings.triplestoreType,
+                projectIri = projectIri,
+                name = groupName).toString())
+            //_ = log.debug(s"groupMembersByNameRequestV1 - query: $sparqlQueryString")
+
+            groupMembersResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResponse]
+            //_ = log.debug(s"projectMembersByShortnameGetRequestV1 - result: ${MessageUtil.toSource(projectMembersResponse)}")
+
+
+            // get project member Iri from results rows
+            groupMemberIris: Seq[IRI] = if (groupMembersResponse.results.bindings.nonEmpty) {
+                groupMembersResponse.results.bindings.map(_.rowMap("s"))
+            } else {
+                Seq.empty[IRI]
+            }
+            //_ = log.debug(s"groupMembersByNameRequestV1 - groupMemberIris: $groupMemberIris")
+
+        } yield GroupMembersResponseV1(members = groupMemberIris)
+    }
 
     private def createGroupV1(createRequest: CreateGroupApiRequestV1, userProfile: UserProfileV1, apiRequestID: UUID): Future[GroupOperationResponseV1] = {
 
@@ -268,7 +322,7 @@ class GroupsResponderV1 extends ResponderV1 {
                 name = createRequest.name,
                 projectIri = createRequest.belongsToProject
             ).toString()
-            _ = log.debug(s"createGroupV1 - check duplicate name: $sparqlQueryString")
+            //_ = log.debug(s"createGroupV1 - check duplicate name: $sparqlQueryString")
             groupQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResponse]
 
             //_ = log.debug(MessageUtil.toSource(userDataQueryResponse))
@@ -292,7 +346,7 @@ class GroupsResponderV1 extends ResponderV1 {
                 status = createRequest.status,
                 hasSelfJoinEnabled = createRequest.hasSelfJoinEnabled
             ).toString
-            _ = log.debug(s"createGroupV1 - createNewGroup: $createNewGroupSparqlString")
+            //_ = log.debug(s"createGroupV1 - createNewGroup: $createNewGroupSparqlString")
             createGroupResponse <- (storeManager ? SparqlUpdateRequest(createNewGroupSparqlString)).mapTo[SparqlUpdateResponse]
 
             /* Verify that the group was created */
@@ -358,7 +412,7 @@ class GroupsResponderV1 extends ResponderV1 {
                 acc + (row.rowMap("p") -> row.rowMap("o"))
         }
 
-        log.debug(s"group properties: ${groupProperties.toString}")
+        //log.debug(s"group properties: ${groupProperties.toString}")
 
         GroupInfoV1(
             id = groupIri,
@@ -367,6 +421,41 @@ class GroupsResponderV1 extends ResponderV1 {
             belongsToProject = groupProperties.getOrElse(OntologyConstants.KnoraBase.BelongsToProject, throw InconsistentTriplestoreDataException(s"Group $groupIri has no project attached")),
             status = groupProperties(OntologyConstants.KnoraBase.Status).toBoolean,
             hasSelfJoinEnabled = groupProperties(OntologyConstants.KnoraBase.HasSelfJoinEnabled).toBoolean)
+    }
+
+    /**
+      * Helper method for checking if a group identified by IRI exists.
+      *
+      * @param groupIri the IRI of the group.
+      * @return a [[Boolean]].
+      */
+    def groupByIriExists(groupIri: IRI): Future[Boolean] = {
+        for {
+            askString <- Future(queries.sparql.v1.txt.checkGroupExistsByIri(groupIri = groupIri).toString)
+            //_ = log.debug("groupExists - query: {}", askString)
+
+            checkUserExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
+            result = checkUserExistsResponse.result
+
+        } yield result
+    }
+
+    /**
+      * Helper method for checking if a group identified by project IRI / name exists.
+      *
+      * @param projectIri the IRI of the project.
+      * @param name the name of the group.
+      * @return a [[Boolean]].
+      */
+    def groupByNameExists(projectIri: IRI, name: String): Future[Boolean] = {
+        for {
+            askString <- Future(queries.sparql.v1.txt.checkGroupExistsByName(projectIri = projectIri, name = name).toString)
+            //_ = log.debug("groupExists - query: {}", askString)
+
+            checkUserExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
+            result = checkUserExistsResponse.result
+
+        } yield result
     }
 
 

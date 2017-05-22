@@ -218,16 +218,5 @@ class ProjectsV1E2ESpec extends E2ESpec(ProjectsV1E2ESpec.config) with SessionJs
                 assert(response.status === StatusCodes.OK)
             }
         }
-
-        "used to modify members" should {
-
-            "add user to project" in {
-                fail("test not implemented")
-            }
-
-            "remove user from project" in {
-                fail("test not implemented")
-            }
-        }
     }
 }
