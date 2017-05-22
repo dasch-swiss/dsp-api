@@ -96,7 +96,7 @@ object DateUtilV1 {
         val daysInMonth = Calendar.DAY_OF_MONTH // will be used to determine the number of days in the given month
         // val monthsInYear = Calendar.MONTH // will be used to determine the number of months in the given year (generic for other calendars)
 
-        val dateSegments = dateString.split(InputValidation.precision_separator)
+        val dateSegments = dateString.split(InputValidation.PrecisionSeparator)
 
         // Determine and handle precision of the given date.
         // When setting the date, set time to noon (12) as JDC would contain a fraction otherwise:
@@ -253,7 +253,7 @@ object DateUtilV1 {
         val datestring = InputValidation.toDate(dateStr, () => throw new BadRequestException(s"Invalid date format: $dateStr"))
 
         // parse date: Calendar:YYYY-MM-DD[:YYYY-MM-DD]
-        val parsedDate = datestring.split(InputValidation.calendar_separator)
+        val parsedDate = datestring.split(InputValidation.CalendarSeparator)
         val calendar = KnoraCalendarV1.lookup(parsedDate(0))
 
         if (parsedDate.length > 2) {

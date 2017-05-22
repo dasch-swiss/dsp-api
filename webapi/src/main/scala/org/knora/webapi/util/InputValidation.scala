@@ -34,6 +34,8 @@ import org.knora.webapi.messages.v1.responder.standoffmessages.StandoffDataTypeC
 import org.knora.webapi.twirl.StandoffTagV1
 import spray.json.JsonParser
 
+import scala.util.matching.Regex
+
 
 /**
   * Do save String to expected value type conversions (to be inserted in the SPARQL template).
@@ -41,13 +43,106 @@ import spray.json.JsonParser
   */
 object InputValidation {
 
-    val calendar_separator = ":"
-    val precision_separator = "-"
-    val dateTimeFormat = "yyyy-MM-dd'T'HH:mm:ss"
+    /**
+      * Separates the calendar name from the rest of a Knora date.
+      */
+    val CalendarSeparator: String = ":"
 
+    /**
+      * Separates year, month, and day in a Knora date.
+      */
+    val PrecisionSeparator: String = "-"
+
+    // The expected format of a Knora date.
+    // Calendar:YYYY[-MM[-DD]][:YYYY[-MM[-DD]]]
+    private val KnoraDateRegex: Regex = ("""^(GREGORIAN|JULIAN)""" +
+        CalendarSeparator + // calendar name
+        """\d{1,4}(""" + // year
+        PrecisionSeparator +
+        """\d{1,2}(""" + // month
+        PrecisionSeparator +
+        """\d{1,2})?)?(""" + // day
+        CalendarSeparator + // separator if a period is given
+        """\d{1,4}(""" + // year 2
+        PrecisionSeparator +
+        """\d{1,2}(""" + // month 2
+        PrecisionSeparator +
+        """\d{1,2})?)?)?$""").r // day 2
+
+    // The expected format of a datetime.
+    private val dateTimeFormat = "yyyy-MM-dd'T'HH:mm:ss"
+
+    // Characters that are escaped in strings that will be used in SPARQL.
+    private val SparqlEscapeInput = Array(
+        "\\",
+        "\"",
+        "'",
+        "\t",
+        "\n"
+    )
+
+    // Escaped characters as they are used in SPARQL.
+    private val SparqlEscapeOutput = Array(
+        "\\\\",
+        "\\\"",
+        "\\'",
+        "\\t",
+        "\\n"
+    )
+
+    // A regex for matching hexadecimal color codes.
+    // http://stackoverflow.com/questions/1636350/how-to-identify-a-given-string-is-hex-color-format
+    private val ColorRegex = "^#(?:[0-9a-fA-F]{3}){1,2}$".r
+
+    // A regex sub-pattern for ontology prefix labels and local entity names. According to
+    // <https://www.w3.org/TR/turtle/#prefixed-name>, a prefix label in Turtle must be a valid XML NCName
+    // <https://www.w3.org/TR/1999/REC-xml-names-19990114/#NT-NCName>. Knora also requires a local entity name to
+    // be an XML NCName.
+    private val NCNamePattern: String =
+    """[\p{L}_][\p{L}0-9_.-]*"""
+
+    // A regex for matching a string containing only an ontology prefix label or a local entity name.
+    private val NCNameRegex = ("^" + NCNamePattern + "$").r
+
+    // A regex for project-specific internal ontologies.
+    private val ProjectSpecificInternalOntologyRegex: Regex = (
+        "^" + OntologyConstants.KnoraInternal.InternalOntologyStart +
+            "(" + NCNamePattern + ")$"
+        ).r
+
+    // A regex for entity IRIs in project-specific internal ontologies.
+    private val ProjectSpecificInternalOntologyEntityRegex: Regex = (
+        "^" + OntologyConstants.KnoraInternal.InternalOntologyStart +
+            "(" + NCNamePattern + ")#(" + NCNamePattern + ")$"
+        ).r
+
+    // A regex for XML import namespaces.
+    private val ProjectSpecificXmlImportNamespaceRegex: Regex = (
+        "^" + OntologyConstants.KnoraXmlImportV1.ProjectSpecificXmlImportNamespace.XmlImportNamespaceStart +
+            "(" + NCNamePattern + ")" +
+            OntologyConstants.KnoraXmlImportV1.ProjectSpecificXmlImportNamespace.XmlImportNamespaceEnd + "$"
+        ).r
+
+    // In XML import data, a property from another ontology is referred to as prefixLabel__localName. This regex parses
+    // that pattern.
+    private val PropertyFromOtherOntologyInXmlImportRegex: Regex = (
+        "^(" + NCNamePattern + ")__(" + NCNamePattern + ")$"
+        ).r
+
+    // Valid URL schemes.
     private val schemes = Array("http", "https")
+
+    // A validator for URLs.
     private val urlValidator = new UrlValidator(schemes, UrlValidator.ALLOW_LOCAL_URLS) // local urls are url encoded Knora Iris as part of the whole URL
 
+    /**
+      * Checks that a string represents a valid integer.
+      *
+      * @param s        the string to be checked.
+      * @param errorFun a function that throws an exception. It will be called if the string does not represent a
+      *                 valid integer.
+      * @return the integer value of the string.
+      */
     def toInt(s: String, errorFun: () => Nothing): Int = {
         try {
             s.toInt
@@ -56,15 +151,31 @@ object InputValidation {
         }
     }
 
+    /**
+      * Checks that a string represents a valid decimal number.
+      *
+      * @param s        the string to be checked.
+      * @param errorFun a function that throws an exception. It will be called if the string does not represent a
+      *                 valid decimal number.
+      * @return the decimal value of the string.
+      */
     def toBigDecimal(s: String, errorFun: () => Nothing): BigDecimal = {
         try {
             BigDecimal(s)
         } catch {
-            case e: Exception => errorFun() // value could not be converted to an Float
+            case e: Exception => errorFun() // value could not be converted to a decimal
         }
     }
 
-    def toDateTime(s: String, errorFun: () => Nothing) = {
+    /**
+      * Checks that a string represents a valid datetime.
+      *
+      * @param s        the string to be checked.
+      * @param errorFun a function that throws an exception. It will be called if the string does not represent
+      *                 a valid datetime.
+      * @return the same string.
+      */
+    def toDateTime(s: String, errorFun: () => Nothing): String = {
         // check if a string corresponds to the expected format `dateTimeFormat`
 
         try {
@@ -75,6 +186,14 @@ object InputValidation {
         }
     }
 
+    /**
+      * Checks that a string represents a valid IRI.
+      *
+      * @param s        the string to be checked.
+      * @param errorFun a function that throws an exception. It will be called if the string does not represent a valid
+      *                 IRI.
+      * @return the same string.
+      */
     def toIri(s: String, errorFun: () => Nothing): IRI = {
         val urlEncodedStr = encodeAllowEscapes(s)
 
@@ -86,52 +205,44 @@ object InputValidation {
     }
 
     /**
-      *
       * Makes a string safe to be entered in the triplestore by escaping special chars.
       *
-      * If the param `revert` is set to `true`, this operation is reverted.
+      * If the param `revert` is set to `true`, the string is unescaped.
       *
-      * @param s        the string to be entered in the triplestore.
-      * @param errorFun the error
+      * @param s        a string.
+      * @param errorFun a function that throws an exception. It will be called if the string is empty or contains
+      *                 a carriage return (`\r`).
       * @param revert   if set to `true`, the escaping is reverted. This is useful when a string is read back from the triplestore.
-      * @return a [[String]].
+      * @return the same string, escaped or unescaped as requested.
       */
     def toSparqlEncodedString(s: String, errorFun: () => Nothing, revert: Boolean = false): String = {
         if (s.isEmpty || s.contains("\r")) errorFun()
 
         // http://www.morelab.deusto.es/code_injection/
 
-        val input = Array(
-            "\\",
-            "\"",
-            "'",
-            "\t",
-            "\n"
-        )
-
-        val output = Array(
-            "\\\\",
-            "\\\"",
-            "\\'",
-            "\\t",
-            "\\n"
-        )
-
         if (!revert) {
             StringUtils.replaceEach(
                 s,
-                input,
-                output
+                SparqlEscapeInput,
+                SparqlEscapeOutput
             )
         } else {
             StringUtils.replaceEach(
                 s,
-                output,
-                input
+                SparqlEscapeOutput,
+                SparqlEscapeInput
             )
         }
     }
 
+    /**
+      * Checks that a geometry string contains valid JSON.
+      *
+      * @param s        a geometry string.
+      * @param errorFun a function that throws an exception. It will be called if the string does not contain valid
+      *                 JSON.
+      * @return the same string.
+      */
     def toGeometryString(s: String, errorFun: () => Nothing): String = {
         // TODO: For now, we just make sure that the string is valid JSON. We should stop JSON in the triplestore, and represent geometry in RDF instead (issue 169).
 
@@ -143,45 +254,50 @@ object InputValidation {
         }
     }
 
+    /**
+      * Checks that a hexadecimal color code string is valid.
+      *
+      * @param s        a string containing a hexadecimal color code.
+      * @param errorFun a function that throws an exception. It will be called if the string does not contain a valid
+      *                 hexadecimal color code.
+      * @return the same string.
+      */
     def toColor(s: String, errorFun: () => Nothing): String = {
-
-        val pattern = "^#(?:[0-9a-fA-F]{3}){1,2}$".r // http://stackoverflow.com/questions/1636350/how-to-identify-a-given-string-is-hex-color-format
-
-        pattern.findFirstIn(s) match {
+        ColorRegex.findFirstIn(s) match {
             case Some(datestr) => datestr
             case None => errorFun() // not a valid color hex value string
         }
     }
 
+    /**
+      * Checks that the format of a Knora date string is valid.
+      *
+      * @param s        a Knora date string.
+      * @param errorFun a function that throws an exception. It will be called if the date's format is invalid.
+      * @return the same string.
+      */
     def toDate(s: String, errorFun: () => Nothing): String = {
         // TODO: how to deal with dates BC -> ERA
 
         // TODO: import calendars instead of hardcoding them
 
-        // Calendar:YYYY[-MM[-DD]][:YYYY[-MM[-DD]]]
-        val pattern = "^(GREGORIAN|JULIAN)" +
-            calendar_separator + // calendar name
-            "\\d{1,4}(" + // year
-            precision_separator +
-            "\\d{1,2}(" + // month
-            precision_separator +
-            "\\d{1,2})?)?(" + // day
-            calendar_separator + // separator if a period is given
-            "\\d{1,4}(" + // year 2
-            precision_separator +
-            "\\d{1,2}(" + // month 2
-            precision_separator +
-            "\\d{1,2})?)?)?$" // day 2
-
         // if the pattern doesn't match (=> None), the date string is formally invalid
         // Please note that this is a mere formal validation,
         // the actual validity check is done in `DateUtilV1.dateString2DateRange`
-        pattern.r.findFirstIn(s) match {
+        KnoraDateRegex.findFirstIn(s) match {
             case Some(value) => value
             case None => errorFun() // calling this function throws an error
         }
     }
 
+    /**
+      * Checks that a string contains a valid boolean value.
+      *
+      * @param s        a string containing a boolean value.
+      * @param errorFun a function that throws an exception. It will be called if the string does not contain
+      *                 a boolean value.
+      * @return the boolean value of the string.
+      */
     def toBoolean(s: String, errorFun: () => Nothing): Boolean = {
         try {
             s.toBoolean
@@ -269,9 +385,9 @@ object InputValidation {
     }
 
     /**
-      * Creates an empty file in the default temporary-file directory specified in the 'settings'.
+      * Creates an empty file in the default temporary-file directory specified in Knora's application settings.
       *
-      * @param settings
+      * @param settings Knora's application settings.
       * @return the location where the file has been written to.
       */
     def createTempFile(settings: SettingsImpl): File = {
@@ -286,7 +402,7 @@ object InputValidation {
         val file: File = File.createTempFile("tmp_", ".bin", new File(settings.tmpDataDir))
 
         if (!file.canWrite)
-            throw FileWriteException(s"File ${file} cannot be written.")
+            throw FileWriteException(s"File $file cannot be written.")
         file
     }
 
@@ -300,5 +416,160 @@ object InputValidation {
         }
 
         Files.deleteIfExists(path)
+    }
+
+    /**
+      * Checks that a string is valid as a project-specific ontology prefix label or entity local name, i.e. that it is
+      * a valid XML NCName and does not start with `knora`.
+      *
+      * @param ncName   the string to be checked.
+      * @param errorFun a function that throws an exception. It will be called if the string is invalid.
+      * @return the same string.
+      */
+    def toProjectSpecificNCName(ncName: String, errorFun: () => Nothing): String = {
+        if (ncName.startsWith("knora")) {
+            errorFun()
+        } else {
+            NCNameRegex.findFirstIn(ncName) match {
+                case Some(value) => value
+                case None => errorFun()
+            }
+
+        }
+    }
+
+    /**
+      * A container for an XML import namespace and its prefix label.
+      *
+      * @param namespace   the namespace.
+      * @param prefixLabel the prefix label.
+      */
+    case class XmlImportNamespaceInfoV1(namespace: IRI, prefixLabel: String)
+
+    /**
+      * Converts the IRI of a project-specific internal ontology (used in the triplestore) to an XML prefix label and
+      * namespace for use in data import.
+      *
+      * @param internalOntologyIri the IRI of the project-specific internal ontology. Any trailing # character will be
+      *                            stripped before the conversion.
+      * @param errorFun            a function that throws an exception. It will be called if the form of the IRI is not
+      *                            valid for an internal ontology IRI.
+      * @return the corresponding XML prefix label and import namespace.
+      */
+    def internalOntologyIriToXmlNamespaceInfoV1(internalOntologyIri: IRI, errorFun: () => Nothing): XmlImportNamespaceInfoV1 = {
+        val prefixLabel = getOntologyPrefixLabelFromInternalOntologyIri(internalOntologyIri, () => errorFun())
+        val namespace = OntologyConstants.KnoraXmlImportV1.ProjectSpecificXmlImportNamespace.XmlImportNamespaceStart +
+            prefixLabel +
+            OntologyConstants.KnoraXmlImportV1.ProjectSpecificXmlImportNamespace.XmlImportNamespaceEnd
+        XmlImportNamespaceInfoV1(namespace = namespace, prefixLabel = prefixLabel)
+    }
+
+    /**
+      * Converts an XML namespace (used in XML data import) to the IRI of a project-specific internal ontology (used
+      * in the triplestore). The resulting IRI will not end in a # character.
+      *
+      * @param namespace the XML namespace.
+      * @param errorFun  a function that throws an exception. It will be called if the form of the string is not
+      *                  valid for a Knora XML import namespace.
+      * @return the corresponding project-specific internal ontology IRI.
+      */
+    def xmlImportNamespaceToInternalOntologyIriV1(namespace: String, errorFun: () => Nothing): IRI = {
+        namespace match {
+            case ProjectSpecificXmlImportNamespaceRegex(prefixLabel) =>
+                OntologyConstants.KnoraInternal.InternalOntologyStart + prefixLabel
+
+            case _ => errorFun()
+        }
+    }
+
+    /**
+      * Converts a XML element name in a particular namespace (used in XML data import) to the IRI of a
+      * project-specific internal ontology entity (used in the triplestore).
+      *
+      * @param namespace    the XML namespace.
+      * @param elementLabel the XML element label.
+      * @param errorFun     a function that throws an exception. It will be called if the form of the namespace is not
+      *                     valid for a Knora XML import namespace.
+      * @return the corresponding project-specific internal ontology entity IRI.
+      */
+    def xmlImportElementNameToInternalOntologyIriV1(namespace: String, elementLabel: String, errorFun: () => Nothing): IRI = {
+        val ontologyIri = xmlImportNamespaceToInternalOntologyIriV1(namespace, errorFun)
+        ontologyIri + "#" + elementLabel
+    }
+
+    /**
+      * Given the IRI of an internal ontology entity, returns the ontology prefix label.
+      *
+      * @param internalEntityIri the ontology entity IRI.
+      * @param errorFun          a function that throws an exception. It will be called if the form of the string is not
+      *                          valid for an internal ontology entity IRI.
+      * @return the ontology prefix label specified in the entity IRI.
+      */
+    def getOntologyPrefixLabelFromInternalEntityIri(internalEntityIri: IRI, errorFun: () => Nothing): String = {
+        internalEntityIri match {
+            case ProjectSpecificInternalOntologyEntityRegex(prefixLabel, _) => prefixLabel
+            case _ => errorFun()
+        }
+    }
+
+    /**
+      * Extracts the prefix label from the IRI of a project-specific internal ontology.
+      *
+      * @param internalOntologyIri the IRI of the project-specific internal ontology. Any trailing # character will be
+      *                            stripped before the conversion.
+      * @param errorFun            a function that throws an exception. It will be called if the form of the IRI is not
+      *                            valid for an internal ontology IRI.
+      * @return the corresponding prefix label.
+      */
+    def getOntologyPrefixLabelFromInternalOntologyIri(internalOntologyIri: IRI, errorFun: () => Nothing): String = {
+        internalOntologyIri.stripSuffix("#") match {
+            case ProjectSpecificInternalOntologyRegex(prefixLabel) => prefixLabel
+            case _ => errorFun()
+        }
+    }
+
+    /**
+      * Given the IRI of an internal ontology entity, returns the internal ontology IRI.
+      *
+      * @param internalEntityIri the ontology entity IRI.
+      * @param errorFun          a function that throws an exception. It will be called if the form of the string is not
+      *                          valid for an internal ontology entity IRI.
+      * @return the ontology IRI portion of the entity IRI.
+      */
+    def getInternalOntologyIriFromInternalEntityIri(internalEntityIri: IRI, errorFun: () => Nothing): IRI = {
+        internalEntityIri match {
+            case ProjectSpecificInternalOntologyEntityRegex(prefixLabel, _) => OntologyConstants.KnoraInternal.InternalOntologyStart + prefixLabel
+            case _ => errorFun()
+        }
+    }
+
+    /**
+      * Given the IRI of an internal ontology entity, returns the local name of the entity.
+      *
+      * @param internalEntityIri the ontology entity IRI.
+      * @param errorFun          a function that throws an exception. It will be called if the form of the string is not
+      *                          valid for an internal ontology entity IRI.
+      * @return the local name specified in the entity IRI.
+      */
+    def getEntityNameFromInternalEntityIri(internalEntityIri: IRI, errorFun: () => Nothing): String = {
+        internalEntityIri match {
+            case ProjectSpecificInternalOntologyEntityRegex(_, entityName) => entityName
+            case _ => errorFun()
+        }
+    }
+
+    /**
+      * In XML import data, a property from another ontology is referred to as `prefixLabel__localName`. This function
+      * attempts to parse a property name in that format.
+      *
+      * @param prefixLabelAndLocalName a string that may refer to a property in the format `prefixLabel__localName`.
+      * @return if successful, a `Some` containing the entity's internal IRI, otherwise `None`.
+      */
+    def toPropertyIriFromOtherOntologyInXmlImport(prefixLabelAndLocalName: String): Option[IRI] = {
+        prefixLabelAndLocalName match {
+            case PropertyFromOtherOntologyInXmlImportRegex(prefixLabel, localName) =>
+                Some(s"${OntologyConstants.KnoraInternal.InternalOntologyStart}$prefixLabel#$localName")
+            case _ => None
+        }
     }
 }

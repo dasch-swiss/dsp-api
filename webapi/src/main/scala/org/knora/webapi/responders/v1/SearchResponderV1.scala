@@ -357,7 +357,7 @@ class SearchResponderV1 extends Responder {
                                 val datestring = InputValidation.toDate(searchval, () => throw BadRequestException(s"Invalid date format: $searchval"))
 
                                 // parse date: Calendar:YYYY-MM-DD[:YYYY-MM-DD]
-                                val parsedDate = datestring.split(InputValidation.calendar_separator)
+                                val parsedDate = datestring.split(InputValidation.CalendarSeparator)
                                 val calendar = KnoraCalendarV1.lookup(parsedDate(0))
 
                                 // val daysInMonth = Calendar.DAY_OF_MONTH // will be used to determine the number of days in the given month
