@@ -620,7 +620,7 @@ case class ReadNamedGraphsV2(namedGraphs: Set[IRI], settings: SettingsImpl) exte
     def toJSONLD: String = {
 
         val context = new util.HashMap[String, String]()
-        context.put(OntologyConstants.KnoraApiV2WithValueObject.KnoraApiPathSegment, OntologyConstants.KnoraApiV2WithValueObject.KnoraApiPrefixExpansion)
+        context.put(OntologyConstants.KnoraApi.KnoraApiOntologyLabel, OntologyConstants.KnoraApiV2WithValueObject.KnoraApiV2PrefixExpansion)
 
         val json: util.HashMap[String, Object] = new util.HashMap[String, Object]()
 
@@ -698,7 +698,7 @@ case class ReadEntityDefinitionsV2(ontologies: Map[IRI, Set[IRI]] = Map.empty[IR
     def toJSONLD = {
 
         val context = new util.HashMap[String, String]()
-        context.put(OntologyConstants.KnoraApiV2WithValueObject.KnoraApiPathSegment, OntologyConstants.KnoraApiV2WithValueObject.KnoraApiPrefixExpansion)
+        context.put(OntologyConstants.KnoraApi.KnoraApiOntologyLabel, OntologyConstants.KnoraApiV2WithValueObject.KnoraApiV2PrefixExpansion)
         context.put("rdfs", "http://www.w3.org/2000/01/rdf-schema#")
 
         val json: util.HashMap[String, Object] = new util.HashMap[String, Object]()
@@ -832,7 +832,7 @@ case class ReadResourcesSequenceV2(numberOfResources: Int, resources: Seq[ReadRe
 
         val context = new util.HashMap[String, String]()
         context.put("@vocab", "http://schema.org/")
-        context.put(OntologyConstants.KnoraApiV2WithValueObject.KnoraApiPathSegment, OntologyConstants.KnoraApiV2WithValueObject.KnoraApiPrefixExpansion)
+        context.put(OntologyConstants.KnoraApi.KnoraApiOntologyLabel, OntologyConstants.KnoraApiV2WithValueObject.KnoraApiV2PrefixExpansion)
         context.put("rdfs", "http://www.w3.org/2000/01/rdf-schema#")
 
         val json: util.HashMap[String, Object] = new util.HashMap[String, Object]()
