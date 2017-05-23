@@ -1177,46 +1177,6 @@ class ResourcesResponderV1 extends ResponderV1 {
 
 
     /**
-      * Implements a pre-update check to ensure that an [[UpdateValueV1]] (representing a link or an ordinary value)
-      * has the correct type for the `knora-base:objectClassConstraint` of the property that is supposed to point to it.
-      *
-      * @param propertyIri                   the IRI of the property.
-      * @param propertyObjectClassConstraint the IRI of the `knora-base:objectClassConstraint` of the property.
-      * @param updateValueV1                 the value to be updated.
-      * @param userProfile                   the profile of the user making the request.
-      * @return an empty [[Future]] on success, or a failed [[Future]] if the value has the wrong type.
-      */
-    def checkPropertyObjectClassConstraint(propertyIri: IRI, propertyObjectClassConstraint: IRI, updateValueV1: UpdateValueV1, userProfile: UserProfileV1): Future[Unit] = {
-        for {
-            result <- updateValueV1 match {
-                case linkUpdate: LinkUpdateV1 =>
-                    // We're creating a link. Check the OWL class of the target resource.
-                    for {
-                        checkTargetClassResponse <- checkResourceClass(
-                            resourceIri = linkUpdate.targetResourceIri,
-                            owlClass = propertyObjectClassConstraint,
-                            userProfile = userProfile
-                        ).mapTo[ResourceCheckClassResponseV1]
-
-                        _ = if (!checkTargetClassResponse.isInClass) {
-                            throw OntologyConstraintException(s"Resource ${linkUpdate.targetResourceIri} cannot be the target of property $propertyIri, because it is not a member of OWL class $propertyObjectClassConstraint")
-                        }
-                    } yield ()
-
-                case _: LinkToClientIDUpdateV1 => throw AssertionException(s"Unexpected LinkToClientIDUpdateV1 in update")
-
-                case otherValue =>
-                    // We're creating an ordinary value. Check that its type is valid for the property's knora-base:objectClassConstraint.
-                    valueUtilV1.checkValueTypeForPropertyObjectClassConstraint(
-                        propertyIri = propertyIri,
-                        propertyObjectClassConstraint = propertyObjectClassConstraint,
-                        valueType = otherValue.valueTypeIri,
-                        responderManager = responderManager)
-            }
-        } yield result
-    }
-
-    /**
       * Create multiple resources and attach the given values to them.
       *
       * @param resourcesToCreate collection of ResourceRequests .
@@ -1289,7 +1249,6 @@ class ResourcesResponderV1 extends ResponderV1 {
                             propertyIris = propertyIris,
                             values = resourceCreateRequest.values,
                             sipiConversionRequest = resourceCreateRequest.file,
-                            linkTargetsAlreadyExist = false,
                             clientResourceIDsToResourceClasses = clientResourceIDsToResourceClasses,
                             userProfile = userProfile
                         )
@@ -1300,7 +1259,13 @@ class ResourcesResponderV1 extends ResponderV1 {
                                 val valuesWithLinkTargetIris = valuesWithComments.map {
                                     valueToCreate =>
                                         valueToCreate.updateValueV1 match {
-                                            case LinkToClientIDUpdateV1(clientIDForTargetResource) => CreateValueV1WithComment(LinkUpdateV1(clientResourceIDsToResourceIris(clientIDForTargetResource)))
+                                            case LinkToClientIDUpdateV1(clientIDForTargetResource) =>
+                                                CreateValueV1WithComment(
+                                                    LinkUpdateV1(
+                                                        targetResourceIri = clientResourceIDsToResourceIris(clientIDForTargetResource),
+                                                        targetExists = false
+                                                    )
+                                                )
                                             case _ => valueToCreate
                                         }
                                 }
@@ -1314,7 +1279,6 @@ class ResourcesResponderV1 extends ResponderV1 {
                             resourceIri = resourceIri,
                             resourceClassIri = resourceCreateRequest.resourceTypeIri,
                             resourceIndex = resourceIndex,
-                            checkObj = false,
                             values = resourceValuesWithLinkTargetIris,
                             fileValues = fileValues,
                             userProfile = userProfile,
@@ -1373,7 +1337,6 @@ class ResourcesResponderV1 extends ResponderV1 {
       *                                           Otherwise, they must be represented as [[LinkToClientIDUpdateV1]] instances, so that appropriate error messages can
       *                                           be generated for links to missing resources.
       * @param sipiConversionRequest              a file (binary representation) to be attached to the resource (GUI and non GUI-case).
-      * @param linkTargetsAlreadyExist            if `true`, link targets are expected to already exist in the triplestore.
       * @param clientResourceIDsToResourceClasses for each client resource ID, the IRI of the resource's class. Used only if `linkTargetsAlreadyExist` is false.
       * @param userProfile                        the profile of the user making the request.
       * @return a tuple (IRI, Vector[CreateValueV1WithComment]) containing the IRI of the resource and a collection of holders of [[UpdateValueV1]] and comment.
@@ -1382,7 +1345,6 @@ class ResourcesResponderV1 extends ResponderV1 {
                               propertyIris: Set[String],
                               values: Map[IRI, Seq[CreateValueV1WithComment]],
                               sipiConversionRequest: Option[SipiResponderConversionRequestV1],
-                              linkTargetsAlreadyExist: Boolean,
                               clientResourceIDsToResourceClasses: Map[String, IRI] = new ErrorHandlingMap[IRI, IRI](
                                   toWrap = Map.empty[IRI, IRI],
                                   errorTemplateFun = { key => s"Resource $key is the target of a link, but was not provided in the request" },
@@ -1411,41 +1373,47 @@ class ResourcesResponderV1 extends ResponderV1 {
 
                         acc ++ valuesWithComments.map {
                             valueV1WithComment: CreateValueV1WithComment =>
-                                if (linkTargetsAlreadyExist) {
-                                    // The targets of links are expected to be in the triplestore already, and each link
-                                    // should be represented by a LinkUpdateV1.
-                                    checkPropertyObjectClassConstraint(
-                                        propertyIri = propertyIri,
-                                        propertyObjectClassConstraint = propertyObjectClassConstraint,
-                                        updateValueV1 = valueV1WithComment.updateValueV1,
-                                        userProfile = userProfile
-                                    )
-                                } else {
-                                    // The targets of links are not expected to be in the triplestore, because they haven't been created yet.
-                                    // They should be in clientResourceIDsToResourceClasses instead, and each link should be represented
-                                    // by a LinkToClientIDUpdateV1.
-                                    valueV1WithComment.updateValueV1 match {
-                                        case LinkToClientIDUpdateV1(targetClientID) =>
-                                            val checkSubClassRequest = CheckSubClassRequestV1(
-                                                subClassIri = clientResourceIDsToResourceClasses(targetClientID),
-                                                superClassIri = propertyObjectClassConstraint
-                                            )
+                                valueV1WithComment.updateValueV1 match {
+                                    case LinkToClientIDUpdateV1(targetClientID) =>
+                                        // We're creating a link to a resource that doesn't exist yet, because it
+                                        // will be created in the same transaction. Check that it will belong to a
+                                        // suitable class.
+                                        val checkSubClassRequest = CheckSubClassRequestV1(
+                                            subClassIri = clientResourceIDsToResourceClasses(targetClientID),
+                                            superClassIri = propertyObjectClassConstraint
+                                        )
 
-                                            for {
-                                                subClassResponse <- (responderManager ? checkSubClassRequest).mapTo[CheckSubClassResponseV1]
+                                        for {
+                                            subClassResponse <- (responderManager ? checkSubClassRequest).mapTo[CheckSubClassResponseV1]
 
-                                                _ = if (!subClassResponse.isSubClass) {
-                                                    throw OntologyConstraintException(s"Resource $targetClientID cannot be the target of property $propertyIri, because it is not a member of OWL class $propertyObjectClassConstraint")
-                                                }
-                                            } yield ()
+                                            _ = if (!subClassResponse.isSubClass) {
+                                                throw OntologyConstraintException(s"Resource $targetClientID cannot be the target of property $propertyIri, because it is not a member of OWL class $propertyObjectClassConstraint")
+                                            }
+                                        } yield ()
 
-                                        case _ =>
-                                            valueUtilV1.checkValueTypeForPropertyObjectClassConstraint(
-                                                propertyIri = propertyIri,
-                                                propertyObjectClassConstraint = propertyObjectClassConstraint,
-                                                valueType = valueV1WithComment.updateValueV1.valueTypeIri,
-                                                responderManager = responderManager)
-                                    }
+                                    case linkUpdate: LinkUpdateV1 =>
+                                        // We're creating a link to an existing resource. Check that it belongs to a
+                                        // suitable class.
+                                        for {
+                                            checkTargetClassResponse <- checkResourceClass(
+                                                resourceIri = linkUpdate.targetResourceIri,
+                                                owlClass = propertyObjectClassConstraint,
+                                                userProfile = userProfile
+                                            ).mapTo[ResourceCheckClassResponseV1]
+
+                                            _ = if (!checkTargetClassResponse.isInClass) {
+                                                throw OntologyConstraintException(s"Resource ${linkUpdate.targetResourceIri} cannot be the target of property $propertyIri, because it is not a member of OWL class $propertyObjectClassConstraint")
+                                            }
+                                        } yield ()
+
+                                    case otherValue =>
+                                        // We're creating an ordinary value. Check that its type is valid for the property's
+                                        // knora-base:objectClassConstraint.
+                                        valueUtilV1.checkValueTypeForPropertyObjectClassConstraint(
+                                            propertyIri = propertyIri,
+                                            propertyObjectClassConstraint = propertyObjectClassConstraint,
+                                            valueType = otherValue.valueTypeIri,
+                                            responderManager = responderManager)
                                 }
                         }
                 }
@@ -1514,7 +1482,6 @@ class ResourcesResponderV1 extends ResponderV1 {
       * @param projectIri       Iri of the project .
       * @param resourceClassIri type of resource .
       * @param resourceIndex    Index of the resource
-      * @param checkObj         flag for checking the object class constraints
       * @param values           values to be created for resource.
       * @param fileValues       file value required by the ontology
       * @param userProfile      the profile of the user making the request.
@@ -1526,7 +1493,6 @@ class ResourcesResponderV1 extends ResponderV1 {
                                              resourceIri: IRI,
                                              resourceClassIri: IRI,
                                              resourceIndex: Int,
-                                             checkObj: Boolean,
                                              values: Map[IRI, Seq[CreateValueV1WithComment]],
                                              fileValues: Option[(IRI, Vector[CreateValueV1WithComment])],
                                              userProfile: UserProfileV1,
@@ -1538,7 +1504,6 @@ class ResourcesResponderV1 extends ResponderV1 {
                 resourceIri = resourceIri,
                 resourceClassIri = resourceClassIri,
                 resourceIndex = resourceIndex,
-                checkObj = checkObj,
                 values = values ++ fileValues,
                 userProfile = userProfile,
                 apiRequestID = apiRequestID
@@ -1653,7 +1618,6 @@ class ResourcesResponderV1 extends ResponderV1 {
                 propertyIris = propertyIris,
                 values = values,
                 sipiConversionRequest = sipiConversionRequest,
-                linkTargetsAlreadyExist = true,
                 userProfile = userProfile
             )
 
@@ -1664,7 +1628,6 @@ class ResourcesResponderV1 extends ResponderV1 {
                 resourceIri = resourceIri,
                 resourceClassIri = resourceClassIri,
                 resourceIndex = 0,
-                checkObj = true,
                 values = values,
                 fileValues = fileValues,
                 userProfile = userProfile,

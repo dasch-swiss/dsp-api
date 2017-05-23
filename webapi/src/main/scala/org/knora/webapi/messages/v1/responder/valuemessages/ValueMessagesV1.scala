@@ -291,16 +291,14 @@ case class ValueVersionHistoryGetResponseV1(valueVersions: Seq[ValueVersionV1]) 
   * successful response will be an [[CreateValueResponseV1]].
   *
   * @param resourceIndex the index of the resource
-  * @param checkObj     check the objectClassConstrain of link
-  * @param resourceIri  the IRI of the resource to which the value should be added.
-  * @param propertyIri  the IRI of the property that should receive the value.
-  * @param value        the value to be added.
-  * @param comment      an optional comment on the value.
-  * @param userProfile  the profile of the user making the request.
-  * @param apiRequestID the ID of this API request.
+  * @param resourceIri   the IRI of the resource to which the value should be added.
+  * @param propertyIri   the IRI of the property that should receive the value.
+  * @param value         the value to be added.
+  * @param comment       an optional comment on the value.
+  * @param userProfile   the profile of the user making the request.
+  * @param apiRequestID  the ID of this API request.
   */
 case class CreateValueRequestV1(resourceIndex: Int = 0,
-                                checkObj: Boolean = true,
                                 resourceIri: IRI,
                                 propertyIri: IRI,
                                 value: UpdateValueV1,
@@ -376,10 +374,8 @@ case class CreateValueV1WithComment(updateValueV1: UpdateValueV1, comment: Optio
   * @param projectIri       the project the values belong to.
   * @param resourceIri      the resource the values will be attached to.
   * @param resourceClassIri the IRI of the resource's OWL class.
-  * @param resourceIndex      the index of the resource to be created
-  * @param checkObj         the flag for checking the ObjectClassConstraint of the links
+  * @param resourceIndex    the index of the resource to be created
   * @param values           the values to be added, with optional comments.
-  *
   * @param userProfile      the user that is creating the values.
   */
 
@@ -387,9 +383,8 @@ case class GenerateSparqlToCreateMultipleValuesRequestV1(projectIri: IRI,
                                                          resourceIri: IRI,
                                                          resourceClassIri: IRI,
                                                          resourceIndex: Int,
-                                                         checkObj:Boolean,
                                                          values: Map[IRI, Seq[CreateValueV1WithComment]],
-                                                         userProfile: UserProfileV1 ,
+                                                         userProfile: UserProfileV1,
                                                          apiRequestID: UUID) extends ValuesResponderRequestV1
 
 
@@ -864,8 +859,10 @@ case class LinkValueV1(subjectIri: IRI,
   * Represents a request to update a link.
   *
   * @param targetResourceIri the IRI of the resource that the link should point to.
+  * @param targetExists      `true` if the link target already exists, `false` if it is going to be created in the
+  *                          same transaction.
   */
-case class LinkUpdateV1(targetResourceIri: IRI) extends UpdateValueV1 {
+case class LinkUpdateV1(targetResourceIri: IRI, targetExists: Boolean = true) extends UpdateValueV1 {
     def valueTypeIri = OntologyConstants.KnoraBase.LinkValue
 
     /**
@@ -905,7 +902,9 @@ case class LinkToClientIDUpdateV1(clientIDForTargetResource: String) extends Upd
     def valueTypeIri = OntologyConstants.KnoraBase.LinkValue
 
     override def isDuplicateOfOtherValue(other: ApiValueV1): Boolean = false
+
     override def toString = clientIDForTargetResource
+
     override def isRedundant(currentVersion: ApiValueV1): Boolean = false
 }
 

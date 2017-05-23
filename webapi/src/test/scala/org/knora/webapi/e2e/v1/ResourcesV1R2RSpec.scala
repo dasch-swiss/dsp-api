@@ -112,6 +112,8 @@ class ResourcesV1R2RSpec extends R2RSpec {
     private val fifthThingIri = new MutableTestIri
     private val sixthThingIri = new MutableTestIri
     private val seventhThingIri = new MutableTestIri
+    private val abelAuthorIri = new MutableTestIri
+    private val mathIntelligencerIri = new MutableTestIri
 
     // incunabula book with title "Eyn biechlin ..."
     private val incunabulaBookBiechlin = "http://data.knora.org/9935159f67"
@@ -1202,14 +1204,14 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    |        <biblio:beol__comment knoraType="richtext_value" mapping_id="$mappingIri"><text xmlns="">A very <strong>interesting</strong> article.</text></biblio:beol__comment>
                    |        <biblio:endPage knoraType="richtext_value">73</biblio:endPage>
                    |        <biblio:isPartOfJournal>
-                   |            <biblio:Journal knoraType="link_value" ref="math_intelligencer"/>
+                   |            <biblio:Journal knoraType="link_value" ref="math_intelligencer" linkType="internal"/>
                    |        </biblio:isPartOfJournal>
                    |        <biblio:journalVolume knoraType="richtext_value">27</biblio:journalVolume>
                    |        <biblio:publicationHasAuthor>
-                   |            <beol:person knoraType="link_value" ref="abel"/>
+                   |            <beol:person knoraType="link_value" linkType="internal" ref="abel"/>
                    |        </biblio:publicationHasAuthor>
                    |        <biblio:publicationHasAuthor>
-                   |            <beol:person knoraType="link_value" ref="holmes"/>
+                   |            <beol:person knoraType="link_value" linkType="internal" ref="holmes"/>
                    |        </biblio:publicationHasAuthor>
                    |        <biblio:publicationHasDate knoraType="date_value">GREGORIAN:1976</biblio:publicationHasDate>
                    |        <biblio:publicationHasTitle knoraType="richtext_value">Strings in the 16th and 17th Centuries</biblio:publicationHasTitle>
@@ -1221,8 +1223,14 @@ class ResourcesV1R2RSpec extends R2RSpec {
             val projectIri = URLEncoder.encode("http://data.knora.org/projects/DczxPs-sR6aZN91qV92ZmQ", "UTF-8")
 
             Post(s"/v1/resources/xmlimport/$projectIri", HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), xmlImport)) ~> addCredentials(BasicHttpCredentials(biblioUserEmail, password)) ~> resourcesPath ~> check {
-                assert(status == StatusCodes.OK, response.toString)
-                responseAs[String] should include("createdResources")
+                val responseStr: String = responseAs[String]
+                assert(status == StatusCodes.OK, responseStr)
+                responseStr should include("createdResources")
+
+                val responseJson: JsObject = AkkaHttpUtils.httpResponseToJson(response)
+                val createdResources: Seq[JsValue] = responseJson.fields("createdResources").asInstanceOf[JsArray].elements
+                abelAuthorIri.set(createdResources.head.asJsObject.fields("res_id").asInstanceOf[JsString].value)
+                mathIntelligencerIri.set(createdResources(2).asJsObject.fields("res_id").asInstanceOf[JsString].value)
             }
         }
 
@@ -1250,14 +1258,14 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    |        <biblio:beol__comment knoraType="richtext_value" mapping_id="$mappingIri"><text xmlns="">A very <strong>interesting</strong> article.</text></biblio:beol__comment>
                    |        <biblio:endPage knoraType="richtext_value">73</biblio:endPage>
                    |        <biblio:isPartOfJournal>
-                   |            <biblio:Journal knoraType="link_value" ref="math_intelligencer"/>
+                   |            <biblio:Journal knoraType="link_value" linkType="internal" ref="math_intelligencer"/>
                    |        </biblio:isPartOfJournal>
                    |        <biblio:journalVolume knoraType="richtext_value">27</biblio:journalVolume>
                    |        <biblio:publicationHasAuthor>
-                   |            <beol:person knoraType="link_value" ref="abel"/>
+                   |            <beol:person knoraType="link_value" linkType="internal" ref="abel"/>
                    |        </biblio:publicationHasAuthor>
                    |        <biblio:publicationHasAuthor>
-                   |            <beol:person knoraType="link_value" ref="holmes"/>
+                   |            <beol:person knoraType="link_value" linkType="internal" ref="holmes"/>
                    |        </biblio:publicationHasAuthor>
                    |        <biblio:publicationHasDate knoraType="date_value">GREGORIAN:19foo76</biblio:publicationHasDate>
                    |        <biblio:publicationHasTitle knoraType="richtext_value">Strings in the 16th and 17th Centuries</biblio:publicationHasTitle>
@@ -1270,8 +1278,42 @@ class ResourcesV1R2RSpec extends R2RSpec {
 
             Post(s"/v1/resources/xmlimport/$projectIri", HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), xmlImport)) ~> addCredentials(BasicHttpCredentials(biblioUserEmail, password)) ~> resourcesPath ~> check {
                 assert(status == StatusCodes.BadRequest, response.toString)
-                responseAs[String] should include("org.xml.sax.SAXParseException")
-                responseAs[String] should include("cvc-pattern-valid")
+                val responseStr = responseAs[String]
+                responseStr should include("org.xml.sax.SAXParseException")
+                responseStr should include("cvc-pattern-valid")
+            }
+        }
+
+        "refer to existing resources in an XML import" in {
+            val xmlImport =
+                s"""<?xml version="1.0" encoding="UTF-8"?>
+                   |<knoraXmlImport:resources xmlns="http://api.knora.org/ontology/biblio/xml-import/v1#"
+                   |    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   |    xsi:schemaLocation="http://api.knora.org/ontology/biblio/xml-import/v1# biblio.xsd"
+                   |    xmlns:biblio="http://api.knora.org/ontology/biblio/xml-import/v1#"
+                   |    xmlns:beol="http://api.knora.org/ontology/beol/xml-import/v1#"
+                   |    xmlns:knoraXmlImport="http://api.knora.org/ontology/knoraXmlImport/v1#">
+                   |    <biblio:JournalArticle id="strings_in_the_18th_century" label="Strings in the 18th Century">
+                   |        <biblio:endPage knoraType="richtext_value">76</biblio:endPage>
+                   |        <biblio:isPartOfJournal>
+                   |            <biblio:Journal knoraType="link_value" linkType="iri" ref="${mathIntelligencerIri.get}"/>
+                   |        </biblio:isPartOfJournal>
+                   |        <biblio:journalVolume knoraType="richtext_value">27</biblio:journalVolume>
+                   |        <biblio:publicationHasAuthor>
+                   |            <beol:person knoraType="link_value" linkType="iri" ref="${abelAuthorIri.get}"/>
+                   |        </biblio:publicationHasAuthor>
+                   |        <biblio:publicationHasDate knoraType="date_value">GREGORIAN:1977</biblio:publicationHasDate>
+                   |        <biblio:publicationHasTitle knoraType="richtext_value">Strings in the 18th Century</biblio:publicationHasTitle>
+                   |        <biblio:startPage knoraType="richtext_value">52</biblio:startPage>
+                   |    </biblio:JournalArticle>
+                   |</knoraXmlImport:resources>""".stripMargin
+
+            val projectIri = URLEncoder.encode("http://data.knora.org/projects/DczxPs-sR6aZN91qV92ZmQ", "UTF-8")
+
+            Post(s"/v1/resources/xmlimport/$projectIri", HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), xmlImport)) ~> addCredentials(BasicHttpCredentials(biblioUserEmail, password)) ~> resourcesPath ~> check {
+                val responseStr = responseAs[String]
+                assert(status == StatusCodes.OK, responseStr)
+                responseStr should include("createdResources")
             }
         }
 

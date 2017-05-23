@@ -102,6 +102,14 @@
             <xs:extension base="emptyType">
                 <xs:attribute name="knoraType" use="required" fixed="link_value"/>
                 <xs:attribute name="ref" use="required" type="xs:string"/>
+                <xs:attribute name="linkType" use="required">
+                    <xs:simpleType>
+                        <xs:restriction base="xs:string">
+                            <xs:enumeration value="internal"/>
+                            <xs:enumeration value="iri"/>
+                        </xs:restriction>
+                    </xs:simpleType>
+                </xs:attribute>
             </xs:extension>
         </xs:simpleContent>
     </xs:complexType>

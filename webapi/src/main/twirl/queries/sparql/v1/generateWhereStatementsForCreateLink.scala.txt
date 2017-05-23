@@ -33,7 +33,6 @@
  * @param linkUpdate a [[LinkUpdate]] object describing the link to insert.
  * @param maybeValueHasOrder an optional value for the knora-base:valueHasOrder predicate of the new link. If not
  *                           provided, the value of this predicate will be calculated using a subquery.
- * @param checkObj flag to check the object class constraint of target resource
  *
  * The SPARQL variable `?resourceClass` (the OWL class of the link source) must already be bound.
  *@
@@ -41,8 +40,7 @@
   valueIndex: Int,
   resourceIri: IRI,
   linkUpdate: SparqlTemplateLinkUpdate,
-  maybeValueHasOrder: Option[Int],
-  checkObj: Boolean)
+  maybeValueHasOrder: Option[Int])
   @index = {@resourceIndex.toString()_@valueIndex.toString()}
     # Value @index
     # Property: @linkUpdate.linkPropertyIri
@@ -52,7 +50,7 @@
     BIND(IRI("@linkUpdate.newLinkValueIri") AS ?newLinkValue@index)
     BIND(IRI("@linkUpdate.linkTargetIri") AS ?linkTarget@index)
 
-  @if(checkObj) {
+  @if(linkUpdate.linkTargetExists) {
         @* Make sure the link target is a knora-base:Resource. *@
 
         ?linkTarget@index rdf:type ?linkTargetClass@index .

@@ -349,6 +349,7 @@ class ValuesResponderV1 extends ResponderV1 {
                             insertDirectLink = true,
                             deleteDirectLink = false,
                             linkValueExists = false,
+                            linkTargetExists = true,
                             newLinkValueIri = knoraIdUtil.makeRandomValueIri(createMultipleValuesRequest.resourceIri),
                             linkTargetIri = targetIri,
                             currentReferenceCount = 0,
@@ -425,6 +426,7 @@ class ValuesResponderV1 extends ResponderV1 {
                                             insertDirectLink = true,
                                             deleteDirectLink = false,
                                             linkValueExists = false,
+                                            linkTargetExists = linkUpdateV1.targetExists,
                                             newLinkValueIri = newValueIri,
                                             linkTargetIri = linkUpdateV1.targetResourceIri,
                                             currentReferenceCount = 0,
@@ -439,8 +441,7 @@ class ValuesResponderV1 extends ResponderV1 {
                                             valueIndex = valueToCreate.valueIndex,
                                             resourceIri = createMultipleValuesRequest.resourceIri,
                                             linkUpdate = sparqlTemplateLinkUpdate,
-                                            maybeValueHasOrder = Some(valueToCreate.valueHasOrder),
-                                            checkObj = createMultipleValuesRequest.checkObj
+                                            maybeValueHasOrder = Some(valueToCreate.valueHasOrder)
                                         ).toString()
 
                                         // Generate INSERT clause statements for the link.
@@ -465,8 +466,7 @@ class ValuesResponderV1 extends ResponderV1 {
                                             newValueIri = newValueIri,
                                             valueTypeIri = updateValueV1.valueTypeIri,
                                             linkUpdates = Seq.empty[SparqlTemplateLinkUpdate], // This is empty because we have to generate SPARQL for standoff links separately.
-                                            maybeValueHasOrder = Some(valueToCreate.valueHasOrder),
-                                            checkObj = createMultipleValuesRequest.checkObj
+                                            maybeValueHasOrder = Some(valueToCreate.valueHasOrder)
                                         ).toString()
 
                                         // Generate INSERT clause statements for the value.
@@ -1955,8 +1955,7 @@ class ValuesResponderV1 extends ResponderV1 {
                 triplestore = settings.triplestoreType,
                 resourceIri = resourceIri,
                 linkUpdate = sparqlTemplateLinkUpdate,
-                maybeComment = comment,
-                checkObj = true
+                maybeComment = comment
             ).toString()
 
             /*
@@ -2026,10 +2025,9 @@ class ValuesResponderV1 extends ResponderV1 {
             // Generate a SPARQL update string.
             //resourceIndex = 0 because this method isn't used when creating multiple resources
             sparqlUpdate = queries.sparql.v1.txt.createValue(
-                resourceIndex = 0,
-                checkObj = true,
                 dataNamedGraph = dataNamedGraph,
                 triplestore = settings.triplestoreType,
+                resourceIndex = 0,
                 resourceIri = resourceIri,
                 propertyIri = propertyIri,
                 newValueIri = newValueIri,
@@ -2342,6 +2340,7 @@ class ValuesResponderV1 extends ResponderV1 {
                         insertDirectLink = insertDirectLink,
                         deleteDirectLink = false,
                         linkValueExists = true,
+                        linkTargetExists = true,
                         newLinkValueIri = newLinkValueIri,
                         linkTargetIri = targetResourceIri,
                         currentReferenceCount = currentReferenceCount,
@@ -2359,6 +2358,7 @@ class ValuesResponderV1 extends ResponderV1 {
                         insertDirectLink = true,
                         deleteDirectLink = false,
                         linkValueExists = false,
+                        linkTargetExists = true,
                         newLinkValueIri = newLinkValueIri,
                         linkTargetIri = targetResourceIri,
                         currentReferenceCount = 0,
@@ -2427,6 +2427,7 @@ class ValuesResponderV1 extends ResponderV1 {
                         insertDirectLink = false,
                         deleteDirectLink = deleteDirectLink,
                         linkValueExists = true,
+                        linkTargetExists = true,
                         newLinkValueIri = newLinkValueIri,
                         linkTargetIri = targetResourceIri,
                         currentReferenceCount = currentReferenceCount,

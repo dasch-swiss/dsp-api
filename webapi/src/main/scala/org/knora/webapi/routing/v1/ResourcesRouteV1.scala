@@ -754,8 +754,21 @@ object ResourcesRouteV1 extends Authenticator {
                         }
 
                     case "link_value" =>
+                        val linkType = node.attribute("linkType").get.headOption match {
+                            case Some(linkTypeNode: Node) => linkTypeNode.text
+                            case None => throw BadRequestException(s"Attribute 'linkType' missing in element '${node.label}'")
+                        }
+
                         node.attribute("ref").get.headOption match {
-                            case Some(refNode: Node) => CreateResourceValueV1(link_to_client_id = Some(refNode.text))
+                            case Some(refNode: Node) =>
+                                val ref = refNode.text
+
+                                linkType match {
+                                    case "internal" => CreateResourceValueV1(link_to_client_id = Some(ref))
+                                    case "iri" => CreateResourceValueV1(link_value = Some(InputValidation.toIri(ref, () => throw BadRequestException(s"Invalid IRI in element '${node.label}': '$ref'"))))
+                                    case other => throw BadRequestException(s"Unrecognised value '$other' in attribute 'linkType' of element '${node.label}'")
+                                }
+
                             case None => throw BadRequestException(s"Attribute 'ref' missing in element '${node.label}'")
                         }
 
