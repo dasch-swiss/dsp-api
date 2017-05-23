@@ -85,6 +85,22 @@
                     rdfs:subPropertyOf knora-base:hasValue, dcterms:issued .
 
 
+###  http://www.knora.org/ontology/biblio#publicationHasLocation
+
+:publicationHasLocation rdf:type owl:ObjectProperty ;
+
+                    rdfs:label "Veröffentlichungsort"@de ,
+                               "Publication Location"@en ;
+
+                    rdfs:comment """Represents the location of a publication."""@en ;
+
+                    knora-base:objectClassConstraint knora-base:TextValue ;
+
+                    salsah-gui:guiElement salsah-gui:SimpleText ;
+
+                    knora-base:subjectClassConstraint :Publication ;
+
+                    rdfs:subPropertyOf knora-base:hasValue .
 
 ###  http://www.knora.org/ontology/biblio#publicationHasPublisher
 :publicationHasPublisher rdf:type owl:ObjectProperty ;
@@ -272,6 +288,34 @@
 
                     rdfs:subPropertyOf knora-base:hasValue , bibo:doi.
 
+###  http://www.knora.org/ontology/biblio#publicationHasLink
+:publicationHasLink rdf:type owl:ObjectProperty ;
+
+                    rdfs:label "Link"@de ,
+                            "Link "@en ;
+
+                    rdfs:comment """Represents a link of the publication."""@en ;
+
+                    knora-base:objectClassConstraint :Webpage ;
+
+                    salsah-gui:guiElement salsah-gui:Searchbox ;
+
+                    knora-base:subjectClassConstraint :Publication ;
+
+                    rdfs:subPropertyOf knora-base:hasLinkTo .
+
+
+
+###  http://www.knora.org/ontology/biblio#publicationHasLinkValue
+
+:publicationHasLinkValue rdf:type owl:ObjectProperty ;
+
+                    knora-base:objectClassConstraint knora-base:LinkValue ;
+
+                    knora-base:subjectClassConstraint :Publication ;
+
+                    rdfs:subPropertyOf knora-base:hasLinkToValue .
+
 
 ###  http://www.knora.org/ontology/biblio#editionHasEditor
 
@@ -383,6 +427,23 @@
 
                     salsah-gui:guiElement salsah-gui:SimpleText ;
 
+                    rdfs:subPropertyOf knora-base:hasValue  .
+
+###  http://www.knora.org/ontology/biblio#hasURI
+
+:hasURI rdf:type owl:ObjectProperty ;
+
+                    rdfs:label "URI"@de ,
+                            "URI"@en ,
+                            "URI"@fr ,
+                            "URI"@it ;
+
+                    rdfs:comment """Represents a URI."""@en ;
+
+                    knora-base:objectClassConstraint knora-base:UriValue ;
+
+                    salsah-gui:guiElement salsah-gui:Richtext ;
+
                     rdfs:subPropertyOf knora-base:hasValue .
 
 
@@ -450,7 +511,7 @@
 
                     rdfs:subPropertyOf knora-base:hasLinkToValue .
 
-###  http://www.knora.org/ontology/biblio#ispartOfCollection
+###  http://www.knora.org/ontology/biblio#isPartOfCollection
 :isPartOfCollection rdf:type owl:ObjectProperty ;
 
                     rdfs:label "ist Teil von"@de ,
@@ -572,6 +633,21 @@
 
                     rdfs:subPropertyOf knora-base:hasValue , bibo:numVolumes .
 
+
+###  http://www.knora.org/ontology/biblio#webpageHasHrefTag
+
+:webpageHasHrefTag rdf:type owl:ObjectProperty ;
+
+                    rdfs:label "href tag"@de ,
+                               "href tag"@en ;
+
+                    rdfs:comment """Represents a href attribute tag."""@en ;
+
+                    knora-base:objectClassConstraint knora-base:TextValue ;
+
+                    salsah-gui:guiElement salsah-gui:SimpleText ;
+
+                    rdfs:subPropertyOf knora-base:hasValue .
 
 
 ###  http://www.knora.org/ontology/biblio#translationOf
@@ -701,7 +777,31 @@
                     rdfs:subPropertyOf knora-base:hasValue .
 
 
+###  http://www.knora.org/ontology/biblio#isPartOfWebsite
+:isPartOfWebsite rdf:type owl:ObjectProperty ;
 
+                    rdfs:label "ist Teil von"@de ,
+                               "is part of"@en ,
+                               "fait partie de"@fr ,
+                               "fa parte di"@it ;
+
+                    rdfs:comment """Represents the website the article is published in."""@en ;
+
+                    knora-base:objectClassConstraint :Website ;
+
+                    salsah-gui:guiElement salsah-gui:Searchbox ;
+
+
+                    rdfs:subPropertyOf knora-base:hasLinkTo, dcterms:isPartOf .
+
+
+###  http://www.knora.org/ontology/biblio#isPartOfWebsiteValue
+
+:isPartOfWebsiteValue rdf:type owl:ObjectProperty ;
+
+                    knora-base:objectClassConstraint knora-base:LinkValue ;
+
+                    rdfs:subPropertyOf knora-base:hasLinkToValue .
 
 #################################################################
 #
@@ -742,6 +842,10 @@
                                     [ rdf:type owl:Restriction ;
                                       owl:onProperty :publicationHasDate ;
                                       owl:minCardinality "1"^^xsd:nonNegativeInteger
+                                    ],
+                                    [ rdf:type owl:Restriction ;
+                                      owl:onProperty :publicationHasLocation ;
+                                      owl:minCardinality "0"^^xsd:nonNegativeInteger
                                     ],
                                     [ rdf:type owl:Restriction ;
                                        owl:onProperty :publicationIsReprinted ;
@@ -915,6 +1019,10 @@
 
                     rdfs:subClassOf :Article,
                                     [ rdf:type owl:Restriction ;
+                                      owl:onProperty :collectionNumber;
+                                      owl:minCardinality "0"^^xsd:nonNegativeInteger
+                                    ],
+                                    [ rdf:type owl:Restriction ;
                                        owl:onProperty :isPartOfCollection ;
                                        owl:minCardinality "0"^^xsd:nonNegativeInteger
                                     ],
@@ -1058,10 +1166,6 @@
                                       owl:minCardinality "0"^^xsd:nonNegativeInteger
                                     ],
                                     [ rdf:type owl:Restriction ;
-                                      owl:onProperty :collectionNumber;
-                                      owl:minCardinality "0"^^xsd:nonNegativeInteger
-                                    ],
-                                    [ rdf:type owl:Restriction ;
                                         owl:onProperty beol:comment ;
                                         owl:minCardinality "0"^^xsd:nonNegativeInteger
                                     ] ;
@@ -1075,3 +1179,68 @@
                     rdfs:comment "A resource representing a collection "@en .
 
 
+###  http://www.knora.org/ontology/biblio#Website
+
+:Website rdf:type owl:Class ;
+
+                    rdfs:subClassOf knora-base:Resource, bibo:Website,
+                                    [ rdf:type owl:Restriction ;
+                                      owl:onProperty :hasName ;
+                                      owl:minCardinality "0"^^xsd:nonNegativeInteger
+                                    ],
+                                    [ rdf:type owl:Restriction ;
+                                      owl:onProperty :hasURI;
+                                      owl:minCardinality "1"^^xsd:nonNegativeInteger
+                                    ],
+                                    [ rdf:type owl:Restriction ;
+                                        owl:onProperty beol:comment ;
+                                        owl:minCardinality "0"^^xsd:nonNegativeInteger
+                                    ] ;
+
+
+                    rdfs:label "Website"@de ,
+                                "Website"@en ;
+
+                    rdfs:comment "A resource representing a website "@en .
+
+
+:Webpage rdf:type owl:Class ;
+
+                    rdfs:subClassOf knora-base:Resource, bibo:Webpage,
+                                    [ rdf:type owl:Restriction ;
+                                      owl:onProperty :isPartOfWebsite ;
+                                      owl:minCardinality "1"^^xsd:nonNegativeInteger
+                                    ],
+                                    [ rdf:type owl:Restriction ;
+                                      owl:onProperty :isPartOfWebsiteValue ;
+                                      owl:minCardinality "1"^^xsd:nonNegativeInteger
+                                    ],
+                                    [ rdf:type owl:Restriction ;
+                                      owl:onProperty :hasURI;
+                                      owl:minCardinality "1"^^xsd:nonNegativeInteger
+                                    ],
+                                    [ rdf:type owl:Restriction ;
+                                      owl:onProperty :webpageHasHrefTag ;
+                                      owl:minCardinality "0"^^xsd:nonNegativeInteger
+                                    ],
+                                    [ rdf:type owl:Restriction ;
+                                        owl:onProperty beol:comment ;
+                                        owl:minCardinality "0"^^xsd:nonNegativeInteger
+                                    ] ;
+
+
+                    rdfs:label "Webpage"@de ,
+                                "Webpage"@en ;
+
+                    rdfs:comment "A resource representing a webpage "@en .
+
+###  http://www.knora.org/ontology/biblio#WebsiteArticle
+
+:WebsiteArticle rdf:type owl:Class ;
+
+                    rdfs:subClassOf :Publication, bibo:Webpage;
+
+                    rdfs:label "Website Artikel"@de ,
+                                "Website Article"@en ;
+
+                    rdfs:comment "A resource representing a website article "@en .
