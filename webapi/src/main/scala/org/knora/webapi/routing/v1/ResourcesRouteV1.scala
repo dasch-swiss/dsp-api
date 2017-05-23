@@ -747,10 +747,6 @@ object ResourcesRouteV1 extends Authenticator {
                                 val mappingIri: Option[IRI] = Some(InputValidation.toIri(mappingID.toString, () => throw BadRequestException(s"Invalid mapping ID in element '${node.label}: '$mappingID")))
                                 val embeddedXmlRootNode = node.child.filterNot(_.label == "#PCDATA").head
                                 val embeddedXmlDoc = """<?xml version="1.0" encoding="UTF-8"?>""" + embeddedXmlRootNode.toString
-
-                                // TODO: this doesn't work because the nodes in the embedded document are in the wrong namespace.
-                                // org.knora.webapi.BadRequestException: namespace http://api.knora.org/ontology/biblio/xml-import/v1# not defined in mapping
-
                                 CreateResourceValueV1(richtext_value = Some(CreateRichtextV1(utf8str = None, xml = Some(embeddedXmlDoc), mapping_id = mappingIri)))
 
                             case None =>
