@@ -1201,7 +1201,9 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    |        <biblio:hasName knoraType="richtext_value">math intelligencer</biblio:hasName>
                    |    </biblio:Journal>
                    |    <biblio:JournalArticle id="strings_in_the_16th_and_17th_centuries" label="Strings in the 16th and 17th Centuries">
-                   |        <biblio:beol__comment knoraType="richtext_value" mapping_id="$mappingIri"><text xmlns="">A very <strong>interesting</strong> article.</text></biblio:beol__comment>
+                   |        <biblio:beol__comment knoraType="richtext_value" mapping_id="$mappingIri">
+                   |            <text xmlns="">A very <strong>interesting</strong> article.</text>
+                   |        </biblio:beol__comment>
                    |        <biblio:endPage knoraType="richtext_value">73</biblio:endPage>
                    |        <biblio:isPartOfJournal>
                    |            <biblio:Journal knoraType="link_value" ref="math_intelligencer" linkType="internal"/>
@@ -1255,7 +1257,9 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    |        <biblio:hasName knoraType="richtext_value">math intelligencer</biblio:hasName>
                    |    </biblio:Journal>
                    |    <biblio:JournalArticle id="strings_in_the_16th_and_17th_centuries" label="Strings in the 16th and 17th Centuries">
-                   |        <biblio:beol__comment knoraType="richtext_value" mapping_id="$mappingIri"><text xmlns="">A very <strong>interesting</strong> article.</text></biblio:beol__comment>
+                   |        <biblio:beol__comment knoraType="richtext_value" mapping_id="$mappingIri">
+                   |            <text xmlns="">A very <strong>interesting</strong> article.</text>
+                   |        </biblio:beol__comment>
                    |        <biblio:endPage knoraType="richtext_value">73</biblio:endPage>
                    |        <biblio:isPartOfJournal>
                    |            <biblio:Journal knoraType="link_value" linkType="internal" ref="math_intelligencer"/>
