@@ -462,7 +462,19 @@ object OntologyConstants {
 
     object KnoraApiV2WithValueObject {
 
-        val KnoraApiV2PrefixExpansion: IRI = KnoraApi.KnoraApiOntologyIri + "/v2#"
+        val VersionSegment = "/v2"
+
+        val KnoraApiV2PrefixExpansion: IRI = KnoraApi.KnoraApiOntologyIri + VersionSegment + "#"
+
+        val HasOntologies = KnoraApiV2PrefixExpansion + "hasOntologies"
+
+        val HasOntologiesWithResourceClasses = KnoraApiV2PrefixExpansion + "hasOntologiesWithResourceClasses"
+
+        val HasProperties = KnoraApiV2PrefixExpansion + "hasProperties"
+
+        val BelongsToOntology = KnoraApiV2PrefixExpansion + "belongsToOntology"
+
+        val HasResourceClasses = KnoraApiV2PrefixExpansion + "hasResourceClasses"
 
         val ValueAsString = KnoraApiV2PrefixExpansion + "valueAsString"
 
@@ -510,4 +522,9 @@ object OntologyConstants {
         val GeonameValueAsGeonameCode = KnoraApiV2PrefixExpansion + "geonameValueAsGeonameCode"
     }
 
+    object KnoraApiV2Simplified {
+
+        val VersionSegment = "/simple/v2"
+
+    }
 }

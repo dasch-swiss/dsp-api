@@ -27,6 +27,62 @@
 
 <http://api.knora.org/ontology/knora-api/v2> rdf:type owl:Ontology .
 
+### http://api.knora.org/ontology/knora-api/v2#hasOntologies
+
+:hasOntologies rdf:type owl:ObjectProperty ;
+
+    :objectClassConstraint :OntologyList ;
+
+    rdfs:label "has ontologies"@en ;
+
+    rdfs:comment "Points to a list of ontologies available on this Knora instance."@en .
+
+
+### http://api.knora.org/ontology/knora-api/v2#OntologyList
+
+:OntologyList rdf:type rdf:List ;
+
+    rdfs:label "A list of ontology Iris"@en ;
+
+    rdfs:comment "A list of ontologies available on this Knora instance."@en .
+
+
+### http://api.knora.org/ontology/knora-api/v2#hasOntologiesWithResourceClasses
+
+:hasOntologiesWithResourceClasses rdf:type owl:ObjectProperty ;
+
+    rdfs:label "A map of ontology Iris to a list of resource classes"@en ;
+
+    rdfs:comment "A map of ontology Iris to a list of resource classes."@en .
+
+
+### http://api.knora.org/ontology/knora-api/v2#hasProperties
+
+:hasProperties rdf:type owl:ObjectProperty ;
+
+    rdfs:label "A map of property Iris to property definitions."@en ;
+
+    rdfs:comment "A map of property Iris to property definitions."@en .
+
+
+### http://api.knora.org/ontology/knora-api/v2#belongsToOntology
+
+:belongsToOntology rdf:type owl:DatatypeProperty ;
+
+    rdfs:label "The ontology a entity definition belongs to."@en ;
+
+    rdfs:comment "The ontology a entity definition belongs to."@en .
+
+
+### http://api.knora.org/ontology/knora-api/v2#hasResourceClasses
+
+:hasResourceClasses rdf:type owl:ObjectProperty ;
+
+    rdfs:label "A map of resource class Iris to resource class definitions."@en ;
+
+    rdfs:comment "A map of resource class Iris to resource class definitions."@en .
+
+
 ### http://api.knora.org/ontology/knora-api/v2#Resource
 
 :Resource rdf:type owl:Class .
@@ -53,9 +109,9 @@
 
      rdfs:subPropertyOf :resourceProperty ;
 
-     knora-base:subjectClassConstraint :Resource ;
+     :subjectClassConstraint :Resource ;
 
-     knora-base:objectClassConstraint :Value .
+     :objectClassConstraint :Value .
 
 
 ### http://api.knora.org/ontology/knora-api/v2#hasLinkTo
@@ -71,9 +127,9 @@
 
       rdfs:comment "Represents a direct connection between two resources"@en ;
 
-      knora-base:objectClassConstraint :Resource ;
+      :objectClassConstraint :Resource ;
 
-      knora-base:subjectClassConstraint :Resource .
+      :subjectClassConstraint :Resource .
 
 
 ###  http://api.knora.org/ontology/knora-api/v2#valueHas
@@ -83,15 +139,45 @@
           :subjectClassConstraint :Value .
 
 
+###  http://api.knora.org/ontology/knora-api/v2#subjectClassConstraint
+
+:subjectClassConstraint rdf:type owl:ObjectProperty ;
+
+                   rdfs:comment "Specifies the OWL class that the subject of a property must belong to"@en .
+
+
+###  http://api.knora.org/ontology/knora-api/v2#objectClassConstraint
+
+:objectClassConstraint rdf:type owl:ObjectProperty ;
+
+                  rdfs:comment "Specifies the OWL class that the object of a property must belong to"@en .
+
+
+###  http://api.knora.org/ontology/knora-api/v2#objectDatatypeConstraint
+
+:objectDatatypeConstraint rdf:type owl:DatatypeProperty ;
+
+                          rdfs:comment "Specifies the type required as the object of a datatype property"@en .
+
+
+###  http://api.knora.org/ontology/knora-api/v2#resourceIcon
+
+:resourceIcon rdf:type owl:DatatypeProperty ;
+
+              :subjectClassConstraint owl:Class ;
+
+              :objectDatatypeConstraint xsd:string .
+
+
 ### http://api.knora.org/ontology/knora-api/v2#valueAsString
 
 :valueAsString rdf:type owl:DatatypeProperty ;
 
     rdfs:comment "A plain string representation of a value"@en ;
 
-    knora-base:subjectClassConstraint :Value ;
+    :subjectClassConstraint :Value ;
 
-    knora-base:objectDatatypeConstraint xsd:string .
+    :objectDatatypeConstraint xsd:string .
 
 
 ### Text value
@@ -122,9 +208,9 @@
 
     rdfs:subPropertyOf :valueHas ;
 
-    knora-base:subjectClassConstraint :TextValue ;
+    :subjectClassConstraint :TextValue ;
 
-    knora-base:objectDatatypeConstraint xsd:string .
+    :objectDatatypeConstraint xsd:string .
 
 
 ### http://api.knora.org/ontology/knora-api/v2#textValueHasMapping
@@ -133,9 +219,9 @@
 
     rdfs:comment "The mapping used to turn standoff into XML and vice versa."@en ;
 
-    knora-base:subjectClassConstraint :TextValue ;
+    :subjectClassConstraint :TextValue ;
 
-    knora-base:objectClassConstraint knora-base:XMLToStandoffMapping .
+    :objectClassConstraint knora-base:XMLToStandoffMapping .
 
 
 ### http://api.knora.org/ontology/knora-api/v2#textValueAsHtml
@@ -146,9 +232,9 @@
 
     rdfs:subPropertyOf :valueHas ;
 
-    knora-base:subjectClassConstraint :TextValue ;
+    :subjectClassConstraint :TextValue ;
 
-    knora-base:objectDatatypeConstraint xsd:string .
+    :objectDatatypeConstraint xsd:string .
 
 ### Date value
 
@@ -194,9 +280,9 @@
 
     rdfs:subPropertyOf :valueHas ;
 
-    knora-base:subjectClassConstraint :DateValue ;
+    :subjectClassConstraint :DateValue ;
 
-    knora-base:objectDatatypeConstraint xsd:integer .
+    :objectDatatypeConstraint xsd:integer .
 
 
 ### http://api.knora.org/ontology/knora-api/v2#dateValueHasEndYear
@@ -207,9 +293,9 @@
 
     rdfs:subPropertyOf :valueHas ;
 
-    knora-base:subjectClassConstraint :DateValue ;
+    :subjectClassConstraint :DateValue ;
 
-    knora-base:objectDatatypeConstraint xsd:integer .
+    :objectDatatypeConstraint xsd:integer .
 
 
 ### http://api.knora.org/ontology/knora-api/v2#dateValueHasStartMonth
@@ -220,9 +306,9 @@
 
     rdfs:subPropertyOf :valueHas ;
 
-    knora-base:subjectClassConstraint :DateValue ;
+    :subjectClassConstraint :DateValue ;
 
-    knora-base:objectDatatypeConstraint xsd:integer .
+    :objectDatatypeConstraint xsd:integer .
 
 
 ### http://api.knora.org/ontology/knora-api/v2#dateValueHasEndMonth
@@ -233,9 +319,9 @@
 
     rdfs:subPropertyOf :valueHas ;
 
-    knora-base:subjectClassConstraint :DateValue ;
+    :subjectClassConstraint :DateValue ;
 
-    knora-base:objectDatatypeConstraint xsd:integer .
+    :objectDatatypeConstraint xsd:integer .
 
 
 ### http://api.knora.org/ontology/knora-api/v2#dateValueHasStartDay
@@ -246,9 +332,9 @@
 
     rdfs:subPropertyOf :valueHas ;
 
-    knora-base:subjectClassConstraint :DateValue ;
+    :subjectClassConstraint :DateValue ;
 
-    knora-base:objectDatatypeConstraint xsd:integer .
+    :objectDatatypeConstraint xsd:integer .
 
 
 ### http://api.knora.org/ontology/knora-api/v2#dateValueHasEndDay
@@ -259,9 +345,9 @@
 
     rdfs:subPropertyOf :valueHas ;
 
-    knora-base:subjectClassConstraint :DateValue ;
+    :subjectClassConstraint :DateValue ;
 
-    knora-base:objectDatatypeConstraint xsd:integer .
+    :objectDatatypeConstraint xsd:integer .
 
 
 ### http://api.knora.org/ontology/knora-api/v2#dateValueHasCalendar
@@ -272,9 +358,9 @@
 
     rdfs:subPropertyOf :valueHas ;
 
-    knora-base:subjectClassConstraint :DateValue ;
+    :subjectClassConstraint :DateValue ;
 
-    knora-base:objectDatatypeConstraint xsd:string .
+    :objectDatatypeConstraint xsd:string .
 
 
 ### Link value
@@ -299,9 +385,9 @@
 
     rdfs:comment "The target of the link property (the referred resource)"@en ;
 
-    knora-base:subjectClassConstraint :LinkValue ;
+    :subjectClassConstraint :LinkValue ;
 
-    knora-base:objectClassConstraint :Resource .
+    :objectClassConstraint :Resource .
 
 
 ### http://api.knora.org/ontology/knora-api/v2#linkValueHasTargetIri
@@ -310,9 +396,9 @@
 
     rdfs:comment "The target IRI of the link property (the referred resource)"@en ;
 
-    knora-base:subjectClassConstraint :LinkValue ;
+    :subjectClassConstraint :LinkValue ;
 
-    knora-base:objectDatatypeConstraint xsd:anyURI .
+    :objectDatatypeConstraint xsd:anyURI .
 
 
 ### Integer Value
@@ -335,9 +421,9 @@
 
     rdfs:subPropertyOf :valueHas ;
 
-    knora-base:subjectClassConstraint :IntegerValue ;
+    :subjectClassConstraint :IntegerValue ;
 
-    knora-base:objectDatatypeConstraint xsd:integer .
+    :objectDatatypeConstraint xsd:integer .
 
 
 ### Decimal Value
@@ -360,9 +446,9 @@
 
     rdfs:subPropertyOf :valueHas ;
 
-    knora-base:subjectClassConstraint :DecimalValue ;
+    :subjectClassConstraint :DecimalValue ;
 
-    knora-base:objectDatatypeConstraint xsd:decimal .
+    :objectDatatypeConstraint xsd:decimal .
 
 
 ### Boolean Value
@@ -384,9 +470,9 @@
 
                        rdfs:subPropertyOf :valueHas ;
 
-                       knora-base:subjectClassConstraint :BooleanValue ;
+                       :subjectClassConstraint :BooleanValue ;
 
-                       knora-base:objectDatatypeConstraint xsd:boolean .
+                       :objectDatatypeConstraint xsd:boolean .
 
 ### Geometry Value
 
@@ -406,9 +492,9 @@
 
                      rdfs:subPropertyOf :valueHas ;
 
-                     knora-base:subjectClassConstraint :GeomValue ;
+                     :subjectClassConstraint :GeomValue ;
 
-                     knora-base:objectDatatypeConstraint xsd:string .
+                     :objectDatatypeConstraint xsd:string .
 
 ### Interval Value
 
@@ -432,9 +518,9 @@
 
                      rdfs:subPropertyOf :valueHas ;
 
-                     knora-base:subjectClassConstraint :IntervalValue ;
+                     :subjectClassConstraint :IntervalValue ;
 
-                     knora-base:objectDatatypeConstraint xsd:decimal .
+                     :objectDatatypeConstraint xsd:decimal .
 
 
 ### http://api.knora.org/ontology/knora-api/v2#intervalValueHasEnd
@@ -445,9 +531,9 @@
 
                      rdfs:subPropertyOf :valueHas ;
 
-                     knora-base:subjectClassConstraint :IntervalValue ;
+                     :subjectClassConstraint :IntervalValue ;
 
-                     knora-base:objectDatatypeConstraint xsd:decimal .
+                     :objectDatatypeConstraint xsd:decimal .
 
 
 ### Hierarchical List Value
@@ -469,9 +555,9 @@
 
                        rdfs:subPropertyOf :valueHas ;
 
-                       knora-base:subjectClassConstraint :ListValue ;
+                       :subjectClassConstraint :ListValue ;
 
-                       knora-base:objectClassConstraint knora-base:ListNode .
+                       :objectClassConstraint knora-base:ListNode .
 
 
 ### Color Value
@@ -492,9 +578,9 @@
 
                     rdfs:subPropertyOf :valueHas ;
 
-                    knora-base:subjectClassConstraint :ColorValue ;
+                    :subjectClassConstraint :ColorValue ;
 
-                    knora-base:objectDatatypeConstraint xsd:string .
+                    :objectDatatypeConstraint xsd:string .
 
 
 ### Uri Value
@@ -515,9 +601,9 @@
 
                rdfs:subPropertyOf :valueHas ;
 
-               knora-base:subjectClassConstraint :UriValue ;
+               :subjectClassConstraint :UriValue ;
 
-               knora-base:objectDatatypeConstraint xsd:anyURI .
+               :objectDatatypeConstraint xsd:anyURI .
 
 
 ### Geoname Value
@@ -538,9 +624,9 @@
 
                            rdfs:subPropertyOf :valueHas ;
 
-                           knora-base:subjectClassConstraint :GeonameValue ;
+                           :subjectClassConstraint :GeonameValue ;
 
-                           knora-base:objectDatatypeConstraint xsd:string .
+                           :objectDatatypeConstraint xsd:string .
 
 
 ### FileValue
@@ -569,9 +655,9 @@
 
     rdfs:subPropertyOf :valueHas ;
 
-    knora-base:subjectClassConstraint :FileValue ;
+    :subjectClassConstraint :FileValue ;
 
-    knora-base:objectDatatypeConstraint xsd:boolean .
+    :objectDatatypeConstraint xsd:boolean .
 
 
 ### http://api.knora.org/ontology/knora-api/v2#fileValueAsUrl
@@ -582,9 +668,9 @@
 
     rdfs:subPropertyOf :valueHas ;
 
-    knora-base:subjectClassConstraint :FileValue ;
+    :subjectClassConstraint :FileValue ;
 
-    knora-base:objectDatatypeConstraint xsd:anyURI .
+    :objectDatatypeConstraint xsd:anyURI .
 
 
 ### http://api.knora.org/ontology/knora-api/v2#fileValueHasFilename
@@ -595,9 +681,9 @@
 
     rdfs:subPropertyOf :valueHas ;
 
-    knora-base:subjectClassConstraint :FileValue ;
+    :subjectClassConstraint :FileValue ;
 
-    knora-base:objectDatatypeConstraint xsd:string .
+    :objectDatatypeConstraint xsd:string .
 
 
 ### TextFileValue
@@ -632,9 +718,9 @@
 
     rdfs:subPropertyOf :valueHas ;
 
-    knora-base:subjectClassConstraint :StillImageFileValue ;
+    :subjectClassConstraint :StillImageFileValue ;
 
-    knora-base:objectDatatypeConstraint xsd:integer .
+    :objectDatatypeConstraint xsd:integer .
 
 
 ### http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimY
@@ -645,9 +731,9 @@
 
     rdfs:subPropertyOf :valueHas ;
 
-    knora-base:subjectClassConstraint :StillImageFileValue ;
+    :subjectClassConstraint :StillImageFileValue ;
 
-    knora-base:objectDatatypeConstraint xsd:integer .
+    :objectDatatypeConstraint xsd:integer .
 
 
 ### http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasIIIFBaseUrl
@@ -658,9 +744,9 @@
 
     rdfs:subPropertyOf :valueHas ;
 
-    knora-base:subjectClassConstraint :StillImageFileValue ;
+    :subjectClassConstraint :StillImageFileValue ;
 
-    knora-base:objectDatatypeConstraint xsd:anyURI .
+    :objectDatatypeConstraint xsd:anyURI .
 
 
 
