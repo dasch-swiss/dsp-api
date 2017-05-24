@@ -78,6 +78,7 @@
     <logger name="org.knora.webapi.viewhandlers.ResourceHtmlView" level="INFO"/>
     <logger name="org.knora.webapi.other.v1.DrawingsGodsV1Spec" level="INFO"/>
     <logger name="org.knora.webapi.other.v1.DrawingsGodsV1E2ESpec" level="INFO"/>
+    <logger name="org.knora.webapi.e2e.v1.UsersV1E2ESpec" level="DEBUG"/>
 
 
     <root level="INFO">

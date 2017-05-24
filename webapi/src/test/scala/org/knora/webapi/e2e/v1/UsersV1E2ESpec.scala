@@ -21,10 +21,12 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers._
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import com.typesafe.config.ConfigFactory
+import org.knora
+import org.knora.webapi
 import org.knora.webapi.messages.v1.responder.sessionmessages.SessionJsonProtocol
 import org.knora.webapi.messages.v1.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
 import org.knora.webapi.util.{AkkaHttpUtils, MutableTestIri}
-import org.knora.webapi.{E2ESpec, SharedAdminTestData}
+import org.knora.webapi.{E2ESpec, IRI, SharedAdminTestData}
 import spray.json._
 
 import scala.concurrent.duration._
@@ -45,15 +47,26 @@ class UsersV1E2ESpec extends E2ESpec(UsersV1E2ESpec.config) with SessionJsonProt
 
     implicit def default(implicit system: ActorSystem) = RouteTestTimeout(5.seconds)
 
+    implicit override val log = akka.event.Logging(system, this.getClass())
+
     private val rdfDataObjects = List.empty[RdfDataObject]
 
     val rootIri = SharedAdminTestData.rootUser.userData.user_id.get
     val rootIriEnc = java.net.URLEncoder.encode(rootIri, "utf-8")
     val rootEmail = SharedAdminTestData.rootUser.userData.email.get
     val rootEmailEnc = java.net.URLEncoder.encode(rootEmail, "utf-8")
+
     val inactiveUserEmailEnc = java.net.URLEncoder.encode(SharedAdminTestData.inactiveUser.userData.email.get, "utf-8")
+
+    val normalUserIri = SharedAdminTestData.normalUser.userData.user_id.get
+    val normalUserIriEnc = java.net.URLEncoder.encode(normalUserIri, "utf-8")
+
+    val multiUserIri = SharedAdminTestData.multiuserUser.userData.user_id.get
+    val multiUserIriEnc = java.net.URLEncoder.encode(multiUserIri, "utf-8")
+
     val wrongEmail = "wrong@example.com"
     val wrongEmailEnc = java.net.URLEncoder.encode(wrongEmail, "utf-8")
+
     val testPass = java.net.URLEncoder.encode("test", "utf-8")
     val wrongPass = java.net.URLEncoder.encode("wrong", "utf-8")
 
@@ -70,7 +83,7 @@ class UsersV1E2ESpec extends E2ESpec(UsersV1E2ESpec.config) with SessionJsonProt
             "return all users" in {
                 val request = Get(baseApiUrl + s"/v1/users") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
                 val response: HttpResponse = singleAwaitingRequest(request)
-                // println(s"response: ${response.toString}")
+                // log.debug(s"response: ${response.toString}")
                 response.status should be (StatusCodes.OK)
             }
 
@@ -78,7 +91,7 @@ class UsersV1E2ESpec extends E2ESpec(UsersV1E2ESpec.config) with SessionJsonProt
                 /* Correct username and password */
                 val request = Get(baseApiUrl + s"/v1/users/$rootIriEnc") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
                 val response: HttpResponse = singleAwaitingRequest(request)
-                // println(s"response: ${response.toString}")
+                // log.debug(s"response: ${response.toString}")
                 response.status should be (StatusCodes.OK)
             }
 
@@ -86,7 +99,7 @@ class UsersV1E2ESpec extends E2ESpec(UsersV1E2ESpec.config) with SessionJsonProt
                 /* Correct username and password */
                 val request = Get(baseApiUrl + s"/v1/users/$rootEmailEnc?identifier=email") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
                 val response: HttpResponse = singleAwaitingRequest(request)
-                // println(s"response: ${response.toString}")
+                // log.debug(s"response: ${response.toString}")
                 response.status should be (StatusCodes.OK)
             }
 
@@ -113,7 +126,7 @@ class UsersV1E2ESpec extends E2ESpec(UsersV1E2ESpec.config) with SessionJsonProt
 
                 val request = Post(baseApiUrl + s"/v1/users", HttpEntity(ContentTypes.`application/json`, params))
                 val response: HttpResponse = singleAwaitingRequest(request)
-                //println(s"response: ${response.toString}")
+                // log.debug(s"response: ${response.toString}")
                 response.status should be (StatusCodes.OK)
 
                 val jsonResult: Map[String, JsValue] = AkkaHttpUtils.httpResponseToJson(response).fields("userProfile").asJsObject.fields("userData").asJsObject.fields
@@ -124,7 +137,7 @@ class UsersV1E2ESpec extends E2ESpec(UsersV1E2ESpec.config) with SessionJsonProt
 
                 val iri = jsonResult("user_id").convertTo[String]
                 donaldIri.set(iri)
-                //println(s"iri: ${donaldIri.get}")
+                // log.debug(s"iri: ${donaldIri.get}")
             }
 
             "update the user's basic information" in {
@@ -142,7 +155,7 @@ class UsersV1E2ESpec extends E2ESpec(UsersV1E2ESpec.config) with SessionJsonProt
                 val userIriEncoded = java.net.URLEncoder.encode(donaldIri.get, "utf-8")
                 val request = Put(baseApiUrl + s"/v1/users/" + userIriEncoded, HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
                 val response: HttpResponse = singleAwaitingRequest(request)
-                //println(s"response: ${response.toString}")
+                // log.debug(s"response: ${response.toString}")
                 response.status should be (StatusCodes.OK)
 
                 val jsonResult: Map[String, JsValue] = AkkaHttpUtils.httpResponseToJson(response).fields("userProfile").asJsObject.fields("userData").asJsObject.fields
@@ -197,7 +210,7 @@ class UsersV1E2ESpec extends E2ESpec(UsersV1E2ESpec.config) with SessionJsonProt
 
                 val request = Put(baseApiUrl + s"/v1/users/" + userIriEncoded, HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
                 val response: HttpResponse = singleAwaitingRequest(request)
-                println(s"response: ${response.toString}")
+                log.debug(s"response: ${response.toString}")
                 response.status should be (StatusCodes.OK)
 
                 val jsonResult: Map[String, JsValue] = AkkaHttpUtils.httpResponseToJson(response).fields("userProfile").asJsObject.fields("userData").asJsObject.fields
@@ -217,13 +230,26 @@ class UsersV1E2ESpec extends E2ESpec(UsersV1E2ESpec.config) with SessionJsonProt
 
                 val request = Put(baseApiUrl + s"/v1/users/" + userIriEncoded, HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
                 val response: HttpResponse = singleAwaitingRequest(request)
-                println(s"response: ${response.toString}")
+                log.debug(s"response: ${response.toString}")
                 response.status should be (StatusCodes.OK)
 
                 val jsonResult: Map[String, JsValue] = AkkaHttpUtils.httpResponseToJson(response).fields("userProfile").asJsObject.fields("permissionData").asJsObject.fields("groupsPerProject").asJsObject.fields
                 jsonResult("http://www.knora.org/ontology/knora-base#SystemProject").convertTo[List[String]].head should equal ("http://www.knora.org/ontology/knora-base#SystemAdmin")
-                //println(jsonResult)
+                // log.debug(jsonResult)
 
+            }
+        }
+
+        "used to query project memberships" should {
+
+            "return all projects the user is a member of" in {
+                val request = Get(baseApiUrl + s"/v1/users/projects/$multiUserIriEnc") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
+                val response: HttpResponse = singleAwaitingRequest(request)
+                log.debug(s"response: ${response.toString}")
+                assert(response.status === StatusCodes.OK)
+
+                val projects: Seq[IRI] = AkkaHttpUtils.httpResponseToJson(response).fields("projects").convertTo[List[IRI]]
+                projects should contain allElementsOf Seq("http://data.knora.org/projects/images","http://data.knora.org/projects/77275339","http://data.knora.org/projects/anything")
             }
         }
 
@@ -238,6 +264,19 @@ class UsersV1E2ESpec extends E2ESpec(UsersV1E2ESpec.config) with SessionJsonProt
             }
         }
 
+        "used to query project admin group memberships" should {
+
+            "return all projects the user is a member of the project admin group" in {
+                val request = Get(baseApiUrl + s"/v1/users/projects-admin/$multiUserIriEnc") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
+                val response: HttpResponse = singleAwaitingRequest(request)
+                log.debug(s"response: ${response.toString}")
+                assert(response.status === StatusCodes.OK)
+
+                val projects: Seq[IRI] = AkkaHttpUtils.httpResponseToJson(response).fields("projects").convertTo[List[IRI]]
+                projects should contain allElementsOf Seq("http://data.knora.org/projects/images","http://data.knora.org/projects/77275339","http://data.knora.org/projects/anything")
+            }
+        }
+
         "used to modify project admin group membership" should {
 
             "add user to project admin group" ignore {
@@ -246,6 +285,19 @@ class UsersV1E2ESpec extends E2ESpec(UsersV1E2ESpec.config) with SessionJsonProt
 
             "remove user from project admin group" ignore {
                 fail("test not implemented")
+            }
+        }
+
+        "used to query group memberships" should {
+
+            "return all groups the user is a member of" in {
+                val request = Get(baseApiUrl + s"/v1/users/groups/$multiUserIriEnc") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
+                val response: HttpResponse = singleAwaitingRequest(request)
+                log.debug(s"response: ${response.toString}")
+                assert(response.status === StatusCodes.OK)
+
+                val groups: Seq[IRI] = AkkaHttpUtils.httpResponseToJson(response).fields("groups").convertTo[List[IRI]]
+                groups should contain allElementsOf Seq("http://data.knora.org/groups/images-reviewer")
             }
         }
 
