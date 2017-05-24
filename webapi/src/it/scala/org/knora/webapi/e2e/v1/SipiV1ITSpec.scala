@@ -382,7 +382,7 @@ class SipiV1ITSpec extends ITSpec(SipiV1ITSpec.config) with TriplestoreJsonProto
                    |        <incunabula:origname knoraType="richtext_value">Chlaus</incunabula:origname>
                    |        <incunabula:pagenum knoraType="richtext_value">1a</incunabula:pagenum>
                    |        <incunabula:partOf>
-                   |            <incunabula:book knoraType="link_value" linkType="internal" target="test_book"/>
+                   |            <incunabula:book knoraType="link_value" linkType="ref" target="test_book"/>
                    |        </incunabula:partOf>
                    |        <incunabula:seqnum knoraType="int_value">1</incunabula:seqnum>
                    |    </incunabula:page>
