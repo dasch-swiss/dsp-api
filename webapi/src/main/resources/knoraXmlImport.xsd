@@ -24,8 +24,7 @@
     <!-- Resource types -->
 
     <xs:complexType name="resourceType">
-        <xs:attribute name="id" use="required" type="xs:string"/>
-        <xs:attribute name="label" use="required" type="xs:string"/>
+        <xs:attribute name="id" use="required" type="xs:NCName"/>
     </xs:complexType>
 
     <xs:element name="file">
@@ -39,6 +38,8 @@
             </xs:simpleContent>
         </xs:complexType>
     </xs:element>
+
+    <xs:element name="label" type="nonEmptyType"/>
 
     <xs:complexType name="Resource_linkValueType">
         <xs:sequence>
@@ -120,11 +121,11 @@
         <xs:simpleContent>
             <xs:extension base="emptyType">
                 <xs:attribute name="knoraType" use="required" fixed="link_value"/>
-                <xs:attribute name="ref" use="required" type="xs:string"/>
+                <xs:attribute name="target" use="required" type="xs:string"/>
                 <xs:attribute name="linkType" use="required">
                     <xs:simpleType>
                         <xs:restriction base="xs:string">
-                            <xs:enumeration value="internal"/>
+                            <xs:enumeration value="ref"/>
                             <xs:enumeration value="iri"/>
                         </xs:restriction>
                     </xs:simpleType>

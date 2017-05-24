@@ -104,7 +104,9 @@ object ResourcesRouteV1 extends Authenticator {
         }
 
 
-        def valuesToCreate(properties: Map[IRI, Seq[CreateResourceValueV1]], userProfile: UserProfileV1): Map[IRI, Future[Seq[CreateValueV1WithComment]]] = {
+        def valuesToCreate(properties: Map[IRI, Seq[CreateResourceValueV1]],
+                           acceptStandoffLinksToClientIDs: Boolean,
+                           userProfile: UserProfileV1): Map[IRI, Future[Seq[CreateValueV1WithComment]]] = {
             properties.map {
                 case (propIri: IRI, values: Seq[CreateResourceValueV1]) =>
                     (InputValidation.toIri(propIri, () => throw BadRequestException(s"Invalid property IRI $propIri")), values.map {
@@ -131,6 +133,7 @@ object ResourcesRouteV1 extends Authenticator {
                                             textWithStandoffTags: TextWithStandoffTagsV1 <- RouteUtilV1.convertXMLtoStandoffTagV1(
                                                 xml = richtext.xml.get,
                                                 mappingIri = mappingIri,
+                                                acceptStandoffLinksToClientIDs = acceptStandoffLinksToClientIDs,
                                                 userProfile = userProfile,
                                                 settings = settings,
                                                 responderManager = responderManager,
@@ -237,7 +240,11 @@ object ResourcesRouteV1 extends Authenticator {
                 case None => None
             }
 
-            val valuesToBeCreatedWithFuture: Map[IRI, Future[Seq[CreateValueV1WithComment]]] = valuesToCreate(apiRequest.properties, userProfile)
+            val valuesToBeCreatedWithFuture: Map[IRI, Future[Seq[CreateValueV1WithComment]]] = valuesToCreate(
+                properties = apiRequest.properties,
+                acceptStandoffLinksToClientIDs = false,
+                userProfile = userProfile
+            )
 
             // since this function `makeCreateResourceRequestMessage` is called by the POST multipart route receiving the binaries (non GUI-case)
             // and by the other POST route, either multipartConversionRequest or paramConversionRequest is set if a file should be attached to the resource, but not both.
@@ -271,8 +278,12 @@ object ResourcesRouteV1 extends Authenticator {
             )
         }
 
-        def createOneResourceRequest(resourceRequest: CreateResourceFromXmlImportRequestV1, userProfile: UserProfileV1): Future[OneOfMultipleResourceCreateRequestV1] = {
-            val values: Map[IRI, Future[Seq[CreateValueV1WithComment]]] = valuesToCreate(resourceRequest.properties, userProfile)
+        def createOneResourceRequestFromXmlImport(resourceRequest: CreateResourceFromXmlImportRequestV1, userProfile: UserProfileV1): Future[OneOfMultipleResourceCreateRequestV1] = {
+            val values: Map[IRI, Future[Seq[CreateValueV1WithComment]]] = valuesToCreate(
+                properties = resourceRequest.properties,
+                acceptStandoffLinksToClientIDs = true,
+                userProfile = userProfile
+            )
 
             // make the whole Map a Future
 
@@ -302,7 +313,7 @@ object ResourcesRouteV1 extends Authenticator {
 
         def makeMultiResourcesRequestMessage(resourceRequest: Seq[CreateResourceFromXmlImportRequestV1], projectId: IRI, apiRequestID: UUID, userProfile: UserProfileV1): Future[MultipleResourceCreateRequestV1] = {
             val resourcesToCreate: Seq[Future[OneOfMultipleResourceCreateRequestV1]] =
-                resourceRequest.map(createResourceRequest => createOneResourceRequest(createResourceRequest, userProfile))
+                resourceRequest.map(createResourceRequest => createOneResourceRequestFromXmlImport(createResourceRequest, userProfile))
 
             for {
                 resToCreateCollection: Seq[OneOfMultipleResourceCreateRequestV1] <- Future.sequence(resourcesToCreate)
@@ -633,9 +644,6 @@ object ResourcesRouteV1 extends Authenticator {
                     // Get the client's unique ID for the resource.
                     val clientIDForResource: String = (resourceNode \ "@id").toString
 
-                    // Get the resource's rdfs:label.
-                    val resourceLabel: String = (resourceNode \ "@label").toString
-
                     // Convert the XML element's label and namespace to an internal resource class IRI.
 
                     val elementNamespace: String = resourceNode.getNamespace(resourceNode.prefix)
@@ -649,15 +657,23 @@ object ResourcesRouteV1 extends Authenticator {
                     // Get the child elements of the resource element.
                     val childElements: Seq[Node] = resourceNode.child.filterNot(_.label == "#PCDATA")
 
+                    // The label must be the first child element of the resource element.
+                    val resourceLabel: String = childElements.headOption match {
+                        case Some(firstChildElem) => firstChildElem.text
+                        case None => throw BadRequestException(s"Resource '$clientIDForResource' contains no ${OntologyConstants.KnoraXmlImportV1.KnoraXmlImportNamespacePrefixLabel}:label element")
+                    }
+
+                    val childElementsAfterLabel = childElements.tail
+
                     // Get the resource's file metadata, if any. This represents a file that has already been stored by Sipi.
-                    // If provided, it must be the first child element of the resource element.
-                    val fileMetadata: Option[CreateFileV1] = childElements.headOption match {
-                        case Some(firstChildElem) =>
-                            if (firstChildElem.label == "file") {
+                    // If provided, it must be the second child element of the resource element.
+                    val fileMetadata: Option[CreateFileV1] = childElementsAfterLabel.headOption match {
+                        case Some(secondChildElem) =>
+                            if (secondChildElem.label == "file") {
                                 Some(CreateFileV1(
-                                    originalFilename = firstChildElem.attribute("original_filename").get.text,
-                                    originalMimeType = firstChildElem.attribute("original_mimetype").get.text,
-                                    filename = firstChildElem.attribute("filename").get.text
+                                    originalFilename = secondChildElem.attribute("original_filename").get.text,
+                                    originalMimeType = secondChildElem.attribute("original_mimetype").get.text,
+                                    filename = secondChildElem.attribute("filename").get.text
                                 ))
                             } else {
                                 None
@@ -668,9 +684,9 @@ object ResourcesRouteV1 extends Authenticator {
 
                     // Any remaining child elements of the resource element represent property values.
                     val propertyElements = if (fileMetadata.isDefined) {
-                        childElements.tail
+                        childElementsAfterLabel.tail
                     } else {
-                        childElements
+                        childElementsAfterLabel
                     }
 
                     // Traverse the property value elements. This produces a sequence in which the same property IRI
@@ -759,13 +775,13 @@ object ResourcesRouteV1 extends Authenticator {
                             case None => throw BadRequestException(s"Attribute 'linkType' missing in element '${node.label}'")
                         }
 
-                        node.attribute("ref").get.headOption match {
-                            case Some(refNode: Node) =>
-                                val ref = refNode.text
+                        node.attribute("target").get.headOption match {
+                            case Some(targetNode: Node) =>
+                                val target = targetNode.text
 
                                 linkType match {
-                                    case "internal" => CreateResourceValueV1(link_to_client_id = Some(ref))
-                                    case "iri" => CreateResourceValueV1(link_value = Some(InputValidation.toIri(ref, () => throw BadRequestException(s"Invalid IRI in element '${node.label}': '$ref'"))))
+                                    case "ref" => CreateResourceValueV1(link_to_client_id = Some(target))
+                                    case "iri" => CreateResourceValueV1(link_value = Some(InputValidation.toIri(target, () => throw BadRequestException(s"Invalid IRI in element '${node.label}': '$target'"))))
                                     case other => throw BadRequestException(s"Unrecognised value '$other' in attribute 'linkType' of element '${node.label}'")
                                 }
 

@@ -80,9 +80,10 @@
                     <xs:complexContent>
                         <xs:extension base="@{knoraXmlImportNamespacePrefixLabel}:resourceType">
                             <xs:sequence>
+                                <xs:element ref="@{knoraXmlImportNamespacePrefixLabel}:label" minOccurs="1" maxOccurs="1"/>
 
                                 @if(resourceClassInfo.fileValueProperties.nonEmpty) {
-                                    <xs:element ref="@{knoraXmlImportNamespacePrefixLabel}:file" minOccurs="0" maxOccurs="1"/>
+                                    <xs:element ref="@{knoraXmlImportNamespacePrefixLabel}:file" minOccurs="1" maxOccurs="1"/>
                                 }
 
                                 @for((propertyIri, cardinality) <- resourceClassInfo.cardinalities.toVector.sortBy(_._1)) {

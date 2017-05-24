@@ -1189,31 +1189,35 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    |    xmlns:biblio="http://api.knora.org/ontology/biblio/xml-import/v1#"
                    |    xmlns:beol="http://api.knora.org/ontology/beol/xml-import/v1#"
                    |    xmlns:knoraXmlImport="http://api.knora.org/ontology/knoraXmlImport/v1#">
-                   |    <beol:person id="abel" label="Niels Henrik Abel">
+                   |    <beol:person id="abel">
+                   |        <knoraXmlImport:label>Niels Henrik Abel</knoraXmlImport:label>
                    |        <beol:hasFamilyName knoraType="richtext_value">Abel</beol:hasFamilyName>
                    |        <beol:hasGivenName knoraType="richtext_value">Niels Henrik</beol:hasGivenName>
                    |    </beol:person>
-                   |    <beol:person id="holmes" label="Sherlock Holmes">
+                   |    <beol:person id="holmes">
+                   |        <knoraXmlImport:label>Sherlock Holmes</knoraXmlImport:label>
                    |        <beol:hasFamilyName knoraType="richtext_value">Holmes</beol:hasFamilyName>
                    |        <beol:hasGivenName knoraType="richtext_value">Sherlock</beol:hasGivenName>
                    |    </beol:person>
-                   |    <biblio:Journal id="math_intelligencer" label="math intelligencer">
-                   |        <biblio:hasName knoraType="richtext_value">math intelligencer</biblio:hasName>
+                   |    <biblio:Journal id="math_intelligencer">
+                   |        <knoraXmlImport:label>Math Intelligencer</knoraXmlImport:label>
+                   |        <biblio:hasName knoraType="richtext_value">Math Intelligencer</biblio:hasName>
                    |    </biblio:Journal>
-                   |    <biblio:JournalArticle id="strings_in_the_16th_and_17th_centuries" label="Strings in the 16th and 17th Centuries">
+                   |    <biblio:JournalArticle id="strings_in_the_16th_and_17th_centuries">
+                   |        <knoraXmlImport:label>Strings in the 16th and 17th Centuries</knoraXmlImport:label>
                    |        <biblio:beol__comment knoraType="richtext_value" mapping_id="$mappingIri">
-                   |            <text xmlns="">A very <strong>interesting</strong> article.</text>
+                   |            <text xmlns="">The most <strong>interesting</strong> article in <a class="salsah-link" href="ref:math_intelligencer">Math Intelligencer</a>.</text>
                    |        </biblio:beol__comment>
                    |        <biblio:endPage knoraType="richtext_value">73</biblio:endPage>
                    |        <biblio:isPartOfJournal>
-                   |            <biblio:Journal knoraType="link_value" ref="math_intelligencer" linkType="internal"/>
+                   |            <biblio:Journal knoraType="link_value" target="math_intelligencer" linkType="ref"/>
                    |        </biblio:isPartOfJournal>
                    |        <biblio:journalVolume knoraType="richtext_value">27</biblio:journalVolume>
                    |        <biblio:publicationHasAuthor>
-                   |            <beol:person knoraType="link_value" linkType="internal" ref="abel"/>
+                   |            <beol:person knoraType="link_value" linkType="ref" target="abel"/>
                    |        </biblio:publicationHasAuthor>
                    |        <biblio:publicationHasAuthor>
-                   |            <beol:person knoraType="link_value" linkType="internal" ref="holmes"/>
+                   |            <beol:person knoraType="link_value" linkType="ref" target="holmes"/>
                    |        </biblio:publicationHasAuthor>
                    |        <biblio:publicationHasDate knoraType="date_value">GREGORIAN:1976</biblio:publicationHasDate>
                    |        <biblio:publicationHasTitle knoraType="richtext_value">Strings in the 16th and 17th Centuries</biblio:publicationHasTitle>
@@ -1245,31 +1249,35 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    |    xmlns:biblio="http://api.knora.org/ontology/biblio/xml-import/v1#"
                    |    xmlns:beol="http://api.knora.org/ontology/beol/xml-import/v1#"
                    |    xmlns:knoraXmlImport="http://api.knora.org/ontology/knoraXmlImport/v1#">
-                   |    <beol:person id="abel" label="Niels Henrik Abel">
+                   |    <beol:person id="abel">
+                   |        <knoraXmlImport:label>Niels Henrik Abel</knoraXmlImport:label>
                    |        <beol:hasFamilyName knoraType="richtext_value">Abel</beol:hasFamilyName>
                    |        <beol:hasGivenName knoraType="richtext_value">Niels Henrik</beol:hasGivenName>
                    |    </beol:person>
-                   |    <beol:person id="holmes" label="Sherlock Holmes">
+                   |    <beol:person id="holmes">
+                   |        <knoraXmlImport:label>Sherlock Holmes</knoraXmlImport:label>
                    |        <beol:hasFamilyName knoraType="richtext_value">Holmes</beol:hasFamilyName>
                    |        <beol:hasGivenName knoraType="richtext_value">Sherlock</beol:hasGivenName>
                    |    </beol:person>
-                   |    <biblio:Journal id="math_intelligencer" label="math intelligencer">
-                   |        <biblio:hasName knoraType="richtext_value">math intelligencer</biblio:hasName>
+                   |    <biblio:Journal id="math_intelligencer">
+                   |        <knoraXmlImport:label>Math Intelligencer</knoraXmlImport:label>
+                   |        <biblio:hasName knoraType="richtext_value">Math Intelligencer</biblio:hasName>
                    |    </biblio:Journal>
-                   |    <biblio:JournalArticle id="strings_in_the_16th_and_17th_centuries" label="Strings in the 16th and 17th Centuries">
+                   |    <biblio:JournalArticle id="strings_in_the_16th_and_17th_centuries">
+                   |        <knoraXmlImport:label>Strings in the 16th and 17th Centuries</knoraXmlImport:label>
                    |        <biblio:beol__comment knoraType="richtext_value" mapping_id="$mappingIri">
-                   |            <text xmlns="">A very <strong>interesting</strong> article.</text>
+                   |            <text xmlns="">The most <strong>interesting</strong> article in <a class="salsah-link" href="ref:math_intelligencer">Math Intelligencer</a>.</text>
                    |        </biblio:beol__comment>
                    |        <biblio:endPage knoraType="richtext_value">73</biblio:endPage>
                    |        <biblio:isPartOfJournal>
-                   |            <biblio:Journal knoraType="link_value" linkType="internal" ref="math_intelligencer"/>
+                   |            <biblio:Journal knoraType="link_value" target="math_intelligencer" linkType="ref"/>
                    |        </biblio:isPartOfJournal>
                    |        <biblio:journalVolume knoraType="richtext_value">27</biblio:journalVolume>
                    |        <biblio:publicationHasAuthor>
-                   |            <beol:person knoraType="link_value" linkType="internal" ref="abel"/>
+                   |            <beol:person knoraType="link_value" linkType="ref" target="abel"/>
                    |        </biblio:publicationHasAuthor>
                    |        <biblio:publicationHasAuthor>
-                   |            <beol:person knoraType="link_value" linkType="internal" ref="holmes"/>
+                   |            <beol:person knoraType="link_value" linkType="ref" target="holmes"/>
                    |        </biblio:publicationHasAuthor>
                    |        <biblio:publicationHasDate knoraType="date_value">GREGORIAN:19foo76</biblio:publicationHasDate>
                    |        <biblio:publicationHasTitle knoraType="richtext_value">Strings in the 16th and 17th Centuries</biblio:publicationHasTitle>
@@ -1297,14 +1305,18 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    |    xmlns:biblio="http://api.knora.org/ontology/biblio/xml-import/v1#"
                    |    xmlns:beol="http://api.knora.org/ontology/beol/xml-import/v1#"
                    |    xmlns:knoraXmlImport="http://api.knora.org/ontology/knoraXmlImport/v1#">
-                   |    <biblio:JournalArticle id="strings_in_the_18th_century" label="Strings in the 18th Century">
+                   |    <biblio:JournalArticle id="strings_in_the_18th_century">
+                   |        <knoraXmlImport:label>Strings in the 18th Century</knoraXmlImport:label>
+                   |        <biblio:beol__comment knoraType="richtext_value" mapping_id="$mappingIri">
+                   |            <text xmlns="">The most <strong>boring</strong> article in <a class="salsah-link" href="${mathIntelligencerIri.get}">Math Intelligencer</a>.</text>
+                   |        </biblio:beol__comment>
                    |        <biblio:endPage knoraType="richtext_value">76</biblio:endPage>
                    |        <biblio:isPartOfJournal>
-                   |            <biblio:Journal knoraType="link_value" linkType="iri" ref="${mathIntelligencerIri.get}"/>
+                   |            <biblio:Journal knoraType="link_value" linkType="iri" target="${mathIntelligencerIri.get}"/>
                    |        </biblio:isPartOfJournal>
                    |        <biblio:journalVolume knoraType="richtext_value">27</biblio:journalVolume>
                    |        <biblio:publicationHasAuthor>
-                   |            <beol:person knoraType="link_value" linkType="iri" ref="${abelAuthorIri.get}"/>
+                   |            <beol:person knoraType="link_value" linkType="iri" target="${abelAuthorIri.get}"/>
                    |        </biblio:publicationHasAuthor>
                    |        <biblio:publicationHasDate knoraType="date_value">GREGORIAN:1977</biblio:publicationHasDate>
                    |        <biblio:publicationHasTitle knoraType="richtext_value">Strings in the 18th Century</biblio:publicationHasTitle>

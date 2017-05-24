@@ -201,31 +201,35 @@ XML looks like this:
         xmlns:biblio="http://api.knora.org/ontology/biblio/xml-import/v1#"
         xmlns:beol="http://api.knora.org/ontology/beol/xml-import/v1#"
         xmlns:knoraXmlImport="http://api.knora.org/ontology/knoraXmlImport/v1#">
-        <beol:person id="abel" label="Niels Henrik Abel">
+        <beol:person id="abel">
+            <knoraXmlImport:label>Niels Henrik Abel</knoraXmlImport:label>
             <beol:hasFamilyName knoraType="richtext_value">Abel</beol:hasFamilyName>
             <beol:hasGivenName knoraType="richtext_value">Niels Henrik</beol:hasGivenName>
         </beol:person>
-        <beol:person id="holmes" label="Sherlock Holmes">
+        <beol:person id="holmes">
+            <knoraXmlImport:label>Sherlock Holmes</knoraXmlImport:label>
             <beol:hasFamilyName knoraType="richtext_value">Holmes</beol:hasFamilyName>
             <beol:hasGivenName knoraType="richtext_value">Sherlock</beol:hasGivenName>
         </beol:person>
-        <biblio:Journal id="math_intelligencer" label="math intelligencer">
-            <biblio:hasName knoraType="richtext_value">math intelligencer</biblio:hasName>
+        <biblio:Journal id="math_intelligencer">
+            <knoraXmlImport:label>Math Intelligencer</knoraXmlImport:label>
+            <biblio:hasName knoraType="richtext_value">Math Intelligencer</biblio:hasName>
         </biblio:Journal>
-        <biblio:JournalArticle id="strings_in_the_16th_and_17th_centuries" label="Strings in the 16th and 17th Centuries">
+        <biblio:JournalArticle id="strings_in_the_16th_and_17th_centuries">
+            <knoraXmlImport:label>Strings in the 16th and 17th Centuries</knoraXmlImport:label>
             <biblio:beol__comment knoraType="richtext_value" mapping_id="http://data.knora.org/projects/standoff/mappings/StandardMapping">
-                <text xmlns="">A very <strong>interesting</strong> article.</text>
+                <text xmlns="">The most <strong>interesting</strong> article in <a class="salsah-link" href="ref:math_intelligencer">Math Intelligencer</a>.</text>
             </biblio:beol__comment>
             <biblio:endPage knoraType="richtext_value">73</biblio:endPage>
             <biblio:isPartOfJournal>
-                <biblio:Journal knoraType="link_value" linkType="internal" ref="math_intelligencer"/>
+                <biblio:Journal knoraType="link_value" target="math_intelligencer" linkType="ref"/>
             </biblio:isPartOfJournal>
             <biblio:journalVolume knoraType="richtext_value">27</biblio:journalVolume>
             <biblio:publicationHasAuthor>
-                <beol:person knoraType="link_value" linkType="internal" ref="abel"/>
+                <beol:person knoraType="link_value" linkType="ref" target="abel"/>
             </biblio:publicationHasAuthor>
             <biblio:publicationHasAuthor>
-                <beol:person knoraType="link_value" linkType="internal" ref="holmes"/>
+                <beol:person knoraType="link_value" linkType="ref" target="holmes"/>
             </biblio:publicationHasAuthor>
             <biblio:publicationHasDate knoraType="date_value">GREGORIAN:1976</biblio:publicationHasDate>
             <biblio:publicationHasTitle knoraType="richtext_value">Strings in the 16th and 17th Centuries</biblio:publicationHasTitle>
@@ -245,24 +249,29 @@ This illustrates several aspects of XML imports:
   the same directory as the schemas, and we run an XML validator to check the XML, it should load the schemas.
 - The child elements of ``knoraXmlImport:resources`` represent resources to be created. The order of these elements
   is unimportant.
-- Each resource must have an ID, which must be unique within the file. These IDs are used only during the import,
+- Each resource must have an ID, which must be an XML NCName_, and must be unique within the file. These IDs are used only during the import,
   and will not be stored in the triplestore.
-- Each resource must have a label, which will be stored as its ``rdfs:label``.
-- The child elements of each resource represent its property values. These must be sorted in alphabetical order by
+- The first child element of each resource must be a ``knoraXmlImport:label``, which will be stored as the resource's ``rdfs:label``.
+- Optionally, the second child element of a resource can provide metadata about a file to be attached to the resource
+  (see :ref:`bulk-import-with-digital-representations`).
+- The remaining child elements of each resource represent its property values. These must be sorted in alphabetical order by
   property name.
 - If a property has mutliple values, these are represented as multiple adjacent property elements.
 - The type of each value must be specified using the attribute ``knoraType``.
 - A link to another resource described in the XML import is represented as a child element of a property element,
-  with attributes ``knoraType="link_value"`` and ``linkType="internal"``, and a ``ref`` attribute containing
+  with attributes ``knoraType="link_value"`` and ``linkType="ref"``, and a ``target`` attribute containing
   the ID of the target resource.
 - There is a specfic syntax for referring to properties from other ontologies. In the example, ``beol:comment``
   is defined in the ontology ``http://www.knora.org/ontology/beol``. In the XML, we refer to it as
   ``biblio:beol__comment``.
 - A text value can contain XML markup. In this case:
-    - The XML markup in the text value will not be validated by the schema.
     - The text value element must have the attribute ``mapping_id``, specifying a mapping from XML to standoff markup (see :ref:`XML-to-standoff-mapping`).
-    - XML markup in a text value cannot contain references to other resources described in the XML import.
     - It is necessary to specify the appropriate XML namespace (in this case the null namespace, ``xmlns=""``) for the XML markup in the text value.
+    - The XML markup in the text value will not be validated by the schema.
+    - In an XML tag that is mapped to a standoff link tag, the link target can refer either to the IRI of a resoruce that already exists
+      in the triplestore, or to the ID of a resource described in the import. If a link points to a resource described in the import,
+      the ID of the target resource must be prefixed with ``ref:``. In the example above, using the standard mapping, the standoff link to
+      ``math_intelligencer`` has the target ``ref:math_intelligencer``.
 
 To create these resources, we use the following route, specifying the IRI of the project
 in which the resources should be created:
@@ -287,14 +296,18 @@ in the triplestore:
         xmlns:biblio="http://api.knora.org/ontology/biblio/xml-import/v1#"
         xmlns:beol="http://api.knora.org/ontology/beol/xml-import/v1#"
         xmlns:knoraXmlImport="http://api.knora.org/ontology/knoraXmlImport/v1#">
-        <biblio:JournalArticle id="strings_in_the_18th_century" label="Strings in the 18th Century">
+        <biblio:JournalArticle id="strings_in_the_18th_century">
+            <knoraXmlImport:label>Strings in the 18th Century</knoraXmlImport:label>
+            <biblio:beol__comment knoraType="richtext_value" mapping_id="$mappingIri">
+                <text xmlns="">The most <strong>boring</strong> article in <a class="salsah-link" href="http://rdfh.ch/biblio/QMDEHvBNQeOdw85Z2NSi9A">Math Intelligencer</a>.</text>
+            </biblio:beol__comment>
             <biblio:endPage knoraType="richtext_value">76</biblio:endPage>
             <biblio:isPartOfJournal>
-                <biblio:Journal knoraType="link_value" linkType="iri" ref="http://rdfh.ch/biblio/QMDEHvBNQeOdw85Z2NSi9A"/>
+                <biblio:Journal knoraType="link_value" linkType="iri" target="http://rdfh.ch/biblio/QMDEHvBNQeOdw85Z2NSi9A"/>
             </biblio:isPartOfJournal>
             <biblio:journalVolume knoraType="richtext_value">27</biblio:journalVolume>
             <biblio:publicationHasAuthor>
-                <beol:person knoraType="link_value" linkType="iri" ref="http://rdfh.ch/biblio/c-xMB3qkRs232pWyjdUUvA"/>
+                <beol:person knoraType="link_value" linkType="iri" target="http://rdfh.ch/biblio/c-xMB3qkRs232pWyjdUUvA"/>
             </biblio:publicationHasAuthor>
             <biblio:publicationHasDate knoraType="date_value">GREGORIAN:1977</biblio:publicationHasDate>
             <biblio:publicationHasTitle knoraType="richtext_value">Strings in the 18th Century</biblio:publicationHasTitle>
@@ -303,7 +316,9 @@ in the triplestore:
     </knoraXmlImport:resources>
 
 Note that in the link elements referring to existing resources, the ``linkType`` attribute has
-the value ``iri``, and the ``ref`` attribute contains the IRI of the target resource.
+the value ``iri``, and the ``target`` attribute contains the IRI of the target resource.
+
+.. _bulk-import-with-digital-representations:
 
 Bulk Import of Resources with Digital Representations
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -320,15 +335,17 @@ file:
         xsi:schemaLocation="http://api.knora.org/ontology/incunabula/xml-import/v1# incunabula.xsd"
         xmlns:incunabula="http://api.knora.org/ontology/incunabula/xml-import/v1#"
         xmlns:knoraXmlImport="http://api.knora.org/ontology/knoraXmlImport/v1#">
-        <incunabula:book id="test_book" label="a book with one page">
+        <incunabula:book id="test_book">
+            <knoraXmlImport:label>a book with one page</knoraXmlImport:label>
             <incunabula:title knoraType="richtext_value">the title of a book with one page</incunabula:title>
         </incunabula:book>
-        <incunabula:page id="test_page" label="a page with an image">
+        <incunabula:page id="test_page">
+            <knoraXmlImport:label>a page with an image</knoraXmlImport:label>
             <knoraXmlImport:file filename="6roIwT7UPmo-EaoOyVomrBE" original_filename="IBB_1_002712355_306.tif" original_mimetype="image/tiff"/>
             <incunabula:origname knoraType="richtext_value">Chlaus</incunabula:origname>
             <incunabula:pagenum knoraType="richtext_value">1a</incunabula:pagenum>
             <incunabula:partOf>
-                <incunabula:book knoraType="link_value" linkType="internal" ref="test_book"/>
+                <incunabula:book knoraType="link_value" linkType="ref" ref="test_book"/>
             </incunabula:partOf>
             <incunabula:seqnum knoraType="int_value">1</incunabula:seqnum>
         </incunabula:page>
@@ -337,3 +354,4 @@ file:
 .. _Apache Xerces: http://xerces.apache.org
 .. _Saxon: http://www.saxonica.com
 .. _Oxygen: https://www.oxygenxml.com
+.. _NCName: https://www.w3.org/TR/REC-xml-names/#NT-NCName

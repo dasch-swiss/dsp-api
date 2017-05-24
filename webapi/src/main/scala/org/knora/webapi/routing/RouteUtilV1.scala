@@ -45,7 +45,7 @@ object RouteUtilV1 {
     /**
       * Sends a message to a responder and completes the HTTP request by returning the response as JSON.
       *
-      * @param requestMessage  a future containing a [[KnoraRequestV1]] message that should be sent to the responder manager.
+      * @param requestMessage   a future containing a [[KnoraRequestV1]] message that should be sent to the responder manager.
       * @param requestContext   the akka-http [[RequestContext]].
       * @param settings         the application's settings.
       * @param responderManager a reference to the responder manager.
@@ -66,7 +66,7 @@ object RouteUtilV1 {
         }
 
         val httpResponse: Future[HttpResponse] = for {
-            // Make sure the responder sent a reply of type KnoraResponseV1.
+        // Make sure the responder sent a reply of type KnoraResponseV1.
             knoraResponse <- (responderManager ? requestMessage).map {
                 case replyMessage: KnoraResponseV1 => replyMessage
 
@@ -97,6 +97,7 @@ object RouteUtilV1 {
 
     /**
       * Sends a message (resulting from a [[Future]]) to a responder and completes the HTTP request by returning the response as JSON.
+      *
       * @param requestMessageF  a [[Future]] containing a [[KnoraRequestV1]] message that should be sent to the responder manager.
       * @param requestContext   the akka-http [[RequestContext]].
       * @param settings         the application's settings.
@@ -183,18 +184,22 @@ object RouteUtilV1 {
       *
       * Converts XML to a [[TextWithStandoffTagsV1]], representing the text and its standoff markup.
       *
-      * @param xml                  the given XML to be converted to standoff.
-      * @param mappingIri           the mapping to be used to convert the XML to standoff.
-      * @param userProfile          the user making the request.
-      * @param settings             the application's settings.
-      * @param responderManager     a reference to the responder manager.
-      * @param log                  a logging adapter.
-      * @param timeout              a timeout for `ask` messages.
-      * @param executionContext     an execution context for futures.
+      * @param xml                            the given XML to be converted to standoff.
+      * @param mappingIri                     the mapping to be used to convert the XML to standoff.
+      * @param acceptStandoffLinksToClientIDs if `true`, allow standoff link tags to use the client's IDs for target
+      *                                       resources. In a bulk import, this allows standoff links to resources
+      *                                       that are to be created by the import.
+      * @param userProfile                    the user making the request.
+      * @param settings                       the application's settings.
+      * @param responderManager               a reference to the responder manager.
+      * @param log                            a logging adapter.
+      * @param timeout                        a timeout for `ask` messages.
+      * @param executionContext               an execution context for futures.
       * @return a [[TextWithStandoffTagsV1]].
       */
     def convertXMLtoStandoffTagV1(xml: String,
                                   mappingIri: IRI,
+                                  acceptStandoffLinksToClientIDs: Boolean,
                                   userProfile: UserProfileV1,
                                   settings: SettingsImpl,
                                   responderManager: ActorSelection,
@@ -202,12 +207,13 @@ object RouteUtilV1 {
 
         for {
 
-            // get the mapping
+        // get the mapping
             mappingResponse: GetMappingResponseV1 <- (responderManager ? GetMappingRequestV1(mappingIri = mappingIri, userProfile = userProfile)).mapTo[GetMappingResponseV1]
 
             textWithStandoffTagV1 = StandoffTagUtilV1.convertXMLtoStandoffTagV1(
                 xml = xml,
                 mapping = mappingResponse,
+                acceptStandoffLinksToClientIDs = acceptStandoffLinksToClientIDs,
                 log = log
             )
 

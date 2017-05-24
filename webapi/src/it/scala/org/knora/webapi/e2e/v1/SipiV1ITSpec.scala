@@ -372,15 +372,17 @@ class SipiV1ITSpec extends ITSpec(SipiV1ITSpec.config) with TriplestoreJsonProto
                    |    xsi:schemaLocation="http://api.knora.org/ontology/incunabula/xml-import/v1# incunabula.xsd"
                    |    xmlns:incunabula="http://api.knora.org/ontology/incunabula/xml-import/v1#"
                    |    xmlns:knoraXmlImport="http://api.knora.org/ontology/knoraXmlImport/v1#">
-                   |    <incunabula:book id="test_book" label="a book with one page">
+                   |    <incunabula:book id="test_book">
+                   |        <knoraXmlImport:label>a book with one page</knoraXmlImport:label>
                    |        <incunabula:title knoraType="richtext_value">the title of a book with one page</incunabula:title>
                    |    </incunabula:book>
-                   |    <incunabula:page id="test_page" label="a page with an image">
+                   |    <incunabula:page id="test_page">
+                   |        <knoraXmlImport:label>a page with an image</knoraXmlImport:label>
                    |        <knoraXmlImport:file filename="$filename" original_filename="$originalFilename" original_mimetype="$originalMimeType"/>
                    |        <incunabula:origname knoraType="richtext_value">Chlaus</incunabula:origname>
                    |        <incunabula:pagenum knoraType="richtext_value">1a</incunabula:pagenum>
                    |        <incunabula:partOf>
-                   |            <incunabula:book knoraType="link_value" linkType="internal" ref="test_book"/>
+                   |            <incunabula:book knoraType="link_value" linkType="internal" target="test_book"/>
                    |        </incunabula:partOf>
                    |        <incunabula:seqnum knoraType="int_value">1</incunabula:seqnum>
                    |    </incunabula:page>

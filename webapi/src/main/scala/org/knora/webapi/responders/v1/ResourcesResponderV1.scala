@@ -67,7 +67,6 @@ class ResourcesResponderV1 extends ResponderV1 {
         case ResourceSearchGetRequestV1(searchString: String, resourceIri: Option[IRI], numberOfProps: Int, limitOfResults: Int, userProfile: UserProfileV1) => future2Message(sender(), getResourceSearchResponseV1(searchString, resourceIri, numberOfProps, limitOfResults, userProfile), log)
         case ResourceCreateRequestV1(resourceTypeIri, label, values, convertRequest, projectIri, userProfile, apiRequestID) => future2Message(sender(), createNewResource(resourceTypeIri, label, values, convertRequest, projectIri, userProfile, apiRequestID), log)
         case MultipleResourceCreateRequestV1(resourcesToCreate, projectIri, userProfile, apiRequestID) => future2Message(sender(), createMultipleNewResources(resourcesToCreate, projectIri, userProfile, apiRequestID), log)
-
         case ResourceCheckClassRequestV1(resourceIri: IRI, owlClass: IRI, userProfile: UserProfileV1) => future2Message(sender(), checkResourceClass(resourceIri, owlClass, userProfile), log)
         case PropertiesGetRequestV1(resourceIri: IRI, userProfile: UserProfileV1) => future2Message(sender(), getPropertiesV1(resourceIri = resourceIri, userProfile = userProfile), log)
         case resourceDeleteRequest: ResourceDeleteRequestV1 => future2Message(sender(), deleteResourceV1(resourceDeleteRequest), log)
@@ -1280,6 +1279,7 @@ class ResourcesResponderV1 extends ResponderV1 {
                             resourceClassIri = resourceCreateRequest.resourceTypeIri,
                             resourceIndex = resourceIndex,
                             values = resourceValuesWithLinkTargetIris,
+                            clientResourceIDsToResourceIris = clientResourceIDsToResourceIris,
                             fileValues = fileValues,
                             userProfile = userProfile,
                             apiRequestID = apiRequestID
@@ -1479,22 +1479,25 @@ class ResourcesResponderV1 extends ResponderV1 {
     /**
       * Generates SPARQL to create the values fo a resource.
       *
-      * @param projectIri       Iri of the project .
-      * @param resourceClassIri type of resource .
-      * @param resourceIndex    Index of the resource
-      * @param values           values to be created for resource.
-      * @param fileValues       file value required by the ontology
-      * @param userProfile      the profile of the user making the request.
-      * @param apiRequestID     the the ID of the API request.
+      * @param projectIri                      Iri of the project .
+      * @param resourceClassIri                type of resource .
+      * @param resourceIndex                   Index of the resource
+      * @param values                          values to be created for resource.
+      * @param fileValues                      file value required by the ontology
+      * @param clientResourceIDsToResourceIris a map of client resource IDs (which may appear in standoff link tags
+      *                                        in values passed to this method) to the IRIs that will be used for
+      *                                        those resources.
+      * @param userProfile                     the profile of the user making the request.
+      * @param apiRequestID                    the the ID of the API request.
       * @return a [[GenerateSparqlToCreateMultipleValuesResponseV1]] returns response of generation of SPARQL for multiple values.
       */
-
     def generateSparqlForValuesOfNewResource(projectIri: IRI,
                                              resourceIri: IRI,
                                              resourceClassIri: IRI,
                                              resourceIndex: Int,
                                              values: Map[IRI, Seq[CreateValueV1WithComment]],
                                              fileValues: Option[(IRI, Vector[CreateValueV1WithComment])],
+                                             clientResourceIDsToResourceIris: Map[String, IRI],
                                              userProfile: UserProfileV1,
                                              apiRequestID: UUID): Future[GenerateSparqlToCreateMultipleValuesResponseV1] = {
         for {
@@ -1505,6 +1508,7 @@ class ResourcesResponderV1 extends ResponderV1 {
                 resourceClassIri = resourceClassIri,
                 resourceIndex = resourceIndex,
                 values = values ++ fileValues,
+                clientResourceIDsToResourceIris = clientResourceIDsToResourceIris,
                 userProfile = userProfile,
                 apiRequestID = apiRequestID
             ))
@@ -1630,6 +1634,7 @@ class ResourcesResponderV1 extends ResponderV1 {
                 resourceIndex = 0,
                 values = values,
                 fileValues = fileValues,
+                clientResourceIDsToResourceIris = Map.empty[String, IRI],
                 userProfile = userProfile,
                 apiRequestID = apiRequestID
             )
