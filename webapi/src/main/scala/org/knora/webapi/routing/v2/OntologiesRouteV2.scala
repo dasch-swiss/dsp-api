@@ -59,17 +59,21 @@ object OntologiesRouteV2 extends Authenticator {
                     )
                 }
             }
-        } ~ path("v2" / "ontologies" / "namedgraphs" / Segments) { (entityIris: List[String]) =>
+        } ~ path("v2" / "ontologies" / "namedgraphs" / Segments) { (externalOntologyIris: List[String]) =>
             get {
                 requestContext => {
                     val userProfile = getUserProfileV1(requestContext)
 
-                    val namedGraphIris: Set[IRI] = entityIris.map {
-                        (propIri: String) =>
-                            InputValidation.toIri(propIri, () => throw BadRequestException(s"Invalid property Iri: '$propIri'"))
+                    val internalOntologyIris: Set[IRI] = externalOntologyIris.map {
+                        (namedGraph: String) =>
+
+                            // translate the given external ontology Iri to an internal ontology Iri
+                            val internalOntologyIri = InputValidation.externalOntologyIriApiV2WithValueObjectToInternalOntologyIri(namedGraph, () => throw BadRequestException(s"given named graph $namedGraph is not a valid external ontology Iri"))
+
+                            InputValidation.toIri(internalOntologyIri, () => throw BadRequestException(s"Invalid named graph Iri: '$internalOntologyIri'"))
                     }.toSet
 
-                    val requestMessage = NamedGraphEntitiesGetRequestV2(namedGraphIris, userProfile = userProfile)
+                    val requestMessage = NamedGraphEntitiesGetRequestV2(internalOntologyIris, userProfile = userProfile)
 
                     RouteUtilV2.runJsonRoute(
                         requestMessage,
@@ -80,17 +84,21 @@ object OntologiesRouteV2 extends Authenticator {
                     )
                 }
             }
-        } ~ path("v2" / "ontologies" / "resourceclasses" / Segments) { (entityIris: List[String]) =>
+        } ~ path("v2" / "ontologies" / "resourceclasses" / Segments) { (externalResourceClassIris: List[String]) =>
             get {
                 requestContext => {
                     val userProfile = getUserProfileV1(requestContext)
 
-                    val resourceClassIris: Set[IRI] = entityIris.map {
+                    val internalResourceClassIris: Set[IRI] = externalResourceClassIris.map {
                         (resourceClassIri: String) =>
-                            InputValidation.toIri(resourceClassIri, () => throw BadRequestException(s"Invalid resource class Iri: '$resourceClassIri'"))
+
+                            // translate the given external resource class Iri to an internal Iri
+                            val internalResClassIri = InputValidation.externalApiV2WithValueObjectEntityIriToInternalEntityIri(resourceClassIri, () => throw BadRequestException(s"invalid external resource class Iri: $resourceClassIri"))
+
+                            InputValidation.toIri(internalResClassIri, () => throw BadRequestException(s"Invalid resource class Iri: '$internalResClassIri'"))
                     }.toSet
 
-                    val requestMessage = ResourceClassesGetRequestV2(resourceClassIris, userProfile = userProfile)
+                    val requestMessage = ResourceClassesGetRequestV2(internalResourceClassIris, userProfile = userProfile)
 
                     RouteUtilV2.runJsonRoute(
                         requestMessage,
@@ -101,17 +109,21 @@ object OntologiesRouteV2 extends Authenticator {
                     )
                 }
             }
-        } ~ path("v2" / "ontologies" / "properties" / Segments) { (entityIris: List[String]) =>
+        } ~ path("v2" / "ontologies" / "properties" / Segments) { (externalPropertyIris: List[String]) =>
             get {
                 requestContext => {
                     val userProfile = getUserProfileV1(requestContext)
 
-                    val propertyIris: Set[IRI] = entityIris.map {
+                    val internalPropertyIris: Set[IRI] = externalPropertyIris.map {
                         (propIri: String) =>
-                            InputValidation.toIri(propIri, () => throw BadRequestException(s"Invalid property Iri: '$propIri'"))
+
+                            // translate the given external property Iri to an internal Iri
+                            val internalPropIri = InputValidation.externalApiV2WithValueObjectEntityIriToInternalEntityIri(propIri, () => throw BadRequestException(s"invalid external property Iri: $propIri"))
+
+                            InputValidation.toIri(internalPropIri, () => throw BadRequestException(s"Invalid property Iri: '$internalPropIri'"))
                     }.toSet
 
-                    val requestMessage = PropertyEntitiesGetRequestV2(propertyIris, userProfile = userProfile)
+                    val requestMessage = PropertyEntitiesGetRequestV2(internalPropertyIris, userProfile = userProfile)
 
                     RouteUtilV2.runJsonRoute(
                         requestMessage,

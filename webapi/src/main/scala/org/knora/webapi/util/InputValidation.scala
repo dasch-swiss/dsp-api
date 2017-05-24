@@ -110,11 +110,25 @@ object InputValidation {
             "(" + NCNamePattern + ")$"
         ).r
 
+    // A regex for external knora-api v2 with value object ontologies.
+    private val ExternalApiV2WithValueObjectOntologyRegex: Regex = (
+        "^" + OntologyConstants.KnoraApi.ApiOntologyStart +
+        "(" + NCNamePattern + ")" +
+        OntologyConstants.KnoraApiV2WithValueObject.VersionSegment + "$"
+    ).r
+
     // A regex for entity IRIs in internal ontologies.
     private val InternalOntologyEntityRegex: Regex = (
         "^" + OntologyConstants.KnoraInternal.InternalOntologyStart +
             "(" + NCNamePattern + ")#(" + NCNamePattern + ")$"
         ).r
+
+    // A regex for external knora-api v2 with value object entity Iris.
+    private val ExternalApiV2WithValueObjectOntologyEntityRegex: Regex = (
+        "^" + OntologyConstants.KnoraApi.ApiOntologyStart +
+            "(" + NCNamePattern + ")" + OntologyConstants.KnoraApiV2WithValueObject.VersionSegment +
+            "#(" + NCNamePattern + ")$"
+    ).r
 
     // A regex for project-specific XML import namespaces.
     private val ProjectSpecificXmlImportNamespaceRegex: Regex = (
@@ -544,12 +558,29 @@ object InputValidation {
     }
 
     /**
+      * Given the Iri of an external knora-api v2 with value object ontology, returns the internal ontology Iri.
+      *
+      * @param externalOntologyIri the external ontology Iri.
+      * @param errorFun a function that throws an exception. It will be called if the form of the string is not
+      *                 valid for an internal ontology IRI.
+      * @return the internal ontology Iri.
+      */
+    def externalOntologyIriApiV2WithValueObjectToInternalOntologyIri(externalOntologyIri: IRI, errorFun: () => Nothing) = {
+        externalOntologyIri match {
+            case ExternalApiV2WithValueObjectOntologyRegex(ontologyName) =>
+                val internalOntologyName = if (ontologyName == "knora-api") "knora-base" else ontologyName
+                OntologyConstants.KnoraInternal.InternalOntologyStart + internalOntologyName
+            case _ => errorFun()
+        }
+    }
+
+    /**
       * Given the Iri of an internal ontology, returns the knora-api with value object ontology Iri.
       *
       * @param internalOntologyIri the Iri of the internal ontology.
       * @param errorFun a function that throws an exception. It will be called if the form of the string is not
       *                 valid for an internal ontology IRI.
-      * @return
+      * @return the external ontology Iri.
       */
     def internalOntologyIriToApiV2WithValueObjectOntologyIri(internalOntologyIri: IRI, errorFun: () => Nothing): IRI = {
         internalOntologyIri match {
@@ -557,6 +588,22 @@ object InputValidation {
                 val apiOntologyName = if (ontologyName == "knora-base") "knora-api" else ontologyName
                 OntologyConstants.KnoraApi.ApiOntologyStart + apiOntologyName + OntologyConstants.KnoraApiV2WithValueObject.VersionSegment
             case _ => errorFun()
+        }
+    }
+
+    /**
+      * Given the Iri of an external knora-api v2 with value object entity, returns the internal entity Iri.
+      *
+      * @param externalEntityIri an external entity Iri.
+      * @param errorFun a function that throws an exception. It will be called if the form of the string is not
+      *                 valid for an internal ontology IRI.
+      * @return the internal entity Iri.
+      */
+    def externalApiV2WithValueObjectEntityIriToInternalEntityIri(externalEntityIri: IRI, errorFun: () => Nothing) = {
+        externalEntityIri match {
+            case ExternalApiV2WithValueObjectOntologyEntityRegex(ontology, entityName) =>
+                val ontologyName = if (ontology == "knora-api") "knora-base" else ontology
+                OntologyConstants.KnoraInternal.InternalOntologyStart + ontologyName + "#" + entityName
         }
     }
 
