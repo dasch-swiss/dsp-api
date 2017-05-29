@@ -105,10 +105,14 @@ class StandoffResponderV1 extends Responder {
             }
         } yield textLocation
 
+        val recoveredTextLocationFuture = textLocationFuture.recover {
+            case notFound: NotFoundException => throw BadRequestException(s"XSL transformation $xslTransformationIri not found: ${notFound.message}")
+        }
+
         for {
 
             // check if the XSL transformation is in the cache
-            textLocation <- textLocationFuture
+            textLocation <- recoveredTextLocationFuture
 
             xsltMaybe: Option[String] = CacheUtil.get[String](cacheName = xsltCacheName, key = textLocation.path)
 
@@ -200,6 +204,21 @@ class StandoffResponderV1 extends Responder {
 
                 // the mapping conforms to the XML schema "src/main/resources/mappingXMLToStandoff.xsd"
                 mappingXML = XML.loadString(xml)
+
+                // get the default XSL transformation, if given (optional)
+                defaultXSLTransformation: Option[IRI] <- mappingXML \ "defaultXSLTransformation" match {
+                    case defaultTrans: NodeSeq if defaultTrans.length == 1 =>
+
+                        // check if the Iri is valid
+                        val transIri = InputValidation.toIri(defaultTrans.headOption.getOrElse(throw BadRequestException("could not access <defaultXSLTransformation>")).text, () => throw BadRequestException(s"XSL transformation ${defaultTrans.head.text} is not a valid IRI"))
+
+                        // try to obtain the XSL transformation to make sure that it really exists
+                        // TODO: add a test to the integration tests
+                        for {
+                            transform: GetXSLTransformationResponseV1 <- getXSLTransformation(transIri, userProfile)
+                        } yield Some(transIri)
+                    case _ => Future(None)
+                }
 
                 // create a collection of a all elements mappingElement
                 mappingElementsXML: NodeSeq = mappingXML \ "mappingElement"
@@ -309,6 +328,7 @@ class StandoffResponderV1 extends Responder {
                     dataNamedGraph = namedGraph,
                     mappingIri = mappingIri,
                     label = label,
+                    defaultXSLTransformation = defaultXSLTransformation,
                     mappingElements = mappingElements
                 ).toString()
 
@@ -332,12 +352,13 @@ class StandoffResponderV1 extends Responder {
             }
 
 
-            createMappingFuture.recoverWith {
+            createMappingFuture.recover {
                 case validationException: SAXException => throw BadRequestException(s"the provided mapping is invalid: ${validationException.getMessage}")
 
                 case ioException: IOException => throw NotFoundException(s"The schema could not be found")
 
                 case unknown: Exception => throw BadRequestException(s"the provided mapping could not be handled correctly: ${unknown.getMessage}")
+
             }
 
         }

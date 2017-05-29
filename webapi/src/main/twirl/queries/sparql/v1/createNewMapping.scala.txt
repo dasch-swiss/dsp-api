@@ -33,6 +33,7 @@
   dataNamedGraph: IRI,
   mappingIri: IRI,
   label: String,
+  defaultXSLTransformation: Option[IRI],
   mappingElements: Seq[MappingElement])
 
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -44,7 +45,14 @@ PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 INSERT {
     GRAPH ?dataNamedGraph {
         ?mapping rdf:type knora-base:XMLToStandoffMapping ;
-        rdfs:label ?label .
+            rdfs:label ?label .
+
+        @*
+            Check if a default XSL transformation is given.
+        *@
+        @if(defaultXSLTransformation.nonEmpty) {
+            ?mapping knora-base:mappingHasDefaultXSLTransformation <@defaultXSLTransformation.get> .
+        }
 
         @for(mappingEle <- mappingElements) {
             ?mapping knora-base:hasMappingElement <@mappingEle.mappingElementIri> .
