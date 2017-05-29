@@ -37,7 +37,7 @@ prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 prefix knora-base: <http://www.knora.org/ontology/knora-base#>
 
-SELECT DISTINCT ?node ?isRoot ?position ?nodeName ?label ?child
+SELECT DISTINCT ?node ?isRoot ?project ?position ?nodeName ?label ?child
 @* Ensure that inference is not used in this query. *@
 @if(triplestore.startsWith("graphdb")) {
     FROM <http://www.ontotext.com/explicit>
@@ -50,15 +50,19 @@ WHERE {
     ?rootNode knora-base:hasSubListNode* ?node .
 
     OPTIONAL {
-        ?node knora-base:hasSubListNode ?child
+        ?node knora-base:hasSubListNode ?child .
     }
 
     OPTIONAL {
-        ?node knora-base:listNodePosition ?position
+        ?node knora-base:listNodePosition ?position .
     }
 
     OPTIONAL {
-        ?node knora-base:isRootNode ?isRoot
+        ?node knora-base:isRootNode ?isRoot .
+    }
+
+    OPTIONAL {
+        ?node knora-base:attachedToProject ?project .
     }
 
     OPTIONAL {

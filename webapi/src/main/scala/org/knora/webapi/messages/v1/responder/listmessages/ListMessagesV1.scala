@@ -32,12 +32,26 @@ import spray.json._
 /**
   * An abstract trait for messages that can be sent to `HierarchicalListsResponderV1`.
   */
-sealed trait ListsResponderRequestV1 extends KnoraRequestV1 {
-    def iri: IRI
+sealed trait ListsResponderRequestV1 extends KnoraRequestV1
 
-    def userProfile: UserProfileV1
-}
 
+/**
+  * Requests a list of all lists or the lists inside a project.
+  *
+  * @param projectIri the IRI of the project.
+  * @param userProfileV1 the profile of the user making the request.
+  */
+case class ListsGetRequestV1(projectIri: Option[IRI], userProfileV1: UserProfileV1) extends ListsResponderRequestV1
+
+/**
+  * Requests a list. A successful response will be a [[ListGetResponseV1]]
+  * @param iri
+  * @param userProfileV1
+  */
+case class ListGetRequestV1(iri: IRI, userProfileV1: UserProfileV1) extends ListsResponderRequestV1
+
+
+case class ListGetResponseV1()
 /**
   * Requests a list. A successful response will be a [[HListGetResponseV1]].
   *
