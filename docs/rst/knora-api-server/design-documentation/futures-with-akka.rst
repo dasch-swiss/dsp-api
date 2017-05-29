@@ -154,6 +154,37 @@ necessary if you need to call the template function at the *very
 beginning* of a ``for``-comprehension. In the rest of the ``for``
 comprehension, you'll already implicitly have a ``Future`` object.
 
+Using ``recover`` on Futures
+----------------------------
+
+By using ``recover`` on a  ``Future``, an apt error message can be thrown if the ``Future`` fails. This is particularly useful when an an error message should be made more clear depending on the context the ``Future`` is used in.
+
+For example, we are asking the resources responder to query for a certain resource in order to process it in a special way. However, the client does not know that the resources responder is sent a request and in case the resource cannot be found, the message sent back from the resources responder (``NotFoundException``) would not make sense to it. Instead, we would like to handle the message in a way so that it makes sense for the operation the client actually executed. We can do this by calling ``recover`` on a ``Future``.
+
+::
+
+    private def mySpecialResourceRequest(iri: IRI, userProfile: UserProfileV1): Future[...] = {
+    
+        resourceRequestFuture = for {
+            resResponse: ResourceFullResponseV1 <- (responderManager ? ResourceFullGetRequestV1(iri = iri, userProfile = userProfile, getIncoming = false)).mapTo[ResourceFullResponseV1]
+        } yield resResponse
+    
+        resourceRequestFuture.recover {
+            case notFound: NotFoundException => throw BadRequestException(s"Special resource handling failed because the resource could not be found: ${notFound.message}") 
+        }
+    
+        for {
+        
+            res <- resourceRequestFuture
+            
+            ...
+        
+        } yield ...
+    
+    }   
+    
+Please note that the content of the ``Future`` has to be accessed using ``<-`` to make this work correctly. Otherwise the content will never be looked at.
+
 Designing with Futures
 ----------------------
 
