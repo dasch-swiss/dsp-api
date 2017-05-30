@@ -1333,6 +1333,40 @@ class ResourcesV1R2RSpec extends R2RSpec {
             }
         }
 
+        "create an anything:Thing with all data types from an XML import" in {
+            val xmlImport =
+                s"""<?xml version="1.0" encoding="UTF-8"?>
+                   |<knoraXmlImport:resources xmlns="http://api.knora.org/ontology/anything/xml-import/v1#"
+                   |    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   |    xsi:schemaLocation="http://api.knora.org/ontology/anything/xml-import/v1# anything.xsd"
+                   |    xmlns:anything="http://api.knora.org/ontology/anything/xml-import/v1#"
+                   |    xmlns:knoraXmlImport="http://api.knora.org/ontology/knoraXmlImport/v1#">
+                   |    <anything:Thing id="test_thing">
+                   |        <knoraXmlImport:label>These are a few of my favorite things</knoraXmlImport:label>
+                   |        <anything:hasBoolean knoraType="boolean_value">true</anything:hasBoolean>
+                   |        <anything:hasColor knoraType="color_value">#4169E1</anything:hasColor>
+                   |        <anything:hasDate knoraType="date_value">JULIAN:1291-08-01:1291-08-01</anything:hasDate>
+                   |        <anything:hasDecimal knoraType="decimal_value">5.6</anything:hasDecimal>
+                   |        <anything:hasInteger knoraType="int_value">12345</anything:hasInteger>
+                   |        <anything:hasInterval knoraType="interval_value">1000000000000000.0000000000000001,1000000000000000.0000000000000002</anything:hasInterval>
+                   |        <anything:hasListItem knoraType="hlist_value">http://data.knora.org/anything/treeList10</anything:hasListItem>
+                   |        <anything:hasOtherThing>
+                   |            <anything:Thing knoraType="link_value" linkType="iri" target="${sixthThingIri.get}"/>
+                   |        </anything:hasOtherThing>
+                   |        <anything:hasText knoraType="richtext_value">This is a test.</anything:hasText>
+                   |        <anything:hasUri knoraType="uri_value">http://dhlab.unibas.ch</anything:hasUri>
+                   |    </anything:Thing>
+                   |</knoraXmlImport:resources>""".stripMargin
+
+            val projectIri = URLEncoder.encode("http://data.knora.org/projects/anything", "UTF-8")
+
+            Post(s"/v1/resources/xmlimport/$projectIri", HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), xmlImport)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPath ~> check {
+                val responseStr = responseAs[String]
+                assert(status == StatusCodes.OK, responseStr)
+                responseStr should include("createdResources")
+            }
+        }
+
         "serve a Zip file containing XML schemas for validating an XML import" in {
             val ontologyIri = URLEncoder.encode("http://www.knora.org/ontology/biblio", "UTF-8")
 
