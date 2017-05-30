@@ -593,6 +593,43 @@
 
                    rdfs:subPropertyOf knora-base:hasValue .
 
+   ### ###########################################
+   ### beol:hasFloruitPlace
+
+   :hasFloruitPlace rdf:type owl:ObjectProperty ;
+
+                  rdfs:label "Blühteort"@de ,
+                            "Place of Floruit"@en ;
+
+                  rdfs:comment """Represents a place a person is seen."""@en ;
+
+                  knora-base:objectClassConstraint knora-base:TextValue ;
+
+                  salsah-gui:guiElement salsah-gui:SimpleText ;
+
+                  knora-base:subjectClassConstraint :person ;
+
+                  rdfs:subPropertyOf knora-base:hasValue .
+
+
+   ### ###########################################
+   ### beol:hasMarriagePlace
+
+   :hasMarriagePlace rdf:type owl:ObjectProperty ;
+
+                  rdfs:label "Trauugsort"@de ,
+                            "Place of Marriage"@en ;
+
+                  rdfs:comment """Represents a place a person is married in."""@en ;
+
+                  knora-base:objectClassConstraint knora-base:TextValue ;
+
+                  salsah-gui:guiElement salsah-gui:SimpleText ;
+
+                  knora-base:subjectClassConstraint :person ;
+
+                  rdfs:subPropertyOf knora-base:hasValue .
+
     ##########################################################
     #
     # RESOURCES
@@ -785,6 +822,14 @@
                     ],
                     [ rdf:type owl:Restriction ;
                       owl:onProperty :hasDeathPlace ;
+                      owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                    ],
+                    [ rdf:type owl:Restriction ;
+                      owl:onProperty :hasFloruitPlace ;
+                      owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                    ],
+                    [ rdf:type owl:Restriction ;
+                      owl:onProperty :hasMarriagePlace ;
                       owl:maxCardinality "1"^^xsd:nonNegativeInteger
                     ],
                     [ rdf:type owl:Restriction ;
