@@ -189,6 +189,9 @@
 			// return false if there is no content
 			if (htmlstr.length == 0) return false;
 
+			// replace non breakable spaces by
+			htmlstr = htmlstr.replace('&nbsp;', String.fromCharCode(160))
+
             // return required params for xml
 			return {
 				xml: addXMLWrapper(htmlstr),
