@@ -20,12 +20,12 @@
 
 package org.knora.webapi.messages.v1.responder.resourcemessages
 
+import java.io.File
 import java.util.UUID
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import com.fasterxml.jackson.annotation.JsonValue
 import org.knora.webapi._
-import org.knora.webapi.messages.v1.responder.sipimessages.{SipiResponderConversionFileRequestV1, SipiResponderConversionRequestV1}
+import org.knora.webapi.messages.v1.responder.sipimessages.{SipiResponderConversionFileRequestV1, SipiResponderConversionPathRequestV1, SipiResponderConversionRequestV1}
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
@@ -59,17 +59,17 @@ case class CreateResourceApiRequestV1(restype_id: IRI,
 /**
   * Used internally to represent a request to create a resource from an XML import.
   *
-  * @param restype_id the IRI of the resource class.
-  * @param label      the resource's label.
-  * @param client_id  the client's unique ID for the resource.
-  * @param properties the resource's properties.
-  * @param file       a file that has already been stored by Sipi and should be attached to the resource.
+  * @param restype_id   the IRI of the resource class.
+  * @param label        the resource's label.
+  * @param client_id    the client's unique ID for the resource.
+  * @param properties   the resource's properties.
+  * @param file         a file on disk that should be attached to the resource.
   */
 case class CreateResourceFromXmlImportRequestV1(restype_id: IRI,
                                                 client_id: String,
                                                 label: String,
                                                 properties: Map[IRI, Seq[CreateResourceValueV1]],
-                                                file: Option[CreateFileV1] = None)
+                                                file: Option[ReadFileV1] = None)
 
 /**
   * Represents a property value to be created.
@@ -220,13 +220,13 @@ case class ResourceCreateRequestV1(resourceTypeIri: IRI,
   * @param clientResourceID the client's ID for the resource.
   * @param label            the rdfs:label of the resource.
   * @param values           the properties to add: type and value(s): a Map of propertyIris to ApiValueV1.
-  * @param file             a file that has already been stored by Sipi and should be attached to the resource.
+  * @param file             a file on disk that should be stored by Sipi and should be attached to the resource.
   */
 case class OneOfMultipleResourceCreateRequestV1(resourceTypeIri: IRI,
                                                 clientResourceID: String,
                                                 label: String,
                                                 values: Map[IRI, Seq[CreateValueV1WithComment]],
-                                                file: Option[SipiResponderConversionFileRequestV1] = None)
+                                                file: Option[SipiResponderConversionPathRequestV1] = None)
 
 /**
   * Requests the creation of multiple new resources.

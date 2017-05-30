@@ -20,6 +20,7 @@
 
 package org.knora.webapi.messages.v1.responder.valuemessages
 
+import java.io.File
 import java.util.UUID
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
@@ -136,6 +137,14 @@ case class CreateFileV1(originalFilename: String,
     def toJsValue = ApiValueV1JsonProtocol.createFileV1Format.write(this)
 
 }
+
+/**
+  * Represents a file on disk to be added to a Knora resource in the context of a bulk import.
+  *
+  * @param file     the file.
+  * @param mimeType the file's MIME type.
+  */
+case class ReadFileV1(file: File, mimeType: String)
 
 /**
   * Represents a quality level of a file value to added to a Knora resource.

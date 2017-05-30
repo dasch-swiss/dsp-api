@@ -23,6 +23,7 @@ package org.knora.webapi.routing.v1
 
 import java.io._
 import java.nio.charset.StandardCharsets
+import java.nio.file.Paths
 import java.util.UUID
 import javax.xml.XMLConstants
 import javax.xml.transform.stream.StreamSource
@@ -258,11 +259,6 @@ object ResourcesRouteV1 extends Authenticator {
                             values <- valuesFuture
                         } yield propIri -> values
                 }
-
-                // since this function `makeCreateResourceRequestMessage` is called by the POST multipart route receiving the binaries (non GUI-case)
-                // and by the other POST route, either multipartConversionRequest or paramConversionRequest is set if a file should be attached to the resource, but not both.
-                _ = if (multipartConversionRequest.nonEmpty && paramConversionRequest.nonEmpty) throw BadRequestException("Binaries sent and file params set to route. This is illegal.")
-
             } yield ResourceCreateRequestV1(
                 resourceTypeIri = resourceTypeIri,
                 label = label,
@@ -300,11 +296,11 @@ object ResourcesRouteV1 extends Authenticator {
                 label = resourceRequest.label,
                 values = valuesToBeCreated.toMap,
                 file = resourceRequest.file.map {
-                    fileMetadata =>
-                        SipiResponderConversionFileRequestV1(
-                            originalFilename = InputValidation.toSparqlEncodedString(fileMetadata.originalFilename, () => throw BadRequestException(s"The original filename is invalid: '${fileMetadata.originalFilename}'")),
-                            originalMimeType = InputValidation.toSparqlEncodedString(fileMetadata.originalMimeType, () => throw BadRequestException(s"The original MIME type is invalid: '${fileMetadata.originalMimeType}'")),
-                            filename = InputValidation.toSparqlEncodedString(fileMetadata.filename, () => throw BadRequestException(s"Invalid filename: '${fileMetadata.filename}'")),
+                    fileToRead =>
+                        SipiResponderConversionPathRequestV1(
+                            originalFilename = InputValidation.toSparqlEncodedString(fileToRead.file.getName, () => throw BadRequestException(s"The filename is invalid: '${fileToRead.file.getName}'")),
+                            originalMimeType = InputValidation.toSparqlEncodedString(fileToRead.mimeType, () => throw BadRequestException(s"The MIME type is invalid: '${fileToRead.mimeType}'")),
+                            source = fileToRead.file,
                             userProfile = userProfile
                         )
                 }
@@ -667,13 +663,18 @@ object ResourcesRouteV1 extends Authenticator {
 
                     // Get the resource's file metadata, if any. This represents a file that has already been stored by Sipi.
                     // If provided, it must be the second child element of the resource element.
-                    val fileMetadata: Option[CreateFileV1] = childElementsAfterLabel.headOption match {
+                    val file: Option[ReadFileV1] = childElementsAfterLabel.headOption match {
                         case Some(secondChildElem) =>
                             if (secondChildElem.label == "file") {
-                                Some(CreateFileV1(
-                                    originalFilename = secondChildElem.attribute("original_filename").get.text,
-                                    originalMimeType = secondChildElem.attribute("original_mimetype").get.text,
-                                    filename = secondChildElem.attribute("filename").get.text
+                                val path = Paths.get(secondChildElem.attribute("path").get.text)
+
+                                if (!path.isAbsolute) {
+                                    throw BadRequestException(s"File path $path in resource '$clientIDForResource' is not absolute")
+                                }
+
+                                Some(ReadFileV1(
+                                    file = path.toFile,
+                                    mimeType = secondChildElem.attribute("mimetype").get.text
                                 ))
                             } else {
                                 None
@@ -683,7 +684,7 @@ object ResourcesRouteV1 extends Authenticator {
                     }
 
                     // Any remaining child elements of the resource element represent property values.
-                    val propertyElements = if (fileMetadata.isDefined) {
+                    val propertyElements = if (file.isDefined) {
                         childElementsAfterLabel.tail
                     } else {
                         childElementsAfterLabel
@@ -737,7 +738,7 @@ object ResourcesRouteV1 extends Authenticator {
                         client_id = clientIDForResource,
                         label = resourceLabel,
                         properties = groupedPropertiesWithValues,
-                        file = fileMetadata
+                        file = file
                     )
                 })
         }
@@ -1127,6 +1128,14 @@ object ResourcesRouteV1 extends Authenticator {
                 entity(as[String]) { xml =>
                     requestContext =>
                         val userProfile = getUserProfileV1(requestContext)
+
+                        if (userProfile.isAnonymousUser) {
+                            throw BadRequestException("You are not logged in, and only a system administrator or project administrator can perform a bulk import")
+                        }
+
+                        if (!(userProfile.permissionData.isSystemAdmin || userProfile.permissionData.isProjectAdmin(projectId))) {
+                            throw BadRequestException(s"You are logged in as ${userProfile.userData.email.get}, but only a system administrator or project administrator can perform a bulk import")
+                        }
 
                         // Parse the submitted XML.
                         val rootElement: Elem = XML.loadString(xml)

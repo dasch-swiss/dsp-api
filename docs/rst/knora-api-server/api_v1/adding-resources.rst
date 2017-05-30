@@ -140,13 +140,12 @@ The procedure for using this feature is as follows:
 
 1. Make a request to the Knora API server to get XML schemas describing the XML to be provided
    for the import.
-2. If the project's data includes digital representations to be stored in Sipi, upload those files to
-   Sipi, and store the metadata that Sipi returns for each file.
-3. Convert your data into XML, including any file metadata.
-4. Use an XML schema validator such as `Apache Xerces`_ or Saxon_, or an XML development environment
+2. Convert your data into XML, including the filesystem paths of any files that should be attached to the
+   resources to be created.
+3. Use an XML schema validator such as `Apache Xerces`_ or Saxon_, or an XML development environment
    such as Oxygen_, to check that your XML is valid according to the schemas you got from the Knora
    API server.
-5. Submit your XML to the Knora API server.
+4. Submit your XML to the Knora API server.
 
 In this procedure, the person responsible for generating the XML import data need not be familiar
 with RDF or with the ontologies involved.
@@ -264,7 +263,7 @@ This illustrates several aspects of XML imports:
 - There is a specfic syntax for referring to properties from other ontologies. In the example, ``beol:comment``
   is defined in the ontology ``http://www.knora.org/ontology/beol``. In the XML, we refer to it as
   ``biblio:beol__comment``.
-- A text value can contain XML markup. In this case:
+- A text value can contain XML markup. If it does:
     - The text value element must have the attribute ``mapping_id``, specifying a mapping from XML to standoff markup (see :ref:`XML-to-standoff-mapping`).
     - It is necessary to specify the appropriate XML namespace (in this case the null namespace, ``xmlns=""``) for the XML markup in the text value.
     - The XML markup in the text value will not be validated by the schema.
@@ -298,7 +297,7 @@ in the triplestore:
         xmlns:knoraXmlImport="http://api.knora.org/ontology/knoraXmlImport/v1#">
         <biblio:JournalArticle id="strings_in_the_18th_century">
             <knoraXmlImport:label>Strings in the 18th Century</knoraXmlImport:label>
-            <biblio:beol__comment knoraType="richtext_value" mapping_id="$mappingIri">
+            <biblio:beol__comment knoraType="richtext_value" mapping_id="http://data.knora.org/projects/standoff/mappings/StandardMapping">
                 <text xmlns="">The most <strong>boring</strong> article in <a class="salsah-link" href="http://rdfh.ch/biblio/QMDEHvBNQeOdw85Z2NSi9A">Math Intelligencer</a>.</text>
             </biblio:beol__comment>
             <biblio:endPage knoraType="richtext_value">76</biblio:endPage>
@@ -324,8 +323,8 @@ Bulk Import of Resources with Digital Representations
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 To attach a digital representation to a resource, we must provide the element ``knoraXmlImport:file`` before
-the property elements. In this element, we give the metadata that Sipi returned when it received the
-file:
+the property elements. In this element, we must give the absolute filesystem path to the file that should
+be attached to the resource, along with its MIME type:
 
 ::
 
@@ -341,7 +340,7 @@ file:
         </incunabula:book>
         <incunabula:page id="test_page">
             <knoraXmlImport:label>a page with an image</knoraXmlImport:label>
-            <knoraXmlImport:file filename="6roIwT7UPmo-EaoOyVomrBE" original_filename="IBB_1_002712355_306.tif" original_mimetype="image/tiff"/>
+            <knoraXmlImport:file path="/usr/local/share/import-images/incunabula/12345.tiff" mimetype="image/tiff"/>
             <incunabula:origname knoraType="richtext_value">Chlaus</incunabula:origname>
             <incunabula:pagenum knoraType="richtext_value">1a</incunabula:pagenum>
             <incunabula:partOf>
@@ -350,6 +349,8 @@ file:
             <incunabula:seqnum knoraType="int_value">1</incunabula:seqnum>
         </incunabula:page>
     </knoraXmlImport:resources>
+
+During the processing of the bulk import, the Knora API server will submit the file to Sipi for storage.
 
 .. _Apache Xerces: http://xerces.apache.org
 .. _Saxon: http://www.saxonica.com

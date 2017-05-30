@@ -35,8 +35,8 @@ import scala.concurrent.{Await, Future}
 object SipiV1ITSpec {
     val config: Config = ConfigFactory.parseString(
         """
-          akka.loglevel = "DEBUG"
-          akka.stdout-loglevel = "DEBUG"
+          |akka.loglevel = "DEBUG"
+          |akka.stdout-loglevel = "DEBUG"
         """.stripMargin)
 }
 
@@ -338,32 +338,8 @@ class SipiV1ITSpec extends ITSpec(SipiV1ITSpec.config) with TriplestoreJsonProto
 
 
         "create an 'incunabula:book' and an 'incunabula:page' with file parameters via XML import" in {
-            // The image to be uploaded.
-            val fileToSend = new File(pathToChlaus)
-            assert(fileToSend.exists(), s"File $pathToChlaus does not exist")
-
-            // A multipart/form-data request containing the image.
-            val sipiFormData = Multipart.FormData(
-                Multipart.FormData.BodyPart(
-                    "file",
-                    HttpEntity.fromPath(MediaTypes.`image/jpeg`, fileToSend.toPath),
-                    Map("filename" -> fileToSend.getName)
-                )
-            )
-
-            // Send a POST request to Sipi, asking it to make a thumbnail of the image.
-            val sipiRequest = Post(baseSipiUrl + "/make_thumbnail", sipiFormData) ~> addCredentials(BasicHttpCredentials(username, password))
-            val sipiResponseJson = getResponseJson(sipiRequest)
-
-            // Request the thumbnail from Sipi.
-            val jsonFields = sipiResponseJson.fields
-            val previewUrl = jsonFields("preview_path").asInstanceOf[JsString].value
-            val sipiGetRequest = Get(previewUrl) ~> addCredentials(BasicHttpCredentials(username, password))
-            checkResponseOK(sipiGetRequest)
-
-            val filename: String = jsonFields("filename").asInstanceOf[JsString].value
-            val originalFilename: String = jsonFields("original_filename").asInstanceOf[JsString].value
-            val originalMimeType: String = jsonFields("original_mimetype").asInstanceOf[JsString].value
+            val fileToUpload = new File(pathToChlaus)
+            val absoluteFilePath = fileToUpload.getAbsolutePath
 
             val knoraParams =
                 s"""<?xml version="1.0" encoding="UTF-8"?>
@@ -378,7 +354,7 @@ class SipiV1ITSpec extends ITSpec(SipiV1ITSpec.config) with TriplestoreJsonProto
                    |    </incunabula:book>
                    |    <incunabula:page id="test_page">
                    |        <knoraXmlImport:label>a page with an image</knoraXmlImport:label>
-                   |        <knoraXmlImport:file filename="$filename" original_filename="$originalFilename" original_mimetype="$originalMimeType"/>
+                   |        <knoraXmlImport:file path="$absoluteFilePath" mimetype="${MediaTypes.`image/jpeg`.toString}"/>
                    |        <incunabula:origname knoraType="richtext_value">Chlaus</incunabula:origname>
                    |        <incunabula:pagenum knoraType="richtext_value">1a</incunabula:pagenum>
                    |        <incunabula:partOf>
@@ -407,9 +383,14 @@ class SipiV1ITSpec extends ITSpec(SipiV1ITSpec.config) with TriplestoreJsonProto
             // Request the page resource from the Knora API server.
             val knoraRequestNewPageResource = Get(baseApiUrl + "/v1/resources/" + URLEncoder.encode(pageResourceIri, "UTF-8")) ~> addCredentials(BasicHttpCredentials(username, password))
             val pageJson: JsObject = getResponseJson(knoraRequestNewPageResource)
-            val origname = pageJson.fields("resinfo").asJsObject.fields("locdata").asJsObject.fields("origname").asInstanceOf[JsString].value
+            val locdata = pageJson.fields("resinfo").asJsObject.fields("locdata").asJsObject
+            val origname = locdata.fields("origname").asInstanceOf[JsString].value
+            val imageUrl = locdata.fields("path").asInstanceOf[JsString].value
+            assert(origname == fileToUpload.getName)
 
-            assert(origname == fileToSend.getName)
+            // Request the file from Sipi.
+            val sipiGetRequest = Get(imageUrl) ~> addCredentials(BasicHttpCredentials(username, password))
+            checkResponseOK(sipiGetRequest)
         }
     }
 
