@@ -165,17 +165,17 @@ For example, we are asking the resources responder to query for a certain resour
 
     private def mySpecialResourceRequest(iri: IRI, userProfile: UserProfileV1): Future[...] = {
     
-        resourceRequestFuture = for {
+        val resourceRequestFuture = for {
             resResponse: ResourceFullResponseV1 <- (responderManager ? ResourceFullGetRequestV1(iri = iri, userProfile = userProfile, getIncoming = false)).mapTo[ResourceFullResponseV1]
         } yield resResponse
     
-        resourceRequestFuture.recover {
+        val resourceRequestFutureRecovered = resourceRequestFuture.recover {
             case notFound: NotFoundException => throw BadRequestException(s"Special resource handling failed because the resource could not be found: ${notFound.message}") 
         }
     
         for {
         
-            res <- resourceRequestFuture
+            res <- resourceRequestFutureRecovered
             
             ...
         
