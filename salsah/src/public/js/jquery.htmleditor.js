@@ -190,7 +190,7 @@
 			if (htmlstr.length == 0) return false;
 
 			// replace non breakable spaces by
-			htmlstr = htmlstr.replace('&nbsp;', String.fromCharCode(160))
+			htmlstr = htmlstr.replace(/&nbsp;/g, String.fromCharCode(160))
 
             // return required params for xml
 			return {
