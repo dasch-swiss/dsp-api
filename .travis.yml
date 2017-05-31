@@ -29,19 +29,16 @@ before_install:
   - sh -e /etc/init.d/xvfb start
 
 script:
-- pwd
+- printenv
 # start fuseki
-- cd triplestores/fuseki/ && ./fuseki-server &
-- pwd
+- cd /home/travis/build/dhlab-basel/Knora/triplestores/fuseki/ && ./fuseki-server &
 # start the built-in webapi server tests
-- cd webapi/ && sbt test
-- pwd
+- cd /home/travis/build/dhlab-basel/Knora/webapi/ && sbt test
 # start the webapi server (needed for salsah tests)
-- cd webapi/ && sbt run &
-- pwd
+- cd /home/travis/build/dhlab-basel/Knora/webapi/ && sbt run &
 # wait for the webapi server to start before we proceed with running the salsah tests
 - until netstat -an 2>/dev/null | grep '3333.*LISTEN'; do true; done
-- cd salsah/ && sbt test
+- cd /home/travis/build/dhlab-basel/Knora/salsah/ && sbt test
 
 notifications:
   slack:
