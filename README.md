@@ -22,18 +22,15 @@ Knora is [free software](http://www.gnu.org/philosophy/free-sw.en.html), release
 
 ## Status
 
-### Alpha stage
+### Beta stage
 
 * The OWL ontologies
 * API operations for querying and updating data
 * API operations dealing with binary files and Sipi
 * The testing framework, which includes many tests
-* Documentation
-
-### Currently being implemented
-
 * Integration of the SALSAH GUI
 * API operations for administering Knora
+* Documentation
 
 ### Planned
 
