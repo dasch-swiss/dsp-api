@@ -141,6 +141,7 @@ lazy val webApiLibs = Seq(
     // authentication
     "org.bouncycastle" % "bcprov-jdk15on" % "1.56",
     "org.springframework.security" % "spring-security-core" % "4.2.1.RELEASE",
+    //"io.igl" %% "jwt" % "1.2.0",
     // caching
     "net.sf.ehcache" % "ehcache" % "2.10.0",
     // monitoring - disabled for now
