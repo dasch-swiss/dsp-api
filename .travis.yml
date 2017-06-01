@@ -35,7 +35,7 @@ script:
 # start the built-in webapi server tests
 - cd /home/travis/build/dhlab-basel/Knora/webapi/ && sbt test
 # start the webapi server (needed for salsah tests)
-- cd /home/travis/build/dhlab-basel/Knora/webapi/ && sbt run allowResetTriplestoreContentOperationOverHTTP &
+- cd /home/travis/build/dhlab-basel/Knora/webapi/ && sbt "run allowResetTriplestoreContentOperationOverHTTP" &
 # wait for the webapi server to start before we proceed with running the salsah tests
 - until netstat -an 2>/dev/null | grep '3333.*LISTEN'; do true; done
 # start built-in salsah browser tests
