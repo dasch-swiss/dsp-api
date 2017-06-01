@@ -141,7 +141,8 @@
                 var filter = ' p em strong strike u sub sup; a[!href](salsah-link)';
 
 				var config = {
-					language: 'de', // customize language
+					//language: 'de', // customize language
+					language: SALSAH.userprofile.userData.lang === undefined ? 'de' : SALSAH.userprofile.userData.lang,
                     allowedContent: filter,
                     pasteFilter: filter,
 					entities: false, // do not use entities (e.g. for Umlaut)
@@ -165,8 +166,25 @@
 							
 						}
 					},
-					toolbar: [ ['Source', 'Bold', 'Italic', 'Underline', 'Strike', 'Subscript', 'Superscript', '-','RemoveFormat', 'Link', 'Unlink'] ] // configuration for toolbar buttons, must conform to `STANDARD_MAPPING`
-				};
+
+					// configuration for toolbar buttons, must conform to `STANDARD_MAPPING`,
+					toolbarGroups: [
+						{ name: 'document', groups: [ 'mode', 'document', 'doctools' ] },
+						{ name: 'clipboard', groups: [ 'clipboard', 'undo' ] },
+						{ name: 'editing', groups: [ 'find', 'selection', 'spellchecker', 'editing' ] },
+						{ name: 'forms', groups: [ 'forms' ] },
+						{ name: 'basicstyles', groups: [ 'basicstyles', 'cleanup' ] },
+						{ name: 'paragraph', groups: [ 'list', 'indent', 'blocks', 'align', 'bidi', 'paragraph' ] },
+						{ name: 'links', groups: [ 'links' ] },
+						{ name: 'insert', groups: [ 'insert' ] },
+						{ name: 'styles', groups: [ 'styles' ] },
+						{ name: 'colors', groups: [ 'colors' ] },
+						{ name: 'tools', groups: [ 'tools' ] },
+						{ name: 'others', groups: [ 'others' ] },
+						{ name: 'about', groups: [ 'about' ] }
+					],
+					removeButtons: 'Cut,Copy,Paste,Anchor,NumberedList,BulletedList,Outdent,Indent,About'
+			};
 
 				// init editor (textarea will be replaced by an iframe)
 				localdata.editor = CKEDITOR.replace(textarea[0], config);
