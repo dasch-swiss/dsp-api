@@ -20,6 +20,7 @@
 
 package org.knora.webapi.messages.v1.responder.valuemessages
 
+import java.io.File
 import java.util.UUID
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
@@ -136,6 +137,14 @@ case class CreateFileV1(originalFilename: String,
     def toJsValue = ApiValueV1JsonProtocol.createFileV1Format.write(this)
 
 }
+
+/**
+  * Represents a file on disk to be added to a Knora resource in the context of a bulk import.
+  *
+  * @param file     the file.
+  * @param mimeType the file's MIME type.
+  */
+case class ReadFileV1(file: File, mimeType: String)
 
 /**
   * Represents a quality level of a file value to added to a Knora resource.
@@ -291,16 +300,14 @@ case class ValueVersionHistoryGetResponseV1(valueVersions: Seq[ValueVersionV1]) 
   * successful response will be an [[CreateValueResponseV1]].
   *
   * @param resourceIndex the index of the resource
-  * @param checkObj     check the objectClassConstrain of link
-  * @param resourceIri  the IRI of the resource to which the value should be added.
-  * @param propertyIri  the IRI of the property that should receive the value.
-  * @param value        the value to be added.
-  * @param comment      an optional comment on the value.
-  * @param userProfile  the profile of the user making the request.
-  * @param apiRequestID the ID of this API request.
+  * @param resourceIri   the IRI of the resource to which the value should be added.
+  * @param propertyIri   the IRI of the property that should receive the value.
+  * @param value         the value to be added.
+  * @param comment       an optional comment on the value.
+  * @param userProfile   the profile of the user making the request.
+  * @param apiRequestID  the ID of this API request.
   */
 case class CreateValueRequestV1(resourceIndex: Int = 0,
-                                checkObj: Boolean = true,
                                 resourceIri: IRI,
                                 propertyIri: IRI,
                                 value: UpdateValueV1,
@@ -373,23 +380,27 @@ case class CreateValueV1WithComment(updateValueV1: UpdateValueV1, comment: Optio
   * - The resource class has a suitable cardinality for each submitted value.
   * - All required values are provided.
   *
-  * @param projectIri       the project the values belong to.
-  * @param resourceIri      the resource the values will be attached to.
-  * @param resourceClassIri the IRI of the resource's OWL class.
-  * @param resourceIndex      the index of the resource to be created
-  * @param checkObj         the flag for checking the ObjectClassConstraint of the links
-  * @param values           the values to be added, with optional comments.
+  * In the collection of values to be created, standoff links in text values are allowed to point either to the IRIs
+  * of resources that already exist in the triplestore, or to the client's IDs for resources that are being created
+  * as part of a bulk import. If client resource IDs are used in standoff links, `clientResourceIDsToResourceIris`
+  * must map those IDs to the real  IRIs of the resources that are to be created.
   *
-  * @param userProfile      the user that is creating the values.
+  * @param projectIri                      the project the values belong to.
+  * @param resourceIri                     the resource the values will be attached to.
+  * @param resourceClassIri                the IRI of the resource's OWL class.
+  * @param resourceIndex                   the index of the resource to be created
+  * @param values                          the values to be added, with optional comments.
+  * @param clientResourceIDsToResourceIris a map of client resource IDs (which may appear in standoff link tags
+  *                                        in values) to the IRIs that will be used for those resources.
+  * @param userProfile                     the user that is creating the values.
   */
-
 case class GenerateSparqlToCreateMultipleValuesRequestV1(projectIri: IRI,
                                                          resourceIri: IRI,
                                                          resourceClassIri: IRI,
                                                          resourceIndex: Int,
-                                                         checkObj:Boolean,
                                                          values: Map[IRI, Seq[CreateValueV1WithComment]],
-                                                         userProfile: UserProfileV1 ,
+                                                         clientResourceIDsToResourceIris: Map[String, IRI],
+                                                         userProfile: UserProfileV1,
                                                          apiRequestID: UUID) extends ValuesResponderRequestV1
 
 
@@ -864,8 +875,10 @@ case class LinkValueV1(subjectIri: IRI,
   * Represents a request to update a link.
   *
   * @param targetResourceIri the IRI of the resource that the link should point to.
+  * @param targetExists      `true` if the link target already exists, `false` if it is going to be created in the
+  *                          same transaction.
   */
-case class LinkUpdateV1(targetResourceIri: IRI) extends UpdateValueV1 {
+case class LinkUpdateV1(targetResourceIri: IRI, targetExists: Boolean = true) extends UpdateValueV1 {
     def valueTypeIri = OntologyConstants.KnoraBase.LinkValue
 
     /**
@@ -892,6 +905,23 @@ case class LinkUpdateV1(targetResourceIri: IRI) extends UpdateValueV1 {
       * @return `true` if this [[UpdateValueV1]] is redundant given `currentVersion`.
       */
     override def isRedundant(currentVersion: ApiValueV1): Boolean = isDuplicateOfOtherValue(currentVersion)
+}
+
+/**
+  * Represents a request to create a link to a resource that hasn't been created yet, and is known only
+  * by the ID that the client has provided for it. Instances of this class will be replaced by instances
+  * of [[LinkUpdateV1]] during the preparation for the update.
+  *
+  * @param clientIDForTargetResource the client's ID for the target resource.
+  */
+case class LinkToClientIDUpdateV1(clientIDForTargetResource: String) extends UpdateValueV1 {
+    def valueTypeIri = OntologyConstants.KnoraBase.LinkValue
+
+    override def isDuplicateOfOtherValue(other: ApiValueV1): Boolean = false
+
+    override def toString = clientIDForTargetResource
+
+    override def isRedundant(currentVersion: ApiValueV1): Boolean = false
 }
 
 /**

@@ -35,8 +35,8 @@ import scala.concurrent.{Await, Future}
 object SipiV1ITSpec {
     val config: Config = ConfigFactory.parseString(
         """
-          akka.loglevel = "DEBUG"
-          akka.stdout-loglevel = "DEBUG"
+          |akka.loglevel = "DEBUG"
+          |akka.stdout-loglevel = "DEBUG"
         """.stripMargin)
 }
 
@@ -336,6 +336,62 @@ class SipiV1ITSpec extends ITSpec(SipiV1ITSpec.config) with TriplestoreJsonProto
             checkResponseOK(knoraPostRequest)
         }
 
+
+        "create an 'incunabula:book' and an 'incunabula:page' with file parameters via XML import" in {
+            val fileToUpload = new File(pathToChlaus)
+            val absoluteFilePath = fileToUpload.getAbsolutePath
+
+            val knoraParams =
+                s"""<?xml version="1.0" encoding="UTF-8"?>
+                   |<knoraXmlImport:resources xmlns="http://api.knora.org/ontology/incunabula/xml-import/v1#"
+                   |    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   |    xsi:schemaLocation="http://api.knora.org/ontology/incunabula/xml-import/v1# incunabula.xsd"
+                   |    xmlns:incunabula="http://api.knora.org/ontology/incunabula/xml-import/v1#"
+                   |    xmlns:knoraXmlImport="http://api.knora.org/ontology/knoraXmlImport/v1#">
+                   |    <incunabula:book id="test_book">
+                   |        <knoraXmlImport:label>a book with one page</knoraXmlImport:label>
+                   |        <incunabula:title knoraType="richtext_value">the title of a book with one page</incunabula:title>
+                   |    </incunabula:book>
+                   |    <incunabula:page id="test_page">
+                   |        <knoraXmlImport:label>a page with an image</knoraXmlImport:label>
+                   |        <knoraXmlImport:file path="$absoluteFilePath" mimetype="${MediaTypes.`image/jpeg`.toString}"/>
+                   |        <incunabula:origname knoraType="richtext_value">Chlaus</incunabula:origname>
+                   |        <incunabula:pagenum knoraType="richtext_value">1a</incunabula:pagenum>
+                   |        <incunabula:partOf>
+                   |            <incunabula:book knoraType="link_value" linkType="ref" target="test_book"/>
+                   |        </incunabula:partOf>
+                   |        <incunabula:seqnum knoraType="int_value">1</incunabula:seqnum>
+                   |    </incunabula:page>
+                   |</knoraXmlImport:resources>""".stripMargin
+
+            val projectIri = URLEncoder.encode("http://data.knora.org/projects/77275339", "UTF-8")
+
+            // Send the JSON in a POST request to the Knora API server.
+            val knoraPostRequest = Post(baseApiUrl + s"/v1/resources/xmlimport/$projectIri", HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), knoraParams)) ~> addCredentials(BasicHttpCredentials(username, password))
+            val knoraPostResponseJson: JsObject = getResponseJson(knoraPostRequest)
+
+            val createdResources = knoraPostResponseJson.fields("createdResources").asInstanceOf[JsArray].elements
+            assert(createdResources.size == 2)
+
+            val bookResourceIri = createdResources.head.asJsObject.fields("res_id").asInstanceOf[JsString].value
+            val pageResourceIri = createdResources(1).asJsObject.fields("res_id").asInstanceOf[JsString].value
+
+            // Request the book resource from the Knora API server.
+            val knoraRequestNewBookResource = Get(baseApiUrl + "/v1/resources/" + URLEncoder.encode(bookResourceIri, "UTF-8")) ~> addCredentials(BasicHttpCredentials(username, password))
+            checkResponseOK(knoraRequestNewBookResource)
+
+            // Request the page resource from the Knora API server.
+            val knoraRequestNewPageResource = Get(baseApiUrl + "/v1/resources/" + URLEncoder.encode(pageResourceIri, "UTF-8")) ~> addCredentials(BasicHttpCredentials(username, password))
+            val pageJson: JsObject = getResponseJson(knoraRequestNewPageResource)
+            val locdata = pageJson.fields("resinfo").asJsObject.fields("locdata").asJsObject
+            val origname = locdata.fields("origname").asInstanceOf[JsString].value
+            val imageUrl = locdata.fields("path").asInstanceOf[JsString].value
+            assert(origname == fileToUpload.getName)
+
+            // Request the file from Sipi.
+            val sipiGetRequest = Get(imageUrl) ~> addCredentials(BasicHttpCredentials(username, password))
+            checkResponseOK(sipiGetRequest)
+        }
     }
 
     /**
