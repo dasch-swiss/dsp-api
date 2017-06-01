@@ -138,7 +138,7 @@ case class SipiResponderConversionFileRequestV1(originalFilename: String,
   */
 case class SipiErrorConversionResponse(message: String) {
     override def toString() = {
-        s"Sipi error message: ${message}"
+        s"Sipi error message: $message"
     }
 }
 

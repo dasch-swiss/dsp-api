@@ -43,7 +43,7 @@ object ResourcesResponderV1SpecContextData {
     */
 
     // The file contains a placeholder, RESTYPE_ICONSRC, which we replace here with the correct value.
-    private val expectedBookResourceContextResponseStr = FileUtil.readFile(new File("src/test/resources/test-data/expectedBookContextResponse.json")).replace(
+    private val expectedBookResourceContextResponseStr = FileUtil.readTextFile(new File("src/test/resources/test-data/expectedBookContextResponse.json")).replace(
         "RESTYPE_ICONSRC",
         settings.salsahBaseUrl + settings.salsahProjectIconsBasePath + "incunabula/book.gif"
     )

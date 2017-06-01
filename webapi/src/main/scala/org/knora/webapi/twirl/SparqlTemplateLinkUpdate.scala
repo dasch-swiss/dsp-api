@@ -33,6 +33,8 @@ import org.knora.webapi.IRI
   *                                to 0).
   * @param linkValueExists         `true` if a `LinkValue` already exists describing a direct link between the source
   *                                and target resources.
+  * @param linkTargetExists        `true` if the link target already exists, `false` if is being created in the same
+  *                                SPARQL update operation.
   * @param newLinkValueIri         the IRI of the new `LinkValue` to be created.
   * @param linkTargetIri           the IRI of the target resource.
   * @param currentReferenceCount   the current reference count of the existing `LinkValue`, if any. This will be
@@ -49,6 +51,7 @@ case class SparqlTemplateLinkUpdate(linkPropertyIri: IRI,
                                     insertDirectLink: Boolean,
                                     deleteDirectLink: Boolean,
                                     linkValueExists: Boolean,
+                                    linkTargetExists: Boolean,
                                     newLinkValueIri: IRI,
                                     linkTargetIri: IRI,
                                     currentReferenceCount: Int,

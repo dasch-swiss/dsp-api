@@ -171,7 +171,8 @@ lazy val webApiLibs = Seq(
     "org.rogach" %% "scallop" % "2.0.5",
     "com.google.gwt" % "gwt-servlet" % "2.8.0",
     "net.sf.saxon" % "Saxon-HE" % "9.7.0-14",
-    "com.github.jsonld-java" % "jsonld-java" % "0.10.0"
+    "com.github.jsonld-java" % "jsonld-java" % "0.10.0",
+    "com.jsuereth" % "scala-arm_2.12" % "2.0"
 )
 
 lazy val javaRunOptions = Seq(

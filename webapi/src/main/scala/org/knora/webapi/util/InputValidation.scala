@@ -104,8 +104,8 @@ object InputValidation {
     // A regex for matching a string containing only an ontology prefix label or a local entity name.
     private val NCNameRegex = ("^" + NCNamePattern + "$").r
 
-    // A regex for internal ontologies.
-    private val InternalOntologyRegex: Regex = (
+    // A regex for project-specific internal ontologies.
+    private val ProjectSpecificInternalOntologyRegex: Regex = (
         "^" + OntologyConstants.KnoraInternal.InternalOntologyStart +
             "(" + NCNamePattern + ")$"
         ).r
@@ -117,8 +117,8 @@ object InputValidation {
         OntologyConstants.KnoraApiV2WithValueObject.VersionSegment + "$"
     ).r
 
-    // A regex for entity IRIs in internal ontologies.
-    private val InternalOntologyEntityRegex: Regex = (
+    // A regex for entity IRIs in project-specific internal ontologies.
+    private val ProjectSpecificInternalOntologyEntityRegex: Regex = (
         "^" + OntologyConstants.KnoraInternal.InternalOntologyStart +
             "(" + NCNamePattern + ")#(" + NCNamePattern + ")$"
         ).r
@@ -141,6 +141,12 @@ object InputValidation {
     // that pattern.
     private val PropertyFromOtherOntologyInXmlImportRegex: Regex = (
         "^(" + NCNamePattern + ")__(" + NCNamePattern + ")$"
+        ).r
+
+    // In XML import data, a standoff link tag that refers to a resource described in the import must have the
+    // form defined by this regex.
+    private val StandoffLinkReferenceToClientIDForResourceRegex: Regex = (
+        "^ref:(" + NCNamePattern + ")$"
         ).r
 
     // Valid URL schemes.
@@ -215,6 +221,56 @@ object InputValidation {
             urlEncodedStr
         } else {
             errorFun()
+        }
+    }
+
+    /**
+      * Checks that a string represents a valid resource identifier in a standoff link.
+      *
+      * @param s               the string to be checked.
+      * @param acceptClientIDs if `true`, the function accepts either an IRI or an XML NCName prefixed by `ref:`.
+      *                        The latter is used to refer to a client's ID for a resource that is described in an XML bulk import.
+      *                        If `false`, only an IRI is accepted.
+      * @param errorFun        a function that throws an exception. It will be called if the form of the string is invalid.
+      * @return the same string.
+      */
+    def toStandoffLinkResourceReference(s: String, acceptClientIDs: Boolean, errorFun: () => Nothing): IRI = {
+        if (acceptClientIDs) {
+            s match {
+                case StandoffLinkReferenceToClientIDForResourceRegex(_) => s
+                case _ => toIri(s, () => errorFun())
+            }
+        } else {
+            toIri(s, () => errorFun())
+        }
+    }
+
+    /**
+      * Checks whether a string is a reference to a client's ID for a resource described in an XML bulk import.
+      *
+      * @param s the string to be checked.
+      * @return `true` if the string is an XML NCName prefixed by `ref:`.
+      */
+    def isStandoffLinkReferenceToClientIDForResource(s: String): Boolean = {
+        s match {
+            case StandoffLinkReferenceToClientIDForResourceRegex(_) => true
+            case _ => false
+        }
+    }
+
+    /**
+      * Accepts a reference from a standoff link to a resource. The reference may be either a real resource IRI
+      * (referring to a resource that already exists) or a client's ID for a resource that doesn't yet exist and is
+      * described in an XML bulk import. Returns the real IRI of the target resource.
+      *
+      * @param iri        an IRI from a standoff link, either in the form of a real resource IRI or in the form of
+      *                   a reference to a client's ID for a resource.
+      * @param clientResourceIDsToResourceIris a map of client resource IDs to real resource IRIs.
+      */
+    def toRealStandoffLinkTargetResourceIri(iri: IRI, clientResourceIDsToResourceIris: Map[String, IRI]): String = {
+        iri match {
+            case StandoffLinkReferenceToClientIDForResourceRegex(clientResourceID) => clientResourceIDsToResourceIris(clientResourceID)
+            case _ => iri
         }
     }
 
@@ -521,7 +577,7 @@ object InputValidation {
       */
     def getOntologyPrefixLabelFromInternalEntityIri(internalEntityIri: IRI, errorFun: () => Nothing): String = {
         internalEntityIri match {
-            case InternalOntologyEntityRegex(prefixLabel, _) => prefixLabel
+            case ProjectSpecificInternalOntologyEntityRegex(prefixLabel, _) => prefixLabel
             case _ => errorFun()
         }
     }
@@ -537,7 +593,7 @@ object InputValidation {
       */
     def getOntologyPrefixLabelFromInternalOntologyIri(internalOntologyIri: IRI, errorFun: () => Nothing): String = {
         internalOntologyIri.stripSuffix("#") match {
-            case InternalOntologyRegex(prefixLabel) => prefixLabel
+            case ProjectSpecificInternalOntologyRegex(prefixLabel) => prefixLabel
             case _ => errorFun()
         }
     }
@@ -552,7 +608,7 @@ object InputValidation {
       */
     def getInternalOntologyIriFromInternalEntityIri(internalEntityIri: IRI, errorFun: () => Nothing): IRI = {
         internalEntityIri match {
-            case InternalOntologyEntityRegex(prefixLabel, _) => OntologyConstants.KnoraInternal.InternalOntologyStart + prefixLabel
+            case ProjectSpecificInternalOntologyEntityRegex(prefixLabel, _) => OntologyConstants.KnoraInternal.InternalOntologyStart + prefixLabel
             case _ => errorFun()
         }
     }
@@ -584,7 +640,7 @@ object InputValidation {
       */
     def internalOntologyIriToApiV2WithValueObjectOntologyIri(internalOntologyIri: IRI, errorFun: () => Nothing): IRI = {
         internalOntologyIri match {
-            case InternalOntologyRegex(ontologyName) =>
+            case ProjectSpecificInternalOntologyRegex(ontologyName) =>
                 val apiOntologyName = if (ontologyName == "knora-base") "knora-api" else ontologyName
                 OntologyConstants.KnoraApi.ApiOntologyStart + apiOntologyName + OntologyConstants.KnoraApiV2WithValueObject.VersionSegment
             case _ => errorFun()
@@ -599,11 +655,12 @@ object InputValidation {
       *                 valid for an internal ontology IRI.
       * @return the internal entity Iri.
       */
-    def externalApiV2WithValueObjectEntityIriToInternalEntityIri(externalEntityIri: IRI, errorFun: () => Nothing) = {
+    def externalApiV2WithValueObjectEntityIriToInternalEntityIri(externalEntityIri: IRI, errorFun: () => Nothing): IRI = {
         externalEntityIri match {
             case ExternalApiV2WithValueObjectOntologyEntityRegex(ontology, entityName) =>
                 val ontologyName = if (ontology == "knora-api") "knora-base" else ontology
                 OntologyConstants.KnoraInternal.InternalOntologyStart + ontologyName + "#" + entityName
+            case _ => errorFun()
         }
     }
 
@@ -617,9 +674,10 @@ object InputValidation {
       */
     def internalEntityIriToApiV2WithValueObjectEntityIri(internalEntityIri: IRI, errorFun: () => Nothing): IRI = {
         internalEntityIri match {
-            case InternalOntologyEntityRegex(prefixLabel, entityName) =>
+            case ProjectSpecificInternalOntologyEntityRegex(prefixLabel, entityName) =>
                 val apiPrefixLabel = if (prefixLabel == "knora-base") "knora-api" else prefixLabel
                 OntologyConstants.KnoraApi.ApiOntologyStart + apiPrefixLabel + OntologyConstants.KnoraApiV2WithValueObject.VersionSegment + "#" + entityName
+            case _ => errorFun()
         }
     }
 
@@ -633,9 +691,10 @@ object InputValidation {
       */
     def internalEntityIriToSimpleApiV2EntityIri(internalEntityIri: IRI, errorFun: () => Nothing): IRI = {
         internalEntityIri match {
-            case InternalOntologyEntityRegex(prefixLabel, entityName) =>
+            case ProjectSpecificInternalOntologyEntityRegex(prefixLabel, entityName) =>
                 val apiPrefixLabel = if (prefixLabel == "knora-base") "knora-api" else prefixLabel
                 OntologyConstants.KnoraApi.ApiOntologyStart + apiPrefixLabel + OntologyConstants.KnoraApiV2Simplified.VersionSegment + "#" + entityName
+            case _ => errorFun()
         }
     }
 
@@ -649,7 +708,7 @@ object InputValidation {
       */
     def getEntityNameFromInternalEntityIri(internalEntityIri: IRI, errorFun: () => Nothing): String = {
         internalEntityIri match {
-            case InternalOntologyEntityRegex(_, entityName) => entityName
+            case ProjectSpecificInternalOntologyEntityRegex(_, entityName) => entityName
             case _ => errorFun()
         }
     }

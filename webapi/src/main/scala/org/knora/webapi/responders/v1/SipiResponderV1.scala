@@ -91,7 +91,7 @@ class SipiResponderV1 extends Responder {
                 (row: VariableResultsRow) =>
                     row.rowMap("fileValue")
             }
-            _ = if(groupedByResourceIri.size > 1) throw InconsistentTriplestoreDataException(s"filename $filename is referred to from more than one file value")
+            _ = if (groupedByResourceIri.size > 1) throw InconsistentTriplestoreDataException(s"filename $filename is referred to from more than one file value")
 
             valueProps = valueUtilV1.createValueProps(filename, rows)
 

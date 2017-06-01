@@ -239,45 +239,45 @@ object OntologyConstants {
         val AttachedToProject: IRI = KnoraBasePrefixExpansion + "attachedToProject"
 
         /* User */
-        val User: IRI = KnoraBasePrefixExpansion                   + "User"
-        val Email: IRI = KnoraBasePrefixExpansion                  + "email"
-        val GivenName: IRI = KnoraBasePrefixExpansion              + "givenName"
-        val FamilyName: IRI = KnoraBasePrefixExpansion             + "familyName"
-        val Password: IRI = KnoraBasePrefixExpansion               + "password"
-        val UsersActiveProject: IRI = KnoraBasePrefixExpansion     + "currentproject"
-        val Status: IRI = KnoraBasePrefixExpansion                 + "status"
-        val PreferredLanguage: IRI = KnoraBasePrefixExpansion      + "preferredLanguage"
-        val IsInProject: IRI = KnoraBasePrefixExpansion            + "isInProject"
-        val IsInGroup: IRI = KnoraBasePrefixExpansion              + "isInGroup"
-        val IsInSystemAdminGroup: IRI = KnoraBasePrefixExpansion   + "isInSystemAdminGroup"
-        val IsInProjectAdminGroup: IRI = KnoraBasePrefixExpansion  + "isInProjectAdminGroup"
+        val User: IRI = KnoraBasePrefixExpansion + "User"
+        val Email: IRI = KnoraBasePrefixExpansion + "email"
+        val GivenName: IRI = KnoraBasePrefixExpansion + "givenName"
+        val FamilyName: IRI = KnoraBasePrefixExpansion + "familyName"
+        val Password: IRI = KnoraBasePrefixExpansion + "password"
+        val UsersActiveProject: IRI = KnoraBasePrefixExpansion + "currentproject"
+        val Status: IRI = KnoraBasePrefixExpansion + "status"
+        val PreferredLanguage: IRI = KnoraBasePrefixExpansion + "preferredLanguage"
+        val IsInProject: IRI = KnoraBasePrefixExpansion + "isInProject"
+        val IsInGroup: IRI = KnoraBasePrefixExpansion + "isInGroup"
+        val IsInSystemAdminGroup: IRI = KnoraBasePrefixExpansion + "isInSystemAdminGroup"
+        val IsInProjectAdminGroup: IRI = KnoraBasePrefixExpansion + "isInProjectAdminGroup"
 
         /* Project */
-        val KnoraProject: IRI = KnoraBasePrefixExpansion           + "knoraProject"
-        val ProjectShortname: IRI = KnoraBasePrefixExpansion       + "projectShortname"
-        val ProjectLongname: IRI = KnoraBasePrefixExpansion        + "projectLongname"
-        val ProjectDescription: IRI = KnoraBasePrefixExpansion     + "projectDescription"
-        val ProjectKeywords: IRI = KnoraBasePrefixExpansion        + "projectKeywords"
-        val ProjectBasepath: IRI = KnoraBasePrefixExpansion        + "projectBasepath"
-        val ProjectLogo: IRI = KnoraBasePrefixExpansion            + "projectLogo"
-        val ProjectOntologyGraph: IRI = KnoraBasePrefixExpansion   + "projectOntologyGraph"
-        val ProjectDataGraph: IRI = KnoraBasePrefixExpansion       + "projectDataGraph"
-        val HasSelfJoinEnabled: IRI = KnoraBasePrefixExpansion     + "hasSelfJoinEnabled"
-        val HasProjectAdmin: IRI = KnoraBasePrefixExpansion        + "hasProjectAdmin"
+        val KnoraProject: IRI = KnoraBasePrefixExpansion + "knoraProject"
+        val ProjectShortname: IRI = KnoraBasePrefixExpansion + "projectShortname"
+        val ProjectLongname: IRI = KnoraBasePrefixExpansion + "projectLongname"
+        val ProjectDescription: IRI = KnoraBasePrefixExpansion + "projectDescription"
+        val ProjectKeywords: IRI = KnoraBasePrefixExpansion + "projectKeywords"
+        val ProjectBasepath: IRI = KnoraBasePrefixExpansion + "projectBasepath"
+        val ProjectLogo: IRI = KnoraBasePrefixExpansion + "projectLogo"
+        val ProjectOntologyGraph: IRI = KnoraBasePrefixExpansion + "projectOntologyGraph"
+        val ProjectDataGraph: IRI = KnoraBasePrefixExpansion + "projectDataGraph"
+        val HasSelfJoinEnabled: IRI = KnoraBasePrefixExpansion + "hasSelfJoinEnabled"
+        val HasProjectAdmin: IRI = KnoraBasePrefixExpansion + "hasProjectAdmin"
 
         /* Group */
-        val UserGroup: IRI = KnoraBasePrefixExpansion              + "UserGroup"
-        val GroupName: IRI = KnoraBasePrefixExpansion              + "groupName"
-        val GroupDescription: IRI = KnoraBasePrefixExpansion       + "groupDescription"
-        val BelongsToProject: IRI = KnoraBasePrefixExpansion       + "belongsToProject"
+        val UserGroup: IRI = KnoraBasePrefixExpansion + "UserGroup"
+        val GroupName: IRI = KnoraBasePrefixExpansion + "groupName"
+        val GroupDescription: IRI = KnoraBasePrefixExpansion + "groupDescription"
+        val BelongsToProject: IRI = KnoraBasePrefixExpansion + "belongsToProject"
 
         /* Built-In Groups */
-        val UnknownUser: IRI = KnoraBasePrefixExpansion            + "UnknownUser"
-        val KnownUser: IRI = KnoraBasePrefixExpansion              + "KnownUser"
-        val ProjectMember: IRI = KnoraBasePrefixExpansion          + "ProjectMember"
-        val Creator: IRI = KnoraBasePrefixExpansion                + "Creator"
-        val SystemAdmin: IRI = KnoraBasePrefixExpansion            + "SystemAdmin"
-        val ProjectAdmin: IRI = KnoraBasePrefixExpansion           + "ProjectAdmin"
+        val UnknownUser: IRI = KnoraBasePrefixExpansion + "UnknownUser"
+        val KnownUser: IRI = KnoraBasePrefixExpansion + "KnownUser"
+        val ProjectMember: IRI = KnoraBasePrefixExpansion + "ProjectMember"
+        val Creator: IRI = KnoraBasePrefixExpansion + "Creator"
+        val SystemAdmin: IRI = KnoraBasePrefixExpansion + "SystemAdmin"
+        val ProjectAdmin: IRI = KnoraBasePrefixExpansion + "ProjectAdmin"
 
         /* Institution */
         val Institution: IRI = KnoraBasePrefixExpansion + "Institution"
@@ -363,20 +363,20 @@ object OntologyConstants {
 
         val StandardMapping: IRI = "http://data.knora.org/projects/standoff/mappings/StandardMapping"
 
-        val AdministrativePermission: IRI = KnoraBasePrefixExpansion       + "AdministrativePermission"
-        val DefaultObjectAccessPermission: IRI = KnoraBasePrefixExpansion  + "DefaultObjectAccessPermission"
-        val ForProject: IRI = KnoraBasePrefixExpansion                     + "forProject"
-        val ForGroup: IRI = KnoraBasePrefixExpansion                       + "forGroup"
-        val ForResourceClass: IRI = KnoraBasePrefixExpansion               + "forResourceClass"
-        val ForProperty: IRI = KnoraBasePrefixExpansion                    + "forProperty"
+        val AdministrativePermission: IRI = KnoraBasePrefixExpansion + "AdministrativePermission"
+        val DefaultObjectAccessPermission: IRI = KnoraBasePrefixExpansion + "DefaultObjectAccessPermission"
+        val ForProject: IRI = KnoraBasePrefixExpansion + "forProject"
+        val ForGroup: IRI = KnoraBasePrefixExpansion + "forGroup"
+        val ForResourceClass: IRI = KnoraBasePrefixExpansion + "forResourceClass"
+        val ForProperty: IRI = KnoraBasePrefixExpansion + "forProperty"
 
-        val SystemProject: IRI = KnoraBasePrefixExpansion                  + "SystemProject"
+        val SystemProject: IRI = KnoraBasePrefixExpansion + "SystemProject"
 
         /**
           * The system user is the owner of objects that are created by the system, rather than directly by the user,
           * such as link values for standoff resource references.
           */
-        val SystemUser: IRI = KnoraBasePrefixExpansion                     + "SystemUser"
+        val SystemUser: IRI = KnoraBasePrefixExpansion + "SystemUser"
 
         val CreationDate: IRI = KnoraBasePrefixExpansion + "creationDate"
         val ValueCreationDate: IRI = KnoraBasePrefixExpansion + "valueCreationDate"
@@ -434,9 +434,11 @@ object OntologyConstants {
             val resourceClass: String = "restypeid"
             val assignmentOperator: String = "="
         }
+
     }
 
     object KnoraXmlImportV1 {
+
         object ProjectSpecificXmlImportNamespace {
             val XmlImportNamespaceStart: String = KnoraApi.ApiOntologyStart
             val XmlImportNamespaceEnd: String = "/xml-import/v1#"
@@ -527,4 +529,5 @@ object OntologyConstants {
         val VersionSegment = "/simple/v2"
 
     }
+
 }

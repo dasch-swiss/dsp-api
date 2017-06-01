@@ -49,8 +49,8 @@ object FakeTriplestore {
     def load(): Unit = {
         val dataToWrap = fakeTriplestoreDir.get.listFiles.map {
             queryDir =>
-                val sparql = FileUtil.readFile(queryDir.listFiles.filter(_.getName.endsWith(".rq")).head)
-                val result = FileUtil.readFile(queryDir.listFiles.filter(_.getName.endsWith(".json")).head)
+                val sparql = FileUtil.readTextFile(queryDir.listFiles.filter(_.getName.endsWith(".rq")).head)
+                val result = FileUtil.readTextFile(queryDir.listFiles.filter(_.getName.endsWith(".json")).head)
                 sparql -> result
         }.toMap
 
@@ -64,9 +64,9 @@ object FakeTriplestore {
             val queryDir = new File(fakeTriplestoreDir.get, paddedQueryNum)
             queryDir.mkdirs()
             val sparqlFile = new File(queryDir, s"query-$paddedQueryNum.rq")
-            FileUtil.writeFile(sparqlFile, sparql)
+            FileUtil.writeTextFile(sparqlFile, sparql)
             val resultFile = new File(queryDir, s"response-$paddedQueryNum.json")
-            FileUtil.writeFile(resultFile, result)
+            FileUtil.writeTextFile(resultFile, result)
             queryNum += 1
         }
     }
