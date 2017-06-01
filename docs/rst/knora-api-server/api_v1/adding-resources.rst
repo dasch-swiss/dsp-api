@@ -136,6 +136,8 @@ This is especially useful if the resources to be created have links to one anoth
 Knora checks the entire request for consistency as as a whole, and performs the update
 in a single database transaction.
 
+Only system or project administrators may use the bulk import.
+
 The procedure for using this feature is as follows:
 
 1. Make a request to the Knora API server to get XML schemas describing the XML to be provided
@@ -350,7 +352,7 @@ be attached to the resource, along with its MIME type:
         </incunabula:page>
     </knoraXmlImport:resources>
 
-During the processing of the bulk import, the Knora API server will submit the file to Sipi for storage.
+During the processing of the bulk import, the Knora API server will communicate the location of file to Sipi that will convert it to JP2000 for storage.
 
 .. _Apache Xerces: http://xerces.apache.org
 .. _Saxon: http://www.saxonica.com
