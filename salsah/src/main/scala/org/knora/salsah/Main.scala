@@ -17,11 +17,15 @@
 package org.knora.salsah
 
 import java.io.{File, PrintWriter}
+import java.nio.file.{Files, Paths}
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.Http.ServerBinding
+import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Directives._
+import akka.http.scaladsl.server.Route
+import akka.http.scaladsl.model.StatusCodes._
 import akka.stream.ActorMaterializer
 
 import scala.concurrent.Future
@@ -56,19 +60,19 @@ object Main extends App {
 
         //create /tmp directory if it does not exist
         val tmpDir = new File("/tmp")
-        if (! tmpDir.exists()){
+        if (!tmpDir.exists()) {
             tmpDir.mkdir()
         }
 
         // rewriting webapi and sipi url in public/js/00_init_javascript.js
-        val originalFile = new File(s"$publicDir/js/00_init_javascript.js")  // Original File
+        val originalFile = new File(s"$publicDir/js/00_init_javascript.js") // Original File
         val tempFile = new File("/tmp/00_init_javascript.js") // Temporary File
         val printWriter = new PrintWriter(tempFile)
 
         Source.fromFile(originalFile)("UTF-8")
                 .getLines
                 .map { line =>
-                    if(line.contains("http://localhost:3333")) {
+                    if (line.contains("http://localhost:3333")) {
                         s"var API_URL = '$webapiUrl';"
                     } else if (line.contains("http://localhost:1024")) {
                         s"var SIPI_URL = '$sipiUrl';"
@@ -81,28 +85,53 @@ object Main extends App {
         printWriter.close()
         tempFile.renameTo(originalFile)
 
-        get {
-            getFromDirectory(publicDir)
-        }
+        serveFromPublicDir(publicDir)
     } else {
         // undeployed state (default when run from sbt)
         val wherami = System.getProperty("user.dir")
         log.info(s"user.dir: $wherami")
         val publicDir = wherami + "/src/public"
         log.info(s"serving files from: $publicDir")
-        get {
-            getFromDirectory(publicDir)
-        }
+
+        serveFromPublicDir(publicDir)
     }
 
     val (host, port) = (settings.hostName, settings.httpPort)
 
     log.info(s"Salsah online at http://$host:$port/index.html")
 
-    val bindingFuture: Future[ServerBinding] =  Http().bindAndHandle(handler, host, port)
+    val bindingFuture: Future[ServerBinding] = Http().bindAndHandle(handler, host, port)
 
     bindingFuture onFailure {
         case ex: Exception =>
             log.error(ex, s"Failed to bind to $host:$port")
+    }
+
+    private def serveFromPublicDir(publicDir: String): Route = {
+        get {
+            entity(as[HttpRequest]) { requestData =>
+                complete {
+                    val fullPath = requestData.uri.path.toString match {
+                        case "/" => Paths.get(publicDir + "/index.html")
+                        case "" => Paths.get(publicDir + "/index.html")
+                        case _ => Paths.get(publicDir + requestData.uri.path.toString)
+                    }
+
+                    val ext = getExtensions(fullPath.getFileName.toString)
+                    val c: ContentType = ContentType(MediaTypes.forExtension(ext).getOrElse(MediaTypes.`text/plain`))
+                    val byteArray = Files.readAllBytes(fullPath)
+                    HttpResponse(OK, entity = HttpEntity(c, byteArray))
+                }
+            }
+        }
+    }
+
+    private def getExtensions(fileName: String): String = {
+
+        val index = fileName.lastIndexOf('.')
+        if (index != 0) {
+            fileName.drop(index + 1)
+        } else
+            ""
     }
 }
