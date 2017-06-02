@@ -34,7 +34,7 @@ import org.knora.webapi.messages.v1.responder.usermessages.{UserProfileByIRIGetV
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v1.store.triplestoremessages._
 import org.knora.webapi.responders.IriLocker
-import org.knora.webapi.twirl.{SparqlTemplateLinkUpdate, StandoffTagV1}
+import org.knora.webapi.twirl.{SparqlTemplateLinkUpdate, StandoffTagIriAttributeV1, StandoffTagV1}
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util._
 
@@ -336,21 +336,38 @@ class ValuesResponderV1 extends ResponderV1 {
                 // standoff references to that IRI.
                 targetIris: Map[IRI, Int] = allResourceReferencesGrouped.mapValues(_.size)
 
-                // Check that each target IRI actually exists and is a knora-base:Resource.
-                targetIriCheckResult <- checkStandoffResourceReferenceTargets(targetIris = targetIris.keySet, userProfile = createMultipleValuesRequest.userProfile)
+                // If we're creating values as part of a bulk import, some standoff links could point to resources
+                // that already exist in the triplestore, and others could point to resources that are being created
+                // as part of the import. We need to know here which ones are supposed to exist already and which aren't,
+                // because if a target resource is supposed to exist already, we have to query the triplestore now to check
+                // that it really exists.
+                //
+                // Therefore, in the GenerateSparqlToCreateMultipleValuesRequestV1 we received, the standoff link targets
+                // that don't yet exist are represented as client resource IDs, while the targets that really exist are
+                // represented as ordinary IRIs. InputValidation.isStandoffLinkReferenceToClientIDForResource() can tell
+                // us which are which.
+                //
+                // So now we can get the set of standoff link targets that are ordinary IRIs, and check that each of
+                // them exists in the triplestore and is a knora-base:Resource.
+                targetIrisThatAlreadyExist: Set[IRI] = targetIris.keySet.filterNot(iri => InputValidation.isStandoffLinkReferenceToClientIDForResource(iri))
+                targetIriCheckResult <- checkStandoffResourceReferenceTargets(targetIris = targetIrisThatAlreadyExist, userProfile = createMultipleValuesRequest.userProfile)
 
-                // For each target IRI, construct a SparqlTemplateLinkUpdate to create one link, as well as one LinkValue
-                // with associated count as its initial reference count.
+                // For each target IRI, construct a SparqlTemplateLinkUpdate to create a hasStandoffLinkTo property and one LinkValue,
+                // with the associated count as the LinkValue's initial reference count.
                 standoffLinkUpdates: Seq[SparqlTemplateLinkUpdate] = targetIris.toSeq.map {
                     case (targetIri, initialReferenceCount) =>
+                        // If the target of a standoff link is a client ID for a resource, convert it to the corresponding real resource IRI.
+                        val realTargetIri = InputValidation.toRealStandoffLinkTargetResourceIri(iri = targetIri, clientResourceIDsToResourceIris = createMultipleValuesRequest.clientResourceIDsToResourceIris)
+
                         SparqlTemplateLinkUpdate(
                             linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
                             directLinkExists = false,
                             insertDirectLink = true,
                             deleteDirectLink = false,
                             linkValueExists = false,
+                            linkTargetExists = true, // doesn't matter, the generateInsertStatementsForStandoffLinks template doesn't use it
                             newLinkValueIri = knoraIdUtil.makeRandomValueIri(createMultipleValuesRequest.resourceIri),
-                            linkTargetIri = targetIri,
+                            linkTargetIri = realTargetIri,
                             currentReferenceCount = 0,
                             newReferenceCount = initialReferenceCount,
                             newLinkValueCreator = OntologyConstants.KnoraBase.SystemUser,
@@ -359,7 +376,10 @@ class ValuesResponderV1 extends ResponderV1 {
                 }
 
                 // Generate INSERT clause statements based on those SparqlTemplateLinkUpdates.
-                standoffLinkInsertSparql: String = queries.sparql.v1.txt.generateInsertStatementsForStandoffLinks(linkUpdates = standoffLinkUpdates, resourceIndex = 0).toString()
+                standoffLinkInsertSparql: String = queries.sparql.v1.txt.generateInsertStatementsForStandoffLinks(
+                    linkUpdates = standoffLinkUpdates,
+                    resourceIndex = createMultipleValuesRequest.resourceIndex
+                ).toString()
 
                 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
                 // Number each value to be created, and give it a valueHasOrder
@@ -404,7 +424,7 @@ class ValuesResponderV1 extends ResponderV1 {
                         }.mapTo[DefaultObjectAccessPermissionsStringResponseV1]
 
                         val defaultObjectAccessPermissions = Await.result(defaultObjectAccessPermissionsF, 1.second)
-                        log.debug(s"createValueV1 - defaultObjectAccessPermissions: $defaultObjectAccessPermissions")
+                        // log.debug(s"createValueV1 - defaultObjectAccessPermissions: $defaultObjectAccessPermissions")
 
                         // For each property, construct a SparqlGenerationResultForProperty containing WHERE clause statements, INSERT clause statements, and UnverifiedValueV1s.
                         val sparqlGenerationResultForProperty: SparqlGenerationResultForProperty = valuesToCreate.foldLeft(SparqlGenerationResultForProperty()) {
@@ -425,6 +445,7 @@ class ValuesResponderV1 extends ResponderV1 {
                                             insertDirectLink = true,
                                             deleteDirectLink = false,
                                             linkValueExists = false,
+                                            linkTargetExists = linkUpdateV1.targetExists,
                                             newLinkValueIri = newValueIri,
                                             linkTargetIri = linkUpdateV1.targetResourceIri,
                                             currentReferenceCount = 0,
@@ -439,8 +460,7 @@ class ValuesResponderV1 extends ResponderV1 {
                                             valueIndex = valueToCreate.valueIndex,
                                             resourceIri = createMultipleValuesRequest.resourceIri,
                                             linkUpdate = sparqlTemplateLinkUpdate,
-                                            maybeValueHasOrder = Some(valueToCreate.valueHasOrder),
-                                            checkObj = createMultipleValuesRequest.checkObj
+                                            maybeValueHasOrder = Some(valueToCreate.valueHasOrder)
                                         ).toString()
 
                                         // Generate INSERT clause statements for the link.
@@ -453,7 +473,7 @@ class ValuesResponderV1 extends ResponderV1 {
 
                                         (whereSparql, insertSparql)
 
-                                    case ordinaryValue =>
+                                    case _ =>
                                         // We're creating an ordinary value.
 
                                         // Generate WHERE clause statements for the value.
@@ -465,16 +485,45 @@ class ValuesResponderV1 extends ResponderV1 {
                                             newValueIri = newValueIri,
                                             valueTypeIri = updateValueV1.valueTypeIri,
                                             linkUpdates = Seq.empty[SparqlTemplateLinkUpdate], // This is empty because we have to generate SPARQL for standoff links separately.
-                                            maybeValueHasOrder = Some(valueToCreate.valueHasOrder),
-                                            checkObj = createMultipleValuesRequest.checkObj
+                                            maybeValueHasOrder = Some(valueToCreate.valueHasOrder)
                                         ).toString()
+
+                                        // If this is a text value and we're creating values as part of a bulk import, some of the target IRIs of
+                                        // standoff link tags in the text value might be client IDs for resources rather than real resource IRIs.
+                                        // Replace those IDs with the real IRIs of the target resources, so the generateInsertStatementsForCreateValue
+                                        // template can use the real IRIs.
+                                        val valueWithRealStandoffLinkIris = updateValueV1 match {
+                                            case textValueWithStandoff: TextValueWithStandoffV1 =>
+                                                val standoffWithRealStandoffLinkIris = textValueWithStandoff.standoff.map {
+                                                    standoffTag: StandoffTagV1 =>
+                                                        standoffTag.copy(
+                                                            attributes = standoffTag.attributes.map {
+                                                                case iriAttribute: StandoffTagIriAttributeV1 =>
+                                                                    iriAttribute.copy(
+                                                                        value = InputValidation.toRealStandoffLinkTargetResourceIri(
+                                                                            iri = iriAttribute.value,
+                                                                            clientResourceIDsToResourceIris = createMultipleValuesRequest.clientResourceIDsToResourceIris
+                                                                        )
+                                                                    )
+
+                                                                case otherAttribute => otherAttribute
+                                                            }
+                                                        )
+                                                }
+
+                                                textValueWithStandoff.copy(
+                                                    standoff = standoffWithRealStandoffLinkIris
+                                                )
+
+                                            case otherValue => otherValue
+                                        }
 
                                         // Generate INSERT clause statements for the value.
                                         val insertSparql = queries.sparql.v1.txt.generateInsertStatementsForCreateValue(
                                             resourceIndex = createMultipleValuesRequest.resourceIndex,
                                             valueIndex = valueToCreate.valueIndex,
                                             propertyIri = propertyIri,
-                                            value = updateValueV1,
+                                            value = valueWithRealStandoffLinkIris,
                                             newValueIri = newValueIri,
                                             linkUpdates = Seq.empty[SparqlTemplateLinkUpdate], // This is empty because we have to generate SPARQL for standoff links separately.
                                             maybeComment = valueToCreate.createValueV1WithComment.comment,
@@ -1955,8 +2004,7 @@ class ValuesResponderV1 extends ResponderV1 {
                 triplestore = settings.triplestoreType,
                 resourceIri = resourceIri,
                 linkUpdate = sparqlTemplateLinkUpdate,
-                maybeComment = comment,
-                checkObj = true
+                maybeComment = comment
             ).toString()
 
             /*
@@ -2026,10 +2074,9 @@ class ValuesResponderV1 extends ResponderV1 {
             // Generate a SPARQL update string.
             //resourceIndex = 0 because this method isn't used when creating multiple resources
             sparqlUpdate = queries.sparql.v1.txt.createValue(
-                resourceIndex = 0,
-                checkObj = true,
                 dataNamedGraph = dataNamedGraph,
                 triplestore = settings.triplestoreType,
+                resourceIndex = 0,
                 resourceIri = resourceIri,
                 propertyIri = propertyIri,
                 newValueIri = newValueIri,
@@ -2342,6 +2389,7 @@ class ValuesResponderV1 extends ResponderV1 {
                         insertDirectLink = insertDirectLink,
                         deleteDirectLink = false,
                         linkValueExists = true,
+                        linkTargetExists = true,
                         newLinkValueIri = newLinkValueIri,
                         linkTargetIri = targetResourceIri,
                         currentReferenceCount = currentReferenceCount,
@@ -2359,6 +2407,7 @@ class ValuesResponderV1 extends ResponderV1 {
                         insertDirectLink = true,
                         deleteDirectLink = false,
                         linkValueExists = false,
+                        linkTargetExists = true,
                         newLinkValueIri = newLinkValueIri,
                         linkTargetIri = targetResourceIri,
                         currentReferenceCount = 0,
@@ -2427,6 +2476,7 @@ class ValuesResponderV1 extends ResponderV1 {
                         insertDirectLink = false,
                         deleteDirectLink = deleteDirectLink,
                         linkValueExists = true,
+                        linkTargetExists = true,
                         newLinkValueIri = newLinkValueIri,
                         linkTargetIri = targetResourceIri,
                         currentReferenceCount = currentReferenceCount,

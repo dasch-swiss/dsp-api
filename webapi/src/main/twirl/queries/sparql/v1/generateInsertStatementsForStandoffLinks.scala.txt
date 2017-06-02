@@ -35,9 +35,7 @@
  * The SPARQL variables `?resource` and `?currentTime` must already be bound.
  *@
 @(linkUpdates: Seq[SparqlTemplateLinkUpdate],
-    resourceIndex: Int
-
-)
+  resourceIndex: Int)
 
         @for((linkUpdate, linkValueIndex) <- linkUpdates.zipWithIndex) {
             @* Insert a direct link for the resource reference if necessary. *@

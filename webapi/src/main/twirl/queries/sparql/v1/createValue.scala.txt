@@ -27,6 +27,7 @@
  *
  * @param dataNamedGraph the named graph in which the project stores its data.
  * @param triplestore the name of the triplestore being used.
+ * @param resourceIndex the index of the resource being created.
  * @param resourceIri the resource to update.
  * @param propertyIri the resource property to update.
  * @param newValueIri the new value IRI.
@@ -41,10 +42,9 @@
  * The generated WHERE clause does some consistency checks. If these fail, the operation will do nothing.
  * To find out whether the update succeeded, the application must query the property's version history.
  *@
-@(resourceIndex : Int,
-  checkObj:Boolean,
-  dataNamedGraph: IRI,
+@(dataNamedGraph: IRI,
   triplestore: String,
+  resourceIndex: Int,
   resourceIri: IRI,
   propertyIri: IRI,
   newValueIri: IRI,
@@ -123,7 +123,6 @@ WHERE {
 
     @{
         queries.sparql.v1.txt.generateWhereStatementsForCreateValue(resourceIndex = resourceIndex,
-                                                                    checkObj=checkObj,
                                                                     valueIndex = 0,
                                                                     resourceIri = resourceIri,
                                                                     propertyIri = propertyIri,

@@ -250,6 +250,15 @@ case class SubClassesGetResponseV1(subClasses: Seq[SubClassInfoV1]) extends Knor
     def toJsValue = ResourceTypeV1JsonProtocol.subClassesGetResponseV1Format.write(this)
 }
 
+/**
+  * Requests information about the ontology entities in the specified named graph. A successful response will be a
+  * [[NamedGraphEntityInfoV1]].
+  *
+  * @param namedGraphIri the IRI of the named graph.
+  * @param userProfile   the profile of the user making the request.
+  */
+case class NamedGraphEntityInfoRequestV1(namedGraphIri: IRI, userProfile: UserProfileV1) extends OntologyResponderRequestV1
+
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Components of messages

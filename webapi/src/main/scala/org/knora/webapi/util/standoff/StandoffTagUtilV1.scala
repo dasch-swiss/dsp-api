@@ -195,11 +195,14 @@ object StandoffTagUtilV1 {
     /**
       * Converts XML to a [[TextWithStandoffTagsV1]].
       *
-      * @param xml     the XML representing text with markup.
-      * @param mapping the mapping used to convert XML to standoff.
+      * @param xml                            the XML representing text with markup.
+      * @param mapping                        the mapping used to convert XML to standoff.
+      * @param acceptStandoffLinksToClientIDs if `true`, allow standoff link tags to use the client's IDs for target
+      *                                       resources. In a bulk import, this allows standoff links to resources
+      *                                       that are to be created by the import.
       * @return a [[TextWithStandoffTagsV1]].
       */
-    def convertXMLtoStandoffTagV1(xml: String, mapping: GetMappingResponseV1, log: LoggingAdapter): TextWithStandoffTagsV1 = {
+    def convertXMLtoStandoffTagV1(xml: String, mapping: GetMappingResponseV1, acceptStandoffLinksToClientIDs: Boolean, log: LoggingAdapter): TextWithStandoffTagsV1 = {
 
         // collect all the `XMLTag` from the given mapping that require a separator
         // and create a `XMLTagSeparatorRequired` for each of them
@@ -243,7 +246,8 @@ object StandoffTagUtilV1 {
         val standoffTagsV1: Seq[StandoffTagV1] = convertXMLStandoffTagToStandoffTagV1(
             textWithStandoff = textWithStandoff,
             mappingXMLtoStandoff = mapping.mapping,
-            standoffEntities = mapping.standoffEntities
+            standoffEntities = mapping.standoffEntities,
+            acceptStandoffLinksToClientIDs = acceptStandoffLinksToClientIDs
         )
 
         TextWithStandoffTagsV1(
@@ -258,12 +262,18 @@ object StandoffTagUtilV1 {
       * Turns a sequence of [[StandoffTag]] returned by [[XMLToStandoffUtil.xml2TextWithStandoff]] into a sequence of [[StandoffTagV1]].
       * This method handles the creation of data type specific properties (e.g. for a date value) on the basis of the provided mapping.
       *
-      * @param textWithStandoff     sequence of [[StandoffTag]] returned by [[XMLToStandoffUtil.xml2TextWithStandoff]].
-      * @param mappingXMLtoStandoff the mapping to be used.
-      * @param standoffEntities     the standoff entities (classes and properties) to be used.
+      * @param textWithStandoff               sequence of [[StandoffTag]] returned by [[XMLToStandoffUtil.xml2TextWithStandoff]].
+      * @param mappingXMLtoStandoff           the mapping to be used.
+      * @param standoffEntities               the standoff entities (classes and properties) to be used.
+      * @param acceptStandoffLinksToClientIDs if `true`, allow standoff link tags to use the client's IDs for target
+      *                                       resources. In a bulk import, this allows standoff links to resources
+      *                                       that are to be created by the import.
       * @return a sequence of [[StandoffTagV1]].
       */
-    private def convertXMLStandoffTagToStandoffTagV1(textWithStandoff: TextWithStandoff, mappingXMLtoStandoff: MappingXMLtoStandoff, standoffEntities: StandoffEntityInfoGetResponseV1): Seq[StandoffTagV1] = {
+    private def convertXMLStandoffTagToStandoffTagV1(textWithStandoff: TextWithStandoff,
+                                                     mappingXMLtoStandoff: MappingXMLtoStandoff,
+                                                     standoffEntities: StandoffEntityInfoGetResponseV1,
+                                                     acceptStandoffLinksToClientIDs: Boolean): Seq[StandoffTagV1] = {
 
         // collect al the existing ids from the standoff tags
         val existingXMLIDs: Seq[String] = textWithStandoff.standoff.filter((standoffTag: StandoffTag) => standoffTag.originalID.isDefined).map {
@@ -301,7 +311,7 @@ object StandoffTagUtilV1 {
 
                 // get the mapping corresponding to the given namespace and tagname
                 val standoffDefFromMapping = mappingXMLtoStandoff.namespace
-                    .getOrElse(xmlNamespace, throw BadRequestException(s"namespace ${xmlNamespace} not defined in mapping"))
+                    .getOrElse(xmlNamespace, throw BadRequestException(s"namespace $xmlNamespace not defined in mapping"))
                     .getOrElse(standoffNodeFromXML.tagName, throw BadRequestException(s"the standoff class for the tag '${standoffNodeFromXML.tagName}' could not be found in the provided mapping"))
                     .getOrElse(classname, throw BadRequestException(s"the standoff class for the classname $classname in combination with the tag '${standoffNodeFromXML.tagName}' could not be found in the provided mapping")).mapping
 
@@ -356,7 +366,7 @@ object StandoffTagUtilV1 {
 
                         val linkString: String = getDataTypeAttribute(standoffDefFromMapping, StandoffDataTypeClasses.StandoffLinkTag, standoffNodeFromXML)
 
-                        val internalLink: StandoffTagAttributeV1 = StandoffTagIriAttributeV1(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink, value = InputValidation.toIri(linkString, () => throw BadRequestException(s"Iri invalid: $linkString")))
+                        val internalLink: StandoffTagAttributeV1 = StandoffTagIriAttributeV1(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink, value = InputValidation.toStandoffLinkResourceReference(linkString, acceptStandoffLinksToClientIDs, () => throw BadRequestException(s"Invalid standoff resource reference: $linkString")))
 
                         val classSpecificProps = cardinalities -- StandoffProperties.systemProperties -- StandoffProperties.linkProperties
 
