@@ -169,21 +169,21 @@
 
 					// configuration for toolbar buttons, must conform to `STANDARD_MAPPING`,
 					toolbarGroups: [
-						{ name: 'document', groups: [ 'mode', 'document', 'doctools' ] },
-						{ name: 'clipboard', groups: [ 'clipboard', 'undo' ] },
-						{ name: 'editing', groups: [ 'find', 'selection', 'spellchecker', 'editing' ] },
-						{ name: 'forms', groups: [ 'forms' ] },
-						{ name: 'basicstyles', groups: [ 'basicstyles', 'cleanup' ] },
-						{ name: 'paragraph', groups: [ 'list', 'indent', 'blocks', 'align', 'bidi', 'paragraph' ] },
-						{ name: 'links', groups: [ 'links' ] },
-						{ name: 'insert', groups: [ 'insert' ] },
-						{ name: 'styles', groups: [ 'styles' ] },
-						{ name: 'colors', groups: [ 'colors' ] },
-						{ name: 'tools', groups: [ 'tools' ] },
-						{ name: 'others', groups: [ 'others' ] },
-						{ name: 'about', groups: [ 'about' ] }
+						{ name: 'document',	   groups: [ 'mode', 'document', 'doctools' ] },
+						{name: 'clipboard', groups: ['clipboard', 'undo']},
+						{name: 'editing', groups: ['find', 'selection', 'spellchecker']},
+						{name: 'forms'},
+						{name: 'basicstyles', groups: ['basicstyles', 'cleanup']},
+						{name: 'paragraph', groups: ['list', 'indent', 'blocks', 'align', 'bidi']},
+						{name: 'links'},
+						{name: 'insert'},
+						{name: 'styles'},
+						{name: 'colors'},
+						{name: 'tools'},
+						{name: 'others'},
+						{name: 'about'}
 					],
-					removeButtons: 'Cut,Copy,Paste,Anchor,NumberedList,BulletedList,Outdent,Indent,About'
+					removeButtons: 'Cut,Copy,Paste,Anchor,About'
 			};
 
 				// init editor (textarea will be replaced by an iframe)
