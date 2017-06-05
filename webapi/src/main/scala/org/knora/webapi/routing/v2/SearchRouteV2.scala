@@ -24,7 +24,7 @@ import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
-import org.knora.webapi.messages.v2.responder.searchmessages.FulltextSearchGetRequestV2
+import org.knora.webapi.messages.v2.responder.searchmessages.{FulltextSearchGetRequestV2, SearchResourceByLabelRequestV2}
 import org.knora.webapi.routing.{Authenticator, RouteUtilV2}
 import org.knora.webapi.util.InputValidation
 import org.knora.webapi.{BadRequestException, SettingsImpl}
@@ -50,7 +50,7 @@ object SearchRouteV2 extends Authenticator {
 
                     val searchString = InputValidation.toSparqlEncodedString(searchval, () => throw BadRequestException(s"Invalid search string: '$searchval'"))
 
-                    val requestMessage = FulltextSearchGetRequestV2(searchValue = searchString, userProfile)
+                    val requestMessage = FulltextSearchGetRequestV2(searchValue = searchString, userProfile = userProfile)
 
                     RouteUtilV2.runJsonRoute(
                         requestMessage,
@@ -61,6 +61,26 @@ object SearchRouteV2 extends Authenticator {
                     )
                 }
             }
+        } ~ path("v2" / "searchbylabel" / Segment) { searchval => // TODO: if a space is encoded as a "+", this is not converted back to a space
+            get {
+                requestContext => {
+
+                    val userProfile = getUserProfileV1(requestContext)
+
+                    val searchString = InputValidation.toSparqlEncodedString(searchval, () => throw BadRequestException(s"Invalid search string: '$searchval'"))
+
+                    val requestMessage = SearchResourceByLabelRequestV2(searchValue = searchString, userProfile = userProfile)
+
+                    RouteUtilV2.runJsonRoute(
+                        requestMessage,
+                        requestContext,
+                        settings,
+                        responderManager,
+                        log
+                    )
+                }
+            }
+
         }
     }
 

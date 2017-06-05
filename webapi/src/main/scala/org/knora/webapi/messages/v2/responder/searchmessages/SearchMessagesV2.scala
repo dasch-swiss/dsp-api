@@ -34,8 +34,17 @@ sealed trait SearchResponderRequestV2 extends KnoraRequestV2 {
 /**
   * Requests a fulltext search. A successful response will be a [[ReadResourcesSequenceV2]].
   *
+  * @param searchValue the values to search for.
   * @param userProfile the profile of the user making the request.
   */
 case class FulltextSearchGetRequestV2(searchValue: String,
                                       userProfile: UserProfileV1) extends SearchResponderRequestV2
 
+/**
+  * Requests a search of resources by their label. A successful response will be a [[ReadResourcesSequenceV2]].
+  *
+  * @param searchValue the values to search for.
+  * @param userProfile the profile of the user making the request.
+  */
+case class SearchResourceByLabelRequestV2(searchValue: String,
+                                          userProfile: UserProfileV1) extends SearchResponderRequestV2

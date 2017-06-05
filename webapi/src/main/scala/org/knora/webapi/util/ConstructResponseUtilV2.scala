@@ -501,7 +501,7 @@ object ConstructResponseUtilV2 {
       * @param searchResults the results returned by the triplestore.
       * @return a collection of [[ReadResourceV2]], representing the search results.
       */
-    def createFulltextSearchResponse(searchResults: Map[IRI, ResourceWithValueRdfData], settings: SettingsImpl): Vector[ReadResourceV2] = {
+    def createSearchResponse(searchResults: Map[IRI, ResourceWithValueRdfData], settings: SettingsImpl): Vector[ReadResourceV2] = {
 
         // each entry represents a resource that matches the search criteria
         // this is because linking properties are excluded from fulltext search

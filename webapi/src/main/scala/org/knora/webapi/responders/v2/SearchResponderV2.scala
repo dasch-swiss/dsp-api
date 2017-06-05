@@ -24,7 +24,7 @@ import akka.pattern._
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.store.triplestoremessages.{SparqlConstructRequest, SparqlConstructResponse}
 import org.knora.webapi.messages.v2.responder._
-import org.knora.webapi.messages.v2.responder.searchmessages.FulltextSearchGetRequestV2
+import org.knora.webapi.messages.v2.responder.searchmessages.{FulltextSearchGetRequestV2, SearchResourceByLabelRequestV2}
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.ConstructResponseUtilV2
@@ -35,8 +35,16 @@ class SearchResponderV2 extends Responder {
 
     def receive = {
         case FulltextSearchGetRequestV2(searchValue, userProfile) => future2Message(sender(), fulltextSearchV2(searchValue, userProfile), log)
+        case SearchResourceByLabelRequestV2(searchValue, userProfile) => future2Message(sender(), searchResourcesByLabelV2(searchValue, userProfile), log)
     }
 
+    /**
+      * Performs a fulltext search (simple search).
+      *
+      * @param searchValue the values to search for.
+      * @param userProfile the profile of the client making the request.
+      * @return a [[ReadResourcesSequenceV2]] representing the resources that have been found.
+      */
     private def fulltextSearchV2(searchValue: String, userProfile: UserProfileV1): Future[ReadResourcesSequenceV2] = {
 
         for {
@@ -50,7 +58,34 @@ class SearchResponderV2 extends Responder {
             // separate resources and value objects
             queryResultsSeparated = ConstructResponseUtilV2.splitResourcesAndValueRdfData(constructQueryResults = searchResponse, userProfile = userProfile)
 
-        } yield ReadResourcesSequenceV2(numberOfResources = queryResultsSeparated.size, resources = ConstructResponseUtilV2.createFulltextSearchResponse(queryResultsSeparated, settings), settings = settings)
+        } yield ReadResourcesSequenceV2(numberOfResources = queryResultsSeparated.size, resources = ConstructResponseUtilV2.createSearchResponse(queryResultsSeparated, settings), settings = settings)
+
+    }
+
+    /**
+      * Performs a search for resources by their label.
+      *
+      * @param searchValue the values to search for.
+      * @param userProfile the profile of the client making the request.
+      * @return a [[ReadResourcesSequenceV2]] representing the resources that have been found.
+      */
+    private def searchResourcesByLabelV2(searchValue: String, userProfile: UserProfileV1): Future[ReadResourcesSequenceV2] = {
+
+        for {
+            searchResourceByLabelSparql <- Future(queries.sparql.v2.txt.searchResourceByLabel(
+                triplestore = settings.triplestoreType,
+                searchTerms = searchValue
+            ).toString())
+
+            searchResourceByLabelResponse: SparqlConstructResponse <- (storeManager ? SparqlConstructRequest(searchResourceByLabelSparql)).mapTo[SparqlConstructResponse]
+
+            // separate resources and value objects
+            queryResultsSeparated = ConstructResponseUtilV2.splitResourcesAndValueRdfData(constructQueryResults = searchResourceByLabelResponse, userProfile = userProfile)
+
+            //_ = println(queryResultsSeparated)
+
+        } yield ReadResourcesSequenceV2(numberOfResources = queryResultsSeparated.size, resources = ConstructResponseUtilV2.createSearchResponse(queryResultsSeparated, settings), settings = settings)
+
 
     }
 }
