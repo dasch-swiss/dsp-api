@@ -34,6 +34,8 @@ script:
 - cd /home/travis/build/dhlab-basel/Knora/triplestores/fuseki/ && ./fuseki-server &
 # start the built-in webapi server tests
 - cd /home/travis/build/dhlab-basel/Knora/webapi/ && sbt test
+# start sipi (needed for salsah tests)
+- docker run --net="host" -p 1024:1024 dhlabbasel/sipi:wip-travis-testing
 # start the webapi server (needed for salsah tests)
 - cd /home/travis/build/dhlab-basel/Knora/webapi/ && sbt "run allowResetTriplestoreContentOperationOverHTTP" &
 # wait for the webapi server to start before we proceed with running the salsah tests
