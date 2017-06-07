@@ -27,6 +27,7 @@ before_install:
   - export CHROME_BIN=chromium-browser
   - export DISPLAY=:99.0
   - sh -e /etc/init.d/xvfb start
+  - export DOCKERHOST=$(ifconfig | grep -E "([0-9]{1,3}\.){3}[0-9]{1,3}" | grep -v 127.0.0.1 | awk '{ print $2 }' | cut -f2 -d: | head -n1)
   - cd /home/travis/build/dhlab-basel/Knora/salsah/lib/chromedriver/ && unzip chromedriver_linux64.zip
 
 script:
@@ -35,7 +36,7 @@ script:
 # start the built-in webapi server tests
 - cd /home/travis/build/dhlab-basel/Knora/webapi/ && sbt test
 # start the sipi container in the background (needed for salsah tests)
-- docker run --net="host" -d -p 1024:1024 dhlabbasel/sipi:wip-travis-testing
+- docker run -d --add-host webapihost:$DOCKERHOST -p 1024:1024 dhlabbasel/sipi:wip-travis-testing
 # start the webapi server (needed for salsah tests)
 - cd /home/travis/build/dhlab-basel/Knora/webapi/ && sbt "run allowResetTriplestoreContentOperationOverHTTP" &
 # wait for the webapi server to start before we proceed with running the salsah tests
