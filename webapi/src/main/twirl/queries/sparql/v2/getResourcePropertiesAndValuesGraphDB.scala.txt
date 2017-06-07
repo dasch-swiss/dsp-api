@@ -28,8 +28,10 @@
  *
  *
  * @param resourceIri the Iri of the requested resource.
+ * @param preview indicates if the request should only return preview information.
  *@
-@(resourceIri: String)
+@(resourceIri: String,
+preview: Boolean)
 
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
@@ -77,44 +79,47 @@ CONSTRUCT {
     ?resource knora-base:attachedToUser ?resourceCreator ;
             knora-base:hasPermissions ?resourcePermissions .
 
-    # there might by resources that have neither values nor links
-    OPTIONAL {
-        {
-            ?resource knora-base:hasValue ?valueObject .
-
-            ?valueObject a knora-base:Value ;
-                knora-base:isDeleted false .
-
+    @* Check if this a full resource requests *@
+    @if(preview == false) {
+        # there might by resources that have neither values nor links
+        OPTIONAL {
             {
-                GRAPH <http://www.ontotext.com/explicit> {
-                    ?resource ?resourceValueProperty ?valueObject .
+                ?resource knora-base:hasValue ?valueObject .
 
-                    ?valueObject a ?valueObjectType ;
-                        ?valueObjectProperty ?valueObjectValue .
+                ?valueObject a knora-base:Value ;
+                    knora-base:isDeleted false .
+
+                {
+                    GRAPH <http://www.ontotext.com/explicit> {
+                        ?resource ?resourceValueProperty ?valueObject .
+
+                        ?valueObject a ?valueObjectType ;
+                            ?valueObjectProperty ?valueObjectValue .
+                    }
+                } UNION {
+                    GRAPH <http://www.ontotext.com/explicit> {
+                        ?valueObject knora-base:valueHasStandoff ?standoffNode .
+                        ?standoffNode ?standoffProperty ?standoffValue .
+                    }
                 }
             } UNION {
+
+                ?resource knora-base:hasLinkTo ?referredResource .
+
+                ?referredResource a knora-base:Resource ;
+                    knora-base:isDeleted false .
+
                 GRAPH <http://www.ontotext.com/explicit> {
-                    ?valueObject knora-base:valueHasStandoff ?standoffNode .
-                    ?standoffNode ?standoffProperty ?standoffValue .
+                    ?resource ?resourceLinkProperty ?referredResource .
+
+                    ?referredResource rdfs:label ?referredResourceLabel ;
+                        a ?referredResourceType ;
+                        knora-base:attachedToUser ?referredResourceCreator ;
+                        knora-base:hasPermissions ?referredResourcePermissions ;
+                        knora-base:attachedToProject ?referredResourceProject .
                 }
+
             }
-        } UNION {
-
-            ?resource knora-base:hasLinkTo ?referredResource .
-
-            ?referredResource a knora-base:Resource ;
-                knora-base:isDeleted false .
-
-            GRAPH <http://www.ontotext.com/explicit> {
-                ?resource ?resourceLinkProperty ?referredResource .
-
-                ?referredResource rdfs:label ?referredResourceLabel ;
-                    a ?referredResourceType ;
-                    knora-base:attachedToUser ?referredResourceCreator ;
-                    knora-base:hasPermissions ?referredResourcePermissions ;
-                    knora-base:attachedToProject ?referredResourceProject .
-            }
-
         }
     }
 }

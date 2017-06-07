@@ -28,17 +28,19 @@
  *
  * @param triplestore the name of the triplestore being used.
  * @param resourceIri the IRI of the resource to be queried.
+ * @param preview indicates if the request should only return preview information.
  *@
 @(triplestore: String,
-  resourceIri: IRI)
+  resourceIri: IRI,
+  preview: Boolean = false)
 
 @if(triplestore.startsWith("graphdb")) {
     @{
-        queries.sparql.v2.txt.getResourcePropertiesAndValuesGraphDB(resourceIri = resourceIri)
+        queries.sparql.v2.txt.getResourcePropertiesAndValuesGraphDB(resourceIri = resourceIri, preview = preview)
     }
 } else {
     @{
         queries.sparql.v2.txt.getResourcePropertiesAndValuesStandard(triplestore = triplestore,
-                                                                    resourceIri = resourceIri)
+                                                                    resourceIri = resourceIri, preview = preview)
     }
 }

@@ -26,9 +26,9 @@ import org.knora.webapi.messages.v1.responder.standoffmessages.{GetMappingReques
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.store.triplestoremessages.{SparqlConstructRequest, SparqlConstructResponse}
 import org.knora.webapi.messages.v2.responder._
-import org.knora.webapi.messages.v2.responder.resourcemessages.ResourcesGetRequestV2
+import org.knora.webapi.messages.v2.responder.resourcemessages.{ResourcePreviewRequestV2, ResourcesGetRequestV2}
 import org.knora.webapi.responders.Responder
-import org.knora.webapi.util.ActorUtil.future2Message
+import org.knora.webapi.util.ActorUtil.{future2Message, handleUnexpectedMessage}
 import org.knora.webapi.util.ConstructResponseUtilV2
 import org.knora.webapi.util.ConstructResponseUtilV2.{MappingAndXSLTransformation, ResourceWithValueRdfData}
 
@@ -37,9 +37,18 @@ import scala.concurrent.Future
 class ResourcesResponderV2 extends Responder {
 
     def receive = {
-        case resourcesGetRequest: ResourcesGetRequestV2 => future2Message(sender(), getResources(resourcesGetRequest.resourceIris, resourcesGetRequest.userProfile), log)
+        case ResourcesGetRequestV2(resIris, userProfile) => future2Message(sender(), getResources(resIris, userProfile), log)
+        case ResourcePreviewRequestV2(resIri, userProfile) => future2Message(sender(), getResourcePreview(resIri, userProfile), log)
+        case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }
 
+    /**
+      * Get one or several resources and return them as a sequence.
+      *
+      * @param resourceIris the resources to query for.
+      * @param userProfile the profile of the client making the request.
+      * @return a [[ReadResourcesSequenceV2]].
+      */
     private def getResources(resourceIris: Set[IRI], userProfile: UserProfileV1): Future[ReadResourcesSequenceV2] = {
 
         // TODO: get all the resources: possibly more than one resource is requested
@@ -96,6 +105,31 @@ class ResourcesResponderV2 extends Responder {
 
             // TODO: possibly more than one resource was requested!
         }  yield ReadResourcesSequenceV2(numberOfResources = 1, resources = Vector(ConstructResponseUtilV2.createFullResourceResponse(resourceIri, queryResultsSeparated(resourceIri), mappings = mappings.toMap, settings)), settings = settings)
+
+    }
+
+    /**
+      * Get the preview of a resource.
+      *
+      * @param resourceIri the resource to query for.
+      * @param userProfile the profile of the client making the request.
+      * @return a [[ReadResourcesSequenceV2]].
+      */
+    private def getResourcePreview(resourceIri: IRI, userProfile: UserProfileV1): Future[ReadResourcesSequenceV2] = {
+
+        for {
+            resourcePreviewRequestSparql <- Future(queries.sparql.v2.txt.getResourcePropertiesAndValues(
+                triplestore = settings.triplestoreType,
+                resourceIri = resourceIri,
+                preview = true
+            ).toString())
+
+            resourcePreviewRequestResponse: SparqlConstructResponse <- (storeManager ? SparqlConstructRequest(resourcePreviewRequestSparql)).mapTo[SparqlConstructResponse]
+
+            // separate resources and values
+            queryResultsSeparated: Map[IRI, ResourceWithValueRdfData] = ConstructResponseUtilV2.splitResourcesAndValueRdfData(constructQueryResults = resourcePreviewRequestResponse, userProfile = userProfile)
+
+        } yield ReadResourcesSequenceV2(numberOfResources = 1, resources = Vector(ConstructResponseUtilV2.createFullResourceResponse(resourceIri, queryResultsSeparated(resourceIri), mappings = Map.empty[IRI, MappingAndXSLTransformation], settings)), settings = settings)
 
     }
 

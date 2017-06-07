@@ -24,7 +24,7 @@ import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
-import org.knora.webapi.messages.v2.responder.resourcemessages.ResourcesGetRequestV2
+import org.knora.webapi.messages.v2.responder.resourcemessages.{ResourcePreviewRequestV2, ResourcesGetRequestV2}
 import org.knora.webapi.routing.{Authenticator, RouteUtilV2}
 import org.knora.webapi.util.InputValidation
 import org.knora.webapi.{BadRequestException, IRI, SettingsImpl}
@@ -64,7 +64,27 @@ object ResourcesRouteV2 extends Authenticator {
                     )
                 }
             }
+        } ~ path("v2" / "resourcepreview" / Segment ) { resIri =>
+            get {
+                requestContext => {
+                    val userProfile = getUserProfileV1(requestContext)
+
+                    val resourceIri: IRI = InputValidation.toIri(resIri, () => throw BadRequestException(s"Invalid resource Iri: '$resIri'"))
+
+                    val requestMessage = ResourcePreviewRequestV2(resourceIri = resourceIri, userProfile = userProfile)
+
+                    RouteUtilV2.runJsonRoute(
+                        requestMessage,
+                        requestContext,
+                        settings,
+                        responderManager,
+                        log
+                    )
+                }
+            }
+
         }
+
     }
 
 

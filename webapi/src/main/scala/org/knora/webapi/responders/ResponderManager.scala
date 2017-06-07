@@ -38,7 +38,7 @@ import org.knora.webapi.messages.v1.responder.storemessages.StoreResponderReques
 import org.knora.webapi.messages.v1.responder.usermessages.UsersResponderRequestV1
 import org.knora.webapi.messages.v1.responder.valuemessages.ValuesResponderRequestV1
 import org.knora.webapi.messages.v2.responder.ontologymessages.OntologiesResponderRequestV2
-import org.knora.webapi.messages.v2.responder.resourcemessages.ResourcesGetRequestV2
+import org.knora.webapi.messages.v2.responder.resourcemessages.ResourcesResponderRequestV2
 import org.knora.webapi.messages.v2.responder.searchmessages.SearchResponderRequestV2
 import org.knora.webapi.responders.v1._
 import org.knora.webapi.responders.v2.{OntologiesResponderV2, ResourcesResponderV2, SearchResponderV2}
@@ -260,7 +260,7 @@ class ResponderManager extends Actor with ActorLogging {
         case groupsResponderRequest: GroupsResponderRequestV1 => groupsRouter forward groupsResponderRequest
         case ontologiesResponderRequest: OntologiesResponderRequestV2 => ontologiesRouter2.forward(ontologiesResponderRequest) // V2
         case searchResponderRequest: SearchResponderRequestV2 => searchRouter2.forward(searchResponderRequest) // V2
-        case resourcesResponderRequest: ResourcesGetRequestV2 => resourcesRouter2.forward(resourcesResponderRequest) // V2
+        case resourcesResponderRequest: ResourcesResponderRequestV2 => resourcesRouter2.forward(resourcesResponderRequest) // V2
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }
 }

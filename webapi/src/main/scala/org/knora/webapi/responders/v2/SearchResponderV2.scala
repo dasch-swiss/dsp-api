@@ -36,6 +36,7 @@ class SearchResponderV2 extends Responder {
     def receive = {
         case FulltextSearchGetRequestV2(searchValue, userProfile) => future2Message(sender(), fulltextSearchV2(searchValue, userProfile), log)
         case SearchResourceByLabelRequestV2(searchValue, userProfile) => future2Message(sender(), searchResourcesByLabelV2(searchValue, userProfile), log)
+        case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }
 
     /**
