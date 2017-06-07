@@ -1,19 +1,92 @@
-package org.knora.webapi.util
+package org.knora.webapi.util.search.v2
 
+import org.eclipse.rdf4j.query.algebra
 import org.eclipse.rdf4j.query.algebra._
 import org.eclipse.rdf4j.query.parser.ParsedQuery
 import org.eclipse.rdf4j.query.parser.sparql._
+import org.knora.webapi.{OntologyConstants, _}
+
+import scala.collection.mutable.ArrayBuffer
 
 /**
-  * Parses the client's query for an extended search in API v2.
+  * Represents an IRI or variable in a query.
+  */
+sealed trait QueryRef
+
+/**
+  * Represents a statement pattern or block pattern in a query.
+  */
+sealed trait QueryPattern
+
+/**
+  * Represents a statement pattern in a query.
+  *
+  * @param subj the subject of the statement.
+  * @param pred the predicate of the statement.
+  * @param obj  the object of the statement.
+  */
+case class StatementPattern(subj: QueryRef, pred: IRI, obj: QueryRef) extends QueryPattern
+
+/**
+  * Represents a block pattern in a query, such as a UNION.
+  */
+sealed trait BlockPattern
+
+/**
+  * Represents a variable in a query.
+  *
+  * @param variableName the name of the variable.
+  */
+case class QueryVariable(variableName: String) extends QueryRef
+
+/**
+  * Represents an IRI in a query.
+  *
+  * @param iri the IRI.
+  */
+case class IriRef(iri: IRI) extends QueryRef
+
+/**
+  * Represents a UNION in the WHERE clause of a query.
+  *
+  * @param blocks the blocks of statement patterns contained in the UNION.
+  */
+case class UnionPattern(blocks: ArrayBuffer[ArrayBuffer[StatementPattern]])
+
+/**
+  * Represents a simple CONSTRUCT clause in a query.
+  *
+  * @param statements the statements in the CONSTRUCT clause.
+  */
+case class SimpleConstructClause(statements: ArrayBuffer[StatementPattern])
+
+/**
+  * Represents a simple WHERE clause in a query.
+  *
+  * @param statements the statements in the WHERE clause.
+  */
+case class SimpleWhereClause(statements: ArrayBuffer[QueryPattern])
+
+/**
+  * Represents a simple CONSTRUCT query submitted to the Knora API.
+  *
+  * @param constructClause the CONSTRUCT clause.
+  * @param whereClause     the WHERE clause.
+  */
+case class SimpleConstructQuery(constructClause: SimpleConstructClause, whereClause: SimpleConstructQuery)
+
+
+/**
+  * Parses the client's SPARQL query for an extended search in API v2. The query must be a CONSTRUCT query,
+  * using no internal ontologies.
   */
 class SearchParserV2 {
     private val sparqlParserFactory = new SPARQLParserFactory()
     private val sparqlParser = sparqlParserFactory.getParser
-    private val visitor = new TestQueryModelVisitor
+    private val visitor = new SimpleConstructQueryModelVisitor
 
     def parseSearchQuery(query: String): ParsedQuery = {
-        sparqlParser.parseQuery(query, "http://api.knora.org/ontology/knora-api/simple/v2#")
+        sparqlParser.parseQuery(query, OntologyConstants.KnoraApi.KnoraApiOntologyIri + OntologyConstants.KnoraApiV2Simplified.VersionSegment + "#")
     }
 
     def test: Unit = {
@@ -22,24 +95,24 @@ class SearchParserV2 {
     }
 }
 
-class TestQueryModelVisitor extends QueryModelVisitor[Exception] {
-    private def sparqlVarToString(sparqlVar: Var): String = {
-        if (sparqlVar.isAnonymous) {
-            sparqlVar.getValue.stringValue
-        } else {
-            "?" + sparqlVar.getName
-        }
-    }
-
+class SimpleConstructQueryModelVisitor extends QueryModelVisitor[SparqlSearchException] {
     override def meet(node: Slice): Unit = {
         println(s"Got Slice")
         node.visitChildren(this)
     }
 
-    override def meet(node: StatementPattern): Unit = {
-        val sub = sparqlVarToString(node.getSubjectVar)
-        val pred = sparqlVarToString(node.getPredicateVar)
-        val obj = sparqlVarToString(node.getObjectVar)
+    private def sparqlVarToQueryRef(sparqlVar: Var): QueryRef = {
+        if (sparqlVar.isAnonymous) {
+            IriRef(sparqlVar.getValue.stringValue)
+        } else {
+            QueryVariable(sparqlVar.getName)
+        }
+    }
+
+    override def meet(node: algebra.StatementPattern): Unit = {
+        val sub = sparqlVarToQueryRef(node.getSubjectVar)
+        val pred = sparqlVarToQueryRef(node.getPredicateVar)
+        val obj = sparqlVarToQueryRef(node.getObjectVar)
         println(s"Got StatementPattern: $sub $pred $obj .")
     }
 
@@ -426,36 +499,36 @@ class TestQueryModelVisitor extends QueryModelVisitor[Exception] {
 
 
 object SearchParserV2 {
-var TestQuery: String =
-    """
-      |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-      |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-      |PREFIX incunabula: <http://api.knora.org/ontology/incunabula/simple/v2#>
-      |
-      |CONSTRUCT {
-      |    ?book a ?bookType .
-      |    ?book rdfs:label ?bookLabel .
-      |    ?page a ?pageType .
-      |    ?page rdfs:label ?pageLabel .
-      |    ?page incunabula:isPartOf ?book .
-      |} WHERE {
-      |    ?book a incunabula:book .
-      |    ?book rdfs:label ?bookLabel .
-      |    ?book incunabula:publisher "Lienhart Ysenhut" .
-      |    ?book incunabula:pubdate ?pubdate .
-      |    FILTER(?pubdate < "GREGORIAN:1500")
-      |    ?page a incunabula:page .
-      |    ?page rdfs:label ?pageLabel .
-      |    ?page incunabula:partOf ?book .
-      |    ?page incunabula:pagenum ?pagenum .
-      |    ?page incunabula:seqnum ?seqnum .
-      |    FILTER(?seqnum < 20)
-      |
-      |    {
-      |        ?page incunabula:pagenum "a7r" .
-      |    } UNION {
-      |        ?page incunabula:pagenum "a8r" .
-      |    }
-      |}
-    """.stripMargin
+    var TestQuery: String =
+        """
+          |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+          |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+          |PREFIX incunabula: <http://api.knora.org/ontology/incunabula/simple/v2#>
+          |
+          |CONSTRUCT {
+          |    ?book a ?bookType .
+          |    ?book rdfs:label ?bookLabel .
+          |    ?page a ?pageType .
+          |    ?page rdfs:label ?pageLabel .
+          |    ?page incunabula:isPartOf ?book .
+          |} WHERE {
+          |    ?book a incunabula:book .
+          |    ?book rdfs:label ?bookLabel .
+          |    ?book incunabula:publisher "Lienhart Ysenhut" .
+          |    ?book incunabula:pubdate ?pubdate .
+          |    FILTER(?pubdate < "GREGORIAN:1500")
+          |    ?page a incunabula:page .
+          |    ?page rdfs:label ?pageLabel .
+          |    ?page incunabula:partOf ?book .
+          |    ?page incunabula:pagenum ?pagenum .
+          |    ?page incunabula:seqnum ?seqnum .
+          |    FILTER(?seqnum < 20)
+          |
+          |    {
+          |        ?page incunabula:pagenum "a7r" .
+          |    } UNION {
+          |        ?page incunabula:pagenum "a8r" .
+          |    }
+          |}
+        """.stripMargin
 }
