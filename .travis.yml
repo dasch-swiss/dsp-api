@@ -39,12 +39,18 @@ cache:
 
 jobs:
   include:
-    - stage: webapi-test
+    - stage: webapi-fuseki-test
       script:
         # start fuseki
         - cd $TRAVIS_BUILD_DIR/triplestores/fuseki/ && ./fuseki-server &
         # start the built-in webapi server tests
         - cd $TRAVIS_BUILD_DIR/webapi/ && sbt test
+    #- stage: webapi-graphdb-test
+    #  script:
+    #    # start graphdb
+    #    - cd $TRAVIS_BUILD_DIR/triplestores/fuseki/ && ./fuseki-server &
+    #    # start the built-in webapi server tests
+    #    - cd $TRAVIS_BUILD_DIR/webapi/ && sbt test
     - stage: salsah-test
       script:
         - export CHROME_BIN=chromium-browser
@@ -57,7 +63,7 @@ jobs:
         - docker run -d --add-host webapihost:$DOCKERHOST -p 1024:1024 dhlabbasel/sipi:wip-travis-testing
         # start the webapi server (needed for salsah tests)
         - cd $TRAVIS_BUILD_DIR/webapi/ && sbt "run allowResetTriplestoreContentOperationOverHTTP" &
-        - sleep 10 # give the webapi server time to start before we proceed with running the salsah tests
+        - sleep 30 # give the webapi server time to start before we proceed with running the salsah tests
         # start built-in salsah browser tests
         - cd $TRAVIS_BUILD_DIR/salsah/ && sbt test
     - stage: publish-docker-images
