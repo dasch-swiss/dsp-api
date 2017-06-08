@@ -48,8 +48,8 @@ jobs:
         - cd $TRAVIS_BUILD_DIR/triplestores/fuseki/ && ./fuseki-server &
         # start the built-in webapi server tests
         - cd /home/travis/build/dhlab-basel/Knora/webapi/ && sbt test
-    - stage: test-salsah
-      script:
+    #- stage: test-salsah
+    #  script:
         # start fuseki
         # - cd $TRAVIS_BUILD_DIR/triplestores/fuseki/ && ./fuseki-server &
         # start the sipi container in the background (needed for salsah tests)
