@@ -27,7 +27,8 @@ env:
     - WEBAPI_REPO=dhlabbasel/webapi
     - SALSAH_REPO=dhlabbasel/salsah
     - COMMIT=${TRAVIS_COMMIT::8}
-    - TAG=`echo ${TRAVIS_BRANCH//\//-}`
+    - TAG=${TRAVIS_BRANCH//\//-}
+    - DOCKERHOST=$(ip route get 8.8.8.8 | awk '{print $NF; exit}')
 
 cache:
   directories:
@@ -37,9 +38,7 @@ before_install:
   - export CHROME_BIN=chromium-browser
   - export DISPLAY=:99.0
   - sh -e /etc/init.d/xvfb start
-  - export DOCKERHOST=$(ip route get 8.8.8.8 | awk '{print $NF; exit}') && echo $DOCKERHOST
-  - cd /home/travis/build/dhlab-basel/Knora/salsah/lib/chromedriver/ && unzip chromedriver_linux64.zip
-  - echo $TRAVIS_BUILD_DIR
+  - cd $TRAVIS_BUILD_DIR/salsah/lib/chromedriver/ && unzip chromedriver_linux64.zip
 
 jobs:
   script:
@@ -47,20 +46,20 @@ jobs:
       - stage: test-webapi
         script:
           # start fuseki
-          - cd /home/travis/build/dhlab-basel/Knora/triplestores/fuseki/ && ./fuseki-server &
+          - cd $TRAVIS_BUILD_DIR/triplestores/fuseki/ && ./fuseki-server &
           # start the built-in webapi server tests
           - cd /home/travis/build/dhlab-basel/Knora/webapi/ && sbt test
       - stage: test-salsah
         script:
           # start fuseki
-          # - cd /home/travis/build/dhlab-basel/Knora/triplestores/fuseki/ && ./fuseki-server &
+          # - cd $TRAVIS_BUILD_DIR/triplestores/fuseki/ && ./fuseki-server &
           # start the sipi container in the background (needed for salsah tests)
           # - docker run -d --add-host webapihost:$DOCKERHOST -p 1024:1024 dhlabbasel/sipi:wip-travis-testing
           # start the webapi server (needed for salsah tests)
-          # - cd /home/travis/build/dhlab-basel/Knora/webapi/ && sbt "run allowResetTriplestoreContentOperationOverHTTP" &
+          # - cd $TRAVIS_BUILD_DIR/webapi/ && sbt "run allowResetTriplestoreContentOperationOverHTTP" &
           # - sleep 10 # give the webapi server time to start before we proceed with running the salsah tests
           # start built-in salsah browser tests
-          # - cd /home/travis/build/dhlab-basel/Knora/salsah/ && sbt test
+          # - cd $TRAVIS_BUILD_DIR/salsah/ && sbt test
       - stage: publish-docker-images
         script:
           - docker login -u $DOCKER_USER -p $DOCKER_PASS
