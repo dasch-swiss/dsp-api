@@ -41,34 +41,33 @@ before_install:
   - cd $TRAVIS_BUILD_DIR/salsah/lib/chromedriver/ && unzip chromedriver_linux64.zip
 
 jobs:
-  script:
-    include:
-      - stage: test-webapi
-        script:
-          # start fuseki
-          - cd $TRAVIS_BUILD_DIR/triplestores/fuseki/ && ./fuseki-server &
-          # start the built-in webapi server tests
-          - cd /home/travis/build/dhlab-basel/Knora/webapi/ && sbt test
-      - stage: test-salsah
-        script:
-          # start fuseki
-          # - cd $TRAVIS_BUILD_DIR/triplestores/fuseki/ && ./fuseki-server &
-          # start the sipi container in the background (needed for salsah tests)
-          # - docker run -d --add-host webapihost:$DOCKERHOST -p 1024:1024 dhlabbasel/sipi:wip-travis-testing
-          # start the webapi server (needed for salsah tests)
-          # - cd $TRAVIS_BUILD_DIR/webapi/ && sbt "run allowResetTriplestoreContentOperationOverHTTP" &
-          # - sleep 10 # give the webapi server time to start before we proceed with running the salsah tests
-          # start built-in salsah browser tests
-          # - cd $TRAVIS_BUILD_DIR/salsah/ && sbt test
-      - stage: publish-docker-images
-        script:
-          - docker login -u $DOCKER_USER -p $DOCKER_PASS
-          - docker build ./webapi/Dockerfile -t $WEBAPI_REPO:$COMMIT
-          - docker tag $WEBAPI_REPO:$COMMIT $WEBAPI_REPO:$TAG
-          - docker push $WEBAPI_REPO:$COMMIT
-          - docker build ./salsah/Dockerfile -t $SALSAH_REPO:$COMMIT
-          - docker tag $SALSAH_REPO:$COMMIT $SALSAH_REPO:$TAG
-          - docker push $SALSAH_REPO:$COMMIT
+  include:
+    - stage: test-webapi
+      script:
+        # start fuseki
+        - cd $TRAVIS_BUILD_DIR/triplestores/fuseki/ && ./fuseki-server &
+        # start the built-in webapi server tests
+        - cd /home/travis/build/dhlab-basel/Knora/webapi/ && sbt test
+    - stage: test-salsah
+      script:
+        # start fuseki
+        # - cd $TRAVIS_BUILD_DIR/triplestores/fuseki/ && ./fuseki-server &
+        # start the sipi container in the background (needed for salsah tests)
+        # - docker run -d --add-host webapihost:$DOCKERHOST -p 1024:1024 dhlabbasel/sipi:wip-travis-testing
+        # start the webapi server (needed for salsah tests)
+        # - cd $TRAVIS_BUILD_DIR/webapi/ && sbt "run allowResetTriplestoreContentOperationOverHTTP" &
+        # - sleep 10 # give the webapi server time to start before we proceed with running the salsah tests
+        # start built-in salsah browser tests
+        # - cd $TRAVIS_BUILD_DIR/salsah/ && sbt test
+    - stage: publish-docker-images
+      script:
+        - docker login -u $DOCKER_USER -p $DOCKER_PASS
+        - docker build ./webapi/Dockerfile -t $WEBAPI_REPO:$COMMIT
+        - docker tag $WEBAPI_REPO:$COMMIT $WEBAPI_REPO:$TAG
+        - docker push $WEBAPI_REPO:$COMMIT
+        - docker build ./salsah/Dockerfile -t $SALSAH_REPO:$COMMIT
+        - docker tag $SALSAH_REPO:$COMMIT $SALSAH_REPO:$TAG
+        - docker push $SALSAH_REPO:$COMMIT
 
 notifications:
   slack:
