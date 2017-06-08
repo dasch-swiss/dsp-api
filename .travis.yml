@@ -63,7 +63,7 @@ jobs:
         - docker run -d --add-host webapihost:$DOCKERHOST -p 1024:1024 dhlabbasel/sipi:wip-travis-testing
         # start the webapi server (needed for salsah tests)
         - cd $TRAVIS_BUILD_DIR/webapi/ && sbt "run allowResetTriplestoreContentOperationOverHTTP" &
-        - sleep 30 # give the webapi server time to start before we proceed with running the salsah tests
+        - sleep 140 # give the webapi server time to start before we proceed with running the salsah tests
         # start built-in salsah browser tests
         - cd $TRAVIS_BUILD_DIR/salsah/ && sbt test
     - stage: publish-docker-images
