@@ -20,6 +20,15 @@ scala:
 jdk:
 - oraclejdk8
 
+env:
+  global:
+    - secure: "Sj0D8wR3Vx0J0h+LBUIh9t1PWjLJ2NEiKILf3JO5nuGdlU7dPhbFomR4w08q85O4d60km38ml7zpapC4noDQnbAFQHC6XeOe5CWPYFXCxkw7ueBoxhy/vkfSzypXp0UTNUX3S7+RcGJcTxLaZcUC9u+UaoWB0LMkmOcIlrKIDuzm3HcefMsml8gYX1xhS2TQJ8P7ZerzBmm0kERYLUabhxTnj5WAvue0d1xbUtzCzT1LpignOfsUZ9kHTagQEA15JsU0iNrMCvlDcxRWj8OzLhHRoHui4bJPQQfKEA8oMnTkPyzBRLmqafqHvmGcNQp9iGhuU04gb+FkF4gubBkLrxEvgTL/D5vIin3BHQvnZna9zSnUguZS+jw4sfEYcjZgYRzgMRPma/630ZM08FSZZ/qjSTCut4Cjua5aw2Vf9pYhf+Aad5rR0T2JmVYKp6Ik92aLhPOF9U40MacKRPPT54RIjCYcakZlmU4vl+kK37l3sYjvD57LeSs3PlqvkpSxwJzaQDhZFOZ+c7ICo+zU7DcQnWkN7k+ErKBOE7r0mIqvYuBYhdteBVKfo8a4rpDzYJDXaWzBdjc8ZKiEFQvFHngnZjR2UtKc0CAc6Y7ieCWIvBZYdMoHhKsBwFDaO1iuWwDLW3cswXaPEqENonlVAnXePu7KkQeB2acwDzPkhlI=" #DOCKER_USER
+    - secure: "iM3Wjt3f5yUaU16yKstwBEEFA8WKx8qcTVnOwF+o9+sooD1SZ39nYJDPgpHHNwFZ1aSkre5ATPEw+dfslr7SnnwYQeYHjYldcqudB+7pq4dmY5U3rCTsjZCH1XmLnnLO45CZRy05pIAUSxWpIiX5khWoHZd704UlDncqIU/6paWWNkywPb2P4UBZ5Xeai1NTS1URHRz0A4aD+dqwKS6P+baq4CyKLC/AqjsTDI+TV4C26FXXTgS0Ly9VfBVZ55D+SdVHgCZXJaHerAixjSX6zvenfkd/87GR6NEAgJ9QofF2nDEXBZZm4jPv5d285Cc4iUvRo1HLbI1VlALya3qUA9Prbno8QQaChNdjRS7mSplkCxZZKzBItpjvI009NPl20zX6GROb/JCjWHRZ4R358cebFKKqE4W1GBArS0piVbdqZyWA/t5KANouQIdrh+lepAf/Xq5JRcDP9r+Rk2hHLk2Rmj97gv001eRf9GjSEC1Qo1kwu1FabZok1UIemJHpY7yWO4d3ZKSOCyQ0WdW6rLMFGkouoByrFVfNPBVxLqDJ3YVL/4x5jc0Q9+G5jm6omqNwQSsn60nUizZJp1fuLGQRUNj8EDvRhxLgVkOJqFf4P/4qRas47k1wkWBk2iBlpNp2eQTY42IZovPIyT+NCfbdg0yyZRyHThpfc+KfTeg=" #DOCKER_PASS
+    - WEBAPI_REPO=dhlabbasel/webapi
+    - SALSAH_REPO=dhlabbasel/salsah
+    - COMMIT=${TRAVIS_COMMIT::8}
+    - TAG=`echo ${TRAVIS_BRANCH//\//-}`
+
 cache:
   directories:
     - $HOME/.ivy2
@@ -30,20 +39,37 @@ before_install:
   - sh -e /etc/init.d/xvfb start
   - export DOCKERHOST=$(ip route get 8.8.8.8 | awk '{print $NF; exit}') && echo $DOCKERHOST
   - cd /home/travis/build/dhlab-basel/Knora/salsah/lib/chromedriver/ && unzip chromedriver_linux64.zip
+  - echo $TRAVIS_BUILD_DIR
 
-script:
-# start fuseki
-- cd /home/travis/build/dhlab-basel/Knora/triplestores/fuseki/ && ./fuseki-server &
-# start the built-in webapi server tests
-- cd /home/travis/build/dhlab-basel/Knora/webapi/ && sbt test
-# start the sipi container in the background (needed for salsah tests)
-- docker run -d --add-host webapihost:$DOCKERHOST -p 1024:1024 dhlabbasel/sipi:wip-travis-testing
-# start the webapi server (needed for salsah tests)
-- cd /home/travis/build/dhlab-basel/Knora/webapi/ && sbt "run allowResetTriplestoreContentOperationOverHTTP" &
-# wait for the webapi server to start before we proceed with running the salsah tests
-- until netstat -an 2>/dev/null | grep '3333.*LISTEN'; do true; done
-# start built-in salsah browser tests
-- cd /home/travis/build/dhlab-basel/Knora/salsah/ && sbt test
+jobs:
+  script:
+    include:
+      - stage: test-webapi
+        script:
+          # start fuseki
+          - cd /home/travis/build/dhlab-basel/Knora/triplestores/fuseki/ && ./fuseki-server &
+          # start the built-in webapi server tests
+          - cd /home/travis/build/dhlab-basel/Knora/webapi/ && sbt test
+      - stage: test-salsah
+        script:
+          # start fuseki
+          # - cd /home/travis/build/dhlab-basel/Knora/triplestores/fuseki/ && ./fuseki-server &
+          # start the sipi container in the background (needed for salsah tests)
+          # - docker run -d --add-host webapihost:$DOCKERHOST -p 1024:1024 dhlabbasel/sipi:wip-travis-testing
+          # start the webapi server (needed for salsah tests)
+          # - cd /home/travis/build/dhlab-basel/Knora/webapi/ && sbt "run allowResetTriplestoreContentOperationOverHTTP" &
+          # - sleep 10 # give the webapi server time to start before we proceed with running the salsah tests
+          # start built-in salsah browser tests
+          # - cd /home/travis/build/dhlab-basel/Knora/salsah/ && sbt test
+      - stage: publish-docker-images
+        script:
+          - docker login -u $DOCKER_USER -p $DOCKER_PASS
+          - docker build ./webapi/Dockerfile -t $WEBAPI_REPO:$COMMIT
+          - docker tag $WEBAPI_REPO:$COMMIT $WEBAPI_REPO:$TAG
+          - docker push $WEBAPI_REPO:$COMMIT
+          - docker build ./salsah/Dockerfile -t $SALSAH_REPO:$COMMIT
+          - docker tag $SALSAH_REPO:$COMMIT $SALSAH_REPO:$TAG
+          - docker push $SALSAH_REPO:$COMMIT
 
 notifications:
   slack:
