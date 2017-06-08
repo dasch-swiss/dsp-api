@@ -12,7 +12,7 @@ RUN \
   cp -r /src/target/universal/stage/* /salsah && \
   rm -rf /src
 
-VOLUME["/localdata"]
+VOLUME ["/localdata"]
 
 # Expose the webapi default port
 EXPOSE 3335
