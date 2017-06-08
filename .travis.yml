@@ -65,10 +65,10 @@ jobs:
         - docker login -u $DOCKER_USER -p $DOCKER_PASS
         - docker build $TRAVIS_BUILD_DIR/webapi/ -t $WEBAPI_REPO:$COMMIT
         - docker tag $WEBAPI_REPO:$COMMIT $WEBAPI_REPO:$TAG
-        - docker push $WEBAPI_REPO:$COMMIT
+        - docker push $WEBAPI_REPO
         - docker build $TRAVIS_BUILD_DIR/salsah/ -t $SALSAH_REPO:$COMMIT
         - docker tag $SALSAH_REPO:$COMMIT $SALSAH_REPO:$TAG
-        - docker push $SALSAH_REPO:$COMMIT
+        - docker push $SALSAH_REPO
 
 notifications:
   slack:
