@@ -2,7 +2,11 @@ dist: trusty
 sudo: required
 
 addons:
-  chrome: stable
+  apt:
+      sources:
+        - google-chrome
+      packages:
+        - google-chrome-stable
 
 git:
   depth: 1
@@ -48,18 +52,23 @@ jobs:
     #    - cd $TRAVIS_BUILD_DIR/webapi/ && sbt test
     - stage: salsah-test
       script:
+        # start x virtual frame buffer
+        - export CHROME_BIN=chromium-browser
+        - export DISPLAY=:99.0
+        - sh -e /etc/init.d/xvfb start
+        - sleep 3
         # start fuseki
         - cd $TRAVIS_BUILD_DIR/triplestores/fuseki/ && ./fuseki-server &
-        # start the sipi container in the background (needed for salsah tests)
+        # start the sipi container
         - docker run -d --add-host webapihost:$DOCKERHOST -p 1024:1024 dhlabbasel/sipi:wip-travis-testing
-        # start the webapi and salsah server (both needed for running salsah tests)
+        # start the webapi and salsah server
         - cd $TRAVIS_BUILD_DIR/webapi/ && sbt "run allowResetTriplestoreContentOperationOverHTTP" &
         - cd $TRAVIS_BUILD_DIR/salsah/ && sbt run &
         # give the webapi and salsah server time to start before we proceed with running the salsah tests
-        - sleep 140
-        # start built-in salsah browser tests
-        - google-chrome-stable --headless --disable-gpu --remote-debugging-port=9222 http://localhost:3335
+        - sleep 180
+        # unzip chromedriver
         - cd $TRAVIS_BUILD_DIR/salsah/lib/chromedriver/ && unzip chromedriver_linux64.zip
+        # start built-in salsah browser tests
         - cd $TRAVIS_BUILD_DIR/salsah/ && sbt test
     - stage: publish-docker-images
       script:
