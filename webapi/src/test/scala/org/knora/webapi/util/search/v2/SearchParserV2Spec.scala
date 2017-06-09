@@ -20,17 +20,55 @@
 
 package org.knora.webapi.util.search.v2
 
+import org.knora.webapi.SparqlSearchException
 import org.scalatest.{Matchers, WordSpec}
 
 /**
   * Tests [[SearchParserV2]].
   */
 class SearchParserV2Spec extends WordSpec with Matchers {
+
     import SearchParserV2Spec._
 
     "The SearchParserV2 object" should {
         "parse a simple CONSTRUCT query for an extended search" in {
             SearchParserV2.parseSearchQuery(SimpleSparqlConstructQueryStr) should ===(SimpleParsedSparqlConstructQuery)
+        }
+
+        "reject a SELECT query" in {
+            assertThrows[SparqlSearchException] {
+                SearchParserV2.parseSearchQuery(SimpleSparqlSelectQueryStr)
+            }
+        }
+
+        "reject a DESCRIBE query" in {
+            assertThrows[SparqlSearchException] {
+                SearchParserV2.parseSearchQuery(SimpleSparqlDescribeQueryStr)
+            }
+        }
+
+        "reject an INSERT" in {
+            assertThrows[SparqlSearchException] {
+                SearchParserV2.parseSearchQuery(SimpleSparqlInsertStr)
+            }
+        }
+
+        "reject a DELETE" in {
+            assertThrows[SparqlSearchException] {
+                SearchParserV2.parseSearchQuery(SimpleSparqlDeleteStr)
+            }
+        }
+
+        "reject an internal ontology IRI" in {
+            assertThrows[SparqlSearchException] {
+                SearchParserV2.parseSearchQuery(SimpleSparqlConstructQueryStrWithInternalEntityIri)
+            }
+        }
+
+        "reject an incorrect FILTER" in {
+            assertThrows[SparqlSearchException] {
+                SearchParserV2.parseSearchQuery(SimpleSparqlConstructQueryStrWithWrongFilter)
+            }
         }
     }
 }
@@ -221,4 +259,105 @@ object SearchParserV2Spec {
             )
         ))
     )
+
+    val SimpleSparqlConstructQueryStrWithWrongFilter: String =
+        """
+          |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+          |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+          |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |PREFIX incunabula: <http://api.knora.org/ontology/incunabula/simple/v2#>
+          |
+          |CONSTRUCT {
+          |    ?book a ?bookType .
+          |    ?book rdfs:label ?bookLabel .
+          |} WHERE {
+          |    ?book a incunabula:book .
+          |    ?book rdfs:label ?bookLabel .
+          |    ?book incunabula:pubdate ?pubdate .
+          |    FILTER("GREGORIAN:1500"^^xsd:string > ?pubdate)
+          |}
+        """.stripMargin
+
+    val SimpleSparqlConstructQueryStrWithInternalEntityIri: String =
+        """
+          |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+          |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+          |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |PREFIX incunabula: <http://www.knora.org/ontology/incunabula#>
+          |
+          |CONSTRUCT {
+          |    ?book a ?bookType .
+          |    ?book rdfs:label ?bookLabel .
+          |} WHERE {
+          |    ?book a incunabula:book .
+          |    ?book rdfs:label ?bookLabel .
+          |    ?book incunabula:pubdate ?pubdate .
+          |    FILTER(?pubdate < "GREGORIAN:1500"^^xsd:string)
+          |}
+        """.stripMargin
+
+    val SimpleSparqlSelectQueryStr: String =
+        """
+          |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+          |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+          |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |PREFIX incunabula: <http://api.knora.org/ontology/incunabula/simple/v2#>
+          |
+          |SELECT ?book ?bookLabel
+          |WHERE {
+          |    ?book a incunabula:book .
+          |    ?book rdfs:label ?bookLabel .
+          |    ?book incunabula:pubdate ?pubdate .
+          |    FILTER(?pubdate < "GREGORIAN:1500"^^xsd:string)
+          |}
+        """.stripMargin
+
+    val SimpleSparqlDescribeQueryStr: String =
+        """
+          |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+          |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+          |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |PREFIX incunabula: <http://api.knora.org/ontology/incunabula/simple/v2#>
+          |
+          |DESCRIBE ?book
+          |WHERE {
+          |    ?book a incunabula:book .
+          |    ?book incunabula:pubdate ?pubdate .
+          |    FILTER(?pubdate < "GREGORIAN:1500"^^xsd:string)
+          |}
+        """.stripMargin
+
+    val SimpleSparqlInsertStr: String =
+        """
+          |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+          |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+          |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |PREFIX incunabula: <http://api.knora.org/ontology/incunabula/simple/v2#>
+          |
+          |INSERT DATA {
+          |    <http://example.org/12345> a incunabula:book .
+          |}
+        """.stripMargin
+
+    val SimpleSparqlDeleteStr: String =
+        """
+          |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+          |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+          |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |PREFIX incunabula: <http://api.knora.org/ontology/incunabula/simple/v2#>
+          |
+          |DELETE {
+          |    <http://example.org/12345> a incunabula:book .
+          |} WHERE {
+          |    ?book a incunabula:book .
+          |    ?book incunabula:pubdate ?pubdate .
+          |    FILTER(?pubdate < "GREGORIAN:1500"^^xsd:string)
+          |}
+        """.stripMargin
 }

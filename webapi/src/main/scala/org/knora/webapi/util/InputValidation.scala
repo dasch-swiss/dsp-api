@@ -714,6 +714,19 @@ object InputValidation {
     }
 
     /**
+      * Checks whether an IRI is the IRI of an internal ontology entity.
+      *
+      * @param iri the IRI to be checked.
+      * @return `true` if the IRI is the IRI of an internal ontology entity.
+      */
+    def isInternalEntityIri(iri: IRI): Boolean = {
+        iri match {
+            case ProjectSpecificInternalOntologyEntityRegex(_*) => true
+            case _ => false
+        }
+    }
+
+    /**
       * In XML import data, a property from another ontology is referred to as `prefixLabel__localName`. This function
       * attempts to parse a property name in that format.
       *

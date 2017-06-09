@@ -25,6 +25,8 @@ import org.eclipse.rdf4j.query.algebra
 import org.eclipse.rdf4j.query.algebra._
 import org.eclipse.rdf4j.query.parser.ParsedQuery
 import org.eclipse.rdf4j.query.parser.sparql._
+import org.eclipse.rdf4j.query.MalformedQueryException
+import org.knora.webapi.util.InputValidation
 import org.knora.webapi.{OntologyConstants, _}
 
 import scala.collection.JavaConverters._
@@ -51,7 +53,11 @@ case class QueryVariable(variableName: String) extends StatementPatternSubject w
   *
   * @param iri the IRI.
   */
-case class IriRef(iri: IRI) extends StatementPatternSubject with StatementPatternObject
+case class IriRef(iri: IRI) extends StatementPatternSubject with StatementPatternObject {
+    if (InputValidation.isInternalEntityIri(iri)) {
+        throw SparqlSearchException(s"Internal ontology entity IRI not allowed in search query: $iri")
+    }
+}
 
 /**
   * Represents a literal value with an XSD type.
@@ -83,11 +89,6 @@ case class StatementPattern(subj: StatementPatternSubject, pred: IriRef, obj: St
   * @param rightArgLiteral     the right argument of the FILTER condition, which must be a literal.
   */
 case class FilterPattern(leftArgVariableName: String, operator: String, rightArgLiteral: XsdLiteral) extends QueryPattern
-
-/**
-  * Represents a block pattern in a query, such as a UNION.
-  */
-sealed trait BlockPattern
 
 /**
   * Represents a UNION in the WHERE clause of a query.
@@ -122,7 +123,8 @@ case class SimpleConstructQuery(constructClause: SimpleConstructClause, whereCla
 /**
   * Parses the client's SPARQL query for an extended search in API v2. The SPARQL that is accepted is restricted:
   *
-  * - The query must be a CONSTRUCT query, using no internal ontologies. (TODO: check this.)
+  * - The query must be a CONSTRUCT query.
+  * - It must use no internal ontologies.
   * - The CONSTRUCT clause may contain only triple patterns.
   * - The WHERE clause may contain only triple patterns, FILTER, and UNION.
   * - No function calls are allowed.
@@ -142,7 +144,13 @@ object SearchParserV2 {
       */
     def parseSearchQuery(query: String): SimpleConstructQuery = {
         val visitor = new SimpleConstructQueryModelVisitor
-        val parsedQuery = sparqlParser.parseQuery(query, OntologyConstants.KnoraApi.KnoraApiOntologyIri + OntologyConstants.KnoraApiV2Simplified.VersionSegment + "#")
+
+        val parsedQuery = try {
+            sparqlParser.parseQuery(query, OntologyConstants.KnoraApi.KnoraApiOntologyIri + OntologyConstants.KnoraApiV2Simplified.VersionSegment + "#")
+        } catch {
+            case malformed: MalformedQueryException => throw SparqlSearchException(s"Invalid search query: ${malformed.getMessage}")
+        }
+
         parsedQuery.getTupleExpr.visit(visitor)
         visitor.makeSimpleConstructQuery
     }
@@ -230,7 +238,7 @@ object SearchParserV2 {
         }
 
         private def unsupported(node: QueryModelNode) {
-            throw SparqlSearchException(s"Unsupported SPARQL feature: $node")
+            throw SparqlSearchException(s"SPARQL feature not supported in search query: $node")
         }
 
         override def meet(node: Slice): Unit = {
@@ -414,7 +422,7 @@ object SearchParserV2 {
         }
 
         override def meet(node: Projection): Unit = {
-            unsupported(node)
+            throw SparqlSearchException(s"SELECT queries are not allowed in search, please use a CONSTRUCT query instead")
         }
 
         override def meet(node: OrderElem): Unit = {
@@ -564,7 +572,7 @@ object SearchParserV2 {
         }
 
         override def meet(node: DescribeOperator): Unit = {
-            unsupported(node)
+            throw SparqlSearchException(s"DESCRIBE queries are not allowed in search, please use a CONSTRUCT query instead")
         }
 
         override def meet(copy: Copy): Unit = {
