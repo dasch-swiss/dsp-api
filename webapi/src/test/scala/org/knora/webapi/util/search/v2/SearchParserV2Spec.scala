@@ -77,7 +77,13 @@ class SearchParserV2Spec extends WordSpec with Matchers {
             }
         }
 
-        "reject an incorrect FILTER" in {
+        "reject an OPTIONAL" in {
+            assertThrows[SparqlSearchException] {
+                SearchParserV2.parseSearchQuery(SimpleSparqlConstructQueryStrWithOptional)
+            }
+        }
+
+        "reject a poorly formatted FILTER" in {
             assertThrows[SparqlSearchException] {
                 SearchParserV2.parseSearchQuery(SimpleSparqlConstructQueryStrWithWrongFilter)
             }
@@ -462,6 +468,34 @@ object SearchParserV2Spec {
           |            ?page incunabula:seqnum "22"^^xsd:integer.
           |        }
           |    }
+          |}
+        """.stripMargin
+
+    val SimpleSparqlConstructQueryStrWithOptional: String =
+        """
+          |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+          |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+          |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |PREFIX incunabula: <http://api.knora.org/ontology/incunabula/simple/v2#>
+          |
+          |CONSTRUCT {
+          |    ?book a ?bookType .
+          |    ?book rdfs:label ?bookLabel .
+          |    ?book knora-api:isMainResource "true"^^xsd:boolean .
+          |    ?page a ?pageType .
+          |    ?page rdfs:label ?pageLabel .
+          |    ?page incunabula:isPartOf ?book .
+          |} WHERE {
+          |    ?book a incunabula:book .
+          |    ?book rdfs:label ?bookLabel .
+          |
+          |    OPTIONAL {
+          |        ?book incunabula:publisher "Lienhart Ysenhut"^^xsd:string .
+          |    }
+          |
+          |    ?book incunabula:pubdate ?pubdate .
+          |    FILTER(?pubdate < "GREGORIAN:1500"^^xsd:string)
           |}
         """.stripMargin
 }

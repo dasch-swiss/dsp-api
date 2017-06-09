@@ -323,7 +323,7 @@ object SearchParserV2 {
             def checkPatterns(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
                 for (pattern <- patterns) {
                     pattern match {
-                        case _: UnionPattern => throw SparqlSearchException("Nested UNIONs are not allowed")
+                        case _: UnionPattern => throw SparqlSearchException("Nested UNIONs are not allowed in search queries")
                         case _ => ()
                     }
                 }
@@ -333,7 +333,7 @@ object SearchParserV2 {
 
             // Get the block of query patterns on the left side of the UNION.
             val leftPatterns: Seq[QueryPattern] = node.getLeftArg match {
-                case _: Union => throw SparqlSearchException("Nested UNIONs are not allowed")
+                case _: Union => throw SparqlSearchException("Nested UNIONs are not allowed in search queries")
                 case otherLeftArg =>
                     val leftArgVisitor = new SimpleConstructQueryModelVisitor
                     otherLeftArg.visit(leftArgVisitor)
@@ -700,7 +700,7 @@ object SearchParserV2 {
         }
 
         override def meet(node: LeftJoin): Unit = {
-            unsupported(node)
+            throw SparqlSearchException("OPTIONAL is not allowed in search queries")
         }
 
         override def meet(node: LangMatches): Unit = {
