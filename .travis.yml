@@ -41,7 +41,7 @@ jobs:
         # start the built-in webapi server tests
         - cd $TRAVIS_BUILD_DIR/webapi/ && sbt test
         # start the sipi container (with production config)
-        - docker run -d --add-host webapihost:$DOCKERHOST -p 1024:1024 dhlabbasel/sipi:wip-travis-testing
+        - docker run -d --add-host webapihost:$DOCKERHOST -v /tmp:/tmp -p 1024:1024 dhlabbasel/sipi:wip-travis-testing
         # start the integration tests
         - cd $TRAVIS_BUILD_DIR/webapi/ && sbt fuseki-it:test
     #- stage: webapi-graphdb-test
