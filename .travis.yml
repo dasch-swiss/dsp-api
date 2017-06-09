@@ -48,6 +48,9 @@ jobs:
     #    - cd $TRAVIS_BUILD_DIR/webapi/ && sbt test
     - stage: salsah-test
       script:
+        - "export DISPLAY=:99.0"
+        - "sh -e /etc/init.d/xvfb start"
+        - sleep 3 # give xvfb some time to start
         # start fuseki
         - cd $TRAVIS_BUILD_DIR/triplestores/fuseki/ && ./fuseki-server &
         # start the sipi container
