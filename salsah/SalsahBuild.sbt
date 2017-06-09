@@ -43,8 +43,8 @@ lazy val salsahCommonSettings = Seq(
 
 lazy val javaRunOptions = Seq(
     // "-showversion",
-    "-Xms2048m",
-    "-Xmx4096m"
+    "-Xms1024m",
+    "-Xmx1024m"
     // "-verbose:gc",
     //"-XX:+UseG1GC",
     //"-XX:MaxGCPauseMillis=500"
@@ -52,8 +52,8 @@ lazy val javaRunOptions = Seq(
 
 lazy val javaTestOptions = Seq(
     // "-showversion",
-    "-Xms2048m",
-    "-Xmx4096m"
+    "-Xms1024m",
+    "-Xmx1024m"
     // "-verbose:gc",
     //"-XX:+UseG1GC",
     //"-XX:MaxGCPauseMillis=500",
