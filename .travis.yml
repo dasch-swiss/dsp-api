@@ -60,8 +60,7 @@ jobs:
         # unzip chromedriver
         - cd $TRAVIS_BUILD_DIR/salsah/lib/chromedriver/ && unzip chromedriver_linux64.zip
         # start built-in salsah browser tests
-        - google-chrome-stable --headless --disable-gpu --remote-debugging-port=9222 http://localhost:3335/index.html
-        - cd $TRAVIS_BUILD_DIR/salsah/ && sbt test
+        - cd $TRAVIS_BUILD_DIR/salsah/ && sbt "headless:test"
     - stage: publish-docker-images
       script:
         - docker login -u $DOCKER_USER -p $DOCKER_PASS

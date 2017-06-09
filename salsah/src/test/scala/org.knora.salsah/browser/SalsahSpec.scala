@@ -44,11 +44,11 @@ abstract class SalsahSpec extends WordSpecLike with ShouldMatchers {
       */
     protected def loadTestData(rdfDataObjectsJsonList: String)(implicit system: ActorSystem, executionContext: ExecutionContext): Unit = {
         // Load the test data into the triplestore.
-        val loadDataRequest: HttpRequest = Post(s"${settings.baseKNORAUrl}/v1/store/ResetTriplestoreContent", HttpEntity(`application/json`, rdfDataObjectsJsonList))
+        val loadDataRequest: HttpRequest = Post(s"${settings.webapiUrl}/v1/store/ResetTriplestoreContent", HttpEntity(`application/json`, rdfDataObjectsJsonList))
         makeHttpRequest(loadDataRequest, Duration("180 seconds"))
 
         // Populate the ontology cache.
-        val loadOntologiesRequest: HttpRequest = Get(s"${settings.baseKNORAUrl}/v1/vocabularies/reload")
+        val loadOntologiesRequest: HttpRequest = Get(s"${settings.webapiUrl}/v1/vocabularies/reload")
         makeHttpRequest(loadOntologiesRequest, Duration("10 seconds"))
     }
 

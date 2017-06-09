@@ -22,10 +22,10 @@ package org.knora.salsah.browser
 
 import java.io.{File, FileNotFoundException}
 
-import org.openqa.selenium.chrome.ChromeDriver
+import org.openqa.selenium.chrome.{ChromeDriver, ChromeOptions}
 import org.openqa.selenium.interactions.Actions
 import org.openqa.selenium.support.ui.Select
-import org.openqa.selenium.{By, JavascriptExecutor, WebDriver, WebElement}
+import org.openqa.selenium.{By, WebDriver, WebElement}
 import org.scalatest.concurrent.Eventually._
 
 import scala.collection.JavaConversions._
@@ -43,12 +43,10 @@ import scala.concurrent.duration._
   * See [[https://selenium.googlecode.com/git/docs/api/java/index.html?org/openqa/selenium/WebDriver.html WebDriver]]
   * for more documentation.
   */
-class SalsahPage {
+class SalsahPage(pageUrl: String, headless: Boolean) {
 
     // How long to wait for results obtained using the 'eventually' function
     implicit val patienceConfig = PatienceConfig(timeout = scaled(10.seconds), interval = scaled(20.millis))
-
-    val pageUrl = "http://localhost:3335/index.html" // TODO: get this from application.conf
 
     val chromeDriverPath = "lib/chromedriver/chromedriver"
 
@@ -58,7 +56,14 @@ class SalsahPage {
 
     // Load the native Selenium driver for Chrome.
     System.setProperty("webdriver.chrome.driver", chromeDriverPath)
-    implicit val driver: WebDriver = new ChromeDriver()
+
+    // Set some arguments that will be passed to chrome
+    val options: ChromeOptions = new ChromeOptions()
+    if (headless) options.addArguments("headless")
+    options.addArguments("window-size=1200x800")
+    //options.addArguments("remote-debugging-port=9222")
+    implicit val driver: WebDriver = new ChromeDriver(options)
+
 
     /**
       * Loads the SALSAH home page.

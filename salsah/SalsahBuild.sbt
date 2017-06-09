@@ -5,7 +5,17 @@ import com.typesafe.sbt.SbtNativePackager.autoImport._
 import com.typesafe.sbt.packager.MappingsHelper.{contentOf, directory}
 
 lazy val salsah = (project in file(".")).
+        configs(
+            HeadlessTest
+        ).
         settings(salsahCommonSettings:  _*).
+        settings(inConfig(HeadlessTest)(
+            Defaults.testTasks ++ Seq(
+                fork := true,
+                javaOptions ++= javaHeadlessTestOptions,
+                testOptions += Tests.Argument("-oDF") // show full stack traces and test case durations
+            )
+        ): _*).
         settings(
             libraryDependencies ++= salsahLibs,
             logLevel := Level.Info,
@@ -60,6 +70,12 @@ lazy val javaTestOptions = Seq(
     //"-XX:MaxMetaspaceSize=4096m"
 )
 
+
+lazy val HeadlessTest = config("headless") extend(Test)
+lazy val javaHeadlessTestOptions = Seq(
+    "-Dconfig.resource=headless-testing.conf"
+) ++ javaTestOptions
+
 lazy val salsahLibs = Seq(
     // akka
     "com.typesafe.akka" % "akka-http-core-experimental_2.11" % "2.0-M2",
@@ -69,7 +85,7 @@ lazy val salsahLibs = Seq(
     // testing
     "com.typesafe.akka" %% "akka-http-testkit-experimental" % "2.0-M2" % "test",
     "org.scalatest" %% "scalatest" % "2.2.5" % "test",
-    "org.seleniumhq.selenium" % "selenium-java" % "2.35.0" % "test",
+    "org.seleniumhq.selenium" % "selenium-java" % "3.4.0" % "test",
     "io.spray" %% "spray-http" % "1.3.3",
     "io.spray" %% "spray-httpx" % "1.3.3",
     "io.spray" %% "spray-util" % "1.3.3",

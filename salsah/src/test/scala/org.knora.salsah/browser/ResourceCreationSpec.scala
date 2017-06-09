@@ -39,8 +39,9 @@ class ResourceCreationSpec extends SalsahSpec {
        for more documentation.
 
      */
-
-    private val page = new SalsahPage
+    private val headless = settings.headless
+    private val pageUrl = s"http://${settings.hostName}:${settings.httpPort}/index.html"
+    private val page = new SalsahPage(pageUrl, headless)
 
     // How long to wait for results obtained using the 'eventually' function
     implicit private val patienceConfig = page.patienceConfig
