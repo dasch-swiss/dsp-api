@@ -359,8 +359,8 @@ case class UserProfileV1(userData: UserDataV1 = UserDataV1(lang = "en"),
 
     def isAnonymousUser: Boolean = {
         userData.user_id match {
-            case Some(iri) => true
-            case None => false
+            case Some(iri) => false
+            case None => true
         }
     }
 
