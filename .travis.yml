@@ -64,8 +64,8 @@ jobs:
         # start the webapi and salsah server
         - cd $TRAVIS_BUILD_DIR/webapi/ && sbt "run allowResetTriplestoreContentOperationOverHTTP" &
         - cd $TRAVIS_BUILD_DIR/salsah/ && sbt run &
-        # give the webapi and salsah server time to start before we proceed with running the salsah tests
-        - sleep 180
+        # wait for the webapi server to start before we proceed with running the salsah tests
+        - until netstat -an 2>/dev/null | grep '3333.*LISTEN'; do true; done
         # unzip chromedriver
         - cd $TRAVIS_BUILD_DIR/salsah/lib/chromedriver/ && unzip chromedriver_linux64.zip
         # start built-in salsah browser tests
