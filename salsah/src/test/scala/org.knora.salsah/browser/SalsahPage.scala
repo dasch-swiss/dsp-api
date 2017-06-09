@@ -674,11 +674,24 @@ class SalsahPage(pageUrl: String, headless: Boolean) {
       */
     def changeLanguage(lang: String): Unit = {
         eventually {
-            driver.findElement(By.xpath(s"//div[@id='langctrl']/a[normalize-space(.) = '$lang']")).click()
+
+            // this hack is needed for headless testing, because of a problem with alerts in headless mode
+            if (headless) {
+                import org.openqa.selenium.JavascriptExecutor
+                val jsExecutor = driver.asInstanceOf[JavascriptExecutor]
+                jsExecutor.executeScript("window.alert = function(){}")
+                jsExecutor.executeScript("window.confirm = function(){return true;}")
+            }
+
+            driver.findElement(By.linkText(lang)).click()
+
         }
 
-        eventually {
-            driver.switchTo().alert().accept()
+        // this hack is needed for headless testing, because of a problem with alerts in headless mode
+        if (!headless) {
+            eventually {
+                driver.switchTo().alert().accept()
+            }
         }
     }
 
