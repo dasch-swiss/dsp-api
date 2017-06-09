@@ -34,12 +34,16 @@ cache:
 
 jobs:
   include:
-    #- stage: webapi-fuseki-test
-    #  script:
-    #    # start fuseki
-    #    - cd $TRAVIS_BUILD_DIR/triplestores/fuseki/ && ./fuseki-server &
-    #    # start the built-in webapi server tests
-    #    - cd $TRAVIS_BUILD_DIR/webapi/ && sbt test
+    - stage: webapi-fuseki-test
+      script:
+        # start fuseki
+        - cd $TRAVIS_BUILD_DIR/triplestores/fuseki/ && ./fuseki-server &
+        # start the built-in webapi server tests
+        - cd $TRAVIS_BUILD_DIR/webapi/ && sbt test
+        # start the sipi container (with production config)
+        - docker run -d --add-host webapihost:$DOCKERHOST -p 1024:1024 dhlabbasel/sipi:wip-travis-testing
+        # start the integration tests
+        - cd $TRAVIS_BUILD_DIR/webapi/ && sbt fuseki-it:test
     #- stage: webapi-graphdb-test
     #  script:
     #    # start graphdb
@@ -53,8 +57,8 @@ jobs:
         - sleep 3 # give xvfb some time to start
         # start fuseki
         - cd $TRAVIS_BUILD_DIR/triplestores/fuseki/ && ./fuseki-server &
-        # start the sipi container
-        - docker run -d --add-host webapihost:$DOCKERHOST -p 1024:1024 dhlabbasel/sipi:wip-travis-testing
+        # start the sipi container (with test config)
+        - docker run -d --add-host webapihost:$DOCKERHOST -p 1024:1024 dhlabbasel/sipi:wip-travis-testing /sipi/local/bin/sipi --config=/sipi/config/sipi.knora-test-docker-config.lua
         # start the webapi and salsah server
         - cd $TRAVIS_BUILD_DIR/webapi/ && sbt "run allowResetTriplestoreContentOperationOverHTTP" &
         - cd $TRAVIS_BUILD_DIR/salsah/ && sbt run &
@@ -63,7 +67,7 @@ jobs:
         # unzip chromedriver
         - cd $TRAVIS_BUILD_DIR/salsah/lib/chromedriver/ && unzip chromedriver_linux64.zip
         # start built-in salsah browser tests
-        - cd $TRAVIS_BUILD_DIR/salsah/ && sbt "headless:test"
+        - cd $TRAVIS_BUILD_DIR/salsah/ && sbt headless:test
     - stage: publish-docker-images
       script:
         - docker login -u $DOCKER_USER -p $DOCKER_PASS

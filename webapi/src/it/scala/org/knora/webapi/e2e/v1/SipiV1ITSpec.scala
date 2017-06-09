@@ -24,7 +24,7 @@ import akka.http.scaladsl.model.headers._
 import akka.http.scaladsl.model.{HttpEntity, _}
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi.messages.v1.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
-import org.knora.webapi.util.MutableTestIri
+import org.knora.webapi.util.{InputValidation, MutableTestIri}
 import org.knora.webapi.{FileWriteException, ITSpec, InvalidApiJsonException}
 import spray.json._
 
@@ -54,6 +54,7 @@ class SipiV1ITSpec extends ITSpec(SipiV1ITSpec.config) with TriplestoreJsonProto
     private val username = "root@example.com"
     private val password = "test"
     private val pathToChlaus = "_test_data/test_route/images/Chlaus.jpg"
+    private val clausFile = new File(pathToChlaus)
     private val pathToMarbles = "_test_data/test_route/images/marbles.tif"
     private val firstPageIri = new MutableTestIri
     private val secondPageIri = new MutableTestIri
@@ -338,8 +339,9 @@ class SipiV1ITSpec extends ITSpec(SipiV1ITSpec.config) with TriplestoreJsonProto
 
 
         "create an 'incunabula:book' and an 'incunabula:page' with file parameters via XML import" in {
-            val fileToUpload = new File(pathToChlaus)
-            val absoluteFilePath = fileToUpload.getAbsolutePath
+            val nameOfFileToUpload = clausFile.getName
+            val fileToUpload = Files.readAllBytes(Paths.get(pathToChlaus))
+            val absoluteFilePath = InputValidation.saveFileToTmpLocation(settings, fileToUpload).getAbsolutePath
 
             val knoraParams =
                 s"""<?xml version="1.0" encoding="UTF-8"?>
@@ -386,7 +388,7 @@ class SipiV1ITSpec extends ITSpec(SipiV1ITSpec.config) with TriplestoreJsonProto
             val locdata = pageJson.fields("resinfo").asJsObject.fields("locdata").asJsObject
             val origname = locdata.fields("origname").asInstanceOf[JsString].value
             val imageUrl = locdata.fields("path").asInstanceOf[JsString].value
-            assert(origname == fileToUpload.getName)
+            assert(origname == nameOfFileToUpload)
 
             // Request the file from Sipi.
             val sipiGetRequest = Get(imageUrl) ~> addCredentials(BasicHttpCredentials(username, password))
