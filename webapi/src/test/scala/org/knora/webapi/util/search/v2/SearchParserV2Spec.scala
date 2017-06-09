@@ -65,6 +65,18 @@ class SearchParserV2Spec extends WordSpec with Matchers {
             }
         }
 
+        "reject left-nested UNIONs" in {
+            assertThrows[SparqlSearchException] {
+                SearchParserV2.parseSearchQuery(SimpleSparqlConstructQueryStrWithLeftNestedUnion)
+            }
+        }
+
+        "reject right-nested UNIONs" in {
+            assertThrows[SparqlSearchException] {
+                SearchParserV2.parseSearchQuery(SimpleSparqlConstructQueryStrWithRightNestedUnion)
+            }
+        }
+
         "reject an incorrect FILTER" in {
             assertThrows[SparqlSearchException] {
                 SearchParserV2.parseSearchQuery(SimpleSparqlConstructQueryStrWithWrongFilter)
@@ -358,6 +370,98 @@ object SearchParserV2Spec {
           |    ?book a incunabula:book .
           |    ?book incunabula:pubdate ?pubdate .
           |    FILTER(?pubdate < "GREGORIAN:1500"^^xsd:string)
+          |}
+        """.stripMargin
+
+    val SimpleSparqlConstructQueryStrWithLeftNestedUnion: String =
+        """
+          |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+          |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+          |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |PREFIX incunabula: <http://api.knora.org/ontology/incunabula/simple/v2#>
+          |
+          |CONSTRUCT {
+          |    ?book a ?bookType .
+          |    ?book rdfs:label ?bookLabel .
+          |    ?book knora-api:isMainResource "true"^^xsd:boolean .
+          |    ?page a ?pageType .
+          |    ?page rdfs:label ?pageLabel .
+          |    ?page incunabula:isPartOf ?book .
+          |} WHERE {
+          |    ?book a incunabula:book .
+          |    ?book rdfs:label ?bookLabel .
+          |    ?book incunabula:publisher "Lienhart Ysenhut"^^xsd:string .
+          |    ?book incunabula:pubdate ?pubdate .
+          |    FILTER(?pubdate < "GREGORIAN:1500"^^xsd:string)
+          |    ?page a incunabula:page .
+          |    ?page rdfs:label ?pageLabel .
+          |    ?page incunabula:isPartOf ?book .
+          |
+          |    {
+          |        ?page incunabula:pagenum "a6r"^^xsd:string .
+          |        ?page incunabula:seqnum "12"^^xsd:integer.
+          |
+          |        {
+          |            ?page incunabula:pagenum "a7r"^^xsd:string .
+          |            ?page incunabula:seqnum "14"^^xsd:integer.
+          |        } UNION {
+          |            ?page incunabula:pagenum "a8r"^^xsd:string .
+          |            ?page incunabula:seqnum "16"^^xsd:integer.
+          |        }
+          |    } UNION {
+          |        ?page incunabula:pagenum "a9r"^^xsd:string .
+          |        ?page incunabula:seqnum "18"^^xsd:integer.
+          |    } UNION {
+          |        ?page incunabula:pagenum "a10r"^^xsd:string .
+          |        ?page incunabula:seqnum "20"^^xsd:integer.
+          |    }
+          |}
+        """.stripMargin
+
+    val SimpleSparqlConstructQueryStrWithRightNestedUnion: String =
+        """
+          |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+          |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+          |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |PREFIX incunabula: <http://api.knora.org/ontology/incunabula/simple/v2#>
+          |
+          |CONSTRUCT {
+          |    ?book a ?bookType .
+          |    ?book rdfs:label ?bookLabel .
+          |    ?book knora-api:isMainResource "true"^^xsd:boolean .
+          |    ?page a ?pageType .
+          |    ?page rdfs:label ?pageLabel .
+          |    ?page incunabula:isPartOf ?book .
+          |} WHERE {
+          |    ?book a incunabula:book .
+          |    ?book rdfs:label ?bookLabel .
+          |    ?book incunabula:publisher "Lienhart Ysenhut"^^xsd:string .
+          |    ?book incunabula:pubdate ?pubdate .
+          |    FILTER(?pubdate < "GREGORIAN:1500"^^xsd:string)
+          |    ?page a incunabula:page .
+          |    ?page rdfs:label ?pageLabel .
+          |    ?page incunabula:isPartOf ?book .
+          |
+          |    {
+          |        ?page incunabula:pagenum "a7r"^^xsd:string .
+          |        ?page incunabula:seqnum "14"^^xsd:integer.
+          |    } UNION {
+          |        ?page incunabula:pagenum "a8r"^^xsd:string .
+          |        ?page incunabula:seqnum "16"^^xsd:integer.
+          |    } UNION {
+          |        ?page incunabula:pagenum "a9r"^^xsd:string .
+          |        ?page incunabula:seqnum "18"^^xsd:integer.
+          |
+          |        {
+          |            ?page incunabula:pagenum "a10r"^^xsd:string .
+          |            ?page incunabula:seqnum "20"^^xsd:integer.
+          |        } UNION {
+          |            ?page incunabula:pagenum "a11r"^^xsd:string .
+          |            ?page incunabula:seqnum "22"^^xsd:integer.
+          |        }
+          |    }
           |}
         """.stripMargin
 }
