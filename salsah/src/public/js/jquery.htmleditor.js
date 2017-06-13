@@ -141,7 +141,7 @@
                 var filter = ' p em strong strike u sub sup; a[!href](salsah-link)';
 
 				var config = {
-					language: 'de', // customize language
+					language: SALSAH.userprofile.userData.lang === undefined ? 'de' : SALSAH.userprofile.userData.lang,
                     allowedContent: filter,
                     pasteFilter: filter,
 					entities: false, // do not use entities (e.g. for Umlaut)
