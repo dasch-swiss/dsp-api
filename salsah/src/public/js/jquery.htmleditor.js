@@ -165,7 +165,8 @@
 							
 						}
 					},
-					toolbar: [ ['Source', 'Bold', 'Italic', 'Underline', 'Strike', 'Subscript', 'Superscript', '-','RemoveFormat', 'Link', 'Unlink'] ] // configuration for toolbar buttons, must conform to `STANDARD_MAPPING`
+					toolbar: [ ['Source', 'Bold', 'Italic', 'Underline', 'Strike', 'Subscript', 'Superscript', '-','RemoveFormat', 'Link', 'Unlink'] ], // configuration for toolbar buttons, must conform to `STANDARD_MAPPING`
+					removeButtons: ''
 				};
 
 				// init editor (textarea will be replaced by an iframe)
