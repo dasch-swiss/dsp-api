@@ -62,7 +62,7 @@ jobs:
         # start fuseki
         - cd $TRAVIS_BUILD_DIR/triplestores/fuseki/ && ./fuseki-server &
         # start the sipi container (with test config)
-        - docker run -d --add-host webapihost:$DOCKERHOST -v /tmp:/tmp -p 1024:1024 dhlabbasel/sipi:wip-travis-testing /sipi/local/bin/sipi --config=/sipi/config/sipi.knora-test-docker-config.lua
+        - docker run -d --add-host webapihost:$DOCKERHOST -v /tmp:/tmp -v $HOME:$HOME -p 1024:1024 dhlabbasel/sipi:wip-travis-testing /sipi/local/bin/sipi --config=/sipi/config/sipi.knora-test-docker-config.lua
         # start the webapi and salsah server
         - cd $TRAVIS_BUILD_DIR/webapi/ && sbt "run allowResetTriplestoreContentOperationOverHTTP" &
         - cd $TRAVIS_BUILD_DIR/salsah/ && sbt run &
