@@ -77,9 +77,9 @@ class SearchParserV2Spec extends WordSpec with Matchers {
             }
         }
 
-        "reject an OPTIONAL" in {
+        "reject a nested OPTIONAL" in {
             assertThrows[SparqlSearchException] {
-                SearchParserV2.parseSearchQuery(SimpleSparqlConstructQueryStrWithOptional)
+                SearchParserV2.parseSearchQuery(SimpleSparqlConstructQueryStrWithNestedOptional)
             }
         }
 
@@ -129,6 +129,7 @@ object SearchParserV2Spec {
           |CONSTRUCT {
           |    ?book a ?bookType .
           |    ?book rdfs:label ?bookLabel .
+          |    ?book incunabula:publisher ?bookPublisher .
           |    ?book knora-api:isMainResource "true"^^xsd:boolean .
           |    ?page a ?pageType .
           |    ?page rdfs:label ?pageLabel .
@@ -136,7 +137,11 @@ object SearchParserV2Spec {
           |} WHERE {
           |    ?book a incunabula:book .
           |    ?book rdfs:label ?bookLabel .
-          |    ?book incunabula:publisher "Lienhart Ysenhut"^^xsd:string .
+          |
+          |    OPTIONAL {
+          |        ?book incunabula:publisher ?bookPublisher .
+          |    }
+          |
           |    ?book incunabula:pubdate ?pubdate .
           |    FILTER(?pubdate < "GREGORIAN:1500"^^xsd:string)
           |    ?page a incunabula:page .
@@ -159,24 +164,6 @@ object SearchParserV2Spec {
 
     val SimpleParsedSparqlConstructQuery = SimpleConstructQuery(
         whereClause = SimpleWhereClause(statements = Vector(
-            StatementPattern(
-                obj = IriRef(iri = "http://api.knora.org/ontology/incunabula/simple/v2#book"),
-                pred = IriRef(iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"),
-                subj = QueryVariable(variableName = "book")
-            ),
-            StatementPattern(
-                obj = QueryVariable(variableName = "bookLabel"),
-                pred = IriRef(iri = "http://www.w3.org/2000/01/rdf-schema#label"),
-                subj = QueryVariable(variableName = "book")
-            ),
-            StatementPattern(
-                obj = XsdLiteral(
-                    datatype = "http://www.w3.org/2001/XMLSchema#string",
-                    value = "Lienhart Ysenhut"
-                ),
-                pred = IriRef(iri = "http://api.knora.org/ontology/incunabula/simple/v2#publisher"),
-                subj = QueryVariable(variableName = "book")
-            ),
             StatementPattern(
                 obj = QueryVariable(variableName = "pubdate"),
                 pred = IriRef(iri = "http://api.knora.org/ontology/incunabula/simple/v2#pubdate"),
@@ -258,6 +245,23 @@ object SearchParserV2Spec {
                     )
                 )
             )),
+            OptionalPattern(statements = Vector(
+                StatementPattern(
+                    obj = IriRef(iri = "http://api.knora.org/ontology/incunabula/simple/v2#book"),
+                    pred = IriRef(iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"),
+                    subj = QueryVariable(variableName = "book")
+                ),
+                StatementPattern(
+                    obj = QueryVariable(variableName = "bookLabel"),
+                    pred = IriRef(iri = "http://www.w3.org/2000/01/rdf-schema#label"),
+                    subj = QueryVariable(variableName = "book")
+                ),
+                StatementPattern(
+                    obj = QueryVariable(variableName = "bookPublisher"),
+                    pred = IriRef(iri = "http://api.knora.org/ontology/incunabula/simple/v2#publisher"),
+                    subj = QueryVariable(variableName = "book")
+                )
+            )),
             FilterPattern(
                 rightArgLiteral = XsdLiteral(
                     datatype = "http://www.w3.org/2001/XMLSchema#string",
@@ -276,6 +280,11 @@ object SearchParserV2Spec {
             StatementPattern(
                 obj = QueryVariable(variableName = "bookLabel"),
                 pred = IriRef(iri = "http://www.w3.org/2000/01/rdf-schema#label"),
+                subj = QueryVariable(variableName = "book")
+            ),
+            StatementPattern(
+                obj = QueryVariable(variableName = "bookPublisher"),
+                pred = IriRef(iri = "http://api.knora.org/ontology/incunabula/simple/v2#publisher"),
                 subj = QueryVariable(variableName = "book")
             ),
             StatementPattern(
@@ -350,12 +359,11 @@ object SearchParserV2Spec {
           |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
           |PREFIX incunabula: <http://api.knora.org/ontology/incunabula/simple/v2#>
           |
-          |SELECT ?book ?bookLabel
+          |SELECT ?subject ?predicate ?object
           |WHERE {
-          |    ?book a incunabula:book .
-          |    ?book rdfs:label ?bookLabel .
-          |    ?book incunabula:pubdate ?pubdate .
-          |    FILTER(?pubdate < "GREGORIAN:1500"^^xsd:string)
+          |    ?subject a incunabula:book .
+          |    ?book rdfs:label ?predicate .
+          |    ?book incunabula:pubdate ?object .
           |}
         """.stripMargin
 
@@ -497,7 +505,7 @@ object SearchParserV2Spec {
           |}
         """.stripMargin
 
-    val SimpleSparqlConstructQueryStrWithOptional: String =
+    val SimpleSparqlConstructQueryStrWithNestedOptional: String =
         """
           |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
           |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -509,6 +517,7 @@ object SearchParserV2Spec {
           |    ?book a ?bookType .
           |    ?book rdfs:label ?bookLabel .
           |    ?book knora-api:isMainResource "true"^^xsd:boolean .
+          |    ?book incunabula:title ?bookTitle .
           |    ?page a ?pageType .
           |    ?page rdfs:label ?pageLabel .
           |    ?page incunabula:isPartOf ?book .
@@ -518,6 +527,10 @@ object SearchParserV2Spec {
           |
           |    OPTIONAL {
           |        ?book incunabula:publisher "Lienhart Ysenhut"^^xsd:string .
+          |
+          |        OPTIONAL {
+          |            ?book incunabula:title ?bookTitle .
+          |        }
           |    }
           |
           |    ?book incunabula:pubdate ?pubdate .

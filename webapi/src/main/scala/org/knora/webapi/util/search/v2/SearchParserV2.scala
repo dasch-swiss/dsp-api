@@ -37,6 +37,11 @@ import scala.collection.JavaConverters._
 sealed trait StatementPatternSubject
 
 /**
+  * Represents something that can be the predicate of a triple pattern in a query.
+  */
+sealed trait StatementPatternPredicate
+
+/**
   * Represents something that can be the object of a triple pattern in a query.
   */
 sealed trait StatementPatternObject
@@ -46,14 +51,14 @@ sealed trait StatementPatternObject
   *
   * @param variableName the name of the variable.
   */
-case class QueryVariable(variableName: String) extends StatementPatternSubject with StatementPatternObject
+case class QueryVariable(variableName: String) extends StatementPatternSubject with StatementPatternPredicate with StatementPatternObject
 
 /**
   * Represents an IRI in a query.
   *
   * @param iri the IRI.
   */
-case class IriRef(iri: IRI) extends StatementPatternSubject with StatementPatternObject {
+case class IriRef(iri: IRI) extends StatementPatternSubject with StatementPatternPredicate with StatementPatternObject {
     if (InputValidation.isInternalEntityIri(iri)) {
         throw SparqlSearchException(s"Internal ontology entity IRI not allowed in search query: $iri")
     }
@@ -70,7 +75,7 @@ case class XsdLiteral(value: String, datatype: IRI) extends StatementPatternObje
 /**
   * Represents a statement pattern or block pattern in a query.
   */
-sealed trait QueryPattern
+sealed trait QueryPattern extends Ordered[QueryPattern]
 
 /**
   * Represents a statement pattern in a query.
@@ -79,7 +84,16 @@ sealed trait QueryPattern
   * @param pred the predicate of the statement.
   * @param obj  the object of the statement.
   */
-case class StatementPattern(subj: StatementPatternSubject, pred: IriRef, obj: StatementPatternObject) extends QueryPattern
+case class StatementPattern(subj: StatementPatternSubject, pred: StatementPatternPredicate, obj: StatementPatternObject) extends QueryPattern {
+    override def compare(that: QueryPattern): Int = {
+        that match {
+            case _: StatementPattern => 0
+            case _: UnionPattern => -1
+            case _: OptionalPattern => -1
+            case _: FilterPattern => -1
+        }
+    }
+}
 
 /**
   * Represents a FILTER pattern in a query.
@@ -88,14 +102,48 @@ case class StatementPattern(subj: StatementPatternSubject, pred: IriRef, obj: St
   * @param operator            the string representation of the FILTER condition's operator.
   * @param rightArgLiteral     the right argument of the FILTER condition, which must be a literal.
   */
-case class FilterPattern(leftArgVariableName: String, operator: String, rightArgLiteral: XsdLiteral) extends QueryPattern
+case class FilterPattern(leftArgVariableName: String, operator: String, rightArgLiteral: XsdLiteral) extends QueryPattern {
+    override def compare(that: QueryPattern): Int = {
+        that match {
+            case _: StatementPattern => 1
+            case _: UnionPattern => 1
+            case _: OptionalPattern => 1
+            case _: FilterPattern => 0
+        }
+    }
+}
 
 /**
   * Represents a UNION in the WHERE clause of a query.
   *
   * @param blocks the blocks of statement patterns contained in the UNION.
   */
-case class UnionPattern(blocks: Seq[Seq[QueryPattern]]) extends QueryPattern
+case class UnionPattern(blocks: Seq[Seq[QueryPattern]]) extends QueryPattern {
+    override def compare(that: QueryPattern): Int = {
+        that match {
+            case _: StatementPattern => 1
+            case _: UnionPattern => 0
+            case _: OptionalPattern => -1
+            case _: FilterPattern => -1
+        }
+    }
+}
+
+/**
+  * Represents an OPTIONAL in the WHERE clause of a query.
+  *
+  * @param statements the statements in the OPTIONAL block.
+  */
+case class OptionalPattern(statements: Seq[QueryPattern]) extends QueryPattern {
+    override def compare(that: QueryPattern): Int = {
+        that match {
+            case _: StatementPattern => 1
+            case _: UnionPattern => 1
+            case _: OptionalPattern => 0
+            case _: FilterPattern => -1
+        }
+    }
+}
 
 /**
   * Represents a simple CONSTRUCT clause in a query.
@@ -207,7 +255,7 @@ object SearchParserV2 {
 
 
             // Convert each ConstructStatementWithConstants to a StatementPattern for use in the CONSTRUCT clause.
-            val constructStatements: Seq[StatementPattern] = constructStatementsWithConstants.map {
+            val constructStatements: Seq[StatementPattern] = constructStatementsWithConstants.toVector.map {
                 constructStatementWithConstant =>
                     StatementPattern(
                         subj = makeStatementPatternSubject(nameToVar(constructStatementWithConstant.subj)),
@@ -226,15 +274,7 @@ object SearchParserV2 {
           * Reorders the patterns in the WHERE clause by putting the FILTERs at the end.
           */
         private def getOrderedWherePatterns: Seq[QueryPattern] = {
-            val (filters, nonFilters) = wherePatterns.partition {
-                case _: FilterPattern => true
-                case _ => false
-            }
-
-            val orderedPatterns = collection.mutable.ArrayBuffer.empty[QueryPattern]
-            orderedPatterns.appendAll(nonFilters)
-            orderedPatterns.appendAll(filters)
-            orderedPatterns
+            wherePatterns.sorted.toVector
         }
 
         private def unsupported(node: QueryModelNode) {
@@ -270,8 +310,8 @@ object SearchParserV2 {
           * @param predVar the [[Var]] to be converted.
           * @return an [[IriRef]].
           */
-        private def makeStatementPatternPredicate(predVar: Var): IriRef = {
-            // The predicate of a statement pattern must be an IRI.
+        private def makeStatementPatternPredicate(predVar: Var): StatementPatternPredicate = {
+            // The predicate of a statement pattern must be an IRI or a parser-generated constant referring to an IRI.
 
             if (predVar.isAnonymous || predVar.isConstant) {
                 predVar.getValue match {
@@ -279,7 +319,7 @@ object SearchParserV2 {
                     case other => throw SparqlSearchException(s"Invalid predicate for triple pattern: $other")
                 }
             } else {
-                throw SparqlSearchException(s"Invalid predicate for triple pattern: ${predVar.getValue}")
+                QueryVariable(predVar.getName)
             }
         }
 
@@ -305,7 +345,7 @@ object SearchParserV2 {
 
         override def meet(node: algebra.StatementPattern): Unit = {
             val subj: StatementPatternSubject = makeStatementPatternSubject(node.getSubjectVar)
-            val pred: IriRef = makeStatementPatternPredicate(node.getPredicateVar)
+            val pred: StatementPatternPredicate = makeStatementPatternPredicate(node.getPredicateVar)
             val obj: StatementPatternObject = makeStatementPatternObject(node.getObjectVar)
             wherePatterns.append(StatementPattern(subj = subj, pred = pred, obj = obj))
         }
@@ -318,26 +358,31 @@ object SearchParserV2 {
             unsupported(node)
         }
 
-        override def meet(node: Union): Unit = {
-            // Check query patterns to prevent nested UNIONs.
-            def checkPatterns(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
-                for (pattern <- patterns) {
-                    pattern match {
-                        case _: UnionPattern => throw SparqlSearchException("Nested UNIONs are not allowed in search queries")
-                        case _ => ()
-                    }
+        /**
+          * Checks the contents of a block patterns to prevent nested blocks.
+          *
+          * @param patterns the patterns inside the block.
+          * @return the same patterns.
+          */
+        private def checkBlockPatterns(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
+            for (pattern <- patterns) {
+                pattern match {
+                    case _: UnionPattern | _: OptionalPattern => throw SparqlSearchException("Nested blocks are not allowed in search queries")
+                    case _ => ()
                 }
-
-                patterns
             }
 
+            patterns
+        }
+
+        override def meet(node: Union): Unit = {
             // Get the block of query patterns on the left side of the UNION.
             val leftPatterns: Seq[QueryPattern] = node.getLeftArg match {
                 case _: Union => throw SparqlSearchException("Nested UNIONs are not allowed in search queries")
                 case otherLeftArg =>
                     val leftArgVisitor = new SimpleConstructQueryModelVisitor
                     otherLeftArg.visit(leftArgVisitor)
-                    checkPatterns(leftArgVisitor.getOrderedWherePatterns)
+                    checkBlockPatterns(leftArgVisitor.getOrderedWherePatterns)
             }
 
             // Get the block(s) of query patterns on the right side of the UNION.
@@ -361,7 +406,7 @@ object SearchParserV2 {
                 case otherRightArg =>
                     val rightArgVisitor = new SimpleConstructQueryModelVisitor
                     otherRightArg.visit(rightArgVisitor)
-                    Seq(checkPatterns(rightArgVisitor.getOrderedWherePatterns))
+                    Seq(checkBlockPatterns(rightArgVisitor.getOrderedWherePatterns))
             }
 
             wherePatterns.append(UnionPattern(Seq(leftPatterns) ++ rightPatterns))
@@ -401,12 +446,18 @@ object SearchParserV2 {
             var obj: Option[String] = None
 
             for (projectionElem: ProjectionElem <- node.getElements.asScala) {
-                val sourceName = projectionElem.getSourceName
+                val sourceName: String = projectionElem.getSourceName
+                val targetName: String = projectionElem.getTargetName
+
+                if (sourceName == targetName) {
+                    throw SparqlSearchException(s"SELECT queries are not allowed in search, please use a CONSTRUCT query instead")
+                }
 
                 projectionElem.getTargetName match {
                     case "subject" => subj = Some(sourceName)
                     case "predicate" => pred = Some(sourceName)
                     case "object" => obj = Some(sourceName)
+                    case _ => SparqlSearchException(s"SELECT queries are not allowed in search, please use a CONSTRUCT query instead")
                 }
             }
 
@@ -422,7 +473,7 @@ object SearchParserV2 {
         }
 
         override def meet(node: Projection): Unit = {
-            throw SparqlSearchException(s"SELECT queries are not allowed in search, please use a CONSTRUCT query instead")
+            node.visitChildren(this)
         }
 
         override def meet(node: OrderElem): Unit = {
@@ -700,7 +751,9 @@ object SearchParserV2 {
         }
 
         override def meet(node: LeftJoin): Unit = {
-            throw SparqlSearchException("OPTIONAL is not allowed in search queries")
+            val optionalVisitor = new SimpleConstructQueryModelVisitor
+            node.visitChildren(optionalVisitor)
+            wherePatterns.append(OptionalPattern(checkBlockPatterns(optionalVisitor.getOrderedWherePatterns)))
         }
 
         override def meet(node: LangMatches): Unit = {
