@@ -339,9 +339,8 @@ class SipiV1ITSpec extends ITSpec(SipiV1ITSpec.config) with TriplestoreJsonProto
 
 
         "create an 'incunabula:book' and an 'incunabula:page' with file parameters via XML import" in {
-            val nameOfFileToUpload = clausFile.getName
-            val fileToUpload = Files.readAllBytes(Paths.get(pathToChlaus))
-            val absoluteFilePath = InputValidation.saveFileToTmpLocation(settings, fileToUpload).getAbsolutePath
+            val fileToUpload = new File(pathToChlaus)
+            val absoluteFilePath = fileToUpload.getAbsolutePath
 
             val knoraParams =
                 s"""<?xml version="1.0" encoding="UTF-8"?>
@@ -388,7 +387,7 @@ class SipiV1ITSpec extends ITSpec(SipiV1ITSpec.config) with TriplestoreJsonProto
             val locdata = pageJson.fields("resinfo").asJsObject.fields("locdata").asJsObject
             val origname = locdata.fields("origname").asInstanceOf[JsString].value
             val imageUrl = locdata.fields("path").asInstanceOf[JsString].value
-            assert(origname == nameOfFileToUpload)
+            assert(origname == fileToUpload.getName)
 
             // Request the file from Sipi.
             val sipiGetRequest = Get(imageUrl) ~> addCredentials(BasicHttpCredentials(username, password))
