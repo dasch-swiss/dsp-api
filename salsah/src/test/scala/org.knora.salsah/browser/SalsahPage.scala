@@ -178,6 +178,17 @@ class SalsahPage(pageUrl: String, headless: Boolean) {
     }
 
     /**
+      * Clicks the SALSAH simple search button.
+      */
+    def clickSimpleSearchButton(): Unit = {
+        eventually {
+            val ele = driver.findElement(By.xpath("//div[@id='searchctrl']/img[1][@class='link']"))
+            assert(ele.isDisplayed)
+            ele.click()
+        }
+    }
+
+    /**
       * Clicks the SALSAH extended search button.
       */
     def clickExtendedSearchButton(): Unit = {
@@ -707,15 +718,13 @@ class SalsahPage(pageUrl: String, headless: Boolean) {
 
     def sendKeysHack(element: WebElement, value: String): Unit = {
 
-        if (headless) {
+        //if (headless) {
             import org.openqa.selenium.JavascriptExecutor
             val jsExecutor = driver.asInstanceOf[JavascriptExecutor]
-            jsExecutor.executeScript(s"arguments[0].setAttribute('value', '$value')", element)
-        } else {
-            element.sendKeys(value)
-        }
-
-        //driver.executeScript( arguments[0].setAttribute("value", "${value}"), element );
+            jsExecutor.executeScript("arguments[0].setAttribute('value', arguments[1]);", element, value)
+        //} else {
+        //    element.sendKeys(value)
+        //}
     }
 
 }

@@ -65,7 +65,9 @@ class SearchAndEditSpec extends SalsahSpec {
 
         val searchField: WebElement = page.getSimpleSearchField
         searchField.clear()
-        searchField.sendKeys("Zeitglöcklein\n")
+        //searchField.sendKeys("Zeitglöcklein\n")
+        page.sendKeysHack(searchField, "Zeitglöcklein")
+        page.clickSimpleSearchButton()
 
         val header = page.getSearchResultHeader
 
@@ -168,7 +170,8 @@ class SearchAndEditSpec extends SalsahSpec {
 
             page.getExtendedSearchSelectionByName(1, "compop").selectByValue("LIKE")
 
-            page.getValueField(1).sendKeys("Zeitglöcklein")
+            //page.getValueField(1).sendKeys("Zeitglöcklein")
+            page.sendKeysHack(page.getValueField(1), "Zeitglöcklein")
 
             page.submitExtendedSearch()
 
@@ -224,7 +227,8 @@ class SearchAndEditSpec extends SalsahSpec {
 
             page.getExtendedSearchSelectionByName(1, "compop").selectByValue("EQ")
 
-            page.getValueField(1).sendKeys("1")
+            //page.getValueField(1).sendKeys("1")
+            page.sendKeysHack(page.getValueField(1), "1")
 
             page.addPropertySetToExtendedSearch(2)
 
@@ -232,7 +236,8 @@ class SearchAndEditSpec extends SalsahSpec {
 
             page.getExtendedSearchSelectionByName(2, "compop").selectByValue("EQ")
 
-            page.getValueField(2).sendKeys("Narrenschiff")
+            //page.getValueField(2).sendKeys("Narrenschiff")
+            page.sendKeysHack(page.getValueField(2), "Narrenschiff")
 
             page.chooseElementFromSearchbox(1)
 
@@ -321,7 +326,8 @@ class SearchAndEditSpec extends SalsahSpec {
             val yearsel = page.getYearFieldInExtendedSearchForm(dateForm, 1)
 
             yearsel.clear()
-            yearsel.sendKeys("1497")
+            //yearsel.sendKeys("1497")
+            page.sendKeysHack(yearsel, "1497")
 
             page.submitExtendedSearch()
 
@@ -373,7 +379,8 @@ class SearchAndEditSpec extends SalsahSpec {
             val yearsel1 = page.getYearFieldInExtendedSearchForm(dateForm, 1)
 
             yearsel1.clear()
-            yearsel1.sendKeys("1495")
+            //yearsel1.sendKeys("1495")
+            page.sendKeysHack(yearsel1, "1495")
 
 
             //
@@ -391,7 +398,8 @@ class SearchAndEditSpec extends SalsahSpec {
             val yearsel2 = page.getYearFieldInExtendedSearchForm(dateForm, 2)
 
             yearsel2.clear()
-            yearsel2.sendKeys("1495")
+            //yearsel2.sendKeys("1495")
+            page.sendKeysHack(yearsel2, "1495")
 
             page.submitExtendedSearch()
 
@@ -451,7 +459,8 @@ class SearchAndEditSpec extends SalsahSpec {
             val yearsel1 = page.getYearField(pubdateField, 1)
 
             yearsel1.clear()
-            yearsel1.sendKeys("1495")
+            //yearsel1.sendKeys("1495")
+            page.sendKeysHack(yearsel1, "1495")
 
             page.clickSaveButton(pubdateField)
 
@@ -530,7 +539,8 @@ class SearchAndEditSpec extends SalsahSpec {
 
             input.clear()
 
-            input.sendKeys("test")
+            //input.sendKeys("test")
+            page.sendKeysHack(input, "test")
 
             page.clickSaveButton(pagenumField)
 
@@ -577,7 +587,8 @@ class SearchAndEditSpec extends SalsahSpec {
 
             input.clear()
 
-            input.sendKeys("Tobiasus")
+            //input.sendKeys("Tobiasus")
+            page.sendKeysHack(input, "Tobiasus")
 
             page.clickSaveButton(creatorField)
 
@@ -623,7 +634,8 @@ class SearchAndEditSpec extends SalsahSpec {
                 page.findCkeditor(descriptionField)
             }
 
-            ckeditor.sendKeys("my text")
+            //ckeditor.sendKeys("my text")
+            page.sendKeysHack(ckeditor, "my text")
 
             page.clickSaveButton(descriptionField)
 
@@ -662,7 +674,8 @@ class SearchAndEditSpec extends SalsahSpec {
 
             val input = page.getSearchBoxInputField(partOfField)
 
-            input.sendKeys("Narrenschiff")
+            //input.sendKeys("Narrenschiff")
+            page.sendKeysHack(input, "Narrenschiff")
 
             page.chooseElementFromSearchbox(2)
 
@@ -787,7 +800,9 @@ class SearchAndEditSpec extends SalsahSpec {
 
             searchField.clear()
 
-            searchField.sendKeys("excluded alpha\n")
+            //searchField.sendKeys("excluded alpha\n")
+            page.sendKeysHack(searchField, "excluded alpha")
+            page.clickSimpleSearchButton()
 
             val header = page.getSearchResultHeader
 

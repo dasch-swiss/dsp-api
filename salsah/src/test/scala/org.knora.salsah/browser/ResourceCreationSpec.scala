@@ -101,7 +101,8 @@ class ResourceCreationSpec extends SalsahSpec {
 
             val label: WebElement = page.getFormFieldByName("__LABEL__")
 
-            label.sendKeys("Robin Hood")
+            //label.sendKeys("Robin Hood")
+            page.sendKeysHack(label, "Robin Hood")
 
             val firstname: WebElement = page.getFormFieldByName("http://www.knora.org/ontology/images#firstname")
 
@@ -142,15 +143,18 @@ class ResourceCreationSpec extends SalsahSpec {
 
             val resource1Label: WebElement = page.getFormFieldByName("__LABEL__")
 
-            resource1Label.sendKeys("Testding")
+            //resource1Label.sendKeys("Testding")
+            page.sendKeysHack(resource1Label, "Testding")
 
             val resource1FloatVal = page.getFormFieldByName("http://www.knora.org/ontology/anything#hasDecimal")
 
-            resource1FloatVal.sendKeys("5.3")
+            //resource1FloatVal.sendKeys("5.3")
+            page.sendKeysHack(resource1FloatVal, "5.3")
 
             val resource1TextVal = page.getFormFieldByName("http://www.knora.org/ontology/anything#hasText")
 
             resource1TextVal.sendKeys("Dies ist ein Test")
+            page.sendKeysHack(resource1TextVal, "Dies ist ein Test")
 
             page.clickSaveButtonForResourceCreationForm()
 
@@ -169,14 +173,17 @@ class ResourceCreationSpec extends SalsahSpec {
             val resource2Label: WebElement = page.getFormFieldByName("__LABEL__")
 
             resource2Label.sendKeys("ein zweites Testding")
+            page.sendKeysHack(resource2Label, "ein zweites Testding")
 
             val resource2FloatVal = page.getFormFieldByName("http://www.knora.org/ontology/anything#hasDecimal")
 
             resource2FloatVal.sendKeys("5.7")
+            page.sendKeysHack(resource2FloatVal, "5.7")
 
             val resource2TextVal = page.getFormFieldByName("http://www.knora.org/ontology/anything#hasText")
 
             resource2TextVal.sendKeys("Dies ist auch ein Test")
+            page.sendKeysHack(resource2TextVal, "Dies ist auch ein Test")
 
             page.clickSaveButtonForResourceCreationForm()
 
