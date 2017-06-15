@@ -20,12 +20,8 @@
 
 package org.knora.salsah.browser
 
-import akka.actor.ActorSystem
-import akka.util.Timeout
-import org.openqa.selenium.{By, WebElement}
+import org.openqa.selenium.{By, Keys, WebElement}
 import org.scalatest.concurrent.Eventually._
-
-import scala.concurrent.duration._
 
 /**
   * Tests the SALSAH web interface using Selenium.
@@ -47,12 +43,6 @@ class SearchAndEditSpec extends SalsahSpec {
 
     // How long to wait for results obtained using the 'eventually' function
     implicit private val patienceConfig = page.patienceConfig
-
-    implicit private val timeout = Timeout(180.seconds)
-
-    implicit private val system = ActorSystem()
-
-    implicit private val dispatcher = system.dispatcher
 
     private val rdfDataObjectsJsonList: String =
         """

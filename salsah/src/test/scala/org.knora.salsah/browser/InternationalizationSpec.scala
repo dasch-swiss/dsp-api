@@ -1,10 +1,5 @@
 package org.knora.salsah.browser
 
-import akka.actor.ActorSystem
-import akka.util.Timeout
-
-import scala.concurrent.duration._
-
 /**
   * Tests the internationalization of the SALSAH GUI.
   */
@@ -25,12 +20,6 @@ class InternationalizationSpec extends SalsahSpec {
 
     // How long to wait for results obtained using the 'eventually' function
     implicit private val patienceConfig = page.patienceConfig
-
-    implicit private val timeout = Timeout(180.seconds)
-
-    implicit private val system = ActorSystem()
-
-    implicit private val dispatcher = system.dispatcher
 
     private val rdfDataObjectsJsonList: String =
         """

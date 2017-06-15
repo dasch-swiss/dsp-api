@@ -17,7 +17,7 @@
 package org.knora.salsah
 
 import java.io.{File, PrintWriter}
-import java.nio.file.{Files, Paths}
+import java.nio.file.{Path, Paths}
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
@@ -25,7 +25,7 @@ import akka.http.scaladsl.Http.ServerBinding
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
-import akka.http.scaladsl.model.StatusCodes._
+import akka.http.scaladsl.server.directives.ContentTypeResolver.Default
 import akka.stream.ActorMaterializer
 
 import scala.concurrent.Future
@@ -107,22 +107,16 @@ object Main extends App {
             log.error(ex, s"Failed to bind to $host:$port")
     }
 
-    private def serveFromPublicDir(publicDir: String): Route = {
-        get {
-            entity(as[HttpRequest]) { requestData =>
-                complete {
-                    val fullPath = requestData.uri.path.toString match {
-                        case "/" => Paths.get(publicDir + "/index.html")
-                        case "" => Paths.get(publicDir + "/index.html")
-                        case _ => Paths.get(publicDir + requestData.uri.path.toString)
-                    }
+    private def serveFromPublicDir(publicDir: String): Route = get {
+        entity(as[HttpRequest]) { requestData =>
 
-                    val ext = getExtensions(fullPath.getFileName.toString)
-                    val c: ContentType = ContentType(MediaTypes.forExtension(ext).getOrElse(MediaTypes.`text/plain`))
-                    val byteArray = Files.readAllBytes(fullPath)
-                    HttpResponse(OK, entity = HttpEntity(c, byteArray))
-                }
+            val fullPath: Path = requestData.uri.path.toString match {
+                case "/" => Paths.get(publicDir + "/index.html")
+                case "" => Paths.get(publicDir + "/index.html")
+                case _ => Paths.get(publicDir + requestData.uri.path.toString)
             }
+
+            getFromFile(fullPath.toString)
         }
     }
 
