@@ -27,6 +27,7 @@ env:
     - COMMIT=${TRAVIS_COMMIT::8}
     - TAG=${TRAVIS_BRANCH//\//-}
     - DOCKERHOST=$(ip route get 8.8.8.8 | awk '{print $NF; exit}')
+    - CHROME_BIN=google-chrome-stable
 
 cache:
   directories:
