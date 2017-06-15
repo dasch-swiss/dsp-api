@@ -93,7 +93,7 @@ class SalsahPage(pageUrl: String, headless: Boolean) {
       * @param password user's password
       * @param fullName user's full name
       */
-    def doLogin(email: String, password: String, fullName: String): Unit = {
+    def doLogin(email: String, password: String, fullName: String, _page: SalsahPage): Unit = {
         val loginButton = driver.findElement(By.id("dologin"))
         loginButton.click()
 
@@ -101,8 +101,12 @@ class SalsahPage(pageUrl: String, headless: Boolean) {
         val passwordInput = driver.findElement(By.id("password"))
         val sendCredentials = driver.findElement(By.id("login_button"))
 
-        userInput.sendKeys(email)
-        passwordInput.sendKeys("test")
+        //userInput.sendKeys(email)
+        _page.sendKeysHack(userInput, email)
+
+        //passwordInput.sendKeys("test")
+        _page.sendKeysHack(passwordInput, "test")
+
         sendCredentials.click()
 
         eventually {
@@ -693,6 +697,25 @@ class SalsahPage(pageUrl: String, headless: Boolean) {
                 driver.switchTo().alert().accept()
             }
         }
+    }
+
+    /*
+        SendKeys hack needed because of issue: https://bugs.chromium.org/p/chromedriver/issues/detail?id=1772
+        Summary: sendKeys does not work without a running xvfb instance on Linux, which when run in Travis and
+        our tests leeds to a stalled build.
+     */
+
+    def sendKeysHack(element: WebElement, value: String): Unit = {
+
+        if (headless) {
+            import org.openqa.selenium.JavascriptExecutor
+            val jsExecutor = driver.asInstanceOf[JavascriptExecutor]
+            jsExecutor.executeScript(s"arguments[0].setAttribute('value', '$value')", element)
+        } else {
+            element.sendKeys(value)
+        }
+
+        //driver.executeScript( arguments[0].setAttribute("value", "${value}"), element );
     }
 
 }

@@ -103,7 +103,7 @@ class SearchAndEditSpec extends SalsahSpec {
         "log in as an Incunabula project user" in {
 
             page.load()
-            page.doLogin(email = incunabulaUserEmail, password = testPassword, fullName = incunabulaUserFullName)
+            page.doLogin(email = incunabulaUserEmail, password = testPassword, fullName = incunabulaUserFullName, page)
             page.doLogout()
 
         }
@@ -113,7 +113,7 @@ class SearchAndEditSpec extends SalsahSpec {
 
             page.load()
 
-            page.doLogin(email = incunabulaUserEmail, password = testPassword, fullName = incunabulaUserFullName)
+            page.doLogin(email = incunabulaUserEmail, password = testPassword, fullName = incunabulaUserFullName, page)
 
             doZeitgloeckleinSearch()
 
@@ -136,7 +136,7 @@ class SearchAndEditSpec extends SalsahSpec {
 
             page.load()
 
-            page.doLogin(email = incunabulaUserEmail, password = testPassword, fullName = incunabulaUserFullName)
+            page.doLogin(email = incunabulaUserEmail, password = testPassword, fullName = incunabulaUserFullName, page)
 
             doZeitgloeckleinSearch()
 
@@ -166,7 +166,7 @@ class SearchAndEditSpec extends SalsahSpec {
 
             page.load()
 
-            page.doLogin(email = incunabulaUserEmail, password = testPassword, fullName = incunabulaUserFullName)
+            page.doLogin(email = incunabulaUserEmail, password = testPassword, fullName = incunabulaUserFullName, page)
 
             page.clickExtendedSearchButton()
 
@@ -195,7 +195,7 @@ class SearchAndEditSpec extends SalsahSpec {
 
             page.load()
 
-            page.doLogin(email = incunabulaUserEmail, password = testPassword, fullName = incunabulaUserFullName)
+            page.doLogin(email = incunabulaUserEmail, password = testPassword, fullName = incunabulaUserFullName, page)
 
             page.clickExtendedSearchButton()
 
@@ -222,7 +222,7 @@ class SearchAndEditSpec extends SalsahSpec {
 
             page.load()
 
-            page.doLogin(email = incunabulaUserEmail, password = testPassword, fullName = incunabulaUserFullName)
+            page.doLogin(email = incunabulaUserEmail, password = testPassword, fullName = incunabulaUserFullName, page)
 
             page.clickExtendedSearchButton()
 
@@ -260,7 +260,7 @@ class SearchAndEditSpec extends SalsahSpec {
 
             page.load()
 
-            page.doLogin(email = incunabulaUserEmail, password = testPassword, fullName = incunabulaUserFullName)
+            page.doLogin(email = incunabulaUserEmail, password = testPassword, fullName = incunabulaUserFullName, page)
 
             page.clickExtendedSearchButton()
 
@@ -302,7 +302,7 @@ class SearchAndEditSpec extends SalsahSpec {
         "do an extended search for a book with the exact publication date Julian 1497-08-01" in {
             page.load()
 
-            page.doLogin(email = incunabulaUserEmail, password = testPassword, fullName = incunabulaUserFullName)
+            page.doLogin(email = incunabulaUserEmail, password = testPassword, fullName = incunabulaUserFullName, page)
 
             page.clickExtendedSearchButton()
 
@@ -347,7 +347,7 @@ class SearchAndEditSpec extends SalsahSpec {
 
             page.load()
 
-            page.doLogin(email = incunabulaUserEmail, password = testPassword, fullName = incunabulaUserFullName)
+            page.doLogin(email = incunabulaUserEmail, password = testPassword, fullName = incunabulaUserFullName, page)
 
             page.clickExtendedSearchButton()
 
@@ -417,7 +417,7 @@ class SearchAndEditSpec extends SalsahSpec {
 
             page.load()
 
-            page.doLogin(email = incunabulaUserEmail, password = testPassword, fullName = incunabulaUserFullName)
+            page.doLogin(email = incunabulaUserEmail, password = testPassword, fullName = incunabulaUserFullName, page)
 
             page.clickExtendedSearchButton()
 
@@ -487,7 +487,7 @@ class SearchAndEditSpec extends SalsahSpec {
 
             page.load()
 
-            page.doLogin(email = incunabulaUserEmail, password = testPassword, fullName = incunabulaUserFullName)
+            page.doLogin(email = incunabulaUserEmail, password = testPassword, fullName = incunabulaUserFullName, page)
 
             doZeitgloeckleinSearch()
 
@@ -559,7 +559,7 @@ class SearchAndEditSpec extends SalsahSpec {
 
             page.load()
 
-            page.doLogin(email = incunabulaUserEmail, password = testPassword, fullName = incunabulaUserFullName)
+            page.doLogin(email = incunabulaUserEmail, password = testPassword, fullName = incunabulaUserFullName, page)
 
             doZeitgloeckleinSearch()
 
@@ -607,7 +607,7 @@ class SearchAndEditSpec extends SalsahSpec {
 
             page.load()
 
-            page.doLogin(email = incunabulaUserEmail, password = testPassword, fullName = incunabulaUserFullName)
+            page.doLogin(email = incunabulaUserEmail, password = testPassword, fullName = incunabulaUserFullName, page)
 
             doZeitgloeckleinSearch()
 
@@ -649,7 +649,7 @@ class SearchAndEditSpec extends SalsahSpec {
 
             page.load()
 
-            page.doLogin(email = incunabulaUserEmail, password = testPassword, fullName = incunabulaUserFullName)
+            page.doLogin(email = incunabulaUserEmail, password = testPassword, fullName = incunabulaUserFullName, page)
 
             doZeitgloeckleinSearch()
 
@@ -693,7 +693,7 @@ class SearchAndEditSpec extends SalsahSpec {
 
             page.load()
 
-            page.doLogin(email = incunabulaUserEmail, password = testPassword, fullName = incunabulaUserFullName)
+            page.doLogin(email = incunabulaUserEmail, password = testPassword, fullName = incunabulaUserFullName, page)
 
             page.clickExtendedSearchButton()
 
@@ -742,7 +742,7 @@ class SearchAndEditSpec extends SalsahSpec {
 
             page.load()
 
-            page.doLogin(email = incunabulaUserEmail, password = testPassword, fullName = incunabulaUserFullName)
+            page.doLogin(email = incunabulaUserEmail, password = testPassword, fullName = incunabulaUserFullName, page)
 
             page.clickExtendedSearchButton()
 
@@ -791,7 +791,7 @@ class SearchAndEditSpec extends SalsahSpec {
 
             page.load()
 
-            page.doLogin(email = incunabulaUserEmail, password = testPassword, fullName = incunabulaUserFullName)
+            page.doLogin(email = incunabulaUserEmail, password = testPassword, fullName = incunabulaUserFullName, page)
 
             val searchField: WebElement = page.getSimpleSearchField
 

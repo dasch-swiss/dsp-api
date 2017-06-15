@@ -92,7 +92,7 @@ class ResourceCreationSpec extends SalsahSpec {
         "log in as anything user" in {
 
             page.load()
-            page.doLogin(email = anythingUserEmail, password = testPassword, fullName = anythingUserFullName)
+            page.doLogin(email = anythingUserEmail, password = testPassword, fullName = anythingUserFullName, page)
             page.doLogout()
 
         }
@@ -101,7 +101,7 @@ class ResourceCreationSpec extends SalsahSpec {
 
             page.load()
 
-            page.doLogin(email = imagesUserEmail, password = testPassword, fullName = imagesUserFullName)
+            page.doLogin(email = imagesUserEmail, password = testPassword, fullName = imagesUserFullName, page)
 
             page.clickAddResourceButton()
 
@@ -111,17 +111,20 @@ class ResourceCreationSpec extends SalsahSpec {
 
             label.sendKeys("Robin Hood")
 
-            val firstname = page.getFormFieldByName("http://www.knora.org/ontology/images#firstname")
+            val firstname: WebElement = page.getFormFieldByName("http://www.knora.org/ontology/images#firstname")
 
-            firstname.sendKeys("Robin")
+            //firstname.sendKeys("Robin")
+            page.sendKeysHack(firstname, "Robin")
 
             val familyname: WebElement = page.getFormFieldByName("http://www.knora.org/ontology/images#lastname")
 
-            familyname.sendKeys("Hood")
+            //familyname.sendKeys("Hood")
+            page.sendKeysHack(familyname, "Hood")
 
             val address: WebElement = page.getFormFieldByName("http://www.knora.org/ontology/images#address")
 
-            address.sendKeys("Sherwood Forest")
+            //address.sendKeys("Sherwood Forest")
+            page.sendKeysHack(address, "Sherwood Forest")
 
             page.clickSaveButtonForResourceCreationForm()
 
@@ -135,7 +138,7 @@ class ResourceCreationSpec extends SalsahSpec {
 
             page.load()
 
-            page.doLogin(email = multiUserEmail, password = testPassword, fullName = multiUserFullName)
+            page.doLogin(email = multiUserEmail, password = testPassword, fullName = multiUserFullName, page)
 
             page.selectProject(anythingProjectIri)
 
