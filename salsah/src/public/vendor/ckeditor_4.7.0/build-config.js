@@ -67,7 +67,7 @@ var CKBUILDER_CONFIG = {
 		'wysiwygarea' : 1
 	},
 	languages : {
-		'de-ch' : 1,
+		'de' : 1,
 		'en' : 1,
 		'fr' : 1,
 		'it' : 1

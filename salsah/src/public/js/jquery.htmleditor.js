@@ -141,7 +141,7 @@
                 var filter = ' p em strong strike u sub sup; a[!href](salsah-link)';
 
 				CKEDITOR.editorConfig = function( config ) {
-					config.language = SALSAH.userprofile.userData.lang === undefined ? 'de' : SALSAH.userprofile.userData.lang;
+					config.language = (SALSAH.userprofile && SALSAH.userprofile.userData && SALSAH.userprofile.userData.lang) ? SALSAH.userprofile.userData.lang : 'en' ,
                     config.allowedContent = filter;
                     config.pasteFilter = filter;
 					config.entities = false; // do not use entities (e.g. for Umlaut)
@@ -186,7 +186,9 @@
 							});
 
 						}
-					}
+					},
+					toolbar: [ ['Bold', 'Italic', 'Underline', 'Strike', 'Subscript', 'Superscript', '-','RemoveFormat', 'Link', 'Unlink'] ], // configuration for toolbar buttons, must conform to `STANDARD_MAPPING`
+					removeButtons: ''
 				};
 
 				// init editor (textarea will be replaced by an iframe)
@@ -212,7 +214,7 @@
 			if (htmlstr.length == 0) return false;
 
 			// replace non breakable spaces by
-			htmlstr = htmlstr.replace(/&nbsp;/g, String.fromCharCode(160))
+			htmlstr = htmlstr.replace(/&nbsp;/g, String.fromCharCode(160));
 
             // return required params for xml
 			return {
