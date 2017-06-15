@@ -194,7 +194,7 @@ The following simple mapping illustrates this principle::
                 </datatype>
             </standoffClass>
         </mappingElement>
-    <mapping>
+    </mapping>
 
 ``<datatype>`` **must** hold the Iri of a standoff data type class (see list above). The ``<classIri>`` must be a subclass of this type or this type itself (the latter is probably not recommendable since semantics are missing: what is the meaning of the date?).
 In the example above, the standoff class is ``anything:StandoffEventTag`` which has the following definition in the ontology ``anything-onto.ttl``::
