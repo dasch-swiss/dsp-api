@@ -77,7 +77,7 @@ The mapping is written in XML itself (for a formal description, see ``webapi/src
            - ``<attributes>``: XML attributes to be mapped to standoff properties (other than ``id`` or ``class``), if any
                - ``<attribute>``: an XML attribute to be mapped to a standoff property, may be repeated
                    - ``<attributeName>``: the name of the XML attribute
-                   - ``<namespace>``: the namespace the attribute belogs to, if any. If the attribute does not belong to a namespace, the keyword ``noNamespace`` has to be used.
+                   - ``<namespace>``: the namespace the attribute belongs to, if any. If the attribute does not belong to a namespace, the keyword ``noNamespace`` has to be used.
                    - ``<propertyIri>``: the Iri of the standoff property the XML attribute is mapped to.
            - ``<datatype>``: the data type of the standoff class, if any.
                - ``<type>``: the Iri of the data type standoff class
