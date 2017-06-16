@@ -32,7 +32,6 @@
  * we need to get explicit (non-inferred) statements.
  *
  * @param searchTerms search terms.
- * @param preferredLanguage the language code of the user's preferred language.
  *@
 @(searchTerms: String)
 
