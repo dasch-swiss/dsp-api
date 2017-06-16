@@ -89,30 +89,8 @@ class SearchParserV2Spec extends WordSpec with Matchers {
             }
         }
 
-        "parse an extended search query" in {
-
-            val extendSearchQuery: String =
-                """
-                  |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-                  |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-                  |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-                  |PREFIX incunabula: <http://api.knora.org/ontology/incunabula/simple/v2#>
-                  |
-                  |CONSTRUCT {
-                  |    ?book rdfs:label ?label .
-                  |    #?book a incunabula:book .
-                  |} WHERE {
-                  |    ?book a incunabula:book .
-                  |
-                  |    ?book rdfs:label  ?label .
-                  |}
-                """.stripMargin
-
-            val parsedQuery = SearchParserV2.parseSearchQuery(extendSearchQuery)
-
-            println(parsedQuery)
-
+        "parse an extended search query for a anything:Thing relating to a specified resource" in {
+            SearchParserV2.parseSearchQuery(extendSearchQueryForAThingRelatingToAnotherThing)
         }
     }
 }
@@ -535,6 +513,21 @@ object SearchParserV2Spec {
           |
           |    ?book incunabula:pubdate ?pubdate .
           |    FILTER(?pubdate < "GREGORIAN:1500"^^xsd:string)
+          |}
+        """.stripMargin
+
+    val extendSearchQueryForAThingRelatingToAnotherThing: String =
+        """
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+          |PREFIX anything: <http://api.knora.org/ontology/anything/v2#>
+          |
+          |CONSTRUCT {
+          |    ?resource knora-api:hasLinkTo <http://data.knora.org/a-thing> .
+          |} WHERE {
+          |    ?resource a anything:Thing .
+          |
+          |    ?resource knora-api:hasLinkTo <http://data.knora.org/a-thing> .
+          |
           |}
         """.stripMargin
 }
