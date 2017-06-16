@@ -101,6 +101,7 @@ XML structure of a mapping::
                         <namespace>XML namespace or "noNamespace"</namespace>
                         <propertyIri>standoff property Iri</propertyIri>
                     </attribute>
+                </attributes>
                 <datatype>
                     <type>standoff data type class</type>
                     <attributeName>XML attribute with the typed value</attributeName>
@@ -316,7 +317,7 @@ The standoff ontology ``standoff-onto.ttl`` offers a set of predefined standoff 
                 <classIri>http://www.knora.org/ontology/standoff#StandoffItalicTag</classIri>
             </standoffClass>
         </mappingElement>
-    <mapping>
+    </mapping>
 
 Predefined standoff classes may be used by various projects, each providing a custom mapping to be able to recreate the original XML from RDF.
 Predefined standoff classes may also be inherited and extended in project specific ontologies.
