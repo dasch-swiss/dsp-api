@@ -76,14 +76,14 @@ class ResourceCreationSpec extends SalsahSpec {
         }
 
         "have the correct title" in {
-            page.load()
+            page.open()
             page.getPageTitle should be("System for Annotation and Linkage of Sources in Arts and Humanities")
 
         }
 
         "log in as anything user" in {
 
-            page.load()
+            page.open()
             page.doLogin(email = anythingUserEmail, password = testPassword, fullName = anythingUserFullName, page)
             page.doLogout()
 
@@ -91,7 +91,7 @@ class ResourceCreationSpec extends SalsahSpec {
 
         "create a resource of type images:person" in {
 
-            page.load()
+            page.open()
 
             page.doLogin(email = imagesUserEmail, password = testPassword, fullName = imagesUserFullName, page)
 
@@ -129,7 +129,7 @@ class ResourceCreationSpec extends SalsahSpec {
 
         "create two resources of type anything:thing in two different projects as the multi-project user" in {
 
-            page.load()
+            page.open()
 
             page.doLogin(email = multiUserEmail, password = testPassword, fullName = multiUserFullName, page)
 

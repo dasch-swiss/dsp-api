@@ -88,14 +88,14 @@ class SearchAndEditSpec extends SalsahSpec {
         }
 
         "have the correct title" in {
-            page.load()
+            page.open()
             page.getPageTitle should be ("System for Annotation and Linkage of Sources in Arts and Humanities")
 
         }
 
         "log in as an Incunabula project user" in {
 
-            page.load()
+            page.open()
             page.doLogin(email = incunabulaUserEmail, password = testPassword, fullName = incunabulaUserFullName, page)
             page.doLogout()
 
@@ -104,7 +104,7 @@ class SearchAndEditSpec extends SalsahSpec {
 
         "do a simple search for 'Zeitglöcklein' and open a search result row representing a page" in {
 
-            page.load()
+            page.open()
 
             page.doLogin(email = incunabulaUserEmail, password = testPassword, fullName = incunabulaUserFullName, page)
 
@@ -127,7 +127,7 @@ class SearchAndEditSpec extends SalsahSpec {
 
         "do a simple search for 'Zeitglöcklein' and open a search result row representing a book" in {
 
-            page.load()
+            page.open()
 
             page.doLogin(email = incunabulaUserEmail, password = testPassword, fullName = incunabulaUserFullName, page)
 
@@ -157,7 +157,7 @@ class SearchAndEditSpec extends SalsahSpec {
 
         "do an extended search for restype book containing 'Zeitglöcklein in the title'" in {
 
-            page.load()
+            page.open()
 
             page.doLogin(email = incunabulaUserEmail, password = testPassword, fullName = incunabulaUserFullName, page)
 
@@ -187,7 +187,7 @@ class SearchAndEditSpec extends SalsahSpec {
 
         "do an extended search for restype region and open a region" in {
 
-            page.load()
+            page.open()
 
             page.doLogin(email = incunabulaUserEmail, password = testPassword, fullName = incunabulaUserFullName, page)
 
@@ -217,7 +217,7 @@ class SearchAndEditSpec extends SalsahSpec {
         } else {
             "do an extended search for restype page with seqnum 1 belonging to a book containing 'Narrenschiff' in its title" in {
 
-                page.load()
+                page.open()
 
                 page.doLogin(email = incunabulaUserEmail, password = testPassword, fullName = incunabulaUserFullName, page)
 
@@ -255,7 +255,7 @@ class SearchAndEditSpec extends SalsahSpec {
 
         "do an extended search for images:bild involving a hierarchical list selection for its title" in {
 
-            page.load()
+            page.open()
 
             page.doLogin(email = incunabulaUserEmail, password = testPassword, fullName = incunabulaUserFullName, page)
 
@@ -297,7 +297,7 @@ class SearchAndEditSpec extends SalsahSpec {
         }
 
         "do an extended search for a book with the exact publication date Julian 1497-08-01" in {
-            page.load()
+            page.open()
 
             page.doLogin(email = incunabulaUserEmail, password = testPassword, fullName = incunabulaUserFullName, page)
 
@@ -343,7 +343,7 @@ class SearchAndEditSpec extends SalsahSpec {
 
         "do an extended search for a book with the period Julian 1495 as publication date" in {
 
-            page.load()
+            page.open()
 
             page.doLogin(email = incunabulaUserEmail, password = testPassword, fullName = incunabulaUserFullName, page)
 
@@ -415,7 +415,7 @@ class SearchAndEditSpec extends SalsahSpec {
 
         "change the publication date of a book" in {
 
-            page.load()
+            page.open()
 
             page.doLogin(email = incunabulaUserEmail, password = testPassword, fullName = incunabulaUserFullName, page)
 
@@ -486,7 +486,7 @@ class SearchAndEditSpec extends SalsahSpec {
 
         "edit the seqnum and the pagenumber of a page" in {
 
-            page.load()
+            page.open()
 
             page.doLogin(email = incunabulaUserEmail, password = testPassword, fullName = incunabulaUserFullName, page)
 
@@ -559,7 +559,7 @@ class SearchAndEditSpec extends SalsahSpec {
 
         "add a new creator to a book" in {
 
-            page.load()
+            page.open()
 
             page.doLogin(email = incunabulaUserEmail, password = testPassword, fullName = incunabulaUserFullName, page)
 
@@ -608,7 +608,7 @@ class SearchAndEditSpec extends SalsahSpec {
 
         "edit the description of a page" ignore {
 
-            page.load()
+            page.open()
 
             page.doLogin(email = incunabulaUserEmail, password = testPassword, fullName = incunabulaUserFullName, page)
 
@@ -654,7 +654,7 @@ class SearchAndEditSpec extends SalsahSpec {
         } else {
             "change the partof property of a page" in {
 
-                page.load()
+                page.open()
 
                 page.doLogin(email = incunabulaUserEmail, password = testPassword, fullName = incunabulaUserFullName, page)
 
@@ -699,7 +699,7 @@ class SearchAndEditSpec extends SalsahSpec {
 
         "change the season property of a image:bild to summer" in {
 
-            page.load()
+            page.open()
 
             page.doLogin(email = incunabulaUserEmail, password = testPassword, fullName = incunabulaUserFullName, page)
 
@@ -748,7 +748,7 @@ class SearchAndEditSpec extends SalsahSpec {
 
         "add a season to a image:bild" in {
 
-            page.load()
+            page.open()
 
             page.doLogin(email = incunabulaUserEmail, password = testPassword, fullName = incunabulaUserFullName, page)
 
@@ -797,7 +797,7 @@ class SearchAndEditSpec extends SalsahSpec {
 
         "display a compound resource without images" in {
 
-            page.load()
+            page.open()
 
             page.doLogin(email = incunabulaUserEmail, password = testPassword, fullName = incunabulaUserFullName, page)
 

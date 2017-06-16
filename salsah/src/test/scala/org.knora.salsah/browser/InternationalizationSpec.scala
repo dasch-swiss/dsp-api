@@ -36,7 +36,7 @@ class InternationalizationSpec extends SalsahSpec {
         }
 
         "change the user interface language" in {
-            page.load()
+            page.open()
             page.getSimpleSearchField.getAttribute("value") should be("Search")
             page.changeLanguage("fr")
             page.getSimpleSearchField.getAttribute("value") should be("Recherche")

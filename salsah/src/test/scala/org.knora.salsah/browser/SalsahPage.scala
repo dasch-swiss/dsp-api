@@ -25,7 +25,7 @@ import java.io.{File, FileNotFoundException}
 import org.openqa.selenium.chrome.{ChromeDriver, ChromeOptions}
 import org.openqa.selenium.interactions.Actions
 import org.openqa.selenium.support.ui.Select
-import org.openqa.selenium.{By, Dimension, WebDriver, WebElement}
+import org.openqa.selenium.{By, WebDriver, WebElement}
 import org.scalatest.concurrent.Eventually._
 
 import scala.collection.JavaConversions._
@@ -62,20 +62,16 @@ class SalsahPage(pageUrl: String, headless: Boolean) {
     if (headless) {
         options.addArguments("headless")
         options.addArguments("disable-gpu")
+
     }
-    // Still bugged
-    // options.addArguments("window-size=1400x1000")
+    options.addArguments("window-size=1400,1000")
 
     implicit val driver: WebDriver = new ChromeDriver(options)
 
-    // Workaround
-    driver.manage().window().setSize(new Dimension(1400, 1000))
-
-
     /**
-      * Loads the SALSAH home page.
+      * Open the SALSAH home page.
       */
-    def load(): Unit = {
+    def open(): Unit = {
         driver.get(pageUrl)
     }
 
