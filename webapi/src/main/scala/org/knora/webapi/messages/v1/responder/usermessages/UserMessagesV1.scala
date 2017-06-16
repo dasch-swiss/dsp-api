@@ -512,10 +512,7 @@ case class UserProfileV1(userData: UserDataV1 = UserDataV1(lang = "en"),
     }
 
     def isAnonymousUser: Boolean = {
-        userData.user_id match {
-            case Some(iri) => false
-            case None => true
-        }
+        permissionData.anonymousUser
     }
 
     def toJsValue: JsValue = UserV1JsonProtocol.userProfileV1Format.write(this)

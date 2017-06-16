@@ -5,22 +5,14 @@ import java.util.UUID
 import org.knora.webapi.{ApplicationLockException, IRI}
 import org.scalatest.{Matchers, WordSpec}
 
-<<<<<<< HEAD
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
-=======
-import scala.concurrent.{Await, Future}
-import scala.concurrent.duration._
->>>>>>> fix (webapi): Make IriLocker release lock if task throws exception instead of returning future
 
 /**
   * Tests [[IriLocker]].
   */
 class IriLockerSpec extends WordSpec with Matchers {
-<<<<<<< HEAD
 
-=======
->>>>>>> fix (webapi): Make IriLocker release lock if task throws exception instead of returning future
     import scala.concurrent.ExecutionContext.Implicits.global
 
     val SUCCESS = "success"
@@ -29,11 +21,7 @@ class IriLockerSpec extends WordSpec with Matchers {
     "IriLocker" should {
         "not allow a request to acquire a lock when another request already has it" in {
             def runLongTask(): Future[String] = Future {
-<<<<<<< HEAD
                 Thread.sleep(3500)
-=======
-                Thread.sleep(3000)
->>>>>>> fix (webapi): Make IriLocker release lock if task throws exception instead of returning future
                 SUCCESS
             }
 
@@ -50,11 +38,7 @@ class IriLockerSpec extends WordSpec with Matchers {
             )
 
             // Wait a bit to allow the first request to get the lock.
-<<<<<<< HEAD
             Thread.sleep(200)
-=======
-            Thread.sleep(500)
->>>>>>> fix (webapi): Make IriLocker release lock if task throws exception instead of returning future
 
             val secondApiRequestID = UUID.randomUUID
 
@@ -71,11 +55,7 @@ class IriLockerSpec extends WordSpec with Matchers {
                 case ale: ApplicationLockException => true
             }
 
-<<<<<<< HEAD
             assert(secondTaskFailedWithLockTimeout, "Second task did not get a lock timeout")
-=======
-            assert(secondTaskFailedWithLockTimeout,"Second task did not get a lock timeout")
->>>>>>> fix (webapi): Make IriLocker release lock if task throws exception instead of returning future
         }
 
         "provide reentrant locks" in {

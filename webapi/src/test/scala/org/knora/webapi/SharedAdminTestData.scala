@@ -259,7 +259,7 @@ object SharedAdminTestData {
             isActiveUser = Some(true),
             lang = "de"
         ),
-        groups = List.empty[IRI],
+        groups = List("http://data.knora.org/groups/images-reviewer"),
         projects_info = Map(IMAGES_PROJECT_IRI -> imagesProjectInfo),
         sessionId = None,
         permissionData = PermissionDataV1(
