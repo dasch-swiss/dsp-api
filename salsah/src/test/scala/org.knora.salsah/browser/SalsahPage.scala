@@ -25,7 +25,7 @@ import java.io.{File, FileNotFoundException}
 import org.openqa.selenium.chrome.{ChromeDriver, ChromeOptions}
 import org.openqa.selenium.interactions.Actions
 import org.openqa.selenium.support.ui.Select
-import org.openqa.selenium.{By, Keys, WebDriver, WebElement}
+import org.openqa.selenium.{By, WebDriver, WebElement}
 import org.scalatest.concurrent.Eventually._
 
 import scala.collection.JavaConversions._
@@ -59,8 +59,12 @@ class SalsahPage(pageUrl: String, headless: Boolean) {
 
     // Set some arguments that will be passed to chrome
     val options: ChromeOptions = new ChromeOptions()
-    if (headless) options.addArguments("headless")
-    options.addArguments("window-size=1200x800")
+    if (headless) {
+        options.addArguments("headless")
+        options.addArguments("disable-gpu")
+    }
+    options.addArguments("window-size=1400x1000")
+
     //options.addArguments("remote-debugging-port=9222")
     implicit val driver: WebDriver = new ChromeDriver(options)
 
@@ -718,13 +722,10 @@ class SalsahPage(pageUrl: String, headless: Boolean) {
 
     def sendKeysHack(element: WebElement, value: String): Unit = {
 
-        //if (headless) {
-            import org.openqa.selenium.JavascriptExecutor
-            val jsExecutor = driver.asInstanceOf[JavascriptExecutor]
-            jsExecutor.executeScript("arguments[0].setAttribute('value', arguments[1]);", element, value)
-        //} else {
-        //    element.sendKeys(value)
-        //}
+        import org.openqa.selenium.JavascriptExecutor
+        val jsExecutor = driver.asInstanceOf[JavascriptExecutor]
+        //jsExecutor.executeScript("arguments[0].setAttribute('value', arguments[1]);", element, value)
+        jsExecutor.executeScript("arguments[0].value = arguments[1];", element, value)
     }
 
 }
