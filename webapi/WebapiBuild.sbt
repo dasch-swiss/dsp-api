@@ -176,8 +176,8 @@ lazy val webApiLibs = Seq(
 
 lazy val javaRunOptions = Seq(
     // "-showversion",
-    "-Xms2048m",
-    "-Xmx2048m"
+    "-Xms1G",
+    "-Xmx1G"
     // "-verbose:gc",
     //"-XX:+UseG1GC",
     //"-XX:MaxGCPauseMillis=500"
@@ -185,8 +185,8 @@ lazy val javaRunOptions = Seq(
 
 lazy val javaTestOptions = Seq(
     // "-showversion",
-    "-Xms2048m",
-    "-Xmx4096m"
+    "-Xms2G",
+    "-Xmx4G"
     // "-verbose:gc",
     //"-XX:+UseG1GC",
     //"-XX:MaxGCPauseMillis=500",
