@@ -24,12 +24,11 @@ import akka.http.scaladsl.model.headers._
 import akka.http.scaladsl.model.{HttpEntity, _}
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi.messages.v1.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
-import org.knora.webapi.util.{InputValidation, MutableTestIri}
+import org.knora.webapi.util.MutableTestIri
 import org.knora.webapi.{FileWriteException, ITSpec, InvalidApiJsonException}
 import spray.json._
 
 import scala.concurrent.duration._
-import scala.concurrent.{Await, Future}
 
 
 object SipiV1ITSpec {
@@ -54,7 +53,6 @@ class SipiV1ITSpec extends ITSpec(SipiV1ITSpec.config) with TriplestoreJsonProto
     private val username = "root@example.com"
     private val password = "test"
     private val pathToChlaus = "_test_data/test_route/images/Chlaus.jpg"
-    private val clausFile = new File(pathToChlaus)
     private val pathToMarbles = "_test_data/test_route/images/marbles.tif"
     private val firstPageIri = new MutableTestIri
     private val secondPageIri = new MutableTestIri
