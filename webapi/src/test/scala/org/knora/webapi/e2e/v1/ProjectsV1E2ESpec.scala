@@ -21,10 +21,11 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers._
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import com.typesafe.config.ConfigFactory
+import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoV1, ProjectV1JsonProtocol}
 import org.knora.webapi.messages.v1.responder.sessionmessages.SessionJsonProtocol
 import org.knora.webapi.messages.v1.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
 import org.knora.webapi.util.{AkkaHttpUtils, MutableTestIri}
-import org.knora.webapi.{E2ESpec, SharedAdminTestData}
+import org.knora.webapi.{E2ESpec, IRI, SharedAdminTestData}
 import spray.json._
 
 import scala.concurrent.duration._
@@ -41,9 +42,11 @@ object ProjectsV1E2ESpec {
 /**
   * End-to-End (E2E) test specification for testing groups endpoint.
   */
-class ProjectsV1E2ESpec extends E2ESpec(ProjectsV1E2ESpec.config) with SessionJsonProtocol with TriplestoreJsonProtocol {
+class ProjectsV1E2ESpec extends E2ESpec(ProjectsV1E2ESpec.config) with SessionJsonProtocol with ProjectV1JsonProtocol with TriplestoreJsonProtocol {
 
     implicit def default(implicit system: ActorSystem) = RouteTestTimeout(5.seconds)
+
+    implicit override val log = akka.event.Logging(system, this.getClass())
 
     private val rdfDataObjects = List.empty[RdfDataObject]
 
@@ -71,6 +74,9 @@ class ProjectsV1E2ESpec extends E2ESpec(ProjectsV1E2ESpec.config) with SessionJs
                 val response: HttpResponse = singleAwaitingRequest(request)
                 log.debug(s"response: ${response.toString}")
                 assert(response.status === StatusCodes.OK)
+
+                log.debug("projects as objects: {}", AkkaHttpUtils.httpResponseToJson(response).fields("projects").convertTo[Seq[ProjectInfoV1]])
+
             }
 
             "return the information for a single project identified by iri" in {
@@ -213,6 +219,20 @@ class ProjectsV1E2ESpec extends E2ESpec(ProjectsV1E2ESpec.config) with SessionJs
 
             "return all members of a project identified by shortname" in {
                 val request = Get(baseApiUrl + s"/v1/projects/members/$projectShortnameEnc?identifier=shortname") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
+                val response: HttpResponse = singleAwaitingRequest(request)
+                log.debug(s"response: ${response.toString}")
+                assert(response.status === StatusCodes.OK)
+            }
+
+            "return all admin members of a project identified by iri" in {
+                val request = Get(baseApiUrl + s"/v1/projects/admin-members/$projectIriEnc") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
+                val response: HttpResponse = singleAwaitingRequest(request)
+                log.debug(s"response: ${response.toString}")
+                assert(response.status === StatusCodes.OK)
+            }
+
+            "return all admin members of a project identified by shortname" in {
+                val request = Get(baseApiUrl + s"/v1/projects/admin-members/$projectShortnameEnc?identifier=shortname") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
                 val response: HttpResponse = singleAwaitingRequest(request)
                 log.debug(s"response: ${response.toString}")
                 assert(response.status === StatusCodes.OK)

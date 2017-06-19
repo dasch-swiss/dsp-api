@@ -25,7 +25,6 @@ import java.util.UUID
 import akka.actor.Status
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
-import org.apache.jena.sparql.function.library.leviathan.log
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.groupmessages.{GroupInfoByIRIGetRequest, GroupInfoResponseV1}
 import org.knora.webapi.messages.v1.responder.permissionmessages._
@@ -774,7 +773,7 @@ class UsersResponderV1 extends ResponderV1 {
       */
     def userProjectAdminMembershipAddRequestV1(userIri: IRI, projectIri: IRI, userProfileV1: UserProfileV1, apiRequestID: UUID): Future[UserOperationResponseV1] = {
 
-        //log.debug(s"userProjectAdminMembershipAddRequestV1: userIri: {}, projectIri: {}", userIri, projectIri)
+        log.debug(s"userProjectAdminMembershipAddRequestV1: userIri: {}, projectIri: {}", userIri, projectIri)
 
         /**
           * The actual task run with an IRI lock.

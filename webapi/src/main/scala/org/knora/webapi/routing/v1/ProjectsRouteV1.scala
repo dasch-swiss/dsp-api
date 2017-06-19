@@ -149,6 +149,31 @@ object ProjectsRouteV1 extends Authenticator with ProjectV1JsonProtocol {
                         )
                 }
             }
+        } ~ path("v1" / "projects" / "admin-members" / Segment) { value =>
+            get {
+                /* returns all admin members part of a project identified through iri or shortname */
+                parameters("identifier" ? "iri") { identifier: String =>
+                    requestContext =>
+
+                        val userProfile = getUserProfileV1(requestContext)
+
+                        val requestMessage = if (identifier != "iri") {// identify project by shortname.
+                        val shortNameDec = java.net.URLDecoder.decode(value, "utf-8")
+                            ProjectAdminMembersByShortnameGetRequestV1(shortNameDec, userProfile)
+                        } else {
+                            val checkedProjectIri = InputValidation.toIri(value, () => throw BadRequestException(s"Invalid project IRI $value"))
+                            ProjectAdminMembersByIRIGetRequestV1(checkedProjectIri, userProfile)
+                        }
+
+                        RouteUtilV1.runJsonRoute(
+                            requestMessage,
+                            requestContext,
+                            settings,
+                            responderManager,
+                            log
+                        )
+                }
+            }
         }
     }
 }

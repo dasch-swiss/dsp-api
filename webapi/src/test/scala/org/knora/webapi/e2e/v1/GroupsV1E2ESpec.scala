@@ -44,6 +44,8 @@ class GroupsV1E2ESpec extends E2ESpec(GroupsV1E2ESpec.config) with SessionJsonPr
 
     implicit def default(implicit system: ActorSystem) = RouteTestTimeout(5.seconds)
 
+    implicit override val log = akka.event.Logging(system, this.getClass())
+
     private val rdfDataObjects = List.empty[RdfDataObject]
 
     val rootEmail = SharedAdminTestData.rootUser.userData.email.get
@@ -95,14 +97,6 @@ class GroupsV1E2ESpec extends E2ESpec(GroupsV1E2ESpec.config) with SessionJsonPr
             }
 
             "update a group" ignore {
-                fail("test not implemented")
-            }
-
-            "return a 'DuplicateValueException' if the supplied group name is not unique (inside project)" ignore {
-                fail("test not implemented")
-            }
-
-            "return 'BadRequestException' if 'name' is missing" ignore {
                 fail("test not implemented")
             }
         }
