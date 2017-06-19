@@ -21,6 +21,7 @@
 package org.knora.webapi.util.search.v2
 
 import org.knora.webapi.SparqlSearchException
+import org.knora.webapi.util.MessageUtil
 import org.scalatest.{Matchers, WordSpec}
 
 /**
@@ -32,6 +33,7 @@ class SearchParserV2Spec extends WordSpec with Matchers {
 
     "The SearchParserV2 object" should {
         "parse a simple CONSTRUCT query for an extended search" in {
+            val parsedQuery = SearchParserV2.parseSearchQuery(SimpleSparqlConstructQueryStr)
             SearchParserV2.parseSearchQuery(SimpleSparqlConstructQueryStr) should ===(SimpleParsedSparqlConstructQuery)
         }
 
@@ -83,14 +85,14 @@ class SearchParserV2Spec extends WordSpec with Matchers {
             }
         }
 
-        "reject a poorly formatted FILTER" in {
+        "reject an unsupported FILTER" in {
             assertThrows[SparqlSearchException] {
                 SearchParserV2.parseSearchQuery(SimpleSparqlConstructQueryStrWithWrongFilter)
             }
         }
 
         "parse an extended search query for a anything:Thing relating to a specified resource" in {
-            SearchParserV2.parseSearchQuery(extendSearchQueryForAThingRelatingToAnotherThing)
+            SearchParserV2.parseSearchQuery(extendSearchQueryForAThingRelatingToAnotherThing) should ===(SimpleSparqlConstructQueryWithBooleanInFilter)
         }
     }
 }
@@ -213,14 +215,14 @@ object SearchParserV2Spec {
                         pred = IriRef(iri = "http://api.knora.org/ontology/incunabula/simple/v2#seqnum"),
                         subj = QueryVariable(variableName = "page")
                     ),
-                    FilterPattern(
-                        rightArgLiteral = XsdLiteral(
+                    FilterPattern(expression = CompareExpression(
+                        rightArg = XsdLiteral(
                             datatype = "http://www.w3.org/2001/XMLSchema#integer",
                             value = "17"
                         ),
                         operator = ">",
-                        leftArgVariableName = "seqnum"
-                    )
+                        leftArg = QueryVariable(variableName = "seqnum")
+                    ))
                 )
             )),
             OptionalPattern(statements = Vector(
@@ -240,14 +242,14 @@ object SearchParserV2Spec {
                     subj = QueryVariable(variableName = "book")
                 )
             )),
-            FilterPattern(
-                rightArgLiteral = XsdLiteral(
+            FilterPattern(expression = CompareExpression(
+                rightArg = XsdLiteral(
                     datatype = "http://www.w3.org/2001/XMLSchema#string",
                     value = "GREGORIAN:1500"
                 ),
                 operator = "<",
-                leftArgVariableName = "pubdate"
-            )
+                leftArg = QueryVariable(variableName = "pubdate")
+            ))
         )),
         constructClause = SimpleConstructClause(statements = Vector(
             StatementPattern(
@@ -291,6 +293,38 @@ object SearchParserV2Spec {
         ))
     )
 
+    val SimpleSparqlConstructQueryWithBooleanInFilter = SimpleConstructQuery(
+        whereClause = SimpleWhereClause(statements = Vector(
+            StatementPattern(
+                obj = IriRef(iri = "http://api.knora.org/ontology/anything/v2#Thing"),
+                pred = IriRef(iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"),
+                subj = QueryVariable(variableName = "resource")
+            ),
+            StatementPattern(
+                obj = IriRef(iri = "http://data.knora.org/a-thing"),
+                pred = QueryVariable(variableName = "linkingProp"),
+                subj = QueryVariable(variableName = "resource")
+            ),
+            FilterPattern(expression = OrExpression(
+                rightArg = CompareExpression(
+                    rightArg = IriRef(iri = "http://api.knora.org/ontology/anything/v2#hasRecipient"),
+                    operator = "=",
+                    leftArg = QueryVariable(variableName = "linkingProp")
+                ),
+                leftArg = CompareExpression(
+                    rightArg = IriRef(iri = "http://api.knora.org/ontology/anything/v2#hasAuthor"),
+                    operator = "=",
+                    leftArg = QueryVariable(variableName = "linkingProp")
+                )
+            ))
+        )),
+        constructClause = SimpleConstructClause(statements = Vector(StatementPattern(
+            obj = IriRef(iri = "http://data.knora.org/a-thing"),
+            pred = IriRef(iri = "http://api.knora.org/ontology/knora-api/v2#hasLinkTo"),
+            subj = QueryVariable(variableName = "resource")
+        )))
+    )
+
     val SimpleSparqlConstructQueryStrWithWrongFilter: String =
         """
           |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -306,7 +340,7 @@ object SearchParserV2Spec {
           |    ?book a incunabula:book .
           |    ?book rdfs:label ?bookLabel .
           |    ?book incunabula:pubdate ?pubdate .
-          |    FILTER("GREGORIAN:1500"^^xsd:string > ?pubdate)
+          |    FILTER(BOUND(?pubdate))
           |}
         """.stripMargin
 
@@ -526,7 +560,8 @@ object SearchParserV2Spec {
           |} WHERE {
           |    ?resource a anything:Thing .
           |
-          |    ?resource knora-api:hasLinkTo <http://data.knora.org/a-thing> .
+          |    ?resource ?linkingProp <http://data.knora.org/a-thing> .
+          |    FILTER(?linkingProp = anything:hasAuthor || ?linkingProp = anything:hasRecipient)
           |
           |}
         """.stripMargin

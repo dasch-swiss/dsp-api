@@ -32,33 +32,23 @@ import org.knora.webapi.{OntologyConstants, _}
 import scala.collection.JavaConverters._
 
 /**
-  * Represents something that can be the subject of a triple pattern in a query.
+  * Represents something that can be the subject, predicate, or object of a triple pattern in a query.
   */
-sealed trait StatementPatternSubject
-
-/**
-  * Represents something that can be the predicate of a triple pattern in a query.
-  */
-sealed trait StatementPatternPredicate
-
-/**
-  * Represents something that can be the object of a triple pattern in a query.
-  */
-sealed trait StatementPatternObject
+sealed trait Entity extends FilterExpression
 
 /**
   * Represents a variable in a query.
   *
   * @param variableName the name of the variable.
   */
-case class QueryVariable(variableName: String) extends StatementPatternSubject with StatementPatternPredicate with StatementPatternObject
+case class QueryVariable(variableName: String) extends Entity
 
 /**
   * Represents an IRI in a query.
   *
   * @param iri the IRI.
   */
-case class IriRef(iri: IRI) extends StatementPatternSubject with StatementPatternPredicate with StatementPatternObject {
+case class IriRef(iri: IRI) extends Entity {
     if (InputValidation.isInternalEntityIri(iri)) {
         throw SparqlSearchException(s"Internal ontology entity IRI not allowed in search query: $iri")
     }
@@ -70,7 +60,7 @@ case class IriRef(iri: IRI) extends StatementPatternSubject with StatementPatter
   * @param value    the literal value.
   * @param datatype the value's XSD type IRI.
   */
-case class XsdLiteral(value: String, datatype: IRI) extends StatementPatternObject
+case class XsdLiteral(value: String, datatype: IRI) extends Entity
 
 /**
   * Represents a statement pattern or block pattern in a query.
@@ -84,7 +74,7 @@ sealed trait QueryPattern extends Ordered[QueryPattern]
   * @param pred the predicate of the statement.
   * @param obj  the object of the statement.
   */
-case class StatementPattern(subj: StatementPatternSubject, pred: StatementPatternPredicate, obj: StatementPatternObject) extends QueryPattern {
+case class StatementPattern(subj: Entity, pred: Entity, obj: Entity) extends QueryPattern {
     override def compare(that: QueryPattern): Int = {
         that match {
             case _: StatementPattern => 0
@@ -95,14 +85,20 @@ case class StatementPattern(subj: StatementPatternSubject, pred: StatementPatter
     }
 }
 
+sealed trait FilterExpression
+
+case class CompareExpression(leftArg: FilterExpression, operator: String, rightArg: FilterExpression) extends FilterExpression
+
+case class AndExpression(leftArg: FilterExpression, rightArg: FilterExpression) extends FilterExpression
+
+case class OrExpression(leftArg: FilterExpression, rightArg: FilterExpression) extends FilterExpression
+
 /**
   * Represents a FILTER pattern in a query.
   *
-  * @param leftArgVariableName the left argument of the FILTER condition, which must be a variable name.
-  * @param operator            the string representation of the FILTER condition's operator.
-  * @param rightArgLiteral     the right argument of the FILTER condition, which must be a literal.
+  * @param expression the expression in the FILTER.
   */
-case class FilterPattern(leftArgVariableName: String, operator: String, rightArgLiteral: XsdLiteral) extends QueryPattern {
+case class FilterPattern(expression: FilterExpression) extends QueryPattern {
     override def compare(that: QueryPattern): Int = {
         that match {
             case _: StatementPattern => 1
@@ -253,14 +249,13 @@ object SearchParserV2 {
                 sparqlVar
             }
 
-
             // Convert each ConstructStatementWithConstants to a StatementPattern for use in the CONSTRUCT clause.
             val constructStatements: Seq[StatementPattern] = constructStatementsWithConstants.toVector.map {
                 constructStatementWithConstant =>
                     StatementPattern(
-                        subj = makeStatementPatternSubject(nameToVar(constructStatementWithConstant.subj)),
-                        pred = makeStatementPatternPredicate(nameToVar(constructStatementWithConstant.pred)),
-                        obj = makeStatementPatternObject(nameToVar(constructStatementWithConstant.obj))
+                        subj = makeEntity(nameToVar(constructStatementWithConstant.subj)),
+                        pred = makeEntity(nameToVar(constructStatementWithConstant.pred)),
+                        obj = makeEntity(nameToVar(constructStatementWithConstant.obj))
                     )
             }
 
@@ -286,52 +281,12 @@ object SearchParserV2 {
         }
 
         /**
-          * Converts an RDF4J [[Var]] into a [[StatementPatternSubject]].
-          *
-          * @param subjVar the [[Var]] to be converted.
-          * @return a [[StatementPatternSubject]].
-          */
-        private def makeStatementPatternSubject(subjVar: Var): StatementPatternSubject = {
-            // The subject of a statement pattern must be an IRI or a variable.
-
-            if (subjVar.isAnonymous || subjVar.isConstant) {
-                subjVar.getValue match {
-                    case iri: rdf4j.model.IRI => IriRef(iri.stringValue)
-                    case other => throw SparqlSearchException(s"Invalid subject for triple pattern: $other")
-                }
-            } else {
-                QueryVariable(subjVar.getName)
-            }
-        }
-
-        /**
-          * Converts an RDF4J [[Var]] into a [[IriRef]] representing the predicate of a statement pattern.
-          *
-          * @param predVar the [[Var]] to be converted.
-          * @return an [[IriRef]].
-          */
-        private def makeStatementPatternPredicate(predVar: Var): StatementPatternPredicate = {
-            // The predicate of a statement pattern must be an IRI or a parser-generated constant referring to an IRI.
-
-            if (predVar.isAnonymous || predVar.isConstant) {
-                predVar.getValue match {
-                    case iri: rdf4j.model.IRI => IriRef(iri.stringValue)
-                    case other => throw SparqlSearchException(s"Invalid predicate for triple pattern: $other")
-                }
-            } else {
-                QueryVariable(predVar.getName)
-            }
-        }
-
-        /**
-          * Converts an RDF4J [[Var]] into a [[StatementPatternObject]].
+          * Converts an RDF4J [[Var]] into a [[Entity]].
           *
           * @param objVar the [[Var]] to be converted.
-          * @return a [[StatementPatternObject]].
+          * @return a [[Entity]].
           */
-        private def makeStatementPatternObject(objVar: Var): StatementPatternObject = {
-            // The object of a statement pattern must be an IRI, a variable, or a literal.
-
+        private def makeEntity(objVar: Var): Entity = {
             if (objVar.isAnonymous || objVar.isConstant) {
                 objVar.getValue match {
                     case iri: rdf4j.model.IRI => IriRef(iri.stringValue)
@@ -344,9 +299,9 @@ object SearchParserV2 {
         }
 
         override def meet(node: algebra.StatementPattern): Unit = {
-            val subj: StatementPatternSubject = makeStatementPatternSubject(node.getSubjectVar)
-            val pred: StatementPatternPredicate = makeStatementPatternPredicate(node.getPredicateVar)
-            val obj: StatementPatternObject = makeStatementPatternObject(node.getObjectVar)
+            val subj: Entity = makeEntity(node.getSubjectVar)
+            val pred: Entity = makeEntity(node.getPredicateVar)
+            val obj: Entity = makeEntity(node.getObjectVar)
             wherePatterns.append(StatementPattern(subj = subj, pred = pred, obj = obj))
         }
 
@@ -485,7 +440,7 @@ object SearchParserV2 {
         }
 
         override def meet(node: Or): Unit = {
-            unsupported(node)
+            // Does nothing, because this is handled in meet(node: Filter).
         }
 
         override def meet(node: Not): Unit = {
@@ -611,7 +566,7 @@ object SearchParserV2 {
         }
 
         override def meet(node: And): Unit = {
-            unsupported(node)
+            // Does nothing, because this is handled in meet(node: Filter).
         }
 
         override def meet(add: Add): Unit = {
@@ -655,41 +610,52 @@ object SearchParserV2 {
         }
 
         override def meet(node: Filter): Unit = {
-            // The left argument of a FILTER must be a variable name, and the right argument must be a literal.
+            def makeFilterExpression(valueExpr: ValueExpr): FilterExpression = {
+                valueExpr match {
+                    case compare: Compare =>
+                        val leftArg = makeFilterExpression(compare.getLeftArg)
+                        val rightArg = makeFilterExpression(compare.getRightArg)
+                        val operator = compare.getOperator.getSymbol
 
-            val condition: Compare = node.getCondition match {
-                case compare: Compare => compare
-                case other => throw SparqlSearchException(s"Unsupported FILTER condition: $other")
+                        CompareExpression(
+                            leftArg = leftArg,
+                            operator = operator,
+                            rightArg = rightArg
+                        )
+
+                    case and: And =>
+                        val leftArg = makeFilterExpression(and.getLeftArg)
+                        val rightArg = makeFilterExpression(and.getRightArg)
+
+                        AndExpression(
+                            leftArg = leftArg,
+                            rightArg = rightArg
+                        )
+
+                    case or: Or =>
+                        val leftArg = makeFilterExpression(or.getLeftArg)
+                        val rightArg = makeFilterExpression(or.getRightArg)
+
+                        OrExpression(
+                            leftArg = leftArg,
+                            rightArg = rightArg
+                        )
+
+                    case valueConstant: ValueConstant =>
+                        valueConstant.getValue match {
+                            case literal: rdf4j.model.Literal => XsdLiteral(value = literal.stringValue, datatype = literal.getDatatype.stringValue)
+                            case iri: org.eclipse.rdf4j.model.IRI => IriRef(iri = iri.toString)
+                            case other => throw SparqlSearchException(s"Unsupported ValueConstant: $other with class ${other.getClass.getName}")
+                        }
+
+                    case sparqlVar: Var => makeEntity(sparqlVar)
+
+                    case other => throw SparqlSearchException(s"Unsupported FILTER expression: $other")
+                }
             }
 
-            val leftArgVariableName: String = condition.getLeftArg match {
-                case sparqlVar: Var =>
-                    if (sparqlVar.isAnonymous || sparqlVar.isConstant) {
-                        throw SparqlSearchException(s"Left argument of FILTER condition is not a variable: $sparqlVar")
-                    }
-
-                    sparqlVar.getName
-
-                case other => throw SparqlSearchException(s"Left argument of FILTER condition is not a variable: $other")
-            }
-
-            val operator: String = condition.getOperator.getSymbol
-
-            val rightArgLiteral: XsdLiteral = condition.getRightArg match {
-                case valueConstant: ValueConstant =>
-                    valueConstant.getValue match {
-                        case literal: rdf4j.model.Literal => XsdLiteral(value = literal.stringValue, datatype = literal.getDatatype.stringValue)
-                        case other => throw SparqlSearchException(s"Right argument of FILTER condition is not a literal: $other")
-                    }
-            }
-
-            wherePatterns.append(
-                FilterPattern(
-                    leftArgVariableName = leftArgVariableName,
-                    operator = operator,
-                    rightArgLiteral = rightArgLiteral
-                )
-            )
+            val filterExpression: FilterExpression = makeFilterExpression(node.getCondition)
+            wherePatterns.append(FilterPattern(expression = filterExpression))
 
             node.visitChildren(this)
         }

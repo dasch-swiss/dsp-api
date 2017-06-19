@@ -83,8 +83,7 @@ object SearchRouteV2 extends Authenticator {
                           |
                           |    # Christian Goldbach
                           |    ?letter ?linkingProp  <http://rdfh.ch/beol/iDyYeZy4QV6sOa0js-fqTg> .
-                          |    #FILTER(?linkingProp = beol:hasAuthor || ?linkingProp = beol:hasRecipient)
-                          |
+                          |    FILTER(?linkingProp = beol:hasAuthor || ?linkingProp = beol:hasRecipient)
                           |}
                         """.stripMargin
 

@@ -68,7 +68,7 @@ class SearchResponderV2 extends Responder {
 
     private def extendedSearchV2(constructQuery: SimpleConstructQuery, userProfile: UserProfileV1): Future[ReadResourcesSequenceV2] = {
 
-        //println(constructQuery.whereClause.statements)
+        println(constructQuery.whereClause)
 
         // process Sparql query provided by the client
         /*val groupedBySubj = constructQuery.whereClause.statements.groupBy {
