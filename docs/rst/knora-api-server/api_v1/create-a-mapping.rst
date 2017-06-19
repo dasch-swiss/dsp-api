@@ -80,7 +80,7 @@ The mapping is written in XML itself (for a formal description, see ``webapi/src
            - ``<attributes>``: XML attributes to be mapped to standoff properties (other than ``id`` or ``class``), if any
                - ``<attribute>``: an XML attribute to be mapped to a standoff property, may be repeated
                    - ``<attributeName>``: the name of the XML attribute
-                   - ``<namespace>``: the namespace the attribute belogs to, if any. If the attribute does not belong to a namespace, the keyword ``noNamespace`` has to be used.
+                   - ``<namespace>``: the namespace the attribute belongs to, if any. If the attribute does not belong to a namespace, the keyword ``noNamespace`` has to be used.
                    - ``<propertyIri>``: the Iri of the standoff property the XML attribute is mapped to.
            - ``<datatype>``: the data type of the standoff class, if any.
                - ``<type>``: the Iri of the data type standoff class
@@ -105,6 +105,7 @@ XML structure of a mapping::
                         <namespace>XML namespace or "noNamespace"</namespace>
                         <propertyIri>standoff property Iri</propertyIri>
                     </attribute>
+                </attributes>
                 <datatype>
                     <type>standoff data type class</type>
                     <attributeName>XML attribute with the typed value</attributeName>
@@ -198,7 +199,7 @@ The following simple mapping illustrates this principle::
                 </datatype>
             </standoffClass>
         </mappingElement>
-    <mapping>
+    </mapping>
 
 ``<datatype>`` **must** hold the Iri of a standoff data type class (see list above). The ``<classIri>`` must be a subclass of this type or this type itself (the latter is probably not recommendable since semantics are missing: what is the meaning of the date?).
 In the example above, the standoff class is ``anything:StandoffEventTag`` which has the following definition in the ontology ``anything-onto.ttl``::
@@ -320,7 +321,7 @@ The standoff ontology ``standoff-onto.ttl`` offers a set of predefined standoff 
                 <classIri>http://www.knora.org/ontology/standoff#StandoffItalicTag</classIri>
             </standoffClass>
         </mappingElement>
-    <mapping>
+    </mapping>
 
 Predefined standoff classes may be used by various projects, each providing a custom mapping to be able to recreate the original XML from RDF.
 Predefined standoff classes may also be inherited and extended in project specific ontologies.
