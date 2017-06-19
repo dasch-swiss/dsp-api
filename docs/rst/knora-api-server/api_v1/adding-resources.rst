@@ -71,7 +71,7 @@ The other part contains the file's name, its binaries, and its mime type and has
        'restype_id': 'http://www.knora.org/ontology/test#testType',
        'properties': {
            'http://www.knora.org/ontology/test#testtext': [
-               {'richtext_value': {'utf8str': "test", 'textattr': json.dumps({}), 'resource_reference': []}}
+               {'richtext_value': {'utf8str': "test"}}
            ],
            'http://www.knora.org/ontology/test#testnumber': [
                {'int_value': 1}
