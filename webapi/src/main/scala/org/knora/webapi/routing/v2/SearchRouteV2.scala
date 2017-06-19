@@ -24,9 +24,10 @@ import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
-import org.knora.webapi.messages.v2.responder.searchmessages.{FulltextSearchGetRequestV2, SearchResourceByLabelRequestV2}
+import org.knora.webapi.messages.v2.responder.searchmessages.{ExtendedSearchGetRequestV2, FulltextSearchGetRequestV2, SearchResourceByLabelRequestV2}
 import org.knora.webapi.routing.{Authenticator, RouteUtilV2}
 import org.knora.webapi.util.InputValidation
+import org.knora.webapi.util.search.v2.SearchParserV2
 import org.knora.webapi.{BadRequestException, SettingsImpl}
 
 import scala.language.postfixOps
@@ -61,6 +62,49 @@ object SearchRouteV2 extends Authenticator {
                     )
                 }
             }
+        } ~ path("v2" / "searchextended" / Segment) { sparql =>
+            get {
+
+                requestContext => {
+                    val userProfile = getUserProfileV1(requestContext)
+
+                    // TODO: process Sparql provided by the user
+
+                    val sparql_tmp =
+                        """
+                          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+                          |PREFIX beol: <http://api.knora.org/ontology/beol/v2#>
+                          |
+                          |CONSTRUCT {
+                          |    ?letter ?linkingProp  <http://data.knora.org/a-thing> .
+                          |} WHERE {
+                          |    ?letter a beol:letter .
+                          |    ?letter knora-api:isMainResource true .
+                          |
+                          |    # Christian Goldbach
+                          |    ?letter ?linkingProp  <http://rdfh.ch/beol/iDyYeZy4QV6sOa0js-fqTg> .
+                          |    #FILTER(?linkingProp = beol:hasAuthor || ?linkingProp = beol:hasRecipient)
+                          |
+                          |}
+                        """.stripMargin
+
+                    val constructQuery = SearchParserV2.parseSearchQuery(sparql_tmp)
+
+                    val requestMessage = ExtendedSearchGetRequestV2(constructQuery = constructQuery, userProfile = userProfile)
+
+                    RouteUtilV2.runJsonRoute(
+                        requestMessage,
+                        requestContext,
+                        settings,
+                        responderManager,
+                        log
+                    )
+                }
+
+
+            }
+
+
         } ~ path("v2" / "searchbylabel" / Segment) { searchval => // TODO: if a space is encoded as a "+", this is not converted back to a space
             get {
                 requestContext => {

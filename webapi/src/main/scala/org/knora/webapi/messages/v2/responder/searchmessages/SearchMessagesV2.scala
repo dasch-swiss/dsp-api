@@ -22,6 +22,7 @@ package org.knora.webapi.messages.v2.responder.searchmessages
 
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v2.responder._
+import org.knora.webapi.util.search.v2.SimpleConstructQuery
 
 /**
   * An abstract trait for messages that can be sent to `SearchResponderV2`.
@@ -38,6 +39,16 @@ sealed trait SearchResponderRequestV2 extends KnoraRequestV2 {
   * @param userProfile the profile of the user making the request.
   */
 case class FulltextSearchGetRequestV2(searchValue: String,
+                                      userProfile: UserProfileV1) extends SearchResponderRequestV2
+
+/**
+  *
+  * Requests an extended search. A successful response will be a [[ReadResourcesSequenceV2]].
+  *
+  * @param constructQuery a Sparql construct query provided by the client.
+  * @param userProfile the profile of the user making the request.
+  */
+case class ExtendedSearchGetRequestV2(constructQuery: SimpleConstructQuery,
                                       userProfile: UserProfileV1) extends SearchResponderRequestV2
 
 /**

@@ -21,13 +21,15 @@
 package org.knora.webapi.responders.v2
 
 import akka.pattern._
+import org.knora.webapi.{BadRequestException, NotImplementedException}
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.store.triplestoremessages.{SparqlConstructRequest, SparqlConstructResponse}
 import org.knora.webapi.messages.v2.responder._
-import org.knora.webapi.messages.v2.responder.searchmessages.{FulltextSearchGetRequestV2, SearchResourceByLabelRequestV2}
+import org.knora.webapi.messages.v2.responder.searchmessages.{ExtendedSearchGetRequestV2, FulltextSearchGetRequestV2, SearchResourceByLabelRequestV2}
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.ConstructResponseUtilV2
+import org.knora.webapi.util.search.v2.{FilterPattern, QueryPattern, SimpleConstructQuery, StatementPattern}
 
 import scala.concurrent.Future
 
@@ -35,6 +37,7 @@ class SearchResponderV2 extends Responder {
 
     def receive = {
         case FulltextSearchGetRequestV2(searchValue, userProfile) => future2Message(sender(), fulltextSearchV2(searchValue, userProfile), log)
+        case ExtendedSearchGetRequestV2(query, userProfile) => future2Message(sender(), extendedSearchV2(query, userProfile), log)
         case SearchResourceByLabelRequestV2(searchValue, userProfile) => future2Message(sender(), searchResourcesByLabelV2(searchValue, userProfile), log)
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }
@@ -52,6 +55,41 @@ class SearchResponderV2 extends Responder {
             searchSparql <- Future(queries.sparql.v2.txt.searchFulltext(
                 triplestore = settings.triplestoreType,
                 searchTerms = searchValue
+            ).toString())
+
+            searchResponse: SparqlConstructResponse <- (storeManager ? SparqlConstructRequest(searchSparql)).mapTo[SparqlConstructResponse]
+
+            // separate resources and value objects
+            queryResultsSeparated = ConstructResponseUtilV2.splitResourcesAndValueRdfData(constructQueryResults = searchResponse, userProfile = userProfile)
+
+        } yield ReadResourcesSequenceV2(numberOfResources = queryResultsSeparated.size, resources = ConstructResponseUtilV2.createSearchResponse(queryResultsSeparated, settings), settings = settings)
+
+    }
+
+    private def extendedSearchV2(constructQuery: SimpleConstructQuery, userProfile: UserProfileV1): Future[ReadResourcesSequenceV2] = {
+
+        //println(constructQuery.whereClause.statements)
+
+        // process Sparql query provided by the client
+        /*val groupedBySubj = constructQuery.whereClause.statements.groupBy {
+            (queryP: QueryPattern) =>
+                queryP match {
+                    case statementP: StatementPattern =>
+                        statementP.subj
+                    case filterP: FilterPattern =>
+                        filterP.leftArgVariableName
+                    case unknown => throw NotImplementedException(s"Cannot handle $unknown when processing Sparql Where clause provided by the client")
+                }
+        }
+
+        println(groupedBySubj)*/
+
+        for {
+
+
+            searchSparql <- Future(queries.sparql.v2.txt.searchExtended(
+                triplestore = settings.triplestoreType,
+                query = constructQuery
             ).toString())
 
             searchResponse: SparqlConstructResponse <- (storeManager ? SparqlConstructRequest(searchSparql)).mapTo[SparqlConstructResponse]
