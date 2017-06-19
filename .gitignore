@@ -13,8 +13,10 @@ native
 docs/env
 docs/_build
 docs/_format_docu
-project/
-target/
+/project/
+*/project/target/
+*/project/project/
+/target/
 *.aux
 *.bbl
 *.bcf
