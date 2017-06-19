@@ -96,13 +96,11 @@ class AdminGroupRightsV1Spec extends CoreSpec(AdminGroupRightsV1Spec.config) wit
 
         "return correct admin-group-rights:Concept resource permissions string for admin user" in {
             responderManager ! DefaultObjectAccessPermissionsStringForResourceClassGetV1(projectIri, conceptResourceClass, adminUser.get.permissionData)
-            //expectMsg(DefaultObjectAccessPermissionsStringResponseV1("CR http://data.knora.org/groups/drawings-gods-admin|D http://data.knora.org/groups/drawings-gods-snf-team,knora-base:Creator|M http://data.knora.org/groups/drawings-gods-add-drawings,http://data.knora.org/groups/drawings-gods-meta-annotators"))
             expectMsg(DefaultObjectAccessPermissionsStringResponseV1("CR knora-base:ProjectAdmin|D knora-base:ProjectMember"))
         }
 
         "return correct admin-group-rights:Concept resource class permissions string for member user" in {
             responderManager ! DefaultObjectAccessPermissionsStringForResourceClassGetV1(projectIri, conceptResourceClass, memberUser.get.permissionData)
-            //expectMsg(DefaultObjectAccessPermissionsStringResponseV1("CR http://data.knora.org/groups/drawings-gods-admin|D http://data.knora.org/groups/drawings-gods-snf-team,knora-base:Creator|M http://data.knora.org/groups/drawings-gods-add-drawings,http://data.knora.org/groups/drawings-gods-meta-annotators|V knora-base:KnownUser,knora-base:UnknownUser,knora-base:ProjectMember"))
             expectMsg(DefaultObjectAccessPermissionsStringResponseV1("CR knora-base:ProjectAdmin|D knora-base:ProjectMember"))
         }
 
