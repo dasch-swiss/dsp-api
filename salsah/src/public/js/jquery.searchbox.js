@@ -185,6 +185,8 @@
 //						position: 'absolute',
 						left: pos.left,
 						top: pos.top +$this.outerHeight(),
+						background: 'white',
+						'z-index': 2, /* :( i don't like black magic numbers or const */
 						display: 'none'
 					}).hover(
 						function(event) {
