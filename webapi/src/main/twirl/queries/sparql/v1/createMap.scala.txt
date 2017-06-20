@@ -21,7 +21,7 @@
 @import org.knora.webapi.IRI
 
 @*
- * Creates a new knora-admin:Map. If the map already exists, this update does nothing.
+ * Creates a new knora-base:Map. If the map already exists, this update does nothing.
  *
  * @param triplestore the name of the triplestore being used.
  * @param mapNamedGraphIri the IRI of the named graph where Maps are stored.
@@ -36,11 +36,10 @@ PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX owl: <http://www.w3.org/2002/07/owl#>
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
-PREFIX knora-admin: <http://www.knora.org/ontology/knora-admin#>
 
 INSERT {
     GRAPH ?mapNamedGraph {
-        ?map rdf:type knora-admin:Map ;
+        ?map rdf:type knora-base:Map ;
             knora-base:lastModificationDate ?currentTime .
     }
 }

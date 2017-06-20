@@ -21,16 +21,14 @@
 @import org.knora.webapi.IRI
 
 @**
- * Deletes old map entries. Does not update the last modification date of the maps in which these entries were found.
+ * Given the IRI of a knora-base:Map, returns the all entries in the map.
  *
  * @param triplestore the name of the triplestore being used.
- * @param mapNamedGraphIri the IRI of the named graph where Maps are stored.
- * @param oldestDateTimeToKeep an xsd:dateTime. MapEntry objects whose knora-base:lastModificationDate is earlier
- * than this will be deleted.
+ * @param mapIri the IRI of the knora-base:Map.
+ * @param mapEntryKey the key of the knora-base:MapEntry.
  *@
 @(triplestore: String,
-  mapNamedGraphIri: IRI,
-  oldestDateTimeToKeep: String)
+  mapIri: IRI)
 
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -38,29 +36,17 @@ PREFIX owl: <http://www.w3.org/2002/07/owl#>
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 
-DELETE {
-    GRAPH ?dataNamedGraph {
-        ?mapEntry rdf:type knora-base:MapEntry ;
-            knora-base:isInMap ?map ;
-            knora-base:mapEntryKey ?mapEntryKey ;
-            knora-base:mapEntryValue ?mapEntryValue ;
-            knora-base:lastModificationDate ?mapEntryLastModificationDate .
-    }
-}
-@* Ensure that inference is not used in the WHERE clause of this update. *@
+SELECT ?mapEntryKey ?mapEntryValue
+@* Ensure that inference is not used in this query. *@
 @if(triplestore.startsWith("graphdb")) {
-    USING <http://www.ontotext.com/explicit>
+    FROM <http://www.ontotext.com/explicit>
 }
 WHERE {
-    BIND(IRI("@mapNamedGraphIri") AS ?mapNamedGraph)
+    BIND(IRI("@mapIri") as ?map)
 
-    ?map rdf:type knora-base:Map .
+    ?map a knora-base:Map .
 
-    ?mapEntry rdf:type knora-base:MapEntry ;
-        knora-base:isInMap ?map ;
+    ?mapEntry knora-base:isInMap ?map ;
         knora-base:mapEntryKey ?mapEntryKey ;
-        knora-base:mapEntryValue ?mapEntryValue ;
-        knora-base:lastModificationDate ?mapEntryLastModificationDate .
-
-    FILTER(?mapEntryLastModificationDate < "@oldestDateTimeToKeep"^^xsd:dateTime)
+        knora-base:mapEntryValue ?mapEntryValue .
 }

@@ -436,11 +436,11 @@
 
 :isInMap rdf:type owl:ObjectProperty ;
 
-    rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
+    rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
-    knora-base:subjectClassConstraint :MapEntry;
+    :subjectClassConstraint :MapEntry;
 
-    knora-base:objectClassConstraint :Map ;
+    :objectClassConstraint :Map ;
 
     rdfs:comment "Associates a MapEntry with a Map"@en .
 
@@ -448,11 +448,11 @@
 
 :mapEntryKey rdf:type owl:DatatypeProperty ;
 
-    rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
+    rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
-    knora-base:subjectClassConstraint :MapEntry;
+    :subjectClassConstraint :MapEntry;
 
-    knora-base:objectDatatypeConstraint xsd:string ;
+    :objectDatatypeConstraint xsd:string ;
 
     rdfs:comment "Represents the key of a MapEntry"@en .
 
@@ -460,11 +460,11 @@
 
 :mapEntryValue rdf:type owl:DatatypeProperty ;
 
-    rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
+    rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
-    knora-base:subjectClassConstraint :MapEntry;
+    :subjectClassConstraint :MapEntry;
 
-    knora-base:objectDatatypeConstraint xsd:string ;
+    :objectDatatypeConstraint xsd:string ;
 
     rdfs:comment "Represents the value of a MapEntry"@en .
 
@@ -638,7 +638,7 @@
 :Map rdf:type owl:Class ;
 
     rdfs:subClassOf [ rdf:type owl:Restriction ;
-                      owl:onProperty knora-base:lastModificationDate ;
+                      owl:onProperty :lastModificationDate ;
                       owl:maxCardinality "1"^^xsd:nonNegativeInteger
                     ] ;
 
@@ -661,7 +661,7 @@
                       owl:cardinality "1"^^xsd:nonNegativeInteger
                     ],
                     [ rdf:type owl:Restriction ;
-                      owl:onProperty knora-base:lastModificationDate ;
+                      owl:onProperty :lastModificationDate ;
                       owl:cardinality "1"^^xsd:nonNegativeInteger
                     ];
 

@@ -21,11 +21,11 @@
 @import org.knora.webapi.IRI
 
 @**
- * Given the IRI of a knora-admin:Map and the key of a knora-admin:MapEntry, returns the value of the map entry.
+ * Given the IRI of a knora-base:Map and the key of a knora-base:MapEntry, returns the value of the map entry.
  *
  * @param triplestore the name of the triplestore being used.
- * @param mapIri the IRI of the knora-admin:Map.
- * @param mapEntryKey the key of the knora-admin:MapEntry.
+ * @param mapIri the IRI of the knora-base:Map.
+ * @param mapEntryKey the key of the knora-base:MapEntry.
  *@
 @(triplestore: String,
   mapIri: IRI,
@@ -36,7 +36,6 @@ PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX owl: <http://www.w3.org/2002/07/owl#>
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
-PREFIX knora-admin: <http://www.knora.org/ontology/knora-admin#>
 
 SELECT ?mapEntryValue
 @* Ensure that inference is not used in this query. *@
@@ -46,9 +45,9 @@ SELECT ?mapEntryValue
 WHERE {
     BIND(IRI("@mapIri") as ?map)
 
-    ?map a knora-admin:Map .
+    ?map a knora-base:Map .
 
-    ?mapEntry knora-admin:isInMap ?map ;
-        knora-admin:mapEntryKey """@mapEntryKey""^^xsd:string ;
-        knora-admin:mapEntryValue ?mapEntryValue .
+    ?mapEntry knora-base:isInMap ?map ;
+        knora-base:mapEntryKey """@mapEntryKey""^^xsd:string ;
+        knora-base:mapEntryValue ?mapEntryValue .
 }

@@ -21,12 +21,12 @@
 @import org.knora.webapi.IRI
 
 @**
- * Deletes any existing knora-admin:MapEntry for the specified key, and creates a new one. Does nothing if the
- * containing knora-admin:Map does not exist.
+ * Deletes any existing knora-base:MapEntry for the specified key, and creates a new one. Does nothing if the
+ * containing knora-base:Map does not exist.
  *
  * @param triplestore the name of the triplestore being used.
  * @param mapNamedGraphIri the IRI of the named graph where Maps are stored.
- * @param mapIri the IRI of the knora-admin:Map.
+ * @param mapIri the IRI of the knora-base:Map.
  * @param mapEntryKey the key of the new MapEntry.
  * @param mapEntryIri the IRI of the new MapEntry.
  * @param mapEntryValue the value to be given to the new MapEntry.
@@ -43,15 +43,14 @@ PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX owl: <http://www.w3.org/2002/07/owl#>
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
-PREFIX knora-admin: <http://www.knora.org/ontology/knora-admin#>
 
 DELETE {
     GRAPH ?dataNamedGraph {
         @* Delete the existing entry, if any. *@
-        ?existingMapEntry rdf:type knora-admin:MapEntry ;
-            knora-admin:isInMap ?map ;
-            knora-admin:mapEntryKey """@mapEntryKey"""^^xsd:string ;
-            knora-admin:mapEntryValue ?existingValue ;
+        ?existingMapEntry rdf:type knora-base:MapEntry ;
+            knora-base:isInMap ?map ;
+            knora-base:mapEntryKey """@mapEntryKey"""^^xsd:string ;
+            knora-base:mapEntryValue ?existingValue ;
             knora-base:lastModificationDate ?existingEntryLastModificationDate .
 
         @* Delete the map's last modification date so we can update it. *@
@@ -60,10 +59,10 @@ DELETE {
 } INSERT {
     GRAPH ?dataNamedGraph {
         @* Create the MapEntry. *@
-        ?newMapEntry rdf:type knora-admin:MapEntry ;
-            knora-admin:isInMap ?map ;
-            knora-admin:mapEntryKey """@mapEntryKey"""^^xsd:string ;
-            knora-admin:mapEntryValue """@mapEntryValue"""^^xsd:string ;
+        ?newMapEntry rdf:type knora-base:MapEntry ;
+            knora-base:isInMap ?map ;
+            knora-base:mapEntryKey """@mapEntryKey"""^^xsd:string ;
+            knora-base:mapEntryValue """@mapEntryValue"""^^xsd:string ;
             knora-base:lastModificationDate ?currentTime .
 
         @* Update the map's last modification date. *@
@@ -80,16 +79,16 @@ WHERE {
     BIND(IRI("@mapEntryIri") AS ?newMapEntry)
     BIND(NOW() AS ?currentTime)
 
-    ?map rdf:type knora-admin:Map ;
+    ?map rdf:type knora-base:Map ;
         knora-base:lastModificationDate ?mapLastModificationDate .
 
     @* Get the existing entry with the specified key, if any, so we can delete it. *@
 
     OPTIONAL {
-        ?existingMapEntry rdf:type knora-admin:MapEntry ;
-            knora-admin:isInMap ?map ;
-            knora-admin:mapEntryKey """@mapEntryKey"""^^xsd:string ;
-            knora-admin:mapEntryValue ?existingValue ;
+        ?existingMapEntry rdf:type knora-base:MapEntry ;
+            knora-base:isInMap ?map ;
+            knora-base:mapEntryKey """@mapEntryKey"""^^xsd:string ;
+            knora-base:mapEntryValue ?existingValue ;
             knora-base:lastModificationDate ?existingEntryLastModificationDate .
     }
 }

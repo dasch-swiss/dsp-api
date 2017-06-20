@@ -21,11 +21,11 @@
 @import org.knora.webapi.IRI
 
 @**
- * Deletes an entry in a knora-admin:Map.
+ * Deletes an entry in a knora-base:Map.
  *
  * @param triplestore the name of the triplestore being used.
  * @param mapNamedGraphIri the IRI of the named graph where Maps are stored.
- * @param mapIri the IRI of the knora-admin:Map in which entries are to be deleted.
+ * @param mapIri the IRI of the knora-base:Map in which entries are to be deleted.
  *@
 @(triplestore: String,
   mapNamedGraphIri: IRI,
@@ -37,14 +37,13 @@ PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX owl: <http://www.w3.org/2002/07/owl#>
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
-PREFIX knora-admin: <http://www.knora.org/ontology/knora-admin#>
 
 DELETE {
     GRAPH ?dataNamedGraph {
-        ?mapEntry rdf:type knora-admin:MapEntry ;
-            knora-admin:isInMap ?map ;
-            knora-admin:mapEntryKey """@mapEntryKey"""^^xsd:string ;
-            knora-admin:mapEntryValue ?mapEntryValue ;
+        ?mapEntry rdf:type knora-base:MapEntry ;
+            knora-base:isInMap ?map ;
+            knora-base:mapEntryKey """@mapEntryKey"""^^xsd:string ;
+            knora-base:mapEntryValue ?mapEntryValue ;
             knora-base:lastModificationDate ?mapEntryLastModificationDate .
     }
 }
@@ -56,11 +55,11 @@ WHERE {
     BIND(IRI("@mapNamedGraphIri") AS ?mapNamedGraph)
     BIND(IRI("@mapIri") AS ?map)
 
-    ?map rdf:type knora-admin:Map .
+    ?map rdf:type knora-base:Map .
 
-    ?mapEntry rdf:type knora-admin:MapEntry ;
-        knora-admin:isInMap ?map ;
-        knora-admin:mapEntryKey """@mapEntryKey"""^^xsd:string ;
-        knora-admin:mapEntryValue ?mapEntryValue ;
+    ?mapEntry rdf:type knora-base:MapEntry ;
+        knora-base:isInMap ?map ;
+        knora-base:mapEntryKey """@mapEntryKey"""^^xsd:string ;
+        knora-base:mapEntryValue ?mapEntryValue ;
         knora-base:lastModificationDate ?mapEntryLastModificationDate .
 }
