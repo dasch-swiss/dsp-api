@@ -79,5 +79,11 @@ WHERE {
         BIND(str("@res.resourceLabel") AS ?label@res.resourceIndex)
 
         @res.generateSparqlForValuesResponse.whereSparql
+
+        @* Check that the resource doesn't already exist. *@
+
+        FILTER NOT EXISTS {
+            ?resource@res.resourceIndex rdf:type ?existingResourceType@res.resourceIndex .
+        }
     }
 }

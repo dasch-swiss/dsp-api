@@ -1,0 +1,66 @@
+@*
+ * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
+ * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
+ *
+ * This file is part of Knora.
+ *
+ * Knora is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Knora is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public
+ * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ *@
+
+@import org.knora.webapi.IRI
+
+@**
+ * Deletes old map entries. Does not update the last modification date of the maps in which these entries were found.
+ *
+ * @param triplestore the name of the triplestore being used.
+ * @param mapNamedGraphIri the IRI of the named graph where Maps are stored.
+ * @param oldestDateTimeToKeep an xsd:dateTime. MapEntry objects whose knora-base:lastModificationDate is earlier
+ * than this will be deleted.
+ *@
+@(triplestore: String,
+  mapNamedGraphIri: IRI,
+  oldestDateTimeToKeep: String)
+
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+
+DELETE {
+    GRAPH ?dataNamedGraph {
+        ?mapEntry rdf:type knora-base:MapEntry ;
+            knora-base:isInMap ?map ;
+            knora-base:mapEntryKey ?mapEntryKey ;
+            knora-base:mapEntryValue ?mapEntryValue ;
+            knora-base:lastModificationDate ?mapEntryLastModificationDate .
+    }
+}
+@* Ensure that inference is not used in the WHERE clause of this update. *@
+@if(triplestore.startsWith("graphdb")) {
+    USING <http://www.ontotext.com/explicit>
+}
+WHERE {
+    BIND(IRI("@mapNamedGraphIri") AS ?mapNamedGraph)
+
+    ?map rdf:type knora-base:Map .
+
+    ?mapEntry rdf:type knora-base:MapEntry ;
+        knora-base:isInMap ?map ;
+        knora-base:mapEntryKey ?mapEntryKey ;
+        knora-base:mapEntryValue ?mapEntryValue ;
+        knora-base:lastModificationDate ?mapEntryLastModificationDate .
+
+    FILTER(?mapEntryLastModificationDate < "@oldestDateTimeToKeep"^^xsd:dateTime)
+}
