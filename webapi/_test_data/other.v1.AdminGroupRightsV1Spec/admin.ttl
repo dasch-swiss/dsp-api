@@ -1,0 +1,43 @@
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix xml: <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
+@prefix salsah-gui: <http://www.knora.org/ontology/salsah-gui#> .
+@prefix admin-group-rights: <http://www.knora.org/ontology/admin-group-rights#> .
+
+<http://data.knora.org/projects/admin-group-rights> a knora-base:knoraProject ;
+        knora-base:projectBasepath "/data/SALSAH/admin-group-rights"^^xsd:string ;
+        knora-base:projectLongname "none"^^xsd:string ;
+        knora-base:projectShortname "admin-group-rights"^^xsd:string ;
+        knora-base:projectDescription "test"^^xsd:string ;
+        knora-base:projectKeywords "test"^^xsd:string ;
+        knora-base:projectOntologyGraph "http://www.knora.org/ontology/admin-group-rights"^^xsd:string ;
+        knora-base:projectDataGraph "http://www.knora.org/data/admin-group-rights"^^xsd:string ;
+        knora-base:status "true"^^xsd:boolean ;
+        knora-base:hasSelfJoinEnabled "false"^^xsd:boolean .
+
+<http://rdfh.ch/users/admin-group-rights-test-admin> rdf:type knora-base:User ;
+        knora-base:givenName "admin"^^xsd:string ;
+        knora-base:familyName "admin"^^xsd:string ;
+	knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="^^xsd:string ;
+        knora-base:email "admin@unil.ch"^^xsd:string ;
+        knora-base:preferredLanguage "fr"^^xsd:string ;
+        knora-base:status "true"^^xsd:boolean ;
+        knora-base:isInProject <http://data.knora.org/projects/admin-group-rights> ; 
+        knora-base:isInProjectAdminGroup <http://data.knora.org/projects/admin-group-rights> ;
+        knora-base:isInSystemAdminGroup "false"^^xsd:boolean .
+
+<http://rdfh.ch/users/admin-group-rights-test-member> rdf:type knora-base:User ;
+        knora-base:givenName "member"^^xsd:string ;
+        knora-base:familyName "member"^^xsd:string ;
+	knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="^^xsd:string ;
+        knora-base:email "member@unil.ch"^^xsd:string ;
+        knora-base:preferredLanguage "fr"^^xsd:string ;
+        knora-base:status "true"^^xsd:boolean ;
+        knora-base:isInProject <http://data.knora.org/projects/admin-group-rights> ;
+        knora-base:isInSystemAdminGroup "false"^^xsd:boolean .
+
+

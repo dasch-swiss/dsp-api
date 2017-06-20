@@ -1,0 +1,7 @@
+open knora-test .
+
+#load admin.ttl into http://www.knora.org/data/admin .
+load onto.ttl into http://www.knora.org/ontology/admin-group-rights .
+#load permissions.ttl into http://www.knora.org/data/permissions .
+close .
+exit .

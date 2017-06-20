@@ -1,0 +1,61 @@
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix xml: <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
+@prefix salsah-gui: <http://www.knora.org/ontology/salsah-gui#> .
+@prefix admin-group-rights: <http://www.knora.org/ontology/admin-group-rights#> .
+@base <http://www.knora.org/ontology/admin-group-rights> .
+
+<http://www.knora.org/ontology/admin-group-rights> rdf:type owl:Ontology .
+
+
+
+#################################################################
+#    Object Properties
+#################################################################
+
+
+###  http://www.knora.org/ontology/admin-group-rights#conceptHasName
+admin-group-rights:nconceptHasName rdf:type owl:ObjectProperty ;
+                  rdfs:subPropertyOf knora-base:hasValue ;
+                  knora-base:objectClassConstraint knora-base:TextValue ;
+                  knora-base:subjectClassConstraint admin-group-rights:Concept ;
+                  salsah-gui:guiElement salsah-gui:SimpleText ;
+                  salsah-gui:guiOrder "1"^^xsd:integer ;
+                  rdfs:comment "Nom d'un concept"@fr ,
+                               "Name of a concept"@en ;
+                  rdfs:label "Nom (concept)"@fr ,
+                             "Name (concept)"@en .
+
+###  http://www.knora.org/ontology/admin-group-rights#conceptHasDefinition
+admin-group-rights:conceptHasDefinition rdf:type owl:ObjectProperty ;
+                  rdfs:subPropertyOf knora-base:hasValue ;
+                  knora-base:objectClassConstraint knora-base:TextValue ;
+                  knora-base:subjectClassConstraint admin-group-rights:Concept ;
+                  salsah-gui:guiElement salsah-gui:Textarea ;
+                  salsah-gui:guiAttribute "width=95%" ,
+                        		  "rows=10" ;
+                  salsah-gui:guiOrder "2"^^xsd:integer ;
+                  rdfs:comment "Une définition d'un concept."@fr ,
+                               "A définition of a concept."@en ;
+                  rdfs:label "Description"@fr ,
+                             "Description"@en .
+
+
+###  http://www.knora.org/ontology/admin-group-rights#Concept
+admin-group-rights:Concept rdf:type owl:Class ;
+        rdfs:subClassOf knora-base:Resource ,
+        		[ rdf:type owl:Restriction ;
+                          owl:onProperty admin-group-rights:conceptHasName ;
+                          owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                        ] ,
+                        [ rdf:type owl:Restriction ;
+                          owl:onProperty admin-group-rights:conceptHasDefinition ;
+                          owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                        ] ;
+        rdfs:comment "Concept"@fr ,
+                     "Concept"@en ;
+        rdfs:label "Concept"@fr ,
+                   "Concept"@en .
