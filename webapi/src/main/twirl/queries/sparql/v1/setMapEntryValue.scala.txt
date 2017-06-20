@@ -1,0 +1,95 @@
+@*
+ * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
+ * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
+ *
+ * This file is part of Knora.
+ *
+ * Knora is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Knora is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public
+ * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ *@
+
+@import org.knora.webapi.IRI
+
+@**
+ * Deletes any existing knora-admin:MapEntry for the specified key, and creates a new one. Does nothing if the
+ * containing knora-admin:Map does not exist.
+ *
+ * @param triplestore the name of the triplestore being used.
+ * @param mapNamedGraphIri the IRI of the named graph where Maps are stored.
+ * @param mapIri the IRI of the knora-admin:Map.
+ * @param mapEntryKey the key of the new MapEntry.
+ * @param mapEntryIri the IRI of the new MapEntry.
+ * @param mapEntryValue the value to be given to the new MapEntry.
+ *@
+@(triplestore: String,
+  mapNamedGraphIri: IRI,
+  mapIri: IRI,
+  mapEntryIri: IRI,
+  mapEntryKey: String,
+  mapEntryValue: String)
+
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+PREFIX knora-admin: <http://www.knora.org/ontology/knora-admin#>
+
+DELETE {
+    GRAPH ?dataNamedGraph {
+        @* Delete the existing entry, if any. *@
+        ?existingMapEntry rdf:type knora-admin:MapEntry ;
+            knora-admin:isInMap ?map ;
+            knora-admin:mapEntryKey """@mapEntryKey"""^^xsd:string ;
+            knora-admin:mapEntryValue ?existingValue ;
+            knora-base:lastModificationDate ?existingEntryLastModificationDate .
+
+        @* Delete the map's last modification date so we can update it. *@
+        ?map knora-base:lastModificationDate ?mapLastModificationDate .
+    }
+} INSERT {
+    GRAPH ?dataNamedGraph {
+        @* Create the MapEntry. *@
+        ?newMapEntry rdf:type knora-admin:MapEntry ;
+            knora-admin:isInMap ?map ;
+            knora-admin:mapEntryKey """@mapEntryKey"""^^xsd:string ;
+            knora-admin:mapEntryValue """@mapEntryValue"""^^xsd:string ;
+            knora-base:lastModificationDate ?currentTime .
+
+        @* Update the map's last modification date. *@
+        ?map knora-base:lastModificationDate ?currentTime .
+    }
+}
+@* Ensure that inference is not used in the WHERE clause of this update. *@
+@if(triplestore.startsWith("graphdb")) {
+    USING <http://www.ontotext.com/explicit>
+}
+WHERE {
+    BIND(IRI("@mapNamedGraphIri") AS ?mapNamedGraph)
+    BIND(IRI("@mapIri") AS ?map)
+    BIND(IRI("@mapEntryIri") AS ?newMapEntry)
+    BIND(NOW() AS ?currentTime)
+
+    ?map rdf:type knora-admin:Map ;
+        knora-base:lastModificationDate ?mapLastModificationDate .
+
+    @* Get the existing entry with the specified key, if any, so we can delete it. *@
+
+    OPTIONAL {
+        ?existingMapEntry rdf:type knora-admin:MapEntry ;
+            knora-admin:isInMap ?map ;
+            knora-admin:mapEntryKey """@mapEntryKey"""^^xsd:string ;
+            knora-admin:mapEntryValue ?existingValue ;
+            knora-base:lastModificationDate ?existingEntryLastModificationDate .
+    }
+}
