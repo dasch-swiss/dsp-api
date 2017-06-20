@@ -689,9 +689,9 @@ class SalsahPage(pageUrl: String, headless: Boolean) {
       * @param lang the language to change to.
       */
     def changeLanguage(lang: String): Unit = {
-        eventually {
 
-            // this hack is needed for headless testing, because of a problem with alerts in headless mode
+        eventually {
+            // this workaround is needed for headless testing, because of a problem with alerts in headless mode
             if (headless) {
                 import org.openqa.selenium.JavascriptExecutor
                 val jsExecutor = driver.asInstanceOf[JavascriptExecutor]
@@ -700,10 +700,9 @@ class SalsahPage(pageUrl: String, headless: Boolean) {
             }
 
             driver.findElement(By.linkText(lang)).click()
-
         }
 
-        // this hack is needed for headless testing, because of a problem with alerts in headless mode
+        // this workaround is needed for headless testing, because of a problem with alerts in headless mode
         if (!headless) {
             eventually {
                 driver.switchTo().alert().accept()
