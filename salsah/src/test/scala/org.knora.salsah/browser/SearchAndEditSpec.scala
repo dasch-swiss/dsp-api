@@ -208,45 +208,40 @@ class SearchAndEditSpec extends SalsahSpec {
 
         }
 
-        if (headless) {
-            "(skipped in headless mode) do an extended search for restype page with seqnum 1 belonging to a book containing 'Narrenschiff' in its title" ignore {}
-        } else {
-            "do an extended search for restype page with seqnum 1 belonging to a book containing 'Narrenschiff' in its title" in {
+        "do an extended search for restype page with seqnum 1 belonging to a book containing 'Narrenschiff' in its title" in {
 
-                page.open()
+            page.open()
 
-                page.doLogin(email = incunabulaUserEmail, password = testPassword, fullName = incunabulaUserFullName, page)
+            page.doLogin(email = incunabulaUserEmail, password = testPassword, fullName = incunabulaUserFullName, page)
 
-                page.clickExtendedSearchButton()
+            page.clickExtendedSearchButton()
 
-                page.selectVocabulary("0") // select all
+            page.selectVocabulary("0") // select all
 
-                page.selectRestype("http://www.knora.org/ontology/incunabula#page")
+            page.selectRestype("http://www.knora.org/ontology/incunabula#page")
 
-                page.getExtendedSearchSelectionByName(1, "selprop").selectByValue("http://www.knora.org/ontology/incunabula#seqnum")
+            page.getExtendedSearchSelectionByName(1, "selprop").selectByValue("http://www.knora.org/ontology/incunabula#seqnum")
 
-                page.getExtendedSearchSelectionByName(1, "compop").selectByValue("EQ")
+            page.getExtendedSearchSelectionByName(1, "compop").selectByValue("EQ")
 
-                page.getValueField(1).sendKeys("1")
+            page.getValueField(1).sendKeys("1")
 
-                page.addPropertySetToExtendedSearch(2)
+            page.addPropertySetToExtendedSearch(2)
 
-                page.getExtendedSearchSelectionByName(2, "selprop").selectByValue("http://www.knora.org/ontology/incunabula#partOf")
+            page.getExtendedSearchSelectionByName(2, "selprop").selectByValue("http://www.knora.org/ontology/incunabula#partOf")
 
-                page.getExtendedSearchSelectionByName(2, "compop").selectByValue("EQ")
+            page.getExtendedSearchSelectionByName(2, "compop").selectByValue("EQ")
 
-                page.getValueField(2).sendKeys("Narrenschiff")
-                page.chooseElementFromSearchbox(1)
+            page.getValueField(2).sendKeys("Narrenschiff")
+            page.chooseElementFromSearchbox(1)
 
-                page.submitExtendedSearch()
+            page.submitExtendedSearch()
 
-                val rows = page.getExtendedSearchResultRows
+            val rows = page.getExtendedSearchResultRows
 
-                assert(rows.length == 1, "There should be one result row")
+            assert(rows.length == 1, "There should be one result row")
 
-                page.doLogout()
-
-            }
+            page.doLogout()
         }
 
         "do an extended search for images:bild involving a hierarchical list selection for its title" in {
@@ -638,52 +633,47 @@ class SearchAndEditSpec extends SalsahSpec {
             page.doLogout()
         }
 
-        if (headless) {
-            "(skipped in headless mode) change the partof property of a page" ignore {}
-        } else {
-            "change the partof property of a page" in {
+        "change the partof property of a page" in {
 
-                page.open()
+            page.open()
 
-                page.doLogin(email = incunabulaUserEmail, password = testPassword, fullName = incunabulaUserFullName, page)
+            page.doLogin(email = incunabulaUserEmail, password = testPassword, fullName = incunabulaUserFullName, page)
 
-                doZeitgloeckleinSearch()
+            doZeitgloeckleinSearch()
 
-                val rows = page.getExtendedSearchResultRows
+            val rows = page.getExtendedSearchResultRows
 
-                // open a page
-                rows(1).click()
+            // open a page
+            rows(1).click()
 
-                val window = page.getWindow(1)
+            val window = page.getWindow(1)
 
-                // get metadata section
-                val metadataSection: WebElement = page.getMetadataSection(window)
+            // get metadata section
+            val metadataSection: WebElement = page.getMetadataSection(window)
 
-                // get a list of editing fields
-                val editFields = page.getEditingFieldsFromMetadataSection(metadataSection)
+            // get a list of editing fields
+            val editFields = page.getEditingFieldsFromMetadataSection(metadataSection)
 
-                val partOfField = editFields(1)
+            val partOfField = editFields(1)
 
-                page.clickEditButton(partOfField)
+            page.clickEditButton(partOfField)
 
-                val input = page.getSearchBoxInputField(partOfField)
+            val input = page.getSearchBoxInputField(partOfField)
 
-                input.sendKeys("Narrenschiff")
+            input.sendKeys("Narrenschiff")
 
-                page.chooseElementFromSearchbox(2)
+            page.chooseElementFromSearchbox(2)
 
-                page.clickSaveButton(partOfField)
+            page.clickSaveButton(partOfField)
 
-                // read the new value back
-                val partOfValueContainer = page.getValueContainer(partOfField)
+            // read the new value back
+            val partOfValueContainer = page.getValueContainer(partOfField)
 
-                val partOfValue = partOfValueContainer.getText
+            val partOfValue = partOfValueContainer.getText
 
-                assert(partOfValue.contains("Narrenschiff"), s"$partOfValue")
+            assert(partOfValue.contains("Narrenschiff"), s"$partOfValue")
 
-                page.doLogout()
-
-            }
+            page.doLogout()
         }
 
         "change the season property of a image:bild to summer" in {
