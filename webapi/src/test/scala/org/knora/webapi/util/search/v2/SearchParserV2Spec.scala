@@ -91,8 +91,8 @@ class SearchParserV2Spec extends WordSpec with Matchers {
             }
         }
 
-        "parse an extended search query for a anything:Thing relating to a specified resource" in {
-            SearchParserV2.parseSearchQuery(extendSearchQueryForAThingRelatingToAnotherThing) should ===(SimpleSparqlConstructQueryWithBooleanInFilter)
+        "parse an extended search query with a FILTER containing a Boolean operator" in {
+            SearchParserV2.parseSearchQuery(extendSearchQueryForAThingRelatingToAnotherThing) should ===(SimpleSparqlConstructQueryWithBooleanOperatorInFilter)
         }
     }
 }
@@ -293,10 +293,10 @@ object SearchParserV2Spec {
         ))
     )
 
-    val SimpleSparqlConstructQueryWithBooleanInFilter = SimpleConstructQuery(
+    val SimpleSparqlConstructQueryWithBooleanOperatorInFilter = SimpleConstructQuery(
         whereClause = SimpleWhereClause(statements = Vector(
             StatementPattern(
-                obj = IriRef(iri = "http://api.knora.org/ontology/anything/v2#Thing"),
+                obj = IriRef(iri = "http://api.knora.org/ontology/anything/simple/v2#Thing"),
                 pred = IriRef(iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"),
                 subj = QueryVariable(variableName = "resource")
             ),
@@ -307,12 +307,12 @@ object SearchParserV2Spec {
             ),
             FilterPattern(expression = OrExpression(
                 rightArg = CompareExpression(
-                    rightArg = IriRef(iri = "http://api.knora.org/ontology/anything/v2#hasRecipient"),
+                    rightArg = IriRef(iri = "http://api.knora.org/ontology/anything/simple/v2#hasOtherThing"),
                     operator = "=",
                     leftArg = QueryVariable(variableName = "linkingProp")
                 ),
                 leftArg = CompareExpression(
-                    rightArg = IriRef(iri = "http://api.knora.org/ontology/anything/v2#hasAuthor"),
+                    rightArg = IriRef(iri = "http://api.knora.org/ontology/anything/simple/v2#isPartOfOtherThing"),
                     operator = "=",
                     leftArg = QueryVariable(variableName = "linkingProp")
                 )
@@ -320,7 +320,7 @@ object SearchParserV2Spec {
         )),
         constructClause = SimpleConstructClause(statements = Vector(StatementPattern(
             obj = IriRef(iri = "http://data.knora.org/a-thing"),
-            pred = IriRef(iri = "http://api.knora.org/ontology/knora-api/v2#hasLinkTo"),
+            pred = IriRef(iri = "http://api.knora.org/ontology/knora-api/simple/v2#hasLinkTo"),
             subj = QueryVariable(variableName = "resource")
         )))
     )
@@ -552,8 +552,8 @@ object SearchParserV2Spec {
 
     val extendSearchQueryForAThingRelatingToAnotherThing: String =
         """
-          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
-          |PREFIX anything: <http://api.knora.org/ontology/anything/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |PREFIX anything: <http://api.knora.org/ontology/anything/simple/v2#>
           |
           |CONSTRUCT {
           |    ?resource knora-api:hasLinkTo <http://data.knora.org/a-thing> .
@@ -561,7 +561,7 @@ object SearchParserV2Spec {
           |    ?resource a anything:Thing .
           |
           |    ?resource ?linkingProp <http://data.knora.org/a-thing> .
-          |    FILTER(?linkingProp = anything:hasAuthor || ?linkingProp = anything:hasRecipient)
+          |    FILTER(?linkingProp = anything:isPartOfOtherThing || ?linkingProp = anything:hasOtherThing)
           |
           |}
         """.stripMargin
