@@ -43,6 +43,8 @@ object OntologiesRouteV2 extends Authenticator {
         implicit val timeout = settings.defaultTimeout
         val responderManager = system.actorSelection("/user/responderManager")
 
+        // TODO: accept both v2 simple Iris and such with value object and create a corresponding answer
+
         path("v2" / "ontologies" / "namedgraphs") {
             get {
                 requestContext => {

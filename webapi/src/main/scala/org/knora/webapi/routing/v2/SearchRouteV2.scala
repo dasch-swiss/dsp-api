@@ -72,18 +72,28 @@ object SearchRouteV2 extends Authenticator {
 
                     val sparql_tmp =
                         """
-                          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
-                          |PREFIX beol: <http://api.knora.org/ontology/beol/v2#>
+                          |PREFIX beol: <http://api.knora.org/ontology/beol/simple/v2#>
+                          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                           |
                           |CONSTRUCT {
-                          |    ?letter ?linkingProp  <http://data.knora.org/a-thing> .
-                          |} WHERE {
-                          |    ?letter a beol:letter .
                           |    ?letter knora-api:isMainResource true .
                           |
-                          |    # Christian Goldbach
-                          |    ?letter ?linkingProp  <http://rdfh.ch/beol/iDyYeZy4QV6sOa0js-fqTg> .
-                          |    FILTER(?linkingProp = beol:hasAuthor || ?linkingProp = beol:hasRecipient)
+                          |    ?letter ?linkingProp1  ?person1 .
+                          |    ?letter ?linkingProp2  ?person2 .
+                          |} WHERE {
+                          |    ?letter a beol:letter .
+                          |
+                          |    # Scheuchzer, Johann Jacob 1672-1733
+                          |    BIND(<http://rdfh.ch/beol/oU8fMNDJQ9SGblfBl5JamA> AS ?person1)
+                          |
+                          |    ?letter ?linkingProp1  ?person1 .
+                          |    FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient )
+                          |
+                          |    # Hermann, Jacob 1678-1733
+                          |    BIND(<http://rdfh.ch/beol/6edJwtTSR8yjAWnYmt6AtA> AS ?person2)
+                          |
+                          |    ?letter ?linkingProp2 ?person2 .
+                          |    FILTER(?linkingProp2 = beol:hasAuthor || ?linkingProp2 = beol:hasRecipient )
                           |}
                         """.stripMargin
 

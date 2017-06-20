@@ -21,15 +21,15 @@
 package org.knora.webapi.responders.v2
 
 import akka.pattern._
-import org.knora.webapi.{BadRequestException, NotImplementedException}
+import org.knora.webapi.{BadRequestException, IRI, NotImplementedException}
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.store.triplestoremessages.{SparqlConstructRequest, SparqlConstructResponse}
 import org.knora.webapi.messages.v2.responder._
 import org.knora.webapi.messages.v2.responder.searchmessages.{ExtendedSearchGetRequestV2, FulltextSearchGetRequestV2, SearchResourceByLabelRequestV2}
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.util.ActorUtil._
-import org.knora.webapi.util.ConstructResponseUtilV2
-import org.knora.webapi.util.search.v2.{FilterPattern, QueryPattern, SimpleConstructQuery, StatementPattern}
+import org.knora.webapi.util.{ConstructResponseUtilV2, InputValidation}
+import org.knora.webapi.util.search.v2._
 
 import scala.concurrent.Future
 
@@ -66,23 +66,54 @@ class SearchResponderV2 extends Responder {
 
     }
 
+    sealed trait ExtendedSearchEntity
+
+    case class ExtendedSearchVar(variableName: String) extends ExtendedSearchEntity
+
+    case class ExtendedSearchIri(iri: IRI) extends ExtendedSearchEntity
+
+    case class ExtendedSearchXsdLiteral(value: String, datatype: IRI) extends ExtendedSearchEntity
+
     private def extendedSearchV2(constructQuery: SimpleConstructQuery, userProfile: UserProfileV1): Future[ReadResourcesSequenceV2] = {
 
-        println(constructQuery.whereClause)
 
-        // process Sparql query provided by the client
-        /*val groupedBySubj = constructQuery.whereClause.statements.groupBy {
-            (queryP: QueryPattern) =>
-                queryP match {
-                    case statementP: StatementPattern =>
-                        statementP.subj
-                    case filterP: FilterPattern =>
-                        filterP.leftArgVariableName
-                    case unknown => throw NotImplementedException(s"Cannot handle $unknown when processing Sparql Where clause provided by the client")
-                }
+
+        def convertExternalEntityToInternalEntity(entity: Entity): ExtendedSearchEntity = {
+            // convert external Iris to internal Iris if needed
+
+            entity match {
+                case iriRef: IriRef => ExtendedSearchIri(InputValidation.externalIriToInternalIri(iriRef.iri))
+                case queryVar: QueryVariable => ExtendedSearchVar(queryVar.variableName)
+                case literal: XsdLiteral => ExtendedSearchXsdLiteral(value = literal.value, datatype = literal.datatype)
+            }
         }
 
-        println(groupedBySubj)*/
+        val statementPatterns: Seq[StatementPattern] = constructQuery.whereClause.statements.collect {
+            case statementP: StatementPattern => statementP
+        }
+
+        // check if the statements patterns contain external v2 Iris and convert them to internal Iris if necessary
+        val statementPatternsConverted = statementPatterns.map {
+            (statementP: StatementPattern) =>
+
+                (
+                    convertExternalEntityToInternalEntity(statementP.subj),
+                    convertExternalEntityToInternalEntity(statementP.pred),
+                    convertExternalEntityToInternalEntity(statementP.obj)
+                )
+
+        }
+
+        /*val statementPatternsGroupedBySubj: Map[Entity, Seq[StatementPattern]] = statementPatternsConverted.groupBy {
+            (statementP: StatementPattern) =>
+                statementP.subj
+        }
+
+        val filterPatterns: Seq[FilterPattern] = constructQuery.whereClause.statements.collect {
+            case filterP: FilterPattern => filterP
+        }*/
+
+
 
         for {
 
