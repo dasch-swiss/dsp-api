@@ -306,8 +306,8 @@ class ResourcesV1R2RSpec extends R2RSpec {
                   |    "label": "Testperson",
                   |    "project_id": "http://data.knora.org/projects/images",
                   |    "properties": {
-                  |        "http://www.knora.org/ontology/images#lastname": [{"richtext_value":{"textattr":"{}","resource_reference" :[],"utf8str":"Testname"}}],
-                  |        "http://www.knora.org/ontology/images#firstname": [{"richtext_value":{"textattr":"{}","resource_reference" :[],"utf8str":"Name"}}]
+                  |        "http://www.knora.org/ontology/images#lastname": [{"richtext_value":{"utf8str":"Testname"}}],
+                  |        "http://www.knora.org/ontology/images#firstname": [{"richtext_value":{"utf8str":"Name"}}]
                   |    }
                   |}
                 """.stripMargin
