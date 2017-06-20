@@ -65,10 +65,7 @@ class SearchAndEditSpec extends SalsahSpec {
 
         val searchField: WebElement = page.getSimpleSearchField
         searchField.clear()
-        //searchField.sendKeys("Zeitglöcklein\n")
-        page.sendKeysHack(searchField, "Zeitglöcklein")
-
-        page.clickSimpleSearchButton()
+        searchField.sendKeys("Zeitglöcklein\n")
 
         val header = page.getSearchResultHeader
 
@@ -171,8 +168,7 @@ class SearchAndEditSpec extends SalsahSpec {
 
             page.getExtendedSearchSelectionByName(1, "compop").selectByValue("LIKE")
 
-            //page.getValueField(1).sendKeys("Zeitglöcklein")
-            page.sendKeysHack(page.getValueField(1), "Zeitglöcklein")
+            page.getValueField(1).sendKeys("Zeitglöcklein")
 
             page.submitExtendedSearch()
 
@@ -328,8 +324,7 @@ class SearchAndEditSpec extends SalsahSpec {
             val yearsel = page.getYearFieldInExtendedSearchForm(dateForm, 1)
 
             yearsel.clear()
-            //yearsel.sendKeys("1497")
-            page.sendKeysHack(yearsel, "1497")
+            yearsel.sendKeys("1497")
 
             page.submitExtendedSearch()
 
@@ -381,8 +376,7 @@ class SearchAndEditSpec extends SalsahSpec {
             val yearsel1 = page.getYearFieldInExtendedSearchForm(dateForm, 1)
 
             yearsel1.clear()
-            //yearsel1.sendKeys("1495")
-            page.sendKeysHack(yearsel1, "1495")
+            yearsel1.sendKeys("1495")
 
 
             //
@@ -400,8 +394,7 @@ class SearchAndEditSpec extends SalsahSpec {
             val yearsel2 = page.getYearFieldInExtendedSearchForm(dateForm, 2)
 
             yearsel2.clear()
-            //yearsel2.sendKeys("1495")
-            page.sendKeysHack(yearsel2, "1495")
+            yearsel2.sendKeys("1495")
 
             page.submitExtendedSearch()
 
@@ -461,8 +454,7 @@ class SearchAndEditSpec extends SalsahSpec {
             val yearsel1 = page.getYearField(pubdateField, 1)
 
             yearsel1.clear()
-            //yearsel1.sendKeys("1495")
-            page.sendKeysHack(yearsel1, "1495")
+            yearsel1.sendKeys("1495")
 
             page.clickSaveButton(pubdateField)
 
@@ -541,8 +533,7 @@ class SearchAndEditSpec extends SalsahSpec {
 
             input.clear()
 
-            //input.sendKeys("test")
-            page.sendKeysHack(input, "test")
+            input.sendKeys("test")
 
             page.clickSaveButton(pagenumField)
 
@@ -589,8 +580,7 @@ class SearchAndEditSpec extends SalsahSpec {
 
             input.clear()
 
-            //input.sendKeys("Tobiasus")
-            page.sendKeysHack(input, "Tobiasus")
+            input.sendKeys("Tobiasus")
 
             page.clickSaveButton(creatorField)
 
@@ -636,8 +626,7 @@ class SearchAndEditSpec extends SalsahSpec {
                 page.findCkeditor(descriptionField)
             }
 
-            //ckeditor.sendKeys("my text")
-            page.sendKeysHack(ckeditor, "my text")
+            ckeditor.sendKeys("my text")
 
             page.clickSaveButton(descriptionField)
 
@@ -805,14 +794,7 @@ class SearchAndEditSpec extends SalsahSpec {
 
             searchField.clear()
 
-            //searchField.sendKeys("excluded alpha\n")
-            page.sendKeysHack(searchField, "excluded alpha")
-            // here the sendKeysHack for some reason does not work
-            //import org.openqa.selenium.JavascriptExecutor
-            //val jsExecutor = page.driver.asInstanceOf[JavascriptExecutor]
-            //jsExecutor.executeScript("document.getElementById('simplesearch').value = arguments[0];", "Zeitglöcklein")
-
-            page.clickSimpleSearchButton()
+            searchField.sendKeys("excluded alpha\n")
 
             val header = page.getSearchResultHeader
 
