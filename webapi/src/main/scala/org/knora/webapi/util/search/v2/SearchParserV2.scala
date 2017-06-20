@@ -77,6 +77,7 @@ sealed trait QueryPattern extends Ordered[QueryPattern]
 case class StatementPattern(subj: Entity, pred: Entity, obj: Entity) extends QueryPattern {
     override def compare(that: QueryPattern): Int = {
         that match {
+            case _: BindStatement => 1
             case _: StatementPattern => 0
             case _: UnionPattern => -1
             case _: OptionalPattern => -1
@@ -85,12 +86,34 @@ case class StatementPattern(subj: Entity, pred: Entity, obj: Entity) extends Que
     }
 }
 
+/**
+  * Represents an expression that can be used in a FILTER.
+  */
 sealed trait FilterExpression
 
+/**
+  * Represents a comparison expression in a FILTER.
+  *
+  * @param leftArg  the left argument.
+  * @param operator the operator.
+  * @param rightArg the right argument.
+  */
 case class CompareExpression(leftArg: FilterExpression, operator: String, rightArg: FilterExpression) extends FilterExpression
 
+/**
+  * Represents an AND expression in a filter.
+  *
+  * @param leftArg  the left argument.
+  * @param rightArg the right argument.
+  */
 case class AndExpression(leftArg: FilterExpression, rightArg: FilterExpression) extends FilterExpression
 
+/**
+  * Represents an OR expression in a filter.
+  *
+  * @param leftArg  the left argument.
+  * @param rightArg the right argument.
+  */
 case class OrExpression(leftArg: FilterExpression, rightArg: FilterExpression) extends FilterExpression
 
 /**
@@ -101,10 +124,29 @@ case class OrExpression(leftArg: FilterExpression, rightArg: FilterExpression) e
 case class FilterPattern(expression: FilterExpression) extends QueryPattern {
     override def compare(that: QueryPattern): Int = {
         that match {
+            case _: BindStatement => 1
             case _: StatementPattern => 1
             case _: UnionPattern => 1
             case _: OptionalPattern => 1
             case _: FilterPattern => 0
+        }
+    }
+}
+
+/**
+  * Represents a BIND statement.
+  *
+  * @param variableName the variable that should be bound.
+  * @param value        the value of the variable.
+  */
+case class BindStatement(variableName: String, value: Entity) extends QueryPattern {
+    override def compare(that: QueryPattern): Int = {
+        that match {
+            case _: BindStatement => 0
+            case _: StatementPattern => -1
+            case _: UnionPattern => -1
+            case _: OptionalPattern => -1
+            case _: FilterPattern => -1
         }
     }
 }
@@ -117,6 +159,7 @@ case class FilterPattern(expression: FilterExpression) extends QueryPattern {
 case class UnionPattern(blocks: Seq[Seq[QueryPattern]]) extends QueryPattern {
     override def compare(that: QueryPattern): Int = {
         that match {
+            case _: BindStatement => 1
             case _: StatementPattern => 1
             case _: UnionPattern => 0
             case _: OptionalPattern => -1
@@ -133,6 +176,7 @@ case class UnionPattern(blocks: Seq[Seq[QueryPattern]]) extends QueryPattern {
 case class OptionalPattern(statements: Seq[QueryPattern]) extends QueryPattern {
     override def compare(that: QueryPattern): Int = {
         that match {
+            case _: BindStatement => 1
             case _: StatementPattern => 1
             case _: UnionPattern => 1
             case _: OptionalPattern => 0
@@ -504,11 +548,21 @@ object SearchParserV2 {
         }
 
         override def meet(node: ExtensionElem): Unit = {
-            // An ExtensionElem provides mappings between parser-generated constants and literal values that are used
-            // in the CONSTRUCT clause. We need to save these so we can build the CONSTRUCT clause correctly.
-
             node.getExpr match {
-                case valueConstant: ValueConstant => valueConstants.put(node.getName, valueConstant)
+                case valueConstant: ValueConstant =>
+                    if (node.getName.startsWith("_const_")) {
+                        // This is a parser-generated constant used in the CONSTRUCT clause. Just save it so we can
+                        // build the CONSTRUCT clause correctly later.
+                        valueConstants.put(node.getName, valueConstant)
+                    } else {
+                        // This is a BIND. Add it to the WHERE clause.
+                        val sparqlVar = new Var
+                        sparqlVar.setName(node.getName)
+                        sparqlVar.setConstant(true)
+                        sparqlVar.setValue(valueConstant.getValue)
+                        val entity = makeEntity(sparqlVar)
+                        wherePatterns.append(BindStatement(variableName = node.getName, value = entity))
+                    }
                 case _ => ()
             }
         }
@@ -602,7 +656,7 @@ object SearchParserV2 {
         }
 
         override def meet(node: SingletonSet): Unit = {
-            unsupported(node)
+            node.visitChildren(this)
         }
 
         override def meet(node: CompareAny): Unit = {
