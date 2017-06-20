@@ -509,6 +509,7 @@
 										attributes.type = 'text';
 										create_entry(propname, pinfo, function(ele, attr, pinfo) {
 											var tmpele = $('<input>', attr).addClass('__searchbox').insertBefore(ele.find('.entrySep'));
+											tmpele.attr('placeholder', 'start typing to search...');
 
 											var restype_id = -1;
 											var numprops = 1;
