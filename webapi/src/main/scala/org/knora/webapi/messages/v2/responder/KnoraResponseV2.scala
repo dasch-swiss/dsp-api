@@ -600,7 +600,7 @@ trait KnoraResponseV2 {
       *
       * @return a string in JSON-LD format.
       */
-    def toJSONLDWithValueObject: String
+    def toJsonLDWithValueObject: String
 
     /**
       * Serialize the response to XML.
@@ -617,7 +617,7 @@ trait KnoraResponseV2 {
 
 case class ReadNamedGraphsV2(namedGraphs: Set[IRI], settings: SettingsImpl) extends KnoraResponseV2 {
 
-    def toJSONLDWithValueObject: String = {
+    def toJsonLDWithValueObject: String = {
 
         val context = new util.HashMap[String, String]()
         context.put(OntologyConstants.KnoraApi.KnoraApiOntologyLabel, OntologyConstants.KnoraApiV2WithValueObject.KnoraApiV2PrefixExpansion)
@@ -698,7 +698,7 @@ case class ReadEntityDefinitionsV2(ontologies: Map[IRI, Set[IRI]] = Map.empty[IR
 
     }
 
-    def toJSONLDWithValueObject = {
+    def toJsonLDWithValueObject = {
 
         val context = new util.HashMap[String, String]()
         context.put(OntologyConstants.KnoraApi.KnoraApiOntologyLabel, OntologyConstants.KnoraApiV2WithValueObject.KnoraApiV2PrefixExpansion)
@@ -842,7 +842,7 @@ object ReadResourceUtil {
   */
 case class ReadResourcesSequenceV2(numberOfResources: Int, resources: Seq[ReadResourceV2], settings: SettingsImpl) extends KnoraResponseV2 {
 
-    def toJSONLDWithValueObject = {
+    def toJsonLDWithValueObject = {
 
         val context = new util.HashMap[String, String]()
         context.put("@vocab", "http://schema.org/")

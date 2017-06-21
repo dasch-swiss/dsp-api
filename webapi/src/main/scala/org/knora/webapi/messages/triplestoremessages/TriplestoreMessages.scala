@@ -1,4 +1,4 @@
-package org.knora.webapi.messages.v1.store.triplestoremessages
+package org.knora.webapi.messages.triplestoremessages
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi.util.ErrorHandlingMap

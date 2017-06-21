@@ -503,6 +503,20 @@ object InputValidation {
     }
 
     /**
+      * Checks that a string is a valid XML [[https://www.w3.org/TR/1999/REC-xml-names-19990114/#NT-NCName NCName]].
+      *
+      * @param ncName   the string to be checked.
+      * @param errorFun a function that throws an exception. It will be called if the string is invalid.
+      * @return the same string.
+      */
+    def toNCName(ncName: String, errorFun: () => Nothing): String = {
+        NCNameRegex.findFirstIn(ncName) match {
+            case Some(value) => value
+            case None => errorFun()
+        }
+    }
+
+    /**
       * Checks that a string is valid as a project-specific ontology prefix label or entity local name, i.e. that it is
       * a valid XML NCName and does not start with `knora`.
       *
@@ -514,11 +528,7 @@ object InputValidation {
         if (ncName.startsWith("knora")) {
             errorFun()
         } else {
-            NCNameRegex.findFirstIn(ncName) match {
-                case Some(value) => value
-                case None => errorFun()
-            }
-
+            toNCName(ncName, () => errorFun())
         }
     }
 
@@ -833,5 +843,24 @@ object InputValidation {
                 Some(s"${OntologyConstants.KnoraInternal.InternalOntologyStart}$prefixLabel#$localName")
             case _ => None
         }
+    }
+
+    /**
+      * Checks that a string represents a valid path for a `knora-base:Map`. A valid path must be a sequence of names
+      * separated by slashes (`/`). Each name must be a valid XML
+      * [[https://www.w3.org/TR/1999/REC-xml-names-19990114/#NT-NCName NCName]].
+      *
+      * @param mapPath the path to be checked.
+      * @param errorFun a function that throws an exception. It will be called if the path is invalid.
+      * @return the same path.
+      */
+    def toMapPath(mapPath: String, errorFun: () => Nothing): String = {
+        val splitPath: Array[String] = mapPath.split('/')
+
+        for (name <- splitPath) {
+            InputValidation.toNCName(name, () => errorFun())
+        }
+
+        mapPath
     }
 }

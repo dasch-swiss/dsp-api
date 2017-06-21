@@ -26,7 +26,7 @@ import akka.pattern._
 import akka.util.Timeout
 import org.knora.webapi.messages.v1.responder.ontologymessages.LoadOntologiesRequest
 import org.knora.webapi.messages.v1.responder.sessionmessages.{SessionJsonProtocol, SessionResponse}
-import org.knora.webapi.messages.v1.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent}
+import org.knora.webapi.messages.triplestoremessages.{RdfDataObject, ResetTriplestoreContent}
 import org.knora.webapi.responders.{ResponderManager, _}
 import org.knora.webapi.routing.Authenticator.KNORA_AUTHENTICATION_COOKIE_NAME
 import org.knora.webapi.routing.v1.{AuthenticateRouteV1, ResourcesRouteV1}

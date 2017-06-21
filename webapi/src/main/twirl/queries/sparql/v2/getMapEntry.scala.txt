@@ -37,7 +37,13 @@ PREFIX owl: <http://www.w3.org/2002/07/owl#>
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 
-SELECT ?mapEntryValue ?mapEntryLastModificationDate
+CONSTRUCT {
+    ?mapEntry rdf:type knora-base:MapEntry ;
+        knora-base:isInMap ?map ;
+        knora-base:mapEntryKey "@mapEntryKey"^^xsd:string ;
+        knora-base:mapEntryValue ?mapEntryValue ;
+        knora-base:lastModificationDate ?mapEntryLastModificationDate .
+}
 @* Ensure that inference is not used in this query. *@
 @if(triplestore.startsWith("graphdb")) {
     FROM <http://www.ontotext.com/explicit>

@@ -2,7 +2,7 @@ package org.knora.webapi.e2e.v1
 
 import akka.http.scaladsl.model.{ContentTypes, HttpEntity, StatusCodes}
 import org.knora.webapi.ITSpec
-import org.knora.webapi.messages.v1.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
+import org.knora.webapi.messages.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
 
 import scala.concurrent.duration._
 import spray.json._

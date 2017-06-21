@@ -280,12 +280,23 @@ class KnoraIdUtil {
     }
 
     /**
-      * Creates a ned permission IRI based on a UUID
+      * Creates a new permission IRI based on a UUID.
       *
-      * @return the IRI of the permission object
+      * @return the IRI of the permission object.
       */
     def makeRandomPermissionIri: IRI = {
         val knoraPermissionID = makeRandomBase64EncodedUuid
         s"http://$IriDomain/permissions/$knoraPermissionID"
+    }
+
+    /**
+      * Creates an IRI for a `knora-base:Map`.
+      *
+      * @param mapPath the map's path, which must be a sequence of names separated by slashes (`/`). Each name must
+      *                be a valid XML [[https://www.w3.org/TR/1999/REC-xml-names-19990114/#NT-NCName NCName]].
+      * @return the IRI of the map.
+      */
+    def makeMapIri(mapPath: String): IRI = {
+        s"http://$IriDomain/maps/$mapPath"
     }
 }

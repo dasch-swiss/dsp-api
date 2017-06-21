@@ -529,5 +529,4 @@ object OntologyConstants {
         val VersionSegment = "/simple/v2"
 
     }
-
 }
