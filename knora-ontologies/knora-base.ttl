@@ -1124,8 +1124,6 @@
 
                       rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
-                      :subjectClassConstraint :Resource ;
-
                       :objectDatatypeConstraint xsd:dateTimeStamp .
 
 
