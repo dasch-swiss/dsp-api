@@ -96,7 +96,7 @@ class SalsahPage(pageUrl: String, headless: Boolean) {
       * @param password user's password
       * @param fullName user's full name
       */
-    def doLogin(email: String, password: String, fullName: String, _page: SalsahPage): Unit = {
+    def doLogin(email: String, password: String, fullName: String): Unit = {
         val loginButton = driver.findElement(By.id("dologin"))
         loginButton.click()
 

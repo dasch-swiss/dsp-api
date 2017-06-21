@@ -84,7 +84,7 @@ class ResourceCreationSpec extends SalsahSpec {
         "log in as anything user" in {
 
             page.open()
-            page.doLogin(email = anythingUserEmail, password = testPassword, fullName = anythingUserFullName, page)
+            page.doLogin(email = anythingUserEmail, password = testPassword, fullName = anythingUserFullName)
             page.doLogout()
 
         }
@@ -93,7 +93,7 @@ class ResourceCreationSpec extends SalsahSpec {
 
             page.open()
 
-            page.doLogin(email = imagesUserEmail, password = testPassword, fullName = imagesUserFullName, page)
+            page.doLogin(email = imagesUserEmail, password = testPassword, fullName = imagesUserFullName)
 
             page.clickAddResourceButton()
 
@@ -127,7 +127,7 @@ class ResourceCreationSpec extends SalsahSpec {
 
             page.open()
 
-            page.doLogin(email = multiUserEmail, password = testPassword, fullName = multiUserFullName, page)
+            page.doLogin(email = multiUserEmail, password = testPassword, fullName = multiUserFullName)
 
             page.selectProject(anythingProjectIri)
 
