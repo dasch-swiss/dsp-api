@@ -18,7 +18,7 @@ package org.knora.webapi.e2e.v1
 
 import akka.http.scaladsl.model.{ContentTypes, HttpEntity, StatusCodes}
 import com.typesafe.config.ConfigFactory
-import org.knora.webapi.messages.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
+import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
 import org.knora.webapi.{E2ESpec, OntologyConstants, SharedAdminTestData, StartupFlags}
 import spray.json._
 

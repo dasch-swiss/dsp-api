@@ -33,7 +33,7 @@ import org.apache.jena.tdb.{TDB, TDBFactory}
 import org.apache.jena.update.{UpdateAction, UpdateFactory, UpdateRequest}
 import org.apache.lucene.store._
 import org.knora.webapi._
-import org.knora.webapi.messages.triplestoremessages._
+import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.store.triplestore.RdfDataObjectFactory
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.ErrorHandlingMap

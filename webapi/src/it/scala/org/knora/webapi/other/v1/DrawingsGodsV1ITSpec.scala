@@ -24,7 +24,7 @@ import akka.http.scaladsl.model._
 import arq.iri
 import com.typesafe.config.ConfigFactory
 import org.knora.webapi.{ITSpec, InvalidApiJsonException}
-import org.knora.webapi.messages.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
+import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
 import org.knora.webapi.util.MutableTestIri
 import spray.json._
 

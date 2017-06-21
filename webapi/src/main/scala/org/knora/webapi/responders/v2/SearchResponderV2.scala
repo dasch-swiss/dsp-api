@@ -23,7 +23,7 @@ package org.knora.webapi.responders.v2
 import akka.pattern._
 import org.knora.webapi.{BadRequestException, IRI, NotImplementedException}
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
-import org.knora.webapi.messages.triplestoremessages.{SparqlConstructRequest, SparqlConstructResponse}
+import org.knora.webapi.messages.store.triplestoremessages.{SparqlConstructRequest, SparqlConstructResponse}
 import org.knora.webapi.messages.v2.responder._
 import org.knora.webapi.messages.v2.responder.searchmessages.{ExtendedSearchGetRequestV2, FulltextSearchGetRequestV2, SearchResourceByLabelRequestV2}
 import org.knora.webapi.responders.Responder

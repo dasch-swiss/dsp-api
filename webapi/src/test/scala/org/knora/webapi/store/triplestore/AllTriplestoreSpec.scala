@@ -24,7 +24,7 @@ import akka.actor.Props
 import akka.testkit.ImplicitSender
 import com.typesafe.config.ConfigFactory
 import org.knora.webapi.SettingsConstants._
-import org.knora.webapi.messages.triplestoremessages._
+import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.store.{StoreManager, _}
 import org.knora.webapi.{CoreSpec, LiveActorMaker}
 

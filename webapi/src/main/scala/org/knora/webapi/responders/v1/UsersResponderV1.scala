@@ -29,7 +29,7 @@ import org.knora.webapi.messages.v1.responder.permissionmessages._
 import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoByIRIGetV1, ProjectInfoV1}
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileType.UserProfileType
 import org.knora.webapi.messages.v1.responder.usermessages._
-import org.knora.webapi.messages.triplestoremessages._
+import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.responders.{IriLocker, Responder}
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.util.ActorUtil._

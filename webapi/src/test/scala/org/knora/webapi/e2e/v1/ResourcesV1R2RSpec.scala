@@ -34,7 +34,7 @@ import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.ontologymessages.LoadOntologiesRequest
 import org.knora.webapi.messages.v1.responder.resourcemessages.PropsGetForRegionV1
 import org.knora.webapi.messages.v1.responder.resourcemessages.ResourceV1JsonProtocol._
-import org.knora.webapi.messages.triplestoremessages._
+import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.responders.{ResponderManager, _}
 import org.knora.webapi.routing.v1.{ResourcesRouteV1, ValuesRouteV1}
 import org.knora.webapi.store._

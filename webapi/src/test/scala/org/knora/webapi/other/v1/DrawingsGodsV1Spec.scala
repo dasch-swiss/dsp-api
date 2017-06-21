@@ -25,7 +25,7 @@ import org.knora.webapi.messages.v1.responder.permissionmessages.{DefaultObjectA
 import org.knora.webapi.messages.v1.responder.resourcemessages.{ResourceCreateRequestV1, ResourceCreateResponseV1, _}
 import org.knora.webapi.messages.v1.responder.usermessages.{UserProfileByIRIGetV1, UserProfileType, UserProfileV1}
 import org.knora.webapi.messages.v1.responder.valuemessages.{CreateValueV1WithComment, TextValueSimpleV1, _}
-import org.knora.webapi.messages.triplestoremessages.{RdfDataObject, ResetTriplestoreContent, ResetTriplestoreContentACK, TriplestoreJsonProtocol}
+import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent, ResetTriplestoreContentACK, TriplestoreJsonProtocol}
 import org.knora.webapi.responders.{RESPONDER_MANAGER_ACTOR_NAME, ResponderManager}
 import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
 import org.knora.webapi.util.{MutableTestIri, MutableUserProfileV1}

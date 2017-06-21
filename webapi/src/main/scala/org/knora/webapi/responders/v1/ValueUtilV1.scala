@@ -29,7 +29,7 @@ import org.knora.webapi.messages.v1.responder.resourcemessages.LocationV1
 import org.knora.webapi.messages.v1.responder.standoffmessages.{GetMappingRequestV1, GetMappingResponseV1, StandoffProperties}
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.responder.valuemessages._
-import org.knora.webapi.messages.triplestoremessages.VariableResultsRow
+import org.knora.webapi.messages.store.triplestoremessages.VariableResultsRow
 import org.knora.webapi.responders.v1.GroupedProps._
 import org.knora.webapi.twirl._
 import org.knora.webapi.util.standoff.StandoffTagUtilV1

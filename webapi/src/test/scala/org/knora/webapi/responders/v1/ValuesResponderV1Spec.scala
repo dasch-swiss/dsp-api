@@ -31,7 +31,7 @@ import org.knora.webapi.messages.v1.responder.resourcemessages.{LocationV1, Reso
 import org.knora.webapi.messages.v1.responder.sipimessages.SipiResponderConversionFileRequestV1
 import org.knora.webapi.messages.v1.responder.standoffmessages.{MappingXMLtoStandoff, StandoffDataTypeClasses, XMLTag}
 import org.knora.webapi.messages.v1.responder.valuemessages._
-import org.knora.webapi.messages.triplestoremessages._
+import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.responders._
 import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
 import org.knora.webapi.twirl.{StandoffTagIriAttributeV1, StandoffTagV1}

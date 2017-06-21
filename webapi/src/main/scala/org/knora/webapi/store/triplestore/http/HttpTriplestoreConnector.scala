@@ -34,7 +34,7 @@ import org.eclipse.rdf4j.rio.RDFHandler
 import org.eclipse.rdf4j.rio.turtle._
 import org.knora.webapi.SettingsConstants._
 import org.knora.webapi._
-import org.knora.webapi.messages.triplestoremessages._
+import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.store.triplestore.RdfDataObjectFactory
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.FakeTriplestore

@@ -28,7 +28,7 @@ import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.ontologymessages.NamedGraphV1
 import org.knora.webapi.messages.v1.responder.projectmessages._
 import org.knora.webapi.messages.v1.responder.usermessages._
-import org.knora.webapi.messages.triplestoremessages._
+import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.responders.{IriLocker, Responder}
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.{KnoraIdUtil, PermissionUtilV1}

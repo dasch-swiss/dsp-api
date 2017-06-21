@@ -23,7 +23,7 @@ package org.knora.webapi.store
 import akka.actor._
 import akka.event.LoggingReceive
 import akka.pattern._
-import org.knora.webapi.messages.triplestoremessages.{Initialized, InitializedResponse, TriplestoreRequest}
+import org.knora.webapi.messages.store.triplestoremessages.{Initialized, InitializedResponse, TriplestoreRequest}
 import org.knora.webapi.store.triplestore.TriplestoreManager
 import org.knora.webapi.{ActorMaker, LiveActorMaker, Settings, UnexpectedMessageException}
 

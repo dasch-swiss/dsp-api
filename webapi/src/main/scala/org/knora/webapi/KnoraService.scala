@@ -34,7 +34,7 @@ import akka.stream.ActorMaterializer
 import org.knora.webapi.http.CORSSupport.CORS
 import org.knora.webapi.messages.v1.responder.permissionmessages.PermissionDataV1
 import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
-import org.knora.webapi.messages.triplestoremessages.{Initialized, InitializedResponse, ResetTriplestoreContent, ResetTriplestoreContentACK}
+import org.knora.webapi.messages.store.triplestoremessages.{Initialized, InitializedResponse, ResetTriplestoreContent, ResetTriplestoreContentACK}
 import org.knora.webapi.messages.v2.responder.ontologymessages.{LoadOntologiesRequestV2, LoadOntologiesResponseV2}
 import org.knora.webapi.responders.{ResponderManager, _}
 import org.knora.webapi.routing.v1._

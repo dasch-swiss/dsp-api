@@ -23,7 +23,7 @@ import java.nio.file.{Files, Paths}
 import akka.http.scaladsl.model.headers._
 import akka.http.scaladsl.model.{HttpEntity, _}
 import com.typesafe.config.{Config, ConfigFactory}
-import org.knora.webapi.messages.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
+import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
 import org.knora.webapi.util.MutableTestIri
 import org.knora.webapi.{FileWriteException, ITSpec, InvalidApiJsonException}
 import spray.json._

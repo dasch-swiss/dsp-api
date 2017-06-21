@@ -20,7 +20,7 @@
 
 package org.knora.webapi.util
 
-import org.knora.webapi.messages.triplestoremessages.{SparqlSelectResponse, SparqlSelectResponseBody, SparqlSelectResponseHeader, VariableResultsRow}
+import org.knora.webapi.messages.store.triplestoremessages.{SparqlSelectResponse, SparqlSelectResponseBody, SparqlSelectResponseHeader, VariableResultsRow}
 import spray.json._
 
 /**

@@ -23,7 +23,7 @@ package org.knora.webapi.responders.v2
 import java.time.OffsetDateTime
 
 import akka.pattern._
-import org.knora.webapi.messages.triplestoremessages.{SparqlConstructRequest, SparqlConstructResponse}
+import org.knora.webapi.messages.store.triplestoremessages.{SparqlConstructRequest, SparqlConstructResponse}
 import org.knora.webapi.messages.v2.responder.persistentmapmessages._
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.util.ActorUtil._

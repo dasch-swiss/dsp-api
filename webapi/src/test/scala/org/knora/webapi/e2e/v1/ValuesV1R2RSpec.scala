@@ -25,7 +25,7 @@ import akka.http.scaladsl.testkit.RouteTestTimeout
 import akka.pattern._
 import akka.util.Timeout
 import org.knora.webapi.messages.v1.responder.ontologymessages.LoadOntologiesRequest
-import org.knora.webapi.messages.triplestoremessages.{RdfDataObject, ResetTriplestoreContent}
+import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent}
 import org.knora.webapi.responders.{ResponderManager, _}
 import org.knora.webapi.routing.v1.ValuesRouteV1
 import org.knora.webapi.store._

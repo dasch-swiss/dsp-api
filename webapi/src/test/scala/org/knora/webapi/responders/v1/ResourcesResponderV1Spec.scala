@@ -32,7 +32,7 @@ import org.knora.webapi.messages.v1.responder.resourcemessages._
 import org.knora.webapi.messages.v1.responder.sipimessages.SipiResponderConversionFileRequestV1
 import org.knora.webapi.messages.v1.responder.standoffmessages.StandoffDataTypeClasses
 import org.knora.webapi.messages.v1.responder.valuemessages._
-import org.knora.webapi.messages.triplestoremessages._
+import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.responders._
 import org.knora.webapi.store._
 import org.knora.webapi.twirl.{StandoffTagIriAttributeV1, StandoffTagV1}

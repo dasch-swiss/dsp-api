@@ -24,7 +24,7 @@ import akka.http.scaladsl.server.Route
 import akka.util.Timeout
 import org.knora.webapi.SettingsImpl
 import org.knora.webapi.messages.v1.responder.storemessages.{ResetTriplestoreContentRequestV1, StoreV1JsonProtocol}
-import org.knora.webapi.messages.triplestoremessages.RdfDataObject
+import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
 
 import scala.concurrent.Future

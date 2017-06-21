@@ -22,7 +22,7 @@ import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRe
 import org.knora.webapi.messages.v1.responder.permissionmessages.PermissionDataV1
 import org.knora.webapi.messages.v1.responder.storemessages.{ResetTriplestoreContentRequestV1, ResetTriplestoreContentResponseV1}
 import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
-import org.knora.webapi.messages.triplestoremessages.{RdfDataObject, ResetTriplestoreContent, ResetTriplestoreContentACK}
+import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent, ResetTriplestoreContentACK}
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.util.ActorUtil._
 
