@@ -80,6 +80,8 @@ case class ExtendedSearchAndExpression(leftArg: ExtendedSearchFilterExpression, 
   */
 case class ExtendedSearchOrExpression(leftArg: ExtendedSearchFilterExpression, rightArg: ExtendedSearchFilterExpression) extends ExtendedSearchFilterExpression
 
+
+// An abstract trait representing a an entity in an extended search query.
 sealed trait ExtendedSearchEntity extends ExtendedSearchFilterExpression
 
 /**
