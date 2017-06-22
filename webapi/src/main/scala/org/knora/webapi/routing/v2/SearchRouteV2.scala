@@ -78,21 +78,17 @@ object SearchRouteV2 extends Authenticator {
                           |CONSTRUCT {
                           |    ?letter knora-api:isMainResource true .
                           |
-                          |    ?letter ?linkingProp1  ?person1 .
-                          |    ?letter ?linkingProp2  ?person2 .
+                          |    ?letter ?linkingProp1  <http://rdfh.ch/beol/oU8fMNDJQ9SGblfBl5JamA> .
+                          |    ?letter ?linkingProp2  <http://rdfh.ch/beol/6edJwtTSR8yjAWnYmt6AtA> .
                           |} WHERE {
                           |    ?letter a beol:letter .
                           |
                           |    # Scheuchzer, Johann Jacob 1672-1733
-                          |    BIND(<http://rdfh.ch/beol/oU8fMNDJQ9SGblfBl5JamA> AS ?person1)
-                          |
-                          |    ?letter ?linkingProp1  ?person1 .
+                          |    ?letter ?linkingProp1  <http://rdfh.ch/beol/oU8fMNDJQ9SGblfBl5JamA> .
                           |    FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient )
                           |
                           |    # Hermann, Jacob 1678-1733
-                          |    BIND(<http://rdfh.ch/beol/6edJwtTSR8yjAWnYmt6AtA> AS ?person2)
-                          |
-                          |    ?letter ?linkingProp2 ?person2 .
+                          |    ?letter ?linkingProp2 <http://rdfh.ch/beol/6edJwtTSR8yjAWnYmt6AtA> .
                           |    FILTER(?linkingProp2 = beol:hasAuthor || ?linkingProp2 = beol:hasRecipient )
                           |}
                         """.stripMargin

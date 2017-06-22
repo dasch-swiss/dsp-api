@@ -20,7 +20,7 @@
 
 @import org.knora.webapi.IRI
 @import org.knora.webapi.SparqlGenerationException
-@import org.knora.webapi.util.search.v2.SimpleConstructQuery
+@import org.knora.webapi.messages.v2.responder.searchmessages.ExtendedSearchQuery
 
 @*
  * Performs an extended search.
@@ -32,7 +32,7 @@
  * @param query the construct query provided by the client.
  *@
 @(triplestore: String,
-  query: SimpleConstructQuery)
+  query: ExtendedSearchQuery)
 
 @if(triplestore.startsWith("graphdb")) {
     @{

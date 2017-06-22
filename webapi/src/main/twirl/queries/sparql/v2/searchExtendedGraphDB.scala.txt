@@ -20,7 +20,7 @@
 
 @import org.knora.webapi.IRI
 @import org.knora.webapi.SparqlGenerationException
-@import org.knora.webapi.util.search.v2.SimpleConstructQuery
+@import org.knora.webapi.messages.v2.responder.searchmessages.ExtendedSearchQuery
 
 @*
  * Performs an extended search.
@@ -29,139 +29,12 @@
  *
  * @param query the construct query provided by the client.
  *@
-@(query: SimpleConstructQuery)
-
-PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
-PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-PREFIX beol: <http://www.knora.org/ontology/beol#>
+@(query: ExtendedSearchQuery)
 
 CONSTRUCT {
 
-    # include this inferred information in the results, needed to identify resources
-    ?resource a knora-base:Resource ;
-        knora-base:isMainResource true ;
-        rdfs:label ?label ;
-        knora-base:attachedToUser ?resourceCreator ;
-        knora-base:hasPermissions ?resourcePermissions ;
-        knora-base:attachedToProject ?resourceProject ;
-        a ?resourceType .
 
-    ?resource knora-base:hasLinkTo ?person1 ;
-        ?linkingProp1 ?person1 .
-
-    ?resource ?linkValueProp1 ?linkValue1 .
-
-    ?resource knora-base:hasValue ?linkValue1 .
-
-    ?linkValue1 a ?valueObjectType1 ;
-                     ?valueObjectProperty1 ?valueObjectValue1 .
-
-    ?person1 a knora-base:Resource ;
-        rdfs:label ?referredResourceLabel1 ;
-        a ?referredResourceType1 ;
-        knora-base:attachedToUser ?referredResourceCreator1 ;
-        knora-base:hasPermissions ?referredResourcePermissions1 ;
-        knora-base:attachedToProject ?referredResourceProject1 .
-
-    ?resource knora-base:hasLinkTo ?person2 ;
-        ?linkingProp2 ?person2 .
-
-    ?resource ?linkValueProp2 ?linkValue2 .
-
-    ?resource knora-base:hasValue ?linkValue2 .
-
-    ?linkValue2 a ?valueObjectType2 ;
-                     ?valueObjectProperty2 ?valueObjectValue2 .
-
-    ?person2 a knora-base:Resource ;
-        rdfs:label ?referredResourceLabel2 ;
-        a ?referredResourceType2 ;
-        knora-base:attachedToUser ?referredResourceCreator2 ;
-        knora-base:hasPermissions ?referredResourcePermissions2 ;
-        knora-base:attachedToProject ?referredResourceProject2 .
 
 } WHERE {
-
-    ?resource a knora-base:Resource ;
-        knora-base:isDeleted false ;
-        rdfs:label ?label ;
-        knora-base:attachedToUser ?resourceCreator ;
-        knora-base:hasPermissions ?resourcePermissions ;
-        knora-base:attachedToProject ?resourceProject .
-
-    # user provided
-    ?resource a beol:letter .
-
-    GRAPH <http://www.ontotext.com/explicit> {
-        ?resource a ?resourceType .
-    }
-
-    # Scheuchzer, Johann Jacob 1672-1733
-    BIND(<http://rdfh.ch/beol/oU8fMNDJQ9SGblfBl5JamA> AS ?person1)
-
-    ?resource knora-base:hasLinkTo ?person1 .
-
-    ?resource knora-base:hasValue ?linkValue1 .
-    ?linkValue1 a knora-base:LinkValue ;
-        rdf:subject ?resource ;
-        rdf:object ?person1 .
-
-
-    GRAPH <http://www.ontotext.com/explicit> {
-        ?resource ?linkValueProp1 ?linkValue1 .
-
-        ?linkValue1 a ?valueObjectType1 ;
-                     ?valueObjectProperty1 ?valueObjectValue1 .
-    }
-
-
-    ?person1 a knora-base:Resource ;
-        knora-base:isDeleted false .
-
-    GRAPH <http://www.ontotext.com/explicit> {
-        # user provided
-        ?resource ?linkingProp1 ?person1 .
-        FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient)
-
-        ?person1 rdfs:label ?referredResourceLabel1 ;
-            a ?referredResourceType1 ;
-            knora-base:attachedToUser ?referredResourceCreator1 ;
-            knora-base:hasPermissions ?referredResourcePermissions1 ;
-            knora-base:attachedToProject ?referredResourceProject1 .
-    }
-
-    # Hermann, Jacob 1678-1733
-    BIND(<http://rdfh.ch/beol/6edJwtTSR8yjAWnYmt6AtA> AS ?person2)
-
-    ?resource knora-base:hasLinkTo ?person2 .
-
-    ?resource knora-base:hasValue ?linkValue2 .
-    ?linkValue2 a knora-base:LinkValue ;
-        rdf:subject ?resource ;
-        rdf:object ?person2 .
-
-
-    GRAPH <http://www.ontotext.com/explicit> {
-        ?resource ?linkValueProp2 ?linkValue2 .
-
-        ?linkValue2 a ?valueObjectType2 ;
-                     ?valueObjectProperty2 ?valueObjectValue2 .
-    }
-
-
-    ?person2 a knora-base:Resource ;
-        knora-base:isDeleted false .
-
-    GRAPH <http://www.ontotext.com/explicit> {
-        # user provided
-        ?resource ?linkingProp2 ?person2 .
-        FILTER(?linkingProp2 = beol:hasAuthor || ?linkingProp2 = beol:hasRecipient)
-
-        ?person2 rdfs:label ?referredResourceLabel2 ;
-            a ?referredResourceType2 ;
-            knora-base:attachedToUser ?referredResourceCreator2 ;
-            knora-base:hasPermissions ?referredResourcePermissions2 ;
-            knora-base:attachedToProject ?referredResourceProject2 .
-    }
 
 }

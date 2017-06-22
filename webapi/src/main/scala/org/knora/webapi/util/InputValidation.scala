@@ -130,6 +130,14 @@ object InputValidation {
             "(" + NCNamePattern + ")#(" + NCNamePattern + ")$"
         ).r
 
+    // A regex for entity Iris in project-specific external ontologies (knora-api).
+    // This works for both cases: with value object and simple.
+    private val KnoraApiOntologyEntityRegex = (
+        "^" + OntologyConstants.KnoraApi.ApiOntologyStart +
+            "(" + NCNamePattern + ")" + "(" + OntologyConstants.KnoraApiV2WithValueObject.VersionSegment + "|" + OntologyConstants.KnoraApiV2Simplified.VersionSegment + ")" +
+            "#(" + NCNamePattern + ")$"
+        ).r
+
     // A regex for external knora-api v2 with value object entity Iris.
     private val ExternalApiV2WithValueObjectOntologyEntityRegex: Regex = (
         "^" + OntologyConstants.KnoraApi.ApiOntologyStart +
@@ -805,20 +813,29 @@ object InputValidation {
     }
 
     /**
-      * Converts an external knora-api entity Iri (both with value object and simple) to an internal Iri.
-      * If the given Iri is not a knora-api Iri, it is returned unchanged.
+      * Checks whether an IRI is the IRI of an external ontology entity (knora-api).
       *
-      * @param iri the external Iri to be converted.
+      * @param iri the IRI to be checked.
+      * @return `true` if the IRI is the IRI of an external ontology entity.
+      */
+    def isKnoraApiEntityIri(iri: IRI) = {
+        iri match {
+            case KnoraApiOntologyEntityRegex(_*) => true
+            case _ => false
+        }
+    }
+
+    /**
+      * Converts an external knora-api entity Iri (both with value object and simple) to an internal Iri.
+      *
+      * @param iri      the external Iri to be converted.
+      * @param errorFun a function that throws an exception. It will be called if the form of the string is not
+      *                 valid for an external ontology or entity IRI.
       * @return an Iri which is not an external knora-api Iri.
       */
-    def externalIriToInternalIri(iri: IRI): IRI = {
+    def externalIriToInternalIri(iri: IRI, errorFun: () => Nothing): IRI = {
 
         iri match {
-            case ExternalApiV2SimpleOntologyRegex(ontology) =>
-                externalOntologyNameToInternalOntologyIri(ontology)
-
-            case ExternalApiV2WithValueObjectOntologyRegex(ontology) =>
-                externalOntologyNameToInternalOntologyIri(ontology)
 
             case ExternalApiV2SimpleOntologyEntityRegex(ontology, entity) =>
                 externalEntityNameToInternalEntityIri(ontology, entity)
@@ -826,7 +843,7 @@ object InputValidation {
             case ExternalApiV2WithValueObjectOntologyEntityRegex(ontology, entity) =>
                 externalEntityNameToInternalEntityIri(ontology, entity)
 
-            case _ => iri
+            case _ => errorFun()
         }
     }
 
