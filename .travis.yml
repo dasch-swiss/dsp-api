@@ -24,6 +24,7 @@ env:
     - secure: "iM3Wjt3f5yUaU16yKstwBEEFA8WKx8qcTVnOwF+o9+sooD1SZ39nYJDPgpHHNwFZ1aSkre5ATPEw+dfslr7SnnwYQeYHjYldcqudB+7pq4dmY5U3rCTsjZCH1XmLnnLO45CZRy05pIAUSxWpIiX5khWoHZd704UlDncqIU/6paWWNkywPb2P4UBZ5Xeai1NTS1URHRz0A4aD+dqwKS6P+baq4CyKLC/AqjsTDI+TV4C26FXXTgS0Ly9VfBVZ55D+SdVHgCZXJaHerAixjSX6zvenfkd/87GR6NEAgJ9QofF2nDEXBZZm4jPv5d285Cc4iUvRo1HLbI1VlALya3qUA9Prbno8QQaChNdjRS7mSplkCxZZKzBItpjvI009NPl20zX6GROb/JCjWHRZ4R358cebFKKqE4W1GBArS0piVbdqZyWA/t5KANouQIdrh+lepAf/Xq5JRcDP9r+Rk2hHLk2Rmj97gv001eRf9GjSEC1Qo1kwu1FabZok1UIemJHpY7yWO4d3ZKSOCyQ0WdW6rLMFGkouoByrFVfNPBVxLqDJ3YVL/4x5jc0Q9+G5jm6omqNwQSsn60nUizZJp1fuLGQRUNj8EDvRhxLgVkOJqFf4P/4qRas47k1wkWBk2iBlpNp2eQTY42IZovPIyT+NCfbdg0yyZRyHThpfc+KfTeg=" #DOCKER_PASS
     - WEBAPI_REPO=dhlabbasel/webapi
     - SALSAH_REPO=dhlabbasel/salsah
+    - SIPI_REPO=dhlabbasel/sipi
     - COMMIT=${TRAVIS_COMMIT::8}
     - TAG=${TRAVIS_BRANCH//\//-}
     - DOCKERHOST=$(ip route get 8.8.8.8 | awk '{print $NF; exit}')
@@ -46,7 +47,7 @@ jobs:
         # start fuseki
         - cd $TRAVIS_BUILD_DIR/triplestores/fuseki/ && ./fuseki-server &
         # start the sipi container (with production config)
-        - docker run -d --add-host webapihost:$DOCKERHOST -v /tmp:/tmp -v $HOME:$HOME -p 1024:1024 dhlabbasel/sipi:develop
+        - docker run -d --add-host webapihost:$DOCKERHOST -v /tmp:/tmp -v $HOME:$HOME -p 1024:1024 $SIPI_REPO:develop
         # start the integration tests
         - cd $TRAVIS_BUILD_DIR/webapi/ && sbt fuseki-it:test
     #- stage: webapi-graphdb
@@ -63,7 +64,7 @@ jobs:
     #    # start fuseki
     #    - cd $TRAVIS_BUILD_DIR/triplestores/fuseki/ && ./fuseki-server &
     #    # start the sipi container (with test config)
-    #    - docker run -d --add-host webapihost:$DOCKERHOST -v /tmp:/tmp -v $HOME:$HOME -p 1024:1024 dhlabbasel/sipi:develop /sipi/local/bin/sipi --config=/sipi/config/sipi.knora-test-docker-config.lua
+    #    - docker run -d --add-host webapihost:$DOCKERHOST -v /tmp:/tmp -v $HOME:$HOME -p 1024:1024 $SIPI_REPO:develop /sipi/local/bin/sipi --config=/sipi/config/sipi.knora-test-docker-config.lua
     #    # start the webapi and salsah server
     #    - cd $TRAVIS_BUILD_DIR/webapi/ && sbt "run allowResetTriplestoreContentOperationOverHTTP" &
     #    - cd $TRAVIS_BUILD_DIR/salsah/ && sbt run &
@@ -84,6 +85,10 @@ jobs:
         - docker tag $SALSAH_REPO:$COMMIT $SALSAH_REPO:$TAG
         # only push to docker if it is not a pull request
         - if [ "$TRAVIS_EVENT_TYPE" != "pull_request" ]; then docker push $SALSAH_REPO ; fi
+        # get the develop sipi and tag it as 'develop-knora' so we know that this version is tested (only on the develop branch)
+        - docker pull $SIPI_REPO:develop
+        - if [ "$TAG" = "develop" ]; docker tag $SIPI_REPO:develop $SIPI_REPO:knora-develop ; fi
+        - if [ "$TRAVIS_EVENT_TYPE" != "pull_request" ]; then docker push $SIPI_REPO ; fi
 
 notifications:
   slack:
