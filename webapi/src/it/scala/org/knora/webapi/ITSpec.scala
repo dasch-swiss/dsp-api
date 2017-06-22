@@ -17,7 +17,6 @@
 package org.knora.webapi
 
 import akka.actor.ActorSystem
-import akka.event.LoggingAdapter
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.client.RequestBuilding
 import akka.http.scaladsl.model.{HttpRequest, HttpResponse, StatusCodes}
@@ -69,9 +68,16 @@ class ITSpec(_system: ActorSystem) extends Core with KnoraService with Suite wit
 
     protected def getResponseString(request: HttpRequest): String = {
         val response = singleAwaitingRequest(request)
+
+        if (response.status != StatusCodes.OK) {
+            log.debug("getResponseString - request: {}", request)
+            log.debug("getResponseString - response: {}", response)
+        }
+
         val responseBodyFuture: Future[String] = response.entity.toStrict(5.seconds).map(_.data.decodeString("UTF-8"))
         val responseBodyStr = Await.result(responseBodyFuture, 5.seconds)
-        assert(response.status === StatusCodes.OK, responseBodyStr)
+
+        assert(response.status === StatusCodes.OK, s", request: $request, response: $response, responseBodyStr: $responseBodyStr")
         responseBodyStr
     }
 

@@ -31,7 +31,7 @@ import spray.json._
 import scala.concurrent.duration._
 
 
-object SipiV1ITSpec {
+object KnoraSipiIntegrationV1ITSpec {
     val config: Config = ConfigFactory.parseString(
         """
           |akka.loglevel = "DEBUG"
@@ -43,7 +43,9 @@ object SipiV1ITSpec {
   * End-to-End (E2E) test specification for testing Knora-Sipi integration. Sipi must be running with the config file
   * `sipi.knora-config.lua`.
   */
-class SipiV1ITSpec extends ITSpec(SipiV1ITSpec.config) with TriplestoreJsonProtocol {
+class KnoraSipiIntegrationV1ITSpec extends ITSpec(KnoraSipiIntegrationV1ITSpec.config) with TriplestoreJsonProtocol {
+
+    implicit override val log = akka.event.Logging(system, this.getClass())
 
     private val rdfDataObjects = List(
         RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/incunabula"),
