@@ -45,8 +45,8 @@ case class LoadOntologiesRequestV2(userProfile: UserProfileV1) extends Ontologie
 /**
   * Indicates that all ontologies were loaded.
   */
-case class LoadOntologiesResponseV2(settings: SettingsImpl) extends KnoraResponseV2 {
-    def toJsonLDWithValueObject = """{"result": "Ontologies loaded."}"""
+case class LoadOntologiesResponseV2() extends KnoraResponseV2 {
+    def toJsonLDWithValueObject(settings: SettingsImpl) = """{"result": "Ontologies loaded."}"""
 
     def toXML = ???
 }

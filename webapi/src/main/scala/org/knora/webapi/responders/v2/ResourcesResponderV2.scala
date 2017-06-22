@@ -104,7 +104,7 @@ class ResourcesResponderV2 extends Responder {
             mappings: Vector[(IRI, MappingAndXSLTransformation)] <- Future.sequence(mappingsWithFuture)
 
             // TODO: possibly more than one resource was requested!
-        }  yield ReadResourcesSequenceV2(numberOfResources = 1, resources = Vector(ConstructResponseUtilV2.createFullResourceResponse(resourceIri, queryResultsSeparated(resourceIri), mappings = mappings.toMap, settings)), settings = settings)
+        }  yield ReadResourcesSequenceV2(numberOfResources = 1, resources = Vector(ConstructResponseUtilV2.createFullResourceResponse(resourceIri, queryResultsSeparated(resourceIri), mappings = mappings.toMap)))
 
     }
 
@@ -129,7 +129,7 @@ class ResourcesResponderV2 extends Responder {
             // separate resources and values
             queryResultsSeparated: Map[IRI, ResourceWithValueRdfData] = ConstructResponseUtilV2.splitResourcesAndValueRdfData(constructQueryResults = resourcePreviewRequestResponse, userProfile = userProfile)
 
-        } yield ReadResourcesSequenceV2(numberOfResources = 1, resources = Vector(ConstructResponseUtilV2.createFullResourceResponse(resourceIri, queryResultsSeparated(resourceIri), mappings = Map.empty[IRI, MappingAndXSLTransformation], settings)), settings = settings)
+        } yield ReadResourcesSequenceV2(numberOfResources = 1, resources = Vector(ConstructResponseUtilV2.createFullResourceResponse(resourceIri, queryResultsSeparated(resourceIri), mappings = Map.empty[IRI, MappingAndXSLTransformation])))
 
     }
 

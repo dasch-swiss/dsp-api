@@ -659,7 +659,7 @@ class OntologiesResponderV2 extends Responder {
 
             _ = CacheUtil.put(cacheName = OntologyCacheName, key = OntologyCacheKey, value = ontologyCacheData)
 
-        } yield LoadOntologiesResponseV2(settings = settings)
+        } yield LoadOntologiesResponseV2()
     }
 
     /**
@@ -813,8 +813,7 @@ class OntologiesResponderV2 extends Responder {
             projectsNamedGraph: Seq[NamedGraphV1] <- (responderManager ? ProjectsNamedGraphGetV1(userProfile)).mapTo[Seq[NamedGraphV1]]
 
             response = ReadNamedGraphsV2(
-                namedGraphs = projectsNamedGraph.map(_.id).toSet,
-                settings = settings
+                namedGraphs = projectsNamedGraph.map(_.id).toSet
             )
         } yield response
     }
@@ -888,7 +887,7 @@ class OntologiesResponderV2 extends Responder {
             // request information about the properties for which cardinalities are defined
             propertiesResponse: EntityInfoGetResponseV2 <- getEntityInfoResponseV2(propertyIris = propertyIris, userProfile = userProfile)
 
-        } yield ReadEntityDefinitionsV2(resourceClasses = resourceClassResponse.resourceEntityInfoMap, properties = propertiesResponse.propertyEntityInfoMap, language = userProfile.userData.lang, settings = settings)
+        } yield ReadEntityDefinitionsV2(resourceClasses = resourceClassResponse.resourceEntityInfoMap, properties = propertiesResponse.propertyEntityInfoMap, language = userProfile.userData.lang)
 
     }
 
@@ -906,7 +905,7 @@ class OntologiesResponderV2 extends Responder {
             propertiesResponse: EntityInfoGetResponseV2 <- getEntityInfoResponseV2(propertyIris = propertyIris, userProfile = userProfile)
 
 
-        } yield ReadEntityDefinitionsV2(properties = propertiesResponse.propertyEntityInfoMap, language = userProfile.userData.lang, settings = settings)
+        } yield ReadEntityDefinitionsV2(properties = propertiesResponse.propertyEntityInfoMap, language = userProfile.userData.lang)
 
     }
 

@@ -313,10 +313,9 @@ object ConstructResponseUtilV2 {
       *
       * @param valueObject the given [[ValueRdfData]].
       * @param mappings    the mappings needed for standoff conversions and XSL transformations.
-      * @param settings    configuration parameters
       * @return a [[ValueContentV2]] representing a value.
       */
-    def createValueContentV2FromValueRdfData(valueObject: ValueRdfData, mappings: Map[IRI, MappingAndXSLTransformation], settings: SettingsImpl): ValueContentV2 = {
+    def createValueContentV2FromValueRdfData(valueObject: ValueRdfData, mappings: Map[IRI, MappingAndXSLTransformation]): ValueContentV2 = {
 
         // every knora-base:Value (any of its subclasses) has a string representation
         val valueObjectValueHasString: String = valueObject.assertions(OntologyConstants.KnoraBase.ValueHasString)
@@ -401,7 +400,7 @@ object ConstructResponseUtilV2 {
 
                         // add information about the referred resource
                         linkValue.copy(
-                            referredResource = Some(constructReadResourceV2(referredResourceIri, referredResourceAssertions, mappings, settings)) // construct a `ReadResourceV2`
+                            referredResource = Some(constructReadResourceV2(referredResourceIri, referredResourceAssertions, mappings)) // construct a `ReadResourceV2`
                         )
 
                     case None => linkValue // do not include information about the referred resource
@@ -421,8 +420,7 @@ object ConstructResponseUtilV2 {
                     qualityLevel = valueObject.assertions(OntologyConstants.KnoraBase.QualityLevel).toInt,
                     isPreview = InputValidation.optionStringToBoolean(valueObject.assertions.get(OntologyConstants.KnoraBase.IsPreview)),
                     valueHasString = valueObject.assertions(OntologyConstants.KnoraBase.ValueHasString),
-                    comment = valueCommentOption,
-                    settings = settings
+                    comment = valueCommentOption
                 )
 
             case OntologyConstants.KnoraBase.TextFileValue =>
@@ -433,8 +431,7 @@ object ConstructResponseUtilV2 {
                     originalFilename = valueObject.assertions(OntologyConstants.KnoraBase.OriginalFilename),
                     originalMimeType = valueObject.assertions.get(OntologyConstants.KnoraBase.OriginalMimeType),
                     valueHasString = valueObject.assertions(OntologyConstants.KnoraBase.ValueHasString),
-                    comment = valueCommentOption,
-                    settings = settings
+                    comment = valueCommentOption
                 )
 
             case other =>
@@ -449,10 +446,9 @@ object ConstructResponseUtilV2 {
       *
       * @param resourceIri              the Iri of the resource.
       * @param resourceWithValueRdfData the Rdf data belonging to the resource.
-      * @param settings                 configuration parameters
       * @return a [[ReadResourceV2]].
       */
-    def constructReadResourceV2(resourceIri: IRI, resourceWithValueRdfData: ResourceWithValueRdfData, mappings: Map[IRI, MappingAndXSLTransformation], settings: SettingsImpl): ReadResourceV2 = {
+    def constructReadResourceV2(resourceIri: IRI, resourceWithValueRdfData: ResourceWithValueRdfData, mappings: Map[IRI, MappingAndXSLTransformation]): ReadResourceV2 = {
 
         val resourceAssertionsMap = resourceWithValueRdfData.resourceAssertions.toMap
 
@@ -465,7 +461,7 @@ object ConstructResponseUtilV2 {
             case (property: IRI, valObjs: Seq[ValueRdfData]) =>
                 (property, valObjs.map {
                     valObj =>
-                        val readValue = createValueContentV2FromValueRdfData(valObj, mappings = mappings, settings)
+                        val readValue = createValueContentV2FromValueRdfData(valObj, mappings = mappings)
 
                         ReadValueV2(valObj.valueObjectIri, readValue)
                 })
@@ -489,9 +485,9 @@ object ConstructResponseUtilV2 {
       * @param mappings        the mappings needed for standoff conversions and XSL transformations.
       * @return a [[ReadResourceV2]].
       */
-    def createFullResourceResponse(resourceIri: IRI, resourceRdfData: ResourceWithValueRdfData, mappings: Map[IRI, MappingAndXSLTransformation], settings: SettingsImpl): ReadResourceV2 = {
+    def createFullResourceResponse(resourceIri: IRI, resourceRdfData: ResourceWithValueRdfData, mappings: Map[IRI, MappingAndXSLTransformation]): ReadResourceV2 = {
 
-        constructReadResourceV2(resourceIri, resourceRdfData, mappings = mappings, settings: SettingsImpl)
+        constructReadResourceV2(resourceIri, resourceRdfData, mappings = mappings)
 
     }
 
@@ -501,7 +497,7 @@ object ConstructResponseUtilV2 {
       * @param searchResults the results returned by the triplestore.
       * @return a collection of [[ReadResourceV2]], representing the search results.
       */
-    def createSearchResponse(searchResults: Map[IRI, ResourceWithValueRdfData], settings: SettingsImpl): Vector[ReadResourceV2] = {
+    def createSearchResponse(searchResults: Map[IRI, ResourceWithValueRdfData]): Vector[ReadResourceV2] = {
 
         // each entry represents a resource that matches the search criteria
         // this is because linking properties are excluded from fulltext search
@@ -510,7 +506,7 @@ object ConstructResponseUtilV2 {
 
                 // TODO: check if the query path is represented by the resource's values the user has permissions to see
 
-                constructReadResourceV2(resourceIri, assertions, mappings = Map.empty[IRI, MappingAndXSLTransformation], settings)
+                constructReadResourceV2(resourceIri, assertions, mappings = Map.empty[IRI, MappingAndXSLTransformation])
         }.toVector
     }
 }

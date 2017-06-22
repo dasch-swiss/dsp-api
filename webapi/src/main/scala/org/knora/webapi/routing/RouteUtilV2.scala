@@ -78,7 +78,7 @@ object RouteUtilV2 {
             // TODO: check whether to send back JSON-LD or XML (content negotiation: HTTP accept header)
 
             // The request was successful
-            jsonResponseWithStatus = knoraResponse.toJsonLDWithValueObject
+            jsonResponseWithStatus = knoraResponse.toJsonLDWithValueObject(settings)
 
         } yield HttpResponse(
             status = StatusCodes.OK,
