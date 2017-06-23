@@ -559,6 +559,9 @@
 													}, function(data) {
 														if (data.status == ApiErrors.OK) {
 															tmpele.val(data.resource_info.firstproperty + ' (' + data.resource_info.restype_label + ')').data('res_id', res_id);
+															// if the choice is selected, change the input value and tag it as valid
+															tmpele.attr("prevVal", "");
+															tmpele.attr("isValid", true);
 														} else {
 															alert(data.errormsg);
 														}

@@ -208,7 +208,13 @@
 							left: pos.left,
 							top: pos.top
 						}).show();
-						$this.val('');
+						if ($this.val()) {
+							// if the input already has a value and it is valid
+							if ($this.attr("isValid")) {
+								$this.attr("prevVal", $this.val());
+							}
+							$this.val('');
+						}
 					});
 
 
@@ -219,6 +225,14 @@
 								$this.css({cursor: 'text'});
 							}
 							localdata.ele.sel.hide();
+							// when leaving this input, if the value is empty, but we had a previous valid input
+							// set back the previous input
+							if (!$this.val()) {
+								if ($this.attr("prevVal")) {
+									$this.val($this.attr("prevVal"));
+									$this.attr("prevVal", '');
+								}
+							}
 						}
 					});
 
