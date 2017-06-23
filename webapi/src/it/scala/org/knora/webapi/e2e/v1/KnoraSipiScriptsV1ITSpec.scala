@@ -22,12 +22,10 @@ import java.nio.file.{Files, Paths}
 import akka.http.scaladsl.model.headers._
 import akka.http.scaladsl.model.{HttpEntity, _}
 import com.typesafe.config.{Config, ConfigFactory}
-import org.knora.webapi.messages.v1.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
+import org.knora.webapi.messages.v1.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.util.MutableTestIri
 import org.knora.webapi.{FileWriteException, ITSpec}
 import spray.json._
-
-import scala.concurrent.duration._
 
 
 object KnoraSipiScriptsV1ITSpec {
@@ -97,14 +95,113 @@ class KnoraSipiScriptsV1ITSpec extends ITSpec(KnoraSipiIntegrationV1ITSpec.confi
             // get the preview_path
             val previewPath = sipiPostResponseJson.fields("preview_path").asInstanceOf[JsString].value
 
+            // get the filename
+            val filename = sipiPostResponseJson.fields("filename").asInstanceOf[JsString].value
+
             // Send a GET request to Sipi, asking for the preview image
-            val sipiGetRequest = Get(previewPath)
-            val sipiGetResponseJson = getResponseString(sipiGetRequest)
+            val sipiGetRequest01 = Get(previewPath)
+            val sipiGetResponseJson01 = getResponseString(sipiGetRequest01)
+
+            // Send a GET request to Sipi, asking for the info.json of the image
+            val sipiGetRequest02 = Get(baseSipiUrl + "/thumbs/" + filename + "_THUMB.jpg/info.json" )
+            val sipiGetResponseJson = getResponseJson(sipiGetRequest02)
         }
 
-        "successfully call convert_from_binaries.lua sipi script" ignore {}
 
-        "successfully call convert_from_file.lua sipi script" ignore {}
+
+        "successfully call convert_from_file.lua sipi script" in {
+
+            /* This is the case where the file is already stored on the sipi server as part of make_thumbnail*/
+
+            // The image to be uploaded.
+            val fileToSend = new File(pathToChlaus)
+            assert(fileToSend.exists(), s"File $pathToChlaus does not exist")
+
+            // A multipart/form-data request containing the image.
+            val sipiFormData = Multipart.FormData(
+                Multipart.FormData.BodyPart(
+                    "file",
+                    HttpEntity.fromPath(MediaTypes.`image/jpeg`, fileToSend.toPath),
+                    Map("filename" -> fileToSend.getName)
+                )
+            )
+
+            // Send a POST request to Sipi, asking it to make a thumbnail of the image.
+            val sipiMakeThumbnailRequest = Post(baseSipiUrl + "/make_thumbnail", sipiFormData)
+            val sipiMakeThumbnailResponseJson = getResponseJson(sipiMakeThumbnailRequest)
+
+
+            val originalFilename = sipiMakeThumbnailResponseJson.fields("original_filename").asInstanceOf[JsString].value
+            val originalMimeType = sipiMakeThumbnailResponseJson.fields("original_mimetype").asInstanceOf[JsString].value
+            val filename = sipiMakeThumbnailResponseJson.fields("filename").asInstanceOf[JsString].value
+
+            // ToDo: Find out why this way of sending json is not working with sipi
+            /*
+            val params =
+                s"""
+                   |{
+                   |    "originalfilename": "$originalFilename",
+                   |    "originalmimetype": "$originalMimeType",
+                   |    "filename": "$filename"
+                   |}
+                """.stripMargin
+
+            val convertFromFileRequest = Post(baseSipiUrl + "/convert_from_file", HttpEntity(ContentTypes.`application/json`, params))
+            val convertFromFileResponseJson = getResponseJson(convertFromFileRequest)
+            */
+
+            // A form-data request containing the payload for convert_from_file.
+
+            val sipiFormData02 = FormData(
+                Map(
+                    "originalFilename" -> originalFilename,
+                    "originalMimeType" -> originalMimeType,
+                    "filename" -> filename
+                )
+            )
+
+            val convertFromFileRequest = Post(baseSipiUrl + "/convert_from_file", sipiFormData02)
+            val convertFromFileResponseJson = getResponseJson(convertFromFileRequest)
+
+            val filenameFull = convertFromFileResponseJson.fields("filename_full").asInstanceOf[JsString].value
+
+            // ToDo: Check if image is accessible. Maybe call to /info.json could be without authentication, as authentication requires credentials and for Knora to know the file.
+            // Send a GET request to Sipi, asking for full image
+            // not possible as authentication is required and file needs to be known by knora to be able to authenticate the request
+            // val sipiGetRequest01 = Get(baseSipiUrl + "/knora/" + filenameFull + "/full/full/0/default.jpg") ~> addCredentials(BasicHttpCredentials(username, password))
+            // val sipiGetResponseJson01 = getResponseString(sipiGetRequest01)
+
+            // Send a GET request to Sipi, asking for the info.json of the image
+            // val sipiGetRequest02 = Get(baseSipiUrl + "/knora/" + filenameFull + "/info.json" ) ~> addCredentials(BasicHttpCredentials(username, password))
+            // val sipiGetResponseJson = getResponseJson(sipiGetRequest02)
+
+
+        }
+
+        "successfully call convert_from_binaries.lua sipi script" in {
+
+            // The image to be uploaded.
+            val fileToSend = new File(pathToChlaus)
+            assert(fileToSend.exists(), s"File $pathToChlaus does not exist")
+
+            // A multipart/form-data request containing the image.
+            val sipiFormData = FormData(
+                Map(
+                    "originalFilename" -> fileToSend.getName,
+                    "originalMimeType" -> "image/jpeg",
+                    "source" -> fileToSend.getAbsolutePath
+                )
+            )
+
+            // Send a POST request to Sipi, asking it to make a thumbnail of the image.
+            val sipiConvertFromBinariesPostRequest = Post(baseSipiUrl + "/convert_from_binaries", sipiFormData)
+            val sipiConvertFromBinariesPostResponseJson = getResponseJson(sipiConvertFromBinariesPostRequest)
+
+            //log.debug("sipiConvertFromBinariesPostResponseJson: {}", sipiConvertFromBinariesPostResponseJson)
+
+            //ToDo: Add some check to see if file was created
+
+        }
 
     }
 

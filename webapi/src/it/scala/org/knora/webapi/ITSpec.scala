@@ -69,15 +69,13 @@ class ITSpec(_system: ActorSystem) extends Core with KnoraService with Suite wit
     protected def getResponseString(request: HttpRequest): String = {
         val response = singleAwaitingRequest(request)
 
-        if (response.status != StatusCodes.OK) {
-            log.debug("getResponseString - request: {}", request)
-            log.debug("getResponseString - response: {}", response)
-        }
+        //log.debug("REQUEST: {}", request)
+        //log.debug("RESPONSE: {}", response.toString())
 
         val responseBodyFuture: Future[String] = response.entity.toStrict(5.seconds).map(_.data.decodeString("UTF-8"))
         val responseBodyStr = Await.result(responseBodyFuture, 5.seconds)
 
-        assert(response.status === StatusCodes.OK, s", request: $request, response: $response, responseBodyStr: $responseBodyStr")
+        assert(response.status === StatusCodes.OK, s",\n REQUEST: $request,\n RESPONSE: $response")
         responseBodyStr
     }
 
