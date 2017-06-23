@@ -70,6 +70,7 @@ object SearchRouteV2 extends Authenticator {
 
                     // TODO: process Sparql provided by the user
 
+                    // search for all the letters exchanged between two persons
                     val sparql_tmp =
                         """
                           |PREFIX beol: <http://api.knora.org/ontology/beol/simple/v2#>
@@ -77,6 +78,8 @@ object SearchRouteV2 extends Authenticator {
                           |
                           |CONSTRUCT {
                           |    ?letter knora-api:isMainResource true .
+                          |
+                          |    ?letter a beol:letter .
                           |
                           |    ?letter ?linkingProp1  <http://rdfh.ch/beol/oU8fMNDJQ9SGblfBl5JamA> .
                           |    ?letter ?linkingProp2  <http://rdfh.ch/beol/6edJwtTSR8yjAWnYmt6AtA> .
@@ -90,6 +93,70 @@ object SearchRouteV2 extends Authenticator {
                           |    # Hermann, Jacob 1678-1733
                           |    ?letter ?linkingProp2 <http://rdfh.ch/beol/6edJwtTSR8yjAWnYmt6AtA> .
                           |    FILTER(?linkingProp2 = beol:hasAuthor || ?linkingProp2 = beol:hasRecipient )
+                          |}
+                        """.stripMargin
+
+                    // search for a letter that has the given title and mentions Isaac Newton
+                    var sparql_tmp2 =
+                        """
+                          |PREFIX beol: <http://api.knora.org/ontology/beol/v2#>
+                          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+                          |
+                          |CONSTRUCT {
+                          |    ?letter knora-api:isMainResource true .
+                          |
+                          |    ?letter a beol:letter .
+                          |
+                          |    ?letter beol:title ?titleObj .
+                          |    ?titleObj knora-base:valueHasString "1707-05-18_2_Hermann_Jacob-Scheuchzer_Johann_Jakob" .
+                          |
+                          |    ?letter beol:mentionsPerson <http://rdfh.ch/beol/NUkE4PxyT1uEm3K9db63wQ>
+                          |
+                          |} WHERE {
+                          |
+                          |    ?letter a beol:letter .
+                          |
+                          |    # in simple v2, this would have to be one statement (no value object)
+                          |    ?letter beol:title ?titleObj .
+                          |
+                          |    ?titleObj knora-base:valueHasString "1707-05-18_2_Hermann_Jacob-Scheuchzer_Johann_Jakob" .
+                          |
+                          |    # Newton,  Isaac 1643-1727
+                          |    ?letter beol:mentionsPerson <http://rdfh.ch/beol/NUkE4PxyT1uEm3K9db63wQ>
+                          |}
+                        """.stripMargin
+
+                    // search for letters that link to another letter via standoff that is authored by a person with IAF id "120379260"
+                    var sparql_tmp3 =
+                        """
+                          |PREFIX beol: <http://api.knora.org/ontology/beol/v2#>
+                          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+                          |
+                          |CONSTRUCT {
+                          |    ?letter knora-api:isMainResource true .
+                          |
+                          |    ?letter a beol:letter .
+                          |
+                          |    ?letter knora-base:hasStandoffLinkTo ?anotherLetter .
+                          |
+                          |    ?anotherLetter beol:hasAuthor ?author .
+                          |
+                          |    ?author a beol:person .
+                          |    ?author beol:hasIAFIdentifier ?idObj .
+                          |    ?idObj knora-base:valueHasString "120379260" .
+                          |} WHERE {
+                          |
+                          |    ?letter a beol:letter .
+                          |
+                          |    ?letter knora-base:hasStandoffLinkTo ?anotherLetter .
+                          |
+                          |    ?anotherLetter beol:hasAuthor ?author .
+                          |
+                          |    # Scheuchzer, Johann 1684-1738
+                          |    ?author a beol:person .
+                          |    ?author beol:hasIAFIdentifier ?idObj .
+                          |    ?idObj knora-base:valueHasString "120379260" .
+                          |
                           |}
                         """.stripMargin
 

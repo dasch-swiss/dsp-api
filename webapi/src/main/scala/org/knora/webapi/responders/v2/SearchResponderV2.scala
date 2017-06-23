@@ -161,7 +161,7 @@ class SearchResponderV2 extends Responder {
                 )
 
         }
-        
+
 
         // collect all the property Iris used in the predicates of statement patterns
         val propertyIrisFromPredicates: Set[IRI] = extendedSearchStatementPatterns.map(_.pred).collect {
@@ -215,7 +215,7 @@ class SearchResponderV2 extends Responder {
                 }
         }.toSet
 
-
+        
 
         for {
 
@@ -235,10 +235,15 @@ class SearchResponderV2 extends Responder {
                 propVar -> propTypes
             }
 
-            _ = println(propVarsWithTypes)
 
 
+            // loop over all the statements and create a sequence of ExtendedSearchStatementsAndFilterPatterns
+            statementsGroupedBySubject = extendedSearchStatementPatterns.groupBy {
+                (statement: ExtendedSearchStatementPattern) =>
+                    statement.subj
+            }
 
+            _ = println(statementsGroupedBySubject)
 
 
             searchSparql <- Future(queries.sparql.v2.txt.searchExtended(
