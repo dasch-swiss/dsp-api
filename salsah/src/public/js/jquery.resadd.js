@@ -509,7 +509,20 @@
 										attributes.type = 'text';
 										create_entry(propname, pinfo, function(ele, attr, pinfo) {
 											var tmpele = $('<input>', attr).addClass('__searchbox').insertBefore(ele.find('.entrySep'));
-											tmpele.attr('placeholder', 'start typing to search...');
+											var placeholderText = 'start typing to search (min 3 letters)...';
+											if (SALSAH.userprofile && SALSAH.userprofile.userData && SALSAH.userprofile.userData.lang) {
+												switch(SALSAH.userprofile.userData.lang) {
+													case 'fr': placeholderText = "entrez les 3 premières lettres pour chercher...";
+													// case german
+												}
+											}
+											tmpele.attr('placeholder', placeholderText);
+
+											// see: https://bugs.jquery.com/ticket/12429
+											// $('<input>', attr) doesn't set "size" in attr={size:23}
+											if (attr["size"]) {
+												tmpele.attr("size", attr["size"]);
+											}
 
 											var restype_id = -1;
 											var numprops = 1;

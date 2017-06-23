@@ -70,7 +70,9 @@
 
                salsah-gui:guiOrder "1"^^xsd:integer ;
 
-               salsah-gui:guiElement salsah-gui:Searchbox .
+               salsah-gui:guiElement salsah-gui:Searchbox ;
+	       
+	       salsah-gui:guiAttribute "size=45".
 
 
 
