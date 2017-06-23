@@ -23,12 +23,11 @@ import akka.http.scaladsl.model.{HttpRequest, HttpResponse, StatusCodes}
 import akka.stream.ActorMaterializer
 import com.typesafe.config.{Config, ConfigFactory}
 import org.scalatest.{BeforeAndAfterAll, Matchers, Suite, WordSpecLike}
-import spray.json.JsObject
+import spray.json.{JsObject, _}
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContextExecutor, Future}
 import scala.languageFeature.postfixOps
-import spray.json._
 
 object ITSpec {
     val defaultConfig: Config = ConfigFactory.load()

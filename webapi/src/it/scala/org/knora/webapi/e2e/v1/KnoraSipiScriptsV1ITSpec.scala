@@ -103,7 +103,7 @@ class KnoraSipiScriptsV1ITSpec extends ITSpec(KnoraSipiIntegrationV1ITSpec.confi
             val sipiGetResponseJson01 = getResponseString(sipiGetRequest01)
 
             // Send a GET request to Sipi, asking for the info.json of the image
-            val sipiGetRequest02 = Get(baseSipiUrl + "/thumbs/" + filename + "_THUMB.jpg/info.json" )
+            val sipiGetRequest02 = Get(baseSipiUrl + "/thumbs/" + filename + ".jpg/info.json" )
             val sipiGetResponseJson = getResponseJson(sipiGetRequest02)
         }
 
