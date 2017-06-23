@@ -40,7 +40,7 @@ object KnoraSipiScriptsV1ITSpec {
   * End-to-End (E2E) test specification for testing Knora-Sipi integration. Sipi must be running with the config file
   * `sipi.knora-config.lua`.
   */
-class KnoraSipiScriptsV1ITSpec extends ITSpec(KnoraSipiIntegrationV1ITSpec.config) with TriplestoreJsonProtocol {
+class KnoraSipiScriptsV1ITSpec extends ITSpec(KnoraSipiScriptsV1ITSpec.config) with TriplestoreJsonProtocol {
 
     implicit override val log = akka.event.Logging(system, this.getClass())
 
