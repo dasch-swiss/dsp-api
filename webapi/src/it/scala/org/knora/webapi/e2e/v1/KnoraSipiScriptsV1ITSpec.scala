@@ -23,8 +23,8 @@ import akka.http.scaladsl.model.headers._
 import akka.http.scaladsl.model.{HttpEntity, _}
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi.messages.v1.store.triplestoremessages.TriplestoreJsonProtocol
-import org.knora.webapi.util.MutableTestIri
-import org.knora.webapi.{FileWriteException, ITSpec}
+import org.knora.webapi.util.{MutableTestIri, TestingUtilities}
+import org.knora.webapi.{FileWriteException, ITKnoraFakeSpec}
 import spray.json._
 
 
@@ -37,12 +37,13 @@ object KnoraSipiScriptsV1ITSpec {
 }
 
 /**
-  * End-to-End (E2E) test specification for testing Knora-Sipi integration. Sipi must be running with the config file
-  * `sipi.knora-config.lua`.
+  * End-to-End (E2E) test specification for testing Knora-Sipi scripts. Sipi must be running with the config file
+  * `sipi.knora-config.lua`. This spec uses the KnoraFakeService to start a faked `webapi` server that always allows
+  * access to files.
   */
-class KnoraSipiScriptsV1ITSpec extends ITSpec(KnoraSipiScriptsV1ITSpec.config) with TriplestoreJsonProtocol {
+class KnoraSipiScriptsV1ITSpec extends ITKnoraFakeSpec(KnoraSipiScriptsV1ITSpec.config) with TriplestoreJsonProtocol with TestingUtilities {
 
-    implicit override val log = akka.event.Logging(system, this.getClass())
+    implicit override lazy val log = akka.event.Logging(system, this.getClass())
 
     private val username = "root@example.com"
     private val password = "test"
@@ -165,15 +166,16 @@ class KnoraSipiScriptsV1ITSpec extends ITSpec(KnoraSipiScriptsV1ITSpec.config) w
 
             val filenameFull = convertFromFileResponseJson.fields("filename_full").asInstanceOf[JsString].value
 
-            // ToDo: Check if image is accessible. Maybe call to /info.json could be without authentication, as authentication requires credentials and for Knora to know the file.
+            // Running with KnoraFakeService which always allows access to files.
             // Send a GET request to Sipi, asking for full image
             // not possible as authentication is required and file needs to be known by knora to be able to authenticate the request
-            // val sipiGetRequest01 = Get(baseSipiUrl + "/knora/" + filenameFull + "/full/full/0/default.jpg") ~> addCredentials(BasicHttpCredentials(username, password))
-            // val sipiGetResponseJson01 = getResponseString(sipiGetRequest01)
+            val sipiGetImageRequest = Get(baseSipiUrl + "/knora/" + filenameFull + "/full/full/0/default.jpg") ~> addCredentials(BasicHttpCredentials(username, password))
+            checkResponseOK(sipiGetImageRequest)
 
             // Send a GET request to Sipi, asking for the info.json of the image
-            // val sipiGetRequest02 = Get(baseSipiUrl + "/knora/" + filenameFull + "/info.json" ) ~> addCredentials(BasicHttpCredentials(username, password))
-            // val sipiGetResponseJson = getResponseJson(sipiGetRequest02)
+            val sipiGetInfoRequest = Get(baseSipiUrl + "/knora/" + filenameFull + "/info.json" ) ~> addCredentials(BasicHttpCredentials(username, password))
+            val sipiGetInfoResponseJson = getResponseJson(sipiGetInfoRequest)
+            log.debug("sipiGetInfoResponseJson: {}", sipiGetInfoResponseJson)
 
 
         }
@@ -197,10 +199,18 @@ class KnoraSipiScriptsV1ITSpec extends ITSpec(KnoraSipiScriptsV1ITSpec.config) w
             val sipiConvertFromBinariesPostRequest = Post(baseSipiUrl + "/convert_from_binaries", sipiFormData)
             val sipiConvertFromBinariesPostResponseJson = getResponseJson(sipiConvertFromBinariesPostRequest)
 
+            val filenameFull = sipiConvertFromBinariesPostResponseJson.fields("filename_full").asInstanceOf[JsString].value
+
             //log.debug("sipiConvertFromBinariesPostResponseJson: {}", sipiConvertFromBinariesPostResponseJson)
 
-            //ToDo: Add some check to see if file was created
+            // Running with KnoraFakeService which always allows access to files.
+            val sipiGetImageRequest = Get(baseSipiUrl + "/knora/" + filenameFull + "/full/full/0/default.jpg") ~> addCredentials(BasicHttpCredentials(username, password))
+            checkResponseOK(sipiGetImageRequest)
 
+            // Send a GET request to Sipi, asking for the info.json of the image
+            val sipiGetInfoRequest = Get(baseSipiUrl + "/knora/" + filenameFull + "/info.json" ) ~> addCredentials(BasicHttpCredentials(username, password))
+            val sipiGetInfoResponseJson = getResponseJson(sipiGetInfoRequest)
+            log.debug("sipiGetInfoResponseJson: {}", sipiGetInfoResponseJson)
         }
 
     }

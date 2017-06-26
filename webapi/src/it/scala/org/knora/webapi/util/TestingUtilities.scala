@@ -14,48 +14,25 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi
+package org.knora.webapi.util
 
-import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.client.RequestBuilding
 import akka.http.scaladsl.model.{HttpRequest, HttpResponse, StatusCodes}
 import akka.stream.ActorMaterializer
-import com.typesafe.config.{Config, ConfigFactory}
-import org.scalatest.{BeforeAndAfterAll, Matchers, Suite, WordSpecLike}
+import org.knora.webapi.Core
+import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
 import spray.json.{JsObject, _}
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContextExecutor, Future}
-import scala.languageFeature.postfixOps
-
-object ITSpec {
-    val defaultConfig: Config = ConfigFactory.load()
-}
 
 /**
-  * This class can be used in End-to-End testing. It starts the Knora server and
-  * provides access to settings and logging.
+  * Created by subotic on 26.06.17.
   */
-class ITSpec(_system: ActorSystem) extends Core with KnoraService with Suite with WordSpecLike with Matchers with BeforeAndAfterAll with RequestBuilding {
+trait TestingUtilities extends WordSpecLike with Matchers with BeforeAndAfterAll with RequestBuilding {
 
-    def this(name: String, config: Config) = this(ActorSystem(name, config.withFallback(ITSpec.defaultConfig)))
-
-    def this(config: Config) = this(ActorSystem("IntegrationTests", config.withFallback(ITSpec.defaultConfig)))
-
-    def this(name: String) = this(ActorSystem(name, ITSpec.defaultConfig))
-
-    def this() = this(ActorSystem("IntegrationTests", ITSpec.defaultConfig))
-
-    /* needed by the core trait */
-    implicit lazy val system: ActorSystem = _system
-
-    if (!settings.knoraApiUseHttp) throw HttpConfigurationException("Integration tests currently require HTTP")
-
-    protected val baseApiUrl: String = settings.knoraApiHttpBaseUrl
-    protected val baseSipiUrl: String = s"${settings.sipiBaseUrl}:${settings.sipiPort}"
-
-    implicit protected val postfix: postfixOps = scala.language.postfixOps
+    this: Core =>
 
     implicit protected val ec: ExecutionContextExecutor = system.dispatcher
     implicit protected val materializer = ActorMaterializer()
@@ -84,20 +61,6 @@ class ITSpec(_system: ActorSystem) extends Core with KnoraService with Suite wit
 
     protected def getResponseJson(request: HttpRequest): JsObject = {
         getResponseString(request).parseJson.asJsObject
-    }
-
-    override def beforeAll: Unit = {
-        /* Set the startup flags and start the Knora Server */
-        log.debug(s"Starting Knora Service")
-        StartupFlags.allowResetTriplestoreContentOperationOverHTTP send true
-        checkActorSystem()
-        startService()
-    }
-
-    override def afterAll: Unit = {
-        /* Stop the server when everything else has finished */
-        log.debug(s"Stopping Knora Service")
-        stopService()
     }
 
 }

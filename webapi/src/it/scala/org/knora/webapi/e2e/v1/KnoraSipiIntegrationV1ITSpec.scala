@@ -24,14 +24,14 @@ import akka.http.scaladsl.model.headers._
 import akka.http.scaladsl.model.{HttpEntity, _}
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi.messages.v1.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
-import org.knora.webapi.util.MutableTestIri
-import org.knora.webapi.{FileWriteException, ITSpec, InvalidApiJsonException}
+import org.knora.webapi.util.{MutableTestIri, TestingUtilities}
+import org.knora.webapi.{FileWriteException, ITKnoraLiveSpec, InvalidApiJsonException}
 import spray.json._
 
 import scala.concurrent.duration._
 
 
-object SipiV1ITSpec {
+object KnoraSipiIntegrationV1ITSpec {
     val config: Config = ConfigFactory.parseString(
         """
           |akka.loglevel = "DEBUG"
@@ -43,7 +43,7 @@ object SipiV1ITSpec {
   * End-to-End (E2E) test specification for testing Knora-Sipi integration. Sipi must be running with the config file
   * `sipi.knora-config.lua`.
   */
-class SipiV1ITSpec extends ITSpec(SipiV1ITSpec.config) with TriplestoreJsonProtocol {
+class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV1ITSpec.config) with TriplestoreJsonProtocol with TestingUtilities {
 
     private val rdfDataObjects = List(
         RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/incunabula"),
