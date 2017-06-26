@@ -18,14 +18,13 @@ package org.knora.webapi.e2e.v1
 
 import java.io.File
 import java.net.URLEncoder
-import java.nio.file.{Files, Paths}
 
 import akka.http.scaladsl.model.headers._
 import akka.http.scaladsl.model.{HttpEntity, _}
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi.messages.v1.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
 import org.knora.webapi.util.{MutableTestIri, TestingUtilities}
-import org.knora.webapi.{FileWriteException, ITKnoraLiveSpec, InvalidApiJsonException}
+import org.knora.webapi.{ITKnoraLiveSpec, InvalidApiJsonException}
 import spray.json._
 
 import scala.concurrent.duration._
@@ -57,6 +56,9 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
     private val firstPageIri = new MutableTestIri
     private val secondPageIri = new MutableTestIri
 
+    // creates tmp directory if not found
+    createTmpFileDir()
+
     "Check if Sipi is running" in {
         // This requires that (1) fileserver.docroot is set in Sipi's config file and (2) it contains a file test.html.
         val request = Get(baseSipiUrl + "/server/test.html")
@@ -72,7 +74,6 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
     "Knora and Sipi" should {
 
         "create an 'incunabula:page' with binary data" in {
-            createTmpFileDir()
 
             // JSON describing the resource to be created.
             val paramsPageWithBinaries =
@@ -390,20 +391,6 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
             // Request the file from Sipi.
             val sipiGetRequest = Get(imageUrl) ~> addCredentials(BasicHttpCredentials(username, password))
             checkResponseOK(sipiGetRequest)
-        }
-    }
-
-    /**
-      * Creates the Knora API server's temporary upload directory if it doesn't exist.
-      */
-    private def createTmpFileDir(): Unit = {
-        if (!Files.exists(Paths.get(settings.tmpDataDir))) {
-            try {
-                val tmpDir = new File(settings.tmpDataDir)
-                tmpDir.mkdir()
-            } catch {
-                case e: Throwable => throw FileWriteException(s"Tmp data directory ${settings.tmpDataDir} could not be created: ${e.getMessage}")
-            }
         }
     }
 }

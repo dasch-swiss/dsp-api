@@ -17,14 +17,13 @@
 package org.knora.webapi.e2e.v1
 
 import java.io.File
-import java.nio.file.{Files, Paths}
 
 import akka.http.scaladsl.model.headers._
 import akka.http.scaladsl.model.{HttpEntity, _}
 import com.typesafe.config.{Config, ConfigFactory}
+import org.knora.webapi.ITKnoraFakeSpec
 import org.knora.webapi.messages.v1.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.util.{MutableTestIri, TestingUtilities}
-import org.knora.webapi.{FileWriteException, ITKnoraFakeSpec}
 import spray.json._
 
 
@@ -51,6 +50,9 @@ class KnoraSipiScriptsV1ITSpec extends ITKnoraFakeSpec(KnoraSipiScriptsV1ITSpec.
     private val pathToMarbles = "_test_data/test_route/images/marbles.tif"
     private val firstPageIri = new MutableTestIri
     private val secondPageIri = new MutableTestIri
+
+    // creates tmp directory if not found
+    createTmpFileDir()
 
     "Check if Sipi is running" in {
         // This requires that (1) fileserver.docroot is set in Sipi's config file and (2) it contains a file test.html.
@@ -213,20 +215,6 @@ class KnoraSipiScriptsV1ITSpec extends ITKnoraFakeSpec(KnoraSipiScriptsV1ITSpec.
             log.debug("sipiGetInfoResponseJson: {}", sipiGetInfoResponseJson)
         }
 
-    }
-
-    /**
-      * Creates the Knora API server's temporary upload directory if it doesn't exist.
-      */
-    private def createTmpFileDir(): Unit = {
-        if (!Files.exists(Paths.get(settings.tmpDataDir))) {
-            try {
-                val tmpDir = new File(settings.tmpDataDir)
-                tmpDir.mkdir()
-            } catch {
-                case e: Throwable => throw FileWriteException(s"Tmp data directory ${settings.tmpDataDir} could not be created: ${e.getMessage}")
-            }
-        }
     }
 }
 

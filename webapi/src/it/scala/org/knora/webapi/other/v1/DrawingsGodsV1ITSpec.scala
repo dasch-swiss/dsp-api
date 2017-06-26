@@ -51,6 +51,9 @@ class DrawingsGodsV1ITSpec extends ITKnoraLiveSpec(DrawingsGodsV1ITSpec.config) 
         RdfDataObject(path = "_test_data/other.v1.DrawingsGodsV1Spec/drawings-gods_data.ttl", name = "http://www.knora.org/data/drawings-gods")
     )
 
+    // creates tmp directory if not found
+    createTmpFileDir()
+
     "Check if Sipi is running" in {
         // This requires that (1) fileserver.docroot is set in Sipi's config file and (2) it contains a file test.html.
         val request = Get(baseSipiUrl + "/server/test.html")

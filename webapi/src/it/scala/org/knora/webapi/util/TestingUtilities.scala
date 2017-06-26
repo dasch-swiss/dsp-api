@@ -16,11 +16,14 @@
 
 package org.knora.webapi.util
 
+import java.io.File
+import java.nio.file.{Files, Paths}
+
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.client.RequestBuilding
 import akka.http.scaladsl.model.{HttpRequest, HttpResponse, StatusCodes}
 import akka.stream.ActorMaterializer
-import org.knora.webapi.Core
+import org.knora.webapi.{Core, FileWriteException}
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
 import spray.json.{JsObject, _}
 
@@ -61,6 +64,20 @@ trait TestingUtilities extends WordSpecLike with Matchers with BeforeAndAfterAll
 
     protected def getResponseJson(request: HttpRequest): JsObject = {
         getResponseString(request).parseJson.asJsObject
+    }
+
+    /**
+      * Creates the Knora API server's temporary upload directory if it doesn't exist.
+      */
+    def createTmpFileDir(): Unit = {
+        if (!Files.exists(Paths.get(settings.tmpDataDir))) {
+            try {
+                val tmpDir = new File(settings.tmpDataDir)
+                tmpDir.mkdir()
+            } catch {
+                case e: Throwable => throw FileWriteException(s"Tmp data directory ${settings.tmpDataDir} could not be created: ${e.getMessage}")
+            }
+        }
     }
 
 }
