@@ -229,7 +229,7 @@
 							if ($this.attr("isValid") && $this.attr("isValid") == "false") {
 								if ($this.attr("prevVal")) {
 									$this.val($this.attr("prevVal"));
-									$this.removeAttribute("prevVal");
+									$this.attr("prevVal", "");
 									$this.attr("isValid", true);
 								}
 							}
