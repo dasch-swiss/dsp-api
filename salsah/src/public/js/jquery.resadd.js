@@ -517,6 +517,7 @@
 												}
 											}
 											tmpele.attr('placeholder', placeholderText);
+											tmpele.attr('autocomplete', 'off');
 
 											// see: https://bugs.jquery.com/ticket/12429
 											// $('<input>', attr) doesn't set "size" in attr={size:23}
