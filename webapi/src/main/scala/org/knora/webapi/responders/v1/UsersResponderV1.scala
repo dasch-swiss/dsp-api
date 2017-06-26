@@ -251,7 +251,7 @@ class UsersResponderV1 extends Responder {
 
             // Create the new user.
             createNewUserSparqlString = queries.sparql.v1.txt.createNewUser(
-                adminNamedGraphIri = "http://www.knora.org/data/admin",
+                adminNamedGraphIri = OntologyConstants.NamedGraphs.AdminNamedGraph,
                 triplestore = settings.triplestoreType,
                 userIri = userIri,
                 userClassIri = OntologyConstants.KnoraBase.User,
@@ -428,7 +428,7 @@ class UsersResponderV1 extends Responder {
         for {
         /* Update the user */
             updateUserSparqlString <- Future(queries.sparql.v1.txt.updateUser(
-                adminNamedGraphIri = "http://www.knora.org/data/admin",
+                adminNamedGraphIri = OntologyConstants.NamedGraphs.AdminNamedGraph,
                 triplestore = settings.triplestoreType,
                 userIri = userIri,
                 maybeEmail = apiUpdateRequest.email,

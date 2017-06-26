@@ -21,6 +21,7 @@
 package org.knora.webapi.messages.v2.responder.persistentmapmessages
 
 import java.time.OffsetDateTime
+import java.util.UUID
 
 import org.knora.webapi._
 import org.knora.webapi.util.InputValidation
@@ -31,14 +32,14 @@ import org.knora.webapi.util.InputValidation
 sealed trait PersistentMapResponderRequestV2
 
 /**
-  * Represents an entry in a [[PersistentMap]].
+  * Represents an entry in a [[PersistentMapV2]].
   *
   * @param key                  the entry's key, which must be a valid XML
   *                             [[https://www.w3.org/TR/1999/REC-xml-names-19990114/#NT-NCName NCName]].
   * @param value                the entry's value.
   * @param lastModificationDate the entry's last modification date.
   */
-case class PersistentMapEntry(key: String, value: String, lastModificationDate: OffsetDateTime) {
+case class PersistentMapEntryV2(key: String, value: String, lastModificationDate: OffsetDateTime) {
     InputValidation.toNCName(key, () => throw InconsistentTriplestoreDataException(s"Invalid map entry key: $key"))
     InputValidation.toSparqlEncodedString(value, () => throw InconsistentTriplestoreDataException(s"Invalid map entry value: $value"))
 
@@ -52,12 +53,12 @@ case class PersistentMapEntry(key: String, value: String, lastModificationDate: 
   * @param entries              the entries in the map.
   * @param lastModificationDate the map's last modification date.
   */
-case class PersistentMap(path: String, entries: Set[PersistentMapEntry], lastModificationDate: OffsetDateTime) {
+case class PersistentMapV2(path: String, entries: Set[PersistentMapEntryV2], lastModificationDate: OffsetDateTime) {
     InputValidation.toMapPath(path, () => throw InconsistentTriplestoreDataException(s"Invalid map path: $path"))
 }
 
 /**
-  * A request for a [[PersistentMapEntry]].
+  * A request for a [[PersistentMapEntryV2]].
   *
   * @param mapPath     the map's path, which must be a sequence of names separated by slashes (`/`). Each name must
   *                    be a valid XML [[https://www.w3.org/TR/1999/REC-xml-names-19990114/#NT-NCName NCName]].
@@ -70,7 +71,7 @@ case class PersistentMapEntryGetRequestV2(mapPath: String, mapEntryKey: String) 
 }
 
 /**
-  * A request for a [[PersistentMap]].
+  * A request for a [[PersistentMapV2]].
   *
   * @param mapPath the map's path, which must be a sequence of names separated by slashes (`/`). Each name must
   *                be a valid XML [[https://www.w3.org/TR/1999/REC-xml-names-19990114/#NT-NCName NCName]].
@@ -87,8 +88,9 @@ case class PersistentMapGetRequestV2(mapPath: String) extends PersistentMapRespo
   *                    be a valid XML [[https://www.w3.org/TR/1999/REC-xml-names-19990114/#NT-NCName NCName]].
   * @param mapEntryKey the map entry's key, which must be a valid XML
   *                    [[https://www.w3.org/TR/1999/REC-xml-names-19990114/#NT-NCName NCName]].
+  * @param apiRequestID  the ID of this API request.
   */
-case class PersistentMapEntryPutRequestV2(mapPath: String, mapEntryKey: String, mapEntryValue: String) extends PersistentMapResponderRequestV2 {
+case class PersistentMapEntryPutRequestV2(mapPath: String, mapEntryKey: String, mapEntryValue: String, apiRequestID: UUID) extends PersistentMapResponderRequestV2 {
     InputValidation.toMapPath(mapPath, () => throw BadRequestException(s"Invalid map path: $mapPath"))
     InputValidation.toNCName(mapEntryKey, () => throw BadRequestException(s"Invalid map entry key: $mapEntryKey"))
     val sparqlEncodedMapEntryValue: String = InputValidation.toSparqlEncodedString(mapEntryValue, () => throw BadRequestException(s"Invalid map entry value: $mapEntryValue"))
@@ -107,8 +109,9 @@ case class PersistentMapEntryPutResponseV2()
   *                    be a valid XML [[https://www.w3.org/TR/1999/REC-xml-names-19990114/#NT-NCName NCName]].
   * @param mapEntryKey the map entry's key, which must be a valid XML
   *                    [[https://www.w3.org/TR/1999/REC-xml-names-19990114/#NT-NCName NCName]].
+  * @param apiRequestID  the ID of this API request.
   */
-case class PersistentMapEntryDeleteRequestV2(mapPath: String, mapEntryKey: String) extends PersistentMapResponderRequestV2 {
+case class PersistentMapEntryDeleteRequestV2(mapPath: String, mapEntryKey: String, apiRequestID: UUID) extends PersistentMapResponderRequestV2 {
     InputValidation.toMapPath(mapPath, () => throw BadRequestException(s"Invalid map path: $mapPath"))
     InputValidation.toNCName(mapEntryKey, () => throw BadRequestException(s"Invalid map entry key: $mapEntryKey"))
 }
@@ -124,8 +127,9 @@ case class PersistentMapEntryDeleteResponseV2()
   *
   * @param mapPath the map's path, which must be a sequence of names separated by slashes (`/`). Each name must
   *                be a valid XML [[https://www.w3.org/TR/1999/REC-xml-names-19990114/#NT-NCName NCName]].
+  * @param apiRequestID  the ID of this API request.
   */
-case class PersistentMapDeleteRequestV2(mapPath: String) extends PersistentMapResponderRequestV2 {
+case class PersistentMapDeleteRequestV2(mapPath: String, apiRequestID: UUID) extends PersistentMapResponderRequestV2 {
     InputValidation.toMapPath(mapPath, () => throw BadRequestException(s"Invalid map path: $mapPath"))
 }
 

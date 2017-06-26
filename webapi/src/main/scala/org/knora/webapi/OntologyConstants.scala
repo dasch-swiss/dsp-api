@@ -380,6 +380,13 @@ object OntologyConstants {
 
         val CreationDate: IRI = KnoraBasePrefixExpansion + "creationDate"
         val ValueCreationDate: IRI = KnoraBasePrefixExpansion + "valueCreationDate"
+
+        val Map: IRI = KnoraBasePrefixExpansion + "Map"
+        val MapEntry: IRI = KnoraBasePrefixExpansion + "MapEntry"
+        val MapEntryKey: IRI = KnoraBasePrefixExpansion + "mapEntryKey"
+        val MapEntryValue: IRI = KnoraBasePrefixExpansion + "mapEntryValue"
+
+        val LastModificationDate: IRI = KnoraBasePrefixExpansion + "lastModificationDate"
     }
 
     object Standoff {
@@ -528,5 +535,10 @@ object OntologyConstants {
 
         val VersionSegment = "/simple/v2"
 
+    }
+
+    object NamedGraphs {
+        val AdminNamedGraph: IRI = "http://www.knora.org/data/admin"
+        val PersistentMapNamedGraph: IRI = "http://www.knora.org/data/maps"
     }
 }

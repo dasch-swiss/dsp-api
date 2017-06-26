@@ -51,7 +51,8 @@ CONSTRUCT {
 WHERE {
     BIND(IRI("@mapIri") as ?map)
 
-    ?map a knora-base:Map .
+    ?map a knora-base:Map ;
+        knora-base:lastModificationDate ?mapEntryLastModificationDate .
 
     ?mapEntry knora-base:isInMap ?map ;
         knora-base:mapEntryKey "@mapEntryKey"^^xsd:string ;

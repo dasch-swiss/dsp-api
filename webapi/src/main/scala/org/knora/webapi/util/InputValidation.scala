@@ -867,7 +867,7 @@ object InputValidation {
       * separated by slashes (`/`). Each name must be a valid XML
       * [[https://www.w3.org/TR/1999/REC-xml-names-19990114/#NT-NCName NCName]].
       *
-      * @param mapPath the path to be checked.
+      * @param mapPath  the path to be checked.
       * @param errorFun a function that throws an exception. It will be called if the path is invalid.
       * @return the same path.
       */

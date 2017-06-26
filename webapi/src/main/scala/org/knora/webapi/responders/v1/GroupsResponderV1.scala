@@ -238,7 +238,7 @@ class GroupsResponderV1 extends Responder {
 
             /* create the group */
             createNewGroupSparqlString = queries.sparql.v1.txt.createNewGroup(
-                adminNamedGraphIri = "http://www.knora.org/data/admin",
+                adminNamedGraphIri = OntologyConstants.NamedGraphs.AdminNamedGraph,
                 triplestore = settings.triplestoreType,
                 groupIri = groupIRI,
                 groupClassIri = OntologyConstants.KnoraBase.UserGroup,

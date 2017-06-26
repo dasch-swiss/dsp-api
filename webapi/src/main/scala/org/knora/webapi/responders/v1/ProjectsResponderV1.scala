@@ -370,7 +370,7 @@ class ProjectsResponderV1 extends Responder {
 
             // Create the new project.
             createNewProjectSparqlString = queries.sparql.v1.txt.createNewProject(
-                adminNamedGraphIri = "http://www.knora.org/data/admin",
+                adminNamedGraphIri = OntologyConstants.NamedGraphs.AdminNamedGraph,
                 triplestore = settings.triplestoreType,
                 projectIri = newProjectIRI,
                 projectClassIri = OntologyConstants.KnoraBase.KnoraProject,
