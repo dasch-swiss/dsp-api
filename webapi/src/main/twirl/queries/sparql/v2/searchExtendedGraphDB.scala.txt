@@ -33,8 +33,18 @@
 
 CONSTRUCT {
 
-
+    @for(statement <- query.constructClause) {
+         @statement.rdfValue(false)
+    }
 
 } WHERE {
+
+    @for(statement <- query.whereClause.statements) {
+        @statement.rdfValue(true)
+    }
+
+    @for(filter <- query.whereClause.filters) {
+        @filter.rdfValue
+    }
 
 }

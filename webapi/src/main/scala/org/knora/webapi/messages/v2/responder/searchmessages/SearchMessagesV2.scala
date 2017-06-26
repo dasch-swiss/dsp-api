@@ -53,7 +53,10 @@ case class ExtendedSearchGetRequestV2(constructQuery: SimpleConstructQuery,
                                       userProfile: UserProfileV1) extends SearchResponderRequestV2
 
 // An abstract trait representing a filter expression
-sealed trait ExtendedSearchFilterExpression
+sealed trait ExtendedSearchFilterExpression {
+
+    def rdfValue: String
+}
 
 /**
   * Represents a comparison expression in a FILTER.
@@ -62,7 +65,10 @@ sealed trait ExtendedSearchFilterExpression
   * @param operator the operator.
   * @param rightArg the right argument.
   */
-case class ExtendedSearchCompareExpression(leftArg: ExtendedSearchFilterExpression, operator: String, rightArg: ExtendedSearchFilterExpression) extends ExtendedSearchFilterExpression
+case class ExtendedSearchCompareExpression(leftArg: ExtendedSearchFilterExpression, operator: String, rightArg: ExtendedSearchFilterExpression) extends ExtendedSearchFilterExpression {
+
+    def rdfValue = s"${leftArg.rdfValue} = ${rightArg.rdfValue}"
+}
 
 /**
   * Represents an AND expression in a filter.
@@ -70,7 +76,10 @@ case class ExtendedSearchCompareExpression(leftArg: ExtendedSearchFilterExpressi
   * @param leftArg  the left argument.
   * @param rightArg the right argument.
   */
-case class ExtendedSearchAndExpression(leftArg: ExtendedSearchFilterExpression, rightArg: ExtendedSearchFilterExpression) extends ExtendedSearchFilterExpression
+case class ExtendedSearchAndExpression(leftArg: ExtendedSearchFilterExpression, rightArg: ExtendedSearchFilterExpression) extends ExtendedSearchFilterExpression {
+
+    def rdfValue = s"FILTER(${leftArg.rdfValue} && ${rightArg.rdfValue})"
+}
 
 /**
   * Represents an OR expression in a filter.
@@ -78,7 +87,10 @@ case class ExtendedSearchAndExpression(leftArg: ExtendedSearchFilterExpression, 
   * @param leftArg  the left argument.
   * @param rightArg the right argument.
   */
-case class ExtendedSearchOrExpression(leftArg: ExtendedSearchFilterExpression, rightArg: ExtendedSearchFilterExpression) extends ExtendedSearchFilterExpression
+case class ExtendedSearchOrExpression(leftArg: ExtendedSearchFilterExpression, rightArg: ExtendedSearchFilterExpression) extends ExtendedSearchFilterExpression {
+
+    def rdfValue = s"FILTER(${leftArg.rdfValue} || ${rightArg.rdfValue})"
+}
 
 
 // An abstract trait representing a an entity in an extended search query.
@@ -89,21 +101,30 @@ sealed trait ExtendedSearchEntity extends ExtendedSearchFilterExpression
   *
   * @param variableName the name of the variable.
   */
-case class ExtendedSearchVar(variableName: String) extends ExtendedSearchEntity
+case class ExtendedSearchVar(variableName: String) extends ExtendedSearchEntity {
+
+    def rdfValue: String = s"?$variableName"
+}
 
 /**
   * Represents a Knora internal entity in a Sparql query (property or resource class).
   *
   * @param iri the Iri of the internal entity.
   */
-case class ExtendedSearchInternalEntityIri(iri: IRI) extends ExtendedSearchEntity
+case class ExtendedSearchInternalEntityIri(iri: IRI) extends ExtendedSearchEntity {
+
+    def rdfValue = s"<$iri>"
+}
 
 /**
   * Represents an Iri in a Sparql query that is not a Knora internal entity.
   *
   * @param iri the Iri of the external entity.
   */
-case class ExtendedSearchIri(iri: IRI) extends ExtendedSearchEntity
+case class ExtendedSearchIri(iri: IRI) extends ExtendedSearchEntity {
+
+    def rdfValue = s"<$iri>"
+}
 
 /**
   * Represents a literal in a Sparql query.
@@ -111,7 +132,10 @@ case class ExtendedSearchIri(iri: IRI) extends ExtendedSearchEntity
   * @param value    the value of the literal
   * @param datatype the datatype of the literal.
   */
-case class ExtendedSearchXsdLiteral(value: String, datatype: IRI) extends ExtendedSearchEntity
+case class ExtendedSearchXsdLiteral(value: String, datatype: IRI) extends ExtendedSearchEntity {
+
+    def rdfValue = s""""${value}"^^<$datatype>"""
+}
 
 /**
   * Represents a statement (triple) in a Sparql query
@@ -120,7 +144,23 @@ case class ExtendedSearchXsdLiteral(value: String, datatype: IRI) extends Extend
   * @param pred the statement's predicate.
   * @param obj  the statement's object.
   */
-case class ExtendedSearchStatementPattern(subj: ExtendedSearchFilterExpression, pred: ExtendedSearchFilterExpression, obj: ExtendedSearchFilterExpression)
+case class ExtendedSearchStatementPattern(subj: ExtendedSearchFilterExpression, pred: ExtendedSearchFilterExpression, obj: ExtendedSearchFilterExpression, inferenceActive: Boolean = true) {
+
+    def rdfValue(whereClause: Boolean): String = {
+
+        val statement = s"${subj.rdfValue} ${pred.rdfValue} ${obj.rdfValue} ."
+
+        if (!whereClause) {
+            statement
+        } else if (!inferenceActive) {
+            "GRAPH <http://www.ontotext.com/explicit> {\n" + statement + "\n}"
+        } else {
+            statement
+        }
+
+    }
+
+}
 
 
 /**
@@ -129,7 +169,7 @@ case class ExtendedSearchStatementPattern(subj: ExtendedSearchFilterExpression, 
   * @param constructClause the construct clause of the extended search query.
   * @param whereClause the where clause of the extended search query.
   */
-case class ExtendedSearchQuery(constructClause: Vector[ExtendedSearchStatementPattern], whereClause: Vector[ExtendedSearchStatementsAndFilterPatterns]) 
+case class ExtendedSearchQuery(constructClause: Vector[ExtendedSearchStatementPattern], whereClause: ExtendedSearchStatementsAndFilterPatterns)
 
 /**
   * Represents statements combined with filter statements.
