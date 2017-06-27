@@ -66,7 +66,7 @@ case class TypeableIriV2(iri: IRI) extends TypeableEntityV2
   *
   * @param typedEntities a map of SPARQL entities to the types that were determined for them.
   */
-case class TypeInspectionResultV2(typedEntities: Map[TypeableEntityV2, SparqlEntityTypeInfoV2]/*, whereClauseWithoutTypeAnnotations: SimpleWhereClause*/)
+case class TypeInspectionResultV2(typedEntities: Map[TypeableEntityV2, SparqlEntityTypeInfoV2])
 
 /**
   * Indicates which API schema is being used in a search query.
@@ -110,6 +110,8 @@ class ExplicitTypeInspectorV2(apiType: ApiV2Schema.Value) extends TypeInspectorV
       * An enumeration of the properties that are used in type annotations.
       */
     private object TypeAnnotationPropertiesV2 extends Enumeration {
+        // import Ordering.Tuple2
+
         val RDF_TYPE = Value(0, OntologyConstants.Rdf.Type)
         val OBJECT_TYPE = Value(1, OntologyConstants.KnoraApiV2Simplified.ObjectType)
 
@@ -193,6 +195,39 @@ class ExplicitTypeInspectorV2(apiType: ApiV2Schema.Value) extends TypeInspectorV
         }.toMap
 
         TypeInspectionResultV2(typedEntities = typedEntities)
+    }
+
+    /**
+      * Removes type annotations from a SPARQL WHERE clause.
+      *
+      * @param whereClause the WHERE clause to be filtered.
+      * @return the same WHERE clause, minus any type annotations.
+      */
+    def removeTypeAnnotations(whereClause: SimpleWhereClause): SimpleWhereClause = {
+        SimpleWhereClause(removeTypeAnnotationsFromPatterns(whereClause.patterns))
+    }
+
+    /**
+      * Removes explicit type annotations from a sequence of query patterns.
+      *
+      * @param patterns the patterns to be filtered.
+      * @return the same patterns, minus any type annotations.
+      */
+    private def removeTypeAnnotationsFromPatterns(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
+        patterns.collect {
+            case statementPattern: StatementPattern if !isAnnotationStatement(statementPattern) => statementPattern
+
+            case optionalPattern: OptionalPattern => OptionalPattern(removeTypeAnnotationsFromPatterns(optionalPattern.patterns))
+
+            case unionPattern: UnionPattern =>
+                val blocksWithoutAnnotations = unionPattern.blocks.map {
+                    patterns: Seq[QueryPattern] => removeTypeAnnotationsFromPatterns(patterns)
+                }
+
+                UnionPattern(blocksWithoutAnnotations)
+
+            case filterPattern: FilterPattern => filterPattern
+        }
     }
 
     /**

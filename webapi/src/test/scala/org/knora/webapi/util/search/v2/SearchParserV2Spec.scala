@@ -36,12 +36,10 @@ class SearchParserV2Spec extends WordSpec with Matchers {
             SearchParserV2.parseSearchQuery(SimpleSparqlConstructQueryStr) should ===(SimpleParsedSparqlConstructQuery)
         }
 
-        "parse a simple CONSTRUCT query with a BIND" in {
-            SearchParserV2.parseSearchQuery(SimpleSparqlConstructQueryWithBind) should ===(SimpleParsedSparqlConstructQueryWithBind)
-        }
-
-        "parse a simple CONSTRUCT query with a BIND at the start of the WHERE clause" in {
-            val parsedQuery = SearchParserV2.parseSearchQuery(SimpleSparqlConstructQueryWithBindAtStart) should ===(SimpleParsedSparqlConstructQueryWithBind)
+        "reject a simple CONSTRUCT query with a BIND" in {
+            assertThrows[SparqlSearchException] {
+                SearchParserV2.parseSearchQuery(SimpleSparqlConstructQueryWithBind)
+            }
         }
 
         "reject a SELECT query" in {
@@ -100,10 +98,6 @@ class SearchParserV2Spec extends WordSpec with Matchers {
 
         "parse an extended search query with a FILTER containing a Boolean operator" in {
             SearchParserV2.parseSearchQuery(extendSearchQueryForAThingRelatingToAnotherThing) should ===(SimpleParsedSparqlConstructQueryWithBooleanOperatorInFilter)
-        }
-
-        "parse an extended search query with explicit type annotations" in {
-            println(MessageUtil.toSource(SearchParserV2.parseSearchQuery(SimpleSparqlConstructQueryWithExplicitTypeAnnotations)))
         }
     }
 }
@@ -304,37 +298,6 @@ object SearchParserV2Spec {
         ))
     )
 
-    val SimpleParsedSparqlConstructQueryWithBind = SimpleConstructQuery(
-        whereClause = SimpleWhereClause(patterns = Vector(
-            BindStatement(
-                value = IriRef(iri = "http://data.knora.org/a-thing"),
-                variableName = "aThing"
-            ),
-            StatementPattern(
-                obj = IriRef(iri = "http://api.knora.org/ontology/anything/simple/v2#Thing"),
-                pred = IriRef(iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"),
-                subj = QueryVariable(variableName = "thing")
-            ),
-            StatementPattern(
-                obj = QueryVariable(variableName = "aThing"),
-                pred = IriRef(iri = "http://api.knora.org/ontology/anything/simple/v2#hasOtherThing"),
-                subj = QueryVariable(variableName = "thing")
-            )
-        )),
-        constructClause = SimpleConstructClause(statements = Vector(
-            StatementPattern(
-                obj = QueryVariable(variableName = "thingType"),
-                pred = IriRef(iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"),
-                subj = QueryVariable(variableName = "thing")
-            ),
-            StatementPattern(
-                obj = QueryVariable(variableName = "thingLabel"),
-                pred = IriRef(iri = "http://www.w3.org/2000/01/rdf-schema#label"),
-                subj = QueryVariable(variableName = "thing")
-            )
-        ))
-    )
-
     val SimpleParsedSparqlConstructQueryWithBooleanOperatorInFilter = SimpleConstructQuery(
         whereClause = SimpleWhereClause(patterns = Vector(
             StatementPattern(
@@ -381,24 +344,6 @@ object SearchParserV2Spec {
           |} WHERE {
           |    ?thing a anything:Thing .
           |    BIND(<http://data.knora.org/a-thing> AS ?aThing)
-          |    ?thing anything:hasOtherThing ?aThing .
-          |}
-        """.stripMargin
-
-    val SimpleSparqlConstructQueryWithBindAtStart: String =
-        """
-          |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-          |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-          |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-          |PREFIX anything: <http://api.knora.org/ontology/anything/simple/v2#>
-          |
-          |CONSTRUCT {
-          |    ?thing a ?thingType .
-          |    ?thing rdfs:label ?thingLabel .
-          |} WHERE {
-          |    BIND(<http://data.knora.org/a-thing> AS ?aThing)
-          |    ?thing a anything:Thing .
           |    ?thing anything:hasOtherThing ?aThing .
           |}
         """.stripMargin
