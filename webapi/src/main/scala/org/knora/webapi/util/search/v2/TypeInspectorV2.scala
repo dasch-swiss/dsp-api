@@ -95,7 +95,7 @@ sealed trait TypeInspectorV2 {
 /**
   * A [[TypeInspectorV2]] that relies on explicit type annotations in SPARQL. There are two kinds of type annotations:
   *
-  * 1. For every variable or IRI representing a resource instance, there must be a triple whose subject is the variable
+  * 1. For every variable or IRI representing a resource or value, there must be a triple whose subject is the variable
   *    or IRI, whose predicate is `rdf:type`, and whose object is `knora-api:Resource`, another `knora-api` type
   *    such as `knora-api:date`, or an XSD type such as `xsd:integer`.
   * 1. For every variable or IRI representing a property, there must be a triple whose subject is the variable or
