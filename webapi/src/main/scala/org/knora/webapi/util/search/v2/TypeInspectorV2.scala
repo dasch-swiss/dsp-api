@@ -110,7 +110,7 @@ class ExplicitTypeInspectorV2(apiType: ApiV2Schema.Value) extends TypeInspectorV
       * An enumeration of the properties that are used in type annotations.
       */
     private object TypeAnnotationPropertiesV2 extends Enumeration {
-        // import Ordering.Tuple2
+        import Ordering.Tuple2 // scala compiler issue: https://issues.scala-lang.org/browse/SI-8541
 
         val RDF_TYPE = Value(0, OntologyConstants.Rdf.Type)
         val OBJECT_TYPE = Value(1, OntologyConstants.KnoraApiV2Simplified.ObjectType)

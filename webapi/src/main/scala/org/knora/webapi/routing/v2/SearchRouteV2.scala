@@ -87,7 +87,6 @@ object SearchRouteV2 extends Authenticator {
                           |
                           |    <http://rdfh.ch/beol/oU8fMNDJQ9SGblfBl5JamA> a knora-api:Resource .
                           |
-                          |
                           |    ?letter knora-api:hasLinkTo <http://rdfh.ch/beol/6edJwtTSR8yjAWnYmt6AtA> .
                           |    ?letter ?linkingProp2  <http://rdfh.ch/beol/6edJwtTSR8yjAWnYmt6AtA> .
                           |
@@ -98,15 +97,16 @@ object SearchRouteV2 extends Authenticator {
                           |    ?letter a beol:letter .
                           |
                           |    # Scheuchzer, Johann Jacob 1672-1733
-                          |    ?letter knora-api:hasLinkTo <http://rdfh.ch/beol/oU8fMNDJQ9SGblfBl5JamA> .
                           |    ?letter ?linkingProp1  <http://rdfh.ch/beol/oU8fMNDJQ9SGblfBl5JamA> .
+                          |    ?linkingProp1 knora-api:objectType knora-api:Resource .
                           |    FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient )
                           |
                           |    <http://rdfh.ch/beol/oU8fMNDJQ9SGblfBl5JamA> a knora-api:Resource .
                           |
                           |    # Hermann, Jacob 1678-1733
-                          |    ?letter knora-api:hasLinkTo <http://rdfh.ch/beol/6edJwtTSR8yjAWnYmt6AtA>  .
                           |    ?letter ?linkingProp2 <http://rdfh.ch/beol/6edJwtTSR8yjAWnYmt6AtA> .
+                          |    ?linkingProp2 knora-api:objectType knora-api:Resource .
+                          |
                           |    FILTER(?linkingProp2 = beol:hasAuthor || ?linkingProp2 = beol:hasRecipient )
                           |
                           |    <http://rdfh.ch/beol/6edJwtTSR8yjAWnYmt6AtA> a knora-api:Resource .

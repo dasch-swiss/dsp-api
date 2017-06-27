@@ -52,11 +52,18 @@ case class FulltextSearchGetRequestV2(searchValue: String,
 case class ExtendedSearchGetRequestV2(constructQuery: SimpleConstructQuery,
                                       userProfile: UserProfileV1) extends SearchResponderRequestV2
 
+
+case class ExtendedSearchFilterPattern(expression: ExtendedSearchFilterExpression) extends ExtendedSearchQueryPattern
+
 // An abstract trait representing a filter expression
 sealed trait ExtendedSearchFilterExpression {
 
     def rdfValue: String
 }
+
+sealed trait ExtendedSearchQueryPattern
+
+case class ExtendedSearchOptionalPattern(patterns: Seq[ExtendedSearchQueryPattern]) extends ExtendedSearchQueryPattern
 
 /**
   * Represents a comparison expression in a FILTER.
@@ -144,23 +151,22 @@ case class ExtendedSearchXsdLiteral(value: String, datatype: IRI) extends Extend
   * @param pred the statement's predicate.
   * @param obj  the statement's object.
   */
-case class ExtendedSearchStatementPattern(subj: ExtendedSearchFilterExpression, pred: ExtendedSearchFilterExpression, obj: ExtendedSearchFilterExpression, inferenceActive: Boolean = true) {
+case class ExtendedSearchStatementPattern(subj: ExtendedSearchEntity, pred: ExtendedSearchEntity, obj: ExtendedSearchEntity, disableInference: Boolean) extends ExtendedSearchQueryPattern {
 
     def rdfValue(whereClause: Boolean): String = {
 
         val statement = s"${subj.rdfValue} ${pred.rdfValue} ${obj.rdfValue} ."
 
-        if (!whereClause) {
-            statement
-        } else if (!inferenceActive) {
+        if (disableInference) {
             "GRAPH <http://www.ontotext.com/explicit> {\n" + statement + "\n}"
         } else {
             statement
         }
-
     }
 
 }
+
+case class ExtendedSearchUnionPattern(blocks: Seq[Seq[ExtendedSearchQueryPattern]]) extends ExtendedSearchQueryPattern
 
 
 /**
