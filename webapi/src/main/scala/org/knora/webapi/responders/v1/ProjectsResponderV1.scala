@@ -203,7 +203,7 @@ class ProjectsResponderV1 extends ResponderV1 {
       *
       * @param projectIri  the Iri of the project requested.
       * @param userProfile the profile of user that is making the request.
-      * @return information about the project as a [[ProjectInfoResponseV1]].
+      * @return information about the project as a [[ProjectInfoV1]].
       */
     private def projectInfoByIRIGetV1(projectIri: IRI, userProfile: Option[UserProfileV1] = None): Future[Option[ProjectInfoV1]] = {
 
@@ -216,10 +216,10 @@ class ProjectsResponderV1 extends ResponderV1 {
             ).toString())
             projectResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
 
-            projectInfo = if (projectResponse.results.bindings.isEmpty) {
-                None
-            } else {
+            projectInfo = if (projectResponse.results.bindings.nonEmpty) {
                 Some(createProjectInfoV1(projectResponse = projectResponse.results.bindings, projectIri = projectIri, userProfile))
+            } else {
+                None
             }
 
         //_ = log.debug("projectInfoByIRIGetV1 - projectInfo: {}", projectInfo)
@@ -551,7 +551,7 @@ class ProjectsResponderV1 extends ResponderV1 {
         } yield result
 
         for {
-            // run the change status task with an IRI lock
+        // run the change status task with an IRI lock
             taskResult <- IriLocker.runWithIriLock(
                 apiRequestID,
                 projectIri,
@@ -571,7 +571,7 @@ class ProjectsResponderV1 extends ResponderV1 {
       */
     private def updateProjectV1(projectIri: IRI, projectUpdatePayload: ProjectUpdatePayloadV1, userProfile: UserProfileV1): Future[ProjectOperationResponseV1] = {
 
-        //log.debug("updateProjectV1 - projectUpdatePayload: {}", projectUpdatePayload)
+        // log.debug("updateProjectV1 - projectUpdatePayload: {}", projectUpdatePayload)
 
         val parametersCount = List(
             projectUpdatePayload.shortname,
@@ -588,7 +588,7 @@ class ProjectsResponderV1 extends ResponderV1 {
         if (parametersCount == 0) throw BadRequestException("No data would be changed. Aborting update request.")
 
         for {
-            /* Verify that the project exists. */
+        /* Verify that the project exists. */
             maybeProjectInfo <- projectInfoByIRIGetV1(projectIri, Some(userProfile))
             projectInfo: ProjectInfoV1 = maybeProjectInfo.getOrElse(throw NotFoundException(s"Project '$projectIri' not found. Aborting update request."))
 

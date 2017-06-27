@@ -45,7 +45,7 @@ class UsersV1E2ESpec extends E2ESpec(UsersV1E2ESpec.config) with SessionJsonProt
 
     implicit def default(implicit system: ActorSystem) = RouteTestTimeout(5.seconds)
 
-    implicit override val log = akka.event.Logging(system, this.getClass())
+    implicit override lazy val log = akka.event.Logging(system, this.getClass())
 
     private val rdfDataObjects = List.empty[RdfDataObject]
 
@@ -347,16 +347,17 @@ class UsersV1E2ESpec extends E2ESpec(UsersV1E2ESpec.config) with SessionJsonProt
                 val projects: Seq[IRI] = AkkaHttpUtils.httpResponseToJson(response).fields("projects").convertTo[List[IRI]]
                 projects should contain allElementsOf Seq("http://data.knora.org/projects/images", "http://data.knora.org/projects/77275339", "http://data.knora.org/projects/anything")
 
-                // testing getUserProjectsAdminMemberships method, which should return the same result
+                // explicitly testing 'getUserProjectsAdminMemberships' method, which should return the same result
                 projects should contain allElementsOf getUserProjectAdminMemberships(multiUserIri, rootCreds)
             }
         }
+
 
         "used to modify project admin group membership" should {
 
             "add user to project admin group" in {
                 val membershipsBeforeUpdate = getUserProjectAdminMemberships(normalUserCreds.userIri, rootCreds)
-                log.debug(s"membershipsBeforeUpdate: $membershipsBeforeUpdate")
+                //log.debug(s"membershipsBeforeUpdate: $membershipsBeforeUpdate")
                 membershipsBeforeUpdate should equal(Seq())
 
                 val request = Post(baseApiUrl + "/v1/users/projects-admin/" + normalUserCreds.urlEncodedIri + "/" + imagesProjectIriEnc) ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
@@ -365,7 +366,7 @@ class UsersV1E2ESpec extends E2ESpec(UsersV1E2ESpec.config) with SessionJsonProt
                 assert(response.status === StatusCodes.OK)
 
                 val membershipsAfterUpdate = getUserProjectAdminMemberships(normalUserCreds.userIri, rootCreds)
-                log.debug(s"membershipsAfterUpdate: $membershipsAfterUpdate")
+                //log.debug(s"membershipsAfterUpdate: $membershipsAfterUpdate")
                 membershipsAfterUpdate should equal(Seq("http://data.knora.org/projects/images"))
             }
 
@@ -384,6 +385,7 @@ class UsersV1E2ESpec extends E2ESpec(UsersV1E2ESpec.config) with SessionJsonProt
                 log.debug(s"membershipsAfterUpdate: $membershipsAfterUpdate")
                 membershipsAfterUpdate should equal(Seq())
             }
+
         }
 
         "used to query group memberships" should {

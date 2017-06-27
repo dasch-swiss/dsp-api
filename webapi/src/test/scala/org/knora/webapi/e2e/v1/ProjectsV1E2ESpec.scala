@@ -23,9 +23,11 @@ import akka.http.scaladsl.testkit.RouteTestTimeout
 import com.typesafe.config.ConfigFactory
 import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoV1, ProjectV1JsonProtocol}
 import org.knora.webapi.messages.v1.responder.sessionmessages.SessionJsonProtocol
+import org.knora.webapi.messages.v1.responder.usermessages.UserDataV1
+import org.knora.webapi.messages.v1.responder.usermessages.UserV1JsonProtocol._
 import org.knora.webapi.messages.v1.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
 import org.knora.webapi.util.{AkkaHttpUtils, MutableTestIri}
-import org.knora.webapi.{E2ESpec, IRI, SharedAdminTestData}
+import org.knora.webapi.{E2ESpec, SharedAdminTestData}
 import spray.json._
 
 import scala.concurrent.duration._
@@ -46,7 +48,7 @@ class ProjectsV1E2ESpec extends E2ESpec(ProjectsV1E2ESpec.config) with SessionJs
 
     implicit def default(implicit system: ActorSystem) = RouteTestTimeout(5.seconds)
 
-    implicit override val log = akka.event.Logging(system, this.getClass())
+    implicit override lazy val log = akka.event.Logging(system, this.getClass())
 
     private val rdfDataObjects = List.empty[RdfDataObject]
 
@@ -72,24 +74,27 @@ class ProjectsV1E2ESpec extends E2ESpec(ProjectsV1E2ESpec.config) with SessionJs
             "return all projects" in {
                 val request = Get(baseApiUrl + s"/v1/projects") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
                 val response: HttpResponse = singleAwaitingRequest(request)
-                log.debug(s"response: ${response.toString}")
+                // log.debug(s"response: {}", response)
                 assert(response.status === StatusCodes.OK)
 
-                log.debug("projects as objects: {}", AkkaHttpUtils.httpResponseToJson(response).fields("projects").convertTo[Seq[ProjectInfoV1]])
+                // log.debug("projects as objects: {}", AkkaHttpUtils.httpResponseToJson(response).fields("projects").convertTo[Seq[ProjectInfoV1]])
+
+                val projects: Seq[ProjectInfoV1] = AkkaHttpUtils.httpResponseToJson(response).fields("projects").convertTo[Seq[ProjectInfoV1]]
+                projects.size should be (7)
 
             }
 
             "return the information for a single project identified by iri" in {
                 val request = Get(baseApiUrl + s"/v1/projects/$projectIriEnc") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
                 val response: HttpResponse = singleAwaitingRequest(request)
-                log.debug(s"response: ${response.toString}")
+                // log.debug(s"response: {}", response)
                 assert(response.status === StatusCodes.OK)
             }
 
             "return the information for a single project identified by shortname" in {
                 val request = Get(baseApiUrl + s"/v1/projects/$projectShortnameEnc?identifier=shortname") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
                 val response: HttpResponse = singleAwaitingRequest(request)
-                log.debug(s"response: ${response.toString}")
+                // log.debug(s"response: {}", response)
                 assert(response.status === StatusCodes.OK)
             }
         }
@@ -116,7 +121,7 @@ class ProjectsV1E2ESpec extends E2ESpec(ProjectsV1E2ESpec.config) with SessionJs
 
                 val request = Post(baseApiUrl + s"/v1/projects", HttpEntity(ContentTypes.`application/json`, params))
                 val response: HttpResponse = singleAwaitingRequest(request)
-                //println(s"response: ${response.toString}")
+                // log.debug(s"response: {}", response)
                 response.status should be (StatusCodes.OK)
 
                 val jsonResult: Map[String, JsValue] = AkkaHttpUtils.httpResponseToJson(response).fields("project_info").asJsObject.fields
@@ -130,7 +135,7 @@ class ProjectsV1E2ESpec extends E2ESpec(ProjectsV1E2ESpec.config) with SessionJs
 
                 val iri = jsonResult("id").convertTo[String]
                 newProjectIri.set(iri)
-                //println(s"iri: ${newProjectIri.get}")
+                // log.debug("newProjectIri: {}", newProjectIri.get)
 
             }
 
@@ -151,7 +156,7 @@ class ProjectsV1E2ESpec extends E2ESpec(ProjectsV1E2ESpec.config) with SessionJs
 
                 val request = Post(baseApiUrl + s"/v1/projects", HttpEntity(ContentTypes.`application/json`, params))
                 val response: HttpResponse = singleAwaitingRequest(request)
-                //println(s"response: ${response.toString}")
+                // log.debug(s"response: {}", response)
                 response.status should be (StatusCodes.BadRequest)
             }
 
@@ -171,7 +176,7 @@ class ProjectsV1E2ESpec extends E2ESpec(ProjectsV1E2ESpec.config) with SessionJs
 
                 val request = Post(baseApiUrl + s"/v1/projects", HttpEntity(ContentTypes.`application/json`, params))
                 val response: HttpResponse = singleAwaitingRequest(request)
-                //println(s"response: ${response.toString}")
+                // log.debug(s"response: {}", response)
                 response.status should be (StatusCodes.BadRequest)
             }
 
@@ -194,7 +199,7 @@ class ProjectsV1E2ESpec extends E2ESpec(ProjectsV1E2ESpec.config) with SessionJs
                 val projectIriEncoded = java.net.URLEncoder.encode(newProjectIri.get, "utf-8")
                 val request = Put(baseApiUrl + s"/v1/projects/" + projectIriEncoded, HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
                 val response: HttpResponse = singleAwaitingRequest(request)
-                //println(s"response: ${response.toString}")
+                // log.debug(s"response: {}", response)
                 response.status should be (StatusCodes.OK)
 
                 val jsonResult: Map[String, JsValue] = AkkaHttpUtils.httpResponseToJson(response).fields("project_info").asJsObject.fields
@@ -213,29 +218,41 @@ class ProjectsV1E2ESpec extends E2ESpec(ProjectsV1E2ESpec.config) with SessionJs
             "return all members of a project identified by iri" in {
                 val request = Get(baseApiUrl + s"/v1/projects/members/$projectIriEnc") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
                 val response: HttpResponse = singleAwaitingRequest(request)
-                log.debug(s"response: ${response.toString}")
+                // log.debug(s"response: {}", response)
                 assert(response.status === StatusCodes.OK)
+
+                val members: Seq[UserDataV1] = AkkaHttpUtils.httpResponseToJson(response).fields("members").convertTo[Seq[UserDataV1]]
+                members.size should be (4)
             }
 
             "return all members of a project identified by shortname" in {
                 val request = Get(baseApiUrl + s"/v1/projects/members/$projectShortnameEnc?identifier=shortname") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
                 val response: HttpResponse = singleAwaitingRequest(request)
-                log.debug(s"response: ${response.toString}")
+                // log.debug(s"response: {}", response)
                 assert(response.status === StatusCodes.OK)
+
+                val members: Seq[UserDataV1] = AkkaHttpUtils.httpResponseToJson(response).fields("members").convertTo[Seq[UserDataV1]]
+                members.size should be (4)
             }
 
             "return all admin members of a project identified by iri" in {
                 val request = Get(baseApiUrl + s"/v1/projects/admin-members/$projectIriEnc") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
                 val response: HttpResponse = singleAwaitingRequest(request)
-                log.debug(s"response: ${response.toString}")
+                // log.debug(s"response: {}", response)
                 assert(response.status === StatusCodes.OK)
+
+                val members: Seq[UserDataV1] = AkkaHttpUtils.httpResponseToJson(response).fields("members").convertTo[Seq[UserDataV1]]
+                members.size should be (2)
             }
 
             "return all admin members of a project identified by shortname" in {
                 val request = Get(baseApiUrl + s"/v1/projects/admin-members/$projectShortnameEnc?identifier=shortname") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
                 val response: HttpResponse = singleAwaitingRequest(request)
-                log.debug(s"response: ${response.toString}")
+                // log.debug(s"response: {}", response)
                 assert(response.status === StatusCodes.OK)
+
+                val members: Seq[UserDataV1] = AkkaHttpUtils.httpResponseToJson(response).fields("members").convertTo[Seq[UserDataV1]]
+                members.size should be (2)
             }
         }
     }

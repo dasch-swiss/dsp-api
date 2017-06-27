@@ -23,13 +23,20 @@
 @**
  * Updates an existing user with the provided values.
  *
- * @param dataNamedGraph the named graph to update.
- * @param triplestore the name of the triplestore being used. The template uses this value to exclude inferred
-                      results from the WHERE clause of the update.
- * @param userIri the IRI of the user we want to update.
- * @param propertyIri the IRI of the property that points from the user to the value.
- * @param currentValue the current value.
- * @param newValueIri the new value.
+ * @param dataNamedGraph     the named graph to update.
+ * @param triplestore        the name of the triplestore being used. The template uses this value to exclude inferred
+                             results from the WHERE clause of the update.
+ * @param userIri            the IRI of the user we want to update.
+ * @param maybeEmail         the new optional value for email.
+ * @param maybeGivenName     the new optional value for given name.
+ * @param maybeFamilyName    the new optional value for family name.
+ * @param maybePassword      the new optional value for value for password.
+ * @param maybeStatus        the new optional value for status.
+ * @param maybeLang          the new optional value for lang.
+ * @param maybeProjects      the new optional value for projects.
+ * @param maybeProjectsAdmin the new optional value for project admin.
+ * @param maybeGroups        the new optional value for groups.
+ * @param maybeSystemAdmin   the new optional value for system admin.
  *@
 @(adminNamedGraphIri: IRI,
   triplestore: String,

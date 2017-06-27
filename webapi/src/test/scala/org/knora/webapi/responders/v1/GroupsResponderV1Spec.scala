@@ -76,6 +76,7 @@ class GroupsResponderV1Spec extends CoreSpec(GroupsResponderV1Spec.config) with 
     }
 
     "The GroupsResponder " when {
+
         "asked about a group identified by 'iri' " should {
             "return group info if the group is known " in {
                 actorUnderTest ! GroupInfoByIRIGetRequest(imagesReviewerGroupInfo.id, Some(rootUserProfileV1))
@@ -86,18 +87,21 @@ class GroupsResponderV1Spec extends CoreSpec(GroupsResponderV1Spec.config) with 
                 expectMsg(Failure(NotFoundException(s"For the given group iri 'http://data.knora.org/groups/notexisting' no information was found")))
             }
         }
+
         "asked about a group identified by 'name' " should {
             "return group info if the group is known " in {
-                actorUnderTest ! GroupInfoByNameGetRequest(imagesProjectAdminGroupInfo.belongsToProject, imagesProjectAdminGroupInfo.name, Some(rootUserProfileV1))
+                actorUnderTest ! GroupInfoByNameGetRequest(imagesProjectAdminGroupInfo.project, imagesProjectAdminGroupInfo.name, Some(rootUserProfileV1))
                 expectMsg(GroupInfoResponseV1(imagesProjectAdminGroupInfo))
             }
             "return 'NotFoundException' when the group is unknown " in {
-                actorUnderTest ! GroupInfoByNameGetRequest(imagesProjectMemberGroupInfo.belongsToProject, "groupwrong", Some(rootUserProfileV1))
+                actorUnderTest ! GroupInfoByNameGetRequest(imagesProjectMemberGroupInfo.project, "groupwrong", Some(rootUserProfileV1))
                 expectMsg(Failure(NotFoundException(s"For the given group name 'groupwrong' no information was found")))
             }
         }
-        "asked to create a new group " should {
-            "create the group and return the group's info if the supplied group name is unique " in {
+
+        "used to modify group information" should {
+
+            "CREATE the group and return the group's info if the supplied group name is unique " in {
                 actorUnderTest ! GroupCreateRequestV1(
                     CreateGroupApiRequestV1("NewGroup", Some("NewGroupDescription"), "http://data.knora.org/projects/images", true, false),
                     SharedAdminTestData.imagesUser01,
@@ -107,12 +111,13 @@ class GroupsResponderV1Spec extends CoreSpec(GroupsResponderV1Spec.config) with 
                     case GroupOperationResponseV1(newGroupInfo) => {
                         newGroupInfo.name should equal ("NewGroup")
                         newGroupInfo.description should equal (Some("NewGroupDescription"))
-                        newGroupInfo.belongsToProject should equal ("http://data.knora.org/projects/images")
+                        newGroupInfo.project should equal ("http://data.knora.org/projects/images")
                         newGroupInfo.status should equal (true)
-                        newGroupInfo.hasSelfJoinEnabled should equal (false)
+                        newGroupInfo.selfjoin should equal (false)
                     }
                 }
             }
+
             "return a 'DuplicateValueException' if the supplied group name is not unique " in {
                 actorUnderTest ! GroupCreateRequestV1(
                     CreateGroupApiRequestV1("NewGroup", Some("NewGroupDescription"), "http://data.knora.org/projects/images", true, false),
@@ -121,6 +126,7 @@ class GroupsResponderV1Spec extends CoreSpec(GroupsResponderV1Spec.config) with 
                 )
                 expectMsg(Failure(DuplicateValueException(s"Group with the name: 'NewGroup' already exists")))
             }
+
             "return 'BadRequestException' if group name or project IRI are missing" in {
 
                 /* missing group name */
@@ -139,6 +145,11 @@ class GroupsResponderV1Spec extends CoreSpec(GroupsResponderV1Spec.config) with 
                 )
                 expectMsg(Failure(BadRequestException("Project IRI cannot be empty")))
             }
+
+            "UPDATE a group" in {
+
+            }
+
         }
 
         "used to query members" should {
@@ -185,116 +196,6 @@ class GroupsResponderV1Spec extends CoreSpec(GroupsResponderV1Spec.config) with 
                 expectMsg(Failure(NotFoundException(s"Group 'groupwrong' not found.")))
             }
         }
-
-        /*
-        "asked to update a user " should {
-            "update the user " in {
-
-                /* User information is updated by the user */
-                actorUnderTest ! UserUpdateRequestV1(
-                    userIri = SharedTestData.normaluserUserProfileV1.userData.user_id.get,
-                    propertyIri = OntologyConstants.Foaf.GivenName,
-                    newValue = "Donald",
-                    userProfile = SharedTestData.normaluserUserProfileV1,
-                    UUID.randomUUID
-                )
-                expectMsgPF(timeout) {
-                    case UserOperationResponseV1(updatedUserProfile, requestingUserData) => {
-                        // check if information was changed
-                        assert(updatedUserProfile.userData.firstname.contains("Donald"))
-
-                        // check if correct and updated userdata is returned
-                        assert(requestingUserData.firstname.contains("Donald"))
-                    }
-                }
-
-                /* User information is updated by a system admin */
-                actorUnderTest ! UserUpdateRequestV1(
-                    userIri = SharedTestData.normaluserUserProfileV1.userData.user_id.get,
-                    propertyIri = OntologyConstants.Foaf.FamilyName,
-                    newValue = "Duck",
-                    userProfile = SharedTestData.superuserUserProfileV1,
-                    UUID.randomUUID
-                )
-                expectMsgPF(timeout) {
-                    case UserOperationResponseV1(updatedUserProfile, requestingUserData) => {
-                        // check if information was changed
-                        assert(updatedUserProfile.userData.lastname.contains("Duck"))
-
-                        // check if the correct userdata is returned
-                        assert(requestingUserData.user_id.contains(SharedTestData.superuserUserProfileV1.userData.user_id.get))
-                    }
-                }
-
-            }
-            "return a 'ForbiddenException' if the user requesting update is not the user itself or system admin " in {
-
-                /* User information is updated by other normal user */
-                actorUnderTest ! UserUpdateRequestV1(
-                    userIri = SharedTestData.superuserUserProfileV1.userData.user_id.get,
-                    propertyIri = OntologyConstants.Foaf.GivenName,
-                    newValue = "Donald",
-                    userProfile = SharedTestData.normaluserUserProfileV1,
-                    UUID.randomUUID
-                )
-                expectMsg(Failure(ForbiddenException("User information can only be changed by the user itself or a system administrator")))
-
-                /* User information is updated by anonymous */
-                actorUnderTest ! UserUpdateRequestV1(
-                    userIri = SharedTestData.superuserUserProfileV1.userData.user_id.get,
-                    propertyIri = OntologyConstants.Foaf.GivenName,
-                    newValue = ("Donald"),
-                    userProfile = SharedTestData.anonymousUserProfileV1,
-                    UUID.randomUUID
-                )
-                expectMsg(Failure(ForbiddenException("User information can only be changed by the user itself or a system administrator")))
-
-            }
-            "return a 'ForbiddenException' if the update gives SA rights but the user requesting the update is not SA " in {
-                /* User information is updated by the user */
-                actorUnderTest ! UserUpdateRequestV1(
-                    userIri = SharedTestData.normaluserUserProfileV1.userData.user_id.get,
-                    propertyIri = OntologyConstants.KnoraBase.IsSystemAdmin,
-                    newValue = true,
-                    userProfile = SharedTestData.normaluserUserProfileV1,
-                    UUID.randomUUID
-                )
-                expectMsg(Failure(ForbiddenException("Giving an user system admin rights can only be performed by another system admin")))
-            }
-            "update the user, giving him SA rights " in {
-                actorUnderTest ! UserUpdateRequestV1(
-                    userIri = SharedTestData.normaluserUserProfileV1.userData.user_id.get,
-                    propertyIri = OntologyConstants.KnoraBase.IsSystemAdmin,
-                    newValue = true,
-                    userProfile = SharedTestData.superuserUserProfileV1,
-                    UUID.randomUUID
-                )
-                expectMsgPF(timeout) {
-                    case UserOperationResponseV1(updatedUserProfile, requestingUserData) => {
-                        // check if information was changed
-                        assert(updatedUserProfile.userData.isSystemAdmin.contains(true))
-                    }
-                }
-            }
-            "update the user, (deleting) making him inactive " in {
-                actorUnderTest ! UserUpdateRequestV1(
-                    userIri = SharedTestData.normaluserUserProfileV1.userData.user_id.get,
-                    propertyIri = OntologyConstants.KnoraBase.IsActiveUser,
-                    newValue = false,
-                    userProfile = SharedTestData.superuserUserProfileV1,
-                    UUID.randomUUID
-                )
-                expectMsgPF(timeout) {
-                    case UserOperationResponseV1(updatedUserProfile, requestingUserData) => {
-                        // check if information was changed
-                        assert(updatedUserProfile.userData.isActiveUser.contains(false))
-                    }
-                }
-
-            }
-        }
-        */
-
     }
 
 }

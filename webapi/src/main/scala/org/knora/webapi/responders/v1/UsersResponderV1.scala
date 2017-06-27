@@ -581,7 +581,7 @@ class UsersResponderV1 extends ResponderV1 {
                 case None => Seq.empty[IRI]
             }
 
-        //_ = log.debug("userDataByIriGetV1 - maybeUserDataV1: {}", maybeUserDataV1)
+            // _ = log.debug("userProjectMembershipsGetRequestV1 - userIri: {}, projectIris: {}", userIri, projectIris)
         } yield UserProjectMembershipsGetResponseV1(projects = projectIris)
     }
 
@@ -596,7 +596,7 @@ class UsersResponderV1 extends ResponderV1 {
       */
     def userProjectMembershipAddRequestV1(userIri: IRI, projectIri: IRI, userProfileV1: UserProfileV1, apiRequestID: UUID): Future[UserOperationResponseV1] = {
 
-        //log.debug(s"userProjectMembershipAddRequestV1: userIri: {}, projectIri: {}", userIri, projectIri)
+        // log.debug(s"userProjectMembershipAddRequestV1: userIri: {}, projectIri: {}", userIri, projectIri)
 
         /**
           * The actual task run with an IRI lock.
@@ -668,7 +668,7 @@ class UsersResponderV1 extends ResponderV1 {
       */
     def userProjectMembershipRemoveRequestV1(userIri: IRI, projectIri: IRI, userProfileV1: UserProfileV1, apiRequestID: UUID): Future[UserOperationResponseV1] = {
 
-        //log.debug(s"userProjectMembershipRemoveRequestV1: userIri: {}, projectIri: {}", userIri, projectIri)
+        // log.debug(s"userProjectMembershipRemoveRequestV1: userIri: {}, projectIri: {}", userIri, projectIri)
 
         /**
           * The actual task run with an IRI lock.
@@ -758,7 +758,7 @@ class UsersResponderV1 extends ResponderV1 {
                 case None => Seq.empty[IRI]
             }
 
-        //_ = log.debug("userDataByIriGetV1 - maybeUserDataV1: {}", maybeUserDataV1)
+            // _ = log.debug("userProjectAdminMembershipsGetRequestV1 - userIri: {}, projectIris: {}", userIri, projectIris)
         } yield UserProjectAdminMembershipsGetResponseV1(projects = projectIris)
     }
 
@@ -773,7 +773,7 @@ class UsersResponderV1 extends ResponderV1 {
       */
     def userProjectAdminMembershipAddRequestV1(userIri: IRI, projectIri: IRI, userProfileV1: UserProfileV1, apiRequestID: UUID): Future[UserOperationResponseV1] = {
 
-        log.debug(s"userProjectAdminMembershipAddRequestV1: userIri: {}, projectIri: {}", userIri, projectIri)
+        // log.debug(s"userProjectAdminMembershipAddRequestV1: userIri: {}, projectIri: {}", userIri, projectIri)
 
         /**
           * The actual task run with an IRI lock.
@@ -845,7 +845,7 @@ class UsersResponderV1 extends ResponderV1 {
       */
     def userProjectAdminMembershipRemoveRequestV1(userIri: IRI, projectIri: IRI, userProfileV1: UserProfileV1, apiRequestID: UUID): Future[UserOperationResponseV1] = {
 
-        //log.debug(s"userProjectAdminMembershipRemoveRequestV1: userIri: {}, projectIri: {}", userIri, projectIri)
+        // log.debug(s"userProjectAdminMembershipRemoveRequestV1: userIri: {}, projectIri: {}", userIri, projectIri)
 
         /**
           * The actual task run with an IRI lock.
@@ -934,7 +934,7 @@ class UsersResponderV1 extends ResponderV1 {
 
     def userGroupMembershipAddRequestV1(userIri: IRI, groupIri: IRI, userProfileV1: UserProfileV1, apiRequestID: UUID): Future[UserOperationResponseV1] = {
 
-        //log.debug(s"userGroupMembershipAddRequestV1: userIri: {}, groupIri: {}", userIri, groupIri)
+        // log.debug(s"userGroupMembershipAddRequestV1: userIri: {}, groupIri: {}", userIri, groupIri)
 
         /**
           * The actual task run with an IRI lock.
@@ -955,7 +955,7 @@ class UsersResponderV1 extends ResponderV1 {
 
             // get group's info. we need the project IRI.
             groupInfo <- (responderManager ? GroupInfoByIRIGetRequest(groupIri, None)).mapTo[GroupInfoResponseV1]
-            projectIri = groupInfo.group_info.belongsToProject
+            projectIri = groupInfo.group_info.project
 
             // check if the requesting user is allowed to perform updates
             _ = if (!userProfileV1.permissionData.isProjectAdmin(projectIri) && !userProfileV1.permissionData.isSystemAdmin) {
@@ -1001,7 +1001,7 @@ class UsersResponderV1 extends ResponderV1 {
 
     def userGroupMembershipRemoveRequestV1(userIri: IRI, groupIri: IRI, userProfileV1: UserProfileV1, apiRequestID: UUID): Future[UserOperationResponseV1] = {
 
-        //log.debug(s"userGroupMembershipRemoveRequestV1: userIri: {}, groupIri: {}", userIri, groupIri)
+        // log.debug(s"userGroupMembershipRemoveRequestV1: userIri: {}, groupIri: {}", userIri, groupIri)
 
         /**
           * The actual task run with an IRI lock.
@@ -1022,7 +1022,7 @@ class UsersResponderV1 extends ResponderV1 {
 
             // get group's info. we need the project IRI.
             groupInfo <- (responderManager ? GroupInfoByIRIGetRequest(groupIri, None)).mapTo[GroupInfoResponseV1]
-            projectIri = groupInfo.group_info.belongsToProject
+            projectIri = groupInfo.group_info.project
 
             // check if the requesting user is allowed to perform updates
             _ = if (!userProfileV1.permissionData.isProjectAdmin(projectIri) && !userProfileV1.permissionData.isSystemAdmin) {
@@ -1079,7 +1079,7 @@ class UsersResponderV1 extends ResponderV1 {
       */
     private def updateUserV1(userIri: IRI, userUpdatePayload: UserUpdatePayloadV1, userProfile: UserProfileV1, apiRequestID: UUID): Future[UserOperationResponseV1] = {
 
-        //log.debug("updateUserV1 - userUpdatePayload: {}", userUpdatePayload)
+        // log.debug("updateUserV1 - userUpdatePayload: {}", userUpdatePayload)
 
         val parametersCount = List(
             userUpdatePayload.email,
@@ -1181,7 +1181,7 @@ class UsersResponderV1 extends ResponderV1 {
       */
     private def userDataQueryResponse2UserData(userDataQueryResponse: SparqlSelectResponse, short: Boolean): Future[Option[UserDataV1]] = {
 
-        //log.debug("userDataQueryResponse2UserData - " + MessageUtil.toSource(userDataQueryResponse))
+        // log.debug("userDataQueryResponse2UserData - " + MessageUtil.toSource(userDataQueryResponse))
 
         if (userDataQueryResponse.results.bindings.nonEmpty) {
             val returnedUserIri = userDataQueryResponse.getFirstRow.rowMap("s")
@@ -1190,7 +1190,7 @@ class UsersResponderV1 extends ResponderV1 {
                 case (predicate, rows) => predicate -> rows.map(_.rowMap("o"))
             }
 
-            //_ = log.debug(s"userDataQueryResponse2UserProfile - groupedUserData: ${MessageUtil.toSource(groupedUserData)}")
+            // _ = log.debug(s"userDataQueryResponse2UserProfile - groupedUserData: ${MessageUtil.toSource(groupedUserData)}")
 
             val userDataV1 = UserDataV1(
                 lang = groupedUserData.get(OntologyConstants.KnoraBase.PreferredLanguage) match {
@@ -1206,7 +1206,7 @@ class UsersResponderV1 extends ResponderV1 {
                 } else None,
                 isActiveUser = groupedUserData.get(OntologyConstants.KnoraBase.Status).map(_.head.toBoolean)
             )
-            //_ = log.debug(s"userDataQueryResponse - userDataV1: {}", MessageUtil.toSource(userDataV1)")
+            // _ = log.debug(s"userDataQueryResponse - userDataV1: {}", MessageUtil.toSource(userDataV1)")
             FastFuture.successful(Some(userDataV1))
         } else {
             FastFuture.successful(None)
@@ -1222,7 +1222,7 @@ class UsersResponderV1 extends ResponderV1 {
       */
     private def userDataQueryResponse2UserProfile(userDataQueryResponse: SparqlSelectResponse, userProfileType: UserProfileType.Value): Future[Option[UserProfileV1]] = {
 
-        //log.debug("userDataQueryResponse2UserProfile - " + MessageUtil.toSource(userDataQueryResponse))
+        // log.debug("userDataQueryResponse2UserProfile - " + MessageUtil.toSource(userDataQueryResponse))
 
         if (userDataQueryResponse.results.bindings.nonEmpty) {
             val returnedUserIri = userDataQueryResponse.getFirstRow.rowMap("s")
@@ -1231,7 +1231,7 @@ class UsersResponderV1 extends ResponderV1 {
                 case (predicate, rows) => predicate -> rows.map(_.rowMap("o"))
             }
 
-            //log.debug("userDataQueryResponse2UserProfile - groupedUserData: {}", MessageUtil.toSource(groupedUserData))
+            // log.debug("userDataQueryResponse2UserProfile - groupedUserData: {}", MessageUtil.toSource(groupedUserData))
 
             val userDataV1 = UserDataV1(
                 lang = groupedUserData.get(OntologyConstants.KnoraBase.PreferredLanguage) match {
@@ -1292,7 +1292,7 @@ class UsersResponderV1 extends ResponderV1 {
                     sessionId = None,
                     permissionData = permissionData
                 )
-                //_ = log.debug(s"Retrieved UserProfileV1: ${up.toString}")
+                // _ = log.debug(s"Retrieved UserProfileV1: ${up.toString}")
 
                 result: Option[UserProfileV1] = Some(up.ofType(userProfileType))
             } yield result
@@ -1311,7 +1311,7 @@ class UsersResponderV1 extends ResponderV1 {
     def userExists(userIri: IRI): Future[Boolean] = {
         for {
             askString <- Future(queries.sparql.v1.txt.checkUserExists(userIri = userIri).toString)
-            //_ = log.debug("userExists - query: {}", askString)
+            // _ = log.debug("userExists - query: {}", askString)
 
             checkUserExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
             result = checkUserExistsResponse.result
@@ -1328,7 +1328,7 @@ class UsersResponderV1 extends ResponderV1 {
     def projectExists(projectIri: IRI): Future[Boolean] = {
         for {
             askString <- Future(queries.sparql.v1.txt.checkProjectExistsByIri(projectIri = projectIri).toString)
-            //_ = log.debug("projectExists - query: {}", askString)
+            // _ = log.debug("projectExists - query: {}", askString)
 
             checkUserExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
             result = checkUserExistsResponse.result
@@ -1345,7 +1345,7 @@ class UsersResponderV1 extends ResponderV1 {
     def groupExists(groupIri: IRI): Future[Boolean] = {
         for {
             askString <- Future(queries.sparql.v1.txt.checkGroupExistsByIri(groupIri = groupIri).toString)
-            //_ = log.debug("groupExists - query: {}", askString)
+            // _ = log.debug("groupExists - query: {}", askString)
 
             checkUserExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
             result = checkUserExistsResponse.result

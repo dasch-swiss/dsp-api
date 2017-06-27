@@ -296,9 +296,9 @@ object SharedAdminTestData {
         id = "-",
         name = "ProjectAdmin",
         description = Some("Default Project Admin Group"),
-        belongsToProject = "http://data.knora.org/projects/images",
+        project = "http://data.knora.org/projects/images",
         status = true,
-        hasSelfJoinEnabled = false
+        selfjoin = false
     )
 
     /* represents the full GroupInfoV1 of the images ProjectMember group */
@@ -306,9 +306,9 @@ object SharedAdminTestData {
         id = "-",
         name = "ProjectMember",
         description = Some("Default Project Member Group"),
-        belongsToProject = "http://data.knora.org/projects/images",
+        project = "http://data.knora.org/projects/images",
         status = true,
-        hasSelfJoinEnabled = false
+        selfjoin = false
     )
 
     /* represents the full GroupInfoV1 of the images project reviewer group */
@@ -316,9 +316,9 @@ object SharedAdminTestData {
         id = "http://data.knora.org/groups/images-reviewer",
         name = "Image reviewer",
         description = Some("A group for image reviewers."),
-        belongsToProject = "http://data.knora.org/projects/images",
+        project = "http://data.knora.org/projects/images",
         status = true,
-        hasSelfJoinEnabled = false
+        selfjoin = false
     )
 
 

@@ -259,7 +259,7 @@ object UsersRouteV1 extends Authenticator {
 
                     val checkedUserIri = InputValidation.toIri(userIri, () => throw BadRequestException(s"Invalid user IRI $userIri"))
 
-                    val requestMessage = UserProjectMembershipsGetRequestV1(
+                    val requestMessage = UserProjectAdminMembershipsGetRequestV1(
                         userIri = checkedUserIri,
                         userProfileV1 = userProfile,
                         apiRequestID = UUID.randomUUID()

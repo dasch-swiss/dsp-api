@@ -90,7 +90,7 @@ class PermissionsResponderV1 extends ResponderV1 {
                 groupIri =>
                     for {
                         groupInfo <- (responderManager ? GroupInfoByIRIGetRequest(groupIri, None)).mapTo[GroupInfoResponseV1]
-                        res = (groupInfo.group_info.belongsToProject, groupIri)
+                        res = (groupInfo.group_info.project, groupIri)
                     } yield res
             }
         } else {

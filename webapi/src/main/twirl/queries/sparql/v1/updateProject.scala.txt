@@ -21,15 +21,22 @@
 @import org.knora.webapi.IRI
 
 @**
- * Updates an existing user with the provided values.
+ * Updates an existing project with the provided values.
  *
- * @param dataNamedGraph the named graph to update.
- * @param triplestore the name of the triplestore being used. The template uses this value to exclude inferred
-                      results from the WHERE clause of the update.
- * @param userIri the IRI of the user we want to update.
- * @param propertyIri the IRI of the property that points from the user to the value.
- * @param currentValue the current value.
- * @param newValueIri the new value.
+ * @param dataNamedGraph     the named graph to update.
+ * @param triplestore        the name of the triplestore being used. The template uses this value to exclude inferred
+                             results from the WHERE clause of the update.
+ * @param projectIri         the IRI of the project we want to update.
+ * @param maybeShortname     the new optional value for shortname.
+ * @param maybeLongname      the new optional value for longname.
+ * @param maybeDescription   the new optional value for description.
+ * @param maybeKeywords      the new optional value for keywords.
+ * @param maybeLogo          the new optional value for logo.
+ * @param maybeInstitution   the new optional value for institution.
+ * @param maybeOntologyGraph the new optional value for ontology graph.
+ * @param maybeDataGraph     the new optional value for data graph.
+ * @param maybeStatus        the new optional value for status.
+ * @param maybeSelfjoin      the new optional value for selfjoin.
  *@
 @(adminNamedGraphIri: IRI,
   triplestore: String,

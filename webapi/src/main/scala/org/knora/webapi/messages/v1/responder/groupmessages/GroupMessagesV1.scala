@@ -31,32 +31,32 @@ import spray.json.{DefaultJsonProtocol, JsonFormat, NullOptions, RootJsonFormat}
 /**
   * Represents an API request payload that asks the Knora API server to create a new group.
   *
-  * @param name               the name of the group to be created (unique).
-  * @param description        the description of the group to be created.
-  * @param belongsToProject   the project inside which the group will be created.
-  * @param status             the status of the group to be created.
-  * @param hasSelfJoinEnabled the status of self-join of the group to be created.
+  * @param name        the name of the group to be created (unique).
+  * @param description the description of the group to be created.
+  * @param project     the project inside which the group will be created.
+  * @param status      the status of the group to be created.
+  * @param selfjoin    the status of self-join of the group to be created.
   */
 case class CreateGroupApiRequestV1(name: String,
                                    description: Option[String],
-                                   belongsToProject: IRI,
+                                   project: IRI,
                                    status: Boolean = true,
-                                   hasSelfJoinEnabled: Boolean = false) extends GroupV1JsonProtocol {
+                                   selfjoin: Boolean = false) extends GroupV1JsonProtocol {
     def toJsValue = createGroupApiRequestV1Format.write(this)
 }
 
 /**
   * Represents an API request payload that asks the Knora API server to update an existing group.
   *
-  * @param name               the new group's name.
-  * @param description        the new group's description.
-  * @param status             the new group's status.
-  * @param hasSelfJoinEnabled the new group's self-join status.
+  * @param name        the new group's name.
+  * @param description the new group's description.
+  * @param status      the new group's status.
+  * @param selfjoin    the new group's self-join status.
   */
 case class ChangeGroupApiRequestV1(name: Option[String] = None,
                                    description: Option[String] = None,
                                    status: Option[Boolean] = None,
-                                   hasSelfJoinEnabled: Option[Boolean] = None) extends GroupV1JsonProtocol{
+                                   selfjoin: Option[Boolean] = None) extends GroupV1JsonProtocol {
     def toJsValue = changeGroupApiRequestV1Format.write(this)
 }
 
@@ -188,20 +188,37 @@ case class GroupOperationResponseV1(group_info: GroupInfoV1) extends KnoraRespon
 /**
   * The information describing a group.
   *
-  * @param id                 the IRI if the group.
-  * @param name               the name of the group.
-  * @param description        the description of the group.
-  * @param belongsToProject   the project this group belongs to.
-  * @param status             the group's status.
-  * @param hasSelfJoinEnabled the group's self-join status.
+  * @param id          the IRI if the group.
+  * @param name        the name of the group.
+  * @param description the description of the group.
+  * @param project     the project this group belongs to.
+  * @param status      the group's status.
+  * @param selfjoin    the group's self-join status.
   *
   */
 case class GroupInfoV1(id: IRI,
                        name: String,
                        description: Option[String] = None,
-                       belongsToProject: IRI,
+                       project: IRI,
                        status: Boolean,
-                       hasSelfJoinEnabled: Boolean)
+                       selfjoin: Boolean)
+
+
+/**
+  * Payload used for updating of an existing group.
+  *
+  * @param name        the name of the group.
+  * @param description the description of the group.
+  * @param project     the project this group belongs to.
+  * @param status      the group's status.
+  * @param selfjoin    the group's self-join status.
+  */
+case class GroupUpdatePayloadV1(name: Option[String] = None,
+                                description: Option[String] = None,
+                                project: Option[IRI] = None,
+                                status: Option[Boolean] = None,
+                                selfjoin: Option[Boolean] = None)
+
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // JSON formating

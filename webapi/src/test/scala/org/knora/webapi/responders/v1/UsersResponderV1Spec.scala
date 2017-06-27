@@ -85,6 +85,7 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
     }
 
     "The UsersResponder " when {
+
         "asked about all users" should {
             "return a list" in {
                 actorUnderTest ! UsersGetRequestV1(rootUser)
@@ -93,6 +94,7 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
                 response.users.size should be (16)
             }
         }
+
         "asked about an user identified by 'iri' " should {
 
             "return a profile if the user (root user) is known" in {
@@ -115,6 +117,7 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
                 expectMsg(None)
             }
         }
+
         "asked about an user identified by 'email'" should {
 
             "return a profile if the user (root user) is known" in {
@@ -137,9 +140,10 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
                 expectMsg(None)
             }
         }
+
         "asked to create a new user" should {
 
-            "create the user and return it's profile if the supplied email is unique " in {
+            "CREATE the user and return it's profile if the supplied email is unique " in {
                 actorUnderTest ! UserCreateRequestV1(
                     createRequest = CreateUserApiRequestV1(
                         email = "donald.duck@example.com",
@@ -241,9 +245,10 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
                 expectMsg(Failure(BadRequestException("Family name cannot be empty")))
             }
         }
+
         "asked to update a user" should {
 
-            "update the user" in {
+            "UPDATE the user" in {
 
                 /* User information is updated by the user */
                 actorUnderTest ! UserChangeBasicUserDataRequestV1(
@@ -296,7 +301,7 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
 
             }
 
-            "update the user's password" in {
+            "UPDATE the user's password" in {
                 actorUnderTest ! UserChangePasswordRequestV1(
                     userIri = SharedAdminTestData.normalUser.userData.user_id.get,
                     changeUserRequest = ChangeUserApiRequestV1(
@@ -327,7 +332,7 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
                 expectMsgType[UserOperationResponseV1](timeout)
             }
 
-            "update the user's status, (deleting) making him inactive " in {
+            "UPDATE the user's status, (deleting) making him inactive " in {
                 actorUnderTest ! UserChangeStatusRequestV1(
                     userIri = SharedAdminTestData.normalUser.userData.user_id.get,
                     changeUserRequest = ChangeUserApiRequestV1(newUserStatus = Some(false)),
@@ -349,7 +354,7 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
                 response2.userProfile.userData.isActiveUser.get should equal (true)
             }
 
-            "update the user's system admin membership" in {
+            "UPDATE the user's system admin membership" in {
                 actorUnderTest ! UserChangeSystemAdminMembershipStatusRequestV1(
                     userIri = SharedAdminTestData.normalUser.userData.user_id.get,
                     changeUserRequest = ChangeUserApiRequestV1(newSystemAdminMembershipStatus = Some(true)),
@@ -422,7 +427,7 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
 
         "asked to update the user's project membership" should {
 
-            "add user to project" in {
+            "ADD user to project" in {
 
                 actorUnderTest ! UserProjectMembershipsGetRequestV1(normalUserIri, rootUser, UUID.randomUUID())
                 val membershipsBeforeUpdate = expectMsgType[UserProjectMembershipsGetResponseV1](timeout)
@@ -441,7 +446,7 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
                 received.members should contain (normalUser.ofType(UserProfileType.SHORT).userData)
             }
 
-            "remove user from project" in {
+            "DELETE user from project" in {
 
                 actorUnderTest ! UserProjectMembershipsGetRequestV1(normalUserIri, rootUser, UUID.randomUUID())
                 val membershipsBeforeUpdate = expectMsgType[UserProjectMembershipsGetResponseV1](timeout)
@@ -475,7 +480,7 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
 
         "asked to update the user's project admin group membership" should {
 
-            "add user to project admin group" in {
+            "ADD user to project admin group" in {
 
                 actorUnderTest ! UserProjectAdminMembershipsGetRequestV1(normalUserIri, rootUser, UUID.randomUUID())
                 val membershipsBeforeUpdate = expectMsgType[UserProjectAdminMembershipsGetResponseV1](timeout)
@@ -494,7 +499,7 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
                 received.members should contain (normalUser.ofType(UserProfileType.SHORT).userData)
             }
 
-            "remove user from project admin group" in {
+            "DELETE user from project admin group" in {
                 actorUnderTest ! UserProjectAdminMembershipsGetRequestV1(normalUserIri, rootUser, UUID.randomUUID())
                 val membershipsBeforeUpdate = expectMsgType[UserProjectAdminMembershipsGetResponseV1](timeout)
                 membershipsBeforeUpdate.projects should equal (Seq("http://data.knora.org/projects/images"))
@@ -527,7 +532,7 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
 
         "asked to update the user's group membership" should {
 
-            "add user to group" in {
+            "ADD user to group" in {
                 actorUnderTest ! UserGroupMembershipsGetRequestV1(normalUserIri, rootUser, UUID.randomUUID())
                 val membershipsBeforeUpdate = expectMsgType[UserGroupMembershipsGetResponseV1](timeout)
                 membershipsBeforeUpdate.groups should equal (Seq())
@@ -545,7 +550,7 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
                 received.members should contain (normalUser.ofType(UserProfileType.SHORT).userData.user_id.get)
             }
 
-            "remove user from group" in {
+            "DELETE user from group" in {
                 actorUnderTest ! UserGroupMembershipsGetRequestV1(normalUserIri, rootUser, UUID.randomUUID())
                 val membershipsBeforeUpdate = expectMsgType[UserGroupMembershipsGetResponseV1](timeout)
                 membershipsBeforeUpdate.groups should equal (Seq(imagesReviewerGroupIri))
