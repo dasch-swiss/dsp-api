@@ -87,7 +87,7 @@ jobs:
         - if [ "$TRAVIS_EVENT_TYPE" != "pull_request" ]; then docker push $SALSAH_REPO ; fi
         # get the develop sipi and tag it as 'develop-knora' so we know that this version is tested (only on the develop branch)
         - docker pull $SIPI_REPO:develop
-        - if [ "$TAG" == "develop" ]; docker tag $SIPI_REPO:develop $SIPI_REPO:knora-develop ; fi
+        - if [ "$TAG" == "develop" ]; then docker tag $SIPI_REPO:develop $SIPI_REPO:knora-develop ; fi
         - if [ "$TRAVIS_EVENT_TYPE" != "pull_request" ]; then docker push $SIPI_REPO ; fi
 
 notifications:
