@@ -76,6 +76,8 @@
     <logger name="org.knora.webapi.responders.v1.OntologyResponderV1" level="INFO"/>
     <logger name="org.knora.webapi.viewhandlers.ResourceHtmlView" level="INFO"/>
     <logger name="org.knora.webapi.other.v1.DrawingsGodsV1ITSpec" level="INFO"/>
+    <logger name="org.knora.webapi.e2e.v1.KnoraSipiIntegrationV1ITSpec" level="INFO"/>
+    <logger name="org.knora.webapi.e2e.v1.KnoraSipiScriptsV1ITSpec" level="INFO"/>
 
 
     <root level="INFO">

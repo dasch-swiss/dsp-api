@@ -22,10 +22,10 @@ package org.knora.salsah.browser
 
 import java.io.{File, FileNotFoundException}
 
-import org.openqa.selenium.chrome.ChromeDriver
+import org.openqa.selenium.chrome.{ChromeDriver, ChromeOptions}
 import org.openqa.selenium.interactions.Actions
 import org.openqa.selenium.support.ui.Select
-import org.openqa.selenium.{By, JavascriptExecutor, WebDriver, WebElement}
+import org.openqa.selenium.{By, WebDriver, WebElement}
 import org.scalatest.concurrent.Eventually._
 
 import scala.collection.JavaConversions._
@@ -43,12 +43,10 @@ import scala.concurrent.duration._
   * See [[https://selenium.googlecode.com/git/docs/api/java/index.html?org/openqa/selenium/WebDriver.html WebDriver]]
   * for more documentation.
   */
-class SalsahPage {
+class SalsahPage(pageUrl: String, headless: Boolean) {
 
     // How long to wait for results obtained using the 'eventually' function
     implicit val patienceConfig = PatienceConfig(timeout = scaled(10.seconds), interval = scaled(20.millis))
-
-    val pageUrl = "http://localhost:3335/index.html" // TODO: get this from application.conf
 
     val chromeDriverPath = "lib/chromedriver/chromedriver"
 
@@ -58,12 +56,22 @@ class SalsahPage {
 
     // Load the native Selenium driver for Chrome.
     System.setProperty("webdriver.chrome.driver", chromeDriverPath)
-    implicit val driver: WebDriver = new ChromeDriver()
+
+    // Set some arguments that will be passed to chrome
+    val options: ChromeOptions = new ChromeOptions()
+    if (headless) {
+        options.addArguments("headless")
+        options.addArguments("disable-gpu")
+
+    }
+    options.addArguments("window-size=1400,1000")
+
+    implicit val driver: WebDriver = new ChromeDriver(options)
 
     /**
-      * Loads the SALSAH home page.
+      * Open the SALSAH home page.
       */
-    def load(): Unit = {
+    def open(): Unit = {
         driver.get(pageUrl)
     }
 
@@ -97,7 +105,9 @@ class SalsahPage {
         val sendCredentials = driver.findElement(By.id("login_button"))
 
         userInput.sendKeys(email)
+
         passwordInput.sendKeys("test")
+
         sendCredentials.click()
 
         eventually {
@@ -165,6 +175,17 @@ class SalsahPage {
     def getSearchResultRowText(searchResultRow: WebElement): String = {
         eventually {
             searchResultRow.findElement(By.xpath("td[3]")).getText
+        }
+    }
+
+    /**
+      * Clicks the SALSAH simple search button.
+      */
+    def clickSimpleSearchButton(): Unit = {
+        eventually {
+            val ele = driver.findElement(By.xpath("//div[@id='searchctrl']/img[1][@class='link']"))
+            assert(ele.isDisplayed)
+            ele.click()
         }
     }
 
@@ -668,13 +689,24 @@ class SalsahPage {
       * @param lang the language to change to.
       */
     def changeLanguage(lang: String): Unit = {
-        eventually {
-            driver.findElement(By.xpath(s"//div[@id='langctrl']/a[normalize-space(.) = '$lang']")).click()
-        }
 
         eventually {
-            driver.switchTo().alert().accept()
+            // this workaround is needed for headless testing, because of a problem with alerts in headless mode
+            if (headless) {
+                import org.openqa.selenium.JavascriptExecutor
+                val jsExecutor = driver.asInstanceOf[JavascriptExecutor]
+                jsExecutor.executeScript("window.alert = function(){}")
+                jsExecutor.executeScript("window.confirm = function(){return true;}")
+            }
+
+            driver.findElement(By.linkText(lang)).click()
+        }
+
+        // this workaround is needed for headless testing, because of a problem with alerts in headless mode
+        if (!headless) {
+            eventually {
+                driver.switchTo().alert().accept()
+            }
         }
     }
-
 }

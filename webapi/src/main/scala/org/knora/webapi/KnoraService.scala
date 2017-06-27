@@ -47,15 +47,36 @@ import scala.collection.JavaConverters._
 import scala.concurrent.Await
 import scala.concurrent.duration._
 
+/**
+  * Knora Core abstraction.
+  */
 trait Core {
     implicit val system: ActorSystem
+
+    implicit val settings: SettingsImpl
+
+    implicit val log: LoggingAdapter
 }
 
 /**
   * The applications actor system.
   */
 trait LiveCore extends Core {
+
+    /**
+      * The application's actor system.
+      */
     implicit lazy val system = ActorSystem("webapi")
+
+    /**
+      * The application's configuration.
+      */
+    implicit lazy val settings: SettingsImpl = Settings(system)
+
+    /**
+      * Provide logging
+      */
+    implicit lazy val log: LoggingAdapter = akka.event.Logging(system, "KnoraService")
 }
 
 /**
@@ -75,16 +96,6 @@ trait KnoraService {
       * The supervisor actor that forwards messages to actors that deal with persistent storage.
       */
     private val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
-
-    /**
-      * The application's configuration.
-      */
-    protected val settings: SettingsImpl = Settings(system)
-
-    /**
-      * Provide logging
-      */
-    protected val log: LoggingAdapter = akka.event.Logging(system, "KnoraService")
 
     /**
       * Timeout definition (need to be high enough to allow reloading of data so that checkActorSystem doesn't timeout)

@@ -20,11 +20,7 @@
 
 package org.knora.salsah.browser
 
-import akka.actor.ActorSystem
-import akka.util.Timeout
 import org.openqa.selenium.WebElement
-
-import scala.concurrent.duration._
 
 /**
   * Tests the SALSAH web interface using Selenium.
@@ -39,17 +35,14 @@ class ResourceCreationSpec extends SalsahSpec {
        for more documentation.
 
      */
-
-    private val page = new SalsahPage
+    private val headless = settings.headless
+    private val pageUrl = s"http://${settings.hostName}:${settings.httpPort}/index.html"
+    private val page = new SalsahPage(pageUrl, headless)
 
     // How long to wait for results obtained using the 'eventually' function
     implicit private val patienceConfig = page.patienceConfig
 
-    implicit private val timeout = Timeout(180.seconds)
 
-    implicit private val system = ActorSystem()
-
-    implicit private val dispatcher = system.dispatcher
 
     private val rdfDataObjectsJsonList: String =
         """
@@ -83,14 +76,14 @@ class ResourceCreationSpec extends SalsahSpec {
         }
 
         "have the correct title" in {
-            page.load()
+            page.open()
             page.getPageTitle should be("System for Annotation and Linkage of Sources in Arts and Humanities")
 
         }
 
         "log in as anything user" in {
 
-            page.load()
+            page.open()
             page.doLogin(email = anythingUserEmail, password = testPassword, fullName = anythingUserFullName)
             page.doLogout()
 
@@ -98,7 +91,7 @@ class ResourceCreationSpec extends SalsahSpec {
 
         "create a resource of type images:person" in {
 
-            page.load()
+            page.open()
 
             page.doLogin(email = imagesUserEmail, password = testPassword, fullName = imagesUserFullName)
 
@@ -110,7 +103,7 @@ class ResourceCreationSpec extends SalsahSpec {
 
             label.sendKeys("Robin Hood")
 
-            val firstname = page.getFormFieldByName("http://www.knora.org/ontology/images#firstname")
+            val firstname: WebElement = page.getFormFieldByName("http://www.knora.org/ontology/images#firstname")
 
             firstname.sendKeys("Robin")
 
@@ -132,7 +125,7 @@ class ResourceCreationSpec extends SalsahSpec {
 
         "create two resources of type anything:thing in two different projects as the multi-project user" in {
 
-            page.load()
+            page.open()
 
             page.doLogin(email = multiUserEmail, password = testPassword, fullName = multiUserFullName)
 

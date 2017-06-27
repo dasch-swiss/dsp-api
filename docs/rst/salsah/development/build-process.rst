@@ -90,9 +90,16 @@ Then, launch the services as described above; the triple store with the test dat
     $ sbt
     > compile
     > re-start
-    > test
+    > test # or headless:test for running tests in headless mode
 
 Note: please be patient as salsah can take up to one mimute (end of a time-out) before reporting some errors.
+
+Runing automated tests in headless browser mode
+-----------------------------------------------
+
+The automated tests can also be run in the headless browser mode, which is supported in Chrome version 59 or higher.
+
+To run the tests in headless mode, execute them with the ``headless`` prefix, e.g., ``$ sbt headless:test``.
 
 SBT Build Configuration
 ------------------------
