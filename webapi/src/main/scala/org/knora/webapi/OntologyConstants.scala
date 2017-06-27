@@ -535,6 +535,12 @@ object OntologyConstants {
 
         val VersionSegment = "/simple/v2"
 
+        val KnoraApiV2PrefixExpansion: IRI = KnoraApi.KnoraApiOntologyIri + VersionSegment + "#"
+
+        val ObjectType: IRI = KnoraApiV2PrefixExpansion + "objectType"
+
+        val Date: IRI = KnoraApiV2PrefixExpansion + "date"
+        val Resource: IRI = KnoraApiV2PrefixExpansion + "Resource"
     }
 
     object NamedGraphs {

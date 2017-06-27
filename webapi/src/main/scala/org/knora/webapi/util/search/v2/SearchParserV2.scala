@@ -154,7 +154,7 @@ case class BindStatement(variableName: String, value: Entity) extends QueryPatte
 /**
   * Represents a UNION in the WHERE clause of a query.
   *
-  * @param blocks the blocks of statement patterns contained in the UNION.
+  * @param blocks the blocks of patterns contained in the UNION.
   */
 case class UnionPattern(blocks: Seq[Seq[QueryPattern]]) extends QueryPattern {
     override def compare(that: QueryPattern): Int = {
@@ -171,9 +171,9 @@ case class UnionPattern(blocks: Seq[Seq[QueryPattern]]) extends QueryPattern {
 /**
   * Represents an OPTIONAL in the WHERE clause of a query.
   *
-  * @param statements the statements in the OPTIONAL block.
+  * @param patterns the patterns in the OPTIONAL block.
   */
-case class OptionalPattern(statements: Seq[QueryPattern]) extends QueryPattern {
+case class OptionalPattern(patterns: Seq[QueryPattern]) extends QueryPattern {
     override def compare(that: QueryPattern): Int = {
         that match {
             case _: BindStatement => 1
@@ -195,9 +195,9 @@ case class SimpleConstructClause(statements: Seq[StatementPattern])
 /**
   * Represents a simple WHERE clause in a query.
   *
-  * @param statements the statements in the WHERE clause.
+  * @param patterns the patterns in the WHERE clause.
   */
-case class SimpleWhereClause(statements: Seq[QueryPattern])
+case class SimpleWhereClause(patterns: Seq[QueryPattern])
 
 /**
   * Represents a simple CONSTRUCT query submitted to the Knora API.
@@ -305,7 +305,7 @@ object SearchParserV2 {
 
             SimpleConstructQuery(
                 constructClause = SimpleConstructClause(statements = constructStatements),
-                whereClause = SimpleWhereClause(statements = getOrderedWherePatterns)
+                whereClause = SimpleWhereClause(patterns = getOrderedWherePatterns)
             )
         }
 
@@ -335,7 +335,7 @@ object SearchParserV2 {
                 objVar.getValue match {
                     case iri: rdf4j.model.IRI => IriRef(iri.stringValue)
                     case literal: rdf4j.model.Literal => XsdLiteral(value = literal.stringValue, datatype = literal.getDatatype.stringValue)
-                    case other => throw SparqlSearchException(s"Invalid object for triple pattern: $other")
+                    case other => throw SparqlSearchException(s"Invalid object for triple patterns: $other")
                 }
             } else {
                 QueryVariable(objVar.getName)

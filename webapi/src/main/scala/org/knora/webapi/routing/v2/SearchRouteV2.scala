@@ -113,6 +113,7 @@ object SearchRouteV2 extends Authenticator {
                           |}
                         """.stripMargin
 
+
                     // search for a letter that has the given title and mentions Isaac Newton
                     var sparql_tmp2 =
                         """

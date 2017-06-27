@@ -101,6 +101,10 @@ class SearchParserV2Spec extends WordSpec with Matchers {
         "parse an extended search query with a FILTER containing a Boolean operator" in {
             SearchParserV2.parseSearchQuery(extendSearchQueryForAThingRelatingToAnotherThing) should ===(SimpleParsedSparqlConstructQueryWithBooleanOperatorInFilter)
         }
+
+        "parse an extended search query with explicit type annotations" in {
+            println(MessageUtil.toSource(SearchParserV2.parseSearchQuery(SimpleSparqlConstructQueryWithExplicitTypeAnnotations)))
+        }
     }
 }
 
@@ -150,7 +154,7 @@ object SearchParserV2Spec {
         """.stripMargin
 
     val SimpleParsedSparqlConstructQuery = SimpleConstructQuery(
-        whereClause = SimpleWhereClause(statements = Vector(
+        whereClause = SimpleWhereClause(patterns = Vector(
             StatementPattern(
                 obj = QueryVariable(variableName = "pubdate"),
                 pred = IriRef(iri = "http://api.knora.org/ontology/incunabula/simple/v2#pubdate"),
@@ -232,7 +236,7 @@ object SearchParserV2Spec {
                     ))
                 )
             )),
-            OptionalPattern(statements = Vector(
+            OptionalPattern(patterns = Vector(
                 StatementPattern(
                     obj = IriRef(iri = "http://api.knora.org/ontology/incunabula/simple/v2#book"),
                     pred = IriRef(iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"),
@@ -301,7 +305,7 @@ object SearchParserV2Spec {
     )
 
     val SimpleParsedSparqlConstructQueryWithBind = SimpleConstructQuery(
-        whereClause = SimpleWhereClause(statements = Vector(
+        whereClause = SimpleWhereClause(patterns = Vector(
             BindStatement(
                 value = IriRef(iri = "http://data.knora.org/a-thing"),
                 variableName = "aThing"
@@ -332,7 +336,7 @@ object SearchParserV2Spec {
     )
 
     val SimpleParsedSparqlConstructQueryWithBooleanOperatorInFilter = SimpleConstructQuery(
-        whereClause = SimpleWhereClause(statements = Vector(
+        whereClause = SimpleWhereClause(patterns = Vector(
             StatementPattern(
                 obj = IriRef(iri = "http://api.knora.org/ontology/anything/simple/v2#Thing"),
                 pred = IriRef(iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"),
@@ -637,6 +641,48 @@ object SearchParserV2Spec {
           |    ?resource ?linkingProp <http://data.knora.org/a-thing> .
           |    FILTER(?linkingProp = anything:isPartOfOtherThing || ?linkingProp = anything:hasOtherThing)
           |
+          |}
+        """.stripMargin
+
+    val SimpleSparqlConstructQueryWithExplicitTypeAnnotations: String =
+        """
+          |PREFIX beol: <http://api.knora.org/ontology/beol/simple/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |
+          |CONSTRUCT {
+          |    ?letter knora-api:isMainResource true .
+          |
+          |    ?letter a knora-api:Resource .
+          |    ?letter a beol:letter .
+          |
+          |    ?letter knora-api:hasLinkTo <http://rdfh.ch/beol/oU8fMNDJQ9SGblfBl5JamA> .
+          |    ?letter ?linkingProp1  <http://rdfh.ch/beol/oU8fMNDJQ9SGblfBl5JamA> .
+          |
+          |    <http://rdfh.ch/beol/oU8fMNDJQ9SGblfBl5JamA> a knora-api:Resource .
+          |
+          |    ?letter knora-api:hasLinkTo <http://rdfh.ch/beol/6edJwtTSR8yjAWnYmt6AtA> .
+          |    ?letter ?linkingProp2  <http://rdfh.ch/beol/6edJwtTSR8yjAWnYmt6AtA> .
+          |
+          |    <http://rdfh.ch/beol/6edJwtTSR8yjAWnYmt6AtA> a knora-api:Resource .
+          |
+          |} WHERE {
+          |    ?letter a knora-api:Resource .
+          |    ?letter a beol:letter .
+          |
+          |    # Scheuchzer, Johann Jacob 1672-1733
+          |    ?letter ?linkingProp1  <http://rdfh.ch/beol/oU8fMNDJQ9SGblfBl5JamA> .
+          |    ?linkingProp1 knora-api:objectType knora-api:Resource .
+          |    FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient )
+          |
+          |    <http://rdfh.ch/beol/oU8fMNDJQ9SGblfBl5JamA> a knora-api:Resource .
+          |
+          |    # Hermann, Jacob 1678-1733
+          |    ?letter ?linkingProp2 <http://rdfh.ch/beol/6edJwtTSR8yjAWnYmt6AtA> .
+          |    ?linkingProp2 knora-api:objectType knora-api:Resource .
+          |
+          |    FILTER(?linkingProp2 = beol:hasAuthor || ?linkingProp2 = beol:hasRecipient )
+          |
+          |    <http://rdfh.ch/beol/6edJwtTSR8yjAWnYmt6AtA> a knora-api:Resource .
           |}
         """.stripMargin
 }

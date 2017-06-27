@@ -128,7 +128,7 @@ class SearchResponderV2 extends Responder {
         }.toVector
 
         // get all the statement patterns from the where clause
-        val whereStatementPatterns: Seq[StatementPattern] = simpleConstructQuery.whereClause.statements.collect {
+        val whereStatementPatterns: Seq[StatementPattern] = simpleConstructQuery.whereClause.patterns.collect {
             case statementP: StatementPattern => statementP
         }
 
@@ -151,7 +151,7 @@ class SearchResponderV2 extends Responder {
         }.toVector
 
         // collect all the filter patterns
-        val filterPatterns: Vector[FilterExpression] = simpleConstructQuery.whereClause.statements.collect {
+        val filterPatterns: Vector[FilterExpression] = simpleConstructQuery.whereClause.patterns.collect {
             case filterP: FilterPattern =>
                 filterP.expression match {
                     case filterExpr: FilterExpression => filterExpr
