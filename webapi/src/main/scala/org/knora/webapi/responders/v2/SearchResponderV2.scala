@@ -172,157 +172,163 @@ class SearchResponderV2 extends Responder {
         val extendedSearchConstructClauseStatementPatterns: Seq[ExtendedSearchStatementPattern] = convertSearchParserConstructPatternsToExtendedSearchPatterns(simpleConstructQuery.constructClause.statements)
         val extendedSearchWhereClausePatternsWithOriginalFilters: Seq[ExtendedSearchQueryPattern] = convertSearchParserQueryPatternsToExtendedSearchPatterns(whereClauseWithoutAnnotations.patterns)
 
-        def convertStatements(patterns: Seq[ExtendedSearchQueryPattern]): Seq[ExtendedSearchQueryPattern] = {
-            patterns.zipWithIndex.flatMap {
-                case (whereP: ExtendedSearchQueryPattern, index: Int) =>
+        def addAdditionalStatementsForStatement(statementP: ExtendedSearchStatementPattern, index: Int): Vector[ExtendedSearchStatementPattern] = {
+
+            // check if subject is contained in the type info
+            val additionalStatementsForSubj: Vector[ExtendedSearchStatementPattern] = statementP.subj match {
+                case variableSubj: ExtendedSearchVar =>
+                    val key = TypeableVariableV2(variableSubj.variableName)
+
+                    if (typeInspectionResultWhere.typedEntities.contains(key)) {
+                        //println(key, typeInspectionResult.typedEntities(key))
+
+                        val additionalStatements = typeInspectionResultWhere.typedEntities(key) match {
+                            case nonPropTypeInfo: NonPropertyTypeInfoV2 =>
+                                val typeIri = InputValidation.externalIriToInternalIri(nonPropTypeInfo.typeIri, () => throw BadRequestException(s"${nonPropTypeInfo.typeIri} is not a valid external knora-api entity Iri"))
+
+                                if (typeIri == OntologyConstants.KnoraBase.Resource) {
+                                    Vector(
+                                        ExtendedSearchStatementPattern(subj = statementP.subj, pred = ExtendedSearchIri(OntologyConstants.Rdf.Type), obj = ExtendedSearchIri(OntologyConstants.KnoraBase.Resource), false),
+                                        ExtendedSearchStatementPattern(subj = statementP.subj, pred = ExtendedSearchIri(OntologyConstants.Rdfs.Label), obj = ExtendedSearchVar("resourceLabel" + index), true),
+                                        ExtendedSearchStatementPattern(subj = statementP.subj, pred = ExtendedSearchIri(OntologyConstants.Rdf.Type), obj = ExtendedSearchVar("resourceType" + index), true),
+                                        ExtendedSearchStatementPattern(subj = statementP.subj, pred = ExtendedSearchInternalEntityIri(OntologyConstants.KnoraBase.AttachedToUser), obj = ExtendedSearchVar("resourceCreator" + index), true),
+                                        ExtendedSearchStatementPattern(subj = statementP.subj, pred = ExtendedSearchInternalEntityIri(OntologyConstants.KnoraBase.HasPermissions), obj = ExtendedSearchVar("resourcePermissions" + index), true),
+                                        ExtendedSearchStatementPattern(subj = statementP.subj, pred = ExtendedSearchInternalEntityIri(OntologyConstants.KnoraBase.AttachedToProject), obj = ExtendedSearchVar("resourceProject" + index), true)
+                                    )
+                                } else {
+                                    Vector.empty[ExtendedSearchStatementPattern]
+                                }
+                            case propTypeInfo: PropertyTypeInfoV2 =>
+                                Vector.empty[ExtendedSearchStatementPattern]
+
+                        }
+
+                        // prevent that the same type info is processed more than once
+                        typeInspectionResultWhere = TypeInspectionResultV2(
+                            typedEntities = typeInspectionResultWhere.typedEntities - key
+                        )
+
+                        additionalStatements
+
+                    } else {
+                        Vector.empty[ExtendedSearchStatementPattern]
+                    }
+
+
+                case iriSubj: ExtendedSearchInternalEntityIri =>
+                    val key = TypeableIriV2(iriSubj.iri)
+
+                    Vector.empty[ExtendedSearchStatementPattern]
+
+                case other => Vector.empty[ExtendedSearchStatementPattern]
+            }
+
+
+            val additionalStatementsForPred: Vector[ExtendedSearchStatementPattern] = statementP.pred match {
+                case variablePred: ExtendedSearchVar =>
+                    val key = TypeableVariableV2(variablePred.variableName)
+
+                    if (typeInspectionResultWhere.typedEntities.contains(key)) {
+
+                        typeInspectionResultWhere.typedEntities(key) match {
+                            case nonPropTypeInfo: NonPropertyTypeInfoV2 => Vector.empty[ExtendedSearchStatementPattern]
+
+                            case propTypeInfo: PropertyTypeInfoV2 =>
+
+                                val objectIri = InputValidation.externalIriToInternalIri(propTypeInfo.objectTypeIri, () => throw BadRequestException(s"${propTypeInfo.objectTypeIri} is not a valid external knora-api entity Iri"))
+
+                                if (objectIri == OntologyConstants.KnoraBase.Resource) {
+                                    Vector(
+                                        ExtendedSearchStatementPattern(subj = statementP.subj, pred = ExtendedSearchInternalEntityIri(OntologyConstants.KnoraBase.HasValue), obj = ExtendedSearchVar("linkValueObj" + index), false),
+                                        ExtendedSearchStatementPattern(subj = statementP.subj, pred = ExtendedSearchVar("linkValueProp" + index), obj = ExtendedSearchVar("linkValueObj" + index), true),
+                                        ExtendedSearchStatementPattern(subj = ExtendedSearchVar("linkValueObj" + index), pred = ExtendedSearchInternalEntityIri(OntologyConstants.Rdf.Type), obj = ExtendedSearchInternalEntityIri(OntologyConstants.KnoraBase.LinkValue), true),
+                                        ExtendedSearchStatementPattern(subj = ExtendedSearchVar("linkValueObj" + index), pred = ExtendedSearchIri(OntologyConstants.Rdf.Subject), obj = statementP.subj, true),
+                                        ExtendedSearchStatementPattern(subj = ExtendedSearchVar("linkValueObj" + index), pred = ExtendedSearchInternalEntityIri(OntologyConstants.Rdf.Object), obj = statementP.obj, true),
+                                        ExtendedSearchStatementPattern(subj = ExtendedSearchVar("linkValueObj" + index), pred = ExtendedSearchVar("linkValueObjProp" + index), obj = ExtendedSearchVar("linkValueObjVal" + index), true)
+                                    )
+                                } else {
+                                    Vector.empty[ExtendedSearchStatementPattern]
+                                }
+
+
+
+                        }
+
+                    } else {
+                        Vector.empty[ExtendedSearchStatementPattern]
+                    }
+
+                case iriPred: ExtendedSearchInternalEntityIri =>
+
+                    Vector.empty[ExtendedSearchStatementPattern]
+
+                case other => Vector.empty[ExtendedSearchStatementPattern]
+            }
+
+            val additionalStatementsForObj: Vector[ExtendedSearchStatementPattern] = statementP.obj match {
+                case variableObj: ExtendedSearchVar => Vector.empty[ExtendedSearchStatementPattern]
+
+                case internalEntityIriObj: ExtendedSearchInternalEntityIri => Vector.empty[ExtendedSearchStatementPattern]
+
+                case iriObj: ExtendedSearchIri =>
+                    val key = TypeableIriV2(iriObj.iri)
+
+                    if (typeInspectionResultWhere.typedEntities.contains(key)) {
+                        //println(key, typeInspectionResult.typedEntities(key))
+
+                        val additionalStatements = typeInspectionResultWhere.typedEntities(key) match {
+                            case nonPropTypeInfo: NonPropertyTypeInfoV2 =>
+                                val typeIri = InputValidation.externalIriToInternalIri(nonPropTypeInfo.typeIri, () => throw BadRequestException(s"${nonPropTypeInfo.typeIri} is not a valid external knora-api entity Iri"))
+
+                                if (typeIri == OntologyConstants.KnoraBase.Resource) {
+                                    Vector(
+                                        ExtendedSearchStatementPattern(subj = statementP.obj, pred = ExtendedSearchIri(OntologyConstants.Rdf.Type), obj = ExtendedSearchIri(OntologyConstants.KnoraBase.Resource), false),
+                                        ExtendedSearchStatementPattern(subj = statementP.obj, pred = ExtendedSearchIri(OntologyConstants.Rdfs.Label), obj = ExtendedSearchVar("resourceLabel" + index), true),
+                                        ExtendedSearchStatementPattern(subj = statementP.obj, pred = ExtendedSearchIri(OntologyConstants.Rdf.Type), obj = ExtendedSearchVar("resourceType" + index), true),
+                                        ExtendedSearchStatementPattern(subj = statementP.obj, pred = ExtendedSearchInternalEntityIri(OntologyConstants.KnoraBase.AttachedToUser), obj = ExtendedSearchVar("resourceCreator" + index), true),
+                                        ExtendedSearchStatementPattern(subj = statementP.obj, pred = ExtendedSearchInternalEntityIri(OntologyConstants.KnoraBase.HasPermissions), obj = ExtendedSearchVar("resourcePermissions" + index), true),
+                                        ExtendedSearchStatementPattern(subj = statementP.obj, pred = ExtendedSearchInternalEntityIri(OntologyConstants.KnoraBase.AttachedToProject), obj = ExtendedSearchVar("resourceProject" + index), true)
+                                    )
+                                } else {
+                                    Vector.empty[ExtendedSearchStatementPattern]
+                                }
+                            case propTypeInfo: PropertyTypeInfoV2 =>
+                                Vector.empty[ExtendedSearchStatementPattern]
+
+                        }
+
+                        // prevent that the same type info is processed more than once
+                        typeInspectionResultWhere = TypeInspectionResultV2(
+                            typedEntities = typeInspectionResultWhere.typedEntities - key
+                        )
+
+                        additionalStatements
+
+                    } else {
+                        Vector.empty[ExtendedSearchStatementPattern]
+                    }
+
+                case other => Vector.empty[ExtendedSearchStatementPattern]
+            }
+
+            additionalStatementsForSubj ++ additionalStatementsForPred ++ additionalStatementsForObj
+
+        }
+
+        def convertQueryPatterns(patterns: Seq[ExtendedSearchQueryPattern]): Seq[ExtendedSearchQueryPattern] = {
+            patterns.flatMap {
+                case (whereP: ExtendedSearchQueryPattern) =>
                     whereP match {
                         case statementP: ExtendedSearchStatementPattern =>
 
-                            // check if subject is contained in the type info
-                            val additionalStatementsForSubj: Vector[ExtendedSearchStatementPattern] = statementP.subj match {
-                                case variableSubj: ExtendedSearchVar =>
-                                    val key = TypeableVariableV2(variableSubj.variableName)
-
-                                    if (typeInspectionResultWhere.typedEntities.contains(key)) {
-                                        //println(key, typeInspectionResult.typedEntities(key))
-
-                                        val additionalStatements = typeInspectionResultWhere.typedEntities(key) match {
-                                            case nonPropTypeInfo: NonPropertyTypeInfoV2 =>
-                                                val typeIri = InputValidation.externalIriToInternalIri(nonPropTypeInfo.typeIri, () => throw BadRequestException(s"${nonPropTypeInfo.typeIri} is not a valid external knora-api entity Iri"))
-
-                                                if (typeIri == OntologyConstants.KnoraBase.Resource) {
-                                                    Vector(
-                                                        ExtendedSearchStatementPattern(subj = statementP.subj, pred = ExtendedSearchIri(OntologyConstants.Rdf.Type), obj = ExtendedSearchIri(OntologyConstants.KnoraBase.Resource), false),
-                                                        ExtendedSearchStatementPattern(subj = statementP.subj, pred = ExtendedSearchIri(OntologyConstants.Rdfs.Label), obj = ExtendedSearchVar("resourceLabel" + index), true),
-                                                        ExtendedSearchStatementPattern(subj = statementP.subj, pred = ExtendedSearchIri(OntologyConstants.Rdf.Type), obj = ExtendedSearchVar("resourceType" + index), true),
-                                                        ExtendedSearchStatementPattern(subj = statementP.subj, pred = ExtendedSearchInternalEntityIri(OntologyConstants.KnoraBase.AttachedToUser), obj = ExtendedSearchVar("resourceCreator" + index), true),
-                                                        ExtendedSearchStatementPattern(subj = statementP.subj, pred = ExtendedSearchInternalEntityIri(OntologyConstants.KnoraBase.HasPermissions), obj = ExtendedSearchVar("resourcePermissions" + index), true),
-                                                        ExtendedSearchStatementPattern(subj = statementP.subj, pred = ExtendedSearchInternalEntityIri(OntologyConstants.KnoraBase.AttachedToProject), obj = ExtendedSearchVar("resourceProject" + index), true)
-                                                    )
-                                                } else {
-                                                    Vector.empty[ExtendedSearchStatementPattern]
-                                                }
-                                            case propTypeInfo: PropertyTypeInfoV2 =>
-                                                Vector.empty[ExtendedSearchStatementPattern]
-
-                                        }
-
-                                        // prevent that the same type info is processed more than once
-                                        typeInspectionResultWhere = TypeInspectionResultV2(
-                                            typedEntities = typeInspectionResultWhere.typedEntities - key
-                                        )
-
-                                        additionalStatements
-
-                                    } else {
-                                        Vector.empty[ExtendedSearchStatementPattern]
-                                    }
-
-
-                                case iriSubj: ExtendedSearchInternalEntityIri =>
-                                    val key = TypeableIriV2(iriSubj.iri)
-
-                                    Vector.empty[ExtendedSearchStatementPattern]
-
-                                case other => Vector.empty[ExtendedSearchStatementPattern]
-                            }
-
-
-                            val additionalStatementsForPred: Vector[ExtendedSearchStatementPattern] = statementP.pred match {
-                                case variablePred: ExtendedSearchVar =>
-                                    val key = TypeableVariableV2(variablePred.variableName)
-
-                                    if (typeInspectionResultWhere.typedEntities.contains(key)) {
-
-                                        typeInspectionResultWhere.typedEntities(key) match {
-                                            case nonPropTypeInfo: NonPropertyTypeInfoV2 => Vector.empty[ExtendedSearchStatementPattern]
-
-                                            case propTypeInfo: PropertyTypeInfoV2 =>
-
-                                                val objectIri = InputValidation.externalIriToInternalIri(propTypeInfo.objectTypeIri, () => throw BadRequestException(s"${propTypeInfo.objectTypeIri} is not a valid external knora-api entity Iri"))
-
-                                                if (objectIri == OntologyConstants.KnoraBase.Resource) {
-                                                    Vector(
-                                                        ExtendedSearchStatementPattern(subj = statementP.subj, pred = ExtendedSearchInternalEntityIri(OntologyConstants.KnoraBase.HasValue), obj = ExtendedSearchVar("linkValueObj" + index), false),
-                                                        ExtendedSearchStatementPattern(subj = statementP.subj, pred = ExtendedSearchVar("linkValueProp" + index), obj = ExtendedSearchVar("linkValueObj" + index), true),
-                                                        ExtendedSearchStatementPattern(subj = ExtendedSearchVar("linkValueObj" + index), pred = ExtendedSearchInternalEntityIri(OntologyConstants.Rdf.Type), obj = ExtendedSearchInternalEntityIri(OntologyConstants.KnoraBase.LinkValue), true),
-                                                        ExtendedSearchStatementPattern(subj = ExtendedSearchVar("linkValueObj" + index), pred = ExtendedSearchIri(OntologyConstants.Rdf.Subject), obj = statementP.subj, true),
-                                                        ExtendedSearchStatementPattern(subj = ExtendedSearchVar("linkValueObj" + index), pred = ExtendedSearchInternalEntityIri(OntologyConstants.Rdf.Object), obj = statementP.obj, true),
-                                                        ExtendedSearchStatementPattern(subj = ExtendedSearchVar("linkValueObj" + index), pred = ExtendedSearchVar("linkValueObjProp" + index), obj = ExtendedSearchVar("linkValueObjVal" + index), true)
-                                                    )
-                                                } else {
-                                                    Vector.empty[ExtendedSearchStatementPattern]
-                                                }
-
-
-
-                                        }
-
-                                    } else {
-                                        Vector.empty[ExtendedSearchStatementPattern]
-                                    }
-
-                                case iriPred: ExtendedSearchInternalEntityIri =>
-
-                                    Vector.empty[ExtendedSearchStatementPattern]
-
-                                case other => Vector.empty[ExtendedSearchStatementPattern]
-                            }
-
-                            val additionalStatementsForObj: Vector[ExtendedSearchStatementPattern] = statementP.obj match {
-                                case variableObj: ExtendedSearchVar => Vector.empty[ExtendedSearchStatementPattern]
-
-                                case internalEntityIriObj: ExtendedSearchInternalEntityIri => Vector.empty[ExtendedSearchStatementPattern]
-
-                                case iriObj: ExtendedSearchIri =>
-                                    val key = TypeableIriV2(iriObj.iri)
-
-                                    if (typeInspectionResultWhere.typedEntities.contains(key)) {
-                                        //println(key, typeInspectionResult.typedEntities(key))
-
-                                        val additionalStatements = typeInspectionResultWhere.typedEntities(key) match {
-                                            case nonPropTypeInfo: NonPropertyTypeInfoV2 =>
-                                                val typeIri = InputValidation.externalIriToInternalIri(nonPropTypeInfo.typeIri, () => throw BadRequestException(s"${nonPropTypeInfo.typeIri} is not a valid external knora-api entity Iri"))
-
-                                                if (typeIri == OntologyConstants.KnoraBase.Resource) {
-                                                    Vector(
-                                                        ExtendedSearchStatementPattern(subj = statementP.obj, pred = ExtendedSearchIri(OntologyConstants.Rdf.Type), obj = ExtendedSearchIri(OntologyConstants.KnoraBase.Resource), false),
-                                                        ExtendedSearchStatementPattern(subj = statementP.obj, pred = ExtendedSearchIri(OntologyConstants.Rdfs.Label), obj = ExtendedSearchVar("resourceLabel" + index), true),
-                                                        ExtendedSearchStatementPattern(subj = statementP.obj, pred = ExtendedSearchIri(OntologyConstants.Rdf.Type), obj = ExtendedSearchVar("resourceType" + index), true),
-                                                        ExtendedSearchStatementPattern(subj = statementP.obj, pred = ExtendedSearchInternalEntityIri(OntologyConstants.KnoraBase.AttachedToUser), obj = ExtendedSearchVar("resourceCreator" + index), true),
-                                                        ExtendedSearchStatementPattern(subj = statementP.obj, pred = ExtendedSearchInternalEntityIri(OntologyConstants.KnoraBase.HasPermissions), obj = ExtendedSearchVar("resourcePermissions" + index), true),
-                                                        ExtendedSearchStatementPattern(subj = statementP.obj, pred = ExtendedSearchInternalEntityIri(OntologyConstants.KnoraBase.AttachedToProject), obj = ExtendedSearchVar("resourceProject" + index), true)
-                                                    )
-                                                } else {
-                                                    Vector.empty[ExtendedSearchStatementPattern]
-                                                }
-                                            case propTypeInfo: PropertyTypeInfoV2 =>
-                                                Vector.empty[ExtendedSearchStatementPattern]
-
-                                        }
-
-                                        // prevent that the same type info is processed more than once
-                                        typeInspectionResultWhere = TypeInspectionResultV2(
-                                            typedEntities = typeInspectionResultWhere.typedEntities - key
-                                        )
-
-                                        additionalStatements
-
-                                    } else {
-                                        Vector.empty[ExtendedSearchStatementPattern]
-                                    }
-
-                                case other => Vector.empty[ExtendedSearchStatementPattern]
-                            }
-
-                            statementP +: (additionalStatementsForSubj ++ additionalStatementsForPred ++ additionalStatementsForObj)
+                            Vector(statementP)
 
                         case optionalP: ExtendedSearchOptionalPattern =>
-                            Seq(ExtendedSearchOptionalPattern(convertStatements(optionalP.patterns)))
+                            Seq(ExtendedSearchOptionalPattern(convertQueryPatterns(optionalP.patterns)))
 
                         case unionP: ExtendedSearchUnionPattern =>
                             val blocks = unionP.blocks.map {
-                                blockPatterns: Seq[ExtendedSearchQueryPattern] => convertStatements(blockPatterns)
+                                blockPatterns: Seq[ExtendedSearchQueryPattern] => convertQueryPatterns(blockPatterns)
                             }
 
                             Seq(ExtendedSearchUnionPattern(blocks))
@@ -332,37 +338,40 @@ class SearchResponderV2 extends Responder {
             }
         }
 
+        val additionalStatements: Seq[ExtendedSearchStatementPattern] = extendedSearchWhereClausePatternsWithOriginalFilters.collect {
+            case statementP: ExtendedSearchStatementPattern => statementP
+        }.zipWithIndex.flatMap {
+            case (statementP, index) =>
+                addAdditionalStatementsForStatement(statementP, index)
+        }
+
         // convert where statements (handle FILTER expressions)
-        val extendedSearchWhereClausePatternsConverted: Seq[ExtendedSearchQueryPattern] = convertStatements(extendedSearchWhereClausePatternsWithOriginalFilters)
+        val extendedSearchWhereClausePatternsConverted: Seq[ExtendedSearchQueryPattern] = convertQueryPatterns(extendedSearchWhereClausePatternsWithOriginalFilters)
 
         val constructQuery = ExtendedSearchQuery(
-            constructClause = extendedSearchConstructClauseStatementPatterns.toVector,
-            whereClause = extendedSearchWhereClausePatternsConverted.toVector
+            constructClause = extendedSearchConstructClauseStatementPatterns.toVector ++ additionalStatements,
+            whereClause = extendedSearchWhereClausePatternsConverted.toVector ++ additionalStatements
         )
 
 
-        val t = 1
-
         for {
-
-            test <- Future(1)
 
         searchSparql <- Future(queries.sparql.v2.txt.searchExtended(
             triplestore = settings.triplestoreType,
             query = constructQuery
         ).toString())
 
-        _ = println(searchSparql)
+        //_ = println(searchSparql)
 
 
 
-        /*searchResponse: SparqlConstructResponse <- (storeManager ? SparqlConstructRequest(searchSparql)).mapTo[SparqlConstructResponse]*/
+        searchResponse: SparqlConstructResponse <- (storeManager ? SparqlConstructRequest(searchSparql)).mapTo[SparqlConstructResponse]
 
 
         // separate resources and value objects
-        //queryResultsSeparated: Map[IRI, ConstructResponseUtilV2.ResourceWithValueRdfData] = ConstructResponseUtilV2.splitResourcesAndValueRdfData(constructQueryResults = searchResponse, userProfile = userProfile)
+        queryResultsSeparated: Map[IRI, ConstructResponseUtilV2.ResourceWithValueRdfData] = ConstructResponseUtilV2.splitResourcesAndValueRdfData(constructQueryResults = searchResponse, userProfile = userProfile)
 
-        } yield ReadResourcesSequenceV2(numberOfResources = 0, resources = Vector.empty[ReadResourceV2])
+        } yield ReadResourcesSequenceV2(numberOfResources = queryResultsSeparated.size, resources = ConstructResponseUtilV2.createSearchResponse(queryResultsSeparated))
 
     }
 
