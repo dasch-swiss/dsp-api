@@ -39,12 +39,8 @@ CONSTRUCT {
 
 } WHERE {
 
-    @for(statement <- query.whereClause.statements) {
+    @for(statement <- query.whereClause) {
         @statement.rdfValue(true)
-    }
-
-    @for(filter <- query.whereClause.filters) {
-        @filter.rdfValue
     }
 
 }

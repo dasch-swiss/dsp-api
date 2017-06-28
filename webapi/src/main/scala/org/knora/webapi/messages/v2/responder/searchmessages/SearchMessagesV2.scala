@@ -53,7 +53,9 @@ case class ExtendedSearchGetRequestV2(constructQuery: SimpleConstructQuery,
                                       userProfile: UserProfileV1) extends SearchResponderRequestV2
 
 
-case class ExtendedSearchFilterPattern(expression: ExtendedSearchFilterExpression) extends ExtendedSearchQueryPattern
+case class ExtendedSearchFilterPattern(expression: ExtendedSearchFilterExpression) extends ExtendedSearchQueryPattern {
+    def rdfValue(whereClause: Boolean): String = ???
+}
 
 // An abstract trait representing a filter expression
 sealed trait ExtendedSearchFilterExpression {
@@ -61,9 +63,15 @@ sealed trait ExtendedSearchFilterExpression {
     def rdfValue: String
 }
 
-sealed trait ExtendedSearchQueryPattern
+sealed trait ExtendedSearchQueryPattern {
 
-case class ExtendedSearchOptionalPattern(patterns: Seq[ExtendedSearchQueryPattern]) extends ExtendedSearchQueryPattern
+    def rdfValue(whereClause: Boolean): String
+}
+
+case class ExtendedSearchOptionalPattern(patterns: Seq[ExtendedSearchQueryPattern]) extends ExtendedSearchQueryPattern {
+
+    def rdfValue(whereClause: Boolean): String = ???
+}
 
 /**
   * Represents a comparison expression in a FILTER.
@@ -166,7 +174,9 @@ case class ExtendedSearchStatementPattern(subj: ExtendedSearchEntity, pred: Exte
 
 }
 
-case class ExtendedSearchUnionPattern(blocks: Seq[Seq[ExtendedSearchQueryPattern]]) extends ExtendedSearchQueryPattern
+case class ExtendedSearchUnionPattern(blocks: Seq[Seq[ExtendedSearchQueryPattern]]) extends ExtendedSearchQueryPattern {
+    def rdfValue(whereClause: Boolean): String = ???
+}
 
 
 /**
@@ -175,7 +185,7 @@ case class ExtendedSearchUnionPattern(blocks: Seq[Seq[ExtendedSearchQueryPattern
   * @param constructClause the construct clause of the extended search query.
   * @param whereClause the where clause of the extended search query.
   */
-case class ExtendedSearchQuery(constructClause: Vector[ExtendedSearchStatementPattern], whereClause: ExtendedSearchStatementsAndFilterPatterns)
+case class ExtendedSearchQuery(constructClause: Vector[ExtendedSearchStatementPattern], whereClause: Vector[ExtendedSearchQueryPattern])
 
 /**
   * Represents statements combined with filter statements.
