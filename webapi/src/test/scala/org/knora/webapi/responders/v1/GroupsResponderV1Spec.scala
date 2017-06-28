@@ -29,11 +29,12 @@ import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.groupmessages._
 import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse}
-import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectMembersByIRIGetRequestV1, ProjectMembersByShortnameGetRequestV1, ProjectMembersGetResponseV1}
+import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectMembersByIRIGetRequestV1, ProjectMembersByShortnameGetRequestV1, ProjectMembersGetResponseV1, ProjectOperationResponseV1}
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileType
 import org.knora.webapi.messages.v1.store.triplestoremessages._
 import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_NAME
 import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
+import org.knora.webapi.util.MutableTestIri
 
 import scala.concurrent.duration._
 
@@ -101,24 +102,29 @@ class GroupsResponderV1Spec extends CoreSpec(GroupsResponderV1Spec.config) with 
 
         "used to modify group information" should {
 
-            "CREATE the group and return the group's info if the supplied group name is unique " in {
+            val newGroupIri = new MutableTestIri
+
+            "CREATE the group and return the group's info if the supplied group name is unique" in {
                 actorUnderTest ! GroupCreateRequestV1(
                     CreateGroupApiRequestV1("NewGroup", Some("NewGroupDescription"), "http://data.knora.org/projects/images", true, false),
                     SharedAdminTestData.imagesUser01,
                     UUID.randomUUID
                 )
-                expectMsgPF(timeout) {
-                    case GroupOperationResponseV1(newGroupInfo) => {
-                        newGroupInfo.name should equal ("NewGroup")
-                        newGroupInfo.description should equal (Some("NewGroupDescription"))
-                        newGroupInfo.project should equal ("http://data.knora.org/projects/images")
-                        newGroupInfo.status should equal (true)
-                        newGroupInfo.selfjoin should equal (false)
-                    }
-                }
+
+                val received: GroupOperationResponseV1 = expectMsgType[GroupOperationResponseV1](timeout)
+                val newGroupInfo = received.group_info
+
+                newGroupInfo.name should equal ("NewGroup")
+                newGroupInfo.description should equal (Some("NewGroupDescription"))
+                newGroupInfo.project should equal ("http://data.knora.org/projects/images")
+                newGroupInfo.status should equal (true)
+                newGroupInfo.selfjoin should equal (false)
+
+                // store for later usage
+                newGroupIri.set(newGroupInfo.id)
             }
 
-            "return a 'DuplicateValueException' if the supplied group name is not unique " in {
+            "return a 'DuplicateValueException' if the supplied group name is not unique" in {
                 actorUnderTest ! GroupCreateRequestV1(
                     CreateGroupApiRequestV1("NewGroup", Some("NewGroupDescription"), "http://data.knora.org/projects/images", true, false),
                     SharedAdminTestData.imagesUser01,
@@ -147,7 +153,54 @@ class GroupsResponderV1Spec extends CoreSpec(GroupsResponderV1Spec.config) with 
             }
 
             "UPDATE a group" in {
+                actorUnderTest ! GroupChangeRequestV1(
+                    newGroupIri.get,
+                    ChangeGroupApiRequestV1(Some("UpdatedGroupName"), Some("UpdatedDescription")),
+                    SharedAdminTestData.imagesUser01,
+                    UUID.randomUUID
+                )
 
+                val received: GroupOperationResponseV1 = expectMsgType[GroupOperationResponseV1](timeout)
+                val updatedGroupInfo = received.group_info
+
+                updatedGroupInfo.name should equal ("UpdatedGroupName")
+                updatedGroupInfo.description should equal (Some("UpdatedDescription"))
+                updatedGroupInfo.project should equal ("http://data.knora.org/projects/images")
+                updatedGroupInfo.status should equal (true)
+                updatedGroupInfo.selfjoin should equal (false)
+            }
+
+            "return 'NotFound' if a not existing group IRI is submitted during update" in {
+                actorUnderTest ! GroupChangeRequestV1(
+                    groupIri = "http://data.knora.org/groups/notexisting",
+                    ChangeGroupApiRequestV1(Some("UpdatedGroupName"), Some("UpdatedDescription")),
+                    SharedAdminTestData.imagesUser01,
+                    UUID.randomUUID
+                )
+
+                expectMsg(Failure(NotFoundException(s"Group 'http://data.knora.org/groups/notexisting' not found. Aborting update request.")))
+            }
+
+            "return 'BadRequest' if the new group name already exists inside the project" in {
+                actorUnderTest ! GroupChangeRequestV1(
+                    newGroupIri.get,
+                    ChangeGroupApiRequestV1(Some("Image reviewer"), Some("UpdatedDescription")),
+                    SharedAdminTestData.imagesUser01,
+                    UUID.randomUUID
+                )
+
+                expectMsg(Failure(BadRequestException(s"Group with the name: 'Image reviewer' already exists.")))
+            }
+
+            "return 'BadRequest' if nothing would be changed during the update" in {
+                actorUnderTest ! GroupChangeRequestV1(
+                    newGroupIri.get,
+                    ChangeGroupApiRequestV1(None, None, None, None),
+                    SharedAdminTestData.imagesUser01,
+                    UUID.randomUUID
+                )
+
+                expectMsg(Failure(BadRequestException(s"No data would be changed. Aborting update request.")))
             }
 
         }

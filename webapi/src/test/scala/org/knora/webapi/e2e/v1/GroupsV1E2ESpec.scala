@@ -54,6 +54,7 @@ class GroupsV1E2ESpec extends E2ESpec(GroupsV1E2ESpec.config) with GroupV1JsonPr
 
     val rootEmail = SharedAdminTestData.rootUser.userData.email.get
     val rootEmailEnc = java.net.URLEncoder.encode(rootEmail, "utf-8")
+    val imagesUser01Email = SharedAdminTestData.imagesUser01.userData.email.get
     val testPass = java.net.URLEncoder.encode("test", "utf-8")
 
     val groupIri = SharedAdminTestData.imagesReviewerGroupInfo.id
@@ -73,21 +74,21 @@ class GroupsV1E2ESpec extends E2ESpec(GroupsV1E2ESpec.config) with GroupV1JsonPr
         "used to query for group information" should {
 
             "return all groups" in {
-                val request = Get(baseApiUrl + s"/v1/groups") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
+                val request = Get(baseApiUrl + s"/v1/groups") ~> addCredentials(BasicHttpCredentials(imagesUser01Email, testPass))
                 val response: HttpResponse = singleAwaitingRequest(request)
                 // log.debug(s"response: {}", response)
                 assert(response.status === StatusCodes.OK)
             }
 
             "return the group's information (identified by iri)" in {
-                val request = Get(baseApiUrl + s"/v1/groups/$groupIriEnc") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
+                val request = Get(baseApiUrl + s"/v1/groups/$groupIriEnc") ~> addCredentials(BasicHttpCredentials(imagesUser01Email, testPass))
                 val response: HttpResponse = singleAwaitingRequest(request)
                 // log.debug(s"response: {}", response)
                 assert(response.status === StatusCodes.OK)
             }
 
             "return the group's information (identified by project and groupname)" in {
-                val request = Get(baseApiUrl + s"/v1/groups/$groupNameEnc?projectIri=$projectIriEnc&identifier=groupname") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
+                val request = Get(baseApiUrl + s"/v1/groups/$groupNameEnc?projectIri=$projectIriEnc&identifier=groupname") ~> addCredentials(BasicHttpCredentials(imagesUser01Email, testPass))
                 val response: HttpResponse = singleAwaitingRequest(request)
                 // log.debug(s"response: {}", response)
                 assert(response.status === StatusCodes.OK)
@@ -98,7 +99,7 @@ class GroupsV1E2ESpec extends E2ESpec(GroupsV1E2ESpec.config) with GroupV1JsonPr
 
             val newGroupIri = new MutableTestIri
 
-            "create a new group" in {
+            "CREATE a new group" in {
 
                 val params =
                     s"""
@@ -112,7 +113,7 @@ class GroupsV1E2ESpec extends E2ESpec(GroupsV1E2ESpec.config) with GroupV1JsonPr
                 """.stripMargin
 
 
-                val request = Post(baseApiUrl + s"/v1/groups", HttpEntity(ContentTypes.`application/json`, params))
+                val request = Post(baseApiUrl + "/v1/groups", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(imagesUser01Email, testPass))
                 val response: HttpResponse = singleAwaitingRequest(request)
                 // log.debug(s"response: {}", response)
                 response.status should be (StatusCodes.OK)
@@ -130,7 +131,47 @@ class GroupsV1E2ESpec extends E2ESpec(GroupsV1E2ESpec.config) with GroupV1JsonPr
                 // log.debug("newGroupIri: {}", newGroupIri.get)
             }
 
-            "update a group" in {
+            "UPDATE a group" in {
+
+                val params =
+                    s"""
+                       |{
+                       |    "name": "UpdatedGroupName",
+                       |    "description": "UpdatedGroupDescription"
+                       |}
+                """.stripMargin
+
+                val groupIriEnc = java.net.URLEncoder.encode(newGroupIri.get, "utf-8")
+                val request = Put(baseApiUrl + "/v1/groups/" + groupIriEnc, HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(imagesUser01Email, testPass))
+                val response: HttpResponse = singleAwaitingRequest(request)
+                log.debug(s"response: {}", response)
+                response.status should be (StatusCodes.OK)
+
+                val groupInfo: GroupInfoV1 = AkkaHttpUtils.httpResponseToJson(response).fields("group_info").convertTo[GroupInfoV1]
+
+                groupInfo.name should be ("UpdatedGroupName")
+                groupInfo.description should be (Some("UpdatedGroupDescription"))
+                groupInfo.project should be ("http://data.knora.org/projects/images")
+                groupInfo.status should be (true)
+                groupInfo.selfjoin should be (false)
+
+            }
+
+            "DELETE a group" in {
+
+                val groupIriEnc = java.net.URLEncoder.encode(newGroupIri.get, "utf-8")
+                val request = Delete(baseApiUrl + "/v1/groups/" + groupIriEnc) ~> addCredentials(BasicHttpCredentials(imagesUser01Email, testPass))
+                val response: HttpResponse = singleAwaitingRequest(request)
+                log.debug(s"response: {}", response)
+                response.status should be (StatusCodes.OK)
+
+                val groupInfo: GroupInfoV1 = AkkaHttpUtils.httpResponseToJson(response).fields("group_info").convertTo[GroupInfoV1]
+
+                groupInfo.name should be ("UpdatedGroupName")
+                groupInfo.description should be (Some("UpdatedGroupDescription"))
+                groupInfo.project should be ("http://data.knora.org/projects/images")
+                groupInfo.status should be (false)
+                groupInfo.selfjoin should be (false)
 
             }
         }
@@ -138,14 +179,14 @@ class GroupsV1E2ESpec extends E2ESpec(GroupsV1E2ESpec.config) with GroupV1JsonPr
         "used to query members" should {
 
             "return all members of a group identified by IRI" in {
-                val request = Get(baseApiUrl + s"/v1/groups/members/$groupIriEnc") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
+                val request = Get(baseApiUrl + s"/v1/groups/members/$groupIriEnc") ~> addCredentials(BasicHttpCredentials(imagesUser01Email, testPass))
                 val response: HttpResponse = singleAwaitingRequest(request)
                 // log.debug(s"response: {}", response)
                 assert(response.status === StatusCodes.OK)
             }
 
             "return all members of a group identified by group name and project IRI" in {
-                val request = Get(baseApiUrl + s"/v1/groups/members/$groupNameEnc?projectIri=$projectIriEnc&identifier=groupname") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
+                val request = Get(baseApiUrl + s"/v1/groups/members/$groupNameEnc?projectIri=$projectIriEnc&identifier=groupname") ~> addCredentials(BasicHttpCredentials(imagesUser01Email, testPass))
                 val response: HttpResponse = singleAwaitingRequest(request)
                 // log.debug(s"response: {}", response)
                 assert(response.status === StatusCodes.OK)

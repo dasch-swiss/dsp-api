@@ -74,8 +74,6 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
 
     "The ProjectsResponderV1 " when {
 
-        val newProjectIri = new MutableTestIri
-
         "used to query for project information" should {
 
             "return information for every project" in {
@@ -132,6 +130,8 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
         }
 
         "used to modify project information" should {
+
+            val newProjectIri = new MutableTestIri
 
             "CREATE the project and return the project info if the supplied shortname is unique" in {
                 actorUnderTest ! ProjectCreateRequestV1(
@@ -234,7 +234,7 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
             "return 'BadRequest' if nothing would be changed during the update" in {
                 actorUnderTest ! ProjectChangeRequestV1(
                     projectIri = "http://data.knora.org/projects/notexisting",
-                    changeProjectRequest = ChangeProjectApiRequestV1(),
+                    changeProjectRequest = ChangeProjectApiRequestV1(None, None, None, None, None, None, None, None, None, None),
                     SharedAdminTestData.rootUser,
                     UUID.randomUUID()
                 )

@@ -210,6 +210,7 @@ trait Authenticator {
       * @return a [[UserProfileV1]]
       */
     def getUserProfileV1(requestContext: RequestContext)(implicit system: ActorSystem, executionContext: ExecutionContext): UserProfileV1 = {
+
         val settings = Settings(system)
         if (settings.skipAuthentication) {
             UserProfileV1(

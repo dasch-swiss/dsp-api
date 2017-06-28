@@ -435,6 +435,12 @@ class ProjectsResponderV1 extends ResponderV1 {
         // check if required properties are not empty
             _ <- Future(if (createRequest.shortname.isEmpty) throw BadRequestException("'Shortname' cannot be empty"))
 
+            // check if the requesting user is allowed to create project
+            _ = if (!userProfile.permissionData.isSystemAdmin) {
+                // not a system admin
+                throw ForbiddenException("A new project can only be created by a system admin.")
+            }
+
             // check if the supplied 'shortname' for the new project is unique, i.e. not already registered
             sparqlQueryString = queries.sparql.v1.txt.getProjectByShortname(
                 triplestore = settings.triplestoreType,

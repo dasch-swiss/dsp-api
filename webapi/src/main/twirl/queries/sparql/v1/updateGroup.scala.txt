@@ -52,7 +52,7 @@ DELETE {
 
     @* Delete current values, for which we have a new one. *@
 
-    @if(maybeShortname.nonEmpty) {
+    @if(maybeName.nonEmpty) {
         ?group knora-base:groupName ?currentName .
     }
 

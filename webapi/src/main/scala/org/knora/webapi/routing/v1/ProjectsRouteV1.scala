@@ -123,6 +123,27 @@ object ProjectsRouteV1 extends Authenticator with ProjectV1JsonProtocol {
                         log
                     )
                 }
+            } ~
+            delete {
+                /* update project status to false */
+                requestContext =>
+                    val userProfile = getUserProfileV1(requestContext)
+                    val checkedProjectIri = InputValidation.toIri(value, () => throw BadRequestException(s"Invalid project IRI $value"))
+
+                    val requestMessage = ProjectChangeRequestV1(
+                        projectIri = checkedProjectIri,
+                        changeProjectRequest = ChangeProjectApiRequestV1(status = Some(false)),
+                        userProfileV1 = userProfile,
+                        apiRequestID = UUID.randomUUID()
+                    )
+
+                    RouteUtilV1.runJsonRoute(
+                        requestMessage,
+                        requestContext,
+                        settings,
+                        responderManager,
+                        log
+                    )
             }
         } ~ path("v1" / "projects" / "members" / Segment) { value =>
             get {

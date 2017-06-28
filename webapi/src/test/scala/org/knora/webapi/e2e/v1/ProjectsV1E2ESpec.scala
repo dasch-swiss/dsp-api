@@ -103,7 +103,7 @@ class ProjectsV1E2ESpec extends E2ESpec(ProjectsV1E2ESpec.config) with SessionJs
 
             val newProjectIri = new MutableTestIri
 
-            "create a new project and return the project info if the supplied shortname is unique" in {
+            "CREATE a new project and return the project info if the supplied shortname is unique" in {
 
                 val params =
                     s"""
@@ -119,7 +119,7 @@ class ProjectsV1E2ESpec extends E2ESpec(ProjectsV1E2ESpec.config) with SessionJs
                 """.stripMargin
 
 
-                val request = Post(baseApiUrl + s"/v1/projects", HttpEntity(ContentTypes.`application/json`, params))
+                val request = Post(baseApiUrl + s"/v1/projects", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
                 val response: HttpResponse = singleAwaitingRequest(request)
                 // log.debug(s"response: {}", response)
                 response.status should be (StatusCodes.OK)
@@ -154,7 +154,7 @@ class ProjectsV1E2ESpec extends E2ESpec(ProjectsV1E2ESpec.config) with SessionJs
                 """.stripMargin
 
 
-                val request = Post(baseApiUrl + s"/v1/projects", HttpEntity(ContentTypes.`application/json`, params))
+                val request = Post(baseApiUrl + s"/v1/projects", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
                 val response: HttpResponse = singleAwaitingRequest(request)
                 // log.debug(s"response: {}", response)
                 response.status should be (StatusCodes.BadRequest)
@@ -174,13 +174,13 @@ class ProjectsV1E2ESpec extends E2ESpec(ProjectsV1E2ESpec.config) with SessionJs
                 """.stripMargin
 
 
-                val request = Post(baseApiUrl + s"/v1/projects", HttpEntity(ContentTypes.`application/json`, params))
+                val request = Post(baseApiUrl + s"/v1/projects", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
                 val response: HttpResponse = singleAwaitingRequest(request)
                 // log.debug(s"response: {}", response)
                 response.status should be (StatusCodes.BadRequest)
             }
 
-            "update a project" in {
+            "UPDATE a project" in {
 
                 val params =
                     s"""
@@ -191,7 +191,7 @@ class ProjectsV1E2ESpec extends E2ESpec(ProjectsV1E2ESpec.config) with SessionJs
                        |    "keywords": "updated keywords",
                        |    "logo": "/fu/bar/baz-updated.jpg",
                        |    "institution": "http://data.knora.org/institutions/dhlab-basel",
-                       |    "status": false,
+                       |    "status": true,
                        |    "selfjoin": true
                        |}
                 """.stripMargin
@@ -208,9 +208,22 @@ class ProjectsV1E2ESpec extends E2ESpec(ProjectsV1E2ESpec.config) with SessionJs
                 jsonResult("description").convertTo[String] should be ("updated project description")
                 jsonResult("keywords").convertTo[String] should be ("updated keywords")
                 jsonResult("logo").convertTo[String] should be ("/fu/bar/baz-updated.jpg")
-                jsonResult("status").convertTo[Boolean] should be (false)
+                jsonResult("status").convertTo[Boolean] should be (true)
                 jsonResult("selfjoin").convertTo[Boolean] should be (true)
             }
+
+            "DELETE a project" in {
+
+                val projectIriEncoded = java.net.URLEncoder.encode(newProjectIri.get, "utf-8")
+                val request = Delete(baseApiUrl + s"/v1/projects/" + projectIriEncoded) ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
+                val response: HttpResponse = singleAwaitingRequest(request)
+                // log.debug(s"response: {}", response)
+                response.status should be (StatusCodes.OK)
+
+                val jsonResult: Map[String, JsValue] = AkkaHttpUtils.httpResponseToJson(response).fields("project_info").asJsObject.fields
+                jsonResult("status").convertTo[Boolean] should be (false)
+            }
+
         }
 
         "used to query members" should {

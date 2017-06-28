@@ -63,7 +63,7 @@ class GroupsResponderV1 extends ResponderV1 with GroupV1JsonProtocol {
         case GroupMembersByIRIGetRequestV1(groupIri, userProfileV1) => future2Message(sender(), groupMembersByIRIGetRequestV1(groupIri, userProfileV1), log)
         case GroupMembersByNameGetRequestV1(projectIri, groupName, userProfileV1) => future2Message(sender(), groupMembersByNameRequestV1(projectIri, groupName, userProfileV1), log)
         case GroupCreateRequestV1(newGroupInfo, userProfile, apiRequestID) => future2Message(sender(), createGroupV1(newGroupInfo, userProfile, apiRequestID), log)
-        case GroupChangeRequestV1(projectIri, changeProjectRequest, userProfileV1, apiRequestID) => future2Message(sender(), changeBasicInformationRequestV1(projectIri, changeProjectRequest, userProfileV1, apiRequestID), log)
+        case GroupChangeRequestV1(groupIri, changeGroupRequest, userProfileV1, apiRequestID) => future2Message(sender(), changeBasicInformationRequestV1(groupIri, changeGroupRequest, userProfileV1, apiRequestID), log)
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }
 
@@ -74,6 +74,8 @@ class GroupsResponderV1 extends ResponderV1 with GroupV1JsonProtocol {
       * @return all the groups as a [[GroupsResponseV1]].
       */
     private def groupsGetRequestV1(userProfile: Option[UserProfileV1]): Future[GroupsResponseV1] = {
+
+        log.debug("groupsGetRequestV1")
 
         for {
             sparqlQuery <- Future(queries.sparql.v1.txt.getGroups(
@@ -338,10 +340,18 @@ class GroupsResponderV1 extends ResponderV1 with GroupV1JsonProtocol {
       */
     private def createGroupV1(createRequest: CreateGroupApiRequestV1, userProfile: UserProfileV1, apiRequestID: UUID): Future[GroupOperationResponseV1] = {
 
+        log.debug("createGroupV1 - createRequest: {}", createRequest)
+
         def createGroupTask(createRequest: CreateGroupApiRequestV1, userProfile: UserProfileV1, apiRequestID: UUID): Future[GroupOperationResponseV1] = for {
             /* check if username or password are not empty */
             _ <- Future(if (createRequest.name.isEmpty) throw BadRequestException("Group name cannot be empty"))
             _ = if (createRequest.project.isEmpty) throw BadRequestException("Project IRI cannot be empty")
+
+            /* check if the requesting user is allowed to create group */
+            _ = if (!userProfile.permissionData.isProjectAdmin(createRequest.project) && !userProfile.permissionData.isSystemAdmin) {
+                // not a project admin and not a system admin
+                throw ForbiddenException("A new group can only be created by a project or system admin.")
+            }
 
             nameExists <- groupByNameExists(createRequest.project, Some(createRequest.name))
             _ = if (nameExists) {
@@ -422,7 +432,7 @@ class GroupsResponderV1 extends ResponderV1 with GroupV1JsonProtocol {
                 if (groupIri.isEmpty) throw BadRequestException("Group IRI cannot be empty")
             )
 
-            /* Verify that the group exists. */
+            /* Get the project IRI which also verifies that the group exists. */
             maybeGroupInfo <- groupInfoByIRIGetV1(groupIri, Some(userProfile))
             groupInfo: GroupInfoV1 = maybeGroupInfo.getOrElse(throw NotFoundException(s"Group '$groupIri' not found. Aborting update request."))
 
@@ -430,12 +440,6 @@ class GroupsResponderV1 extends ResponderV1 with GroupV1JsonProtocol {
             _ = if (!userProfileV1.permissionData.isProjectAdmin(groupInfo.project) && !userProfileV1.permissionData.isSystemAdmin) {
                 // not a project admin and not a system admin
                 throw ForbiddenException("Group's information can only be changed by a project or system admin.")
-            }
-
-            /* Verify that the potentially new name is unique */
-            maybeNewNameExists <- groupByNameExists(groupInfo.project, changeGroupRequest.name)
-            _ = if (maybeNewNameExists && changeGroupRequest.name.isDefined) {
-                throw BadRequestException(s"Group with the name: '${changeGroupRequest.name.get}' already exists")
             }
 
             /* create the update request */
@@ -491,7 +495,7 @@ class GroupsResponderV1 extends ResponderV1 with GroupV1JsonProtocol {
             /* Verify that the potentially new name is unique */
             maybeNewNameExists <- groupByNameExists(groupInfo.project, groupUpdatePayload.name)
             _ = if (maybeNewNameExists && groupUpdatePayload.name.isDefined) {
-                throw BadRequestException(s"Group with the name: '${groupUpdatePayload.name.get}' already exists")
+                throw BadRequestException(s"Group with the name: '${groupUpdatePayload.name.get}' already exists.")
             }
 
             /* Update group */
@@ -607,7 +611,7 @@ class GroupsResponderV1 extends ResponderV1 with GroupV1JsonProtocol {
                 } yield checkResult
 
             } else {
-                false
+                Future(false)
             }
         } yield result
     }

@@ -45,7 +45,6 @@ object GroupsRouteV1 extends Authenticator with GroupV1JsonProtocol {
                 /* return all groups */
                 requestContext =>
                     val userProfile = getUserProfileV1(requestContext)
-                    val params = requestContext.request.uri.query().toMap
 
                     val requestMessage = GroupsGetRequestV1(Some(userProfile))
 
@@ -89,14 +88,12 @@ object GroupsRouteV1 extends Authenticator with GroupV1JsonProtocol {
                                 case Some(projectIri) => {
                                     val groupNameDec = java.net.URLDecoder.decode(value, "utf-8")
                                     val ckeckedProjectIri = InputValidation.toIri(projectIri, () => throw BadRequestException(s"Invalid project IRI $projectIri"))
-                                    println(s"groupname case - value: $value, projectIri: $ckeckedProjectIri")
                                     GroupInfoByNameGetRequest(ckeckedProjectIri, groupNameDec, Some(userProfile))
                                 }
                                 case None => throw BadRequestException("Missing project IRI")
                             }
 
                         } else { // identify group by iri. this is the default case
-                            println(s"iri case: $value")
                             val checkedGroupIri = InputValidation.toIri(value, () => throw BadRequestException(s"Invalid group IRI $value"))
                             GroupInfoByIRIGetRequest(checkedGroupIri, Some(userProfile))
                         }
@@ -132,6 +129,27 @@ object GroupsRouteV1 extends Authenticator with GroupV1JsonProtocol {
                             log
                         )
                 }
+            } ~
+            delete {
+                /* update group status to false */
+                requestContext =>
+                    val userProfile = getUserProfileV1(requestContext)
+                    val checkedGroupIri = InputValidation.toIri(value, () => throw BadRequestException(s"Invalid group IRI $value"))
+
+                    val requestMessage = GroupChangeRequestV1(
+                        groupIri = checkedGroupIri,
+                        changeGroupRequest = ChangeGroupApiRequestV1(status = Some(false)),
+                        userProfile = userProfile,
+                        apiRequestID = UUID.randomUUID()
+                    )
+
+                    RouteUtilV1.runJsonRoute(
+                        requestMessage,
+                        requestContext,
+                        settings,
+                        responderManager,
+                        log
+                    )
             }
         } ~
         path("v1" / "groups" / "members" / Segment) { value =>
@@ -147,7 +165,6 @@ object GroupsRouteV1 extends Authenticator with GroupV1JsonProtocol {
                                 case Some(projectIri) => {
                                     val groupNameDec = java.net.URLDecoder.decode(value, "utf-8")
                                     val ckeckedProjectIri = InputValidation.toIri(projectIri, () => throw BadRequestException(s"Invalid project IRI $projectIri"))
-                                    println(s"groupname case - value: $value, projectIri: $ckeckedProjectIri")
                                     GroupMembersByNameGetRequestV1(
                                         projectIri = ckeckedProjectIri,
                                         groupName = groupNameDec,
@@ -157,7 +174,6 @@ object GroupsRouteV1 extends Authenticator with GroupV1JsonProtocol {
                                 case None => throw BadRequestException("Missing project IRI")
                             }
                         } else { // identify group by iri. this is the default case
-                            println(s"iri case: $value")
                             val checkedGroupIri = InputValidation.toIri(value, () => throw BadRequestException(s"Invalid group IRI $value"))
                             GroupMembersByIRIGetRequestV1(
                                 groupIri = checkedGroupIri,

@@ -232,7 +232,7 @@ trait GroupV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
     implicit val groupsResponseV1Format: RootJsonFormat[GroupsResponseV1] = jsonFormat(GroupsResponseV1, "groups")
     implicit val groupInfoResponseV1Format: RootJsonFormat[GroupInfoResponseV1] = jsonFormat(GroupInfoResponseV1, "group_info")
     implicit val groupMembersResponseV1Format: RootJsonFormat[GroupMembersResponseV1] = jsonFormat(GroupMembersResponseV1, "members")
-    implicit val createGroupApiRequestV1Format: RootJsonFormat[CreateGroupApiRequestV1] = jsonFormat(CreateGroupApiRequestV1, "name", "description", "belongsToProject", "status", "hasSelfJoinEnabled")
-    implicit val changeGroupApiRequestV1Format: RootJsonFormat[ChangeGroupApiRequestV1] = jsonFormat(ChangeGroupApiRequestV1, "name", "description", "status", "hasSelfJoinEnabled")
+    implicit val createGroupApiRequestV1Format: RootJsonFormat[CreateGroupApiRequestV1] = jsonFormat(CreateGroupApiRequestV1, "name", "description", "project", "status", "selfjoin")
+    implicit val changeGroupApiRequestV1Format: RootJsonFormat[ChangeGroupApiRequestV1] = jsonFormat(ChangeGroupApiRequestV1, "name", "description", "status", "selfjoin")
     implicit val groupOperationResponseV1Format: RootJsonFormat[GroupOperationResponseV1] = jsonFormat(GroupOperationResponseV1, "group_info")
 }
