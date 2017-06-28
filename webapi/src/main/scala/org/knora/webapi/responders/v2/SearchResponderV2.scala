@@ -167,7 +167,7 @@ class SearchResponderV2 extends Responder {
 
         val typeInspector = new ExplicitTypeInspectorV2(ApiV2Schema.SIMPLE)
         val whereClauseWithoutAnnotations: SimpleWhereClause = typeInspector.removeTypeAnnotations(simpleConstructQuery.whereClause)
-        var typeInspectionResult: TypeInspectionResultV2 = typeInspector.inspectTypes(simpleConstructQuery.whereClause)
+        var typeInspectionResultWhere: TypeInspectionResultV2 = typeInspector.inspectTypes(simpleConstructQuery.whereClause)
 
         val extendedSearchConstructClauseStatementPatterns: Seq[ExtendedSearchStatementPattern] = convertSearchParserConstructPatternsToExtendedSearchPatterns(simpleConstructQuery.constructClause.statements)
         val extendedSearchWhereClausePatternsWithOriginalFilters: Seq[ExtendedSearchQueryPattern] = convertSearchParserQueryPatternsToExtendedSearchPatterns(whereClauseWithoutAnnotations.patterns)
@@ -183,10 +183,10 @@ class SearchResponderV2 extends Responder {
                                 case variableSubj: ExtendedSearchVar =>
                                     val key = TypeableVariableV2(variableSubj.variableName)
 
-                                    if (typeInspectionResult.typedEntities.contains(key)) {
+                                    if (typeInspectionResultWhere.typedEntities.contains(key)) {
                                         //println(key, typeInspectionResult.typedEntities(key))
 
-                                        val additionalStatements = typeInspectionResult.typedEntities(key) match {
+                                        val additionalStatements = typeInspectionResultWhere.typedEntities(key) match {
                                             case nonPropTypeInfo: NonPropertyTypeInfoV2 =>
                                                 val typeIri = InputValidation.externalIriToInternalIri(nonPropTypeInfo.typeIri, () => throw BadRequestException(s"${nonPropTypeInfo.typeIri} is not a valid external knora-api entity Iri"))
 
@@ -208,8 +208,8 @@ class SearchResponderV2 extends Responder {
                                         }
 
                                         // prevent that the same type info is processed more than once
-                                        typeInspectionResult = TypeInspectionResultV2(
-                                            typedEntities = typeInspectionResult.typedEntities - key
+                                        typeInspectionResultWhere = TypeInspectionResultV2(
+                                            typedEntities = typeInspectionResultWhere.typedEntities - key
                                         )
 
                                         additionalStatements
@@ -232,9 +232,9 @@ class SearchResponderV2 extends Responder {
                                 case variablePred: ExtendedSearchVar =>
                                     val key = TypeableVariableV2(variablePred.variableName)
 
-                                    if (typeInspectionResult.typedEntities.contains(key)) {
+                                    if (typeInspectionResultWhere.typedEntities.contains(key)) {
 
-                                        typeInspectionResult.typedEntities(key) match {
+                                        typeInspectionResultWhere.typedEntities(key) match {
                                             case nonPropTypeInfo: NonPropertyTypeInfoV2 => Vector.empty[ExtendedSearchStatementPattern]
 
                                             case propTypeInfo: PropertyTypeInfoV2 =>
@@ -247,7 +247,7 @@ class SearchResponderV2 extends Responder {
                                                         ExtendedSearchStatementPattern(subj = statementP.subj, pred = ExtendedSearchVar("linkValueProp" + index), obj = ExtendedSearchVar("linkValueObj" + index), true),
                                                         ExtendedSearchStatementPattern(subj = ExtendedSearchVar("linkValueObj" + index), pred = ExtendedSearchInternalEntityIri(OntologyConstants.Rdf.Type), obj = ExtendedSearchInternalEntityIri(OntologyConstants.KnoraBase.LinkValue), true),
                                                         ExtendedSearchStatementPattern(subj = ExtendedSearchVar("linkValueObj" + index), pred = ExtendedSearchIri(OntologyConstants.Rdf.Subject), obj = statementP.subj, true),
-                                                        ExtendedSearchStatementPattern(subj = ExtendedSearchVar("linkValueObj" + index), pred = ExtendedSearchInternalEntityIri(OntologyConstants.Rdf.Object), obj = statementP.obj, false),
+                                                        ExtendedSearchStatementPattern(subj = ExtendedSearchVar("linkValueObj" + index), pred = ExtendedSearchInternalEntityIri(OntologyConstants.Rdf.Object), obj = statementP.obj, true),
                                                         ExtendedSearchStatementPattern(subj = ExtendedSearchVar("linkValueObj" + index), pred = ExtendedSearchVar("linkValueObjProp" + index), obj = ExtendedSearchVar("linkValueObjVal" + index), true)
                                                     )
                                                 } else {
@@ -277,10 +277,10 @@ class SearchResponderV2 extends Responder {
                                 case iriObj: ExtendedSearchIri =>
                                     val key = TypeableIriV2(iriObj.iri)
 
-                                    if (typeInspectionResult.typedEntities.contains(key)) {
+                                    if (typeInspectionResultWhere.typedEntities.contains(key)) {
                                         //println(key, typeInspectionResult.typedEntities(key))
 
-                                        val additionalStatements = typeInspectionResult.typedEntities(key) match {
+                                        val additionalStatements = typeInspectionResultWhere.typedEntities(key) match {
                                             case nonPropTypeInfo: NonPropertyTypeInfoV2 =>
                                                 val typeIri = InputValidation.externalIriToInternalIri(nonPropTypeInfo.typeIri, () => throw BadRequestException(s"${nonPropTypeInfo.typeIri} is not a valid external knora-api entity Iri"))
 
@@ -302,8 +302,8 @@ class SearchResponderV2 extends Responder {
                                         }
 
                                         // prevent that the same type info is processed more than once
-                                        typeInspectionResult = TypeInspectionResultV2(
-                                            typedEntities = typeInspectionResult.typedEntities - key
+                                        typeInspectionResultWhere = TypeInspectionResultV2(
+                                            typedEntities = typeInspectionResultWhere.typedEntities - key
                                         )
 
                                         additionalStatements
@@ -347,12 +347,12 @@ class SearchResponderV2 extends Responder {
 
             test <- Future(1)
 
-        /*searchSparql <- Future(queries.sparql.v2.txt.searchExtended(
+        searchSparql <- Future(queries.sparql.v2.txt.searchExtended(
             triplestore = settings.triplestoreType,
             query = constructQuery
-        ).toString())*/
+        ).toString())
 
-        //_ = println(searchSparql)
+        _ = println(searchSparql)
 
 
 

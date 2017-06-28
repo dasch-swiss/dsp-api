@@ -52,9 +52,11 @@ case class FulltextSearchGetRequestV2(searchValue: String,
 case class ExtendedSearchGetRequestV2(constructQuery: SimpleConstructQuery,
                                       userProfile: UserProfileV1) extends SearchResponderRequestV2
 
-
+// TODO: Do we need this wrapper?
 case class ExtendedSearchFilterPattern(expression: ExtendedSearchFilterExpression) extends ExtendedSearchQueryPattern {
-    def rdfValue(whereClause: Boolean): String = ???
+    def rdfValue: String = {
+        expression.rdfValue
+    }
 }
 
 // An abstract trait representing a filter expression
@@ -65,12 +67,12 @@ sealed trait ExtendedSearchFilterExpression {
 
 sealed trait ExtendedSearchQueryPattern {
 
-    def rdfValue(whereClause: Boolean): String
+    def rdfValue: String
 }
 
 case class ExtendedSearchOptionalPattern(patterns: Seq[ExtendedSearchQueryPattern]) extends ExtendedSearchQueryPattern {
 
-    def rdfValue(whereClause: Boolean): String = ???
+    def rdfValue: String = ???
 }
 
 /**
@@ -161,21 +163,12 @@ case class ExtendedSearchXsdLiteral(value: String, datatype: IRI) extends Extend
   */
 case class ExtendedSearchStatementPattern(subj: ExtendedSearchEntity, pred: ExtendedSearchEntity, obj: ExtendedSearchEntity, disableInference: Boolean) extends ExtendedSearchQueryPattern {
 
-    def rdfValue(whereClause: Boolean): String = {
-
-        val statement = s"${subj.rdfValue} ${pred.rdfValue} ${obj.rdfValue} ."
-
-        if (disableInference) {
-            "GRAPH <http://www.ontotext.com/explicit> {\n" + statement + "\n}"
-        } else {
-            statement
-        }
-    }
+    def rdfValue: String = s"${subj.rdfValue} ${pred.rdfValue} ${obj.rdfValue} ."
 
 }
 
 case class ExtendedSearchUnionPattern(blocks: Seq[Seq[ExtendedSearchQueryPattern]]) extends ExtendedSearchQueryPattern {
-    def rdfValue(whereClause: Boolean): String = ???
+    def rdfValue: String = ???
 }
 
 
@@ -186,14 +179,6 @@ case class ExtendedSearchUnionPattern(blocks: Seq[Seq[ExtendedSearchQueryPattern
   * @param whereClause the where clause of the extended search query.
   */
 case class ExtendedSearchQuery(constructClause: Vector[ExtendedSearchStatementPattern], whereClause: Vector[ExtendedSearchQueryPattern])
-
-/**
-  * Represents statements combined with filter statements.
-  *
-  * @param statements the statements.
-  * @param filters the filters belonging to the statements.
-  */
-case class ExtendedSearchStatementsAndFilterPatterns(statements: Vector[ExtendedSearchStatementPattern], filters: Vector[ExtendedSearchFilterExpression])
 
 /**
   * Requests a search of resources by their label. A successful response will be a [[ReadResourcesSequenceV2]].

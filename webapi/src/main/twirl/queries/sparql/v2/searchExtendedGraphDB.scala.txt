@@ -20,7 +20,7 @@
 
 @import org.knora.webapi.IRI
 @import org.knora.webapi.SparqlGenerationException
-@import org.knora.webapi.messages.v2.responder.searchmessages.ExtendedSearchQuery
+@import org.knora.webapi.messages.v2.responder.searchmessages._
 
 @*
  * Performs an extended search.
@@ -34,13 +34,26 @@
 CONSTRUCT {
 
     @for(statement <- query.constructClause) {
-         @statement.rdfValue(false)
+         @statement.rdfValue
     }
 
 } WHERE {
 
     @for(statement <- query.whereClause) {
-        @statement.rdfValue(true)
-    }
 
+        @statement match {
+
+            case statementPatternWithoutInference: ExtendedSearchStatementPattern if statementPatternWithoutInference.disableInference => {
+                # disable inference
+                GRAPH <http://www.ontotext.com/explicit> {
+                    @statementPatternWithoutInference.rdfValue
+                }
+            }
+
+            case anyPattern => {
+                @anyPattern.rdfValue
+            }
+
+        }
+    }
 }
