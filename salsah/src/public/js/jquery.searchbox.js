@@ -209,11 +209,11 @@
 							top: pos.top
 						}).show();
 						// if the input already has a value and it is valid, back it up
-						if ($this.attr("isValid")) {
+						if ($this.attr("isValid") === "true") {
 							$this.attr("prevVal", $this.val());
 						}
 						$this.val("");
-						$this.attr("isValid", false);
+						$this.attr("isValid", "false");
 					});
 
 
@@ -230,7 +230,7 @@
 								if ($this.attr("prevVal")) {
 									$this.val($this.attr("prevVal"));
 									$this.attr("prevVal", "");
-									$this.attr("isValid", true);
+									$this.attr("isValid", "true");
 								}
 							}
 						}
