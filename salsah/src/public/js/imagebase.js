@@ -90,6 +90,10 @@ $(function() {
 			//***************
 
 
+			var sortedprops = Object.keys(resource.props).map(function(propname) {return [propname, resource.props[propname]];});
+			sortedprops.sort(function(prop1, prop2){
+				return prop1[1].guiorder - prop2[1].guiorder;
+			});
 
 			if ((resource.resdata.rights >= Rights.RESOURCE_ACCESS_VIEW_RESTRICTED) && (resource.resinfo.locations))
 			{
@@ -99,8 +103,9 @@ $(function() {
 			}
 			if (settings.regnum !== undefined)
 			{
-				for (var propname in resource.props)
+				for (var i = 0; i < sortedprops.length; i++)
 				{
+					var propname = sortedprops[i][0];
 					if (propname == 'http://www.knora.org/ontology/knora-base#isRegionOf') continue;
 					if (propname == '__location__') continue;
 					if (propname == '__label__') continue;
@@ -120,9 +125,10 @@ $(function() {
 					.append(' Descriptive Metadata')
 				);
 				var metadata_section = $('<div>').addClass('propedit section metadata winid_' + settings.winid);
-				for (propname in resource.props)
+				for (var i = 0; i < sortedprops.length; i++)
 				{
-					propdata = resource.props[propname];
+					propname = sortedprops[i][0];
+					propdata = sortedprops[i][1];
 					if (propdata.is_annotation == 1) { // keep annotations for annotations section below
 						annotations[propname] = propdata;
 						continue;
