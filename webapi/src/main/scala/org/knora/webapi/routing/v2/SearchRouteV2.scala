@@ -111,30 +111,32 @@ object SearchRouteV2 extends Authenticator {
                     // search for a letter that has the given title and mentions Isaac Newton
                     var sparql_tmp2 =
                         """
-                          |PREFIX beol: <http://api.knora.org/ontology/beol/v2#>
-                          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+                          |PREFIX beol: <http://api.knora.org/ontology/beol/simple/v2#>
+                          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                           |
                           |CONSTRUCT {
                           |    ?letter knora-api:isMainResource true .
                           |
                           |    ?letter a beol:letter .
                           |
-                          |    ?letter beol:title ?titleObj .
-                          |    ?titleObj knora-base:valueHasString "1707-05-18_2_Hermann_Jacob-Scheuchzer_Johann_Jakob" .
+                          |    ?letter beol:title "1707-05-18_2_Hermann_Jacob-Scheuchzer_Johann_Jakob" .
                           |
-                          |    ?letter beol:mentionsPerson <http://rdfh.ch/beol/NUkE4PxyT1uEm3K9db63wQ>
+                          |    ?letter beol:mentionsPerson <http://rdfh.ch/beol/NUkE4PxyT1uEm3K9db63wQ> .
                           |
                           |} WHERE {
-                          |
+                          |    ?letter a knora-api:Resource .
                           |    ?letter a beol:letter .
                           |
-                          |    # in simple v2, this would have to be one statement (no value object)
-                          |    ?letter beol:title ?titleObj .
+                          |    ?letter beol:title "1707-05-18_2_Hermann_Jacob-Scheuchzer_Johann_Jakob" .
+                          |    beol:title knora-api:objectType xsd:string .
                           |
-                          |    ?titleObj knora-base:valueHasString "1707-05-18_2_Hermann_Jacob-Scheuchzer_Johann_Jakob" .
                           |
                           |    # Newton,  Isaac 1643-1727
-                          |    ?letter beol:mentionsPerson <http://rdfh.ch/beol/NUkE4PxyT1uEm3K9db63wQ>
+                          |    ?letter beol:mentionsPerson <http://rdfh.ch/beol/NUkE4PxyT1uEm3K9db63wQ> .
+                          |    beol:mentionsPerson  knora-api:objectType knora-api:Resource .
+                          |
+                          |    <http://rdfh.ch/beol/NUkE4PxyT1uEm3K9db63wQ> a knora-api:Resource .
+                          |
                           |}
                         """.stripMargin
 
@@ -172,7 +174,7 @@ object SearchRouteV2 extends Authenticator {
                           |}
                         """.stripMargin
 
-                    val constructQuery = SearchParserV2.parseSearchQuery(sparql_tmp)
+                    val constructQuery = SearchParserV2.parseSearchQuery(sparql_tmp2)
 
                     val requestMessage = ExtendedSearchGetRequestV2(constructQuery = constructQuery, userProfile = userProfile)
 
