@@ -113,8 +113,8 @@ We write automated tests using [ScalaTest](http://www.scalatest.org/). You can r
 There are three sets of automated tests:
 
 * Unit tests, route-to-route tests, and end-to-end tests are under `webapi/src/test`. To run these, type `graphdb:test` or `fuseki:test` (depending on which triplestore you're using) at the SBT console in the `webapi` project. To run a single test, use `graphdb:test-only *NameOfTestSpec`.
-* Integration tests, which can involve [Sipi](https://github.com/dhlab-basel/Sipi), are undr `src/it`. To run these, first start Sipi, then type `it:test` at the SBT console in the `webapi` project.
-* Browser interaction tests are under `salsah/src/test`, and are written using [Selenium](http://www.seleniumhq.org/). To run these, you will need to download the [Selenium driver for Chrome](https://sites.google.com/a/chromium.org/chromedriver/downloads) and put it in `salsah/lib`. Then start Sipi and the Knora API server, and type `test` at the SBT console in the `salsah` project.
+* Integration tests, which can involve [Sipi](https://github.com/dhlab-basel/Sipi), are under `src/it`. To run these, first start Sipi, then type `it:test` at the SBT console in the `webapi` project.
+* Browser interaction tests are under `salsah/src/test`, and are written using [Selenium](http://www.seleniumhq.org/). To run these, you will need to unpack the correct [ChromeDriver](https://sites.google.com/a/chromium.org/chromedriver/) for your platform found under `salsah/lib/chromedriver` and put it in the same folder. Then start Sipi and the Knora API server, and type `test` at the SBT console in the `salsah` project.
 
 Whenever you add a new feature or fix a bug, you should add one or more tests for the change you made.
 

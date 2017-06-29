@@ -19,13 +19,12 @@ package org.knora.webapi.other.v1
 import java.io.File
 import java.net.URLEncoder
 
-import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.model._
-import arq.iri
+import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import com.typesafe.config.ConfigFactory
-import org.knora.webapi.{ITSpec, InvalidApiJsonException}
 import org.knora.webapi.messages.v1.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
-import org.knora.webapi.util.MutableTestIri
+import org.knora.webapi.util.TestingUtilities
+import org.knora.webapi.{ITKnoraLiveSpec, InvalidApiJsonException}
 import spray.json._
 
 import scala.concurrent.duration._
@@ -41,9 +40,9 @@ object DrawingsGodsV1ITSpec {
 /**
   * End-to-End (E2E) test specification for additional testing of permissions.
   */
-class DrawingsGodsV1ITSpec extends ITSpec(DrawingsGodsV1ITSpec.config) with TriplestoreJsonProtocol {
+class DrawingsGodsV1ITSpec extends ITKnoraLiveSpec(DrawingsGodsV1ITSpec.config) with TriplestoreJsonProtocol with TestingUtilities {
 
-    implicit override val log = akka.event.Logging(system, this.getClass())
+    implicit override lazy val log = akka.event.Logging(system, this.getClass())
 
     private val rdfDataObjects: List[RdfDataObject] = List(
         RdfDataObject(path = "_test_data/other.v1.DrawingsGodsV1Spec/drawings-gods_admin-data.ttl", name = "http://www.knora.org/data/admin"),
@@ -51,6 +50,9 @@ class DrawingsGodsV1ITSpec extends ITSpec(DrawingsGodsV1ITSpec.config) with Trip
         RdfDataObject(path = "_test_data/other.v1.DrawingsGodsV1Spec/drawings-gods_ontology.ttl", name = "http://www.knora.org/ontology/drawings-gods"),
         RdfDataObject(path = "_test_data/other.v1.DrawingsGodsV1Spec/drawings-gods_data.ttl", name = "http://www.knora.org/data/drawings-gods")
     )
+
+    // creates tmp directory if not found
+    createTmpFileDir()
 
     "Check if Sipi is running" in {
         // This requires that (1) fileserver.docroot is set in Sipi's config file and (2) it contains a file test.html.

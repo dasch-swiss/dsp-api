@@ -51,8 +51,7 @@ which then gets displayed to the user in the browser. Sipi copies the original f
 
 Once the user finally wants to attach the file to a resource, the request is sent to Knora's API
 providing all the required parameters to create the resource along with additional information about the file to be attached.
-**However, the file itself is not submitted to the Knora Api,
-but its filename returned by Sipi.**
+**However, the file itself is not submitted to the Knora Api, but its filename returned by Sipi (from the ``create_thumbnail`` response).**
 
 Create a new Resource with a Digital Representation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
