@@ -586,6 +586,11 @@ class StandoffResponderV1 extends Responder {
 
             mappingResponse: SparqlConstructResponse <- (storeManager ? SparqlConstructRequest(getMappingSparql)).mapTo[SparqlConstructResponse]
 
+            // if the result is empty, the mapping does not exist
+            _ = if (mappingResponse.statements.isEmpty) {
+                throw BadRequestException(s"mapping $mappingIri does not exist")
+            }
+
             // separate MappingElements from other statements (attributes and datatypes)
             (mappingElementStatements: Map[IRI, Seq[(IRI, String)]], otherStatements: Map[IRI, Seq[(IRI, String)]]) = mappingResponse.statements.partition {
                 case (subjectIri: IRI, assertions: Seq[(IRI, String)]) =>

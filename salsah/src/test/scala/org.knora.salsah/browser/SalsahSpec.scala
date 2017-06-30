@@ -21,57 +21,53 @@
 package org.knora.salsah.browser
 
 import akka.actor.ActorSystem
+import akka.http.scaladsl.Http
+import akka.http.scaladsl.client.RequestBuilding
+import akka.http.scaladsl.model._
+import akka.stream.ActorMaterializer
+import akka.util.Timeout
 import com.typesafe.config.ConfigFactory
 import org.knora.salsah.SettingsImpl
 import org.scalatest._
-import spray.client.pipelining._
-import spray.http.MediaTypes._
-import spray.http.{HttpEntity, HttpRequest, HttpResponse, StatusCodes}
 
-import scala.concurrent.duration.Duration
-import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.concurrent.duration._
+import scala.concurrent.{Await, ExecutionContext, ExecutionContextExecutor}
 
 /**
   * An abstract base class for Selenium tests of the SALSAH user interface.
   */
-abstract class SalsahSpec extends WordSpecLike with ShouldMatchers {
+abstract class SalsahSpec extends WordSpecLike with Matchers with RequestBuilding {
+
+    implicit private val system = ActorSystem()
+
     protected val settings = new SettingsImpl(ConfigFactory.load())
+
+    implicit private val timeout = Timeout(180.seconds)
+    implicit private val dispatcher = system.dispatcher
+    implicit protected val ec: ExecutionContextExecutor = dispatcher
+    implicit protected val materializer = ActorMaterializer()
 
     /**
       * Loads test data and populates the ontology cache.
       *
       * @param rdfDataObjectsJsonList a JSON array specifying data files to be loaded into the triplestore.
       */
-    protected def loadTestData(rdfDataObjectsJsonList: String)(implicit system: ActorSystem, executionContext: ExecutionContext): Unit = {
-        // Load the test data into the triplestore.
-        val loadDataRequest: HttpRequest = Post(s"${settings.baseKNORAUrl}/v1/store/ResetTriplestoreContent", HttpEntity(`application/json`, rdfDataObjectsJsonList))
-        makeHttpRequest(loadDataRequest, Duration("180 seconds"))
+    protected def loadTestData(rdfDataObjectsJsonList: String): Unit = {
 
-        // Populate the ontology cache.
-        val loadOntologiesRequest: HttpRequest = Get(s"${settings.baseKNORAUrl}/v1/vocabularies/reload")
-        makeHttpRequest(loadOntologiesRequest, Duration("10 seconds"))
+        val request = Post(settings.webapiUrl + "/v1/store/ResetTriplestoreContent", HttpEntity(ContentTypes.`application/json`, rdfDataObjectsJsonList))
+        singleAwaitingRequest(request, 300.seconds)
     }
 
     /**
-      * Makes an HTTP request and checks that the response is HTTP 200 (OK).
-      *
+      * Makes a single HTTP request, waits for the result and chekcs that the response is HTTP 200 (OK)
       * @param request the request to send.
+      * @param duration the max wait time.
       */
-    private def makeHttpRequest(request: HttpRequest, timeout: Duration)(implicit system: ActorSystem, executionContext: ExecutionContext): Unit = {
-        // define a pipeline function that gets turned into a generic [[HTTP Response]] (containing JSON)
-        val pipeline: HttpRequest => Future[HttpResponse] = (
-            addHeader("Accept", "application/json")
-                ~> sendReceive
-                ~> unmarshal[HttpResponse]
-            )
+    def singleAwaitingRequest(request: HttpRequest, duration: Duration = 3.seconds): HttpResponse = {
+        val responseFuture = Http().singleRequest(request)
+        val response = Await.result(responseFuture, duration)
 
-        val loadRequestFuture: Future[HttpResponse] = for {
-            requestFuture <- Future(request)
-            pipelineResult <- pipeline(requestFuture)
-        } yield pipelineResult
-
-        val requestResponse = Await.result(loadRequestFuture, timeout)
-
-        assert(requestResponse.status == StatusCodes.OK)
+        assert(response.status == StatusCodes.OK)
+        response
     }
 }

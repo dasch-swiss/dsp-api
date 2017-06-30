@@ -34,7 +34,7 @@ class SettingsImpl(config: Config) extends Extension {
     val httpsPort = config.getInt("app.http.https-port")
 
     // used for testing
-    val baseKNORAUrl = config.getString("app.http.base-knora-url")
+    val headless = config.getBoolean("app.testing.headless")
 
     // used in deployment
     val deployed = config.getBoolean("app.deployed")

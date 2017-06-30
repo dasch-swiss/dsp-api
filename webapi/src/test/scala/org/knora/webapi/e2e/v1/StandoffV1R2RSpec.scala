@@ -1103,5 +1103,40 @@ class StandoffV1R2RSpec extends R2RSpec {
 
         }
 
+        "attempt to create a TextValue providing an invalid mapping Iri" in {
+
+            val xml = """<?xml version="1.0" encoding="UTF-8"?>
+                <text documentType="html">
+                    <p>
+                        This an a text with an invalid mapping.
+                    </p>
+                </text>""".stripMargin
+
+            val newValueParams =
+                s"""
+                {
+                  "project_id": "http://data.knora.org/projects/anything",
+                  "res_id": "http://data.knora.org/a-thing",
+                  "prop": "http://www.knora.org/ontology/anything#hasText",
+                  "richtext_value": {
+                        "xml": ${JsString(xml)},
+                        "mapping_id": "${anythingProjectIri}/invalidPathForMappings/HTMLMapping"
+                  }
+                }
+                """
+
+            // create standoff from XML
+            Post("/v1/values", HttpEntity(ContentTypes.`application/json`, newValueParams)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> valuesPath ~> check {
+
+                assert(status == StatusCodes.BadRequest, response.toString)
+
+                // the error message should inform the user that the provided mapping Iri is invalid
+                assert(responseAs[String].contains(s"mapping ${anythingProjectIri}/invalidPathForMappings/HTMLMapping does not exist"))
+
+
+            }
+
+        }
+
     }
 }

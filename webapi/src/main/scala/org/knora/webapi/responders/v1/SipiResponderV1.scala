@@ -108,6 +108,33 @@ class SipiResponderV1 extends Responder {
 
 
     /**
+      * Convert a file that has been sent to Knora (non GUI-case).
+      *
+      * @param conversionRequest the information about the file (uploaded by Knora).
+      * @return a [[SipiResponderConversionResponseV1]] representing the file values to be added to the triplestore.
+      */
+    private def convertPathV1(conversionRequest: SipiResponderConversionPathRequestV1): Future[SipiResponderConversionResponseV1] = {
+        val url = s"${settings.sipiImageConversionUrl}/${settings.sipiPathConversionRoute}"
+
+        callSipiConvertRoute(url, conversionRequest)
+
+    }
+
+
+    /**
+      * Convert a file that is already managed by Sipi (GUI-case).
+      *
+      * @param conversionRequest the information about the file (managed by Sipi).
+      * @return a [[SipiResponderConversionResponseV1]] representing the file values to be added to the triplestore.
+      */
+    private def convertFileV1(conversionRequest: SipiResponderConversionFileRequestV1): Future[SipiResponderConversionResponseV1] = {
+        val url = s"${settings.sipiImageConversionUrl}/${settings.sipiFileConversionRoute}"
+
+        callSipiConvertRoute(url, conversionRequest)
+    }
+
+
+    /**
       * Makes a conversion request to Sipi and creates a [[SipiResponderConversionResponseV1]]
       * containing the file values to be added to the triplestore.
       *
@@ -250,29 +277,6 @@ class SipiResponderV1 extends Responder {
     }
 
 
-    /**
-      * Convert a file that has been sent to Knora (non GUI-case).
-      *
-      * @param conversionRequest the information about the file (uploaded by Knora).
-      * @return a [[SipiResponderConversionResponseV1]] representing the file values to be added to the triplestore.
-      */
-    private def convertPathV1(conversionRequest: SipiResponderConversionPathRequestV1): Future[SipiResponderConversionResponseV1] = {
-        val url = s"${settings.sipiImageConversionUrl}/${settings.sipiPathConversionRoute}"
 
-        callSipiConvertRoute(url, conversionRequest)
-
-    }
-
-    /**
-      * Convert a file that is already managed by Sipi (GUI-case).
-      *
-      * @param conversionRequest the information about the file (managed by Sipi).
-      * @return a [[SipiResponderConversionResponseV1]] representing the file values to be added to the triplestore.
-      */
-    private def convertFileV1(conversionRequest: SipiResponderConversionFileRequestV1): Future[SipiResponderConversionResponseV1] = {
-        val url = s"${settings.sipiImageConversionUrl}/${settings.sipiFileConversionRoute}"
-
-        callSipiConvertRoute(url, conversionRequest)
-    }
 
 }

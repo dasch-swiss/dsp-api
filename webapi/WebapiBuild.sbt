@@ -11,7 +11,7 @@ connectInput in run := true
 lazy val webapi = (project in file(".")).
         configs(
             FusekiTest,
-            FusekiTomcatTest,
+            FusekiIntegrationTest,
             GraphDBTest,
             GraphDBFreeTest,
             SesameTest,
@@ -26,10 +26,10 @@ lazy val webapi = (project in file(".")).
                 testOptions += Tests.Argument("-oDF") // show full stack traces and test case durations
             )
         ): _*).
-        settings(inConfig(FusekiTomcatTest)(
+        settings(inConfig(FusekiIntegrationTest)(
             Defaults.testTasks ++ Seq(
                 fork := true,
-                javaOptions ++= javaFusekiTomcatTestOptions,
+                javaOptions ++= javaFusekiIntegrationTestOptions,
                 testOptions += Tests.Argument("-oDF") // show full stack traces and test case durations
             )
         ): _*).
@@ -109,8 +109,8 @@ lazy val webApiCommonSettings = Seq(
     scalaVersion := "2.12.1"
 )
 
-lazy val akkaVersion = "2.4.16"
-lazy val akkaHttpVersion = "10.0.3"
+lazy val akkaVersion = "2.4.19"
+lazy val akkaHttpVersion = "10.0.7"
 
 lazy val webApiLibs = Seq(
     // akka
@@ -163,10 +163,10 @@ lazy val webApiLibs = Seq(
     "com.sksamuel.diff" % "diff" % "1.1.11",
     "org.xmlunit" % "xmlunit-core" % "2.1.1",
     // testing
-    "com.typesafe.akka" %% "akka-testkit" % akkaVersion % "test, fuseki, fuseki-tomcat, graphdb, tdb, it",
-    "com.typesafe.akka" %% "akka-http-testkit" % akkaHttpVersion % "test, fuseki, fuseki-tomcat, graphdb, tdb, it",
-    "com.typesafe.akka" %% "akka-stream-testkit" % akkaVersion % "test, fuseki, fuseki-tomcat, graphdb, tdb, it",
-    "org.scalatest" %% "scalatest" % "3.0.0" % "test, fuseki, fuseki-tomcat, graphdb, tdb, it",
+    "com.typesafe.akka" %% "akka-testkit" % akkaVersion % "test, fuseki, graphdb, tdb, it, fuseki-it",
+    "com.typesafe.akka" %% "akka-http-testkit" % akkaHttpVersion % "test, fuseki, graphdb, tdb, it, fuseki-it",
+    "com.typesafe.akka" %% "akka-stream-testkit" % akkaVersion % "test, fuseki, graphdb, tdb, it, fuseki-it",
+    "org.scalatest" %% "scalatest" % "3.0.0" % "test, fuseki, graphdb, tdb, it, fuseki-it",
     "org.eclipse.rdf4j" % "rdf4j-rio-turtle" % "2.2.1",
     "org.eclipse.rdf4j" % "rdf4j-queryparser-sparql" % "2.2.1",
     "org.rogach" %% "scallop" % "2.0.5",
@@ -178,8 +178,8 @@ lazy val webApiLibs = Seq(
 
 lazy val javaRunOptions = Seq(
     // "-showversion",
-    "-Xms2048m",
-    "-Xmx4096m"
+    "-Xms1G",
+    "-Xmx1G"
     // "-verbose:gc",
     //"-XX:+UseG1GC",
     //"-XX:MaxGCPauseMillis=500"
@@ -187,8 +187,8 @@ lazy val javaRunOptions = Seq(
 
 lazy val javaTestOptions = Seq(
     // "-showversion",
-    "-Xms2048m",
-    "-Xmx4096m"
+    "-Xms2G",
+    "-Xmx4G"
     // "-verbose:gc",
     //"-XX:+UseG1GC",
     //"-XX:MaxGCPauseMillis=500",
@@ -200,9 +200,9 @@ lazy val javaFusekiTestOptions = Seq(
     "-Dconfig.resource=fuseki.conf"
 ) ++ javaTestOptions
 
-lazy val FusekiTomcatTest = config("fuseki-tomcat") extend(Test)
-lazy val javaFusekiTomcatTestOptions = Seq(
-    "-Dconfig.resource=fuseki-tomcat.conf"
+lazy val FusekiIntegrationTest = config("fuseki-it") extend(IntegrationTest)
+lazy val javaFusekiIntegrationTestOptions = Seq(
+    "-Dconfig.resource=fuseki.conf"
 ) ++ javaTestOptions
 
 lazy val GraphDBTest = config("graphdb") extend(Test)

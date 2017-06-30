@@ -1,16 +1,17 @@
 package org.knora.webapi.e2e.v1
 
 import akka.http.scaladsl.model.{ContentTypes, HttpEntity, StatusCodes}
-import org.knora.webapi.ITSpec
+import org.knora.webapi.ITKnoraLiveSpec
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
+import org.knora.webapi.util.TestingUtilities
+import spray.json._
 
 import scala.concurrent.duration._
-import spray.json._
 
 /**
   * Causes an internal server error to see if logging is working correctly.
   */
-class ErrorV1ITSpec extends ITSpec with TriplestoreJsonProtocol {
+class ErrorV1ITSpec extends ITKnoraLiveSpec with TestingUtilities with TriplestoreJsonProtocol {
     private val rdfDataObjects = List.empty[RdfDataObject]
 
     "Load test data" in {
