@@ -181,7 +181,7 @@
            
            :guiAttributeDefinition "numprops=numeric" ,
                                    "resource=api:resources",
-				   "size=numeric" .
+				                   "size=numeric" .
 
 
 

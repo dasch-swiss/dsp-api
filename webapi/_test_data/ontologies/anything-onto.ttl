@@ -72,7 +72,7 @@
 
                salsah-gui:guiElement salsah-gui:Searchbox ;
 	       
-	       salsah-gui:guiAttribute "size=45".
+	           salsah-gui:guiAttribute "size=45".
 
 
 
