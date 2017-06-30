@@ -185,6 +185,8 @@
 //						position: 'absolute',
 						left: pos.left,
 						top: pos.top +$this.outerHeight(),
+						background: 'white',
+						'z-index': 2, /* :( i don't like black magic numbers or const */
 						display: 'none'
 					}).hover(
 						function(event) {
@@ -206,7 +208,12 @@
 							left: pos.left,
 							top: pos.top
 						}).show();
-						$this.val('');
+						// if the input already has a value and it is valid, back it up
+						if ($this.attr("isValid") === "true") {
+							$this.attr("prevVal", $this.val());
+						}
+						$this.val("");
+						$this.attr("isValid", "false");
 					});
 
 
@@ -217,6 +224,15 @@
 								$this.css({cursor: 'text'});
 							}
 							localdata.ele.sel.hide();
+							// when leaving this input, if the value is empty, but we had a previous valid input
+							// set back the previous input
+							if ($this.attr("isValid") === "false") {
+								if ($this.attr("prevVal")) {
+									$this.val($this.attr("prevVal"));
+									$this.attr("prevVal", "");
+									$this.attr("isValid", "true");
+								}
+							}
 						}
 					});
 
