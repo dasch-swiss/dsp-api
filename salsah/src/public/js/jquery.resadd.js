@@ -509,6 +509,21 @@
 										attributes.type = 'text';
 										create_entry(propname, pinfo, function(ele, attr, pinfo) {
 											var tmpele = $('<input>', attr).addClass('__searchbox').insertBefore(ele.find('.entrySep'));
+											var placeholderText = 'start typing to search (min 3 letters)...';
+											if (SALSAH.userprofile && SALSAH.userprofile.userData && SALSAH.userprofile.userData.lang) {
+												switch(SALSAH.userprofile.userData.lang) {
+													case 'fr': placeholderText = "entrez les 3 premières lettres pour chercher...";
+													// case german
+												}
+											}
+											tmpele.attr('placeholder', placeholderText);
+											tmpele.attr('autocomplete', 'off');
+
+											// see: https://bugs.jquery.com/ticket/12429
+											// $('<input>', attr) doesn't set "size" in attr={size:23}
+											if (attr["size"]) {
+												tmpele.attr("size", attr["size"]);
+											}
 
 											var restype_id = -1;
 											var numprops = 1;
@@ -545,6 +560,9 @@
 													}, function(data) {
 														if (data.status == ApiErrors.OK) {
 															tmpele.val(data.resource_info.firstproperty + ' (' + data.resource_info.restype_label + ')').data('res_id', res_id);
+															// if the choice is selected, change the input value and tag it as valid
+															tmpele.attr("prevVal", "");
+															tmpele.attr("isValid", "true");
 														} else {
 															alert(data.errormsg);
 														}
