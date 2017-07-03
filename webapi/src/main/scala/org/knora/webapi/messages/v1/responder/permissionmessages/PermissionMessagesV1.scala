@@ -361,6 +361,7 @@ case class DefaultObjectAccessPermissionOperationResponseV1(success: Boolean,
   *
   * @param groupsPerProject                         the groups the user belongs to for each project.
   * @param administrativePermissionsPerProject      the user's administrative permissions for each project.
+  * @param anonymousUser                            the type of user.
   */
 case class PermissionDataV1(groupsPerProject: Map[IRI, Seq[IRI]] = Map.empty[IRI, Seq[IRI]],
                             administrativePermissionsPerProject: Map[IRI, Set[PermissionV1]] = Map.empty[IRI, Set[PermissionV1]],

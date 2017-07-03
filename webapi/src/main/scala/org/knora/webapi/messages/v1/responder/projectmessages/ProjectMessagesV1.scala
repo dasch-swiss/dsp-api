@@ -23,10 +23,9 @@ package org.knora.webapi.messages.v1.responder.projectmessages
 import java.util.UUID
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import org.knora.webapi.{BadRequestException, IRI}
 import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
 import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
-import org.openrdf.query.algebra.If
+import org.knora.webapi.{BadRequestException, IRI}
 import spray.json.{DefaultJsonProtocol, JsonFormat, NullOptions, RootJsonFormat}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -37,19 +36,19 @@ import spray.json.{DefaultJsonProtocol, JsonFormat, NullOptions, RootJsonFormat}
   *
   * @param shortname   the shortname of the project to be created (unique).
   * @param longname    the longname of the project to be created.
-  * @param description the descripton of the project to be created.
+  * @param description the description of the project to be created.
   * @param keywords    the keywords of the project to be created.
   * @param logo        the logo of the project to be created.
-  * @param status      the status of the project to be created.
-  * @param selfjoin    the status of self-join of the project to be created.
+  * @param status      the status of the project to be created (default = true).
+  * @param selfjoin    the status of self-join of the project to be created (default = false).
   */
 case class CreateProjectApiRequestV1(shortname: String,
                                      longname: Option[String],
                                      description: Option[String],
                                      keywords: Option[String],
                                      logo: Option[String],
-                                     status: Boolean,
-                                     selfjoin: Boolean) extends ProjectV1JsonProtocol {
+                                     status: Option[Boolean] = Some(true),
+                                     selfjoin: Option[Boolean] = Some(false)) extends ProjectV1JsonProtocol {
     def toJsValue = createProjectApiRequestV1Format.write(this)
 }
 
@@ -98,7 +97,7 @@ case class ChangeProjectApiRequestV1(shortname: Option[String] = None,
     if (ontologygraph.isDefined || datagraph.isDefined) {
         if (ontologygraph.isDefined && datagraph.isEmpty && parametersCount > 1) BadRequestException("To many parameters sent for ontology graph change.")
         if (datagraph.isDefined && ontologygraph.isEmpty && parametersCount > 1) BadRequestException("To many parameters sent for data graph change.")
-        if ( ontologygraph.isDefined && datagraph.isDefined && parametersCount > 2) BadRequestException("To many parameters sent for ontology and data graph change.")
+        if (ontologygraph.isDefined && datagraph.isDefined && parametersCount > 2) BadRequestException("To many parameters sent for ontology and data graph change.")
     }
 
     // change basic project information case

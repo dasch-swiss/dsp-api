@@ -106,7 +106,7 @@ class GroupsResponderV1Spec extends CoreSpec(GroupsResponderV1Spec.config) with 
 
             "CREATE the group and return the group's info if the supplied group name is unique" in {
                 actorUnderTest ! GroupCreateRequestV1(
-                    CreateGroupApiRequestV1("NewGroup", Some("NewGroupDescription"), "http://data.knora.org/projects/images", true, false),
+                    CreateGroupApiRequestV1("NewGroup", Some("NewGroupDescription"), "http://data.knora.org/projects/images", Some(true), Some(false)),
                     SharedAdminTestData.imagesUser01,
                     UUID.randomUUID
                 )
@@ -126,7 +126,7 @@ class GroupsResponderV1Spec extends CoreSpec(GroupsResponderV1Spec.config) with 
 
             "return a 'DuplicateValueException' if the supplied group name is not unique" in {
                 actorUnderTest ! GroupCreateRequestV1(
-                    CreateGroupApiRequestV1("NewGroup", Some("NewGroupDescription"), "http://data.knora.org/projects/images", true, false),
+                    CreateGroupApiRequestV1("NewGroup", Some("NewGroupDescription"), "http://data.knora.org/projects/images", Some(true), Some(false)),
                     SharedAdminTestData.imagesUser01,
                     UUID.randomUUID
                 )
@@ -137,7 +137,7 @@ class GroupsResponderV1Spec extends CoreSpec(GroupsResponderV1Spec.config) with 
 
                 /* missing group name */
                 actorUnderTest ! GroupCreateRequestV1(
-                    CreateGroupApiRequestV1("", Some("NoNameGroupDescription"), "http://data.knora.org/projects/images", true, false),
+                    CreateGroupApiRequestV1("", Some("NoNameGroupDescription"), "http://data.knora.org/projects/images", Some(true), Some(false)),
                     SharedAdminTestData.imagesUser01,
                     UUID.randomUUID
                 )
@@ -145,7 +145,7 @@ class GroupsResponderV1Spec extends CoreSpec(GroupsResponderV1Spec.config) with 
 
                 /* missing project */
                 actorUnderTest ! GroupCreateRequestV1(
-                    CreateGroupApiRequestV1("OtherNewGroup", Some("OtherNewGroupDescription"), "", true, false),
+                    CreateGroupApiRequestV1("OtherNewGroup", Some("OtherNewGroupDescription"), "", Some(true), Some(false)),
                     SharedAdminTestData.imagesUser01,
                     UUID.randomUUID
                 )

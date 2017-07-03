@@ -141,8 +141,8 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
                         description = Some("project description"),
                         keywords = Some("keywords"),
                         logo = Some("/fu/bar/baz.jpg"),
-                        status = true,
-                        selfjoin = false
+                        status = Some(true),
+                        selfjoin = Some(false)
                     ),
                     SharedAdminTestData.rootUser,
                     UUID.randomUUID()
@@ -166,8 +166,8 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
                         description = Some("project description"),
                         keywords = Some("keywords"),
                         logo = Some("/fu/bar/baz.jpg"),
-                        status = true,
-                        selfjoin = false
+                        status = Some(true),
+                        selfjoin = Some(false)
                     ),
                     SharedAdminTestData.rootUser,
                     UUID.randomUUID()
@@ -184,8 +184,8 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
                         description = Some("project description"),
                         keywords = Some("keywords"),
                         logo = Some("/fu/bar/baz.jpg"),
-                        status = true,
-                        selfjoin = false
+                        status = Some(true),
+                        selfjoin = Some(false)
                     ),
                     SharedAdminTestData.rootUser,
                     UUID.randomUUID()
