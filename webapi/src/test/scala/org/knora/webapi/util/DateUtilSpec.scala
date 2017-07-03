@@ -20,6 +20,8 @@
 
 package org.knora.webapi.util
 
+import java.util.{Calendar, GregorianCalendar}
+
 import org.knora.webapi.BadRequestException
 import org.knora.webapi.messages.v1.responder.valuemessages.{DateValueV1, JulianDayNumberValueV1, KnoraCalendarV1, KnoraPrecisionV1}
 import org.knora.webapi.util.DateUtilV1.DateRange
@@ -50,6 +52,16 @@ class DateUtilSpec extends WordSpec with Matchers {
             val reverseConvertedBundesbriefDateValueV1 = DateUtilV1.julianDayNumberValueV1ToDateValueV1(bundesbriefJulianDayCountValueV1)
 
             reverseConvertedBundesbriefDateValueV1 should be(bundesbriefDateValueV1)
+        }
+
+        "convert an era date string with year precision to a Java GregorianCalendar BC" in {
+            val dateRange: DateRange = DateUtilV1.dateString2DateRange("50-02-28 BC", KnoraCalendarV1.GREGORIAN)
+            dateRange.start.get(Calendar.ERA) should be(GregorianCalendar.BC)
+        }
+
+        "convert an era date string with year precision to a Java GregorianCalendar AD" in {
+            val dateRange: DateRange = DateUtilV1.dateString2DateRange("50-02-28 AD", KnoraCalendarV1.GREGORIAN)
+            dateRange.start.get(Calendar.ERA) should be(GregorianCalendar.AD)
         }
 
         "convert a date in YYYY-MM-DD format, in the Gregorian calendar, into a Julian day count, and back again" in {
