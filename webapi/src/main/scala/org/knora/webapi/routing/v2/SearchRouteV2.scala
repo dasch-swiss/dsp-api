@@ -79,9 +79,6 @@ object SearchRouteV2 extends Authenticator {
                           |CONSTRUCT {
                           |    ?letter knora-api:isMainResource true .
                           |
-                          |    ?letter a knora-api:Resource .
-                          |    ?letter a beol:letter .
-                          |
                           |    ?letter ?linkingProp1  <http://rdfh.ch/beol/oU8fMNDJQ9SGblfBl5JamA> .
                           |
                           |    ?letter ?linkingProp2  <http://rdfh.ch/beol/6edJwtTSR8yjAWnYmt6AtA> .
