@@ -140,38 +140,42 @@ object SearchRouteV2 extends Authenticator {
                     // search for letters that link to another letter via standoff that is authored by a person with IAF id "120379260"
                     var sparql_tmp3 =
                         """
-                          |PREFIX beol: <http://api.knora.org/ontology/beol/v2#>
-                          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+                          |PREFIX beol: <http://api.knora.org/ontology/beol/simple/v2#>
+                          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                           |
                           |CONSTRUCT {
                           |    ?letter knora-api:isMainResource true .
                           |
                           |    ?letter a beol:letter .
                           |
-                          |    ?letter knora-base:hasStandoffLinkTo ?anotherLetter .
+                          |    ?letter knora-api:hasStandoffLinkTo ?anotherLetter .
                           |
                           |    ?anotherLetter beol:hasAuthor ?author .
                           |
-                          |    ?author a beol:person .
-                          |    ?author beol:hasIAFIdentifier ?idObj .
-                          |    ?idObj knora-base:valueHasString "120379260" .
+                          |    ?author beol:hasIAFIdentifier "120379260" .
                           |} WHERE {
                           |
                           |    ?letter a beol:letter .
+                          |    ?letter a knora-api:Resource .
                           |
-                          |    ?letter knora-base:hasStandoffLinkTo ?anotherLetter .
+                          |    ?letter knora-api:hasStandoffLinkTo ?anotherLetter .
+                          |    knora-api:hasStandoffLinkTo knora-api:objectType knora-api:Resource .
+                          |    ?anotherLetter a knora-api:Resource .
                           |
                           |    ?anotherLetter beol:hasAuthor ?author .
+                          |    beol:hasAuthor knora-api:objectType knora-api:Resource .
                           |
                           |    # Scheuchzer, Johann 1684-1738
                           |    ?author a beol:person .
-                          |    ?author beol:hasIAFIdentifier ?idObj .
-                          |    ?idObj knora-base:valueHasString "120379260" .
+                          |    ?author a knora-api:Resource .
+                          |
+                          |    ?author beol:hasIAFIdentifier "120379260" .
+                          |    beol:hasIAFIdentifier knora-api:objectType xsd:string .
                           |
                           |}
                         """.stripMargin
 
-                    val constructQuery = SearchParserV2.parseSearchQuery(sparql_tmp2)
+                    val constructQuery = SearchParserV2.parseSearchQuery(sparql_tmp3)
 
                     val requestMessage = ExtendedSearchGetRequestV2(constructQuery = constructQuery, userProfile = userProfile)
 
