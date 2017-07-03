@@ -80,6 +80,45 @@ case class ChangeUserApiRequestV1(email: Option[String] = None,
                                   newUserStatus: Option[Boolean] = None,
                                   newSystemAdminMembershipStatus: Option[Boolean] = None) {
 
+    val parametersCount = List(
+        email,
+        givenName,
+        familyName,
+        lang,
+        oldPassword,
+        newPassword,
+        newUserStatus,
+        newSystemAdminMembershipStatus
+    ).flatten.size
+
+    // something needs to be sent, i.e. everything 'None' is not allowed
+    if (parametersCount == 0) throw BadRequestException("No data sent in API request.")
+
+
+    /* check that only allowed information for the 4 cases is send and not more. */
+
+    // change password case
+    if (oldPassword.isDefined || newPassword.isDefined) {
+        if (parametersCount > 2) {
+            throw BadRequestException("To many parameters sent for password change.")
+        } else if (parametersCount < 2) {
+            throw BadRequestException("To few parameters sent for password change.")
+        }
+    }
+
+    // change status case
+    if (newUserStatus.isDefined) {
+        if (parametersCount > 1) throw BadRequestException("To many parameters sent for user status change.")
+    }
+
+    // change system admin membership case
+    if (newSystemAdminMembershipStatus.isDefined) {
+        if (parametersCount > 1) throw BadRequestException("To many parameters sent for system admin membership change.")
+    }
+
+    // change basic user information case
+    if (parametersCount > 4) throw BadRequestException("To many parameters sent for basic user information change.")
+
     def toJsValue = UserV1JsonProtocol.changeUserApiRequestV1Format.write(this)
 }
 

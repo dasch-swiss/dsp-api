@@ -19,7 +19,7 @@ package org.knora.webapi.messages.v1.responder.groupmessages
 import java.util.UUID
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import org.knora.webapi.IRI
+import org.knora.webapi.{BadRequestException, IRI}
 import org.knora.webapi.messages.v1.responder._
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.responders.v1.GroupsResponderV1
@@ -42,6 +42,7 @@ case class CreateGroupApiRequestV1(name: String,
                                    project: IRI,
                                    status: Boolean = true,
                                    selfjoin: Boolean = false) extends GroupV1JsonProtocol {
+
     def toJsValue = createGroupApiRequestV1Format.write(this)
 }
 
@@ -57,6 +58,18 @@ case class ChangeGroupApiRequestV1(name: Option[String] = None,
                                    description: Option[String] = None,
                                    status: Option[Boolean] = None,
                                    selfjoin: Option[Boolean] = None) extends GroupV1JsonProtocol {
+
+    val parametersCount = List(
+        name,
+        description,
+        status,
+        selfjoin
+    ).flatten.size
+
+    // something needs to be sent, i.e. everything 'None' is not allowed
+    if (parametersCount == 0) throw BadRequestException("No data sent in API request.")
+
+
     def toJsValue = changeGroupApiRequestV1Format.write(this)
 }
 

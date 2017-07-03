@@ -23,9 +23,10 @@ package org.knora.webapi.messages.v1.responder.projectmessages
 import java.util.UUID
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import org.knora.webapi.IRI
+import org.knora.webapi.{BadRequestException, IRI}
 import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
 import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
+import org.openrdf.query.algebra.If
 import spray.json.{DefaultJsonProtocol, JsonFormat, NullOptions, RootJsonFormat}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -76,6 +77,33 @@ case class ChangeProjectApiRequestV1(shortname: Option[String] = None,
                                      datagraph: Option[String] = None,
                                      status: Option[Boolean] = None,
                                      selfjoin: Option[Boolean] = None) extends ProjectV1JsonProtocol {
+
+    val parametersCount = List(
+        shortname,
+        longname,
+        description,
+        keywords,
+        logo,
+        institution,
+        ontologygraph,
+        datagraph,
+        status,
+        selfjoin
+    ).flatten.size
+
+    // something needs to be sent, i.e. everything 'None' is not allowed
+    if (parametersCount == 0) throw BadRequestException("No data sent in API request.")
+
+    // change ontology and/or datagraph case
+    if (ontologygraph.isDefined || datagraph.isDefined) {
+        if (ontologygraph.isDefined && datagraph.isEmpty && parametersCount > 1) BadRequestException("To many parameters sent for ontology graph change.")
+        if (datagraph.isDefined && ontologygraph.isEmpty && parametersCount > 1) BadRequestException("To many parameters sent for data graph change.")
+        if ( ontologygraph.isDefined && datagraph.isDefined && parametersCount > 2) BadRequestException("To many parameters sent for ontology and data graph change.")
+    }
+
+    // change basic project information case
+    if (parametersCount > 8) throw BadRequestException("To many parameters sent for changing basic project information.")
+
     def toJsValue = changeProjectApiRequestV1Format.write(this)
 }
 

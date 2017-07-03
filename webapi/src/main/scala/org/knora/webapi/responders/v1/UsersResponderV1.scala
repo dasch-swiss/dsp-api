@@ -368,7 +368,7 @@ class UsersResponderV1 extends ResponderV1 {
             _ = if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty")
 
             parametersCount = List(changeUserRequest.email, changeUserRequest.givenName, changeUserRequest.familyName, changeUserRequest.lang).flatten.size
-            _ = if (parametersCount == 0) throw BadRequestException("At least one paremeter needs to be supplied. No data would be changed. Aborting request for changing of basic user data.")
+            _ = if (parametersCount == 0) throw BadRequestException("At least one parameter needs to be supplied. No data would be changed. Aborting request for changing of basic user data.")
 
             userUpdatePayload = UserUpdatePayloadV1(
                 email = changeUserRequest.email,

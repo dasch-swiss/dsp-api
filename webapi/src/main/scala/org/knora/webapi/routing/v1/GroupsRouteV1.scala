@@ -114,6 +114,8 @@ object GroupsRouteV1 extends Authenticator with GroupV1JsonProtocol {
                         val userProfile = getUserProfileV1(requestContext)
                         val checkedGroupIri = InputValidation.toIri(value, () => throw BadRequestException(s"Invalid group IRI $value"))
 
+                        /* the api request is already checked at time of creation. see case class. */
+
                         val requestMessage = GroupChangeRequestV1(
                             groupIri = checkedGroupIri,
                             changeGroupRequest = apiRequest,

@@ -477,7 +477,7 @@ class GroupsResponderV1 extends ResponderV1 with GroupV1JsonProtocol {
 
         log.debug("updateGroupV1 - groupIri: {}, groupUpdatePayload: {}", groupIri, groupUpdatePayload)
 
-        val parametersCount = List(
+        val parametersCount: Int = List(
             groupUpdatePayload.name,
             groupUpdatePayload.description,
             groupUpdatePayload.project,

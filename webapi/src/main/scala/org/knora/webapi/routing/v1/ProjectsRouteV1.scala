@@ -108,6 +108,8 @@ object ProjectsRouteV1 extends Authenticator with ProjectV1JsonProtocol {
                     val userProfile = getUserProfileV1(requestContext)
                     val checkedProjectIri = InputValidation.toIri(value, () => throw BadRequestException(s"Invalid project IRI $value"))
 
+                    /* the api request is already checked at time of creation. see case class. */
+
                     val requestMessage = ProjectChangeRequestV1(
                         projectIri = checkedProjectIri,
                         changeProjectRequest = apiRequest,

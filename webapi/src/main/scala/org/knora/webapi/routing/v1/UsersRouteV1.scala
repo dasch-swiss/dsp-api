@@ -113,6 +113,8 @@ object UsersRouteV1 extends Authenticator {
                     val userIri = InputValidation.toIri(value, () => throw BadRequestException(s"Invalid user IRI $value"))
                     val userProfile = getUserProfileV1(requestContext)
 
+                    /* the api request is already checked at time of creation. see case class. */
+
                     val requestMessage = if (apiRequest.oldPassword.isDefined && apiRequest.newPassword.isDefined) {
                         /* update existing user's password */
                         UserChangePasswordRequestV1(
@@ -139,7 +141,6 @@ object UsersRouteV1 extends Authenticator {
                         )
                     } else {
                         /* update existing user's basic information */
-                        /* not checking anything here as checks will be performed later */
                         UserChangeBasicUserDataRequestV1(
                             userIri,
                             changeUserRequest = apiRequest,
