@@ -31,12 +31,24 @@ export module groupFormats {
          */
         name: string;
 
+        /**
+         * The description of the group to be created.
+         */
         description?: string;
 
+        /**
+         * The project inside which the group will be created.
+         */
         project: basicMessageComponents.KnoraIRI;
 
+        /**
+         * The status of the group to be created (default = true).
+         */
         status?: boolean;
 
+        /**
+         * The status of self-join of the group to be created (default = false).
+         */
         selfjoin?: boolean;
     }
 
