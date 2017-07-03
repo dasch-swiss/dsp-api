@@ -17,6 +17,7 @@
 package org.knora.webapi
 
 import akka.actor.ActorSystem
+import akka.event.LoggingAdapter
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.client.RequestBuilding
 import akka.http.scaladsl.model.{HttpRequest, HttpResponse}
@@ -48,6 +49,12 @@ class E2ESpec(_system: ActorSystem) extends Core with KnoraService with Suite wi
 
     /* needed by the core trait */
     implicit lazy val system: ActorSystem = _system
+
+    /* needed by the core trait */
+    implicit lazy val settings: SettingsImpl = Settings(system)
+
+    /* needed by the core trait */
+    implicit lazy val log: LoggingAdapter = akka.event.Logging(system, "E2ESpec")
 
     if (!settings.knoraApiUseHttp) throw HttpConfigurationException("E2E tests currently require HTTP")
 

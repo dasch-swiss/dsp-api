@@ -51,8 +51,7 @@
   newValueIri: IRI,
   valueTypeIri: IRI,
   linkUpdates: Seq[SparqlTemplateLinkUpdate],
-  maybeValueHasOrder: Option[Int],
-  checkObj: Boolean)
+  maybeValueHasOrder: Option[Int])
     @index = {@resourceIndex.toString()_@valueIndex.toString()}
     # Value @index
     # Property: @propertyIri
@@ -71,20 +70,22 @@
     ?resourceClass@resourceIndex rdfs:subClassOf* ?restriction@index .
     ?restriction@index a owl:Restriction .
     ?restriction@index owl:onProperty ?property@index .
-    @if(checkObj==true) {
-        @*
 
-        If this template is being used to create a single text value in an existing resource, there may be existing
-        LinkValues that need to be updated for standoff links in the text. In that case, check the state of those
-        LinkValues. For each existing LinkValue, bind a SPARQL variable ?linkValue@linkValueIndex. This is necessary so
-        that a new version of the LinkValue can be inserted and point to the previous one.
+    @*
 
-        If this template is being used to create a new resource with its initial values, linkUpdates will be empty, so there
-        is nothing to check here and no SPARQL variables to bind.
+    If this template is being used to create a single text value in an existing resource, there may be existing
+    LinkValues that need to be updated for standoff links in the text. In that case, check the state of those
+    LinkValues. For each existing LinkValue, bind a SPARQL variable ?linkValue@linkValueIndex. This is necessary so
+    that a new version of the LinkValue can be inserted and point to the previous one.
 
-        *@
+    If this template is being used to create a new resource with its initial values, linkUpdates will be empty, so there
+    is nothing to check here and no SPARQL variables to bind.
 
-        @for((linkUpdate, linkValueIndex) <- linkUpdates.zipWithIndex) {
+    *@
+
+    @for((linkUpdate, linkValueIndex) <- linkUpdates.zipWithIndex) {
+
+        @if(linkUpdate.linkTargetExists) {
 
             @if(linkUpdate.insertDirectLink) {
                 @*
@@ -138,9 +139,13 @@
                         knora-base:isDeleted false .
                 }
             }
-        }
+        } else {
 
+            @{throw SparqlGenerationException(s"linkUpdate.linkTargetExists must be true in this SPARQL template"); ()}
+
+        }
     }
+
 
     @*
 

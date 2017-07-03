@@ -141,7 +141,7 @@
                 var filter = ' p em strong strike u sub sup; a[!href](salsah-link)';
 
 				var config = {
-					language: 'de', // customize language
+					language: (SALSAH.userprofile && SALSAH.userprofile.userData && SALSAH.userprofile.userData.lang) ? SALSAH.userprofile.userData.lang : 'en' ,
                     allowedContent: filter,
                     pasteFilter: filter,
 					entities: false, // do not use entities (e.g. for Umlaut)
@@ -165,7 +165,8 @@
 							
 						}
 					},
-					toolbar: [ ['Source', 'Bold', 'Italic', 'Underline', 'Strike', 'Subscript', 'Superscript', '-','RemoveFormat', 'Link', 'Unlink'] ] // configuration for toolbar buttons, must conform to `STANDARD_MAPPING`
+					toolbar: [ ['Bold', 'Italic', 'Underline', 'Strike', 'Subscript', 'Superscript', '-','RemoveFormat', 'Link', 'Unlink'] ], // configuration for toolbar buttons, must conform to `STANDARD_MAPPING`
+					removeButtons: ''
 				};
 
 				// init editor (textarea will be replaced by an iframe)
@@ -188,6 +189,9 @@
 
 			// return false if there is no content
 			if (htmlstr.length == 0) return false;
+
+			// replace non breakable spaces by
+			htmlstr = htmlstr.replace(/&nbsp;/g, String.fromCharCode(160));
 
             // return required params for xml
 			return {

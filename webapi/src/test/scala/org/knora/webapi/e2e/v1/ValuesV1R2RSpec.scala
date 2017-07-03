@@ -32,6 +32,7 @@ import org.knora.webapi.routing.v1.ValuesRouteV1
 import org.knora.webapi.store._
 import org.knora.webapi.util.{AkkaHttpUtils, MutableTestIri}
 import org.knora.webapi.{IRI, LiveActorMaker, R2RSpec, SharedAdminTestData}
+import org.knora.webapi.messages.v1.responder.valuemessages.ApiValueV1JsonProtocol._
 import spray.json._
 
 import scala.concurrent.Await
@@ -72,6 +73,8 @@ class ValuesV1R2RSpec extends R2RSpec {
     private val anythingUser = SharedAdminTestData.anythingUser1
     private val anythingUserEmail = anythingUser.userData.email.get
     private val testPass = "test"
+
+    private val mappingIri = "http://data.knora.org/projects/standoff/mappings/StandardMapping"
 
     "Load test data" in {
         Await.result(storeManager ? ResetTriplestoreContent(rdfDataObjects), 300.seconds)
@@ -153,36 +156,59 @@ class ValuesV1R2RSpec extends R2RSpec {
         }
 
         "add a text value containing a standoff reference to another resource" in {
+            val xmlStr =
+                """<?xml version="1.0" encoding="UTF-8"?>
+                    |<text>
+                    |   This text links to another <a class="salsah-link" href="http://data.knora.org/another-thing">resource</a>.
+                    |</text>
+                """.stripMargin
+
+
             val params =
-                """
+                s"""
                   |{
                   |    "res_id": "http://data.knora.org/a-thing",
                   |    "prop": "http://www.knora.org/ontology/anything#hasText",
-                  |    "richtext_value": {"utf8str":"This comment refers to another resource","textattr":"{\"_link\":[{\"start\":31,\"end\":39,\"resid\":\"http://data.knora.org/another-thing\",\"href\":\"http://data.knora.org/another-thing\"}]}","resource_reference":["http://data.knora.org/another-thing"]}
+                  |    "richtext_value": {"xml": ${xmlStr.toJson.compactPrint}, "mapping_id": "$mappingIri"}
                   |}
                 """.stripMargin
 
             Post("/v1/values", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, testPass)) ~> valuesPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)
                 val responseJson: Map[String, JsValue] = responseAs[String].parseJson.asJsObject.fields
+
+                // check for standoff link in value creation response
+                assert(responseJson("value").asInstanceOf[JsObject].fields("xml").toString.contains("http://data.knora.org/another-thing"), "standoff link target is not contained in value creation response")
+
                 val valueIri: IRI = responseJson("id").asInstanceOf[JsString].value
                 textValueIri.set(valueIri)
             }
         }
 
         "change a text value containing a standoff reference to another resource" in {
+            val xmlStr =
+                """<?xml version="1.0" encoding="UTF-8"?>
+                  |<text>
+                  |   This new version of the text links to another <a class="salsah-link" href="http://data.knora.org/a-thing-with-text-values">resource</a>.
+                  |</text>
+                """.stripMargin
+
             val params =
-                """
+                s"""
                   |{
                   |    "res_id": "http://data.knora.org/a-thing",
                   |    "prop": "http://www.knora.org/ontology/anything#hasText",
-                  |    "richtext_value": {"utf8str":"This remark refers to another resource","textattr":"{\"_link\":[{\"start\":30,\"end\":38,\"resid\":\"http://data.knora.org/another-thing\",\"href\":\"http://data.knora.org/another-thing\"}]}","resource_reference":["http://data.knora.org/another-thing"]}
+                  |    "richtext_value": {"xml": ${xmlStr.toJson.compactPrint}, "mapping_id": "$mappingIri"}
                   |}
                 """.stripMargin
 
             Put(s"/v1/values/${URLEncoder.encode(textValueIri.get, "UTF-8")}", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, testPass)) ~> valuesPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)
                 val responseJson: Map[String, JsValue] = responseAs[String].parseJson.asJsObject.fields
+
+                // check for standoff link in value creation response
+                assert(responseJson("value").asInstanceOf[JsObject].fields("xml").toString.contains("http://data.knora.org/a-thing-with-text-values"), "standoff link target is not contained in value creation response")
+
                 val valueIri: IRI = responseJson("id").asInstanceOf[JsString].value
                 textValueIri.set(valueIri)
             }
@@ -236,12 +262,12 @@ class ValuesV1R2RSpec extends R2RSpec {
         "add a link value with a comment to a resource" in {
             val params =
                 s"""
-                  |{
-                  |    "res_id": "http://data.knora.org/a-thing",
-                  |    "prop": "http://www.knora.org/ontology/anything#hasOtherThing",
-                  |    "link_value": "http://data.knora.org/another-thing",
-                  |    "comment":"$boringComment"
-                  |}
+                   |{
+                   |    "res_id": "http://data.knora.org/a-thing",
+                   |    "prop": "http://www.knora.org/ontology/anything#hasOtherThing",
+                   |    "link_value": "http://data.knora.org/another-thing",
+                   |    "comment":"$boringComment"
+                   |}
                 """.stripMargin
 
             Post("/v1/values", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, testPass)) ~> valuesPath ~> check {

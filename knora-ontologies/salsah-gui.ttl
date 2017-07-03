@@ -180,7 +180,8 @@
                     owl:NamedIndividual ;
            
            :guiAttributeDefinition "numprops=numeric" ,
-                                   "resource=api:resources" .
+                                   "resource=api:resources",
+				                   "size=numeric" .
 
 
 

@@ -22,18 +22,15 @@ Knora is [free software](http://www.gnu.org/philosophy/free-sw.en.html), release
 
 ## Status
 
-### Alpha stage
+### Beta stage
 
 * The OWL ontologies
 * API operations for querying and updating data
 * API operations dealing with binary files and Sipi
 * The testing framework, which includes many tests
-* Documentation
-
-### Currently being implemented
-
 * Integration of the SALSAH GUI
 * API operations for administering Knora
+* Documentation
 
 ### Planned
 
@@ -97,11 +94,35 @@ Make sure you've started Fuseki as shown above. Then at the SBT prompt:
 > fuseki:test
 ```
 
-## What you can do
+## How to Contribute
 
-* Help with testing (please contact us first).
-* Projects currently using the earlier SALSAH server and GUI can convert their data to RDF (contact us about how to do this). Soon they will be able to switch to Knora for better performance, greater reliability, and a storage system that is suitable for long-term accessibility of data.
-* New projects can begin designing OWL ontologies for their data based on Knora's ontologies, in preparation for entering data into Knora.
+You can help by testing Knora with your data, making bug reports, improving the documentation, and adding features that you need.
+
+First, open an [issue](https://github.com/dhlab-basel/Knora/issues) to describe your problem or idea. We may ask you to submit a [pull request](https://help.github.com/articles/about-pull-requests/) implementing the desired functionality.
+
+### Coding conventions
+
+Use `camelCase` for names of classes, variables, and functions. Make names descriptive, and don't worry if they're long.
+
+Format your code consistently. We [IntelliJ IDEA](https://www.jetbrains.com/idea/) to format code, with 4 spaces indentation. Use whitespace to make your code easier to read. Add lots of implementation comments describing what your code is doing, how it works, and why it works that way.
+
+### Tests
+
+We write automated tests using [ScalaTest](http://www.scalatest.org/). You can run them from the [SBT](http://www.scala-sbt.org/) console.
+
+There are three sets of automated tests:
+
+* Unit tests, route-to-route tests, and end-to-end tests are under `webapi/src/test`. To run these, type `graphdb:test` or `fuseki:test` (depending on which triplestore you're using) at the SBT console in the `webapi` project. To run a single test, use `graphdb:test-only *NameOfTestSpec`.
+* Integration tests, which can involve [Sipi](https://github.com/dhlab-basel/Sipi), are under `src/it`. To run these, first start Sipi, then type `it:test` at the SBT console in the `webapi` project.
+* Browser interaction tests are under `salsah/src/test`, and are written using [Selenium](http://www.seleniumhq.org/). To run these, you will need to unpack the correct [ChromeDriver](https://sites.google.com/a/chromium.org/chromedriver/) for your platform found under `salsah/lib/chromedriver` and put it in the same folder. Then start Sipi and the Knora API server, and type `test` at the SBT console in the `salsah` project.
+
+Whenever you add a new feature or fix a bug, you should add one or more tests for the change you made.
+
+### Documentation
+
+A pull request should include tests and documentation for the changes that were made. Design and user documentation go under `docs` and are written in [reStructuredText](http://docutils.sourceforge.net/rst.html) format using the [Sphinx](http://www.sphinx-doc.org/en/stable/) documentation generator.
+
+
 
 ## Contact information
 

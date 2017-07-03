@@ -8,7 +8,7 @@
 @prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
 @prefix salsah-gui: <http://www.knora.org/ontology/salsah-gui#> .
 @prefix standoff: <http://www.knora.org/ontology/standoff#> .
-@base <http://www.knora.org/ontology/beol> .
+@base <http://www.knora.org/ontology/beol#> .
 
 @prefix : <http://www.knora.org/ontology/beol#> .
 

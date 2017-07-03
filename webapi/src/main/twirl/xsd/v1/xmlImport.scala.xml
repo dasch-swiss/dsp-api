@@ -1,0 +1,261 @@
+@*
+ * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
+ * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
+ *
+ * This file is part of Knora.
+ *
+ * Knora is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Knora is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public
+ * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ *@
+
+@import org.knora.webapi._
+@import org.knora.webapi.messages.v1.responder.ontologymessages._
+@import org.knora.webapi.util.InputValidation.XmlImportNamespaceInfoV1
+
+@**
+ * Generates an XML schema based on ontology definitions.
+ *
+ * @param targetNamespaceInfo information about the target XML namespace of the schema.
+ * @param importedNamespaces information about other namespaces to be imported, including the standard Knora XML import V1 namespace.
+ * @param knoraXmlImportNamespacePrefixLabel the prefix label to be used for the standard Knora XML import V1 namespace.
+ * @param information about the resource classes defined in the internal ontology.
+ * @param information about the properties defined in the internal ontology.
+ * @param getNamespacePrefixLabel a function that takes an internal ontology entity IRI and returns the corresponding XML namespace prefix label.
+ * @param getEntityName a function that takes an internal ontology entity IRI and returns the corresponding XML element label.
+ *@
+@(targetNamespaceInfo: XmlImportNamespaceInfoV1,
+  importedNamespaces: Seq[XmlImportNamespaceInfoV1],
+  knoraXmlImportNamespacePrefixLabel: String,
+  resourceEntityInfoMap: Map[IRI, ResourceEntityInfoV1],
+  propertyEntityInfoMap: Map[IRI, PropertyEntityInfoV1],
+  getNamespacePrefixLabel: IRI => String,
+  getEntityName: IRI => String)
+
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+ * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
+ * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
+ *
+ * This file is part of Knora.
+ *
+ * Knora is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Knora is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public
+ * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+-->
+<xs:schema elementFormDefault="qualified" targetNamespace="@{targetNamespaceInfo.namespace}"
+           xmlns="@{targetNamespaceInfo.namespace}" xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           @for(namespaceInfo <- importedNamespaces) {
+               xmlns:@{namespaceInfo.prefixLabel}="@{namespaceInfo.namespace}"
+           }
+           xmlns:vc="http://www.w3.org/2007/XMLSchema-versioning" vc:minVersion="1.0">
+    @for(namespaceInfo <- importedNamespaces) {
+        <xs:import namespace="@{namespaceInfo.namespace}" schemaLocation="@{namespaceInfo.prefixLabel}.xsd"/>
+    }
+
+    @for((resourceClassIri, resourceClassInfo) <- resourceEntityInfoMap.toVector.sortBy(_._1)) {
+
+        @defining(getEntityName(resourceClassIri)) { resourceClassName =>
+
+            <xs:element name="@resourceClassName">
+                <xs:complexType>
+                    <xs:complexContent>
+                        <xs:extension base="@{knoraXmlImportNamespacePrefixLabel}:resourceType">
+                            <xs:sequence>
+                                <xs:element ref="@{knoraXmlImportNamespacePrefixLabel}:label" minOccurs="1" maxOccurs="1"/>
+
+                                @if(resourceClassInfo.fileValueProperties.nonEmpty) {
+                                    <xs:element ref="@{knoraXmlImportNamespacePrefixLabel}:file" minOccurs="1" maxOccurs="1"/>
+                                }
+
+                                @for((propertyIri, cardinality) <- resourceClassInfo.cardinalities.toVector.sortBy(_._1)) {
+
+                                    @defining(propertyEntityInfoMap(propertyIri)) { propertyInfo =>
+
+                                        @if(!(propertyIri == OntologyConstants.KnoraBase.HasStandoffLinkTo || propertyInfo.isLinkValueProp || propertyInfo.isFileValueProp)) {
+
+                                            <xs:element
+
+                                                @defining(getNamespacePrefixLabel(propertyIri)) { propertyNamespacePrefixLabel =>
+
+                                                    @if(propertyNamespacePrefixLabel == targetNamespaceInfo.prefixLabel) {
+
+                                                        name="@{getEntityName(propertyIri)}"
+
+                                                    } else {
+
+                                                        name="@{propertyNamespacePrefixLabel}__@{getEntityName(propertyIri)}"
+                                                    }
+
+                                                }
+
+                                                @cardinality match {
+
+                                                    case Cardinality.MayHaveOne => {
+
+                                                        minOccurs="0" maxOccurs="1"
+                    
+                                                    }
+
+                                                    case Cardinality.MayHaveMany => {
+
+                                                        minOccurs="0" maxOccurs="unbounded"
+
+                                                    }
+
+                                                    case Cardinality.MustHaveOne => {
+
+                                                        minOccurs="1" maxOccurs="1"
+
+                                                    }
+
+                                                    case Cardinality.MustHaveSome => {
+
+                                                        minOccurs="1" maxOccurs="unbounded"
+
+                                                    }
+                                                }
+
+                                                @defining(propertyInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint).getOrElse(throw InconsistentTriplestoreDataException(s"Property $propertyIri has no knora-base:objectClassConstraint"))) { propertyObjectClassConstraint =>
+
+                                                    @if(propertyInfo.isLinkProp) {
+
+                                                            @defining(getNamespacePrefixLabel(propertyObjectClassConstraint)) { targetResourceClassNamespacePrefixLabel =>
+
+                                                                @if(targetResourceClassNamespacePrefixLabel == targetNamespaceInfo.prefixLabel) {
+
+                                                                    type="@{getEntityName(propertyObjectClassConstraint)}_linkValueType"
+
+                                                                } else {
+                                                                
+                                                                    type="@{targetResourceClassNamespacePrefixLabel}:@{getEntityName(propertyObjectClassConstraint)}_linkValueType"
+
+                                                                }
+
+                                                            }
+
+                                                    } else {
+
+                                                        @propertyObjectClassConstraint match {
+
+                                                            case OntologyConstants.KnoraBase.TextValue => {
+
+                                                                type="@{knoraXmlImportNamespacePrefixLabel}:richtextValueType"
+
+                                                            }
+
+                                                            case OntologyConstants.KnoraBase.IntValue => {
+
+                                                                type="@{knoraXmlImportNamespacePrefixLabel}:intValueType"
+
+                                                            }
+
+                                                            case OntologyConstants.KnoraBase.BooleanValue => {
+
+                                                                type="@{knoraXmlImportNamespacePrefixLabel}:booleanValueType"
+
+                                                            }
+
+                                                            case OntologyConstants.KnoraBase.UriValue => {
+
+                                                                type="@{knoraXmlImportNamespacePrefixLabel}:uriValueType"
+
+                                                            }
+
+                                                            case OntologyConstants.KnoraBase.DecimalValue => {
+
+                                                                type="@{knoraXmlImportNamespacePrefixLabel}:decimalValueType"
+
+                                                            }
+
+                                                            case OntologyConstants.KnoraBase.DateValue => {
+
+                                                                type="@{knoraXmlImportNamespacePrefixLabel}:dateValueType"
+
+                                                            }
+
+                                                            case OntologyConstants.KnoraBase.ColorValue => {
+
+                                                                type="@{knoraXmlImportNamespacePrefixLabel}:colorValueType"
+
+                                                            }
+
+                                                            case OntologyConstants.KnoraBase.GeomValue => {
+
+                                                                type="@{knoraXmlImportNamespacePrefixLabel}:geomValueType"
+
+                                                            }
+
+                                                            case OntologyConstants.KnoraBase.ListValue => {
+
+                                                                type="@{knoraXmlImportNamespacePrefixLabel}:hlistValueType"
+
+                                                            }
+
+                                                            case OntologyConstants.KnoraBase.IntervalValue => {
+
+                                                                type="@{knoraXmlImportNamespacePrefixLabel}:intervalValueType"
+
+                                                            }
+
+                                                            case OntologyConstants.KnoraBase.GeonameValue => {
+
+                                                                type="@{knoraXmlImportNamespacePrefixLabel}:geonameValueType"
+
+                                                            }
+
+                                                            case other => {
+
+                                                                @{throw SparqlGenerationException(s"Value type $other is not supported in XML import"); ()}
+
+                                                            }
+
+                                                        }
+
+                                                    }
+
+                                                }
+
+                                            />
+
+                                        }
+
+                                    }
+
+                                }
+
+                            </xs:sequence>
+                        </xs:extension>
+                    </xs:complexContent>
+                </xs:complexType>
+            </xs:element>
+
+            <xs:complexType name="@{resourceClassName}_linkValueType">
+                <xs:sequence>
+                    <xs:element name="@resourceClassName" type="@{knoraXmlImportNamespacePrefixLabel}:linkValueType"/>
+                </xs:sequence>
+            </xs:complexType>
+
+        }
+
+    }
+    
+</xs:schema>
