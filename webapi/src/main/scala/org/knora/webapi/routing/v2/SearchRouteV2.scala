@@ -124,9 +124,11 @@ object SearchRouteV2 extends Authenticator {
                           |    ?letter a knora-api:Resource .
                           |    ?letter a beol:letter .
                           |
-                          |    ?letter beol:title "1707-05-18_2_Hermann_Jacob-Scheuchzer_Johann_Jakob" .
+                          |    ?letter beol:title ?title .
                           |    beol:title knora-api:objectType xsd:string .
                           |
+                          |    ?title a xsd:string .
+                          |    FILTER(?title = "1707-05-18_2_Hermann_Jacob-Scheuchzer_Johann_Jakob")
                           |
                           |    # Newton,  Isaac 1643-1727
                           |    ?letter beol:mentionsPerson <http://rdfh.ch/beol/NUkE4PxyT1uEm3K9db63wQ> .
@@ -175,7 +177,7 @@ object SearchRouteV2 extends Authenticator {
                           |}
                         """.stripMargin
 
-                    val constructQuery = SearchParserV2.parseSearchQuery(sparql_tmp3)
+                    val constructQuery = SearchParserV2.parseSearchQuery(sparql_tmp2)
 
                     val requestMessage = ExtendedSearchGetRequestV2(constructQuery = constructQuery, userProfile = userProfile)
 

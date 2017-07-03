@@ -52,10 +52,10 @@ case class FulltextSearchGetRequestV2(searchValue: String,
 case class ExtendedSearchGetRequestV2(constructQuery: SimpleConstructQuery,
                                       userProfile: UserProfileV1) extends SearchResponderRequestV2
 
-// TODO: Do we need this wrapper?
+
 case class ExtendedSearchFilterPattern(expression: ExtendedSearchFilterExpression) extends ExtendedSearchQueryPattern {
     def rdfValue: String = {
-        expression.rdfValue
+        s"FILTER(${expression.rdfValue})"
     }
 }
 
@@ -95,7 +95,7 @@ case class ExtendedSearchCompareExpression(leftArg: ExtendedSearchFilterExpressi
   */
 case class ExtendedSearchAndExpression(leftArg: ExtendedSearchFilterExpression, rightArg: ExtendedSearchFilterExpression) extends ExtendedSearchFilterExpression {
 
-    def rdfValue = s"FILTER(${leftArg.rdfValue} && ${rightArg.rdfValue})"
+    def rdfValue = s"${leftArg.rdfValue} && ${rightArg.rdfValue}"
 }
 
 /**
@@ -106,7 +106,7 @@ case class ExtendedSearchAndExpression(leftArg: ExtendedSearchFilterExpression, 
   */
 case class ExtendedSearchOrExpression(leftArg: ExtendedSearchFilterExpression, rightArg: ExtendedSearchFilterExpression) extends ExtendedSearchFilterExpression {
 
-    def rdfValue = s"FILTER(${leftArg.rdfValue} || ${rightArg.rdfValue})"
+    def rdfValue = s"${leftArg.rdfValue} || ${rightArg.rdfValue}"
 }
 
 
