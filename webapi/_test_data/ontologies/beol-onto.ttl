@@ -46,7 +46,6 @@
            salsah-gui:guiAttribute "size=80" ,
                                    "maxlength=255" .
 
-
 ### ###########################################
 ### beol:creationDate
 
@@ -166,6 +165,24 @@
 
                      rdfs:subPropertyOf knora-base:hasLinkToValue .
 
+### ###########################################
+### beol:letterHasNumber
+
+:letterHasNumber rdf:type owl:ObjectProperty ;
+
+       rdfs:label "Briefnummer"@de ,
+                  "Letter Number"@en ;
+
+       rdfs:comment """Number of the letter"""@de ;
+
+       knora-base:subjectClassConstraint :letter ;
+
+       knora-base:objectClassConstraint knora-base:TextValue ;
+
+       salsah-gui:guiElement salsah-gui:SimpleText ;
+
+       salsah-gui:guiAttribute "size=80" ,
+                               "maxlength=255" .
 
 ### ###########################################
 ### beol:location
@@ -708,17 +725,22 @@
                           rdf:type owl:Restriction ;
                           owl:onProperty :hasRecipient ;
                           owl:minCardinality "0"^^xsd:nonNegativeInteger
-                        ] ,
+                        ],
                         [
                           rdf:type owl:Restriction ;
                           owl:onProperty :hasRecipientValue ;
                           owl:minCardinality "0"^^xsd:nonNegativeInteger
                         ],
                         [
+                           rdf:type owl:Restriction ;
+                           owl:onProperty :letterHasNumber ;
+                           owl:minCardinality "0"^^xsd:nonNegativeInteger
+                        ],
+                        [
                           rdf:type owl:Restriction ;
                           owl:onProperty :mentionsPerson ;
                           owl:minCardinality "0"^^xsd:nonNegativeInteger
-                        ] ,
+                        ],
                         [
                           rdf:type owl:Restriction ;
                           owl:onProperty :mentionsPersonValue ;
