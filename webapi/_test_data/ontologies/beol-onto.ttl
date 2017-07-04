@@ -46,7 +46,6 @@
            salsah-gui:guiAttribute "size=80" ,
                                    "maxlength=255" .
 
-
 ### ###########################################
 ### beol:creationDate
 
@@ -166,6 +165,24 @@
 
                      rdfs:subPropertyOf knora-base:hasLinkToValue .
 
+### ###########################################
+### beol:letterHasNumber
+
+:letterHasNumber rdf:type owl:ObjectProperty ;
+
+       rdfs:label "Briefnummer"@de ,
+                  "Letter Number"@en ;
+
+       rdfs:comment """Number of the letter"""@de ;
+
+       knora-base:subjectClassConstraint :letter ;
+
+       knora-base:objectClassConstraint knora-base:TextValue ;
+
+       salsah-gui:guiElement salsah-gui:SimpleText ;
+
+       salsah-gui:guiAttribute "size=80" ,
+                               "maxlength=255" .
 
 ### ###########################################
 ### beol:location
@@ -425,6 +442,42 @@
                    rdfs:subPropertyOf knora-base:hasValue .
 
     ### ###########################################
+    ### beol:hasTitle
+
+    :hasTitle rdf:type owl:ObjectProperty ;
+
+                    rdfs:label "Titel"@de ,
+                             "Title"@en ;
+
+                    rdfs:comment """Represents title of person."""@en ;
+
+                    knora-base:objectClassConstraint knora-base:TextValue ;
+
+                    salsah-gui:guiElement salsah-gui:SimpleText ;
+
+                    knora-base:subjectClassConstraint :person ;
+
+                    rdfs:subPropertyOf knora-base:hasValue .
+
+    ### ###########################################
+    ### beol:hasAlternativeName
+
+    :hasAlternativeName rdf:type owl:ObjectProperty ;
+
+                   rdfs:label "Alternative-Name"@de ,
+                            "alternative name"@en ;
+
+                   rdfs:comment """Represents alternative name."""@en ;
+
+                   knora-base:objectClassConstraint knora-base:TextValue ;
+
+                   salsah-gui:guiElement salsah-gui:SimpleText ;
+
+                   knora-base:subjectClassConstraint :person ;
+
+                   rdfs:subPropertyOf knora-base:hasValue .
+
+    ### ###########################################
     ### beol:hasIAFIdentifier
 
     :hasIAFIdentifier rdf:type owl:ObjectProperty ;
@@ -483,7 +536,134 @@
 
                   rdfs:subPropertyOf knora-base:hasValue .
 
+    ### ###########################################
+    ### beol:hasFloruitDate
 
+    :hasFloruitDate rdf:type owl:ObjectProperty ;
+
+                  rdfs:label "Blühtedataum"@de ,
+                             "Floruit Date"@en ;
+
+                  rdfs:comment """Repräsentiert ein Blühtedataum."""@de,
+                               """Represents a floruit date."""@en ;
+
+                  knora-base:objectClassConstraint knora-base:DateValue ;
+
+                  salsah-gui:guiElement salsah-gui:Date ;
+
+                  knora-base:subjectClassConstraint :person ;
+
+                  rdfs:subPropertyOf knora-base:hasValue .
+
+    ### ###########################################
+    ### beol:hasMarriageDate
+
+    :hasMarriageDate rdf:type owl:ObjectProperty ;
+
+                  rdfs:label "Hochzeitdataum"@de ,
+                             "Marriage Date"@en ;
+
+                  rdfs:comment """Repräsentiert ein Hochzeitdatum."""@de,
+                               """Represents a marriage date."""@en ;
+
+                  knora-base:objectClassConstraint knora-base:DateValue ;
+
+                  salsah-gui:guiElement salsah-gui:Date ;
+
+                  knora-base:subjectClassConstraint :person ;
+
+                  rdfs:subPropertyOf knora-base:hasValue .
+
+    ### ###########################################
+    ### beol:hasBirthPlace
+
+    :hasBirthPlace rdf:type owl:ObjectProperty ;
+
+                   rdfs:label "Geburtsort"@de ,
+                             "Birth Place"@en ;
+
+                   rdfs:comment """Represents a birth place."""@en ;
+
+                   knora-base:objectClassConstraint knora-base:TextValue ;
+
+                   salsah-gui:guiElement salsah-gui:SimpleText ;
+
+                   knora-base:subjectClassConstraint :person ;
+
+                   rdfs:subPropertyOf knora-base:hasValue .
+
+    ### ###########################################
+    ### beol:hasDeathPlace
+
+    :hasDeathPlace rdf:type owl:ObjectProperty ;
+
+                   rdfs:label "Todesort"@de ,
+                             "Place of death"@en ;
+
+                   rdfs:comment """Represents a place of death."""@en ;
+
+                   knora-base:objectClassConstraint knora-base:TextValue ;
+
+                   salsah-gui:guiElement salsah-gui:SimpleText ;
+
+                   knora-base:subjectClassConstraint :person ;
+
+                   rdfs:subPropertyOf knora-base:hasValue .
+
+   ### ###########################################
+   ### beol:hasFloruitPlace
+
+   :hasFloruitPlace rdf:type owl:ObjectProperty ;
+
+                  rdfs:label "Blühteort"@de ,
+                            "Place of Floruit"@en ;
+
+                  rdfs:comment """Represents a place a person is seen."""@en ;
+
+                  knora-base:objectClassConstraint knora-base:TextValue ;
+
+                  salsah-gui:guiElement salsah-gui:SimpleText ;
+
+                  knora-base:subjectClassConstraint :person ;
+
+                  rdfs:subPropertyOf knora-base:hasValue .
+
+
+   ### ###########################################
+   ### beol:hasMarriagePlace
+
+   :hasMarriagePlace rdf:type owl:ObjectProperty ;
+
+                  rdfs:label "Trauugsort"@de ,
+                            "Place of Marriage"@en ;
+
+                  rdfs:comment """Represents a place a person is married in."""@en ;
+
+                  knora-base:objectClassConstraint knora-base:TextValue ;
+
+                  salsah-gui:guiElement salsah-gui:SimpleText ;
+
+                  knora-base:subjectClassConstraint :person ;
+
+                  rdfs:subPropertyOf knora-base:hasValue .
+
+   ### ###########################################
+   ### beol:hasDictionaryEntries
+
+   :hasDictionaryEntries rdf:type owl:ObjectProperty ;
+
+                 rdfs:label "Indexeinträge"@de ,
+                           "Dictionary Entries"@en ;
+
+                 rdfs:comment """Represents entries in dictionaries about the person."""@en ;
+
+                 knora-base:objectClassConstraint knora-base:TextValue ;
+
+                 salsah-gui:guiElement salsah-gui:SimpleText ;
+
+                 knora-base:subjectClassConstraint :person ;
+
+                 rdfs:subPropertyOf knora-base:hasValue .
 
     ##########################################################
     #
@@ -563,17 +743,22 @@
                           rdf:type owl:Restriction ;
                           owl:onProperty :hasRecipient ;
                           owl:minCardinality "0"^^xsd:nonNegativeInteger
-                        ] ,
+                        ],
                         [
                           rdf:type owl:Restriction ;
                           owl:onProperty :hasRecipientValue ;
                           owl:minCardinality "0"^^xsd:nonNegativeInteger
                         ],
                         [
+                           rdf:type owl:Restriction ;
+                           owl:onProperty :letterHasNumber ;
+                           owl:minCardinality "0"^^xsd:nonNegativeInteger
+                        ],
+                        [
                           rdf:type owl:Restriction ;
                           owl:onProperty :mentionsPerson ;
                           owl:minCardinality "0"^^xsd:nonNegativeInteger
-                        ] ,
+                        ],
                         [
                           rdf:type owl:Restriction ;
                           owl:onProperty :mentionsPersonValue ;
@@ -635,13 +820,21 @@
 :person rdf:type owl:Class ;
 
     rdfs:subClassOf knora-base:Resource, foaf:Person ,
-    					[ rdf:type owl:Restriction ;
+    				[ rdf:type owl:Restriction ;
                       owl:onProperty :hasFamilyName ;
                       owl:maxCardinality "1"^^xsd:nonNegativeInteger
                     ],
                     [ rdf:type owl:Restriction ;
                       owl:onProperty :hasGivenName ;
                       owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                    ],
+                    [ rdf:type owl:Restriction ;
+                      owl:onProperty :hasTitle ;
+                      owl:minCardinality "0"^^xsd:nonNegativeInteger
+                    ],
+                    [ rdf:type owl:Restriction ;
+                      owl:onProperty :hasAlternativeName ;
+                      owl:minCardinality "0"^^xsd:nonNegativeInteger
                     ],
                     [ rdf:type owl:Restriction ;
                       owl:onProperty :hasIAFIdentifier ;
@@ -656,11 +849,39 @@
                       owl:maxCardinality "1"^^xsd:nonNegativeInteger
                     ],
                     [ rdf:type owl:Restriction ;
+                      owl:onProperty :hasFloruitDate;
+                      owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                    ],
+                    [ rdf:type owl:Restriction ;
+                      owl:onProperty :hasMarriageDate;
+                      owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                    ],
+                    [ rdf:type owl:Restriction ;
+                      owl:onProperty :hasBirthPlace ;
+                      owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                    ],
+                    [ rdf:type owl:Restriction ;
+                      owl:onProperty :hasDeathPlace ;
+                      owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                    ],
+                    [ rdf:type owl:Restriction ;
+                      owl:onProperty :hasFloruitPlace ;
+                      owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                    ],
+                    [ rdf:type owl:Restriction ;
+                      owl:onProperty :hasMarriagePlace ;
+                      owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                    ],
+                    [ rdf:type owl:Restriction ;
                       owl:onProperty :hasSonValue ;
                       owl:minCardinality "0"^^xsd:nonNegativeInteger
                     ],
                     [ rdf:type owl:Restriction ;
                       owl:onProperty :hasSon ;
+                      owl:minCardinality "0"^^xsd:nonNegativeInteger
+                    ] ,
+                    [ rdf:type owl:Restriction ;
+                      owl:onProperty :hasDictionaryEntries ;
                       owl:minCardinality "0"^^xsd:nonNegativeInteger
                     ] ,
                     [ rdf:type owl:Restriction ;

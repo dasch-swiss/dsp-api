@@ -54,20 +54,21 @@ object InputValidation {
     val PrecisionSeparator: String = "-"
 
     // The expected format of a Knora date.
-    // Calendar:YYYY[-MM[-DD]][:YYYY[-MM[-DD]]]
+    // Calendar:YYYY[-MM[-DD]][ EE][:YYYY[-MM[-DD]][ EE]]
+    // EE being the era: one of BC or AD
     private val KnoraDateRegex: Regex = ("""^(GREGORIAN|JULIAN)""" +
         CalendarSeparator + // calendar name
         """\d{1,4}(""" + // year
         PrecisionSeparator +
         """\d{1,2}(""" + // month
         PrecisionSeparator +
-        """\d{1,2})?)?(""" + // day
+        """\d{1,2})?)?( BC| AD)?(""" + // day
         CalendarSeparator + // separator if a period is given
         """\d{1,4}(""" + // year 2
         PrecisionSeparator +
         """\d{1,2}(""" + // month 2
         PrecisionSeparator +
-        """\d{1,2})?)?)?$""").r // day 2
+        """\d{1,2})?)?( BC| AD)?)?$""").r // day 2
 
     // The expected format of a datetime.
     private val dateTimeFormat = "yyyy-MM-dd'T'HH:mm:ss"
@@ -333,10 +334,6 @@ object InputValidation {
       * @return the same string.
       */
     def toDate(s: String, errorFun: () => Nothing): String = {
-        // TODO: how to deal with dates BC -> ERA
-
-        // TODO: import calendars instead of hardcoding them
-
         // if the pattern doesn't match (=> None), the date string is formally invalid
         // Please note that this is a mere formal validation,
         // the actual validity check is done in `DateUtilV1.dateString2DateRange`
