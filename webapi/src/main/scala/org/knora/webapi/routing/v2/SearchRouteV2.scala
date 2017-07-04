@@ -62,122 +62,13 @@ object SearchRouteV2 extends Authenticator {
                     )
                 }
             }
-        } ~ path("v2" / "searchextended" / Segment) { sparql =>
+        } ~ path("v2" / "searchextended" / Segment) { sparql => // Segment is a URL encoded string representing a Sparql query
             get {
 
                 requestContext => {
                     val userProfile = getUserProfileV1(requestContext)
 
-                    // TODO: process Sparql provided by the user
-
-                    // search for all the letters exchanged between two persons
-                    val sparql_tmp =
-                        """
-                          |PREFIX beol: <http://api.knora.org/ontology/beol/simple/v2#>
-                          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-                          |
-                          |CONSTRUCT {
-                          |    ?letter knora-api:isMainResource true .
-                          |
-                          |    ?letter ?linkingProp1  <http://rdfh.ch/beol/oU8fMNDJQ9SGblfBl5JamA> .
-                          |
-                          |    ?letter ?linkingProp2  <http://rdfh.ch/beol/6edJwtTSR8yjAWnYmt6AtA> .
-                          |
-                          |} WHERE {
-                          |    ?letter a knora-api:Resource .
-                          |    ?letter a beol:letter .
-                          |
-                          |    # Scheuchzer, Johann Jacob 1672-1733
-                          |    ?letter ?linkingProp1  <http://rdfh.ch/beol/oU8fMNDJQ9SGblfBl5JamA> .
-                          |    ?linkingProp1 knora-api:objectType knora-api:Resource .
-                          |    FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient )
-                          |
-                          |    <http://rdfh.ch/beol/oU8fMNDJQ9SGblfBl5JamA> a knora-api:Resource .
-                          |
-                          |    # Hermann, Jacob 1678-1733
-                          |    ?letter ?linkingProp2 <http://rdfh.ch/beol/6edJwtTSR8yjAWnYmt6AtA> .
-                          |    ?linkingProp2 knora-api:objectType knora-api:Resource .
-                          |
-                          |    FILTER(?linkingProp2 = beol:hasAuthor || ?linkingProp2 = beol:hasRecipient )
-                          |
-                          |    <http://rdfh.ch/beol/6edJwtTSR8yjAWnYmt6AtA> a knora-api:Resource .
-                          |}
-                        """.stripMargin
-
-
-                    // search for a letter that has the given title and mentions Isaac Newton
-                    var sparql_tmp2 =
-                        """
-                          |PREFIX beol: <http://api.knora.org/ontology/beol/simple/v2#>
-                          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-                          |
-                          |CONSTRUCT {
-                          |    ?letter knora-api:isMainResource true .
-                          |
-                          |    ?letter a beol:letter .
-                          |
-                          |    ?letter beol:title "1707-05-18_2_Hermann_Jacob-Scheuchzer_Johann_Jakob" .
-                          |
-                          |    ?letter beol:mentionsPerson <http://rdfh.ch/beol/NUkE4PxyT1uEm3K9db63wQ> .
-                          |
-                          |} WHERE {
-                          |    ?letter a knora-api:Resource .
-                          |    ?letter a beol:letter .
-                          |
-                          |    ?letter beol:title ?title .
-                          |    beol:title knora-api:objectType xsd:string .
-                          |
-                          |    ?title a xsd:string .
-                          |    FILTER(?title = "1707-05-18_2_Hermann_Jacob-Scheuchzer_Johann_Jakob")
-                          |
-                          |    # Newton,  Isaac 1643-1727
-                          |    ?letter beol:mentionsPerson <http://rdfh.ch/beol/NUkE4PxyT1uEm3K9db63wQ> .
-                          |    beol:mentionsPerson  knora-api:objectType knora-api:Resource .
-                          |
-                          |    <http://rdfh.ch/beol/NUkE4PxyT1uEm3K9db63wQ> a knora-api:Resource .
-                          |
-                          |}
-                        """.stripMargin
-
-                    // search for letters that link to another letter via standoff that is authored by a person with IAF id "120379260"
-                    var sparql_tmp3 =
-                        """
-                          |PREFIX beol: <http://api.knora.org/ontology/beol/simple/v2#>
-                          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-                          |
-                          |CONSTRUCT {
-                          |    ?letter knora-api:isMainResource true .
-                          |
-                          |    ?letter a beol:letter .
-                          |
-                          |    ?letter knora-api:hasStandoffLinkTo ?anotherLetter .
-                          |
-                          |    ?anotherLetter beol:hasAuthor ?author .
-                          |
-                          |    ?author beol:hasIAFIdentifier "120379260" .
-                          |} WHERE {
-                          |
-                          |    ?letter a beol:letter .
-                          |    ?letter a knora-api:Resource .
-                          |
-                          |    ?letter knora-api:hasStandoffLinkTo ?anotherLetter .
-                          |    knora-api:hasStandoffLinkTo knora-api:objectType knora-api:Resource .
-                          |    ?anotherLetter a knora-api:Resource .
-                          |
-                          |    ?anotherLetter beol:hasAuthor ?author .
-                          |    beol:hasAuthor knora-api:objectType knora-api:Resource .
-                          |
-                          |    # Scheuchzer, Johann 1684-1738
-                          |    ?author a beol:person .
-                          |    ?author a knora-api:Resource .
-                          |
-                          |    ?author beol:hasIAFIdentifier "120379260" .
-                          |    beol:hasIAFIdentifier knora-api:objectType xsd:string .
-                          |
-                          |}
-                        """.stripMargin
-
-                    val constructQuery = SearchParserV2.parseSearchQuery(sparql_tmp2)
+                    val constructQuery = SearchParserV2.parseSearchQuery(sparql)
 
                     val requestMessage = ExtendedSearchGetRequestV2(constructQuery = constructQuery, userProfile = userProfile)
 
@@ -189,7 +80,6 @@ object SearchRouteV2 extends Authenticator {
                         log
                     )
                 }
-
 
             }
 

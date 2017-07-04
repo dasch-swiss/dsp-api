@@ -230,9 +230,6 @@ class SearchResponderV2 extends Responder {
                     ), filterKeysProcessed = filterKeysProcessed)
                 case OntologyConstants.Xsd.String =>
 
-                    // TODO: check whether statementPattern.obj is a literal or a variable
-                    println()
-
                     statementPattern.obj match {
 
                         case stringLiteral: ExtendedSearchXsdLiteral =>
@@ -252,7 +249,6 @@ class SearchResponderV2 extends Responder {
                                 ExtendedSearchStatementPattern(subj = stringVar, pred = ExtendedSearchVar("stringValueObjProp" + index), obj = ExtendedSearchVar("stringValueObjVal" + index), true)
                             ), filterKeysProcessed = filterKeysProcessed)
 
-                            // TODO: handle FILTER statement
                         case _ => ConvertedStatements()
 
                     }
@@ -505,7 +501,7 @@ class SearchResponderV2 extends Responder {
             query = constructQuery
         ).toString())
 
-       _ = println(searchSparql)
+        //_ = println(searchSparql)
 
 
         searchResponse: SparqlConstructResponse <- (storeManager ? SparqlConstructRequest(searchSparql)).mapTo[SparqlConstructResponse]
