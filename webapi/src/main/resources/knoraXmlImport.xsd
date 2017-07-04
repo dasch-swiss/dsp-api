@@ -103,7 +103,7 @@
     <xs:simpleType name="dateType">
         <xs:restriction base="xs:string">
             <xs:pattern
-                value="(GREGORIAN|JULIAN):\d{1,4}(-\d{1,2}(-\d{1,2})?)?(:\d{1,4}(-\d{1,2}(-\d{1,2})?)?)?"
+                value="(GREGORIAN|JULIAN):\d{1,4}(-\d{1,2}(-\d{1,2})?)?( BC| AD)?(:\d{1,4}(-\d{1,2}(-\d{1,2})?)?( BC| AD)?)?"
             />
         </xs:restriction>
     </xs:simpleType>

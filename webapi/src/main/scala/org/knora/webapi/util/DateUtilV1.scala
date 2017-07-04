@@ -96,7 +96,21 @@ object DateUtilV1 {
         val daysInMonth = Calendar.DAY_OF_MONTH // will be used to determine the number of days in the given month
         // val monthsInYear = Calendar.MONTH // will be used to determine the number of months in the given year (generic for other calendars)
 
-        val dateSegments = dateString.split(InputValidation.PrecisionSeparator)
+        var era: Option[Int] = None
+
+        var date: String =dateString
+        if (dateString.contains(" ")) {
+
+            val dateWEra = dateString.split(" ")
+            date = dateWEra(0)
+            dateWEra(1) match {
+                case "BC" => era = Some(GregorianCalendar.BC)
+                case "AD" => era = Some(GregorianCalendar.AD)
+            }
+        }
+
+
+        val dateSegments = date.split(InputValidation.PrecisionSeparator)
 
         // Determine and handle precision of the given date.
         // When setting the date, set time to noon (12) as JDC would contain a fraction otherwise:
@@ -109,17 +123,20 @@ object DateUtilV1 {
         // call get method on calendar after setting the date, an `IllegalArgumentException` is thrown if the date is invalid
         // https://docs.oracle.com/javase/8/docs/api/java/util/Calendar.html#get-int-
 
+
         dateSegments.length match {
             case 1 => // year precision
 
                 try {
                     val intervalStart = new GregorianCalendar
+                    era.map(era => intervalStart.set(Calendar.ERA, era))
                     intervalStart.setLenient(false) // set leniency to false in order to check for invalid dates
                     intervalStart.setGregorianChange(changeDate)
                     intervalStart.set(dateSegments(0).toInt, 0, 1, 12, 0, 0) // January 1st of the given year. Attention: in java.util.Calendar, month count starts with 0
                     intervalStart.get(0) // call method `get` in order to format the date; if it is invalid an exception is thrown
 
                     val intervalEnd = new GregorianCalendar
+                    era.map(era => intervalEnd.set(Calendar.ERA, era))
                     intervalEnd.setLenient(false) // set leniency to false in order to check for invalid dates
                     intervalEnd.setGregorianChange(changeDate)
                     intervalEnd.set(dateSegments(0).toInt, 11, 31, 12, 0, 0) // December 31st of the given year. Attention: in java.util.Calendar, month count starts with 0
@@ -137,12 +154,14 @@ object DateUtilV1 {
 
                 try {
                     val intervalStart = new GregorianCalendar
+                    era.map(era => intervalStart.set(Calendar.ERA, era))
                     intervalStart.setLenient(false) // set leniency to false in order to check for invalid dates
                     intervalStart.setGregorianChange(changeDate)
                     intervalStart.set(dateSegments(0).toInt, dateSegments(1).toInt - 1, 1, 12, 0, 0) // Attention: in java.util.Calendar, month count starts with 0; first day of the given month in the given year
                     intervalStart.get(0) // call method `get` in order to format the date; if it is invalid an exception is thrown
 
                     val intervalEnd = new GregorianCalendar
+                    era.map(era => intervalEnd.set(Calendar.ERA, era))
                     intervalEnd.setLenient(false) // set leniency to false in order to check for invalid dates
                     intervalEnd.setGregorianChange(changeDate)
                     intervalEnd.set(dateSegments(0).toInt, dateSegments(1).toInt - 1, intervalStart.getActualMaximum(daysInMonth), 12, 0, 0) // Attention: in java.util.Calendar, month count starts with 0; last day of the given month in the given year
@@ -159,6 +178,7 @@ object DateUtilV1 {
 
                 try {
                     val exactDate = new GregorianCalendar
+                    era.map(era => exactDate.set(Calendar.ERA, era))
                     exactDate.setLenient(false) // set leniency to false in order to check for invalid dates
                     exactDate.setGregorianChange(changeDate)
                     exactDate.set(dateSegments(0).toInt, dateSegments(1).toInt - 1, dateSegments(2).toInt) // Attention: in java.util.Calendar, month count starts with 0
@@ -186,7 +206,8 @@ object DateUtilV1 {
     def julianDayNumber2DateString(julianDay: Int, calendarType: KnoraCalendarV1.Value, precision: KnoraPrecisionV1.Value): String = {
         val gregorianCalendar = convertJulianDayNumberToDate(julianDay, calendarType)
         val year = gregorianCalendar.get(Calendar.YEAR)
-        val month = gregorianCalendar.get(Calendar.MONTH) + 1 // Attention: in java.util.Calendar, month count starts with 0
+        val month = gregorianCalendar.get(Calendar.MONTH) + 1
+        // Attention: in java.util.Calendar, month count starts with 0
         val day = gregorianCalendar.get(Calendar.DAY_OF_MONTH)
 
         precision match {

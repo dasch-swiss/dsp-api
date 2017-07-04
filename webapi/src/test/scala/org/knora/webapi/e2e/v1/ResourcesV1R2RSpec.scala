@@ -1219,7 +1219,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    |        <biblio:publicationHasAuthor>
                    |            <beol:person knoraType="link_value" linkType="ref" target="holmes"/>
                    |        </biblio:publicationHasAuthor>
-                   |        <biblio:publicationHasDate knoraType="date_value">GREGORIAN:1976</biblio:publicationHasDate>
+                   |        <biblio:publicationHasDate knoraType="date_value">GREGORIAN:500 BC:400 BC</biblio:publicationHasDate>
                    |        <biblio:publicationHasTitle knoraType="richtext_value">Strings in the 16th and 17th Centuries</biblio:publicationHasTitle>
                    |        <biblio:publicationHasTitle knoraType="richtext_value">An alternate title</biblio:publicationHasTitle>
                    |        <biblio:startPage knoraType="richtext_value">48</biblio:startPage>
