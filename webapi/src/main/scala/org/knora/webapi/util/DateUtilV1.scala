@@ -106,6 +106,9 @@ object DateUtilV1 {
             dateWEra(1) match {
                 case "BC" => era = Some(GregorianCalendar.BC)
                 case "AD" => era = Some(GregorianCalendar.AD)
+                // java Gregorian calendar had just BC and AD as public fields
+                case "BCE" => era = Some(GregorianCalendar.BC)  //BCE = BC
+                case "CE" => era = Some(GregorianCalendar.AD)   //CE = AD
             }
         }
 

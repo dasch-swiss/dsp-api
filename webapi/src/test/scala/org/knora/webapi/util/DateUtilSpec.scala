@@ -63,6 +63,15 @@ class DateUtilSpec extends WordSpec with Matchers {
             val dateRange: DateRange = DateUtilV1.dateString2DateRange("50-02-28 AD", KnoraCalendarV1.GREGORIAN)
             dateRange.start.get(Calendar.ERA) should be(GregorianCalendar.AD)
         }
+        "convert an era date string with year precision to a Java GregorianCalendar BCE" in {
+            val dateRange: DateRange = DateUtilV1.dateString2DateRange("50-02-28 BCE", KnoraCalendarV1.GREGORIAN)
+            dateRange.start.get(Calendar.ERA) should be(GregorianCalendar.BC)
+        }
+
+        "convert an era date string with year precision to a Java GregorianCalendar CE" in {
+            val dateRange: DateRange = DateUtilV1.dateString2DateRange("50-02-28 CE", KnoraCalendarV1.GREGORIAN)
+            dateRange.start.get(Calendar.ERA) should be(GregorianCalendar.AD)
+        }
 
         "convert a date in YYYY-MM-DD format, in the Gregorian calendar, into a Julian day count, and back again" in {
             val benBirthdayDateValueV1 = DateValueV1(
