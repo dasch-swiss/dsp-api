@@ -55,14 +55,14 @@ export module projectFormats {
         logo?: string;
 
         /**
-         * The status of the project to be created (default = true).
+         * The status of the project to be created (active = true, inactive = false).
          */
-        status?: boolean;
+        status: boolean;
 
         /**
-         * The status of self-join of the project to be created (default = false).
+         * The status of self-join of the project to be created.
          */
-        selfjoin?: boolean;
+        selfjoin: boolean;
     }
 
 

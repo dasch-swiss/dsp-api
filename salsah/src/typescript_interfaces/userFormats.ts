@@ -54,19 +54,19 @@ export module userFormats {
         password: string;
 
         /**
-         * The status of the user to be created (active = true, inactive = false) (default = true).
+         * The status of the user to be created (active = true, inactive = false).
          */
-        status?: boolean;
+        status: boolean;
 
         /**
-         * The default language of the user to be created (default = "en").
+         * The default language of the user to be created (e.g., "en").
          */
-        lang?: string;
+        lang: string;
 
         /**
-         * The system admin membership (default = false).
+         * The system admin membership.
          */
-        systemAdmin?: boolean;
+        systemAdmin: boolean;
     }
 
     /**
@@ -84,21 +84,45 @@ export module userFormats {
      */
     export interface ChangeUserApiRequestV1 {
 
+        /**
+         * The new email address. Needs to be unique on the server.
+         */
         email?: string;
 
+        /**
+         * The new given name.
+         */
         givenName?: string;
 
+        /**
+         * The new family name.
+         */
         familyName?: string;
 
+        /**
+         * The new ISO 639-1 code of the new preferred language.
+         */
         lang?: string;
 
+        /**
+         * The old password.
+         */
         oldPassword?: string;
 
+        /**
+         * The new password.
+         */
         newPassword?: string;
 
-        newUserStatus?: boolean;
+        /**
+         * The new user status (active = true, inactive = false).
+         */
+        status?: boolean;
 
-        newSystemAdminMembershipStatus?:boolean;
+        /**
+         * The new system admin membership status.
+         */
+        systemAdmin?:boolean;
     }
 
     /**
@@ -195,41 +219,41 @@ export module userFormats {
         /**
          * User's email address
          */
-        email?: string;
+        email: string | null;
 
         /**
          * User's first name
          */
-        firstname?: string;
+        firstname: string | null;
 
         /**
          * User's last name
          */
-        lastname?: string;
+        lastname: string | null;
 
         /**
          * User's IRI
          */
-        user_id?: basicMessageComponents.KnoraIRI | null;
+        user_id: basicMessageComponents.KnoraIRI | null;
 
         /**
          * User's preferred language
          */
-        lang?: string;
+        lang: string | null;
 
         /**
          * True if the user is active.
          */
-        isActiveUser?: boolean;
+        status: boolean | null;
 
         /**
          * Session token is never exposed.
          */
-        token?: string;
+        token: string | null;
 
         /**
          * Password is never exposed.
          */
-        password?: string;
+        password: string | null;
     }
 }
