@@ -647,6 +647,24 @@
 
                   rdfs:subPropertyOf knora-base:hasValue .
 
+   ### ###########################################
+   ### beol:hasDictionaryEntries
+
+   :hasDictionaryEntries rdf:type owl:ObjectProperty ;
+
+                 rdfs:label "Indexeinträge"@de ,
+                           "Dictionary Entries"@en ;
+
+                 rdfs:comment """Represents entries in dictionaries about the person."""@en ;
+
+                 knora-base:objectClassConstraint knora-base:TextValue ;
+
+                 salsah-gui:guiElement salsah-gui:SimpleText ;
+
+                 knora-base:subjectClassConstraint :person ;
+
+                 rdfs:subPropertyOf knora-base:hasValue .
+
     ##########################################################
     #
     # RESOURCES
@@ -860,6 +878,10 @@
                     ],
                     [ rdf:type owl:Restriction ;
                       owl:onProperty :hasSon ;
+                      owl:minCardinality "0"^^xsd:nonNegativeInteger
+                    ] ,
+                    [ rdf:type owl:Restriction ;
+                      owl:onProperty :hasDictionaryEntries ;
                       owl:minCardinality "0"^^xsd:nonNegativeInteger
                     ] ,
                     [ rdf:type owl:Restriction ;
