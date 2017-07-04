@@ -29,7 +29,6 @@ import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.groupmessages._
 import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse}
-import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectMembersByIRIGetRequestV1, ProjectMembersByShortnameGetRequestV1, ProjectMembersGetResponseV1, ProjectOperationResponseV1}
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileType
 import org.knora.webapi.messages.v1.store.triplestoremessages._
 import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_NAME
@@ -106,7 +105,7 @@ class GroupsResponderV1Spec extends CoreSpec(GroupsResponderV1Spec.config) with 
 
             "CREATE the group and return the group's info if the supplied group name is unique" in {
                 actorUnderTest ! GroupCreateRequestV1(
-                    CreateGroupApiRequestV1("NewGroup", Some("NewGroupDescription"), "http://data.knora.org/projects/images", Some(true), Some(false)),
+                    CreateGroupApiRequestV1("NewGroup", Some("NewGroupDescription"), "http://data.knora.org/projects/images", true, false),
                     SharedAdminTestData.imagesUser01,
                     UUID.randomUUID
                 )
@@ -126,7 +125,7 @@ class GroupsResponderV1Spec extends CoreSpec(GroupsResponderV1Spec.config) with 
 
             "return a 'DuplicateValueException' if the supplied group name is not unique" in {
                 actorUnderTest ! GroupCreateRequestV1(
-                    CreateGroupApiRequestV1("NewGroup", Some("NewGroupDescription"), "http://data.knora.org/projects/images", Some(true), Some(false)),
+                    CreateGroupApiRequestV1("NewGroup", Some("NewGroupDescription"), "http://data.knora.org/projects/images", true, false),
                     SharedAdminTestData.imagesUser01,
                     UUID.randomUUID
                 )
@@ -137,7 +136,7 @@ class GroupsResponderV1Spec extends CoreSpec(GroupsResponderV1Spec.config) with 
 
                 /* missing group name */
                 actorUnderTest ! GroupCreateRequestV1(
-                    CreateGroupApiRequestV1("", Some("NoNameGroupDescription"), "http://data.knora.org/projects/images", Some(true), Some(false)),
+                    CreateGroupApiRequestV1("", Some("NoNameGroupDescription"), "http://data.knora.org/projects/images", true, false),
                     SharedAdminTestData.imagesUser01,
                     UUID.randomUUID
                 )
@@ -145,7 +144,7 @@ class GroupsResponderV1Spec extends CoreSpec(GroupsResponderV1Spec.config) with 
 
                 /* missing project */
                 actorUnderTest ! GroupCreateRequestV1(
-                    CreateGroupApiRequestV1("OtherNewGroup", Some("OtherNewGroupDescription"), "", Some(true), Some(false)),
+                    CreateGroupApiRequestV1("OtherNewGroup", Some("OtherNewGroupDescription"), "", true, false),
                     SharedAdminTestData.imagesUser01,
                     UUID.randomUUID
                 )
@@ -193,14 +192,18 @@ class GroupsResponderV1Spec extends CoreSpec(GroupsResponderV1Spec.config) with 
             }
 
             "return 'BadRequest' if nothing would be changed during the update" in {
+
+                an [BadRequestException] should be thrownBy ChangeGroupApiRequestV1(None, None, None, None)
+
+                /*
                 actorUnderTest ! GroupChangeRequestV1(
                     newGroupIri.get,
                     ChangeGroupApiRequestV1(None, None, None, None),
                     SharedAdminTestData.imagesUser01,
                     UUID.randomUUID
                 )
-
-                expectMsg(Failure(BadRequestException(s"No data would be changed. Aborting update request.")))
+                expectMsg(Failure(BadRequestException(s"No data sent in API request.")))
+                */
             }
 
         }

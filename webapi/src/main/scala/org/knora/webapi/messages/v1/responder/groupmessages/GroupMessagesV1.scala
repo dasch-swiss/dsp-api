@@ -34,14 +34,14 @@ import spray.json.{DefaultJsonProtocol, JsonFormat, NullOptions, RootJsonFormat}
   * @param name        the name of the group to be created (unique).
   * @param description the description of the group to be created.
   * @param project     the project inside which the group will be created.
-  * @param status      the status of the group to be created (default = true).
-  * @param selfjoin    the status of self-join of the group to be created (default = false).
+  * @param status      the status of the group to be created (active = true, inactive = false).
+  * @param selfjoin    the status of self-join of the group to be created.
   */
 case class CreateGroupApiRequestV1(name: String,
                                    description: Option[String],
                                    project: IRI,
-                                   status: Option[Boolean] = Some(true),
-                                   selfjoin: Option[Boolean] = Some(false)) extends GroupV1JsonProtocol {
+                                   status: Boolean,
+                                   selfjoin: Boolean) extends GroupV1JsonProtocol {
 
     def toJsValue = createGroupApiRequestV1Format.write(this)
 }

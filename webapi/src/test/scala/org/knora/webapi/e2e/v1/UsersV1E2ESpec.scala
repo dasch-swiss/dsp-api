@@ -184,7 +184,9 @@ class UsersV1E2ESpec extends E2ESpec(UsersV1E2ESpec.config) with SessionJsonProt
                 jsonResult("email").convertTo[String] should be("donald.duck@example.org")
                 jsonResult("firstname").convertTo[String] should be("Donald")
                 jsonResult("lastname").convertTo[String] should be("Duck")
+                jsonResult("status").convertTo[Boolean] should be (true)
                 jsonResult("lang").convertTo[String] should be("en")
+
 
                 val iri = jsonResult("user_id").convertTo[String]
                 donaldIri.set(iri)
@@ -252,7 +254,7 @@ class UsersV1E2ESpec extends E2ESpec(UsersV1E2ESpec.config) with SessionJsonProt
                 val params =
                     s"""
                     {
-                        "newUserStatus": false
+                        "status": false
                     }
                     """.stripMargin
 
@@ -263,7 +265,7 @@ class UsersV1E2ESpec extends E2ESpec(UsersV1E2ESpec.config) with SessionJsonProt
                 response.status should be(StatusCodes.OK)
 
                 val jsonResult: Map[String, JsValue] = AkkaHttpUtils.httpResponseToJson(response).fields("userProfile").asJsObject.fields("userData").asJsObject.fields
-                jsonResult("isActiveUser").convertTo[Boolean] should be(false)
+                jsonResult("status").convertTo[Boolean] should be(false)
             }
 
             "update the user's system admin membership status" in {
@@ -272,7 +274,7 @@ class UsersV1E2ESpec extends E2ESpec(UsersV1E2ESpec.config) with SessionJsonProt
                 val params =
                     s"""
                     {
-                        "newSystemAdminMembershipStatus": true
+                        "systemAdmin": true
                     }
                     """.stripMargin
 

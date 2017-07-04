@@ -471,8 +471,8 @@ class ProjectsResponderV1 extends ResponderV1 {
                 maybeDescription = createRequest.description,
                 maybeKeywords = createRequest.keywords,
                 maybeLogo = createRequest.logo,
-                status = createRequest.status.get, // case class has default value
-                hasSelfJoinEnabled = createRequest.selfjoin.get, // case class has default value
+                status = createRequest.status,
+                hasSelfJoinEnabled = createRequest.selfjoin,
                 projectOntologyGraph = projectOntologyGraphString,
                 projectDataGraph = projectDataGraphString
             ).toString

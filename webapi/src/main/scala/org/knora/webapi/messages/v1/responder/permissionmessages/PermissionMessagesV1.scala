@@ -22,7 +22,6 @@ import org.knora.webapi.messages.v1.responder.permissionmessages.PermissionDataT
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectV1JsonProtocol
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
-import org.knora.webapi.util.MessageUtil
 import spray.json._
 
 

@@ -306,7 +306,7 @@ object Authenticator {
         //log.debug(s"authenticateCredentials - userProfileV1: $userProfileV1")
 
         /* check if the user is active, if not, then no need to check the password */
-        val isActiveUser = if (userProfileV1.userData.isActiveUser.get) {
+        val isActiveUser = if (userProfileV1.isActive) {
             true
         } else {
             log.debug("authenticateCredentials - user is not active")

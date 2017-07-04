@@ -39,16 +39,16 @@ import spray.json.{DefaultJsonProtocol, JsonFormat, NullOptions, RootJsonFormat}
   * @param description the description of the project to be created.
   * @param keywords    the keywords of the project to be created.
   * @param logo        the logo of the project to be created.
-  * @param status      the status of the project to be created (default = true).
-  * @param selfjoin    the status of self-join of the project to be created (default = false).
+  * @param status      the status of the project to be created (active = true, inactive = false).
+  * @param selfjoin    the status of self-join of the project to be created.
   */
 case class CreateProjectApiRequestV1(shortname: String,
                                      longname: Option[String],
                                      description: Option[String],
                                      keywords: Option[String],
                                      logo: Option[String],
-                                     status: Option[Boolean] = Some(true),
-                                     selfjoin: Option[Boolean] = Some(false)) extends ProjectV1JsonProtocol {
+                                     status: Boolean,
+                                     selfjoin: Boolean) extends ProjectV1JsonProtocol {
     def toJsValue = createProjectApiRequestV1Format.write(this)
 }
 

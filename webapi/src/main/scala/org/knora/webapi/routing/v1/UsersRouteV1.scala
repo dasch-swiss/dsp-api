@@ -123,7 +123,7 @@ object UsersRouteV1 extends Authenticator {
                             userProfile,
                             apiRequestID = UUID.randomUUID()
                         )
-                    } else if (apiRequest.newUserStatus.isDefined) {
+                    } else if (apiRequest.status.isDefined) {
                         /* update existing user's status */
                         UserChangeStatusRequestV1(
                             userIri,
@@ -131,7 +131,7 @@ object UsersRouteV1 extends Authenticator {
                             userProfile,
                             apiRequestID = UUID.randomUUID()
                         )
-                    } else if (apiRequest.newSystemAdminMembershipStatus.isDefined) {
+                    } else if (apiRequest.systemAdmin.isDefined) {
                         /* update existing user's system admin membership status */
                         UserChangeSystemAdminMembershipStatusRequestV1(
                             userIri,
@@ -166,7 +166,7 @@ object UsersRouteV1 extends Authenticator {
                     /* update existing user's status to false */
                     val requestMessage = UserChangeStatusRequestV1(
                         userIri,
-                        changeUserRequest = ChangeUserApiRequestV1(newUserStatus = Some(false)),
+                        changeUserRequest = ChangeUserApiRequestV1(status = Some(false)),
                         userProfile,
                         apiRequestID = UUID.randomUUID()
                     )

@@ -370,8 +370,8 @@ class GroupsResponderV1 extends ResponderV1 with GroupV1JsonProtocol {
                 name = createRequest.name,
                 maybeDescription = createRequest.description,
                 projectIri = createRequest.project,
-                status = createRequest.status.get, // case class has default value
-                hasSelfJoinEnabled = createRequest.selfjoin.get // case class has default value
+                status = createRequest.status,
+                hasSelfJoinEnabled = createRequest.selfjoin
             ).toString
             //_ = log.debug(s"createGroupV1 - createNewGroup: $createNewGroupSparqlString")
             createGroupResponse <- (storeManager ? SparqlUpdateRequest(createNewGroupSparqlString)).mapTo[SparqlUpdateResponse]

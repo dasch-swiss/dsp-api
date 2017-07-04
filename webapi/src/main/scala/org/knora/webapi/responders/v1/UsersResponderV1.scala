@@ -116,7 +116,7 @@ class UsersResponderV1 extends ResponderV1 {
                         email = propsMap.get(OntologyConstants.KnoraBase.Email),
                         firstname = propsMap.get(OntologyConstants.KnoraBase.GivenName),
                         lastname = propsMap.get(OntologyConstants.KnoraBase.FamilyName),
-                        isActiveUser = propsMap.get(OntologyConstants.KnoraBase.Status).map(_.toBoolean)
+                        status = propsMap.get(OntologyConstants.KnoraBase.Status).map(_.toBoolean)
                     )
             }.toSeq
 
@@ -476,7 +476,7 @@ class UsersResponderV1 extends ResponderV1 {
                 // check if necessary information is present
                 if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty")
             )
-            _ = if (changeUserRequest.newUserStatus.isEmpty) throw BadRequestException("New user status cannot be empty")
+            _ = if (changeUserRequest.status.isEmpty) throw BadRequestException("New user status cannot be empty")
 
             // check if the requesting user is allowed to perform updates
             _ = if (!userProfile.userData.user_id.contains(userIri) && !userProfile.permissionData.isSystemAdmin) {
@@ -486,7 +486,7 @@ class UsersResponderV1 extends ResponderV1 {
             }
 
             // create the update request
-            userUpdatePayload = UserUpdatePayloadV1(status = changeUserRequest.newUserStatus)
+            userUpdatePayload = UserUpdatePayloadV1(status = changeUserRequest.status)
 
             result <- updateUserV1(userIri, userUpdatePayload, userProfile, apiRequestID)
 
@@ -524,7 +524,7 @@ class UsersResponderV1 extends ResponderV1 {
 
         // check if necessary information is present
             _ <- Future(if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty"))
-            _ = if (changeUserRequest.newSystemAdminMembershipStatus.isEmpty) throw BadRequestException("New user system admin membership status cannot be empty")
+            _ = if (changeUserRequest.systemAdmin.isEmpty) throw BadRequestException("New user system admin membership status cannot be empty")
 
             // check if the requesting user is allowed to perform updates
             _ = if (!userProfile.permissionData.isSystemAdmin) {
@@ -534,7 +534,7 @@ class UsersResponderV1 extends ResponderV1 {
             }
 
             // create the update request
-            userUpdatePayload = UserUpdatePayloadV1(systemAdmin = changeUserRequest.newSystemAdminMembershipStatus)
+            userUpdatePayload = UserUpdatePayloadV1(systemAdmin = changeUserRequest.systemAdmin)
 
             result <- updateUserV1(userIri, userUpdatePayload, userProfile, apiRequestID)
 
@@ -1139,7 +1139,7 @@ class UsersResponderV1 extends ResponderV1 {
             }
 
             _ = if (userUpdatePayload.status.isDefined) {
-                if (updatedUserData.isActiveUser != userUpdatePayload.status) throw UpdateNotPerformedException("User's 'status' was not updated. Please report this as a possible bug.")
+                if (updatedUserData.status != userUpdatePayload.status) throw UpdateNotPerformedException("User's 'status' was not updated. Please report this as a possible bug.")
             }
 
             _ = if (userUpdatePayload.lang.isDefined) {
@@ -1204,7 +1204,7 @@ class UsersResponderV1 extends ResponderV1 {
                 password = if (!short) {
                     groupedUserData.get(OntologyConstants.KnoraBase.Password).map(_.head)
                 } else None,
-                isActiveUser = groupedUserData.get(OntologyConstants.KnoraBase.Status).map(_.head.toBoolean)
+                status = groupedUserData.get(OntologyConstants.KnoraBase.Status).map(_.head.toBoolean)
             )
             // _ = log.debug(s"userDataQueryResponse - userDataV1: {}", MessageUtil.toSource(userDataV1)")
             FastFuture.successful(Some(userDataV1))
@@ -1243,7 +1243,7 @@ class UsersResponderV1 extends ResponderV1 {
                 firstname = groupedUserData.get(OntologyConstants.KnoraBase.GivenName).map(_.head),
                 lastname = groupedUserData.get(OntologyConstants.KnoraBase.FamilyName).map(_.head),
                 password = groupedUserData.get(OntologyConstants.KnoraBase.Password).map(_.head),
-                isActiveUser = groupedUserData.get(OntologyConstants.KnoraBase.Status).map(_.head.toBoolean)
+                status = groupedUserData.get(OntologyConstants.KnoraBase.Status).map(_.head.toBoolean)
             )
             // log.debug("userDataQueryResponse2UserProfile - userDataV1: {}", MessageUtil.toSource(userDataV1)")
 

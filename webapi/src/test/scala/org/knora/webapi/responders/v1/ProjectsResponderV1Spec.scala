@@ -27,6 +27,7 @@ import akka.actor.Status.Failure
 import akka.testkit.{ImplicitSender, TestActorRef}
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi._
+import org.knora.webapi.messages.v1.responder.groupmessages.{ChangeGroupApiRequestV1, GroupChangeRequestV1}
 import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse}
 import org.knora.webapi.messages.v1.responder.projectmessages._
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileType
@@ -141,8 +142,8 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
                         description = Some("project description"),
                         keywords = Some("keywords"),
                         logo = Some("/fu/bar/baz.jpg"),
-                        status = Some(true),
-                        selfjoin = Some(false)
+                        status = true,
+                        selfjoin = false
                     ),
                     SharedAdminTestData.rootUser,
                     UUID.randomUUID()
@@ -166,8 +167,8 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
                         description = Some("project description"),
                         keywords = Some("keywords"),
                         logo = Some("/fu/bar/baz.jpg"),
-                        status = Some(true),
-                        selfjoin = Some(false)
+                        status = true,
+                        selfjoin = false
                     ),
                     SharedAdminTestData.rootUser,
                     UUID.randomUUID()
@@ -184,8 +185,8 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
                         description = Some("project description"),
                         keywords = Some("keywords"),
                         logo = Some("/fu/bar/baz.jpg"),
-                        status = Some(true),
-                        selfjoin = Some(false)
+                        status = true,
+                        selfjoin = false
                     ),
                     SharedAdminTestData.rootUser,
                     UUID.randomUUID()
@@ -232,6 +233,10 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
             }
 
             "return 'BadRequest' if nothing would be changed during the update" in {
+
+                an [BadRequestException] should be thrownBy ChangeProjectApiRequestV1(None, None, None, None, None, None, None, None, None, None)
+
+                /*
                 actorUnderTest ! ProjectChangeRequestV1(
                     projectIri = "http://data.knora.org/projects/notexisting",
                     changeProjectRequest = ChangeProjectApiRequestV1(None, None, None, None, None, None, None, None, None, None),
@@ -239,6 +244,7 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
                     UUID.randomUUID()
                 )
                 expectMsg(Failure(BadRequestException("No data would be changed. Aborting update request.")))
+                */
             }
         }
 

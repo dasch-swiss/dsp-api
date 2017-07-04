@@ -28,7 +28,7 @@ import akka.actor.Status.Failure
 import akka.testkit.{ImplicitSender, TestActorRef}
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi._
-import org.knora.webapi.messages.v1.responder.groupmessages.{GroupMembersByIRIGetRequestV1, GroupMembersResponseV1}
+import org.knora.webapi.messages.v1.responder.groupmessages.{ChangeGroupApiRequestV1, GroupMembersByIRIGetRequestV1, GroupMembersResponseV1}
 import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse}
 import org.knora.webapi.messages.v1.responder.projectmessages._
 import org.knora.webapi.messages.v1.responder.usermessages._
@@ -151,7 +151,8 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
                         familyName = "Duck",
                         password = "test",
                         status = true,
-                        lang = "en"
+                        lang = "en",
+                        systemAdmin = false
                     ),
                     userProfile = SharedAdminTestData.anonymousUser,
                     apiRequestID = UUID.randomUUID
@@ -174,7 +175,8 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
                         familyName = "Duck",
                         password = "test",
                         status = true,
-                        lang = "en"
+                        lang = "en",
+                        systemAdmin = false
                     ),
                     SharedAdminTestData.anonymousUser,
                     UUID.randomUUID
@@ -192,7 +194,8 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
                         familyName = "Duck",
                         password = "test",
                         status = true,
-                        lang = "en"
+                        lang = "en",
+                        systemAdmin = false
                     ),
                     SharedAdminTestData.anonymousUser,
                     UUID.randomUUID
@@ -207,7 +210,8 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
                         familyName = "Duck",
                         password = "",
                         status = true,
-                        lang = "en"
+                        lang = "en",
+                        systemAdmin = false
                     ),
                     SharedAdminTestData.anonymousUser,
                     UUID.randomUUID
@@ -222,7 +226,8 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
                         familyName = "Duck",
                         password = "test",
                         status = true,
-                        lang = "en"
+                        lang = "en",
+                        systemAdmin = false
                     ),
                     SharedAdminTestData.anonymousUser,
                     UUID.randomUUID
@@ -237,7 +242,8 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
                         familyName = "",
                         password = "test",
                         status = true,
-                        lang = "en"
+                        lang = "en",
+                        systemAdmin = false
                     ),
                     SharedAdminTestData.anonymousUser,
                     UUID.randomUUID
@@ -248,7 +254,7 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
 
         "asked to update a user" should {
 
-            "UPDATE the user" in {
+            "UPDATE the user's basic information" in {
 
                 /* User information is updated by the user */
                 actorUnderTest ! UserChangeBasicUserDataRequestV1(
@@ -335,29 +341,29 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
             "UPDATE the user's status, (deleting) making him inactive " in {
                 actorUnderTest ! UserChangeStatusRequestV1(
                     userIri = SharedAdminTestData.normalUser.userData.user_id.get,
-                    changeUserRequest = ChangeUserApiRequestV1(newUserStatus = Some(false)),
+                    changeUserRequest = ChangeUserApiRequestV1(status = Some(false)),
                     userProfile = SharedAdminTestData.superUser,
                     UUID.randomUUID()
                 )
 
                 val response1 = expectMsgType[UserOperationResponseV1](timeout)
-                response1.userProfile.userData.isActiveUser.get should equal (false)
+                response1.userProfile.userData.status.get should equal (false)
 
                 actorUnderTest ! UserChangeStatusRequestV1(
                     userIri = SharedAdminTestData.normalUser.userData.user_id.get,
-                    changeUserRequest = ChangeUserApiRequestV1(newUserStatus = Some(true)),
+                    changeUserRequest = ChangeUserApiRequestV1(status = Some(true)),
                     userProfile = SharedAdminTestData.superUser,
                     UUID.randomUUID()
                 )
 
                 val response2 = expectMsgType[UserOperationResponseV1](timeout)
-                response2.userProfile.userData.isActiveUser.get should equal (true)
+                response2.userProfile.userData.status.get should equal (true)
             }
 
             "UPDATE the user's system admin membership" in {
                 actorUnderTest ! UserChangeSystemAdminMembershipStatusRequestV1(
                     userIri = SharedAdminTestData.normalUser.userData.user_id.get,
-                    changeUserRequest = ChangeUserApiRequestV1(newSystemAdminMembershipStatus = Some(true)),
+                    changeUserRequest = ChangeUserApiRequestV1(systemAdmin = Some(true)),
                     userProfile = SharedAdminTestData.superUser,
                     UUID.randomUUID()
                 )
@@ -367,7 +373,7 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
 
                 actorUnderTest ! UserChangeSystemAdminMembershipStatusRequestV1(
                     userIri = SharedAdminTestData.normalUser.userData.user_id.get,
-                    changeUserRequest = ChangeUserApiRequestV1(newSystemAdminMembershipStatus = Some(false)),
+                    changeUserRequest = ChangeUserApiRequestV1(systemAdmin = Some(false)),
                     userProfile = SharedAdminTestData.superUser,
                     UUID.randomUUID()
                 )
@@ -408,7 +414,7 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
                 /* Status is updated by other normal user */
                 actorUnderTest ! UserChangeStatusRequestV1(
                     userIri = SharedAdminTestData.superUser.userData.user_id.get,
-                    changeUserRequest = ChangeUserApiRequestV1(newUserStatus = Some(false)),
+                    changeUserRequest = ChangeUserApiRequestV1(status = Some(false)),
                     userProfile = SharedAdminTestData.normalUser,
                     UUID.randomUUID
                 )
@@ -417,11 +423,16 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
                 /* System admin group membership */
                 actorUnderTest ! UserChangeSystemAdminMembershipStatusRequestV1(
                     userIri = SharedAdminTestData.normalUser.userData.user_id.get,
-                    changeUserRequest = ChangeUserApiRequestV1(newSystemAdminMembershipStatus = Some(true)),
+                    changeUserRequest = ChangeUserApiRequestV1(systemAdmin = Some(true)),
                     userProfile = SharedAdminTestData.normalUser,
                     UUID.randomUUID()
                 )
                 expectMsg(Failure(ForbiddenException("User's system admin membership can only be changed by a system administrator")))
+            }
+
+            "return 'BadRequest' if nothing would be changed during the update" in {
+
+                an [BadRequestException] should be thrownBy ChangeUserApiRequestV1(None, None, None, None, None, None, None, None)
             }
         }
 

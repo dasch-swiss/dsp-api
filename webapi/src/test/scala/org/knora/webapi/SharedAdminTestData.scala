@@ -46,7 +46,7 @@ object SharedAdminTestData {
             firstname = Some("System"),
             lastname = Some("Administrator"),
             token = None,
-            isActiveUser = Some(true),
+            status = Some(true),
             lang = "de"
         ),
         groups = Vector.empty[IRI],
@@ -69,7 +69,7 @@ object SharedAdminTestData {
             email = Some("super.user@example.com"),
             password = Some("$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="), // -> "test"
             token = None,
-            isActiveUser = Some(true),
+            status = Some(true),
             lang = "de"
         ),
         groups = Vector.empty[IRI],
@@ -91,7 +91,7 @@ object SharedAdminTestData {
             email = Some("normal.user@example.com"),
             password = Some("$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="), // -> "test"
             token = None,
-            isActiveUser = Some(true),
+            status = Some(true),
             lang = "de"
         ),
         groups = Vector.empty[IRI],
@@ -110,7 +110,7 @@ object SharedAdminTestData {
             email = Some("inactive.user@example.com"),
             password = Some("$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="), // -> "test"
             token = None,
-            isActiveUser = Some(false),
+            status = Some(false),
             lang = "de"
         ),
         groups = Vector.empty[IRI],
@@ -142,7 +142,7 @@ object SharedAdminTestData {
             email = Some("multi.user@example.com"),
             password = Some("$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="), // -> "test"
             token = None,
-            isActiveUser = Some(true),
+            status = Some(true),
             lang = "de"
         ),
         groups = List("http://data.knora.org/groups/images-reviewer"),
@@ -199,7 +199,7 @@ object SharedAdminTestData {
             email = Some("user01.user1@example.com"),
             password = Some("$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="), // -> "test"
             token = None,
-            isActiveUser = Some(true),
+            status = Some(true),
             lang = "de"
         ),
         groups = List.empty[IRI],
@@ -228,7 +228,7 @@ object SharedAdminTestData {
             email = Some("user02.user@example.com"),
             password = Some("$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="), // -> "test"
             token = None,
-            isActiveUser = Some(true),
+            status = Some(true),
             lang = "de"
         ),
         groups = List.empty[IRI],
@@ -256,7 +256,7 @@ object SharedAdminTestData {
             email = Some("images-reviewer-user@example.com"),
             password = Some("$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"), // -> "test"
             token = None,
-            isActiveUser = Some(true),
+            status = Some(true),
             lang = "de"
         ),
         groups = List("http://data.knora.org/groups/images-reviewer"),
@@ -339,7 +339,7 @@ object SharedAdminTestData {
             email = Some("user.test@example.com"),
             password = Some("$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="), // -> "test"
             token = None,
-            isActiveUser = Some(true),
+            status = Some(true),
             lang = "de"
         ),
         groups = Vector.empty[IRI],
@@ -368,7 +368,7 @@ object SharedAdminTestData {
             email = Some("root-alt@example.com"),
             password = Some("$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="), // -> "test"
             token = None,
-            isActiveUser = Some(true),
+            status = Some(true),
             lang = "de"
         ),
         groups = Vector.empty[IRI],
@@ -396,7 +396,7 @@ object SharedAdminTestData {
             email = Some("user.test2t@test.ch"),
             password = Some("$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="), // -> "test"
             token = None,
-            isActiveUser = Some(true),
+            status = Some(true),
             lang = "de"
         ),
         groups = Vector.empty[IRI],
@@ -444,7 +444,7 @@ object SharedAdminTestData {
             email = Some("anything.user01@example.org"),
             password = Some("$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="), // -> "test"
             token = None,
-            isActiveUser = Some(true),
+            status = Some(true),
             lang = "de"
         ),
         groups = Seq.empty[IRI],
@@ -472,7 +472,7 @@ object SharedAdminTestData {
             email = Some("anything.user02@example.org"),
             password = Some("$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="), // -> "test"
             token = None,
-            isActiveUser = Some(true),
+            status = Some(true),
             lang = "de"
         ),
         groups = Vector.empty[IRI],
@@ -556,7 +556,7 @@ object SharedAdminTestData {
             email = Some("biblio@example.com"),
             password = Some("$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"), // -> "test"
             token = None,
-            isActiveUser = Some(true),
+            status = Some(true),
             lang = "en"
         ),
         groups = Vector.empty[IRI],

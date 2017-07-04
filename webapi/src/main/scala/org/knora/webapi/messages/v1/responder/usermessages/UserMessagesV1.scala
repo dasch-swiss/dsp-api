@@ -42,17 +42,17 @@ import spray.json._
   * @param givenName   the given name of the user to be created.
   * @param familyName  the family name of the user to be created
   * @param password    the password of the user to be created.
-  * @param status      the status of the user to be created (active = true, inactive = false) (default = true).
-  * @param lang        the default language of the user to be created (default = "en").
-  * @param systemAdmin the system admin membership (default = false).
+  * @param status      the status of the user to be created (active = true, inactive = false).
+  * @param lang        the default language of the user to be created.
+  * @param systemAdmin the system admin membership.
   */
 case class CreateUserApiRequestV1(email: String,
                                   givenName: String,
                                   familyName: String,
                                   password: String,
-                                  status: Boolean = true,
-                                  lang: String = "en",
-                                  systemAdmin: Boolean = false) {
+                                  status: Boolean,
+                                  lang: String,
+                                  systemAdmin: Boolean) {
 
     def toJsValue = UserV1JsonProtocol.createUserApiRequestV1Format.write(this)
 }
@@ -62,14 +62,14 @@ case class CreateUserApiRequestV1(email: String,
   * be changed include the user's email, given name, family name, language, password, user status, and system admin
   * membership.
   *
-  * @param email                          the new email address. Needs to be unique on the server.
-  * @param givenName                      the new given name.
-  * @param familyName                     the new family name.
-  * @param lang                           the new ISO 639-1 code of the new preferred language.
-  * @param oldPassword                    the old password.
-  * @param newPassword                    the new password.
-  * @param newUserStatus                  the new user status (active = true, inactive = false).
-  * @param newSystemAdminMembershipStatus the new system admin membership status.
+  * @param email       the new email address. Needs to be unique on the server.
+  * @param givenName   the new given name.
+  * @param familyName  the new family name.
+  * @param lang        the new ISO 639-1 code of the new preferred language.
+  * @param oldPassword the old password.
+  * @param newPassword the new password.
+  * @param status      the new user status (active = true, inactive = false).
+  * @param systemAdmin the new system admin membership status.
   */
 case class ChangeUserApiRequestV1(email: Option[String] = None,
                                   givenName: Option[String] = None,
@@ -77,8 +77,8 @@ case class ChangeUserApiRequestV1(email: Option[String] = None,
                                   lang: Option[String] = None,
                                   oldPassword: Option[String] = None,
                                   newPassword: Option[String] = None,
-                                  newUserStatus: Option[Boolean] = None,
-                                  newSystemAdminMembershipStatus: Option[Boolean] = None) {
+                                  status: Option[Boolean] = None,
+                                  systemAdmin: Option[Boolean] = None) {
 
     val parametersCount = List(
         email,
@@ -87,8 +87,8 @@ case class ChangeUserApiRequestV1(email: Option[String] = None,
         lang,
         oldPassword,
         newPassword,
-        newUserStatus,
-        newSystemAdminMembershipStatus
+        status,
+        systemAdmin
     ).flatten.size
 
     // something needs to be sent, i.e. everything 'None' is not allowed
@@ -107,12 +107,12 @@ case class ChangeUserApiRequestV1(email: Option[String] = None,
     }
 
     // change status case
-    if (newUserStatus.isDefined) {
+    if (status.isDefined) {
         if (parametersCount > 1) throw BadRequestException("To many parameters sent for user status change.")
     }
 
     // change system admin membership case
-    if (newSystemAdminMembershipStatus.isDefined) {
+    if (systemAdmin.isDefined) {
         if (parametersCount > 1) throw BadRequestException("To many parameters sent for system admin membership change.")
     }
 
@@ -488,7 +488,7 @@ case class UserProfileV1(userData: UserDataV1 = UserDataV1(lang = "en"),
                     lastname = oldUserData.lastname,
                     email = oldUserData.email,
                     password = None, // remove password
-                    isActiveUser = oldUserData.isActiveUser,
+                    status = oldUserData.status,
                     lang = oldUserData.lang
                 )
 
@@ -510,7 +510,7 @@ case class UserProfileV1(userData: UserDataV1 = UserDataV1(lang = "en"),
                     lastname = oldUserData.lastname,
                     email = oldUserData.email,
                     password = None, // remove password
-                    isActiveUser = oldUserData.isActiveUser
+                    status = oldUserData.status
                 )
 
                 UserProfileV1(
@@ -554,6 +554,10 @@ case class UserProfileV1(userData: UserDataV1 = UserDataV1(lang = "en"),
         permissionData.anonymousUser
     }
 
+    def isActive: Boolean = {
+        userData.status.getOrElse(false)
+    }
+
     def toJsValue: JsValue = UserV1JsonProtocol.userProfileV1Format.write(this)
 
 }
@@ -562,14 +566,14 @@ case class UserProfileV1(userData: UserDataV1 = UserDataV1(lang = "en"),
 /**
   * Represents basic information about a user.
   *
-  * @param user_id      The user's IRI.
-  * @param email        The user's email address.
-  * @param password     The user's hashed password.
-  * @param token        The API token. Can be used instead of email/password for authentication.
-  * @param firstname    The user's given name.
-  * @param lastname     The user's surname.
-  * @param isActiveUser The user's status.
-  * @param lang         The ISO 639-1 code of the user's preferred language.
+  * @param user_id   The user's IRI.
+  * @param email     The user's email address.
+  * @param password  The user's hashed password.
+  * @param token     The API token. Can be used instead of email/password for authentication.
+  * @param firstname The user's given name.
+  * @param lastname  The user's surname.
+  * @param status    The user's status.
+  * @param lang      The ISO 639-1 code of the user's preferred language.
   */
 case class UserDataV1(user_id: Option[IRI] = None,
                       email: Option[String] = None,
@@ -577,7 +581,7 @@ case class UserDataV1(user_id: Option[IRI] = None,
                       token: Option[String] = None,
                       firstname: Option[String] = None,
                       lastname: Option[String] = None,
-                      isActiveUser: Option[Boolean] = Some(true),
+                      status: Option[Boolean] = Some(true),
                       lang: String) {
 
     def fullname: Option[String] = {
@@ -666,7 +670,7 @@ object UserV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
     implicit val userDataV1Format: JsonFormat[UserDataV1] = lazyFormat(jsonFormat8(UserDataV1))
     implicit val userProfileV1Format: JsonFormat[UserProfileV1] = jsonFormat6(UserProfileV1)
     implicit val createUserApiRequestV1Format: RootJsonFormat[CreateUserApiRequestV1] = jsonFormat7(CreateUserApiRequestV1)
-    implicit val changeUserApiRequestV1Format: RootJsonFormat[ChangeUserApiRequestV1] = jsonFormat8(ChangeUserApiRequestV1)
+    implicit val changeUserApiRequestV1Format: RootJsonFormat[ChangeUserApiRequestV1] = jsonFormat(ChangeUserApiRequestV1, "email", "givenName", "familyName", "lang", "oldPassword", "newPassword", "status", "systemAdmin")
     implicit val usersGetResponseV1Format: RootJsonFormat[UsersGetResponseV1] = jsonFormat1(UsersGetResponseV1)
     implicit val userProfileResponseV1Format: RootJsonFormat[UserProfileResponseV1] = jsonFormat1(UserProfileResponseV1)
     implicit val userProjectMembershipsGetResponseV1Format: RootJsonFormat[UserProjectMembershipsGetResponseV1] = jsonFormat1(UserProjectMembershipsGetResponseV1)
