@@ -44,7 +44,7 @@ CONSTRUCT {
         @statement match {
 
             case statementPatternWithoutInference: ExtendedSearchStatementPattern if statementPatternWithoutInference.disableInference => {
-                # disable inference
+                @* disable inference *@
                 GRAPH <http://www.ontotext.com/explicit> {
                     @statementPatternWithoutInference.rdfValue
                 }

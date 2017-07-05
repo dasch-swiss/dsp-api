@@ -200,6 +200,7 @@ class SearchResponderV2 extends Responder {
             if (typeIriInternal == OntologyConstants.KnoraBase.Resource) {
                 AdditionalStatements(additionalStatements = Vector(
                     ExtendedSearchStatementPattern(subj = subject, pred = ExtendedSearchIri(OntologyConstants.Rdf.Type), obj = ExtendedSearchIri(OntologyConstants.KnoraBase.Resource), false),
+                    ExtendedSearchStatementPattern(subj = subject, pred = ExtendedSearchIri(OntologyConstants.KnoraBase.IsDeleted), obj = ExtendedSearchXsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean), true),
                     ExtendedSearchStatementPattern(subj = subject, pred = ExtendedSearchIri(OntologyConstants.Rdfs.Label), obj = ExtendedSearchVar("resourceLabel" + index), true),
                     ExtendedSearchStatementPattern(subj = subject, pred = ExtendedSearchIri(OntologyConstants.Rdf.Type), obj = ExtendedSearchVar("resourceType" + index), true),
                     ExtendedSearchStatementPattern(subj = subject, pred = ExtendedSearchInternalEntityIri(OntologyConstants.KnoraBase.AttachedToUser), obj = ExtendedSearchVar("resourceCreator" + index), true),
@@ -234,6 +235,7 @@ class SearchResponderV2 extends Responder {
                 case OntologyConstants.KnoraBase.Resource =>
                     AdditionalStatements(additionalStatements = Vector(
                         ExtendedSearchStatementPattern(subj = statementPattern.subj, pred = ExtendedSearchInternalEntityIri(OntologyConstants.KnoraBase.HasValue), obj = ExtendedSearchVar("linkValueObj" + index), false),
+                        ExtendedSearchStatementPattern(subj = ExtendedSearchVar("linkValueObj" + index), pred = ExtendedSearchIri(OntologyConstants.KnoraBase.IsDeleted), obj = ExtendedSearchXsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean), true),
                         ExtendedSearchStatementPattern(subj = statementPattern.subj, pred = ExtendedSearchVar("linkValueProp" + index), obj = ExtendedSearchVar("linkValueObj" + index), true),
                         ExtendedSearchStatementPattern(subj = ExtendedSearchVar("linkValueObj" + index), pred = ExtendedSearchInternalEntityIri(OntologyConstants.Rdf.Type), obj = ExtendedSearchInternalEntityIri(OntologyConstants.KnoraBase.LinkValue), true),
                         ExtendedSearchStatementPattern(subj = ExtendedSearchVar("linkValueObj" + index), pred = ExtendedSearchIri(OntologyConstants.Rdf.Subject), obj = statementPattern.subj, true),
@@ -250,6 +252,7 @@ class SearchResponderV2 extends Responder {
                             case stringLiteral: ExtendedSearchXsdLiteral =>
                                 AdditionalStatements(additionalStatements = Vector(
                                     ExtendedSearchStatementPattern(subj = statementPattern.subj, pred = ExtendedSearchInternalEntityIri(OntologyConstants.KnoraBase.HasValue), obj = ExtendedSearchVar("stringValueObj" + index), false),
+                                    ExtendedSearchStatementPattern(subj = ExtendedSearchVar("stringValueObj" + index), pred = ExtendedSearchIri(OntologyConstants.KnoraBase.IsDeleted), obj = ExtendedSearchXsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean), true),
                                     ExtendedSearchStatementPattern(subj = statementPattern.subj, pred = statementPattern.pred, obj = ExtendedSearchVar("stringValueObj" + index), false),
                                     ExtendedSearchStatementPattern(subj = ExtendedSearchVar("stringValueObj" + index), pred = ExtendedSearchInternalEntityIri(OntologyConstants.Rdf.Type), obj = ExtendedSearchInternalEntityIri(OntologyConstants.KnoraBase.TextValue), true),
                                     ExtendedSearchStatementPattern(subj = ExtendedSearchVar("stringValueObj" + index), pred = ExtendedSearchVar("stringValueObjProp" + index), obj = ExtendedSearchVar("stringValueObjVal" + index), true),
@@ -259,6 +262,7 @@ class SearchResponderV2 extends Responder {
                             case stringVar: ExtendedSearchVar =>
                                 AdditionalStatements(additionalStatements = Vector(
                                     ExtendedSearchStatementPattern(subj = statementPattern.subj, pred = ExtendedSearchInternalEntityIri(OntologyConstants.KnoraBase.HasValue), obj = stringVar, false),
+                                    ExtendedSearchStatementPattern(subj = stringVar, pred = ExtendedSearchIri(OntologyConstants.KnoraBase.IsDeleted), obj = ExtendedSearchXsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean), true),
                                     ExtendedSearchStatementPattern(subj = statementPattern.subj, pred = statementPattern.pred, obj = stringVar, false),
                                     ExtendedSearchStatementPattern(subj = stringVar, pred = ExtendedSearchInternalEntityIri(OntologyConstants.Rdf.Type), obj = ExtendedSearchInternalEntityIri(OntologyConstants.KnoraBase.TextValue), true),
                                     ExtendedSearchStatementPattern(subj = stringVar, pred = ExtendedSearchVar("stringValueObjProp" + index), obj = ExtendedSearchVar("stringValueObjVal" + index), true)

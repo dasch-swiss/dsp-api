@@ -6,8 +6,10 @@
 
 let http = require("http");
 
+let queryArr = [];
+
 // search for all the letters exchanged between two persons
-let query = `
+queryArr.push(`
     PREFIX beol: <http://api.knora.org/ontology/beol/simple/v2#>
     PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
     
@@ -37,10 +39,10 @@ let query = `
     
         <http://rdfh.ch/beol/6edJwtTSR8yjAWnYmt6AtA> a knora-api:Resource .
 }
-`;
+`);
 
 // search for a letter that has the given title and mentions Isaac Newton
-let query2 = `
+queryArr.push(`
       PREFIX beol: <http://api.knora.org/ontology/beol/simple/v2#>
       PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
       
@@ -69,10 +71,10 @@ let query2 = `
       
           <http://rdfh.ch/beol/NUkE4PxyT1uEm3K9db63wQ> a knora-api:Resource .
       }
-`;
+`);
 
 // search for letters that link to another letter via standoff that is authored by a person with IAF id "120379260" and has the title "1708-03-11_Scheuchzer_Johannes-Bernoulli_Johann_I"
-let query3 = `
+queryArr.push(`
 PREFIX beol: <http://api.knora.org/ontology/beol/simple/v2#>
 PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
 
@@ -108,59 +110,70 @@ CONSTRUCT {
     ?author beol:hasIAFIdentifier "120379260" .
     beol:hasIAFIdentifier knora-api:objectType xsd:string .
 }
-`;
+`);
 
 
-let options = {
-    host: 'localhost',
-    port: 3333,
-    path: '/v2/searchextended/' + encodeURIComponent(query2)
-};
 
-let timeStart = new Date();
 
-http.get(options, (res) => {
-    const { statusCode } = res;
-    const contentType = res.headers['content-type'];
+function runQuery(queryStrArr, index) {
 
-    let error;
-    if (statusCode !== 200) {
-        error = new Error('Request Failed.\n' +
-        `Status Code: ${statusCode}`);
-    } else if (!/^application\/json/.test(contentType)) {
-        error = new Error('Invalid content-type.\n' +
-            `Expected application/json but received ${contentType}`);
-    }
+    if (index >= queryStrArr.length) return;
 
-    if (error) {
-        console.error(error.message);
-        // consume response data to free up memory
-        res.resume();
-        return;
-    }
+    let options = {
+        host: 'localhost',
+        port: 3333,
+        path: '/v2/searchextended/' + encodeURIComponent(queryStrArr[index])
+    };
 
-    res.setEncoding('utf8');
-    let rawData = '';
+    let timeStart = new Date();
 
-    res.on('data', (chunk) => {
-        rawData += chunk;
-    });
+    return http.get(options, (res) => {
+        const { statusCode } = res;
+        const contentType = res.headers['content-type'];
 
-    res.on('end', () => {
-        try {
-            let timeEnd = new Date();
-            let duration = timeEnd - timeStart;
-            //const parsedData = JSON.parse(rawData);
-            console.log(rawData);
-            console.log(`Duration in millis: ${duration}`);
-        } catch (e) {
-            console.error(e.message);
+        let error;
+        if (statusCode !== 200) {
+            error = new Error('Request Failed.\n' +
+            `Status Code: ${statusCode}`);
+        } else if (!/^application\/json/.test(contentType)) {
+            error = new Error('Invalid content-type.\n' +
+                `Expected application/json but received ${contentType}`);
         }
-    });
 
-    res.on('error', (e) => {
-        console.error(`Got error: ${e.message}`);
-    });
+        if (error) {
+            console.error(error.message);
+            // consume response data to free up memory
+            res.resume();
+            return;
+        }
 
-});
+        res.setEncoding('utf8');
+        let rawData = '';
+
+        res.on('data', (chunk) => {
+            rawData += chunk;
+        });
+
+        res.on('end', () => {
+            try {
+                let timeEnd = new Date();
+                let duration = timeEnd - timeStart;
+                //const parsedData = JSON.parse(rawData);
+                console.log(rawData);
+                console.log(`Duration in millis: ${duration}`);
+                console.log("++++++++++")
+                runQuery(queryStrArr, index+1);
+            } catch (e) {
+                console.error(e.message);
+            }
+        });
+
+        res.on('error', (e) => {
+            console.error(`Got error: ${e.message}`);
+        });
+
+    });
+}
+
+runQuery(queryArr, 0);
 
