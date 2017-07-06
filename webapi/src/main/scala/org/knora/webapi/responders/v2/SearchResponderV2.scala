@@ -185,11 +185,11 @@ class SearchResponderV2 extends Responder {
         /**
           * Creates additional statements based on a non property type Iri.
           *
-          * @param typeIriExternal  the non property type Iri.
-          * @param statementPattern the statement to be processed.
-          * @param subject          the entity that is the subject in the additional statement to be generated.
+          * @param typeIriExternal       the non property type Iri.
+          * @param statementPattern      the statement to be processed.
+          * @param subject               the entity that is the subject in the additional statement to be generated.
           * @param typeInfoKeysProcessed a Set of keys that indicates which type info entries already habe been processed.
-          * @param index            the index to be used to create variables in Sparql.
+          * @param index                 the index to be used to create variables in Sparql.
           * @return a sequence of [[ExtendedSearchStatementPattern]].
           */
         def createAdditionalStatementsForNonPropertyType(typeIriExternal: IRI, statementPattern: ExtendedSearchStatementPattern, subject: ExtendedSearchEntity, typeInfoKeysProcessed: Set[TypeableEntityV2], index: Int): AdditionalStatements = {
@@ -217,10 +217,10 @@ class SearchResponderV2 extends Responder {
         /**
           * Creates additional statements based on a property type Iri.
           *
-          * @param typeIriExternal  the property type Iri.
-          * @param statementPattern the statement to be processed.
+          * @param typeIriExternal       the property type Iri.
+          * @param statementPattern      the statement to be processed.
           * @param typeInfoKeysProcessed a Set of keys that indicates which type info entries already habe been processed.
-          * @param index            the index to be used to create variables in Sparql.
+          * @param index                 the index to be used to create variables in Sparql.
           * @return a sequence of [[ExtendedSearchStatementPattern]].
           */
         def createAdditionalStatementsForPropertyType(typeIriExternal: IRI, statementPattern: ExtendedSearchStatementPattern, typeInfoKeysProcessed: Set[TypeableEntityV2], index: Int): AdditionalStatements = {
@@ -376,13 +376,13 @@ class SearchResponderV2 extends Responder {
           * Represents the originally given statement in the query provided by the user and statements that were additionally cretaed based on the given type annotations.
           *
           * @param additionalStatements statements created based on the given type annotations.
-          * @param filterKeysProcessed a Set of keys that indicates which type info entries already habe been processed.
+          * @param filterKeysProcessed  a Set of keys that indicates which type info entries already habe been processed.
           */
         case class AdditionalStatements(additionalStatements: Vector[ExtendedSearchStatementPattern] = Vector.empty[ExtendedSearchStatementPattern], filterKeysProcessed: Set[TypeableEntityV2] = Set.empty[TypeableEntityV2])
 
         /**
           *
-          * @param originalStatement the statement originally given by the user. Since some statements have to be converted (e.g. direct statements from resources to literals in the simplified Api schema), original statements might not be returned.
+          * @param originalStatement    the statement originally given by the user. Since some statements have to be converted (e.g. direct statements from resources to literals in the simplified Api schema), original statements might not be returned.
           * @param additionalStatements statements created based on the given type annotations.
           */
         case class ConvertedStatement(originalStatement: Option[ExtendedSearchStatementPattern], additionalStatements: AdditionalStatements)
@@ -390,8 +390,8 @@ class SearchResponderV2 extends Responder {
         /**
           * Based on the given type annotations, convert the given statement.
           *
-          * @param statementP the given statement.
-          * @param index the current index (used to create unique variable names).
+          * @param statementP                      the given statement.
+          * @param index                           the current index (used to create unique variable names).
           * @param filterKeysProcessedInStatements a Set of keys that indicates which type info entries already habe been processed.
           * @return a sequence of [[AdditionalStatements]].
           */
@@ -526,29 +526,35 @@ class SearchResponderV2 extends Responder {
                         val key = TypeableIriV2(InputValidation.internalEntityIriToSimpleApiV2EntityIri(internalIriPred.iri, () => throw AssertionException(s"${internalIriPred.iri} could not be converted back to knora-api simple format")))
 
                         typeInspectionResultWhere.typedEntities.get(key) match {
-                            case Some(propTypeInfo: PropertyTypeInfoV2)  =>
+                            case Some(propTypeInfo: PropertyTypeInfoV2) =>
+                                // value types like xsd:string are not recognised as Knora entity Iris
+
                                 if (InputValidation.isKnoraApiEntityIri(propTypeInfo.objectTypeIri)) {
                                     val internalIri = InputValidation.externalIriToInternalIri(propTypeInfo.objectTypeIri, () => throw BadRequestException(s"${propTypeInfo.objectTypeIri} is not a valid external knora-api entity Iri"))
 
                                     if (internalIri == OntologyConstants.KnoraBase.Resource) {
                                         // linking prop
+                                        //println(s"linking prop $key")
                                         ConvertedStatement(originalStatement = Some(statementP), additionalStatements = additionalStatementsAll)
                                     } else {
                                         // no linking prop
+                                        // value prop -> additional statements have been created to comply with Knora's value object structure
+                                        //println(s"value prop $key")
                                         ConvertedStatement(originalStatement = None, additionalStatements = additionalStatementsAll)
                                     }
 
 
                                 } else {
                                     // no linking prop
+                                    // value prop -> additional statements have been created to comply with Knora's value object structure
+                                    //println(s"value prop $key")
                                     ConvertedStatement(originalStatement = None, additionalStatements = additionalStatementsAll)
                                 }
 
-                                // value prop -> additional statements have been created to comply with Knora's value object structure
-
                             case _ =>
-                                // include original statement
-                                ConvertedStatement(originalStatement = Some(statementP), additionalStatements = additionalStatementsAll)
+                                // there should be a property type annotation for the predicate
+                                throw SparqlSearchException(s"no property type information found for $key")
+
                         }
 
                     case iriPred: ExtendedSearchIri =>
@@ -556,10 +562,42 @@ class SearchResponderV2 extends Responder {
                         ConvertedStatement(originalStatement = Some(statementP), additionalStatements = additionalStatementsAll)
 
                     case varPred: ExtendedSearchVar =>
-                        // TODO: check if var stands for a value prop or a linking prop
-                        ConvertedStatement(originalStatement = Some(statementP), additionalStatements = additionalStatementsAll)
 
-                    case other => // include original statement
+                        val key = TypeableVariableV2(varPred.variableName)
+
+                        typeInspectionResultWhere.typedEntities.get(key) match {
+                            case Some(propTypeInfo: PropertyTypeInfoV2) =>
+                                // value types like xsd:string are not recognised as Knora entity Iris
+
+                                if (InputValidation.isKnoraApiEntityIri(propTypeInfo.objectTypeIri)) {
+                                    val internalIri = InputValidation.externalIriToInternalIri(propTypeInfo.objectTypeIri, () => throw BadRequestException(s"${propTypeInfo.objectTypeIri} is not a valid external knora-api entity Iri"))
+
+                                    if (internalIri == OntologyConstants.KnoraBase.Resource) {
+                                        // linking prop
+                                        //println(s"linking prop $key")
+                                        ConvertedStatement(originalStatement = Some(statementP), additionalStatements = additionalStatementsAll)
+                                    } else {
+                                        // no linking prop
+                                        // value prop -> additional statements have been created to comply with Knora's value object structure
+                                        //println(s"int value prop $key")
+                                        ConvertedStatement(originalStatement = None, additionalStatements = additionalStatementsAll)
+                                    }
+
+
+                                } else {
+                                    // no linking prop
+                                    // value prop -> additional statements have been created to comply with Knora's value object structure
+                                    //println(s"ext value prop $key")
+                                    ConvertedStatement(originalStatement = None, additionalStatements = additionalStatementsAll)
+                                }
+
+                            case _ =>
+                                // there should be a property type annotation for the predicate
+                                throw SparqlSearchException(s"no property type information found for $key")
+
+                        }
+
+                    case other =>
                         throw NotImplementedException(s"preserve original statement not implemented for ${other}")
 
                 }
@@ -573,8 +611,8 @@ class SearchResponderV2 extends Responder {
         /**
           * Represents original query patterns provided by the user a additional statements created on the bases of the given type annotations.
           *
-          * @param originalPatterns the patterns originally provided by the user.
-          * @param additionalPatterns additional statements created on the bases of the given type annotations.
+          * @param originalPatterns                  the patterns originally provided by the user.
+          * @param additionalPatterns                additional statements created on the bases of the given type annotations.
           * @param typeInfoKeysProcessedInStatements a Set of keys that indicates which type info entries already habe been processed.
           */
         case class ConvertedQueryPatterns(originalPatterns: Vector[ExtendedSearchQueryPattern], additionalPatterns: Vector[ExtendedSearchStatementPattern], typeInfoKeysProcessedInStatements: Set[TypeableEntityV2])
@@ -606,7 +644,7 @@ class SearchResponderV2 extends Responder {
 
                         case filterP: ExtendedSearchFilterPattern =>
                             // TODO: transform filter, possibly adding more statements (text, date comparison etc.)
-                            
+
                             filterP.expression match {
                                 case filterCompare: ExtendedSearchCompareExpression =>
 

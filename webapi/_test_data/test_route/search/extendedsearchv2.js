@@ -73,6 +73,40 @@ queryArr.push(`
       }
 `);
 
+// search for a letter that has the given title and mentions Isaac Newton using a var as a value prop pred
+queryArr.push(`
+      PREFIX beol: <http://api.knora.org/ontology/beol/simple/v2#>
+      PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+      
+      CONSTRUCT {
+          ?letter knora-api:isMainResource true .
+      
+          ?letter a beol:letter .
+      
+          ?letter beol:title ?title .
+      
+          ?letter beol:mentionsPerson <http://rdfh.ch/beol/NUkE4PxyT1uEm3K9db63wQ> .
+      
+      } WHERE {
+          ?letter a knora-api:Resource .
+          ?letter a beol:letter .
+      
+          ?letter ?hasTitle ?title .
+          ?hasTitle knora-api:objectType xsd:string .
+      
+          FILTER(?hasTitle = beol:title)  
+      
+          ?title a xsd:string .
+          FILTER(?title = "1707-05-18_2_Hermann_Jacob-Scheuchzer_Johann_Jakob")
+      
+          # Newton,  Isaac 1643-1727
+          ?letter beol:mentionsPerson <http://rdfh.ch/beol/NUkE4PxyT1uEm3K9db63wQ> .
+          beol:mentionsPerson  knora-api:objectType knora-api:Resource .
+      
+          <http://rdfh.ch/beol/NUkE4PxyT1uEm3K9db63wQ> a knora-api:Resource .
+      }
+`);
+
 // search for letters that link to another letter via standoff that is authored by a person with IAF id "120379260" and has the title "1708-03-11_Scheuchzer_Johannes-Bernoulli_Johann_I"
 queryArr.push(`
 PREFIX beol: <http://api.knora.org/ontology/beol/simple/v2#>
