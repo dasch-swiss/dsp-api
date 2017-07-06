@@ -278,19 +278,96 @@ class SearchResponderV2 extends Responder {
 
 
                 case OntologyConstants.Xsd.Boolean =>
-                    AdditionalStatements()
+                    throw NotImplementedException(s"literal type ${OntologyConstants.Xsd.Boolean} not implemented yet")
 
                 case OntologyConstants.Xsd.Integer =>
-                    AdditionalStatements()
+                    if (apiSchema == ApiV2Schema.SIMPLE) {
+                        // do not include the given statement pattern in the answer because a direct statement from the resource to a string literal (simplified) has to be translated to a value object (extra level).
+
+                        statementPattern.obj match {
+
+                            case integerLiteral: ExtendedSearchXsdLiteral =>
+                                AdditionalStatements(additionalStatements = Vector(
+                                    ExtendedSearchStatementPattern(subj = statementPattern.subj, pred = ExtendedSearchInternalEntityIri(OntologyConstants.KnoraBase.HasValue), obj = ExtendedSearchVar("integerValueObj" + index), false),
+                                    ExtendedSearchStatementPattern(subj = ExtendedSearchVar("integerValueObj" + index), pred = ExtendedSearchIri(OntologyConstants.KnoraBase.IsDeleted), obj = ExtendedSearchXsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean), true),
+                                    ExtendedSearchStatementPattern(subj = statementPattern.subj, pred = statementPattern.pred, obj = ExtendedSearchVar("integerValueObj" + index), false),
+                                    ExtendedSearchStatementPattern(subj = ExtendedSearchVar("integerValueObj" + index), pred = ExtendedSearchInternalEntityIri(OntologyConstants.Rdf.Type), obj = ExtendedSearchInternalEntityIri(OntologyConstants.KnoraBase.IntValue), true),
+                                    ExtendedSearchStatementPattern(subj = ExtendedSearchVar("integerValueObj" + index), pred = ExtendedSearchVar("integerValueObjProp" + index), obj = ExtendedSearchVar("stringValueObjVal" + index), true),
+                                    ExtendedSearchStatementPattern(subj = ExtendedSearchVar("integerValueObj" + index), pred = ExtendedSearchIri(OntologyConstants.KnoraBase.ValueHasInteger), obj = statementPattern.obj, true)
+                                ), filterKeysProcessed = typeInfoKeysProcessed)
+
+                            case stringVar: ExtendedSearchVar =>
+                                AdditionalStatements(additionalStatements = Vector(
+                                    ExtendedSearchStatementPattern(subj = statementPattern.subj, pred = ExtendedSearchInternalEntityIri(OntologyConstants.KnoraBase.HasValue), obj = stringVar, false),
+                                    ExtendedSearchStatementPattern(subj = stringVar, pred = ExtendedSearchIri(OntologyConstants.KnoraBase.IsDeleted), obj = ExtendedSearchXsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean), true),
+                                    ExtendedSearchStatementPattern(subj = statementPattern.subj, pred = statementPattern.pred, obj = stringVar, false),
+                                    ExtendedSearchStatementPattern(subj = stringVar, pred = ExtendedSearchInternalEntityIri(OntologyConstants.Rdf.Type), obj = ExtendedSearchInternalEntityIri(OntologyConstants.KnoraBase.IntValue), true),
+                                    ExtendedSearchStatementPattern(subj = stringVar, pred = ExtendedSearchVar("integerValueObjProp" + index), obj = ExtendedSearchVar("integerValueObjVal" + index), true)
+                                ), filterKeysProcessed = typeInfoKeysProcessed)
+
+                            case _ => AdditionalStatements()
+
+                        }
+
+                    } else {
+                        throw NotImplementedException(s"Extended search not implemented for schema $apiSchema")
+                    }
 
                 case OntologyConstants.Xsd.Decimal =>
-                    AdditionalStatements()
+                    throw NotImplementedException(s"literal type ${OntologyConstants.Xsd.Decimal} not implemented yet")
 
                 case OntologyConstants.KnoraApiV2Simplified.Date =>
-                    AdditionalStatements()
+                    throw NotImplementedException(s"literal type ${OntologyConstants.KnoraApiV2Simplified.Date} not implemented yet")
+
+                case OntologyConstants.KnoraBase.StillImageFile =>
+                    if (apiSchema == ApiV2Schema.SIMPLE) {
+                        // do not include the given statement pattern in the answer because a direct statement from the resource to a string literal (simplified) has to be translated to a value object (extra level).
+
+                        statementPattern.obj match {
+
+                            case fileVar: ExtendedSearchVar =>
+                                AdditionalStatements(additionalStatements = Vector(
+                                    ExtendedSearchStatementPattern(subj = statementPattern.subj, pred = ExtendedSearchInternalEntityIri(OntologyConstants.KnoraBase.HasValue), obj = fileVar, false),
+                                    ExtendedSearchStatementPattern(subj = fileVar, pred = ExtendedSearchIri(OntologyConstants.KnoraBase.IsDeleted), obj = ExtendedSearchXsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean), true),
+                                    ExtendedSearchStatementPattern(subj = statementPattern.subj, pred = statementPattern.pred, obj = fileVar, false),
+                                    ExtendedSearchStatementPattern(subj = fileVar, pred = ExtendedSearchInternalEntityIri(OntologyConstants.Rdf.Type), obj = ExtendedSearchInternalEntityIri(OntologyConstants.KnoraBase.StillImageFileValue), true),
+                                    ExtendedSearchStatementPattern(subj = fileVar, pred = ExtendedSearchVar("fileValueObjProp" + index), obj = ExtendedSearchVar("fileValueObjVal" + index), true)
+                                ), filterKeysProcessed = typeInfoKeysProcessed)
+
+                            case _ => throw BadRequestException("could not handle file")
+
+                        }
+
+                    } else {
+                        throw NotImplementedException(s"Extended search not implemented for schema $apiSchema")
+                    }
+
+                case OntologyConstants.KnoraBase.Geom =>
+                    if (apiSchema == ApiV2Schema.SIMPLE) {
+                        // do not include the given statement pattern in the answer because a direct statement from the resource to a string literal (simplified) has to be translated to a value object (extra level).
+
+                        statementPattern.obj match {
+
+                            case fileVar: ExtendedSearchVar =>
+                                AdditionalStatements(additionalStatements = Vector(
+                                    ExtendedSearchStatementPattern(subj = statementPattern.subj, pred = ExtendedSearchInternalEntityIri(OntologyConstants.KnoraBase.HasValue), obj = fileVar, false),
+                                    ExtendedSearchStatementPattern(subj = fileVar, pred = ExtendedSearchIri(OntologyConstants.KnoraBase.IsDeleted), obj = ExtendedSearchXsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean), true),
+                                    ExtendedSearchStatementPattern(subj = statementPattern.subj, pred = statementPattern.pred, obj = fileVar, false),
+                                    ExtendedSearchStatementPattern(subj = fileVar, pred = ExtendedSearchInternalEntityIri(OntologyConstants.Rdf.Type), obj = ExtendedSearchInternalEntityIri(OntologyConstants.KnoraBase.GeomValue), true),
+                                    ExtendedSearchStatementPattern(subj = fileVar, pred = ExtendedSearchVar("geomValueObjProp" + index), obj = ExtendedSearchVar("geomValueObjVal" + index), true)
+                                ), filterKeysProcessed = typeInfoKeysProcessed)
+
+                            case _ => throw BadRequestException("could not handle file")
+
+                        }
+
+                    } else {
+                        throw NotImplementedException(s"Extended search not implemented for schema $apiSchema")
+                    }
+
 
                 case other =>
-                    AdditionalStatements()
+                    throw NotImplementedException(s"type $other not implemented")
             }
 
         }
@@ -440,29 +517,50 @@ class SearchResponderV2 extends Responder {
             if (apiSchema == ApiV2Schema.SIMPLE) {
 
                 // if pred is a valueProp, do not return the original statement
-                // it had to be converted to comply with knora's value object structure
+                // it had to be converted to comply with Knora's value object structure
 
                 statementP.pred match {
-                    case iriPred: ExtendedSearchInternalEntityIri =>
+                    case internalIriPred: ExtendedSearchInternalEntityIri =>
 
-                        val key = if (apiSchema == ApiV2Schema.SIMPLE) {
-                            // convert this Iri to knora-api simple since the type inspector uses knora-api simple Iris
-                            TypeableIriV2(InputValidation.internalEntityIriToSimpleApiV2EntityIri(iriPred.iri, () => throw AssertionException(s"${iriPred.iri} could not be converted back to knora-api simple format")))
-                        } else {
-                            throw NotImplementedException("The extended search for knora-api with value object has not been implemented yet")
-                        }
+                        // convert this Iri to knora-api simple since the type inspector uses knora-api simple Iris
+                        val key = TypeableIriV2(InputValidation.internalEntityIriToSimpleApiV2EntityIri(internalIriPred.iri, () => throw AssertionException(s"${internalIriPred.iri} could not be converted back to knora-api simple format")))
 
                         typeInspectionResultWhere.typedEntities.get(key) match {
-                            case Some(propTypeInfo: PropertyTypeInfoV2) if propTypeInfo.objectTypeIri != OntologyConstants.KnoraBase.Resource =>
-                                // value prop -> additonal statements have been created to comply with knora's value object structure
-                                ConvertedStatement(originalStatement = None, additionalStatements = additionalStatementsAll)
+                            case Some(propTypeInfo: PropertyTypeInfoV2)  =>
+                                if (InputValidation.isKnoraApiEntityIri(propTypeInfo.objectTypeIri)) {
+                                    val internalIri = InputValidation.externalIriToInternalIri(propTypeInfo.objectTypeIri, () => throw BadRequestException(s"${propTypeInfo.objectTypeIri} is not a valid external knora-api entity Iri"))
+
+                                    if (internalIri == OntologyConstants.KnoraBase.Resource) {
+                                        // linking prop
+                                        ConvertedStatement(originalStatement = Some(statementP), additionalStatements = additionalStatementsAll)
+                                    } else {
+                                        // no linking prop
+                                        ConvertedStatement(originalStatement = None, additionalStatements = additionalStatementsAll)
+                                    }
+
+
+                                } else {
+                                    // no linking prop
+                                    ConvertedStatement(originalStatement = None, additionalStatements = additionalStatementsAll)
+                                }
+
+                                // value prop -> additional statements have been created to comply with Knora's value object structure
+
                             case _ =>
                                 // include original statement
                                 ConvertedStatement(originalStatement = Some(statementP), additionalStatements = additionalStatementsAll)
                         }
 
-                    case _ => // include original statement
+                    case iriPred: ExtendedSearchIri =>
+                        // preserve original statement
                         ConvertedStatement(originalStatement = Some(statementP), additionalStatements = additionalStatementsAll)
+
+                    case varPred: ExtendedSearchVar =>
+                        // TODO: check if var stands for a value prop or a linking prop
+                        ConvertedStatement(originalStatement = Some(statementP), additionalStatements = additionalStatementsAll)
+
+                    case other => // include original statement
+                        throw NotImplementedException(s"preserve original statement not implemented for ${other}")
 
                 }
 
@@ -525,7 +623,13 @@ class SearchResponderV2 extends Responder {
                                                     nonPropTypeInfo.typeIri match {
                                                         case OntologyConstants.Xsd.String =>
                                                             val statement = ExtendedSearchStatementPattern(subj = searchVar, pred = ExtendedSearchInternalEntityIri(OntologyConstants.KnoraBase.ValueHasString), obj = ExtendedSearchVar("stringVar" + index), true)
-                                                            val filterPattern = ExtendedSearchFilterPattern(ExtendedSearchCompareExpression(leftArg = ExtendedSearchVar("stringVar" + index), operator = "=", rightArg = filterCompare.rightArg))
+                                                            val filterPattern = ExtendedSearchFilterPattern(ExtendedSearchCompareExpression(leftArg = ExtendedSearchVar("stringVar" + index), operator = filterCompare.operator, rightArg = filterCompare.rightArg))
+
+                                                            ConvertedQueryPatterns(originalPatterns = acc.originalPatterns :+ filterPattern, additionalPatterns = acc.additionalPatterns :+ statement, typeInfoKeysProcessedInStatements = acc.typeInfoKeysProcessedInStatements)
+
+                                                        case OntologyConstants.Xsd.Integer =>
+                                                            val statement = ExtendedSearchStatementPattern(subj = searchVar, pred = ExtendedSearchInternalEntityIri(OntologyConstants.KnoraBase.ValueHasInteger), obj = ExtendedSearchVar("intVar" + index), true)
+                                                            val filterPattern = ExtendedSearchFilterPattern(ExtendedSearchCompareExpression(leftArg = ExtendedSearchVar("intVar" + index), operator = filterCompare.operator, rightArg = filterCompare.rightArg))
 
                                                             ConvertedQueryPatterns(originalPatterns = acc.originalPatterns :+ filterPattern, additionalPatterns = acc.additionalPatterns :+ statement, typeInfoKeysProcessedInStatements = acc.typeInfoKeysProcessedInStatements)
                                                         case _ =>
@@ -539,8 +643,6 @@ class SearchResponderV2 extends Responder {
 
 
                                         case searchIri: ExtendedSearchInternalEntityIri =>
-                                            println(filterCompare)
-                                            println(searchIri)
                                             ConvertedQueryPatterns(originalPatterns = acc.originalPatterns ++ Seq(filterP), additionalPatterns = acc.additionalPatterns, typeInfoKeysProcessedInStatements = acc.typeInfoKeysProcessedInStatements)
 
                                         case _ =>
@@ -549,9 +651,10 @@ class SearchResponderV2 extends Responder {
 
 
                                 case filterOr: ExtendedSearchOrExpression =>
-                                    //println(filterOr)
+                                    // TODO: process left and right arg like ExtendedSearchCompareExpression
                                     ConvertedQueryPatterns(originalPatterns = acc.originalPatterns ++ Seq(filterP), additionalPatterns = acc.additionalPatterns, typeInfoKeysProcessedInStatements = acc.typeInfoKeysProcessedInStatements)
                                 case filterAnd: ExtendedSearchAndExpression =>
+                                    // TODO: process left and right arg like ExtendedSearchCompareExpression
                                     ConvertedQueryPatterns(originalPatterns = acc.originalPatterns ++ Seq(filterP), additionalPatterns = acc.additionalPatterns, typeInfoKeysProcessedInStatements = acc.typeInfoKeysProcessedInStatements)
                                 case _ =>
                                     ConvertedQueryPatterns(originalPatterns = acc.originalPatterns ++ Seq(filterP), additionalPatterns = acc.additionalPatterns, typeInfoKeysProcessedInStatements = acc.typeInfoKeysProcessedInStatements)
@@ -578,7 +681,7 @@ class SearchResponderV2 extends Responder {
                 query = constructQuery
             ).toString())
 
-            _ = println(searchSparql)
+            //_ = println(searchSparql)
 
 
             searchResponse: SparqlConstructResponse <- (storeManager ? SparqlConstructRequest(searchSparql)).mapTo[SparqlConstructResponse]

@@ -84,7 +84,7 @@ case class ExtendedSearchOptionalPattern(patterns: Seq[ExtendedSearchQueryPatter
   */
 case class ExtendedSearchCompareExpression(leftArg: ExtendedSearchFilterExpression, operator: String, rightArg: ExtendedSearchFilterExpression) extends ExtendedSearchFilterExpression {
 
-    def rdfValue = s"${leftArg.rdfValue} = ${rightArg.rdfValue}"
+    def rdfValue = s"${leftArg.rdfValue} $operator ${rightArg.rdfValue}"
 }
 
 /**

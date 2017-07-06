@@ -51,7 +51,7 @@ queryArr.push(`
       
           ?letter a beol:letter .
       
-          ?letter beol:title "1707-05-18_2_Hermann_Jacob-Scheuchzer_Johann_Jakob" .
+          ?letter beol:title ?title .
       
           ?letter beol:mentionsPerson <http://rdfh.ch/beol/NUkE4PxyT1uEm3K9db63wQ> .
       
@@ -112,6 +112,108 @@ CONSTRUCT {
 }
 `);
 
+queryArr.push(`
+    PREFIX incunabula: <http://api.knora.org/ontology/incunabula/simple/v2#>
+    PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+ 
+    CONSTRUCT {
+        ?page knora-api:isMainResource true .
+        
+        ?page a incunabula:page .
+        
+        ?page knora-api:partOf <http://data.knora.org/b6b5ff1eb703> .
+    } WHERE {
+    
+        ?page a incunabula:page .
+        ?page a knora-api:Resource .
+        
+        ?page knora-api:isPartOf <http://data.knora.org/b6b5ff1eb703> .
+        knora-api:isPartOf knora-api:objectType knora-api:Resource .
+        
+        <http://data.knora.org/b6b5ff1eb703> a knora-api:Resource .
+    
+        ?page incunabula:seqnum ?seqnum .
+        incunabula:seqnum knora-api:objectType xsd:integer .
+    
+        FILTER(?seqnum <= 10)
+    
+        ?seqnum a xsd:integer .
+    
+    }
+`);
+
+queryArr.push(`
+    PREFIX beol: <http://api.knora.org/ontology/beol/simple/v2#>
+    PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+ 
+    CONSTRUCT {
+        ?page knora-api:isMainResource true .
+        
+        ?page a beol:page .
+        
+        ?page knora-api:isPartOf <http://rdfh.ch/beol/dQ1D0AjmSMCS_j4yLaSmFw> .
+        
+        ?page beol:seqnum ?seqnum .
+        
+        ?page knora-api:hasStillImageFileValue ?file .
+    } WHERE {
+    
+        ?page a beol:page .
+        ?page a knora-api:Resource .
+        
+        ?page knora-api:isPartOf <http://rdfh.ch/beol/dQ1D0AjmSMCS_j4yLaSmFw> .
+        knora-api:isPartOf knora-api:objectType knora-api:Resource .
+        
+        <http://rdfh.ch/beol/dQ1D0AjmSMCS_j4yLaSmFw> a knora-api:Resource .
+    
+        ?page beol:seqnum ?seqnum .
+        beol:seqnum knora-api:objectType xsd:integer .
+    
+        ?seqnum a xsd:integer .
+    
+        ?page knora-api:hasStillImageFileValue ?file .
+        knora-api:hasStillImageFileValue knora-api:objectType knora-api:StillImageFile .
+        
+        ?file a knora-api:StillImageFile .
+    
+    }
+`);
+
+queryArr.push(`
+    PREFIX incunabula: <http://api.knora.org/ontology/incunabula/simple/v2#>
+    PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+ 
+    CONSTRUCT {
+        ?region knora-api:isMainResource true .
+        
+        ?region a knora-api:Region .
+        
+        ?region knora-api:isRegionOf <http://data.knora.org/9d626dc76c03> .
+        
+        ?region knora-api:hasGeometry ?geom .
+    } WHERE {
+    
+        ?region a knora-api:Region .
+        ?region a knora-api:Resource .
+        
+        ?region knora-api:isRegionOf <http://data.knora.org/9d626dc76c03> .
+        knora-api:isRegionOf knora-api:objectType knora-api:Resource .
+        
+        <http://data.knora.org/9d626dc76c03> a knora-api:Resource .
+        
+        ?region knora-api:hasGeometry ?geom .
+        knora-api:hasGeometry knora-api:objectType knora-api:Geom .
+        
+        ?geom a knora-api:Geom .
+        
+        ?region knora-api:hasComment ?comment .
+        knora-api:hasComment knora-api:objectType xsd:string .
+        
+        ?comment a xsd:string .
+        
+    }
+`);
+
 
 
 
@@ -142,6 +244,15 @@ function runQuery(queryStrArr, index) {
 
         if (error) {
             console.error(error.message);
+
+            let errMsg = '';
+            res.on('data', (chunk) => {
+                errMsg += chunk;
+            });
+
+            res.on('end', () => {
+                console.log(errMsg);
+            });
             // consume response data to free up memory
             res.resume();
             return;
@@ -158,7 +269,8 @@ function runQuery(queryStrArr, index) {
             try {
                 let timeEnd = new Date();
                 let duration = timeEnd - timeStart;
-                //const parsedData = JSON.parse(rawData);
+                const parsedData = JSON.parse(rawData);
+                console.log(parsedData['numberOfItems'])
                 console.log(rawData);
                 console.log(`Duration in millis: ${duration}`);
                 console.log("++++++++++")

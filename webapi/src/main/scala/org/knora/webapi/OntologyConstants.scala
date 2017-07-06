@@ -192,8 +192,10 @@ object OntologyConstants {
         val UriValue: IRI = KnoraBasePrefixExpansion + "UriValue"
         val DecimalValue: IRI = KnoraBasePrefixExpansion + "DecimalValue"
         val DateValue: IRI = KnoraBasePrefixExpansion + "DateValue"
+        val Date: IRI = KnoraBasePrefixExpansion + "Date" // TODO: find a better solution for v2 simple
         val ColorValue: IRI = KnoraBasePrefixExpansion + "ColorValue"
         val GeomValue: IRI = KnoraBasePrefixExpansion + "GeomValue"
+        val Geom: IRI = KnoraBasePrefixExpansion + "Geom" // TODO: find a better solution for v2 simple
         val ListValue: IRI = KnoraBasePrefixExpansion + "ListValue"
         val IntervalValue: IRI = KnoraBasePrefixExpansion + "IntervalValue"
         val LinkValue: IRI = KnoraBasePrefixExpansion + "LinkValue"
@@ -203,6 +205,7 @@ object OntologyConstants {
         val DDDFileValue: IRI = KnoraBasePrefixExpansion + "DDDFileValue"
         val DocumentFileValue: IRI = KnoraBasePrefixExpansion + "DocumentFileValue"
         val StillImageFileValue: IRI = KnoraBasePrefixExpansion + "StillImageFileValue"
+        val StillImageFile: IRI = KnoraBasePrefixExpansion + "StillImageFile" // TODO: find a better solution for v2 simple
         val MovingImageFileValue: IRI = KnoraBasePrefixExpansion + "MovingImageFileValue"
         val TextFileValue: IRI = KnoraBasePrefixExpansion + "TextFileValue"
 
@@ -541,6 +544,10 @@ object OntologyConstants {
 
         val Date: IRI = KnoraApiV2PrefixExpansion + "date"
         val Resource: IRI = KnoraApiV2PrefixExpansion + "Resource"
+
+        val StillImageFile: IRI = KnoraApiV2PrefixExpansion + "StillImageFile"
+
+        val Geom: IRI = KnoraApiV2PrefixExpansion + "Geom"
     }
 
     object NamedGraphs {
