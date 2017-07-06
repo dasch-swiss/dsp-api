@@ -194,6 +194,7 @@ object OntologyConstants {
         val DateValue: IRI = KnoraBasePrefixExpansion + "DateValue"
         val Date: IRI = KnoraBasePrefixExpansion + "Date" // TODO: find a better solution for v2 simple
         val ColorValue: IRI = KnoraBasePrefixExpansion + "ColorValue"
+        val Color: IRI = KnoraBasePrefixExpansion + "Color" // TODO: find a better solution for v2 simple
         val GeomValue: IRI = KnoraBasePrefixExpansion + "GeomValue"
         val Geom: IRI = KnoraBasePrefixExpansion + "Geom" // TODO: find a better solution for v2 simple
         val ListValue: IRI = KnoraBasePrefixExpansion + "ListValue"
@@ -542,12 +543,14 @@ object OntologyConstants {
 
         val ObjectType: IRI = KnoraApiV2PrefixExpansion + "objectType"
 
-        val Date: IRI = KnoraApiV2PrefixExpansion + "date"
+        val Date: IRI = KnoraApiV2PrefixExpansion + "Date"
         val Resource: IRI = KnoraApiV2PrefixExpansion + "Resource"
 
         val StillImageFile: IRI = KnoraApiV2PrefixExpansion + "StillImageFile"
 
         val Geom: IRI = KnoraApiV2PrefixExpansion + "Geom"
+
+        val Color: IRI =  KnoraApiV2PrefixExpansion + "Color"
     }
 
     object NamedGraphs {

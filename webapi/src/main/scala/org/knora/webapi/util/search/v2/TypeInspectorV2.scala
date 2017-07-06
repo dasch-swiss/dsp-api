@@ -133,7 +133,8 @@ class ExplicitTypeInspectorV2(apiType: ApiV2Schema.Value) extends TypeInspectorV
             OntologyConstants.KnoraApiV2Simplified.Date,
             OntologyConstants.KnoraApiV2Simplified.Resource,
             OntologyConstants.KnoraApiV2Simplified.StillImageFile,
-            OntologyConstants.KnoraApiV2Simplified.Geom
+            OntologyConstants.KnoraApiV2Simplified.Geom,
+            OntologyConstants.KnoraApiV2Simplified.Color
         )
 
         /**

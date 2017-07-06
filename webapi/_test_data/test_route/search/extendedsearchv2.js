@@ -225,6 +225,10 @@ queryArr.push(`
         ?region knora-api:isRegionOf <http://data.knora.org/9d626dc76c03> .
         
         ?region knora-api:hasGeometry ?geom .
+        
+        ?region knora-api:hasComment ?comment .
+        
+        ?region knora-api:hasColor ?color .
     } WHERE {
     
         ?region a knora-api:Region .
@@ -245,8 +249,103 @@ queryArr.push(`
         
         ?comment a xsd:string .
         
+        ?region knora-api:hasColor ?color .
+        knora-api:hasColor knora-api:objectType knora-api:Color .
+        
+        ?color a knora-api:Color .
+        
     }
 `);
+
+queryArr.push(`
+    PREFIX incunabula: <http://api.knora.org/ontology/incunabula/simple/v2#>
+    PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+    
+    CONSTRUCT {
+        ?book knora-api:isMainResource true .
+    
+        ?book a incunabula:book .
+        
+        ?book incunabula:title ?title .
+        
+        ?book incunabula:pubdate "JULIAN:1497-03-01" .
+    } WHERE {
+        
+        ?book a incunabula:book .
+        ?book a knora-api:Resource .
+        
+        ?book incunabula:title ?title .
+        incunabula:title knora-api:objectType xsd:string .
+        
+        ?title a xsd:string .
+        
+        ?book incunabula:pubdate "JULIAN:1497-03-01" .
+        incunabula:pubdate knora-api:objectType knora-api:Date .
+        
+    }
+`)
+
+queryArr.push(`
+    PREFIX incunabula: <http://api.knora.org/ontology/incunabula/simple/v2#>
+    PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+    
+    CONSTRUCT {
+        ?book knora-api:isMainResource true .
+    
+        ?book a incunabula:book .
+        
+        ?book incunabula:title ?title .
+        
+        ?book incunabula:pubdate ?pubdate .
+    } WHERE {
+        
+        ?book a incunabula:book .
+        ?book a knora-api:Resource .
+        
+        ?book incunabula:title ?title .
+        incunabula:title knora-api:objectType xsd:string .
+        
+        ?title a xsd:string .
+        
+        ?book incunabula:pubdate ?pubdate .
+        incunabula:pubdate knora-api:objectType knora-api:Date .
+        
+        ?pubdate a knora-api:Date .
+        FILTER(?pubdate = "JULIAN:1497-03")
+        
+    }
+`)
+
+queryArr.push(`
+    PREFIX incunabula: <http://api.knora.org/ontology/incunabula/simple/v2#>
+    PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+    
+    CONSTRUCT {
+        ?book knora-api:isMainResource true .
+    
+        ?book a incunabula:book .
+        
+        ?book incunabula:title ?title .
+        
+        ?book incunabula:pubdate ?pubdate .
+    } WHERE {
+        
+        ?book a incunabula:book .
+        ?book a knora-api:Resource .
+        
+        ?book incunabula:title ?title .
+        incunabula:title knora-api:objectType xsd:string .
+        
+        ?title a xsd:string .
+        
+        ?book incunabula:pubdate ?pubdate .
+        incunabula:pubdate knora-api:objectType knora-api:Date .
+        
+        ?pubdate a knora-api:Date .
+        FILTER(?pubdate = "JULIAN:1497")
+        
+    }
+`)
 
 
 
