@@ -1081,19 +1081,7 @@ class UsersResponderV1 extends ResponderV1 {
 
         // log.debug("updateUserV1 - userUpdatePayload: {}", userUpdatePayload)
 
-        val parametersCount = List(
-            userUpdatePayload.email,
-            userUpdatePayload.givenName,
-            userUpdatePayload.familyName,
-            userUpdatePayload.password,
-            userUpdatePayload.status,
-            userUpdatePayload.lang,
-            userUpdatePayload.projects,
-            userUpdatePayload.projectsAdmin,
-            userUpdatePayload.groups,
-            userUpdatePayload.systemAdmin
-        ).flatten.size
-        if (parametersCount == 0) throw BadRequestException("No data would be changed. Aborting request.")
+        /* Remember: some checks on UserUpdatePayloadV1 are implemented in the case class */
 
         for {
             /* Update the user */

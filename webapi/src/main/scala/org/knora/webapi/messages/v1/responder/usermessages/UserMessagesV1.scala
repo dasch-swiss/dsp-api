@@ -54,7 +54,7 @@ case class CreateUserApiRequestV1(email: String,
                                   lang: String,
                                   systemAdmin: Boolean) {
 
-    def toJsValue = UserV1JsonProtocol.createUserApiRequestV1Format.write(this)
+    def toJsValue: JsValue = UserV1JsonProtocol.createUserApiRequestV1Format.write(this)
 }
 
 /**
@@ -80,7 +80,7 @@ case class ChangeUserApiRequestV1(email: Option[String] = None,
                                   status: Option[Boolean] = None,
                                   systemAdmin: Option[Boolean] = None) {
 
-    val parametersCount = List(
+    val parametersCount: Int = List(
         email,
         givenName,
         familyName,
@@ -119,7 +119,7 @@ case class ChangeUserApiRequestV1(email: Option[String] = None,
     // change basic user information case
     if (parametersCount > 4) throw BadRequestException("To many parameters sent for basic user information change.")
 
-    def toJsValue = UserV1JsonProtocol.changeUserApiRequestV1Format.write(this)
+    def toJsValue: JsValue = UserV1JsonProtocol.changeUserApiRequestV1Format.write(this)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -391,7 +391,7 @@ case class UsersGetResponseV1(users: Seq[UserDataV1]) extends KnoraResponseV1 {
   * @param userProfile the user's profile of the requested type.
   */
 case class UserProfileResponseV1(userProfile: UserProfileV1) extends KnoraResponseV1 {
-    def toJsValue = UserV1JsonProtocol.userProfileResponseV1Format.write(this)
+    def toJsValue: JsValue = UserV1JsonProtocol.userProfileResponseV1Format.write(this)
 }
 
 /**
@@ -400,7 +400,7 @@ case class UserProfileResponseV1(userProfile: UserProfileV1) extends KnoraRespon
   * @param projects a sequence of projects the user is member of.
   */
 case class UserProjectMembershipsGetResponseV1(projects: Seq[IRI]) extends KnoraResponseV1 {
-    def toJsValue = UserV1JsonProtocol.userProjectMembershipsGetResponseV1Format.write(this)
+    def toJsValue: JsValue = UserV1JsonProtocol.userProjectMembershipsGetResponseV1Format.write(this)
 }
 
 /**
@@ -409,7 +409,7 @@ case class UserProjectMembershipsGetResponseV1(projects: Seq[IRI]) extends Knora
   * @param projects a sequence of projects the user is member of the project admin group.
   */
 case class UserProjectAdminMembershipsGetResponseV1(projects: Seq[IRI]) extends KnoraResponseV1 {
-    def toJsValue = UserV1JsonProtocol.userProjectAdminMembershipsGetResponseV1Format.write(this)
+    def toJsValue: JsValue = UserV1JsonProtocol.userProjectAdminMembershipsGetResponseV1Format.write(this)
 }
 
 /**
@@ -418,7 +418,7 @@ case class UserProjectAdminMembershipsGetResponseV1(projects: Seq[IRI]) extends 
   * @param groups a sequence of groups the user is member of.
   */
 case class UserGroupMembershipsGetResponseV1(groups: Seq[IRI]) extends KnoraResponseV1 {
-    def toJsValue = UserV1JsonProtocol.userGroupMembershipsGetResponseV1Format.write(this)
+    def toJsValue: JsValue = UserV1JsonProtocol.userGroupMembershipsGetResponseV1Format.write(this)
 }
 
 /**
@@ -427,7 +427,7 @@ case class UserGroupMembershipsGetResponseV1(groups: Seq[IRI]) extends KnoraResp
   * @param userProfile the new user profile of the created/modified user.
   */
 case class UserOperationResponseV1(userProfile: UserProfileV1) extends KnoraResponseV1 {
-    def toJsValue = UserV1JsonProtocol.userOperationResponseV1Format.write(this)
+    def toJsValue: JsValue = UserV1JsonProtocol.userOperationResponseV1Format.write(this)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -593,7 +593,7 @@ case class UserDataV1(user_id: Option[IRI] = None,
         }
     }
 
-    def toJsValue = UserV1JsonProtocol.userDataV1Format.write(this)
+    def toJsValue: JsValue = UserV1JsonProtocol.userDataV1Format.write(this)
 
 }
 
@@ -657,7 +657,64 @@ case class UserUpdatePayloadV1(email: Option[String] = None,
                                projects: Option[Seq[IRI]] = None,
                                projectsAdmin: Option[Seq[IRI]] = None,
                                groups: Option[Seq[IRI]] = None,
-                               systemAdmin: Option[Boolean] = None)
+                               systemAdmin: Option[Boolean] = None) {
+
+    val parametersCount: Int = List(
+        email,
+        givenName,
+        familyName,
+        password,
+        status,
+        lang,
+        projects,
+        projectsAdmin,
+        groups,
+        systemAdmin
+    ).flatten.size
+
+    // something needs to be sent, i.e. everything 'None' is not allowed
+    if (parametersCount == 0) {
+        throw BadRequestException("No data sent in API request.")
+    }
+
+    /* check that only allowed information for the 4 cases is send and not more. */
+
+    // change password case
+    if (password.isDefined && parametersCount > 1) {
+        throw BadRequestException("To many parameters sent for password change.")
+    }
+
+    // change status case
+    if (status.isDefined && parametersCount > 1) {
+        throw BadRequestException("To many parameters sent for user status change.")
+    }
+
+    // change system admin membership case
+    if (systemAdmin.isDefined && parametersCount > 1) {
+        throw BadRequestException("To many parameters sent for system admin membership change.")
+    }
+
+    // change project memberships
+    if (projects.isDefined && parametersCount > 1) {
+        throw BadRequestException("To many parameters sent for project membership change.")
+    }
+
+    // change projectAdmin memberships
+    if (projectsAdmin.isDefined && parametersCount > 1) {
+        throw BadRequestException("To many parameters sent for projectAdmin membership change.")
+    }
+
+    // change group memberships
+    if (groups.isDefined && parametersCount > 1) {
+        throw BadRequestException("To many parameters sent for group membership change.")
+    }
+
+    // change basic user information case
+    if (parametersCount > 4) {
+        throw BadRequestException("To many parameters sent for basic user information change.")
+    }
+
+}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // JSON formatting
