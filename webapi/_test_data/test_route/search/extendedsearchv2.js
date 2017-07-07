@@ -107,7 +107,7 @@ queryArr.push(`
       }
 `);
 
-// search for letters that link to another letter via standoff that is authored by a person with IAF id "120379260" and has the title "1708-03-11_Scheuchzer_Johannes-Bernoulli_Johann_I"
+// search for a letter with the given title that links to another letter via standoff that is authored by a person with IAF id "120379260" and has the title "1708-03-11_Scheuchzer_Johannes-Bernoulli_Johann_I"
 queryArr.push(`
 PREFIX beol: <http://api.knora.org/ontology/beol/simple/v2#>
 PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
