@@ -26,6 +26,8 @@ export module projectFormats {
 
     /**
      * Represents an API request payload sent during a project creation request.
+     *
+     * HTTP POST request to http://host/v1/projects
      */
     export interface CreateProjectApiRequestV1 {
 
@@ -68,6 +70,8 @@ export module projectFormats {
 
     /**
      * Represents an API request payload sent during a project change request.
+     *
+     * HTTP PUT request to http://host/v1/projects/projectIRI
      *
      * There are two distinct use cases / payload combination:
      *
@@ -129,6 +133,8 @@ export module projectFormats {
 
     /**
      * Represents a response to a request for information about all projects.
+     *
+     * HTTP GET request to http://host/v1/projects
      */
     export interface ProjectsResponseV1 {
 
@@ -140,6 +146,8 @@ export module projectFormats {
 
     /**
      * Represents a response to a request for information about a single project.
+     *
+     * HTTP GET request to http://host/v1/projects/projectIRI
      */
     export interface ProjectInfoResponseV1 {
 
@@ -151,6 +159,8 @@ export module projectFormats {
 
     /**
      * Represents a response to a request for a list of members inside a single project.
+     *
+     * HTTP GET request to http://host/v1/projects/members
      */
     export interface ProjectMembersGetResponseV1 {
 
@@ -167,6 +177,8 @@ export module projectFormats {
 
     /**
      * Represents a response to a request for a list of admin members inside a single project.
+     *
+     * HTTP GET request to http://host/v1/projects/admin-members/projectIRI
      */
     export interface ProjectAdminMembersGetResponseV1 {
 

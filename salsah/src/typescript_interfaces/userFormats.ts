@@ -29,6 +29,8 @@ export module userFormats {
 
     /**
      * Represents an API request payload sent during a user creation request.
+     *
+     * HTTP POST request to http://host/v1/users
      */
     export interface CreateUserApiRequestV1 {
 
@@ -71,6 +73,8 @@ export module userFormats {
 
     /**
      * Represents an API request payload sent during a user change request.
+     *
+     * HTTP PUT request to http://host/v1/users/userIRI
      *
      * There are four distinct use case / payload combination:
      *
@@ -127,6 +131,9 @@ export module userFormats {
 
     /**
      * Represents a response to a request for information about all users.
+     *
+     * HTTP GET request to http://host/v1/users
+     *
      */
     export interface UsersGetResponseV1 extends basicMessageComponents.basicResponse {
         /**
@@ -137,6 +144,8 @@ export module userFormats {
 
     /**
      * Represents a response to a request for information about a single user.
+     *
+     * HTTP GET request to http://host/v1/users/userIRI
      */
     export interface UserProfileResponseV1 {
         userProfile: UserProfileV1
@@ -144,6 +153,8 @@ export module userFormats {
 
     /**
      * Represents an answer to a request for a list of all projects the user is member of.
+     *
+     * HTTP GET request to http://host/v1/users/projects
      */
     export interface UserProjectMembershipsGetResponseV1 {
 
@@ -152,6 +163,8 @@ export module userFormats {
 
     /**
      * Represents an answer to a request for a list of all projects the user is member of the project admin group.
+     *
+     * HTTP GET request to http://host/v1/users/projects-admin
      */
     export interface UserProjectAdminMembershipsGetResponseV1 {
 
@@ -160,6 +173,8 @@ export module userFormats {
 
     /**
      * Represents an answer to a request for a list of all groups the user is member of.
+     *
+     * HTTP GET request to http://host/v1/users/groups
      */
     export interface UserGroupMembershipsGetResponseV1 {
 
@@ -169,6 +184,7 @@ export module userFormats {
 
     /**
      * Represents an answer to a user creation / change operation
+     *
      */
     export interface UserOperationResponseV1 {
 

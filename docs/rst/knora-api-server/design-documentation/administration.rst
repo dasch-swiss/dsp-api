@@ -779,10 +779,12 @@ Users Endpoint
 
 **Create user**:
   - Required permission: none, self-registration is allowed
-  - Required information: email, given name, family name, password
-  - Returns IRI of newly created user
+  - Required information: email (unique), given name, family name, password, password, status, systemAdmin
+  - Returns information about the newly created user
+  - TypeScript Docs: userFormats - CreateUserApiRequestV1
   - POST: ``/v1/users/``
   - BODY:
+
 ::
 
   {
@@ -795,11 +797,17 @@ Users Endpoint
     "systemAdmin": false
   }
 
-**Update user's basic information**:
+**Update user information**:
   - Required permission: SystemAdmin / User
-  - Changeable information: email, given name, family name
-  - PUT: ``/v1/users/userIri``
+  - Changeable information: email, given name, family name, password, status, SystemAdmin membership
+  - Remark: There are four distinct use case / payload combination. It is not possible to mix cases, e.g., sending
+    ``newUserStatus`` and basic user information at the same time will result in an error: (1) change password:
+    oldPassword, newPassword, (2) change status: newUserStatus, (3) change system admin membership: newSystemAdminMembershipStatus,
+    and (4) change basic user information: email, givenName, familyName, lang
+  - TypeScript Docs: userFormats - ChangeUserApiRequestV1
+  - PUT: ``/v1/users/<userIRI>``
   - BODY:
+
 ::
 
   {
@@ -812,8 +820,9 @@ Users Endpoint
 **Update user's password**
   - Required permission: User
   - Changeable information: password
-  - PUT: ``/v1/users/userIri``
+  - PUT: ``/v1/users/<userIri>``
   - BODY:
+
 ::
 
   {
@@ -821,53 +830,61 @@ Users Endpoint
     "newPassword": "test1234"
   }
 
-**Delete user (-> update user)**:
+**Delete user**:
   - Required permission: SystemAdmin / User
-  - Effects property: ``knora-base:isActiveUser`` with value ``true`` or ``false``
-  - PUT: ``/v1/users/userIri``
+  - Remark: The same as updating a user and changing ``status`` do ``false``. To un-delete, set ``status`` to ``true``.
+  - PUT: ``/v1/users/<userIRI>``
   - BODY:
+
 ::
 
   {
-    "newUserStatus": false // true or false
+    "status": false // true or false
   }
 
+**Delete user (-> update user)**
+  - Required permission: SystemAdmin / User
+  - Remark: The same as updating a user and changing ``status`` to ``false``. To un-delete, set ``status`` to ``true``.
+  - DELETE: ``/v1/projects/projectIRI``
+  - BODY: empty
+
 **Get user's project memberships**
-  - GET: ``/v1/users/projects/<userIri>
+  - GET: ``/v1/users/projects/<userIRI>``
 
 **Add/remove user to/from project**:
   - Required permission: SystemAdmin / ProjectAdmin / User (if project self-assignment is enabled)
   - Required information: project IRI, user IRI
   - Effects: ``knora-base:isInProject`` user property
-  - POST / DELETE: ``/v1/users/projects/<userIri>/<projectIri>``
+  - POST / DELETE: ``/v1/users/projects/<userIRI>/<projectIRI>``
   - BODY: empty
 
 **Get user's project admin memberships**
-  - GET: ``/v1/users/projects-admin/<userIri>
+  - GET: ``/v1/users/projects-admin/<userIri>``
 
 **Add/remove user to/from project admin group**
   - Required permission: SystemAdmin / ProjectAdmin
   - Required information: project IRI, user IRI
   - Effects: ``knora-base:isInProjectAdminGroup`` user property
-  - POST / DELETE: ``/v1/users/projects-admin/<userIri>/<projectIri>``
+  - POST / DELETE: ``/v1/users/projects-admin/<userIRI>/<projectIRI>``
   - BODY: empty
 
 **Get user's group memberships**
-  - GET: ``/v1/users/groups/<userIri>
+  - GET: ``/v1/users/groups/<userIri>``
 
 **Add/remove user to/from 'normal' group** (not *SystemAdmin* or *ProjectAdmin*):
   - Required permission: SystemAdmin / hasProjectAllAdminPermission / hasProjectAllGroupAdminPermission /
     hasProjectRestrictedGroupAdminPermission (for this group) / User (if group self-assignment is enabled)
   - Required information: group IRI, user IRI
   - Effects: ``knora-base:isInGroup``
-  - POST / DELETE: ``/v1/users/groups/<userIri>/<groupIri>``
+  - POST / DELETE: ``/v1/users/groups/<userIRI>/<groupIRI>``
   - BODY: empty
 
 **Add/remove user to/from system admin group**:
   - Required permission: SystemAdmin / User
   - Effects property: ``knora-base:isInSystemAdminGroup`` with value ``true`` or ``false``
-  - PUT: ``/v1/users/userIri``
+  - PUT: ``/v1/users/<userIri>``
   - BODY:
+
 ::
 
   {
@@ -895,50 +912,57 @@ Projects Endpoint
 ^^^^^^^^^^^^^^^^^^
 **Create project**:
   - Required permission: SystemAdmin
-  - Required information: projectShortname (unique; used for named graphs), projectBasepath
-  - Optional information: projectLongname, projectDescription, projectKeyword, projectLogo
-  - Returns IRI of newly created project
-  - Effects:
-      - create project
-      - create group named *ProjectAdmin*, give group *hasProjectAllAdminPermission* and *hasProjectResourceCreateAllPermission*
-      - create group named *ProjectMember*, give group *hasProjectResourceCreateAllPermission*,
-        *knora-base:hasDefaultChangeRightsPermission* for *knora-base:Creator*,
-        *knora-base:hasDefaultModifyPermission* for this *ProjectMember* group, and
-        *knora-base:hasDefaultViewPermission* for *knora-base:KnownUser*
+  - Required information: shortname (unique; used for named graphs), status, selfjoin
+  - Optional information: longname, description, keywords, logo
+  - Returns information about the newly created project
+  - Remark: There are two distinct use cases / payload combination: (1) change ontology and data graph: ontologygraph,
+    datagraph, (2) basic project information: shortname, longname, description, keywords, logo, institution, status,
+    selfjoin
+  - TypeScript Docs: projectFormats - CreateProjectApiRequestV1
   - POST: ``/v1/projects/``
   - BODY:
+
 ::
 
   {
+    "shortname": "newproject",
+    "longname": "project longname",
+    "description": "project description",
+    "keywords": "keywords",
+    "logo": "/fu/bar/baz.jpg",
+    "status": true,
+    "selfjoin": false
   }
 
 **Update project information**:
   - Required permission: SystemAdmin / ProjectAdmin
-  - Changeable information: shortname, longname, description
-  - Effects property: ``knora-base:projectLongname``, ``knora-base:description``
-  - PUT: ``/v1/projects/projectIri``
+  - Changeable information: shortname, longname, description, keywords, logo, status, selfjoin
+  - TypeScript Docs: projectFormats - ChangeProjectApiRequestV1
+  - PUT: ``/v1/projects/<projectIRI>``
   - BODY:
+
 ::
 
   {
+    "shortname": "newproject",
+    "longname": "project longname",
+    "description": "project description",
+    "keywords": "keywords",
+    "logo": "/fu/bar/baz.jpg",
+    "status": true,
+    "selfjoin": false
   }
 
 
 **Get project members**
   - Required permission: SystemAdmin / ProjectAdmin
   - Required information: project IRI
-  - GET: ``/v1/projects/members/projectIri``
+  - GET: ``/v1/projects/members/<projectIRI>``
 
-**Delete / Un-Delete project (-> update project)**:
+**Delete project (-> update project)**:
   - Required permission: SystemAdmin / ProjectAdmin
-  - Effects property: ``knora-base:isActiveProject`` with value ``true`` or ``false``
-  - DELETE / POST: ``/v1/projects/status/projectIri``
-  - BODY: empty
-
-**Enable/disable self-join**:
-  - Required permission: SystemAdmin / ProjectAdmin
-  - Effects property: ``knora-base:hasSelfAssignmentEnabled`` with value ``true`` or ``false``
-  - POST / DELETE: ``/v1/projects/selfjoin/projectIri
+  - Remark: The same as updating a project and changing ``status`` to ``false``. To un-delete, set ``status`` to ``true``.
+  - DELETE: ``/v1/projects/<projectIRI>``
   - BODY: empty
 
 Example Project Information stored in admin named graph:
@@ -960,41 +984,45 @@ Groups Endpoint
 
 **Create group**:
   - Required permission: SystemAdmin / hasProjectAllAdminPermission / hasProjectAllGroupAdminPermission
-  - Required information: group name (unique inside project), project IRI
+  - Required information: name (unique inside project), project IRI
   - Optional information: group description
-  - Returns IRI of newly created group
+  - Returns information about the newly created group
+  - TypeScript Docs: groupFormats - CreateGroupApiRequestV1
   - POST: ``/v1/groups``
   - BODY:
+
 ::
 
   {
+    "name": "NewGroup",
+    "description": "NewGroupDescription",
+    "project": "http://data.knora.org/projects/images",
+    "status": true,
+    "selfjoin": false
   }
 
 
 **Update group information**:
   - Required permission: SystemAdmin / hasProjectAllAdminPermission /  hasProjectAllGroupAdminPermission /
     hasProjectRestrictedGroupAdminPermission (for this group)
-  - Changeable information: name, group description
-  - Effects property: ``<http://xmlns.com/foaf/0.1/name>``, ``knora-base:groupDescription``
-  - PUT: ``/v1/groups/groupIri``
+  - Changeable information: name, description, status, selfjoin
+  - TypeScript Docs: groupFormats - ChangeGroupApiRequestV1
+  - PUT: ``/v1/groups/<groupIRI>``
   - BODY:
+
 ::
 
   {
+    "name": "UpdatedGroupName",
+    "description": "UpdatedGroupDescription".
+    "status": true,
+    "selfjoin": false
   }
 
-**Delete / Un-Delete group**:
+**Delete group (-> update group)**:
   - Required permission: SystemAdmin / hasProjectAllAdminPermission
-  - Effect: user's ``knora-base:isInGroup`` / group's ``knora-base:status`` / removes group from any object permissions
-  - DELETE / POST: ``/v1/groups/status/groupIri``
-
-**Enable/disable self-join**:
-  - Required permission: SystemAdmin / hasProjectAllAdminPermission / hasProjectAllGroupAdminPermission /
-    hasProjectRestrictedGroupAdminPermission (for this group)
-  - Effects property: ``knora-base:hasSelfAssignmentEnabled`` with value ``true`` or ``false``
-  - POST / DELETE: ``/v1/groups/selfjoin/groupIri
-  - BODY: empty
-
+  - Remark: The same as updating a group and changing ``status`` to ``false``. To un-delete, set ``status`` to ``true``.
+  - DELETE: ``/v1/groups/<groupIRI>``
 
 Example Group Information stored in admin named graph:
 ::

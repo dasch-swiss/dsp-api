@@ -23,6 +23,8 @@ export module groupFormats {
 
     /**
      * Represents an API request payload sent during a group creation request.
+     *
+     * HTTP POST request to http://host/v1/groups
      */
     export interface CreateGroupApiRequestV1 {
 
@@ -54,6 +56,8 @@ export module groupFormats {
 
     /**
      * Represents an API request payload sent during a group change request.
+     *
+     * HTTP PUT request to http://host/v1/groups/groupsIRI
      */
     export interface ChangeGroupApiRequestV1 {
 
@@ -80,6 +84,8 @@ export module groupFormats {
 
     /**
      * Represents a response to a request for information about all groups.
+     *
+     * HTTP GET request to http://host/v1/groups
      */
     export interface GroupsResponseV1 {
 
@@ -91,6 +97,8 @@ export module groupFormats {
 
     /**
      * Represents a response to a request for information about a single group.
+     *
+     * HTTP GET request to http://host/v1/groups/groupIRI
      */
     export interface GroupInfoResponseV1 {
 
@@ -102,6 +110,8 @@ export module groupFormats {
 
     /**
      * Represents a response to a request for a list of members inside a single group.
+     *
+     * HTTP GET request to http://host/v1/groups/members/groupIRI
      */
     export interface GroupMembersResponseV1 {
 
