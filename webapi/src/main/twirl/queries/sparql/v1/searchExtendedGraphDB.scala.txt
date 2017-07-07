@@ -207,6 +207,27 @@ WHERE {
                         ?valueObject@index knora-base:valueHasEndJDN ?dateEnd@index .
                         ?valueObject@index knora-base:valueHasString ?dateString@index .
 
+                        @*
+
+                        This condition checks whether the defined criterion for a date value and a resource's date value overlap.
+
+                        Since dates are represented as periods, equality is given if a date value's period ends after or equals the start of the defined period (search criterion date start) and
+                        a date value's period starts before or equals the end of the defined period (search criterion date end).
+
+                        Formally, equality is the negation of inequality of two given dates. Inequality (see below) is given if a date value's period starts after the end of the defined period (search criterion date end) or
+                        ends before the start of the defined period (search criterion date start).
+
+                        Negation of the filter expression for inequality:
+
+                        FILTER (!(@searchCriterion.dateStart > ?dateEnd@index || @searchCriterion.dateEnd < ?dateStart@index))
+
+                        Following De Morgan's laws, the expression can be rewritten by negating both parts of the expression and combining them with a logical AND:
+
+                        FILTER(!(@searchCriterion.dateStart > ?dateEnd@index) && !(@searchCriterion.dateEnd < ?dateStart@index))
+
+                        which can be then further simplified to the expression stated below.
+
+                        *@
                         FILTER (@searchCriterion.dateStart <= ?dateEnd@index && @searchCriterion.dateEnd >= ?dateStart@index)
                         BIND(?dateString@index as ?literal@index)
 
