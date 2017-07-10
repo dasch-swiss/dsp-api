@@ -1193,6 +1193,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    |        <knoraXmlImport:label>Niels Henrik Abel</knoraXmlImport:label>
                    |        <beol:hasFamilyName knoraType="richtext_value">Abel</beol:hasFamilyName>
                    |        <beol:hasGivenName knoraType="richtext_value">Niels Henrik</beol:hasGivenName>
+                   |        <beol:personHasTitle knoraType="richtext_value">Sir</beol:personHasTitle>
                    |    </beol:person>
                    |    <beol:person id="holmes">
                    |        <knoraXmlImport:label>Sherlock Holmes</knoraXmlImport:label>

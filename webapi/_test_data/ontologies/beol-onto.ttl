@@ -442,9 +442,9 @@
                    rdfs:subPropertyOf knora-base:hasValue .
 
     ### ###########################################
-    ### beol:hasTitle
+    ### beol:personHasTitle
 
-    :hasTitle rdf:type owl:ObjectProperty ;
+    :personHasTitle rdf:type owl:ObjectProperty ;
 
                     rdfs:label "Titel"@de ,
                              "Title"@en ;
@@ -541,10 +541,10 @@
 
     :hasFloruitDate rdf:type owl:ObjectProperty ;
 
-                  rdfs:label "Blühtedataum"@de ,
+                  rdfs:label "Floruit-Dataum"@de ,
                              "Floruit Date"@en ;
 
-                  rdfs:comment """Repräsentiert ein Blühtedataum."""@de,
+                  rdfs:comment """Repräsentiert ein Floruit-Dataum."""@de,
                                """Represents a floruit date."""@en ;
 
                   knora-base:objectClassConstraint knora-base:DateValue ;
@@ -615,7 +615,7 @@
 
    :hasFloruitPlace rdf:type owl:ObjectProperty ;
 
-                  rdfs:label "Blühteort"@de ,
+                  rdfs:label "Floruit-Ort"@de ,
                             "Place of Floruit"@en ;
 
                   rdfs:comment """Represents a place a person is seen."""@en ;
@@ -829,7 +829,7 @@
                       owl:maxCardinality "1"^^xsd:nonNegativeInteger
                     ],
                     [ rdf:type owl:Restriction ;
-                      owl:onProperty :hasTitle ;
+                      owl:onProperty :personHasTitle ;
                       owl:minCardinality "0"^^xsd:nonNegativeInteger
                     ],
                     [ rdf:type owl:Restriction ;
