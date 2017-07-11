@@ -95,25 +95,26 @@ object DateUtilV1 {
 
         val daysInMonth = Calendar.DAY_OF_MONTH // will be used to determine the number of days in the given month
         // val monthsInYear = Calendar.MONTH // will be used to determine the number of months in the given year (generic for other calendars)
+        val dateStringSplitByEra: Array[String] = dateString.split(" ")
+        val era: Option[Int] = dateStringSplitByEra.length match {
 
-        var era: Option[Int] = None
+            case 1 =>
+                // no era indicated, assume AD/CE
+                Some(GregorianCalendar.AD)
+            case 2 =>
+                dateStringSplitByEra(1) match {
+                    case "BC" => Some(GregorianCalendar.BC)
+                    case "AD" => Some(GregorianCalendar.AD)
+                    // java Gregorian calendar had just BC and AD as public fields
+                    case "BCE" => Some(GregorianCalendar.BC)  //BCE = BC
+                    case "CE" =>  Some(GregorianCalendar.AD)
 
-        var date: String =dateString
-        if (dateString.contains(" ")) {
-
-            val dateWEra = dateString.split(" ")
-            date = dateWEra(0)
-            dateWEra(1) match {
-                case "BC" => era = Some(GregorianCalendar.BC)
-                case "AD" => era = Some(GregorianCalendar.AD)
-                // java Gregorian calendar had just BC and AD as public fields
-                case "BCE" => era = Some(GregorianCalendar.BC)  //BCE = BC
-                case "CE" => era = Some(GregorianCalendar.AD)   //CE = AD
-            }
+                }
+            case _ => throw new IllegalArgumentException(s"Could not handle era in $dateString")
         }
 
 
-        val dateSegments = date.split(InputValidation.PrecisionSeparator)
+        val dateSegments = dateStringSplitByEra(0).split(InputValidation.PrecisionSeparator)
 
         // Determine and handle precision of the given date.
         // When setting the date, set time to noon (12) as JDC would contain a fraction otherwise:
