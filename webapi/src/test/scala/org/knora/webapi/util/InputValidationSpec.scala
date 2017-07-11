@@ -73,18 +73,18 @@ class InputValidationSpec extends WordSpec with Matchers {
             InputValidation.toDate(dateString, () => throw new IllegalArgumentException(s"Not accepted ${dateString}"))
         }
 
-        "accept JULIAN:2017" in {
-            val dateString = "JULIAN:2017"
+        "accept JULIAN:50 BCE" in {
+            val dateString = "JULIAN:50 BCE"
             InputValidation.toDate(dateString, () => throw new IllegalArgumentException(s"Not accepted ${dateString}"))
         }
 
-        "accept JULIAN:2017-05" in {
-            val dateString = "JULIAN:2017-05"
+        "accept JULIAN:1560-05 CE" in {
+            val dateString = "JULIAN:1560-05 CE"
             InputValidation.toDate(dateString, () => throw new IllegalArgumentException(s"Not accepted ${dateString}"))
         }
 
-        "accept JULIAN:2017-05-10" in {
-            val dateString = "JULIAN:2017-05-10"
+        "accept JULIAN:217-05-10 BCE" in {
+            val dateString = "JULIAN:217-05-10 BCE"
             InputValidation.toDate(dateString, () => throw new IllegalArgumentException(s"Not accepted ${dateString}"))
         }
 
@@ -95,6 +95,10 @@ class InputValidationSpec extends WordSpec with Matchers {
 
         "accept JULIAN:2017:2017-05-12" in {
             val dateString = "JULIAN:2017:2017-05-12"
+            InputValidation.toDate(dateString, () => throw new IllegalArgumentException(s"Not accepted ${dateString}"))
+        }
+        "accept JULIAN:500 BCE:10 CE" in {
+            val dateString = "JULIAN:500 BCE:10 CE"
             InputValidation.toDate(dateString, () => throw new IllegalArgumentException(s"Not accepted ${dateString}"))
         }
     }
