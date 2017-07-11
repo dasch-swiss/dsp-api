@@ -116,9 +116,9 @@ class ResponderManagerV1 extends Actor with ActorLogging {
     protected val usersRouter = makeDefaultUsersRouter
 
     /**
-      * Constructs the default Akka routing actor that routes messages to [[HierarchicalListsResponderV1]].
+      * Constructs the default Akka routing actor that routes messages to [[ListsResponderV1]].
       */
-    protected final def makeDefaultListsRouter = makeActor(FromConfig.props(Props[HierarchicalListsResponderV1]), HIERARCHICAL_LISTS_ROUTER_ACTOR_NAME)
+    protected final def makeDefaultListsRouter = makeActor(FromConfig.props(Props[ListsResponderV1]), LISTS_ROUTER_ACTOR_NAME)
 
     /**
       * The Akka routing actor that should receive messages addressed to the lists responder. Subclasses can override this

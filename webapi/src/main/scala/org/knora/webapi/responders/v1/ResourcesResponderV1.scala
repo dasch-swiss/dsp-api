@@ -1767,12 +1767,17 @@ class ResourcesResponderV1 extends ResponderV1 {
                     throw ForbiddenException(s"User $userIri does not have permission to mark resource ${resourceDeleteRequest.resourceIri} as deleted")
                 }
 
-                projectInfo <- {
+                maybeProjectInfo <- {
                     responderManager ? ProjectInfoByIRIGetV1(
                         resourceInfo.project_id,
                         None
                     )
-                }.mapTo[ProjectInfoV1]
+                }.mapTo[Option[ProjectInfoV1]]
+
+                projectInfo = maybeProjectInfo match {
+                    case Some(pi) => pi
+                    case None => throw NotFoundException(s"Project '${resourceInfo.project_id}' not found.")
+                }
 
                 // Create update sparql string
                 sparqlUpdate = queries.sparql.v1.txt.deleteResource(
@@ -1866,12 +1871,17 @@ class ResourcesResponderV1 extends ResponderV1 {
                     throw ForbiddenException(s"User $userIri does not have permission to change the label of resource $resourceIri")
                 }
 
-                projectInfo <- {
+                maybeProjectInfo <- {
                     responderManager ? ProjectInfoByIRIGetV1(
                         resourceInfo.project_id,
                         None
                     )
-                }.mapTo[ProjectInfoV1]
+                }.mapTo[Option[ProjectInfoV1]]
+
+                projectInfo = maybeProjectInfo match {
+                    case Some(pi) => pi
+                    case None => throw NotFoundException(s"Project '${resourceInfo.project_id}' not found.")
+                }
 
                 // get the named graph the resource is contained in by the resource's project
                 namedGraph = projectInfo.dataNamedGraph

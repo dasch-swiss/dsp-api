@@ -26,7 +26,6 @@ import akka.testkit._
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.listmessages._
 import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse}
-import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
 import org.knora.webapi.messages.v1.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent, ResetTriplestoreContentACK}
 import org.knora.webapi.responders._
 import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
@@ -35,19 +34,19 @@ import scala.concurrent.duration._
 
 
 /**
-  * Static data for testing [[HierarchicalListsResponderV1]].
+  * Static data for testing [[ListsResponderV1]].
   */
-object HierarchicalListsResponderV1Spec {
+object ListsResponderV1Spec {
 
 }
 
 /**
-  * Tests [[HierarchicalListsResponderV1]].
+  * Tests [[ListsResponderV1]].
   */
-class HierarchicalListsResponderV1Spec extends CoreSpec() with ImplicitSender {
+class ListsResponderV1Spec extends CoreSpec() with ImplicitSender {
 
     // Construct the actors needed for this test.
-    private val actorUnderTest = TestActorRef[HierarchicalListsResponderV1]
+    private val actorUnderTest = TestActorRef[ListsResponderV1]
     private val responderManager = system.actorOf(Props(new ResponderManagerV1 with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
     private val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
 
