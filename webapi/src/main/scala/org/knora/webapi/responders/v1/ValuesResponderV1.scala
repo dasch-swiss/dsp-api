@@ -22,7 +22,6 @@ package org.knora.webapi.responders.v1
 
 import akka.actor.Status
 import akka.pattern._
-import org.apache.jena.sparql.function.library.leviathan.log
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.ontologymessages.{Cardinality, EntityInfoGetRequestV1, EntityInfoGetResponseV1}
 import org.knora.webapi.messages.v1.responder.permissionmessages.{DefaultObjectAccessPermissionsStringForPropertyGetV1, DefaultObjectAccessPermissionsStringResponseV1}
@@ -39,9 +38,8 @@ import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util._
 
 import scala.annotation.tailrec
-import scala.collection.{breakOut, immutable}
-import scala.concurrent.duration._
-import scala.concurrent.{Await, Future}
+import scala.collection.breakOut
+import scala.concurrent.Future
 
 /**
   * Updates Knora values.
@@ -413,144 +411,134 @@ class ValuesResponderV1 extends ResponderV1 {
                 // Generate SPARQL for each value of each property
 
                 // Make a SparqlGenerationResultForProperty for each property.
-                sparqlGenerationResultsFutures: immutable.Iterable[Future[(IRI, SparqlGenerationResultForProperty)]] = groupedNumberedValuesWithValueHasOrder.map {
+                sparqlGenerationResults: Map[IRI, SparqlGenerationResultForProperty] = groupedNumberedValuesWithValueHasOrder.map {
                     case (propertyIri: IRI, valuesToCreate: Seq[NumberedValueToCreate]) =>
-                        for {
-                            defaultObjectAccessPermissions <- {
-                                responderManager ? DefaultObjectAccessPermissionsStringForPropertyGetV1(
-                                    projectIri = createMultipleValuesRequest.projectIri,
-                                    resourceClassIri = createMultipleValuesRequest.resourceClassIri,
-                                    propertyIri = propertyIri,
-                                    createMultipleValuesRequest.userProfile.permissionData)
-                            }.mapTo[DefaultObjectAccessPermissionsStringResponseV1]
+                        val defaultPropertyAccessPermissions: String = createMultipleValuesRequest.defaultPropertyAccessPermissions(propertyIri)
 
-                            // log.debug(s"createValueV1 - defaultObjectAccessPermissions: $defaultObjectAccessPermissions")
+                        // log.debug(s"createValueV1 - defaultPropertyAccessPermissions: $defaultPropertyAccessPermissions")
 
-                            // For each property, construct a SparqlGenerationResultForProperty containing WHERE clause statements, INSERT clause statements, and UnverifiedValueV1s.
-                            sparqlGenerationResultForProperty: SparqlGenerationResultForProperty = valuesToCreate.foldLeft(SparqlGenerationResultForProperty()) {
-                                case (propertyAcc: SparqlGenerationResultForProperty, valueToCreate: NumberedValueToCreate) =>
-                                    val updateValueV1 = valueToCreate.createValueV1WithComment.updateValueV1
-                                    val newValueIri = knoraIdUtil.makeRandomValueIri(createMultipleValuesRequest.resourceIri)
+                        // For each property, construct a SparqlGenerationResultForProperty containing WHERE clause statements, INSERT clause statements, and UnverifiedValueV1s.
+                        val sparqlGenerationResultForProperty: SparqlGenerationResultForProperty = valuesToCreate.foldLeft(SparqlGenerationResultForProperty()) {
+                            case (propertyAcc: SparqlGenerationResultForProperty, valueToCreate: NumberedValueToCreate) =>
+                                val updateValueV1 = valueToCreate.createValueV1WithComment.updateValueV1
+                                val newValueIri = knoraIdUtil.makeRandomValueIri(createMultipleValuesRequest.resourceIri)
 
-                                    // How we generate the SPARQL depends on whether we're creating a link or an ordinary value.
-                                    val (whereSparql: String, insertSparql: String) = valueToCreate.createValueV1WithComment.updateValueV1 match {
-                                        case linkUpdateV1: LinkUpdateV1 =>
-                                            // We're creating a link.
+                                // How we generate the SPARQL depends on whether we're creating a link or an ordinary value.
+                                val (whereSparql: String, insertSparql: String) = valueToCreate.createValueV1WithComment.updateValueV1 match {
+                                    case linkUpdateV1: LinkUpdateV1 =>
+                                        // We're creating a link.
 
-                                            // Construct a SparqlTemplateLinkUpdate to tell the SPARQL templates how to create
-                                            // the link and its LinkValue.
-                                            val sparqlTemplateLinkUpdate = SparqlTemplateLinkUpdate(
-                                                linkPropertyIri = propertyIri,
-                                                directLinkExists = false,
-                                                insertDirectLink = true,
-                                                deleteDirectLink = false,
-                                                linkValueExists = false,
-                                                linkTargetExists = linkUpdateV1.targetExists,
-                                                newLinkValueIri = newValueIri,
-                                                linkTargetIri = linkUpdateV1.targetResourceIri,
-                                                currentReferenceCount = 0,
-                                                newReferenceCount = 1,
-                                                newLinkValueCreator = userIri,
-                                                newLinkValuePermissions = defaultObjectAccessPermissions.permissionLiteral
-                                            )
+                                        // Construct a SparqlTemplateLinkUpdate to tell the SPARQL templates how to create
+                                        // the link and its LinkValue.
+                                        val sparqlTemplateLinkUpdate = SparqlTemplateLinkUpdate(
+                                            linkPropertyIri = propertyIri,
+                                            directLinkExists = false,
+                                            insertDirectLink = true,
+                                            deleteDirectLink = false,
+                                            linkValueExists = false,
+                                            linkTargetExists = linkUpdateV1.targetExists,
+                                            newLinkValueIri = newValueIri,
+                                            linkTargetIri = linkUpdateV1.targetResourceIri,
+                                            currentReferenceCount = 0,
+                                            newReferenceCount = 1,
+                                            newLinkValueCreator = userIri,
+                                            newLinkValuePermissions = defaultPropertyAccessPermissions
+                                        )
 
-                                            // Generate WHERE clause statements for the link.
-                                            val whereSparql = queries.sparql.v1.txt.generateWhereStatementsForCreateLink(
-                                                resourceIndex = createMultipleValuesRequest.resourceIndex,
-                                                valueIndex = valueToCreate.valueIndex,
-                                                resourceIri = createMultipleValuesRequest.resourceIri,
-                                                linkUpdate = sparqlTemplateLinkUpdate,
-                                                maybeValueHasOrder = Some(valueToCreate.valueHasOrder)
-                                            ).toString()
+                                        // Generate WHERE clause statements for the link.
+                                        val whereSparql = queries.sparql.v1.txt.generateWhereStatementsForCreateLink(
+                                            resourceIndex = createMultipleValuesRequest.resourceIndex,
+                                            valueIndex = valueToCreate.valueIndex,
+                                            resourceIri = createMultipleValuesRequest.resourceIri,
+                                            linkUpdate = sparqlTemplateLinkUpdate,
+                                            maybeValueHasOrder = Some(valueToCreate.valueHasOrder)
+                                        ).toString()
 
-                                            // Generate INSERT clause statements for the link.
-                                            val insertSparql = queries.sparql.v1.txt.generateInsertStatementsForCreateLink(
-                                                resourceIndex = createMultipleValuesRequest.resourceIndex,
-                                                valueIndex = valueToCreate.valueIndex,
-                                                linkUpdate = sparqlTemplateLinkUpdate,
-                                                maybeComment = valueToCreate.createValueV1WithComment.comment
-                                            ).toString()
+                                        // Generate INSERT clause statements for the link.
+                                        val insertSparql = queries.sparql.v1.txt.generateInsertStatementsForCreateLink(
+                                            resourceIndex = createMultipleValuesRequest.resourceIndex,
+                                            valueIndex = valueToCreate.valueIndex,
+                                            linkUpdate = sparqlTemplateLinkUpdate,
+                                            maybeComment = valueToCreate.createValueV1WithComment.comment
+                                        ).toString()
 
-                                            (whereSparql, insertSparql)
+                                        (whereSparql, insertSparql)
 
-                                        case _ =>
-                                            // We're creating an ordinary value.
+                                    case _ =>
+                                        // We're creating an ordinary value.
 
-                                            // Generate WHERE clause statements for the value.
-                                            val whereSparql = queries.sparql.v1.txt.generateWhereStatementsForCreateValue(
-                                                resourceIndex = createMultipleValuesRequest.resourceIndex,
-                                                valueIndex = valueToCreate.valueIndex,
-                                                resourceIri = createMultipleValuesRequest.resourceIri,
-                                                propertyIri = propertyIri,
-                                                newValueIri = newValueIri,
-                                                valueTypeIri = updateValueV1.valueTypeIri,
-                                                linkUpdates = Seq.empty[SparqlTemplateLinkUpdate], // This is empty because we have to generate SPARQL for standoff links separately.
-                                                maybeValueHasOrder = Some(valueToCreate.valueHasOrder)
-                                            ).toString()
+                                        // Generate WHERE clause statements for the value.
+                                        val whereSparql = queries.sparql.v1.txt.generateWhereStatementsForCreateValue(
+                                            resourceIndex = createMultipleValuesRequest.resourceIndex,
+                                            valueIndex = valueToCreate.valueIndex,
+                                            resourceIri = createMultipleValuesRequest.resourceIri,
+                                            propertyIri = propertyIri,
+                                            newValueIri = newValueIri,
+                                            valueTypeIri = updateValueV1.valueTypeIri,
+                                            linkUpdates = Seq.empty[SparqlTemplateLinkUpdate], // This is empty because we have to generate SPARQL for standoff links separately.
+                                            maybeValueHasOrder = Some(valueToCreate.valueHasOrder)
+                                        ).toString()
 
-                                            // If this is a text value and we're creating values as part of a bulk import, some of the target IRIs of
-                                            // standoff link tags in the text value might be client IDs for resources rather than real resource IRIs.
-                                            // Replace those IDs with the real IRIs of the target resources, so the generateInsertStatementsForCreateValue
-                                            // template can use the real IRIs.
-                                            val valueWithRealStandoffLinkIris = updateValueV1 match {
-                                                case textValueWithStandoff: TextValueWithStandoffV1 =>
-                                                    val standoffWithRealStandoffLinkIris = textValueWithStandoff.standoff.map {
-                                                        standoffTag: StandoffTagV1 =>
-                                                            standoffTag.copy(
-                                                                attributes = standoffTag.attributes.map {
-                                                                    case iriAttribute: StandoffTagIriAttributeV1 =>
-                                                                        iriAttribute.copy(
-                                                                            value = InputValidation.toRealStandoffLinkTargetResourceIri(
-                                                                                iri = iriAttribute.value,
-                                                                                clientResourceIDsToResourceIris = createMultipleValuesRequest.clientResourceIDsToResourceIris
-                                                                            )
+                                        // If this is a text value and we're creating values as part of a bulk import, some of the target IRIs of
+                                        // standoff link tags in the text value might be client IDs for resources rather than real resource IRIs.
+                                        // Replace those IDs with the real IRIs of the target resources, so the generateInsertStatementsForCreateValue
+                                        // template can use the real IRIs.
+                                        val valueWithRealStandoffLinkIris = updateValueV1 match {
+                                            case textValueWithStandoff: TextValueWithStandoffV1 =>
+                                                val standoffWithRealStandoffLinkIris = textValueWithStandoff.standoff.map {
+                                                    standoffTag: StandoffTagV1 =>
+                                                        standoffTag.copy(
+                                                            attributes = standoffTag.attributes.map {
+                                                                case iriAttribute: StandoffTagIriAttributeV1 =>
+                                                                    iriAttribute.copy(
+                                                                        value = InputValidation.toRealStandoffLinkTargetResourceIri(
+                                                                            iri = iriAttribute.value,
+                                                                            clientResourceIDsToResourceIris = createMultipleValuesRequest.clientResourceIDsToResourceIris
                                                                         )
+                                                                    )
 
-                                                                    case otherAttribute => otherAttribute
-                                                                }
-                                                            )
-                                                    }
+                                                                case otherAttribute => otherAttribute
+                                                            }
+                                                        )
+                                                }
 
-                                                    textValueWithStandoff.copy(
-                                                        standoff = standoffWithRealStandoffLinkIris
-                                                    )
+                                                textValueWithStandoff.copy(
+                                                    standoff = standoffWithRealStandoffLinkIris
+                                                )
 
-                                                case otherValue => otherValue
-                                            }
+                                            case otherValue => otherValue
+                                        }
 
-                                            // Generate INSERT clause statements for the value.
-                                            val insertSparql = queries.sparql.v1.txt.generateInsertStatementsForCreateValue(
-                                                resourceIndex = createMultipleValuesRequest.resourceIndex,
-                                                valueIndex = valueToCreate.valueIndex,
-                                                propertyIri = propertyIri,
-                                                value = valueWithRealStandoffLinkIris,
-                                                newValueIri = newValueIri,
-                                                linkUpdates = Seq.empty[SparqlTemplateLinkUpdate], // This is empty because we have to generate SPARQL for standoff links separately.
-                                                maybeComment = valueToCreate.createValueV1WithComment.comment,
-                                                valueCreator = userIri,
-                                                valuePermissions = defaultObjectAccessPermissions.permissionLiteral
-                                            ).toString()
+                                        // Generate INSERT clause statements for the value.
+                                        val insertSparql = queries.sparql.v1.txt.generateInsertStatementsForCreateValue(
+                                            resourceIndex = createMultipleValuesRequest.resourceIndex,
+                                            valueIndex = valueToCreate.valueIndex,
+                                            propertyIri = propertyIri,
+                                            value = valueWithRealStandoffLinkIris,
+                                            newValueIri = newValueIri,
+                                            linkUpdates = Seq.empty[SparqlTemplateLinkUpdate], // This is empty because we have to generate SPARQL for standoff links separately.
+                                            maybeComment = valueToCreate.createValueV1WithComment.comment,
+                                            valueCreator = userIri,
+                                            valuePermissions = defaultPropertyAccessPermissions
+                                        ).toString()
 
-                                            //println(insertSparql)
+                                        //println(insertSparql)
 
-                                            (whereSparql, insertSparql)
-                                    }
+                                        (whereSparql, insertSparql)
+                                }
 
-                                    // For each value of the property, accumulate the generated SPARQL and an UnverifiedValueV1
-                                    // in the SparqlGenerationResultForProperty.
-                                    propertyAcc.copy(
-                                        whereSparql = propertyAcc.whereSparql :+ whereSparql,
-                                        insertSparql = propertyAcc.insertSparql :+ insertSparql,
-                                        valuesToVerify = propertyAcc.valuesToVerify :+ UnverifiedValueV1(newValueIri = newValueIri, value = updateValueV1),
-                                        valueIndexes = propertyAcc.valueIndexes :+ valueToCreate.valueIndex
-                                    )
-                            }
+                                // For each value of the property, accumulate the generated SPARQL and an UnverifiedValueV1
+                                // in the SparqlGenerationResultForProperty.
+                                propertyAcc.copy(
+                                    whereSparql = propertyAcc.whereSparql :+ whereSparql,
+                                    insertSparql = propertyAcc.insertSparql :+ insertSparql,
+                                    valuesToVerify = propertyAcc.valuesToVerify :+ UnverifiedValueV1(newValueIri = newValueIri, value = updateValueV1),
+                                    valueIndexes = propertyAcc.valueIndexes :+ valueToCreate.valueIndex
+                                )
+                        }
 
-                        } yield (propertyIri, sparqlGenerationResultForProperty)
+                        (propertyIri, sparqlGenerationResultForProperty)
                 }
-
-                sparqlGenerationResultsSeq <- Future.sequence(sparqlGenerationResultsFutures)
-                sparqlGenerationResults: Map[IRI, SparqlGenerationResultForProperty] = sparqlGenerationResultsSeq.toMap
 
                 // Concatenate all the generated SPARQL into one string for the WHERE clause and one string for the INSERT clause, sorting
                 // the values by their indexes.

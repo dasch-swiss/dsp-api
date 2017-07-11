@@ -385,18 +385,20 @@ case class CreateValueV1WithComment(updateValueV1: UpdateValueV1, comment: Optio
   * as part of a bulk import. If client resource IDs are used in standoff links, `clientResourceIDsToResourceIris`
   * must map those IDs to the real  IRIs of the resources that are to be created.
   *
-  * @param projectIri                      the project the values belong to.
-  * @param resourceIri                     the resource the values will be attached to.
-  * @param resourceClassIri                the IRI of the resource's OWL class.
-  * @param resourceIndex                   the index of the resource to be created
-  * @param values                          the values to be added, with optional comments.
-  * @param clientResourceIDsToResourceIris a map of client resource IDs (which may appear in standoff link tags
-  *                                        in values) to the IRIs that will be used for those resources.
-  * @param userProfile                     the user that is creating the values.
+  * @param projectIri                       the project the values belong to.
+  * @param resourceIri                      the resource the values will be attached to.
+  * @param resourceClassIri                 the IRI of the resource's OWL class.
+  * @param defaultPropertyAccessPermissions the default object access permissions of each property attached to the resource class.
+  * @param resourceIndex                    the index of the resource to be created
+  * @param values                           the values to be added, with optional comments.
+  * @param clientResourceIDsToResourceIris  a map of client resource IDs (which may appear in standoff link tags
+  *                                         in values) to the IRIs that will be used for those resources.
+  * @param userProfile                      the user that is creating the values.
   */
 case class GenerateSparqlToCreateMultipleValuesRequestV1(projectIri: IRI,
                                                          resourceIri: IRI,
                                                          resourceClassIri: IRI,
+                                                         defaultPropertyAccessPermissions: Map[IRI, String],
                                                          resourceIndex: Int,
                                                          values: Map[IRI, Seq[CreateValueV1WithComment]],
                                                          clientResourceIDsToResourceIris: Map[String, IRI],
