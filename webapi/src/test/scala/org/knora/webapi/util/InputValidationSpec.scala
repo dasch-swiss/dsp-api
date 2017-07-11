@@ -101,6 +101,13 @@ class InputValidationSpec extends WordSpec with Matchers {
             val dateString = "JULIAN:500 BCE:10 CE"
             InputValidation.toDate(dateString, () => throw new IllegalArgumentException(s"Not accepted ${dateString}"))
         }
+
+        "not accept year 0 " in {
+            val dateString = "GREGORIAN:0-05-10"
+            assertThrows[IllegalArgumentException] {
+                InputValidation.toDate(dateString, () => throw new IllegalArgumentException(s"Year 0 is Not accepted ${dateString}"))
+            }
+        }
     }
 }
 

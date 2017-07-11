@@ -58,13 +58,13 @@ object InputValidation {
     // EE being the era: one of BC or AD
     private val KnoraDateRegex: Regex = ("""^(GREGORIAN|JULIAN)""" +
         CalendarSeparator + // calendar name
-        """\d{1,4}(""" + // year
+        """[1-9]\d{1,4}(""" + // year
         PrecisionSeparator +
         """\d{1,2}(""" + // month
         PrecisionSeparator +
         """\d{1,2})?)?( BC| AD| BCE| CE)?(""" + // day
         CalendarSeparator + // separator if a period is given
-        """\d{1,4}(""" + // year 2
+        """[1-9]\d{1,4}(""" + // year 2
         PrecisionSeparator +
         """\d{1,2}(""" + // month 2
         PrecisionSeparator +
