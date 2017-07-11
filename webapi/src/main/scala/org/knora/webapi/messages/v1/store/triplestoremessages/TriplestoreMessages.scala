@@ -108,6 +108,22 @@ case class SparqlUpdateRequest(sparql: String) extends TriplestoreRequest
   */
 case class SparqlUpdateResponse()
 
+
+/**
+  * Represents a SPARQL ASK query to be sent to the triplestore. A successful response will be a
+  * [[SparqlAskResponse]].
+  *
+  * @param sparql the SPARQL string.
+  */
+case class SparqlAskRequest(sparql: String) extends TriplestoreRequest
+
+/**
+  * Represents a response to a SPARQL ASK query, containing the result.
+  *
+  * @param result of the query.
+  */
+case class SparqlAskResponse(result: Boolean)
+
 /**
   * Message for resetting the contents of the triplestore and loading a fresh set of data. The data needs to be
   * stored in an accessible path and supplied via the [[RdfDataObject]].

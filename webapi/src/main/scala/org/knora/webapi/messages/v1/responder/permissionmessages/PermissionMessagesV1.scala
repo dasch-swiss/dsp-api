@@ -22,7 +22,6 @@ import org.knora.webapi.messages.v1.responder.permissionmessages.PermissionDataT
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectV1JsonProtocol
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
-import org.knora.webapi.util.MessageUtil
 import spray.json._
 
 
@@ -361,6 +360,7 @@ case class DefaultObjectAccessPermissionOperationResponseV1(success: Boolean,
   *
   * @param groupsPerProject                         the groups the user belongs to for each project.
   * @param administrativePermissionsPerProject      the user's administrative permissions for each project.
+  * @param anonymousUser                            the type of user.
   */
 case class PermissionDataV1(groupsPerProject: Map[IRI, Seq[IRI]] = Map.empty[IRI, Seq[IRI]],
                             administrativePermissionsPerProject: Map[IRI, Set[PermissionV1]] = Map.empty[IRI, Set[PermissionV1]],

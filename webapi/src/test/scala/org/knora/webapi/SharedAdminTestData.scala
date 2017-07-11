@@ -46,7 +46,7 @@ object SharedAdminTestData {
             firstname = Some("System"),
             lastname = Some("Administrator"),
             token = None,
-            isActiveUser = Some(true),
+            status = Some(true),
             lang = "de"
         ),
         groups = Vector.empty[IRI],
@@ -69,7 +69,7 @@ object SharedAdminTestData {
             email = Some("super.user@example.com"),
             password = Some("$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="), // -> "test"
             token = None,
-            isActiveUser = Some(true),
+            status = Some(true),
             lang = "de"
         ),
         groups = Vector.empty[IRI],
@@ -91,7 +91,7 @@ object SharedAdminTestData {
             email = Some("normal.user@example.com"),
             password = Some("$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="), // -> "test"
             token = None,
-            isActiveUser = Some(true),
+            status = Some(true),
             lang = "de"
         ),
         groups = Vector.empty[IRI],
@@ -110,7 +110,7 @@ object SharedAdminTestData {
             email = Some("inactive.user@example.com"),
             password = Some("$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="), // -> "test"
             token = None,
-            isActiveUser = Some(false),
+            status = Some(false),
             lang = "de"
         ),
         groups = Vector.empty[IRI],
@@ -142,7 +142,7 @@ object SharedAdminTestData {
             email = Some("multi.user@example.com"),
             password = Some("$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="), // -> "test"
             token = None,
-            isActiveUser = Some(true),
+            status = Some(true),
             lang = "de"
         ),
         groups = List("http://data.knora.org/groups/images-reviewer"),
@@ -176,11 +176,11 @@ object SharedAdminTestData {
         description = Some("Knora System Project"),
         keywords = None,
         logo = None,
-        belongsToInstitution = None,
+        institution = None,
         ontologyNamedGraph = "http://www.knora.org/ontology/knora-base",
         dataNamedGraph = "-",
         status = true,
-        hasSelfJoinEnabled = false
+        selfjoin = false
     )
 
 
@@ -199,7 +199,7 @@ object SharedAdminTestData {
             email = Some("user01.user1@example.com"),
             password = Some("$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="), // -> "test"
             token = None,
-            isActiveUser = Some(true),
+            status = Some(true),
             lang = "de"
         ),
         groups = List.empty[IRI],
@@ -207,7 +207,7 @@ object SharedAdminTestData {
         sessionId = None,
         permissionData = PermissionDataV1(
             groupsPerProject = Map(
-                IMAGES_PROJECT_IRI -> List(s"${OntologyConstants.KnoraBase.ProjectMember}", s"${OntologyConstants.KnoraBase.ProjectAdmin}")
+                IMAGES_PROJECT_IRI -> List(OntologyConstants.KnoraBase.ProjectMember, OntologyConstants.KnoraBase.ProjectAdmin)
             ),
             administrativePermissionsPerProject = Map(
                 "http://data.knora.org/projects/images" -> Set(
@@ -228,7 +228,7 @@ object SharedAdminTestData {
             email = Some("user02.user@example.com"),
             password = Some("$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="), // -> "test"
             token = None,
-            isActiveUser = Some(true),
+            status = Some(true),
             lang = "de"
         ),
         groups = List.empty[IRI],
@@ -236,7 +236,7 @@ object SharedAdminTestData {
         sessionId = None,
         permissionData = PermissionDataV1(
             groupsPerProject = Map(
-                "http://data.knora.org/projects/images" -> List(s"${OntologyConstants.KnoraBase.ProjectMember}")
+                "http://data.knora.org/projects/images" -> List(OntologyConstants.KnoraBase.ProjectMember)
             ),
             administrativePermissionsPerProject = Map(
                 "http://data.knora.org/projects/images" -> Set(
@@ -256,7 +256,7 @@ object SharedAdminTestData {
             email = Some("images-reviewer-user@example.com"),
             password = Some("$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"), // -> "test"
             token = None,
-            isActiveUser = Some(true),
+            status = Some(true),
             lang = "de"
         ),
         groups = List("http://data.knora.org/groups/images-reviewer"),
@@ -284,11 +284,11 @@ object SharedAdminTestData {
         description = Some("A demo project of a collection of images"),
         keywords = Some("images, collection"),
         logo = None,
-        belongsToInstitution = None,
+        institution = None,
         ontologyNamedGraph = "http://www.knora.org/ontology/images",
         dataNamedGraph = "http://www.knora.org/data/images",
         status = true,
-        hasSelfJoinEnabled = false
+        selfjoin = false
     )
 
     /* represents the full GroupInfoV1 of the images ProjectAdmin group */
@@ -296,9 +296,9 @@ object SharedAdminTestData {
         id = "-",
         name = "ProjectAdmin",
         description = Some("Default Project Admin Group"),
-        belongsToProject = "http://data.knora.org/projects/images",
+        project = "http://data.knora.org/projects/images",
         status = true,
-        hasSelfJoinEnabled = false
+        selfjoin = false
     )
 
     /* represents the full GroupInfoV1 of the images ProjectMember group */
@@ -306,19 +306,19 @@ object SharedAdminTestData {
         id = "-",
         name = "ProjectMember",
         description = Some("Default Project Member Group"),
-        belongsToProject = "http://data.knora.org/projects/images",
+        project = "http://data.knora.org/projects/images",
         status = true,
-        hasSelfJoinEnabled = false
+        selfjoin = false
     )
 
     /* represents the full GroupInfoV1 of the images project reviewer group */
-    def imageReviewerGroupInfo = GroupInfoV1(
+    def imagesReviewerGroupInfo = GroupInfoV1(
         id = "http://data.knora.org/groups/images-reviewer",
         name = "Image reviewer",
         description = Some("A group for image reviewers."),
-        belongsToProject = "http://data.knora.org/projects/images",
+        project = "http://data.knora.org/projects/images",
         status = true,
-        hasSelfJoinEnabled = false
+        selfjoin = false
     )
 
 
@@ -339,7 +339,7 @@ object SharedAdminTestData {
             email = Some("user.test@example.com"),
             password = Some("$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="), // -> "test"
             token = None,
-            isActiveUser = Some(true),
+            status = Some(true),
             lang = "de"
         ),
         groups = Vector.empty[IRI],
@@ -368,7 +368,7 @@ object SharedAdminTestData {
             email = Some("root-alt@example.com"),
             password = Some("$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="), // -> "test"
             token = None,
-            isActiveUser = Some(true),
+            status = Some(true),
             lang = "de"
         ),
         groups = Vector.empty[IRI],
@@ -396,7 +396,7 @@ object SharedAdminTestData {
             email = Some("user.test2t@test.ch"),
             password = Some("$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="), // -> "test"
             token = None,
-            isActiveUser = Some(true),
+            status = Some(true),
             lang = "de"
         ),
         groups = Vector.empty[IRI],
@@ -423,11 +423,11 @@ object SharedAdminTestData {
         description = Some("<p>Das interdisziplinäre Forschungsprojekt \"<b><em>Die Bilderfolgen der Basler Frühdrucke: Spätmittelalterliche Didaxe als Bild-Text-Lektüre</em></b>\" verbindet eine umfassende kunstwissenschaftliche Analyse der Bezüge zwischen den Bildern und Texten in den illustrierten Basler Inkunabeln mit der Digitalisierung der Bestände der Universitätsbibliothek und der Entwicklung einer elektronischen Edition in der Form einer neuartigen Web-0.2-Applikation.\n</p>\n<p>Das Projekt wird durchgeführt vom <a href=\"http://kunsthist.unibas.ch\">Kunsthistorischen Seminar</a> der Universität Basel (Prof. B. Schellewald) und dem <a href=\"http://www.dhlab.unibas.ch\">Digital Humanities Lab</a> der Universität Basel (PD Dr. L. Rosenthaler).\n</p>\n<p>\nDas Kernstück der digitalen Edition besteht aus rund zwanzig reich bebilderten Frühdrucken aus vier verschiedenen Basler Offizinen. Viele davon sind bereits vor 1500 in mehreren Ausgaben erschienen, einige fast gleichzeitig auf Deutsch und Lateinisch. Es handelt sich um eine ausserordentlich vielfältige Produktion; neben dem Heilsspiegel finden sich ein Roman, die Melusine,  die Reisebeschreibungen des Jean de Mandeville, einige Gebets- und Erbauungsbüchlein, theologische Schriften, Fastenpredigten, die Leben der Heiligen Fridolin und Meinrad, das berühmte Narrenschiff  sowie die Exempelsammlung des Ritters vom Thurn.\n</p>\nDie Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durch die Möglichkeiten nichtlinearer Verknüpfung und Kommentierung der Bilder und Texte, für die wissenschaftliche Edition sowie für die Erforschung der Bilder und Texte nutzbar machen. Auch können bereits bestehende und entstehende Online-Editionen damit verknüpft  werden , wodurch die Nutzung von Datenbanken anderer Institutionen im Hinblick auf unser Corpus optimiert wird.\n</p>"),
         keywords = Some("Basler Frühdrucke, Inkunabel, Narrenschiff, Wiegendrucke, Sebastian Brant, Bilderfolgen, early print, incunabula, ship of fools, Kunsthistorischs Seminar Universität Basel, Late Middle Ages, Letterpress Printing, Basel, Contectualisation of images"),
         logo = Some("incunabula_logo.png"),
-        belongsToInstitution = None,
+        institution = None,
         ontologyNamedGraph = "http://www.knora.org/ontology/incunabula",
         dataNamedGraph = "http://www.knora.org/data/incunabula",
         status = true,
-        hasSelfJoinEnabled = false
+        selfjoin = false
     )
 
     /************************************/
@@ -444,7 +444,7 @@ object SharedAdminTestData {
             email = Some("anything.user01@example.org"),
             password = Some("$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="), // -> "test"
             token = None,
-            isActiveUser = Some(true),
+            status = Some(true),
             lang = "de"
         ),
         groups = Seq.empty[IRI],
@@ -472,7 +472,7 @@ object SharedAdminTestData {
             email = Some("anything.user02@example.org"),
             password = Some("$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="), // -> "test"
             token = None,
-            isActiveUser = Some(true),
+            status = Some(true),
             lang = "de"
         ),
         groups = Vector.empty[IRI],
@@ -498,11 +498,11 @@ object SharedAdminTestData {
         description = Some("Anything Project"),
         keywords = None,
         logo = None,
-        belongsToInstitution = None,
+        institution = None,
         ontologyNamedGraph = "http://www.knora.org/ontology/anything",
         dataNamedGraph = "http://www.knora.org/data/anything",
         status = true,
-        hasSelfJoinEnabled = false
+        selfjoin = false
     )
 
 
@@ -519,11 +519,11 @@ object SharedAdminTestData {
         description = Some("Bernoulli-Euler Online"),
         keywords = None,
         logo = None,
-        belongsToInstitution = None,
+        institution = None,
         ontologyNamedGraph = "http://www.knora.org/ontology/beol",
         dataNamedGraph = "http://www.knora.org/data/beol",
         status = true,
-        hasSelfJoinEnabled = false
+        selfjoin = false
     )
 
 
@@ -540,11 +540,11 @@ object SharedAdminTestData {
         description = Some("Bibliography"),
         keywords = None,
         logo = None,
-        belongsToInstitution = None,
+        institution = None,
         ontologyNamedGraph = "http://www.knora.org/ontology/biblio",
         dataNamedGraph = "http://www.knora.org/data/biblio",
         status = true,
-        hasSelfJoinEnabled = false
+        selfjoin = false
     )
 
     /* represents the user profile of 'superuser' as found in admin-data.ttl */
@@ -556,7 +556,7 @@ object SharedAdminTestData {
             email = Some("biblio@example.com"),
             password = Some("$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"), // -> "test"
             token = None,
-            isActiveUser = Some(true),
+            status = Some(true),
             lang = "en"
         ),
         groups = Vector.empty[IRI],
@@ -578,11 +578,11 @@ object SharedAdminTestData {
         description = Some("Dokubib"),
         keywords = None,
         logo = None,
-        belongsToInstitution = None,
+        institution = None,
         ontologyNamedGraph = "http://www.knora.org/ontology/dokubib",
         dataNamedGraph = "http://www.knora.org/data/dokubib",
         status = false,
-        hasSelfJoinEnabled = false
+        selfjoin = false
     )
 
 }
