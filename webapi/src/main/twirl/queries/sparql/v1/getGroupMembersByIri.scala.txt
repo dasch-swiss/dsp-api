@@ -21,10 +21,10 @@
 @import org.knora.webapi.IRI
 
 @**
- * Gets all members of a project, given the project's IRI.
+ * Gets all members of a group, given the group's IRI.
  *
  * @param triplestore the name of the triplestore being used.
- * @param projectIri the project's IRI.
+ * @param groupIri the group's IRI.
  *@
 @(triplestore: String,
   groupIri: IRI)

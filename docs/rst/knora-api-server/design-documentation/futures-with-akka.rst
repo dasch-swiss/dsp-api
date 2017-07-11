@@ -231,7 +231,11 @@ Mixing Futures with non-Futures
 If you have a ``match ... case`` or ``if`` expression, and one branch
 obtains some data in a future, but another branch can produce the data
 immediately, you can wrap the result of the latter branch in a future,
-so that both branches have the same type:
+so that both branches have the same type. Here we use an alternative
+implementation of ``scala.concurrent.Future``, found in
+``akka.http.scaladsl.util.FastFuture``, which tries to avoid scheduling
+to an ``scala.concurrent.ExecutionContext`` if possible, i.e. if the
+given future value is already present:
 
 ::
 
@@ -239,7 +243,7 @@ so that both branches have the same type:
         for {
             foo <- howToGetFoo match {
                 case "askForIt" => (fooActor ? GetFoo("foo")).mapTo[Foo]
-                case "createIt" => Future(new Foo())
+                case "createIt" => FastFuture.successful(new Foo())
             }
 
             bar <- (barActor ? GetBar("bar")).mapTo[Bar]

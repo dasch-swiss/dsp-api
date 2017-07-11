@@ -832,7 +832,7 @@ Users Endpoint
 
 **Delete user**:
   - Required permission: SystemAdmin / User
-  - Remark: The same as updating a user and changing ``status`` do ``false``. To un-delete, set ``status`` to ``true``.
+  - Remark: The same as updating a user and changing ``status`` to ``false``. To un-delete, set ``status`` to ``true``.
   - PUT: ``/v1/users/<userIRI>``
   - BODY:
 
