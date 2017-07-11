@@ -58,17 +58,17 @@ object InputValidation {
     // EE being the era: one of BC or AD
     private val KnoraDateRegex: Regex = ("""^(GREGORIAN|JULIAN)""" +
         CalendarSeparator + // calendar name
-        """[1-9]\d{1,4}(""" + // year
+        """(?:[1-9][0-9]{0,3})(""" + // year
         PrecisionSeparator +
-        """\d{1,2}(""" + // month
+        """(?!00)[0-9]{2}(""" + // month
         PrecisionSeparator +
-        """\d{1,2})?)?( BC| AD| BCE| CE)?(""" + // day
+        """(?!00)[0-9]{2})?)?( BC| AD| BCE| CE)?(""" + // day
         CalendarSeparator + // separator if a period is given
-        """[1-9]\d{1,4}(""" + // year 2
+        """(?:[1-9][0-9]{0,3})(""" + // year 2
         PrecisionSeparator +
-        """\d{1,2}(""" + // month 2
+        """(?!00)[0-9]{2}(""" + // month 2
         PrecisionSeparator +
-        """\d{1,2})?)?( BC| AD| BCE| CE)?)?$""").r // day 2
+        """(?!00)[0-9]{2})?)?( BC| AD| BCE| CE)?)?$""").r // day 2
 
     // The expected format of a datetime.
     private val dateTimeFormat = "yyyy-MM-dd'T'HH:mm:ss"

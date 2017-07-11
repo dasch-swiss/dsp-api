@@ -85,15 +85,15 @@ class DateUtilSpec extends WordSpec with Matchers {
         }
 
         "convert a date in YYYY-MM-DD Era format, in the Julian calendar, into a Julian day count" in {
-            val bundesbriefDateValueV1 = DateValueV1(
+            val someDateValueV1 = DateValueV1(
                 dateval1 = "4713-01-01 BC",
                 dateval2 = "4713-01-01 BC",
                 calendar = KnoraCalendarV1.JULIAN
             )
 
-            val bundesbriefJulianDayCountValueV1 = DateUtilV1.dateValueV1ToJulianDayNumberValueV1(bundesbriefDateValueV1)
+            val theJulianDayCountValueV1 = DateUtilV1.dateValueV1ToJulianDayNumberValueV1(someDateValueV1)
 
-            bundesbriefJulianDayCountValueV1 should be(JulianDayNumberValueV1(
+            theJulianDayCountValueV1 should be(JulianDayNumberValueV1(
                 dateval1 = 0,
                 dateval2 = 0,
                 calendar = KnoraCalendarV1.JULIAN,
