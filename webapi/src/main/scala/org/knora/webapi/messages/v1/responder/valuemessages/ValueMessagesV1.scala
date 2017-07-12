@@ -1236,19 +1236,22 @@ case class JulianDayNumberValueV1(dateval1: Int,
   */
 case class DateValueV1(dateval1: String,
                        dateval2: String,
+                       era1:String,
+                       era2:String,
                        calendar: KnoraCalendarV1.Value) extends ApiValueV1 {
 
     def valueTypeIri = OntologyConstants.KnoraBase.DateValue
 
     override def toString = {
 
+
         // if date1 and date2 are identical, it's not a period.
         if (dateval1 == dateval2) {
             // one exact day
-            dateval1
+            dateval1 + " " + era1
         } else {
             // period: from to
-            dateval1 + " - " + dateval2
+            dateval1 + " " + era1+ " - " + dateval2+ " " + era2
         }
 
     }
@@ -1590,7 +1593,7 @@ object ApiValueV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
     implicit val createFileQualityLevelFormat: RootJsonFormat[CreateFileQualityLevelV1] = jsonFormat4(CreateFileQualityLevelV1)
     implicit val createFileV1Format: RootJsonFormat[CreateFileV1] = jsonFormat3(CreateFileV1)
     implicit val valueGetResponseV1Format: RootJsonFormat[ValueGetResponseV1] = jsonFormat7(ValueGetResponseV1)
-    implicit val dateValueV1Format: JsonFormat[DateValueV1] = jsonFormat3(DateValueV1)
+    implicit val dateValueV1Format: JsonFormat[DateValueV1] = jsonFormat5(DateValueV1)
     implicit val stillImageFileValueV1Format: JsonFormat[StillImageFileValueV1] = jsonFormat9(StillImageFileValueV1)
     implicit val textFileValueV1Format: JsonFormat[TextFileValueV1] = jsonFormat4(TextFileValueV1)
     implicit val movingImageFileValueV1Format: JsonFormat[MovingImageFileValueV1] = jsonFormat4(MovingImageFileValueV1)
