@@ -60,15 +60,15 @@ object InputValidation {
         CalendarSeparator + // calendar name
         """(?:[1-9][0-9]{0,3})(""" + // year
         PrecisionSeparator +
-        """(?!00)[0-9]{2}(""" + // month
+        """(?!00)[0-9]{1,2}(""" + // month
         PrecisionSeparator +
-        """(?!00)[0-9]{2})?)?( BC| AD| BCE| CE)?(""" + // day
+        """(?!00)[0-9]{1,2})?)?( BC| AD| BCE| CE)?(""" + // day
         CalendarSeparator + // separator if a period is given
         """(?:[1-9][0-9]{0,3})(""" + // year 2
         PrecisionSeparator +
-        """(?!00)[0-9]{2}(""" + // month 2
+        """(?!00)[0-9]{1,2}(""" + // month 2
         PrecisionSeparator +
-        """(?!00)[0-9]{2})?)?( BC| AD| BCE| CE)?)?$""").r // day 2
+        """(?!00)[0-9]{1,2})?)?( BC| AD| BCE| CE)?)?$""").r // day 2
 
     // The expected format of a datetime.
     private val dateTimeFormat = "yyyy-MM-dd'T'HH:mm:ss"
