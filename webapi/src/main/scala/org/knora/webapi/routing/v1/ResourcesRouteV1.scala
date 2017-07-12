@@ -308,6 +308,14 @@ object ResourcesRouteV1 extends Authenticator {
         }
 
         def makeMultiResourcesRequestMessage(resourceRequest: Seq[CreateResourceFromXmlImportRequestV1], projectId: IRI, apiRequestID: UUID, userProfile: UserProfileV1): Future[MultipleResourceCreateRequestV1] = {
+            // Make sure there are no duplicate client resource IDs.
+
+            val duplicateClientIDs: immutable.Iterable[String] = resourceRequest.map(_.client_id).groupBy(identity).collect { case (clientID, occurrences) if occurrences.size > 1 => clientID }
+
+            if (duplicateClientIDs.nonEmpty) {
+                throw BadRequestException(s"One or more client resource IDs were used for multiple resources: ${duplicateClientIDs.mkString(", ")}")
+            }
+
             val resourcesToCreate: Seq[Future[OneOfMultipleResourceCreateRequestV1]] =
                 resourceRequest.map(createResourceRequest => createOneResourceRequestFromXmlImport(createResourceRequest, userProfile))
 
@@ -1171,7 +1179,7 @@ object ResourcesRouteV1 extends Authenticator {
                             settings = settings,
                             responderManager = responderManager,
                             log = loggingAdapter
-                        )
+                        )(timeout = 1.hour, executionContext = executionContext)
                 }
 
             }
