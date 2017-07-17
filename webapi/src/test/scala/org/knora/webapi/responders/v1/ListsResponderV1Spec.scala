@@ -23,6 +23,7 @@ package org.knora.webapi.responders.v1
 
 import akka.actor.Props
 import akka.testkit._
+import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.listmessages._
 import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse}
@@ -38,18 +39,24 @@ import scala.concurrent.duration._
   * Static data for testing [[ListsResponderV1]].
   */
 object ListsResponderV1Spec {
-
+    val config: Config = ConfigFactory.parseString(
+        """
+         akka.loglevel = "DEBUG"
+         akka.stdout-loglevel = "DEBUG"
+        """.stripMargin)
 }
 
 /**
   * Tests [[ListsResponderV1]].
   */
-class ListsResponderV1Spec extends CoreSpec() with ImplicitSender {
+class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with ImplicitSender {
 
     // Construct the actors needed for this test.
     private val actorUnderTest = TestActorRef[ListsResponderV1]
     private val responderManager = system.actorOf(Props(new ResponderManagerV1 with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
     private val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
+
+    val log = akka.event.Logging(system, this.getClass())
 
     // The default timeout for receiving reply messages from actors.
     private val timeout = 5.seconds
@@ -3306,6 +3313,8 @@ class ListsResponderV1Spec extends CoreSpec() with ImplicitSender {
                 actorUnderTest ! ListsGetRequestV1(projectIri = Some(SharedAdminTestData.IMAGES_PROJECT_IRI), userProfile = userProfile)
 
                 val received: ListsGetResponseV1 = expectMsgType[ListsGetResponseV1](timeout)
+
+                log.debug("received: " + received)
 
                 received.lists.size should be(4)
             }

@@ -146,12 +146,15 @@ class ListsV1E2ESpec extends E2ESpec(ListsV1E2ESpec.config) with SessionJsonProt
             }
 
             "return all lists belonging to the images project" in {
-                val request = Get(baseApiUrl + s"/v1/lists") ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
+                val request = Get(baseApiUrl + s"/v1/lists?projectIri=http%3A%2F%2Fdata.knora.org%2Fprojects%2Fimages") ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
                 val response: HttpResponse = singleAwaitingRequest(request)
                 // log.debug(s"response: ${response.toString}")
                 response.status should be(StatusCodes.OK)
 
                 val listInfos: Seq[ListInfoV1] = AkkaHttpUtils.httpResponseToJson(response).fields("lists").convertTo[Seq[ListInfoV1]]
+
+                log.debug("received: " + listInfos)
+
                 listInfos.size should be (4)
             }
         }
