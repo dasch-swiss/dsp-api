@@ -1,0 +1,192 @@
+@*
+ * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
+ * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
+ *
+ * This file is part of Knora.
+ *
+ * Knora is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Knora is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public
+ * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ *@
+
+@import org.knora.webapi.IRI
+
+@**
+ * Updates an existing project with the provided values.
+ *
+ * @param dataNamedGraph     the named graph to update.
+ * @param triplestore        the name of the triplestore being used. The template uses this value to exclude inferred
+                             results from the WHERE clause of the update.
+ * @param projectIri         the IRI of the project we want to update.
+ * @param maybeShortname     the new optional value for shortname.
+ * @param maybeLongname      the new optional value for longname.
+ * @param maybeDescription   the new optional value for description.
+ * @param maybeKeywords      the new optional value for keywords.
+ * @param maybeLogo          the new optional value for logo.
+ * @param maybeInstitution   the new optional value for institution.
+ * @param maybeOntologyGraph the new optional value for ontology graph.
+ * @param maybeDataGraph     the new optional value for data graph.
+ * @param maybeStatus        the new optional value for status.
+ * @param maybeSelfjoin      the new optional value for selfjoin.
+ *@
+@(adminNamedGraphIri: IRI,
+  triplestore: String,
+  projectIri: IRI,
+  maybeShortname: Option[String],
+  maybeLongname: Option[String],
+  maybeDescription: Option[String],
+  maybeKeywords: Option[String],
+  maybeLogo: Option[String],
+  maybeInstitution: Option[IRI],
+  maybeOntologyGraph: Option[String],
+  maybeDataGraph: Option[String],
+  maybeStatus: Option[Boolean],
+  maybeSelfjoin: Option[Boolean])
+
+prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+prefix xsd: <http://www.w3.org/2001/XMLSchema#>
+prefix knora-base: <http://www.knora.org/ontology/knora-base#>
+
+WITH <@adminNamedGraphIri>
+DELETE {
+
+    @* Delete current values, for which we have a new one. *@
+
+    @if(maybeShortname.nonEmpty) {
+        ?project knora-base:projectShortname ?currentShortname .
+    }
+
+    @if(maybeLongname.nonEmpty) {
+        ?project knora-base:projectLongname ?currentLongname .
+    }
+
+    @if(maybeDescription.nonEmpty) {
+        ?project knora-base:projectDescription ?currentDescription .
+    }
+
+    @if(maybeKeywords.nonEmpty) {
+        ?project knora-base:projectKeywords ?currentKeywords .
+    }
+
+    @if(maybeLogo.nonEmpty) {
+        ?project knora-base:projectLogo ?currentLogo .
+    }
+
+    @if(maybeInstitution.nonEmpty) {
+        ?project knora-base:belongsToInstitution ?currentInstitution .
+    }
+
+    @if(maybeOntologyGraph.nonEmpty) {
+        project knora-base:projectOntologyGraph ?currentOntologyGraph .
+    }
+
+    @if(maybeDataGraph.nonEmpty) {
+        ?project knora-base:projectDataGraph ?currentDataGraph .
+    }
+
+    @if(maybeStatus.nonEmpty) {
+        ?project knora-base:status ?currentStatus .
+    }
+
+    @if(maybeSelfjoin.nonEmpty) {
+        ?project knora-base:hasSelfJoinEnabled ?currentSelfjoin .
+    }
+
+
+
+} INSERT {
+
+    @* Add the new values. *@
+
+    @if(maybeShortname.nonEmpty) {
+        ?project knora-base:projectShortname "@maybeShortname.get"^^xsd:string .
+    }
+
+    @if(maybeLongname.nonEmpty) {
+        ?project knora-base:projectLongname "@maybeLongname.get"^^xsd:string .
+    }
+
+    @if(maybeDescription.nonEmpty) {
+        ?project knora-base:projectDescription "@maybeDescription.get"^^xsd:string .
+    }
+
+    @if(maybeKeywords.nonEmpty) {
+        ?project knora-base:projectKeywords "@maybeKeywords.get"^^xsd:string .
+    }
+
+    @if(maybeLogo.nonEmpty) {
+        ?project knora-base:projectLogo "@maybeLogo.get"^^xsd:string .
+    }
+
+    @if(maybeInstitution.nonEmpty) {
+        ?project knora-base:belongsToInstitution <@maybeInstitution.get> .
+    }
+
+    @if(maybeOntologyGraph.nonEmpty) {
+        ?project knora-base:projectOntologyGraph "@maybeOntologyGraph.get"^^xsd:string .
+    }
+
+    @if(maybeDataGraph.nonEmpty) {
+        ?project knora-base:projectDataGraph "@maybeDataGraph.get"^^xsd:string .
+    }
+
+    @if(maybeStatus.nonEmpty) {
+        ?project knora-base:status "@maybeStatus.get"^^xsd:boolean .
+    }
+
+    @if(maybeSelfjoin.nonEmpty) {
+        ?project knora-base:hasSelfJoinEnabled "@maybeSelfjoin.get"^^xsd:boolean .
+    }
+}
+
+@*
+
+GraphDB's consistency checking requires reasoning, but reasoning interferes with certain things
+in the WHERE clauses of our SPARQL updates, so we set a GraphDB-specific flag to return only
+explicit statements in the WHERE clause here.
+
+*@
+
+@triplestore match {
+    case "graphdb" | "graphdb-free" => {
+        USING <http://www.ontotext.com/explicit>
+    }
+
+    case other => {}
+}
+
+WHERE {
+    BIND(IRI("@projectIri") AS ?project)
+
+    @* Get all current defined values. *@
+
+    ?project knora-base:projectShortname ?currentShortname .
+
+    optional {?project knora-base:projectLongname ?currentLongname .}
+
+    optional {?project knora-base:projectDescription ?currentDescription .}
+
+    optional {?project knora-base:projectKeywords ?currentKeywords .}
+
+    optional {?project knora-base:projectLogo ?currentLogo .}
+
+    optional {?project knora-base:belongsToInstitution ?currentInstitution .}
+
+    ?project knora-base:projectOntologyGraph ?currentOntologyGraph .
+
+    ?project knora-base:projectDataGraph ?currentDataGraph .
+
+    ?project knora-base:status ?currentStatus .
+
+    ?project knora-base:hasSelfJoinEnabled ?currentSelfjoin .
+}

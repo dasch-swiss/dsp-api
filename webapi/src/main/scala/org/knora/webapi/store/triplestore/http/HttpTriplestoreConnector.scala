@@ -108,6 +108,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
         case SparqlSelectRequest(sparql) => future2Message(sender(), sparqlHttpSelect(sparql), log)
         case SparqlConstructRequest(sparql) => future2Message(sender(), sparqlHttpConstruct(sparql), log)
         case SparqlUpdateRequest(sparql) => future2Message(sender(), sparqlHttpUpdate(sparql), log)
+        case SparqlAskRequest(sparql) => future2Message(sender(), sparqlHttpAsk(sparql), log)
         case ResetTriplestoreContent(rdfDataObjects) => future2Message(sender(), resetTripleStoreContent(rdfDataObjects), log)
         case DropAllTriplestoreContent() => future2Message(sender(), dropAllTriplestoreContent(), log)
         case InsertTriplestoreContent(rdfDataObjects) => future2Message(sender(), insertDataIntoTriplestore(rdfDataObjects), log)
@@ -250,6 +251,21 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
                 getTriplestoreHttpResponse(indexUpdateSparqlString, isUpdate = true)
             }
         } yield SparqlUpdateResponse()
+    }
+
+    /**
+      * Performs a SPARQL ASK query.
+      *
+      * @param sparql the SPARQL ASK query.
+      * @return a [[SparqlAskResponse]].
+      */
+    def sparqlHttpAsk(sparql: String): Future[SparqlAskResponse] = {
+        for {
+            resultString <- getTriplestoreHttpResponse(sparql, isUpdate = false)
+            _ = log.debug("sparqlHttpAsk - resultString: {}", resultString)
+
+            result: Boolean = resultString.parseJson.asJsObject.getFields("boolean").head.convertTo[Boolean]
+        } yield SparqlAskResponse(result)
     }
 
     private def resetTripleStoreContent(rdfDataObjects: Seq[RdfDataObject]): Future[ResetTriplestoreContentACK] = {

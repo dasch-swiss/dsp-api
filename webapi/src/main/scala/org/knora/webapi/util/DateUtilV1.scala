@@ -48,8 +48,9 @@ object DateUtilV1 {
       */
     def dateValueV1ToJulianDayNumberValueV1(dateValueV1: DateValueV1): JulianDayNumberValueV1 = {
         // Get the start and end date ranges of the DateValueV1.
-        val dateRange1 = dateString2DateRange(dateValueV1.dateval1, dateValueV1.calendar)
-        val dateRange2 = dateString2DateRange(dateValueV1.dateval2, dateValueV1.calendar)
+
+        val dateRange1 = dateString2DateRange(dateValueV1.dateval1+" "+ dateValueV1.era1, dateValueV1.calendar)
+        val dateRange2 = dateString2DateRange(dateValueV1.dateval2+" "+ dateValueV1.era2, dateValueV1.calendar)
 
         JulianDayNumberValueV1(
             dateval1 = convertDateToJulianDayNumber(dateRange1.start),
@@ -69,10 +70,13 @@ object DateUtilV1 {
     def julianDayNumberValueV1ToDateValueV1(julianDayNumberValueV1: JulianDayNumberValueV1): DateValueV1 = {
         val dateval1 = julianDayNumber2DateString(julianDayNumberValueV1.dateval1, julianDayNumberValueV1.calendar, julianDayNumberValueV1.dateprecision1)
         val dateval2 = julianDayNumber2DateString(julianDayNumberValueV1.dateval2, julianDayNumberValueV1.calendar, julianDayNumberValueV1.dateprecision2)
-
+        val dateWEra1 = dateval1.split(" ")
+        val dateWEra2 = dateval2.split(" ")
         DateValueV1(
-            dateval1 = dateval1,
-            dateval2 = dateval2,
+            dateval1 = dateWEra1(0),
+            dateval2 = dateWEra2(0),
+            era1 = dateWEra1(1),
+            era2 = dateWEra2(1),
             calendar = julianDayNumberValueV1.calendar
         )
     }
@@ -95,25 +99,26 @@ object DateUtilV1 {
 
         val daysInMonth = Calendar.DAY_OF_MONTH // will be used to determine the number of days in the given month
         // val monthsInYear = Calendar.MONTH // will be used to determine the number of months in the given year (generic for other calendars)
+        val dateStringSplitByEra: Array[String] = dateString.split(" ")
+        val era: Option[Int] = dateStringSplitByEra.length match {
 
-        var era: Option[Int] = None
+            case 1 =>
+                // no era indicated, assume AD/CE
+                Some(GregorianCalendar.AD)
+            case 2 =>
+                dateStringSplitByEra(1) match {
+                    case "BC" => Some(GregorianCalendar.BC)
+                    case "AD" => Some(GregorianCalendar.AD)
+                    // java Gregorian calendar had just BC and AD as public fields
+                    case "BCE" => Some(GregorianCalendar.BC)  //BCE = BC
+                    case "CE" =>  Some(GregorianCalendar.AD)
 
-        var date: String =dateString
-        if (dateString.contains(" ")) {
-
-            val dateWEra = dateString.split(" ")
-            date = dateWEra(0)
-            dateWEra(1) match {
-                case "BC" => era = Some(GregorianCalendar.BC)
-                case "AD" => era = Some(GregorianCalendar.AD)
-                // java Gregorian calendar had just BC and AD as public fields
-                case "BCE" => era = Some(GregorianCalendar.BC)  //BCE = BC
-                case "CE" => era = Some(GregorianCalendar.AD)   //CE = AD
-            }
+                }
+            case _ => throw new IllegalArgumentException(s"Could not handle era in $dateString")
         }
 
 
-        val dateSegments = date.split(InputValidation.PrecisionSeparator)
+        val dateSegments = dateStringSplitByEra(0).split(InputValidation.PrecisionSeparator)
 
         // Determine and handle precision of the given date.
         // When setting the date, set time to noon (12) as JDC would contain a fraction otherwise:
@@ -212,20 +217,29 @@ object DateUtilV1 {
         val month = gregorianCalendar.get(Calendar.MONTH) + 1
         // Attention: in java.util.Calendar, month count starts with 0
         val day = gregorianCalendar.get(Calendar.DAY_OF_MONTH)
+        val era = gregorianCalendar.get(Calendar.ERA)
 
+        val date_era:String = era match {
+
+            case 1 => "CE"
+            case 0 => "BCE"
+
+        }
         precision match {
             case KnoraPrecisionV1.YEAR =>
                 // Year precision: just include the year.
-                f"$year%04d"
+                f"$year%04d $date_era"
 
             case KnoraPrecisionV1.MONTH =>
                 // Month precision: include the year and the month.
-                f"$year%04d-$month%02d"
+                f"$year%04d-$month%02d $date_era"
 
             case KnoraPrecisionV1.DAY =>
                 // Day precision: include the year, the month, and the day.
-                f"$year%04d-$month%02d-$day%02d"
+                f"$year%04d-$month%02d-$day%02d $date_era"
         }
+
+
     }
 
     /**

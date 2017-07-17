@@ -21,6 +21,8 @@
 package org.knora.webapi.messages.v1.responder.authenticatemessages
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
+import arq.iri
+import org.knora.webapi.IRI
 import spray.json._
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -33,6 +35,18 @@ import spray.json._
   * @param password
   */
 case class CreateSessionApiRequestV1(username: String, password: String)
+
+/**
+  * Representing user's credentials (iri, email, password)
+  *
+  * @param userIri  the user's IRI.
+  * @param email    the user's email.
+  * @param password the user's password.
+  */
+case class Credentials(userIri: IRI, email: String, password: String) {
+    def urlEncodedIri = java.net.URLEncoder.encode(userIri, "utf-8")
+    def urlEncodedEmail = java.net.URLEncoder.encode(email, "utf-8")
+}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // JSON formatting

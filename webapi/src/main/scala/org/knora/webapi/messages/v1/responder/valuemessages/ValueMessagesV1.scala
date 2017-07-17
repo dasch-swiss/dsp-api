@@ -385,46 +385,40 @@ case class CreateValueV1WithComment(updateValueV1: UpdateValueV1, comment: Optio
   * as part of a bulk import. If client resource IDs are used in standoff links, `clientResourceIDsToResourceIris`
   * must map those IDs to the real  IRIs of the resources that are to be created.
   *
-  * @param projectIri                      the project the values belong to.
-  * @param resourceIri                     the resource the values will be attached to.
-  * @param resourceClassIri                the IRI of the resource's OWL class.
-  * @param resourceIndex                   the index of the resource to be created
-  * @param values                          the values to be added, with optional comments.
-  * @param clientResourceIDsToResourceIris a map of client resource IDs (which may appear in standoff link tags
-  *                                        in values) to the IRIs that will be used for those resources.
-  * @param userProfile                     the user that is creating the values.
+  * @param projectIri                       the project the values belong to.
+  * @param resourceIri                      the resource the values will be attached to.
+  * @param resourceClassIri                 the IRI of the resource's OWL class.
+  * @param defaultPropertyAccessPermissions the default object access permissions of each property attached to the resource class.
+  * @param values                           the values to be added, with optional comments.
+  * @param clientResourceIDsToResourceIris  a map of client resource IDs (which may appear in standoff link tags
+  *                                         in values) to the IRIs that will be used for those resources.
+  * @param currentTime                      an xsd:dateTimeStamp that will be attached to the values.
+  * @param userProfile                      the user that is creating the values.
   */
 case class GenerateSparqlToCreateMultipleValuesRequestV1(projectIri: IRI,
                                                          resourceIri: IRI,
                                                          resourceClassIri: IRI,
-                                                         resourceIndex: Int,
+                                                         defaultPropertyAccessPermissions: Map[IRI, String],
                                                          values: Map[IRI, Seq[CreateValueV1WithComment]],
                                                          clientResourceIDsToResourceIris: Map[String, IRI],
+                                                         currentTime: String,
                                                          userProfile: UserProfileV1,
                                                          apiRequestID: UUID) extends ValuesResponderRequestV1
 
 
 /**
-  * Represents a response to a [[GenerateSparqlToCreateMultipleValuesRequestV1]], providing strings that can be included
-  * in the `WHERE` and `INSERT` clauses of a SPARQL update operation to create the requested values. The `WHERE` clause must
-  * also bind the following SPARQL variables:
-  *
-  * - `?resource`: the IRI of the resource in which the values are being created.
-  * - `?resourceClass`: the IRI of the OWL class of that resource.
-  * - `?currentTime`: the return value of the SPARQL function `NOW()`.
+  * Represents a response to a [[GenerateSparqlToCreateMultipleValuesRequestV1]], providing a string that can be included
+  * in the `INSERT DATA` clause of a SPARQL update operation to create the requested values.
   *
   * After executing the SPARQL update, the receiver can check whether the values were actually created by sending a
   * [[VerifyMultipleValueCreationRequestV1]].
   *
-  * @param whereSparql      a string containing statements that must be inserted into the WHERE clause of the SPARQL
-  *                         update that will create the values.
   * @param insertSparql     a string containing statements that must be inserted into the INSERT clause of the SPARQL
   *                         update that will create the values.
   * @param unverifiedValues a map of property IRIs to [[UnverifiedValueV1]] objects describing
   *                         the values that should have been created.
   */
-case class GenerateSparqlToCreateMultipleValuesResponseV1(whereSparql: String,
-                                                          insertSparql: String,
+case class GenerateSparqlToCreateMultipleValuesResponseV1(insertSparql: String,
                                                           unverifiedValues: Map[IRI, Seq[UnverifiedValueV1]])
 
 
@@ -1234,19 +1228,22 @@ case class JulianDayNumberValueV1(dateval1: Int,
   */
 case class DateValueV1(dateval1: String,
                        dateval2: String,
+                       era1:String,
+                       era2:String,
                        calendar: KnoraCalendarV1.Value) extends ApiValueV1 {
 
     def valueTypeIri = OntologyConstants.KnoraBase.DateValue
 
     override def toString = {
 
+
         // if date1 and date2 are identical, it's not a period.
         if (dateval1 == dateval2) {
             // one exact day
-            dateval1
+            dateval1 + " " + era1
         } else {
             // period: from to
-            dateval1 + " - " + dateval2
+            dateval1 + " " + era1+ " - " + dateval2+ " " + era2
         }
 
     }
@@ -1588,7 +1585,7 @@ object ApiValueV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
     implicit val createFileQualityLevelFormat: RootJsonFormat[CreateFileQualityLevelV1] = jsonFormat4(CreateFileQualityLevelV1)
     implicit val createFileV1Format: RootJsonFormat[CreateFileV1] = jsonFormat3(CreateFileV1)
     implicit val valueGetResponseV1Format: RootJsonFormat[ValueGetResponseV1] = jsonFormat7(ValueGetResponseV1)
-    implicit val dateValueV1Format: JsonFormat[DateValueV1] = jsonFormat3(DateValueV1)
+    implicit val dateValueV1Format: JsonFormat[DateValueV1] = jsonFormat5(DateValueV1)
     implicit val stillImageFileValueV1Format: JsonFormat[StillImageFileValueV1] = jsonFormat9(StillImageFileValueV1)
     implicit val textFileValueV1Format: JsonFormat[TextFileValueV1] = jsonFormat4(TextFileValueV1)
     implicit val movingImageFileValueV1Format: JsonFormat[MovingImageFileValueV1] = jsonFormat4(MovingImageFileValueV1)

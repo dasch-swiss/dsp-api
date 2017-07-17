@@ -68,12 +68,14 @@ object ActorUtil {
             case Failure(e) => e match {
                 case rejectedEx: RequestRejectedException =>
                     // The error was the client's fault, so just tell the client.
+                    log.debug("future2Message - rejectedException: {}", rejectedEx)
                     sender ! akka.actor.Status.Failure(rejectedEx)
 
                 case otherEx: Exception =>
                     // The error wasn't the client's fault. Log the exception, and also
                     // let the client know.
                     val exToReport = ExceptionUtil.logAndWrapIfNotSerializable(otherEx, log)
+                    log.debug("future2Message - otherException: {}", exToReport)
                     sender ! akka.actor.Status.Failure(exToReport)
                     throw exToReport
 

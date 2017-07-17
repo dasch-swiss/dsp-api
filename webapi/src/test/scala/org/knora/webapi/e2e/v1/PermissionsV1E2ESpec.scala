@@ -16,20 +16,15 @@
 
 package org.knora.webapi.e2e.v1
 
-import akka.actor.ActorSystem
-import akka.http.scaladsl.model._
-import akka.http.scaladsl.model.headers._
-import akka.http.scaladsl.testkit.RouteTestTimeout
+import akka.http.scaladsl.model.{ContentTypes, HttpEntity, StatusCodes}
 import com.typesafe.config.ConfigFactory
-import org.knora.webapi.messages.v1.responder.sessionmessages.SessionJsonProtocol
 import org.knora.webapi.messages.v1.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
-import org.knora.webapi.{E2ESpec, SharedAdminTestData}
+import org.knora.webapi.{E2ESpec, OntologyConstants, SharedAdminTestData, StartupFlags}
 import spray.json._
 
 import scala.concurrent.duration._
 
-
-object GroupsRouteV1E2ESpec {
+object PermissionsV1E2ESpec {
     val config = ConfigFactory.parseString(
         """
           akka.loglevel = "DEBUG"
@@ -38,19 +33,13 @@ object GroupsRouteV1E2ESpec {
 }
 
 /**
-  * End-to-End (E2E) test specification for testing groups endpoint.
+  * End-to-End (E2E) test specification for testing the 'v1/permissions' route.
+  *
+  * This spec tests the 'v1/store' route.
   */
-class GroupsRouteV1E2ESpec extends E2ESpec(GroupsRouteV1E2ESpec.config) with SessionJsonProtocol with TriplestoreJsonProtocol {
+class PermissionsV1E2ESpec extends E2ESpec(PermissionsV1E2ESpec.config) with TriplestoreJsonProtocol {
 
-    implicit def default(implicit system: ActorSystem) = RouteTestTimeout(5.seconds)
-
-    private val rdfDataObjects = List.empty[RdfDataObject]
-
-    val rootEmail = SharedAdminTestData.rootUser.userData.email.get
-    val rootEmailEnc = java.net.URLEncoder.encode(rootEmail, "utf-8")
-    val testPass = java.net.URLEncoder.encode("test", "utf-8")
-
-    val groupIriEnc = java.net.URLEncoder.encode("http://data.knora.org/groups/images-reviewer", "utf-8")
+    private val rdfDataObjects: List[RdfDataObject] = List.empty[RdfDataObject]
 
     "Load test data" in {
         // send POST to 'v1/store/ResetTriplestoreContent'
@@ -58,15 +47,16 @@ class GroupsRouteV1E2ESpec extends E2ESpec(GroupsRouteV1E2ESpec.config) with Ses
         singleAwaitingRequest(request, 300.seconds)
     }
 
-    "The Groups Route ('v1/groups') with credentials supplied via Basic Auth" should {
+    "The Permissions Route ('v1/permissions/projectIri/groupIri')" should {
 
-        "return the group's information" in {
-            /* Correct username and password */
-            val request = Get(baseApiUrl + s"/v1/groups/iri/$groupIriEnc") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
-            val response: HttpResponse = singleAwaitingRequest(request)
-            println(s"response: ${response.toString}")
+        "return administrative permissions" in {
+            val projectIri = java.net.URLEncoder.encode(SharedAdminTestData.imagesProjectInfo.id, "utf-8")
+            val groupIri = java.net.URLEncoder.encode(OntologyConstants.KnoraBase.ProjectMember, "utf-8")
+
+            val request = Get(baseApiUrl + s"/v1/permissions/$projectIri/$groupIri")
+            val response = singleAwaitingRequest(request, 1.seconds)
+            log.debug("==>> " + response.toString)
             assert(response.status === StatusCodes.OK)
         }
-
     }
 }

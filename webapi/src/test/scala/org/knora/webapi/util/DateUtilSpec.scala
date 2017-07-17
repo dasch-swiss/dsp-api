@@ -36,6 +36,8 @@ class DateUtilSpec extends WordSpec with Matchers {
             val bundesbriefDateValueV1 = DateValueV1(
                 dateval1 = "1291-08-01",
                 dateval2 = "1291-08-01",
+                era1 = "CE",
+                era2 = "CE",
                 calendar = KnoraCalendarV1.JULIAN
             )
 
@@ -67,16 +69,69 @@ class DateUtilSpec extends WordSpec with Matchers {
             val dateRange: DateRange = DateUtilV1.dateString2DateRange("50-02-28 BCE", KnoraCalendarV1.GREGORIAN)
             dateRange.start.get(Calendar.ERA) should be(GregorianCalendar.BC)
         }
-
+        "convert an era date string with just year precision to a Java GregorianCalendar BCE" in {
+            val dateRange: DateRange = DateUtilV1.dateString2DateRange("50 BCE", KnoraCalendarV1.GREGORIAN)
+            dateRange.start.get(Calendar.ERA) should be(GregorianCalendar.BC)
+        }
+        "convert an era date string with just year/month precision to a Java GregorianCalendar BCE" in {
+            val dateRange: DateRange = DateUtilV1.dateString2DateRange("50-02 BCE", KnoraCalendarV1.GREGORIAN)
+            dateRange.start.get(Calendar.ERA) should be(GregorianCalendar.BC)
+        }
         "convert an era date string with year precision to a Java GregorianCalendar CE" in {
             val dateRange: DateRange = DateUtilV1.dateString2DateRange("50-02-28 CE", KnoraCalendarV1.GREGORIAN)
             dateRange.start.get(Calendar.ERA) should be(GregorianCalendar.AD)
         }
+        "convert an era date string with julian calendar with year precision to a Java GregorianCalendar BC" in {
+            val dateRange: DateRange = DateUtilV1.dateString2DateRange("50-02-28 AD", KnoraCalendarV1.JULIAN)
+            dateRange.start.get(Calendar.ERA) should be(GregorianCalendar.AD)
+        }
 
+        "convert a date in YYYY-MM-DD Era format, to Date Range and back to String" in {
+            val someDateValueV1 = DateValueV1(
+                dateval1 = "4713-01-01",
+                dateval2 = "4713-01-01",
+                era1="BCE",
+                era2="BCE",
+                calendar = KnoraCalendarV1.JULIAN
+            )
+
+            val theJulianDayCountValueV1 = DateUtilV1.dateValueV1ToJulianDayNumberValueV1(someDateValueV1)
+
+
+
+            val date_string = DateUtilV1.julianDayNumber2DateString(theJulianDayCountValueV1.dateval1, theJulianDayCountValueV1.calendar, theJulianDayCountValueV1.dateprecision1)
+
+
+        }
+        "convert a date in YYYY-MM-DD Era format, in the Julian calendar, into a Julian day count" in {
+            val someDateValueV1 = DateValueV1(
+                dateval1 = "4713-01-01",
+                dateval2 = "4713-01-01",
+                era1="BCE",
+                era2="BCE",
+                calendar = KnoraCalendarV1.JULIAN
+
+            )
+
+            val theJulianDayCountValueV1 = DateUtilV1.dateValueV1ToJulianDayNumberValueV1(someDateValueV1)
+
+
+
+            theJulianDayCountValueV1 should be(JulianDayNumberValueV1(
+                dateval1 = 0,
+                dateval2 = 0,
+                calendar = KnoraCalendarV1.JULIAN,
+                dateprecision1 = KnoraPrecisionV1.DAY,
+                dateprecision2 = KnoraPrecisionV1.DAY
+            ))
+
+        }
         "convert a date in YYYY-MM-DD format, in the Gregorian calendar, into a Julian day count, and back again" in {
             val benBirthdayDateValueV1 = DateValueV1(
                 dateval1 = "1969-03-10",
                 dateval2 = "1969-03-10",
+                era2 = "CE",
+                era1 = "CE",
                 calendar = KnoraCalendarV1.GREGORIAN
             )
 
@@ -99,6 +154,8 @@ class DateUtilSpec extends WordSpec with Matchers {
             val dateValueV1 = DateValueV1(
                 dateval1 = "1291-08",
                 dateval2 = "1969-03-10",
+                era2="CE",
+                era1="CE",
                 calendar = KnoraCalendarV1.GREGORIAN
             )
 
@@ -113,7 +170,8 @@ class DateUtilSpec extends WordSpec with Matchers {
             ))
 
             val reverseConvertedDateValueV1 = DateUtilV1.julianDayNumberValueV1ToDateValueV1(julianDayCountValueV1)
-
+            println(reverseConvertedDateValueV1)
+            println(dateValueV1)
             reverseConvertedDateValueV1 should be(dateValueV1)
         }
 
@@ -121,6 +179,8 @@ class DateUtilSpec extends WordSpec with Matchers {
             val dateValueV1 = DateValueV1(
                 dateval1 = "2005-09",
                 dateval2 = "2015-07",
+                era2="CE",
+                era1="CE",
                 calendar = KnoraCalendarV1.GREGORIAN
             )
 
@@ -144,6 +204,7 @@ class DateUtilSpec extends WordSpec with Matchers {
             val dateRange: DateRange = DateUtilV1.dateString2DateRange("2017-02-28", KnoraCalendarV1.GREGORIAN)
 
         }
+
 
         "attempt to convert an date string representing an non existing date with day precision to a Java GregorianCalendar" in {
 

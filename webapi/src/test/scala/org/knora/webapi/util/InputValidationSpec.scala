@@ -73,18 +73,18 @@ class InputValidationSpec extends WordSpec with Matchers {
             InputValidation.toDate(dateString, () => throw new IllegalArgumentException(s"Not accepted ${dateString}"))
         }
 
-        "accept JULIAN:2017" in {
-            val dateString = "JULIAN:2017"
+        "accept JULIAN:50 BCE" in {
+            val dateString = "JULIAN:50 BCE"
             InputValidation.toDate(dateString, () => throw new IllegalArgumentException(s"Not accepted ${dateString}"))
         }
 
-        "accept JULIAN:2017-05" in {
-            val dateString = "JULIAN:2017-05"
+        "accept JULIAN:1560-05 CE" in {
+            val dateString = "JULIAN:1560-05 CE"
             InputValidation.toDate(dateString, () => throw new IllegalArgumentException(s"Not accepted ${dateString}"))
         }
 
-        "accept JULIAN:2017-05-10" in {
-            val dateString = "JULIAN:2017-05-10"
+        "accept JULIAN:217-05-10 BCE" in {
+            val dateString = "JULIAN:217-05-10 BCE"
             InputValidation.toDate(dateString, () => throw new IllegalArgumentException(s"Not accepted ${dateString}"))
         }
 
@@ -93,9 +93,35 @@ class InputValidationSpec extends WordSpec with Matchers {
             InputValidation.toDate(dateString, () => throw new IllegalArgumentException(s"Not accepted ${dateString}"))
         }
 
-        "accept JULIAN:2017:2017-05-12" in {
-            val dateString = "JULIAN:2017:2017-05-12"
+        "accept JULIAN:2017:2017-5-12" in {
+            val dateString = "JULIAN:2017:2017-5-12"
             InputValidation.toDate(dateString, () => throw new IllegalArgumentException(s"Not accepted ${dateString}"))
+        }
+        "accept JULIAN:500 BCE:400 BCE" in {
+            val dateString = "JULIAN:500 BCE:400 BCE"
+            InputValidation.toDate(dateString, () => throw new IllegalArgumentException(s"Not accepted ${dateString}"))
+        }
+        "accept GREGORIAN:10 BC:1 AD" in {
+            val dateString = "GREGORIAN:10 BC:1 AD"
+            InputValidation.toDate(dateString, () => throw new IllegalArgumentException(s"Not accepted ${dateString}"))
+        }
+        "not accept month 00" in {
+            val dateString = "GREGORIAN:2017-00:2017-02"
+            assertThrows[IllegalArgumentException] {
+                InputValidation.toDate(dateString, () => throw new IllegalArgumentException(s"month 00 in ${dateString} Not accepted" ))
+            }
+        }
+        "not accept day 00" in {
+            val dateString = "GREGORIAN:2017-01-00"
+            assertThrows[IllegalArgumentException] {
+                InputValidation.toDate(dateString, () => throw new IllegalArgumentException(s"day 00 in ${dateString} Not accepted" ))
+            }
+        }
+        "not accept year 0 " in {
+            val dateString = "GREGORIAN:0 BC"
+            assertThrows[IllegalArgumentException] {
+                InputValidation.toDate(dateString, () => throw new IllegalArgumentException(s"Year 0 is Not accepted ${dateString}"))
+            }
         }
     }
 }
