@@ -24,62 +24,45 @@
 
 @**
  * Generates statements to be added to the WHERE clause of a SPARQL update when creating a new value of a resource
- * property (as opposed to a new version of an existing value). This template is used in two contexts: when creating a
- * single value in an existing resource, and when creating a new resource with its initial values.
+ * property (as opposed to a new version of an existing value). This template is used only when creating a
+ * single value in an existing resource.
  *
- * @param resourceIndex the index of the resource
- * @param valueIndex the index of the value in the sequence of values that are being created in the transaction (can
- *                   be 0 if only one value is being created). This index will be used to make SPARQL variable names
- *                   specific to the value being created.
- * @param resourceIri the resource to update.
  * @param propertyIri the resource property to update.
  * @param newValueIri the new value IRI.
  * @param valueTypeIri the type of the new value.
  * @param linkUpdates a list of [[LinkUpdate]] objects describing links and LinkValues that need to be
  *        updated for resource references in Standoff text values. This list will be empty if the links and LinkValues
  *        are being created separately.
- * @param maybeValueHasOrder an optional value for the knora-base:valueHasOrder predicate of the new value. If not
- *                           provided, the value of this predicate will be calculated using a subquery.
  *
- * The SPARQL variables `?resource` and `?resourceClass` must already be bound.
+ * The SPARQL variables ?resource and ?resourceClass must already be bound.
  *@
-@(
-  resourceIndex: Int,
-  valueIndex: Int,
-  resourceIri: IRI,
-  propertyIri: IRI,
+@(propertyIri: IRI,
   newValueIri: IRI,
   valueTypeIri: IRI,
-  linkUpdates: Seq[SparqlTemplateLinkUpdate],
-  maybeValueHasOrder: Option[Int])
-    @index = {@resourceIndex.toString()_@valueIndex.toString()}
-    # Value @index
+  linkUpdates: Seq[SparqlTemplateLinkUpdate])
+
+    # Value: @newValueIri
     # Property: @propertyIri
 
-    BIND(IRI("@propertyIri") AS ?property@index)
-    BIND(IRI("@newValueIri") AS ?newValue@index)
-    BIND(IRI("@valueTypeIri") AS ?valueType@index)
+    BIND(IRI("@propertyIri") AS ?property)
+    BIND(IRI("@valueTypeIri") AS ?valueType)
 
     @* Do nothing if the submitted value has the wrong type. *@
 
-    ?property@index knora-base:objectClassConstraint ?propertyRange@index .
-    ?valueType@index rdfs:subClassOf* ?propertyRange@index .
+    ?property knora-base:objectClassConstraint ?propertyRange .
+    ?valueType rdfs:subClassOf* ?propertyRange .
 
     @* Do nothing if neither the resource class nor any of its superclasses has a cardinality for this property. *@
 
-    ?resourceClass@resourceIndex rdfs:subClassOf* ?restriction@index .
-    ?restriction@index a owl:Restriction .
-    ?restriction@index owl:onProperty ?property@index .
+    ?resourceClass rdfs:subClassOf* ?restriction .
+    ?restriction a owl:Restriction .
+    ?restriction owl:onProperty ?property .
 
     @*
 
-    If this template is being used to create a single text value in an existing resource, there may be existing
-    LinkValues that need to be updated for standoff links in the text. In that case, check the state of those
-    LinkValues. For each existing LinkValue, bind a SPARQL variable ?linkValue@linkValueIndex. This is necessary so
-    that a new version of the LinkValue can be inserted and point to the previous one.
-
-    If this template is being used to create a new resource with its initial values, linkUpdates will be empty, so there
-    is nothing to check here and no SPARQL variables to bind.
+    There may be existing LinkValues that need to be updated for standoff links in the text. For each existing
+    LinkValue, bind a SPARQL variable ?linkValue@linkValueIndex. This is necessary so that a new version of the
+    LinkValue can be inserted and point to the previous one.
 
     *@
 
@@ -105,11 +88,11 @@
 
             @if(linkUpdate.directLinkExists) {
                 @* Make sure the relevant direct link exists between the two resources. *@
-                ?resource@resourceIndex <@linkUpdate.linkPropertyIri> <@linkUpdate.linkTargetIri> .
+                ?resource <@linkUpdate.linkPropertyIri> <@linkUpdate.linkTargetIri> .
             } else {
                 @* Make sure there no such direct link. *@
                 MINUS {
-                    ?resource@resourceIndex <@linkUpdate.linkPropertyIri> <@linkUpdate.linkTargetIri> .
+                    ?resource <@linkUpdate.linkPropertyIri> <@linkUpdate.linkTargetIri> .
                 }
             }
 
@@ -120,9 +103,9 @@
                 between the source and target resources, and has the correct reference count.
 
                 *@
-                ?resource@resourceIndex <@{linkUpdate.linkPropertyIri}Value> ?linkValue@linkValueIndex .
+                ?resource <@{linkUpdate.linkPropertyIri}Value> ?linkValue@linkValueIndex .
                 ?linkValue@linkValueIndex rdf:type knora-base:LinkValue ;
-                    rdf:subject ?resource@resourceIndex ;
+                    rdf:subject ?resource ;
                     rdf:predicate <@linkUpdate.linkPropertyIri> ;
                     rdf:object <@linkUpdate.linkTargetIri> ;
                     knora-base:valueHasRefCount @linkUpdate.currentReferenceCount ;
@@ -131,9 +114,9 @@
             } else {
                 @* Make sure there is no such knora-base:LinkValue. *@
                 MINUS {
-                    ?resource@resourceIndex <@{linkUpdate.linkPropertyIri}Value> ?linkValue@linkValueIndex .
+                    ?resource <@{linkUpdate.linkPropertyIri}Value> ?linkValue@linkValueIndex .
                     ?linkValue@linkValueIndex rdf:type knora-base:LinkValue ;
-                        rdf:subject ?resource@resourceIndex ;
+                        rdf:subject ?resource ;
                         rdf:predicate <@linkUpdate.linkPropertyIri> ;
                         rdf:object <@linkUpdate.linkTargetIri> ;
                         knora-base:isDeleted false .
@@ -151,33 +134,17 @@
 
     Bind a variable for knora-base:valueHasOrder for the new value.
 
-    If this template is being used to create a single value, maybeValueHasOrder will be None, and we have to do a subquery
-    to determine the next available knora-base:valueHasOrder. This works as follows: if the property already has one or more
-    (non-deleted) values in the resource, find the one with the highest order, add 1 to its order, and give the resulting
-    order to the new value. Otherwise, give the new value an order of 0.
-
-    If this template is being used to create a new resource with its initial values, there are no existing values to query in
-    the resource, and maybeValueHasOrder will contain the knora-base:valueHasOrder to be used.
+    We have to do a subquery to determine the next available knora-base:valueHasOrder. This works as follows: if the
+    property already has one or more (non-deleted) values in the resource, find the one with the highest order, add 1 to
+    its order, and give the resulting order to the new value. Otherwise, give the new value an order of 0.
 
     *@
 
-    @maybeValueHasOrder match {
-        case Some(valueHasOrder) => {
-
-            BIND(@valueHasOrder AS ?nextOrder@index)
-
-        }
-
-        case None => {
-
-            {
-                SELECT ((MAX(?order@index)) AS ?maxOrder@index) (IF(BOUND(?maxOrder@index), ?maxOrder@index + 1, 0) AS ?nextOrder@index)
-                WHERE {
-                    <@resourceIri> <@propertyIri> ?otherValue@index .
-                    ?otherValue@index knora-base:valueHasOrder ?order@index ;
-                        knora-base:isDeleted false .
-                }
-            }
-
+    {
+        SELECT ((MAX(?order)) AS ?maxOrder) (IF(BOUND(?maxOrder), ?maxOrder + 1, 0) AS ?nextOrder)
+        WHERE {
+            ?resource <@propertyIri> ?otherValue .
+            ?otherValue knora-base:valueHasOrder ?order ;
+                knora-base:isDeleted false .
         }
     }

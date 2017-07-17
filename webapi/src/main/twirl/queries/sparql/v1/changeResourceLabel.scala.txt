@@ -27,11 +27,13 @@
  * @param triplestore the name of the triplestore being used.
  * @param resourceIri the IRI of the resource containing the value.
  * @param label the resource's new label.
+ * @param currentTime an xsd:dateTimeStamp that will be attached to the resources.
  *@
 @(dataNamedGraph: IRI,
   triplestore: String,
   resourceIri: IRI,
-  label: String)
+  label: String,
+  currentTime: String)
 
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -53,7 +55,7 @@ DELETE {
         ?resource rdfs:label ?newLabel .
 
         @* Update the resource's last modification date. *@
-        ?resource knora-base:lastModificationDate ?currentTime .
+        ?resource knora-base:lastModificationDate "@currentTime"^^xsd:dateTimeStamp .
     }
 }
 @* Ensure that inference is not used in the WHERE clause of this update. *@
@@ -63,7 +65,6 @@ DELETE {
 WHERE {
     BIND(IRI("@dataNamedGraph") AS ?dataNamedGraph)
     BIND(IRI("@resourceIri") AS ?resource)
-    BIND(NOW() AS ?currentTime)
     BIND("@label" AS ?newLabel)
 
     ?resource rdf:type ?resourceClass ;
