@@ -228,13 +228,14 @@ object OntologyConstants {
         )
 
         val ListNode: IRI = KnoraBasePrefixExpansion + "ListNode"
+        val ListNodeName: String = KnoraBasePrefixExpansion + "listNodeName"
 
         val IsDeleted: IRI = KnoraBasePrefixExpansion + "isDeleted"
 
         /* Resource creator */
         val AttachedToUser: IRI = KnoraBasePrefixExpansion + "attachedToUser"
 
-        /* Resource's project */
+        /* Resource's and list's project */
         val AttachedToProject: IRI = KnoraBasePrefixExpansion + "attachedToProject"
 
         /* User */

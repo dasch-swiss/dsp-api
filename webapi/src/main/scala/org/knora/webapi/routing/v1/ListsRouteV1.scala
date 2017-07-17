@@ -24,10 +24,10 @@ import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
-import org.knora.webapi.messages.v1.responder.listmessages.{HListGetRequestV1, NodePathGetRequestV1, SelectionGetRequestV1}
+import org.knora.webapi.messages.v1.responder.listmessages.{HListGetRequestV1, ListsGetRequestV1, NodePathGetRequestV1, SelectionGetRequestV1}
 import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
 import org.knora.webapi.util.InputValidation
-import org.knora.webapi.{BadRequestException, SettingsImpl}
+import org.knora.webapi.{BadRequestException, IRI, SettingsImpl}
 
 /**
   * Provides a spray-routing function for API routes that deal with lists.
@@ -40,6 +40,54 @@ object ListsRouteV1 extends Authenticator {
         implicit val timeout = settings.defaultTimeout
         val responderManager = system.actorSelection("/user/responderManager")
 
+        path("v1" / "lists") {
+            get {
+                /* return all lists */
+                parameters("projectIri".?) { projectIri: Option[IRI] =>
+                    requestContext =>
+                        val userProfile = getUserProfileV1(requestContext)
+
+                        val requestMessage = ListsGetRequestV1(projectIri, userProfile)
+
+                        RouteUtilV1.runJsonRoute(
+                            requestMessage,
+                            requestContext,
+                            settings,
+                            responderManager,
+                            log
+                        )
+                }
+            } ~
+            post {
+                /* create a list */
+                ???
+            }
+        } ~
+        path("v1" / "lists" / Segment) {iri =>
+            get {
+                requestContext =>
+                    val userProfile = getUserProfileV1(requestContext)
+                    val listIri = InputValidation.toIri(iri, () => throw BadRequestException(s"Invalid param list IRI: $iri"))
+
+                    val requestMessage = HListGetRequestV1(listIri, userProfile)
+
+                    RouteUtilV1.runJsonRoute(
+                        requestMessage,
+                        requestContext,
+                        settings,
+                        responderManager,
+                        log
+                    )
+            } ~
+            put {
+                /* update list */
+                ???
+            } ~
+            delete {
+                /* delete (deactivate) list */
+                ???
+            }
+        } ~
         path("v1" / "hlists" / Segment) { iri =>
             get {
                 requestContext =>

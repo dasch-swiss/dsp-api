@@ -29,6 +29,7 @@ import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRe
 import org.knora.webapi.messages.v1.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent, ResetTriplestoreContentACK}
 import org.knora.webapi.responders._
 import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
+import org.knora.webapi.util.MutableTestIri
 
 import scala.concurrent.duration._
 
@@ -51,10 +52,11 @@ class ListsResponderV1Spec extends CoreSpec() with ImplicitSender {
     private val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
 
     // The default timeout for receiving reply messages from actors.
-    private val timeout = 10.seconds
+    private val timeout = 5.seconds
 
     val rdfDataObjects = List(
-        RdfDataObject(path = "_test_data/responders.v1.HierarchicalListsResponderV1Spec/dokubib-data.ttl", name = "http://www.knora.org/data/dokubib")
+        RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/images"),
+        RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/anything")
     )
 
     // A test UserProfileV1.
@@ -3072,17 +3074,17 @@ class ListsResponderV1Spec extends CoreSpec() with ImplicitSender {
                 position = 0,
                 level = 0,
                 children = Nil,
-                label = Some("Laserkopie"),
-                name = Some("laserkopie"),
-                id = "http://data.knora.org/lists/88d6cc5f05"
+                label = Some("Fotografie s/w"),
+                name = Some("foto_sw"),
+                id = "http://data.knora.org/lists/230a209905"
             ),
             HierarchicalListV1(
                 position = 1,
                 level = 0,
                 children = Nil,
-                label = Some("Fotografie s/w"),
-                name = Some("foto_sw"),
-                id = "http://data.knora.org/lists/230a209905"
+                label = Some("Laserkopie"),
+                name = Some("laserkopie"),
+                id = "http://data.knora.org/lists/88d6cc5f05"
             ),
             HierarchicalListV1(
                 position = 2,
@@ -3096,25 +3098,25 @@ class ListsResponderV1Spec extends CoreSpec() with ImplicitSender {
                 position = 3,
                 level = 0,
                 children = Nil,
-                label = Some("Fotografie farb"),
-                name = Some("foto_farb"),
-                id = "http://data.knora.org/lists/5971c60b06"
+                label = Some("Fotografie digital"),
+                name = Some("foto_digital"),
+                id = "http://data.knora.org/lists/8fd86c7e06"
             ),
             HierarchicalListV1(
                 position = 4,
                 level = 0,
                 children = Nil,
-                label = Some("Fotografie kol"),
-                name = Some("foto_kol"),
-                id = "http://data.knora.org/lists/f4a4194506"
+                label = Some("Fotografie farb"),
+                name = Some("foto_farb"),
+                id = "http://data.knora.org/lists/5971c60b06"
             ),
             HierarchicalListV1(
                 position = 5,
                 level = 0,
                 children = Nil,
-                label = Some("Fotografie digital"),
-                name = Some("foto_digital"),
-                id = "http://data.knora.org/lists/8fd86c7e06"
+                label = Some("Fotografie kol"),
+                name = Some("foto_kol"),
+                id = "http://data.knora.org/lists/f4a4194506"
             ),
             HierarchicalListV1(
                 position = 6,
@@ -3245,17 +3247,17 @@ class ListsResponderV1Spec extends CoreSpec() with ImplicitSender {
                 position = 0,
                 level = 0,
                 children = Nil,
-                label = Some("Winter"),
-                name = Some("winter"),
-                id = "http://data.knora.org/lists/eda2792605"
+                label = Some("Sommer"),
+                name = Some("sommer"),
+                id = "http://data.knora.org/lists/526f26ed04"
             ),
             HierarchicalListV1(
                 position = 1,
                 level = 0,
                 children = Nil,
-                label = Some("Sommer"),
-                name = Some("sommer"),
-                id = "http://data.knora.org/lists/526f26ed04"
+                label = Some("Winter"),
+                name = Some("winter"),
+                id = "http://data.knora.org/lists/eda2792605"
             )
         )
     )
@@ -3288,45 +3290,95 @@ class ListsResponderV1Spec extends CoreSpec() with ImplicitSender {
         expectMsg(10.seconds, LoadOntologiesResponse())
     }
 
-    "The hlist responder" should {
-        "return all the toplevel and child nodes of \"Hierarchisches Stichwortverzeichnis / Signatur der Bilder\" when we do a query for the hlist http://data.knora.org/lists/73d0ec0302 (root node) in the dokubib test data" in {
-            // http://localhost:3333/v1/hlists/http%3A%2F%2Fdata.knora.org%2Flists%2F73d0ec0302
-            actorUnderTest ! HListGetRequestV1(
-                userProfile = userProfile,
-                iri = "http://data.knora.org/lists/73d0ec0302"
-            )
+    "The Lists Responder" when {
 
-            expectMsg(timeout, hKeywords)
+        "used to query information about lists" should {
+
+            "return all lists" in {
+                actorUnderTest ! ListsGetRequestV1(userProfile = userProfile)
+
+                val received: ListsGetResponseV1 = expectMsgType[ListsGetResponseV1](timeout)
+
+                received.lists.size should be(6)
+            }
+
+            "return all lists belonging to the images project" in {
+                actorUnderTest ! ListsGetRequestV1(projectIri = Some(SharedAdminTestData.IMAGES_PROJECT_IRI), userProfile = userProfile)
+
+                val received: ListsGetResponseV1 = expectMsgType[ListsGetResponseV1](timeout)
+
+                received.lists.size should be(4)
+            }
+
+            "return all the toplevel and child nodes of \"Hierarchisches Stichwortverzeichnis / Signatur der Bilder\" when we do a query for the hlist 'http://data.knora.org/lists/73d0ec0302' (root node) in the images-demo-data" in {
+                // http://localhost:3333/v1/hlists/http%3A%2F%2Fdata.knora.org%2Flists%2F73d0ec0302
+                actorUnderTest ! HListGetRequestV1(
+                    userProfile = userProfile,
+                    iri = "http://data.knora.org/lists/73d0ec0302"
+                )
+
+                expectMsg(timeout, hKeywords)
+            }
+
+            "return all nodes of the flat (one level only) list (selection) \"Art des Bildes oder Photographie\"" in {
+                // http://localhost:3333/v1/selections/http%3A%2F%2Fdata.knora.org%2Flists%2F6cce4ce5
+                actorUnderTest ! SelectionGetRequestV1(
+                    userProfile = userProfile,
+                    iri = "http://data.knora.org/lists/6cce4ce5"
+                )
+
+                expectMsg(timeout, imageCategory)
+            }
+
+            "return the two seasons winter and summer (flat season list consisting of two items)" in {
+                // http://localhost:3333/v1/hlists/http%3A%2F%2Fdata.knora.org%2Flists%2Fd19af9ab
+                actorUnderTest ! HListGetRequestV1(
+                    userProfile = userProfile,
+                    iri = "http://data.knora.org/lists/d19af9ab"
+                )
+
+                expectMsg(timeout, season)
+            }
+
+            "return the path to the node 'Heidi Film'" in {
+                // http://localhost:3333/v1/hlists/http%3A%2F%2Fdata.knora.org%2Flists%2Fc7f07a3fc1?reqtype=node
+                actorUnderTest ! NodePathGetRequestV1(
+                    userProfile = userProfile,
+                    iri = "http://data.knora.org/lists/c7f07a3fc1"
+                )
+
+                expectMsg(timeout, nodePath)
+            }
         }
 
-        "return all nodes of the flat (one level only) list (selection) \"Art des Bildes oder Photographie\"" in {
-            // http://localhost:3333/v1/selections/http%3A%2F%2Fdata.knora.org%2Flists%2F6cce4ce5
-            actorUnderTest ! SelectionGetRequestV1(
-                userProfile = userProfile,
-                iri = "http://data.knora.org/lists/6cce4ce5"
-            )
+        "used to modify lists" should {
 
-            expectMsg(timeout, imageCategory)
-        }
+            val newListIri = new MutableTestIri
 
-        "return the two seasons winter and summer (flat season list consisting of two items)" in {
-            // http://localhost:3333/v1/hlists/http%3A%2F%2Fdata.knora.org%2Flists%2Fd19af9ab
-            actorUnderTest ! HListGetRequestV1(
-                userProfile = userProfile,
-                iri = "http://data.knora.org/lists/d19af9ab"
-            )
+            "create a list" ignore {
 
-            expectMsg(timeout, season)
-        }
+            }
 
-        "return the path to the node 'Heidi Film'" in {
-            // http://localhost:3333/v1/hlists/http%3A%2F%2Fdata.knora.org%2Flists%2Fc7f07a3fc1?reqtype=node
-            actorUnderTest ! NodePathGetRequestV1(
-                userProfile = userProfile,
-                iri = "http://data.knora.org/lists/c7f07a3fc1"
-            )
+            "update basic list information" ignore {
 
-            expectMsg(timeout, nodePath)
+            }
+
+            "add flat nodes" ignore {
+
+            }
+
+            "add hierarchical nodes" ignore {
+
+            }
+
+            "change node order" ignore {
+
+            }
+
+            "delete node if not in use" ignore {
+
+            }
+
         }
     }
 }

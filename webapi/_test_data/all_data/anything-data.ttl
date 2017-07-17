@@ -452,6 +452,7 @@
 <http://data.knora.org/anything/treeList> a knora-base:ListNode ;
 	knora-base:isRootNode true ;
 	rdfs:label "Tree list root"@en ;
+	knora-base:attachedToProject <http://data.knora.org/projects/anything> ;
 	knora-base:hasSubListNode <http://data.knora.org/anything/treeList01> , <http://data.knora.org/anything/treeList02> , <http://data.knora.org/anything/treeList03> .
 
 <http://data.knora.org/anything/treeList01> a knora-base:ListNode ;
@@ -488,6 +489,7 @@
 <http://data.knora.org/anything/otherTreeList> a knora-base:ListNode ;
 	knora-base:isRootNode true ;
 	rdfs:label "Tree list root"@en ;
+	knora-base:attachedToProject <http://data.knora.org/projects/anything> ;
 	knora-base:hasSubListNode <http://data.knora.org/anything/otherTreeList01> , <http://data.knora.org/anything/otherTreeList02> , <http://data.knora.org/anything/otherTreeList03> .
 
 <http://data.knora.org/anything/otherTreeList01> a knora-base:ListNode ;

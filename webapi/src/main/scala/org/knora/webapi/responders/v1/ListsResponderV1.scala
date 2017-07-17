@@ -36,33 +36,68 @@ import scala.concurrent.Future
   */
 class ListsResponderV1 extends ResponderV1 {
 
-    /**
-      * An enumeration whose values correspond to the types of hierarchical list objects that this actor can
-      * produce: "hlists" | "selections".
-      */
-    object PathType extends Enumeration {
-        val HList, Selection = Value
-    }
-
     def receive = {
-        case HListGetRequestV1(listIri, userProfile) => future2Message(sender(), getListResponseV1(listIri, userProfile, PathType.HList), log)
-        case SelectionGetRequestV1(listIri, userProfile) => future2Message(sender(), getListResponseV1(listIri, userProfile, PathType.Selection), log)
+        case ListsGetRequestV1(projectIri, userProfile) => future2Message(sender(), listsGetRequestV1(projectIri, userProfile), log)
+        case HListGetRequestV1(listIri, userProfile) => future2Message(sender(), listGetRequestV1(listIri, userProfile, PathType.HList), log)
+        case SelectionGetRequestV1(listIri, userProfile) => future2Message(sender(), listGetRequestV1(listIri, userProfile, PathType.Selection), log)
         case NodePathGetRequestV1(iri: IRI, userProfile: UserProfileV1) => future2Message(sender(), getNodePathResponseV1(iri, userProfile), log)
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }
 
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    // Methods for generating complete API responses.
 
     /**
-      * Retrieves a list from the triplestore and returns it as a [[ListsGetResponseV1]].
+      * Gets all lists and returns them as a sequence of [[ListInfoV1]].
+      *
+      * @param projectIri  the IRI of the project the list belongs to.
+      * @param userProfile the profile of the user making the request.
+      * @return
+      */
+    def listsGetRequestV1(projectIri: Option[IRI], userProfile: UserProfileV1): Future[ListsGetResponseV1] = {
+
+        log.debug("listsGetRequestV1")
+
+        for {
+            sparqlQuery <- Future(queries.sparql.v1.txt.getLists(
+                triplestore = settings.triplestoreType,
+                maybeProjectIri = projectIri
+            ).toString())
+
+            listsResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
+
+            listsResponseRows: Seq[VariableResultsRow] = listsResponse.results.bindings
+
+            listsWithProperties: Map[String, Map[String, String]] = listsResponseRows.groupBy(_.rowMap("s")).map {
+                case (listIri: String, rows: Seq[VariableResultsRow]) => (listIri, rows.map {
+                    case row => (row.rowMap("p"), row.rowMap("o"))
+                }.toMap)
+            }
+
+            lists = listsWithProperties.map {
+                case (listIri: IRI, propsMap: Map[String, String]) =>
+
+                    ListInfoV1(
+                        id = listIri,
+                        projectIri = propsMap.get(OntologyConstants.KnoraBase.AttachedToProject),
+                        name = propsMap.get(OntologyConstants.KnoraBase.ListNodeName),
+                        comment = propsMap.get(OntologyConstants.Rdfs.Comment),
+                        label = propsMap.get(OntologyConstants.Rdfs.Label)
+                    )
+            }.toVector
+        } yield ListsGetResponseV1(
+            lists = lists
+        )
+    }
+
+    /**
+      * Retrieves a list from the triplestore and returns it as a [[org.knora.webapi.messages.v1.responder.listmessages.ListGetResponseV1]].
       * Due to compatibility with the old, crappy SALSAH-API, "hlists" and "selection" have to be differentiated in the response
-      * [[ListsGetResponseV1]] is the abstract super class of [[HListGetResponseV1]] and [[SelectionGetResponseV1]]
+      * [[org.knora.webapi.messages.v1.responder.listmessages.ListGetResponseV1]] is the abstract super class of [[HListGetResponseV1]] and [[SelectionGetResponseV1]]
       *
       * @param rootNodeIri the Iri if the root node of the list to be queried.
-      * @return a [[ListsGetResponseV1]].
+      * @param pathType    the type of the list (HList or Selection).
+      * @return a [[ListGetResponseV1]].
       */
-    private def getListResponseV1(rootNodeIri: IRI, userProfile: UserProfileV1, pathType: PathType.Value): Future[ListsGetResponseV1] = {
+    private def listGetRequestV1(rootNodeIri: IRI, userProfile: UserProfileV1, pathType: PathType.Value): Future[ListGetResponseV1] = {
 
         /**
           * Compares the `position`-values of two nodes

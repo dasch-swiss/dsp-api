@@ -26,6 +26,11 @@ import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
 import spray.json._
 
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// API requests
+
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Messages
 
@@ -38,20 +43,20 @@ sealed trait ListsResponderRequestV1 extends KnoraRequestV1
 /**
   * Requests a list of all lists or the lists inside a project.
   *
-  * @param projectIri the IRI of the project.
-  * @param userProfileV1 the profile of the user making the request.
+  * @param projectIri  the IRI of the project.
+  * @param userProfile the profile of the user making the request.
   */
-case class ListsGetRequestV1(projectIri: Option[IRI], userProfileV1: UserProfileV1) extends ListsResponderRequestV1
+case class ListsGetRequestV1(projectIri: Option[IRI] = None,
+                             userProfile: UserProfileV1) extends ListsResponderRequestV1
 
 /**
-  * Requests a list. A successful response will be a [[ListGetResponseV1]]
-  * @param iri
-  * @param userProfileV1
+  * Requests a list. A successful response will be a [[HListGetResponseV1]]
+  *
+  * @param iri         the IRI of the list.
+  * @param userProfile the profile of the user making the request.
   */
-case class ListGetRequestV1(iri: IRI, userProfileV1: UserProfileV1) extends ListsResponderRequestV1
+case class ListGetRequestV1(iri: IRI, userProfile: UserProfileV1) extends ListsResponderRequestV1
 
-
-case class ListGetResponseV1()
 /**
   * Requests a list. A successful response will be a [[HListGetResponseV1]].
   *
@@ -77,18 +82,26 @@ case class SelectionGetRequestV1(iri: IRI, userProfile: UserProfileV1) extends L
   */
 case class NodePathGetRequestV1(iri: IRI, userProfile: UserProfileV1) extends ListsResponderRequestV1
 
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Responses
+
+case class ListsGetResponseV1(lists: Seq[ListInfoV1]) extends KnoraResponseV1 with ListV1JsonProtocol {
+    def toJsValue = listsGetResponseV1Format.write(this)
+}
+
 /**
   * An abstract class extended by `HListGetResponseV1` and `SelectionGetResponseV1`.
   */
-sealed abstract class ListsGetResponseV1 extends KnoraResponseV1
+sealed abstract class ListGetResponseV1 extends KnoraResponseV1
 
 /**
   * Provides a hierarchical list representing a "hlist" in the old SALSAH.
   *
   * @param hlist the list requested.
   */
-case class HListGetResponseV1(hlist: Seq[HierarchicalListV1]) extends ListsGetResponseV1 {
-    def toJsValue = HierarchicalListV1JsonProtocol.hlistGetResponseV1Format.write(this)
+case class HListGetResponseV1(hlist: Seq[HierarchicalListV1]) extends ListGetResponseV1 with ListV1JsonProtocol {
+    def toJsValue = hlistGetResponseV1Format.write(this)
 }
 
 /**
@@ -96,8 +109,8 @@ case class HListGetResponseV1(hlist: Seq[HierarchicalListV1]) extends ListsGetRe
   *
   * @param selection the list requested.
   */
-case class SelectionGetResponseV1(selection: Seq[HierarchicalListV1]) extends ListsGetResponseV1 {
-    def toJsValue = HierarchicalListV1JsonProtocol.selectionGetResponseV1Format.write(this)
+case class SelectionGetResponseV1(selection: Seq[HierarchicalListV1]) extends ListGetResponseV1 with ListV1JsonProtocol {
+    def toJsValue = selectionGetResponseV1Format.write(this)
 }
 
 /**
@@ -105,9 +118,10 @@ case class SelectionGetResponseV1(selection: Seq[HierarchicalListV1]) extends Li
   *
   * @param nodelist a list of the nodes composing the path from the list's root node up to and including the specified node.
   */
-case class NodePathGetResponseV1(nodelist: Seq[NodePathElementV1]) extends ListsGetResponseV1 {
-    def toJsValue = HierarchicalListV1JsonProtocol.nodePathGetResponseV1Format.write(this)
+case class NodePathGetResponseV1(nodelist: Seq[NodePathElementV1]) extends ListGetResponseV1 with ListV1JsonProtocol {
+    def toJsValue = nodePathGetResponseV1Format.write(this)
 }
+
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Components of messages
@@ -133,13 +147,33 @@ case class HierarchicalListV1(id: IRI, name: Option[String], label: Option[Strin
   */
 case class NodePathElementV1(id: IRI, name: Option[String], label: Option[String])
 
+/**
+  * Represents information about a list.
+  *
+  * @param id         the IRI of the list.
+  * @param projectIri the IRI of the project this list belongs to (optional).
+  * @param name       the name of the list (optional).
+  * @param comment    the comment attached to the list (optional).
+  * @param label      the label of the list (optional).
+  */
+case class ListInfoV1(id: IRI, projectIri: Option[IRI], name: Option[String], comment: Option[String], label: Option[String])
+
+/**
+  * An enumeration whose values correspond to the types of hierarchical list objects that [[org.knora.webapi.responders.v1.ListsResponderV1]] actor can
+  * produce: "hlists" | "selections".
+  */
+object PathType extends Enumeration {
+    val HList, Selection = Value
+}
+
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // JSON formatting
 
 /**
   * A spray-json protocol for generating Knora API v1 JSON providing data about lists.
   */
-object HierarchicalListV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with NullOptions {
+trait ListV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with NullOptions {
 
     implicit object HierarchicalListV1JsonFormat extends JsonFormat[HierarchicalListV1] {
         /**
@@ -174,8 +208,10 @@ object HierarchicalListV1JsonProtocol extends SprayJsonSupport with DefaultJsonP
         def read(jsonVal: JsValue) = ???
     }
 
-    implicit val hlistGetResponseV1Format: RootJsonFormat[HListGetResponseV1] = jsonFormat1(HListGetResponseV1)
-    implicit val selectionGetResponseV1Format: RootJsonFormat[SelectionGetResponseV1] = jsonFormat1(SelectionGetResponseV1)
-    implicit val nodePathElementV1Format: JsonFormat[NodePathElementV1] = jsonFormat3(NodePathElementV1)
-    implicit val nodePathGetResponseV1Format: RootJsonFormat[NodePathGetResponseV1] = jsonFormat1(NodePathGetResponseV1)
+    implicit val hlistGetResponseV1Format: RootJsonFormat[HListGetResponseV1] = jsonFormat(HListGetResponseV1, "hlist")
+    implicit val selectionGetResponseV1Format: RootJsonFormat[SelectionGetResponseV1] = jsonFormat(SelectionGetResponseV1, "selection")
+    implicit val nodePathElementV1Format: JsonFormat[NodePathElementV1] = jsonFormat(NodePathElementV1, "id", "name", "label")
+    implicit val nodePathGetResponseV1Format: RootJsonFormat[NodePathGetResponseV1] = jsonFormat(NodePathGetResponseV1, "nodelist")
+    implicit val listInfoV1Format: JsonFormat[ListInfoV1] = jsonFormat5(ListInfoV1)
+    implicit val listsGetResponseV1Format: RootJsonFormat[ListsGetResponseV1] = jsonFormat(ListsGetResponseV1, "lists")
 }
