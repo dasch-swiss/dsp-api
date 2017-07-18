@@ -27,6 +27,7 @@ import akka.http.javadsl.model.headers.Authorization
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.Accept
+import akka.http.scaladsl.util.FastFuture
 import akka.stream.ActorMaterializer
 import org.apache.commons.lang3.StringUtils
 import org.eclipse.rdf4j.model.Statement
@@ -52,8 +53,9 @@ import scala.util.{Failure, Success, Try}
   */
 class HttpTriplestoreConnector extends Actor with ActorLogging {
     // MIME type constants.
-    private val mimeTypeApplicationSparqlResultsJson = MediaType.applicationWithOpenCharset("sparql-results+json") // JSON is always UTF-8
+    private val mimeTypeApplicationSparqlResultsJson = MediaType.applicationWithFixedCharset("sparql-results+json", HttpCharsets.`UTF-8`) // JSON is always UTF-8
     private val mimeTypeTextTurtle = MediaType.text("turtle") // Turtle is always UTF-8
+    private val mimeTypeApplicationSparqlUpdate = MediaType.applicationWithFixedCharset("sparql-update", HttpCharsets.`UTF-8`) // SPARQL 1.1 Protocol §3.2.2, "UPDATE using POST directly"
 
     private implicit val system = context.system
     private implicit val executionContext = system.dispatcher
@@ -272,7 +274,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
         log.debug("resetTripleStoreContent")
         val resetTriplestoreResult = for {
 
-            // drop old content
+        // drop old content
             dropResult <- dropAllTriplestoreContent()
 
             // insert new content
@@ -353,58 +355,66 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
     /**
       * Submits a SPARQL request to the triplestore and returns the response as a string.
       *
-      * @param sparql   the SPARQL request to be submitted.
-      * @param isUpdate `true` if this is an update request.
+      * @param sparql      the SPARQL request to be submitted.
+      * @param isUpdate    `true` if this is an update request.
       * @param isConstruct `true` if this is a CONSTRUCT request.
       * @return the triplestore's response.
       */
     private def getTriplestoreHttpResponse(sparql: String, isUpdate: Boolean, isConstruct: Boolean = false): Future[String] = {
-        // We send POST requests as application/x-www-form-urlencoded (as per SPARQL 1.1 Protocol §2.1.2,
-        // "query via POST with URL-encoded parameters"), because Sesame doesn't support SPARQL 1.1 Protocol
-        // §2.1.3 ("query via POST directly").
+        val request = if (isUpdate) {
+            // Send updates as application/sparql-update (as per SPARQL 1.1 Protocol §3.2.2, "UPDATE using POST directly").
 
-        val triplestoreResponseFuture = for {
-            // The name of the form parameter that contains the SPARQL.
-            sparqlParam: String <- Future(if (isUpdate) "update" else "query")
+            val entity = HttpEntity(mimeTypeApplicationSparqlUpdate, sparql)
+            val headers = List(authorization)
 
-            // An optional boolean parameter to turn on inference, used only with GraphDB.
-            maybeInfer = if (triplestoreType == HTTP_GRAPH_DB_TS_TYPE || triplestoreType == HTTP_GRAPH_DB_FREE_TS_TYPE) {
+            HttpRequest(
+                method = HttpMethods.POST,
+                uri = updateUri,
+                entity = entity,
+                headers = headers
+            )
+        } else {
+            // Send queries as application/x-www-form-urlencoded (as per SPARQL 1.1 Protocol §2.1.2,
+            // "query via POST with URL-encoded parameters"), so we can include the "infer" parameter when using GraphDB.
+
+            val maybeInfer = if (triplestoreType == HTTP_GRAPH_DB_TS_TYPE || triplestoreType == HTTP_GRAPH_DB_FREE_TS_TYPE) {
                 Some("infer" -> "true")
             } else {
                 None
             }
 
-            formData = FormData(
-                Map(sparqlParam -> sparql) ++ maybeInfer
+            val formData = FormData(
+                Map("query" -> sparql) ++ maybeInfer
             )
 
             // Construct the Accept header if needed.
-            maybeAcceptContentType = if (isConstruct) {
+            val acceptContentType = if (isConstruct) {
                 // CONSTRUCT queries should return Turtle.
-                Some(Accept(MediaRange(mimeTypeTextTurtle)))
-            } else if (!isUpdate) {
-                // SELECT queries should return JSON.
-                Some(Accept(MediaRange(mimeTypeApplicationSparqlResultsJson)))
+                Accept(MediaRange(mimeTypeTextTurtle))
             } else {
-                // Update queries return no content.
-                None
+                // SELECT queries should return JSON.
+                Accept(MediaRange(mimeTypeApplicationSparqlResultsJson))
             }
 
-            headers = List(authorization) ++ maybeAcceptContentType
+            val headers = List(authorization, acceptContentType)
 
-            request = HttpRequest(
+            HttpRequest(
                 method = HttpMethods.POST,
-                uri = if (isUpdate) updateUri else queryUri,
+                uri = queryUri,
                 entity = formData.toEntity,
                 headers = headers
             )
+        }
 
-            // _ = println(request.toString())
+        val triplestoreResponseFuture = for {
+        // _ = println(request.toString())
 
-            requestStartTime: Long = if (settings.profileQueries) {
-                System.currentTimeMillis()
-            } else {
-                0
+            requestStartTime: Long <- FastFuture.successful {
+                if (settings.profileQueries) {
+                    System.currentTimeMillis()
+                } else {
+                    0
+                }
             }
 
             // Send the HTTP request.
