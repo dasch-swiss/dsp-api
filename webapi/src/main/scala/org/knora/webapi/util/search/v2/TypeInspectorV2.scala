@@ -351,19 +351,6 @@ class ExplicitTypeInspectorV2(apiType: ApiV2Schema.Value) extends TypeInspectorV
     }
 
     /**
-      * Given a SPARQL entity that is known to represent a type IRI, extracts the IRI.
-      *
-      * @param entity a SPARQL entity that is known to represent a type IRI.
-      * @return the IRI.
-      */
-    private def toTypeIri(entity: Entity): IRI = {
-        entity match {
-            case IriRef(iri) => iri
-            case _ => throw AssertionException(s"Entity is not a type IRI: $entity")
-        }
-    }
-
-    /**
       * Given a SPARQL entity that is known to need type information, converts it to a [[TypeableEntityV2]].
       *
       * @param entity a SPARQL entity that is known to need type information.
