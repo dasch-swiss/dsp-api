@@ -225,6 +225,36 @@
                     rdfs:subPropertyOf knora-base:hasLinkToValue .
 
 
+###  http://www.knora.org/ontology/biblio#publicationHasEditorOrg
+
+:publicationHasEditorOrg rdf:type owl:ObjectProperty ;
+
+                    rdfs:label "Editorische Organisation"@de ,
+                            "Editorial Organization"@en ;
+
+                    rdfs:comment """Represents the editorial organization of the publication."""@en ;
+
+                    knora-base:objectClassConstraint :Organization ;
+
+                    salsah-gui:guiElement salsah-gui:Searchbox ;
+
+                    knora-base:subjectClassConstraint :Publication ;
+
+                    rdfs:subPropertyOf knora-base:hasLinkTo .
+
+
+
+
+###  http://www.knora.org/ontology/biblio#publicationHasEditorOrgValue
+
+:publicationHasEditorOrgValue rdf:type owl:ObjectProperty ;
+
+                    knora-base:objectClassConstraint knora-base:LinkValue ;
+
+                    knora-base:subjectClassConstraint :Publication ;
+
+                    rdfs:subPropertyOf knora-base:hasLinkToValue .
+
 ###  http://www.knora.org/ontology/biblio#publisherHasLocation
 
 :publisherHasLocation rdf:type owl:ObjectProperty ;
@@ -911,17 +941,50 @@
 
 :manuscriptHasArchive rdf:type owl:ObjectProperty ;
 
-                    rdfs:label "End Folium"@en ;
+                    rdfs:label "Archive of Manuscript"@en ;
 
                     rdfs:comment """Represents the archive where manuscript is stored."""@en ;
 
-                    knora-base:objectClassConstraint knora-base:TextValue ;
+                    knora-base:objectClassConstraint :Archive ;
 
-                    salsah-gui:guiElement salsah-gui:SimpleText ;
+                    salsah-gui:guiElement salsah-gui:Searchbox ;
 
-                    knora-base:subjectClassConstraint :Manuscript ;
 
-                    rdfs:subPropertyOf knora-base:hasValue .
+                    rdfs:subPropertyOf knora-base:hasLinkTo .
+
+
+###  http://www.knora.org/ontology/biblio#manuscriptHasArchiveValue
+
+:manuscriptHasArchiveValue rdf:type owl:ObjectProperty ;
+
+                    knora-base:objectClassConstraint knora-base:LinkValue ;
+
+                    rdfs:subPropertyOf knora-base:hasLinkToValue .
+
+
+###  http://www.knora.org/ontology/biblio#manuscriptHasAuthor
+
+:manuscriptHasAuthor rdf:type owl:ObjectProperty ;
+
+                    rdfs:label "Author of Manuscript"@en ;
+
+                    rdfs:comment """Represents the author of manuscript."""@en ;
+
+                    knora-base:objectClassConstraint beol:person ;
+
+                    salsah-gui:guiElement salsah-gui:Searchbox ;
+
+
+                    rdfs:subPropertyOf knora-base:hasLinkTo, :publicationHasAuthor .
+
+
+###  http://www.knora.org/ontology/biblio#manuscriptHasAuthorValue
+
+:manuscriptHasAuthorValue rdf:type owl:ObjectProperty ;
+
+                    knora-base:objectClassConstraint knora-base:LinkValue ;
+
+                    rdfs:subPropertyOf knora-base:hasLinkToValue .
 
 
 ###  http://www.knora.org/ontology/biblio#manuscriptHasShelfMark
@@ -940,6 +1003,22 @@
 
                     rdfs:subPropertyOf knora-base:hasValue .
 
+###  http://www.knora.org/ontology/biblio#manuscriptHasDate
+:manuscriptHasDate rdf:type owl:ObjectProperty ;
+
+                    rdfs:label "Datum des ManusKripts "@de ,
+                            "Manuscript Date "@en ;
+
+
+                    rdfs:comment """Represents a Publication Date."""@en ;
+
+                    knora-base:objectClassConstraint knora-base:DateValue  ;
+
+                    salsah-gui:guiElement salsah-gui:Date ;
+
+                    knora-base:subjectClassConstraint :Manuscript ;
+
+                    rdfs:subPropertyOf knora-base:hasValue, dcterms:issued .
 
 #################################################################
 #
@@ -967,6 +1046,14 @@
                                     ],
                                     [ rdf:type owl:Restriction ;
                                       owl:onProperty :publicationHasEditorValue ;
+                                      owl:minCardinality "0"^^xsd:nonNegativeInteger
+                                    ],
+                                    [ rdf:type owl:Restriction ;
+                                      owl:onProperty :publicationHasEditorOrg ;
+                                      owl:minCardinality "0"^^xsd:nonNegativeInteger
+                                    ],
+                                    [ rdf:type owl:Restriction ;
+                                      owl:onProperty :publicationHasEditorOrgValue ;
                                       owl:minCardinality "0"^^xsd:nonNegativeInteger
                                     ],
                                     [ rdf:type owl:Restriction ;
@@ -1202,11 +1289,11 @@
                     rdfs:subClassOf knora-base:Resource,
                                   [ rdf:type owl:Restriction ;
                                     owl:onProperty :translationHasTitle ;
-                                    owl:minCardinality "1"^^xsd:nonNegativeInteger
+                                    owl:minCardinality "0"^^xsd:nonNegativeInteger
                                   ],
                                   [ rdf:type owl:Restriction ;
                                        owl:onProperty :translationHasLanguage ;
-                                       owl:minCardinality "1"^^xsd:nonNegativeInteger
+                                       owl:minCardinality "0"^^xsd:nonNegativeInteger
                                     ],
                                     [ rdf:type owl:Restriction ;
                                        owl:onProperty :translationHasTranslator ;
@@ -1438,6 +1525,20 @@
                     rdfs:comment "A resource representing a website article "@en .
 
 
+###  http://www.knora.org/ontology/biblio#Archive
+
+:Archive rdf:type owl:Class ;
+
+                    rdfs:subClassOf knora-base:Resource ,
+                        [   rdf:type owl:Restriction ;
+                            owl:onProperty :hasName ;
+                            owl:minCardinality "1"^^xsd:nonNegativeInteger
+                        ];
+                    rdfs:label "Archive"@de ,
+                                "Archive"@en ;
+
+                    rdfs:comment "A resource representing an Archive "@en .
+
 ###  http://www.knora.org/ontology/biblio#Manuscript
 
 :Manuscript rdf:type owl:Class ;
@@ -1448,7 +1549,19 @@
                                     owl:minCardinality "1"^^xsd:nonNegativeInteger
                                   ],
                                   [ rdf:type owl:Restriction ;
+                                    owl:onProperty :manuscriptHasAuthor ;
+                                    owl:minCardinality "0"^^xsd:nonNegativeInteger
+                                  ],
+                                  [ rdf:type owl:Restriction ;
+                                    owl:onProperty :manuscriptHasAuthorValue ;
+                                    owl:minCardinality "0"^^xsd:nonNegativeInteger
+                                  ],
+                                  [ rdf:type owl:Restriction ;
                                     owl:onProperty :manuscriptHasArchive ;
+                                    owl:minCardinality "0"^^xsd:nonNegativeInteger
+                                  ],
+                                  [ rdf:type owl:Restriction ;
+                                    owl:onProperty :manuscriptHasArchiveValue ;
                                     owl:minCardinality "0"^^xsd:nonNegativeInteger
                                   ],
                                   [ rdf:type owl:Restriction ;
@@ -1469,6 +1582,10 @@
                                   ],
                                   [ rdf:type owl:Restriction ;
                                     owl:onProperty :manuscriptHasShelfMark ;
+                                    owl:minCardinality "0"^^xsd:nonNegativeInteger
+                                  ],
+                                  [ rdf:type owl:Restriction ;
+                                    owl:onProperty :manuscriptHasDate ;
                                     owl:minCardinality "0"^^xsd:nonNegativeInteger
                                   ],
                                   [ rdf:type owl:Restriction ;
