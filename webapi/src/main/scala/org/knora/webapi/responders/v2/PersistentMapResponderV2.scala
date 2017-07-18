@@ -45,6 +45,7 @@ class PersistentMapResponderV2 extends Responder {
         case mapGetRequest: PersistentMapGetRequestV2 => future2Message(sender(), getPersistentMapV2(mapGetRequest), log)
         case mapEntryPutRequest: PersistentMapEntryPutRequestV2 => future2Message(sender, putPersistentMapEntryV2(mapEntryPutRequest), log)
         case mapEntryDeleteRequest: PersistentMapEntryDeleteRequestV2 => future2Message(sender, deletePersistentMapEntryV2(mapEntryDeleteRequest), log)
+        case mapDeleteRequest: PersistentMapDeleteRequestV2 => future2Message(sender, deletePersistentMapV2(mapDeleteRequest), log)
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }
 
