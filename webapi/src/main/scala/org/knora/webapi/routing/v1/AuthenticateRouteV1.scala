@@ -24,7 +24,7 @@ import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
-import org.knora.webapi.SettingsImpl
+import org.knora.webapi.{IRI, SettingsImpl}
 import org.knora.webapi.routing.Authenticator
 
 /**
@@ -47,15 +47,16 @@ object AuthenticateRouteV1 extends Authenticator {
             }
         } ~ path("v1" / "session") {
             get {
-                requestContext => {
-                    requestContext.complete {
-                        val params = requestContext.request.uri.query().toMap
-                        if (params.contains("logout")) {
-                            doLogout(requestContext)
-                        } else if (params.contains("login")) {
-                            doLogin(requestContext)
-                        } else {
-                            doSessionAuthentication(requestContext)
+                parameters("login"?, "logout".?) { (login: Option[String], logout: Option[String]) =>
+                    requestContext => {
+                        requestContext.complete {
+                            if (login.isDefined) {
+                                doLogin(requestContext)
+                            } else if (logout.isDefined) {
+                                doLogout(requestContext)
+                            } else {
+                                doSessionAuthentication(requestContext)
+                            }
                         }
                     }
                 }
