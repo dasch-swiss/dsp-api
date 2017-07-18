@@ -949,7 +949,7 @@
                                     ],
                                     [ rdf:type owl:Restriction ;
                                       owl:onProperty :publicationHasDate ;
-                                      owl:minCardinality "1"^^xsd:nonNegativeInteger
+                                      owl:minCardinality "0"^^xsd:nonNegativeInteger
                                     ],
                                     [ rdf:type owl:Restriction ;
                                       owl:onProperty :publicationHasLocation ;
@@ -1294,7 +1294,7 @@
 
 :Collection rdf:type owl:Class ;
 
-                    rdfs:subClassOf :Publication, bibo:Collection,
+                    rdfs:subClassOf knora-base:Resource, bibo:Collection,
                                     [ rdf:type owl:Restriction ;
                                       owl:onProperty :hasName ;
                                       owl:minCardinality "1"^^xsd:nonNegativeInteger
