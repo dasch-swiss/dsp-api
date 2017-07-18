@@ -1388,22 +1388,15 @@ class ResourcesResponderV1 extends ResponderV1 {
             // Do the update.
             createResourceResponse <- (storeManager ? SparqlUpdateRequest(createMultipleResourcesSparql)).mapTo[SparqlUpdateResponse]
 
-            apiResponses: Seq[Future[ResourceCreateResponseV1]] = resourcesToCreate.map {
-                resourceToCreate =>
-                    for {
-                    // verify the created resource
-                        apiResponse <- verifyResourceCreated(
-                            resourceIri = resourceToCreate.resourceIri,
-                            creatorIri = userIri,
-                            createNewResourceSparql = createMultipleResourcesSparql,
-                            generateSparqlForValuesResponse = resourceToCreate.generateSparqlForValuesResponse,
-                            userProfile = userProfile
-                        )
-                    } yield apiResponse
+            // We don't query the newly created resources to verify that they and their values were actually created,
+            // because this would be too expensive. In any case, since the update is done with INSERT DATA, i.e. there is no WHERE clause,
+            // any failure should result in an HTTP error from the triplestore (SPARQL 1.1 Protocol §2.2.5, "Failure Responses").
+
+            apiResponses: Seq[ResourceCreateResponseV1] = resourcesToCreate.map {
+                resourceToCreate => ResourceCreateResponseV1(res_id = resourceToCreate.resourceIri)
             }
 
-            responses: Seq[ResourceCreateResponseV1] <- Future.sequence(apiResponses)
-            responsesJson: Seq[JsValue] = responses.map(_.toJsValue)
+            responsesJson: Seq[JsValue] = apiResponses.map(_.toJsValue)
         } yield MultipleResourceCreateResponseV1(responsesJson)
     }
 
