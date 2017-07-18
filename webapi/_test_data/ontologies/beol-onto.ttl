@@ -330,6 +330,21 @@
 
                   salsah-gui:guiElement salsah-gui:Richtext .
 
+### ###########################################
+###  http://www.knora.org/ontology/beol#mentionedIn
+
+:mentionedIn rdf:type owl:ObjectProperty ;
+
+                    rdfs:label "Mentioned In"@en ;
+
+                    rdfs:comment """Represents where the resource is mentioned ."""@en ;
+
+                    knora-base:objectClassConstraint knora-base:TextValue ;
+
+                    salsah-gui:guiElement salsah-gui:SimpleText ;
+
+                    rdfs:subPropertyOf knora-base:hasValue .
+
 
 ### ###########################################
 ### beol:hasText
@@ -886,6 +901,10 @@
                     ] ,
                     [ rdf:type owl:Restriction ;
                       owl:onProperty :comment ;
+                      owl:minCardinality "0"^^xsd:nonNegativeInteger
+                    ] ,
+                    [ rdf:type owl:Restriction ;
+                      owl:onProperty :mentionedIn ;
                       owl:minCardinality "0"^^xsd:nonNegativeInteger
                     ] ;
 

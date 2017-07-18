@@ -1020,6 +1020,25 @@
 
                     rdfs:subPropertyOf knora-base:hasValue, dcterms:issued .
 
+
+###  http://www.knora.org/ontology/biblio#publicationHasAbbreviation
+
+:publicationHasAbbreviation rdf:type owl:ObjectProperty ;
+
+                    rdfs:label "Abbreviation of the publication"@en ;
+
+                    rdfs:comment """Represents the abbreviation of publication."""@en ;
+
+                    knora-base:objectClassConstraint knora-base:TextValue ;
+
+                    salsah-gui:guiElement salsah-gui:SimpleText ;
+
+                    knora-base:subjectClassConstraint :publication ;
+
+                    rdfs:subPropertyOf knora-base:hasValue .
+
+
+
 #################################################################
 #
 #    Classes
@@ -1032,6 +1051,14 @@
 :Publication rdf:type owl:Class ;
 
                     rdfs:subClassOf knora-base:Resource, dcterms:BibliographicResource ,
+                                    [ rdf:type owl:Restriction ;
+                                      owl:onProperty beol:mentionedIn ;
+                                      owl:minCardinality "0"^^xsd:nonNegativeInteger
+                                    ],
+                                    [ rdf:type owl:Restriction ;
+                                      owl:onProperty :publicationHasAbbreviation ;
+                                      owl:minCardinality "0"^^xsd:nonNegativeInteger
+                                    ],
                                     [ rdf:type owl:Restriction ;
                                       owl:onProperty :publicationHasAuthor ;
                                       owl:minCardinality "0"^^xsd:nonNegativeInteger
@@ -1138,6 +1165,10 @@
                                           owl:minCardinality "0"^^xsd:nonNegativeInteger
                                         ],
                                         [ rdf:type owl:Restriction ;
+                                          owl:onProperty beol:mentionedIn ;
+                                          owl:minCardinality "0"^^xsd:nonNegativeInteger
+                                        ],
+                                        [ rdf:type owl:Restriction ;
                                           owl:onProperty :editionHasEditorValue ;
                                           owl:minCardinality "0"^^xsd:nonNegativeInteger
                                         ],
@@ -1171,6 +1202,10 @@
                                         [ rdf:type owl:Restriction ;
                                           owl:onProperty :hasName ;
                                           owl:minCardinality "1"^^xsd:nonNegativeInteger
+                                        ],
+                                        [ rdf:type owl:Restriction ;
+                                          owl:onProperty beol:mentionedIn ;
+                                          owl:minCardinality "0"^^xsd:nonNegativeInteger
                                         ],
                                         [ rdf:type owl:Restriction ;
                                            owl:onProperty beol:comment ;
@@ -1292,6 +1327,10 @@
                                     owl:minCardinality "0"^^xsd:nonNegativeInteger
                                   ],
                                   [ rdf:type owl:Restriction ;
+                                    owl:onProperty beol:mentionedIn ;
+                                    owl:minCardinality "0"^^xsd:nonNegativeInteger
+                                  ],
+                                  [ rdf:type owl:Restriction ;
                                        owl:onProperty :translationHasLanguage ;
                                        owl:minCardinality "0"^^xsd:nonNegativeInteger
                                     ],
@@ -1339,6 +1378,10 @@
                                      [ rdf:type owl:Restriction ;
                                        owl:onProperty :hasName;
                                        owl:minCardinality "1"^^xsd:nonNegativeInteger
+                                     ],
+                                     [ rdf:type owl:Restriction ;
+                                       owl:onProperty beol:mentionedIn ;
+                                       owl:minCardinality "0"^^xsd:nonNegativeInteger
                                      ],
                                      [ rdf:type owl:Restriction ;
                                        owl:onProperty :numPages;
@@ -1425,6 +1468,10 @@
                                       owl:minCardinality "1"^^xsd:nonNegativeInteger
                                     ],
                                     [ rdf:type owl:Restriction ;
+                                      owl:onProperty beol:mentionedIn ;
+                                      owl:minCardinality "0"^^xsd:nonNegativeInteger
+                                    ],
+                                    [ rdf:type owl:Restriction ;
                                         owl:onProperty beol:comment ;
                                       owl:minCardinality "0"^^xsd:nonNegativeInteger
                                     ],
@@ -1464,6 +1511,10 @@
                                       owl:minCardinality "0"^^xsd:nonNegativeInteger
                                     ],
                                     [ rdf:type owl:Restriction ;
+                                      owl:onProperty beol:mentionedIn ;
+                                      owl:minCardinality "0"^^xsd:nonNegativeInteger
+                                    ],
+                                    [ rdf:type owl:Restriction ;
                                       owl:onProperty :hasURI;
                                       owl:minCardinality "1"^^xsd:nonNegativeInteger
                                     ],
@@ -1484,6 +1535,10 @@
                     rdfs:subClassOf knora-base:Resource, bibo:Webpage,
                                     [ rdf:type owl:Restriction ;
                                       owl:onProperty :hasName ;
+                                      owl:minCardinality "0"^^xsd:nonNegativeInteger
+                                    ],
+                                    [ rdf:type owl:Restriction ;
+                                      owl:onProperty beol:mentionedIn ;
                                       owl:minCardinality "0"^^xsd:nonNegativeInteger
                                     ],
                                     [ rdf:type owl:Restriction ;
@@ -1533,6 +1588,10 @@
                         [   rdf:type owl:Restriction ;
                             owl:onProperty :hasName ;
                             owl:minCardinality "1"^^xsd:nonNegativeInteger
+                        ],
+                        [ rdf:type owl:Restriction ;
+                          owl:onProperty beol:mentionedIn ;
+                          owl:minCardinality "0"^^xsd:nonNegativeInteger
                         ];
                     rdfs:label "Archive"@de ,
                                 "Archive"@en ;
@@ -1547,6 +1606,10 @@
                                   [ rdf:type owl:Restriction ;
                                     owl:onProperty :hasName ;
                                     owl:minCardinality "1"^^xsd:nonNegativeInteger
+                                  ],
+                                  [ rdf:type owl:Restriction ;
+                                    owl:onProperty beol:mentionedIn ;
+                                    owl:minCardinality "0"^^xsd:nonNegativeInteger
                                   ],
                                   [ rdf:type owl:Restriction ;
                                     owl:onProperty :manuscriptHasAuthor ;
