@@ -31,7 +31,6 @@ import org.knora.webapi.messages.v1.responder.valuemessages.GenerateSparqlToCrea
   * @param permissions                     the permissions user has for creating the new resource.
   * @param generateSparqlForValuesResponse the SPARQL for creating the values of the resource.
   * @param resourceClassIri                the type of the resource to be created.
-  * @param resourceIndex                   the index of the resource.
   * @param resourceLabel                   the label of the resource.
   */
 
@@ -39,5 +38,4 @@ case class ResourceToCreate(resourceIri: IRI,
                             permissions: String,
                             generateSparqlForValuesResponse: GenerateSparqlToCreateMultipleValuesResponseV1,
                             resourceClassIri: IRI,
-                            resourceIndex: Int,
                             resourceLabel: String)

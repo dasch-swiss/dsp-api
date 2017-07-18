@@ -20,6 +20,7 @@
 
 package org.knora.webapi.responders.v1
 
+import java.time.Instant
 import java.util.UUID
 
 import akka.actor.Status
@@ -1299,8 +1300,11 @@ class ResourcesResponderV1 extends ResponderV1 {
 
             defaultPropertyAccessPermissionsMap: Map[IRI, Map[IRI, String]] = new ErrorHandlingMap(defaultPropertyAccessPermissions.toMap, { key: IRI => s"No default property access permissions found for resource class $key" })
 
-            resourceCreationFutures: Seq[Future[ResourceToCreate]] = resourcesToCreate.zipWithIndex.map {
-                case (resourceCreateRequest: OneOfMultipleResourceCreateRequestV1, resourceIndex) =>
+            // Make a timestamp for the new resources and their values.
+            currentTime: String = Instant.now.toString
+
+            resourceCreationFutures: Seq[Future[ResourceToCreate]] = resourcesToCreate.map {
+                resourceCreateRequest: OneOfMultipleResourceCreateRequestV1 =>
                     for {
                     // Check user's PermissionProfile (part of UserProfileV1) to see if the user has the permission to
                     // create a new resource in the given project.
@@ -1352,9 +1356,9 @@ class ResourcesResponderV1 extends ResponderV1 {
                             resourceIri = resourceIri,
                             resourceClassIri = resourceCreateRequest.resourceTypeIri,
                             defaultPropertyAccessPermissions = defaultPropertyAccessPermissionsMap(resourceCreateRequest.resourceTypeIri),
-                            resourceIndex = resourceIndex,
                             values = resourceValuesWithLinkTargetIris,
                             clientResourceIDsToResourceIris = clientResourceIDsToResourceIris,
+                            currentTime = currentTime,
                             fileValues = fileValues,
                             userProfile = userProfile,
                             apiRequestID = apiRequestID
@@ -1365,7 +1369,6 @@ class ResourcesResponderV1 extends ResponderV1 {
                         permissions = defaultObjectAccessPermissions,
                         generateSparqlForValuesResponse = generateSparqlForValuesResponse,
                         resourceClassIri = resourceCreateRequest.resourceTypeIri,
-                        resourceIndex = resourceIndex,
                         resourceLabel = resourceCreateRequest.label
                     )
             }
@@ -1378,7 +1381,8 @@ class ResourcesResponderV1 extends ResponderV1 {
                 resourcesToCreate = resourcesToCreate,
                 projectIri = projectIri,
                 namedGraph = namedGraph,
-                creatorIri = userIri
+                creatorIri = userIri,
+                currentTime = currentTime
             )
 
             // Do the update.
@@ -1556,7 +1560,6 @@ class ResourcesResponderV1 extends ResponderV1 {
       * @param resourceIri                      the IRI of the resource to be created.
       * @param resourceClassIri                 the IRI of the resource class.
       * @param defaultPropertyAccessPermissions the default object access permissions of each property attached to the resource class.
-      * @param resourceIndex                    the index that the resource will have in the generated SPARQL.
       * @param values                           the values to be created for resource.
       * @param fileValues                       the file values to be created with the resource.
       * @param clientResourceIDsToResourceIris  a map of client resource IDs (which may appear in standoff link tags
@@ -1570,10 +1573,10 @@ class ResourcesResponderV1 extends ResponderV1 {
                                              resourceIri: IRI,
                                              resourceClassIri: IRI,
                                              defaultPropertyAccessPermissions: Map[IRI, String],
-                                             resourceIndex: Int,
                                              values: Map[IRI, Seq[CreateValueV1WithComment]],
                                              fileValues: Option[(IRI, Vector[CreateValueV1WithComment])],
                                              clientResourceIDsToResourceIris: Map[String, IRI],
+                                             currentTime: String,
                                              userProfile: UserProfileV1,
                                              apiRequestID: UUID): Future[GenerateSparqlToCreateMultipleValuesResponseV1] = {
         for {
@@ -1583,9 +1586,9 @@ class ResourcesResponderV1 extends ResponderV1 {
                 resourceIri = resourceIri,
                 resourceClassIri = resourceClassIri,
                 defaultPropertyAccessPermissions = defaultPropertyAccessPermissions,
-                resourceIndex = resourceIndex,
                 values = values ++ fileValues,
                 clientResourceIDsToResourceIris = clientResourceIDsToResourceIris,
+                currentTime = currentTime,
                 userProfile = userProfile,
                 apiRequestID = apiRequestID
             ))
@@ -1603,14 +1606,15 @@ class ResourcesResponderV1 extends ResponderV1 {
       * @param namedGraph        the named graph the resources belongs to.
       * @return a [String] returns a Sparql query for creating the resources and their values .
       */
-    def generateSparqlForNewResources(resourcesToCreate: Seq[ResourceToCreate], projectIri: IRI, namedGraph: IRI, creatorIri: IRI): String = {
+    def generateSparqlForNewResources(resourcesToCreate: Seq[ResourceToCreate], projectIri: IRI, namedGraph: IRI, creatorIri: IRI, currentTime: String): String = {
         // Generate SPARQL for creating the resources, and include the SPARQL for creating the values of every resource.
         queries.sparql.v1.txt.createNewResources(
             dataNamedGraph = namedGraph,
             triplestore = settings.triplestoreType,
             resourcesToCreate = resourcesToCreate,
             projectIri = projectIri,
-            creatorIri = creatorIri
+            creatorIri = creatorIri,
+            currentTime = currentTime
         ).toString()
     }
 
@@ -1690,7 +1694,7 @@ class ResourcesResponderV1 extends ResponderV1 {
                                userProfile: UserProfileV1,
                                apiRequestID: UUID): Future[ResourceCreateResponseV1] = {
         for {
-            // Get ontology information about the resource class and its properties.
+        // Get ontology information about the resource class and its properties.
 
             resourceClassEntityInfoResponse: EntityInfoGetResponseV1 <- (responderManager ? EntityInfoGetRequestV1(
                 resourceClassIris = Set(resourceClassIri),
@@ -1743,15 +1747,18 @@ class ResourcesResponderV1 extends ResponderV1 {
 
             // Everything looks OK, so we can create the resource and its values.
 
+            // Make a timestamp for the resource and its values.
+            currentTime: String = Instant.now.toString
+
             generateSparqlForValuesResponse <- generateSparqlForValuesOfNewResource(
                 projectIri = projectIri,
                 resourceIri = resourceIri,
                 resourceClassIri = resourceClassIri,
                 defaultPropertyAccessPermissions = defaultPropertyAccessPermissions,
-                resourceIndex = 0,
                 values = values,
                 fileValues = fileValues,
                 clientResourceIDsToResourceIris = Map.empty[String, IRI],
+                currentTime = currentTime,
                 userProfile = userProfile,
                 apiRequestID = apiRequestID
             )
@@ -1761,7 +1768,6 @@ class ResourcesResponderV1 extends ResponderV1 {
                 permissions = defaultResourceClassAccessPermissions,
                 generateSparqlForValuesResponse = generateSparqlForValuesResponse,
                 resourceClassIri = resourceClassIri,
-                resourceIndex = 0,
                 resourceLabel = label)
             )
 
@@ -1769,7 +1775,8 @@ class ResourcesResponderV1 extends ResponderV1 {
                 resourcesToCreate = resourcesToCreate,
                 projectIri = projectIri,
                 namedGraph = namedGraph,
-                creatorIri = creatorIri
+                creatorIri = creatorIri,
+                currentTime = currentTime
             )
 
             // Do the update.
@@ -1890,12 +1897,16 @@ class ResourcesResponderV1 extends ResponderV1 {
                     case None => throw NotFoundException(s"Project '${resourceInfo.project_id}' not found.")
                 }
 
+                // Make a timestamp to indicate when the resource was marked as deleted.
+                currentTime: String = Instant.now.toString
+
                 // Create update sparql string
                 sparqlUpdate = queries.sparql.v1.txt.deleteResource(
                     dataNamedGraph = projectInfo.dataNamedGraph,
                     triplestore = settings.triplestoreType,
                     resourceIri = resourceDeleteRequest.resourceIri,
-                    maybeDeleteComment = resourceDeleteRequest.deleteComment
+                    maybeDeleteComment = resourceDeleteRequest.deleteComment,
+                    currentTime = currentTime
                 ).toString()
 
                 // Do the update.
@@ -1997,12 +2008,16 @@ class ResourcesResponderV1 extends ResponderV1 {
                 // get the named graph the resource is contained in by the resource's project
                 namedGraph = projectInfo.dataNamedGraph
 
+                // Make a timestamp to indicate when the resource was updated.
+                currentTime: String = Instant.now.toString
+
                 // the user has sufficient permissions to change the resource's label
                 sparqlUpdate = queries.sparql.v1.txt.changeResourceLabel(
                     dataNamedGraph = namedGraph,
                     triplestore = settings.triplestoreType,
                     resourceIri = resourceIri,
-                    label = label
+                    label = label,
+                    currentTime = currentTime
                 ).toString()
 
                 //_ = print(sparqlUpdate)

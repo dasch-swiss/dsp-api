@@ -194,6 +194,36 @@
 
                     rdfs:subPropertyOf knora-base:hasLinkToValue .
 
+###  http://www.knora.org/ontology/biblio#publicationHasEditor
+
+:publicationHasEditor rdf:type owl:ObjectProperty ;
+
+                    rdfs:label "Editor"@de ,
+                            "Editor"@en ;
+
+                    rdfs:comment """Represents the editor of the publication."""@en ;
+
+                    knora-base:objectClassConstraint beol:person ;
+
+                    salsah-gui:guiElement salsah-gui:Searchbox ;
+
+                    knora-base:subjectClassConstraint :Publication ;
+
+                    rdfs:subPropertyOf knora-base:hasLinkTo .
+
+
+
+
+###  http://www.knora.org/ontology/biblio#publicationHasEditorValue
+
+:publicationHasEditorValue rdf:type owl:ObjectProperty ;
+
+                    knora-base:objectClassConstraint knora-base:LinkValue ;
+
+                    knora-base:subjectClassConstraint :Publication ;
+
+                    rdfs:subPropertyOf knora-base:hasLinkToValue .
+
 
 ###  http://www.knora.org/ontology/biblio#publisherHasLocation
 
@@ -929,6 +959,14 @@
                                     ],
                                     [ rdf:type owl:Restriction ;
                                       owl:onProperty :publicationHasAuthorValue ;
+                                      owl:minCardinality "0"^^xsd:nonNegativeInteger
+                                    ],
+                                    [ rdf:type owl:Restriction ;
+                                      owl:onProperty :publicationHasEditor ;
+                                      owl:minCardinality "0"^^xsd:nonNegativeInteger
+                                    ],
+                                    [ rdf:type owl:Restriction ;
+                                      owl:onProperty :publicationHasEditorValue ;
                                       owl:minCardinality "0"^^xsd:nonNegativeInteger
                                     ],
                                     [ rdf:type owl:Restriction ;
