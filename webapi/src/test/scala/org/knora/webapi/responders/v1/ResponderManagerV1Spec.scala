@@ -39,7 +39,7 @@ class ResponderManagerV1Spec extends CoreSpec("ResponderManagerTestSystem") with
     val mockValuesRouter = actorUnderTest.underlyingActor.asInstanceOf[TestProbeMaker].probes.getOrElse(VALUES_ROUTER_ACTOR_NAME, null)
     val mockSipiRouter = actorUnderTest.underlyingActor.asInstanceOf[TestProbeMaker].probes.getOrElse(SIPI_ROUTER_ACTOR_NAME, null)
     val mockUsersRouter = actorUnderTest.underlyingActor.asInstanceOf[TestProbeMaker].probes.getOrElse(USERS_ROUTER_ACTOR_NAME, null)
-    val mockListsRouter = actorUnderTest.underlyingActor.asInstanceOf[TestProbeMaker].probes.getOrElse(HIERARCHICAL_LISTS_ROUTER_ACTOR_NAME, null)
+    val mockListsRouter = actorUnderTest.underlyingActor.asInstanceOf[TestProbeMaker].probes.getOrElse(LISTS_ROUTER_ACTOR_NAME, null)
     val mockSearchRouter = actorUnderTest.underlyingActor.asInstanceOf[TestProbeMaker].probes.getOrElse(SEARCH_ROUTER_ACTOR_NAME, null)
     val mockOntologyRouter = actorUnderTest.underlyingActor.asInstanceOf[TestProbeMaker].probes.getOrElse(ONTOLOGY_ROUTER_ACTOR_NAME, null)
 

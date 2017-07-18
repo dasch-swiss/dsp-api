@@ -43,11 +43,6 @@ object ResourceTypesRouteV1 extends Authenticator {
         implicit val timeout = settings.defaultTimeout
         val responderManager = system.actorSelection("/user/responderManager")
 
-        def makeResourceTypeRequestMessage(resourceTypeIri: String, userProfile: UserProfileV1): OntologyResponderRequestV1 = {
-
-            ResourceTypeGetRequestV1(resourceTypeIri, userProfile)
-        }
-
         path("v1" / "resourcetypes" / Segment) { iri =>
             get {
                 requestContext =>
@@ -56,7 +51,7 @@ object ResourceTypesRouteV1 extends Authenticator {
                     // TODO: Check that this is the IRI of a resource type and not just any IRI
                     val resourceTypeIri = InputValidation.toIri(iri, () => throw BadRequestException(s"Invalid resource class IRI: $iri"))
 
-                    val requestMessage = makeResourceTypeRequestMessage(resourceTypeIri, userProfile)
+                    val requestMessage = ResourceTypeGetRequestV1(resourceTypeIri, userProfile)
 
                     RouteUtilV1.runJsonRoute(
                         requestMessage,

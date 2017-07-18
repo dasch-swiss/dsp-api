@@ -29,9 +29,11 @@ import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.groupmessages._
 import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse}
+import org.knora.webapi.messages.v1.responder.usermessages.UserProfileType
 import org.knora.webapi.messages.v1.store.triplestoremessages._
 import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_NAME
 import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
+import org.knora.webapi.util.MutableTestIri
 
 import scala.concurrent.duration._
 
@@ -53,7 +55,7 @@ class GroupsResponderV1Spec extends CoreSpec(GroupsResponderV1Spec.config) with 
     implicit private val executionContext = system.dispatcher
     private val timeout = 5.seconds
 
-    private val imageReviewerGroupInfo = SharedAdminTestData.imageReviewerGroupInfo
+    private val imagesReviewerGroupInfo = SharedAdminTestData.imagesReviewerGroupInfo
     private val imagesProjectAdminGroupInfo = SharedAdminTestData.imagesProjectAdminGroupInfo
     private val imagesProjectMemberGroupInfo = SharedAdminTestData.imagesProjectMemberGroupInfo
 
@@ -74,44 +76,54 @@ class GroupsResponderV1Spec extends CoreSpec(GroupsResponderV1Spec.config) with 
     }
 
     "The GroupsResponder " when {
+
         "asked about a group identified by 'iri' " should {
             "return group info if the group is known " in {
-                actorUnderTest ! GroupInfoByIRIGetRequest(imageReviewerGroupInfo.id, Some(rootUserProfileV1))
-                expectMsg(GroupInfoResponseV1(imageReviewerGroupInfo))
+                actorUnderTest ! GroupInfoByIRIGetRequest(imagesReviewerGroupInfo.id, Some(rootUserProfileV1))
+                expectMsg(GroupInfoResponseV1(imagesReviewerGroupInfo))
             }
             "return 'NotFoundException' when the group is unknown " in {
                 actorUnderTest ! GroupInfoByIRIGetRequest("http://data.knora.org/groups/notexisting", Some(rootUserProfileV1))
                 expectMsg(Failure(NotFoundException(s"For the given group iri 'http://data.knora.org/groups/notexisting' no information was found")))
             }
         }
+
         "asked about a group identified by 'name' " should {
             "return group info if the group is known " in {
-                actorUnderTest ! GroupInfoByNameGetRequest(imagesProjectAdminGroupInfo.belongsToProject, imagesProjectAdminGroupInfo.name, Some(rootUserProfileV1))
+                actorUnderTest ! GroupInfoByNameGetRequest(imagesProjectAdminGroupInfo.project, imagesProjectAdminGroupInfo.name, Some(rootUserProfileV1))
                 expectMsg(GroupInfoResponseV1(imagesProjectAdminGroupInfo))
             }
             "return 'NotFoundException' when the group is unknown " in {
-                actorUnderTest ! GroupInfoByNameGetRequest(imagesProjectMemberGroupInfo.belongsToProject, "groupwrong", Some(rootUserProfileV1))
+                actorUnderTest ! GroupInfoByNameGetRequest(imagesProjectMemberGroupInfo.project, "groupwrong", Some(rootUserProfileV1))
                 expectMsg(Failure(NotFoundException(s"For the given group name 'groupwrong' no information was found")))
             }
         }
-        "asked to create a new group " should {
-            "create the group and return the group's info if the supplied group name is unique " in {
+
+        "used to modify group information" should {
+
+            val newGroupIri = new MutableTestIri
+
+            "CREATE the group and return the group's info if the supplied group name is unique" in {
                 actorUnderTest ! GroupCreateRequestV1(
                     CreateGroupApiRequestV1("NewGroup", Some("NewGroupDescription"), "http://data.knora.org/projects/images", true, false),
                     SharedAdminTestData.imagesUser01,
                     UUID.randomUUID
                 )
-                expectMsgPF(timeout) {
-                    case GroupOperationResponseV1(newGroupInfo) => {
-                        newGroupInfo.name should equal ("NewGroup")
-                        newGroupInfo.description should equal (Some("NewGroupDescription"))
-                        newGroupInfo.belongsToProject should equal ("http://data.knora.org/projects/images")
-                        newGroupInfo.status should equal (true)
-                        newGroupInfo.hasSelfJoinEnabled should equal (false)
-                    }
-                }
+
+                val received: GroupOperationResponseV1 = expectMsgType[GroupOperationResponseV1](timeout)
+                val newGroupInfo = received.group_info
+
+                newGroupInfo.name should equal ("NewGroup")
+                newGroupInfo.description should equal (Some("NewGroupDescription"))
+                newGroupInfo.project should equal ("http://data.knora.org/projects/images")
+                newGroupInfo.status should equal (true)
+                newGroupInfo.selfjoin should equal (false)
+
+                // store for later usage
+                newGroupIri.set(newGroupInfo.id)
             }
-            "return a 'DuplicateValueException' if the supplied group name is not unique " in {
+
+            "return a 'DuplicateValueException' if the supplied group name is not unique" in {
                 actorUnderTest ! GroupCreateRequestV1(
                     CreateGroupApiRequestV1("NewGroup", Some("NewGroupDescription"), "http://data.knora.org/projects/images", true, false),
                     SharedAdminTestData.imagesUser01,
@@ -119,6 +131,7 @@ class GroupsResponderV1Spec extends CoreSpec(GroupsResponderV1Spec.config) with 
                 )
                 expectMsg(Failure(DuplicateValueException(s"Group with the name: 'NewGroup' already exists")))
             }
+
             "return 'BadRequestException' if group name or project IRI are missing" in {
 
                 /* missing group name */
@@ -137,116 +150,108 @@ class GroupsResponderV1Spec extends CoreSpec(GroupsResponderV1Spec.config) with 
                 )
                 expectMsg(Failure(BadRequestException("Project IRI cannot be empty")))
             }
+
+            "UPDATE a group" in {
+                actorUnderTest ! GroupChangeRequestV1(
+                    newGroupIri.get,
+                    ChangeGroupApiRequestV1(Some("UpdatedGroupName"), Some("UpdatedDescription")),
+                    SharedAdminTestData.imagesUser01,
+                    UUID.randomUUID
+                )
+
+                val received: GroupOperationResponseV1 = expectMsgType[GroupOperationResponseV1](timeout)
+                val updatedGroupInfo = received.group_info
+
+                updatedGroupInfo.name should equal ("UpdatedGroupName")
+                updatedGroupInfo.description should equal (Some("UpdatedDescription"))
+                updatedGroupInfo.project should equal ("http://data.knora.org/projects/images")
+                updatedGroupInfo.status should equal (true)
+                updatedGroupInfo.selfjoin should equal (false)
+            }
+
+            "return 'NotFound' if a not existing group IRI is submitted during update" in {
+                actorUnderTest ! GroupChangeRequestV1(
+                    groupIri = "http://data.knora.org/groups/notexisting",
+                    ChangeGroupApiRequestV1(Some("UpdatedGroupName"), Some("UpdatedDescription")),
+                    SharedAdminTestData.imagesUser01,
+                    UUID.randomUUID
+                )
+
+                expectMsg(Failure(NotFoundException(s"Group 'http://data.knora.org/groups/notexisting' not found. Aborting update request.")))
+            }
+
+            "return 'BadRequest' if the new group name already exists inside the project" in {
+                actorUnderTest ! GroupChangeRequestV1(
+                    newGroupIri.get,
+                    ChangeGroupApiRequestV1(Some("Image reviewer"), Some("UpdatedDescription")),
+                    SharedAdminTestData.imagesUser01,
+                    UUID.randomUUID
+                )
+
+                expectMsg(Failure(BadRequestException(s"Group with the name: 'Image reviewer' already exists.")))
+            }
+
+            "return 'BadRequest' if nothing would be changed during the update" in {
+
+                an [BadRequestException] should be thrownBy ChangeGroupApiRequestV1(None, None, None, None)
+
+                /*
+                actorUnderTest ! GroupChangeRequestV1(
+                    newGroupIri.get,
+                    ChangeGroupApiRequestV1(None, None, None, None),
+                    SharedAdminTestData.imagesUser01,
+                    UUID.randomUUID
+                )
+                expectMsg(Failure(BadRequestException(s"No data sent in API request.")))
+                */
+            }
+
         }
-        /*
-        "asked to update a user " should {
-            "update the user " in {
 
-                /* User information is updated by the user */
-                actorUnderTest ! UserUpdateRequestV1(
-                    userIri = SharedTestData.normaluserUserProfileV1.userData.user_id.get,
-                    propertyIri = OntologyConstants.Foaf.GivenName,
-                    newValue = "Donald",
-                    userProfile = SharedTestData.normaluserUserProfileV1,
-                    UUID.randomUUID
+        "used to query members" should {
+
+            "return all members of a group identified by IRI" in {
+                actorUnderTest ! GroupMembersByIRIGetRequestV1(
+                    groupIri = SharedAdminTestData.imagesReviewerGroupInfo.id,
+                    userProfileV1 = SharedAdminTestData.rootUser
                 )
-                expectMsgPF(timeout) {
-                    case UserOperationResponseV1(updatedUserProfile, requestingUserData) => {
-                        // check if information was changed
-                        assert(updatedUserProfile.userData.firstname.contains("Donald"))
-
-                        // check if correct and updated userdata is returned
-                        assert(requestingUserData.firstname.contains("Donald"))
-                    }
-                }
-
-                /* User information is updated by a system admin */
-                actorUnderTest ! UserUpdateRequestV1(
-                    userIri = SharedTestData.normaluserUserProfileV1.userData.user_id.get,
-                    propertyIri = OntologyConstants.Foaf.FamilyName,
-                    newValue = "Duck",
-                    userProfile = SharedTestData.superuserUserProfileV1,
-                    UUID.randomUUID
+                val received: GroupMembersResponseV1 = expectMsgType[GroupMembersResponseV1](timeout)
+                received.members should contain allElementsOf Seq(
+                    SharedAdminTestData.multiuserUser.ofType(UserProfileType.SHORT).userData.user_id.get,
+                    SharedAdminTestData.imagesReviewerUser.ofType(UserProfileType.SHORT).userData.user_id.get
                 )
-                expectMsgPF(timeout) {
-                    case UserOperationResponseV1(updatedUserProfile, requestingUserData) => {
-                        // check if information was changed
-                        assert(updatedUserProfile.userData.lastname.contains("Duck"))
-
-                        // check if the correct userdata is returned
-                        assert(requestingUserData.user_id.contains(SharedTestData.superuserUserProfileV1.userData.user_id.get))
-                    }
-                }
-
             }
-            "return a 'ForbiddenException' if the user requesting update is not the user itself or system admin " in {
 
-                /* User information is updated by other normal user */
-                actorUnderTest ! UserUpdateRequestV1(
-                    userIri = SharedTestData.superuserUserProfileV1.userData.user_id.get,
-                    propertyIri = OntologyConstants.Foaf.GivenName,
-                    newValue = "Donald",
-                    userProfile = SharedTestData.normaluserUserProfileV1,
-                    UUID.randomUUID
+            "return all members of a group identified by shortname / project IRI combination" in {
+                actorUnderTest ! GroupMembersByNameGetRequestV1(
+                    projectIri = SharedAdminTestData.imagesProjectInfo.id,
+                    groupName = SharedAdminTestData.imagesReviewerGroupInfo.name,
+                    userProfileV1 = SharedAdminTestData.rootUser
                 )
-                expectMsg(Failure(ForbiddenException("User information can only be changed by the user itself or a system administrator")))
-
-                /* User information is updated by anonymous */
-                actorUnderTest ! UserUpdateRequestV1(
-                    userIri = SharedTestData.superuserUserProfileV1.userData.user_id.get,
-                    propertyIri = OntologyConstants.Foaf.GivenName,
-                    newValue = ("Donald"),
-                    userProfile = SharedTestData.anonymousUserProfileV1,
-                    UUID.randomUUID
+                val received: GroupMembersResponseV1 = expectMsgType[GroupMembersResponseV1](timeout)
+                received.members should contain allElementsOf Seq(
+                    SharedAdminTestData.multiuserUser.ofType(UserProfileType.SHORT).userData.user_id.get,
+                    SharedAdminTestData.imagesReviewerUser.ofType(UserProfileType.SHORT).userData.user_id.get
                 )
-                expectMsg(Failure(ForbiddenException("User information can only be changed by the user itself or a system administrator")))
-
             }
-            "return a 'ForbiddenException' if the update gives SA rights but the user requesting the update is not SA " in {
-                /* User information is updated by the user */
-                actorUnderTest ! UserUpdateRequestV1(
-                    userIri = SharedTestData.normaluserUserProfileV1.userData.user_id.get,
-                    propertyIri = OntologyConstants.KnoraBase.IsSystemAdmin,
-                    newValue = true,
-                    userProfile = SharedTestData.normaluserUserProfileV1,
-                    UUID.randomUUID
-                )
-                expectMsg(Failure(ForbiddenException("Giving an user system admin rights can only be performed by another system admin")))
-            }
-            "update the user, giving him SA rights " in {
-                actorUnderTest ! UserUpdateRequestV1(
-                    userIri = SharedTestData.normaluserUserProfileV1.userData.user_id.get,
-                    propertyIri = OntologyConstants.KnoraBase.IsSystemAdmin,
-                    newValue = true,
-                    userProfile = SharedTestData.superuserUserProfileV1,
-                    UUID.randomUUID
-                )
-                expectMsgPF(timeout) {
-                    case UserOperationResponseV1(updatedUserProfile, requestingUserData) => {
-                        // check if information was changed
-                        assert(updatedUserProfile.userData.isSystemAdmin.contains(true))
-                    }
-                }
-            }
-            "update the user, (deleting) making him inactive " in {
-                actorUnderTest ! UserUpdateRequestV1(
-                    userIri = SharedTestData.normaluserUserProfileV1.userData.user_id.get,
-                    propertyIri = OntologyConstants.KnoraBase.IsActiveUser,
-                    newValue = false,
-                    userProfile = SharedTestData.superuserUserProfileV1,
-                    UUID.randomUUID
-                )
-                expectMsgPF(timeout) {
-                    case UserOperationResponseV1(updatedUserProfile, requestingUserData) => {
-                        // check if information was changed
-                        assert(updatedUserProfile.userData.isActiveUser.contains(false))
-                    }
-                }
 
+            "return 'NotFound' when the group IRI is unknown" in {
+                actorUnderTest ! GroupMembersByIRIGetRequestV1(
+                    groupIri = "http://data.knora.org/groups/notexisting",
+                    SharedAdminTestData.rootUser
+                )
+                expectMsg(Failure(NotFoundException(s"Group 'http://data.knora.org/groups/notexisting' not found.")))
+            }
+
+            "return 'NotFound' when the group shortname / project IRI combination is unknown" in {
+                actorUnderTest ! GroupMembersByNameGetRequestV1(
+                    projectIri = SharedAdminTestData.imagesProjectInfo.id,
+                    groupName = "groupwrong",
+                    SharedAdminTestData.rootUser
+                )
+                expectMsg(Failure(NotFoundException(s"Group 'groupwrong' not found.")))
             }
         }
-        */
-
     }
 
 }
