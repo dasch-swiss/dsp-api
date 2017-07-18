@@ -42,9 +42,7 @@
 
                    rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
-                   rdfs:comment "Connects a Resource to a project"@en ;
-
-                   :subjectClassConstraint :Resource ;
+                   rdfs:comment "Connects a Resource or a ListNode (only the root node) to a project"@en ;
 
                    :objectClassConstraint :knoraProject .
 
@@ -604,11 +602,15 @@
                                 owl:maxCardinality "1"^^xsd:nonNegativeInteger
                               ] ,
                               [ rdf:type owl:Restriction ;
+                                owl:onProperty :projectKeywords ;
+                                owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                              ] ,
+                              [ rdf:type owl:Restriction ;
                                 owl:onProperty :projectLogo ;
                                 owl:maxCardinality "1"^^xsd:nonNegativeInteger
                               ] ,
                               [ rdf:type owl:Restriction ;
-                                owl:onProperty :projectKeywords ;
+                                owl:onProperty :belongsToInstitution ;
                                 owl:maxCardinality "1"^^xsd:nonNegativeInteger
                               ] ,
                               [ rdf:type owl:Restriction ;
@@ -626,10 +628,6 @@
                               [ rdf:type owl:Restriction ;
                                 owl:onProperty :hasSelfJoinEnabled ;
                                 owl:cardinality "1"^^xsd:nonNegativeInteger
-                              ] ,
-                              [ rdf:type owl:Restriction ;
-                                owl:onProperty :belongsToInstitution ;
-                                owl:maxCardinality "1"^^xsd:nonNegativeInteger
                               ] ;
 
               rdfs:comment "Represents a project that uses Knora"@en .
@@ -679,32 +677,32 @@
 
 ###  http://www.knora.org/ontology/knora-base#UnknownUser
 :UnknownUser rdf:type :UserGroup ;
-             :groupName "unknown user" ;
+             :groupName "UnknownUser" ;
              :status "true"^^xsd:boolean .
 
 ###  http://www.knora.org/ontology/knora-base#KnownUser
 :KnownUser rdf:type :UserGroup ;
-           :groupName "known user" ;
+           :groupName "KnownUser" ;
            :status "true"^^xsd:boolean .
 
 ###  http://www.knora.org/ontology/knora-base#Creator
 :Creator rdf:type :UserGroup ;
-         :groupName  "creator" ;
+         :groupName  "Creator" ;
          :status "true"^^xsd:boolean .
 
 ###  http://www.knora.org/ontology/knora-base#ProjectMember
 :ProjectMember rdf:type :UserGroup ;
-               :groupName "project member" ;
+               :groupName "ProjectMember" ;
                :status "true"^^xsd:boolean .
 
 ###  http://www.knora.org/ontology/knora-base#ProjectAdmin
 :ProjectAdmin rdf:type :UserGroup ;
-              :groupName "project admin" ;
+              :groupName "ProjectAdmin" ;
               :status "true"^^xsd:boolean .
 
 ###  http://www.knora.org/ontology/knora-base#SystemAdmin
 :SystemAdmin rdf:type :UserGroup ;
-             :groupName "system admin" ;
+             :groupName "SystemAdmin" ;
              :belongsToProject <http://www.knora.org/ontology/knora-base#SystemProject> ;
              :status "true"^^xsd:boolean ;
              :hasSelfJoinEnabled "false"^^xsd:boolean .

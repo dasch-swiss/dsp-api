@@ -23,9 +23,9 @@ package org.knora.webapi.messages.v1.responder.projectmessages
 import java.util.UUID
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import org.knora.webapi.IRI
 import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
 import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
+import org.knora.webapi.{BadRequestException, IRI}
 import spray.json.{DefaultJsonProtocol, JsonFormat, NullOptions, RootJsonFormat}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -34,32 +34,76 @@ import spray.json.{DefaultJsonProtocol, JsonFormat, NullOptions, RootJsonFormat}
 /**
   * Represents an API request payload that asks the Knora API server to create a new project.
   *
-  * @param shortname          the shortname of the project to be created (unique).
-  * @param longname           the longname of the project to be created.
-  * @param basepath           the basepath of the project to be created.
-  * @param status             the status of the project to be created.
-  * @param hasSelfJoinEnabled the status of self-join of the project to be created.
+  * @param shortname   the shortname of the project to be created (unique).
+  * @param longname    the longname of the project to be created.
+  * @param description the description of the project to be created.
+  * @param keywords    the keywords of the project to be created.
+  * @param logo        the logo of the project to be created.
+  * @param status      the status of the project to be created (active = true, inactive = false).
+  * @param selfjoin    the status of self-join of the project to be created.
   */
 case class CreateProjectApiRequestV1(shortname: String,
                                      longname: Option[String],
                                      description: Option[String],
                                      keywords: Option[String],
                                      logo: Option[String],
-                                     basepath: String,
-                                     status: Boolean = true,
-                                     hasSelfJoinEnabled: Boolean = false) extends ProjectV1JsonProtocol {
+                                     status: Boolean,
+                                     selfjoin: Boolean) extends ProjectV1JsonProtocol {
     def toJsValue = createProjectApiRequestV1Format.write(this)
 }
 
 /**
-  * Represents an API request payload that asks the Knora API server to update one property of an existing project.
+  * Represents an API request payload that asks the Knora API server to update an existing project.
   *
-  * @param propertyIri the property of the project to be updated.
-  * @param newValue    the new value for the property of the project to be updated.
+  * @param shortname     the new project's shortname.
+  * @param longname      the new project's longname.
+  * @param description   the new project's description.
+  * @param keywords      the new project's keywords.
+  * @param logo          the new project's logo.
+  * @param institution   the new project's institution.
+  * @param ontologygraph the new project's ontology graph.
+  * @param datagraph     the new project's data graph.
+  * @param status        the new project's status.
+  * @param selfjoin      the new project's self-join status.
   */
-case class UpdateProjectApiRequestV1(propertyIri: String,
-                                     newValue: String) extends ProjectV1JsonProtocol {
-    def toJsValue = updateProjectApiRequestV1Format.write(this)
+case class ChangeProjectApiRequestV1(shortname: Option[String] = None,
+                                     longname: Option[String] = None,
+                                     description: Option[String] = None,
+                                     keywords: Option[String] = None,
+                                     logo: Option[String] = None,
+                                     institution: Option[IRI] = None,
+                                     ontologygraph: Option[String] = None,
+                                     datagraph: Option[String] = None,
+                                     status: Option[Boolean] = None,
+                                     selfjoin: Option[Boolean] = None) extends ProjectV1JsonProtocol {
+
+    val parametersCount = List(
+        shortname,
+        longname,
+        description,
+        keywords,
+        logo,
+        institution,
+        ontologygraph,
+        datagraph,
+        status,
+        selfjoin
+    ).flatten.size
+
+    // something needs to be sent, i.e. everything 'None' is not allowed
+    if (parametersCount == 0) throw BadRequestException("No data sent in API request.")
+
+    // change ontology and/or datagraph case
+    if (ontologygraph.isDefined || datagraph.isDefined) {
+        if (ontologygraph.isDefined && datagraph.isEmpty && parametersCount > 1) BadRequestException("To many parameters sent for ontology graph change.")
+        if (datagraph.isDefined && ontologygraph.isEmpty && parametersCount > 1) BadRequestException("To many parameters sent for data graph change.")
+        if (ontologygraph.isDefined && datagraph.isDefined && parametersCount > 2) BadRequestException("To many parameters sent for ontology and data graph change.")
+    }
+
+    // change basic project information case
+    if (parametersCount > 8) throw BadRequestException("To many parameters sent for changing basic project information.")
+
+    def toJsValue = changeProjectApiRequestV1Format.write(this)
 }
 
 
@@ -136,6 +180,22 @@ case class ProjectMembersByIRIGetRequestV1(iri: IRI, userProfileV1: UserProfileV
 case class ProjectMembersByShortnameGetRequestV1(shortname: String, userProfileV1: UserProfileV1) extends ProjectsResponderRequestV1
 
 /**
+  * Returns all admin users of a project.
+  *
+  * @param iri           the IRI of the project.
+  * @param userProfileV1 the profile of the user making the request.
+  */
+case class ProjectAdminMembersByIRIGetRequestV1(iri: IRI, userProfileV1: UserProfileV1) extends ProjectsResponderRequestV1
+
+/**
+  * Returns all admin users of a project.
+  *
+  * @param shortname     of the project
+  * @param userProfileV1 the profile of the user making the request.
+  */
+case class ProjectAdminMembersByShortnameGetRequestV1(shortname: String, userProfileV1: UserProfileV1) extends ProjectsResponderRequestV1
+
+/**
   * Requests the creation of a new project.
   *
   * @param createRequest the [[CreateProjectApiRequestV1]] information for creation a new project.
@@ -147,17 +207,17 @@ case class ProjectCreateRequestV1(createRequest: CreateProjectApiRequestV1,
                                   apiRequestID: UUID) extends ProjectsResponderRequestV1
 
 /**
-  * Requests updating an existing project
+  * Requests updating an existing project.
   *
-  * @param projectIri    the IRI of the project to be updated.
-  * @param propertyIri   the IRI of the property to be updated.
-  * @param newValue      the new value for the property.
-  * @param userProfileV1 the user profile of the user requesting the update.
+  * @param projectIri           the IRI of the project to be updated.
+  * @param changeProjectRequest the data which needs to be update.
+  * @param userProfileV1        the user profile of the user requesting the update.
+  * @param apiRequestID         the ID of the API request.
   */
-case class ProjectUpdateRequestV1(projectIri: IRI,
-                                  propertyIri: IRI,
-                                  newValue: Any,
-                                  userProfileV1: UserProfileV1) extends ProjectsResponderRequestV1
+case class ProjectChangeRequestV1(projectIri: IRI,
+                                  changeProjectRequest: ChangeProjectApiRequestV1,
+                                  userProfileV1: UserProfileV1,
+                                  apiRequestID: UUID) extends ProjectsResponderRequestV1
 
 // Responses
 /**
@@ -191,6 +251,18 @@ case class ProjectMembersGetResponseV1(members: Seq[UserDataV1],
 }
 
 /**
+  * Represents the Knora API v1 JSON response to a request for a list of admin members inside a single project.
+  *
+  * @param members    a list of admin members.
+  * @param userDataV1 information about the user that made the request.
+  */
+case class ProjectAdminMembersGetResponseV1(members: Seq[UserDataV1],
+                                            userDataV1: UserDataV1) extends KnoraResponseV1 with ProjectV1JsonProtocol {
+
+    def toJsValue = projectAdminMembersGetRequestV1Format.write(this)
+}
+
+/**
   * Represents an answer to a project creating/modifying operation.
   *
   * @param project_info the new project info of the created/modified project.
@@ -202,18 +274,58 @@ case class ProjectOperationResponseV1(project_info: ProjectInfoV1) extends Knora
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Components of messages
 
+/**
+  * Represents basic information about a project.
+  *
+  * @param id                 The project's IRI.
+  * @param shortname          The project's shortname. Needs to be system wide unique.
+  * @param longname           The project's long name.
+  * @param description        The project's description.
+  * @param keywords           The project's keywords.
+  * @param logo               The project's logo.
+  * @param institution        The project's institution.
+  * @param ontologyNamedGraph The project's ontology named graph.
+  * @param dataNamedGraph     The project's data named graph.
+  * @param status             The project's status.
+  * @param selfjoin           The project's self-join status.
+  */
 case class ProjectInfoV1(id: IRI,
                          shortname: String,
                          longname: Option[String],
                          description: Option[String],
                          keywords: Option[String],
                          logo: Option[String],
-                         belongsToInstitution: Option[IRI],
+                         institution: Option[IRI],
                          ontologyNamedGraph: IRI,
                          dataNamedGraph: IRI,
                          status: Boolean,
-                         hasSelfJoinEnabled: Boolean)
+                         selfjoin: Boolean)
 
+
+/**
+  * Payload used for updating of an existing project.
+  *
+  * @param shortname          The project's shortname. Needs to be system wide unique.
+  * @param longname           The project's long name.
+  * @param description        The project's description.
+  * @param keywords           The project's keywords.
+  * @param logo               The project's logo.
+  * @param institution        The project's institution.
+  * @param ontologyNamedGraph The project's ontology named graph.
+  * @param dataNamedGraph     The project's data named graph.
+  * @param status             The project's status.
+  * @param selfjoin           The project's self-join status.
+  */
+case class ProjectUpdatePayloadV1(shortname: Option[String] = None,
+                                  longname: Option[String] = None,
+                                  description: Option[String] = None,
+                                  keywords: Option[String] = None,
+                                  logo: Option[String] = None,
+                                  institution: Option[IRI] = None,
+                                  ontologyNamedGraph: Option[IRI] = None,
+                                  dataNamedGraph: Option[IRI] = None,
+                                  status: Option[Boolean] = None,
+                                  selfjoin: Option[Boolean] = None)
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // JSON formating
@@ -229,12 +341,13 @@ trait ProjectV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol wi
     // protocol and UserV1JsonProtocol. See ttps://github.com/spray/spray-json#jsonformats-for-recursive-types.
     // rootFormat makes it return the expected type again.
     // https://github.com/spray/spray-json#jsonformats-for-recursive-types
+    implicit val projectAdminMembersGetRequestV1Format: RootJsonFormat[ProjectAdminMembersGetResponseV1] = rootFormat(lazyFormat(jsonFormat(ProjectAdminMembersGetResponseV1, "members", "userdata")))
     implicit val projectMembersGetRequestV1Format: RootJsonFormat[ProjectMembersGetResponseV1] = rootFormat(lazyFormat(jsonFormat(ProjectMembersGetResponseV1, "members", "userdata")))
     implicit val projectInfoV1Format: JsonFormat[ProjectInfoV1] = jsonFormat11(ProjectInfoV1)
     implicit val projectsResponseV1Format: RootJsonFormat[ProjectsResponseV1] = rootFormat(lazyFormat(jsonFormat(ProjectsResponseV1, "projects")))
     implicit val projectInfoResponseV1Format: RootJsonFormat[ProjectInfoResponseV1] = rootFormat(lazyFormat(jsonFormat(ProjectInfoResponseV1, "project_info")))
-    implicit val createProjectApiRequestV1Format: RootJsonFormat[CreateProjectApiRequestV1] = rootFormat(lazyFormat(jsonFormat8(CreateProjectApiRequestV1)))
-    implicit val updateProjectApiRequestV1Format: RootJsonFormat[UpdateProjectApiRequestV1] = rootFormat(lazyFormat(jsonFormat2(UpdateProjectApiRequestV1)))
-    implicit val projectOperationResponseV1Format: RootJsonFormat[ProjectOperationResponseV1] = rootFormat(lazyFormat(jsonFormat1(ProjectOperationResponseV1)))
+    implicit val createProjectApiRequestV1Format: RootJsonFormat[CreateProjectApiRequestV1] = rootFormat(lazyFormat(jsonFormat(CreateProjectApiRequestV1, "shortname", "longname", "description", "keywords", "logo", "status", "selfjoin")))
+    implicit val changeProjectApiRequestV1Format: RootJsonFormat[ChangeProjectApiRequestV1] = rootFormat(lazyFormat(jsonFormat(ChangeProjectApiRequestV1, "shortname", "longname", "description", "keywords", "logo", "institution", "ontologygraph", "datagraph", "status", "selfjoin")))
+    implicit val projectOperationResponseV1Format: RootJsonFormat[ProjectOperationResponseV1] = rootFormat(lazyFormat(jsonFormat(ProjectOperationResponseV1, "project_info")))
 
 }

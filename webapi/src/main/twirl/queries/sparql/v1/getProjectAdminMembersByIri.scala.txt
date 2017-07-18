@@ -1,6 +1,6 @@
 @*
  * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
+ * Tobias Schweizer, André Kilchenmann, and André Fatton.
  *
  * This file is part of Knora.
  *
@@ -21,35 +21,26 @@
 @import org.knora.webapi.IRI
 
 @**
- * Gets all information about a single group, given the group's name and project association.
+ * Gets all admin members of a project, given the project's IRI.
  *
  * @param triplestore the name of the triplestore being used.
- * @param name the group's `<http://www.knora.org/ontology/knora-base#groupName>`.
- * @param projectIri the group's `<http://www.knora.org/ontology/knora-base#belongsToProject>` project association.
+ * @param projectIri the project's IRI.
  *@
 @(triplestore: String,
-  name: String,
   projectIri: IRI)
 
-prefix xsd: <http://www.w3.org/2001/XMLSchema#>
 prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 prefix knora-base: <http://www.knora.org/ontology/knora-base#>
 
-SELECT ?s ?p ?o
+SELECT ?s
 @* Ensure that inference is not used in this query. *@
 @if(triplestore.startsWith("graphdb")) {
     FROM <http://www.ontotext.com/explicit>
 }
 WHERE {
-    ?s rdf:type knora-base:UserGroup .
-    ?s knora-base:groupName "@name"^^xsd:string .
-    ?s knora-base:belongsToProject <@projectIri> .
-    ?s ?p ?o .
-    FILTER (?s != <http://www.knora.org/ontology/knora-base#UnknownUser>) .
-    FILTER (?s != <http://www.knora.org/ontology/knora-base#KnownUser>) .
-    FILTER (?s != <http://www.knora.org/ontology/knora-base#Creator>) .
-    FILTER (?s != <http://www.knora.org/ontology/knora-base#ProjectMember>) .
-    FILTER (?s != <http://www.knora.org/ontology/knora-base#ProjectAdmin>) .
-    FILTER (?s != <http://www.knora.org/ontology/knora-base#SystemAdmin>) .
+    BIND(IRI("@projectIri") as ?projectIri)
+
+    ?projectIri rdf:type knora-base:knoraProject .
+    ?s knora-base:isInProjectAdminGroup ?projectIri .
+    ?s rdf:type knora-base:User .
 }

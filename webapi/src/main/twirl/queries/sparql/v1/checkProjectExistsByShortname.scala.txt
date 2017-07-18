@@ -1,45 +1,38 @@
-/*
+@*
  * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
  * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
+ *
  * This file is part of Knora.
+ *
  * Knora is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
  * by the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
+ *
  * Knora is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Affero General Public License for more details.
+ *
  * You should have received a copy of the GNU Affero General Public
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
- */
+ *@
 
-import {basicMessageComponents} from "./basicMessageComponents"
-import {userFormats} from "./userFormats";
+@import org.knora.webapi.IRI
 
-/**
- * This module contains interfaces that represent responses to requests to open and close
- * a user session.
- */
-export module sessionResponseFormats {
-    import UserProfileV1 = userFormats.UserProfileV1;
-    /**
-     * Represents the response to a successful login request.
-     */
-    export interface loginResponse extends basicMessageComponents.basicResponse {
-        /**
-         * The user's session ID.
-         */
-        sid: string;
+@**
+ * Checks if a project exists.
+ *
+ * @param projectIri the IRI of the project we want to check.
+ *@
+@(shortname: String)
 
-        /**
-         * A description of the result of the request.
-         */
-        message: string;
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 
-        /**
-         * The user's profile.
-         */
-        userProfile: UserProfileV1;
-    }
+ASK {
+    ?s rdf:type knora-base:knoraProject .
+    ?s knora-base:projectShortname "@shortname"^^xsd:string .
 }
+

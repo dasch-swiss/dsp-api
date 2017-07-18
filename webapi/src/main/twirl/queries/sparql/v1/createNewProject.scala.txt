@@ -49,7 +49,6 @@
   maybeDescription: Option[String],
   maybeKeywords: Option[String],
   maybeLogo: Option[String],
-  basepath: String,
   status: Boolean,
   hasSelfJoinEnabled: Boolean,
   projectOntologyGraph: String,
@@ -77,14 +76,12 @@ INSERT {
             }
 
             @if(maybeKeywords.nonEmpty) {
-                knora-base:keywords "@maybeKeywords.get"^^xsd:string ;
+                knora-base:projectKeywords "@maybeKeywords.get"^^xsd:string ;
             }
 
             @if(maybeLogo.nonEmpty) {
-                knora-base:logo "@maybeLogo.get"^^xsd:string ;
+                knora-base:projectLogo "@maybeLogo.get"^^xsd:string ;
             }
-
-            knora-base:projectBasepath "@basepath"^^xsd:string ;
 
             knora-base:status "@status"^^xsd:boolean ;
 

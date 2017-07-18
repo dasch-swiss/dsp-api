@@ -210,6 +210,7 @@ trait Authenticator {
       * @return a [[UserProfileV1]]
       */
     def getUserProfileV1(requestContext: RequestContext)(implicit system: ActorSystem, executionContext: ExecutionContext): UserProfileV1 = {
+
         val settings = Settings(system)
         if (settings.skipAuthentication) {
             UserProfileV1(
@@ -305,7 +306,7 @@ object Authenticator {
         //log.debug(s"authenticateCredentials - userProfileV1: $userProfileV1")
 
         /* check if the user is active, if not, then no need to check the password */
-        val isActiveUser = if (userProfileV1.userData.isActiveUser.get) {
+        val isActiveUser = if (userProfileV1.isActive) {
             true
         } else {
             log.debug("authenticateCredentials - user is not active")

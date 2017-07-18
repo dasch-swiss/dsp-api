@@ -38,7 +38,11 @@ SELECT ?s ?p ?o
 WHERE {
 
     ?s rdf:type knora-base:UserGroup .
-    FILTER (?s != <http://www.knora.org/ontology/knora-base#AllGroups>) .
     ?s ?p ?o .
-
+    FILTER (?s != <http://www.knora.org/ontology/knora-base#UnknownUser>) .
+    FILTER (?s != <http://www.knora.org/ontology/knora-base#KnownUser>) .
+    FILTER (?s != <http://www.knora.org/ontology/knora-base#Creator>) .
+    FILTER (?s != <http://www.knora.org/ontology/knora-base#ProjectMember>) .
+    FILTER (?s != <http://www.knora.org/ontology/knora-base#ProjectAdmin>) .
+    FILTER (?s != <http://www.knora.org/ontology/knora-base#SystemAdmin>) .
 }

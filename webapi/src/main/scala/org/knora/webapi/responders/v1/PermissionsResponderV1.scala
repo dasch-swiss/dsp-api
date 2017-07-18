@@ -91,7 +91,7 @@ class PermissionsResponderV1 extends Responder {
                 groupIri =>
                     for {
                         groupInfo <- (responderManager ? GroupInfoByIRIGetRequest(groupIri, None)).mapTo[GroupInfoResponseV1]
-                        res = (groupInfo.group_info.belongsToProject, groupIri)
+                        res = (groupInfo.group_info.project, groupIri)
                     } yield res
             }
         } else {
@@ -126,8 +126,7 @@ class PermissionsResponderV1 extends Responder {
                 Vector.empty[(IRI, IRI)]
             }
             //_ = log.debug("permissionsProfileGetV1 - projectAdmins: {}", MessageUtil.toSource(projectAdmins))
-
-
+            
             /* materialize implicit membership in 'http://www.knora.org/ontology/knora-base#SystemAdmin' group */
             systemAdmin: Vector[(IRI, IRI)] = if (isInSystemAdminGroup) {
                 Vector((OntologyConstants.KnoraBase.SystemProject, OntologyConstants.KnoraBase.SystemAdmin))
