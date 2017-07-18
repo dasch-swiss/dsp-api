@@ -20,7 +20,7 @@
 
 package org.knora.webapi.responders
 
-import akka.actor.{Actor, ActorLogging, Props}
+import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props}
 import akka.event.LoggingReceive
 import akka.routing.FromConfig
 import org.knora.webapi.ActorMaker
@@ -38,11 +38,14 @@ import org.knora.webapi.messages.v1.responder.storemessages.StoreResponderReques
 import org.knora.webapi.messages.v1.responder.usermessages.UsersResponderRequestV1
 import org.knora.webapi.messages.v1.responder.valuemessages.ValuesResponderRequestV1
 import org.knora.webapi.messages.v2.responder.ontologymessages.OntologiesResponderRequestV2
+import org.knora.webapi.messages.v2.responder.persistentmapmessages.PersistentMapResponderRequestV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.ResourcesResponderRequestV2
 import org.knora.webapi.messages.v2.responder.searchmessages.SearchResponderRequestV2
 import org.knora.webapi.responders.v1._
-import org.knora.webapi.responders.v2.{OntologiesResponderV2, ResourcesResponderV2, SearchResponderV2}
+import org.knora.webapi.responders.v2.{OntologiesResponderV2, PersistentMapResponderV2, ResourcesResponderV2, SearchResponderV2}
 import org.knora.webapi.util.ActorUtil.handleUnexpectedMessage
+
+import scala.concurrent.ExecutionContextExecutor
 
 /**
   * This actor receives messages representing client requests, and forwards them to pools specialised actors that it supervises.
@@ -53,12 +56,12 @@ class ResponderManager extends Actor with ActorLogging {
     /**
       * The responder's Akka actor system.
       */
-    protected implicit val system = context.system
+    protected implicit val system: ActorSystem = context.system
 
     /**
       * The Akka actor system's execution context for futures.
       */
-    protected implicit val executionContext = system.dispatcher
+    protected implicit val executionContext: ExecutionContextExecutor = system.dispatcher
 
     // A subclass can replace the standard responders with custom responders, e.g. for testing. To do this, it must
     // override one or more of the protected val members below representing actors that route requests to particular
@@ -67,145 +70,145 @@ class ResponderManager extends Actor with ActorLogging {
     /**
       * Constructs the default Akka routing actor that routes messages to [[ResourcesResponderV1]].
       */
-    protected final def makeDefaultResourcesRouter = makeActor(FromConfig.props(Props[ResourcesResponderV1]), RESOURCES_ROUTER_ACTOR_NAME)
+    protected final def makeDefaultResourcesRouterV1: ActorRef = makeActor(FromConfig.props(Props[ResourcesResponderV1]), RESOURCES_ROUTER_V1_ACTOR_NAME)
 
     /**
       * The Akka routing actor that should receive messages addressed to the resources responder. Subclasses can override this
       * member to substitute a custom actor instead of the default resources responder.
       */
-    protected val resourcesRouter = makeDefaultResourcesRouter
+    protected val resourcesRouterV1: ActorRef = makeDefaultResourcesRouterV1
 
     /**
       * Constructs the default Akka routing actor that routes messages to [[ValuesResponderV1]].
       */
-    protected final def makeDefaultValuesRouter = makeActor(FromConfig.props(Props[ValuesResponderV1]), VALUES_ROUTER_ACTOR_NAME)
+    protected final def makeDefaultValuesRouterV1: ActorRef = makeActor(FromConfig.props(Props[ValuesResponderV1]), VALUES_ROUTER_V1_ACTOR_NAME)
 
     /**
       * The Akka routing actor that should receive messages addressed to the values responder. Subclasses can override this
       * member to substitute a custom actor instead of the default values responder.
       */
-    protected val valuesRouter = makeDefaultValuesRouter
+    protected val valuesRouterV1: ActorRef = makeDefaultValuesRouterV1
 
     /**
       * Constructs the default Akka routing actor that routes messages to [[SipiResponderV1]].
       */
-    protected final def makeDefaultSipiRouter = makeActor(FromConfig.props(Props[SipiResponderV1]), SIPI_ROUTER_ACTOR_NAME)
+    protected final def makeDefaultSipiRouterV1: ActorRef = makeActor(FromConfig.props(Props[SipiResponderV1]), SIPI_ROUTER_V1_ACTOR_NAME)
 
     /**
       * The Akka routing actor that should receive messages addressed to the Sipi responder. Subclasses can override this
       * member to substitute a custom actor instead of the default Sipi responder.
       */
-    protected val sipiRouter = makeDefaultSipiRouter
+    protected val sipiRouterV1: ActorRef = makeDefaultSipiRouterV1
 
     /**
       * Constructs the default Akka routing actor that routes messages to [[StandoffResponderV1]].
       */
-    protected final def makeDefaultStandoffRouter = makeActor(FromConfig.props(Props[StandoffResponderV1]), STANDOFF_ROUTER_ACTOR_NAME)
+    protected final def makeDefaultStandoffRouterV1: ActorRef = makeActor(FromConfig.props(Props[StandoffResponderV1]), STANDOFF_ROUTER_V1_ACTOR_NAME)
 
     /**
       * The Akka routing actor that should receive messages addressed to the Sipi responder. Subclasses can override this
       * member to substitute a custom actor instead of the default Sipi responder.
       */
-    protected val standoffRouter = makeDefaultStandoffRouter
+    protected val standoffRouterV1: ActorRef = makeDefaultStandoffRouterV1
 
     /**
       * Constructs the default Akka routing actor that routes messages to [[UsersResponderV1]].
       */
-    protected final def makeDefaultUsersRouter = makeActor(FromConfig.props(Props[UsersResponderV1]), USERS_ROUTER_ACTOR_NAME)
+    protected final def makeDefaultUsersRouterV1: ActorRef = makeActor(FromConfig.props(Props[UsersResponderV1]), USERS_ROUTER_V1_ACTOR_NAME)
 
     /**
       * The Akka routing actor that should receive messages addressed to the users responder. Subclasses can override this
       * member to substitute a custom actor instead of the default users responder.
       */
-    protected val usersRouter = makeDefaultUsersRouter
+    protected val usersRouterV1: ActorRef = makeDefaultUsersRouterV1
 
     /**
       * Constructs the default Akka routing actor that routes messages to [[ListsResponderV1]].
       */
-    protected final def makeDefaultListsRouter = makeActor(FromConfig.props(Props[ListsResponderV1]), LISTS_ROUTER_ACTOR_NAME)
+    protected final def makeDefaultListsRouterV1: ActorRef = makeActor(FromConfig.props(Props[ListsResponderV1]), LISTS_ROUTER_V1_ACTOR_NAME)
 
     /**
       * The Akka routing actor that should receive messages addressed to the lists responder. Subclasses can override this
       * member to substitute a custom actor instead of the default lists responder.
       */
-    protected val listsRouter = makeDefaultListsRouter
+    protected val listsRouterV1: ActorRef = makeDefaultListsRouterV1
 
     /**
       * Constructs the default Akka routing actor that routes messages to [[SearchResponderV1]].
       */
-    protected final def makeDefaultSearchRouter = makeActor(FromConfig.props(Props[SearchResponderV1]), SEARCH_ROUTER_ACTOR_NAME)
+    protected final def makeDefaultSearchRouterV1: ActorRef = makeActor(FromConfig.props(Props[SearchResponderV1]), SEARCH_ROUTER_V1_ACTOR_NAME)
 
     /**
       * The Akka routing actor that should receive messages addressed to the search responder. Subclasses can override this
       * member to substitute a custom actor instead of the default search responder.
       */
-    protected val searchRouter = makeDefaultSearchRouter
+    protected val searchRouterV1: ActorRef = makeDefaultSearchRouterV1
 
     /**
       * Constructs the default Akka routing actor that routes messages to [[OntologyResponderV1]].
       */
-    protected final def makeDefaultOntologyRouter = makeActor(FromConfig.props(Props[OntologyResponderV1]), ONTOLOGY_ROUTER_ACTOR_NAME)
+    protected final def makeDefaultOntologyRouterV1: ActorRef = makeActor(FromConfig.props(Props[OntologyResponderV1]), ONTOLOGY_ROUTER_V1_ACTOR_NAME)
 
     /**
       * The Akka routing actor that should receive messages addressed to the ontology responder. Subclasses can override this
       * member to substitute a custom actor instead of the default ontology responder.
       */
-    protected val ontologyRouter = makeDefaultOntologyRouter
+    protected val ontologyRouterV1: ActorRef = makeDefaultOntologyRouterV1
 
     /**
       * Constructs the default Akka routing actor that routes messages to [[ProjectsResponderV1]].
       */
-    protected final def makeDefaultProjectsRouter = makeActor(FromConfig.props(Props[ProjectsResponderV1]), PROJECTS_ROUTER_ACTOR_NAME)
+    protected final def makeDefaultProjectsRouterV1: ActorRef = makeActor(FromConfig.props(Props[ProjectsResponderV1]), PROJECTS_ROUTER_V1_ACTOR_NAME)
 
     /**
       * The Akka routing actor that should receive messages addressed to the projects responder. Subclasses can override this
       * member to substitute a custom actor instead of the default projects responder.
       */
-    protected val projectsRouter = makeDefaultProjectsRouter
+    protected val projectsRouterV1: ActorRef = makeDefaultProjectsRouterV1
 
     /**
       * Constructs the default Akka routing actor that routes messages to [[CkanResponderV1]].
       */
-    protected final def makeDefaultCkanRouter = makeActor(FromConfig.props(Props[CkanResponderV1]), CKAN_ROUTER_ACTOR_NAME)
+    protected final def makeDefaultCkanRouterV1: ActorRef = makeActor(FromConfig.props(Props[CkanResponderV1]), CKAN_ROUTER_V1_ACTOR_NAME)
 
     /**
       * The Akka routing actor that should receive messages addressed to the Ckan responder. Subclasses can override this
       * member to substitute a custom actor instead of the default Ckan responder.
       */
-    protected val ckanRouter = makeDefaultCkanRouter
+    protected val ckanRouterV1: ActorRef = makeDefaultCkanRouterV1
 
     /**
       * Constructs the default Akka routing actor that routes messages to [[StoreResponderV1]].
       */
-    protected final def makeDefaultStoreRouter = makeActor(FromConfig.props(Props[StoreResponderV1]), STORE_ROUTER_ACTOR_NAME)
+    protected final def makeDefaultStoreRouterV1: ActorRef = makeActor(FromConfig.props(Props[StoreResponderV1]), STORE_ROUTER_V1_ACTOR_NAME)
 
     /**
       * The Akka routing actor that should receive messages addressed to the Store responder. Subclasses can override this
       * member to substitute a custom actor instead of the default Store responder.
       */
-    protected val storeRouter = makeDefaultStoreRouter
+    protected val storeRouterV1: ActorRef = makeDefaultStoreRouterV1
 
     /**
       * Constructs the default Akka routing actor that routes messages to [[PermissionsResponderV1]].
       */
-    protected final def makeDefaultPermissionsRouter = makeActor(FromConfig.props(Props[PermissionsResponderV1]), PERMISSIONS_ROUTER_ACTOR_NAME)
+    protected final def makeDefaultPermissionsRouterV1: ActorRef = makeActor(FromConfig.props(Props[PermissionsResponderV1]), PERMISSIONS_ROUTER_V1_ACTOR_NAME)
 
     /**
       * The Akka routing actor that should receive messages addressed to the Permissions responder. Subclasses can override this
-      * member to substitute a custom actor instead of the default Store responder.
+      * member to substitute a custom actor instead of the default Permissions responder.
       */
-    protected val permissionsRouter = makeDefaultPermissionsRouter
+    protected val permissionsRouterV1: ActorRef = makeDefaultPermissionsRouterV1
 
     /**
       * Constructs the default Akka routing actor that routes messages to [[GroupsResponderV1]].
       */
-    protected final def makeDefaultGroupsRouter = makeActor(FromConfig.props(Props[GroupsResponderV1]), GROUPS_ROUTER_ACTOR_NAME)
+    protected final def makeDefaultGroupsRouterV1: ActorRef = makeActor(FromConfig.props(Props[GroupsResponderV1]), GROUPS_ROUTER_V1_ACTOR_NAME)
 
     /**
-      * The Akka routing actor that should receive messages addressed to the Permissions responder. Subclasses can override this
-      * member to substitute a custom actor instead of the default Store responder.
+      * The Akka routing actor that should receive messages addressed to the groups responder. Subclasses can override this
+      * member to substitute a custom actor instead of the default groups responder.
       */
-    protected val groupsRouter = makeDefaultGroupsRouter
+    protected val groupsRouterV1: ActorRef = makeDefaultGroupsRouterV1
 
     //
     // V2 responders
@@ -214,53 +217,70 @@ class ResponderManager extends Actor with ActorLogging {
     /**
       * Constructs the default Akka routing actor that routes messages to [[OntologiesResponderV2]].
       */
-    protected final def makeDefaultOntologiesRouter2 = makeActor(FromConfig.props(Props[OntologiesResponderV2]), ONTOLOGIES_ROUTER_ACTOR_NAME2)
+    protected final def makeDefaultOntologiesRouterV2: ActorRef = makeActor(FromConfig.props(Props[OntologiesResponderV2]), ONTOLOGIES_ROUTER_V2_ACTOR_NAME)
 
     /**
       * Constructs the default Akka routing actor that routes messages to [[SearchResponderV2]].
       */
-    protected final def makeDefaultSearchRouter2 = makeActor(FromConfig.props(Props[SearchResponderV2]), SEARCH_ROUTER_ACTOR_NAME2)
+    protected final def makeDefaultSearchRouterV2: ActorRef = makeActor(FromConfig.props(Props[SearchResponderV2]), SEARCH_ROUTER_V2_ACTOR_NAME)
 
     /**
       * Constructs the default Akka routing actor that routes messages to [[ResourcesResponderV2]].
       */
-    protected final def makeDefaultResourcesRouter2 = makeActor(FromConfig.props(Props[ResourcesResponderV2]), RESOURCES_ROUTER_ACTOR_NAME2)
+    protected final def makeDefaultResourcesRouterV2: ActorRef = makeActor(FromConfig.props(Props[ResourcesResponderV2]), RESOURCES_ROUTER_V2_ACTOR_NAME)
 
     /**
-      * The Akka routing actor that should receive messages addressed to the ontologies responder. Subclasses can override this
-      * member to substitute a custom actor instead of the default search responder.
+      * Constructs the default Akka routing actor that routes messages to [[PersistentMapResponderV2]].
       */
-    protected val ontologiesRouter2 = makeDefaultOntologiesRouter2
+    protected final def makeDefaultPersistentMapRouterV2: ActorRef = makeActor(FromConfig.props(Props[PersistentMapResponderV2]), PERSISTENT_MAP_ROUTER_V2_ACTOR_NAME)
+
+    /**
+      * The Akka routing actor that should receive messages addressed to the ontology responder. Subclasses can override this
+      * member to substitute a custom actor instead of the default ontology responder.
+      */
+    protected val ontologiesRouterV2: ActorRef = makeDefaultOntologiesRouterV2
 
     /**
       * The Akka routing actor that should receive messages addressed to the search responder. Subclasses can override this
       * member to substitute a custom actor instead of the default search responder.
       */
-    protected val searchRouter2 = makeDefaultSearchRouter2
+    protected val searchRouterV2: ActorRef = makeDefaultSearchRouterV2
 
     /**
       * The Akka routing actor that should receive messages addressed to the resources responder. Subclasses can override this
-      * member to substitute a custom actor instead of the default search responder.
+      * member to substitute a custom actor instead of the default resources responder.
       */
-    protected val resourcesRouter2 = makeDefaultResourcesRouter2
+    protected val resourcesRouterV2: ActorRef = makeDefaultResourcesRouterV2
+
+    /**
+      * The Akka routing actor that should receive messages addressed to the persistent map responder. Subclasses can override this
+      * member to substitute a custom actor instead of the default persistent map responder.
+      */
+    protected val persistentMapRouterV2: ActorRef = makeDefaultPersistentMapRouterV2
+
 
     def receive = LoggingReceive {
-        case resourcesResponderRequestV1: ResourcesResponderRequestV1 => resourcesRouter.forward(resourcesResponderRequestV1)
-        case valuesResponderRequest: ValuesResponderRequestV1 => valuesRouter.forward(valuesResponderRequest)
-        case sipiResponderRequest: SipiResponderRequestV1 => sipiRouter.forward(sipiResponderRequest)
-        case listsResponderRequest: ListsResponderRequestV1 => listsRouter.forward(listsResponderRequest)
-        case searchResponderRequest: SearchResponderRequestV1 => searchRouter.forward(searchResponderRequest)
-        case ontologyResponderRequest: OntologyResponderRequestV1 => ontologyRouter.forward(ontologyResponderRequest)
-        case ckanResponderRequest: CkanResponderRequestV1 => ckanRouter.forward(ckanResponderRequest)
-        case storeResponderRequest: StoreResponderRequestV1 => storeRouter.forward(storeResponderRequest)
-        case standoffResponderRequest: StandoffResponderRequestV1 => standoffRouter forward standoffResponderRequest
-		case permissionsResponderRequest: PermissionsResponderRequestV1 => permissionsRouter forward permissionsResponderRequest
-        case usersResponderRequest: UsersResponderRequestV1 => usersRouter forward usersResponderRequest
-        case projectsResponderRequest: ProjectsResponderRequestV1 => projectsRouter forward projectsResponderRequest
-        case groupsResponderRequest: GroupsResponderRequestV1 => groupsRouter forward groupsResponderRequest
-        case ontologiesResponderRequest: OntologiesResponderRequestV2 => ontologiesRouter2.forward(ontologiesResponderRequest) // V2
-        case searchResponderRequest: SearchResponderRequestV2 => searchRouter2.forward(searchResponderRequest) // V2
-        case resourcesResponderRequest: ResourcesResponderRequestV2 => resourcesRouter2.forward(resourcesResponderRequest) // V2
+        // Knora API V1 messages
+        case resourcesResponderRequestV1: ResourcesResponderRequestV1 => resourcesRouterV1.forward(resourcesResponderRequestV1)
+        case valuesResponderRequestV1: ValuesResponderRequestV1 => valuesRouterV1.forward(valuesResponderRequestV1)
+        case sipiResponderRequestV1: SipiResponderRequestV1 => sipiRouterV1.forward(sipiResponderRequestV1)
+        case listsResponderRequestV1: ListsResponderRequestV1 => listsRouterV1.forward(listsResponderRequestV1)
+        case searchResponderRequestV1: SearchResponderRequestV1 => searchRouterV1.forward(searchResponderRequestV1)
+        case ontologyResponderRequestV1: OntologyResponderRequestV1 => ontologyRouterV1.forward(ontologyResponderRequestV1)
+        case ckanResponderRequestV1: CkanResponderRequestV1 => ckanRouterV1.forward(ckanResponderRequestV1)
+        case storeResponderRequestV1: StoreResponderRequestV1 => storeRouterV1.forward(storeResponderRequestV1)
+        case standoffResponderRequestV1: StandoffResponderRequestV1 => standoffRouterV1.forward(standoffResponderRequestV1)
+		case permissionsResponderRequestV1: PermissionsResponderRequestV1 => permissionsRouterV1.forward(permissionsResponderRequestV1)
+        case usersResponderRequestV1: UsersResponderRequestV1 => usersRouterV1.forward(usersResponderRequestV1)
+        case projectsResponderRequestV1: ProjectsResponderRequestV1 => projectsRouterV1.forward(projectsResponderRequestV1)
+        case groupsResponderRequestV1: GroupsResponderRequestV1 => groupsRouterV1.forward(groupsResponderRequestV1)
+
+        // Knora API V2 messages
+        case ontologiesResponderRequestV2: OntologiesResponderRequestV2 => ontologiesRouterV2.forward(ontologiesResponderRequestV2)
+        case searchResponderRequestV2: SearchResponderRequestV2 => searchRouterV2.forward(searchResponderRequestV2)
+        case resourcesResponderRequestV2: ResourcesResponderRequestV2 => resourcesRouterV2.forward(resourcesResponderRequestV2)
+        case persistentMapResponderRequestV2: PersistentMapResponderRequestV2 => persistentMapRouterV2.forward(persistentMapResponderRequestV2)
+
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }
 }
