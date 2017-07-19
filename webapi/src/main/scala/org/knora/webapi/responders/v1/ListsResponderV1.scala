@@ -21,9 +21,11 @@
 package org.knora.webapi.responders.v1
 
 import akka.pattern._
+import org.knora
+import org.knora.webapi
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.listmessages._
-import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
+import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
 import org.knora.webapi.messages.v1.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
 import org.knora.webapi.util.ActorUtil._
 
@@ -38,6 +40,7 @@ class ListsResponderV1 extends ResponderV1 {
 
     def receive = {
         case ListsGetRequestV1(projectIri, userProfile) => future2Message(sender(), listsGetRequestV1(projectIri, userProfile), log)
+        case ListExtendedGetRequestV1(listIri, userProfile) => future2Message(sender(), listExtendedGetRequestV1(listIri, userProfile), log)
         case HListGetRequestV1(listIri, userProfile) => future2Message(sender(), listGetRequestV1(listIri, userProfile, PathType.HList), log)
         case SelectionGetRequestV1(listIri, userProfile) => future2Message(sender(), listGetRequestV1(listIri, userProfile, PathType.Selection), log)
         case NodePathGetRequestV1(iri: IRI, userProfile: UserProfileV1) => future2Message(sender(), getNodePathResponseV1(iri, userProfile), log)
@@ -89,15 +92,85 @@ class ListsResponderV1 extends ResponderV1 {
     }
 
     /**
+      * Retrieves a list from the triplestore and returns it as a [[org.knora.webapi.messages.v1.responder.listmessages.ListExtendedGetResponseV1]].
+      *
+      * @param rootNodeIri the Iri if the root node of the list to be queried.
+      * @param userProfile the profile of the user making the request.
+      * @return a [[ListExtendedGetResponseV1]].
+      */
+    def listExtendedGetRequestV1(rootNodeIri: IRI, userProfile: UserProfileV1): Future[ListExtendedGetResponseV1] = {
+
+        for {
+            sparqlQuery <- Future(queries.sparql.v1.txt.getListInfo(
+                triplestore = settings.triplestoreType,
+                rootNodeIri = rootNodeIri
+            ).toString())
+
+            listInfoResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
+
+            _ = if (listInfoResponse.results.bindings.isEmpty) {
+                throw NotFoundException(s"List not found: $rootNodeIri")
+            }
+
+            groupedListProperties: Map[String, Seq[String]] = listInfoResponse.results.bindings.groupBy(_.rowMap("p")).map {
+                case (predicate, rows) => predicate -> rows.map(_.rowMap("o"))
+            }
+
+            // _ = log.debug(s"userDataQueryResponse2UserProfile - groupedUserData: ${MessageUtil.toSource(groupedUserData)}")
+
+            listInfo: ListInfoV1 = ListInfoV1(
+                id = rootNodeIri,
+                projectIri = groupedListProperties.get(OntologyConstants.KnoraBase.AttachedToProject).map(_.head),
+                name = groupedListProperties.get(OntologyConstants.KnoraBase.ListNodeName).map(_.head),
+                comment = groupedListProperties.get(OntologyConstants.Rdfs.Comment).map(_.head),
+                label = groupedListProperties.get(OntologyConstants.Rdfs.Label).map(_.head)
+                // status = groupedListProperties.get(OntologyConstants.KnoraBase.Status).map(_.head.toBoolean)
+            )
+
+            // here we know that the list exists and it is fine if children is an empty list
+            children: Seq[ListNodeV1] <- listGetV1(rootNodeIri, userProfile)
+
+        } yield ListExtendedGetResponseV1(info = listInfo, nodes = children)
+
+    }
+
+    /**
       * Retrieves a list from the triplestore and returns it as a [[org.knora.webapi.messages.v1.responder.listmessages.ListGetResponseV1]].
       * Due to compatibility with the old, crappy SALSAH-API, "hlists" and "selection" have to be differentiated in the response
       * [[org.knora.webapi.messages.v1.responder.listmessages.ListGetResponseV1]] is the abstract super class of [[HListGetResponseV1]] and [[SelectionGetResponseV1]]
       *
       * @param rootNodeIri the Iri if the root node of the list to be queried.
+      * @param userProfile the profile of the user making the request.
       * @param pathType    the type of the list (HList or Selection).
       * @return a [[ListGetResponseV1]].
       */
-    private def listGetRequestV1(rootNodeIri: IRI, userProfile: UserProfileV1, pathType: PathType.Value): Future[ListGetResponseV1] = {
+    def listGetRequestV1(rootNodeIri: IRI, userProfile: UserProfileV1, pathType: PathType.Value): Future[ListGetResponseV1] = {
+
+        for {
+            maybeChildren <- listGetV1(rootNodeIri, userProfile)
+
+            children = maybeChildren match {
+                case children: Seq[ListNodeV1] if children.nonEmpty => children
+                case _ => throw NotFoundException(s"List not found: $rootNodeIri")
+            }
+
+            // consider routing path here ("hlists" | "selections") and return the correct case class
+            result = pathType match {
+                case PathType.HList => HListGetResponseV1(hlist = children)
+                case PathType.Selection => SelectionGetResponseV1(selection = children)
+            }
+
+        } yield result
+    }
+
+    /**
+      * Retrieves a list from the triplestore and returns it as a sequence of child nodes.
+      *
+      * @param rootNodeIri the Iri of the root node of the list to be queried.
+      * @param userProfile the profile of the user making the request.
+      * @return a sequence of [[ListNodeV1]].
+      */
+    private def listGetV1(rootNodeIri: IRI, userProfile: UserProfileV1): Future[Seq[ListNodeV1]] = {
 
         /**
           * Compares the `position`-values of two nodes
@@ -106,19 +179,19 @@ class ListsResponderV1 extends ResponderV1 {
           * @param list2 node in the same list
           * @return true if the `position` of list1 is lower than the one of list2
           */
-        def orderNodes(list1: HierarchicalListV1, list2: HierarchicalListV1): Boolean = {
+        def orderNodes(list1: ListNodeV1, list2: ListNodeV1): Boolean = {
             list1.position < list2.position
         }
 
         /**
-          * This function recursively transforms SPARQL query results representing a hierarchical list into a [[HierarchicalListV1]].
+          * This function recursively transforms SPARQL query results representing a hierarchical list into a [[ListNodeV1]].
           *
           * @param nodeIri          the IRI of the node to be created.
           * @param groupedByNodeIri a [[Map]] in which each key is the IRI of a node in the hierarchical list, and each value is a [[Seq]]
           *                         of SPARQL query results representing that node's children.
-          * @return a [[HierarchicalListV1]].
+          * @return a [[ListNodeV1]].
           */
-        def createHierarchicalListV1(nodeIri: IRI, groupedByNodeIri: Map[IRI, Seq[VariableResultsRow]], level: Int): HierarchicalListV1 = {
+        def createHierarchicalListV1(nodeIri: IRI, groupedByNodeIri: Map[IRI, Seq[VariableResultsRow]], level: Int): ListNodeV1 = {
             val childRows = groupedByNodeIri(nodeIri)
 
             /*
@@ -143,7 +216,7 @@ class ListsResponderV1 extends ResponderV1 {
 
             val firstRowMap = childRows.head.rowMap
 
-            HierarchicalListV1(
+            ListNodeV1(
                 id = nodeIri,
                 name = firstRowMap.get("nodeName"),
                 label = firstRowMap.get("label"),
@@ -157,7 +230,6 @@ class ListsResponderV1 extends ResponderV1 {
                 position = firstRowMap("position").toInt,
                 level = level
             )
-
         }
 
         for {
@@ -174,14 +246,11 @@ class ListsResponderV1 extends ResponderV1 {
             // Group the results to map each node to the SPARQL query results representing its children.
             groupedByNodeIri: Map[IRI, Seq[VariableResultsRow]] = listQueryResponse.results.bindings.groupBy(row => row.rowMap("node"))
 
-            rootNodeChildren = groupedByNodeIri.get(rootNodeIri) match {
-                case Some(resultsList) => resultsList
-                case _ => throw NotFoundException(s"List not found: $rootNodeIri")
-            }
+            rootNodeChildren = groupedByNodeIri.getOrElse(rootNodeIri, Seq.empty[VariableResultsRow])
 
-            children: Seq[HierarchicalListV1] = if (rootNodeChildren.head.rowMap.get("child").isEmpty) {
-                // The root node has no children.
-                Nil
+            children: Seq[ListNodeV1] = if (rootNodeChildren.head.rowMap.get("child").isEmpty) {
+                // The root node has no children, so we return an empty list.
+                Seq.empty[ListNodeV1]
             } else {
                 // Process each child of the root node.
                 rootNodeChildren.map {
@@ -189,20 +258,7 @@ class ListsResponderV1 extends ResponderV1 {
                 }.sortWith(orderNodes)
             }
 
-            // consider routing path here ("hlists" | "selections") and return the correct case class
-            list = pathType match {
-                case PathType.HList =>
-                    HListGetResponseV1(
-                        hlist = children
-                    )
-
-                case PathType.Selection =>
-                    SelectionGetResponseV1(
-                        selection = children
-                    )
-            }
-
-        } yield list
+        } yield children
     }
 
     /**

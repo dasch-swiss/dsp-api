@@ -22,11 +22,11 @@ import akka.http.scaladsl.model.headers._
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import com.typesafe.config.ConfigFactory
 import org.knora.webapi.messages.v1.responder.authenticatemessages.Credentials
-import org.knora.webapi.messages.v1.responder.listmessages.{ListInfoV1, ListV1JsonProtocol}
+import org.knora.webapi.messages.v1.responder.listmessages.{ListExtendedGetResponseV1, ListInfoV1, ListNodeV1, ListV1JsonProtocol}
 import org.knora.webapi.messages.v1.responder.sessionmessages.SessionJsonProtocol
 import org.knora.webapi.messages.v1.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
 import org.knora.webapi.util.{AkkaHttpUtils, MutableTestIri}
-import org.knora.webapi.{E2ESpec, IRI, SharedAdminTestData}
+import org.knora.webapi.{E2ESpec, SharedAdminTestData}
 import spray.json._
 
 import scala.concurrent.duration._
@@ -86,44 +86,6 @@ class ListsV1E2ESpec extends E2ESpec(ListsV1E2ESpec.config) with SessionJsonProt
     val imagesReviewerGroupIri = SharedAdminTestData.imagesReviewerGroupInfo.id
     val imagesReviewerGroupIriEnc = java.net.URLEncoder.encode(imagesReviewerGroupIri, "utf-8")
 
-    /**
-      * Convenience method returning the users project memberships.
-      *
-      * @param userIri     the user's IRI.
-      * @param credentials the credentials of the user making the request.
-      */
-    private def getUserProjectMemberships(userIri: IRI, credentials: Credentials): Seq[IRI] = {
-        val userIriEnc = java.net.URLEncoder.encode(userIri, "utf-8")
-        val request = Get(baseApiUrl + "/v1/users/projects/" + userIriEnc) ~> addCredentials(BasicHttpCredentials(credentials.email, credentials.password))
-        val response: HttpResponse = singleAwaitingRequest(request)
-        AkkaHttpUtils.httpResponseToJson(response).fields("projects").convertTo[Seq[IRI]]
-    }
-
-    /**
-      * Convenience method returning the users project-admin memberships.
-      *
-      * @param userIri     the user's IRI.
-      * @param credentials the credentials of the user making the request.
-      */
-    private def getUserProjectAdminMemberships(userIri: IRI, credentials: Credentials): Seq[IRI] = {
-        val userIriEnc = java.net.URLEncoder.encode(userIri, "utf-8")
-        val request = Get(baseApiUrl + "/v1/users/projects-admin/" + userIriEnc) ~> addCredentials(BasicHttpCredentials(credentials.email, credentials.password))
-        val response: HttpResponse = singleAwaitingRequest(request)
-        AkkaHttpUtils.httpResponseToJson(response).fields("projects").convertTo[Seq[IRI]]
-    }
-
-    /**
-      * Convenience method returning the users group memberships.
-      *
-      * @param userIri     the user's IRI.
-      * @param credentials the credentials of the user making the request.
-      */
-    private def getUserGroupMemberships(userIri: IRI, credentials: Credentials): Seq[IRI] = {
-        val userIriEnc = java.net.URLEncoder.encode(userIri, "utf-8")
-        val request = Get(baseApiUrl + "/v1/users/groups/" + userIriEnc) ~> addCredentials(BasicHttpCredentials(credentials.email, credentials.password))
-        val response: HttpResponse = singleAwaitingRequest(request)
-        AkkaHttpUtils.httpResponseToJson(response).fields("groups").convertTo[Seq[IRI]]
-    }
 
     "Load test data" in {
         // send POST to 'v1/store/ResetTriplestoreContent'
@@ -153,9 +115,33 @@ class ListsV1E2ESpec extends E2ESpec(ListsV1E2ESpec.config) with SessionJsonProt
 
                 val listInfos: Seq[ListInfoV1] = AkkaHttpUtils.httpResponseToJson(response).fields("lists").convertTo[Seq[ListInfoV1]]
 
-                log.debug("received: " + listInfos)
+                //log.debug("received: " + listInfos)
 
                 listInfos.size should be (4)
+            }
+
+            "return an extended list response" in {
+                val request = Get(baseApiUrl + s"/v1/lists/http%3A%2F%2Fdata.knora.org%2Flists%2F73d0ec0302") ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
+                val response: HttpResponse = singleAwaitingRequest(request)
+                // log.debug(s"response: ${response.toString}")
+                response.status should be(StatusCodes.OK)
+
+                val responseJson = AkkaHttpUtils.httpResponseToJson(response)
+                val info: ListInfoV1 = responseJson.fields("info").convertTo[ListInfoV1]
+                // val nodes: Seq[ListNodeV1] = responseJson.fields("nodes").convertTo[Seq[ListNodeV1]]
+
+                // log.debug("info: " + info)
+                // log.debug("nodes: " + nodes)
+
+                val expectedListInfo = ListInfoV1(
+                    id = "http://data.knora.org/lists/73d0ec0302",
+                    projectIri = Some("http://data.knora.org/projects/images"),
+                    name = None,
+                    comment = Some("Hierarchisches Stichwortverzeichnis / Signatur der Bilder"),
+                    label = Some("Titel")
+                )
+
+                info should be (expectedListInfo)
             }
         }
 

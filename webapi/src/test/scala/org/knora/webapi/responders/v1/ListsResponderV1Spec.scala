@@ -59,7 +59,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
     val log = akka.event.Logging(system, this.getClass())
 
     // The default timeout for receiving reply messages from actors.
-    private val timeout = 5.seconds
+    implicit val timeout = 5.seconds
 
     val rdfDataObjects = List(
         RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/images"),
@@ -72,13 +72,21 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
     // A test UserDataV1.
     private val userData = userProfile.userData
 
+    val listInfo = ListInfoV1(
+        id = "http://data.knora.org/lists/73d0ec0302",
+        projectIri = Some("http://data.knora.org/projects/images"),
+        name = None,
+        comment = Some("Hierarchisches Stichwortverzeichnis / Signatur der Bilder"),
+        label = Some("Titel")
+    )
+
     private val hKeywords = HListGetResponseV1(
         hlist = Vector(
-            HierarchicalListV1(
+            ListNodeV1(
                 position = 0,
                 level = 0,
                 children = Vector(
-                    HierarchicalListV1(
+                    ListNodeV1(
                         position = 0,
                         level = 1,
                         children = Nil,
@@ -86,7 +94,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                         name = Some("1"),
                         id = "http://data.knora.org/lists/412821d3a6"
                     ),
-                    HierarchicalListV1(
+                    ListNodeV1(
                         position = 1,
                         level = 1,
                         children = Nil,
@@ -99,14 +107,14 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                 name = Some("1ALL"),
                 id = "http://data.knora.org/lists/a8f4cd99a6"
             ),
-            HierarchicalListV1(
+            ListNodeV1(
                 position = 1,
                 level = 0,
                 children = Vector(
-                    HierarchicalListV1(
+                    ListNodeV1(
                         position = 0,
                         level = 1,
-                        children = Vector(HierarchicalListV1(
+                        children = Vector(ListNodeV1(
                             position = 0,
                             level = 2,
                             children = Nil,
@@ -118,10 +126,10 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                         name = Some("1"),
                         id = "http://data.knora.org/lists/0cc31a7fa7"
                     ),
-                    HierarchicalListV1(
+                    ListNodeV1(
                         position = 1,
                         level = 1,
-                        children = Vector(HierarchicalListV1(
+                        children = Vector(ListNodeV1(
                             position = 0,
                             level = 2,
                             children = Nil,
@@ -133,11 +141,11 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                         name = Some("2"),
                         id = "http://data.knora.org/lists/3e2ac1f1a7"
                     ),
-                    HierarchicalListV1(
+                    ListNodeV1(
                         position = 2,
                         level = 1,
                         children = Vector(
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 0,
                                 level = 2,
                                 children = Nil,
@@ -145,7 +153,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("1"),
                                 id = "http://data.knora.org/lists/09c5ba9da8"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 1,
                                 level = 2,
                                 children = Nil,
@@ -153,7 +161,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("2"),
                                 id = "http://data.knora.org/lists/a2f80dd7a8"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 2,
                                 level = 2,
                                 children = Nil,
@@ -161,7 +169,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("3"),
                                 id = "http://data.knora.org/lists/3b2c6110a9"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 3,
                                 level = 2,
                                 children = Nil,
@@ -169,7 +177,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("4"),
                                 id = "http://data.knora.org/lists/d45fb449a9"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 4,
                                 level = 2,
                                 children = Nil,
@@ -177,7 +185,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("5"),
                                 id = "http://data.knora.org/lists/6d930783a9"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 5,
                                 level = 2,
                                 children = Nil,
@@ -185,7 +193,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("6"),
                                 id = "http://data.knora.org/lists/06c75abca9"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 6,
                                 level = 2,
                                 children = Nil,
@@ -193,11 +201,11 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("7"),
                                 id = "http://data.knora.org/lists/9ffaadf5a9"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 7,
                                 level = 2,
                                 children = Vector(
-                                    HierarchicalListV1(
+                                    ListNodeV1(
                                         position = 0,
                                         level = 3,
                                         children = Nil,
@@ -205,7 +213,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("1"),
                                         id = "http://data.knora.org/lists/d1615468aa"
                                     ),
-                                    HierarchicalListV1(
+                                    ListNodeV1(
                                         position = 1,
                                         level = 3,
                                         children = Nil,
@@ -213,7 +221,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("2"),
                                         id = "http://data.knora.org/lists/6a95a7a1aa"
                                     ),
-                                    HierarchicalListV1(
+                                    ListNodeV1(
                                         position = 2,
                                         level = 3,
                                         children = Nil,
@@ -221,7 +229,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("3"),
                                         id = "http://data.knora.org/lists/03c9fadaaa"
                                     ),
-                                    HierarchicalListV1(
+                                    ListNodeV1(
                                         position = 3,
                                         level = 3,
                                         children = Nil,
@@ -229,7 +237,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("4"),
                                         id = "http://data.knora.org/lists/9cfc4d14ab"
                                     ),
-                                    HierarchicalListV1(
+                                    ListNodeV1(
                                         position = 4,
                                         level = 3,
                                         children = Nil,
@@ -237,7 +245,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("5"),
                                         id = "http://data.knora.org/lists/3530a14dab"
                                     ),
-                                    HierarchicalListV1(
+                                    ListNodeV1(
                                         position = 5,
                                         level = 3,
                                         children = Nil,
@@ -245,7 +253,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("6"),
                                         id = "http://data.knora.org/lists/ce63f486ab"
                                     ),
-                                    HierarchicalListV1(
+                                    ListNodeV1(
                                         position = 6,
                                         level = 3,
                                         children = Nil,
@@ -253,7 +261,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("7"),
                                         id = "http://data.knora.org/lists/679747c0ab"
                                     ),
-                                    HierarchicalListV1(
+                                    ListNodeV1(
                                         position = 7,
                                         level = 3,
                                         children = Nil,
@@ -261,7 +269,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("8"),
                                         id = "http://data.knora.org/lists/00cb9af9ab"
                                     ),
-                                    HierarchicalListV1(
+                                    ListNodeV1(
                                         position = 8,
                                         level = 3,
                                         children = Nil,
@@ -269,7 +277,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("9"),
                                         id = "http://data.knora.org/lists/99feed32ac"
                                     ),
-                                    HierarchicalListV1(
+                                    ListNodeV1(
                                         position = 9,
                                         level = 3,
                                         children = Nil,
@@ -277,7 +285,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("10"),
                                         id = "http://data.knora.org/lists/3232416cac"
                                     ),
-                                    HierarchicalListV1(
+                                    ListNodeV1(
                                         position = 10,
                                         level = 3,
                                         children = Nil,
@@ -285,7 +293,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("11"),
                                         id = "http://data.knora.org/lists/cb6594a5ac"
                                     ),
-                                    HierarchicalListV1(
+                                    ListNodeV1(
                                         position = 11,
                                         level = 3,
                                         children = Nil,
@@ -293,7 +301,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("12"),
                                         id = "http://data.knora.org/lists/6499e7deac"
                                     ),
-                                    HierarchicalListV1(
+                                    ListNodeV1(
                                         position = 12,
                                         level = 3,
                                         children = Nil,
@@ -301,7 +309,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("13"),
                                         id = "http://data.knora.org/lists/fdcc3a18ad"
                                     ),
-                                    HierarchicalListV1(
+                                    ListNodeV1(
                                         position = 13,
                                         level = 3,
                                         children = Nil,
@@ -309,7 +317,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("14"),
                                         id = "http://data.knora.org/lists/96008e51ad"
                                     ),
-                                    HierarchicalListV1(
+                                    ListNodeV1(
                                         position = 14,
                                         level = 3,
                                         children = Nil,
@@ -317,7 +325,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("15"),
                                         id = "http://data.knora.org/lists/2f34e18aad"
                                     ),
-                                    HierarchicalListV1(
+                                    ListNodeV1(
                                         position = 15,
                                         level = 3,
                                         children = Nil,
@@ -325,7 +333,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("16"),
                                         id = "http://data.knora.org/lists/c86734c4ad"
                                     ),
-                                    HierarchicalListV1(
+                                    ListNodeV1(
                                         position = 16,
                                         level = 3,
                                         children = Nil,
@@ -333,7 +341,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("17"),
                                         id = "http://data.knora.org/lists/619b87fdad"
                                     ),
-                                    HierarchicalListV1(
+                                    ListNodeV1(
                                         position = 17,
                                         level = 3,
                                         children = Nil,
@@ -346,11 +354,11 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("8"),
                                 id = "http://data.knora.org/lists/382e012faa"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 8,
                                 level = 2,
                                 children = Vector(
-                                    HierarchicalListV1(
+                                    ListNodeV1(
                                         position = 0,
                                         level = 3,
                                         children = Nil,
@@ -358,7 +366,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("1"),
                                         id = "http://data.knora.org/lists/2c3681a9ae"
                                     ),
-                                    HierarchicalListV1(
+                                    ListNodeV1(
                                         position = 1,
                                         level = 3,
                                         children = Nil,
@@ -366,7 +374,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("2"),
                                         id = "http://data.knora.org/lists/c569d4e2ae"
                                     ),
-                                    HierarchicalListV1(
+                                    ListNodeV1(
                                         position = 2,
                                         level = 3,
                                         children = Nil,
@@ -374,7 +382,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("3"),
                                         id = "http://data.knora.org/lists/5e9d271caf"
                                     ),
-                                    HierarchicalListV1(
+                                    ListNodeV1(
                                         position = 3,
                                         level = 3,
                                         children = Nil,
@@ -382,7 +390,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("4"),
                                         id = "http://data.knora.org/lists/f7d07a55af"
                                     ),
-                                    HierarchicalListV1(
+                                    ListNodeV1(
                                         position = 4,
                                         level = 3,
                                         children = Nil,
@@ -390,7 +398,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("5"),
                                         id = "http://data.knora.org/lists/9004ce8eaf"
                                     ),
-                                    HierarchicalListV1(
+                                    ListNodeV1(
                                         position = 5,
                                         level = 3,
                                         children = Nil,
@@ -398,7 +406,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("6"),
                                         id = "http://data.knora.org/lists/293821c8af"
                                     ),
-                                    HierarchicalListV1(
+                                    ListNodeV1(
                                         position = 6,
                                         level = 3,
                                         children = Nil,
@@ -406,7 +414,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("7"),
                                         id = "http://data.knora.org/lists/c26b7401b0"
                                     ),
-                                    HierarchicalListV1(
+                                    ListNodeV1(
                                         position = 7,
                                         level = 3,
                                         children = Nil,
@@ -414,7 +422,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("8"),
                                         id = "http://data.knora.org/lists/5b9fc73ab0"
                                     ),
-                                    HierarchicalListV1(
+                                    ListNodeV1(
                                         position = 8,
                                         level = 3,
                                         children = Nil,
@@ -422,7 +430,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("9"),
                                         id = "http://data.knora.org/lists/f4d21a74b0"
                                     ),
-                                    HierarchicalListV1(
+                                    ListNodeV1(
                                         position = 9,
                                         level = 3,
                                         children = Nil,
@@ -430,7 +438,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("10"),
                                         id = "http://data.knora.org/lists/8d066eadb0"
                                     ),
-                                    HierarchicalListV1(
+                                    ListNodeV1(
                                         position = 10,
                                         level = 3,
                                         children = Nil,
@@ -438,7 +446,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("11"),
                                         id = "http://data.knora.org/lists/263ac1e6b0"
                                     ),
-                                    HierarchicalListV1(
+                                    ListNodeV1(
                                         position = 11,
                                         level = 3,
                                         children = Nil,
@@ -446,7 +454,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("12"),
                                         id = "http://data.knora.org/lists/bf6d1420b1"
                                     ),
-                                    HierarchicalListV1(
+                                    ListNodeV1(
                                         position = 12,
                                         level = 3,
                                         children = Nil,
@@ -454,7 +462,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("13"),
                                         id = "http://data.knora.org/lists/58a16759b1"
                                     ),
-                                    HierarchicalListV1(
+                                    ListNodeV1(
                                         position = 13,
                                         level = 3,
                                         children = Nil,
@@ -462,7 +470,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("14"),
                                         id = "http://data.knora.org/lists/f1d4ba92b1"
                                     ),
-                                    HierarchicalListV1(
+                                    ListNodeV1(
                                         position = 14,
                                         level = 3,
                                         children = Nil,
@@ -470,7 +478,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("15"),
                                         id = "http://data.knora.org/lists/8a080eccb1"
                                     ),
-                                    HierarchicalListV1(
+                                    ListNodeV1(
                                         position = 15,
                                         level = 3,
                                         children = Nil,
@@ -478,7 +486,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("16"),
                                         id = "http://data.knora.org/lists/233c6105b2"
                                     ),
-                                    HierarchicalListV1(
+                                    ListNodeV1(
                                         position = 16,
                                         level = 3,
                                         children = Nil,
@@ -486,7 +494,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("17"),
                                         id = "http://data.knora.org/lists/bc6fb43eb2"
                                     ),
-                                    HierarchicalListV1(
+                                    ListNodeV1(
                                         position = 17,
                                         level = 3,
                                         children = Nil,
@@ -504,11 +512,11 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                         name = Some("3"),
                         id = "http://data.knora.org/lists/70916764a8"
                     ),
-                    HierarchicalListV1(
+                    ListNodeV1(
                         position = 3,
                         level = 1,
                         children = Vector(
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 0,
                                 level = 2,
                                 children = Nil,
@@ -516,7 +524,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("1"),
                                 id = "http://data.knora.org/lists/870aaeeab2"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 1,
                                 level = 2,
                                 children = Nil,
@@ -524,7 +532,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("2"),
                                 id = "http://data.knora.org/lists/203e0124b3"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 2,
                                 level = 2,
                                 children = Nil,
@@ -532,7 +540,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("3"),
                                 id = "http://data.knora.org/lists/b971545db3"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 3,
                                 level = 2,
                                 children = Nil,
@@ -540,7 +548,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("4"),
                                 id = "http://data.knora.org/lists/52a5a796b3"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 4,
                                 level = 2,
                                 children = Nil,
@@ -548,7 +556,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("5"),
                                 id = "http://data.knora.org/lists/ebd8facfb3"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 5,
                                 level = 2,
                                 children = Nil,
@@ -556,7 +564,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("6"),
                                 id = "http://data.knora.org/lists/840c4e09b4"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 6,
                                 level = 2,
                                 children = Nil,
@@ -569,11 +577,11 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                         name = Some("4"),
                         id = "http://data.knora.org/lists/eed65ab1b2"
                     ),
-                    HierarchicalListV1(
+                    ListNodeV1(
                         position = 4,
                         level = 1,
                         children = Vector(
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 0,
                                 level = 2,
                                 children = Nil,
@@ -581,7 +589,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("1"),
                                 id = "http://data.knora.org/lists/4fa747b5b4"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 1,
                                 level = 2,
                                 children = Nil,
@@ -589,7 +597,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("2"),
                                 id = "http://data.knora.org/lists/e8da9aeeb4"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 2,
                                 level = 2,
                                 children = Nil,
@@ -602,11 +610,11 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                         name = Some("5"),
                         id = "http://data.knora.org/lists/b673f47bb4"
                     ),
-                    HierarchicalListV1(
+                    ListNodeV1(
                         position = 5,
                         level = 1,
                         children = Vector(
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 0,
                                 level = 2,
                                 children = Nil,
@@ -614,7 +622,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("1"),
                                 id = "http://data.knora.org/lists/1a424161b5"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 1,
                                 level = 2,
                                 children = Nil,
@@ -632,11 +640,11 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                 name = Some("2GEO"),
                 id = "http://data.knora.org/lists/738fc745a7"
             ),
-            HierarchicalListV1(
+            ListNodeV1(
                 position = 2,
                 level = 0,
                 children = Vector(
-                    HierarchicalListV1(
+                    ListNodeV1(
                         position = 0,
                         level = 1,
                         children = Nil,
@@ -644,7 +652,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                         name = Some("1"),
                         id = "http://data.knora.org/lists/de02f5180501"
                     ),
-                    HierarchicalListV1(
+                    ListNodeV1(
                         position = 1,
                         level = 1,
                         children = Nil,
@@ -652,7 +660,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                         name = Some("2"),
                         id = "http://data.knora.org/lists/773648520501"
                     ),
-                    HierarchicalListV1(
+                    ListNodeV1(
                         position = 2,
                         level = 1,
                         children = Nil,
@@ -660,7 +668,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                         name = Some("3"),
                         id = "http://data.knora.org/lists/106a9b8b0501"
                     ),
-                    HierarchicalListV1(
+                    ListNodeV1(
                         position = 3,
                         level = 1,
                         children = Nil,
@@ -668,15 +676,15 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                         name = Some("4"),
                         id = "http://data.knora.org/lists/a99deec40501"
                     ),
-                    HierarchicalListV1(
+                    ListNodeV1(
                         position = 4,
                         level = 1,
                         children = Vector(
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 0,
                                 level = 2,
                                 children = Vector(
-                                    HierarchicalListV1(
+                                    ListNodeV1(
                                         position = 0,
                                         level = 3,
                                         children = Nil,
@@ -684,7 +692,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("1"),
                                         id = "http://data.knora.org/lists/1744e17fb6"
                                     ),
-                                    HierarchicalListV1(
+                                    ListNodeV1(
                                         position = 1,
                                         level = 3,
                                         children = Nil,
@@ -692,7 +700,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("2"),
                                         id = "http://data.knora.org/lists/b07734b9b6"
                                     ),
-                                    HierarchicalListV1(
+                                    ListNodeV1(
                                         position = 2,
                                         level = 3,
                                         children = Nil,
@@ -700,7 +708,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("3"),
                                         id = "http://data.knora.org/lists/49ab87f2b6"
                                     ),
-                                    HierarchicalListV1(
+                                    ListNodeV1(
                                         position = 3,
                                         level = 3,
                                         children = Nil,
@@ -708,7 +716,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("4"),
                                         id = "http://data.knora.org/lists/e2deda2bb7"
                                     ),
-                                    HierarchicalListV1(
+                                    ListNodeV1(
                                         position = 4,
                                         level = 3,
                                         children = Nil,
@@ -716,7 +724,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("5"),
                                         id = "http://data.knora.org/lists/7b122e65b7"
                                     ),
-                                    HierarchicalListV1(
+                                    ListNodeV1(
                                         position = 5,
                                         level = 3,
                                         children = Nil,
@@ -724,7 +732,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("6"),
                                         id = "http://data.knora.org/lists/1446819eb7"
                                     ),
-                                    HierarchicalListV1(
+                                    ListNodeV1(
                                         position = 6,
                                         level = 3,
                                         children = Nil,
@@ -732,7 +740,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("7"),
                                         id = "http://data.knora.org/lists/ad79d4d7b7"
                                     ),
-                                    HierarchicalListV1(
+                                    ListNodeV1(
                                         position = 7,
                                         level = 3,
                                         children = Nil,
@@ -740,7 +748,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("8"),
                                         id = "http://data.knora.org/lists/46ad2711b8"
                                     ),
-                                    HierarchicalListV1(
+                                    ListNodeV1(
                                         position = 8,
                                         level = 3,
                                         children = Nil,
@@ -748,7 +756,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("9"),
                                         id = "http://data.knora.org/lists/dfe07a4ab8"
                                     ),
-                                    HierarchicalListV1(
+                                    ListNodeV1(
                                         position = 9,
                                         level = 3,
                                         children = Nil,
@@ -756,7 +764,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("10"),
                                         id = "http://data.knora.org/lists/7814ce83b8"
                                     ),
-                                    HierarchicalListV1(
+                                    ListNodeV1(
                                         position = 10,
                                         level = 3,
                                         children = Nil,
@@ -764,7 +772,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("11"),
                                         id = "http://data.knora.org/lists/114821bdb8"
                                     ),
-                                    HierarchicalListV1(
+                                    ListNodeV1(
                                         position = 11,
                                         level = 3,
                                         children = Nil,
@@ -772,7 +780,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("12"),
                                         id = "http://data.knora.org/lists/aa7b74f6b8"
                                     ),
-                                    HierarchicalListV1(
+                                    ListNodeV1(
                                         position = 12,
                                         level = 3,
                                         children = Nil,
@@ -780,7 +788,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("13"),
                                         id = "http://data.knora.org/lists/43afc72fb9"
                                     ),
-                                    HierarchicalListV1(
+                                    ListNodeV1(
                                         position = 13,
                                         level = 3,
                                         children = Nil,
@@ -788,7 +796,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("14"),
                                         id = "http://data.knora.org/lists/dce21a69b9"
                                     ),
-                                    HierarchicalListV1(
+                                    ListNodeV1(
                                         position = 14,
                                         level = 3,
                                         children = Nil,
@@ -796,7 +804,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("15"),
                                         id = "http://data.knora.org/lists/75166ea2b9"
                                     ),
-                                    HierarchicalListV1(
+                                    ListNodeV1(
                                         position = 15,
                                         level = 3,
                                         children = Nil,
@@ -804,7 +812,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("16"),
                                         id = "http://data.knora.org/lists/0e4ac1dbb9"
                                     ),
-                                    HierarchicalListV1(
+                                    ListNodeV1(
                                         position = 16,
                                         level = 3,
                                         children = Nil,
@@ -812,7 +820,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("17"),
                                         id = "http://data.knora.org/lists/a77d1415ba"
                                     ),
-                                    HierarchicalListV1(
+                                    ListNodeV1(
                                         position = 17,
                                         level = 3,
                                         children = Nil,
@@ -820,7 +828,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("18"),
                                         id = "http://data.knora.org/lists/40b1674eba"
                                     ),
-                                    HierarchicalListV1(
+                                    ListNodeV1(
                                         position = 18,
                                         level = 3,
                                         children = Nil,
@@ -828,7 +836,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("19"),
                                         id = "http://data.knora.org/lists/d9e4ba87ba"
                                     ),
-                                    HierarchicalListV1(
+                                    ListNodeV1(
                                         position = 19,
                                         level = 3,
                                         children = Nil,
@@ -836,7 +844,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("20"),
                                         id = "http://data.knora.org/lists/72180ec1ba"
                                     ),
-                                    HierarchicalListV1(
+                                    ListNodeV1(
                                         position = 20,
                                         level = 3,
                                         children = Nil,
@@ -844,7 +852,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("21"),
                                         id = "http://data.knora.org/lists/0b4c61faba"
                                     ),
-                                    HierarchicalListV1(
+                                    ListNodeV1(
                                         position = 21,
                                         level = 3,
                                         children = Nil,
@@ -852,7 +860,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("22"),
                                         id = "http://data.knora.org/lists/a47fb433bb"
                                     ),
-                                    HierarchicalListV1(
+                                    ListNodeV1(
                                         position = 22,
                                         level = 3,
                                         children = Nil,
@@ -860,7 +868,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("23"),
                                         id = "http://data.knora.org/lists/3db3076dbb"
                                     ),
-                                    HierarchicalListV1(
+                                    ListNodeV1(
                                         position = 23,
                                         level = 3,
                                         children = Nil,
@@ -868,7 +876,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("24"),
                                         id = "http://data.knora.org/lists/d6e65aa6bb"
                                     ),
-                                    HierarchicalListV1(
+                                    ListNodeV1(
                                         position = 24,
                                         level = 3,
                                         children = Nil,
@@ -876,7 +884,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("25"),
                                         id = "http://data.knora.org/lists/6f1aaedfbb"
                                     ),
-                                    HierarchicalListV1(
+                                    ListNodeV1(
                                         position = 25,
                                         level = 3,
                                         children = Nil,
@@ -889,7 +897,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("1"),
                                 id = "http://data.knora.org/lists/7e108e46b6"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 1,
                                 level = 2,
                                 children = Nil,
@@ -897,7 +905,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("2"),
                                 id = "http://data.knora.org/lists/a1815452bc"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 2,
                                 level = 2,
                                 children = Nil,
@@ -905,7 +913,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("3"),
                                 id = "http://data.knora.org/lists/3ab5a78bbc"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 3,
                                 level = 2,
                                 children = Nil,
@@ -913,7 +921,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("4"),
                                 id = "http://data.knora.org/lists/d3e8fac4bc"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 4,
                                 level = 2,
                                 children = Nil,
@@ -921,7 +929,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("5"),
                                 id = "http://data.knora.org/lists/6c1c4efebc"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 5,
                                 level = 2,
                                 children = Nil,
@@ -929,7 +937,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("6"),
                                 id = "http://data.knora.org/lists/0550a137bd"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 6,
                                 level = 2,
                                 children = Nil,
@@ -942,7 +950,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                         name = Some("5"),
                         id = "http://data.knora.org/lists/e5dc3a0db6"
                     ),
-                    HierarchicalListV1(
+                    ListNodeV1(
                         position = 5,
                         level = 1,
                         children = Nil,
@@ -950,7 +958,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                         name = Some("7"),
                         id = "http://data.knora.org/lists/37b747aabd"
                     ),
-                    HierarchicalListV1(
+                    ListNodeV1(
                         position = 6,
                         level = 1,
                         children = Nil,
@@ -963,15 +971,15 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                 name = Some("3GES"),
                 id = "http://data.knora.org/lists/4ca9e7d3b5"
             ),
-            HierarchicalListV1(
+            ListNodeV1(
                 position = 3,
                 level = 0,
                 children = Vector(
-                    HierarchicalListV1(
+                    ListNodeV1(
                         position = 0,
                         level = 1,
                         children = Vector(
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 0,
                                 level = 2,
                                 children = Nil,
@@ -979,7 +987,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("1"),
                                 id = "http://data.knora.org/lists/9b85948fbe"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 1,
                                 level = 2,
                                 children = Nil,
@@ -987,7 +995,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("2"),
                                 id = "http://data.knora.org/lists/34b9e7c8be"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 2,
                                 level = 2,
                                 children = Nil,
@@ -995,7 +1003,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("3"),
                                 id = "http://data.knora.org/lists/cdec3a02bf"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 3,
                                 level = 2,
                                 children = Nil,
@@ -1003,7 +1011,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("4"),
                                 id = "http://data.knora.org/lists/66208e3bbf"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 4,
                                 level = 2,
                                 children = Nil,
@@ -1016,11 +1024,11 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                         name = Some("5"),
                         id = "http://data.knora.org/lists/02524156be"
                     ),
-                    HierarchicalListV1(
+                    ListNodeV1(
                         position = 1,
                         level = 1,
                         children = Vector(
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 0,
                                 level = 2,
                                 children = Nil,
@@ -1028,7 +1036,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("1"),
                                 id = "http://data.knora.org/lists/31bb87e7bf"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 1,
                                 level = 2,
                                 children = Nil,
@@ -1036,7 +1044,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("2"),
                                 id = "http://data.knora.org/lists/caeeda20c0"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 2,
                                 level = 2,
                                 children = Nil,
@@ -1044,7 +1052,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("3"),
                                 id = "http://data.knora.org/lists/63222e5ac0"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 3,
                                 level = 2,
                                 children = Nil,
@@ -1052,7 +1060,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("4"),
                                 id = "http://data.knora.org/lists/fc558193c0"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 4,
                                 level = 2,
                                 children = Nil,
@@ -1065,11 +1073,11 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                         name = Some("6"),
                         id = "http://data.knora.org/lists/988734aebf"
                     ),
-                    HierarchicalListV1(
+                    ListNodeV1(
                         position = 2,
                         level = 1,
                         children = Vector(
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 0,
                                 level = 2,
                                 children = Nil,
@@ -1077,7 +1085,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("1"),
                                 id = "http://data.knora.org/lists/c7f07a3fc1"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 1,
                                 level = 2,
                                 children = Nil,
@@ -1085,7 +1093,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("2"),
                                 id = "http://data.knora.org/lists/6024ce78c1"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 2,
                                 level = 2,
                                 children = Nil,
@@ -1098,11 +1106,11 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                         name = Some("7"),
                         id = "http://data.knora.org/lists/2ebd2706c1"
                     ),
-                    HierarchicalListV1(
+                    ListNodeV1(
                         position = 3,
                         level = 1,
                         children = Vector(
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 0,
                                 level = 2,
                                 children = Nil,
@@ -1110,7 +1118,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("1"),
                                 id = "http://data.knora.org/lists/2bbfc724c2"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 1,
                                 level = 2,
                                 children = Nil,
@@ -1118,7 +1126,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("2"),
                                 id = "http://data.knora.org/lists/c4f21a5ec2"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 2,
                                 level = 2,
                                 children = Nil,
@@ -1126,7 +1134,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("3"),
                                 id = "http://data.knora.org/lists/5d266e97c2"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 3,
                                 level = 2,
                                 children = Nil,
@@ -1134,7 +1142,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("4"),
                                 id = "http://data.knora.org/lists/f659c1d0c2"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 4,
                                 level = 2,
                                 children = Nil,
@@ -1142,7 +1150,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("5"),
                                 id = "http://data.knora.org/lists/8f8d140ac3"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 5,
                                 level = 2,
                                 children = Nil,
@@ -1155,11 +1163,11 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                         name = Some("8"),
                         id = "http://data.knora.org/lists/928b74ebc1"
                     ),
-                    HierarchicalListV1(
+                    ListNodeV1(
                         position = 4,
                         level = 1,
                         children = Vector(
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 0,
                                 level = 2,
                                 children = Nil,
@@ -1167,7 +1175,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("1"),
                                 id = "http://data.knora.org/lists/5a280eb6c3"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 1,
                                 level = 2,
                                 children = Nil,
@@ -1175,7 +1183,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("2"),
                                 id = "http://data.knora.org/lists/f35b61efc3"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 2,
                                 level = 2,
                                 children = Nil,
@@ -1188,11 +1196,11 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                         name = Some("9"),
                         id = "http://data.knora.org/lists/c1f4ba7cc3"
                     ),
-                    HierarchicalListV1(
+                    ListNodeV1(
                         position = 5,
                         level = 1,
                         children = Vector(
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 0,
                                 level = 2,
                                 children = Nil,
@@ -1200,7 +1208,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("1"),
                                 id = "http://data.knora.org/lists/bef65a9bc4"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 1,
                                 level = 2,
                                 children = Nil,
@@ -1218,11 +1226,11 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                 name = Some("4KUN"),
                 id = "http://data.knora.org/lists/691eee1cbe"
             ),
-            HierarchicalListV1(
+            ListNodeV1(
                 position = 4,
                 level = 0,
                 children = Vector(
-                    HierarchicalListV1(
+                    ListNodeV1(
                         position = 0,
                         level = 1,
                         children = Nil,
@@ -1230,11 +1238,11 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                         name = Some("1"),
                         id = "http://data.knora.org/lists/89915447c5"
                     ),
-                    HierarchicalListV1(
+                    ListNodeV1(
                         position = 1,
                         level = 1,
                         children = Vector(
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 0,
                                 level = 2,
                                 children = Nil,
@@ -1242,7 +1250,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("1"),
                                 id = "http://data.knora.org/lists/bbf8fab9c5"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 1,
                                 level = 2,
                                 children = Nil,
@@ -1255,7 +1263,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                         name = Some("3"),
                         id = "http://data.knora.org/lists/22c5a780c5"
                     ),
-                    HierarchicalListV1(
+                    ListNodeV1(
                         position = 2,
                         level = 1,
                         children = Nil,
@@ -1268,15 +1276,15 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                 name = Some("5MED"),
                 id = "http://data.knora.org/lists/f05d010ec5"
             ),
-            HierarchicalListV1(
+            ListNodeV1(
                 position = 5,
                 level = 0,
                 children = Vector(
-                    HierarchicalListV1(
+                    ListNodeV1(
                         position = 0,
                         level = 1,
                         children = Vector(
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 0,
                                 level = 2,
                                 children = Nil,
@@ -1284,7 +1292,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("1"),
                                 id = "http://data.knora.org/lists/b8fa9ad8c6"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 1,
                                 level = 2,
                                 children = Nil,
@@ -1292,7 +1300,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("2"),
                                 id = "http://data.knora.org/lists/512eee11c7"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 2,
                                 level = 2,
                                 children = Nil,
@@ -1305,11 +1313,11 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                         name = Some("2"),
                         id = "http://data.knora.org/lists/1fc7479fc6"
                     ),
-                    HierarchicalListV1(
+                    ListNodeV1(
                         position = 1,
                         level = 1,
                         children = Vector(
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 0,
                                 level = 2,
                                 children = Nil,
@@ -1317,7 +1325,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("1"),
                                 id = "http://data.knora.org/lists/1cc9e7bdc7"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 1,
                                 level = 2,
                                 children = Nil,
@@ -1330,7 +1338,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                         name = Some("3"),
                         id = "http://data.knora.org/lists/83959484c7"
                     ),
-                    HierarchicalListV1(
+                    ListNodeV1(
                         position = 2,
                         level = 1,
                         children = Nil,
@@ -1338,11 +1346,11 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                         name = Some("4"),
                         id = "http://data.knora.org/lists/4e308e30c8"
                     ),
-                    HierarchicalListV1(
+                    ListNodeV1(
                         position = 3,
                         level = 1,
                         children = Vector(
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 0,
                                 level = 2,
                                 children = Nil,
@@ -1350,7 +1358,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("1"),
                                 id = "http://data.knora.org/lists/809734a3c8"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 1,
                                 level = 2,
                                 children = Nil,
@@ -1358,7 +1366,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("2"),
                                 id = "http://data.knora.org/lists/19cb87dcc8"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 2,
                                 level = 2,
                                 children = Nil,
@@ -1366,7 +1374,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("3"),
                                 id = "http://data.knora.org/lists/b2feda15c9"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 3,
                                 level = 2,
                                 children = Nil,
@@ -1379,7 +1387,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                         name = Some("5"),
                         id = "http://data.knora.org/lists/e763e169c8"
                     ),
-                    HierarchicalListV1(
+                    ListNodeV1(
                         position = 4,
                         level = 1,
                         children = Nil,
@@ -1392,13 +1400,13 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                 name = Some("6NAT"),
                 id = "http://data.knora.org/lists/8693f465c6"
             ),
-            HierarchicalListV1(
+            ListNodeV1(
                 position = 6,
                 level = 0,
-                children = Vector(HierarchicalListV1(
+                children = Vector(ListNodeV1(
                     position = 0,
                     level = 1,
-                    children = Vector(HierarchicalListV1(
+                    children = Vector(ListNodeV1(
                         position = 0,
                         level = 2,
                         children = Nil,
@@ -1414,11 +1422,11 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                 name = Some("7REL"),
                 id = "http://data.knora.org/lists/7d99d4c1c9"
             ),
-            HierarchicalListV1(
+            ListNodeV1(
                 position = 7,
                 level = 0,
                 children = Vector(
-                    HierarchicalListV1(
+                    ListNodeV1(
                         position = 0,
                         level = 1,
                         children = Nil,
@@ -1426,11 +1434,11 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                         name = Some("1"),
                         id = "http://data.knora.org/lists/e16721a7ca"
                     ),
-                    HierarchicalListV1(
+                    ListNodeV1(
                         position = 1,
                         level = 1,
                         children = Vector(
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 0,
                                 level = 2,
                                 children = Nil,
@@ -1438,7 +1446,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("1"),
                                 id = "http://data.knora.org/lists/13cfc719cb"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 1,
                                 level = 2,
                                 children = Nil,
@@ -1446,7 +1454,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("2"),
                                 id = "http://data.knora.org/lists/ac021b53cb"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 2,
                                 level = 2,
                                 children = Nil,
@@ -1454,7 +1462,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("3"),
                                 id = "http://data.knora.org/lists/45366e8ccb"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 3,
                                 level = 2,
                                 children = Nil,
@@ -1467,7 +1475,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                         name = Some("2"),
                         id = "http://data.knora.org/lists/7a9b74e0ca"
                     ),
-                    HierarchicalListV1(
+                    ListNodeV1(
                         position = 2,
                         level = 1,
                         children = Nil,
@@ -1475,11 +1483,11 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                         name = Some("3"),
                         id = "http://data.knora.org/lists/779d14ffcb"
                     ),
-                    HierarchicalListV1(
+                    ListNodeV1(
                         position = 3,
                         level = 1,
                         children = Vector(
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 0,
                                 level = 2,
                                 children = Nil,
@@ -1487,7 +1495,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("1"),
                                 id = "http://data.knora.org/lists/a904bb71cc"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 1,
                                 level = 2,
                                 children = Nil,
@@ -1495,7 +1503,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("2"),
                                 id = "http://data.knora.org/lists/42380eabcc"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 2,
                                 level = 2,
                                 children = Nil,
@@ -1503,7 +1511,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("3"),
                                 id = "http://data.knora.org/lists/db6b61e4cc"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 3,
                                 level = 2,
                                 children = Nil,
@@ -1511,7 +1519,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("4"),
                                 id = "http://data.knora.org/lists/749fb41dcd"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 4,
                                 level = 2,
                                 children = Nil,
@@ -1519,7 +1527,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("5"),
                                 id = "http://data.knora.org/lists/0dd30757cd"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 5,
                                 level = 2,
                                 children = Nil,
@@ -1532,7 +1540,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                         name = Some("4"),
                         id = "http://data.knora.org/lists/10d16738cc"
                     ),
-                    HierarchicalListV1(
+                    ListNodeV1(
                         position = 4,
                         level = 1,
                         children = Nil,
@@ -1540,7 +1548,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                         name = Some("6"),
                         id = "http://data.knora.org/lists/3f3aaec9cd"
                     ),
-                    HierarchicalListV1(
+                    ListNodeV1(
                         position = 5,
                         level = 1,
                         children = Nil,
@@ -1553,15 +1561,15 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                 name = Some("8SOZ"),
                 id = "http://data.knora.org/lists/4834ce6dca"
             ),
-            HierarchicalListV1(
+            ListNodeV1(
                 position = 8,
                 level = 0,
                 children = Vector(
-                    HierarchicalListV1(
+                    ListNodeV1(
                         position = 0,
                         level = 1,
                         children = Vector(
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 0,
                                 level = 2,
                                 children = Nil,
@@ -1569,7 +1577,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("1"),
                                 id = "http://data.knora.org/lists/a308fbaece"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 1,
                                 level = 2,
                                 children = Nil,
@@ -1577,7 +1585,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("2"),
                                 id = "http://data.knora.org/lists/3c3c4ee8ce"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 2,
                                 level = 2,
                                 children = Nil,
@@ -1585,7 +1593,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("3"),
                                 id = "http://data.knora.org/lists/d56fa121cf"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 3,
                                 level = 2,
                                 children = Nil,
@@ -1593,7 +1601,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("4"),
                                 id = "http://data.knora.org/lists/6ea3f45acf"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 4,
                                 level = 2,
                                 children = Nil,
@@ -1601,7 +1609,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("5"),
                                 id = "http://data.knora.org/lists/07d74794cf"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 5,
                                 level = 2,
                                 children = Nil,
@@ -1609,7 +1617,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("6"),
                                 id = "http://data.knora.org/lists/a00a9bcdcf"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 6,
                                 level = 2,
                                 children = Nil,
@@ -1617,7 +1625,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("7"),
                                 id = "http://data.knora.org/lists/393eee06d0"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 7,
                                 level = 2,
                                 children = Nil,
@@ -1625,7 +1633,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("8"),
                                 id = "http://data.knora.org/lists/d2714140d0"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 8,
                                 level = 2,
                                 children = Nil,
@@ -1633,7 +1641,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("9"),
                                 id = "http://data.knora.org/lists/6ba59479d0"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 9,
                                 level = 2,
                                 children = Nil,
@@ -1641,7 +1649,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("10"),
                                 id = "http://data.knora.org/lists/04d9e7b2d0"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 10,
                                 level = 2,
                                 children = Nil,
@@ -1649,7 +1657,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("11"),
                                 id = "http://data.knora.org/lists/9d0c3becd0"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 11,
                                 level = 2,
                                 children = Nil,
@@ -1657,7 +1665,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("12"),
                                 id = "http://data.knora.org/lists/36408e25d1"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 12,
                                 level = 2,
                                 children = Nil,
@@ -1665,7 +1673,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("13"),
                                 id = "http://data.knora.org/lists/cf73e15ed1"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 13,
                                 level = 2,
                                 children = Nil,
@@ -1678,11 +1686,11 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                         name = Some("0"),
                         id = "http://data.knora.org/lists/0ad5a775ce"
                     ),
-                    HierarchicalListV1(
+                    ListNodeV1(
                         position = 1,
                         level = 1,
                         children = Vector(
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 0,
                                 level = 2,
                                 children = Nil,
@@ -1690,7 +1698,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("1"),
                                 id = "http://data.knora.org/lists/9a0edb0ad2"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 1,
                                 level = 2,
                                 children = Nil,
@@ -1698,7 +1706,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("2"),
                                 id = "http://data.knora.org/lists/33422e44d2"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 2,
                                 level = 2,
                                 children = Nil,
@@ -1706,7 +1714,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("3"),
                                 id = "http://data.knora.org/lists/cc75817dd2"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 3,
                                 level = 2,
                                 children = Nil,
@@ -1714,7 +1722,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("4"),
                                 id = "http://data.knora.org/lists/65a9d4b6d2"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 4,
                                 level = 2,
                                 children = Nil,
@@ -1727,11 +1735,11 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                         name = Some("1"),
                         id = "http://data.knora.org/lists/01db87d1d1"
                     ),
-                    HierarchicalListV1(
+                    ListNodeV1(
                         position = 2,
                         level = 1,
                         children = Vector(
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 0,
                                 level = 2,
                                 children = Nil,
@@ -1739,7 +1747,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("1"),
                                 id = "http://data.knora.org/lists/3044ce62d3"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 1,
                                 level = 2,
                                 children = Nil,
@@ -1747,7 +1755,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("2"),
                                 id = "http://data.knora.org/lists/c977219cd3"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 2,
                                 level = 2,
                                 children = Nil,
@@ -1755,7 +1763,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("3"),
                                 id = "http://data.knora.org/lists/62ab74d5d3"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 3,
                                 level = 2,
                                 children = Nil,
@@ -1763,7 +1771,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("4"),
                                 id = "http://data.knora.org/lists/fbdec70ed4"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 4,
                                 level = 2,
                                 children = Nil,
@@ -1771,7 +1779,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("5"),
                                 id = "http://data.knora.org/lists/94121b48d4"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 5,
                                 level = 2,
                                 children = Nil,
@@ -1779,7 +1787,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("6"),
                                 id = "http://data.knora.org/lists/2d466e81d4"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 6,
                                 level = 2,
                                 children = Nil,
@@ -1792,7 +1800,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                         name = Some("2"),
                         id = "http://data.knora.org/lists/97107b29d3"
                     ),
-                    HierarchicalListV1(
+                    ListNodeV1(
                         position = 3,
                         level = 1,
                         children = Nil,
@@ -1800,11 +1808,11 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                         name = Some("2-2"),
                         id = "http://data.knora.org/lists/5fad14f4d4"
                     ),
-                    HierarchicalListV1(
+                    ListNodeV1(
                         position = 4,
                         level = 1,
                         children = Vector(
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 0,
                                 level = 2,
                                 children = Nil,
@@ -1812,7 +1820,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("1"),
                                 id = "http://data.knora.org/lists/9114bb66d5"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 1,
                                 level = 2,
                                 children = Nil,
@@ -1820,7 +1828,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("2"),
                                 id = "http://data.knora.org/lists/2a480ea0d5"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 2,
                                 level = 2,
                                 children = Nil,
@@ -1828,7 +1836,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("3"),
                                 id = "http://data.knora.org/lists/c37b61d9d5"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 3,
                                 level = 2,
                                 children = Nil,
@@ -1836,7 +1844,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("4"),
                                 id = "http://data.knora.org/lists/5cafb412d6"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 4,
                                 level = 2,
                                 children = Nil,
@@ -1844,7 +1852,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("5"),
                                 id = "http://data.knora.org/lists/f5e2074cd6"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 5,
                                 level = 2,
                                 children = Nil,
@@ -1852,7 +1860,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("6"),
                                 id = "http://data.knora.org/lists/8e165b85d6"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 6,
                                 level = 2,
                                 children = Nil,
@@ -1860,7 +1868,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("7"),
                                 id = "http://data.knora.org/lists/274aaebed6"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 7,
                                 level = 2,
                                 children = Nil,
@@ -1873,11 +1881,11 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                         name = Some("2-3"),
                         id = "http://data.knora.org/lists/f8e0672dd5"
                     ),
-                    HierarchicalListV1(
+                    ListNodeV1(
                         position = 5,
                         level = 1,
                         children = Vector(
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 0,
                                 level = 2,
                                 children = Nil,
@@ -1885,7 +1893,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("1"),
                                 id = "http://data.knora.org/lists/f2e4a76ad7"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 1,
                                 level = 2,
                                 children = Nil,
@@ -1898,7 +1906,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                         name = Some("2-4"),
                         id = "http://data.knora.org/lists/59b15431d7"
                     ),
-                    HierarchicalListV1(
+                    ListNodeV1(
                         position = 6,
                         level = 1,
                         children = Nil,
@@ -1906,11 +1914,11 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                         name = Some("2-5"),
                         id = "http://data.knora.org/lists/244c4eddd7"
                     ),
-                    HierarchicalListV1(
+                    ListNodeV1(
                         position = 7,
                         level = 1,
                         children = Vector(
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 0,
                                 level = 2,
                                 children = Nil,
@@ -1918,7 +1926,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("1"),
                                 id = "http://data.knora.org/lists/56b3f44fd8"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 1,
                                 level = 2,
                                 children = Nil,
@@ -1931,11 +1939,11 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                         name = Some("3"),
                         id = "http://data.knora.org/lists/bd7fa116d8"
                     ),
-                    HierarchicalListV1(
+                    ListNodeV1(
                         position = 8,
                         level = 1,
                         children = Vector(
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 0,
                                 level = 2,
                                 children = Nil,
@@ -1943,11 +1951,11 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("1"),
                                 id = "http://data.knora.org/lists/214eeefbd8"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 1,
                                 level = 2,
                                 children = Vector(
-                                    HierarchicalListV1(
+                                    ListNodeV1(
                                         position = 0,
                                         level = 3,
                                         children = Nil,
@@ -1955,7 +1963,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("1"),
                                         id = "http://data.knora.org/lists/53b5946ed9"
                                     ),
-                                    HierarchicalListV1(
+                                    ListNodeV1(
                                         position = 1,
                                         level = 3,
                                         children = Nil,
@@ -1963,7 +1971,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("2"),
                                         id = "http://data.knora.org/lists/ece8e7a7d9"
                                     ),
-                                    HierarchicalListV1(
+                                    ListNodeV1(
                                         position = 2,
                                         level = 3,
                                         children = Nil,
@@ -1971,7 +1979,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("3"),
                                         id = "http://data.knora.org/lists/851c3be1d9"
                                     ),
-                                    HierarchicalListV1(
+                                    ListNodeV1(
                                         position = 3,
                                         level = 3,
                                         children = Nil,
@@ -1979,7 +1987,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("4"),
                                         id = "http://data.knora.org/lists/1e508e1ada"
                                     ),
-                                    HierarchicalListV1(
+                                    ListNodeV1(
                                         position = 4,
                                         level = 3,
                                         children = Nil,
@@ -1987,7 +1995,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("5"),
                                         id = "http://data.knora.org/lists/b783e153da"
                                     ),
-                                    HierarchicalListV1(
+                                    ListNodeV1(
                                         position = 5,
                                         level = 3,
                                         children = Nil,
@@ -1995,7 +2003,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("6"),
                                         id = "http://data.knora.org/lists/50b7348dda"
                                     ),
-                                    HierarchicalListV1(
+                                    ListNodeV1(
                                         position = 6,
                                         level = 3,
                                         children = Nil,
@@ -2008,7 +2016,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("2"),
                                 id = "http://data.knora.org/lists/ba814135d9"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 2,
                                 level = 2,
                                 children = Nil,
@@ -2016,7 +2024,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("3"),
                                 id = "http://data.knora.org/lists/821edbffda"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 3,
                                 level = 2,
                                 children = Nil,
@@ -2024,10 +2032,10 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("4"),
                                 id = "http://data.knora.org/lists/1b522e39db"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 4,
                                 level = 2,
-                                children = Vector(HierarchicalListV1(
+                                children = Vector(ListNodeV1(
                                     position = 0,
                                     level = 3,
                                     children = Nil,
@@ -2039,7 +2047,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("5"),
                                 id = "http://data.knora.org/lists/b4858172db"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 5,
                                 level = 2,
                                 children = Nil,
@@ -2047,7 +2055,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("6"),
                                 id = "http://data.knora.org/lists/e6ec27e5db"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 6,
                                 level = 2,
                                 children = Nil,
@@ -2060,15 +2068,15 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                         name = Some("4"),
                         id = "http://data.knora.org/lists/881a9bc2d8"
                     ),
-                    HierarchicalListV1(
+                    ListNodeV1(
                         position = 9,
                         level = 1,
                         children = Vector(
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 0,
                                 level = 2,
                                 children = Vector(
-                                    HierarchicalListV1(
+                                    ListNodeV1(
                                         position = 0,
                                         level = 3,
                                         children = Nil,
@@ -2076,7 +2084,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("1"),
                                         id = "http://data.knora.org/lists/4abb74cadc"
                                     ),
-                                    HierarchicalListV1(
+                                    ListNodeV1(
                                         position = 1,
                                         level = 3,
                                         children = Nil,
@@ -2084,7 +2092,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("2"),
                                         id = "http://data.knora.org/lists/e3eec703dd"
                                     ),
-                                    HierarchicalListV1(
+                                    ListNodeV1(
                                         position = 2,
                                         level = 3,
                                         children = Nil,
@@ -2097,11 +2105,11 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("1"),
                                 id = "http://data.knora.org/lists/b1872191dc"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 1,
                                 level = 2,
                                 children = Vector(
-                                    HierarchicalListV1(
+                                    ListNodeV1(
                                         position = 0,
                                         level = 3,
                                         children = Nil,
@@ -2109,7 +2117,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("1"),
                                         id = "http://data.knora.org/lists/ae89c1afdd"
                                     ),
-                                    HierarchicalListV1(
+                                    ListNodeV1(
                                         position = 1,
                                         level = 3,
                                         children = Nil,
@@ -2122,7 +2130,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("2"),
                                 id = "http://data.knora.org/lists/15566e76dd"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 2,
                                 level = 2,
                                 children = Nil,
@@ -2135,11 +2143,11 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                         name = Some("5"),
                         id = "http://data.knora.org/lists/1854ce57dc"
                     ),
-                    HierarchicalListV1(
+                    ListNodeV1(
                         position = 10,
                         level = 1,
                         children = Vector(
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 0,
                                 level = 2,
                                 children = Nil,
@@ -2147,7 +2155,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("1"),
                                 id = "http://data.knora.org/lists/7924bb5bde"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 1,
                                 level = 2,
                                 children = Nil,
@@ -2155,7 +2163,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("2"),
                                 id = "http://data.knora.org/lists/12580e95de"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 2,
                                 level = 2,
                                 children = Nil,
@@ -2163,7 +2171,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("3"),
                                 id = "http://data.knora.org/lists/ab8b61cede"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 3,
                                 level = 2,
                                 children = Nil,
@@ -2171,7 +2179,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("4"),
                                 id = "http://data.knora.org/lists/44bfb407df"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 4,
                                 level = 2,
                                 children = Nil,
@@ -2179,7 +2187,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("5"),
                                 id = "http://data.knora.org/lists/ddf20741df"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 5,
                                 level = 2,
                                 children = Nil,
@@ -2187,7 +2195,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("6"),
                                 id = "http://data.knora.org/lists/76265b7adf"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 6,
                                 level = 2,
                                 children = Nil,
@@ -2195,7 +2203,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("7"),
                                 id = "http://data.knora.org/lists/0f5aaeb3df"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 7,
                                 level = 2,
                                 children = Nil,
@@ -2208,11 +2216,11 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                         name = Some("6"),
                         id = "http://data.knora.org/lists/e0f06722de"
                     ),
-                    HierarchicalListV1(
+                    ListNodeV1(
                         position = 11,
                         level = 1,
                         children = Vector(
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 0,
                                 level = 2,
                                 children = Nil,
@@ -2220,7 +2228,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("1"),
                                 id = "http://data.knora.org/lists/daf4a75fe0"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 1,
                                 level = 2,
                                 children = Nil,
@@ -2228,7 +2236,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("2"),
                                 id = "http://data.knora.org/lists/7328fb98e0"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 2,
                                 level = 2,
                                 children = Nil,
@@ -2236,11 +2244,11 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("3"),
                                 id = "http://data.knora.org/lists/0c5c4ed2e0"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 3,
                                 level = 2,
                                 children = Vector(
-                                    HierarchicalListV1(
+                                    ListNodeV1(
                                         position = 0,
                                         level = 3,
                                         children = Nil,
@@ -2248,7 +2256,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("1"),
                                         id = "http://data.knora.org/lists/3ec3f444e1"
                                     ),
-                                    HierarchicalListV1(
+                                    ListNodeV1(
                                         position = 1,
                                         level = 3,
                                         children = Nil,
@@ -2256,7 +2264,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("2"),
                                         id = "http://data.knora.org/lists/d7f6477ee1"
                                     ),
-                                    HierarchicalListV1(
+                                    ListNodeV1(
                                         position = 2,
                                         level = 3,
                                         children = Nil,
@@ -2269,7 +2277,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("4"),
                                 id = "http://data.knora.org/lists/a58fa10be1"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 4,
                                 level = 2,
                                 children = Nil,
@@ -2277,7 +2285,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("5"),
                                 id = "http://data.knora.org/lists/095eeef0e1"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 5,
                                 level = 2,
                                 children = Nil,
@@ -2290,11 +2298,11 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                         name = Some("7"),
                         id = "http://data.knora.org/lists/41c15426e0"
                     ),
-                    HierarchicalListV1(
+                    ListNodeV1(
                         position = 12,
                         level = 1,
                         children = Vector(
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 0,
                                 level = 2,
                                 children = Nil,
@@ -2302,7 +2310,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("1"),
                                 id = "http://data.knora.org/lists/d4f8e79ce2"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 1,
                                 level = 2,
                                 children = Nil,
@@ -2310,7 +2318,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("2"),
                                 id = "http://data.knora.org/lists/6d2c3bd6e2"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 2,
                                 level = 2,
                                 children = Nil,
@@ -2318,7 +2326,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("3"),
                                 id = "http://data.knora.org/lists/06608e0fe3"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 3,
                                 level = 2,
                                 children = Nil,
@@ -2326,7 +2334,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("4"),
                                 id = "http://data.knora.org/lists/9f93e148e3"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 4,
                                 level = 2,
                                 children = Nil,
@@ -2339,11 +2347,11 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                         name = Some("8"),
                         id = "http://data.knora.org/lists/3bc59463e2"
                     ),
-                    HierarchicalListV1(
+                    ListNodeV1(
                         position = 13,
                         level = 1,
                         children = Vector(
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 0,
                                 level = 2,
                                 children = Nil,
@@ -2351,7 +2359,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("1"),
                                 id = "http://data.knora.org/lists/6a2edbf4e3"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 1,
                                 level = 2,
                                 children = Nil,
@@ -2359,7 +2367,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("2"),
                                 id = "http://data.knora.org/lists/03622e2ee4"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 2,
                                 level = 2,
                                 children = Nil,
@@ -2367,7 +2375,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("3"),
                                 id = "http://data.knora.org/lists/9c958167e4"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 3,
                                 level = 2,
                                 children = Nil,
@@ -2375,7 +2383,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("4"),
                                 id = "http://data.knora.org/lists/35c9d4a0e4"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 4,
                                 level = 2,
                                 children = Nil,
@@ -2388,15 +2396,15 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                         name = Some("9"),
                         id = "http://data.knora.org/lists/d1fa87bbe3"
                     ),
-                    HierarchicalListV1(
+                    ListNodeV1(
                         position = 14,
                         level = 1,
                         children = Vector(
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 0,
                                 level = 2,
                                 children = Vector(
-                                    HierarchicalListV1(
+                                    ListNodeV1(
                                         position = 0,
                                         level = 3,
                                         children = Nil,
@@ -2404,7 +2412,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("1"),
                                         id = "http://data.knora.org/lists/99972186e5"
                                     ),
-                                    HierarchicalListV1(
+                                    ListNodeV1(
                                         position = 1,
                                         level = 3,
                                         children = Nil,
@@ -2412,7 +2420,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("2"),
                                         id = "http://data.knora.org/lists/32cb74bfe5"
                                     ),
-                                    HierarchicalListV1(
+                                    ListNodeV1(
                                         position = 2,
                                         level = 3,
                                         children = Nil,
@@ -2420,7 +2428,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("3"),
                                         id = "http://data.knora.org/lists/cbfec7f8e5"
                                     ),
-                                    HierarchicalListV1(
+                                    ListNodeV1(
                                         position = 3,
                                         level = 3,
                                         children = Nil,
@@ -2428,7 +2436,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("4"),
                                         id = "http://data.knora.org/lists/64321b32e6"
                                     ),
-                                    HierarchicalListV1(
+                                    ListNodeV1(
                                         position = 4,
                                         level = 3,
                                         children = Nil,
@@ -2441,7 +2449,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("1"),
                                 id = "http://data.knora.org/lists/0064ce4ce5"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 1,
                                 level = 2,
                                 children = Nil,
@@ -2449,7 +2457,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("2"),
                                 id = "http://data.knora.org/lists/9699c1a4e6"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 2,
                                 level = 2,
                                 children = Nil,
@@ -2457,7 +2465,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("3"),
                                 id = "http://data.knora.org/lists/2fcd14dee6"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 3,
                                 level = 2,
                                 children = Nil,
@@ -2465,7 +2473,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("4"),
                                 id = "http://data.knora.org/lists/c8006817e7"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 4,
                                 level = 2,
                                 children = Nil,
@@ -2473,7 +2481,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("5"),
                                 id = "http://data.knora.org/lists/6134bb50e7"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 5,
                                 level = 2,
                                 children = Nil,
@@ -2481,7 +2489,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("6"),
                                 id = "http://data.knora.org/lists/fa670e8ae7"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 6,
                                 level = 2,
                                 children = Nil,
@@ -2494,11 +2502,11 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                         name = Some("10"),
                         id = "http://data.knora.org/lists/67307b13e5"
                     ),
-                    HierarchicalListV1(
+                    ListNodeV1(
                         position = 15,
                         level = 1,
                         children = Vector(
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 0,
                                 level = 2,
                                 children = Nil,
@@ -2506,7 +2514,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("1"),
                                 id = "http://data.knora.org/lists/c5020836e8"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 1,
                                 level = 2,
                                 children = Nil,
@@ -2514,7 +2522,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("2"),
                                 id = "http://data.knora.org/lists/5e365b6fe8"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 2,
                                 level = 2,
                                 children = Nil,
@@ -2522,7 +2530,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("3"),
                                 id = "http://data.knora.org/lists/f769aea8e8"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 3,
                                 level = 2,
                                 children = Nil,
@@ -2530,7 +2538,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("4"),
                                 id = "http://data.knora.org/lists/909d01e2e8"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 4,
                                 level = 2,
                                 children = Nil,
@@ -2538,7 +2546,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("5"),
                                 id = "http://data.knora.org/lists/29d1541be9"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 5,
                                 level = 2,
                                 children = Nil,
@@ -2546,7 +2554,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("6"),
                                 id = "http://data.knora.org/lists/c204a854e9"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 6,
                                 level = 2,
                                 children = Nil,
@@ -2554,7 +2562,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("7"),
                                 id = "http://data.knora.org/lists/5b38fb8de9"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 7,
                                 level = 2,
                                 children = Nil,
@@ -2572,15 +2580,15 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                 name = Some("9SPO"),
                 id = "http://data.knora.org/lists/71a1543cce"
             ),
-            HierarchicalListV1(
+            ListNodeV1(
                 position = 9,
                 level = 0,
                 children = Vector(
-                    HierarchicalListV1(
+                    ListNodeV1(
                         position = 0,
                         level = 1,
                         children = Vector(
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 0,
                                 level = 2,
                                 children = Nil,
@@ -2588,7 +2596,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("1"),
                                 id = "http://data.knora.org/lists/bf064873ea"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 1,
                                 level = 2,
                                 children = Nil,
@@ -2596,7 +2604,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("2"),
                                 id = "http://data.knora.org/lists/583a9bacea"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 2,
                                 level = 2,
                                 children = Nil,
@@ -2604,7 +2612,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("3"),
                                 id = "http://data.knora.org/lists/f16deee5ea"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 3,
                                 level = 2,
                                 children = Nil,
@@ -2612,7 +2620,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("4"),
                                 id = "http://data.knora.org/lists/8aa1411feb"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 4,
                                 level = 2,
                                 children = Nil,
@@ -2620,7 +2628,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("5"),
                                 id = "http://data.knora.org/lists/23d59458eb"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 5,
                                 level = 2,
                                 children = Nil,
@@ -2628,7 +2636,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("6"),
                                 id = "http://data.knora.org/lists/bc08e891eb"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 6,
                                 level = 2,
                                 children = Nil,
@@ -2636,7 +2644,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("7"),
                                 id = "http://data.knora.org/lists/553c3bcbeb"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 7,
                                 level = 2,
                                 children = Nil,
@@ -2644,7 +2652,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("8"),
                                 id = "http://data.knora.org/lists/ee6f8e04ec"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 8,
                                 level = 2,
                                 children = Nil,
@@ -2652,7 +2660,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("9"),
                                 id = "http://data.knora.org/lists/87a3e13dec"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 9,
                                 level = 2,
                                 children = Nil,
@@ -2660,7 +2668,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("10"),
                                 id = "http://data.knora.org/lists/20d73477ec"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 10,
                                 level = 2,
                                 children = Nil,
@@ -2668,7 +2676,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("11"),
                                 id = "http://data.knora.org/lists/b90a88b0ec"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 11,
                                 level = 2,
                                 children = Nil,
@@ -2676,7 +2684,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("12"),
                                 id = "http://data.knora.org/lists/523edbe9ec"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 12,
                                 level = 2,
                                 children = Nil,
@@ -2689,10 +2697,10 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                         name = Some("1"),
                         id = "http://data.knora.org/lists/26d3f439ea"
                     ),
-                    HierarchicalListV1(
+                    ListNodeV1(
                         position = 1,
                         level = 1,
-                        children = Vector(HierarchicalListV1(
+                        children = Vector(ListNodeV1(
                             position = 0,
                             level = 2,
                             children = Nil,
@@ -2704,11 +2712,11 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                         name = Some("1-1"),
                         id = "http://data.knora.org/lists/84a5815ced"
                     ),
-                    HierarchicalListV1(
+                    ListNodeV1(
                         position = 2,
                         level = 1,
                         children = Vector(
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 0,
                                 level = 2,
                                 children = Nil,
@@ -2716,7 +2724,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("1"),
                                 id = "http://data.knora.org/lists/4f407b08ee"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 1,
                                 level = 2,
                                 children = Nil,
@@ -2724,7 +2732,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("2"),
                                 id = "http://data.knora.org/lists/e873ce41ee"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 2,
                                 level = 2,
                                 children = Nil,
@@ -2737,190 +2745,190 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                         name = Some("2"),
                         id = "http://data.knora.org/lists/b60c28cfed"
                     ),
-                    HierarchicalListV1(
+                    ListNodeV1(
                         position = 3,
                         level = 1,
                         children = Vector(
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 0,
                                 level = 2,
                                 children = Vector(
-                                    HierarchicalListV1(
+                                    ListNodeV1(
                                         "http://data.knora.org/lists/97744976b801",
                                         Some("hotel_a"),
                                         Some("Hotel A"),
                                         Nil,
                                         3,
                                         0),
-                                    HierarchicalListV1(
+                                    ListNodeV1(
                                         "http://data.knora.org/lists/30a89cafb801",
                                         Some("hotel_b"),
                                         Some("Hotel B"),
                                         Nil,
                                         3,
                                         1),
-                                    HierarchicalListV1(
+                                    ListNodeV1(
                                         "http://data.knora.org/lists/c9dbefe8b801",
                                         Some("hotel_c"),
                                         Some("Hotel C"),
                                         Nil,
                                         3,
                                         2),
-                                    HierarchicalListV1(
+                                    ListNodeV1(
                                         "http://data.knora.org/lists/620f4322b901",
                                         Some("hotel_d"),
                                         Some("Hotel D"),
                                         Nil,
                                         3,
                                         3),
-                                    HierarchicalListV1(
+                                    ListNodeV1(
                                         "http://data.knora.org/lists/fb42965bb901",
                                         Some("hotel_e"),
                                         Some("Hotel E"),
                                         Nil,
                                         3,
                                         4),
-                                    HierarchicalListV1(
+                                    ListNodeV1(
                                         "http://data.knora.org/lists/9476e994b901",
                                         Some("hotel_f"),
                                         Some("Hotel F"),
                                         Nil,
                                         3,
                                         5),
-                                    HierarchicalListV1(
+                                    ListNodeV1(
                                         "http://data.knora.org/lists/2daa3cceb901",
                                         Some("hotel_g"),
                                         Some("Hotel G"),
                                         Nil,
                                         3,
                                         6),
-                                    HierarchicalListV1(
+                                    ListNodeV1(
                                         "http://data.knora.org/lists/c6dd8f07ba01",
                                         Some("hotel_h"),
                                         Some("Hotel H"),
                                         Nil,
                                         3,
                                         7),
-                                    HierarchicalListV1(
+                                    ListNodeV1(
                                         "http://data.knora.org/lists/5f11e340ba01",
                                         Some("hotel_i"),
                                         Some("Hotel I"),
                                         Nil,
                                         3,
                                         8),
-                                    HierarchicalListV1(
+                                    ListNodeV1(
                                         "http://data.knora.org/lists/f844367aba01",
                                         Some("hotel_j"),
                                         Some("Hotel J"),
                                         Nil,
                                         3,
                                         9),
-                                    HierarchicalListV1(
+                                    ListNodeV1(
                                         "http://data.knora.org/lists/917889b3ba01",
                                         Some("hotel_k"),
                                         Some("Hotel K"),
                                         Nil,
                                         3,
                                         10),
-                                    HierarchicalListV1(
+                                    ListNodeV1(
                                         "http://data.knora.org/lists/2aacdcecba01",
                                         Some("hotel_l"),
                                         Some("Hotel L"),
                                         Nil,
                                         3,
                                         11),
-                                    HierarchicalListV1(
+                                    ListNodeV1(
                                         "http://data.knora.org/lists/c3df2f26bb01",
                                         Some("hotel_m"),
                                         Some("Hotel M"),
                                         Nil,
                                         3,
                                         12),
-                                    HierarchicalListV1(
+                                    ListNodeV1(
                                         "http://data.knora.org/lists/5c13835fbb01",
                                         Some("hotel_n"),
                                         Some("Hotel N"),
                                         Nil,
                                         3,
                                         13),
-                                    HierarchicalListV1(
+                                    ListNodeV1(
                                         "http://data.knora.org/lists/f546d698bb01",
                                         Some("hotel_o"),
                                         Some("Hotel O"),
                                         Nil,
                                         3,
                                         14),
-                                    HierarchicalListV1(
+                                    ListNodeV1(
                                         "http://data.knora.org/lists/8e7a29d2bb01",
                                         Some("hotel_p"),
                                         Some("Hotel P"),
                                         Nil,
                                         3,
                                         15),
-                                    HierarchicalListV1(
+                                    ListNodeV1(
                                         "http://data.knora.org/lists/27ae7c0bbc01",
                                         Some("hotel_q"),
                                         Some("Hotel Q"),
                                         Nil,
                                         3,
                                         16),
-                                    HierarchicalListV1(
+                                    ListNodeV1(
                                         "http://data.knora.org/lists/c0e1cf44bc01",
                                         Some("hotel_r"),
                                         Some("Hotel R"),
                                         Nil,
                                         3,
                                         17),
-                                    HierarchicalListV1(
+                                    ListNodeV1(
                                         "http://data.knora.org/lists/5915237ebc01",
                                         Some("hotel_s"),
                                         Some("Hotel S"),
                                         Nil,
                                         3,
                                         18),
-                                    HierarchicalListV1(
+                                    ListNodeV1(
                                         "http://data.knora.org/lists/f24876b7bc01",
                                         Some("hotel_t"),
                                         Some("Hotel T"),
                                         Nil,
                                         3,
                                         19),
-                                    HierarchicalListV1(
+                                    ListNodeV1(
                                         "http://data.knora.org/lists/8b7cc9f0bc01",
                                         Some("hotel_u"),
                                         Some("Hotel U"),
                                         Nil,
                                         3,
                                         20),
-                                    HierarchicalListV1(
+                                    ListNodeV1(
                                         "http://data.knora.org/lists/24b01c2abd01",
                                         Some("hotel_v"),
                                         Some("Hotel V"),
                                         Nil,
                                         3,
                                         21),
-                                    HierarchicalListV1(
+                                    ListNodeV1(
                                         "http://data.knora.org/lists/9f29173c3b02",
                                         Some("hotel_w"),
                                         Some("Hotel W"),
                                         Nil,
                                         3,
                                         22),
-                                    HierarchicalListV1(
+                                    ListNodeV1(
                                         "http://data.knora.org/lists/bde36f63bd01",
                                         Some("hotel_x"),
                                         Some("Hotel X"),
                                         Nil,
                                         3,
                                         23),
-                                    HierarchicalListV1(
+                                    ListNodeV1(
                                         "http://data.knora.org/lists/5617c39cbd01",
                                         Some("hotel_y"),
                                         Some("Hotel Y"),
                                         Nil,
                                         3,
                                         24),
-                                    HierarchicalListV1(
+                                    ListNodeV1(
                                         "http://data.knora.org/lists/ef4a16d6bd01",
                                         Some("hotel_z"),
                                         Some("Hotel Z"),
@@ -2931,7 +2939,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("1"),
                                 id = "http://data.knora.org/lists/b30ec8edee"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 1,
                                 level = 2,
                                 children = Nil,
@@ -2939,7 +2947,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("2"),
                                 id = "http://data.knora.org/lists/4c421b27ef"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 2,
                                 level = 2,
                                 children = Nil,
@@ -2952,11 +2960,11 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                         name = Some("3"),
                         id = "http://data.knora.org/lists/1adb74b4ee"
                     ),
-                    HierarchicalListV1(
+                    ListNodeV1(
                         position = 4,
                         level = 1,
                         children = Vector(
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 0,
                                 level = 2,
                                 children = Nil,
@@ -2964,7 +2972,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("1"),
                                 id = "http://data.knora.org/lists/17dd14d3ef"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 1,
                                 level = 2,
                                 children = Nil,
@@ -2972,7 +2980,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("2"),
                                 id = "http://data.knora.org/lists/b010680cf0"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 2,
                                 level = 2,
                                 children = Nil,
@@ -2985,11 +2993,11 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                         name = Some("4"),
                         id = "http://data.knora.org/lists/7ea9c199ef"
                     ),
-                    HierarchicalListV1(
+                    ListNodeV1(
                         position = 5,
                         level = 1,
                         children = Vector(
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 0,
                                 level = 2,
                                 children = Nil,
@@ -2997,7 +3005,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("1"),
                                 id = "http://data.knora.org/lists/7bab61b8f0"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 1,
                                 level = 2,
                                 children = Nil,
@@ -3005,7 +3013,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("2"),
                                 id = "http://data.knora.org/lists/14dfb4f1f0"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 2,
                                 level = 2,
                                 children = Nil,
@@ -3018,11 +3026,11 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                         name = Some("6"),
                         id = "http://data.knora.org/lists/e2770e7ff0"
                     ),
-                    HierarchicalListV1(
+                    ListNodeV1(
                         position = 6,
                         level = 1,
                         children = Vector(
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 0,
                                 level = 2,
                                 children = Nil,
@@ -3030,7 +3038,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("1"),
                                 id = "http://data.knora.org/lists/df79ae9df1"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 1,
                                 level = 2,
                                 children = Nil,
@@ -3038,7 +3046,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("2"),
                                 id = "http://data.knora.org/lists/78ad01d7f1"
                             ),
-                            HierarchicalListV1(
+                            ListNodeV1(
                                 position = 2,
                                 level = 2,
                                 children = Nil,
@@ -3051,7 +3059,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                         name = Some("7"),
                         id = "http://data.knora.org/lists/46465b64f1"
                     ),
-                    HierarchicalListV1(
+                    ListNodeV1(
                         position = 7,
                         level = 1,
                         children = Nil,
@@ -3059,7 +3067,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                         name = Some("8"),
                         id = "http://data.knora.org/lists/aa14a849f2"
                     ),
-                    HierarchicalListV1(
+                    ListNodeV1(
                         position = 8,
                         level = 1,
                         children = Nil,
@@ -3077,7 +3085,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
 
     private val imageCategory = SelectionGetResponseV1(
         selection = Vector(
-            HierarchicalListV1(
+            ListNodeV1(
                 position = 0,
                 level = 0,
                 children = Nil,
@@ -3085,7 +3093,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                 name = Some("foto_sw"),
                 id = "http://data.knora.org/lists/230a209905"
             ),
-            HierarchicalListV1(
+            ListNodeV1(
                 position = 1,
                 level = 0,
                 children = Nil,
@@ -3093,7 +3101,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                 name = Some("laserkopie"),
                 id = "http://data.knora.org/lists/88d6cc5f05"
             ),
-            HierarchicalListV1(
+            ListNodeV1(
                 position = 2,
                 level = 0,
                 children = Nil,
@@ -3101,7 +3109,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                 name = Some("foto_chamois"),
                 id = "http://data.knora.org/lists/be3d73d205"
             ),
-            HierarchicalListV1(
+            ListNodeV1(
                 position = 3,
                 level = 0,
                 children = Nil,
@@ -3109,7 +3117,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                 name = Some("foto_digital"),
                 id = "http://data.knora.org/lists/8fd86c7e06"
             ),
-            HierarchicalListV1(
+            ListNodeV1(
                 position = 4,
                 level = 0,
                 children = Nil,
@@ -3117,7 +3125,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                 name = Some("foto_farb"),
                 id = "http://data.knora.org/lists/5971c60b06"
             ),
-            HierarchicalListV1(
+            ListNodeV1(
                 position = 5,
                 level = 0,
                 children = Nil,
@@ -3125,7 +3133,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                 name = Some("foto_kol"),
                 id = "http://data.knora.org/lists/f4a4194506"
             ),
-            HierarchicalListV1(
+            ListNodeV1(
                 position = 6,
                 level = 0,
                 children = Nil,
@@ -3133,7 +3141,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                 name = Some("postkarte_sw"),
                 id = "http://data.knora.org/lists/2a0cc0b706"
             ),
-            HierarchicalListV1(
+            ListNodeV1(
                 position = 7,
                 level = 0,
                 children = Nil,
@@ -3141,7 +3149,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                 name = Some("postkarte_farb"),
                 id = "http://data.knora.org/lists/c53f13f106"
             ),
-            HierarchicalListV1(
+            ListNodeV1(
                 position = 8,
                 level = 0,
                 children = Nil,
@@ -3149,7 +3157,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                 name = Some("postkarte_kol"),
                 id = "http://data.knora.org/lists/6073662a07"
             ),
-            HierarchicalListV1(
+            ListNodeV1(
                 position = 9,
                 level = 0,
                 children = Nil,
@@ -3157,7 +3165,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                 name = Some("dia_farb"),
                 id = "http://data.knora.org/lists/fba6b96307"
             ),
-            HierarchicalListV1(
+            ListNodeV1(
                 position = 10,
                 level = 0,
                 children = Nil,
@@ -3165,7 +3173,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                 name = Some("dia_sw"),
                 id = "http://data.knora.org/lists/96da0c9d07"
             ),
-            HierarchicalListV1(
+            ListNodeV1(
                 position = 11,
                 level = 0,
                 children = Nil,
@@ -3173,7 +3181,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                 name = Some("negativ_sw"),
                 id = "http://data.knora.org/lists/310e60d607"
             ),
-            HierarchicalListV1(
+            ListNodeV1(
                 position = 12,
                 level = 0,
                 children = Nil,
@@ -3181,7 +3189,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                 name = Some("negativ_farb"),
                 id = "http://data.knora.org/lists/cc41b30f08"
             ),
-            HierarchicalListV1(
+            ListNodeV1(
                 position = 13,
                 level = 0,
                 children = Nil,
@@ -3189,7 +3197,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                 name = Some("gemaelde"),
                 id = "http://data.knora.org/lists/6775064908"
             ),
-            HierarchicalListV1(
+            ListNodeV1(
                 position = 14,
                 level = 0,
                 children = Nil,
@@ -3197,7 +3205,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                 name = Some("stich"),
                 id = "http://data.knora.org/lists/02a9598208"
             ),
-            HierarchicalListV1(
+            ListNodeV1(
                 position = 15,
                 level = 0,
                 children = Nil,
@@ -3205,7 +3213,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                 name = Some("zeichnung"),
                 id = "http://data.knora.org/lists/9ddcacbb08"
             ),
-            HierarchicalListV1(
+            ListNodeV1(
                 position = 16,
                 level = 0,
                 children = Nil,
@@ -3213,7 +3221,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                 name = Some("druck"),
                 id = "http://data.knora.org/lists/381000f508"
             ),
-            HierarchicalListV1(
+            ListNodeV1(
                 position = 17,
                 level = 0,
                 children = Nil,
@@ -3221,7 +3229,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                 name = Some("glasplatte_p"),
                 id = "http://data.knora.org/lists/d343532e09"
             ),
-            HierarchicalListV1(
+            ListNodeV1(
                 position = 18,
                 level = 0,
                 children = Nil,
@@ -3229,7 +3237,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                 name = Some("glasplatte_n"),
                 id = "http://data.knora.org/lists/9f85063e11"
             ),
-            HierarchicalListV1(
+            ListNodeV1(
                 position = 19,
                 level = 0,
                 children = Nil,
@@ -3237,7 +3245,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                 name = Some("plakat"),
                 id = "http://data.knora.org/lists/6e77a66709"
             ),
-            HierarchicalListV1(
+            ListNodeV1(
                 position = 20,
                 level = 0,
                 children = Nil,
@@ -3250,7 +3258,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
 
     private val season = HListGetResponseV1(
         hlist = Vector(
-            HierarchicalListV1(
+            ListNodeV1(
                 position = 0,
                 level = 0,
                 children = Nil,
@@ -3258,7 +3266,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                 name = Some("sommer"),
                 id = "http://data.knora.org/lists/526f26ed04"
             ),
-            HierarchicalListV1(
+            ListNodeV1(
                 position = 1,
                 level = 0,
                 children = Nil,
@@ -3317,6 +3325,15 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                 log.debug("received: " + received)
 
                 received.lists.size should be(4)
+            }
+
+            "return an extended list response" in {
+                actorUnderTest ! ListExtendedGetRequestV1(
+                    iri = "http://data.knora.org/lists/73d0ec0302",
+                    userProfile = userProfile
+                )
+
+                expectMsg(ListExtendedGetResponseV1(info = listInfo, nodes = hKeywords.hlist))
             }
 
             "return all the toplevel and child nodes of \"Hierarchisches Stichwortverzeichnis / Signatur der Bilder\" when we do a query for the hlist 'http://data.knora.org/lists/73d0ec0302' (root node) in the images-demo-data" in {
