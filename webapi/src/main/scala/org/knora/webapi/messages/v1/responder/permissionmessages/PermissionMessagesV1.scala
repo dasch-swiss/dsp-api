@@ -375,22 +375,20 @@ case class PermissionDataV1(groupsPerProject: Map[IRI, Seq[IRI]] = Map.empty[IRI
     def ofType(permissionProfileType: PermissionProfileType): PermissionDataV1 = {
         permissionProfileType match {
 
-            case PermissionDataType.RESTRICTED => {
-
+            case PermissionDataType.RESTRICTED =>
                 PermissionDataV1(
                     groupsPerProject = groupsPerProject,
                     administrativePermissionsPerProject = Map.empty[IRI, Set[PermissionV1]], // remove administrative permission information
                     anonymousUser = anonymousUser
                 )
-            }
-            case PermissionDataType.FULL => {
 
+            case PermissionDataType.FULL =>
                 PermissionDataV1(
                     groupsPerProject = groupsPerProject,
                     administrativePermissionsPerProject = administrativePermissionsPerProject,
                     anonymousUser = anonymousUser
                 )
-            }
+
             case _ => throw BadRequestException(s"The requested userProfileType: $permissionProfileType is invalid.")
         }
     }
@@ -408,9 +406,7 @@ case class PermissionDataV1(groupsPerProject: Map[IRI, Seq[IRI]] = Map.empty[IRI
     /* Does the user have the 'ProjectAdminAllPermission' permission for the project */
     def hasProjectAdminAllPermissionFor(projectIri: IRI): Boolean = {
         administrativePermissionsPerProject.get(projectIri) match {
-            case Some(permissions) => {
-                permissions(PermissionV1.ProjectAdminAllPermission)
-            }
+            case Some(permissions) => permissions(PermissionV1.ProjectAdminAllPermission)
             case None => false
         }
     }
@@ -450,7 +446,7 @@ case class PermissionDataV1(groupsPerProject: Map[IRI, Seq[IRI]] = Map.empty[IRI
     }
 
     /* custom equality implementation with additional debugging output */
-    def canEqual(a: Any) = a.isInstanceOf[PermissionDataV1]
+    def canEqual(a: Any): Boolean = a.isInstanceOf[PermissionDataV1]
 
     override def equals(that: Any): Boolean =
         that match {
