@@ -792,6 +792,10 @@
 							tmpobj.dateval1 = data.value.dateval1;
 							tmpobj.dateval2 = data.value.dateval2;
 							tmpobj.calendar = data.value.calendar;
+							tmpobj.era1 = data.value.era1;
+							tmpobj.era2 = data.value.era2;
+
+							// console.log("postdata got response to new value: " + JSON.stringify(data));
 
 							//tmpobj.dateprecision1 = precisionnames[data.value.dateprecision1];
 							//tmpobj.dateprecision2 = precisionnames[data.value.dateprecision2];
@@ -847,7 +851,10 @@
 							tmpobj.dateval1 = data.value.dateval1;
 							tmpobj.dateval2 = data.value.dateval2;
 							tmpobj.calendar = data.value.calendar;
+                            tmpobj.era1 = data.value.era1;
+                            tmpobj.era2 = data.value.era2;
 
+                            // console.log("postdata got response to new version: " + JSON.stringify(data));
 
 							propinfo[active.prop].values[active.value_index] = tmpobj; // HIER IST DER FEHLER!!!!!!!!!
 							// set new value Iri
