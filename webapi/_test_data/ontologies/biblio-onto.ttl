@@ -975,7 +975,7 @@
                     salsah-gui:guiElement salsah-gui:Searchbox ;
 
 
-                    rdfs:subPropertyOf knora-base:hasLinkTo, :publicationHasAuthor .
+                    rdfs:subPropertyOf knora-base:hasLinkTo .
 
 
 ###  http://www.knora.org/ontology/biblio#manuscriptHasAuthorValue
@@ -1033,7 +1033,7 @@
 
                     salsah-gui:guiElement salsah-gui:SimpleText ;
 
-                    knora-base:subjectClassConstraint :publication ;
+                    knora-base:subjectClassConstraint :Publication ;
 
                     rdfs:subPropertyOf knora-base:hasValue .
 
