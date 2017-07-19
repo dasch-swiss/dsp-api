@@ -149,6 +149,24 @@ class ResourceCreationSpec extends SalsahSpec {
 
             resource1TextVal.sendKeys("Dies ist ein Test")
 
+            val resource1DateVal = page.getFormFieldByName("http://www.knora.org/ontology/anything#hasDate")
+
+            val resource1Monthsel1 = page.getMonthSelection(resource1DateVal, 1)
+
+            // choose 15 March 44 BCE
+
+            resource1Monthsel1.selectByValue("3")
+
+            val resource1Days1 = page.getDays(resource1DateVal, 1)
+            resource1Days1(15).click()
+
+            val resource1Yearsel1 = page.getYearField(resource1DateVal, 1)
+            resource1Yearsel1.clear()
+            resource1Yearsel1.sendKeys("44")
+
+            val resource1Erasel1 = page.getEraSelection(resource1DateVal, 1)
+            resource1Erasel1.selectByIndex(1)
+
             page.clickSaveButtonForResourceCreationForm()
 
             val resource1Window = page.getWindow(1)

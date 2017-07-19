@@ -226,7 +226,7 @@ export module projectFormats {
         /**
          * The IRI of the institution, if any, that the project belongs to.
          */
-        belongsToInstitution: basicMessageComponents.KnoraIRI | null;
+        institution: basicMessageComponents.KnoraIRI | null;
 
         /**
          * The filename of the project's logo, if any.
@@ -261,7 +261,8 @@ export module projectFormats {
         /**
          * True if users can add themselves to the project.
          */
-        hasSelfJoinEnabled: boolean;
+        selfjoin: boolean;
+
     }
 
 }
