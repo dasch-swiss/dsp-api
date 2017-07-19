@@ -20,7 +20,7 @@
 
 package org.knora.webapi.responders.v2
 
-import java.time.OffsetDateTime
+import java.time.Instant
 
 import akka.pattern._
 import org.knora.webapi.{IRI, InconsistentTriplestoreDataException, OntologyConstants}
@@ -40,7 +40,7 @@ import scala.concurrent.Future
 class PersistentMapResponderV2 extends Responder {
     private val knoraIdUtil = new KnoraIdUtil
 
-    def receive = {
+    def receive: PartialFunction[Any, Unit] = {
         case mapEntryGetRequest: PersistentMapEntryGetRequestV2 => future2Message(sender(), getPersistentMapEntryV2(mapEntryGetRequest), log)
         case mapGetRequest: PersistentMapGetRequestV2 => future2Message(sender(), getPersistentMapV2(mapGetRequest), log)
         case mapEntryPutRequest: PersistentMapEntryPutRequestV2 => future2Message(sender, putPersistentMapEntryV2(mapEntryPutRequest), log)
@@ -263,7 +263,7 @@ class PersistentMapResponderV2 extends Responder {
                 PersistentMapEntryV2(
                     key = entryPredicateObjectMap(OntologyConstants.KnoraBase.MapEntryKey),
                     value = entryPredicateObjectMap(OntologyConstants.KnoraBase.MapEntryValue),
-                    lastModificationDate = OffsetDateTime.parse(entryPredicateObjectMap(OntologyConstants.KnoraBase.LastModificationDate))
+                    lastModificationDate = Instant.parse(entryPredicateObjectMap(OntologyConstants.KnoraBase.LastModificationDate))
                 )
         }.toSet
 
@@ -282,7 +282,7 @@ class PersistentMapResponderV2 extends Responder {
         PersistentMapV2(
             path = returnedMapPath,
             entries = mapEntries,
-            lastModificationDate = OffsetDateTime.parse(mapPredicateObjectMap(OntologyConstants.KnoraBase.LastModificationDate))
+            lastModificationDate = Instant.parse(mapPredicateObjectMap(OntologyConstants.KnoraBase.LastModificationDate))
         )
     }
 }

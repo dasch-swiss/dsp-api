@@ -20,7 +20,7 @@
 
 package org.knora.webapi.messages.v2.responder.persistentmapmessages
 
-import java.time.OffsetDateTime
+import java.time.Instant
 import java.util.UUID
 
 import org.knora.webapi._
@@ -39,7 +39,7 @@ sealed trait PersistentMapResponderRequestV2
   * @param value                the entry's value.
   * @param lastModificationDate the entry's last modification date.
   */
-case class PersistentMapEntryV2(key: String, value: String, lastModificationDate: OffsetDateTime) {
+case class PersistentMapEntryV2(key: String, value: String, lastModificationDate: Instant) {
     InputValidation.toNCName(key, () => throw InconsistentTriplestoreDataException(s"Invalid map entry key: $key"))
     InputValidation.toSparqlEncodedString(value, () => throw InconsistentTriplestoreDataException(s"Invalid map entry value: $value"))
 
@@ -53,7 +53,7 @@ case class PersistentMapEntryV2(key: String, value: String, lastModificationDate
   * @param entries              the entries in the map.
   * @param lastModificationDate the map's last modification date.
   */
-case class PersistentMapV2(path: String, entries: Set[PersistentMapEntryV2], lastModificationDate: OffsetDateTime) {
+case class PersistentMapV2(path: String, entries: Set[PersistentMapEntryV2], lastModificationDate: Instant) {
     InputValidation.toMapPath(path, () => throw InconsistentTriplestoreDataException(s"Invalid map path: $path"))
 }
 
