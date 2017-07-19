@@ -90,6 +90,9 @@ object DateUtilV1 {
       * YYYY-MM:     (YYYY-MM-01, YYYY-MM-LAST-DAY-OF-MONTH) month precision
       * YYYY-MM-DD:  (YYYY-MM-DD, YYYY-MM-DD) day precision
       *
+      * A date string can optionally end with a space and an era, which can be AD, BC, CE, or BCE. If no
+      * era is given, AD/CE is assumed.
+      *
       * @param dateString   A string representation of the given date conforming to the expected format.
       * @param calendarType a [[KnoraCalendarV1.Value]] specifying the calendar.
       * @return A tuple containing two calendar dates (interval) and a precision.
@@ -137,14 +140,14 @@ object DateUtilV1 {
 
                 try {
                     val intervalStart = new GregorianCalendar
-                    era.map(era => intervalStart.set(Calendar.ERA, era))
+                    era.foreach(era => intervalStart.set(Calendar.ERA, era))
                     intervalStart.setLenient(false) // set leniency to false in order to check for invalid dates
                     intervalStart.setGregorianChange(changeDate)
                     intervalStart.set(dateSegments(0).toInt, 0, 1, 12, 0, 0) // January 1st of the given year. Attention: in java.util.Calendar, month count starts with 0
                     intervalStart.get(0) // call method `get` in order to format the date; if it is invalid an exception is thrown
 
                     val intervalEnd = new GregorianCalendar
-                    era.map(era => intervalEnd.set(Calendar.ERA, era))
+                    era.foreach(era => intervalEnd.set(Calendar.ERA, era))
                     intervalEnd.setLenient(false) // set leniency to false in order to check for invalid dates
                     intervalEnd.setGregorianChange(changeDate)
                     intervalEnd.set(dateSegments(0).toInt, 11, 31, 12, 0, 0) // December 31st of the given year. Attention: in java.util.Calendar, month count starts with 0
@@ -162,14 +165,14 @@ object DateUtilV1 {
 
                 try {
                     val intervalStart = new GregorianCalendar
-                    era.map(era => intervalStart.set(Calendar.ERA, era))
+                    era.foreach(era => intervalStart.set(Calendar.ERA, era))
                     intervalStart.setLenient(false) // set leniency to false in order to check for invalid dates
                     intervalStart.setGregorianChange(changeDate)
                     intervalStart.set(dateSegments(0).toInt, dateSegments(1).toInt - 1, 1, 12, 0, 0) // Attention: in java.util.Calendar, month count starts with 0; first day of the given month in the given year
                     intervalStart.get(0) // call method `get` in order to format the date; if it is invalid an exception is thrown
 
                     val intervalEnd = new GregorianCalendar
-                    era.map(era => intervalEnd.set(Calendar.ERA, era))
+                    era.foreach(era => intervalEnd.set(Calendar.ERA, era))
                     intervalEnd.setLenient(false) // set leniency to false in order to check for invalid dates
                     intervalEnd.setGregorianChange(changeDate)
                     intervalEnd.set(dateSegments(0).toInt, dateSegments(1).toInt - 1, intervalStart.getActualMaximum(daysInMonth), 12, 0, 0) // Attention: in java.util.Calendar, month count starts with 0; last day of the given month in the given year
@@ -186,7 +189,7 @@ object DateUtilV1 {
 
                 try {
                     val exactDate = new GregorianCalendar
-                    era.map(era => exactDate.set(Calendar.ERA, era))
+                    era.foreach(era => exactDate.set(Calendar.ERA, era))
                     exactDate.setLenient(false) // set leniency to false in order to check for invalid dates
                     exactDate.setGregorianChange(changeDate)
                     exactDate.set(dateSegments(0).toInt, dateSegments(1).toInt - 1, dateSegments(2).toInt) // Attention: in java.util.Calendar, month count starts with 0
@@ -199,7 +202,7 @@ object DateUtilV1 {
                     case e: Exception => throw BadRequestException(s"The provided date $dateString could not be handled correctly: ${e.getMessage}")
                 }
 
-            case other => throw BadRequestException(s"Invalid date format: $dateString") // should never be fulfilled due to previous regex checking
+            case _ => throw BadRequestException(s"Invalid date format: $dateString") // should never be fulfilled due to previous regex checking
         }
     }
 
@@ -277,7 +280,7 @@ object DateUtilV1 {
         calendarType match {
             case KnoraCalendarV1.JULIAN => new Date(java.lang.Long.MAX_VALUE) // for Julian: if calendar given in Julian cal
             case KnoraCalendarV1.GREGORIAN => new Date(java.lang.Long.MIN_VALUE) //for Gregorian: if calendar given in Gregorian cal
-            case other => throw new BadRequestException(s"Invalid calendar name: $calendarType")
+            case _ => throw BadRequestException(s"Invalid calendar name: $calendarType")
         }
     }
 
@@ -288,7 +291,7 @@ object DateUtilV1 {
       * @return a [[JulianDayNumberValueV1]] representing the date.
       */
     def createJDNValueV1FromDateString(dateStr: String): JulianDayNumberValueV1 = {
-        val datestring = InputValidation.toDate(dateStr, () => throw new BadRequestException(s"Invalid date format: $dateStr"))
+        val datestring = InputValidation.toDate(dateStr, () => throw BadRequestException(s"Invalid date format: $dateStr"))
 
         // parse date: Calendar:YYYY-MM-DD[:YYYY-MM-DD]
         val parsedDate = datestring.split(InputValidation.CalendarSeparator)
