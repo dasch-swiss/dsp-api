@@ -28,6 +28,7 @@ import org.knora.webapi.messages.v1.responder.listmessages._
 import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
 import org.knora.webapi.messages.v1.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
 import org.knora.webapi.util.ActorUtil._
+import org.knora.webapi.util.MessageUtil
 
 import scala.annotation.tailrec
 import scala.collection.breakOut
@@ -116,7 +117,7 @@ class ListsResponderV1 extends ResponderV1 {
                 case (predicate, rows) => predicate -> rows.map(_.rowMap("o"))
             }
 
-            // _ = log.debug(s"userDataQueryResponse2UserProfile - groupedUserData: ${MessageUtil.toSource(groupedUserData)}")
+            // _ = log.debug(s"listExtendedGetRequestV1 - groupedListProperties: ${MessageUtil.toSource(groupedListProperties)}")
 
             listInfo: ListInfoV1 = ListInfoV1(
                 id = rootNodeIri,
@@ -129,6 +130,8 @@ class ListsResponderV1 extends ResponderV1 {
 
             // here we know that the list exists and it is fine if children is an empty list
             children: Seq[ListNodeV1] <- listGetV1(rootNodeIri, userProfile)
+
+            _ = log.debug(s"listExtendedGetRequestV1 - children: ${MessageUtil.toSource(children)}")
 
         } yield ListExtendedGetResponseV1(info = listInfo, nodes = children)
 

@@ -222,7 +222,8 @@ trait ListV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with 
                 "id" -> tree.id.toJson,
                 "name" -> tree.name.toJson,
                 "label" -> tree.label.toJson,
-                "level" -> tree.level.toJson
+                "level" -> tree.level.toJson,
+                "position" -> tree.position.toJson
             ) ++ childrenOption
 
             JsObject(fields)
