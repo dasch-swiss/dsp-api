@@ -252,9 +252,9 @@ Explanation of the comparison operators:
     In case of a date value type, inequality is given if the dates do not overlap in any way, meaning that a date starts after the end of the defined period or ends before the beginning of the defined period
     (dates are internally always treated as periods, see above).
   - ``GT``: checks if a resource's value is *greater than* the search value. In case of a date value type, it assures that a period begins after the indicated period's end.
-  - ``GT_EQ``: checks if a resource's value *equals or is greater than* the search value. In case of a date value type, it assures that a period's start equals the end of the indicated period or the period begins after the indicated period's end.
+  - ``GT_EQ``: checks if a resource's value *equals or is greater than* the search value. In case of a date value type, it assures that the periods overlap in any way (see ``EQ``) **or** that the period starts after the indicated period's end (see ``GT``).
   - ``LT``: checks if a resource's value is *lower than* the search value. In case of a date value type, it assures that a period ends before the indicated period's start.
-  - ``LT_EQ``: checks if a resource's value *equals or is lower than* the search value. In case of a date value type, it assures that a period's end equals the beginning of the indicated period or the period ends before the indicated period's start.
+  - ``LT_EQ``: checks if a resource's value *equals or is lower than* the search value. In case of a date value type, it assures that the periods overlap in any way (see ``EQ``) **or** that the period ends before the indicated period's start (see ``LT``).
   - ``EXISTS``: checks if an instance of the indicated property type *exists* for a resource. **Please always provide an empty search value when using EXISTS: "searchval="**. Otherwise, the query syntax rules would be violated.
   - ``MATCH``: checks if a resource's text value *matches* the search value. The behaviour depends on the used triplestore's full text index.
   - ``LIKE``: checks if the search value is contained in a resource's text value.
