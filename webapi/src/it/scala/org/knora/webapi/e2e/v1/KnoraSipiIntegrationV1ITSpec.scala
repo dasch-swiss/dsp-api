@@ -373,8 +373,8 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
             val createdResources = knoraPostResponseJson.fields("createdResources").asInstanceOf[JsArray].elements
             assert(createdResources.size == 2)
 
-            val bookResourceIri = createdResources.head.asJsObject.fields("res_id").asInstanceOf[JsString].value
-            val pageResourceIri = createdResources(1).asJsObject.fields("res_id").asInstanceOf[JsString].value
+            val bookResourceIri = createdResources.head.asJsObject.fields("resourceIri").asInstanceOf[JsString].value
+            val pageResourceIri = createdResources(1).asJsObject.fields("resourceIri").asInstanceOf[JsString].value
 
             // Request the book resource from the Knora API server.
             val knoraRequestNewBookResource = Get(baseApiUrl + "/v1/resources/" + URLEncoder.encode(bookResourceIri, "UTF-8")) ~> addCredentials(BasicHttpCredentials(username, password))
