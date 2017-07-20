@@ -34,8 +34,8 @@ import org.knora.webapi.messages.v1.responder.valuemessages.GenerateSparqlToCrea
   * @param resourceLabel                   the label of the resource.
   */
 
-case class ResourceToCreate(resourceIri: IRI,
-                            permissions: String,
-                            generateSparqlForValuesResponse: GenerateSparqlToCreateMultipleValuesResponseV1,
-                            resourceClassIri: IRI,
-                            resourceLabel: String)
+case class SparqlTemplateResourceToCreate(resourceIri: IRI,
+                                          permissions: String,
+                                          generateSparqlForValuesResponse: GenerateSparqlToCreateMultipleValuesResponseV1,
+                                          resourceClassIri: IRI,
+                                          resourceLabel: String)

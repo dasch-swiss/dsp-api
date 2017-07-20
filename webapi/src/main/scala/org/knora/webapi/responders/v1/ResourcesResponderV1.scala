@@ -37,7 +37,7 @@ import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v1.store.triplestoremessages._
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.v1.GroupedProps._
-import org.knora.webapi.twirl.ResourceToCreate
+import org.knora.webapi.twirl.SparqlTemplateResourceToCreate
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util._
 import spray.json._
@@ -1303,7 +1303,7 @@ class ResourcesResponderV1 extends ResponderV1 {
             // Make a timestamp for the new resources and their values.
             currentTime: String = Instant.now.toString
 
-            resourceCreationFutures: Seq[Future[ResourceToCreate]] = resourcesToCreate.map {
+            resourceCreationFutures: Seq[Future[SparqlTemplateResourceToCreate]] = resourcesToCreate.map {
                 resourceCreateRequest: OneOfMultipleResourceCreateRequestV1 =>
                     for {
                     // Check user's PermissionProfile (part of UserProfileV1) to see if the user has the permission to
@@ -1364,7 +1364,7 @@ class ResourcesResponderV1 extends ResponderV1 {
                             apiRequestID = apiRequestID
                         )
 
-                    } yield ResourceToCreate(
+                    } yield SparqlTemplateResourceToCreate(
                         resourceIri = resourceIri,
                         permissions = defaultObjectAccessPermissions,
                         generateSparqlForValuesResponse = generateSparqlForValuesResponse,
@@ -1374,11 +1374,11 @@ class ResourcesResponderV1 extends ResponderV1 {
             }
 
             // change sequence of futures to future of sequences
-            resourcesToCreate: Seq[ResourceToCreate] <- Future.sequence(resourceCreationFutures)
+            sparqlTemplateResourcesToCreate: Seq[SparqlTemplateResourceToCreate] <- Future.sequence(resourceCreationFutures)
 
             //create a sparql query for all the resources to be created
             createMultipleResourcesSparql: String = generateSparqlForNewResources(
-                resourcesToCreate = resourcesToCreate,
+                resourcesToCreate = sparqlTemplateResourcesToCreate,
                 projectIri = projectIri,
                 namedGraph = namedGraph,
                 creatorIri = userIri,
@@ -1392,12 +1392,14 @@ class ResourcesResponderV1 extends ResponderV1 {
             // because this would be too expensive. In any case, since the update is done with INSERT DATA, i.e. there is no WHERE clause,
             // any failure should result in an HTTP error from the triplestore (SPARQL 1.1 Protocol §2.2.5, "Failure Responses").
 
-            apiResponses: Seq[ResourceCreateResponseV1] = resourcesToCreate.map {
-                resourceToCreate => ResourceCreateResponseV1(res_id = resourceToCreate.resourceIri)
+            responses: Seq[OneOfMultipleResourcesCreateResponseV1] = resourcesToCreate.map {
+                resourceToCreate: OneOfMultipleResourceCreateRequestV1 =>
+                    OneOfMultipleResourcesCreateResponseV1(
+                        clientResourceID = resourceToCreate.clientResourceID,
+                        resourceIri = clientResourceIDsToResourceIris(resourceToCreate.clientResourceID)
+                    )
             }
-
-            responsesJson: Seq[JsValue] = apiResponses.map(_.toJsValue)
-        } yield MultipleResourceCreateResponseV1(responsesJson)
+       } yield MultipleResourceCreateResponseV1(responses)
     }
 
     /**
@@ -1599,7 +1601,7 @@ class ResourcesResponderV1 extends ResponderV1 {
       * @param namedGraph        the named graph the resources belongs to.
       * @return a [String] returns a Sparql query for creating the resources and their values .
       */
-    def generateSparqlForNewResources(resourcesToCreate: Seq[ResourceToCreate], projectIri: IRI, namedGraph: IRI, creatorIri: IRI, currentTime: String): String = {
+    def generateSparqlForNewResources(resourcesToCreate: Seq[SparqlTemplateResourceToCreate], projectIri: IRI, namedGraph: IRI, creatorIri: IRI, currentTime: String): String = {
         // Generate SPARQL for creating the resources, and include the SPARQL for creating the values of every resource.
         queries.sparql.v1.txt.createNewResources(
             dataNamedGraph = namedGraph,
@@ -1756,7 +1758,7 @@ class ResourcesResponderV1 extends ResponderV1 {
                 apiRequestID = apiRequestID
             )
 
-            resourcesToCreate: Seq[ResourceToCreate] = Seq(ResourceToCreate(
+            resourcesToCreate: Seq[SparqlTemplateResourceToCreate] = Seq(SparqlTemplateResourceToCreate(
                 resourceIri = resourceIri,
                 permissions = defaultResourceClassAccessPermissions,
                 generateSparqlForValuesResponse = generateSparqlForValuesResponse,

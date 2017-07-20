@@ -1237,8 +1237,8 @@ class ResourcesV1R2RSpec extends R2RSpec {
 
                 val responseJson: JsObject = AkkaHttpUtils.httpResponseToJson(response)
                 val createdResources: Seq[JsValue] = responseJson.fields("createdResources").asInstanceOf[JsArray].elements
-                abelAuthorIri.set(createdResources.head.asJsObject.fields("res_id").asInstanceOf[JsString].value)
-                mathIntelligencerIri.set(createdResources(2).asJsObject.fields("res_id").asInstanceOf[JsString].value)
+                abelAuthorIri.set(createdResources.head.asJsObject.fields("resourceIri").asInstanceOf[JsString].value)
+                mathIntelligencerIri.set(createdResources(2).asJsObject.fields("resourceIri").asInstanceOf[JsString].value)
             }
         }
 

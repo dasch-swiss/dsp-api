@@ -248,11 +248,19 @@ case class MultipleResourceCreateRequestV1(resourcesToCreate: Seq[OneOfMultipleR
   * @param createdResources created resources
   *
   */
-case class MultipleResourceCreateResponseV1(createdResources: Seq[JsValue]) extends KnoraResponseV1 {
+case class MultipleResourceCreateResponseV1(createdResources: Seq[OneOfMultipleResourcesCreateResponseV1]) extends KnoraResponseV1 {
 
     def toJsValue: JsValue = ResourceV1JsonProtocol.multipleResourceCreateResponseV1Format.write(this)
 
 }
+
+/**
+  * Represents one of multiple resources that were created in response to a single API request.
+  *
+  * @param clientResourceID the client's ID for the resource.
+  * @param resourceIri the IRI that was assigned to the resource.
+  */
+case class OneOfMultipleResourcesCreateResponseV1(clientResourceID: String, resourceIri: IRI)
 
 /**
   * Checks whether a resource belongs to a certain OWL class or to a subclass of that class. This message is used
@@ -1139,6 +1147,7 @@ object ResourceV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
     implicit val resourceSearchResponseV1Format: RootJsonFormat[ResourceSearchResponseV1] = jsonFormat1(ResourceSearchResponseV1)
     implicit val resourceCreateValueObjectResponseV1Format: RootJsonFormat[ResourceCreateValueObjectResponseV1] = jsonFormat14(ResourceCreateValueObjectResponseV1)
     implicit val resourceCreateValueResponseV1Format: RootJsonFormat[ResourceCreateValueResponseV1] = jsonFormat2(ResourceCreateValueResponseV1)
+    implicit val oneOfMultipleResourcesCreateResponseFormat: JsonFormat[OneOfMultipleResourcesCreateResponseV1] = jsonFormat2(OneOfMultipleResourcesCreateResponseV1)
     implicit val multipleResourceCreateResponseV1Format: RootJsonFormat[MultipleResourceCreateResponseV1] = jsonFormat1(MultipleResourceCreateResponseV1)
     implicit val resourceCreateResponseV1Format: RootJsonFormat[ResourceCreateResponseV1] = jsonFormat2(ResourceCreateResponseV1)
     implicit val resourceDeleteResponseV1Format: RootJsonFormat[ResourceDeleteResponseV1] = jsonFormat1(ResourceDeleteResponseV1)
