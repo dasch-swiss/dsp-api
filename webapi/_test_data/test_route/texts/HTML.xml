@@ -15,4 +15,41 @@
         On the <span class="event" data-description="New year's eve" data-date="GREGORIAN:2016-12-31">31st of December 2016, we will have a party</span>. Most probably it will be boring.
 
     </p>
+    
+    <h1>header 1</h1>
+    <h2>header 2</h2>
+    <h3>header 3</h3>
+    <h4>header 4</h4>
+    <h5>header 5</h5>
+    <h6>header 6</h6>
+
+    <ul>
+        <li>unordered list element</li>
+        <li>unordered list element</li>
+    </ul>
+
+    <ol>
+        <li>ordered list element</li>
+        <li>ordered list element</li>
+    </ol>
+
+    <table>
+        <tr>
+            <td>year</td>
+            <td>name</td>
+        </tr>
+        <tr>
+            <td>2012</td>
+            <td>Old Ideas</td>
+        </tr>
+        <tr>
+            <td>2014</td>
+            <td>Polpular Problems</td>
+        </tr>
+    </table>
+
+    He will speak these words of wisdom <br/>
+    Like a sage, a man of vision        <br/>
+    Though he knows he’s really nothing <br/>
+    But the brief elaboration of a tube <br/>
 </text>
