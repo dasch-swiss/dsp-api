@@ -596,7 +596,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
             }
         }
 
-        "return 5 books when we search for all books whose publication date is greater than or equal to January 1495 (Julian date) in the Incunabula test data" in {
+        "return 7 books when we search for all books whose publication date is greater than or equal to January 1495 (Julian date) in the Incunabula test data" in {
             // http://localhost:3333/v1/search/?searchtype=extended&filter_by_restype=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23book&property_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23pubdate&compop=GT_EQ&searchval=JULIAN:1495-01
             actorUnderTest ! ExtendedSearchGetRequestV1(
                 userProfile = incunabulaUser,
@@ -609,11 +609,11 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case response: SearchGetResponseV1 => response.subjects.size should ===(5)
+                case response: SearchGetResponseV1 => response.subjects.size should ===(7)
             }
         }
 
-        "return 13 books when we search for all books whose publication date is less than or equal to December 1495 (Julian date) in the Incunabula test data" in {
+        "return 15 books when we search for all books whose publication date is less than or equal to December 1495 (Julian date) in the Incunabula test data" in {
             // http://localhost:3333/v1/search/?searchtype=extended&filter_by_restype=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23book&property_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23pubdate&compop=LT_EQ&searchval=JULIAN:1495-12
             actorUnderTest ! ExtendedSearchGetRequestV1(
                 userProfile = incunabulaUser,
@@ -626,7 +626,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case response: SearchGetResponseV1 => response.subjects.size should ===(13)
+                case response: SearchGetResponseV1 => response.subjects.size should ===(15)
             }
         }
 

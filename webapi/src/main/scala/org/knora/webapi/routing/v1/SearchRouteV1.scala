@@ -59,26 +59,26 @@ object SearchRouteV1 extends Authenticator {
 
         // only one value is expected
         val restypeIri: Option[IRI] = params.get("filter_by_restype") match {
-            case Some(List(restype: IRI)) => Some(InputValidation.toIri(restype, () => throw BadRequestException(s"Unexpected param 'filter_by_restype' for extended search: $restype")))
+            case Some(List(restype: IRI)) => Some(InputValidation.toIri(restype, () => throw BadRequestException(s"Value for param 'filter_by_restype' for extended search $restype is not a valid Iri. Please make sure that it was correctly URL encoded.")))
             case other => None
         }
 
         // only one value is expected
         val projectIri: Option[IRI] = params.get("filter_by_project") match {
-            case Some(List(project: IRI)) => Some(InputValidation.toIri(project, () => throw BadRequestException(s"Unexpected param 'filter_by_project' for extended search: $project")))
+            case Some(List(project: IRI)) => Some(InputValidation.toIri(project, () => throw BadRequestException(s"Value for param 'filter_by_project' for extended search $project is not a valid Iri. Please make sure that it was correctly URL encoded.")))
             case other => None
         }
 
         // only one value is expected
         val ownerIri: Option[IRI] = params.get("filter_by_owner") match {
-            case Some(List(owner: IRI)) => Some(InputValidation.toIri(owner, () => throw BadRequestException(s"Unexpected param 'filter_by_owner' for extended search: $owner")))
+            case Some(List(owner: IRI)) => Some(InputValidation.toIri(owner, () => throw BadRequestException(s"Value for param 'filter_by_owner' for extended search $owner is not a valid Iri. Please make sure that it was correctly URL encoded.")))
             case other => None
         }
 
         // here, also multiple values can be given
         val propertyIri: Seq[IRI] = params.get("property_id") match {
             case Some(propertyList: Seq[IRI]) => propertyList.map(
-                prop => InputValidation.toIri(prop, () => throw BadRequestException(s"Unexpected param 'property_id' for extended search: $prop"))
+                prop => InputValidation.toIri(prop, () => throw BadRequestException(s"Value for param 'property_id' for extended search $prop is not a valid Iri. Please make sure that it was correctly URL encoded."))
             )
             case other => Nil
         }
