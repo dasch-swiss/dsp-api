@@ -54,7 +54,7 @@ object SearchRouteV1 extends Authenticator {
 
         params.get("searchtype") match {
             case Some(List("extended")) => ()
-            case other => throw BadRequestException(s"Unexpected searchtype param for extended search")
+            case other => throw BadRequestException(s"Unexpected searchtype param for extended search: $other")
         }
 
         // only one value is expected
