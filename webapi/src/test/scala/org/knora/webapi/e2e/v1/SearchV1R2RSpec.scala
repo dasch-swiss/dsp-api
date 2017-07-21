@@ -110,6 +110,102 @@ class SearchV1R2RSpec extends R2RSpec {
 
         }
 
+        "perform an extended search for books that have been published on the first of March 1497 (Julian Calendar)" in {
+
+            val props = "&property_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23pubdate&compop=EQ&searchval=JULIAN:1497-03-01"
+            val filter = "&show_nrows=25&start_at=0&filter_by_restype=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23book"
+
+            Get("/v1/search/?searchtype=extended" + props + filter) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                checkNumberOfHits(responseAs[String], 2)
+
+            }
+
+        }
+
+        "perform an extended search for books that have not been published on the first of March 1497 (Julian Calendar)" in {
+
+            val props = "&property_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23pubdate&compop=!EQ&searchval=JULIAN:1497-03-01"
+            val filter = "&show_nrows=25&start_at=0&filter_by_restype=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23book"
+
+            Get("/v1/search/?searchtype=extended" + props + filter) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                // this is the negation of the query condition above, hence the size of the result set must be 19 (total of incunabula:book) minus 2 (number of results from query above)
+                checkNumberOfHits(responseAs[String], 17)
+
+            }
+
+        }
+
+        "perform an extended search for books that have been published before 1497 (Julian Calendar)" in {
+
+            val props = "&property_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23pubdate&compop=LT&searchval=JULIAN:1497"
+            val filter = "&show_nrows=25&start_at=0&filter_by_restype=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23book"
+
+            Get("/v1/search/?searchtype=extended" + props + filter) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                // this is the negation of the query condition above, hence the size of the result set must be 19 (total of incunabula:book) minus 4 (number of results from query below)
+                checkNumberOfHits(responseAs[String], 15)
+
+            }
+
+        }
+
+        "perform an extended search for books that have been published 1497 or later (Julian Calendar)" in {
+
+            val props = "&property_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23pubdate&compop=GT_EQ&searchval=JULIAN:1497"
+            val filter = "&show_nrows=25&start_at=0&filter_by_restype=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23book"
+
+            Get("/v1/search/?searchtype=extended" + props + filter) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                // this is the negation of the query condition above, hence the size of the result set must be 19 (total of incunabula:book) minus 15 (number of results from query above)
+                checkNumberOfHits(responseAs[String], 4)
+
+            }
+
+        }
+
+        "perform an extended search for books that have been published after 1497 (Julian Calendar)" in {
+
+            val props = "&property_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23pubdate&compop=GT&searchval=JULIAN:1497"
+            val filter = "&show_nrows=25&start_at=0&filter_by_restype=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23book"
+
+            Get("/v1/search/?searchtype=extended" + props + filter) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                // this is the negation of the query condition above, hence the size of the result set must be 19 (total of incunabula:book) minus 18 (number of results from query below)
+                checkNumberOfHits(responseAs[String], 1)
+
+            }
+
+        }
+
+        "perform an extended search for books that have been published 1497 or before (Julian Calendar)" in {
+
+            val props = "&property_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23pubdate&compop=LT_EQ&searchval=JULIAN:1497"
+            val filter = "&show_nrows=25&start_at=0&filter_by_restype=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23book"
+
+            Get("/v1/search/?searchtype=extended" + props + filter) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                // this is the negation of the query condition above, hence the size of the result set must be 19 (total of incunabula:book) minus 1 (number of results from query above)
+                checkNumberOfHits(responseAs[String], 18)
+
+            }
+
+        }
+
+
     }
 
 }

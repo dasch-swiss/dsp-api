@@ -94,7 +94,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
     /**
       * Checks for the number of expected results to be returned.
       *
-      * @param responseJson the response send back by the search route.
+      * @param responseJson   the response send back by the search route.
       * @param expectedNumber the expected number of results for the query.
       * @return an assertion that the actual amount of results corresponds with the expected number of results.
       */
@@ -135,9 +135,9 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         "perform an extended search for the pages of a book whose seqnum is lower than or equals 10" in {
 
-            val sparql_simplified =
+            val sparqlSimplified =
                 """PREFIX incunabula: <http://api.knora.org/ontology/incunabula/simple/v2#>
-                  |    PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |
                   |    CONSTRUCT {
                   |        ?page knora-api:isMainResource true .
@@ -168,7 +168,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                 """.stripMargin
 
             // TODO: find a better way to submit spaces as %20
-            Get("/v2/searchextended/" + URLEncoder.encode(sparql_simplified, "UTF-8").replace("+", "%20")) ~> searchPath ~> check {
+            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -177,5 +177,327 @@ class SearchRouteV2R2RSpec extends R2RSpec {
             }
 
         }
+
+
+        "perform an extended search for books that have been published on the first of March 1497 (Julian Calendar)" in {
+            val sparqlSimplified =
+                """PREFIX incunabula: <http://api.knora.org/ontology/incunabula/simple/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |
+                  |    CONSTRUCT {
+                  |        ?book knora-api:isMainResource true .
+                  |
+                  |        ?book a incunabula:book .
+                  |
+                  |        ?book incunabula:title ?title .
+                  |
+                  |        ?book incunabula:pubdate "JULIAN:1497-03-01" .
+                  |    } WHERE {
+                  |
+                  |        ?book a incunabula:book .
+                  |        ?book a knora-api:Resource .
+                  |
+                  |        ?book incunabula:title ?title .
+                  |        incunabula:title knora-api:objectType xsd:string .
+                  |
+                  |        ?title a xsd:string .
+                  |
+                  |        ?book incunabula:pubdate "JULIAN:1497-03-01" .
+                  |        incunabula:pubdate knora-api:objectType knora-api:Date .
+                  |
+                  |    }
+                """.stripMargin
+
+            // TODO: find a better way to submit spaces as %20
+            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                checkNumberOfItems(responseAs[String], 2)
+
+            }
+
+        }
+
+        "perform an extended search for books that have not been published on the first of March 1497 (Julian Calendar)" in {
+            val sparqlSimplified =
+                """PREFIX incunabula: <http://api.knora.org/ontology/incunabula/simple/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |
+                  |    CONSTRUCT {
+                  |        ?book knora-api:isMainResource true .
+                  |
+                  |        ?book a incunabula:book .
+                  |
+                  |        ?book incunabula:title ?title .
+                  |
+                  |        ?book incunabula:pubdate "JULIAN:1497-03-01" .
+                  |    } WHERE {
+                  |
+                  |        ?book a incunabula:book .
+                  |        ?book a knora-api:Resource .
+                  |
+                  |        ?book incunabula:title ?title .
+                  |        incunabula:title knora-api:objectType xsd:string .
+                  |
+                  |        ?title a xsd:string .
+                  |
+                  |        ?book incunabula:pubdate ?pubdate .
+                  |        incunabula:pubdate knora-api:objectType knora-api:Date .
+                  |
+                  |        ?pubdate a knora-api:Date .
+                  |
+                  |         FILTER(?pubdate != "JULIAN:1497-03-01")
+                  |
+                  |    }
+                """.stripMargin
+
+            // TODO: find a better way to submit spaces as %20
+            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                // this is the negation of the query condition above, hence the size of the result set must be 19 (total of incunabula:book) minus 2 (number of results from query above)
+                checkNumberOfItems(responseAs[String], 17)
+
+            }
+
+        }
+
+        "perform an extended search for books that have been published before 1497 (Julian Calendar)" in {
+            val sparqlSimplified =
+                """    PREFIX incunabula: <http://api.knora.org/ontology/incunabula/simple/v2#>
+                  |    PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |
+                  |    CONSTRUCT {
+                  |        ?book knora-api:isMainResource true .
+                  |
+                  |        ?book a incunabula:book .
+                  |
+                  |        ?book incunabula:title ?title .
+                  |
+                  |        ?book incunabula:pubdate ?pubdate .
+                  |    } WHERE {
+                  |
+                  |        ?book a incunabula:book .
+                  |        ?book a knora-api:Resource .
+                  |
+                  |        ?book incunabula:title ?title .
+                  |        incunabula:title knora-api:objectType xsd:string .
+                  |
+                  |        ?title a xsd:string .
+                  |
+                  |        ?book incunabula:pubdate ?pubdate .
+                  |        incunabula:pubdate knora-api:objectType knora-api:Date .
+                  |
+                  |        ?pubdate a knora-api:Date .
+                  |        FILTER(?pubdate < "JULIAN:1497")
+                  |
+                  |    }
+                """.stripMargin
+
+            // TODO: find a better way to submit spaces as %20
+            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                // this is the negation of the query condition above, hence the size of the result set must be 19 (total of incunabula:book) minus 4 (number of results from query below)
+                checkNumberOfItems(responseAs[String], 15)
+
+            }
+
+        }
+
+        "perform an extended search for books that have been published 1497 or later (Julian Calendar)" in {
+            val sparqlSimplified =
+                """    PREFIX incunabula: <http://api.knora.org/ontology/incunabula/simple/v2#>
+                  |    PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |
+                  |    CONSTRUCT {
+                  |        ?book knora-api:isMainResource true .
+                  |
+                  |        ?book a incunabula:book .
+                  |
+                  |        ?book incunabula:title ?title .
+                  |
+                  |        ?book incunabula:pubdate ?pubdate .
+                  |    } WHERE {
+                  |
+                  |        ?book a incunabula:book .
+                  |        ?book a knora-api:Resource .
+                  |
+                  |        ?book incunabula:title ?title .
+                  |        incunabula:title knora-api:objectType xsd:string .
+                  |
+                  |        ?title a xsd:string .
+                  |
+                  |        ?book incunabula:pubdate ?pubdate .
+                  |        incunabula:pubdate knora-api:objectType knora-api:Date .
+                  |
+                  |        ?pubdate a knora-api:Date .
+                  |        FILTER(?pubdate >= "JULIAN:1497")
+                  |
+                  |    }
+                """.stripMargin
+
+            // TODO: find a better way to submit spaces as %20
+            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                // this is the negation of the query condition above, hence the size of the result set must be 19 (total of incunabula:book) minus 15 (number of results from query above)
+                checkNumberOfItems(responseAs[String], 4)
+
+            }
+
+        }
+
+        "perform an extended search for books that have been published after 1497 (Julian Calendar)" in {
+            val sparqlSimplified =
+                """    PREFIX incunabula: <http://api.knora.org/ontology/incunabula/simple/v2#>
+                  |    PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |
+                  |    CONSTRUCT {
+                  |        ?book knora-api:isMainResource true .
+                  |
+                  |        ?book a incunabula:book .
+                  |
+                  |        ?book incunabula:title ?title .
+                  |
+                  |        ?book incunabula:pubdate ?pubdate .
+                  |    } WHERE {
+                  |
+                  |        ?book a incunabula:book .
+                  |        ?book a knora-api:Resource .
+                  |
+                  |        ?book incunabula:title ?title .
+                  |        incunabula:title knora-api:objectType xsd:string .
+                  |
+                  |        ?title a xsd:string .
+                  |
+                  |        ?book incunabula:pubdate ?pubdate .
+                  |        incunabula:pubdate knora-api:objectType knora-api:Date .
+                  |
+                  |        ?pubdate a knora-api:Date .
+                  |        FILTER(?pubdate > "JULIAN:1497")
+                  |
+                  |    }
+                """.stripMargin
+
+            // TODO: find a better way to submit spaces as %20
+            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                // this is the negation of the query condition above, hence the size of the result set must be 19 (total of incunabula:book) minus 18 (number of results from query above)
+                checkNumberOfItems(responseAs[String], 1)
+
+            }
+
+        }
+
+        "perform an extended search for books that have been published 1497 or before (Julian Calendar)" in {
+            val sparqlSimplified =
+                """    PREFIX incunabula: <http://api.knora.org/ontology/incunabula/simple/v2#>
+                  |    PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |
+                  |    CONSTRUCT {
+                  |        ?book knora-api:isMainResource true .
+                  |
+                  |        ?book a incunabula:book .
+                  |
+                  |        ?book incunabula:title ?title .
+                  |
+                  |        ?book incunabula:pubdate ?pubdate .
+                  |    } WHERE {
+                  |
+                  |        ?book a incunabula:book .
+                  |        ?book a knora-api:Resource .
+                  |
+                  |        ?book incunabula:title ?title .
+                  |        incunabula:title knora-api:objectType xsd:string .
+                  |
+                  |        ?title a xsd:string .
+                  |
+                  |        ?book incunabula:pubdate ?pubdate .
+                  |        incunabula:pubdate knora-api:objectType knora-api:Date .
+                  |
+                  |        ?pubdate a knora-api:Date .
+                  |        FILTER(?pubdate <= "JULIAN:1497")
+                  |
+                  |    }
+                """.stripMargin
+
+            // TODO: find a better way to submit spaces as %20
+            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                // this is the negation of the query condition above, hence the size of the result set must be 19 (total of incunabula:book) minus 1 (number of results from query above)
+                checkNumberOfItems(responseAs[String], 18)
+
+            }
+
+        }
+
+
+        "get the regions beloning to a page" in {
+            val sparqlSimplified =
+                """    PREFIX incunabula: <http://api.knora.org/ontology/incunabula/simple/v2#>
+                  |    PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |
+                  |    CONSTRUCT {
+                  |        ?region knora-api:isMainResource true .
+                  |
+                  |        ?region a knora-api:Region .
+                  |
+                  |        ?region knora-api:isRegionOf <http://data.knora.org/9d626dc76c03> .
+                  |
+                  |        ?region knora-api:hasGeometry ?geom .
+                  |
+                  |        ?region knora-api:hasComment ?comment .
+                  |
+                  |        ?region knora-api:hasColor ?color .
+                  |    } WHERE {
+                  |
+                  |        ?region a knora-api:Region .
+                  |        ?region a knora-api:Resource .
+                  |
+                  |        ?region knora-api:isRegionOf <http://data.knora.org/9d626dc76c03> .
+                  |        knora-api:isRegionOf knora-api:objectType knora-api:Resource .
+                  |
+                  |        <http://data.knora.org/9d626dc76c03> a knora-api:Resource .
+                  |
+                  |        ?region knora-api:hasGeometry ?geom .
+                  |        knora-api:hasGeometry knora-api:objectType knora-api:Geom .
+                  |
+                  |        ?geom a knora-api:Geom .
+                  |
+                  |        ?region knora-api:hasComment ?comment .
+                  |        knora-api:hasComment knora-api:objectType xsd:string .
+                  |
+                  |        ?comment a xsd:string .
+                  |
+                  |        ?region knora-api:hasColor ?color .
+                  |        knora-api:hasColor knora-api:objectType knora-api:Color .
+                  |
+                  |        ?color a knora-api:Color .
+                  |
+                  |    }
+                """.stripMargin
+
+            // TODO: find a better way to submit spaces as %20
+            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                checkNumberOfItems(responseAs[String], 2)
+
+            }
+
+        }
+
+
+
     }
 }
