@@ -208,9 +208,7 @@ class SearchResponderV2 extends Responder {
                     ExtendedSearchStatementPattern(subj = subject, pred = ExtendedSearchInternalEntityIri(OntologyConstants.KnoraBase.AttachedToProject), obj = ExtendedSearchVar("resourceProject" + index), true)
                 ), typeInfoKeysProcessed = typeInfoKeysProcessed)
             } else {
-                // TODO: handle more cases here
-
-                AdditionalStatements()
+                throw SparqlSearchException(s"non property type is expected to be of type ${OntologyConstants.KnoraBase.Resource}, but $typeIriInternal is given")
             }
         }
 
