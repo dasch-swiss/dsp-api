@@ -421,4 +421,58 @@
         </standoffClass>
     </mappingElement>
 
+    <mappingElement>
+        <tag>
+            <name>hr</name>
+            <class>noClass</class>
+            <namespace>noNamespace</namespace>
+            <separatesWords>true</separatesWords>
+        </tag>
+        <standoffClass>
+            <classIri>http://www.knora.org/ontology/standoff#StandoffLineTag</classIri>
+        </standoffClass>
+    </mappingElement>
+
+    <mappingElement>
+        <tag>
+            <name>pre</name>
+            <class>noClass</class>
+            <namespace>noNamespace</namespace>
+            <separatesWords>true</separatesWords>
+        </tag>
+        <standoffClass>
+            <classIri>http://www.knora.org/ontology/standoff#StandoffPreTag</classIri>
+        </standoffClass>
+    </mappingElement>
+
+    <mappingElement>
+        <tag>
+            <name>cite</name>
+            <class>noClass</class>
+            <namespace>noNamespace</namespace>
+            <separatesWords>true</separatesWords>
+        </tag>
+        <standoffClass>
+            <classIri>http://www.knora.org/ontology/standoff#StandoffCiteTag</classIri>
+        </standoffClass>
+    </mappingElement>
+
+    <!--
+    <mappingElement>
+        <tag>
+            <name>blockquote</name>
+            <class>noClass</class>
+            <namespace>noNamespace</namespace>
+            <separatesWords>true</separatesWords>
+        </tag>
+        <standoffClass>
+            <classIri>http://www.knora.org/ontology/standoff#StandoffBlockquoteTag</classIri>
+            <datatype>
+                <type>http://www.knora.org/ontology/standoff#standoffHyperlinkTagHasTarget</type>
+                <attributeName>cite</attributeName>
+            </datatype>
+        </standoffClass>
+    </mappingElement>
+    -->
+
 </mapping>

@@ -89,6 +89,8 @@
 
             rdfs:comment "Represents the root node if the TextValue has been created from XML"@en .
 
+###  http://www.knora.org/ontology/standoff#StandoffHyperlinkTag
+
 :StandoffHyperlinkTag rdf:type owl:Class ;
 
             rdfs:subClassOf knora-base:StandoffUriTag ,
@@ -97,7 +99,19 @@
                               owl:maxCardinality "1"^^xsd:nonNegativeInteger
                            ] ;
 
-                        rdfs:comment "Represents a hyperlink in a text"@en .
+            rdfs:comment "Represents a hyperlink in a text"@en .
+
+###  http://www.knora.org/ontology/standoff#StandoffBlockquoteTag
+
+:StandoffBlockquoteTag rdf:type owl:Class ;
+
+            rdfs:subClassOf :StandoffHyperlinkTag ,
+                           [ rdf:type owl:Restriction ;
+                              owl:onProperty :standoffHyperlinkTagHasTarget ;
+                              owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                           ] ;
+
+            rdfs:comment "Represents a section that is quoted from another source in a text"@en .
 
 
 ###  http://www.knora.org/ontology/standoff#StandoffParagraphTag
@@ -279,3 +293,29 @@
                 rdfs:subClassOf :StandoffVisualTag ;
 
                 rdfs:comment "Represents subscript in a TextValue"@en .
+                
+###  http://www.knora.org/ontology/standoff-html-editor#StandoffQuoteTag
+
+:StandoffCiteTag rdf:type owl:Class ;
+
+                rdfs:subClassOf :StandoffVisualTag ;
+
+                rdfs:comment "Represents the title of a work in a TextValue"@en .
+
+
+###  http://www.knora.org/ontology/standoff-html-editor#StandoffLineTag
+
+:StandoffLineTag rdf:type owl:Class ;
+
+                rdfs:subClassOf :StandoffVisualTag ;
+
+                rdfs:comment "Represents a line to seperate content in a TextValue"@en .
+
+
+###  http://www.knora.org/ontology/standoff-html-editor#StandoffPreTag
+
+:StandoffPreTag rdf:type owl:Class ;
+
+                rdfs:subClassOf :StandoffVisualTag ;
+
+                rdfs:comment "Represents a preformatted content in a TextValue"@en .
