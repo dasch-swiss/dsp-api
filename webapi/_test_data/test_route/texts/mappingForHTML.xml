@@ -457,7 +457,6 @@
         </standoffClass>
     </mappingElement>
 
-    <!--
     <mappingElement>
         <tag>
             <name>blockquote</name>
@@ -468,11 +467,10 @@
         <standoffClass>
             <classIri>http://www.knora.org/ontology/standoff#StandoffBlockquoteTag</classIri>
             <datatype>
-                <type>http://www.knora.org/ontology/standoff#standoffHyperlinkTagHasTarget</type>
+                <type>http://www.knora.org/ontology/knora-base#StandoffUriTag</type>
                 <attributeName>cite</attributeName>
             </datatype>
         </standoffClass>
     </mappingElement>
-    -->
 
 </mapping>
