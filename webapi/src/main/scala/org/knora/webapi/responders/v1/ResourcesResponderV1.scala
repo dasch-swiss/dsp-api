@@ -1396,7 +1396,8 @@ class ResourcesResponderV1 extends ResponderV1 {
                 resourceToCreate: OneOfMultipleResourceCreateRequestV1 =>
                     OneOfMultipleResourcesCreateResponseV1(
                         clientResourceID = resourceToCreate.clientResourceID,
-                        resourceIri = clientResourceIDsToResourceIris(resourceToCreate.clientResourceID)
+                        resourceIri = clientResourceIDsToResourceIris(resourceToCreate.clientResourceID),
+                        label = resourceToCreate.label
                     )
             }
        } yield MultipleResourceCreateResponseV1(responses)
