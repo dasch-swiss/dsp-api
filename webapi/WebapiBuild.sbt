@@ -137,7 +137,7 @@ lazy val webApiLibs = Seq(
     "com.typesafe.scala-logging" %% "scala-logging" % "3.5.0",
     "ch.qos.logback" % "logback-classic" % "1.1.7",
     // input validation
-    "commons-validator" % "commons-validator" % "1.5.1",
+    "commons-validator" % "commons-validator" % "1.6",
     // authentication
     "org.bouncycastle" % "bcprov-jdk15on" % "1.56",
     "org.springframework.security" % "spring-security-core" % "4.2.1.RELEASE",
