@@ -21,6 +21,7 @@
 package org.knora.webapi.responders.v1
 
 import akka.pattern._
+import org.apache.jena.sparql.function.library.leviathan.log
 import org.knora
 import org.knora.webapi
 import org.knora.webapi._
@@ -42,6 +43,7 @@ class ListsResponderV1 extends ResponderV1 {
     def receive = {
         case ListsGetRequestV1(projectIri, userProfile) => future2Message(sender(), listsGetRequestV1(projectIri, userProfile), log)
         case ListExtendedGetRequestV1(listIri, userProfile) => future2Message(sender(), listExtendedGetRequestV1(listIri, userProfile), log)
+        case ListNodeInfoGetRequestV1(listIri, userProfile) => future2Message(sender(), listNodeInfoGetRequestV1(listIri, userProfile), log)
         case HListGetRequestV1(listIri, userProfile) => future2Message(sender(), listGetRequestV1(listIri, userProfile, PathType.HList), log)
         case SelectionGetRequestV1(listIri, userProfile) => future2Message(sender(), listGetRequestV1(listIri, userProfile, PathType.Selection), log)
         case NodePathGetRequestV1(iri: IRI, userProfile: UserProfileV1) => future2Message(sender(), getNodePathResponseV1(iri, userProfile), log)
@@ -70,21 +72,20 @@ class ListsResponderV1 extends ResponderV1 {
 
             listsResponseRows: Seq[VariableResultsRow] = listsResponse.results.bindings
 
-            listsWithProperties: Map[String, Map[String, String]] = listsResponseRows.groupBy(_.rowMap("s")).map {
-                case (listIri: String, rows: Seq[VariableResultsRow]) => (listIri, rows.map {
-                    case row => (row.rowMap("p"), row.rowMap("o"))
-                }.toMap)
+            listsWithProperties: Map[String, Map[String, Seq[String]]] = listsResponseRows.groupBy(_.rowMap("s")).map {
+                case (listIri: String, rows: Seq[VariableResultsRow]) => listIri -> rows.groupBy(_.rowMap("p")).map {
+                    case (predicate, rows: Seq[VariableResultsRow]) => predicate -> rows.map(_.rowMap("o"))
+                }
             }
 
             lists = listsWithProperties.map {
-                case (listIri: IRI, propsMap: Map[String, String]) =>
+                case (listIri: IRI, propsMap: Map[String, Seq[String]]) =>
 
                     ListInfoV1(
                         id = listIri,
-                        projectIri = propsMap.get(OntologyConstants.KnoraBase.AttachedToProject),
-                        name = propsMap.get(OntologyConstants.KnoraBase.ListNodeName),
-                        comment = propsMap.get(OntologyConstants.Rdfs.Comment),
-                        label = propsMap.get(OntologyConstants.Rdfs.Label)
+                        projectIri = propsMap.get(OntologyConstants.KnoraBase.AttachedToProject).map(_.head),
+                        labels = propsMap.getOrElse(OntologyConstants.Rdfs.Label, Seq.empty[String]),
+                        comment = propsMap.get(OntologyConstants.Rdfs.Comment).map(_.head)
                     )
             }.toVector
         } yield ListsGetResponseV1(
@@ -102,9 +103,10 @@ class ListsResponderV1 extends ResponderV1 {
     def listExtendedGetRequestV1(rootNodeIri: IRI, userProfile: UserProfileV1): Future[ListExtendedGetResponseV1] = {
 
         for {
-            sparqlQuery <- Future(queries.sparql.v1.txt.getListInfo(
+            sparqlQuery <- Future(queries.sparql.v1.txt.getListNode(
                 triplestore = settings.triplestoreType,
-                rootNodeIri = rootNodeIri
+                nodeIri = rootNodeIri,
+                isRootNode = true
             ).toString())
 
             listInfoResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
@@ -114,7 +116,7 @@ class ListsResponderV1 extends ResponderV1 {
             }
 
             groupedListProperties: Map[String, Seq[String]] = listInfoResponse.results.bindings.groupBy(_.rowMap("p")).map {
-                case (predicate, rows) => predicate -> rows.map(_.rowMap("o"))
+                case (predicate: String, rows: Seq[VariableResultsRow]) => predicate -> rows.map(_.rowMap("o"))
             }
 
             // _ = log.debug(s"listExtendedGetRequestV1 - groupedListProperties: ${MessageUtil.toSource(groupedListProperties)}")
@@ -122,19 +124,54 @@ class ListsResponderV1 extends ResponderV1 {
             listInfo: ListInfoV1 = ListInfoV1(
                 id = rootNodeIri,
                 projectIri = groupedListProperties.get(OntologyConstants.KnoraBase.AttachedToProject).map(_.head),
-                name = groupedListProperties.get(OntologyConstants.KnoraBase.ListNodeName).map(_.head),
-                comment = groupedListProperties.get(OntologyConstants.Rdfs.Comment).map(_.head),
-                label = groupedListProperties.get(OntologyConstants.Rdfs.Label).map(_.head)
+                labels = groupedListProperties.getOrElse(OntologyConstants.Rdfs.Label, Seq.empty[String]),
+                comment = groupedListProperties.get(OntologyConstants.Rdfs.Comment).map(_.head)
+
                 // status = groupedListProperties.get(OntologyConstants.KnoraBase.Status).map(_.head.toBoolean)
             )
 
             // here we know that the list exists and it is fine if children is an empty list
             children: Seq[ListNodeV1] <- listGetV1(rootNodeIri, userProfile)
 
-            _ = log.debug(s"listExtendedGetRequestV1 - children: ${MessageUtil.toSource(children)}")
+            // _ = log.debug(s"listExtendedGetRequestV1 - children: {}", MessageUtil.toSource(children)")
 
         } yield ListExtendedGetResponseV1(info = listInfo, nodes = children)
+    }
 
+
+    def listNodeInfoGetRequestV1(nodeIri: IRI, userProfile: UserProfileV1): Future[ListNodeInfoGetResponseV1] = {
+        for {
+            sparqlQuery <- Future(queries.sparql.v1.txt.getListNode(
+                triplestore = settings.triplestoreType,
+                nodeIri = nodeIri,
+                isRootNode = false
+            ).toString())
+
+            // _ = log.debug("listNodeInfoGetRequestV1 - sparqlQuery: {}", sparqlQuery)
+
+            listNodeResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
+
+            _ = if (listNodeResponse.results.bindings.isEmpty) {
+                throw NotFoundException(s"List node not found: $nodeIri")
+            }
+
+            groupedListProperties: Map[String, Seq[String]] = listNodeResponse.results.bindings.groupBy(_.rowMap("p")).map {
+                case (predicate: String, rows: Seq[VariableResultsRow]) => predicate -> rows.map(_.rowMap("o"))
+            }
+
+            // _ = log.debug(s"listNodeInfoGetRequestV1 - groupedListProperties: {}", MessageUtil.toSource(groupedListProperties))
+
+            listNodeInfo: ListNodeInfoV1 = ListNodeInfoV1(
+                id = nodeIri,
+                labels = groupedListProperties.getOrElse(OntologyConstants.Rdfs.Label, Seq.empty[String]),
+                comment = groupedListProperties.get(OntologyConstants.Rdfs.Comment).map(_.head)
+
+                // status = groupedListProperties.get(OntologyConstants.KnoraBase.Status).map(_.head.toBoolean)
+            )
+
+            // _ = log.debug(s"listNodeInfoGetRequestV1 - listNodeInfo: {}", MessageUtil.toSource(listNodeInfo))
+
+        } yield ListNodeInfoGetResponseV1(id = listNodeInfo.id, labels = listNodeInfo.labels, comment = listNodeInfo.comment)
     }
 
     /**

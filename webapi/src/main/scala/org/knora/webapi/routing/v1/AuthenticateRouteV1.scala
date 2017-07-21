@@ -47,7 +47,7 @@ object AuthenticateRouteV1 extends Authenticator {
             }
         } ~ path("v1" / "session") {
             get {
-                parameters("login"?, "logout".?) { (login: Option[String], logout: Option[String]) =>
+                parameters("login".?, "logout".?) { (login: Option[String], logout: Option[String]) =>
                     requestContext => {
                         requestContext.complete {
                             if (login.isDefined) {

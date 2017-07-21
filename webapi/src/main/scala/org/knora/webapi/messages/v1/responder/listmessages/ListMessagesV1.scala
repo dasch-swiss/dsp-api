@@ -58,6 +58,14 @@ case class ListsGetRequestV1(projectIri: Option[IRI] = None,
 case class ListExtendedGetRequestV1(iri: IRI, userProfile: UserProfileV1) extends ListsResponderRequestV1
 
 /**
+  * Request basic information about a list node. A successful response will be a [[ListNodeInfoGetResponseV1]]
+  *
+  * @param iri         the IRI of the list node.
+  * @param userProfile the profile of the user making the request.
+  */
+case class ListNodeInfoGetRequestV1(iri: IRI, userProfile: UserProfileV1) extends ListsResponderRequestV1
+
+/**
   * Requests a list. A successful response will be a [[HListGetResponseV1]]
   *
   * @param iri         the IRI of the list.
@@ -106,7 +114,7 @@ sealed abstract class ListGetResponseV1 extends KnoraResponseV1
 /**
   * Provides a information about the list and the list itself.
   *
-  * @param info the basic information about a list.
+  * @param info  the basic information about a list.
   * @param nodes the whole list.
   */
 case class ListExtendedGetResponseV1(info: ListInfoV1, nodes: Seq[ListNodeV1]) extends ListGetResponseV1 with ListV1JsonProtocol {
@@ -129,6 +137,17 @@ case class HListGetResponseV1(hlist: Seq[ListNodeV1]) extends ListGetResponseV1 
   */
 case class SelectionGetResponseV1(selection: Seq[ListNodeV1]) extends ListGetResponseV1 with ListV1JsonProtocol {
     def toJsValue = selectionGetResponseV1Format.write(this)
+}
+
+/**
+  * Provides basic information about a list node.
+  *
+  * @param id      the IRI of the list node.
+  * @param labels  the labels in each language including the language specifier.
+  * @param comment the comment attached to the list (optional).
+  */
+case class ListNodeInfoGetResponseV1(id: IRI, labels: Seq[String], comment: Option[String]) extends KnoraResponseV1 with ListV1JsonProtocol {
+    def toJsValue = listNodeInfoGetResponseV1Format.write(this)
 }
 
 /**
@@ -170,16 +189,24 @@ case class NodePathElementV1(id: IRI, name: Option[String], label: Option[String
   *
   * @param id         the IRI of the list.
   * @param projectIri the IRI of the project this list belongs to (optional).
-  * @param name       the name of the list (optional).
+  * @param labels     the labels of the list in all available languages.
   * @param comment    the comment attached to the list (optional).
-  * @param label      the label of the list (optional).
   */
-case class ListInfoV1(id: IRI, projectIri: Option[IRI], name: Option[String], comment: Option[String], label: Option[String])
+case class ListInfoV1(id: IRI, projectIri: Option[IRI], labels: Seq[String], comment: Option[String])
+
+/**
+  * Represents information about a list node.
+  *
+  * @param id      the IRI of the list node.
+  * @param labels  the labels in each language including the language specifier.
+  * @param comment the comment attached to the list (optional)
+  */
+case class ListNodeInfoV1(id: IRI, labels: Seq[String], comment: Option[String])
 
 /**
   * Represents a list, including the basic information and the whole tree.
   *
-  * @param info the basic list information.
+  * @param info  the basic list information.
   * @param nodes the complete list tree.
   */
 case class ListV1(info: ListInfoV1, nodes: Seq[ListNodeV1])
@@ -250,7 +277,6 @@ trait ListV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with 
             */
 
 
-
             /*
             val fields = value.asJsObject.fields
 
@@ -292,7 +318,8 @@ trait ListV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with 
     implicit val selectionGetResponseV1Format: RootJsonFormat[SelectionGetResponseV1] = jsonFormat(SelectionGetResponseV1, "selection")
     implicit val nodePathElementV1Format: JsonFormat[NodePathElementV1] = jsonFormat(NodePathElementV1, "id", "name", "label")
     implicit val nodePathGetResponseV1Format: RootJsonFormat[NodePathGetResponseV1] = jsonFormat(NodePathGetResponseV1, "nodelist")
-    implicit val listInfoV1Format: JsonFormat[ListInfoV1] = jsonFormat5(ListInfoV1)
+    implicit val listInfoV1Format: JsonFormat[ListInfoV1] = jsonFormat4(ListInfoV1)
     implicit val listsGetResponseV1Format: RootJsonFormat[ListsGetResponseV1] = jsonFormat(ListsGetResponseV1, "lists")
     implicit val listExtendedGetResponseV1Format: RootJsonFormat[ListExtendedGetResponseV1] = jsonFormat(ListExtendedGetResponseV1, "info", "nodes")
+    implicit val listNodeInfoGetResponseV1Format: RootJsonFormat[ListNodeInfoGetResponseV1] = jsonFormat(ListNodeInfoGetResponseV1, "id", "labels", "comment")
 }

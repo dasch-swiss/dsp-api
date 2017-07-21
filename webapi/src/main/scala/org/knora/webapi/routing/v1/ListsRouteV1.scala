@@ -65,6 +65,7 @@ object ListsRouteV1 extends Authenticator {
         } ~
         path("v1" / "lists" / Segment) {iri =>
             get {
+                /* return a list */
                 requestContext =>
                     val userProfile = getUserProfileV1(requestContext)
                     val listIri = InputValidation.toIri(iri, () => throw BadRequestException(s"Invalid param list IRI: $iri"))
@@ -85,6 +86,32 @@ object ListsRouteV1 extends Authenticator {
             } ~
             delete {
                 /* delete (deactivate) list */
+                ???
+            }
+        } ~
+        path("v1" / "lists" / "nodes" / Segment) {iri =>
+            get {
+                /* return a list node */
+                requestContext =>
+                    val userProfile = getUserProfileV1(requestContext)
+                    val listIri = InputValidation.toIri(iri, () => throw BadRequestException(s"Invalid param list IRI: $iri"))
+
+                    val requestMessage = ListNodeInfoGetRequestV1(listIri, userProfile)
+
+                    RouteUtilV1.runJsonRoute(
+                        requestMessage,
+                        requestContext,
+                        settings,
+                        responderManager,
+                        log
+                    )
+            } ~
+            put {
+                /* update list node */
+                ???
+            } ~
+            delete {
+                /* delete list node */
                 ???
             }
         } ~

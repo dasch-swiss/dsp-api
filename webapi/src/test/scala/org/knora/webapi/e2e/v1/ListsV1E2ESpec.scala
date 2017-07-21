@@ -22,7 +22,7 @@ import akka.http.scaladsl.model.headers._
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import com.typesafe.config.ConfigFactory
 import org.knora.webapi.messages.v1.responder.authenticatemessages.Credentials
-import org.knora.webapi.messages.v1.responder.listmessages.{ListExtendedGetResponseV1, ListInfoV1, ListNodeV1, ListV1JsonProtocol}
+import org.knora.webapi.messages.v1.responder.listmessages._
 import org.knora.webapi.messages.v1.responder.sessionmessages.SessionJsonProtocol
 import org.knora.webapi.messages.v1.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
 import org.knora.webapi.util.{AkkaHttpUtils, MutableTestIri}
@@ -120,6 +120,24 @@ class ListsV1E2ESpec extends E2ESpec(ListsV1E2ESpec.config) with SessionJsonProt
                 listInfos.size should be (4)
             }
 
+            "return basic list node information" in {
+                val request = Get(baseApiUrl + s"/v1/lists/nodes/http%3A%2F%2Fdata.knora.org%2Flists%2F73d0ec0302") ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
+                val response: HttpResponse = singleAwaitingRequest(request)
+                // log.debug(s"response: ${response.toString}")
+                response.status should be(StatusCodes.OK)
+
+                val responseJson = AkkaHttpUtils.httpResponseToJson(response)
+                val receivedNodeinfo: ListNodeInfoGetResponseV1 = responseJson.convertTo[ListNodeInfoGetResponseV1]
+
+                val expectedNodeInfo = ListNodeInfoGetResponseV1(
+                    id = "http://data.knora.org/lists/73d0ec0302",
+                    labels = Seq("Title", "Titel", "Titre"),
+                    comment = Some("Hierarchisches Stichwortverzeichnis / Signatur der Bilder")
+                )
+
+                receivedNodeinfo should be (expectedNodeInfo)
+            }
+
             "return an extended list response" in {
                 val request = Get(baseApiUrl + s"/v1/lists/http%3A%2F%2Fdata.knora.org%2Flists%2F73d0ec0302") ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
                 val response: HttpResponse = singleAwaitingRequest(request)
@@ -127,7 +145,7 @@ class ListsV1E2ESpec extends E2ESpec(ListsV1E2ESpec.config) with SessionJsonProt
                 response.status should be(StatusCodes.OK)
 
                 val responseJson = AkkaHttpUtils.httpResponseToJson(response)
-                val info: ListInfoV1 = responseJson.fields("info").convertTo[ListInfoV1]
+                val receivedListInfo: ListInfoV1 = responseJson.fields("info").convertTo[ListInfoV1]
                 // val nodes: Seq[ListNodeV1] = responseJson.fields("nodes").convertTo[Seq[ListNodeV1]]
 
                 // log.debug("info: " + info)
@@ -136,12 +154,11 @@ class ListsV1E2ESpec extends E2ESpec(ListsV1E2ESpec.config) with SessionJsonProt
                 val expectedListInfo = ListInfoV1(
                     id = "http://data.knora.org/lists/73d0ec0302",
                     projectIri = Some("http://data.knora.org/projects/images"),
-                    name = None,
-                    comment = Some("Hierarchisches Stichwortverzeichnis / Signatur der Bilder"),
-                    label = Some("Titel")
+                    labels = Seq("Title", "Titel", "Titre"),
+                    comment = Some("Hierarchisches Stichwortverzeichnis / Signatur der Bilder")
                 )
 
-                info should be (expectedListInfo)
+                receivedListInfo should be (expectedListInfo)
             }
         }
 

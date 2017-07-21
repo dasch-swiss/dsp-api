@@ -75,9 +75,8 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
     val listInfo = ListInfoV1(
         id = "http://data.knora.org/lists/73d0ec0302",
         projectIri = Some("http://data.knora.org/projects/images"),
-        name = None,
-        comment = Some("Hierarchisches Stichwortverzeichnis / Signatur der Bilder"),
-        label = Some("Titel")
+        labels = Seq("Title", "Titel", "Titre"),
+        comment = Some("Hierarchisches Stichwortverzeichnis / Signatur der Bilder")
     )
 
     private val hKeywords = HListGetResponseV1(
@@ -3322,9 +3321,18 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
 
                 val received: ListsGetResponseV1 = expectMsgType[ListsGetResponseV1](timeout)
 
-                log.debug("received: " + received)
+                // log.debug("received: " + received)
 
                 received.lists.size should be(4)
+            }
+
+            "return basic list node information" in {
+                actorUnderTest ! ListNodeInfoGetRequestV1(
+                    iri = "http://data.knora.org/lists/73d0ec0302",
+                    userProfile = userProfile
+                )
+
+                expectMsg(ListNodeInfoGetResponseV1(id = listInfo.id, labels = listInfo.labels, comment = listInfo.comment))
             }
 
             "return an extended list response" in {

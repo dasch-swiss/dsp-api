@@ -3736,7 +3736,7 @@
 <http://data.knora.org/lists/73d0ec0302> a knora-base:ListNode ;
 	knora-base:isRootNode true ;
 	rdfs:comment "Hierarchisches Stichwortverzeichnis / Signatur der Bilder"@de ;
-	rdfs:label "Titel" , "Titel" , "Titel" ;
+	rdfs:label "Titel"@de , "Title"@en , "Titre"@fr ;
 	knora-base:attachedToProject <http://data.knora.org/projects/images> ;
 	knora-base:hasSubListNode <http://data.knora.org/lists/a8f4cd99a6> , <http://data.knora.org/lists/738fc745a7> , <http://data.knora.org/lists/4ca9e7d3b5> , <http://data.knora.org/lists/691eee1cbe> , <http://data.knora.org/lists/f05d010ec5> , <http://data.knora.org/lists/8693f465c6> , <http://data.knora.org/lists/7d99d4c1c9> , <http://data.knora.org/lists/4834ce6dca> , <http://data.knora.org/lists/71a1543cce> , <http://data.knora.org/lists/8d9fa100ea> .
 

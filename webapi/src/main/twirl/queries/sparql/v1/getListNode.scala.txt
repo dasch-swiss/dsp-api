@@ -21,30 +21,34 @@
 @import org.knora.webapi.IRI
 
 @**
- * Given the root node of a hierarchical list, returns basic information about that list.
+ * Given the node IRI of a list node, returns all information about that node.
  *
  * @param triplestore the name of the triplestore being used.
- * @param maybeProjectIri the IRI of the project the list belongs to.
+ * @param nodeIri the IRI of node.
+ * @param isRootNode the flag specifying if the node in question is the root of a list.
  *@
 @(triplestore: String,
-  rootNodeIri: IRI)
+  nodeIri: IRI,
+  isRootNode: Boolean)
 
 prefix xsd: <http://www.w3.org/2001/XMLSchema#>
 prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 prefix knora-base: <http://www.knora.org/ontology/knora-base#>
 
-SELECT DISTINCT ?s ?p ?o
+SELECT ?s ?p ?o
 @* Ensure that inference is not used in this query. *@
 @if(triplestore.startsWith("graphdb")) {
     FROM <http://www.ontotext.com/explicit>
 }
 WHERE {
-    BIND(IRI("@rootNodeIri") as ?s)
+    BIND(IRI("@nodeIri") as ?s)
 
     ?s rdf:type knora-base:ListNode .
 
-    ?s knora-base:isRootNode "true"^^xsd:boolean .
+    @if(isRootNode) {
+      ?s knora-base:isRootNode "@isRootNode"^^xsd:boolean .
+    }
 
     ?s ?p ?o .
 }
