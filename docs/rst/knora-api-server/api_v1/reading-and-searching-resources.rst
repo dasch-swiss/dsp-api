@@ -244,12 +244,17 @@ The following table indicates the possible combinations of value types and compa
 +------------------+-----------------------------------------------------+
 
 Explanation of the comparison operators:
-  - ``EQ``: checks if a resource's value *equals* the search value. In case of a text value type, it checks for identity of the strings compared. In case of a date value type, it checks if the dates are equal or if the specified date encompasses it (internally, dates are always treated as periods).
-  - ``!EQ``: checks if a resource's value *does not equal* the search value. In case of a text value type, it checks if the compared strings are different. In case of a date value type, it checks if the dates are not equal or if the specified date does not encompass it (internally, dates are always treated as periods).
-  - ``GT``: checks if a resource's value is *greater than* the search value. In case of a date value type, it checks if the resource's period begins after the indicated date.
-  - ``GT_EQ``: checks if a resource's value *equals or is greater than* the search value. In case of a date value type, it checks if the resource's period equals the end of the indicated period or begins after the indicated period.
-  - ``LT``: checks if a resource's value is *lower than* the search value. In case of a date value type, it checks if the resource's period begins before the indicated date.
-  - ``LT_EQ``: checks if a resource's value *equals or is lower than* the search value. In case of a date value type, it checks if the resource's period equals the begin of the indicated period or begins before the indicated period.
+  - ``EQ``: checks if a resource's value *equals* the search value. In case of a text value type, it checks for identity of the strings compared.
+    In case of a date value type, equality is given if the dates overlap in any way. Since dates are internally always treated as periods,
+    equality is given if a date value's period ends after or equals the start of the defined period and
+    a date value's period starts before or equals the end of the defined period.
+  - ``!EQ``: checks if a resource's value *does not equal* the search value. In case of a text value type, it checks if the compared strings are different.
+    In case of a date value type, inequality is given if the dates do not overlap in any way, meaning that a date starts after the end of the defined period or ends before the beginning of the defined period
+    (dates are internally always treated as periods, see above).
+  - ``GT``: checks if a resource's value is *greater than* the search value. In case of a date value type, it assures that a period begins after the indicated period's end.
+  - ``GT_EQ``: checks if a resource's value *equals or is greater than* the search value. In case of a date value type, it assures that the periods overlap in any way (see ``EQ``) **or** that the period starts after the indicated period's end (see ``GT``).
+  - ``LT``: checks if a resource's value is *lower than* the search value. In case of a date value type, it assures that a period ends before the indicated period's start.
+  - ``LT_EQ``: checks if a resource's value *equals or is lower than* the search value. In case of a date value type, it assures that the periods overlap in any way (see ``EQ``) **or** that the period ends before the indicated period's start (see ``LT``).
   - ``EXISTS``: checks if an instance of the indicated property type *exists* for a resource. **Please always provide an empty search value when using EXISTS: "searchval="**. Otherwise, the query syntax rules would be violated.
   - ``MATCH``: checks if a resource's text value *matches* the search value. The behaviour depends on the used triplestore's full text index.
   - ``LIKE``: checks if the search value is contained in a resource's text value.
