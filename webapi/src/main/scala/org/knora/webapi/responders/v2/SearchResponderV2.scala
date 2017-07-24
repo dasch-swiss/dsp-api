@@ -132,7 +132,7 @@ class SearchResponderV2 extends Responder {
                 disableInference = disableInference || (pred match { // disable inference if `disableInference` is set to true or if the statement's predicate is a variable.
                     case variable: ExtendedSearchVar => true // disable inference to get the actual IRI for the predicate and not an inferred information
                         // TODO: this has the effect that subproperties are not found by the query!
-                        // TODO: I think this be omitted since we can get the actual property from the reification (ConstructResponseUtilV2 does not look at subproperties of hasLinkTo, this property is needed to get information about the resource referred to)
+                        // TODO: I think this may be omitted since we can get the actual property from the reification (ConstructResponseUtilV2 does not look at subproperties of hasLinkTo, this property is needed to get information about the resource referred to)
                     case _ => false
                 })
             )
@@ -859,25 +859,21 @@ class SearchResponderV2 extends Responder {
                                                     ConvertedQueryPatterns(originalPatterns = acc.originalPatterns :+ filterPattern, additionalPatterns = acc.additionalPatterns ++ addStatements, typeInfoKeysProcessedInStatements = acc.typeInfoKeysProcessedInStatements)
 
 
-                                                case other => throw SparqlSearchException(s"operator not implemented yet for date filter: $other")
+                                                case other => throw SparqlSearchException(s"operator not implemented for date filter: $other")
                                             }
 
 
-                                        case other =>
-                                            throw SparqlSearchException(s"not implemented yet: $other")
+                                        case otherType =>
+                                            throw SparqlSearchException(s"type not implemented yet: $otherType")
                                     }
 
 
-                                case _ =>
+                                case propType: PropertyTypeInfoV2 =>
                                     ConvertedQueryPatterns(originalPatterns = acc.originalPatterns ++ Seq(ExtendedSearchFilterPattern(filterExpression)), additionalPatterns = acc.additionalPatterns, typeInfoKeysProcessedInStatements = acc.typeInfoKeysProcessedInStatements)
                             }
 
-
-                        case searchIri: ExtendedSearchInternalEntityIri =>
-                            ConvertedQueryPatterns(originalPatterns = acc.originalPatterns ++ Seq(ExtendedSearchFilterPattern(filterExpression)), additionalPatterns = acc.additionalPatterns, typeInfoKeysProcessedInStatements = acc.typeInfoKeysProcessedInStatements)
-
-                        case _ =>
-                            ConvertedQueryPatterns(originalPatterns = acc.originalPatterns ++ Seq(ExtendedSearchFilterPattern(filterExpression)), additionalPatterns = acc.additionalPatterns, typeInfoKeysProcessedInStatements = acc.typeInfoKeysProcessedInStatements)
+                        case nonVariable =>
+                            throw SparqlSearchException(s"expected a variable as the left argument of a Filter expression, but $nonVariable given")
                     }
 
 
