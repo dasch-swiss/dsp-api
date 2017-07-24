@@ -38,6 +38,9 @@ PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 
 CONSTRUCT {
+    ?map a knora-base:Map ;
+        knora-base:lastModificationDate ?mapEntryLastModificationDate .
+
     ?mapEntry rdf:type knora-base:MapEntry ;
         knora-base:isInMap ?map ;
         knora-base:mapEntryKey "@mapEntryKey"^^xsd:string ;

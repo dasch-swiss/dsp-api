@@ -36,7 +36,8 @@
   mapIri: IRI,
   mapEntryIri: IRI,
   mapEntryKey: String,
-  mapEntryValue: String)
+  mapEntryValue: String,
+  currentTime: String)
 
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -63,10 +64,10 @@ DELETE {
             knora-base:isInMap ?map ;
             knora-base:mapEntryKey "@mapEntryKey"^^xsd:string ;
             knora-base:mapEntryValue """@mapEntryValue"""^^xsd:string ;
-            knora-base:lastModificationDate ?currentTime .
+            knora-base:lastModificationDate "@currentTime"^^xsd:dateTimeStamp .
 
         @* Update the map's last modification date. *@
-        ?map knora-base:lastModificationDate ?currentTime .
+        ?map knora-base:lastModificationDate "@currentTime"^^xsd:dateTimeStamp .
     }
 }
 @* Ensure that inference is not used in the WHERE clause of this update. *@
@@ -77,7 +78,6 @@ WHERE {
     BIND(IRI("@mapNamedGraphIri") AS ?mapNamedGraph)
     BIND(IRI("@mapIri") AS ?map)
     BIND(IRI("@mapEntryIri") AS ?newMapEntry)
-    BIND(NOW() AS ?currentTime)
 
     ?map rdf:type knora-base:Map ;
         knora-base:lastModificationDate ?mapLastModificationDate .

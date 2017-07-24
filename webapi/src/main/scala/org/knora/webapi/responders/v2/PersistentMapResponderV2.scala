@@ -101,13 +101,17 @@ class PersistentMapResponderV2 extends Responder {
       */
     private def putPersistentMapEntryV2(request: PersistentMapEntryPutRequestV2): Future[PersistentMapEntryPutResponseV2] = {
         def makeTaskFuture(): Future[PersistentMapEntryPutResponseV2] = {
+            // An xsd:dateTimeStamp for the map entry, and for the map if it doesn't exist yet.
+            val currentTime = Instant.now.toString
+
             val updateFuture = for {
             // Create the persistent map if it doesn't exist already.
 
                 createMapSparql <- Future(queries.sparql.v2.txt.createMap(
                     mapNamedGraphIri = OntologyConstants.NamedGraphs.PersistentMapNamedGraph,
                     triplestore = settings.triplestoreType,
-                    mapIri = knoraIdUtil.makeMapIri(request.mapPath)
+                    mapIri = knoraIdUtil.makeMapIri(request.mapPath),
+                    currentTime = currentTime
                 ).toString())
 
                 createMapSparqlUpdateResponse: SparqlUpdateResponse <- (storeManager ? SparqlUpdateRequest(createMapSparql)).mapTo[SparqlUpdateResponse]
@@ -118,7 +122,8 @@ class PersistentMapResponderV2 extends Responder {
                     mapIri = knoraIdUtil.makeMapIri(request.mapPath),
                     mapEntryIri = knoraIdUtil.makeRandomMapEntryIri,
                     mapEntryKey = request.mapEntryKey,
-                    mapEntryValue = request.sparqlEncodedMapEntryValue
+                    mapEntryValue = request.sparqlEncodedMapEntryValue,
+                    currentTime = currentTime
                 ).toString()
 
                 setMapEntryValueUpdateResponse: SparqlUpdateResponse <- (storeManager ? SparqlUpdateRequest(setMapEntryValueSparql)).mapTo[SparqlUpdateResponse]
@@ -248,7 +253,7 @@ class PersistentMapResponderV2 extends Responder {
         // There must be exactly one map in the response.
 
         if (mapStatements.isEmpty) {
-            throw InconsistentTriplestoreDataException(s"Persistent map query didn't return a map")
+            throw NotFoundException(s"No persistent map found at path $requestedMapPath")
         }
 
         if (mapStatements.size > 1) {
