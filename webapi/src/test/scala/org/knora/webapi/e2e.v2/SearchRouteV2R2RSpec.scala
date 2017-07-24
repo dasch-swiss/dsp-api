@@ -264,6 +264,51 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         }
 
+        "perform an extended search for books that have not been published on the first of March 1497 (Julian Calendar) 2" in {
+            val sparqlSimplified =
+                """PREFIX incunabula: <http://api.knora.org/ontology/incunabula/simple/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |
+                  |    CONSTRUCT {
+                  |        ?book knora-api:isMainResource true .
+                  |
+                  |        ?book a incunabula:book .
+                  |
+                  |        ?book incunabula:title ?title .
+                  |
+                  |        ?book incunabula:pubdate "JULIAN:1497-03-01" .
+                  |    } WHERE {
+                  |
+                  |        ?book a incunabula:book .
+                  |        ?book a knora-api:Resource .
+                  |
+                  |        ?book incunabula:title ?title .
+                  |        incunabula:title knora-api:objectType xsd:string .
+                  |
+                  |        ?title a xsd:string .
+                  |
+                  |        ?book incunabula:pubdate ?pubdate .
+                  |        incunabula:pubdate knora-api:objectType knora-api:Date .
+                  |
+                  |        ?pubdate a knora-api:Date .
+                  |
+                  |         FILTER(?pubdate < "JULIAN:1497-03-01" || ?pubdate > "JULIAN:1497-03-01")
+                  |
+                  |    }
+                """.stripMargin
+
+            // TODO: find a better way to submit spaces as %20
+            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                // this is the negation of the query condition above, hence the size of the result set must be 19 (total of incunabula:book) minus 2 (number of results from query above)
+                checkNumberOfItems(responseAs[String], 17)
+
+            }
+
+        }
+
         "perform an extended search for books that have been published before 1497 (Julian Calendar)" in {
             val sparqlSimplified =
                 """    PREFIX incunabula: <http://api.knora.org/ontology/incunabula/simple/v2#>
@@ -440,8 +485,51 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         }
 
+        "perform an extended search for books that have been published after 1486 and before 1491 (Julian Calendar)" in {
+            val sparqlSimplified =
+                """PREFIX incunabula: <http://api.knora.org/ontology/incunabula/simple/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |
+                  |    CONSTRUCT {
+                  |        ?book knora-api:isMainResource true .
+                  |
+                  |        ?book a incunabula:book .
+                  |
+                  |        ?book incunabula:title ?title .
+                  |
+                  |        ?book incunabula:pubdate ?pubdate .
+                  |    } WHERE {
+                  |
+                  |        ?book a incunabula:book .
+                  |        ?book a knora-api:Resource .
+                  |
+                  |        ?book incunabula:title ?title .
+                  |        incunabula:title knora-api:objectType xsd:string .
+                  |
+                  |        ?title a xsd:string .
+                  |
+                  |        ?book incunabula:pubdate ?pubdate .
+                  |        incunabula:pubdate knora-api:objectType knora-api:Date .
+                  |
+                  |        ?pubdate a knora-api:Date .
+                  |
+                  |        FILTER(?pubdate > "JULIAN:1486" && ?pubdate < "JULIAN:1491")
+                  |
+                  |    }
+                """.stripMargin
 
-        "get the regions beloning to a page" in {
+            // TODO: find a better way to submit spaces as %20
+            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                checkNumberOfItems(responseAs[String], 5)
+
+            }
+
+        }
+
+        "get the regions belonging to a page" in {
             val sparqlSimplified =
                 """    PREFIX incunabula: <http://api.knora.org/ontology/incunabula/simple/v2#>
                   |    PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
@@ -496,8 +584,6 @@ class SearchRouteV2R2RSpec extends R2RSpec {
             }
 
         }
-
-
 
     }
 }

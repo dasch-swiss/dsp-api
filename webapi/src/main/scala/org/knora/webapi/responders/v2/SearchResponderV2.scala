@@ -188,16 +188,18 @@ class SearchResponderV2 extends Responder {
           * Creates additional statements based on a non property type Iri.
           *
           * @param typeIriExternal       the non property type Iri.
-          * @param statementPattern      the statement to be processed.
           * @param subject               the entity that is the subject in the additional statement to be generated.
           * @param typeInfoKeysProcessed a Set of keys that indicates which type info entries already habe been processed.
           * @param index                 the index to be used to create variables in Sparql.
           * @return a sequence of [[ExtendedSearchStatementPattern]].
           */
-        def createAdditionalStatementsForNonPropertyType(typeIriExternal: IRI, statementPattern: ExtendedSearchStatementPattern, subject: ExtendedSearchEntity, typeInfoKeysProcessed: Set[TypeableEntityV2], index: Int): AdditionalStatements = {
+        def createAdditionalStatementsForNonPropertyType(typeIriExternal: IRI, subject: ExtendedSearchEntity, typeInfoKeysProcessed: Set[TypeableEntityV2], index: Int): AdditionalStatements = {
             val typeIriInternal = InputValidation.externalIriToInternalIri(typeIriExternal, () => throw BadRequestException(s"${typeIriExternal} is not a valid external knora-api entity Iri"))
 
             if (typeIriInternal == OntologyConstants.KnoraBase.Resource) {
+
+                // create additional statements in order to query permissions and other information for a resource
+
                 AdditionalStatements(additionalStatements = Vector(
                     ExtendedSearchStatementPattern(subj = subject, pred = ExtendedSearchIri(OntologyConstants.Rdf.Type), obj = ExtendedSearchIri(OntologyConstants.KnoraBase.Resource), false),
                     ExtendedSearchStatementPattern(subj = subject, pred = ExtendedSearchIri(OntologyConstants.KnoraBase.IsDeleted), obj = ExtendedSearchXsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean), true),
@@ -539,7 +541,7 @@ class SearchResponderV2 extends Responder {
 
                         val additionalStatements: AdditionalStatements = typeInspectionResultWhere.typedEntities(key) match {
                             case nonPropTypeInfo: NonPropertyTypeInfoV2 =>
-                                createAdditionalStatementsForNonPropertyType(nonPropTypeInfo.typeIri, statementP, statementP.subj, typeInfoKeysProcessedInStatements + key, index)
+                                createAdditionalStatementsForNonPropertyType(nonPropTypeInfo.typeIri, statementP.subj, typeInfoKeysProcessedInStatements + key, index)
                             case propTypeInfo: PropertyTypeInfoV2 =>
                                 AdditionalStatements()
                         }
@@ -636,7 +638,7 @@ class SearchResponderV2 extends Responder {
 
                         val additionalStatements: AdditionalStatements = typeInspectionResultWhere.typedEntities(key) match {
                             case nonPropTypeInfo: NonPropertyTypeInfoV2 =>
-                                createAdditionalStatementsForNonPropertyType(nonPropTypeInfo.typeIri, statementP, statementP.obj, typeInfoKeysProcessedInStatements + key, index)
+                                createAdditionalStatementsForNonPropertyType(nonPropTypeInfo.typeIri, statementP.obj, typeInfoKeysProcessedInStatements + key, index)
                             case propTypeInfo: PropertyTypeInfoV2 =>
                                 AdditionalStatements()
 
@@ -753,6 +755,203 @@ class SearchResponderV2 extends Responder {
         }
 
         /**
+          * Processes a given Filter expression [[ExtendedSearchFilterExpression]].
+          * Given Filter expression may have to be converted to more complex expressions (e.g., in case of a date).
+          *
+          * @param acc the query patterns to add to.
+          * @param index the current index used to create unqiue varibale names.
+          * @param filterExpression the Filter expression to be processed.
+          * @return a [[ConvertedQueryPatterns]] containing the processed Filter expression and additional statements.
+          */
+        def processExtendedSearchFilterPattern(acc: ConvertedQueryPatterns, index: Int, filterExpression: ExtendedSearchFilterExpression): ConvertedQueryPatterns = {
+            filterExpression match {
+                case filterCompare: ExtendedSearchCompareExpression =>
+
+                    // TODO: check validity of comparison operator (see extended search v1) -> make it an enum
+
+                    filterCompare.leftArg match {
+                        case searchVar: ExtendedSearchVar =>
+
+                            val objectType: SparqlEntityTypeInfoV2 = typeInspectionResultWhere.typedEntities(TypeableVariableV2(searchVar.variableName))
+
+                            objectType match {
+                                case nonPropTypeInfo: NonPropertyTypeInfoV2 =>
+
+                                    nonPropTypeInfo.typeIri match {
+                                        case OntologyConstants.Xsd.String =>
+                                            val statement = ExtendedSearchStatementPattern(subj = searchVar, pred = ExtendedSearchInternalEntityIri(OntologyConstants.KnoraBase.ValueHasString), obj = ExtendedSearchVar("stringVar" + index), true)
+                                            val filterPattern = ExtendedSearchFilterPattern(ExtendedSearchCompareExpression(leftArg = ExtendedSearchVar("stringVar" + index), operator = filterCompare.operator, rightArg = filterCompare.rightArg))
+
+                                            ConvertedQueryPatterns(originalPatterns = acc.originalPatterns :+ filterPattern, additionalPatterns = acc.additionalPatterns :+ statement, typeInfoKeysProcessedInStatements = acc.typeInfoKeysProcessedInStatements)
+
+                                        case OntologyConstants.Xsd.Integer =>
+                                            val statement = ExtendedSearchStatementPattern(subj = searchVar, pred = ExtendedSearchInternalEntityIri(OntologyConstants.KnoraBase.ValueHasInteger), obj = ExtendedSearchVar("intVar" + index), true)
+                                            val filterPattern = ExtendedSearchFilterPattern(ExtendedSearchCompareExpression(leftArg = ExtendedSearchVar("intVar" + index), operator = filterCompare.operator, rightArg = filterCompare.rightArg))
+
+                                            ConvertedQueryPatterns(originalPatterns = acc.originalPatterns :+ filterPattern, additionalPatterns = acc.additionalPatterns :+ statement, typeInfoKeysProcessedInStatements = acc.typeInfoKeysProcessedInStatements)
+
+                                        case OntologyConstants.KnoraApiV2Simplified.Date =>
+
+                                            // expect rightArg to be a string literal
+                                            val dateStringLiteral = filterCompare.rightArg match {
+                                                case stringLiteral: ExtendedSearchXsdLiteral if stringLiteral.datatype == OntologyConstants.Xsd.String =>
+                                                    stringLiteral.value
+                                                case other => throw SparqlSearchException(s"$other is expected to be a string literal")
+                                            }
+
+                                            val dateStr = InputValidation.toDate(dateStringLiteral, () => throw BadRequestException(s"${dateStringLiteral} is not a valid date string"))
+
+                                            val date: JulianDayNumberValueV1 = DateUtilV1.createJDNValueV1FromDateString(dateStr)
+
+                                            //println(date)
+
+                                            filterCompare.operator match {
+                                                case "=" =>
+
+                                                    // overlap in considered as equality
+                                                    val filterPattern = ExtendedSearchFilterPattern(ExtendedSearchAndExpression(ExtendedSearchCompareExpression(ExtendedSearchXsdLiteral(date.dateval1.toString, OntologyConstants.Xsd.Integer), "<=", ExtendedSearchVar("dateValEnd" + index)), ExtendedSearchCompareExpression(ExtendedSearchXsdLiteral(date.dateval2.toString, OntologyConstants.Xsd.Integer), ">=", ExtendedSearchVar("dateValStart" + index))))
+
+                                                    val addStatements = Vector(ExtendedSearchStatementPattern(subj = searchVar, pred = ExtendedSearchInternalEntityIri(OntologyConstants.KnoraBase.ValueHasStartJDN), obj = ExtendedSearchVar("dateValStart" + index), true),
+                                                        ExtendedSearchStatementPattern(subj = searchVar, pred = ExtendedSearchInternalEntityIri(OntologyConstants.KnoraBase.ValueHasEndJDN), obj = ExtendedSearchVar("dateValEnd" + index), true))
+
+                                                    ConvertedQueryPatterns(originalPatterns = acc.originalPatterns :+ filterPattern, additionalPatterns = acc.additionalPatterns ++ addStatements, typeInfoKeysProcessedInStatements = acc.typeInfoKeysProcessedInStatements)
+
+                                                case "!=" =>
+                                                    // no overlap in considered as inequality
+                                                    val filterPattern = ExtendedSearchFilterPattern(ExtendedSearchOrExpression(ExtendedSearchCompareExpression(ExtendedSearchXsdLiteral(date.dateval1.toString, OntologyConstants.Xsd.Integer), ">", ExtendedSearchVar("dateValEnd" + index)), ExtendedSearchCompareExpression(ExtendedSearchXsdLiteral(date.dateval2.toString, OntologyConstants.Xsd.Integer), "<", ExtendedSearchVar("dateValStart" + index))))
+
+                                                    val addStatements = Vector(ExtendedSearchStatementPattern(subj = searchVar, pred = ExtendedSearchInternalEntityIri(OntologyConstants.KnoraBase.ValueHasStartJDN), obj = ExtendedSearchVar("dateValStart" + index), true),
+                                                        ExtendedSearchStatementPattern(subj = searchVar, pred = ExtendedSearchInternalEntityIri(OntologyConstants.KnoraBase.ValueHasEndJDN), obj = ExtendedSearchVar("dateValEnd" + index), true))
+
+                                                    ConvertedQueryPatterns(originalPatterns = acc.originalPatterns :+ filterPattern, additionalPatterns = acc.additionalPatterns ++ addStatements, typeInfoKeysProcessedInStatements = acc.typeInfoKeysProcessedInStatements)
+
+                                                case "<" =>
+                                                    // no overlap in considered as inequality
+                                                    val filterPattern = ExtendedSearchFilterPattern(ExtendedSearchCompareExpression(ExtendedSearchVar("dateValEnd" + index), "<", ExtendedSearchXsdLiteral(date.dateval1.toString, OntologyConstants.Xsd.Integer)))
+
+                                                    val addStatements = Vector(ExtendedSearchStatementPattern(subj = searchVar, pred = ExtendedSearchInternalEntityIri(OntologyConstants.KnoraBase.ValueHasEndJDN), obj = ExtendedSearchVar("dateValEnd" + index), true))
+
+                                                    ConvertedQueryPatterns(originalPatterns = acc.originalPatterns :+ filterPattern, additionalPatterns = acc.additionalPatterns ++ addStatements, typeInfoKeysProcessedInStatements = acc.typeInfoKeysProcessedInStatements)
+
+                                                case ">=" =>
+                                                    // no overlap in considered as inequality
+                                                    val filterPattern = ExtendedSearchFilterPattern(ExtendedSearchCompareExpression(ExtendedSearchVar("dateValEnd" + index), ">=", ExtendedSearchXsdLiteral(date.dateval1.toString, OntologyConstants.Xsd.Integer)))
+
+                                                    val addStatements = Vector(ExtendedSearchStatementPattern(subj = searchVar, pred = ExtendedSearchInternalEntityIri(OntologyConstants.KnoraBase.ValueHasEndJDN), obj = ExtendedSearchVar("dateValEnd" + index), true))
+
+                                                    ConvertedQueryPatterns(originalPatterns = acc.originalPatterns :+ filterPattern, additionalPatterns = acc.additionalPatterns ++ addStatements, typeInfoKeysProcessedInStatements = acc.typeInfoKeysProcessedInStatements)
+
+                                                case ">" =>
+                                                    // no overlap in considered as inequality
+                                                    val filterPattern = ExtendedSearchFilterPattern(ExtendedSearchCompareExpression(ExtendedSearchVar("dateValStart" + index), ">", ExtendedSearchXsdLiteral(date.dateval2.toString, OntologyConstants.Xsd.Integer)))
+
+                                                    val addStatements = Vector(ExtendedSearchStatementPattern(subj = searchVar, pred = ExtendedSearchInternalEntityIri(OntologyConstants.KnoraBase.ValueHasStartJDN), obj = ExtendedSearchVar("dateValStart" + index), true))
+
+                                                    ConvertedQueryPatterns(originalPatterns = acc.originalPatterns :+ filterPattern, additionalPatterns = acc.additionalPatterns ++ addStatements, typeInfoKeysProcessedInStatements = acc.typeInfoKeysProcessedInStatements)
+
+
+                                                case "<=" =>
+                                                    // no overlap in considered as inequality
+                                                    val filterPattern = ExtendedSearchFilterPattern(ExtendedSearchCompareExpression(ExtendedSearchVar("dateValStart" + index), "<=", ExtendedSearchXsdLiteral(date.dateval2.toString, OntologyConstants.Xsd.Integer)))
+
+                                                    val addStatements = Vector(ExtendedSearchStatementPattern(subj = searchVar, pred = ExtendedSearchInternalEntityIri(OntologyConstants.KnoraBase.ValueHasStartJDN), obj = ExtendedSearchVar("dateValStart" + index), true))
+
+                                                    ConvertedQueryPatterns(originalPatterns = acc.originalPatterns :+ filterPattern, additionalPatterns = acc.additionalPatterns ++ addStatements, typeInfoKeysProcessedInStatements = acc.typeInfoKeysProcessedInStatements)
+
+
+                                                case other => throw SparqlSearchException(s"operator not implemented yet for date filter: $other")
+                                            }
+
+
+                                        case other =>
+                                            throw SparqlSearchException(s"not implemented yet: $other")
+                                    }
+
+
+                                case _ =>
+                                    ConvertedQueryPatterns(originalPatterns = acc.originalPatterns ++ Seq(ExtendedSearchFilterPattern(filterExpression)), additionalPatterns = acc.additionalPatterns, typeInfoKeysProcessedInStatements = acc.typeInfoKeysProcessedInStatements)
+                            }
+
+
+                        case searchIri: ExtendedSearchInternalEntityIri =>
+                            ConvertedQueryPatterns(originalPatterns = acc.originalPatterns ++ Seq(ExtendedSearchFilterPattern(filterExpression)), additionalPatterns = acc.additionalPatterns, typeInfoKeysProcessedInStatements = acc.typeInfoKeysProcessedInStatements)
+
+                        case _ =>
+                            ConvertedQueryPatterns(originalPatterns = acc.originalPatterns ++ Seq(ExtendedSearchFilterPattern(filterExpression)), additionalPatterns = acc.additionalPatterns, typeInfoKeysProcessedInStatements = acc.typeInfoKeysProcessedInStatements)
+                    }
+
+
+                case filterOr: ExtendedSearchOrExpression =>
+
+                    val filterPatternsLeft: ConvertedQueryPatterns = processExtendedSearchFilterPattern(ConvertedQueryPatterns(originalPatterns = Vector.empty[ExtendedSearchQueryPattern], additionalPatterns = Vector.empty[ExtendedSearchStatementPattern], typeInfoKeysProcessedInStatements = Set.empty[TypeableEntityV2]), index, filterOr.leftArg)
+                    val filterPatternsRight: ConvertedQueryPatterns = processExtendedSearchFilterPattern(ConvertedQueryPatterns(originalPatterns = Vector.empty[ExtendedSearchQueryPattern], additionalPatterns = Vector.empty[ExtendedSearchStatementPattern], typeInfoKeysProcessedInStatements = Set.empty[TypeableEntityV2]), index, filterOr.rightArg)
+
+                    val leftArg = filterPatternsLeft.originalPatterns match {
+                        case queryP: Vector[ExtendedSearchQueryPattern] if queryP.size == 1 =>
+                            queryP.head match {
+                                case filterP: ExtendedSearchFilterPattern =>
+                                    filterP.expression
+                                case _ => throw SparqlSearchException("Could not process filter Or expression: leftArg is not a ExtendedSearchFilterPattern")
+                            }
+
+                        case _ => throw SparqlSearchException("Could not process filter Or expression: leftArg is not a Vector of type ExtendedSearchQueryPattern with size 1")
+                    }
+
+                    val rightArg = filterPatternsRight.originalPatterns match {
+                        case queryP: Vector[ExtendedSearchQueryPattern] if queryP.size == 1 =>
+                            queryP.head match {
+                                case filterP: ExtendedSearchFilterPattern =>
+                                    filterP.expression
+                                case _ => throw SparqlSearchException("Could not process filter Or expression: rightArg is not a ExtendedSearchFilterPattern")
+                            }
+
+                        case _ => throw SparqlSearchException("Could not process filter Or expression: rightArg is not a Vector of type ExtendedSearchQueryPattern with size 1")
+                    }
+
+                    // recreate the Or expression and also return statements that were additionally created
+                    val orExpression = ExtendedSearchOrExpression(leftArg = leftArg, rightArg = rightArg)
+
+                    ConvertedQueryPatterns(originalPatterns = acc.originalPatterns ++ Seq(ExtendedSearchFilterPattern(orExpression)), additionalPatterns = acc.additionalPatterns ++ filterPatternsLeft.additionalPatterns ++ filterPatternsRight.additionalPatterns, typeInfoKeysProcessedInStatements = acc.typeInfoKeysProcessedInStatements)
+
+                case filterAnd: ExtendedSearchAndExpression =>
+
+                    val filterPatternsLeft: ConvertedQueryPatterns = processExtendedSearchFilterPattern(ConvertedQueryPatterns(originalPatterns = Vector.empty[ExtendedSearchQueryPattern], additionalPatterns = Vector.empty[ExtendedSearchStatementPattern], typeInfoKeysProcessedInStatements = Set.empty[TypeableEntityV2]), index, filterAnd.leftArg)
+                    val filterPatternsRight: ConvertedQueryPatterns = processExtendedSearchFilterPattern(ConvertedQueryPatterns(originalPatterns = Vector.empty[ExtendedSearchQueryPattern], additionalPatterns = Vector.empty[ExtendedSearchStatementPattern], typeInfoKeysProcessedInStatements = Set.empty[TypeableEntityV2]), index, filterAnd.rightArg)
+
+                    val leftArg = filterPatternsLeft.originalPatterns match {
+                        case queryP: Vector[ExtendedSearchQueryPattern] if queryP.size == 1 =>
+                            queryP.head match {
+                                case filterP: ExtendedSearchFilterPattern =>
+                                    filterP.expression
+                                case _ => throw SparqlSearchException("Could not process filter And expression: leftArg is not a ExtendedSearchFilterPattern")
+                            }
+
+                        case _ => throw SparqlSearchException("Could not process filter And expression: leftArg is not a Vector of type ExtendedSearchQueryPattern with size 1")
+                    }
+
+                    val rightArg = filterPatternsRight.originalPatterns match {
+                        case queryP: Vector[ExtendedSearchQueryPattern] if queryP.size == 1 =>
+                            queryP.head match {
+                                case filterP: ExtendedSearchFilterPattern =>
+                                    filterP.expression
+                                case _ => throw SparqlSearchException("Could not process filter And expression: rightArg is not a ExtendedSearchFilterPattern")
+                            }
+
+                        case _ => throw SparqlSearchException("Could not process filter And expression: rightArg is not a Vector of type ExtendedSearchQueryPattern with size 1")
+                    }
+
+                    // recreate the And expression and also return statements that were additionally created
+                    val andExpression = ExtendedSearchAndExpression(leftArg = leftArg, rightArg = rightArg)
+
+                    ConvertedQueryPatterns(originalPatterns = acc.originalPatterns ++ Seq(ExtendedSearchFilterPattern(andExpression)), additionalPatterns = acc.additionalPatterns ++ filterPatternsLeft.additionalPatterns ++ filterPatternsRight.additionalPatterns, typeInfoKeysProcessedInStatements = acc.typeInfoKeysProcessedInStatements)
+
+
+                case other =>
+                    throw SparqlSearchException(s"unsupported Filter expression: $other")
+            }
+        }
+
+        /**
           * Represents original query patterns provided by the user a additional statements created on the bases of the given type annotations.
           *
           * @param originalPatterns                  the patterns originally provided by the user.
@@ -787,135 +986,8 @@ class SearchResponderV2 extends Responder {
                             ConvertedQueryPatterns(originalPatterns = acc.originalPatterns ++ Seq(ExtendedSearchUnionPattern(blocks)), additionalPatterns = acc.additionalPatterns, typeInfoKeysProcessedInStatements = acc.typeInfoKeysProcessedInStatements)
 
                         case filterP: ExtendedSearchFilterPattern =>
-                            // TODO: transform filter, possibly adding more statements (text, date comparison etc.)
 
-                            filterP.expression match {
-                                case filterCompare: ExtendedSearchCompareExpression =>
-
-                                    // TODO: check validity of comparison operator (see extended search v1) -> make it an enum
-
-                                    filterCompare.leftArg match {
-                                        case searchVar: ExtendedSearchVar =>
-
-                                            val objectType: SparqlEntityTypeInfoV2 = typeInspectionResultWhere.typedEntities(TypeableVariableV2(searchVar.variableName))
-
-
-                                            objectType match {
-                                                case nonPropTypeInfo: NonPropertyTypeInfoV2 =>
-
-                                                    nonPropTypeInfo.typeIri match {
-                                                        case OntologyConstants.Xsd.String =>
-                                                            val statement = ExtendedSearchStatementPattern(subj = searchVar, pred = ExtendedSearchInternalEntityIri(OntologyConstants.KnoraBase.ValueHasString), obj = ExtendedSearchVar("stringVar" + index), true)
-                                                            val filterPattern = ExtendedSearchFilterPattern(ExtendedSearchCompareExpression(leftArg = ExtendedSearchVar("stringVar" + index), operator = filterCompare.operator, rightArg = filterCompare.rightArg))
-
-                                                            ConvertedQueryPatterns(originalPatterns = acc.originalPatterns :+ filterPattern, additionalPatterns = acc.additionalPatterns :+ statement, typeInfoKeysProcessedInStatements = acc.typeInfoKeysProcessedInStatements)
-
-                                                        case OntologyConstants.Xsd.Integer =>
-                                                            val statement = ExtendedSearchStatementPattern(subj = searchVar, pred = ExtendedSearchInternalEntityIri(OntologyConstants.KnoraBase.ValueHasInteger), obj = ExtendedSearchVar("intVar" + index), true)
-                                                            val filterPattern = ExtendedSearchFilterPattern(ExtendedSearchCompareExpression(leftArg = ExtendedSearchVar("intVar" + index), operator = filterCompare.operator, rightArg = filterCompare.rightArg))
-
-                                                            ConvertedQueryPatterns(originalPatterns = acc.originalPatterns :+ filterPattern, additionalPatterns = acc.additionalPatterns :+ statement, typeInfoKeysProcessedInStatements = acc.typeInfoKeysProcessedInStatements)
-
-                                                        case OntologyConstants.KnoraApiV2Simplified.Date =>
-
-                                                            // expect rightArg to be a string literal
-                                                            val dateStringLiteral = filterCompare.rightArg match {
-                                                                case stringLiteral: ExtendedSearchXsdLiteral if stringLiteral.datatype == OntologyConstants.Xsd.String =>
-                                                                    stringLiteral.value
-                                                                case other => throw SparqlSearchException(s"$other is expected to be a string literal")
-                                                            }
-
-                                                            val dateStr = InputValidation.toDate(dateStringLiteral, () => throw BadRequestException(s"${dateStringLiteral} is not a valid date string"))
-
-                                                            val date: JulianDayNumberValueV1 = DateUtilV1.createJDNValueV1FromDateString(dateStr)
-
-                                                            //println(date)
-
-                                                            filterCompare.operator match {
-                                                                case "=" =>
-
-                                                                    // overlap in considered as equality
-                                                                    val filterPattern = ExtendedSearchFilterPattern(ExtendedSearchAndExpression(ExtendedSearchCompareExpression(ExtendedSearchXsdLiteral(date.dateval1.toString, OntologyConstants.Xsd.Integer), "<=", ExtendedSearchVar("dateValEnd" + index)), ExtendedSearchCompareExpression(ExtendedSearchXsdLiteral(date.dateval2.toString, OntologyConstants.Xsd.Integer), ">=", ExtendedSearchVar("dateValStart" + index))))
-
-                                                                    val addStatements = Vector(ExtendedSearchStatementPattern(subj = searchVar, pred = ExtendedSearchInternalEntityIri(OntologyConstants.KnoraBase.ValueHasStartJDN), obj = ExtendedSearchVar("dateValStart" + index), true),
-                                                                    ExtendedSearchStatementPattern(subj = searchVar, pred = ExtendedSearchInternalEntityIri(OntologyConstants.KnoraBase.ValueHasEndJDN), obj = ExtendedSearchVar("dateValEnd" + index), true))
-
-                                                                    ConvertedQueryPatterns(originalPatterns = acc.originalPatterns :+ filterPattern, additionalPatterns = acc.additionalPatterns ++ addStatements, typeInfoKeysProcessedInStatements = acc.typeInfoKeysProcessedInStatements)
-
-                                                                case "!=" =>
-                                                                    // no overlap in considered as inequality
-                                                                    val filterPattern = ExtendedSearchFilterPattern(ExtendedSearchOrExpression(ExtendedSearchCompareExpression(ExtendedSearchXsdLiteral(date.dateval1.toString, OntologyConstants.Xsd.Integer), ">", ExtendedSearchVar("dateValEnd" + index)), ExtendedSearchCompareExpression(ExtendedSearchXsdLiteral(date.dateval2.toString, OntologyConstants.Xsd.Integer), "<", ExtendedSearchVar("dateValStart" + index))))
-
-                                                                    val addStatements = Vector(ExtendedSearchStatementPattern(subj = searchVar, pred = ExtendedSearchInternalEntityIri(OntologyConstants.KnoraBase.ValueHasStartJDN), obj = ExtendedSearchVar("dateValStart" + index), true),
-                                                                        ExtendedSearchStatementPattern(subj = searchVar, pred = ExtendedSearchInternalEntityIri(OntologyConstants.KnoraBase.ValueHasEndJDN), obj = ExtendedSearchVar("dateValEnd" + index), true))
-
-                                                                    ConvertedQueryPatterns(originalPatterns = acc.originalPatterns :+ filterPattern, additionalPatterns = acc.additionalPatterns ++ addStatements, typeInfoKeysProcessedInStatements = acc.typeInfoKeysProcessedInStatements)
-
-                                                                case "<" =>
-                                                                    // no overlap in considered as inequality
-                                                                    val filterPattern = ExtendedSearchFilterPattern(ExtendedSearchCompareExpression(ExtendedSearchVar("dateValEnd" + index), "<", ExtendedSearchXsdLiteral(date.dateval1.toString, OntologyConstants.Xsd.Integer)))
-
-                                                                    val addStatements = Vector(ExtendedSearchStatementPattern(subj = searchVar, pred = ExtendedSearchInternalEntityIri(OntologyConstants.KnoraBase.ValueHasEndJDN), obj = ExtendedSearchVar("dateValEnd" + index), true))
-
-                                                                    ConvertedQueryPatterns(originalPatterns = acc.originalPatterns :+ filterPattern, additionalPatterns = acc.additionalPatterns ++ addStatements, typeInfoKeysProcessedInStatements = acc.typeInfoKeysProcessedInStatements)
-
-                                                                case ">=" =>
-                                                                    // no overlap in considered as inequality
-                                                                    val filterPattern = ExtendedSearchFilterPattern(ExtendedSearchCompareExpression(ExtendedSearchVar("dateValEnd" + index), ">=", ExtendedSearchXsdLiteral(date.dateval1.toString, OntologyConstants.Xsd.Integer)))
-
-                                                                    val addStatements = Vector(ExtendedSearchStatementPattern(subj = searchVar, pred = ExtendedSearchInternalEntityIri(OntologyConstants.KnoraBase.ValueHasEndJDN), obj = ExtendedSearchVar("dateValEnd" + index), true))
-
-                                                                    ConvertedQueryPatterns(originalPatterns = acc.originalPatterns :+ filterPattern, additionalPatterns = acc.additionalPatterns ++ addStatements, typeInfoKeysProcessedInStatements = acc.typeInfoKeysProcessedInStatements)
-
-                                                                case ">" =>
-                                                                    // no overlap in considered as inequality
-                                                                    val filterPattern = ExtendedSearchFilterPattern(ExtendedSearchCompareExpression(ExtendedSearchVar("dateValStart" + index), ">", ExtendedSearchXsdLiteral(date.dateval2.toString, OntologyConstants.Xsd.Integer)))
-
-                                                                    val addStatements = Vector(ExtendedSearchStatementPattern(subj = searchVar, pred = ExtendedSearchInternalEntityIri(OntologyConstants.KnoraBase.ValueHasStartJDN), obj = ExtendedSearchVar("dateValStart" + index), true))
-
-                                                                    ConvertedQueryPatterns(originalPatterns = acc.originalPatterns :+ filterPattern, additionalPatterns = acc.additionalPatterns ++ addStatements, typeInfoKeysProcessedInStatements = acc.typeInfoKeysProcessedInStatements)
-
-
-                                                                case "<=" =>
-                                                                    // no overlap in considered as inequality
-                                                                    val filterPattern = ExtendedSearchFilterPattern(ExtendedSearchCompareExpression(ExtendedSearchVar("dateValStart" + index), "<=", ExtendedSearchXsdLiteral(date.dateval2.toString, OntologyConstants.Xsd.Integer)))
-
-                                                                    val addStatements = Vector(ExtendedSearchStatementPattern(subj = searchVar, pred = ExtendedSearchInternalEntityIri(OntologyConstants.KnoraBase.ValueHasStartJDN), obj = ExtendedSearchVar("dateValStart" + index), true))
-
-                                                                    ConvertedQueryPatterns(originalPatterns = acc.originalPatterns :+ filterPattern, additionalPatterns = acc.additionalPatterns ++ addStatements, typeInfoKeysProcessedInStatements = acc.typeInfoKeysProcessedInStatements)
-
-
-                                                                case other => throw SparqlSearchException(s"operator not implemented yet for date filter: $other")
-                                                            }
-
-
-                                                        case other =>
-                                                            throw SparqlSearchException(s"not implemented yet: $other")
-                                                    }
-
-
-                                                case _ =>
-                                                    ConvertedQueryPatterns(originalPatterns = acc.originalPatterns ++ Seq(filterP), additionalPatterns = acc.additionalPatterns, typeInfoKeysProcessedInStatements = acc.typeInfoKeysProcessedInStatements)
-                                            }
-
-
-                                        case searchIri: ExtendedSearchInternalEntityIri =>
-                                            ConvertedQueryPatterns(originalPatterns = acc.originalPatterns ++ Seq(filterP), additionalPatterns = acc.additionalPatterns, typeInfoKeysProcessedInStatements = acc.typeInfoKeysProcessedInStatements)
-
-                                        case _ =>
-                                            ConvertedQueryPatterns(originalPatterns = acc.originalPatterns ++ Seq(filterP), additionalPatterns = acc.additionalPatterns, typeInfoKeysProcessedInStatements = acc.typeInfoKeysProcessedInStatements)
-                                    }
-
-
-                                case filterOr: ExtendedSearchOrExpression =>
-                                    // TODO: process left and right arg like ExtendedSearchCompareExpression
-                                    ConvertedQueryPatterns(originalPatterns = acc.originalPatterns ++ Seq(filterP), additionalPatterns = acc.additionalPatterns, typeInfoKeysProcessedInStatements = acc.typeInfoKeysProcessedInStatements)
-                                case filterAnd: ExtendedSearchAndExpression =>
-                                    // TODO: process left and right arg like ExtendedSearchCompareExpression
-                                    ConvertedQueryPatterns(originalPatterns = acc.originalPatterns ++ Seq(filterP), additionalPatterns = acc.additionalPatterns, typeInfoKeysProcessedInStatements = acc.typeInfoKeysProcessedInStatements)
-                                case _ =>
-                                    ConvertedQueryPatterns(originalPatterns = acc.originalPatterns ++ Seq(filterP), additionalPatterns = acc.additionalPatterns, typeInfoKeysProcessedInStatements = acc.typeInfoKeysProcessedInStatements)
-                            }
+                            processExtendedSearchFilterPattern(acc, index, filterP.expression)
 
                     }
 
