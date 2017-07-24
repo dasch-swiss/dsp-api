@@ -170,6 +170,8 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
       * @return a [[SparqlConstructResponse]]
       */
     private def sparqlHttpConstruct(sparql: String): Future[SparqlConstructResponse] = {
+        // println(logDelimiter + sparql)
+
         /**
           * Converts a graph in parsed Turtle to a [[SparqlConstructResponse]].
           */

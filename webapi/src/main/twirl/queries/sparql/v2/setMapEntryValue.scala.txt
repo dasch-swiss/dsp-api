@@ -46,7 +46,7 @@ PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 
 DELETE {
-    GRAPH ?dataNamedGraph {
+    GRAPH ?mapNamedGraph {
         @* Delete the existing entry, if any. *@
         ?existingMapEntry rdf:type knora-base:MapEntry ;
             knora-base:isInMap ?map ;
@@ -58,7 +58,7 @@ DELETE {
         ?map knora-base:lastModificationDate ?mapLastModificationDate .
     }
 } INSERT {
-    GRAPH ?dataNamedGraph {
+    GRAPH ?mapNamedGraph {
         @* Create the MapEntry. *@
         ?newMapEntry rdf:type knora-base:MapEntry ;
             knora-base:isInMap ?map ;
