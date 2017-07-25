@@ -294,14 +294,6 @@
 
                 rdfs:comment "Represents subscript in a TextValue"@en .
                 
-###  http://www.knora.org/ontology/standoff-html-editor#StandoffQuoteTag
-
-:StandoffCiteTag rdf:type owl:Class ;
-
-                rdfs:subClassOf :StandoffVisualTag ;
-
-                rdfs:comment "Represents the title of a work in a TextValue"@en .
-
 
 ###  http://www.knora.org/ontology/standoff-html-editor#StandoffLineTag
 
