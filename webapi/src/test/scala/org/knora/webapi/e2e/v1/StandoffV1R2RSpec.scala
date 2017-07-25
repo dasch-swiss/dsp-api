@@ -149,20 +149,6 @@ class StandoffV1R2RSpec extends R2RSpec {
 
         val pathToHTML = "_test_data/test_route/texts/HTML.xml"
 
-        val paramsCreateHTMLExtMappingFromXML =
-            s"""
-               |{
-               |  "project_id": "$anythingProjectIri",
-               |  "label": "mapping for HTML Extended",
-               |  "mappingName": "HTMLExtMapping"
-               |}
-             """.stripMargin
-
-        val pathToHTMLExtMapping = "_test_data/test_route/texts/mappingForHTML-Extended.xml"
-
-        val pathToHTMLExt = "_test_data/test_route/texts/HTML-Extended.xml"
-
-
     }
 
     "The Standoff Endpoint" should {
