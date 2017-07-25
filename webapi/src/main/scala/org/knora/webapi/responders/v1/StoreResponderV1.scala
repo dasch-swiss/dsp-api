@@ -22,7 +22,8 @@ import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRe
 import org.knora.webapi.messages.v1.responder.permissionmessages.PermissionDataV1
 import org.knora.webapi.messages.v1.responder.storemessages.{ResetTriplestoreContentRequestV1, ResetTriplestoreContentResponseV1}
 import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
-import org.knora.webapi.messages.v1.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent, ResetTriplestoreContentACK}
+import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent, ResetTriplestoreContentACK}
+import org.knora.webapi.responders.Responder
 import org.knora.webapi.util.ActorUtil._
 
 import scala.concurrent.Future
@@ -31,7 +32,7 @@ import scala.concurrent.Future
   * This responder is used by [[org.knora.webapi.routing.v1.StoreRouteV1]], for piping through HTTP requests to the
   * 'Store Module'
   */
-class StoreResponderV1 extends ResponderV1 {
+class StoreResponderV1 extends Responder {
 
     /**
       * A user representing the Knora API server, used in those cases where a user is required.

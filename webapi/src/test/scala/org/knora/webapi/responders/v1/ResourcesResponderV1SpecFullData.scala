@@ -852,8 +852,9 @@ object ResourcesResponderV1SpecFullData {
     )
 
     val dummyMapping = MappingXMLtoStandoff(
-            namespace = Map.empty[String, Map[String, Map[String, XMLTag]]]
-        )
+        namespace = Map.empty[String, Map[String, Map[String, XMLTag]]],
+        defaultXSLTransformation = None
+    )
 
     val expectedRegionFullResource = ResourceFullResponseV1(
         access = "OK",
@@ -975,17 +976,17 @@ object ResourcesResponderV1SpecFullData {
                             originalXMLID = None,
                             startIndex = 0
                         ),
-                        StandoffTagV1(
-                            standoffTagClassIri = OntologyConstants.KnoraBase.StandoffLinkTag,
-                            dataType = Some(StandoffDataTypeClasses.StandoffLinkTag),
-                            endPosition = 39,
-                            startPosition = 36,
-                            attributes = Vector(StandoffTagIriAttributeV1(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink, value = "http://data.knora.org/047db418ae06/values/2428fc96-1383-4457-9704-077b37256103")),
-                            uuid = UUID.randomUUID().toString,
-                            originalXMLID = None,
-                            startIndex = 0
-                        )
-                    ),
+                            StandoffTagV1(
+                                standoffTagClassIri = OntologyConstants.KnoraBase.StandoffLinkTag,
+                                dataType = Some(StandoffDataTypeClasses.StandoffLinkTag),
+                                endPosition = 39,
+                                startPosition = 36,
+                                attributes = Vector(StandoffTagIriAttributeV1(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink, value = "http://data.knora.org/047db418ae06/values/2428fc96-1383-4457-9704-077b37256103")),
+                                uuid = UUID.randomUUID().toString,
+                                originalXMLID = None,
+                                startIndex = 0
+                            )
+                        ),
                     utf8str = "Derselbe Holzschnitt wird auf Seite c7r der lateinischen Ausgabe des Narrenschiffs verwendet.\r",
                     mapping = dummyMapping,
                     mappingIri = "http://data.knora.org/projects/standoff/mappings/StandardMapping"

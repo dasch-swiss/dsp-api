@@ -24,8 +24,8 @@ import akka.pattern._
 import org.knora.webapi.messages.v1.responder.groupmessages._
 import org.knora.webapi.messages.v1.responder.projectmessages._
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
-import org.knora.webapi.messages.v1.store.triplestoremessages._
-import org.knora.webapi.responders.IriLocker
+import org.knora.webapi.messages.store.triplestoremessages._
+import org.knora.webapi.responders.{IriLocker, Responder}
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.KnoraIdUtil
 import org.knora.webapi.{DuplicateValueException, _}
@@ -36,7 +36,7 @@ import scala.concurrent.Future
 /**
   * Returns information about Knora projects.
   */
-class GroupsResponderV1 extends ResponderV1 with GroupV1JsonProtocol {
+class GroupsResponderV1 extends Responder with GroupV1JsonProtocol {
 
     // Creates IRIs for new Knora user objects.
     val knoraIdUtil = new KnoraIdUtil
@@ -363,7 +363,7 @@ class GroupsResponderV1 extends ResponderV1 with GroupV1JsonProtocol {
 
             /* create the group */
             createNewGroupSparqlString = queries.sparql.v1.txt.createNewGroup(
-                adminNamedGraphIri = "http://www.knora.org/data/admin",
+                adminNamedGraphIri = OntologyConstants.NamedGraphs.AdminNamedGraph,
                 triplestore = settings.triplestoreType,
                 groupIri = groupIRI,
                 groupClassIri = OntologyConstants.KnoraBase.UserGroup,

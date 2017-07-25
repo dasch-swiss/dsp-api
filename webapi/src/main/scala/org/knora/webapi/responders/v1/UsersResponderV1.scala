@@ -31,8 +31,8 @@ import org.knora.webapi.messages.v1.responder.permissionmessages._
 import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoByIRIGetV1, ProjectInfoV1}
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileType.UserProfileType
 import org.knora.webapi.messages.v1.responder.usermessages._
-import org.knora.webapi.messages.v1.store.triplestoremessages._
-import org.knora.webapi.responders.IriLocker
+import org.knora.webapi.messages.store.triplestoremessages._
+import org.knora.webapi.responders.{IriLocker, Responder}
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.{CacheUtil, KnoraIdUtil}
@@ -43,7 +43,7 @@ import scala.concurrent.Future
 /**
   * Provides information about Knora users to other responders.
   */
-class UsersResponderV1 extends ResponderV1 {
+class UsersResponderV1 extends Responder {
 
     // Creates IRIs for new Knora user objects.
     val knoraIdUtil = new KnoraIdUtil
@@ -291,7 +291,7 @@ class UsersResponderV1 extends ResponderV1 {
 
             // Create the new user.
             createNewUserSparqlString = queries.sparql.v1.txt.createNewUser(
-                adminNamedGraphIri = "http://www.knora.org/data/admin",
+                adminNamedGraphIri = OntologyConstants.NamedGraphs.AdminNamedGraph,
                 triplestore = settings.triplestoreType,
                 userIri = userIri,
                 userClassIri = OntologyConstants.KnoraBase.User,
@@ -1086,7 +1086,7 @@ class UsersResponderV1 extends ResponderV1 {
         for {
             /* Update the user */
             updateUserSparqlString <- Future(queries.sparql.v1.txt.updateUser(
-                adminNamedGraphIri = "http://www.knora.org/data/admin",
+                adminNamedGraphIri = OntologyConstants.NamedGraphs.AdminNamedGraph,
                 triplestore = settings.triplestoreType,
                 userIri = userIri,
                 maybeEmail = userUpdatePayload.email,
