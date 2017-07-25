@@ -585,5 +585,228 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         }
 
+        "search for an anything:Thing that has a decimal value of 2.1" in {
+            val sparqlSimplified =
+                """
+                  |PREFIX anything: <http://api.knora.org/ontology/anything/simple/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |
+                  |CONSTRUCT {
+                  |     ?thing knora-api:isMainResource true .
+                  |
+                  |     ?thing a anything:Thing .
+                  |
+                  |     ?thing anything:hasDecimal 2.1
+                  |} WHERE {
+                  |
+                  |     ?thing a anything:Thing .
+                  |     ?thing a knora-api:Resource .
+                  |
+                  |     ?thing anything:hasDecimal 2.1 .
+                  |     anything:hasDecimal knora-api:objectType xsd:decimal .
+                  |
+                  |}
+                  |
+                """.stripMargin
+
+            // TODO: find a better way to submit spaces as %20
+            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                checkNumberOfItems(responseAs[String], 1)
+
+            }
+
+        }
+
+        "search for an anything:Thing that has a decimal value of 2.1 2" in {
+            val sparqlSimplified =
+                """
+                  |PREFIX anything: <http://api.knora.org/ontology/anything/simple/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |
+                  |CONSTRUCT {
+                  |     ?thing knora-api:isMainResource true .
+                  |
+                  |     ?thing a anything:Thing .
+                  |
+                  |     ?thing anything:hasDecimal 2.1
+                  |} WHERE {
+                  |
+                  |     ?thing a anything:Thing .
+                  |     ?thing a knora-api:Resource .
+                  |
+                  |     ?thing anything:hasDecimal ?decimal .
+                  |     anything:hasDecimal knora-api:objectType xsd:decimal .
+                  |
+                  |     ?decimal a xsd:decimal .
+                  |
+                  |     FILTER(?decimal = 2.1)
+                  |}
+                  |
+                """.stripMargin
+
+            // TODO: find a better way to submit spaces as %20
+            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                checkNumberOfItems(responseAs[String], 1)
+
+            }
+
+        }
+
+        "search for an anything:Thing that has a decimal value bigger than 2.0" in {
+            val sparqlSimplified =
+                """
+                  |PREFIX anything: <http://api.knora.org/ontology/anything/simple/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |
+                  |CONSTRUCT {
+                  |     ?thing knora-api:isMainResource true .
+                  |
+                  |     ?thing a anything:Thing .
+                  |
+                  |     ?thing anything:hasDecimal 2.1
+                  |} WHERE {
+                  |
+                  |     ?thing a anything:Thing .
+                  |     ?thing a knora-api:Resource .
+                  |
+                  |     ?thing anything:hasDecimal ?decimal .
+                  |     anything:hasDecimal knora-api:objectType xsd:decimal .
+                  |
+                  |     ?decimal a xsd:decimal .
+                  |
+                  |     FILTER(?decimal > 2)
+                  |}
+                  |
+                """.stripMargin
+
+            // TODO: find a better way to submit spaces as %20
+            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                checkNumberOfItems(responseAs[String], 1)
+
+            }
+
+        }
+
+        "search for an anything:Thing that has a decimal value smaller than 3.0" in {
+            val sparqlSimplified =
+                """
+                  |PREFIX anything: <http://api.knora.org/ontology/anything/simple/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |
+                  |CONSTRUCT {
+                  |     ?thing knora-api:isMainResource true .
+                  |
+                  |     ?thing a anything:Thing .
+                  |
+                  |     ?thing anything:hasDecimal 2.1
+                  |} WHERE {
+                  |
+                  |     ?thing a anything:Thing .
+                  |     ?thing a knora-api:Resource .
+                  |
+                  |     ?thing anything:hasDecimal ?decimal .
+                  |     anything:hasDecimal knora-api:objectType xsd:decimal .
+                  |
+                  |     ?decimal a xsd:decimal .
+                  |
+                  |     FILTER(?decimal < 3)
+                  |}
+                  |
+                """.stripMargin
+
+            // TODO: find a better way to submit spaces as %20
+            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                checkNumberOfItems(responseAs[String], 1)
+
+            }
+
+        }
+
+        "search for an anything:Thing that has a Boolean value that is true" in {
+            val sparqlSimplified =
+                """
+                  |PREFIX anything: <http://api.knora.org/ontology/anything/simple/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |
+                  |CONSTRUCT {
+                  |     ?thing knora-api:isMainResource true .
+                  |
+                  |     ?thing a anything:Thing .
+                  |
+                  |     ?thing anything:hasBoolean true
+                  |} WHERE {
+                  |
+                  |     ?thing a anything:Thing .
+                  |     ?thing a knora-api:Resource .
+                  |
+                  |     ?thing anything:hasBoolean true .
+                  |     anything:hasBoolean knora-api:objectType xsd:boolean .
+                  |
+                  |}
+                  |
+                """.stripMargin
+
+            // TODO: find a better way to submit spaces as %20
+            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                checkNumberOfItems(responseAs[String], 1)
+
+            }
+
+        }
+
+        "search for an anything:Thing that has a Boolean value that is true 2" in {
+            val sparqlSimplified =
+                """
+                  |PREFIX anything: <http://api.knora.org/ontology/anything/simple/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |
+                  |CONSTRUCT {
+                  |     ?thing knora-api:isMainResource true .
+                  |
+                  |     ?thing a anything:Thing .
+                  |
+                  |     ?thing anything:hasBoolean true
+                  |} WHERE {
+                  |
+                  |     ?thing a anything:Thing .
+                  |     ?thing a knora-api:Resource .
+                  |
+                  |     ?thing anything:hasBoolean ?boolean .
+                  |     anything:hasBoolean knora-api:objectType xsd:boolean .
+                  |
+                  |     ?boolean a xsd:boolean .
+                  |
+                  |     FILTER(?boolean = true)
+                  |
+                  |}
+                  |
+                """.stripMargin
+
+            // TODO: find a better way to submit spaces as %20
+            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                checkNumberOfItems(responseAs[String], 1)
+
+            }
+
+        }
+
     }
 }

@@ -304,7 +304,48 @@ class SearchResponderV2 extends Responder {
 
 
                 case OntologyConstants.Xsd.Boolean =>
-                    throw NotImplementedException(s"literal type ${OntologyConstants.Xsd.Boolean} not implemented yet")
+                    if (apiSchema == ApiV2Schema.SIMPLE) {
+                        // do not include the given statement pattern in the answer because a direct statement from the resource to a string literal (simplified) has to be translated to a value object (extra level).
+
+                        statementPattern.obj match {
+
+                            case booleanLiteral: ExtendedSearchXsdLiteral =>
+
+                                // variable referring to the integer value object
+                                val booleanValueObjVar = ExtendedSearchVar("booleanValueObj" + index)
+
+                                AdditionalStatements(additionalStatements = Vector(
+                                    ExtendedSearchStatementPattern(subj = statementPattern.subj, pred = ExtendedSearchInternalEntityIri(OntologyConstants.KnoraBase.HasValue), obj = booleanValueObjVar, false),
+                                    ExtendedSearchStatementPattern(subj = statementPattern.subj, pred = statementPattern.pred, obj = booleanValueObjVar, false),
+                                    ExtendedSearchStatementPattern(subj = booleanValueObjVar, pred = ExtendedSearchIri(OntologyConstants.KnoraBase.IsDeleted), obj = ExtendedSearchXsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean), true),
+                                    ExtendedSearchStatementPattern(subj = booleanValueObjVar, pred = ExtendedSearchInternalEntityIri(OntologyConstants.Rdf.Type), obj = ExtendedSearchInternalEntityIri(OntologyConstants.KnoraBase.BooleanValue), true),
+                                    ExtendedSearchStatementPattern(subj = booleanValueObjVar, pred = ExtendedSearchVar("booleanValueObjProp" + index), obj = ExtendedSearchVar("booleanValueObjVal" + index), true),
+                                    ExtendedSearchStatementPattern(subj = booleanValueObjVar, pred = ExtendedSearchIri(OntologyConstants.KnoraBase.ValueHasBoolean), obj = statementPattern.obj, true)
+                                ), typeInfoKeysProcessed = typeInfoKeysProcessed)
+
+                            case decimalVar: ExtendedSearchVar =>
+
+                                // the statement's object is a variable
+
+                                // since all value property statements are eliminated, recreate the statement using the given predicate
+
+                                // TODO: maybe only those value property statements have to be eliminated whose object is a literal
+
+                                AdditionalStatements(additionalStatements = Vector(
+                                    ExtendedSearchStatementPattern(subj = statementPattern.subj, pred = ExtendedSearchInternalEntityIri(OntologyConstants.KnoraBase.HasValue), obj = decimalVar, false),
+                                    ExtendedSearchStatementPattern(subj = statementPattern.subj, pred = statementPattern.pred, obj = decimalVar, false),
+                                    ExtendedSearchStatementPattern(subj = decimalVar, pred = ExtendedSearchIri(OntologyConstants.KnoraBase.IsDeleted), obj = ExtendedSearchXsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean), true),
+                                    ExtendedSearchStatementPattern(subj = decimalVar, pred = ExtendedSearchInternalEntityIri(OntologyConstants.Rdf.Type), obj = ExtendedSearchInternalEntityIri(OntologyConstants.KnoraBase.BooleanValue), true),
+                                    ExtendedSearchStatementPattern(subj = decimalVar, pred = ExtendedSearchVar("booleanValueObjProp" + index), obj = ExtendedSearchVar("booleanValueObjVal" + index), true)
+                                ), typeInfoKeysProcessed = typeInfoKeysProcessed)
+
+                            case _ => AdditionalStatements()
+
+                        }
+
+                    } else {
+                        throw NotImplementedException(s"Extended search not implemented for schema $apiSchema")
+                    }
 
                 case OntologyConstants.Xsd.Integer =>
                     if (apiSchema == ApiV2Schema.SIMPLE) {
@@ -351,7 +392,48 @@ class SearchResponderV2 extends Responder {
                     }
 
                 case OntologyConstants.Xsd.Decimal =>
-                    throw NotImplementedException(s"literal type ${OntologyConstants.Xsd.Decimal} not implemented yet")
+                    if (apiSchema == ApiV2Schema.SIMPLE) {
+                        // do not include the given statement pattern in the answer because a direct statement from the resource to a string literal (simplified) has to be translated to a value object (extra level).
+
+                        statementPattern.obj match {
+
+                            case decimalLiteral: ExtendedSearchXsdLiteral =>
+
+                                // variable referring to the integer value object
+                                val decimalValueObjVar = ExtendedSearchVar("decimalValueObj" + index)
+
+                                AdditionalStatements(additionalStatements = Vector(
+                                    ExtendedSearchStatementPattern(subj = statementPattern.subj, pred = ExtendedSearchInternalEntityIri(OntologyConstants.KnoraBase.HasValue), obj = decimalValueObjVar, false),
+                                    ExtendedSearchStatementPattern(subj = statementPattern.subj, pred = statementPattern.pred, obj = decimalValueObjVar, false),
+                                    ExtendedSearchStatementPattern(subj = decimalValueObjVar, pred = ExtendedSearchIri(OntologyConstants.KnoraBase.IsDeleted), obj = ExtendedSearchXsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean), true),
+                                    ExtendedSearchStatementPattern(subj = decimalValueObjVar, pred = ExtendedSearchInternalEntityIri(OntologyConstants.Rdf.Type), obj = ExtendedSearchInternalEntityIri(OntologyConstants.KnoraBase.DecimalValue), true),
+                                    ExtendedSearchStatementPattern(subj = decimalValueObjVar, pred = ExtendedSearchVar("decimalValueObjProp" + index), obj = ExtendedSearchVar("decimalValueObjVal" + index), true),
+                                    ExtendedSearchStatementPattern(subj = decimalValueObjVar, pred = ExtendedSearchIri(OntologyConstants.KnoraBase.ValueHasDecimal), obj = statementPattern.obj, true)
+                                ), typeInfoKeysProcessed = typeInfoKeysProcessed)
+
+                            case decimalVar: ExtendedSearchVar =>
+
+                                // the statement's object is a variable
+
+                                // since all value property statements are eliminated, recreate the statement using the given predicate
+
+                                // TODO: maybe only those value property statements have to be eliminated whose object is a literal
+
+                                AdditionalStatements(additionalStatements = Vector(
+                                    ExtendedSearchStatementPattern(subj = statementPattern.subj, pred = ExtendedSearchInternalEntityIri(OntologyConstants.KnoraBase.HasValue), obj = decimalVar, false),
+                                    ExtendedSearchStatementPattern(subj = statementPattern.subj, pred = statementPattern.pred, obj = decimalVar, false),
+                                    ExtendedSearchStatementPattern(subj = decimalVar, pred = ExtendedSearchIri(OntologyConstants.KnoraBase.IsDeleted), obj = ExtendedSearchXsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean), true),
+                                    ExtendedSearchStatementPattern(subj = decimalVar, pred = ExtendedSearchInternalEntityIri(OntologyConstants.Rdf.Type), obj = ExtendedSearchInternalEntityIri(OntologyConstants.KnoraBase.DecimalValue), true),
+                                    ExtendedSearchStatementPattern(subj = decimalVar, pred = ExtendedSearchVar("decimalValueObjProp" + index), obj = ExtendedSearchVar("decimalValueObjVal" + index), true)
+                                ), typeInfoKeysProcessed = typeInfoKeysProcessed)
+
+                            case _ => AdditionalStatements()
+
+                        }
+
+                    } else {
+                        throw NotImplementedException(s"Extended search not implemented for schema $apiSchema")
+                    }
 
                 case OntologyConstants.KnoraBase.Date =>
                     if (apiSchema == ApiV2Schema.SIMPLE) {
@@ -803,8 +885,6 @@ class SearchResponderV2 extends Responder {
 
                                             val date: JulianDayNumberValueV1 = DateUtilV1.createJDNValueV1FromDateString(dateStr)
 
-                                            //println(date)
-
                                             filterCompare.operator match {
                                                 case "=" =>
 
@@ -862,9 +942,21 @@ class SearchResponderV2 extends Responder {
                                                 case other => throw SparqlSearchException(s"operator not implemented for date filter: $other")
                                             }
 
+                                        case OntologyConstants.Xsd.Decimal =>
+                                            val statement = ExtendedSearchStatementPattern(subj = searchVar, pred = ExtendedSearchInternalEntityIri(OntologyConstants.KnoraBase.ValueHasDecimal), obj = ExtendedSearchVar("decimalVar" + index), true)
+                                            val filterPattern = ExtendedSearchFilterPattern(ExtendedSearchCompareExpression(leftArg = ExtendedSearchVar("decimalVar" + index), operator = filterCompare.operator, rightArg = filterCompare.rightArg))
+
+                                            ConvertedQueryPatterns(originalPatterns = acc.originalPatterns :+ filterPattern, additionalPatterns = acc.additionalPatterns :+ statement, typeInfoKeysProcessedInStatements = acc.typeInfoKeysProcessedInStatements)
+
+                                        case OntologyConstants.Xsd.Boolean =>
+                                            val statement = ExtendedSearchStatementPattern(subj = searchVar, pred = ExtendedSearchInternalEntityIri(OntologyConstants.KnoraBase.ValueHasBoolean), obj = ExtendedSearchVar("booleanVar" + index), true)
+                                            val filterPattern = ExtendedSearchFilterPattern(ExtendedSearchCompareExpression(leftArg = ExtendedSearchVar("booleanVar" + index), operator = filterCompare.operator, rightArg = filterCompare.rightArg))
+
+                                            ConvertedQueryPatterns(originalPatterns = acc.originalPatterns :+ filterPattern, additionalPatterns = acc.additionalPatterns :+ statement, typeInfoKeysProcessedInStatements = acc.typeInfoKeysProcessedInStatements)
+
 
                                         case otherType =>
-                                            throw SparqlSearchException(s"type not implemented yet: $otherType")
+                                            throw SparqlSearchException(s"type not implemented yet for filter: $otherType")
                                     }
 
 
