@@ -34,7 +34,7 @@ import org.eclipse.rdf4j.rio.RDFHandler
 import org.eclipse.rdf4j.rio.turtle._
 import org.knora.webapi.SettingsConstants._
 import org.knora.webapi._
-import org.knora.webapi.messages.v1.store.triplestoremessages._
+import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.store.triplestore.RdfDataObjectFactory
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.FakeTriplestore
@@ -170,6 +170,8 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
       * @return a [[SparqlConstructResponse]]
       */
     private def sparqlHttpConstruct(sparql: String): Future[SparqlConstructResponse] = {
+        // println(logDelimiter + sparql)
+
         /**
           * Converts a graph in parsed Turtle to a [[SparqlConstructResponse]].
           */
@@ -411,7 +413,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
             response <- http.singleRequest(request)
 
             // Convert the HTTP response body to a string.
-            responseString <- response.entity.toStrict(5.seconds).map(_.data.decodeString("UTF-8"))
+            responseString <- response.entity.toStrict(11.seconds).map(_.data.decodeString("UTF-8"))
 
             _ = if (!response.status.isSuccess) {
                 throw TriplestoreResponseException(s"Triplestore responded with HTTP code ${response.status}: $responseString")

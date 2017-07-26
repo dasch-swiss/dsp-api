@@ -22,7 +22,6 @@ package org.knora.webapi.responders.v1
 
 import akka.actor.Status
 import akka.pattern._
-import org.apache.jena.sparql.function.library.leviathan.log
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.ontologymessages.{Cardinality, EntityInfoGetRequestV1, EntityInfoGetResponseV1}
 import org.knora.webapi.messages.v1.responder.permissionmessages.{DefaultObjectAccessPermissionsStringForPropertyGetV1, DefaultObjectAccessPermissionsStringResponseV1}
@@ -32,8 +31,8 @@ import org.knora.webapi.messages.v1.responder.sipimessages.{SipiConstants, SipiR
 import org.knora.webapi.messages.v1.responder.standoffmessages.StandoffDataTypeClasses
 import org.knora.webapi.messages.v1.responder.usermessages.{UserProfileByIRIGetV1, UserProfileType, UserProfileV1}
 import org.knora.webapi.messages.v1.responder.valuemessages._
-import org.knora.webapi.messages.v1.store.triplestoremessages._
-import org.knora.webapi.responders.IriLocker
+import org.knora.webapi.messages.store.triplestoremessages._
+import org.knora.webapi.responders.{IriLocker, Responder}
 import org.knora.webapi.twirl.{SparqlTemplateLinkUpdate, StandoffTagIriAttributeV1, StandoffTagV1}
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util._
@@ -46,7 +45,7 @@ import scala.concurrent.{Await, Future}
 /**
   * Updates Knora values.
   */
-class ValuesResponderV1 extends ResponderV1 {
+class ValuesResponderV1 extends Responder {
     // Creates IRIs for new Knora value objects.
     val knoraIdUtil = new KnoraIdUtil
 
@@ -428,7 +427,7 @@ class ValuesResponderV1 extends ResponderV1 {
                                 createMultipleValuesRequest.userProfile.permissionData)
                         }.mapTo[DefaultObjectAccessPermissionsStringResponseV1]
 
-                        val defaultObjectAccessPermissions = Await.result(defaultObjectAccessPermissionsF, 1.second)
+                        val defaultObjectAccessPermissions = Await.result(defaultObjectAccessPermissionsF, 5.second)
                         // log.debug(s"createValueV1 - defaultObjectAccessPermissions: $defaultObjectAccessPermissions")
 
                         // For each property, construct a SparqlGenerationResultForProperty containing WHERE clause statements, INSERT clause statements, and UnverifiedValueV1s.
@@ -2618,7 +2617,8 @@ class ValuesResponderV1 extends ResponderV1 {
                         propertyIri = propertyIri,
                         propertyObjectClassConstraint = propertyObjectClassConstraint,
                         valueType = otherValue.valueTypeIri,
-                        responderManager = responderManager)
+                        responderManager = responderManager,
+                        userProfile = userProfile)
             }
         } yield result
     }

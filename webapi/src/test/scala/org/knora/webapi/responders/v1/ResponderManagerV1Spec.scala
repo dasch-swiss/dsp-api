@@ -28,20 +28,20 @@ import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.{CoreSpec, SharedAdminTestData, TestProbeMaker}
 
 /**
-  * Tests [[ResponderManagerV1]].
+  * Tests [[ResponderManager]].
   */
 class ResponderManagerV1Spec extends CoreSpec("ResponderManagerTestSystem") with ImplicitSender with Authenticator {
 
 
-    val actorUnderTest = TestActorRef(Props(new ResponderManagerV1 with TestProbeMaker), RESPONDER_MANAGER_ACTOR_NAME)
+    val actorUnderTest = TestActorRef(Props(new ResponderManager with TestProbeMaker), RESPONDER_MANAGER_ACTOR_NAME)
 
-    val mockResourcesRouter = actorUnderTest.underlyingActor.asInstanceOf[TestProbeMaker].probes.getOrElse(RESOURCES_ROUTER_ACTOR_NAME, null)
-    val mockValuesRouter = actorUnderTest.underlyingActor.asInstanceOf[TestProbeMaker].probes.getOrElse(VALUES_ROUTER_ACTOR_NAME, null)
-    val mockSipiRouter = actorUnderTest.underlyingActor.asInstanceOf[TestProbeMaker].probes.getOrElse(SIPI_ROUTER_ACTOR_NAME, null)
-    val mockUsersRouter = actorUnderTest.underlyingActor.asInstanceOf[TestProbeMaker].probes.getOrElse(USERS_ROUTER_ACTOR_NAME, null)
-    val mockListsRouter = actorUnderTest.underlyingActor.asInstanceOf[TestProbeMaker].probes.getOrElse(LISTS_ROUTER_ACTOR_NAME, null)
-    val mockSearchRouter = actorUnderTest.underlyingActor.asInstanceOf[TestProbeMaker].probes.getOrElse(SEARCH_ROUTER_ACTOR_NAME, null)
-    val mockOntologyRouter = actorUnderTest.underlyingActor.asInstanceOf[TestProbeMaker].probes.getOrElse(ONTOLOGY_ROUTER_ACTOR_NAME, null)
+    val mockResourcesRouter = actorUnderTest.underlyingActor.asInstanceOf[TestProbeMaker].probes.getOrElse(RESOURCES_ROUTER_V1_ACTOR_NAME, null)
+    val mockValuesRouter = actorUnderTest.underlyingActor.asInstanceOf[TestProbeMaker].probes.getOrElse(VALUES_ROUTER_V1_ACTOR_NAME, null)
+    val mockSipiRouter = actorUnderTest.underlyingActor.asInstanceOf[TestProbeMaker].probes.getOrElse(SIPI_ROUTER_V1_ACTOR_NAME, null)
+    val mockUsersRouter = actorUnderTest.underlyingActor.asInstanceOf[TestProbeMaker].probes.getOrElse(USERS_ROUTER_V1_ACTOR_NAME, null)
+    val mockListsRouter = actorUnderTest.underlyingActor.asInstanceOf[TestProbeMaker].probes.getOrElse(LISTS_ROUTER_V1_ACTOR_NAME, null)
+    val mockSearchRouter = actorUnderTest.underlyingActor.asInstanceOf[TestProbeMaker].probes.getOrElse(SEARCH_ROUTER_V1_ACTOR_NAME, null)
+    val mockOntologyRouter = actorUnderTest.underlyingActor.asInstanceOf[TestProbeMaker].probes.getOrElse(ONTOLOGY_ROUTER_V1_ACTOR_NAME, null)
 
     /**
       * TODO: Add test cases testing if for every type of message, the message gets forwarded correctly to the

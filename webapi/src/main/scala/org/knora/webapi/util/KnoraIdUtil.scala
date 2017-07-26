@@ -29,8 +29,10 @@ object KnoraIdUtil {
     private val CanonicalUuidLength = 36
     private val Base64UuidLength = 22
 
-    // The domain name used to construct Knora IRIs. If the project ID has been registered with
-    // the Data and Service Center for the Humanities, the IRI will be dereferenceable.
+    /**
+      * The domain name used to construct Knora IRIs. If the project ID has been registered with
+      * the Data and Service Center for the Humanities, the IRI will be dereferenceable.
+      */
     private val IriDomain = "rdfh.ch"
 }
 
@@ -280,12 +282,41 @@ class KnoraIdUtil {
     }
 
     /**
-      * Creates a ned permission IRI based on a UUID
+      * Creates a new permission IRI based on a UUID.
       *
-      * @return the IRI of the permission object
+      * @return the IRI of the permission object.
       */
     def makeRandomPermissionIri: IRI = {
         val knoraPermissionID = makeRandomBase64EncodedUuid
         s"http://$IriDomain/permissions/$knoraPermissionID"
+    }
+
+    /**
+      * Creates an IRI for a `knora-base:Map`.
+      *
+      * @param mapPath the map's path, which must be a sequence of names separated by slashes (`/`). Each name must
+      *                be a valid XML [[https://www.w3.org/TR/1999/REC-xml-names-19990114/#NT-NCName NCName]].
+      * @return the IRI of the map.
+      */
+    def makeMapIri(mapPath: String): IRI = {
+        s"http://$IriDomain/maps/$mapPath"
+    }
+
+    /**
+      * Extracts the path of a persistent map from the IRI of a `knora-base:Map`.
+      *
+      * @param mapIri the IRI of the `knora-base:Map`.
+      * @return the map's path.
+      */
+    def mapIriToMapPath(mapIri: IRI): String = {
+        mapIri.stripPrefix(s"http://$IriDomain/maps/")
+    }
+
+    /**
+      * Creates a random IRI for a `knora-base:MapEntry`.
+      */
+    def makeRandomMapEntryIri: IRI = {
+        val mapEntryID = makeRandomBase64EncodedUuid
+        s"http://$IriDomain/map-entries/$mapEntryID"
     }
 }

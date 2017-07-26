@@ -21,15 +21,12 @@
 package org.knora.webapi.responders.v1
 
 import akka.pattern._
-import org.apache.jena.sparql.function.library.leviathan.log
-import org.knora
-import org.knora.webapi
 import org.knora.webapi._
+import org.knora.webapi.messages.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
 import org.knora.webapi.messages.v1.responder.listmessages._
-import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
-import org.knora.webapi.messages.v1.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
+import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
+import org.knora.webapi.responders.Responder
 import org.knora.webapi.util.ActorUtil._
-import org.knora.webapi.util.MessageUtil
 
 import scala.annotation.tailrec
 import scala.collection.breakOut
@@ -38,7 +35,7 @@ import scala.concurrent.Future
 /**
   * A responder that returns information about hierarchical lists.
   */
-class ListsResponderV1 extends ResponderV1 {
+class ListsResponderV1 extends Responder {
 
     def receive = {
         case ListsGetRequestV1(projectIri, userProfile) => future2Message(sender(), listsGetRequestV1(projectIri, userProfile), log)
