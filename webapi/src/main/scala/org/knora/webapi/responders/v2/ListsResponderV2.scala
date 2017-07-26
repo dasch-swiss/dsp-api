@@ -21,8 +21,9 @@
 package org.knora.webapi.responders.v2
 
 import akka.pattern._
+import org.apache.jena.sparql.procedure.library.debug
 import org.knora.webapi._
-import org.knora.webapi.messages.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
+import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v2.responder.listmessages._
 import org.knora.webapi.responders.Responder
@@ -62,8 +63,13 @@ class ListsResponderV2 extends Responder {
                 maybeProjectIri = projectIri
             ).toString())
 
-            listsResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
+            listsResponse <- (storeManager ? SparqlConstructRequest(sparqlQuery)).mapTo[SparqlConstructResponse]
 
+            _ = log.debug("listsGetRequestV2 - listsResponse: {}", listsResponse )
+
+            lists = Seq.empty[ListInfoV2]
+
+            /*
             listsResponseRows: Seq[VariableResultsRow] = listsResponse.results.bindings
 
             listsWithProperties: Map[String, Map[String, Seq[String]]] = listsResponseRows.groupBy(_.rowMap("s")).map {
@@ -82,6 +88,7 @@ class ListsResponderV2 extends Responder {
                         comment = propsMap.get(OntologyConstants.Rdfs.Comment).map(_.head)
                     )
             }.toVector
+            */
         } yield ListsGetResponseV2(
             lists = lists
         )

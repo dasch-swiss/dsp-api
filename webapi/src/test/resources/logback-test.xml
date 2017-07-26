@@ -75,6 +75,8 @@
     <logger name="org.knora.webapi.responders.v1.ValuesResponderV1" level="INFO"/>
     <logger name="org.knora.webapi.responders.v1.StoreResponderV1" level="INFO"/>
     <logger name="org.knora.webapi.responders.v1.OntologyResponderV1" level="INFO"/>
+    <logger name="org.knora.webapi.responders.v2.ListsResponderV2" level="DEBUG"/>
+    <logger name="org.knora.webapi.responders.v2.ListsResponderV2Spec" level="DEBUG"/>
     <logger name="org.knora.webapi.store.StoreManager" level="INFO"/>
     <logger name="org.knora.webapi.store.triplestore" level="INFO"/>
     <logger name="org.knora.webapi.store.triplestore.http.HttpTriplestoreConnector" level="INFO"/>
@@ -84,7 +86,7 @@
     <logger name="org.knora.webapi.e2e.v1.UsersV1E2ESpec" level="INFO"/>
     <logger name="org.knora.webapi.e2e.v1.ProjectsV1E2ESpec" level="INFO"/>
     <logger name="org.knora.webapi.e2e.v1.GroupsV1E2ESpec" level="INFO"/>
-    <logger name="org.knora.webapi.e2e.v1.ListsV1E2ESpec" level="DEBUG"/>
+    <logger name="org.knora.webapi.e2e.v2.ListsV2E2ESpec" level="DEBUG"/>
 
 
 

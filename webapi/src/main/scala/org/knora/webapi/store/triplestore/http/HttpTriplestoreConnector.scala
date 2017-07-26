@@ -30,6 +30,7 @@ import akka.http.scaladsl.model.headers.Accept
 import akka.stream.ActorMaterializer
 import org.apache.commons.lang3.StringUtils
 import org.eclipse.rdf4j.model.Statement
+import org.eclipse.rdf4j.model.impl.SimpleLiteral
 import org.eclipse.rdf4j.rio.RDFHandler
 import org.eclipse.rdf4j.rio.turtle._
 import org.knora.webapi.SettingsConstants._
@@ -45,6 +46,8 @@ import scala.collection.JavaConverters._
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
 import scala.util.{Failure, Success, Try}
+
+import scala.compat.java8.OptionConverters._
 
 /**
   * Submits SPARQL queries and updates to a triplestore over HTTP. Supports different triplestores, which can be configured in
@@ -107,6 +110,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
     def receive = {
         case SparqlSelectRequest(sparql) => future2Message(sender(), sparqlHttpSelect(sparql), log)
         case SparqlConstructRequest(sparql) => future2Message(sender(), sparqlHttpConstruct(sparql), log)
+        case SparqlExtendedConstructRequest(sparql) => future2Message(sender(), sparqlHttpExtendedConstruct(sparql), log)
         case SparqlUpdateRequest(sparql) => future2Message(sender(), sparqlHttpUpdate(sparql), log)
         case SparqlAskRequest(sparql) => future2Message(sender(), sparqlHttpAsk(sparql), log)
         case ResetTriplestoreContent(rdfDataObjects) => future2Message(sender(), resetTripleStoreContent(rdfDataObjects), log)
@@ -166,7 +170,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
     /**
       * Given a SPARQL CONSTRUCT query string, runs the query, returning the result as a [[SparqlConstructResponse]].
       *
-      * @param sparql the SPARQL SELECT query string.
+      * @param sparql the SPARQL CONSTRUCT query string.
       * @return a [[SparqlConstructResponse]]
       */
     private def sparqlHttpConstruct(sparql: String): Future[SparqlConstructResponse] = {
@@ -208,6 +212,78 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
         }
 
         def parseTurtleResponse(sparql: String, turtleStr: String): Future[SparqlConstructResponse] = {
+            val parseTry = Try {
+                val turtleParser = new TurtleParser()
+                val handler = new ConstructResponseTurtleHandler
+                turtleParser.setRDFHandler(handler)
+                turtleParser.parse(new StringReader(turtleStr), "query-result.ttl")
+                handler.getConstructResponse
+            }
+
+            parseTry match {
+                case Success(parsed) => Future.successful(parsed)
+                case Failure(e) =>
+                    log.error(e, s"Couldn't parse response from triplestore:$logDelimiter$turtleStr${logDelimiter}in response to SPARQL query:$logDelimiter$sparql")
+                    Future.failed(TriplestoreResponseException("Couldn't parse Turtle from triplestore", e, log))
+            }
+        }
+
+        for {
+            turtleStr <- getTriplestoreHttpResponse(sparql, isUpdate = false, isConstruct = true)
+            response <- parseTurtleResponse(sparql, turtleStr)
+        } yield response
+    }
+
+    /**
+      * Given a SPARQL CONSTRUCT query string, runs the query, returning the result as a [[SparqlExtendedConstructResponse]].
+      *
+      * @param sparql the SPARQL CONSTRUCT query string.
+      * @return a [[SparqlExtendedConstructResponse]]
+      */
+    private def sparqlHttpExtendedConstruct(sparql: String): Future[SparqlExtendedConstructResponse] = {
+        // println(logDelimiter + sparql)
+
+        /**
+          * Converts a graph in parsed Turtle to a [[SparqlExtendedConstructResponse]].
+          */
+        class ConstructResponseTurtleHandler extends RDFHandler {
+            /**
+              * A collection of all the statements in the input file, grouped and sorted by subject IRI.
+              */
+            private var statements = Map.empty[IRI, Map[IRI, Seq[(String, Option[String])]]]
+
+            override def handleComment(comment: IRI): Unit = {}
+
+            /**
+              * Adds a statement to the collection `statements`.
+              *
+              * @param st the statement to be added.
+              */
+            override def handleStatement(st: Statement): Unit = {
+                val subjectIri = st.getSubject.stringValue
+                val predicateIri = st.getPredicate.stringValue
+                val objectIri = st.getObject.stringValue
+                val objectLang: Option[String] = st.getObject match {
+                    case lit: SimpleLiteral => lit.getLanguage.asScala
+                    case _ => None
+                }
+                val currentStatementsForSubject = statements.getOrElse(subjectIri, Map.empty[IRI, Map[IRI, Seq[(String, Option[String])]]])
+
+                statements += (subjectIri -> (currentStatementsForSubject :+ ( predicateIri -> (objectIri, objectLang))))
+            }
+
+            override def endRDF(): Unit = {}
+
+            override def handleNamespace(prefix: IRI, uri: IRI): Unit = {}
+
+            override def startRDF(): Unit = {}
+
+            def getConstructResponse: SparqlExtendedConstructResponse = {
+                SparqlExtendedConstructResponse(statements)
+            }
+        }
+
+        def parseTurtleResponse(sparql: String, turtleStr: String): Future[SparqlExtendedConstructResponse] = {
             val parseTry = Try {
                 val turtleParser = new TurtleParser()
                 val handler = new ConstructResponseTurtleHandler

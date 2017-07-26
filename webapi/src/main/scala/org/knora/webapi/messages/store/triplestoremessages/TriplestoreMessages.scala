@@ -117,6 +117,21 @@ case class SparqlConstructRequest(sparql: String) extends TriplestoreRequest
 case class SparqlConstructResponse(statements: Map[IRI, Seq[(IRI, String)]])
 
 /**
+  * Represents a SPARQL CONSTRUCT query to be sent to the triplestore. A successful response will be a
+  * [[SparqlExtendedConstructResponse]].
+  *
+  * @param sparql       the SPARQL string.
+  */
+case class SparqlExtendedConstructRequest(sparql: String) extends TriplestoreRequest
+
+/**
+  * A response to a [[SparqlExtendedConstructRequest]].
+  *
+  * @param statements a map of subject IRIs to statements about each subject.
+  */
+case class SparqlExtendedConstructResponse(statements: Map[IRI, Map[IRI, Seq[(String, Option[String])]]])
+
+/**
   * Represents a SPARQL Update operation to be performed.
   *
   * @param sparql the SPARQL string.
