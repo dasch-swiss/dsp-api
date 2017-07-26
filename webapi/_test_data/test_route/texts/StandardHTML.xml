@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<text documentType="html">
+    <p>
+        This is very boring text that as boring markup as well: <strong>strong</strong>, <strike>struck</strike>, <em>emphasized</em>, <u>underlined</u>,
+        <sub>subtext</sub>m <sup>supertext</sup>, <a href="http://www.knora.org">KNORA</a>, <a class="salsah-link" href="http://data.knora.org/7uuGcnFcQJq08dMOralyCQ">internal link</a>,
+    </p>
+
+    <h1>header 1</h1>
+    <h2>header 2</h2>
+    <h3>header 3</h3>
+    <h4>header 4</h4>
+    <h5>header 5</h5>
+    <h6>header 6</h6>
+
+    <ul>
+        <li>unordered list element</li>
+        <li>unordered list element</li>
+    </ul>
+
+    <ol>
+        <li>ordered list element</li>
+        <li>ordered list element</li>
+    </ol>
+
+    <table>
+        <tr>
+            <td>year</td>
+            <td>name</td>
+        </tr>
+        <tr>
+            <td>2012</td>
+            <td>Old Ideas</td>
+        </tr>
+        <tr>
+            <td>2014</td>
+            <td>Polpular Problems</td>
+        </tr>
+    </table>
+
+    He will speak these words of wisdom <br/>
+    Like a sage, a man of vision        <br/>
+    Though he knows he’s really nothing <br/>
+    But the brief elaboration of a tube <br/>
+    
+    <hr/>
+    
+    <blockquote cite="http://humanities.ch/">
+        Digital data created during research that might be valuable for other ongoing or future research projects can be transfered to the DaSCH infrastructre. The DaSCH will preserve the data and provide long-term access.
+    </blockquote>
+
+    <pre>
+        ,= ,-_-. =.
+       ((_/)o o(\_))
+        `-'(. .)`-'
+            \_/
+    </pre> 
+    <cite>GNU</cite><em>Copyright © 2004, Martin Dickopp</em>
+                   
+</text>

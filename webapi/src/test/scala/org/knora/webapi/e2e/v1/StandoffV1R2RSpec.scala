@@ -145,6 +145,9 @@ class StandoffV1R2RSpec extends R2RSpec {
                |}
              """.stripMargin
 
+        // Standard HTML is the html code that can be translated into Standoff markup with the OntologyConstants.KnoraBase.StandardMapping
+        val pathToStandardHTML = "_test_data/test_route/texts/StandardHTML.xml"
+
         val pathToHTMLMapping = "_test_data/test_route/texts/mappingForHTML.xml"
 
         val pathToHTML = "_test_data/test_route/texts/HTML.xml"
@@ -869,6 +872,60 @@ class StandoffV1R2RSpec extends R2RSpec {
 
                 assert(mappingIri == anythingProjectIri + "/mappings/HTMLMapping", "Iri of the new mapping is not correct")
 
+
+            }
+
+        }
+
+        "create a TextValue from StandardXML representing HTML (in strict XML notation)" in {
+
+            val xmlFileToSend = new File(RequestParams.pathToStandardHTML)
+
+            val newValueParams =
+                s"""
+                {
+                  "project_id": "http://data.knora.org/projects/anything",
+                  "res_id": "http://data.knora.org/a-thing",
+                  "prop": "http://www.knora.org/ontology/anything#hasText",
+                  "richtext_value": {
+                        "xml": ${JsString(Source.fromFile(xmlFileToSend).mkString)},
+                        "mapping_id": "${OntologyConstants.KnoraBase.StandardMapping}"
+                  }
+                }
+                """
+
+            // create standoff from XML
+            Post("/v1/values", HttpEntity(ContentTypes.`application/json`, newValueParams)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> valuesPath ~> check {
+
+                assert(status == StatusCodes.OK, "creation of a TextValue from XML returned a non successful HTTP status code: " + responseAs[String])
+
+                thirdTextValueIri.set(ResponseUtils.getStringMemberFromResponse(response, "id"))
+
+
+            }
+
+        }
+
+        "read the TextValue back to XML and compare it to the (Standard) HTML that was originally sent" in {
+
+            val htmlFile = new File(RequestParams.pathToStandardHTML)
+
+            Get("/v1/values/" + URLEncoder.encode(thirdTextValueIri.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> valuesPath ~> check {
+
+                assert(response.status == StatusCodes.OK, "reading back text value to XML failed")
+
+                val xml = AkkaHttpUtils.httpResponseToJson(response).fields.get("value") match {
+                    case Some(value: JsObject) => value.fields.get("xml") match {
+                        case Some(JsString(xml: String)) => xml
+                        case _ => throw new InvalidApiJsonException("member 'xml' not given")
+                    }
+                    case _ => throw new InvalidApiJsonException("member 'value' not given")
+                }
+
+                // Compare the original XML with the regenerated XML.
+                val xmlDiff: Diff = DiffBuilder.compare(Input.fromString(Source.fromFile(htmlFile)(Codec.UTF8).mkString)).withTest(Input.fromString(xml)).build()
+
+                xmlDiff.hasDifferences should be(false)
 
             }
 
