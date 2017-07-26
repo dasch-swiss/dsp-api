@@ -138,7 +138,7 @@
 
                 // specify allowed elements, attributes, and classes
                 // this must conform to the `STANDARD_MAPPING`
-                var filter = ' p em strong strike u sub sup; a[!href](salsah-link)';
+                var filter = ' p em strong strike u sub sup hr; a[!href](salsah-link) ';
 
 				var config = {
 					language: (SALSAH.userprofile && SALSAH.userprofile.userData && SALSAH.userprofile.userData.lang) ? SALSAH.userprofile.userData.lang : 'en' ,
@@ -165,7 +165,8 @@
 							
 						}
 					},
-					toolbar: [ ['Bold', 'Italic', 'Underline', 'Strike', 'Subscript', 'Superscript', '-','RemoveFormat', 'Link', 'Unlink'] ], // configuration for toolbar buttons, must conform to `STANDARD_MAPPING`
+                    extraPlugins: 'horizontalrule',
+					toolbar: [ [ 'Bold', 'Italic', 'Underline', 'Strike', 'Subscript', 'Superscript', '-','RemoveFormat', '-', 'HorizontalRule', '-', 'Link', 'Unlink'] ], // configuration for toolbar buttons, must conform to `STANDARD_MAPPING`
 					removeButtons: ''
 				};
 
