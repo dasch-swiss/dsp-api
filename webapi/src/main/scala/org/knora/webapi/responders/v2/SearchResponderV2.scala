@@ -20,6 +20,7 @@
 
 package org.knora.webapi.responders.v2
 
+import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi.messages.store.triplestoremessages.{SparqlConstructRequest, SparqlConstructResponse}
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
@@ -65,6 +66,27 @@ class SearchResponderV2 extends Responder {
 
         } yield ReadResourcesSequenceV2(numberOfResources = queryResultsSeparated.size, resources = ConstructResponseUtilV2.createSearchResponse(queryResultsSeparated))
 
+    }
+
+    private def newExtendedSearchV2(simpleConstructQuery: SimpleConstructQuery, apiSchema: ApiV2Schema.Value = ApiV2Schema.SIMPLE, userProfile: UserProfileV1): Future[ReadResourcesSequenceV2] = {
+        for {
+            typeInspector <- FastFuture.successful(new ExplicitTypeInspectorV2(apiSchema))
+            whereClauseWithoutAnnotations: SimpleWhereClause = typeInspector.removeTypeAnnotations(simpleConstructQuery.whereClause)
+            typeInspectionResultWhere: TypeInspectionResultV2 = typeInspector.inspectTypes(simpleConstructQuery.whereClause)
+
+            searchSparql = queries.sparql.v2.txt.newSearchExtended(
+                triplestore = settings.triplestoreType,
+                whereClauseWithoutAnnotations = whereClauseWithoutAnnotations,
+                typeInspectionResultWhere = typeInspectionResultWhere,
+                constructClause = simpleConstructQuery.constructClause
+            ).toString()
+
+            searchResponse: SparqlConstructResponse <- (storeManager ? SparqlConstructRequest(searchSparql)).mapTo[SparqlConstructResponse]
+
+            // separate resources and value objects
+            queryResultsSeparated: Map[IRI, ConstructResponseUtilV2.ResourceWithValueRdfData] = ConstructResponseUtilV2.splitResourcesAndValueRdfData(constructQueryResults = searchResponse, userProfile = userProfile)
+
+        } yield ReadResourcesSequenceV2(numberOfResources = queryResultsSeparated.size, resources = ConstructResponseUtilV2.createSearchResponse(queryResultsSeparated))
     }
 
     /**

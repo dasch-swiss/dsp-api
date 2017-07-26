@@ -35,7 +35,6 @@ object ConstructResponseUtilV2 {
 
     val InferredPredicates = Set(
         OntologyConstants.KnoraBase.HasValue,
-        OntologyConstants.KnoraBase.HasLinkTo,
         OntologyConstants.KnoraBase.IsMainResource
     )
 
@@ -102,7 +101,6 @@ object ConstructResponseUtilV2 {
                 // the query returns the following inferred information:
                 // - every resource is a knora-base:Resource
                 // - every value property is a subproperty of knora-base:hasValue
-                // - every linking property is a subproperty of knora-base:hasLinkTo
                 // - every resource that's a main resource (not a dependent resource) in the query result has knora-base:isMainResource true
                 val assertionsExplicit: Seq[(IRI, String)] = assertions.filterNot {
                     case (pred, obj) =>
