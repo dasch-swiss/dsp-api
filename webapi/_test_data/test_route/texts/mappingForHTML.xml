@@ -1,12 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <mapping xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../src/main/resources/mappingXMLToStandoff.xsd">
     <mappingElement>
-        <tag>
-            <name>text</name>
+        <tag><name>text</name>
             <class>noClass</class>
             <namespace>noNamespace</namespace>
-            <separatesWords>false</separatesWords>
-        </tag>
+            <separatesWords>false</separatesWords></tag>
         <standoffClass>
             <classIri>http://www.knora.org/ontology/standoff#StandoffRootTag</classIri>
             <attributes>
@@ -165,11 +163,7 @@
         <standoffClass>
             <classIri>http://www.knora.org/ontology/anything#StandoffEventTag</classIri>
             <attributes>
-                <attribute>
-                    <attributeName>data-description</attributeName>
-                    <namespace>noNamespace</namespace>
-                    <propertyIri>http://www.knora.org/ontology/anything#standoffEventTagHasDescription</propertyIri>
-                </attribute>
+                <attribute><attributeName>data-description</attributeName><namespace>noNamespace</namespace><propertyIri>http://www.knora.org/ontology/anything#standoffEventTagHasDescription</propertyIri></attribute>
             </attributes>
             <datatype>
                 <type>http://www.knora.org/ontology/knora-base#StandoffDateTag</type>
@@ -259,216 +253,6 @@
             <datatype>
                 <type>http://www.knora.org/ontology/knora-base#StandoffBooleanTag</type>
                 <attributeName>data-boolean</attributeName>
-            </datatype>
-        </standoffClass>
-    </mappingElement>
-
-    <!-- addition of html standard -->
-
-    <mappingElement>
-        <tag>
-            <name>h1</name>
-            <class>noClass</class>
-            <namespace>noNamespace</namespace>
-            <separatesWords>true</separatesWords>
-        </tag>
-        <standoffClass>
-            <classIri>http://www.knora.org/ontology/standoff#StandoffHeader1Tag</classIri>
-        </standoffClass>
-    </mappingElement>
-
-    <mappingElement>
-        <tag>
-            <name>h2</name>
-            <class>noClass</class>
-            <namespace>noNamespace</namespace>
-            <separatesWords>true</separatesWords>
-        </tag>
-        <standoffClass>
-            <classIri>http://www.knora.org/ontology/standoff#StandoffHeader2Tag</classIri>
-        </standoffClass>
-    </mappingElement>
-
-    <mappingElement>
-        <tag>
-            <name>h3</name>
-            <class>noClass</class>
-            <namespace>noNamespace</namespace>
-            <separatesWords>true</separatesWords>
-        </tag>
-        <standoffClass>
-            <classIri>http://www.knora.org/ontology/standoff#StandoffHeader3Tag</classIri>
-        </standoffClass>
-    </mappingElement>
-
-    <mappingElement>
-        <tag>
-            <name>h4</name>
-            <class>noClass</class>
-            <namespace>noNamespace</namespace>
-            <separatesWords>true</separatesWords>
-        </tag>
-        <standoffClass>
-            <classIri>http://www.knora.org/ontology/standoff#StandoffHeader4Tag</classIri>
-        </standoffClass>
-    </mappingElement>
-
-    <mappingElement>
-        <tag>
-            <name>h5</name>
-            <class>noClass</class>
-            <namespace>noNamespace</namespace>
-            <separatesWords>true</separatesWords>
-        </tag>
-        <standoffClass>
-            <classIri>http://www.knora.org/ontology/standoff#StandoffHeader5Tag</classIri>
-        </standoffClass>
-    </mappingElement>
-
-    <mappingElement>
-        <tag>
-            <name>h6</name>
-            <class>noClass</class>
-            <namespace>noNamespace</namespace>
-            <separatesWords>true</separatesWords>
-        </tag>
-        <standoffClass>
-            <classIri>http://www.knora.org/ontology/standoff#StandoffHeader6Tag</classIri>
-        </standoffClass>
-    </mappingElement>
-
-    <mappingElement>
-        <tag>
-            <name>ol</name>
-            <class>noClass</class>
-            <namespace>noNamespace</namespace>
-            <separatesWords>true</separatesWords>
-        </tag>
-        <standoffClass>
-            <classIri>http://www.knora.org/ontology/standoff#StandoffOrderedListTag</classIri>
-        </standoffClass>
-    </mappingElement>
-
-    <mappingElement>
-        <tag>
-            <name>ul</name>
-            <class>noClass</class>
-            <namespace>noNamespace</namespace>
-            <separatesWords>true</separatesWords>
-        </tag>
-        <standoffClass>
-            <classIri>http://www.knora.org/ontology/standoff#StandoffUnorderedListTag</classIri>
-        </standoffClass>
-    </mappingElement>
-
-    <mappingElement>
-        <tag>
-            <name>li</name>
-            <class>noClass</class>
-            <namespace>noNamespace</namespace>
-            <separatesWords>true</separatesWords>
-        </tag>
-        <standoffClass>
-            <classIri>http://www.knora.org/ontology/standoff#StandoffListElementTag</classIri>
-        </standoffClass>
-    </mappingElement>
-
-    <mappingElement>
-        <tag>
-            <name>table</name>
-            <class>noClass</class>
-            <namespace>noNamespace</namespace>
-            <separatesWords>true</separatesWords>
-        </tag>
-        <standoffClass>
-            <classIri>http://www.knora.org/ontology/standoff#StandoffTableTag</classIri>
-        </standoffClass>
-    </mappingElement>
-
-    <mappingElement>
-        <tag>
-            <name>tr</name>
-            <class>noClass</class>
-            <namespace>noNamespace</namespace>
-            <separatesWords>true</separatesWords>
-        </tag>
-        <standoffClass>
-            <classIri>http://www.knora.org/ontology/standoff#StandoffTableRowTag</classIri>
-        </standoffClass>
-    </mappingElement>
-
-    <mappingElement>
-        <tag>
-            <name>td</name>
-            <class>noClass</class>
-            <namespace>noNamespace</namespace>
-            <separatesWords>true</separatesWords>
-        </tag>
-        <standoffClass>
-            <classIri>http://www.knora.org/ontology/standoff#StandoffTableCellTag</classIri>
-        </standoffClass>
-    </mappingElement>
-
-    <mappingElement>
-        <tag>
-            <name>br</name>
-            <class>noClass</class>
-            <namespace>noNamespace</namespace>
-            <separatesWords>true</separatesWords>
-        </tag>
-        <standoffClass>
-            <classIri>http://www.knora.org/ontology/standoff#StandoffBrTag</classIri>
-        </standoffClass>
-    </mappingElement>
-
-    <mappingElement>
-        <tag>
-            <name>hr</name>
-            <class>noClass</class>
-            <namespace>noNamespace</namespace>
-            <separatesWords>true</separatesWords>
-        </tag>
-        <standoffClass>
-            <classIri>http://www.knora.org/ontology/standoff#StandoffLineTag</classIri>
-        </standoffClass>
-    </mappingElement>
-
-    <mappingElement>
-        <tag>
-            <name>pre</name>
-            <class>noClass</class>
-            <namespace>noNamespace</namespace>
-            <separatesWords>true</separatesWords>
-        </tag>
-        <standoffClass>
-            <classIri>http://www.knora.org/ontology/standoff#StandoffPreTag</classIri>
-        </standoffClass>
-    </mappingElement>
-
-    <mappingElement>
-        <tag>
-            <name>cite</name>
-            <class>noClass</class>
-            <namespace>noNamespace</namespace>
-            <separatesWords>true</separatesWords>
-        </tag>
-        <standoffClass>
-            <classIri>http://www.knora.org/ontology/standoff#StandoffCiteTag</classIri>
-        </standoffClass>
-    </mappingElement>
-
-    <mappingElement>
-        <tag>
-            <name>blockquote</name>
-            <class>noClass</class>
-            <namespace>noNamespace</namespace>
-            <separatesWords>true</separatesWords>
-        </tag>
-        <standoffClass>
-            <classIri>http://www.knora.org/ontology/standoff#StandoffBlockquoteTag</classIri>
-            <datatype>
-                <type>http://www.knora.org/ontology/knora-base#StandoffUriTag</type>
-                <attributeName>cite</attributeName>
             </datatype>
         </standoffClass>
     </mappingElement>
