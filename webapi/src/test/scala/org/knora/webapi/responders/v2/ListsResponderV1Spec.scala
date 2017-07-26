@@ -18,7 +18,7 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.responders.v1
+package org.knora.webapi.responders.v2
 
 
 import akka.actor.Props
@@ -26,8 +26,8 @@ import akka.testkit._
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent, ResetTriplestoreContentACK}
-import org.knora.webapi.messages.v1.responder.listmessages._
 import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse}
+import org.knora.webapi.messages.v2.responder.listmessages._
 import org.knora.webapi.responders._
 import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
 import org.knora.webapi.util.MutableTestIri
@@ -36,9 +36,9 @@ import scala.concurrent.duration._
 
 
 /**
-  * Static data for testing [[ListsResponderV1]].
+  * Static data for testing [[ListsResponderV2]].
   */
-object ListsResponderV1Spec {
+object ListsResponderV2Spec {
     val config: Config = ConfigFactory.parseString(
         """
          akka.loglevel = "DEBUG"
@@ -47,12 +47,12 @@ object ListsResponderV1Spec {
 }
 
 /**
-  * Tests [[ListsResponderV1]].
+  * Tests [[ListsResponderV2]].
   */
-class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with ImplicitSender {
+class ListsResponderV2Spec extends CoreSpec(ListsResponderV2Spec.config) with ImplicitSender {
 
     // Construct the actors needed for this test.
-    private val actorUnderTest = TestActorRef[ListsResponderV1]
+    private val actorUnderTest = TestActorRef[ListsResponderV2]
     private val responderManager = system.actorOf(Props(new ResponderManager with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
 
     private val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
@@ -73,13 +73,20 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
     // A test UserDataV1.
     private val userData = userProfile.userData
 
-    private val hKeywords = HListGetResponseV1(
+    val listInfo = ListInfoV2(
+        id = "http://data.knora.org/lists/73d0ec0302",
+        projectIri = Some("http://data.knora.org/projects/images"),
+        labels = Seq("Title", "Titel", "Titre"),
+        comment = Some("Hierarchisches Stichwortverzeichnis / Signatur der Bilder")
+    )
+
+    private val hKeywords = HListGetResponseV2(
         hlist = Vector(
-            ListNodeV1(
+            ListNodeV2(
                 position = 0,
                 level = 0,
                 children = Vector(
-                    ListNodeV1(
+                    ListNodeV2(
                         position = 0,
                         level = 1,
                         children = Nil,
@@ -87,7 +94,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                         name = Some("1"),
                         id = "http://data.knora.org/lists/412821d3a6"
                     ),
-                    ListNodeV1(
+                    ListNodeV2(
                         position = 1,
                         level = 1,
                         children = Nil,
@@ -100,14 +107,14 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                 name = Some("1ALL"),
                 id = "http://data.knora.org/lists/a8f4cd99a6"
             ),
-            ListNodeV1(
+            ListNodeV2(
                 position = 1,
                 level = 0,
                 children = Vector(
-                    ListNodeV1(
+                    ListNodeV2(
                         position = 0,
                         level = 1,
-                        children = Vector(ListNodeV1(
+                        children = Vector(ListNodeV2(
                             position = 0,
                             level = 2,
                             children = Nil,
@@ -119,10 +126,10 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                         name = Some("1"),
                         id = "http://data.knora.org/lists/0cc31a7fa7"
                     ),
-                    ListNodeV1(
+                    ListNodeV2(
                         position = 1,
                         level = 1,
-                        children = Vector(ListNodeV1(
+                        children = Vector(ListNodeV2(
                             position = 0,
                             level = 2,
                             children = Nil,
@@ -134,11 +141,11 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                         name = Some("2"),
                         id = "http://data.knora.org/lists/3e2ac1f1a7"
                     ),
-                    ListNodeV1(
+                    ListNodeV2(
                         position = 2,
                         level = 1,
                         children = Vector(
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 0,
                                 level = 2,
                                 children = Nil,
@@ -146,7 +153,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("1"),
                                 id = "http://data.knora.org/lists/09c5ba9da8"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 1,
                                 level = 2,
                                 children = Nil,
@@ -154,7 +161,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("2"),
                                 id = "http://data.knora.org/lists/a2f80dd7a8"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 2,
                                 level = 2,
                                 children = Nil,
@@ -162,7 +169,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("3"),
                                 id = "http://data.knora.org/lists/3b2c6110a9"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 3,
                                 level = 2,
                                 children = Nil,
@@ -170,7 +177,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("4"),
                                 id = "http://data.knora.org/lists/d45fb449a9"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 4,
                                 level = 2,
                                 children = Nil,
@@ -178,7 +185,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("5"),
                                 id = "http://data.knora.org/lists/6d930783a9"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 5,
                                 level = 2,
                                 children = Nil,
@@ -186,7 +193,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("6"),
                                 id = "http://data.knora.org/lists/06c75abca9"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 6,
                                 level = 2,
                                 children = Nil,
@@ -194,11 +201,11 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("7"),
                                 id = "http://data.knora.org/lists/9ffaadf5a9"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 7,
                                 level = 2,
                                 children = Vector(
-                                    ListNodeV1(
+                                    ListNodeV2(
                                         position = 0,
                                         level = 3,
                                         children = Nil,
@@ -206,7 +213,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("1"),
                                         id = "http://data.knora.org/lists/d1615468aa"
                                     ),
-                                    ListNodeV1(
+                                    ListNodeV2(
                                         position = 1,
                                         level = 3,
                                         children = Nil,
@@ -214,7 +221,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("2"),
                                         id = "http://data.knora.org/lists/6a95a7a1aa"
                                     ),
-                                    ListNodeV1(
+                                    ListNodeV2(
                                         position = 2,
                                         level = 3,
                                         children = Nil,
@@ -222,7 +229,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("3"),
                                         id = "http://data.knora.org/lists/03c9fadaaa"
                                     ),
-                                    ListNodeV1(
+                                    ListNodeV2(
                                         position = 3,
                                         level = 3,
                                         children = Nil,
@@ -230,7 +237,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("4"),
                                         id = "http://data.knora.org/lists/9cfc4d14ab"
                                     ),
-                                    ListNodeV1(
+                                    ListNodeV2(
                                         position = 4,
                                         level = 3,
                                         children = Nil,
@@ -238,7 +245,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("5"),
                                         id = "http://data.knora.org/lists/3530a14dab"
                                     ),
-                                    ListNodeV1(
+                                    ListNodeV2(
                                         position = 5,
                                         level = 3,
                                         children = Nil,
@@ -246,7 +253,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("6"),
                                         id = "http://data.knora.org/lists/ce63f486ab"
                                     ),
-                                    ListNodeV1(
+                                    ListNodeV2(
                                         position = 6,
                                         level = 3,
                                         children = Nil,
@@ -254,7 +261,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("7"),
                                         id = "http://data.knora.org/lists/679747c0ab"
                                     ),
-                                    ListNodeV1(
+                                    ListNodeV2(
                                         position = 7,
                                         level = 3,
                                         children = Nil,
@@ -262,7 +269,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("8"),
                                         id = "http://data.knora.org/lists/00cb9af9ab"
                                     ),
-                                    ListNodeV1(
+                                    ListNodeV2(
                                         position = 8,
                                         level = 3,
                                         children = Nil,
@@ -270,7 +277,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("9"),
                                         id = "http://data.knora.org/lists/99feed32ac"
                                     ),
-                                    ListNodeV1(
+                                    ListNodeV2(
                                         position = 9,
                                         level = 3,
                                         children = Nil,
@@ -278,7 +285,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("10"),
                                         id = "http://data.knora.org/lists/3232416cac"
                                     ),
-                                    ListNodeV1(
+                                    ListNodeV2(
                                         position = 10,
                                         level = 3,
                                         children = Nil,
@@ -286,7 +293,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("11"),
                                         id = "http://data.knora.org/lists/cb6594a5ac"
                                     ),
-                                    ListNodeV1(
+                                    ListNodeV2(
                                         position = 11,
                                         level = 3,
                                         children = Nil,
@@ -294,7 +301,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("12"),
                                         id = "http://data.knora.org/lists/6499e7deac"
                                     ),
-                                    ListNodeV1(
+                                    ListNodeV2(
                                         position = 12,
                                         level = 3,
                                         children = Nil,
@@ -302,7 +309,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("13"),
                                         id = "http://data.knora.org/lists/fdcc3a18ad"
                                     ),
-                                    ListNodeV1(
+                                    ListNodeV2(
                                         position = 13,
                                         level = 3,
                                         children = Nil,
@@ -310,7 +317,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("14"),
                                         id = "http://data.knora.org/lists/96008e51ad"
                                     ),
-                                    ListNodeV1(
+                                    ListNodeV2(
                                         position = 14,
                                         level = 3,
                                         children = Nil,
@@ -318,7 +325,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("15"),
                                         id = "http://data.knora.org/lists/2f34e18aad"
                                     ),
-                                    ListNodeV1(
+                                    ListNodeV2(
                                         position = 15,
                                         level = 3,
                                         children = Nil,
@@ -326,7 +333,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("16"),
                                         id = "http://data.knora.org/lists/c86734c4ad"
                                     ),
-                                    ListNodeV1(
+                                    ListNodeV2(
                                         position = 16,
                                         level = 3,
                                         children = Nil,
@@ -334,7 +341,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("17"),
                                         id = "http://data.knora.org/lists/619b87fdad"
                                     ),
-                                    ListNodeV1(
+                                    ListNodeV2(
                                         position = 17,
                                         level = 3,
                                         children = Nil,
@@ -347,11 +354,11 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("8"),
                                 id = "http://data.knora.org/lists/382e012faa"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 8,
                                 level = 2,
                                 children = Vector(
-                                    ListNodeV1(
+                                    ListNodeV2(
                                         position = 0,
                                         level = 3,
                                         children = Nil,
@@ -359,7 +366,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("1"),
                                         id = "http://data.knora.org/lists/2c3681a9ae"
                                     ),
-                                    ListNodeV1(
+                                    ListNodeV2(
                                         position = 1,
                                         level = 3,
                                         children = Nil,
@@ -367,7 +374,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("2"),
                                         id = "http://data.knora.org/lists/c569d4e2ae"
                                     ),
-                                    ListNodeV1(
+                                    ListNodeV2(
                                         position = 2,
                                         level = 3,
                                         children = Nil,
@@ -375,7 +382,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("3"),
                                         id = "http://data.knora.org/lists/5e9d271caf"
                                     ),
-                                    ListNodeV1(
+                                    ListNodeV2(
                                         position = 3,
                                         level = 3,
                                         children = Nil,
@@ -383,7 +390,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("4"),
                                         id = "http://data.knora.org/lists/f7d07a55af"
                                     ),
-                                    ListNodeV1(
+                                    ListNodeV2(
                                         position = 4,
                                         level = 3,
                                         children = Nil,
@@ -391,7 +398,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("5"),
                                         id = "http://data.knora.org/lists/9004ce8eaf"
                                     ),
-                                    ListNodeV1(
+                                    ListNodeV2(
                                         position = 5,
                                         level = 3,
                                         children = Nil,
@@ -399,7 +406,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("6"),
                                         id = "http://data.knora.org/lists/293821c8af"
                                     ),
-                                    ListNodeV1(
+                                    ListNodeV2(
                                         position = 6,
                                         level = 3,
                                         children = Nil,
@@ -407,7 +414,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("7"),
                                         id = "http://data.knora.org/lists/c26b7401b0"
                                     ),
-                                    ListNodeV1(
+                                    ListNodeV2(
                                         position = 7,
                                         level = 3,
                                         children = Nil,
@@ -415,7 +422,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("8"),
                                         id = "http://data.knora.org/lists/5b9fc73ab0"
                                     ),
-                                    ListNodeV1(
+                                    ListNodeV2(
                                         position = 8,
                                         level = 3,
                                         children = Nil,
@@ -423,7 +430,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("9"),
                                         id = "http://data.knora.org/lists/f4d21a74b0"
                                     ),
-                                    ListNodeV1(
+                                    ListNodeV2(
                                         position = 9,
                                         level = 3,
                                         children = Nil,
@@ -431,7 +438,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("10"),
                                         id = "http://data.knora.org/lists/8d066eadb0"
                                     ),
-                                    ListNodeV1(
+                                    ListNodeV2(
                                         position = 10,
                                         level = 3,
                                         children = Nil,
@@ -439,7 +446,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("11"),
                                         id = "http://data.knora.org/lists/263ac1e6b0"
                                     ),
-                                    ListNodeV1(
+                                    ListNodeV2(
                                         position = 11,
                                         level = 3,
                                         children = Nil,
@@ -447,7 +454,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("12"),
                                         id = "http://data.knora.org/lists/bf6d1420b1"
                                     ),
-                                    ListNodeV1(
+                                    ListNodeV2(
                                         position = 12,
                                         level = 3,
                                         children = Nil,
@@ -455,7 +462,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("13"),
                                         id = "http://data.knora.org/lists/58a16759b1"
                                     ),
-                                    ListNodeV1(
+                                    ListNodeV2(
                                         position = 13,
                                         level = 3,
                                         children = Nil,
@@ -463,7 +470,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("14"),
                                         id = "http://data.knora.org/lists/f1d4ba92b1"
                                     ),
-                                    ListNodeV1(
+                                    ListNodeV2(
                                         position = 14,
                                         level = 3,
                                         children = Nil,
@@ -471,7 +478,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("15"),
                                         id = "http://data.knora.org/lists/8a080eccb1"
                                     ),
-                                    ListNodeV1(
+                                    ListNodeV2(
                                         position = 15,
                                         level = 3,
                                         children = Nil,
@@ -479,7 +486,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("16"),
                                         id = "http://data.knora.org/lists/233c6105b2"
                                     ),
-                                    ListNodeV1(
+                                    ListNodeV2(
                                         position = 16,
                                         level = 3,
                                         children = Nil,
@@ -487,7 +494,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("17"),
                                         id = "http://data.knora.org/lists/bc6fb43eb2"
                                     ),
-                                    ListNodeV1(
+                                    ListNodeV2(
                                         position = 17,
                                         level = 3,
                                         children = Nil,
@@ -505,11 +512,11 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                         name = Some("3"),
                         id = "http://data.knora.org/lists/70916764a8"
                     ),
-                    ListNodeV1(
+                    ListNodeV2(
                         position = 3,
                         level = 1,
                         children = Vector(
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 0,
                                 level = 2,
                                 children = Nil,
@@ -517,7 +524,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("1"),
                                 id = "http://data.knora.org/lists/870aaeeab2"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 1,
                                 level = 2,
                                 children = Nil,
@@ -525,7 +532,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("2"),
                                 id = "http://data.knora.org/lists/203e0124b3"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 2,
                                 level = 2,
                                 children = Nil,
@@ -533,7 +540,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("3"),
                                 id = "http://data.knora.org/lists/b971545db3"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 3,
                                 level = 2,
                                 children = Nil,
@@ -541,7 +548,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("4"),
                                 id = "http://data.knora.org/lists/52a5a796b3"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 4,
                                 level = 2,
                                 children = Nil,
@@ -549,7 +556,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("5"),
                                 id = "http://data.knora.org/lists/ebd8facfb3"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 5,
                                 level = 2,
                                 children = Nil,
@@ -557,7 +564,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("6"),
                                 id = "http://data.knora.org/lists/840c4e09b4"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 6,
                                 level = 2,
                                 children = Nil,
@@ -570,11 +577,11 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                         name = Some("4"),
                         id = "http://data.knora.org/lists/eed65ab1b2"
                     ),
-                    ListNodeV1(
+                    ListNodeV2(
                         position = 4,
                         level = 1,
                         children = Vector(
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 0,
                                 level = 2,
                                 children = Nil,
@@ -582,7 +589,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("1"),
                                 id = "http://data.knora.org/lists/4fa747b5b4"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 1,
                                 level = 2,
                                 children = Nil,
@@ -590,7 +597,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("2"),
                                 id = "http://data.knora.org/lists/e8da9aeeb4"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 2,
                                 level = 2,
                                 children = Nil,
@@ -603,11 +610,11 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                         name = Some("5"),
                         id = "http://data.knora.org/lists/b673f47bb4"
                     ),
-                    ListNodeV1(
+                    ListNodeV2(
                         position = 5,
                         level = 1,
                         children = Vector(
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 0,
                                 level = 2,
                                 children = Nil,
@@ -615,7 +622,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("1"),
                                 id = "http://data.knora.org/lists/1a424161b5"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 1,
                                 level = 2,
                                 children = Nil,
@@ -633,11 +640,11 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                 name = Some("2GEO"),
                 id = "http://data.knora.org/lists/738fc745a7"
             ),
-            ListNodeV1(
+            ListNodeV2(
                 position = 2,
                 level = 0,
                 children = Vector(
-                    ListNodeV1(
+                    ListNodeV2(
                         position = 0,
                         level = 1,
                         children = Nil,
@@ -645,7 +652,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                         name = Some("1"),
                         id = "http://data.knora.org/lists/de02f5180501"
                     ),
-                    ListNodeV1(
+                    ListNodeV2(
                         position = 1,
                         level = 1,
                         children = Nil,
@@ -653,7 +660,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                         name = Some("2"),
                         id = "http://data.knora.org/lists/773648520501"
                     ),
-                    ListNodeV1(
+                    ListNodeV2(
                         position = 2,
                         level = 1,
                         children = Nil,
@@ -661,7 +668,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                         name = Some("3"),
                         id = "http://data.knora.org/lists/106a9b8b0501"
                     ),
-                    ListNodeV1(
+                    ListNodeV2(
                         position = 3,
                         level = 1,
                         children = Nil,
@@ -669,15 +676,15 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                         name = Some("4"),
                         id = "http://data.knora.org/lists/a99deec40501"
                     ),
-                    ListNodeV1(
+                    ListNodeV2(
                         position = 4,
                         level = 1,
                         children = Vector(
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 0,
                                 level = 2,
                                 children = Vector(
-                                    ListNodeV1(
+                                    ListNodeV2(
                                         position = 0,
                                         level = 3,
                                         children = Nil,
@@ -685,7 +692,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("1"),
                                         id = "http://data.knora.org/lists/1744e17fb6"
                                     ),
-                                    ListNodeV1(
+                                    ListNodeV2(
                                         position = 1,
                                         level = 3,
                                         children = Nil,
@@ -693,7 +700,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("2"),
                                         id = "http://data.knora.org/lists/b07734b9b6"
                                     ),
-                                    ListNodeV1(
+                                    ListNodeV2(
                                         position = 2,
                                         level = 3,
                                         children = Nil,
@@ -701,7 +708,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("3"),
                                         id = "http://data.knora.org/lists/49ab87f2b6"
                                     ),
-                                    ListNodeV1(
+                                    ListNodeV2(
                                         position = 3,
                                         level = 3,
                                         children = Nil,
@@ -709,7 +716,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("4"),
                                         id = "http://data.knora.org/lists/e2deda2bb7"
                                     ),
-                                    ListNodeV1(
+                                    ListNodeV2(
                                         position = 4,
                                         level = 3,
                                         children = Nil,
@@ -717,7 +724,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("5"),
                                         id = "http://data.knora.org/lists/7b122e65b7"
                                     ),
-                                    ListNodeV1(
+                                    ListNodeV2(
                                         position = 5,
                                         level = 3,
                                         children = Nil,
@@ -725,7 +732,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("6"),
                                         id = "http://data.knora.org/lists/1446819eb7"
                                     ),
-                                    ListNodeV1(
+                                    ListNodeV2(
                                         position = 6,
                                         level = 3,
                                         children = Nil,
@@ -733,7 +740,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("7"),
                                         id = "http://data.knora.org/lists/ad79d4d7b7"
                                     ),
-                                    ListNodeV1(
+                                    ListNodeV2(
                                         position = 7,
                                         level = 3,
                                         children = Nil,
@@ -741,7 +748,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("8"),
                                         id = "http://data.knora.org/lists/46ad2711b8"
                                     ),
-                                    ListNodeV1(
+                                    ListNodeV2(
                                         position = 8,
                                         level = 3,
                                         children = Nil,
@@ -749,7 +756,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("9"),
                                         id = "http://data.knora.org/lists/dfe07a4ab8"
                                     ),
-                                    ListNodeV1(
+                                    ListNodeV2(
                                         position = 9,
                                         level = 3,
                                         children = Nil,
@@ -757,7 +764,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("10"),
                                         id = "http://data.knora.org/lists/7814ce83b8"
                                     ),
-                                    ListNodeV1(
+                                    ListNodeV2(
                                         position = 10,
                                         level = 3,
                                         children = Nil,
@@ -765,7 +772,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("11"),
                                         id = "http://data.knora.org/lists/114821bdb8"
                                     ),
-                                    ListNodeV1(
+                                    ListNodeV2(
                                         position = 11,
                                         level = 3,
                                         children = Nil,
@@ -773,7 +780,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("12"),
                                         id = "http://data.knora.org/lists/aa7b74f6b8"
                                     ),
-                                    ListNodeV1(
+                                    ListNodeV2(
                                         position = 12,
                                         level = 3,
                                         children = Nil,
@@ -781,7 +788,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("13"),
                                         id = "http://data.knora.org/lists/43afc72fb9"
                                     ),
-                                    ListNodeV1(
+                                    ListNodeV2(
                                         position = 13,
                                         level = 3,
                                         children = Nil,
@@ -789,7 +796,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("14"),
                                         id = "http://data.knora.org/lists/dce21a69b9"
                                     ),
-                                    ListNodeV1(
+                                    ListNodeV2(
                                         position = 14,
                                         level = 3,
                                         children = Nil,
@@ -797,7 +804,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("15"),
                                         id = "http://data.knora.org/lists/75166ea2b9"
                                     ),
-                                    ListNodeV1(
+                                    ListNodeV2(
                                         position = 15,
                                         level = 3,
                                         children = Nil,
@@ -805,7 +812,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("16"),
                                         id = "http://data.knora.org/lists/0e4ac1dbb9"
                                     ),
-                                    ListNodeV1(
+                                    ListNodeV2(
                                         position = 16,
                                         level = 3,
                                         children = Nil,
@@ -813,7 +820,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("17"),
                                         id = "http://data.knora.org/lists/a77d1415ba"
                                     ),
-                                    ListNodeV1(
+                                    ListNodeV2(
                                         position = 17,
                                         level = 3,
                                         children = Nil,
@@ -821,7 +828,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("18"),
                                         id = "http://data.knora.org/lists/40b1674eba"
                                     ),
-                                    ListNodeV1(
+                                    ListNodeV2(
                                         position = 18,
                                         level = 3,
                                         children = Nil,
@@ -829,7 +836,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("19"),
                                         id = "http://data.knora.org/lists/d9e4ba87ba"
                                     ),
-                                    ListNodeV1(
+                                    ListNodeV2(
                                         position = 19,
                                         level = 3,
                                         children = Nil,
@@ -837,7 +844,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("20"),
                                         id = "http://data.knora.org/lists/72180ec1ba"
                                     ),
-                                    ListNodeV1(
+                                    ListNodeV2(
                                         position = 20,
                                         level = 3,
                                         children = Nil,
@@ -845,7 +852,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("21"),
                                         id = "http://data.knora.org/lists/0b4c61faba"
                                     ),
-                                    ListNodeV1(
+                                    ListNodeV2(
                                         position = 21,
                                         level = 3,
                                         children = Nil,
@@ -853,7 +860,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("22"),
                                         id = "http://data.knora.org/lists/a47fb433bb"
                                     ),
-                                    ListNodeV1(
+                                    ListNodeV2(
                                         position = 22,
                                         level = 3,
                                         children = Nil,
@@ -861,7 +868,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("23"),
                                         id = "http://data.knora.org/lists/3db3076dbb"
                                     ),
-                                    ListNodeV1(
+                                    ListNodeV2(
                                         position = 23,
                                         level = 3,
                                         children = Nil,
@@ -869,7 +876,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("24"),
                                         id = "http://data.knora.org/lists/d6e65aa6bb"
                                     ),
-                                    ListNodeV1(
+                                    ListNodeV2(
                                         position = 24,
                                         level = 3,
                                         children = Nil,
@@ -877,7 +884,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("25"),
                                         id = "http://data.knora.org/lists/6f1aaedfbb"
                                     ),
-                                    ListNodeV1(
+                                    ListNodeV2(
                                         position = 25,
                                         level = 3,
                                         children = Nil,
@@ -890,7 +897,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("1"),
                                 id = "http://data.knora.org/lists/7e108e46b6"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 1,
                                 level = 2,
                                 children = Nil,
@@ -898,7 +905,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("2"),
                                 id = "http://data.knora.org/lists/a1815452bc"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 2,
                                 level = 2,
                                 children = Nil,
@@ -906,7 +913,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("3"),
                                 id = "http://data.knora.org/lists/3ab5a78bbc"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 3,
                                 level = 2,
                                 children = Nil,
@@ -914,7 +921,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("4"),
                                 id = "http://data.knora.org/lists/d3e8fac4bc"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 4,
                                 level = 2,
                                 children = Nil,
@@ -922,7 +929,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("5"),
                                 id = "http://data.knora.org/lists/6c1c4efebc"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 5,
                                 level = 2,
                                 children = Nil,
@@ -930,7 +937,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("6"),
                                 id = "http://data.knora.org/lists/0550a137bd"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 6,
                                 level = 2,
                                 children = Nil,
@@ -943,7 +950,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                         name = Some("5"),
                         id = "http://data.knora.org/lists/e5dc3a0db6"
                     ),
-                    ListNodeV1(
+                    ListNodeV2(
                         position = 5,
                         level = 1,
                         children = Nil,
@@ -951,7 +958,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                         name = Some("7"),
                         id = "http://data.knora.org/lists/37b747aabd"
                     ),
-                    ListNodeV1(
+                    ListNodeV2(
                         position = 6,
                         level = 1,
                         children = Nil,
@@ -964,15 +971,15 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                 name = Some("3GES"),
                 id = "http://data.knora.org/lists/4ca9e7d3b5"
             ),
-            ListNodeV1(
+            ListNodeV2(
                 position = 3,
                 level = 0,
                 children = Vector(
-                    ListNodeV1(
+                    ListNodeV2(
                         position = 0,
                         level = 1,
                         children = Vector(
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 0,
                                 level = 2,
                                 children = Nil,
@@ -980,7 +987,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("1"),
                                 id = "http://data.knora.org/lists/9b85948fbe"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 1,
                                 level = 2,
                                 children = Nil,
@@ -988,7 +995,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("2"),
                                 id = "http://data.knora.org/lists/34b9e7c8be"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 2,
                                 level = 2,
                                 children = Nil,
@@ -996,7 +1003,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("3"),
                                 id = "http://data.knora.org/lists/cdec3a02bf"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 3,
                                 level = 2,
                                 children = Nil,
@@ -1004,7 +1011,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("4"),
                                 id = "http://data.knora.org/lists/66208e3bbf"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 4,
                                 level = 2,
                                 children = Nil,
@@ -1017,11 +1024,11 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                         name = Some("5"),
                         id = "http://data.knora.org/lists/02524156be"
                     ),
-                    ListNodeV1(
+                    ListNodeV2(
                         position = 1,
                         level = 1,
                         children = Vector(
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 0,
                                 level = 2,
                                 children = Nil,
@@ -1029,7 +1036,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("1"),
                                 id = "http://data.knora.org/lists/31bb87e7bf"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 1,
                                 level = 2,
                                 children = Nil,
@@ -1037,7 +1044,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("2"),
                                 id = "http://data.knora.org/lists/caeeda20c0"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 2,
                                 level = 2,
                                 children = Nil,
@@ -1045,7 +1052,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("3"),
                                 id = "http://data.knora.org/lists/63222e5ac0"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 3,
                                 level = 2,
                                 children = Nil,
@@ -1053,7 +1060,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("4"),
                                 id = "http://data.knora.org/lists/fc558193c0"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 4,
                                 level = 2,
                                 children = Nil,
@@ -1066,11 +1073,11 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                         name = Some("6"),
                         id = "http://data.knora.org/lists/988734aebf"
                     ),
-                    ListNodeV1(
+                    ListNodeV2(
                         position = 2,
                         level = 1,
                         children = Vector(
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 0,
                                 level = 2,
                                 children = Nil,
@@ -1078,7 +1085,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("1"),
                                 id = "http://data.knora.org/lists/c7f07a3fc1"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 1,
                                 level = 2,
                                 children = Nil,
@@ -1086,7 +1093,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("2"),
                                 id = "http://data.knora.org/lists/6024ce78c1"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 2,
                                 level = 2,
                                 children = Nil,
@@ -1099,11 +1106,11 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                         name = Some("7"),
                         id = "http://data.knora.org/lists/2ebd2706c1"
                     ),
-                    ListNodeV1(
+                    ListNodeV2(
                         position = 3,
                         level = 1,
                         children = Vector(
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 0,
                                 level = 2,
                                 children = Nil,
@@ -1111,7 +1118,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("1"),
                                 id = "http://data.knora.org/lists/2bbfc724c2"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 1,
                                 level = 2,
                                 children = Nil,
@@ -1119,7 +1126,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("2"),
                                 id = "http://data.knora.org/lists/c4f21a5ec2"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 2,
                                 level = 2,
                                 children = Nil,
@@ -1127,7 +1134,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("3"),
                                 id = "http://data.knora.org/lists/5d266e97c2"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 3,
                                 level = 2,
                                 children = Nil,
@@ -1135,7 +1142,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("4"),
                                 id = "http://data.knora.org/lists/f659c1d0c2"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 4,
                                 level = 2,
                                 children = Nil,
@@ -1143,7 +1150,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("5"),
                                 id = "http://data.knora.org/lists/8f8d140ac3"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 5,
                                 level = 2,
                                 children = Nil,
@@ -1156,11 +1163,11 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                         name = Some("8"),
                         id = "http://data.knora.org/lists/928b74ebc1"
                     ),
-                    ListNodeV1(
+                    ListNodeV2(
                         position = 4,
                         level = 1,
                         children = Vector(
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 0,
                                 level = 2,
                                 children = Nil,
@@ -1168,7 +1175,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("1"),
                                 id = "http://data.knora.org/lists/5a280eb6c3"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 1,
                                 level = 2,
                                 children = Nil,
@@ -1176,7 +1183,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("2"),
                                 id = "http://data.knora.org/lists/f35b61efc3"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 2,
                                 level = 2,
                                 children = Nil,
@@ -1189,11 +1196,11 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                         name = Some("9"),
                         id = "http://data.knora.org/lists/c1f4ba7cc3"
                     ),
-                    ListNodeV1(
+                    ListNodeV2(
                         position = 5,
                         level = 1,
                         children = Vector(
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 0,
                                 level = 2,
                                 children = Nil,
@@ -1201,7 +1208,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("1"),
                                 id = "http://data.knora.org/lists/bef65a9bc4"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 1,
                                 level = 2,
                                 children = Nil,
@@ -1219,11 +1226,11 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                 name = Some("4KUN"),
                 id = "http://data.knora.org/lists/691eee1cbe"
             ),
-            ListNodeV1(
+            ListNodeV2(
                 position = 4,
                 level = 0,
                 children = Vector(
-                    ListNodeV1(
+                    ListNodeV2(
                         position = 0,
                         level = 1,
                         children = Nil,
@@ -1231,11 +1238,11 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                         name = Some("1"),
                         id = "http://data.knora.org/lists/89915447c5"
                     ),
-                    ListNodeV1(
+                    ListNodeV2(
                         position = 1,
                         level = 1,
                         children = Vector(
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 0,
                                 level = 2,
                                 children = Nil,
@@ -1243,7 +1250,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("1"),
                                 id = "http://data.knora.org/lists/bbf8fab9c5"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 1,
                                 level = 2,
                                 children = Nil,
@@ -1256,7 +1263,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                         name = Some("3"),
                         id = "http://data.knora.org/lists/22c5a780c5"
                     ),
-                    ListNodeV1(
+                    ListNodeV2(
                         position = 2,
                         level = 1,
                         children = Nil,
@@ -1269,15 +1276,15 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                 name = Some("5MED"),
                 id = "http://data.knora.org/lists/f05d010ec5"
             ),
-            ListNodeV1(
+            ListNodeV2(
                 position = 5,
                 level = 0,
                 children = Vector(
-                    ListNodeV1(
+                    ListNodeV2(
                         position = 0,
                         level = 1,
                         children = Vector(
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 0,
                                 level = 2,
                                 children = Nil,
@@ -1285,7 +1292,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("1"),
                                 id = "http://data.knora.org/lists/b8fa9ad8c6"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 1,
                                 level = 2,
                                 children = Nil,
@@ -1293,7 +1300,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("2"),
                                 id = "http://data.knora.org/lists/512eee11c7"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 2,
                                 level = 2,
                                 children = Nil,
@@ -1306,11 +1313,11 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                         name = Some("2"),
                         id = "http://data.knora.org/lists/1fc7479fc6"
                     ),
-                    ListNodeV1(
+                    ListNodeV2(
                         position = 1,
                         level = 1,
                         children = Vector(
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 0,
                                 level = 2,
                                 children = Nil,
@@ -1318,7 +1325,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("1"),
                                 id = "http://data.knora.org/lists/1cc9e7bdc7"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 1,
                                 level = 2,
                                 children = Nil,
@@ -1331,7 +1338,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                         name = Some("3"),
                         id = "http://data.knora.org/lists/83959484c7"
                     ),
-                    ListNodeV1(
+                    ListNodeV2(
                         position = 2,
                         level = 1,
                         children = Nil,
@@ -1339,11 +1346,11 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                         name = Some("4"),
                         id = "http://data.knora.org/lists/4e308e30c8"
                     ),
-                    ListNodeV1(
+                    ListNodeV2(
                         position = 3,
                         level = 1,
                         children = Vector(
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 0,
                                 level = 2,
                                 children = Nil,
@@ -1351,7 +1358,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("1"),
                                 id = "http://data.knora.org/lists/809734a3c8"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 1,
                                 level = 2,
                                 children = Nil,
@@ -1359,7 +1366,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("2"),
                                 id = "http://data.knora.org/lists/19cb87dcc8"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 2,
                                 level = 2,
                                 children = Nil,
@@ -1367,7 +1374,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("3"),
                                 id = "http://data.knora.org/lists/b2feda15c9"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 3,
                                 level = 2,
                                 children = Nil,
@@ -1380,7 +1387,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                         name = Some("5"),
                         id = "http://data.knora.org/lists/e763e169c8"
                     ),
-                    ListNodeV1(
+                    ListNodeV2(
                         position = 4,
                         level = 1,
                         children = Nil,
@@ -1393,13 +1400,13 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                 name = Some("6NAT"),
                 id = "http://data.knora.org/lists/8693f465c6"
             ),
-            ListNodeV1(
+            ListNodeV2(
                 position = 6,
                 level = 0,
-                children = Vector(ListNodeV1(
+                children = Vector(ListNodeV2(
                     position = 0,
                     level = 1,
-                    children = Vector(ListNodeV1(
+                    children = Vector(ListNodeV2(
                         position = 0,
                         level = 2,
                         children = Nil,
@@ -1415,11 +1422,11 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                 name = Some("7REL"),
                 id = "http://data.knora.org/lists/7d99d4c1c9"
             ),
-            ListNodeV1(
+            ListNodeV2(
                 position = 7,
                 level = 0,
                 children = Vector(
-                    ListNodeV1(
+                    ListNodeV2(
                         position = 0,
                         level = 1,
                         children = Nil,
@@ -1427,11 +1434,11 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                         name = Some("1"),
                         id = "http://data.knora.org/lists/e16721a7ca"
                     ),
-                    ListNodeV1(
+                    ListNodeV2(
                         position = 1,
                         level = 1,
                         children = Vector(
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 0,
                                 level = 2,
                                 children = Nil,
@@ -1439,7 +1446,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("1"),
                                 id = "http://data.knora.org/lists/13cfc719cb"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 1,
                                 level = 2,
                                 children = Nil,
@@ -1447,7 +1454,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("2"),
                                 id = "http://data.knora.org/lists/ac021b53cb"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 2,
                                 level = 2,
                                 children = Nil,
@@ -1455,7 +1462,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("3"),
                                 id = "http://data.knora.org/lists/45366e8ccb"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 3,
                                 level = 2,
                                 children = Nil,
@@ -1468,7 +1475,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                         name = Some("2"),
                         id = "http://data.knora.org/lists/7a9b74e0ca"
                     ),
-                    ListNodeV1(
+                    ListNodeV2(
                         position = 2,
                         level = 1,
                         children = Nil,
@@ -1476,11 +1483,11 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                         name = Some("3"),
                         id = "http://data.knora.org/lists/779d14ffcb"
                     ),
-                    ListNodeV1(
+                    ListNodeV2(
                         position = 3,
                         level = 1,
                         children = Vector(
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 0,
                                 level = 2,
                                 children = Nil,
@@ -1488,7 +1495,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("1"),
                                 id = "http://data.knora.org/lists/a904bb71cc"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 1,
                                 level = 2,
                                 children = Nil,
@@ -1496,7 +1503,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("2"),
                                 id = "http://data.knora.org/lists/42380eabcc"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 2,
                                 level = 2,
                                 children = Nil,
@@ -1504,7 +1511,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("3"),
                                 id = "http://data.knora.org/lists/db6b61e4cc"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 3,
                                 level = 2,
                                 children = Nil,
@@ -1512,7 +1519,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("4"),
                                 id = "http://data.knora.org/lists/749fb41dcd"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 4,
                                 level = 2,
                                 children = Nil,
@@ -1520,7 +1527,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("5"),
                                 id = "http://data.knora.org/lists/0dd30757cd"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 5,
                                 level = 2,
                                 children = Nil,
@@ -1533,7 +1540,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                         name = Some("4"),
                         id = "http://data.knora.org/lists/10d16738cc"
                     ),
-                    ListNodeV1(
+                    ListNodeV2(
                         position = 4,
                         level = 1,
                         children = Nil,
@@ -1541,7 +1548,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                         name = Some("6"),
                         id = "http://data.knora.org/lists/3f3aaec9cd"
                     ),
-                    ListNodeV1(
+                    ListNodeV2(
                         position = 5,
                         level = 1,
                         children = Nil,
@@ -1554,15 +1561,15 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                 name = Some("8SOZ"),
                 id = "http://data.knora.org/lists/4834ce6dca"
             ),
-            ListNodeV1(
+            ListNodeV2(
                 position = 8,
                 level = 0,
                 children = Vector(
-                    ListNodeV1(
+                    ListNodeV2(
                         position = 0,
                         level = 1,
                         children = Vector(
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 0,
                                 level = 2,
                                 children = Nil,
@@ -1570,7 +1577,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("1"),
                                 id = "http://data.knora.org/lists/a308fbaece"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 1,
                                 level = 2,
                                 children = Nil,
@@ -1578,7 +1585,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("2"),
                                 id = "http://data.knora.org/lists/3c3c4ee8ce"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 2,
                                 level = 2,
                                 children = Nil,
@@ -1586,7 +1593,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("3"),
                                 id = "http://data.knora.org/lists/d56fa121cf"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 3,
                                 level = 2,
                                 children = Nil,
@@ -1594,7 +1601,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("4"),
                                 id = "http://data.knora.org/lists/6ea3f45acf"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 4,
                                 level = 2,
                                 children = Nil,
@@ -1602,7 +1609,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("5"),
                                 id = "http://data.knora.org/lists/07d74794cf"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 5,
                                 level = 2,
                                 children = Nil,
@@ -1610,7 +1617,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("6"),
                                 id = "http://data.knora.org/lists/a00a9bcdcf"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 6,
                                 level = 2,
                                 children = Nil,
@@ -1618,7 +1625,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("7"),
                                 id = "http://data.knora.org/lists/393eee06d0"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 7,
                                 level = 2,
                                 children = Nil,
@@ -1626,7 +1633,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("8"),
                                 id = "http://data.knora.org/lists/d2714140d0"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 8,
                                 level = 2,
                                 children = Nil,
@@ -1634,7 +1641,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("9"),
                                 id = "http://data.knora.org/lists/6ba59479d0"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 9,
                                 level = 2,
                                 children = Nil,
@@ -1642,7 +1649,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("10"),
                                 id = "http://data.knora.org/lists/04d9e7b2d0"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 10,
                                 level = 2,
                                 children = Nil,
@@ -1650,7 +1657,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("11"),
                                 id = "http://data.knora.org/lists/9d0c3becd0"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 11,
                                 level = 2,
                                 children = Nil,
@@ -1658,7 +1665,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("12"),
                                 id = "http://data.knora.org/lists/36408e25d1"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 12,
                                 level = 2,
                                 children = Nil,
@@ -1666,7 +1673,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("13"),
                                 id = "http://data.knora.org/lists/cf73e15ed1"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 13,
                                 level = 2,
                                 children = Nil,
@@ -1679,11 +1686,11 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                         name = Some("0"),
                         id = "http://data.knora.org/lists/0ad5a775ce"
                     ),
-                    ListNodeV1(
+                    ListNodeV2(
                         position = 1,
                         level = 1,
                         children = Vector(
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 0,
                                 level = 2,
                                 children = Nil,
@@ -1691,7 +1698,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("1"),
                                 id = "http://data.knora.org/lists/9a0edb0ad2"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 1,
                                 level = 2,
                                 children = Nil,
@@ -1699,7 +1706,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("2"),
                                 id = "http://data.knora.org/lists/33422e44d2"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 2,
                                 level = 2,
                                 children = Nil,
@@ -1707,7 +1714,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("3"),
                                 id = "http://data.knora.org/lists/cc75817dd2"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 3,
                                 level = 2,
                                 children = Nil,
@@ -1715,7 +1722,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("4"),
                                 id = "http://data.knora.org/lists/65a9d4b6d2"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 4,
                                 level = 2,
                                 children = Nil,
@@ -1728,11 +1735,11 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                         name = Some("1"),
                         id = "http://data.knora.org/lists/01db87d1d1"
                     ),
-                    ListNodeV1(
+                    ListNodeV2(
                         position = 2,
                         level = 1,
                         children = Vector(
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 0,
                                 level = 2,
                                 children = Nil,
@@ -1740,7 +1747,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("1"),
                                 id = "http://data.knora.org/lists/3044ce62d3"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 1,
                                 level = 2,
                                 children = Nil,
@@ -1748,7 +1755,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("2"),
                                 id = "http://data.knora.org/lists/c977219cd3"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 2,
                                 level = 2,
                                 children = Nil,
@@ -1756,7 +1763,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("3"),
                                 id = "http://data.knora.org/lists/62ab74d5d3"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 3,
                                 level = 2,
                                 children = Nil,
@@ -1764,7 +1771,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("4"),
                                 id = "http://data.knora.org/lists/fbdec70ed4"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 4,
                                 level = 2,
                                 children = Nil,
@@ -1772,7 +1779,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("5"),
                                 id = "http://data.knora.org/lists/94121b48d4"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 5,
                                 level = 2,
                                 children = Nil,
@@ -1780,7 +1787,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("6"),
                                 id = "http://data.knora.org/lists/2d466e81d4"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 6,
                                 level = 2,
                                 children = Nil,
@@ -1793,7 +1800,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                         name = Some("2"),
                         id = "http://data.knora.org/lists/97107b29d3"
                     ),
-                    ListNodeV1(
+                    ListNodeV2(
                         position = 3,
                         level = 1,
                         children = Nil,
@@ -1801,11 +1808,11 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                         name = Some("2-2"),
                         id = "http://data.knora.org/lists/5fad14f4d4"
                     ),
-                    ListNodeV1(
+                    ListNodeV2(
                         position = 4,
                         level = 1,
                         children = Vector(
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 0,
                                 level = 2,
                                 children = Nil,
@@ -1813,7 +1820,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("1"),
                                 id = "http://data.knora.org/lists/9114bb66d5"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 1,
                                 level = 2,
                                 children = Nil,
@@ -1821,7 +1828,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("2"),
                                 id = "http://data.knora.org/lists/2a480ea0d5"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 2,
                                 level = 2,
                                 children = Nil,
@@ -1829,7 +1836,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("3"),
                                 id = "http://data.knora.org/lists/c37b61d9d5"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 3,
                                 level = 2,
                                 children = Nil,
@@ -1837,7 +1844,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("4"),
                                 id = "http://data.knora.org/lists/5cafb412d6"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 4,
                                 level = 2,
                                 children = Nil,
@@ -1845,7 +1852,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("5"),
                                 id = "http://data.knora.org/lists/f5e2074cd6"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 5,
                                 level = 2,
                                 children = Nil,
@@ -1853,7 +1860,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("6"),
                                 id = "http://data.knora.org/lists/8e165b85d6"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 6,
                                 level = 2,
                                 children = Nil,
@@ -1861,7 +1868,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("7"),
                                 id = "http://data.knora.org/lists/274aaebed6"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 7,
                                 level = 2,
                                 children = Nil,
@@ -1874,11 +1881,11 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                         name = Some("2-3"),
                         id = "http://data.knora.org/lists/f8e0672dd5"
                     ),
-                    ListNodeV1(
+                    ListNodeV2(
                         position = 5,
                         level = 1,
                         children = Vector(
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 0,
                                 level = 2,
                                 children = Nil,
@@ -1886,7 +1893,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("1"),
                                 id = "http://data.knora.org/lists/f2e4a76ad7"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 1,
                                 level = 2,
                                 children = Nil,
@@ -1899,7 +1906,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                         name = Some("2-4"),
                         id = "http://data.knora.org/lists/59b15431d7"
                     ),
-                    ListNodeV1(
+                    ListNodeV2(
                         position = 6,
                         level = 1,
                         children = Nil,
@@ -1907,11 +1914,11 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                         name = Some("2-5"),
                         id = "http://data.knora.org/lists/244c4eddd7"
                     ),
-                    ListNodeV1(
+                    ListNodeV2(
                         position = 7,
                         level = 1,
                         children = Vector(
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 0,
                                 level = 2,
                                 children = Nil,
@@ -1919,7 +1926,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("1"),
                                 id = "http://data.knora.org/lists/56b3f44fd8"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 1,
                                 level = 2,
                                 children = Nil,
@@ -1932,11 +1939,11 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                         name = Some("3"),
                         id = "http://data.knora.org/lists/bd7fa116d8"
                     ),
-                    ListNodeV1(
+                    ListNodeV2(
                         position = 8,
                         level = 1,
                         children = Vector(
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 0,
                                 level = 2,
                                 children = Nil,
@@ -1944,11 +1951,11 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("1"),
                                 id = "http://data.knora.org/lists/214eeefbd8"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 1,
                                 level = 2,
                                 children = Vector(
-                                    ListNodeV1(
+                                    ListNodeV2(
                                         position = 0,
                                         level = 3,
                                         children = Nil,
@@ -1956,7 +1963,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("1"),
                                         id = "http://data.knora.org/lists/53b5946ed9"
                                     ),
-                                    ListNodeV1(
+                                    ListNodeV2(
                                         position = 1,
                                         level = 3,
                                         children = Nil,
@@ -1964,7 +1971,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("2"),
                                         id = "http://data.knora.org/lists/ece8e7a7d9"
                                     ),
-                                    ListNodeV1(
+                                    ListNodeV2(
                                         position = 2,
                                         level = 3,
                                         children = Nil,
@@ -1972,7 +1979,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("3"),
                                         id = "http://data.knora.org/lists/851c3be1d9"
                                     ),
-                                    ListNodeV1(
+                                    ListNodeV2(
                                         position = 3,
                                         level = 3,
                                         children = Nil,
@@ -1980,7 +1987,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("4"),
                                         id = "http://data.knora.org/lists/1e508e1ada"
                                     ),
-                                    ListNodeV1(
+                                    ListNodeV2(
                                         position = 4,
                                         level = 3,
                                         children = Nil,
@@ -1988,7 +1995,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("5"),
                                         id = "http://data.knora.org/lists/b783e153da"
                                     ),
-                                    ListNodeV1(
+                                    ListNodeV2(
                                         position = 5,
                                         level = 3,
                                         children = Nil,
@@ -1996,7 +2003,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("6"),
                                         id = "http://data.knora.org/lists/50b7348dda"
                                     ),
-                                    ListNodeV1(
+                                    ListNodeV2(
                                         position = 6,
                                         level = 3,
                                         children = Nil,
@@ -2009,7 +2016,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("2"),
                                 id = "http://data.knora.org/lists/ba814135d9"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 2,
                                 level = 2,
                                 children = Nil,
@@ -2017,7 +2024,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("3"),
                                 id = "http://data.knora.org/lists/821edbffda"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 3,
                                 level = 2,
                                 children = Nil,
@@ -2025,10 +2032,10 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("4"),
                                 id = "http://data.knora.org/lists/1b522e39db"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 4,
                                 level = 2,
-                                children = Vector(ListNodeV1(
+                                children = Vector(ListNodeV2(
                                     position = 0,
                                     level = 3,
                                     children = Nil,
@@ -2040,7 +2047,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("5"),
                                 id = "http://data.knora.org/lists/b4858172db"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 5,
                                 level = 2,
                                 children = Nil,
@@ -2048,7 +2055,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("6"),
                                 id = "http://data.knora.org/lists/e6ec27e5db"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 6,
                                 level = 2,
                                 children = Nil,
@@ -2061,15 +2068,15 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                         name = Some("4"),
                         id = "http://data.knora.org/lists/881a9bc2d8"
                     ),
-                    ListNodeV1(
+                    ListNodeV2(
                         position = 9,
                         level = 1,
                         children = Vector(
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 0,
                                 level = 2,
                                 children = Vector(
-                                    ListNodeV1(
+                                    ListNodeV2(
                                         position = 0,
                                         level = 3,
                                         children = Nil,
@@ -2077,7 +2084,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("1"),
                                         id = "http://data.knora.org/lists/4abb74cadc"
                                     ),
-                                    ListNodeV1(
+                                    ListNodeV2(
                                         position = 1,
                                         level = 3,
                                         children = Nil,
@@ -2085,7 +2092,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("2"),
                                         id = "http://data.knora.org/lists/e3eec703dd"
                                     ),
-                                    ListNodeV1(
+                                    ListNodeV2(
                                         position = 2,
                                         level = 3,
                                         children = Nil,
@@ -2098,11 +2105,11 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("1"),
                                 id = "http://data.knora.org/lists/b1872191dc"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 1,
                                 level = 2,
                                 children = Vector(
-                                    ListNodeV1(
+                                    ListNodeV2(
                                         position = 0,
                                         level = 3,
                                         children = Nil,
@@ -2110,7 +2117,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("1"),
                                         id = "http://data.knora.org/lists/ae89c1afdd"
                                     ),
-                                    ListNodeV1(
+                                    ListNodeV2(
                                         position = 1,
                                         level = 3,
                                         children = Nil,
@@ -2123,7 +2130,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("2"),
                                 id = "http://data.knora.org/lists/15566e76dd"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 2,
                                 level = 2,
                                 children = Nil,
@@ -2136,11 +2143,11 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                         name = Some("5"),
                         id = "http://data.knora.org/lists/1854ce57dc"
                     ),
-                    ListNodeV1(
+                    ListNodeV2(
                         position = 10,
                         level = 1,
                         children = Vector(
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 0,
                                 level = 2,
                                 children = Nil,
@@ -2148,7 +2155,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("1"),
                                 id = "http://data.knora.org/lists/7924bb5bde"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 1,
                                 level = 2,
                                 children = Nil,
@@ -2156,7 +2163,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("2"),
                                 id = "http://data.knora.org/lists/12580e95de"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 2,
                                 level = 2,
                                 children = Nil,
@@ -2164,7 +2171,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("3"),
                                 id = "http://data.knora.org/lists/ab8b61cede"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 3,
                                 level = 2,
                                 children = Nil,
@@ -2172,7 +2179,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("4"),
                                 id = "http://data.knora.org/lists/44bfb407df"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 4,
                                 level = 2,
                                 children = Nil,
@@ -2180,7 +2187,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("5"),
                                 id = "http://data.knora.org/lists/ddf20741df"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 5,
                                 level = 2,
                                 children = Nil,
@@ -2188,7 +2195,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("6"),
                                 id = "http://data.knora.org/lists/76265b7adf"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 6,
                                 level = 2,
                                 children = Nil,
@@ -2196,7 +2203,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("7"),
                                 id = "http://data.knora.org/lists/0f5aaeb3df"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 7,
                                 level = 2,
                                 children = Nil,
@@ -2209,11 +2216,11 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                         name = Some("6"),
                         id = "http://data.knora.org/lists/e0f06722de"
                     ),
-                    ListNodeV1(
+                    ListNodeV2(
                         position = 11,
                         level = 1,
                         children = Vector(
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 0,
                                 level = 2,
                                 children = Nil,
@@ -2221,7 +2228,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("1"),
                                 id = "http://data.knora.org/lists/daf4a75fe0"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 1,
                                 level = 2,
                                 children = Nil,
@@ -2229,7 +2236,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("2"),
                                 id = "http://data.knora.org/lists/7328fb98e0"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 2,
                                 level = 2,
                                 children = Nil,
@@ -2237,11 +2244,11 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("3"),
                                 id = "http://data.knora.org/lists/0c5c4ed2e0"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 3,
                                 level = 2,
                                 children = Vector(
-                                    ListNodeV1(
+                                    ListNodeV2(
                                         position = 0,
                                         level = 3,
                                         children = Nil,
@@ -2249,7 +2256,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("1"),
                                         id = "http://data.knora.org/lists/3ec3f444e1"
                                     ),
-                                    ListNodeV1(
+                                    ListNodeV2(
                                         position = 1,
                                         level = 3,
                                         children = Nil,
@@ -2257,7 +2264,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("2"),
                                         id = "http://data.knora.org/lists/d7f6477ee1"
                                     ),
-                                    ListNodeV1(
+                                    ListNodeV2(
                                         position = 2,
                                         level = 3,
                                         children = Nil,
@@ -2270,7 +2277,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("4"),
                                 id = "http://data.knora.org/lists/a58fa10be1"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 4,
                                 level = 2,
                                 children = Nil,
@@ -2278,7 +2285,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("5"),
                                 id = "http://data.knora.org/lists/095eeef0e1"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 5,
                                 level = 2,
                                 children = Nil,
@@ -2291,11 +2298,11 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                         name = Some("7"),
                         id = "http://data.knora.org/lists/41c15426e0"
                     ),
-                    ListNodeV1(
+                    ListNodeV2(
                         position = 12,
                         level = 1,
                         children = Vector(
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 0,
                                 level = 2,
                                 children = Nil,
@@ -2303,7 +2310,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("1"),
                                 id = "http://data.knora.org/lists/d4f8e79ce2"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 1,
                                 level = 2,
                                 children = Nil,
@@ -2311,7 +2318,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("2"),
                                 id = "http://data.knora.org/lists/6d2c3bd6e2"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 2,
                                 level = 2,
                                 children = Nil,
@@ -2319,7 +2326,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("3"),
                                 id = "http://data.knora.org/lists/06608e0fe3"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 3,
                                 level = 2,
                                 children = Nil,
@@ -2327,7 +2334,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("4"),
                                 id = "http://data.knora.org/lists/9f93e148e3"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 4,
                                 level = 2,
                                 children = Nil,
@@ -2340,11 +2347,11 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                         name = Some("8"),
                         id = "http://data.knora.org/lists/3bc59463e2"
                     ),
-                    ListNodeV1(
+                    ListNodeV2(
                         position = 13,
                         level = 1,
                         children = Vector(
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 0,
                                 level = 2,
                                 children = Nil,
@@ -2352,7 +2359,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("1"),
                                 id = "http://data.knora.org/lists/6a2edbf4e3"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 1,
                                 level = 2,
                                 children = Nil,
@@ -2360,7 +2367,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("2"),
                                 id = "http://data.knora.org/lists/03622e2ee4"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 2,
                                 level = 2,
                                 children = Nil,
@@ -2368,7 +2375,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("3"),
                                 id = "http://data.knora.org/lists/9c958167e4"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 3,
                                 level = 2,
                                 children = Nil,
@@ -2376,7 +2383,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("4"),
                                 id = "http://data.knora.org/lists/35c9d4a0e4"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 4,
                                 level = 2,
                                 children = Nil,
@@ -2389,15 +2396,15 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                         name = Some("9"),
                         id = "http://data.knora.org/lists/d1fa87bbe3"
                     ),
-                    ListNodeV1(
+                    ListNodeV2(
                         position = 14,
                         level = 1,
                         children = Vector(
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 0,
                                 level = 2,
                                 children = Vector(
-                                    ListNodeV1(
+                                    ListNodeV2(
                                         position = 0,
                                         level = 3,
                                         children = Nil,
@@ -2405,7 +2412,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("1"),
                                         id = "http://data.knora.org/lists/99972186e5"
                                     ),
-                                    ListNodeV1(
+                                    ListNodeV2(
                                         position = 1,
                                         level = 3,
                                         children = Nil,
@@ -2413,7 +2420,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("2"),
                                         id = "http://data.knora.org/lists/32cb74bfe5"
                                     ),
-                                    ListNodeV1(
+                                    ListNodeV2(
                                         position = 2,
                                         level = 3,
                                         children = Nil,
@@ -2421,7 +2428,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("3"),
                                         id = "http://data.knora.org/lists/cbfec7f8e5"
                                     ),
-                                    ListNodeV1(
+                                    ListNodeV2(
                                         position = 3,
                                         level = 3,
                                         children = Nil,
@@ -2429,7 +2436,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                         name = Some("4"),
                                         id = "http://data.knora.org/lists/64321b32e6"
                                     ),
-                                    ListNodeV1(
+                                    ListNodeV2(
                                         position = 4,
                                         level = 3,
                                         children = Nil,
@@ -2442,7 +2449,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("1"),
                                 id = "http://data.knora.org/lists/0064ce4ce5"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 1,
                                 level = 2,
                                 children = Nil,
@@ -2450,7 +2457,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("2"),
                                 id = "http://data.knora.org/lists/9699c1a4e6"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 2,
                                 level = 2,
                                 children = Nil,
@@ -2458,7 +2465,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("3"),
                                 id = "http://data.knora.org/lists/2fcd14dee6"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 3,
                                 level = 2,
                                 children = Nil,
@@ -2466,7 +2473,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("4"),
                                 id = "http://data.knora.org/lists/c8006817e7"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 4,
                                 level = 2,
                                 children = Nil,
@@ -2474,7 +2481,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("5"),
                                 id = "http://data.knora.org/lists/6134bb50e7"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 5,
                                 level = 2,
                                 children = Nil,
@@ -2482,7 +2489,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("6"),
                                 id = "http://data.knora.org/lists/fa670e8ae7"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 6,
                                 level = 2,
                                 children = Nil,
@@ -2495,11 +2502,11 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                         name = Some("10"),
                         id = "http://data.knora.org/lists/67307b13e5"
                     ),
-                    ListNodeV1(
+                    ListNodeV2(
                         position = 15,
                         level = 1,
                         children = Vector(
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 0,
                                 level = 2,
                                 children = Nil,
@@ -2507,7 +2514,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("1"),
                                 id = "http://data.knora.org/lists/c5020836e8"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 1,
                                 level = 2,
                                 children = Nil,
@@ -2515,7 +2522,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("2"),
                                 id = "http://data.knora.org/lists/5e365b6fe8"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 2,
                                 level = 2,
                                 children = Nil,
@@ -2523,7 +2530,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("3"),
                                 id = "http://data.knora.org/lists/f769aea8e8"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 3,
                                 level = 2,
                                 children = Nil,
@@ -2531,7 +2538,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("4"),
                                 id = "http://data.knora.org/lists/909d01e2e8"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 4,
                                 level = 2,
                                 children = Nil,
@@ -2539,7 +2546,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("5"),
                                 id = "http://data.knora.org/lists/29d1541be9"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 5,
                                 level = 2,
                                 children = Nil,
@@ -2547,7 +2554,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("6"),
                                 id = "http://data.knora.org/lists/c204a854e9"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 6,
                                 level = 2,
                                 children = Nil,
@@ -2555,7 +2562,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("7"),
                                 id = "http://data.knora.org/lists/5b38fb8de9"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 7,
                                 level = 2,
                                 children = Nil,
@@ -2573,15 +2580,15 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                 name = Some("9SPO"),
                 id = "http://data.knora.org/lists/71a1543cce"
             ),
-            ListNodeV1(
+            ListNodeV2(
                 position = 9,
                 level = 0,
                 children = Vector(
-                    ListNodeV1(
+                    ListNodeV2(
                         position = 0,
                         level = 1,
                         children = Vector(
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 0,
                                 level = 2,
                                 children = Nil,
@@ -2589,7 +2596,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("1"),
                                 id = "http://data.knora.org/lists/bf064873ea"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 1,
                                 level = 2,
                                 children = Nil,
@@ -2597,7 +2604,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("2"),
                                 id = "http://data.knora.org/lists/583a9bacea"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 2,
                                 level = 2,
                                 children = Nil,
@@ -2605,7 +2612,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("3"),
                                 id = "http://data.knora.org/lists/f16deee5ea"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 3,
                                 level = 2,
                                 children = Nil,
@@ -2613,7 +2620,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("4"),
                                 id = "http://data.knora.org/lists/8aa1411feb"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 4,
                                 level = 2,
                                 children = Nil,
@@ -2621,7 +2628,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("5"),
                                 id = "http://data.knora.org/lists/23d59458eb"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 5,
                                 level = 2,
                                 children = Nil,
@@ -2629,7 +2636,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("6"),
                                 id = "http://data.knora.org/lists/bc08e891eb"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 6,
                                 level = 2,
                                 children = Nil,
@@ -2637,7 +2644,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("7"),
                                 id = "http://data.knora.org/lists/553c3bcbeb"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 7,
                                 level = 2,
                                 children = Nil,
@@ -2645,7 +2652,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("8"),
                                 id = "http://data.knora.org/lists/ee6f8e04ec"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 8,
                                 level = 2,
                                 children = Nil,
@@ -2653,7 +2660,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("9"),
                                 id = "http://data.knora.org/lists/87a3e13dec"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 9,
                                 level = 2,
                                 children = Nil,
@@ -2661,7 +2668,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("10"),
                                 id = "http://data.knora.org/lists/20d73477ec"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 10,
                                 level = 2,
                                 children = Nil,
@@ -2669,7 +2676,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("11"),
                                 id = "http://data.knora.org/lists/b90a88b0ec"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 11,
                                 level = 2,
                                 children = Nil,
@@ -2677,7 +2684,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("12"),
                                 id = "http://data.knora.org/lists/523edbe9ec"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 12,
                                 level = 2,
                                 children = Nil,
@@ -2690,10 +2697,10 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                         name = Some("1"),
                         id = "http://data.knora.org/lists/26d3f439ea"
                     ),
-                    ListNodeV1(
+                    ListNodeV2(
                         position = 1,
                         level = 1,
-                        children = Vector(ListNodeV1(
+                        children = Vector(ListNodeV2(
                             position = 0,
                             level = 2,
                             children = Nil,
@@ -2705,11 +2712,11 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                         name = Some("1-1"),
                         id = "http://data.knora.org/lists/84a5815ced"
                     ),
-                    ListNodeV1(
+                    ListNodeV2(
                         position = 2,
                         level = 1,
                         children = Vector(
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 0,
                                 level = 2,
                                 children = Nil,
@@ -2717,7 +2724,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("1"),
                                 id = "http://data.knora.org/lists/4f407b08ee"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 1,
                                 level = 2,
                                 children = Nil,
@@ -2725,7 +2732,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("2"),
                                 id = "http://data.knora.org/lists/e873ce41ee"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 2,
                                 level = 2,
                                 children = Nil,
@@ -2738,190 +2745,190 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                         name = Some("2"),
                         id = "http://data.knora.org/lists/b60c28cfed"
                     ),
-                    ListNodeV1(
+                    ListNodeV2(
                         position = 3,
                         level = 1,
                         children = Vector(
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 0,
                                 level = 2,
                                 children = Vector(
-                                    ListNodeV1(
+                                    ListNodeV2(
                                         "http://data.knora.org/lists/97744976b801",
                                         Some("hotel_a"),
                                         Some("Hotel A"),
                                         Nil,
                                         3,
                                         0),
-                                    ListNodeV1(
+                                    ListNodeV2(
                                         "http://data.knora.org/lists/30a89cafb801",
                                         Some("hotel_b"),
                                         Some("Hotel B"),
                                         Nil,
                                         3,
                                         1),
-                                    ListNodeV1(
+                                    ListNodeV2(
                                         "http://data.knora.org/lists/c9dbefe8b801",
                                         Some("hotel_c"),
                                         Some("Hotel C"),
                                         Nil,
                                         3,
                                         2),
-                                    ListNodeV1(
+                                    ListNodeV2(
                                         "http://data.knora.org/lists/620f4322b901",
                                         Some("hotel_d"),
                                         Some("Hotel D"),
                                         Nil,
                                         3,
                                         3),
-                                    ListNodeV1(
+                                    ListNodeV2(
                                         "http://data.knora.org/lists/fb42965bb901",
                                         Some("hotel_e"),
                                         Some("Hotel E"),
                                         Nil,
                                         3,
                                         4),
-                                    ListNodeV1(
+                                    ListNodeV2(
                                         "http://data.knora.org/lists/9476e994b901",
                                         Some("hotel_f"),
                                         Some("Hotel F"),
                                         Nil,
                                         3,
                                         5),
-                                    ListNodeV1(
+                                    ListNodeV2(
                                         "http://data.knora.org/lists/2daa3cceb901",
                                         Some("hotel_g"),
                                         Some("Hotel G"),
                                         Nil,
                                         3,
                                         6),
-                                    ListNodeV1(
+                                    ListNodeV2(
                                         "http://data.knora.org/lists/c6dd8f07ba01",
                                         Some("hotel_h"),
                                         Some("Hotel H"),
                                         Nil,
                                         3,
                                         7),
-                                    ListNodeV1(
+                                    ListNodeV2(
                                         "http://data.knora.org/lists/5f11e340ba01",
                                         Some("hotel_i"),
                                         Some("Hotel I"),
                                         Nil,
                                         3,
                                         8),
-                                    ListNodeV1(
+                                    ListNodeV2(
                                         "http://data.knora.org/lists/f844367aba01",
                                         Some("hotel_j"),
                                         Some("Hotel J"),
                                         Nil,
                                         3,
                                         9),
-                                    ListNodeV1(
+                                    ListNodeV2(
                                         "http://data.knora.org/lists/917889b3ba01",
                                         Some("hotel_k"),
                                         Some("Hotel K"),
                                         Nil,
                                         3,
                                         10),
-                                    ListNodeV1(
+                                    ListNodeV2(
                                         "http://data.knora.org/lists/2aacdcecba01",
                                         Some("hotel_l"),
                                         Some("Hotel L"),
                                         Nil,
                                         3,
                                         11),
-                                    ListNodeV1(
+                                    ListNodeV2(
                                         "http://data.knora.org/lists/c3df2f26bb01",
                                         Some("hotel_m"),
                                         Some("Hotel M"),
                                         Nil,
                                         3,
                                         12),
-                                    ListNodeV1(
+                                    ListNodeV2(
                                         "http://data.knora.org/lists/5c13835fbb01",
                                         Some("hotel_n"),
                                         Some("Hotel N"),
                                         Nil,
                                         3,
                                         13),
-                                    ListNodeV1(
+                                    ListNodeV2(
                                         "http://data.knora.org/lists/f546d698bb01",
                                         Some("hotel_o"),
                                         Some("Hotel O"),
                                         Nil,
                                         3,
                                         14),
-                                    ListNodeV1(
+                                    ListNodeV2(
                                         "http://data.knora.org/lists/8e7a29d2bb01",
                                         Some("hotel_p"),
                                         Some("Hotel P"),
                                         Nil,
                                         3,
                                         15),
-                                    ListNodeV1(
+                                    ListNodeV2(
                                         "http://data.knora.org/lists/27ae7c0bbc01",
                                         Some("hotel_q"),
                                         Some("Hotel Q"),
                                         Nil,
                                         3,
                                         16),
-                                    ListNodeV1(
+                                    ListNodeV2(
                                         "http://data.knora.org/lists/c0e1cf44bc01",
                                         Some("hotel_r"),
                                         Some("Hotel R"),
                                         Nil,
                                         3,
                                         17),
-                                    ListNodeV1(
+                                    ListNodeV2(
                                         "http://data.knora.org/lists/5915237ebc01",
                                         Some("hotel_s"),
                                         Some("Hotel S"),
                                         Nil,
                                         3,
                                         18),
-                                    ListNodeV1(
+                                    ListNodeV2(
                                         "http://data.knora.org/lists/f24876b7bc01",
                                         Some("hotel_t"),
                                         Some("Hotel T"),
                                         Nil,
                                         3,
                                         19),
-                                    ListNodeV1(
+                                    ListNodeV2(
                                         "http://data.knora.org/lists/8b7cc9f0bc01",
                                         Some("hotel_u"),
                                         Some("Hotel U"),
                                         Nil,
                                         3,
                                         20),
-                                    ListNodeV1(
+                                    ListNodeV2(
                                         "http://data.knora.org/lists/24b01c2abd01",
                                         Some("hotel_v"),
                                         Some("Hotel V"),
                                         Nil,
                                         3,
                                         21),
-                                    ListNodeV1(
+                                    ListNodeV2(
                                         "http://data.knora.org/lists/9f29173c3b02",
                                         Some("hotel_w"),
                                         Some("Hotel W"),
                                         Nil,
                                         3,
                                         22),
-                                    ListNodeV1(
+                                    ListNodeV2(
                                         "http://data.knora.org/lists/bde36f63bd01",
                                         Some("hotel_x"),
                                         Some("Hotel X"),
                                         Nil,
                                         3,
                                         23),
-                                    ListNodeV1(
+                                    ListNodeV2(
                                         "http://data.knora.org/lists/5617c39cbd01",
                                         Some("hotel_y"),
                                         Some("Hotel Y"),
                                         Nil,
                                         3,
                                         24),
-                                    ListNodeV1(
+                                    ListNodeV2(
                                         "http://data.knora.org/lists/ef4a16d6bd01",
                                         Some("hotel_z"),
                                         Some("Hotel Z"),
@@ -2932,7 +2939,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("1"),
                                 id = "http://data.knora.org/lists/b30ec8edee"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 1,
                                 level = 2,
                                 children = Nil,
@@ -2940,7 +2947,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("2"),
                                 id = "http://data.knora.org/lists/4c421b27ef"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 2,
                                 level = 2,
                                 children = Nil,
@@ -2953,11 +2960,11 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                         name = Some("3"),
                         id = "http://data.knora.org/lists/1adb74b4ee"
                     ),
-                    ListNodeV1(
+                    ListNodeV2(
                         position = 4,
                         level = 1,
                         children = Vector(
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 0,
                                 level = 2,
                                 children = Nil,
@@ -2965,7 +2972,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("1"),
                                 id = "http://data.knora.org/lists/17dd14d3ef"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 1,
                                 level = 2,
                                 children = Nil,
@@ -2973,7 +2980,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("2"),
                                 id = "http://data.knora.org/lists/b010680cf0"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 2,
                                 level = 2,
                                 children = Nil,
@@ -2986,11 +2993,11 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                         name = Some("4"),
                         id = "http://data.knora.org/lists/7ea9c199ef"
                     ),
-                    ListNodeV1(
+                    ListNodeV2(
                         position = 5,
                         level = 1,
                         children = Vector(
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 0,
                                 level = 2,
                                 children = Nil,
@@ -2998,7 +3005,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("1"),
                                 id = "http://data.knora.org/lists/7bab61b8f0"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 1,
                                 level = 2,
                                 children = Nil,
@@ -3006,7 +3013,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("2"),
                                 id = "http://data.knora.org/lists/14dfb4f1f0"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 2,
                                 level = 2,
                                 children = Nil,
@@ -3019,11 +3026,11 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                         name = Some("6"),
                         id = "http://data.knora.org/lists/e2770e7ff0"
                     ),
-                    ListNodeV1(
+                    ListNodeV2(
                         position = 6,
                         level = 1,
                         children = Vector(
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 0,
                                 level = 2,
                                 children = Nil,
@@ -3031,7 +3038,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("1"),
                                 id = "http://data.knora.org/lists/df79ae9df1"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 1,
                                 level = 2,
                                 children = Nil,
@@ -3039,7 +3046,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                                 name = Some("2"),
                                 id = "http://data.knora.org/lists/78ad01d7f1"
                             ),
-                            ListNodeV1(
+                            ListNodeV2(
                                 position = 2,
                                 level = 2,
                                 children = Nil,
@@ -3052,7 +3059,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                         name = Some("7"),
                         id = "http://data.knora.org/lists/46465b64f1"
                     ),
-                    ListNodeV1(
+                    ListNodeV2(
                         position = 7,
                         level = 1,
                         children = Nil,
@@ -3060,7 +3067,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                         name = Some("8"),
                         id = "http://data.knora.org/lists/aa14a849f2"
                     ),
-                    ListNodeV1(
+                    ListNodeV2(
                         position = 8,
                         level = 1,
                         children = Nil,
@@ -3076,9 +3083,9 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
         )
     )
 
-    private val imageCategory = SelectionGetResponseV1(
+    private val imageCategory = SelectionGetResponseV2(
         selection = Vector(
-            ListNodeV1(
+            ListNodeV2(
                 position = 0,
                 level = 0,
                 children = Nil,
@@ -3086,7 +3093,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                 name = Some("foto_sw"),
                 id = "http://data.knora.org/lists/230a209905"
             ),
-            ListNodeV1(
+            ListNodeV2(
                 position = 1,
                 level = 0,
                 children = Nil,
@@ -3094,7 +3101,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                 name = Some("laserkopie"),
                 id = "http://data.knora.org/lists/88d6cc5f05"
             ),
-            ListNodeV1(
+            ListNodeV2(
                 position = 2,
                 level = 0,
                 children = Nil,
@@ -3102,7 +3109,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                 name = Some("foto_chamois"),
                 id = "http://data.knora.org/lists/be3d73d205"
             ),
-            ListNodeV1(
+            ListNodeV2(
                 position = 3,
                 level = 0,
                 children = Nil,
@@ -3110,7 +3117,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                 name = Some("foto_digital"),
                 id = "http://data.knora.org/lists/8fd86c7e06"
             ),
-            ListNodeV1(
+            ListNodeV2(
                 position = 4,
                 level = 0,
                 children = Nil,
@@ -3118,7 +3125,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                 name = Some("foto_farb"),
                 id = "http://data.knora.org/lists/5971c60b06"
             ),
-            ListNodeV1(
+            ListNodeV2(
                 position = 5,
                 level = 0,
                 children = Nil,
@@ -3126,7 +3133,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                 name = Some("foto_kol"),
                 id = "http://data.knora.org/lists/f4a4194506"
             ),
-            ListNodeV1(
+            ListNodeV2(
                 position = 6,
                 level = 0,
                 children = Nil,
@@ -3134,7 +3141,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                 name = Some("postkarte_sw"),
                 id = "http://data.knora.org/lists/2a0cc0b706"
             ),
-            ListNodeV1(
+            ListNodeV2(
                 position = 7,
                 level = 0,
                 children = Nil,
@@ -3142,7 +3149,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                 name = Some("postkarte_farb"),
                 id = "http://data.knora.org/lists/c53f13f106"
             ),
-            ListNodeV1(
+            ListNodeV2(
                 position = 8,
                 level = 0,
                 children = Nil,
@@ -3150,7 +3157,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                 name = Some("postkarte_kol"),
                 id = "http://data.knora.org/lists/6073662a07"
             ),
-            ListNodeV1(
+            ListNodeV2(
                 position = 9,
                 level = 0,
                 children = Nil,
@@ -3158,7 +3165,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                 name = Some("dia_farb"),
                 id = "http://data.knora.org/lists/fba6b96307"
             ),
-            ListNodeV1(
+            ListNodeV2(
                 position = 10,
                 level = 0,
                 children = Nil,
@@ -3166,7 +3173,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                 name = Some("dia_sw"),
                 id = "http://data.knora.org/lists/96da0c9d07"
             ),
-            ListNodeV1(
+            ListNodeV2(
                 position = 11,
                 level = 0,
                 children = Nil,
@@ -3174,7 +3181,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                 name = Some("negativ_sw"),
                 id = "http://data.knora.org/lists/310e60d607"
             ),
-            ListNodeV1(
+            ListNodeV2(
                 position = 12,
                 level = 0,
                 children = Nil,
@@ -3182,7 +3189,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                 name = Some("negativ_farb"),
                 id = "http://data.knora.org/lists/cc41b30f08"
             ),
-            ListNodeV1(
+            ListNodeV2(
                 position = 13,
                 level = 0,
                 children = Nil,
@@ -3190,7 +3197,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                 name = Some("gemaelde"),
                 id = "http://data.knora.org/lists/6775064908"
             ),
-            ListNodeV1(
+            ListNodeV2(
                 position = 14,
                 level = 0,
                 children = Nil,
@@ -3198,7 +3205,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                 name = Some("stich"),
                 id = "http://data.knora.org/lists/02a9598208"
             ),
-            ListNodeV1(
+            ListNodeV2(
                 position = 15,
                 level = 0,
                 children = Nil,
@@ -3206,7 +3213,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                 name = Some("zeichnung"),
                 id = "http://data.knora.org/lists/9ddcacbb08"
             ),
-            ListNodeV1(
+            ListNodeV2(
                 position = 16,
                 level = 0,
                 children = Nil,
@@ -3214,7 +3221,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                 name = Some("druck"),
                 id = "http://data.knora.org/lists/381000f508"
             ),
-            ListNodeV1(
+            ListNodeV2(
                 position = 17,
                 level = 0,
                 children = Nil,
@@ -3222,7 +3229,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                 name = Some("glasplatte_p"),
                 id = "http://data.knora.org/lists/d343532e09"
             ),
-            ListNodeV1(
+            ListNodeV2(
                 position = 18,
                 level = 0,
                 children = Nil,
@@ -3230,7 +3237,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                 name = Some("glasplatte_n"),
                 id = "http://data.knora.org/lists/9f85063e11"
             ),
-            ListNodeV1(
+            ListNodeV2(
                 position = 19,
                 level = 0,
                 children = Nil,
@@ -3238,7 +3245,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                 name = Some("plakat"),
                 id = "http://data.knora.org/lists/6e77a66709"
             ),
-            ListNodeV1(
+            ListNodeV2(
                 position = 20,
                 level = 0,
                 children = Nil,
@@ -3249,9 +3256,9 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
         )
     )
 
-    private val season = HListGetResponseV1(
+    private val season = HListGetResponseV2(
         hlist = Vector(
-            ListNodeV1(
+            ListNodeV2(
                 position = 0,
                 level = 0,
                 children = Nil,
@@ -3259,7 +3266,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                 name = Some("sommer"),
                 id = "http://data.knora.org/lists/526f26ed04"
             ),
-            ListNodeV1(
+            ListNodeV2(
                 position = 1,
                 level = 0,
                 children = Nil,
@@ -3270,19 +3277,19 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
         )
     )
 
-    private val nodePath = NodePathGetResponseV1(
+    private val nodePath = NodePathGetResponseV2(
         nodelist = Vector(
-            NodePathElementV1(
+            NodePathElementV2(
                 label = Some("KUNST"),
                 name = Some("4KUN"),
                 id = "http://data.knora.org/lists/691eee1cbe"
             ),
-            NodePathElementV1(
+            NodePathElementV2(
                 label = Some("FILM UND FOTO"),
                 name = Some("7"),
                 id = "http://data.knora.org/lists/2ebd2706c1"
             ),
-            NodePathElementV1(
+            NodePathElementV2(
                 label = Some("Heidi Film"),
                 name = Some("1"),
                 id = "http://data.knora.org/lists/c7f07a3fc1"
@@ -3298,49 +3305,75 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
         expectMsg(10.seconds, LoadOntologiesResponse())
     }
 
-    "The Lists Responder V1" when {
+    "The Lists Responder" when {
 
         "used to query information about lists" should {
 
-            "return all the toplevel and child nodes of \"Hierarchisches Stichwortverzeichnis / Signatur der Bilder\" when we do a query for the hlist 'http://data.knora.org/lists/73d0ec0302' (root node) in the images-demo-data" in {
-                // http://localhost:3333/v1/hlists/http%3A%2F%2Fdata.knora.org%2Flists%2F73d0ec0302
-                actorUnderTest ! HListGetRequestV1(
-                    userProfile = userProfile,
-                    iri = "http://data.knora.org/lists/73d0ec0302"
-                )
+            "return all lists" in {
+                actorUnderTest ! ListsGetRequestV2(userProfile = userProfile)
 
-                expectMsg(timeout, hKeywords)
+                val received: ListsGetResponseV2 = expectMsgType[ListsGetResponseV2](timeout)
+
+                received.lists.size should be(6)
             }
 
-            "return all nodes of the flat (one level only) list (selection) \"Art des Bildes oder Photographie\"" in {
-                // http://localhost:3333/v1/selections/http%3A%2F%2Fdata.knora.org%2Flists%2F6cce4ce5
-                actorUnderTest ! SelectionGetRequestV1(
-                    userProfile = userProfile,
-                    iri = "http://data.knora.org/lists/6cce4ce5"
-                )
+            "return all lists belonging to the images project" in {
+                actorUnderTest ! ListsGetRequestV2(projectIri = Some(SharedAdminTestData.IMAGES_PROJECT_IRI), userProfile = userProfile)
 
-                expectMsg(timeout, imageCategory)
+                val received: ListsGetResponseV2 = expectMsgType[ListsGetResponseV2](timeout)
+
+                // log.debug("received: " + received)
+
+                received.lists.size should be(4)
             }
 
-            "return the two seasons winter and summer (flat season list consisting of two items)" in {
-                // http://localhost:3333/v1/hlists/http%3A%2F%2Fdata.knora.org%2Flists%2Fd19af9ab
-                actorUnderTest ! HListGetRequestV1(
-                    userProfile = userProfile,
-                    iri = "http://data.knora.org/lists/d19af9ab"
+            "return basic list node information" in {
+                actorUnderTest ! ListNodeInfoGetRequestV2(
+                    iri = "http://data.knora.org/lists/73d0ec0302",
+                    userProfile = userProfile
                 )
 
-                expectMsg(timeout, season)
+                expectMsg(ListNodeInfoGetResponseV2(id = listInfo.id, labels = listInfo.labels, comment = listInfo.comment))
             }
 
-            "return the path to the node 'Heidi Film'" in {
-                // http://localhost:3333/v1/hlists/http%3A%2F%2Fdata.knora.org%2Flists%2Fc7f07a3fc1?reqtype=node
-                actorUnderTest ! NodePathGetRequestV1(
-                    userProfile = userProfile,
-                    iri = "http://data.knora.org/lists/c7f07a3fc1"
+            "return an extended list response" in {
+                actorUnderTest ! ListExtendedGetRequestV2(
+                    iri = "http://data.knora.org/lists/73d0ec0302",
+                    userProfile = userProfile
                 )
 
-                expectMsg(timeout, nodePath)
+                expectMsg(ListExtendedGetResponseV2(info = listInfo, nodes = hKeywords.hlist))
             }
+        }
+
+        "used to modify lists" should {
+
+            val newListIri = new MutableTestIri
+
+            "create a list" ignore {
+
+            }
+
+            "update basic list information" ignore {
+
+            }
+
+            "add flat nodes" ignore {
+
+            }
+
+            "add hierarchical nodes" ignore {
+
+            }
+
+            "change node order" ignore {
+
+            }
+
+            "delete node if not in use" ignore {
+
+            }
+
         }
     }
 }

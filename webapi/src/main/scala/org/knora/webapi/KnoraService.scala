@@ -132,7 +132,8 @@ trait KnoraService {
             PermissionsRouteV1.knoraApiPath(system, settings, log) ~
             OntologiesRouteV2.knoraApiPath(system, settings, log) ~ // This is a V2 responder !
             SearchRouteV2.knoraApiPath(system, settings, log) ~  // This is a V2 responder !
-            ResourcesRouteV2.knoraApiPath(system, settings, log), // This is a V2 responder !
+            ResourcesRouteV2.knoraApiPath(system, settings, log) ~ // This is a V2 responder !
+            ListsRouteV2.knoraApiPath(system, settings, log), // This is a V2 responder !
         settings,
         log
     )

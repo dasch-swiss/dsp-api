@@ -14,22 +14,24 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.e2e.v1
+package org.knora.webapi.e2e.v2
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.model._
+import akka.http.scaladsl.model.headers._
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import com.typesafe.config.ConfigFactory
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
 import org.knora.webapi.messages.v1.responder.authenticatemessages.Credentials
-import org.knora.webapi.messages.v1.responder.listmessages._
 import org.knora.webapi.messages.v1.responder.sessionmessages.SessionJsonProtocol
+import org.knora.webapi.messages.v2.responder.listmessages.{ListInfoV2, ListNodeInfoGetResponseV2, ListV2JsonProtocol}
+import org.knora.webapi.util.{AkkaHttpUtils, MutableTestIri}
 import org.knora.webapi.{E2ESpec, SharedAdminTestData}
 import spray.json._
 
 import scala.concurrent.duration._
 
-object ListsV1E2ESpec {
+object ListsV2E2ESpec {
     val config = ConfigFactory.parseString(
         """
           akka.loglevel = "DEBUG"
@@ -40,7 +42,7 @@ object ListsV1E2ESpec {
 /**
   * End-to-End (E2E) test specification for testing users endpoint.
   */
-class ListsV1E2ESpec extends E2ESpec(ListsV1E2ESpec.config) with SessionJsonProtocol with TriplestoreJsonProtocol with ListV1JsonProtocol {
+class ListsV2E2ESpec extends E2ESpec(ListsV2E2ESpec.config) with SessionJsonProtocol with TriplestoreJsonProtocol with ListV2JsonProtocol {
 
     implicit def default(implicit system: ActorSystem) = RouteTestTimeout(5.seconds)
 
@@ -91,39 +93,103 @@ class ListsV1E2ESpec extends E2ESpec(ListsV1E2ESpec.config) with SessionJsonProt
         singleAwaitingRequest(request, 300.seconds)
     }
 
-    "The HList Route ('v1/hlists')" when {
+    "The Lists Route ('v2/lists')" when {
 
-        "used to query information about hierarchical lists" should {
+        "used to query information about lists" should {
 
-            "return an hlist" ignore {
-                /*
-                val request = Get(baseApiUrl + s"/v1/lists") ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
+            "return all lists" ignore {
+                val request = Get(baseApiUrl + s"/v2/lists") ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
                 val response: HttpResponse = singleAwaitingRequest(request)
                 // log.debug(s"response: ${response.toString}")
                 response.status should be(StatusCodes.OK)
 
-                val listInfos: Seq[ListInfoV1] = AkkaHttpUtils.httpResponseToJson(response).fields("lists").convertTo[Seq[ListInfoV1]]
+                val listInfos: Seq[ListInfoV2] = AkkaHttpUtils.httpResponseToJson(response).fields("lists").convertTo[Seq[ListInfoV2]]
                 listInfos.size should be (6)
-                */
+            }
+
+            "return all lists belonging to the images project" ignore {
+                val request = Get(baseApiUrl + s"/v2/lists?projectIri=http%3A%2F%2Fdata.knora.org%2Fprojects%2Fimages") ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
+                val response: HttpResponse = singleAwaitingRequest(request)
+                // log.debug(s"response: ${response.toString}")
+                response.status should be(StatusCodes.OK)
+
+                val listInfos: Seq[ListInfoV2] = AkkaHttpUtils.httpResponseToJson(response).fields("lists").convertTo[Seq[ListInfoV2]]
+
+                //log.debug("received: " + listInfos)
+
+                listInfos.size should be (4)
+            }
+
+            "return basic list node information" ignore {
+                val request = Get(baseApiUrl + s"/v2/lists/nodes/http%3A%2F%2Fdata.knora.org%2Flists%2F73d0ec0302") ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
+                val response: HttpResponse = singleAwaitingRequest(request)
+                // log.debug(s"response: ${response.toString}")
+                response.status should be(StatusCodes.OK)
+
+                val responseJson = AkkaHttpUtils.httpResponseToJson(response)
+                val receivedNodeinfo: ListNodeInfoGetResponseV2 = responseJson.convertTo[ListNodeInfoGetResponseV2]
+
+                val expectedNodeInfo = ListNodeInfoGetResponseV2(
+                    id = "http://data.knora.org/lists/73d0ec0302",
+                    labels = Seq("Title", "Titel", "Titre"),
+                    comment = Some("Hierarchisches Stichwortverzeichnis / Signatur der Bilder")
+                )
+
+                receivedNodeinfo should be (expectedNodeInfo)
+            }
+
+            "return an extended list response" ignore {
+                val request = Get(baseApiUrl + s"/v2/lists/http%3A%2F%2Fdata.knora.org%2Flists%2F73d0ec0302") ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
+                val response: HttpResponse = singleAwaitingRequest(request)
+                // log.debug(s"response: ${response.toString}")
+                response.status should be(StatusCodes.OK)
+
+                val responseJson = AkkaHttpUtils.httpResponseToJson(response)
+                val receivedListInfo: ListInfoV2 = responseJson.fields("info").convertTo[ListInfoV2]
+                // val nodes: Seq[ListNodeV1] = responseJson.fields("nodes").convertTo[Seq[ListNodeV1]]
+
+                // log.debug("info: " + info)
+                // log.debug("nodes: " + nodes)
+
+                val expectedListInfo = ListInfoV2(
+                    id = "http://data.knora.org/lists/73d0ec0302",
+                    projectIri = Some("http://data.knora.org/projects/images"),
+                    labels = Seq("Title", "Titel", "Titre"),
+                    comment = Some("Hierarchisches Stichwortverzeichnis / Signatur der Bilder")
+                )
+
+                receivedListInfo should be (expectedListInfo)
             }
         }
-    }
 
-    "The Selections Route ('v1/selections')" when {
+        "used to modify list information" should {
 
-        "used to query information about selections (flat lists)" should {
+            val newListIri = new MutableTestIri
 
-            "return a selection" ignore {
-                /*
-                val request = Get(baseApiUrl + s"/v1/lists") ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
-                val response: HttpResponse = singleAwaitingRequest(request)
-                // log.debug(s"response: ${response.toString}")
-                response.status should be(StatusCodes.OK)
+            "create a list" ignore {
 
-                val listInfos: Seq[ListInfoV1] = AkkaHttpUtils.httpResponseToJson(response).fields("lists").convertTo[Seq[ListInfoV1]]
-                listInfos.size should be (6)
-                */
             }
+
+            "update basic list information" ignore {
+
+            }
+
+            "add flat nodes" ignore {
+
+            }
+
+            "add hierarchical nodes" ignore {
+
+            }
+
+            "change node order" ignore {
+
+            }
+
+            "delete node if not in use" ignore {
+
+            }
+
         }
     }
 }

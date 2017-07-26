@@ -42,7 +42,7 @@ import org.knora.webapi.messages.v2.responder.persistentmapmessages.PersistentMa
 import org.knora.webapi.messages.v2.responder.resourcemessages.ResourcesResponderRequestV2
 import org.knora.webapi.messages.v2.responder.searchmessages.SearchResponderRequestV2
 import org.knora.webapi.responders.v1._
-import org.knora.webapi.responders.v2.{OntologiesResponderV2, PersistentMapResponderV2, ResourcesResponderV2, SearchResponderV2}
+import org.knora.webapi.responders.v2._
 import org.knora.webapi.util.ActorUtil.handleUnexpectedMessage
 
 import scala.concurrent.ExecutionContextExecutor
@@ -257,6 +257,19 @@ class ResponderManager extends Actor with ActorLogging {
       * member to substitute a custom actor instead of the default persistent map responder.
       */
     protected val persistentMapRouterV2: ActorRef = makeDefaultPersistentMapRouterV2
+
+
+    /**
+      * Constructs the default Akka routing actor that routes messages to [[ListsResponderV2]].
+      */
+    protected final def makeDefaultListsRouterV2: ActorRef = makeActor(FromConfig.props(Props[ListsResponderV2]), LISTS_ROUTER_V2_ACTOR_NAME)
+
+    /**
+      * The Akka routing actor that should receive messages addressed to the lists responder. Subclasses can override this
+      * member to substitute a custom actor instead of the default lists responder.
+      */
+    protected val listsRouterV2: ActorRef = makeDefaultListsRouterV2
+
 
 
     def receive = LoggingReceive {

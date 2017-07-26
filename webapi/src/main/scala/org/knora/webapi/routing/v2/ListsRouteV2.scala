@@ -18,21 +18,21 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.routing.v1
+package org.knora.webapi.routing.v2
 
 import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
-import org.knora.webapi.messages.v1.responder.listmessages._
-import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
+import org.knora.webapi.messages.v2.responder.listmessages.{ListExtendedGetRequestV2, ListNodeInfoGetRequestV2, ListsGetRequestV2}
+import org.knora.webapi.routing.{Authenticator, RouteUtilV2}
 import org.knora.webapi.util.InputValidation
 import org.knora.webapi.{BadRequestException, IRI, SettingsImpl}
 
 /**
   * Provides a spray-routing function for API routes that deal with lists.
   */
-object ListsRouteV1 extends Authenticator {
+object ListsRouteV2 extends Authenticator {
 
     def knoraApiPath(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter): Route = {
         implicit val system: ActorSystem = _system
@@ -40,46 +40,79 @@ object ListsRouteV1 extends Authenticator {
         implicit val timeout = settings.defaultTimeout
         val responderManager = system.actorSelection("/user/responderManager")
 
-        path("v1" / "hlists" / Segment) { iri =>
+        path("v2" / "lists") {
             get {
+                /* return all lists */
+                parameters("projectIri".?) { projectIri: Option[IRI] =>
+                    requestContext =>
+                        val userProfile = getUserProfileV1(requestContext)
+
+                        val requestMessage = ListsGetRequestV2(projectIri, userProfile)
+
+                        RouteUtilV2.runJsonRoute(
+                            requestMessage,
+                            requestContext,
+                            settings,
+                            responderManager,
+                            log
+                        )
+                }
+            } ~
+            post {
+                /* create a list */
+                ???
+            }
+        } ~
+        path("v2" / "lists" / Segment) {iri =>
+            get {
+                /* return a list */
                 requestContext =>
                     val userProfile = getUserProfileV1(requestContext)
                     val listIri = InputValidation.toIri(iri, () => throw BadRequestException(s"Invalid param list IRI: $iri"))
 
-                    val requestMessage = requestContext.request.uri.query().get("reqtype") match {
-                        case Some("node") => NodePathGetRequestV1(listIri, userProfile)
-                        case Some(reqtype) => throw BadRequestException(s"Invalid reqtype: $reqtype")
-                        case None => HListGetRequestV1(listIri, userProfile)
-                    }
+                    val requestMessage = ListExtendedGetRequestV2(listIri, userProfile)
 
-                    RouteUtilV1.runJsonRoute(
+                    RouteUtilV2.runJsonRoute(
                         requestMessage,
                         requestContext,
                         settings,
                         responderManager,
                         log
                     )
+            } ~
+            put {
+                /* update list */
+                ???
+            } ~
+            delete {
+                /* delete (deactivate) list */
+                ???
             }
         } ~
-        path("v1" / "selections" / Segment) { iri =>
+        path("v2" / "lists" / "nodes" / Segment) {iri =>
             get {
+                /* return a list node */
                 requestContext =>
                     val userProfile = getUserProfileV1(requestContext)
-                    val selIri = InputValidation.toIri(iri, () => throw BadRequestException(s"Invalid param list IRI: $iri"))
+                    val listIri = InputValidation.toIri(iri, () => throw BadRequestException(s"Invalid param list IRI: $iri"))
 
-                    val requestMessage = requestContext.request.uri.query().get("reqtype") match {
-                        case Some("node") => NodePathGetRequestV1(selIri, userProfile)
-                        case Some(reqtype) => throw BadRequestException(s"Invalid reqtype: $reqtype")
-                        case None => SelectionGetRequestV1(selIri, userProfile)
-                    }
+                    val requestMessage = ListNodeInfoGetRequestV2(listIri, userProfile)
 
-                    RouteUtilV1.runJsonRoute(
+                    RouteUtilV2.runJsonRoute(
                         requestMessage,
                         requestContext,
                         settings,
                         responderManager,
                         log
                     )
+            } ~
+            put {
+                /* update list node */
+                ???
+            } ~
+            delete {
+                /* delete list node */
+                ???
             }
         }
     }
