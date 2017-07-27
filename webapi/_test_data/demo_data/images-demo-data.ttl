@@ -2654,29 +2654,29 @@
 	knora-base:hasRootNode <http://data.knora.org/lists/73d0ec0302> ;
 	knora-base:listNodeName "10" ;
 	knora-base:listNodePosition 9 ;
-	rdfs:label "Schiessen" .
+	rdfs:label "Schiessen"@de .
 
 <http://data.knora.org/lists/0550a137bd> a knora-base:ListNode ;
 	knora-base:hasRootNode <http://data.knora.org/lists/73d0ec0302> ;
 	knora-base:listNodeName "6" ;
 	knora-base:listNodePosition 5 ;
-	rdfs:label "Sonnenbadende" .
+	rdfs:label "Sonnenbadende"@de .
 
 <http://data.knora.org/lists/06608e0fe3> a knora-base:ListNode ;
 	knora-base:hasRootNode <http://data.knora.org/lists/73d0ec0302> ;
 	knora-base:listNodeName "3" ;
 	knora-base:listNodePosition 2 ;
-	rdfs:label "Trecking mit Tieren" .
+	rdfs:label "Trecking mit Tieren"@de .
 
 <http://data.knora.org/lists/06c75abca9> a knora-base:ListNode ;
 	knora-base:hasRootNode <http://data.knora.org/lists/73d0ec0302> ;
 	knora-base:listNodeName "6" ;
 	knora-base:listNodePosition 5 ;
-	rdfs:label "Landschaft Seen" .
+	rdfs:label "Landschaft Seen"@de .
 
 <http://data.knora.org/lists/0702a01e01> a knora-base:ListNode ;
 	knora-base:isRootNode true ;
-	rdfs:label "Zugangsart" ;
+	rdfs:label "Zugangsart"@de ;
 	knora-base:attachedToProject <http://data.knora.org/projects/images> ;
 	knora-base:hasSubListNode <http://data.knora.org/lists/3f12a0130a> , <http://data.knora.org/lists/09abf9a009> , <http://data.knora.org/lists/a4de4cda09> .
 
@@ -2684,50 +2684,50 @@
 	knora-base:hasRootNode <http://data.knora.org/lists/73d0ec0302> ;
 	knora-base:listNodeName "5" ;
 	knora-base:listNodePosition 4 ;
-	rdfs:label "Fitness" .
+	rdfs:label "Fitness"@de .
 
 <http://data.knora.org/lists/084e0119bc> a knora-base:ListNode ;
 	knora-base:hasRootNode <http://data.knora.org/lists/73d0ec0302> ;
 	knora-base:listNodeName "26" ;
 	knora-base:listNodePosition 25 ;
-	rdfs:label "Personen Z" .
+	rdfs:label "Personen Z"@de .
 
 <http://data.knora.org/lists/095eeef0e1> a knora-base:ListNode ;
 	knora-base:hasRootNode <http://data.knora.org/lists/73d0ec0302> ;
 	knora-base:listNodeName "5" ;
 	knora-base:listNodePosition 4 ;
-	rdfs:label "Tennis" .
+	rdfs:label "Tennis"@de .
 
 <http://data.knora.org/lists/09abf9a009> a knora-base:ListNode ;
 	knora-base:listNodeName "kauf" ;
 	knora-base:hasRootNode <http://data.knora.org/lists/0702a01e01> ;
 	knora-base:listNodePosition 1 ;
-	rdfs:label "Kauf" .
+	rdfs:label "Kauf"@de .
 
 <http://data.knora.org/lists/09c5ba9da8> a knora-base:ListNode ;
 	knora-base:hasRootNode <http://data.knora.org/lists/73d0ec0302> ;
 	knora-base:listNodeName "1" ;
 	knora-base:listNodePosition 0 ;
-	rdfs:label "Flugaufnahmen" .
+	rdfs:label "Flugaufnahmen"@de .
 
 <http://data.knora.org/lists/0ad5a775ce> a knora-base:ListNode ;
 	knora-base:hasRootNode <http://data.knora.org/lists/73d0ec0302> ;
 	knora-base:listNodeName "0" ;
 	knora-base:listNodePosition 0 ;
-	rdfs:label "SPORT" ;
+	rdfs:label "SPORT"@de ;
 	knora-base:hasSubListNode <http://data.knora.org/lists/a308fbaece> , <http://data.knora.org/lists/3c3c4ee8ce> , <http://data.knora.org/lists/d56fa121cf> , <http://data.knora.org/lists/6ea3f45acf> , <http://data.knora.org/lists/07d74794cf> , <http://data.knora.org/lists/a00a9bcdcf> , <http://data.knora.org/lists/393eee06d0> , <http://data.knora.org/lists/d2714140d0> , <http://data.knora.org/lists/6ba59479d0> , <http://data.knora.org/lists/04d9e7b2d0> , <http://data.knora.org/lists/9d0c3becd0> , <http://data.knora.org/lists/36408e25d1> , <http://data.knora.org/lists/cf73e15ed1> , <http://data.knora.org/lists/68a73498d1> .
 
 <http://data.knora.org/lists/0b4c61faba> a knora-base:ListNode ;
 	knora-base:hasRootNode <http://data.knora.org/lists/73d0ec0302> ;
 	knora-base:listNodeName "21" ;
 	knora-base:listNodePosition 20 ;
-	rdfs:label "Personen U" .
+	rdfs:label "Personen U"@de .
 
 <http://data.knora.org/lists/0c5c4ed2e0> a knora-base:ListNode ;
 	knora-base:hasRootNode <http://data.knora.org/lists/73d0ec0302> ;
 	knora-base:listNodeName "3" ;
 	knora-base:listNodePosition 2 ;
-	rdfs:label "Kegeln" .
+	rdfs:label "Kegeln"@de .
 
 <http://data.knora.org/lists/0cc31a7fa7> a knora-base:ListNode ;
 	knora-base:hasRootNode <http://data.knora.org/lists/73d0ec0302> ;
@@ -2921,7 +2921,7 @@
 	knora-base:listNodeName "foto_sw" ;
 	knora-base:hasRootNode <http://data.knora.org/lists/6cce4ce5> ;
 	knora-base:listNodePosition 0 ;
-	rdfs:label "Fotografie s/w" .
+	rdfs:label "Fotografie s/w"@de .
 
 <http://data.knora.org/lists/233c6105b2> a knora-base:ListNode ;
 	knora-base:hasRootNode <http://data.knora.org/lists/73d0ec0302> ;
@@ -3660,7 +3660,7 @@
 <http://data.knora.org/lists/6cce4ce5> a knora-base:ListNode ;
 	knora-base:isRootNode true ;
 	rdfs:comment "Art des Bildes oder Photographie"@de ;
-	rdfs:label "Bildart" ;
+	rdfs:label "Bildart"@de ;
 	knora-base:attachedToProject <http://data.knora.org/projects/images> ;
 	knora-base:hasSubListNode <http://data.knora.org/lists/230a209905> , <http://data.knora.org/lists/88d6cc5f05> , <http://data.knora.org/lists/be3d73d205> , <http://data.knora.org/lists/8fd86c7e06> , <http://data.knora.org/lists/5971c60b06> , <http://data.knora.org/lists/f4a4194506> , <http://data.knora.org/lists/2a0cc0b706> , <http://data.knora.org/lists/c53f13f106> , <http://data.knora.org/lists/6073662a07> , <http://data.knora.org/lists/fba6b96307> , <http://data.knora.org/lists/96da0c9d07> , <http://data.knora.org/lists/310e60d607> , <http://data.knora.org/lists/cc41b30f08> , <http://data.knora.org/lists/6775064908> , <http://data.knora.org/lists/02a9598208> , <http://data.knora.org/lists/9ddcacbb08> , <http://data.knora.org/lists/381000f508> , <http://data.knora.org/lists/d343532e09> , <http://data.knora.org/lists/9f85063e11> , <http://data.knora.org/lists/6e77a66709> , <http://data.knora.org/lists/3ab9597711> .
 
@@ -3668,69 +3668,69 @@
 	knora-base:hasRootNode <http://data.knora.org/lists/73d0ec0302> ;
 	knora-base:listNodeName "2" ;
 	knora-base:listNodePosition 1 ;
-	rdfs:label "Berghütten und Restaurants" .
+	rdfs:label "Berghütten und Restaurants"@de .
 
 <http://data.knora.org/lists/6d930783a9> a knora-base:ListNode ;
 	knora-base:hasRootNode <http://data.knora.org/lists/73d0ec0302> ;
 	knora-base:listNodeName "5" ;
 	knora-base:listNodePosition 4 ;
-	rdfs:label "Landschaft Winter mit Ortschaften" .
+	rdfs:label "Landschaft Winter mit Ortschaften"@de .
 
 <http://data.knora.org/lists/6e77a66709> a knora-base:ListNode ;
 	knora-base:listNodeName "plakat" ;
 	knora-base:hasRootNode <http://data.knora.org/lists/6cce4ce5> ;
 	knora-base:listNodePosition 19 ;
-	rdfs:label "Plakate" .
+	rdfs:label "Plakate"@de .
 
 <http://data.knora.org/lists/6ea3f45acf> a knora-base:ListNode ;
 	knora-base:hasRootNode <http://data.knora.org/lists/73d0ec0302> ;
 	knora-base:listNodeName "4" ;
 	knora-base:listNodePosition 3 ;
-	rdfs:label "Fechten" .
+	rdfs:label "Fechten"@de .
 
 <http://data.knora.org/lists/6f1aaedfbb> a knora-base:ListNode ;
 	knora-base:hasRootNode <http://data.knora.org/lists/73d0ec0302> ;
 	knora-base:listNodeName "25" ;
 	knora-base:listNodePosition 24 ;
-	rdfs:label "Personen Y" .
+	rdfs:label "Personen Y"@de .
 
 <http://data.knora.org/lists/702a9bb7e1> a knora-base:ListNode ;
 	knora-base:hasRootNode <http://data.knora.org/lists/73d0ec0302> ;
 	knora-base:listNodeName "3" ;
 	knora-base:listNodePosition 2 ;
-	rdfs:label "Wintergolf" .
+	rdfs:label "Wintergolf"@de .
 
 <http://data.knora.org/lists/70916764a8> a knora-base:ListNode ;
 	knora-base:hasRootNode <http://data.knora.org/lists/73d0ec0302> ;
 	knora-base:listNodeName "3" ;
 	knora-base:listNodePosition 2 ;
-	rdfs:label "ENGADIN" ;
+	rdfs:label "ENGADIN"@de ;
 	knora-base:hasSubListNode <http://data.knora.org/lists/09c5ba9da8> , <http://data.knora.org/lists/a2f80dd7a8> , <http://data.knora.org/lists/3b2c6110a9> , <http://data.knora.org/lists/d45fb449a9> , <http://data.knora.org/lists/6d930783a9> , <http://data.knora.org/lists/06c75abca9> , <http://data.knora.org/lists/9ffaadf5a9> , <http://data.knora.org/lists/382e012faa> , <http://data.knora.org/lists/93022e70ae> .
 
 <http://data.knora.org/lists/71a1543cce> a knora-base:ListNode ;
 	knora-base:hasRootNode <http://data.knora.org/lists/73d0ec0302> ;
 	knora-base:listNodeName "9SPO" ;
 	knora-base:listNodePosition 8 ;
-	rdfs:label "SPORT" ;
+	rdfs:label "SPORT"@de ;
 	knora-base:hasSubListNode <http://data.knora.org/lists/0ad5a775ce> , <http://data.knora.org/lists/01db87d1d1> , <http://data.knora.org/lists/97107b29d3> , <http://data.knora.org/lists/5fad14f4d4> , <http://data.knora.org/lists/f8e0672dd5> , <http://data.knora.org/lists/59b15431d7> , <http://data.knora.org/lists/244c4eddd7> , <http://data.knora.org/lists/bd7fa116d8> , <http://data.knora.org/lists/881a9bc2d8> , <http://data.knora.org/lists/1854ce57dc> , <http://data.knora.org/lists/e0f06722de> , <http://data.knora.org/lists/41c15426e0> , <http://data.knora.org/lists/3bc59463e2> , <http://data.knora.org/lists/d1fa87bbe3> , <http://data.knora.org/lists/67307b13e5> , <http://data.knora.org/lists/2ccfb4fce7> .
 
 <http://data.knora.org/lists/72180ec1ba> a knora-base:ListNode ;
 	knora-base:hasRootNode <http://data.knora.org/lists/73d0ec0302> ;
 	knora-base:listNodeName "20" ;
 	knora-base:listNodePosition 19 ;
-	rdfs:label "Personen T" .
+	rdfs:label "Personen T"@de .
 
 <http://data.knora.org/lists/7328fb98e0> a knora-base:ListNode ;
 	knora-base:hasRootNode <http://data.knora.org/lists/73d0ec0302> ;
 	knora-base:listNodeName "2" ;
 	knora-base:listNodePosition 1 ;
-	rdfs:label "Fussball" .
+	rdfs:label "Fussball"@de .
 
 <http://data.knora.org/lists/738fc745a7> a knora-base:ListNode ;
 	knora-base:hasRootNode <http://data.knora.org/lists/73d0ec0302> ;
 	knora-base:listNodeName "2GEO" ;
 	knora-base:listNodePosition 1 ;
-	rdfs:label "GEOGRAPHIE" ;
+	rdfs:label "GEOGRAPHIE"@de ;
 	knora-base:hasSubListNode <http://data.knora.org/lists/0cc31a7fa7> , <http://data.knora.org/lists/3e2ac1f1a7> , <http://data.knora.org/lists/70916764a8> , <http://data.knora.org/lists/eed65ab1b2> , <http://data.knora.org/lists/b673f47bb4> , <http://data.knora.org/lists/810eee27b5> .
 
 <http://data.knora.org/lists/73d0ec0302> a knora-base:ListNode ;
@@ -3744,7 +3744,7 @@
 	knora-base:hasRootNode <http://data.knora.org/lists/73d0ec0302> ;
 	knora-base:listNodeName "4" ;
 	knora-base:listNodePosition 3 ;
-	rdfs:label "Feste und Umzüge" .
+	rdfs:label "Feste und Umzüge"@de .
 
 <http://data.knora.org/lists/75166ea2b9> a knora-base:ListNode ;
 	knora-base:hasRootNode <http://data.knora.org/lists/73d0ec0302> ;
@@ -4642,7 +4642,7 @@
 
 <http://data.knora.org/lists/d19af9ab> a knora-base:ListNode ;
 	knora-base:isRootNode true ;
-	rdfs:label "Jahreszeit" , "Jahreszeit" ;
+	rdfs:label "Jahreszeit"@de , "Jahreszeit"@de ;
 	knora-base:attachedToProject <http://data.knora.org/projects/images> ;
 	knora-base:hasSubListNode <http://data.knora.org/lists/526f26ed04> , <http://data.knora.org/lists/eda2792605> .
 
@@ -4650,14 +4650,14 @@
 	knora-base:hasRootNode <http://data.knora.org/lists/73d0ec0302> ;
 	knora-base:listNodeName "9" ;
 	knora-base:listNodePosition 13 ;
-	rdfs:label "FLIEGEN" ;
+	rdfs:label "FLIEGEN"@de ;
 	knora-base:hasSubListNode <http://data.knora.org/lists/6a2edbf4e3> , <http://data.knora.org/lists/03622e2ee4> , <http://data.knora.org/lists/9c958167e4> , <http://data.knora.org/lists/35c9d4a0e4> , <http://data.knora.org/lists/cefc27dae4> .
 
 <http://data.knora.org/lists/d2714140d0> a knora-base:ListNode ;
 	knora-base:hasRootNode <http://data.knora.org/lists/73d0ec0302> ;
 	knora-base:listNodeName "8" ;
 	knora-base:listNodePosition 7 ;
-	rdfs:label "Leichtathletik" .
+	rdfs:label "Leichtathletik"@de .
 
 <http://data.knora.org/lists/d343532e09> a knora-base:ListNode ;
 	knora-base:listNodeName "glasplatte_p" ;
@@ -4790,292 +4790,292 @@
 	knora-base:hasRootNode <http://data.knora.org/lists/73d0ec0302> ;
 	knora-base:listNodeName "6" ;
 	knora-base:listNodePosition 5 ;
-	rdfs:label "GEWERBE" ;
+	rdfs:label "GEWERBE"@de ;
 	knora-base:hasSubListNode <http://data.knora.org/lists/7bab61b8f0> , <http://data.knora.org/lists/14dfb4f1f0> , <http://data.knora.org/lists/ad12082bf1> .
 
 <http://data.knora.org/lists/e2deda2bb7> a knora-base:ListNode ;
 	knora-base:hasRootNode <http://data.knora.org/lists/73d0ec0302> ;
 	knora-base:listNodeName "4" ;
 	knora-base:listNodePosition 3 ;
-	rdfs:label "Personen D" .
+	rdfs:label "Personen D"@de .
 
 <http://data.knora.org/lists/e3eec703dd> a knora-base:ListNode ;
 	knora-base:hasRootNode <http://data.knora.org/lists/73d0ec0302> ;
 	knora-base:listNodeName "2" ;
 	knora-base:listNodePosition 1 ;
-	rdfs:label "Stürze" .
+	rdfs:label "Stürze"@de .
 
 <http://data.knora.org/lists/e4658188c9> a knora-base:ListNode ;
 	knora-base:hasRootNode <http://data.knora.org/lists/73d0ec0302> ;
 	knora-base:listNodeName "6" ;
 	knora-base:listNodePosition 4 ;
-	rdfs:label "UMWELT" .
+	rdfs:label "UMWELT"@de .
 
 <http://data.knora.org/lists/e5756e60ef> a knora-base:ListNode ;
 	knora-base:hasRootNode <http://data.knora.org/lists/73d0ec0302> ;
 	knora-base:listNodeName "3" ;
 	knora-base:listNodePosition 2 ;
-	rdfs:label "Menükarten" .
+	rdfs:label "Menükarten"@de .
 
 <http://data.knora.org/lists/e5dc3a0db6> a knora-base:ListNode ;
 	knora-base:hasRootNode <http://data.knora.org/lists/73d0ec0302> ;
 	knora-base:listNodeName "5" ;
 	knora-base:listNodePosition 4 ;
-	rdfs:label "BIOGRAPHIEN" ;
+	rdfs:label "BIOGRAPHIEN"@de ;
 	knora-base:hasSubListNode <http://data.knora.org/lists/7e108e46b6> , <http://data.knora.org/lists/a1815452bc> , <http://data.knora.org/lists/3ab5a78bbc> , <http://data.knora.org/lists/d3e8fac4bc> , <http://data.knora.org/lists/6c1c4efebc> , <http://data.knora.org/lists/0550a137bd> , <http://data.knora.org/lists/9e83f470bd> .
 
 <http://data.knora.org/lists/e6ec27e5db> a knora-base:ListNode ;
 	knora-base:hasRootNode <http://data.knora.org/lists/73d0ec0302> ;
 	knora-base:listNodeName "6" ;
 	knora-base:listNodePosition 5 ;
-	rdfs:label "Eisstockschiessen" .
+	rdfs:label "Eisstockschiessen"@de .
 
 <http://data.knora.org/lists/e763e169c8> a knora-base:ListNode ;
 	knora-base:hasRootNode <http://data.knora.org/lists/73d0ec0302> ;
 	knora-base:listNodeName "5" ;
 	knora-base:listNodePosition 3 ;
-	rdfs:label "KLIMATOLOGIE UND METEOROLOGIE" ;
+	rdfs:label "KLIMATOLOGIE UND METEOROLOGIE"@de ;
 	knora-base:hasSubListNode <http://data.knora.org/lists/809734a3c8> , <http://data.knora.org/lists/19cb87dcc8> , <http://data.knora.org/lists/b2feda15c9> , <http://data.knora.org/lists/4b322e4fc9> .
 
 <http://data.knora.org/lists/e873ce41ee> a knora-base:ListNode ;
 	knora-base:hasRootNode <http://data.knora.org/lists/73d0ec0302> ;
 	knora-base:listNodeName "2" ;
 	knora-base:listNodePosition 1 ;
-	rdfs:label "Gäste" .
+	rdfs:label "Gäste"@de .
 
 <http://data.knora.org/lists/e8da9aeeb4> a knora-base:ListNode ;
 	knora-base:hasRootNode <http://data.knora.org/lists/73d0ec0302> ;
 	knora-base:listNodeName "2" ;
 	knora-base:listNodePosition 1 ;
-	rdfs:label "Landschaften" .
+	rdfs:label "Landschaften"@de .
 
 <http://data.knora.org/lists/e9ea87c6da> a knora-base:ListNode ;
 	knora-base:hasRootNode <http://data.knora.org/lists/73d0ec0302> ;
 	knora-base:listNodeName "7" ;
 	knora-base:listNodePosition 6 ;
-	rdfs:label "Personen" .
+	rdfs:label "Personen"@de .
 
 <http://data.knora.org/lists/ea61414bc7> a knora-base:ListNode ;
 	knora-base:hasRootNode <http://data.knora.org/lists/73d0ec0302> ;
 	knora-base:listNodeName "3" ;
 	knora-base:listNodePosition 2 ;
-	rdfs:label "Tiere" .
+	rdfs:label "Tiere"@de .
 
 <http://data.knora.org/lists/eb712e23ed> a knora-base:ListNode ;
 	knora-base:hasRootNode <http://data.knora.org/lists/73d0ec0302> ;
 	knora-base:listNodeName "13" ;
 	knora-base:listNodePosition 12 ;
-	rdfs:label "Wegweiser" .
+	rdfs:label "Wegweiser"@de .
 
 <http://data.knora.org/lists/ebd8facfb3> a knora-base:ListNode ;
 	knora-base:hasRootNode <http://data.knora.org/lists/73d0ec0302> ;
 	knora-base:listNodeName "5" ;
 	knora-base:listNodePosition 4 ;
-	rdfs:label "St. Moritz Landschaft Sommer" .
+	rdfs:label "St. Moritz Landschaft Sommer"@de .
 
 <http://data.knora.org/lists/ece8e7a7d9> a knora-base:ListNode ;
 	knora-base:hasRootNode <http://data.knora.org/lists/73d0ec0302> ;
 	knora-base:listNodeName "2" ;
 	knora-base:listNodePosition 1 ;
-	rdfs:label "Gymkhana" .
+	rdfs:label "Gymkhana"@de .
 
 <http://data.knora.org/lists/ed5fa12cc6> a knora-base:ListNode ;
 	knora-base:hasRootNode <http://data.knora.org/lists/73d0ec0302> ;
 	knora-base:listNodeName "4" ;
 	knora-base:listNodePosition 2 ;
-	rdfs:label "SPITAL UND KLINIKEN / KINDERHEIME" .
+	rdfs:label "SPITAL UND KLINIKEN / KINDERHEIME"@de .
 
 <http://data.knora.org/lists/eda2792605> a knora-base:ListNode ;
 	knora-base:listNodeName "winter" ;
 	knora-base:hasRootNode <http://data.knora.org/lists/d19af9ab> ;
 	knora-base:listNodePosition 1 ;
-	rdfs:label "Winter" .
+	rdfs:label "Winter"@de .
 
 <http://data.knora.org/lists/ee6f8e04ec> a knora-base:ListNode ;
 	knora-base:hasRootNode <http://data.knora.org/lists/73d0ec0302> ;
 	knora-base:listNodeName "8" ;
 	knora-base:listNodePosition 7 ;
-	rdfs:label "Schneekanonen" .
+	rdfs:label "Schneekanonen"@de .
 
 <http://data.knora.org/lists/eed65ab1b2> a knora-base:ListNode ;
 	knora-base:hasRootNode <http://data.knora.org/lists/73d0ec0302> ;
 	knora-base:listNodeName "4" ;
 	knora-base:listNodePosition 3 ;
-	rdfs:label "ST. MORITZ" ;
+	rdfs:label "ST. MORITZ"@de ;
 	knora-base:hasSubListNode <http://data.knora.org/lists/870aaeeab2> , <http://data.knora.org/lists/203e0124b3> , <http://data.knora.org/lists/b971545db3> , <http://data.knora.org/lists/52a5a796b3> , <http://data.knora.org/lists/ebd8facfb3> , <http://data.knora.org/lists/840c4e09b4> , <http://data.knora.org/lists/1d40a142b4> .
 
 <http://data.knora.org/lists/ef4a16d6bd01> a knora-base:ListNode ;
 	knora-base:hasRootNode <http://data.knora.org/lists/73d0ec0302> ;
 	knora-base:listNodeName "hotel_z" ;
 	knora-base:listNodePosition 25 ;
-	rdfs:label "Hotel Z" .
+	rdfs:label "Hotel Z"@de .
 
 <http://data.knora.org/lists/efe64789d8> a knora-base:ListNode ;
 	knora-base:hasRootNode <http://data.knora.org/lists/73d0ec0302> ;
 	knora-base:listNodeName "2" ;
 	knora-base:listNodePosition 1 ;
-	rdfs:label "Olympiade 1948" .
+	rdfs:label "Olympiade 1948"@de .
 
 <http://data.knora.org/lists/f05d010ec5> a knora-base:ListNode ;
 	knora-base:hasRootNode <http://data.knora.org/lists/73d0ec0302> ;
 	knora-base:listNodeName "5MED" ;
 	knora-base:listNodePosition 4 ;
-	rdfs:label "MEDIZIN" ;
+	rdfs:label "MEDIZIN"@de ;
 	knora-base:hasSubListNode <http://data.knora.org/lists/89915447c5> , <http://data.knora.org/lists/22c5a780c5> , <http://data.knora.org/lists/ed5fa12cc6> .
 
 <http://data.knora.org/lists/f16deee5ea> a knora-base:ListNode ;
 	knora-base:hasRootNode <http://data.knora.org/lists/73d0ec0302> ;
 	knora-base:listNodeName "3" ;
 	knora-base:listNodePosition 2 ;
-	rdfs:label "Flugplatz Samedan" .
+	rdfs:label "Flugplatz Samedan"@de .
 
 <http://data.knora.org/lists/f1d4ba92b1> a knora-base:ListNode ;
 	knora-base:hasRootNode <http://data.knora.org/lists/73d0ec0302> ;
 	knora-base:listNodeName "14" ;
 	knora-base:listNodePosition 13 ;
-	rdfs:label "S-chanf" .
+	rdfs:label "S-chanf"@de .
 
 <http://data.knora.org/lists/f24876b7bc01> a knora-base:ListNode ;
 	knora-base:hasRootNode <http://data.knora.org/lists/73d0ec0302> ;
 	knora-base:listNodeName "hotel_t" ;
 	knora-base:listNodePosition 19 ;
-	rdfs:label "Hotel T" .
+	rdfs:label "Hotel T"@de .
 
 <http://data.knora.org/lists/f2e4a76ad7> a knora-base:ListNode ;
 	knora-base:hasRootNode <http://data.knora.org/lists/73d0ec0302> ;
 	knora-base:listNodeName "1" ;
 	knora-base:listNodePosition 0 ;
-	rdfs:label "Skilanglauf" .
+	rdfs:label "Skilanglauf"@de .
 
 <http://data.knora.org/lists/f35b61efc3> a knora-base:ListNode ;
 	knora-base:hasRootNode <http://data.knora.org/lists/73d0ec0302> ;
 	knora-base:listNodeName "2" ;
 	knora-base:listNodePosition 1 ;
-	rdfs:label "Holzschnitte" .
+	rdfs:label "Holzschnitte"@de .
 
 <http://data.knora.org/lists/f46b4ec7e9> a knora-base:ListNode ;
 	knora-base:hasRootNode <http://data.knora.org/lists/73d0ec0302> ;
 	knora-base:listNodeName "8" ;
 	knora-base:listNodePosition 7 ;
-	rdfs:label "Kitesurfen" .
+	rdfs:label "Kitesurfen"@de .
 
 <http://data.knora.org/lists/f4a4194506> a knora-base:ListNode ;
 	knora-base:listNodeName "foto_kol" ;
 	knora-base:hasRootNode <http://data.knora.org/lists/6cce4ce5> ;
 	knora-base:listNodePosition 5 ;
-	rdfs:label "Fotografie kol" .
+	rdfs:label "Fotografie kol"@de .
 
 <http://data.knora.org/lists/f4d21a74b0> a knora-base:ListNode ;
 	knora-base:hasRootNode <http://data.knora.org/lists/73d0ec0302> ;
 	knora-base:listNodeName "9" ;
 	knora-base:listNodePosition 8 ;
-	rdfs:label "Bever" .
+	rdfs:label "Bever"@de .
 
 <http://data.knora.org/lists/f546d698bb01> a knora-base:ListNode ;
 	knora-base:hasRootNode <http://data.knora.org/lists/73d0ec0302> ;
 	knora-base:listNodeName "hotel_o" ;
 	knora-base:listNodePosition 14 ;
-	rdfs:label "Hotel O" .
+	rdfs:label "Hotel O"@de .
 
 <http://data.knora.org/lists/f5e2074cd6> a knora-base:ListNode ;
 	knora-base:hasRootNode <http://data.knora.org/lists/73d0ec0302> ;
 	knora-base:listNodeName "5" ;
 	knora-base:listNodePosition 4 ;
-	rdfs:label "Ski Vorweltmeisterschaft 1973" .
+	rdfs:label "Ski Vorweltmeisterschaft 1973"@de .
 
 <http://data.knora.org/lists/f659c1d0c2> a knora-base:ListNode ;
 	knora-base:hasRootNode <http://data.knora.org/lists/73d0ec0302> ;
 	knora-base:listNodeName "4" ;
 	knora-base:listNodePosition 3 ;
-	rdfs:label "Stiche" .
+	rdfs:label "Stiche"@de .
 
 <http://data.knora.org/lists/f769aea8e8> a knora-base:ListNode ;
 	knora-base:hasRootNode <http://data.knora.org/lists/73d0ec0302> ;
 	knora-base:listNodeName "3" ;
 	knora-base:listNodePosition 2 ;
-	rdfs:label "Rudern" .
+	rdfs:label "Rudern"@de .
 
 <http://data.knora.org/lists/f7d07a55af> a knora-base:ListNode ;
 	knora-base:hasRootNode <http://data.knora.org/lists/73d0ec0302> ;
 	knora-base:listNodeName "4" ;
 	knora-base:listNodePosition 3 ;
-	rdfs:label "Surlej" .
+	rdfs:label "Surlej"@de .
 
 <http://data.knora.org/lists/f844367aba01> a knora-base:ListNode ;
 	knora-base:hasRootNode <http://data.knora.org/lists/73d0ec0302> ;
 	knora-base:listNodeName "hotel_j" ;
 	knora-base:listNodePosition 9 ;
-	rdfs:label "Hotel J" .
+	rdfs:label "Hotel J"@de .
 
 <http://data.knora.org/lists/f8e0672dd5> a knora-base:ListNode ;
 	knora-base:hasRootNode <http://data.knora.org/lists/73d0ec0302> ;
 	knora-base:listNodeName "2-3" ;
 	knora-base:listNodePosition 4 ;
-	rdfs:label "SKIRENNEN UND SKISPRINGEN" ;
+	rdfs:label "SKIRENNEN UND SKISPRINGEN"@de ;
 	knora-base:hasSubListNode <http://data.knora.org/lists/9114bb66d5> , <http://data.knora.org/lists/2a480ea0d5> , <http://data.knora.org/lists/c37b61d9d5> , <http://data.knora.org/lists/5cafb412d6> , <http://data.knora.org/lists/f5e2074cd6> , <http://data.knora.org/lists/8e165b85d6> , <http://data.knora.org/lists/274aaebed6> , <http://data.knora.org/lists/c07d01f8d6> .
 
 <http://data.knora.org/lists/f95721b2c1> a knora-base:ListNode ;
 	knora-base:hasRootNode <http://data.knora.org/lists/73d0ec0302> ;
 	knora-base:listNodeName "3" ;
 	knora-base:listNodePosition 2 ;
-	rdfs:label "Film" .
+	rdfs:label "Film"@de .
 
 <http://data.knora.org/lists/fa670e8ae7> a knora-base:ListNode ;
 	knora-base:hasRootNode <http://data.knora.org/lists/73d0ec0302> ;
 	knora-base:listNodeName "6" ;
 	knora-base:listNodePosition 5 ;
-	rdfs:label "Radfahren" .
+	rdfs:label "Radfahren"@de .
 
 <http://data.knora.org/lists/faceda36ae> a knora-base:ListNode ;
 	knora-base:hasRootNode <http://data.knora.org/lists/73d0ec0302> ;
 	knora-base:listNodeName "18" ;
 	knora-base:listNodePosition 17 ;
-	rdfs:label "Personen" .
+	rdfs:label "Personen"@de .
 
 <http://data.knora.org/lists/fb42965bb901> a knora-base:ListNode ;
 	knora-base:hasRootNode <http://data.knora.org/lists/73d0ec0302> ;
 	knora-base:listNodeName "hotel_e" ;
 	knora-base:listNodePosition 4 ;
-	rdfs:label "Hotel E" .
+	rdfs:label "Hotel E"@de .
 
 <http://data.knora.org/lists/fba6b96307> a knora-base:ListNode ;
 	knora-base:listNodeName "dia_farb" ;
 	knora-base:hasRootNode <http://data.knora.org/lists/6cce4ce5> ;
 	knora-base:listNodePosition 9 ;
-	rdfs:label "Dia farbig" .
+	rdfs:label "Dia farbig"@de .
 
 <http://data.knora.org/lists/fbdec70ed4> a knora-base:ListNode ;
 	knora-base:hasRootNode <http://data.knora.org/lists/73d0ec0302> ;
 	knora-base:listNodeName "4" ;
 	knora-base:listNodePosition 3 ;
-	rdfs:label "Skifahren" .
+	rdfs:label "Skifahren"@de .
 
 <http://data.knora.org/lists/fc558193c0> a knora-base:ListNode ;
 	knora-base:hasRootNode <http://data.knora.org/lists/73d0ec0302> ;
 	knora-base:listNodeName "4" ;
 	knora-base:listNodePosition 3 ;
-	rdfs:label "Theater" .
+	rdfs:label "Theater"@de .
 
 <http://data.knora.org/lists/fd656e6be6> a knora-base:ListNode ;
 	knora-base:hasRootNode <http://data.knora.org/lists/73d0ec0302> ;
 	knora-base:listNodeName "5" ;
 	knora-base:listNodePosition 4 ;
-	rdfs:label "Verschiedenes" .
+	rdfs:label "Verschiedenes"@de .
 
 <http://data.knora.org/lists/fdcc3a18ad> a knora-base:ListNode ;
 	knora-base:hasRootNode <http://data.knora.org/lists/73d0ec0302> ;
 	knora-base:listNodeName "13" ;
 	knora-base:listNodePosition 12 ;
-	rdfs:label "Zuoz" .
+	rdfs:label "Zuoz"@de .
 
 <http://data.knora.org/lists/fedc27f0d2> a knora-base:ListNode ;
 	knora-base:hasRootNode <http://data.knora.org/lists/73d0ec0302> ;
 	knora-base:listNodeName "5" ;
 	knora-base:listNodePosition 4 ;
-	rdfs:label "Wind-, Schlittenhundrennen" .
+	rdfs:label "Wind-, Schlittenhundrennen"@de .
 
 <http://data.knora.org/lists/ff53e174bf> a knora-base:ListNode ;
 	knora-base:hasRootNode <http://data.knora.org/lists/73d0ec0302> ;
 	knora-base:listNodeName "5" ;
 	knora-base:listNodePosition 4 ;
-	rdfs:label "Sgrafitti" .
+	rdfs:label "Sgrafitti"@de .

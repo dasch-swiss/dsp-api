@@ -36,6 +36,7 @@ import org.eclipse.rdf4j.rio.turtle._
 import org.knora.webapi.SettingsConstants._
 import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages._
+import org.knora.webapi.messages.v2.responder.listmessages.StringWithOptionalLang
 import org.knora.webapi.store.triplestore.RdfDataObjectFactory
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.FakeTriplestore
@@ -46,7 +47,6 @@ import scala.collection.JavaConverters._
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
 import scala.util.{Failure, Success, Try}
-
 import scala.compat.java8.OptionConverters._
 
 /**
@@ -196,7 +196,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
                 val subjectIri = st.getSubject.stringValue
                 val predicateIri = st.getPredicate.stringValue
                 val objectIri = st.getObject.stringValue
-                val currentStatementsForSubject = statements.getOrElse(subjectIri, Vector.empty[(IRI, String)])
+                val currentStatementsForSubject: Seq[(IRI, String)] = statements.getOrElse(subjectIri, Vector.empty[(IRI, String)])
                 statements += (subjectIri -> (currentStatementsForSubject :+ (predicateIri, objectIri)))
             }
 
@@ -250,7 +250,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
             /**
               * A collection of all the statements in the input file, grouped and sorted by subject IRI.
               */
-            private var statements = Map.empty[IRI, Map[IRI, Seq[(String, Option[String])]]]
+            private var statements = Map.empty[IRI, Map[IRI, Seq[StringWithOptionalLang]]]
 
             override def handleComment(comment: IRI): Unit = {}
 
@@ -264,12 +264,16 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
                 val predicateIri = st.getPredicate.stringValue
                 val objectIri = st.getObject.stringValue
                 val objectLang: Option[String] = st.getObject match {
-                    case lit: SimpleLiteral => lit.getLanguage.asScala
+                    case lit: SimpleLiteral => lit.getLanguage.asScala // needs the 'scala.compat.java8.OptionConverters._' import
                     case _ => None
                 }
-                val currentStatementsForSubject = statements.getOrElse(subjectIri, Map.empty[IRI, Map[IRI, Seq[(String, Option[String])]]])
+                val currentStatementsForSubject: Map[IRI, Seq[StringWithOptionalLang]] = statements.getOrElse(subjectIri, Map.empty[IRI, Seq[StringWithOptionalLang]])
+                val currentStatementsForPredicate: Seq[StringWithOptionalLang] = currentStatementsForSubject.getOrElse(predicateIri, Seq.empty[StringWithOptionalLang])
 
-                statements += (subjectIri -> (currentStatementsForSubject :+ ( predicateIri -> (objectIri, objectLang))))
+                val updatedPredicateStatements = currentStatementsForPredicate :+ StringWithOptionalLang(objectIri, objectLang)
+                val updatedSubjectStatements = currentStatementsForSubject + (predicateIri -> updatedPredicateStatements)
+
+                statements += (subjectIri -> updatedSubjectStatements)
             }
 
             override def endRDF(): Unit = {}

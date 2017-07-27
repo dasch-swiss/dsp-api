@@ -24,7 +24,7 @@ import com.typesafe.config.ConfigFactory
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
 import org.knora.webapi.messages.v1.responder.authenticatemessages.Credentials
 import org.knora.webapi.messages.v1.responder.sessionmessages.SessionJsonProtocol
-import org.knora.webapi.messages.v2.responder.listmessages.{ListInfoV2, ListNodeInfoGetResponseV2, ListV2JsonProtocol}
+import org.knora.webapi.messages.v2.responder.listmessages.{ListInfoV2, ListNodeInfoGetResponseV2, ListV2JsonProtocol, StringWithOptionalLang}
 import org.knora.webapi.util.{AkkaHttpUtils, MutableTestIri}
 import org.knora.webapi.{E2ESpec, SharedAdminTestData}
 import spray.json._
@@ -97,7 +97,7 @@ class ListsV2E2ESpec extends E2ESpec(ListsV2E2ESpec.config) with SessionJsonProt
 
         "used to query information about lists" should {
 
-            "return all lists" ignore {
+            "return all lists" in {
                 val request = Get(baseApiUrl + s"/v2/lists") ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
                 val response: HttpResponse = singleAwaitingRequest(request)
                 // log.debug(s"response: ${response.toString}")
@@ -107,7 +107,7 @@ class ListsV2E2ESpec extends E2ESpec(ListsV2E2ESpec.config) with SessionJsonProt
                 listInfos.size should be (6)
             }
 
-            "return all lists belonging to the images project" ignore {
+            "return all lists belonging to the images project" in {
                 val request = Get(baseApiUrl + s"/v2/lists?projectIri=http%3A%2F%2Fdata.knora.org%2Fprojects%2Fimages") ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
                 val response: HttpResponse = singleAwaitingRequest(request)
                 // log.debug(s"response: ${response.toString}")
@@ -120,7 +120,7 @@ class ListsV2E2ESpec extends E2ESpec(ListsV2E2ESpec.config) with SessionJsonProt
                 listInfos.size should be (4)
             }
 
-            "return basic list node information" ignore {
+            "return basic list node information" in {
                 val request = Get(baseApiUrl + s"/v2/lists/nodes/http%3A%2F%2Fdata.knora.org%2Flists%2F73d0ec0302") ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
                 val response: HttpResponse = singleAwaitingRequest(request)
                 // log.debug(s"response: ${response.toString}")
@@ -131,14 +131,14 @@ class ListsV2E2ESpec extends E2ESpec(ListsV2E2ESpec.config) with SessionJsonProt
 
                 val expectedNodeInfo = ListNodeInfoGetResponseV2(
                     id = "http://data.knora.org/lists/73d0ec0302",
-                    labels = Seq("Title", "Titel", "Titre"),
-                    comment = Some("Hierarchisches Stichwortverzeichnis / Signatur der Bilder")
+                    labels = Seq(StringWithOptionalLang("Title", Some("en")), StringWithOptionalLang("Titel", Some("de")), StringWithOptionalLang("Titre", Some("fr"))),
+                    comments = Seq(StringWithOptionalLang("Hierarchisches Stichwortverzeichnis / Signatur der Bilder", Some("de")))
                 )
 
                 receivedNodeinfo should be (expectedNodeInfo)
             }
 
-            "return an extended list response" ignore {
+            "return an extended list response" in {
                 val request = Get(baseApiUrl + s"/v2/lists/http%3A%2F%2Fdata.knora.org%2Flists%2F73d0ec0302") ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
                 val response: HttpResponse = singleAwaitingRequest(request)
                 // log.debug(s"response: ${response.toString}")
@@ -154,8 +154,8 @@ class ListsV2E2ESpec extends E2ESpec(ListsV2E2ESpec.config) with SessionJsonProt
                 val expectedListInfo = ListInfoV2(
                     id = "http://data.knora.org/lists/73d0ec0302",
                     projectIri = Some("http://data.knora.org/projects/images"),
-                    labels = Seq("Title", "Titel", "Titre"),
-                    comment = Some("Hierarchisches Stichwortverzeichnis / Signatur der Bilder")
+                    labels = Seq(StringWithOptionalLang("Title", Some("en")), StringWithOptionalLang("Titel", Some("de")), StringWithOptionalLang("Titre", Some("fr"))),
+                    comments = Seq(StringWithOptionalLang("Hierarchisches Stichwortverzeichnis / Signatur der Bilder", Some("de")))
                 )
 
                 receivedListInfo should be (expectedListInfo)

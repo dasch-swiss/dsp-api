@@ -108,7 +108,7 @@ case class ListsGetResponseV2(lists: Seq[ListInfoV2]) extends KnoraResponseV2 wi
 
     def toXML: String = ???
 
-    def toJsonLDWithValueObject(settings: SettingsImpl): String = ???
+    def toJsonLDWithValueObject(settings: SettingsImpl): String = toJsValue.toString
 }
 
 /**
@@ -128,7 +128,7 @@ case class ListExtendedGetResponseV2(info: ListInfoV2, nodes: Seq[ListNodeV2]) e
 
     def toXML: String = ???
 
-    def toJsonLDWithValueObject(settings: SettingsImpl): String = ???
+    def toJsonLDWithValueObject(settings: SettingsImpl): String = toJsValue.toString
 }
 
 /**
@@ -142,7 +142,7 @@ case class HListGetResponseV2(hlist: Seq[ListNodeV2]) extends ListGetResponseV2 
 
     def toXML: String = ???
 
-    def toJsonLDWithValueObject(settings: SettingsImpl): String = ???
+    def toJsonLDWithValueObject(settings: SettingsImpl): String = toJsValue.toString
 }
 
 /**
@@ -156,23 +156,23 @@ case class SelectionGetResponseV2(selection: Seq[ListNodeV2]) extends ListGetRes
 
     def toXML: String = ???
 
-    def toJsonLDWithValueObject(settings: SettingsImpl): String = ???
+    def toJsonLDWithValueObject(settings: SettingsImpl): String = toJsValue.toString
 }
 
 /**
   * Provides basic information about a list node.
   *
-  * @param id      the IRI of the list node.
-  * @param labels  the labels in each language including the language specifier.
-  * @param comment the comment attached to the list (optional).
+  * @param id       the IRI of the list node.
+  * @param labels   the labels of the list in all available languages.
+  * @param comments the comments of the list in all available languages.
   */
-case class ListNodeInfoGetResponseV2(id: IRI, labels: Seq[String], comment: Option[String]) extends KnoraResponseV2 with ListV2JsonProtocol {
+case class ListNodeInfoGetResponseV2(id: IRI, labels: Seq[StringWithOptionalLang], comments: Seq[StringWithOptionalLang]) extends KnoraResponseV2 with ListV2JsonProtocol {
 
-    def toJsValue = listNodeInfoGetResponseV2Format.write(this)
+    def toJsValue: JsValue = listNodeInfoGetResponseV2Format.write(this)
 
     def toXML: String = ???
 
-    def toJsonLDWithValueObject(settings: SettingsImpl): String = ???
+    def toJsonLDWithValueObject(settings: SettingsImpl): String = toJsValue.toString
 }
 
 /**
@@ -186,7 +186,7 @@ case class NodePathGetResponseV2(nodelist: Seq[NodePathElementV2]) extends ListG
 
     def toXML: String = ???
 
-    def toJsonLDWithValueObject(settings: SettingsImpl): String = ???
+    def toJsonLDWithValueObject(settings: SettingsImpl): String = toJsValue.toString
 }
 
 
@@ -220,18 +220,18 @@ case class NodePathElementV2(id: IRI, name: Option[String], label: Option[String
   * @param id         the IRI of the list.
   * @param projectIri the IRI of the project this list belongs to (optional).
   * @param labels     the labels of the list in all available languages.
-  * @param comment    the comment attached to the list (optional).
+  * @param comments   the comments attached to the list in all available languages.
   */
-case class ListInfoV2(id: IRI, projectIri: Option[IRI], labels: Seq[String], comment: Option[String])
+case class ListInfoV2(id: IRI, projectIri: Option[IRI], labels: Seq[StringWithOptionalLang], comments: Seq[StringWithOptionalLang])
 
 /**
   * Represents information about a list node.
   *
-  * @param id      the IRI of the list node.
-  * @param labels  the labels in each language including the language specifier.
-  * @param comment the comment attached to the list (optional)
+  * @param id       the IRI of the list node.
+  * @param labels   the labels of the list in all available languages.
+  * @param comments the comments attached to the list in all available languages.
   */
-case class ListNodeInfoV2(id: IRI, labels: Seq[String], comment: Option[String])
+case class ListNodeInfoV2(id: IRI, labels: Seq[StringWithOptionalLang], comments: Seq[StringWithOptionalLang])
 
 /**
   * Represents a list, including the basic information and the whole tree.
@@ -250,12 +250,12 @@ object PathType extends Enumeration {
 }
 
 /**
-  * Represents a string with an language tag.
+  * Represents a string with an optional language tag.
   *
   * @param value the string value.
-  * @param lang the language tag.
+  * @param lang  the optional language tag.
   */
-case class StringWithLang(value: String, lang: String)
+case class StringWithOptionalLang(value: String, lang: Option[String])
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // JSON formatting
@@ -355,7 +355,7 @@ trait ListV2JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with 
     implicit val selectionGetResponseV2Format: RootJsonFormat[SelectionGetResponseV2] = jsonFormat(SelectionGetResponseV2, "selection")
     implicit val nodePathElementV2Format: JsonFormat[NodePathElementV2] = jsonFormat(NodePathElementV2, "id", "name", "label")
     implicit val nodePathGetResponseV2Format: RootJsonFormat[NodePathGetResponseV2] = jsonFormat(NodePathGetResponseV2, "nodelist")
-    implicit val stringWithLangV2Format: JsonFormat[StringWithLang] = jsonFormat2(StringWithLang)
+    implicit val stringWithLangV2Format: JsonFormat[StringWithOptionalLang] = jsonFormat2(StringWithOptionalLang)
     implicit val listInfoV2Format: JsonFormat[ListInfoV2] = jsonFormat4(ListInfoV2)
     implicit val listsGetResponseV2Format: RootJsonFormat[ListsGetResponseV2] = jsonFormat(ListsGetResponseV2, "lists")
     implicit val listExtendedGetResponseV2Format: RootJsonFormat[ListExtendedGetResponseV2] = jsonFormat(ListExtendedGetResponseV2, "info", "nodes")

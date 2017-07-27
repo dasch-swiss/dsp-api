@@ -21,6 +21,7 @@
 package org.knora.webapi.messages.store.triplestoremessages
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
+import org.knora.webapi.messages.v2.responder.listmessages.StringWithOptionalLang
 import org.knora.webapi.util.ErrorHandlingMap
 import org.knora.webapi.{IRI, InconsistentTriplestoreDataException, TriplestoreResponseException}
 import spray.json.{DefaultJsonProtocol, NullOptions, RootJsonFormat}
@@ -129,7 +130,7 @@ case class SparqlExtendedConstructRequest(sparql: String) extends TriplestoreReq
   *
   * @param statements a map of subject IRIs to statements about each subject.
   */
-case class SparqlExtendedConstructResponse(statements: Map[IRI, Map[IRI, Seq[(String, Option[String])]]])
+case class SparqlExtendedConstructResponse(statements: Map[IRI, Map[IRI, Seq[StringWithOptionalLang]]])
 
 /**
   * Represents a SPARQL Update operation to be performed.

@@ -37,6 +37,7 @@ import org.knora.webapi.messages.v1.responder.standoffmessages.StandoffResponder
 import org.knora.webapi.messages.v1.responder.storemessages.StoreResponderRequestV1
 import org.knora.webapi.messages.v1.responder.usermessages.UsersResponderRequestV1
 import org.knora.webapi.messages.v1.responder.valuemessages.ValuesResponderRequestV1
+import org.knora.webapi.messages.v2.responder.listmessages.ListsResponderRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.OntologiesResponderRequestV2
 import org.knora.webapi.messages.v2.responder.persistentmapmessages.PersistentMapResponderRequestV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.ResourcesResponderRequestV2
@@ -293,6 +294,7 @@ class ResponderManager extends Actor with ActorLogging {
         case searchResponderRequestV2: SearchResponderRequestV2 => searchRouterV2.forward(searchResponderRequestV2)
         case resourcesResponderRequestV2: ResourcesResponderRequestV2 => resourcesRouterV2.forward(resourcesResponderRequestV2)
         case persistentMapResponderRequestV2: PersistentMapResponderRequestV2 => persistentMapRouterV2.forward(persistentMapResponderRequestV2)
+        case listsResponderRequestV1: ListsResponderRequestV2 => listsRouterV2 forward listsResponderRequestV1
 
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }
