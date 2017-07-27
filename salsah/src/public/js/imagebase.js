@@ -89,10 +89,14 @@ $(function() {
 			}
 			//***************
 
-
-			var sortedprops = Object.keys(resource.props).map(function(propname) {return [propname, resource.props[propname]];});
+            // we want the properties to be sorted, so we will transfer the 
+            // Objects {key: value, key: value, ...} or more precisely { propname: propdata, propname: propdata, ... }
+            // into an Array [ {'key': key, 'value': value}, ... ] or more precisely [ {'name': propname, 'value': propdata}, ...]
+			var sortedprops = Object.keys(resource.props).map(function(propname) {return { 'name' : propname, 'value' : resource.props[propname]};});
+            
+            // why did we do this Objects to Array juggling? because on arrays we can call `Array.sort()`
 			sortedprops.sort(function(prop1, prop2){
-				return prop1[1].guiorder - prop2[1].guiorder;
+				return prop1.value.guiorder - prop2.value.guiorder;
 			});
 
 			if ((resource.resdata.rights >= Rights.RESOURCE_ACCESS_VIEW_RESTRICTED) && (resource.resinfo.locations))
@@ -105,12 +109,12 @@ $(function() {
 			{
 				for (var i = 0; i < sortedprops.length; i++)
 				{
-					var propname = sortedprops[i][0];
+					var propname = sortedprops[i].name;
 					if (propname == 'http://www.knora.org/ontology/knora-base#isRegionOf') continue;
 					if (propname == '__location__') continue;
 					if (propname == '__label__') continue;
 					propedit
-					.append($('<em>').addClass('propedit label').text(resource.props[propname].label + ' :'))
+					.append($('<em>').addClass('propedit label').text(sortedprops[i].value.label + ' :'))
 					.append($('<div>').addClass('propedit ' + datafield + ' regnum_' + settings.regnum).data('propname', propname))
 					.append($('<div>').css({height: '10px'}).text(' '));
 				}
@@ -127,8 +131,8 @@ $(function() {
 				var metadata_section = $('<div>').addClass('propedit section metadata winid_' + settings.winid);
 				for (var i = 0; i < sortedprops.length; i++)
 				{
-					propname = sortedprops[i][0];
-					propdata = sortedprops[i][1];
+					propname = sortedprops[i].name;
+					propdata = sortedprops[i].value;
 					if (propdata.is_annotation == 1) { // keep annotations for annotations section below
 						annotations[propname] = propdata;
 						continue;
