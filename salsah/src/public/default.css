@@ -13,7 +13,21 @@
  * You should have received a copy of the GNU Affero General Public
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
-
+/*
+ * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
+ * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
+ * This file is part of Knora.
+ * Knora is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * Knora is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ * You should have received a copy of the GNU Affero General Public
+ * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ */
 /******************************************************************************
  * Generic definitions
  * ===================
@@ -201,15 +215,15 @@ input[type=submit]:active {
   outline-style: inset;
 }
 select {
-  background-color: #eeeeee;
+  background-color: #EEEEEE;
   border-width: 1px;
-  border-color: #bbbbbb;
+  border-color: #BBBBBB;
   border-style: solid;
   margin: 1px;
 }
 select.in_header {
-  background-color: #ffffff;
-  border-color: #ffaa00;
+  background-color: #FFFFFF;
+  border-color: #FFAA00;
 }
 button {
   cursor: pointer;
@@ -226,23 +240,23 @@ button:active {
   outline-style: inset;
 }
 textarea {
-  background-color: #eeeeee;
+  background-color: #EEEEEE;
   border-width: 1px;
   border-style: solid;
-  border-color: #bbbbbb;
+  border-color: #BBBBBB;
   margin: 1px;
 }
 input[type=text] {
-  background-color: #eeeeee;
+  background-color: #EEEEEE;
   border-width: 1px;
   border-style: solid;
-  border-color: #bbbbbb;
+  border-color: #BBBBBB;
   margin: 1px;
 }
 input[type=text].in_header {
   vertical-align: middle;
-  background-color: #ffffff;
-  border-color: #ffaa00;
+  background-color: #FFFFFF;
+  border-color: #FFAA00;
 }
 .hlist {
   list-style: none;
@@ -274,6 +288,24 @@ input[type=text].in_header {
 .mainwin_toolbar_ele {
   display: inline-block;
 }
+code {
+  font-family: Courrier, monospace;
+}
+/*
+ * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
+ * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
+ * This file is part of Knora.
+ * Knora is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * Knora is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ * You should have received a copy of the GNU Affero General Public
+ * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ */
 body {
   position: absolute;
   top: 0px;
@@ -290,7 +322,7 @@ body {
   right: 0px;
   top: 0px;
   background: none repeat-x 0 0;
-  background-color: #eeeeee;
+  background-color: #EEE;
   height: 34px;
   padding-left: 5px;
   padding-right: 5px;
@@ -298,7 +330,7 @@ body {
   padding-bottom: 3;
   border-bottom-style: solid;
   border-bottom-width: 1px;
-  border-bottom-color: #aaaaaa;
+  border-bottom-color: #AAA;
 }
 .workwin_logo {
   position: absolute;
@@ -313,9 +345,9 @@ body {
   left: 0px;
   right: 0px;
   bottom: 0px;
-  color: #000000;
+  color: #000;
   background: none repeat-x 0 0;
-  background-color: #dddddd;
+  background-color: #DDD;
   height: 11px;
   padding-left: 5px;
   padding-right: 5px;
@@ -323,7 +355,7 @@ body {
   padding-bottom: 2px;
   border-top-style: solid;
   border-top-width: 1px;
-  border-top-color: #aaaaaa;
+  border-top-color: #AAA;
 }
 .workwin_footer span {
   position: absolute;
@@ -388,9 +420,24 @@ body {
   bottom: 0;
 }
 .workwin_content .tabContainer {
-  background-color: #cccccc;
-  border-bottom: 1px solid #999999;
+  background-color: #CCC;
+  border-bottom: 1px solid #999;
 }
+/*
+ * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
+ * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
+ * This file is part of Knora.
+ * Knora is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * Knora is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ * You should have received a copy of the GNU Affero General Public
+ * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ */
 /* TITLEBAR */
 /* TASKBAR */
 /* TABCONTAINER */
@@ -414,26 +461,26 @@ body {
 }
 .win {
   /*	overflow: hidden; SAFARI BUG */
-  background-color: #eeeeee;
+  background-color: #eee;
   border-style: solid;
   border-width: 1px;
-  border-color: #000000;
+  border-color: #000;
   -moz-border-radius: 7px;
   -webkit-border-radius: 7px;
   -khtml-border-radius: 7px;
   border-radius: 7px;
   /*	border-bottom-right-radius: 0; */
-  -moz-box-shadow: 5px 5px 5px #999999;
-  -webkit-box-shadow: 5px 5px 5px #999999;
-  -khtml-box-shadow: 5px 5px 5px #999999;
-  box-shadow: 5px 5px 5px #999999;
+  -moz-box-shadow: 5px 5px 5px #999;
+  -webkit-box-shadow: 5px 5px 5px #999;
+  -khtml-box-shadow: 5px 5px 5px #999;
+  box-shadow: 5px 5px 5px #999;
 }
 .win .titlebar {
   /*	font-family: Fraktur; */
-  color: #000000;
+  color: #000;
   background: none repeat-x 0 0;
-  background-color: #cccccc;
-  border-bottom: 1px solid #000000;
+  background-color: #CCC;
+  border-bottom: 1px solid #000;
   padding: TITLEBAR_PADDING;
   height: 19px;
   -moz-border-radius-topleft: 7px;
@@ -480,12 +527,12 @@ body {
 .win .taskbar {
   top: 24px;
   height: 23px;
-  background-color: #ffffff;
-  border-bottom: 1px solid #000000;
+  background-color: #FFF;
+  border-bottom: 1px solid #000;
   padding: 2px;
 }
 .focus .taskbar {
-  background-color: #eeeeee;
+  background-color: #EEE;
 }
 .win .content {
   top: 24px;
@@ -530,19 +577,19 @@ body {
 }
 /* //////////////////////////////////////////////////////////////////////////*/
 .focus .titlebar {
-  color: #ffffff;
+  color: #FFF;
   background: none repeat-x 0 0;
-  background-color: #555555;
+  background-color: #555;
 }
 .win.focus {
-  -moz-box-shadow: 5px 5px 5px #222222;
-  -webkit-box-shadow: 5px 5px 5px #222222;
-  -khtml-box-shadow: 5px 5px 5px #222222;
-  box-shadow: 5px 5px 5px #222222;
+  -moz-box-shadow: 5px 5px 5px #222;
+  -webkit-box-shadow: 5px 5px 5px #222;
+  -khtml-box-shadow: 5px 5px 5px #222;
+  box-shadow: 5px 5px 5px #222;
 }
 .win .tabContainer {
   border: 1px solid #666666;
-  background-color: #ffffff;
+  background-color: #FFFFFF;
   overflow-y: scroll;
   overflow-x: hidden;
 }
@@ -558,6 +605,21 @@ body {
   border-bottom-style: solid;
   border-bottom-width: 1px;
 }
+/*
+ * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
+ * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
+ * This file is part of Knora.
+ * Knora is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * Knora is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ * You should have received a copy of the GNU Affero General Public
+ * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ */
 /******************************************************************************
  * Tables for displaying search results
  */
@@ -575,17 +637,17 @@ table.searchres {
   border-horizontal-spacing: 0px;
 }
 table.searchres th {
-  background-color: #ffffff;
+  background-color: #FFF;
   padding: 1px 3px 1px 3px;
   margin: 0px;
   border-style: none;
   text-align: left;
 }
 .focus table.searchres th {
-  background-color: #ffffff;
+  background-color: #FFF;
 }
 table.searchres tr:nth-child(odd) {
-  background-color: #eeeeee;
+  background-color: #EEE;
   margin: 0px;
 }
 table.searchres tr:nth-child(even) {
@@ -593,7 +655,7 @@ table.searchres tr:nth-child(even) {
   margin: 0px;
 }
 table.searchres tr:hover {
-  background-color: #eeccaa;
+  background-color: #ECA;
   cursor: pointer;
 }
 table.searchres td {
@@ -611,7 +673,7 @@ table.searchres td {
 }
 .searchres_highlight {
   font-weight: bold;
-  background-color: #ffff55;
+  background-color: #FF5;
 }
 .searchinfowin {
   background-color: #000;
@@ -629,9 +691,6 @@ table.searchres td {
   -webkit-box-shadow: 5px 5px 5px #222;
   -khtml-box-shadow: 5px 5px 5px #222;
   box-shadow: 5px 5px 5px #222;
-}
-.searchinfowin table {
-    color: white;
 }
 /*////////////////////////////////////////////////////////////////////////////*/
 .mainpage_simplesearch {
@@ -769,6 +828,21 @@ input.disp_tableedit {
 input.disp_csv {
   background: url('icons/sets/view/csv_icon&16.png') no-repeat top left;
 }
+/*
+ * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
+ * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
+ * This file is part of Knora.
+ * Knora is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * Knora is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ * You should have received a copy of the GNU Affero General Public
+ * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ */
 .dock {
   position: absolute;
   left: 0;
@@ -778,10 +852,10 @@ input.disp_csv {
 }
 .dock > div {
   float: left;
-  color: #000000;
-  background-color: #dddddd;
+  color: #000;
+  background-color: #ddd;
   height: 23px;
-  border: 1px solid #aaaaaa;
+  border: 1px solid #aaa;
   padding-left: 3px;
   padding-right: 3px;
   overflow: hidden;
@@ -792,11 +866,11 @@ input.disp_csv {
   cursor: pointer;
 }
 .dock > div.toggled {
-  color: #ffffff;
-  background-color: #333333;
+  color: #fff;
+  background-color: #333;
 }
 .dock > div:hover {
-  border-color: #ff0000;
+  border-color: #f00;
 }
 .fader {
   width: 100%;
@@ -809,6 +883,21 @@ input.disp_csv {
   -webkit-opacity: 0.5;
   opacity: 0.5;
 }
+/*
+ * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
+ * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
+ * This file is part of Knora.
+ * Knora is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * Knora is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ * You should have received a copy of the GNU Affero General Public
+ * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ */
 .admin .tabLabel {
   border-left-style: solid;
   border-top-style: solid;
@@ -847,9 +936,24 @@ input.disp_csv {
   bottom: 0;
 }
 .admin .tabContainer {
-  background-color: #ffffff;
+  background-color: #FFF;
   border-bottom: 1px solid #000;
 }
+/*
+ * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
+ * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
+ * This file is part of Knora.
+ * Knora is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * Knora is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ * You should have received a copy of the GNU Affero General Public
+ * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ */
 /*
  ********************************************************************
  */
@@ -873,11 +977,11 @@ input.disp_csv {
 .imageBase .separatorArea {
   border: none;
   width: 7px;
-  background-color: #aaaaaa;
+  background-color: #AAA;
   cursor: ew-resize;
 }
 .imageBase.focus .separatorArea {
-  background-color: #999999;
+  background-color: #999;
 }
 /*
  * horizontal separator
@@ -885,15 +989,15 @@ input.disp_csv {
 .imageBase .hseparatorArea {
   border: none;
   height: 7px;
-  background-color: #aaaaaa;
+  background-color: #AAA;
   cursor: ns-resize;
 }
 .imageBase.focus .hseparatorArea {
-  background-color: #999999;
+  background-color: #999;
 }
 .imageBase .controlArea {
   border: none;
-  background-color: #d1f4ff;
+  background-color: #D1F4FF;
   overflow: visible;
   height: 16px;
 }
@@ -1088,7 +1192,7 @@ input.disp_csv {
   overflow-y: auto;
 }
 .imageBase .tabContainer {
-  background-color: #ffffff;
+  background-color: #FFF;
   border-bottom: 1px solid #000;
 }
 /* css configuration for transcription */
@@ -1191,13 +1295,28 @@ table.chartable,
 table.chartable td {
   border: 1px solid #000000;
 }
+/*
+ * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
+ * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
+ * This file is part of Knora.
+ * Knora is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * Knora is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ * You should have received a copy of the GNU Affero General Public
+ * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ */
 .propedit,
 .propedit * {
   font-size: 14px;
 }
 .propedit.sectiontitle {
   background: none repeat-x 0 0;
-  background-color: #cccccc;
+  background-color: #CCC;
   padding-top: 2px;
   padding-left: 5px;
   font-weight: bold;
@@ -1206,25 +1325,25 @@ table.propedit tr td {
   vertical-align: top;
 }
 .propedit.sectionheader {
-  background-color: #eeeeee;
+  background-color: #EEE;
   margin-left: 2px;
   margin-right: 2px;
   margin-top: 5px;
   margin-bottom: 5px;
   padding: 2px;
-  outline: #888888 outset 2px;
+  outline: #888 outset 2px;
   vertical-align: middle;
 }
 .focus .propedit.sectionheader {
-  background-color: #bbbbbb;
-  outline: #888888 outset 2px;
+  background-color: #BBB;
+  outline: #888 outset 2px;
 }
 .propedit.section {
   margin: 2px;
   padding: 2px;
 }
 .propedit.label {
-  background-color: #ffff99;
+  background-color: #FF9;
   text-align: right;
 }
 div.daysel {
@@ -1257,7 +1376,7 @@ div.daysel td.highlight {
   background-color: #fff;
 }
 .searchboxItem:hover {
-  background-color: #ffff99;
+  background-color: #FF9;
   cursor: pointer;
 }
 /* css for texteditor */
@@ -1327,4 +1446,41 @@ button.active {
   -webkit-border-radius: 5px;
   -khtml-border-radius: 5px;
   border-radius: 5px;
+}
+.propedit h1 {
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 20px;
+  padding-bottom: 3px;
+  border-bottom: 1px solid black;
+}
+.propedit h2 {
+  font-size: 25px;
+  font-weight: 700;
+  line-height: 15px;
+  padding-left: 1em;
+}
+.propedit h3 {
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 15px;
+  padding-left: 2em;
+}
+.propedit h4 {
+  font-size: 20px;
+  font-weight: 300;
+  line-height: 15px;
+  padding-left: 3em;
+}
+.propedit h5 {
+  font-size: 15px;
+  font-weight: 300;
+  line-height: 15px;
+  padding-left: 5em;
+}
+.propedit h6 {
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 15px;
+  padding-left: 7em;
 }
