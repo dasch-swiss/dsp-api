@@ -249,6 +249,18 @@
 
     <mappingElement>
         <tag>
+            <name>tbody</name>
+            <class>noClass</class>
+            <namespace>noNamespace</namespace>
+            <separatesWords>true</separatesWords>
+        </tag>
+        <standoffClass>
+            <classIri>http://www.knora.org/ontology/standoff#StandoffTableBodyTag</classIri>
+        </standoffClass>
+    </mappingElement>
+
+    <mappingElement>
+        <tag>
             <name>table</name>
             <class>noClass</class>
             <namespace>noNamespace</namespace>
@@ -340,10 +352,18 @@
         </tag>
         <standoffClass>
             <classIri>http://www.knora.org/ontology/standoff#StandoffBlockquoteTag</classIri>
-            <datatype>
-                <type>http://www.knora.org/ontology/knora-base#StandoffUriTag</type>
-                <attributeName>cite</attributeName>
-            </datatype>
+        </standoffClass>
+    </mappingElement>
+
+    <mappingElement>
+        <tag>
+            <name>code</name>
+            <class>noClass</class>
+            <namespace>noNamespace</namespace>
+            <separatesWords>true</separatesWords>
+        </tag>
+        <standoffClass>
+            <classIri>http://www.knora.org/ontology/standoff#StandoffCodeTag</classIri>
         </standoffClass>
     </mappingElement>
 

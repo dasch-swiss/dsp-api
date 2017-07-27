@@ -37,23 +37,25 @@
         </tr>
     </table>
 
-    He will speak these words of wisdom <br/>
-    Like a sage, a man of vision        <br/>
-    Though he knows he’s really nothing <br/>
-    But the brief elaboration of a tube <br/>
+    <pre>
+    He will speak these words of wisdom 
+      Like a sage, a man of vision        
+        Though he knows he’s really nothing
+          But the brief elaboration of a tube
+    </pre>
     
     <hr/>
     
-    <blockquote cite="http://humanities.ch/">
+    <blockquote>
         Digital data created during research that might be valuable for other ongoing or future research projects can be transfered to the DaSCH infrastructre. The DaSCH will preserve the data and provide long-term access.
     </blockquote>
 
-    <pre>
+    <code>
         ,= ,-_-. =.
        ((_/)o o(\_))
         `-'(. .)`-'
             \_/
-    </pre> 
-    <cite>GNU</cite><em>Copyright © 2004, Martin Dickopp</em>
+    </code> 
+    <cite>GNU</cite>&#160;<em>Copyright © 2004, Martin Dickopp</em>
                    
 </text>

@@ -105,9 +105,18 @@
 
 :StandoffBlockquoteTag rdf:type owl:Class ;
 
-            rdfs:subClassOf :StandoffHyperlinkTag ;
+            rdfs:subClassOf :StandoffStructuralTag ;
 
             rdfs:comment "Represents a section that is quoted from another source in a text"@en .
+
+
+###  http://www.knora.org/ontology/standoff#StandoffCodeTag
+
+:StandoffCodeTag rdf:type owl:Class ;
+
+            rdfs:subClassOf :StandoffStructuralTag ;
+
+            rdfs:comment "Represents a section of computer source code in a text"@en .
 
 
 ###  http://www.knora.org/ontology/standoff#StandoffParagraphTag
@@ -198,6 +207,15 @@
                 rdfs:subClassOf :StandoffStructuralTag ;
 
                 rdfs:comment "Represents a list element in a TextValue"@en .
+
+
+###  http://www.knora.org/ontology/standoff#StandoffTableBodyTag
+
+:StandoffTableBodyTag rdf:type owl:Class ;
+
+                rdfs:subClassOf :StandoffStructuralTag ;
+
+                rdfs:comment "Represents a table body in a TextValue"@en .
 
 
 ###  http://www.knora.org/ontology/standoff#StandoffTableTag

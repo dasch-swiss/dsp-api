@@ -34,13 +34,15 @@
                                  <http://data.knora.org/projects/standoff/mappings/StandardMapping/elements/USzK8q7nQpe2k_BQ3O2-fg> , 
                                  <http://data.knora.org/projects/standoff/mappings/StandardMapping/elements/uJ4GgFl_Qki-cYHae_nAtA> , 
                                  <http://data.knora.org/projects/standoff/mappings/StandardMapping/elements/X-SQznMkTx-LZRLAY74ePA> , 
+                                 <http://data.knora.org/projects/standoff/mappings/StandardMapping/elements/62844c98-7251-11e7-8cf> , 
                                  <http://data.knora.org/projects/standoff/mappings/StandardMapping/elements/_-8MPxJFSAiZm1T-g3Ymzg> , 
                                  <http://data.knora.org/projects/standoff/mappings/StandardMapping/elements/vlGCAF3kQyywpobNu1T7ng> , 
                                  <http://data.knora.org/projects/standoff/mappings/StandardMapping/elements/ktOIwFHSTm-GC1RVF3HZpw> , 
                                  <http://data.knora.org/projects/standoff/mappings/StandardMapping/elements/ZeSrjYCxT-anWm8YYy61Uw> , 
                                  <http://data.knora.org/projects/standoff/mappings/StandardMapping/elements/a05L2z3NT3iMWMn7nFqIOA> , 
                                  <http://data.knora.org/projects/standoff/mappings/StandardMapping/elements/vncrL3zVRxiUzHyK6EE6Cw> ,
-                                 <http://data.knora.org/projects/standoff/mappings/StandardMapping/elements/niV5iI8DTVK3on2ySXvXRQ> . 
+                                 <http://data.knora.org/projects/standoff/mappings/StandardMapping/elements/niV5iI8DTVK3on2ySXvXRQ> , 
+                                 <http://data.knora.org/projects/standoff/mappings/StandardMapping/elements/5b548e03-7ece-4ed7-858> . 
                                  
 <http://data.knora.org/projects/standoff/mappings/StandardMapping/elements/4b-Cx4qYQOyy9mUswmvW7g>
     a knora-base:MappingElement ;
@@ -223,6 +225,14 @@
     knora-base:mappingElementRequiresSeparator true ;
 	knora-base:mappingHasXMLTagname "table"^^xsd:string .
 
+<http://data.knora.org/projects/standoff/mappings/StandardMapping/elements/62844c98-7251-11e7-8cf>
+	a knora-base:MappingElement ;
+	knora-base:mappingHasStandoffClass standoff:StandoffTableBodyTag ;
+	knora-base:mappingHasXMLClass "noClass"^^xsd:string ;
+	knora-base:mappingHasXMLNamespace "noNamespace"^^xsd:string ;
+    knora-base:mappingElementRequiresSeparator true ;
+	knora-base:mappingHasXMLTagname "tbody"^^xsd:string .
+
 <http://data.knora.org/projects/standoff/mappings/StandardMapping/elements/_-8MPxJFSAiZm1T-g3Ymzg>
 	a knora-base:MappingElement ;
 	knora-base:mappingHasStandoffClass standoff:StandoffTableRowTag ;
@@ -276,11 +286,13 @@
 	knora-base:mappingHasStandoffClass standoff:StandoffBlockquoteTag ;
 	knora-base:mappingHasXMLClass "noClass"^^xsd:string ;
 	knora-base:mappingHasXMLNamespace "noNamespace"^^xsd:string ;
-	knora-base:mappingHasXMLTagname "blockquote"^^xsd:string ;
     knora-base:mappingElementRequiresSeparator true ;
-	knora-base:mappingHasStandoffDataTypeClass <http://data.knora.org/projects/standoff/mappings/StandardMapping/elements/aSDxc6n6Qj68oq9U8dlpxA> .
-
-<http://data.knora.org/projects/standoff/mappings/StandardMapping/elements/aSDxc6n6Qj68oq9U8dlpxA>
-	a knora-base:MappingStandoffDataTypeClass ;
-    knora-base:mappingHasStandoffClass knora-base:StandoffUriTag ;
-	knora-base:mappingHasXMLAttributename "cite"^^xsd:string .
+	knora-base:mappingHasXMLTagname "blockquote"^^xsd:string .
+    
+<http://data.knora.org/projects/standoff/mappings/StandardMapping/elements/5b548e03-7ece-4ed7-858>
+	a knora-base:MappingElement ;
+	knora-base:mappingHasStandoffClass standoff:StandoffCodeTag ;
+	knora-base:mappingHasXMLClass "noClass"^^xsd:string ;
+	knora-base:mappingHasXMLNamespace "noNamespace"^^xsd:string ;
+    knora-base:mappingElementRequiresSeparator true ;
+	knora-base:mappingHasXMLTagname "code"^^xsd:string .
