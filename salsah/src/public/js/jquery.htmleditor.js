@@ -172,22 +172,17 @@
 					},
                     extraPlugins: 'codemirror,codesnippet',
                     toolbarGroups: [
-                    		{ name: 'clipboard', groups: [ 'clipboard', 'undo' ] },
-                    		{ name: 'editing', groups: [ 'find', 'selection', 'spellchecker', 'editing' ] },
-                    		{ name: 'links', groups: [ 'links' ] },
-                    		{ name: 'insert', groups: [ 'insert' ] },
-                    		{ name: 'forms', groups: [ 'forms' ] },
-                    		{ name: 'tools', groups: [ 'tools' ] },
-                    		{ name: 'document', groups: [ 'mode', 'document', 'doctools' ] },
-                    		{ name: 'others', groups: [ 'others' ] },
-                    		'/',
+                    		{ name: 'styles', groups: [ 'styles' ] }, // format
                     		{ name: 'basicstyles', groups: [ 'basicstyles', 'cleanup' ] },
-                    		{ name: 'paragraph', groups: [ 'list', 'indent', 'blocks', 'align', 'bidi', 'paragraph' ] },
-                    		{ name: 'styles', groups: [ 'styles' ] },
-                    		{ name: 'colors', groups: [ 'colors' ] },
-                    		{ name: 'about', groups: [ 'about' ] }
+                    		{ name: 'paragraph', groups: [ 'list', 'blocks' ] },
+                    		'/',
+                    		{ name: 'undo', groups: [ 'undo' ] },
+                    		{ name: 'links', groups: [ 'links' ] },
+                    		{ name: 'insert', groups: [ 'insert' ] }, // code snipet, table, hr
+                    		{ name: 'tools', groups: [ 'tools' ] } // maximize
+                    		//{ name: 'document', groups: [ 'mode', 'document', 'doctools' ] }, // source button
                     	],
-                        removeButtons: 'Cut,Copy,Paste,PasteText,PasteFromWord,Outdent,Indent,Styles'
+                        removeButtons: 'Styles'
 				};
 
 				// init editor (textarea will be replaced by an iframe)
