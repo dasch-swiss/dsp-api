@@ -28,8 +28,8 @@ import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.ontologymessages.NamedGraphV1
 import org.knora.webapi.messages.v1.responder.projectmessages._
 import org.knora.webapi.messages.v1.responder.usermessages._
-import org.knora.webapi.messages.v1.store.triplestoremessages._
-import org.knora.webapi.responders.IriLocker
+import org.knora.webapi.messages.store.triplestoremessages._
+import org.knora.webapi.responders.{IriLocker, Responder}
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.KnoraIdUtil
 
@@ -38,7 +38,7 @@ import scala.concurrent.Future
 /**
   * Returns information about Knora projects.
   */
-class ProjectsResponderV1 extends ResponderV1 {
+class ProjectsResponderV1 extends Responder {
 
     // Creates IRIs for new Knora user objects.
     val knoraIdUtil = new KnoraIdUtil
@@ -462,7 +462,7 @@ class ProjectsResponderV1 extends ResponderV1 {
 
             // Create the new project.
             createNewProjectSparqlString = queries.sparql.v1.txt.createNewProject(
-                adminNamedGraphIri = "http://www.knora.org/data/admin",
+                adminNamedGraphIri = OntologyConstants.NamedGraphs.AdminNamedGraph,
                 triplestore = settings.triplestoreType,
                 projectIri = newProjectIRI,
                 projectClassIri = OntologyConstants.KnoraBase.KnoraProject,

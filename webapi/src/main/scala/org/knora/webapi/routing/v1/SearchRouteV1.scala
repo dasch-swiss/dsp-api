@@ -30,7 +30,6 @@ import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
 import org.knora.webapi.util.InputValidation
 import org.knora.webapi.{BadRequestException, IRI, SettingsImpl}
 
-import scala.concurrent.Future
 import scala.language.postfixOps
 
 // slash after path without following segment
@@ -55,7 +54,7 @@ object SearchRouteV1 extends Authenticator {
 
         params.get("searchtype") match {
             case Some(List("extended")) => ()
-            case other => throw BadRequestException(s"Unexpected searchtype param for extended search")
+            case other => throw BadRequestException(s"Unexpected searchtype param for extended search: $other")
         }
 
         // only one value is expected
