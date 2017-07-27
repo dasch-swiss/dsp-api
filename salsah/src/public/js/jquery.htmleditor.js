@@ -138,13 +138,18 @@
 
                 // specify allowed elements, attributes, and classes
                 // this must conform to the `STANDARD_MAPPING`
-                var filter = ' p em strong strike u sub sup hr; a[!href](salsah-link) ';
+                var filter = ' p em strong strike u sub sup hr h1 h2 h3 h4 h5 h6 pre table tbody tr td ol ul li cite blockquote code; a[!href](salsah-link) ';
 
 				var config = {
 					language: (SALSAH.userprofile && SALSAH.userprofile.userData && SALSAH.userprofile.userData.lang) ? SALSAH.userprofile.userData.lang : 'en' ,
                     allowedContent: filter,
                     pasteFilter: filter,
+                    format_tags: 'p;h1;h2;h3;h4;h5;h6;pre',
 					entities: false, // do not use entities (e.g. for Umlaut)
+                    coreStyles_strike: { element : 'strike' }, // defines the output for some tags, `s`-> `strike`
+                    format_h4:         { element : 'h4' },     // idem, `h4` instead of `p`
+                    format_h5:         { element : 'h5' },     // idem, idem  
+                    format_h6:         { element : 'h6' },     // end of the basic tag definition
                     on: {
 						instanceReady: function(event) {
 
@@ -165,9 +170,24 @@
 							
 						}
 					},
-                    extraPlugins: 'horizontalrule',
-					toolbar: [ [ 'Bold', 'Italic', 'Underline', 'Strike', 'Subscript', 'Superscript', '-','RemoveFormat', '-', 'HorizontalRule', '-', 'Link', 'Unlink'] ], // configuration for toolbar buttons, must conform to `STANDARD_MAPPING`
-					removeButtons: ''
+                    extraPlugins: 'codemirror,codesnippet',
+                    toolbarGroups: [
+                    		{ name: 'clipboard', groups: [ 'clipboard', 'undo' ] },
+                    		{ name: 'editing', groups: [ 'find', 'selection', 'spellchecker', 'editing' ] },
+                    		{ name: 'links', groups: [ 'links' ] },
+                    		{ name: 'insert', groups: [ 'insert' ] },
+                    		{ name: 'forms', groups: [ 'forms' ] },
+                    		{ name: 'tools', groups: [ 'tools' ] },
+                    		{ name: 'document', groups: [ 'mode', 'document', 'doctools' ] },
+                    		{ name: 'others', groups: [ 'others' ] },
+                    		'/',
+                    		{ name: 'basicstyles', groups: [ 'basicstyles', 'cleanup' ] },
+                    		{ name: 'paragraph', groups: [ 'list', 'indent', 'blocks', 'align', 'bidi', 'paragraph' ] },
+                    		{ name: 'styles', groups: [ 'styles' ] },
+                    		{ name: 'colors', groups: [ 'colors' ] },
+                    		{ name: 'about', groups: [ 'about' ] }
+                    	],
+                        removeButtons: 'Cut,Copy,Paste,PasteText,PasteFromWord,Outdent,Indent,Styles'
 				};
 
 				// init editor (textarea will be replaced by an iframe)
