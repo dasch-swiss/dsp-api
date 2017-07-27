@@ -26,9 +26,8 @@ import akka.pattern._
 import akka.util.Timeout
 import org.knora.webapi.messages.v1.responder.ontologymessages.LoadOntologiesRequest
 import org.knora.webapi.messages.v1.responder.sessionmessages.{SessionJsonProtocol, SessionResponse}
-import org.knora.webapi.messages.v1.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent}
-import org.knora.webapi.responders._
-import org.knora.webapi.responders.v1.ResponderManagerV1
+import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent}
+import org.knora.webapi.responders.{ResponderManager, _}
 import org.knora.webapi.routing.Authenticator.KNORA_AUTHENTICATION_COOKIE_NAME
 import org.knora.webapi.routing.v1.{AuthenticateRouteV1, ResourcesRouteV1}
 import org.knora.webapi.store._
@@ -52,7 +51,7 @@ class AuthenticationV1R2RSpec extends R2RSpec with SessionJsonProtocol {
          akka.stdout-loglevel = "DEBUG"
         """.stripMargin
 
-    private val responderManager = system.actorOf(Props(new ResponderManagerV1 with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
+    private val responderManager = system.actorOf(Props(new ResponderManager with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
     private val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
 
     private val authenticatePath = AuthenticateRouteV1.knoraApiPath(system, settings, log)
@@ -135,7 +134,7 @@ class AuthenticationV1R2RSpec extends R2RSpec with SessionJsonProtocol {
                 status should equal(StatusCodes.OK)
                 /* store session */
                 sid = Await.result(Unmarshal(response.entity).to[SessionResponse], 1.seconds).sid
-                header[`Set-Cookie`] should equal(Some(`Set-Cookie`(HttpCookie(KNORA_AUTHENTICATION_COOKIE_NAME, sid))))
+                header[`Set-Cookie`] should equal(Some(`Set-Cookie`(HttpCookie(KNORA_AUTHENTICATION_COOKIE_NAME, value = sid, path = Some("/")))))
             }
         }
 

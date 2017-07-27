@@ -32,8 +32,8 @@ import org.knora.webapi.messages.v1.responder.resourcemessages.{MultipleResource
 import org.knora.webapi.messages.v1.responder.sipimessages._
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.responder.valuemessages._
-import org.knora.webapi.messages.v1.store.triplestoremessages._
-import org.knora.webapi.responders.IriLocker
+import org.knora.webapi.messages.store.triplestoremessages._
+import org.knora.webapi.responders.{IriLocker, Responder}
 import org.knora.webapi.responders.v1.GroupedProps._
 import org.knora.webapi.twirl.ResourceToCreate
 import org.knora.webapi.util.ActorUtil._
@@ -45,7 +45,7 @@ import scala.concurrent.Future
 /**
   * Responds to requests for information about resources, and returns responses in Knora API v1 format.
   */
-class ResourcesResponderV1 extends ResponderV1 {
+class ResourcesResponderV1 extends Responder {
 
     // Converts SPARQL query results to ApiValueV1 objects.
     val valueUtilV1 = new ValueUtilV1(settings)
@@ -1380,7 +1380,8 @@ class ResourcesResponderV1 extends ResponderV1 {
                                         // suitable class.
                                         val checkSubClassRequest = CheckSubClassRequestV1(
                                             subClassIri = clientResourceIDsToResourceClasses(targetClientID),
-                                            superClassIri = propertyObjectClassConstraint
+                                            superClassIri = propertyObjectClassConstraint,
+                                            userProfile = userProfile
                                         )
 
                                         for {
@@ -1413,7 +1414,8 @@ class ResourcesResponderV1 extends ResponderV1 {
                                             propertyIri = propertyIri,
                                             propertyObjectClassConstraint = propertyObjectClassConstraint,
                                             valueType = otherValue.valueTypeIri,
-                                            responderManager = responderManager)
+                                            responderManager = responderManager,
+                                            userProfile = userProfile)
                                 }
                         }
                 }
@@ -1767,12 +1769,17 @@ class ResourcesResponderV1 extends ResponderV1 {
                     throw ForbiddenException(s"User $userIri does not have permission to mark resource ${resourceDeleteRequest.resourceIri} as deleted")
                 }
 
-                projectInfo <- {
+                maybeProjectInfo <- {
                     responderManager ? ProjectInfoByIRIGetV1(
                         resourceInfo.project_id,
                         None
                     )
-                }.mapTo[ProjectInfoV1]
+                }.mapTo[Option[ProjectInfoV1]]
+
+                projectInfo = maybeProjectInfo match {
+                    case Some(pi) => pi
+                    case None => throw NotFoundException(s"Project '${resourceInfo.project_id}' not found.")
+                }
 
                 // Create update sparql string
                 sparqlUpdate = queries.sparql.v1.txt.deleteResource(
@@ -1836,7 +1843,8 @@ class ResourcesResponderV1 extends ResponderV1 {
 
             checkSubClassRequest = CheckSubClassRequestV1(
                 subClassIri = resourceInfo.restype_id,
-                superClassIri = owlClass
+                superClassIri = owlClass,
+                userProfile = userProfile
             )
 
             subClassResponse <- (responderManager ? checkSubClassRequest).mapTo[CheckSubClassResponseV1]
@@ -1866,12 +1874,17 @@ class ResourcesResponderV1 extends ResponderV1 {
                     throw ForbiddenException(s"User $userIri does not have permission to change the label of resource $resourceIri")
                 }
 
-                projectInfo <- {
+                maybeProjectInfo <- {
                     responderManager ? ProjectInfoByIRIGetV1(
                         resourceInfo.project_id,
                         None
                     )
-                }.mapTo[ProjectInfoV1]
+                }.mapTo[Option[ProjectInfoV1]]
+
+                projectInfo = maybeProjectInfo match {
+                    case Some(pi) => pi
+                    case None => throw NotFoundException(s"Project '${resourceInfo.project_id}' not found.")
+                }
 
                 // get the named graph the resource is contained in by the resource's project
                 namedGraph = projectInfo.dataNamedGraph

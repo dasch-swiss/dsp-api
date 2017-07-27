@@ -22,7 +22,6 @@ package org.knora.webapi.responders.v1
 
 import akka.actor.Status
 import akka.pattern._
-import org.apache.jena.sparql.function.library.leviathan.log
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.ontologymessages.{Cardinality, EntityInfoGetRequestV1, EntityInfoGetResponseV1}
 import org.knora.webapi.messages.v1.responder.permissionmessages.{DefaultObjectAccessPermissionsStringForPropertyGetV1, DefaultObjectAccessPermissionsStringResponseV1}
@@ -32,8 +31,8 @@ import org.knora.webapi.messages.v1.responder.sipimessages.{SipiConstants, SipiR
 import org.knora.webapi.messages.v1.responder.standoffmessages.StandoffDataTypeClasses
 import org.knora.webapi.messages.v1.responder.usermessages.{UserProfileByIRIGetV1, UserProfileType, UserProfileV1}
 import org.knora.webapi.messages.v1.responder.valuemessages._
-import org.knora.webapi.messages.v1.store.triplestoremessages._
-import org.knora.webapi.responders.IriLocker
+import org.knora.webapi.messages.store.triplestoremessages._
+import org.knora.webapi.responders.{IriLocker, Responder}
 import org.knora.webapi.twirl.{SparqlTemplateLinkUpdate, StandoffTagIriAttributeV1, StandoffTagV1}
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util._
@@ -46,7 +45,7 @@ import scala.concurrent.{Await, Future}
 /**
   * Updates Knora values.
   */
-class ValuesResponderV1 extends ResponderV1 {
+class ValuesResponderV1 extends Responder {
     // Creates IRIs for new Knora value objects.
     val knoraIdUtil = new KnoraIdUtil
 
@@ -202,12 +201,17 @@ class ValuesResponderV1 extends ResponderV1 {
             _ = log.debug(s"createValueV1 - defaultObjectAccessPermissions: $defaultObjectAccessPermissions")
 
             // Get project info
-            projectInfo <- {
+            maybeProjectInfo <- {
                 responderManager ? ProjectInfoByIRIGetV1(
                     iri = projectIri,
                     userProfileV1 = Some(createValueRequest.userProfile)
                 )
-            }.mapTo[ProjectInfoV1]
+            }.mapTo[Option[ProjectInfoV1]]
+
+            projectInfo = maybeProjectInfo match {
+                case Some(pi) => pi
+                case None => throw NotFoundException(s"Project '$projectIri' not found.")
+            }
 
             // Everything seems OK, so create the value.
 
@@ -423,7 +427,7 @@ class ValuesResponderV1 extends ResponderV1 {
                                 createMultipleValuesRequest.userProfile.permissionData)
                         }.mapTo[DefaultObjectAccessPermissionsStringResponseV1]
 
-                        val defaultObjectAccessPermissions = Await.result(defaultObjectAccessPermissionsF, 1.second)
+                        val defaultObjectAccessPermissions = Await.result(defaultObjectAccessPermissionsF, 5.second)
                         // log.debug(s"createValueV1 - defaultObjectAccessPermissions: $defaultObjectAccessPermissions")
 
                         // For each property, construct a SparqlGenerationResultForProperty containing WHERE clause statements, INSERT clause statements, and UnverifiedValueV1s.
@@ -907,12 +911,17 @@ class ValuesResponderV1 extends ResponderV1 {
                 _ = log.debug(s"changeValueV1 - defaultObjectAccessPermissions: $defaultObjectAccessPermissions")
 
                 // Get project info
-                projectInfo <- {
+                maybeProjectInfo <- {
                     responderManager ? ProjectInfoByIRIGetV1(
                         iri = resourceFullResponse.resinfo.get.project_id,
                         userProfileV1 = Some(changeValueRequest.userProfile)
                     )
-                }.mapTo[ProjectInfoV1]
+                }.mapTo[Option[ProjectInfoV1]]
+
+                projectInfo = maybeProjectInfo match {
+                    case Some(pi) => pi
+                    case None => throw NotFoundException(s"Project '${resourceFullResponse.resinfo.get.project_id}' not found.")
+                }
 
                 // The rest of the preparation for the update depends on whether we're changing a link or an ordinary value.
                 apiResponse <- (changeValueRequest.value, currentValueQueryResult) match {
@@ -1010,13 +1019,17 @@ class ValuesResponderV1 extends ResponderV1 {
                 newValueIri = knoraIdUtil.makeRandomValueIri(findResourceWithValueResult.resourceIri)
 
                 // Get project info
-                projectInfo <- {
+                maybeProjectInfo <- {
                     responderManager ? ProjectInfoByIRIGetV1(
                         findResourceWithValueResult.projectIri,
                         None
                     )
-                }.mapTo[ProjectInfoV1]
+                }.mapTo[Option[ProjectInfoV1]]
 
+                projectInfo = maybeProjectInfo match {
+                    case Some(pi) => pi
+                    case None => throw NotFoundException(s"Project '${findResourceWithValueResult.projectIri}' not found.")
+                }
 
                 // Generate a SPARQL update.
                 sparqlUpdate = queries.sparql.v1.txt.changeComment(
@@ -1109,12 +1122,17 @@ class ValuesResponderV1 extends ResponderV1 {
 
                     for {
                     // Get project info
-                        projectInfo <- {
+                        maybeProjectInfo <- {
                             responderManager ? ProjectInfoByIRIGetV1(
                                 findResourceWithValueResult.projectIri,
                                 None
                             )
-                        }.mapTo[ProjectInfoV1]
+                        }.mapTo[Option[ProjectInfoV1]]
+
+                        projectInfo = maybeProjectInfo match {
+                            case Some(pi) => pi
+                            case None => throw NotFoundException(s"Project '${findResourceWithValueResult.projectIri}' not found.")
+                        }
 
                         sparqlTemplateLinkUpdate <- decrementLinkValue(
                             sourceResourceIri = findResourceWithValueResult.resourceIri,
@@ -1162,12 +1180,17 @@ class ValuesResponderV1 extends ResponderV1 {
                         linkUpdates <- linkUpdatesFuture
 
                         // Get project info
-                        projectInfo <- {
+                        maybeProjectInfo <- {
                             responderManager ? ProjectInfoByIRIGetV1(
                                 findResourceWithValueResult.projectIri,
                                 None
                             )
-                        }.mapTo[ProjectInfoV1]
+                        }.mapTo[Option[ProjectInfoV1]]
+
+                        projectInfo = maybeProjectInfo match {
+                            case Some(pi) => pi
+                            case None => throw NotFoundException(s"Project '${findResourceWithValueResult.projectIri}' not found.")
+                        }
 
                         sparqlUpdate = queries.sparql.v1.txt.deleteValue(
                             dataNamedGraph = projectInfo.dataNamedGraph,
@@ -2149,12 +2172,17 @@ class ValuesResponderV1 extends ResponderV1 {
             )
 
             // Get project info
-            projectInfo <- {
+            maybeProjectInfo <- {
                 responderManager ? ProjectInfoByIRIGetV1(
                     projectIri,
                     None
                 )
-            }.mapTo[ProjectInfoV1]
+            }.mapTo[Option[ProjectInfoV1]]
+
+            projectInfo = maybeProjectInfo match {
+                case Some(pi) => pi
+                case None => throw NotFoundException(s"Project '$projectIri' not found.")
+            }
 
             // Generate a SPARQL update string.
             sparqlUpdate = queries.sparql.v1.txt.changeLink(
@@ -2285,12 +2313,17 @@ class ValuesResponderV1 extends ResponderV1 {
             }
 
             // Get project info
-            projectInfo <- {
+            maybeProjectInfo <- {
                 responderManager ? ProjectInfoByIRIGetV1(
                     projectIri,
                     None
                 )
-            }.mapTo[ProjectInfoV1]
+            }.mapTo[Option[ProjectInfoV1]]
+
+            projectInfo = maybeProjectInfo match {
+                case Some(pi) => pi
+                case None => throw NotFoundException(s"Project '$projectIri' not found.")
+            }
 
             // Generate a SPARQL update.
             sparqlUpdate = queries.sparql.v1.txt.addValueVersion(
@@ -2584,7 +2617,8 @@ class ValuesResponderV1 extends ResponderV1 {
                         propertyIri = propertyIri,
                         propertyObjectClassConstraint = propertyObjectClassConstraint,
                         valueType = otherValue.valueTypeIri,
-                        responderManager = responderManager)
+                        responderManager = responderManager,
+                        userProfile = userProfile)
             }
         } yield result
     }

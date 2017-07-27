@@ -687,6 +687,101 @@ object StandoffTagUtilV1 {
     }
 
     /**
+      * Create a sequence of [[StandoffTagV1]] from the given standoff nodes (Sparql results).
+      *
+      * @param standoffEntities     information about the standoff entities (from the ontology).
+      * @param standoffAssertions   standoff assertions to be converted into [[StandoffTagV1]]
+      * @return a sequence of [[StandoffTagV1]].
+      */
+    def createStandoffTagsV1FromSparqlResults(standoffEntities: StandoffEntityInfoGetResponseV1, standoffAssertions: Map[IRI, Map[IRI, String]]): Vector[StandoffTagV1] = {
+
+        standoffAssertions.map {
+
+            case (standoffNodeIri: IRI, standoffNodes: Map[IRI, String]) =>
+
+                // create a sequence of `StandoffTagAttributeV1` from the given attributes
+                val attributes: Seq[StandoffTagAttributeV1] = (standoffNodes -- StandoffProperties.systemProperties - OntologyConstants.Rdf.Type).map {
+                    case (propIri, value) =>
+
+                        // check if the given property has an object type constraint (linking property) or an object data type constraint
+                        if (standoffEntities.standoffPropertyEntityInfoMap(propIri).predicates.get(OntologyConstants.KnoraBase.ObjectClassConstraint).isDefined) {
+
+                            // it is a linking property
+                            // check if it refers to a resource or a standoff node
+
+                            if (standoffEntities.standoffPropertyEntityInfoMap(propIri).isSubPropertyOf.contains(OntologyConstants.KnoraBase.StandoffTagHasInternalReference)) {
+                                // it refers to a standoff node, recreate the original id
+
+                                // value points to another standoff node
+                                // get this standoff node and access its original id
+                                val originalId: String = standoffAssertions(value).getOrElse(OntologyConstants.KnoraBase.StandoffTagHasOriginalXMLID, throw InconsistentTriplestoreDataException(s"referred standoff $value node has no original XML id"))
+
+                                // recreate the original id reference
+                                StandoffTagStringAttributeV1(standoffPropertyIri = propIri, value = StandoffTagUtilV1.internalLinkMarker + originalId)
+                            } else {
+                                // it refers to a knora resource
+                                StandoffTagIriAttributeV1(standoffPropertyIri = propIri, value = value)
+                            }
+                        } else if (standoffEntities.standoffPropertyEntityInfoMap(propIri).predicates.get(OntologyConstants.KnoraBase.ObjectDatatypeConstraint).isDefined) {
+
+                            // it is a data type property (literal)
+                            val propDataType = standoffEntities.standoffPropertyEntityInfoMap(propIri).predicates(OntologyConstants.KnoraBase.ObjectDatatypeConstraint)
+
+                            propDataType.objects.headOption match {
+                                case Some(OntologyConstants.Xsd.String) =>
+                                    StandoffTagStringAttributeV1(standoffPropertyIri = propIri, value = value)
+
+                                case Some(OntologyConstants.Xsd.Integer) =>
+                                    StandoffTagIntegerAttributeV1(standoffPropertyIri = propIri, value = value.toInt)
+
+                                case Some(OntologyConstants.Xsd.Decimal) =>
+                                    StandoffTagDecimalAttributeV1(standoffPropertyIri = propIri, value = BigDecimal(value))
+
+                                case Some(OntologyConstants.Xsd.Boolean) =>
+                                    StandoffTagBooleanAttributeV1(standoffPropertyIri = propIri, value = value.toBoolean)
+
+                                case Some(OntologyConstants.Xsd.Uri) => StandoffTagIriAttributeV1(standoffPropertyIri = propIri, value = value)
+
+                                case None => throw InconsistentTriplestoreDataException(s"did not find ${OntologyConstants.KnoraBase.ObjectDatatypeConstraint} for $propIri")
+
+                                case other => throw InconsistentTriplestoreDataException(s"triplestore returned unknown ${OntologyConstants.KnoraBase.ObjectDatatypeConstraint} '$other' for $propIri")
+
+                            }
+                        } else {
+                            throw InconsistentTriplestoreDataException(s"no object class or data type constraint found for property '$propIri'")
+                        }
+
+                }.toVector
+
+                StandoffTagV1(
+                    standoffTagClassIri = standoffNodes(OntologyConstants.Rdf.Type),
+                    startPosition = standoffNodes(OntologyConstants.KnoraBase.StandoffTagHasStart).toInt,
+                    endPosition = standoffNodes(OntologyConstants.KnoraBase.StandoffTagHasEnd).toInt,
+                    dataType = standoffEntities.standoffClassEntityInfoMap(standoffNodes(OntologyConstants.Rdf.Type)).dataType,
+                    startIndex = standoffNodes(OntologyConstants.KnoraBase.StandoffTagHasStartIndex).toInt,
+                    endIndex = standoffNodes.get(OntologyConstants.KnoraBase.StandoffTagHasEndIndex) match {
+                        case Some(endIndex: String) => Some(endIndex.toInt)
+                        case None => None
+                    },
+                    uuid = standoffNodes(OntologyConstants.KnoraBase.StandoffTagHasUUID),
+                    originalXMLID = standoffNodes.get(OntologyConstants.KnoraBase.StandoffTagHasOriginalXMLID),
+                    startParentIndex = standoffNodes.get(OntologyConstants.KnoraBase.StandoffTagHasStartParent) match {
+                        // translate standoff node IRI to index
+                        case Some(startParentIri: IRI) => Some(standoffAssertions(startParentIri)(OntologyConstants.KnoraBase.StandoffTagHasStartIndex).toInt)
+                        case None => None
+                    },
+                    endParentIndex = standoffNodes.get(OntologyConstants.KnoraBase.StandoffTagHasEndParent) match {
+                        // translate standoff node IRI to index
+                        case Some(endParentIri: IRI) => Some(standoffAssertions(endParentIri)(OntologyConstants.KnoraBase.StandoffTagHasStartIndex).toInt)
+                        case None => None
+                    },
+                    attributes = attributes
+                )
+        }.toVector
+
+    }
+
+    /**
       * Converts a sequence of [[StandoffTagAttributeV1]] to a sequence of [[StandoffTagAttribute]].
       *
       * @param mapping    the mapping used to convert standoff property IRIs to XML attribute names.

@@ -27,6 +27,7 @@ import scala.concurrent.Future
 import org.knora.webapi.BadRequestException
 import org.knora.webapi.messages.v1.responder.sipimessages._
 import org.knora.webapi.messages.v1.responder.valuemessages.StillImageFileValueV1
+import org.knora.webapi.responders.Responder
 
 /**
   * Keep track of the temporary files that was written in the route
@@ -48,7 +49,7 @@ object SourcePath {
   * Takes the place of [[SipiResponderV1]] for tests without an actual Sipi server, by returning hard-coded responses
   * simulating responses from Sipi.
   */
-class MockSipiResponderV1 extends ResponderV1 {
+class MockSipiResponderV1 extends Responder {
     /**
       * Imitates the Sipi server by returning a [[SipiResponderConversionResponseV1]] representing an image conversion request.
       *

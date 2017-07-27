@@ -2,7 +2,7 @@ package org.knora.webapi.e2e.v1
 
 import akka.http.scaladsl.model.{ContentTypes, HttpEntity, StatusCodes}
 import org.knora.webapi.ITKnoraLiveSpec
-import org.knora.webapi.messages.v1.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
+import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
 import org.knora.webapi.util.TestingUtilities
 import spray.json._
 

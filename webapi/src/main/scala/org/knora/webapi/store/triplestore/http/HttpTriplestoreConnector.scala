@@ -34,7 +34,7 @@ import org.eclipse.rdf4j.rio.RDFHandler
 import org.eclipse.rdf4j.rio.turtle._
 import org.knora.webapi.SettingsConstants._
 import org.knora.webapi._
-import org.knora.webapi.messages.v1.store.triplestoremessages._
+import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.store.triplestore.RdfDataObjectFactory
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.FakeTriplestore
@@ -108,6 +108,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
         case SparqlSelectRequest(sparql) => future2Message(sender(), sparqlHttpSelect(sparql), log)
         case SparqlConstructRequest(sparql) => future2Message(sender(), sparqlHttpConstruct(sparql), log)
         case SparqlUpdateRequest(sparql) => future2Message(sender(), sparqlHttpUpdate(sparql), log)
+        case SparqlAskRequest(sparql) => future2Message(sender(), sparqlHttpAsk(sparql), log)
         case ResetTriplestoreContent(rdfDataObjects) => future2Message(sender(), resetTripleStoreContent(rdfDataObjects), log)
         case DropAllTriplestoreContent() => future2Message(sender(), dropAllTriplestoreContent(), log)
         case InsertTriplestoreContent(rdfDataObjects) => future2Message(sender(), insertDataIntoTriplestore(rdfDataObjects), log)
@@ -169,6 +170,8 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
       * @return a [[SparqlConstructResponse]]
       */
     private def sparqlHttpConstruct(sparql: String): Future[SparqlConstructResponse] = {
+        // println(logDelimiter + sparql)
+
         /**
           * Converts a graph in parsed Turtle to a [[SparqlConstructResponse]].
           */
@@ -250,6 +253,21 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
                 getTriplestoreHttpResponse(indexUpdateSparqlString, isUpdate = true)
             }
         } yield SparqlUpdateResponse()
+    }
+
+    /**
+      * Performs a SPARQL ASK query.
+      *
+      * @param sparql the SPARQL ASK query.
+      * @return a [[SparqlAskResponse]].
+      */
+    def sparqlHttpAsk(sparql: String): Future[SparqlAskResponse] = {
+        for {
+            resultString <- getTriplestoreHttpResponse(sparql, isUpdate = false)
+            _ = log.debug("sparqlHttpAsk - resultString: {}", resultString)
+
+            result: Boolean = resultString.parseJson.asJsObject.getFields("boolean").head.convertTo[Boolean]
+        } yield SparqlAskResponse(result)
     }
 
     private def resetTripleStoreContent(rdfDataObjects: Seq[RdfDataObject]): Future[ResetTriplestoreContentACK] = {
@@ -395,7 +413,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
             response <- http.singleRequest(request)
 
             // Convert the HTTP response body to a string.
-            responseString <- response.entity.toStrict(5.seconds).map(_.data.decodeString("UTF-8"))
+            responseString <- response.entity.toStrict(11.seconds).map(_.data.decodeString("UTF-8"))
 
             _ = if (!response.status.isSuccess) {
                 throw TriplestoreResponseException(s"Triplestore responded with HTTP code ${response.status}: $responseString")

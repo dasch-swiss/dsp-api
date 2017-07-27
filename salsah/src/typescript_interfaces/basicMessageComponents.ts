@@ -125,51 +125,6 @@ export module basicMessageComponents {
     }
 
     /**
-     * Represents a Knora project
-     */
-    interface projectItem {
-        /**
-         * Path to the project's files
-         */
-        basepath:string | null;
-
-        /**
-         * Project's short name
-         */
-        shortname:string;
-
-        /**
-         * Description of the project
-         */
-        description:string | null;
-
-        /**
-         * The project's logo
-         */
-        logo:string | null;
-
-        /**
-         * The project's IRI
-         */
-        id:KnoraIRI;
-
-        /**
-         * Keywords describing the project
-         */
-        keywords:string | null;
-
-        /**
-         * obsolete
-         */
-        rights:KnoraRights | null;
-
-        /**
-         * Project's long name
-         */
-        longname:string;
-    }
-
-    /**
      * Represents a text with markup.
      */
     interface richtext {
