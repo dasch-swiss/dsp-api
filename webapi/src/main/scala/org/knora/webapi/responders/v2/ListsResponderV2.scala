@@ -27,6 +27,7 @@ import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v2.responder.listmessages._
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.util.ActorUtil._
+import org.knora.webapi.util.MessageUtil
 
 import scala.annotation.tailrec
 import scala.collection.breakOut
@@ -165,7 +166,7 @@ class ListsResponderV2 extends Responder {
                     )
             }
 
-            // _ = log.debug(s"listNodeInfoGetRequestV2 - listNodeInfo: {}", MessageUtil.toSource(listNodeInfo))
+            _ = log.debug(s"listNodeInfoGetRequestV2 - listNodeInfo: {}", MessageUtil.toSource(listNodeInfo))
 
         } yield ListNodeInfoGetResponseV2(id = listNodeInfo.id, labels = listNodeInfo.labels, comments = listNodeInfo.comments)
     }
