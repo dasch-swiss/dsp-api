@@ -691,6 +691,11 @@ class SalsahPage(pageUrl: String, headless: Boolean) {
     def changeLanguage(lang: String): Unit = {
 
         eventually {
+            driver.switchTo().alert().accept()
+        }
+
+        /*
+        eventually {
             // this workaround is needed for headless testing, because of a problem with alerts in headless mode
             if (headless) {
                 import org.openqa.selenium.JavascriptExecutor
@@ -708,5 +713,7 @@ class SalsahPage(pageUrl: String, headless: Boolean) {
                 driver.switchTo().alert().accept()
             }
         }
+
+        */
     }
 }
