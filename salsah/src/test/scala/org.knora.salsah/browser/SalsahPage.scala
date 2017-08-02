@@ -152,9 +152,7 @@ class SalsahPage(pageUrl: String, headless: Boolean) {
       */
     def getSimpleSearchField: WebElement = {
         eventually {
-            println("getSimpleSearchField start")
             driver.findElement(By.id("simplesearch"))
-            println("getSimpleSearchField end")
         }
     }
 
