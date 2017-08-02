@@ -401,7 +401,7 @@ class SearchAndEditSpec extends SalsahSpec {
 
         }
 
-        "change the publication date of a book" in {
+        "change the publication date of a book" ignore {
 
             page.open()
 
@@ -471,7 +471,7 @@ class SearchAndEditSpec extends SalsahSpec {
 
         }
 
-        "edit the seqnum and the pagenumber of a page" in {
+        "edit the seqnum and the pagenumber of a page" ignore {
 
             page.open()
 
@@ -543,7 +543,7 @@ class SearchAndEditSpec extends SalsahSpec {
 
         }
 
-        "add a new creator to a book" in {
+        "add a new creator to a book" ignore {
 
             page.open()
 
@@ -591,7 +591,7 @@ class SearchAndEditSpec extends SalsahSpec {
 
         }
 
-        "edit the description of a page" ignore {
+        "edit the description of a page" ignore { // was realy ignored
 
             page.open()
 
@@ -633,7 +633,7 @@ class SearchAndEditSpec extends SalsahSpec {
             page.doLogout()
         }
 
-        "change the partof property of a page" in {
+        "change the partof property of a page" ignore {
 
             page.open()
 
@@ -676,7 +676,7 @@ class SearchAndEditSpec extends SalsahSpec {
             page.doLogout()
         }
 
-        "change the season property of a image:bild to summer" in {
+        "change the season property of a image:bild to summer" ignore {
 
             page.open()
 
@@ -725,7 +725,7 @@ class SearchAndEditSpec extends SalsahSpec {
 
         }
 
-        "add a season to a image:bild" in {
+        "add a season to a image:bild" ignore {
 
             page.open()
 
@@ -774,7 +774,7 @@ class SearchAndEditSpec extends SalsahSpec {
 
         }
 
-        "display a compound resource without images" in {
+        "display a compound resource without images" ignore {
 
             page.open()
 
@@ -805,7 +805,6 @@ class SearchAndEditSpec extends SalsahSpec {
             page.doLogout()
 
         }
-
 
         "close the browser" in {
             page.quit()
