@@ -1,3 +1,15 @@
+----------ChromeDriver v2.31 (2017-07-21)----------
+Supports Chrome v58-60
+Resolved issue 1804: Flakiness when retrieving cookies using GetCookies command on Windows [['Pri-1']]
+Resolved issue 1879: Implement /session/{session id}/cookie/{name} command [['Pri-2']]
+Resolved issue 1860: WebDriverException: Message: unknown error: bad inspector message:"" when attempting to get page_source [['Pri-2']]
+Resolved issue 1293: Timed out receiving message from renderer on window.location change [['Pri-2']]
+Resolved issue 1849: ChromeDriver 2.30 AddCookie command uses incorrect default path [['Pri-2']]
+Resolved issue 1256: switchToFrame should throw StaleElementReferenceException in case the element is stale [['Pri-2']]
+Resolved issue 1786: Feature request: change chromeOptions to goog:chromeOptions [['Pri-3']]
+Resolved issue 1772: Chromedriver running against canary chrome w/ headless flag requires XVFB for sendKey interactions [[]]
+Resolved issue 727979: Failed to set Chrome's command line file on device for long command line [['Pri-3']]
+
 ----------ChromeDriver v2.30 (2017-06-07)----------
 Supports Chrome v58-60
 Resolved issue 644: ChromeDriver does not delete the profile & scoped_dir* folders after test exits [['Pri-1']]
@@ -110,3 +122,4 @@ Supports Chrome v43-46
 Resolved issue 1158: Unable to find elements after installing Chrome 44 [['ChromeDriver-2.17', 'OS-All', 'Pri-1']]
 Resolved issue 635: Implement touch actions for android chrome [['OS-Android', 'Pri-2']]
 Resolved issue 1194: unknown error: cannot determine loading status from disconnected: received Inspector.detached event [[]]
+
