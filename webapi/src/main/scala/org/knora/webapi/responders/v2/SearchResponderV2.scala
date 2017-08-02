@@ -22,16 +22,16 @@ package org.knora.webapi.responders.v2
 
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
+import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages.{SparqlConstructRequest, SparqlConstructResponse}
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
+import org.knora.webapi.messages.v1.responder.valuemessages.JulianDayNumberValueV1
 import org.knora.webapi.messages.v2.responder._
 import org.knora.webapi.messages.v2.responder.searchmessages._
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.search.v2.{ApiV2Schema, _}
-import org.knora.webapi.util.{ConstructResponseUtilV2, DateUtilV1, DateUtilV2, InputValidation}
-import org.knora.webapi._
-import org.knora.webapi.messages.v1.responder.valuemessages.JulianDayNumberValueV1
+import org.knora.webapi.util.{ConstructResponseUtilV2, DateUtilV1, InputValidation}
 
 import scala.concurrent.Future
 
@@ -68,14 +68,15 @@ class SearchResponderV2 extends Responder {
 
     }
 
-    private def newExtendedSearchV2(simpleConstructQuery: SimpleConstructQuery, apiSchema: ApiV2Schema.Value = ApiV2Schema.SIMPLE, userProfile: UserProfileV1): Future[ReadResourcesSequenceV2] = {
+    private def newExtendedSearchV2(constructQuery: ConstructQuery, apiSchema: ApiV2Schema.Value = ApiV2Schema.SIMPLE, userProfile: UserProfileV1): Future[ReadResourcesSequenceV2] = {
         for {
             typeInspector <- FastFuture.successful(new ExplicitTypeInspectorV2(apiSchema))
-            whereClauseWithoutAnnotations: SimpleWhereClause = typeInspector.removeTypeAnnotations(simpleConstructQuery.whereClause)
-            typeInspectionResultWhere: TypeInspectionResultV2 = typeInspector.inspectTypes(simpleConstructQuery.whereClause)
+            whereClauseWithoutAnnotations: WhereClause = typeInspector.removeTypeAnnotations(constructQuery.whereClause)
+            typeInspectionResultWhere: TypeInspectionResultV2 = typeInspector.inspectTypes(constructQuery.whereClause)
 
-            searchSparql = ""
+            // TODO: transform the construct query as needed.
 
+            searchSparql = constructQuery.toSparql
             searchResponse: SparqlConstructResponse <- (storeManager ? SparqlConstructRequest(searchSparql)).mapTo[SparqlConstructResponse]
 
             // separate resources and value objects
@@ -91,7 +92,7 @@ class SearchResponderV2 extends Responder {
       * @param userProfile          the profile of the client making the request.
       * @return a [[ReadResourcesSequenceV2]] representing the resources that have been found.
       */
-    private def extendedSearchV2(simpleConstructQuery: SimpleConstructQuery, apiSchema: ApiV2Schema.Value = ApiV2Schema.SIMPLE, userProfile: UserProfileV1): Future[ReadResourcesSequenceV2] = {
+    private def extendedSearchV2(simpleConstructQuery: ConstructQuery, apiSchema: ApiV2Schema.Value = ApiV2Schema.SIMPLE, userProfile: UserProfileV1): Future[ReadResourcesSequenceV2] = {
 
         /**
           * Converts a [[FilterExpression]] to an [[ExtendedSearchFilterExpression]].
@@ -148,8 +149,8 @@ class SearchResponderV2 extends Responder {
                 obj = obj,
                 disableInference = disableInference || (pred match { // disable inference if `disableInference` is set to true or if the statement's predicate is a variable.
                     case variable: ExtendedSearchVar => true // disable inference to get the actual IRI for the predicate and not an inferred information
-                        // TODO: this has the effect that subproperties are not found by the query!
-                        // TODO: I think this may be omitted since we can get the actual property from the reification (ConstructResponseUtilV2 does not look at subproperties of hasLinkTo, this property is needed to get information about the resource referred to)
+                    // TODO: this has the effect that subproperties are not found by the query!
+                    // TODO: I think this may be omitted since we can get the actual property from the reification (ConstructResponseUtilV2 does not look at subproperties of hasLinkTo, this property is needed to get information about the resource referred to)
                     case _ => false
                 })
             )
@@ -195,7 +196,7 @@ class SearchResponderV2 extends Responder {
         }
 
         val typeInspector = new ExplicitTypeInspectorV2(apiSchema)
-        val whereClauseWithoutAnnotations: SimpleWhereClause = typeInspector.removeTypeAnnotations(simpleConstructQuery.whereClause)
+        val whereClauseWithoutAnnotations: WhereClause = typeInspector.removeTypeAnnotations(simpleConstructQuery.whereClause)
         val typeInspectionResultWhere: TypeInspectionResultV2 = typeInspector.inspectTypes(simpleConstructQuery.whereClause)
 
         val extendedSearchConstructClauseStatementPatterns: Seq[ExtendedSearchStatementPattern] = convertSearchParserConstructPatternsToExtendedSearchPatterns(simpleConstructQuery.constructClause.statements)
@@ -609,8 +610,8 @@ class SearchResponderV2 extends Responder {
         /**
           * Represents the originally given statement in the query provided by the user and statements that were additionally cretaed based on the given type annotations.
           *
-          * @param additionalStatements statements created based on the given type annotations.
-          * @param typeInfoKeysProcessed  a Set of keys that indicates which type info entries already habe been processed.
+          * @param additionalStatements  statements created based on the given type annotations.
+          * @param typeInfoKeysProcessed a Set of keys that indicates which type info entries already habe been processed.
           */
         case class AdditionalStatements(additionalStatements: Vector[ExtendedSearchStatementPattern] = Vector.empty[ExtendedSearchStatementPattern], additionalFilterPatterns: Vector[ExtendedSearchFilterPattern] = Vector.empty[ExtendedSearchFilterPattern], typeInfoKeysProcessed: Set[TypeableEntityV2] = Set.empty[TypeableEntityV2])
 
@@ -624,8 +625,8 @@ class SearchResponderV2 extends Responder {
         /**
           * Based on the given type annotations, convert the given statement.
           *
-          * @param statementP                      the given statement.
-          * @param index                           the current index (used to create unique variable names).
+          * @param statementP                        the given statement.
+          * @param index                             the current index (used to create unique variable names).
           * @param typeInfoKeysProcessedInStatements a Set of keys that indicates which type info entries already habe been processed.
           * @return a sequence of [[AdditionalStatements]].
           */
@@ -857,8 +858,8 @@ class SearchResponderV2 extends Responder {
           * Processes a given Filter expression [[ExtendedSearchFilterExpression]].
           * Given Filter expression may have to be converted to more complex expressions (e.g., in case of a date).
           *
-          * @param acc the query patterns to add to.
-          * @param index the current index used to create unqiue varibale names.
+          * @param acc              the query patterns to add to.
+          * @param index            the current index used to create unqiue varibale names.
           * @param filterExpression the Filter expression to be processed.
           * @return a [[ConvertedQueryPatterns]] containing the processed Filter expression and additional statements.
           */

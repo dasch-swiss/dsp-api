@@ -9,14 +9,14 @@ import org.scalatest.{Matchers, WordSpec}
 class TypeInspectorV2Spec extends WordSpec with Matchers {
     "TypeInspectorV2" should {
         "get type information from a simple query" in {
-            val parsedQuery = SearchParserV2.parseSearchQuery(SearchParserV2Spec.SimpleSparqlConstructQueryWithExplicitTypeAnnotations)
+            val parsedQuery = SearchParserV2.parseSearchQuery(SearchParserV2Spec.SparqlConstructQueryWithExplicitTypeAnnotations)
             val typeInspector = new ExplicitTypeInspectorV2(ApiV2Schema.SIMPLE)
             val typeInspectionResult = typeInspector.inspectTypes(parsedQuery.whereClause)
             typeInspectionResult should ===(SimpleTypeInspectionResult)
         }
 
         "remove the type annotations from a WHERE clause" in {
-            val parsedQuery = SearchParserV2.parseSearchQuery(SearchParserV2Spec.SimpleSparqlConstructQueryWithExplicitTypeAnnotations)
+            val parsedQuery = SearchParserV2.parseSearchQuery(SearchParserV2Spec.SparqlConstructQueryWithExplicitTypeAnnotations)
             val typeInspector = new ExplicitTypeInspectorV2(ApiV2Schema.SIMPLE)
             val whereClauseWithoutAnnotations = typeInspector.removeTypeAnnotations(parsedQuery.whereClause)
             whereClauseWithoutAnnotations should ===(whereClauseWithoutAnnotations)
@@ -31,7 +31,7 @@ class TypeInspectorV2Spec extends WordSpec with Matchers {
         TypeableIriV2(iri = "http://rdfh.ch/beol/6edJwtTSR8yjAWnYmt6AtA") -> NonPropertyTypeInfoV2(typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource")
     ))
 
-    val WhereClauseWithoutAnnotations = SimpleWhereClause(patterns = Vector(
+    val WhereClauseWithoutAnnotations = WhereClause(patterns = Vector(
         StatementPattern(
             obj = IriRef(iri = "http://api.knora.org/ontology/beol/simple/v2#letter"),
             pred = IriRef(iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"),

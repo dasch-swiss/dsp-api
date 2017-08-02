@@ -21,15 +21,21 @@
 package org.knora.webapi.util.search.v2
 
 import org.eclipse.rdf4j
-import org.eclipse.rdf4j.query.algebra
+import org.eclipse.rdf4j.query.{MalformedQueryException, algebra}
 import org.eclipse.rdf4j.query.algebra._
 import org.eclipse.rdf4j.query.parser.ParsedQuery
 import org.eclipse.rdf4j.query.parser.sparql._
-import org.eclipse.rdf4j.query.MalformedQueryException
 import org.knora.webapi.util.InputValidation
 import org.knora.webapi.{OntologyConstants, _}
 
 import scala.collection.JavaConverters._
+
+/**
+  * Represents something that can generate SPARQL source code.
+  */
+sealed trait SparqlGenerator {
+    def toSparql: String
+}
 
 /**
   * Represents something that can be the subject, predicate, or object of a triple pattern in a query.
@@ -41,7 +47,9 @@ sealed trait Entity extends FilterExpression
   *
   * @param variableName the name of the variable.
   */
-case class QueryVariable(variableName: String) extends Entity
+case class QueryVariable(variableName: String) extends Entity {
+    def toSparql: String = s"?$variableName"
+}
 
 /**
   * Represents an IRI in a query.
@@ -49,6 +57,8 @@ case class QueryVariable(variableName: String) extends Entity
   * @param iri the IRI.
   */
 case class IriRef(iri: IRI) extends Entity {
+    def toSparql: String = s"<$iri>"
+
     if (InputValidation.isInternalEntityIri(iri)) {
         throw SparqlSearchException(s"Internal ontology entity IRI not allowed in search query: $iri")
     }
@@ -60,12 +70,14 @@ case class IriRef(iri: IRI) extends Entity {
   * @param value    the literal value.
   * @param datatype the value's XSD type IRI.
   */
-case class XsdLiteral(value: String, datatype: IRI) extends Entity
+case class XsdLiteral(value: String, datatype: IRI) extends Entity {
+    def toSparql: String = "\"" + value + "\"^^<" + datatype + ">"
+}
 
 /**
   * Represents a statement pattern or block pattern in a query.
   */
-sealed trait QueryPattern extends Ordered[QueryPattern]
+sealed trait QueryPattern extends SparqlGenerator
 
 /**
   * Represents a statement pattern in a query.
@@ -74,13 +86,19 @@ sealed trait QueryPattern extends Ordered[QueryPattern]
   * @param pred the predicate of the statement.
   * @param obj  the object of the statement.
   */
-case class StatementPattern(subj: Entity, pred: Entity, obj: Entity) extends QueryPattern {
-    override def compare(that: QueryPattern): Int = {
-        that match {
-            case _: StatementPattern => 0
-            case _: UnionPattern => -1
-            case _: OptionalPattern => -1
-            case _: FilterPattern => -1
+case class StatementPattern(subj: Entity, pred: Entity, obj: Entity, namedGraph: Option[IriRef] = None) extends QueryPattern {
+    def toSparql: String = {
+        val triple = s"${subj.toSparql} ${pred.toSparql} ${obj.toSparql} ."
+
+        namedGraph match {
+            case Some(graph) =>
+                s"""GRAPH ${graph.toSparql} {
+                   |    $triple
+                   |}
+                   |""".stripMargin
+
+            case None =>
+                triple + "\n"
         }
     }
 }
@@ -88,7 +106,7 @@ case class StatementPattern(subj: Entity, pred: Entity, obj: Entity) extends Que
 /**
   * Represents an expression that can be used in a FILTER.
   */
-sealed trait FilterExpression
+sealed trait FilterExpression extends SparqlGenerator
 
 /**
   * Represents a comparison expression in a FILTER.
@@ -97,7 +115,9 @@ sealed trait FilterExpression
   * @param operator the operator.
   * @param rightArg the right argument.
   */
-case class CompareExpression(leftArg: FilterExpression, operator: String, rightArg: FilterExpression) extends FilterExpression
+case class CompareExpression(leftArg: FilterExpression, operator: String, rightArg: FilterExpression) extends FilterExpression {
+    def toSparql: String = s"(${leftArg.toSparql} $operator ${rightArg.toSparql})"
+}
 
 /**
   * Represents an AND expression in a filter.
@@ -105,7 +125,9 @@ case class CompareExpression(leftArg: FilterExpression, operator: String, rightA
   * @param leftArg  the left argument.
   * @param rightArg the right argument.
   */
-case class AndExpression(leftArg: FilterExpression, rightArg: FilterExpression) extends FilterExpression
+case class AndExpression(leftArg: FilterExpression, rightArg: FilterExpression) extends FilterExpression {
+    def toSparql: String = s"(${leftArg.toSparql} && ${rightArg.toSparql})"
+}
 
 /**
   * Represents an OR expression in a filter.
@@ -113,7 +135,9 @@ case class AndExpression(leftArg: FilterExpression, rightArg: FilterExpression) 
   * @param leftArg  the left argument.
   * @param rightArg the right argument.
   */
-case class OrExpression(leftArg: FilterExpression, rightArg: FilterExpression) extends FilterExpression
+case class OrExpression(leftArg: FilterExpression, rightArg: FilterExpression) extends FilterExpression {
+    def toSparql: String = s"(${leftArg.toSparql} || ${rightArg.toSparql})"
+}
 
 /**
   * Represents a FILTER pattern in a query.
@@ -121,14 +145,7 @@ case class OrExpression(leftArg: FilterExpression, rightArg: FilterExpression) e
   * @param expression the expression in the FILTER.
   */
 case class FilterPattern(expression: FilterExpression) extends QueryPattern {
-    override def compare(that: QueryPattern): Int = {
-        that match {
-            case _: StatementPattern => 1
-            case _: UnionPattern => 1
-            case _: OptionalPattern => 1
-            case _: FilterPattern => 0
-        }
-    }
+    def toSparql: String = s"FILTER(${expression.toSparql})\n"
 }
 
 /**
@@ -137,13 +154,17 @@ case class FilterPattern(expression: FilterExpression) extends QueryPattern {
   * @param blocks the blocks of patterns contained in the UNION.
   */
 case class UnionPattern(blocks: Seq[Seq[QueryPattern]]) extends QueryPattern {
-    override def compare(that: QueryPattern): Int = {
-        that match {
-            case _: StatementPattern => 1
-            case _: UnionPattern => 0
-            case _: OptionalPattern => -1
-            case _: FilterPattern => -1
+    def toSparql: String = {
+        val blocksAsStrings = blocks.map {
+            block: Seq[QueryPattern] =>
+                val queryPatternStrings: Seq[String] = block.map {
+                    queryPattern: QueryPattern => queryPattern.toSparql
+                }
+
+                queryPatternStrings.mkString
         }
+
+        "{\n" + blocksAsStrings.mkString("} UNION {\n") + "}\n"
     }
 }
 
@@ -153,49 +174,53 @@ case class UnionPattern(blocks: Seq[Seq[QueryPattern]]) extends QueryPattern {
   * @param patterns the patterns in the OPTIONAL block.
   */
 case class OptionalPattern(patterns: Seq[QueryPattern]) extends QueryPattern {
-    override def compare(that: QueryPattern): Int = {
-        that match {
-            case _: StatementPattern => 1
-            case _: UnionPattern => 1
-            case _: OptionalPattern => 0
-            case _: FilterPattern => -1
+    def toSparql: String = {
+        val queryPatternStrings: Seq[String] = patterns.map {
+            queryPattern: QueryPattern => queryPattern.toSparql
         }
+
+        "OPTIONAL {\n" + queryPatternStrings.mkString + "}\n"
     }
 }
 
 /**
-  * Represents a simple CONSTRUCT clause in a query.
+  * Represents a CONSTRUCT clause in a query.
   *
   * @param statements the statements in the CONSTRUCT clause.
   */
-case class SimpleConstructClause(statements: Seq[StatementPattern])
+case class ConstructClause(statements: Seq[StatementPattern]) extends SparqlGenerator {
+    def toSparql: String = "CONSTRUCT {\n" + statements.map(_.toSparql).mkString + "} "
+}
 
 /**
-  * Represents a simple WHERE clause in a query.
+  * Represents a WHERE clause in a query.
   *
   * @param patterns the patterns in the WHERE clause.
   */
-case class SimpleWhereClause(patterns: Seq[QueryPattern])
+case class WhereClause(patterns: Seq[QueryPattern]) extends SparqlGenerator {
+    def toSparql: String = "WHERE {\n" + patterns.map(_.toSparql).mkString + "}\n"
+}
 
 /**
-  * Represents a simple CONSTRUCT query submitted to the Knora API.
+  * Represents a CONSTRUCT query.
   *
   * @param constructClause the CONSTRUCT clause.
   * @param whereClause     the WHERE clause.
   */
-case class SimpleConstructQuery(constructClause: SimpleConstructClause, whereClause: SimpleWhereClause)
+case class ConstructQuery(constructClause: ConstructClause, whereClause: WhereClause) extends SparqlGenerator {
+    def toSparql: String = constructClause.toSparql + whereClause.toSparql
+}
 
 
 /**
-  * Parses the client's SPARQL query for an extended search in API v2. The SPARQL that is accepted is restricted:
+  * Parses a SPARQL query. The SPARQL that is accepted is restricted:
   *
   * - The query must be a CONSTRUCT query.
   * - It must use no internal ontologies.
-  * - The CONSTRUCT clause may contain only triple patterns.
-  * - The WHERE clause may contain only triple patterns, FILTER, and UNION.
+  * - The CONSTRUCT clause may contain only quad patterns.
+  * - The WHERE clause may contain only quad patterns, FILTER, and UNION.
   * - No function calls are allowed.
-  * - A UNION may not contain a nested UNION.
-  * - The condition of a FILTER must have a variable as the left argument and a literal as the right argument.
+  * - A UNION or OPTIONAL may not contain a nested UNION or OPTIONAL.
   */
 object SearchParserV2 {
     // This implementation uses the RDF4J SPARQL parser.
@@ -203,13 +228,13 @@ object SearchParserV2 {
     private val sparqlParser = sparqlParserFactory.getParser
 
     /**
-      * Given a string representation of a simple SPARQL CONSTRUCT query, returns a [[SimpleConstructQuery]].
+      * Given a string representation of a simple SPARQL CONSTRUCT query, returns a [[ConstructQuery]].
       *
       * @param query the SPARQL string to be parsed.
-      * @return a [[SimpleConstructQuery]].
+      * @return a [[ConstructQuery]].
       */
-    def parseSearchQuery(query: String): SimpleConstructQuery = {
-        val visitor = new SimpleConstructQueryModelVisitor
+    def parseSearchQuery(query: String): ConstructQuery = {
+        val visitor = new ConstructQueryModelVisitor
 
         val parsedQuery = try {
             sparqlParser.parseQuery(query, OntologyConstants.KnoraApi.KnoraApiOntologyIri + OntologyConstants.KnoraApiV2Simplified.VersionSegment + "#")
@@ -218,13 +243,13 @@ object SearchParserV2 {
         }
 
         parsedQuery.getTupleExpr.visit(visitor)
-        visitor.makeSimpleConstructQuery
+        visitor.makeConstructQuery
     }
 
     /**
-      * An RDF4J [[QueryModelVisitor]] that converts a [[ParsedQuery]] into a [[SimpleConstructQuery]].
+      * An RDF4J [[QueryModelVisitor]] that converts a [[ParsedQuery]] into a [[ConstructQuery]].
       */
-    class SimpleConstructQueryModelVisitor extends QueryModelVisitor[SparqlSearchException] {
+    class ConstructQueryModelVisitor extends QueryModelVisitor[SparqlSearchException] {
 
         // Represents a statement pattern in the CONSTRUCT clause. Each string could be a variable name or a parser-generated
         // constant. These constants can be replaced by their values only after valueConstants is populated.
@@ -240,12 +265,12 @@ object SearchParserV2 {
         private val wherePatterns: collection.mutable.ArrayBuffer[QueryPattern] = collection.mutable.ArrayBuffer.empty[QueryPattern]
 
         /**
-          * After this visitor has visited the parse tree, this method returns a [[SimpleConstructQuery]] representing
+          * After this visitor has visited the parse tree, this method returns a [[ConstructQuery]] representing
           * the query that was parsed.
           *
-          * @return a [[SimpleConstructQuery]].
+          * @return a [[ConstructQuery]].
           */
-        def makeSimpleConstructQuery: SimpleConstructQuery = {
+        def makeConstructQuery: ConstructQuery = {
             /**
               * Given a source name used in a [[ProjectionElem]], checks whether it's the name of a constant whose
               * literal value was saved when the [[ExtensionElem]] nodes were processed. If so, returns a [[Var]] representing
@@ -273,25 +298,26 @@ object SearchParserV2 {
 
             // Convert each ConstructStatementWithConstants to a StatementPattern for use in the CONSTRUCT clause.
             val constructStatements: Seq[StatementPattern] = constructStatementsWithConstants.toVector.map {
-                constructStatementWithConstant =>
+                (constructStatementWithConstant: ConstructStatementWithConstants) =>
                     StatementPattern(
                         subj = makeEntity(nameToVar(constructStatementWithConstant.subj)),
                         pred = makeEntity(nameToVar(constructStatementWithConstant.pred)),
-                        obj = makeEntity(nameToVar(constructStatementWithConstant.obj))
+                        obj = makeEntity(nameToVar(constructStatementWithConstant.obj)),
+                        namedGraph = None
                     )
             }
 
-            SimpleConstructQuery(
-                constructClause = SimpleConstructClause(statements = constructStatements),
-                whereClause = SimpleWhereClause(patterns = getOrderedWherePatterns)
+            ConstructQuery(
+                constructClause = ConstructClause(statements = constructStatements),
+                whereClause = WhereClause(patterns = getWherePatterns)
             )
         }
 
         /**
-          * Reorders the patterns in the WHERE clause by putting the FILTERs at the end.
+          * Returns the WHERE patterns found in the query.
           */
-        private def getOrderedWherePatterns: Seq[QueryPattern] = {
-            wherePatterns.sorted.toVector
+        private def getWherePatterns: Seq[QueryPattern] = {
+            wherePatterns.toVector
         }
 
         private def unsupported(node: QueryModelNode) {
@@ -324,7 +350,16 @@ object SearchParserV2 {
             val subj: Entity = makeEntity(node.getSubjectVar)
             val pred: Entity = makeEntity(node.getPredicateVar)
             val obj: Entity = makeEntity(node.getObjectVar)
-            wherePatterns.append(StatementPattern(subj = subj, pred = pred, obj = obj))
+
+            val namedGraph = Option(node.getContextVar).map {
+                v =>
+                    makeEntity(v) match {
+                        case iriRef: IriRef => iriRef
+                        case other => throw SparqlSearchException(s"Invalid named graph: $other")
+                    }
+            }
+
+            wherePatterns.append(StatementPattern(subj = subj, pred = pred, obj = obj, namedGraph = namedGraph))
         }
 
         override def meet(node: Str): Unit = {
@@ -344,7 +379,7 @@ object SearchParserV2 {
         private def checkBlockPatterns(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
             for (pattern <- patterns) {
                 pattern match {
-                    case _: UnionPattern | _: OptionalPattern => throw SparqlSearchException("Nested blocks are not allowed in search queries")
+                    case _: UnionPattern | _: OptionalPattern => throw SparqlSearchException(s"Nested blocks are not allowed in search queries, found $pattern")
                     case _ => ()
                 }
             }
@@ -357,9 +392,9 @@ object SearchParserV2 {
             val leftPatterns: Seq[QueryPattern] = node.getLeftArg match {
                 case _: Union => throw SparqlSearchException("Nested UNIONs are not allowed in search queries")
                 case otherLeftArg =>
-                    val leftArgVisitor = new SimpleConstructQueryModelVisitor
+                    val leftArgVisitor = new ConstructQueryModelVisitor
                     otherLeftArg.visit(leftArgVisitor)
-                    checkBlockPatterns(leftArgVisitor.getOrderedWherePatterns)
+                    checkBlockPatterns(leftArgVisitor.getWherePatterns)
             }
 
             // Get the block(s) of query patterns on the right side of the UNION.
@@ -367,9 +402,9 @@ object SearchParserV2 {
                 case rightArgUnion: Union =>
                     // If the right arg is also a UNION, recursively get its blocks. This represents a sequence of
                     // UNIONs rather than a nested UNION.
-                    val rightArgVisitor = new SimpleConstructQueryModelVisitor
+                    val rightArgVisitor = new ConstructQueryModelVisitor
                     rightArgUnion.visit(rightArgVisitor)
-                    val rightWherePatterns = rightArgVisitor.getOrderedWherePatterns
+                    val rightWherePatterns = rightArgVisitor.getWherePatterns
 
                     if (rightWherePatterns.size > 1) {
                         throw SparqlSearchException(s"Right argument of UNION is not a UnionPattern as expected: $rightWherePatterns")
@@ -381,9 +416,9 @@ object SearchParserV2 {
                     }
 
                 case otherRightArg =>
-                    val rightArgVisitor = new SimpleConstructQueryModelVisitor
+                    val rightArgVisitor = new ConstructQueryModelVisitor
                     otherRightArg.visit(rightArgVisitor)
-                    Seq(checkBlockPatterns(rightArgVisitor.getOrderedWherePatterns))
+                    Seq(checkBlockPatterns(rightArgVisitor.getWherePatterns))
             }
 
             wherePatterns.append(UnionPattern(Seq(leftPatterns) ++ rightPatterns))
@@ -681,10 +716,12 @@ object SearchParserV2 {
                 }
             }
 
+            // Visit the nodes that the filter applies to.
+            node.getArg.visit(this)
+
+            // Add the FILTER.
             val filterExpression: FilterExpression = makeFilterExpression(node.getCondition)
             wherePatterns.append(FilterPattern(expression = filterExpression))
-
-            node.visitChildren(this)
         }
 
         override def meet(node: FunctionCall): Unit = {
@@ -744,9 +781,13 @@ object SearchParserV2 {
         }
 
         override def meet(node: LeftJoin): Unit = {
-            val optionalVisitor = new SimpleConstructQueryModelVisitor
-            node.visitChildren(optionalVisitor)
-            wherePatterns.append(OptionalPattern(checkBlockPatterns(optionalVisitor.getOrderedWherePatterns)))
+            // Visit the nodes that aren't in the OPTIONAL.
+            node.getLeftArg.visit(this)
+
+            // Visit the nodes that are in the OPTIONAL.
+            val rightArgVisitor = new ConstructQueryModelVisitor
+            node.getRightArg.visit(rightArgVisitor)
+            wherePatterns.append(OptionalPattern(checkBlockPatterns(rightArgVisitor.getWherePatterns)))
         }
 
         override def meet(node: LangMatches): Unit = {

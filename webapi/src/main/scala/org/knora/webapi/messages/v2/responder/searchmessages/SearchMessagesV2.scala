@@ -23,7 +23,7 @@ package org.knora.webapi.messages.v2.responder.searchmessages
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v2.responder._
-import org.knora.webapi.util.search.v2.SimpleConstructQuery
+import org.knora.webapi.util.search.v2.ConstructQuery
 
 /**
   * An abstract trait for messages that can be sent to `SearchResponderV2`.
@@ -49,7 +49,7 @@ case class FulltextSearchGetRequestV2(searchValue: String,
   * @param constructQuery a Sparql construct query provided by the client.
   * @param userProfile the profile of the user making the request.
   */
-case class ExtendedSearchGetRequestV2(constructQuery: SimpleConstructQuery,
+case class ExtendedSearchGetRequestV2(constructQuery: ConstructQuery,
                                       userProfile: UserProfileV1) extends SearchResponderRequestV2
 
 

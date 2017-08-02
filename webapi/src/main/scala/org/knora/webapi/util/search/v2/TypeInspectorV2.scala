@@ -89,7 +89,7 @@ sealed trait TypeInspectorV2 {
       * @param whereClause the SPARQL WHERE clause.
       * @return information about the types that were found in the query.
       */
-    def inspectTypes(whereClause: SimpleWhereClause): TypeInspectionResultV2
+    def inspectTypes(whereClause: WhereClause): TypeInspectionResultV2
 }
 
 /**
@@ -156,7 +156,7 @@ class ExplicitTypeInspectorV2(apiType: ApiV2Schema.Value) extends TypeInspectorV
         throw NotImplementedException("Type inspection with value objects is not yet implemented")
     }
 
-    def inspectTypes(whereClause: SimpleWhereClause): TypeInspectionResultV2 = {
+    def inspectTypes(whereClause: WhereClause): TypeInspectionResultV2 = {
         val maybeTypedEntities = collection.mutable.Map.empty[TypeableEntityV2, Option[SparqlEntityTypeInfoV2]]
 
         // Make a set of all the entities to be typed in the WHERE clause.
@@ -206,8 +206,8 @@ class ExplicitTypeInspectorV2(apiType: ApiV2Schema.Value) extends TypeInspectorV
       * @param whereClause the WHERE clause to be filtered.
       * @return the same WHERE clause, minus any type annotations.
       */
-    def removeTypeAnnotations(whereClause: SimpleWhereClause): SimpleWhereClause = {
-        SimpleWhereClause(removeTypeAnnotationsFromPatterns(whereClause.patterns))
+    def removeTypeAnnotations(whereClause: WhereClause): WhereClause = {
+        WhereClause(removeTypeAnnotationsFromPatterns(whereClause.patterns))
     }
 
     /**
