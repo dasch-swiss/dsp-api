@@ -56,24 +56,21 @@ jobs:
     #    - cd $TRAVIS_BUILD_DIR/triplestores/fuseki/ && ./fuseki-server &
     #    # start the built-in webapi server tests
     #    - cd $TRAVIS_BUILD_DIR/webapi/ && sbt test
-    #- stage: test
-    #  script:
-    #    #- "export DISPLAY=:99.0"
-    #    #- "sh -e /etc/init.d/xvfb start"
-    #    #- sleep 3 # give xvfb some time to start
-    #    # start fuseki
-    #    - cd $TRAVIS_BUILD_DIR/triplestores/fuseki/ && ./fuseki-server &
-    #    # start the sipi container (with test config)
-    #    - docker run -d --add-host webapihost:$DOCKERHOST -v /tmp:/tmp -v $HOME:$HOME -p 1024:1024 $SIPI_REPO:develop /sipi/local/bin/sipi --config=/sipi/config/sipi.knora-test-docker-config.lua
-    #    # start the webapi and salsah server
-    #    - cd $TRAVIS_BUILD_DIR/webapi/ && sbt "run allowResetTriplestoreContentOperationOverHTTP" &
-    #    - cd $TRAVIS_BUILD_DIR/salsah/ && sbt run &
-    #    # wait for the webapi server to start before we proceed with running the salsah tests
-    #    - until netstat -an 2>/dev/null | grep '3333.*LISTEN'; do true; done
-    #    # unzip chromedriver
-    #    - cd $TRAVIS_BUILD_DIR/salsah/lib/chromedriver/ && unzip chromedriver_linux64.zip
-    #    # start built-in salsah browser tests
-    #    - cd $TRAVIS_BUILD_DIR/salsah/ && sbt headless:test
+    - stage: test
+      script:
+        # start fuseki
+        - cd $TRAVIS_BUILD_DIR/triplestores/fuseki/ && ./fuseki-server &
+        # start the sipi container (with test config)
+        - docker run -d --add-host webapihost:$DOCKERHOST -v /tmp:/tmp -v $HOME:$HOME -p 1024:1024 $SIPI_REPO:develop /sipi/local/bin/sipi --config=/sipi/config/sipi.knora-test-docker-config.lua
+        # start the webapi and salsah server
+        - cd $TRAVIS_BUILD_DIR/webapi/ && sbt "run allowResetTriplestoreContentOperationOverHTTP" &
+        - cd $TRAVIS_BUILD_DIR/salsah/ && sbt run &
+        # wait for the webapi server to start before we proceed with running the salsah tests
+        - until netstat -an 2>/dev/null | grep '3333.*LISTEN'; do true; done
+        # unzip chromedriver
+        - cd $TRAVIS_BUILD_DIR/salsah/lib/chromedriver/ && unzip chromedriver_linux64.zip
+        # start built-in salsah browser tests
+        - cd $TRAVIS_BUILD_DIR/salsah/ && sbt headless:test
     - stage: publish
       script:
         - docker login -u $DOCKER_USER -p $DOCKER_PASS
