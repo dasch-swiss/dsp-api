@@ -97,20 +97,20 @@ class SalsahPage(pageUrl: String, headless: Boolean) {
       * @param fullName user's full name
       */
     def doLogin(email: String, password: String, fullName: String): Unit = {
-        val loginButton = driver.findElement(By.id("dologin"))
-        loginButton.click()
-
-        val userInput = driver.findElement(By.id("user_id"))
-        val passwordInput = driver.findElement(By.id("password"))
-        val sendCredentials = driver.findElement(By.id("login_button"))
-
-        userInput.sendKeys(email)
-
-        passwordInput.sendKeys("test")
-
-        sendCredentials.click()
-
         eventually {
+            val loginButton = driver.findElement(By.id("dologin"))
+            loginButton.click()
+
+            val userInput = driver.findElement(By.id("user_id"))
+            val passwordInput = driver.findElement(By.id("password"))
+            val sendCredentials = driver.findElement(By.id("login_button"))
+
+            userInput.sendKeys(email)
+
+            passwordInput.sendKeys("test")
+
+            sendCredentials.click()
+
             driver.findElement(By.xpath("//*[@id=\"userctrl\"]")).getText.contains(fullName)
             driver.findElement(By.id("dologout"))
         }
@@ -120,10 +120,10 @@ class SalsahPage(pageUrl: String, headless: Boolean) {
       * Logs the user out.
       */
     def doLogout(): Unit = {
-        val logoutButton = driver.findElement(By.id("dologout"))
-        logoutButton.click()
-
         eventually {
+            val logoutButton = driver.findElement(By.id("dologout"))
+            logoutButton.click()
+
             val logoutConfirmButton = driver.findElement(By.id("logout_button"))
             logoutConfirmButton.click()
         }
