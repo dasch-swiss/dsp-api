@@ -74,12 +74,7 @@ class SearchResponderV2 extends Responder {
             whereClauseWithoutAnnotations: SimpleWhereClause = typeInspector.removeTypeAnnotations(simpleConstructQuery.whereClause)
             typeInspectionResultWhere: TypeInspectionResultV2 = typeInspector.inspectTypes(simpleConstructQuery.whereClause)
 
-            searchSparql = queries.sparql.v2.txt.newSearchExtended(
-                triplestore = settings.triplestoreType,
-                whereClauseWithoutAnnotations = whereClauseWithoutAnnotations,
-                typeInspectionResultWhere = typeInspectionResultWhere,
-                constructClause = simpleConstructQuery.constructClause
-            ).toString()
+            searchSparql = ""
 
             searchResponse: SparqlConstructResponse <- (storeManager ? SparqlConstructRequest(searchSparql)).mapTo[SparqlConstructResponse]
 
