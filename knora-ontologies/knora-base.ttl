@@ -426,7 +426,8 @@
                               "a standoff lien vers"@fr ,
                               "ha standoff link verso"@it ;
 
-                   rdfs:comment "Represents a link in standoff markup from one resource to another."@en ;
+                   rdfs:comment "Repräsentiert einen Link im Standoff Markup von einer Ressource zu einer anderen"@de ,
+                                "Represents a link in standoff markup from one resource to another."@en ;
                    
                    :objectClassConstraint :Resource ;
 
@@ -439,6 +440,14 @@
 ###  http://www.knora.org/ontology/knora-base#hasStandoffLinkToValue
 
 :hasStandoffLinkToValue rdf:type owl:ObjectProperty ;
+
+                        rdfs:label "hat Standoff Link zu"@de ,
+                                   "has Standoff Link to"@en ,
+                                   "a standoff lien vers"@fr ,
+                                   "ha standoff link verso"@it ;
+
+                        rdfs:comment "Repräsentiert einen Link im Standoff Markup von einer Ressource zu einer anderen"@de ,
+                                     "Represents a link in standoff markup from one resource to another."@en ;
 
                         :objectClassConstraint :LinkValue ;
 
