@@ -32,16 +32,16 @@ class SearchParserV2Spec extends WordSpec with Matchers {
     import SearchParserV2Spec._
 
     "The SearchParserV2 object" should {
-        "parse a CONSTRUCT query for an extended search using the simplified API" in {
-            val parsed: ConstructQuery = SearchParserV2.parseSearchQuery(SimpleApiQuery)
-            parsed should ===(ParsedSimpleApiQuery)
+        "parse a CONSTRUCT query for an extended search" in {
+            val parsed: ConstructQuery = SearchParserV2.parseSearchQuery(Query)
+            parsed should ===(ParsedQuery)
             val reparsed = SearchParserV2.parseSearchQuery(parsed.toSparql)
             reparsed should ===(parsed)
         }
 
         "reject a CONSTRUCT query with a BIND" in {
             assertThrows[SparqlSearchException] {
-                SearchParserV2.parseSearchQuery(SimpleApiQueryWithBind)
+                SearchParserV2.parseSearchQuery(QueryWithBind)
             }
         }
 
@@ -71,56 +71,52 @@ class SearchParserV2Spec extends WordSpec with Matchers {
 
         "reject an internal ontology IRI" in {
             assertThrows[SparqlSearchException] {
-                SearchParserV2.parseSearchQuery(SimpleApiQueryWithInternalEntityIri)
+                SearchParserV2.parseSearchQuery(QueryWithInternalEntityIri)
             }
         }
 
         "reject left-nested UNIONs" in {
             assertThrows[SparqlSearchException] {
-                SearchParserV2.parseSearchQuery(SimpleApiQueryWithLeftNestedUnion)
+                SearchParserV2.parseSearchQuery(QueryWithLeftNestedUnion)
             }
         }
 
         "reject right-nested UNIONs" in {
             assertThrows[SparqlSearchException] {
-                SearchParserV2.parseSearchQuery(SimpleApiQueryStrWithRightNestedUnion)
+                SearchParserV2.parseSearchQuery(QueryStrWithRightNestedUnion)
             }
         }
 
         "reject a nested OPTIONAL" in {
             assertThrows[SparqlSearchException] {
-                SearchParserV2.parseSearchQuery(SimpleApiQueryStrWithNestedOptional)
+                SearchParserV2.parseSearchQuery(QueryStrWithNestedOptional)
             }
         }
 
         "reject an unsupported FILTER" in {
             assertThrows[SparqlSearchException] {
-                SearchParserV2.parseSearchQuery(SimpleApiQueryWithWrongFilter)
+                SearchParserV2.parseSearchQuery(QueryWithWrongFilter)
             }
         }
 
-        "parse an extended search query with a FILTER containing a Boolean operator using the simplified API" in {
-            val parsed: ConstructQuery = SearchParserV2.parseSearchQuery(SimpleApiQueryForAThingRelatingToAnotherThing)
-            parsed should ===(ParsedSimpleApiQueryWithBooleanOperatorInFilter)
+        "parse an extended search query with a FILTER containing a Boolean operator" in {
+            val parsed: ConstructQuery = SearchParserV2.parseSearchQuery(QueryForAThingRelatingToAnotherThing)
+            parsed should ===(ParsedQueryWithBooleanOperatorInFilter)
             val reparsed = SearchParserV2.parseSearchQuery(parsed.toSparql)
             reparsed should ===(parsed)
         }
 
-        "parse an extended search query containing a GRAPH clause using the simplified API" in {
-            val parsed: ConstructQuery = SearchParserV2.parseSearchQuery(SimpleApiQueryWithGraph)
-            parsed should ===(ParsedSimpleApiQueryWithGraph)
+        "parse an extended search query containing a GRAPH clause" in {
+            val parsed: ConstructQuery = SearchParserV2.parseSearchQuery(QueryWithGraph)
+            parsed should ===(ParsedQueryWithGraph)
             val reparsed = SearchParserV2.parseSearchQuery(parsed.toSparql)
             reparsed should ===(parsed)
-        }
-
-        "parse an extended search query using the value-object API" in {
-
         }
     }
 }
 
 object SearchParserV2Spec {
-    val SimpleApiQuery: String =
+    val Query: String =
         """
           |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
           |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -166,7 +162,7 @@ object SearchParserV2Spec {
           |}
         """.stripMargin
 
-    val ParsedSimpleApiQuery = ConstructQuery(
+    val ParsedQuery = ConstructQuery(
         whereClause = WhereClause(patterns = Vector(
             StatementPattern(
                 namedGraph = None,
@@ -349,7 +345,7 @@ object SearchParserV2Spec {
         ))
     )
 
-    val ParsedSimpleApiQueryWithBooleanOperatorInFilter = ConstructQuery(
+    val ParsedQueryWithBooleanOperatorInFilter = ConstructQuery(
         whereClause = WhereClause(patterns = Vector(
             StatementPattern(
                 obj = IriRef(iri = "http://api.knora.org/ontology/anything/simple/v2#Thing"),
@@ -381,7 +377,7 @@ object SearchParserV2Spec {
         )))
     )
 
-    val ParsedSimpleApiQueryWithGraph = ConstructQuery(
+    val ParsedQueryWithGraph = ConstructQuery(
         whereClause = WhereClause(patterns = Vector(
             StatementPattern(
                 namedGraph = None,
@@ -448,7 +444,7 @@ object SearchParserV2Spec {
         ))
     )
 
-    val SimpleApiQueryWithBind: String =
+    val QueryWithBind: String =
         """
           |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
           |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -466,7 +462,7 @@ object SearchParserV2Spec {
           |}
         """.stripMargin
 
-    val SimpleApiQueryWithWrongFilter: String =
+    val QueryWithWrongFilter: String =
         """
           |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
           |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -485,7 +481,7 @@ object SearchParserV2Spec {
           |}
         """.stripMargin
 
-    val SimpleApiQueryWithInternalEntityIri: String =
+    val QueryWithInternalEntityIri: String =
         """
           |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
           |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -566,7 +562,7 @@ object SearchParserV2Spec {
           |}
         """.stripMargin
 
-    val SimpleApiQueryWithLeftNestedUnion: String =
+    val QueryWithLeftNestedUnion: String =
         """
           |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
           |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -612,7 +608,7 @@ object SearchParserV2Spec {
           |}
         """.stripMargin
 
-    val SimpleApiQueryStrWithRightNestedUnion: String =
+    val QueryStrWithRightNestedUnion: String =
         """
           |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
           |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -658,7 +654,7 @@ object SearchParserV2Spec {
           |}
         """.stripMargin
 
-    val SimpleApiQueryStrWithNestedOptional: String =
+    val QueryStrWithNestedOptional: String =
         """
           |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
           |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -691,7 +687,7 @@ object SearchParserV2Spec {
           |}
         """.stripMargin
 
-    val SimpleApiQueryForAThingRelatingToAnotherThing: String =
+    val QueryForAThingRelatingToAnotherThing: String =
         """
           |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
           |PREFIX anything: <http://api.knora.org/ontology/anything/simple/v2#>
@@ -707,7 +703,7 @@ object SearchParserV2Spec {
           |}
         """.stripMargin
 
-    val SimpleApiQueryWithExplicitTypeAnnotations: String =
+    val QueryWithExplicitTypeAnnotations: String =
         """
           |PREFIX beol: <http://api.knora.org/ontology/beol/simple/v2#>
           |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
@@ -749,7 +745,7 @@ object SearchParserV2Spec {
           |}
         """.stripMargin
 
-    val SimpleApiQueryWithGraph: String =
+    val QueryWithGraph: String =
         """
           |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
           |PREFIX anything: <http://api.knora.org/ontology/anything/simple/v2#>
