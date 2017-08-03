@@ -21,7 +21,8 @@
 package org.knora.webapi.util.search
 
 /**
-  * A trait for classes that transform statements and filters in CONSTRUCT queries.
+  * A trait for classes that transform statements and filters in CONSTRUCT queries. Such a class will probably need
+  * to refer to a [[TypeInspectionResult]].
   */
 trait QueryPatternTransformer {
 
