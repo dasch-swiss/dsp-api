@@ -21,6 +21,7 @@
 package org.knora.webapi.util.search.v2
 
 import org.knora.webapi.SparqlSearchException
+import org.knora.webapi.util.search._
 import org.scalatest.{Matchers, WordSpec}
 
 /**

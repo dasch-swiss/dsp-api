@@ -1,13 +1,14 @@
 package org.knora.webapi.util.search.v2
 
 import org.knora.webapi.util.MessageUtil
+import org.knora.webapi.util.search._
 import org.scalatest.{Matchers, WordSpec}
 
 /**
-  * Tests [[TypeInspectorV2]].
+  * Tests [[TypeInspector]].
   */
 class TypeInspectorV2Spec extends WordSpec with Matchers {
-    "TypeInspectorV2" should {
+    "TypeInspector" should {
         "get type information from a simple query" in {
             val parsedQuery = SearchParserV2.parseSearchQuery(SearchParserV2Spec.SparqlConstructQueryWithExplicitTypeAnnotations)
             val typeInspector = new ExplicitTypeInspectorV2(ApiV2Schema.SIMPLE)
@@ -23,12 +24,12 @@ class TypeInspectorV2Spec extends WordSpec with Matchers {
         }
     }
 
-    val SimpleTypeInspectionResult = TypeInspectionResultV2(typedEntities = Map(
-        TypeableVariableV2(variableName = "linkingProp1") -> PropertyTypeInfoV2(objectTypeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource"),
-        TypeableIriV2(iri = "http://rdfh.ch/beol/oU8fMNDJQ9SGblfBl5JamA") -> NonPropertyTypeInfoV2(typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource"),
-        TypeableVariableV2(variableName = "letter") -> NonPropertyTypeInfoV2(typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource"),
-        TypeableVariableV2(variableName = "linkingProp2") -> PropertyTypeInfoV2(objectTypeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource"),
-        TypeableIriV2(iri = "http://rdfh.ch/beol/6edJwtTSR8yjAWnYmt6AtA") -> NonPropertyTypeInfoV2(typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource")
+    val SimpleTypeInspectionResult = TypeInspectionResult(typedEntities = Map(
+        TypeableVariable(variableName = "linkingProp1") -> PropertyTypeInfo(objectTypeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource"),
+        TypeableIri(iri = "http://rdfh.ch/beol/oU8fMNDJQ9SGblfBl5JamA") -> NonPropertyTypeInfo(typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource"),
+        TypeableVariable(variableName = "letter") -> NonPropertyTypeInfo(typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource"),
+        TypeableVariable(variableName = "linkingProp2") -> PropertyTypeInfo(objectTypeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource"),
+        TypeableIri(iri = "http://rdfh.ch/beol/6edJwtTSR8yjAWnYmt6AtA") -> NonPropertyTypeInfo(typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource")
     ))
 
     val WhereClauseWithoutAnnotations = WhereClause(patterns = Vector(

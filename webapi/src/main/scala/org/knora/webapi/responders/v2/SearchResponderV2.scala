@@ -30,6 +30,7 @@ import org.knora.webapi.messages.v2.responder._
 import org.knora.webapi.messages.v2.responder.searchmessages._
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.util.ActorUtil._
+import org.knora.webapi.util.search._
 import org.knora.webapi.util.search.v2.{ApiV2Schema, _}
 import org.knora.webapi.util.{ConstructResponseUtilV2, DateUtilV1, InputValidation}
 
@@ -72,7 +73,7 @@ class SearchResponderV2 extends Responder {
         for {
             typeInspector <- FastFuture.successful(new ExplicitTypeInspectorV2(apiSchema))
             whereClauseWithoutAnnotations: WhereClause = typeInspector.removeTypeAnnotations(constructQuery.whereClause)
-            typeInspectionResultWhere: TypeInspectionResultV2 = typeInspector.inspectTypes(constructQuery.whereClause)
+            typeInspectionResultWhere: TypeInspectionResult = typeInspector.inspectTypes(constructQuery.whereClause)
 
             // TODO: transform the construct query as needed.
 
@@ -197,7 +198,7 @@ class SearchResponderV2 extends Responder {
 
         val typeInspector = new ExplicitTypeInspectorV2(apiSchema)
         val whereClauseWithoutAnnotations: WhereClause = typeInspector.removeTypeAnnotations(simpleConstructQuery.whereClause)
-        val typeInspectionResultWhere: TypeInspectionResultV2 = typeInspector.inspectTypes(simpleConstructQuery.whereClause)
+        val typeInspectionResultWhere: TypeInspectionResult = typeInspector.inspectTypes(simpleConstructQuery.whereClause)
 
         val extendedSearchConstructClauseStatementPatterns: Seq[ExtendedSearchStatementPattern] = convertSearchParserConstructPatternsToExtendedSearchPatterns(simpleConstructQuery.constructClause.statements)
         val extendedSearchWhereClausePatternsWithOriginalFilters: Seq[ExtendedSearchQueryPattern] = convertSearchParserQueryPatternsToExtendedSearchPatterns(whereClauseWithoutAnnotations.patterns)
@@ -211,7 +212,7 @@ class SearchResponderV2 extends Responder {
           * @param index                 the index to be used to create variables in Sparql.
           * @return a sequence of [[ExtendedSearchStatementPattern]].
           */
-        def createAdditionalStatementsForNonPropertyType(typeIriExternal: IRI, subject: ExtendedSearchEntity, typeInfoKeysProcessed: Set[TypeableEntityV2], index: Int): AdditionalStatements = {
+        def createAdditionalStatementsForNonPropertyType(typeIriExternal: IRI, subject: ExtendedSearchEntity, typeInfoKeysProcessed: Set[TypeableEntity], index: Int): AdditionalStatements = {
             val typeIriInternal = InputValidation.externalIriToInternalIri(typeIriExternal, () => throw BadRequestException(s"${typeIriExternal} is not a valid external knora-api entity Iri"))
 
             if (typeIriInternal == OntologyConstants.KnoraBase.Resource) {
@@ -242,7 +243,7 @@ class SearchResponderV2 extends Responder {
           * @param index                 the index to be used to create unique variable names in Sparql.
           * @return a sequence of [[ExtendedSearchStatementPattern]].
           */
-        def createAdditionalStatementsForPropertyType(typeIriExternal: IRI, statementPattern: ExtendedSearchStatementPattern, typeInfoKeysProcessed: Set[TypeableEntityV2], index: Int): AdditionalStatements = {
+        def createAdditionalStatementsForPropertyType(typeIriExternal: IRI, statementPattern: ExtendedSearchStatementPattern, typeInfoKeysProcessed: Set[TypeableEntity], index: Int): AdditionalStatements = {
 
             // convert the type information into an internal Knora Iri if possible
             val objectIri = if (InputValidation.isKnoraApiEntityIri(typeIriExternal)) {
@@ -613,7 +614,7 @@ class SearchResponderV2 extends Responder {
           * @param additionalStatements  statements created based on the given type annotations.
           * @param typeInfoKeysProcessed a Set of keys that indicates which type info entries already habe been processed.
           */
-        case class AdditionalStatements(additionalStatements: Vector[ExtendedSearchStatementPattern] = Vector.empty[ExtendedSearchStatementPattern], additionalFilterPatterns: Vector[ExtendedSearchFilterPattern] = Vector.empty[ExtendedSearchFilterPattern], typeInfoKeysProcessed: Set[TypeableEntityV2] = Set.empty[TypeableEntityV2])
+        case class AdditionalStatements(additionalStatements: Vector[ExtendedSearchStatementPattern] = Vector.empty[ExtendedSearchStatementPattern], additionalFilterPatterns: Vector[ExtendedSearchFilterPattern] = Vector.empty[ExtendedSearchFilterPattern], typeInfoKeysProcessed: Set[TypeableEntity] = Set.empty[TypeableEntity])
 
         /**
           *
@@ -630,19 +631,19 @@ class SearchResponderV2 extends Responder {
           * @param typeInfoKeysProcessedInStatements a Set of keys that indicates which type info entries already habe been processed.
           * @return a sequence of [[AdditionalStatements]].
           */
-        def addTypeInformationStatementsToStatement(statementP: ExtendedSearchStatementPattern, index: Int, typeInfoKeysProcessedInStatements: Set[TypeableEntityV2]): ConvertedStatement = {
+        def addTypeInformationStatementsToStatement(statementP: ExtendedSearchStatementPattern, index: Int, typeInfoKeysProcessedInStatements: Set[TypeableEntity]): ConvertedStatement = {
 
             // check if subject is contained in the type info
             val additionalStatementsForSubj: AdditionalStatements = statementP.subj match {
                 case variableSubj: ExtendedSearchVar =>
-                    val key = TypeableVariableV2(variableSubj.variableName)
+                    val key = TypeableVariable(variableSubj.variableName)
 
                     if (typeInspectionResultWhere.typedEntities -- typeInfoKeysProcessedInStatements contains key) {
 
                         val additionalStatements: AdditionalStatements = typeInspectionResultWhere.typedEntities(key) match {
-                            case nonPropTypeInfo: NonPropertyTypeInfoV2 =>
+                            case nonPropTypeInfo: NonPropertyTypeInfo =>
                                 createAdditionalStatementsForNonPropertyType(nonPropTypeInfo.typeIri, statementP.subj, typeInfoKeysProcessedInStatements + key, index)
-                            case propTypeInfo: PropertyTypeInfoV2 =>
+                            case propTypeInfo: PropertyTypeInfo =>
                                 AdditionalStatements()
                         }
 
@@ -655,7 +656,7 @@ class SearchResponderV2 extends Responder {
 
 
                 case iriSubj: ExtendedSearchInternalEntityIri =>
-                    val key = TypeableIriV2(iriSubj.iri)
+                    val key = TypeableIri(iriSubj.iri)
 
                     AdditionalStatements()
 
@@ -667,16 +668,16 @@ class SearchResponderV2 extends Responder {
             // the predicate represents a property
             val additionalStatementsForPred: AdditionalStatements = statementP.pred match {
                 case variablePred: ExtendedSearchVar =>
-                    val key = TypeableVariableV2(variablePred.variableName)
+                    val key = TypeableVariable(variablePred.variableName)
 
                     // get type information about the predicate variable (if not already processed before)
                     if (typeInspectionResultWhere.typedEntities -- typeInfoKeysProcessedInStatements contains key) {
 
                         val additionalStatements: AdditionalStatements = typeInspectionResultWhere.typedEntities(key) match {
-                            case nonPropTypeInfo: NonPropertyTypeInfoV2 =>
+                            case nonPropTypeInfo: NonPropertyTypeInfo =>
                                 throw SparqlSearchException(s"got non property type information for predicate variable $variablePred from type inspector v2")
 
-                            case propTypeInfo: PropertyTypeInfoV2 =>
+                            case propTypeInfo: PropertyTypeInfo =>
                                 // create additional statements based on the type of the predicate (property)
                                 createAdditionalStatementsForPropertyType(propTypeInfo.objectTypeIri, statementP, typeInfoKeysProcessedInStatements + key, index)
                         }
@@ -692,7 +693,7 @@ class SearchResponderV2 extends Responder {
 
                     val key = if (apiSchema == ApiV2Schema.SIMPLE) {
                         // convert this Iri to knora-api simple since the type inspector uses knora-api simple Iris
-                        TypeableIriV2(InputValidation.internalEntityIriToSimpleApiV2EntityIri(iriPred.iri, () => throw AssertionException(s"${iriPred.iri} could not be converted back to knora-api simple format")))
+                        TypeableIri(InputValidation.internalEntityIriToSimpleApiV2EntityIri(iriPred.iri, () => throw AssertionException(s"${iriPred.iri} could not be converted back to knora-api simple format")))
                     } else {
                         throw NotImplementedException("The extended search for knora-api with value object has not been implemented yet")
                     }
@@ -701,10 +702,10 @@ class SearchResponderV2 extends Responder {
                     if (typeInspectionResultWhere.typedEntities -- typeInfoKeysProcessedInStatements contains key) {
 
                         val additionalStatements: AdditionalStatements = typeInspectionResultWhere.typedEntities(key) match {
-                            case nonPropTypeInfo: NonPropertyTypeInfoV2 =>
+                            case nonPropTypeInfo: NonPropertyTypeInfo =>
                                 throw SparqlSearchException(s"got non property type information for predicate iri $iriPred from type inspector v2")
 
-                            case propTypeInfo: PropertyTypeInfoV2 =>
+                            case propTypeInfo: PropertyTypeInfo =>
                                 // create additional statements based on the type of the predicate (property)
                                 createAdditionalStatementsForPropertyType(propTypeInfo.objectTypeIri, statementP, typeInfoKeysProcessedInStatements + key, index)
                         }
@@ -732,14 +733,14 @@ class SearchResponderV2 extends Responder {
                     AdditionalStatements()
 
                 case iriObj: ExtendedSearchIri =>
-                    val key = TypeableIriV2(iriObj.iri)
+                    val key = TypeableIri(iriObj.iri)
 
                     if (typeInspectionResultWhere.typedEntities -- typeInfoKeysProcessedInStatements contains key) {
 
                         val additionalStatements: AdditionalStatements = typeInspectionResultWhere.typedEntities(key) match {
-                            case nonPropTypeInfo: NonPropertyTypeInfoV2 =>
+                            case nonPropTypeInfo: NonPropertyTypeInfo =>
                                 createAdditionalStatementsForNonPropertyType(nonPropTypeInfo.typeIri, statementP.obj, typeInfoKeysProcessedInStatements + key, index)
-                            case propTypeInfo: PropertyTypeInfoV2 =>
+                            case propTypeInfo: PropertyTypeInfo =>
                                 AdditionalStatements()
 
                         }
@@ -769,10 +770,10 @@ class SearchResponderV2 extends Responder {
                     case internalIriPred: ExtendedSearchInternalEntityIri =>
 
                         // convert this Iri to knora-api simple since the type inspector uses knora-api simple Iris
-                        val key = TypeableIriV2(InputValidation.internalEntityIriToSimpleApiV2EntityIri(internalIriPred.iri, () => throw AssertionException(s"${internalIriPred.iri} could not be converted back to knora-api simple format")))
+                        val key = TypeableIri(InputValidation.internalEntityIriToSimpleApiV2EntityIri(internalIriPred.iri, () => throw AssertionException(s"${internalIriPred.iri} could not be converted back to knora-api simple format")))
 
                         typeInspectionResultWhere.typedEntities.get(key) match {
-                            case Some(propTypeInfo: PropertyTypeInfoV2) =>
+                            case Some(propTypeInfo: PropertyTypeInfo) =>
                                 // value types like xsd:string are not recognised as Knora entity Iris
 
                                 if (InputValidation.isKnoraApiEntityIri(propTypeInfo.objectTypeIri)) {
@@ -809,10 +810,10 @@ class SearchResponderV2 extends Responder {
 
                     case varPred: ExtendedSearchVar =>
 
-                        val key = TypeableVariableV2(varPred.variableName)
+                        val key = TypeableVariable(varPred.variableName)
 
                         typeInspectionResultWhere.typedEntities.get(key) match {
-                            case Some(propTypeInfo: PropertyTypeInfoV2) =>
+                            case Some(propTypeInfo: PropertyTypeInfo) =>
                                 // value types like xsd:string are not recognised as Knora entity Iris
 
                                 if (InputValidation.isKnoraApiEntityIri(propTypeInfo.objectTypeIri)) {
@@ -872,10 +873,10 @@ class SearchResponderV2 extends Responder {
                     filterCompare.leftArg match {
                         case searchVar: ExtendedSearchVar =>
 
-                            val objectType: SparqlEntityTypeInfoV2 = typeInspectionResultWhere.typedEntities(TypeableVariableV2(searchVar.variableName))
+                            val objectType: SparqlEntityTypeInfo = typeInspectionResultWhere.typedEntities(TypeableVariable(searchVar.variableName))
 
                             objectType match {
-                                case nonPropTypeInfo: NonPropertyTypeInfoV2 =>
+                                case nonPropTypeInfo: NonPropertyTypeInfo =>
 
                                     nonPropTypeInfo.typeIri match {
                                         case OntologyConstants.Xsd.String =>
@@ -978,7 +979,7 @@ class SearchResponderV2 extends Responder {
                                     }
 
 
-                                case propType: PropertyTypeInfoV2 =>
+                                case propType: PropertyTypeInfo =>
                                     ConvertedQueryPatterns(originalPatterns = acc.originalPatterns ++ Seq(ExtendedSearchFilterPattern(filterExpression)), additionalPatterns = acc.additionalPatterns, typeInfoKeysProcessedInStatements = acc.typeInfoKeysProcessedInStatements)
                             }
 
@@ -989,8 +990,8 @@ class SearchResponderV2 extends Responder {
 
                 case filterOr: ExtendedSearchOrExpression =>
 
-                    val filterPatternsLeft: ConvertedQueryPatterns = processExtendedSearchFilterPattern(ConvertedQueryPatterns(originalPatterns = Vector.empty[ExtendedSearchQueryPattern], additionalPatterns = Vector.empty[ExtendedSearchStatementPattern], typeInfoKeysProcessedInStatements = Set.empty[TypeableEntityV2]), index, filterOr.leftArg)
-                    val filterPatternsRight: ConvertedQueryPatterns = processExtendedSearchFilterPattern(ConvertedQueryPatterns(originalPatterns = Vector.empty[ExtendedSearchQueryPattern], additionalPatterns = Vector.empty[ExtendedSearchStatementPattern], typeInfoKeysProcessedInStatements = Set.empty[TypeableEntityV2]), index, filterOr.rightArg)
+                    val filterPatternsLeft: ConvertedQueryPatterns = processExtendedSearchFilterPattern(ConvertedQueryPatterns(originalPatterns = Vector.empty[ExtendedSearchQueryPattern], additionalPatterns = Vector.empty[ExtendedSearchStatementPattern], typeInfoKeysProcessedInStatements = Set.empty[TypeableEntity]), index, filterOr.leftArg)
+                    val filterPatternsRight: ConvertedQueryPatterns = processExtendedSearchFilterPattern(ConvertedQueryPatterns(originalPatterns = Vector.empty[ExtendedSearchQueryPattern], additionalPatterns = Vector.empty[ExtendedSearchStatementPattern], typeInfoKeysProcessedInStatements = Set.empty[TypeableEntity]), index, filterOr.rightArg)
 
                     val leftArg = filterPatternsLeft.originalPatterns match {
                         case queryP: Vector[ExtendedSearchQueryPattern] if queryP.size == 1 =>
@@ -1021,8 +1022,8 @@ class SearchResponderV2 extends Responder {
 
                 case filterAnd: ExtendedSearchAndExpression =>
 
-                    val filterPatternsLeft: ConvertedQueryPatterns = processExtendedSearchFilterPattern(ConvertedQueryPatterns(originalPatterns = Vector.empty[ExtendedSearchQueryPattern], additionalPatterns = Vector.empty[ExtendedSearchStatementPattern], typeInfoKeysProcessedInStatements = Set.empty[TypeableEntityV2]), index, filterAnd.leftArg)
-                    val filterPatternsRight: ConvertedQueryPatterns = processExtendedSearchFilterPattern(ConvertedQueryPatterns(originalPatterns = Vector.empty[ExtendedSearchQueryPattern], additionalPatterns = Vector.empty[ExtendedSearchStatementPattern], typeInfoKeysProcessedInStatements = Set.empty[TypeableEntityV2]), index, filterAnd.rightArg)
+                    val filterPatternsLeft: ConvertedQueryPatterns = processExtendedSearchFilterPattern(ConvertedQueryPatterns(originalPatterns = Vector.empty[ExtendedSearchQueryPattern], additionalPatterns = Vector.empty[ExtendedSearchStatementPattern], typeInfoKeysProcessedInStatements = Set.empty[TypeableEntity]), index, filterAnd.leftArg)
+                    val filterPatternsRight: ConvertedQueryPatterns = processExtendedSearchFilterPattern(ConvertedQueryPatterns(originalPatterns = Vector.empty[ExtendedSearchQueryPattern], additionalPatterns = Vector.empty[ExtendedSearchStatementPattern], typeInfoKeysProcessedInStatements = Set.empty[TypeableEntity]), index, filterAnd.rightArg)
 
                     val leftArg = filterPatternsLeft.originalPatterns match {
                         case queryP: Vector[ExtendedSearchQueryPattern] if queryP.size == 1 =>
@@ -1064,10 +1065,10 @@ class SearchResponderV2 extends Responder {
           * @param additionalPatterns                additional statements created on the bases of the given type annotations.
           * @param typeInfoKeysProcessedInStatements a Set of keys that indicates which type info entries already habe been processed.
           */
-        case class ConvertedQueryPatterns(originalPatterns: Vector[ExtendedSearchQueryPattern], additionalPatterns: Vector[ExtendedSearchStatementPattern], typeInfoKeysProcessedInStatements: Set[TypeableEntityV2])
+        case class ConvertedQueryPatterns(originalPatterns: Vector[ExtendedSearchQueryPattern], additionalPatterns: Vector[ExtendedSearchStatementPattern], typeInfoKeysProcessedInStatements: Set[TypeableEntity])
 
         def convertQueryPatterns(patterns: Seq[ExtendedSearchQueryPattern]): ConvertedQueryPatterns = {
-            patterns.zipWithIndex.foldLeft(ConvertedQueryPatterns(originalPatterns = Vector.empty[ExtendedSearchQueryPattern], additionalPatterns = Vector.empty[ExtendedSearchStatementPattern], typeInfoKeysProcessedInStatements = Set.empty[TypeableEntityV2])) {
+            patterns.zipWithIndex.foldLeft(ConvertedQueryPatterns(originalPatterns = Vector.empty[ExtendedSearchQueryPattern], additionalPatterns = Vector.empty[ExtendedSearchStatementPattern], typeInfoKeysProcessedInStatements = Set.empty[TypeableEntity])) {
 
                 case (acc: ConvertedQueryPatterns, (pattern: ExtendedSearchQueryPattern, index: Int)) =>
 

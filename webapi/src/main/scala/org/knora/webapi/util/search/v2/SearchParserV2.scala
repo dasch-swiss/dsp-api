@@ -21,199 +21,18 @@
 package org.knora.webapi.util.search.v2
 
 import org.eclipse.rdf4j
-import org.eclipse.rdf4j.query.{MalformedQueryException, algebra}
-import org.eclipse.rdf4j.query.algebra._
+import org.eclipse.rdf4j.query.algebra
 import org.eclipse.rdf4j.query.parser.ParsedQuery
 import org.eclipse.rdf4j.query.parser.sparql._
-import org.knora.webapi.util.InputValidation
-import org.knora.webapi.{OntologyConstants, _}
+import org.eclipse.rdf4j.query.MalformedQueryException
+import org.knora.webapi.util.search
+import org.knora.webapi.util.search._
+import org.knora.webapi._
 
 import scala.collection.JavaConverters._
 
 /**
-  * Represents something that can generate SPARQL source code.
-  */
-sealed trait SparqlGenerator {
-    def toSparql: String
-}
-
-/**
-  * Represents something that can be the subject, predicate, or object of a triple pattern in a query.
-  */
-sealed trait Entity extends FilterExpression
-
-/**
-  * Represents a variable in a query.
-  *
-  * @param variableName the name of the variable.
-  */
-case class QueryVariable(variableName: String) extends Entity {
-    def toSparql: String = s"?$variableName"
-}
-
-/**
-  * Represents an IRI in a query.
-  *
-  * @param iri the IRI.
-  */
-case class IriRef(iri: IRI) extends Entity {
-    def toSparql: String = s"<$iri>"
-
-    if (InputValidation.isInternalEntityIri(iri)) {
-        throw SparqlSearchException(s"Internal ontology entity IRI not allowed in search query: $iri")
-    }
-}
-
-/**
-  * Represents a literal value with an XSD type.
-  *
-  * @param value    the literal value.
-  * @param datatype the value's XSD type IRI.
-  */
-case class XsdLiteral(value: String, datatype: IRI) extends Entity {
-    def toSparql: String = "\"" + value + "\"^^<" + datatype + ">"
-}
-
-/**
-  * Represents a statement pattern or block pattern in a query.
-  */
-sealed trait QueryPattern extends SparqlGenerator
-
-/**
-  * Represents a statement pattern in a query.
-  *
-  * @param subj the subject of the statement.
-  * @param pred the predicate of the statement.
-  * @param obj  the object of the statement.
-  */
-case class StatementPattern(subj: Entity, pred: Entity, obj: Entity, namedGraph: Option[IriRef] = None) extends QueryPattern {
-    def toSparql: String = {
-        val triple = s"${subj.toSparql} ${pred.toSparql} ${obj.toSparql} ."
-
-        namedGraph match {
-            case Some(graph) =>
-                s"""GRAPH ${graph.toSparql} {
-                   |    $triple
-                   |}
-                   |""".stripMargin
-
-            case None =>
-                triple + "\n"
-        }
-    }
-}
-
-/**
-  * Represents an expression that can be used in a FILTER.
-  */
-sealed trait FilterExpression extends SparqlGenerator
-
-/**
-  * Represents a comparison expression in a FILTER.
-  *
-  * @param leftArg  the left argument.
-  * @param operator the operator.
-  * @param rightArg the right argument.
-  */
-case class CompareExpression(leftArg: FilterExpression, operator: String, rightArg: FilterExpression) extends FilterExpression {
-    def toSparql: String = s"(${leftArg.toSparql} $operator ${rightArg.toSparql})"
-}
-
-/**
-  * Represents an AND expression in a filter.
-  *
-  * @param leftArg  the left argument.
-  * @param rightArg the right argument.
-  */
-case class AndExpression(leftArg: FilterExpression, rightArg: FilterExpression) extends FilterExpression {
-    def toSparql: String = s"(${leftArg.toSparql} && ${rightArg.toSparql})"
-}
-
-/**
-  * Represents an OR expression in a filter.
-  *
-  * @param leftArg  the left argument.
-  * @param rightArg the right argument.
-  */
-case class OrExpression(leftArg: FilterExpression, rightArg: FilterExpression) extends FilterExpression {
-    def toSparql: String = s"(${leftArg.toSparql} || ${rightArg.toSparql})"
-}
-
-/**
-  * Represents a FILTER pattern in a query.
-  *
-  * @param expression the expression in the FILTER.
-  */
-case class FilterPattern(expression: FilterExpression) extends QueryPattern {
-    def toSparql: String = s"FILTER(${expression.toSparql})\n"
-}
-
-/**
-  * Represents a UNION in the WHERE clause of a query.
-  *
-  * @param blocks the blocks of patterns contained in the UNION.
-  */
-case class UnionPattern(blocks: Seq[Seq[QueryPattern]]) extends QueryPattern {
-    def toSparql: String = {
-        val blocksAsStrings = blocks.map {
-            block: Seq[QueryPattern] =>
-                val queryPatternStrings: Seq[String] = block.map {
-                    queryPattern: QueryPattern => queryPattern.toSparql
-                }
-
-                queryPatternStrings.mkString
-        }
-
-        "{\n" + blocksAsStrings.mkString("} UNION {\n") + "}\n"
-    }
-}
-
-/**
-  * Represents an OPTIONAL in the WHERE clause of a query.
-  *
-  * @param patterns the patterns in the OPTIONAL block.
-  */
-case class OptionalPattern(patterns: Seq[QueryPattern]) extends QueryPattern {
-    def toSparql: String = {
-        val queryPatternStrings: Seq[String] = patterns.map {
-            queryPattern: QueryPattern => queryPattern.toSparql
-        }
-
-        "OPTIONAL {\n" + queryPatternStrings.mkString + "}\n"
-    }
-}
-
-/**
-  * Represents a CONSTRUCT clause in a query.
-  *
-  * @param statements the statements in the CONSTRUCT clause.
-  */
-case class ConstructClause(statements: Seq[StatementPattern]) extends SparqlGenerator {
-    def toSparql: String = "CONSTRUCT {\n" + statements.map(_.toSparql).mkString + "} "
-}
-
-/**
-  * Represents a WHERE clause in a query.
-  *
-  * @param patterns the patterns in the WHERE clause.
-  */
-case class WhereClause(patterns: Seq[QueryPattern]) extends SparqlGenerator {
-    def toSparql: String = "WHERE {\n" + patterns.map(_.toSparql).mkString + "}\n"
-}
-
-/**
-  * Represents a CONSTRUCT query.
-  *
-  * @param constructClause the CONSTRUCT clause.
-  * @param whereClause     the WHERE clause.
-  */
-case class ConstructQuery(constructClause: ConstructClause, whereClause: WhereClause) extends SparqlGenerator {
-    def toSparql: String = constructClause.toSparql + whereClause.toSparql
-}
-
-
-/**
-  * Parses a SPARQL query. The SPARQL that is accepted is restricted:
+  * Parses a SPARQL CONSTRUCT query. The SPARQL that is accepted is restricted:
   *
   * - The query must be a CONSTRUCT query.
   * - It must use no internal ontologies.
@@ -247,16 +66,16 @@ object SearchParserV2 {
     }
 
     /**
-      * An RDF4J [[QueryModelVisitor]] that converts a [[ParsedQuery]] into a [[ConstructQuery]].
+      * An RDF4J [[algebra.QueryModelVisitor]] that converts a [[ParsedQuery]] into a [[ConstructQuery]].
       */
-    class ConstructQueryModelVisitor extends QueryModelVisitor[SparqlSearchException] {
+    class ConstructQueryModelVisitor extends algebra.QueryModelVisitor[SparqlSearchException] {
 
         // Represents a statement pattern in the CONSTRUCT clause. Each string could be a variable name or a parser-generated
         // constant. These constants can be replaced by their values only after valueConstants is populated.
         private case class ConstructStatementWithConstants(subj: String, pred: String, obj: String)
 
         // A map of parser-generated constants to literal values.
-        private val valueConstants: collection.mutable.Map[String, ValueConstant] = collection.mutable.Map.empty[String, ValueConstant]
+        private val valueConstants: collection.mutable.Map[String, algebra.ValueConstant] = collection.mutable.Map.empty[String, algebra.ValueConstant]
 
         // A sequence of statement patterns in the CONSTRUCT clause, possibly using parser-generated constants.
         private val constructStatementsWithConstants: collection.mutable.ArrayBuffer[ConstructStatementWithConstants] = collection.mutable.ArrayBuffer.empty[ConstructStatementWithConstants]
@@ -272,16 +91,16 @@ object SearchParserV2 {
           */
         def makeConstructQuery: ConstructQuery = {
             /**
-              * Given a source name used in a [[ProjectionElem]], checks whether it's the name of a constant whose
-              * literal value was saved when the [[ExtensionElem]] nodes were processed. If so, returns a [[Var]] representing
-              * the literal value. Otherwise, returns a [[Var]] representing the name itself. The resulting [[Var]] can be
+              * Given a source name used in an [[algebra.ProjectionElem]], checks whether it's the name of a constant whose
+              * literal value was saved when the [[algebra.ExtensionElem]] nodes were processed. If so, returns a [[algebra.Var]] representing
+              * the literal value. Otherwise, returns an [[algebra.Var]] representing the name itself. The resulting [[algebra.Var]] can be
               * passed to `makeStatementPatternSubject`, `makeStatementPatternPredicate`, or `makeStatementPatternObject`.
               *
               * @param sourceName the source name.
-              * @return a [[Var]] representing the name or its literal value.
+              * @return an [[algebra.Var]] representing the name or its literal value.
               */
-            def nameToVar(sourceName: String): Var = {
-                val sparqlVar = new Var
+            def nameToVar(sourceName: String): algebra.Var = {
+                val sparqlVar = new algebra.Var
                 sparqlVar.setName(sourceName)
 
                 valueConstants.get(sourceName) match {
@@ -297,7 +116,7 @@ object SearchParserV2 {
             }
 
             // Convert each ConstructStatementWithConstants to a StatementPattern for use in the CONSTRUCT clause.
-            val constructStatements: Seq[StatementPattern] = constructStatementsWithConstants.toVector.map {
+            val constructStatements: Seq[search.StatementPattern] = constructStatementsWithConstants.toVector.map {
                 (constructStatementWithConstant: ConstructStatementWithConstants) =>
                     StatementPattern(
                         subj = makeEntity(nameToVar(constructStatementWithConstant.subj)),
@@ -320,21 +139,21 @@ object SearchParserV2 {
             wherePatterns.toVector
         }
 
-        private def unsupported(node: QueryModelNode) {
+        private def unsupported(node: algebra.QueryModelNode) {
             throw SparqlSearchException(s"SPARQL feature not supported in search query: $node")
         }
 
-        override def meet(node: Slice): Unit = {
+        override def meet(node: algebra.Slice): Unit = {
             unsupported(node)
         }
 
         /**
-          * Converts an RDF4J [[Var]] into a [[Entity]].
+          * Converts an RDF4J [[algebra.Var]] into a [[Entity]].
           *
-          * @param objVar the [[Var]] to be converted.
+          * @param objVar the [[algebra.Var]] to be converted.
           * @return a [[Entity]].
           */
-        private def makeEntity(objVar: Var): Entity = {
+        private def makeEntity(objVar: algebra.Var): Entity = {
             if (objVar.isAnonymous || objVar.isConstant) {
                 objVar.getValue match {
                     case iri: rdf4j.model.IRI => IriRef(iri.stringValue)
@@ -362,11 +181,11 @@ object SearchParserV2 {
             wherePatterns.append(StatementPattern(subj = subj, pred = pred, obj = obj, namedGraph = namedGraph))
         }
 
-        override def meet(node: Str): Unit = {
+        override def meet(node: algebra.Str): Unit = {
             unsupported(node)
         }
 
-        override def meet(node: Sum): Unit = {
+        override def meet(node: algebra.Sum): Unit = {
             unsupported(node)
         }
 
@@ -387,10 +206,10 @@ object SearchParserV2 {
             patterns
         }
 
-        override def meet(node: Union): Unit = {
+        override def meet(node: algebra.Union): Unit = {
             // Get the block of query patterns on the left side of the UNION.
             val leftPatterns: Seq[QueryPattern] = node.getLeftArg match {
-                case _: Union => throw SparqlSearchException("Nested UNIONs are not allowed in search queries")
+                case _:algebra. Union => throw SparqlSearchException("Nested UNIONs are not allowed in search queries")
                 case otherLeftArg =>
                     val leftArgVisitor = new ConstructQueryModelVisitor
                     otherLeftArg.visit(leftArgVisitor)
@@ -399,7 +218,7 @@ object SearchParserV2 {
 
             // Get the block(s) of query patterns on the right side of the UNION.
             val rightPatterns: Seq[Seq[QueryPattern]] = node.getRightArg match {
-                case rightArgUnion: Union =>
+                case rightArgUnion: algebra.Union =>
                     // If the right arg is also a UNION, recursively get its blocks. This represents a sequence of
                     // UNIONs rather than a nested UNION.
                     val rightArgVisitor = new ConstructQueryModelVisitor
@@ -424,31 +243,31 @@ object SearchParserV2 {
             wherePatterns.append(UnionPattern(Seq(leftPatterns) ++ rightPatterns))
         }
 
-        override def meet(node: ValueConstant): Unit = {
+        override def meet(node: algebra.ValueConstant): Unit = {
             unsupported(node)
         }
 
-        override def meet(node: ListMemberOperator): Unit = {
+        override def meet(node: algebra.ListMemberOperator): Unit = {
             unsupported(node)
         }
 
-        override def meet(node: Var): Unit = {
+        override def meet(node: algebra.Var): Unit = {
             unsupported(node)
         }
 
-        override def meet(node: ZeroLengthPath): Unit = {
+        override def meet(node: algebra.ZeroLengthPath): Unit = {
             unsupported(node)
         }
 
-        override def meet(node: Regex): Unit = {
+        override def meet(node: algebra.Regex): Unit = {
             unsupported(node)
         }
 
-        override def meet(node: Reduced): Unit = {
+        override def meet(node: algebra.Reduced): Unit = {
             node.visitChildren(this)
         }
 
-        override def meet(node: ProjectionElemList): Unit = {
+        override def meet(node: algebra.ProjectionElemList): Unit = {
             // A ProjectionElemList represents the patterns in the CONSTRUCT clause. They're represented using
             // parser-generated constants instead of literal values, so for now we just have to store them that way
             // for now. Later, once we have the values of the constants, we will be able to build the CONSTRUCT clause.
@@ -457,7 +276,7 @@ object SearchParserV2 {
             var pred: Option[String] = None
             var obj: Option[String] = None
 
-            for (projectionElem: ProjectionElem <- node.getElements.asScala) {
+            for (projectionElem: algebra.ProjectionElem <- node.getElements.asScala) {
                 val sourceName: String = projectionElem.getSourceName
                 val targetName: String = projectionElem.getTargetName
 
@@ -480,89 +299,89 @@ object SearchParserV2 {
             constructStatementsWithConstants.append(ConstructStatementWithConstants(subj = subj.get, pred = pred.get, obj = obj.get))
         }
 
-        override def meet(node: ProjectionElem): Unit = {
+        override def meet(node: algebra.ProjectionElem): Unit = {
             unsupported(node)
         }
 
-        override def meet(node: Projection): Unit = {
+        override def meet(node: algebra.Projection): Unit = {
             node.visitChildren(this)
         }
 
-        override def meet(node: OrderElem): Unit = {
+        override def meet(node: algebra.OrderElem): Unit = {
             unsupported(node)
         }
 
-        override def meet(node: Order): Unit = {
+        override def meet(node: algebra.Order): Unit = {
             unsupported(node)
         }
 
-        override def meet(node: Or): Unit = {
+        override def meet(node: algebra.Or): Unit = {
             // Does nothing, because this is handled in meet(node: Filter).
         }
 
-        override def meet(node: Not): Unit = {
+        override def meet(node: algebra.Not): Unit = {
             unsupported(node)
         }
 
-        override def meet(node: Namespace): Unit = {
+        override def meet(node: algebra.Namespace): Unit = {
             unsupported(node)
         }
 
-        override def meet(node: MultiProjection): Unit = {
+        override def meet(node: algebra.MultiProjection): Unit = {
             node.visitChildren(this)
         }
 
-        override def meet(move: Move): Unit = {
+        override def meet(move: algebra.Move): Unit = {
             unsupported(move)
         }
 
-        override def meet(node: Coalesce): Unit = {
+        override def meet(node: algebra.Coalesce): Unit = {
             unsupported(node)
         }
 
-        override def meet(node: Compare): Unit = {
+        override def meet(node: algebra.Compare): Unit = {
             // Do nothing, because this is handled by meet(node: Filter).
         }
 
-        override def meet(node: CompareAll): Unit = {
+        override def meet(node: algebra.CompareAll): Unit = {
             unsupported(node)
         }
 
-        override def meet(node: IsLiteral): Unit = {
+        override def meet(node: algebra.IsLiteral): Unit = {
             unsupported(node)
         }
 
-        override def meet(node: IsNumeric): Unit = {
+        override def meet(node: algebra.IsNumeric): Unit = {
             unsupported(node)
         }
 
-        override def meet(node: IsResource): Unit = {
+        override def meet(node: algebra.IsResource): Unit = {
             unsupported(node)
         }
 
-        override def meet(node: IsURI): Unit = {
+        override def meet(node: algebra.IsURI): Unit = {
             unsupported(node)
         }
 
-        override def meet(node: SameTerm): Unit = {
+        override def meet(node: algebra.SameTerm): Unit = {
             unsupported(node)
         }
 
-        override def meet(modify: Modify): Unit = {
+        override def meet(modify: algebra.Modify): Unit = {
             unsupported(modify)
         }
 
-        override def meet(node: Min): Unit = {
+        override def meet(node: algebra.Min): Unit = {
             unsupported(node)
         }
 
-        override def meet(node: Max): Unit = {
+        override def meet(node: algebra.Max): Unit = {
             unsupported(node)
         }
 
-        override def meet(node: ExtensionElem): Unit = {
+        override def meet(node: algebra.ExtensionElem): Unit = {
             node.getExpr match {
-                case valueConstant: ValueConstant =>
+                case valueConstant: algebra.ValueConstant =>
                     if (node.getName.startsWith("_const_")) {
                         // This is a parser-generated constant used in the CONSTRUCT clause. Just save it so we can
                         // build the CONSTRUCT clause correctly later.
@@ -575,106 +394,106 @@ object SearchParserV2 {
             }
         }
 
-        override def meet(node: Extension): Unit = {
+        override def meet(node: algebra.Extension): Unit = {
             node.visitChildren(this)
         }
 
-        override def meet(node: Exists): Unit = {
+        override def meet(node: algebra.Exists): Unit = {
             unsupported(node)
         }
 
-        override def meet(node: EmptySet): Unit = {
+        override def meet(node: algebra.EmptySet): Unit = {
             unsupported(node)
         }
 
-        override def meet(node: Distinct): Unit = {
+        override def meet(node: algebra.Distinct): Unit = {
             unsupported(node)
         }
 
-        override def meet(node: Difference): Unit = {
+        override def meet(node: algebra.Difference): Unit = {
             unsupported(node)
         }
 
-        override def meet(deleteData: DeleteData): Unit = {
+        override def meet(deleteData: algebra.DeleteData): Unit = {
             unsupported(deleteData)
         }
 
-        override def meet(node: Datatype): Unit = {
+        override def meet(node: algebra.Datatype): Unit = {
             unsupported(node)
         }
 
-        override def meet(clear: Clear): Unit = {
+        override def meet(clear: algebra.Clear): Unit = {
             unsupported(clear)
         }
 
-        override def meet(node: Bound): Unit = {
+        override def meet(node: algebra.Bound): Unit = {
             unsupported(node)
         }
 
-        override def meet(node: BNodeGenerator): Unit = {
+        override def meet(node: algebra.BNodeGenerator): Unit = {
             unsupported(node)
         }
 
-        override def meet(node: BindingSetAssignment): Unit = {
+        override def meet(node: algebra.BindingSetAssignment): Unit = {
             unsupported(node)
         }
 
-        override def meet(node: Avg): Unit = {
+        override def meet(node: algebra.Avg): Unit = {
             unsupported(node)
         }
 
-        override def meet(node: ArbitraryLengthPath): Unit = {
+        override def meet(node:algebra.ArbitraryLengthPath): Unit = {
             unsupported(node)
         }
 
-        override def meet(node: And): Unit = {
+        override def meet(node: algebra.And): Unit = {
             // Does nothing, because this is handled in meet(node: Filter).
         }
 
-        override def meet(add: Add): Unit = {
+        override def meet(add: algebra.Add): Unit = {
             unsupported(add)
         }
 
-        override def meet(node: QueryRoot): Unit = {
+        override def meet(node: algebra.QueryRoot): Unit = {
             node.visitChildren(this)
         }
 
-        override def meet(node: DescribeOperator): Unit = {
+        override def meet(node: algebra.DescribeOperator): Unit = {
             throw SparqlSearchException(s"DESCRIBE queries are not allowed in search, please use a CONSTRUCT query instead")
         }
 
-        override def meet(copy: Copy): Unit = {
+        override def meet(copy: algebra.Copy): Unit = {
             unsupported(copy)
         }
 
-        override def meet(node: Count): Unit = {
+        override def meet(node: algebra.Count): Unit = {
             unsupported(node)
         }
 
-        override def meet(create: Create): Unit = {
+        override def meet(create: algebra.Create): Unit = {
             unsupported(create)
         }
 
-        override def meet(node: Sample): Unit = {
+        override def meet(node: algebra.Sample): Unit = {
             unsupported(node)
         }
 
-        override def meet(node: Service): Unit = {
+        override def meet(node: algebra.Service): Unit = {
             unsupported(node)
         }
 
-        override def meet(node: SingletonSet): Unit = {
+        override def meet(node: algebra.SingletonSet): Unit = {
             node.visitChildren(this)
         }
 
-        override def meet(node: CompareAny): Unit = {
+        override def meet(node: algebra.CompareAny): Unit = {
             unsupported(node)
         }
 
-        override def meet(node: Filter): Unit = {
-            def makeFilterExpression(valueExpr: ValueExpr): FilterExpression = {
+        override def meet(node: algebra.Filter): Unit = {
+            def makeFilterExpression(valueExpr: algebra.ValueExpr): FilterExpression = {
                 valueExpr match {
-                    case compare: Compare =>
+                    case compare: algebra.Compare =>
                         val leftArg = makeFilterExpression(compare.getLeftArg)
                         val rightArg = makeFilterExpression(compare.getRightArg)
                         val operator = compare.getOperator.getSymbol
@@ -685,7 +504,7 @@ object SearchParserV2 {
                             rightArg = rightArg
                         )
 
-                    case and: And =>
+                    case and: algebra.And =>
                         val leftArg = makeFilterExpression(and.getLeftArg)
                         val rightArg = makeFilterExpression(and.getRightArg)
 
@@ -694,7 +513,7 @@ object SearchParserV2 {
                             rightArg = rightArg
                         )
 
-                    case or: Or =>
+                    case or: algebra.Or =>
                         val leftArg = makeFilterExpression(or.getLeftArg)
                         val rightArg = makeFilterExpression(or.getRightArg)
 
@@ -703,14 +522,14 @@ object SearchParserV2 {
                             rightArg = rightArg
                         )
 
-                    case valueConstant: ValueConstant =>
+                    case valueConstant: algebra.ValueConstant =>
                         valueConstant.getValue match {
                             case literal: rdf4j.model.Literal => XsdLiteral(value = literal.stringValue, datatype = literal.getDatatype.stringValue)
                             case iri: org.eclipse.rdf4j.model.IRI => IriRef(iri = iri.toString)
                             case other => throw SparqlSearchException(s"Unsupported ValueConstant: $other with class ${other.getClass.getName}")
                         }
 
-                    case sparqlVar: Var => makeEntity(sparqlVar)
+                    case sparqlVar: algebra.Var => makeEntity(sparqlVar)
 
                     case other => throw SparqlSearchException(s"Unsupported FILTER expression: $other")
                 }
@@ -724,63 +543,63 @@ object SearchParserV2 {
             wherePatterns.append(FilterPattern(expression = filterExpression))
         }
 
-        override def meet(node: FunctionCall): Unit = {
+        override def meet(node: algebra.FunctionCall): Unit = {
             unsupported(node)
         }
 
-        override def meet(node: Group): Unit = {
+        override def meet(node: algebra.Group): Unit = {
             unsupported(node)
         }
 
-        override def meet(node: GroupConcat): Unit = {
+        override def meet(node: algebra.GroupConcat): Unit = {
             unsupported(node)
         }
 
-        override def meet(node: GroupElem): Unit = {
+        override def meet(node: algebra.GroupElem): Unit = {
             unsupported(node)
         }
 
-        override def meet(node: If): Unit = {
+        override def meet(node: algebra.If): Unit = {
             unsupported(node)
         }
 
-        override def meet(node: In): Unit = {
+        override def meet(node: algebra.In): Unit = {
             unsupported(node)
         }
 
-        override def meet(insertData: InsertData): Unit = {
+        override def meet(insertData: algebra.InsertData): Unit = {
             unsupported(insertData)
         }
 
-        override def meet(node: Intersection): Unit = {
+        override def meet(node: algebra.Intersection): Unit = {
             unsupported(node)
         }
 
-        override def meet(node: IRIFunction): Unit = {
+        override def meet(node: algebra.IRIFunction): Unit = {
             unsupported(node)
         }
 
-        override def meet(node: IsBNode): Unit = {
+        override def meet(node: algebra.IsBNode): Unit = {
             unsupported(node)
         }
 
-        override def meet(node: MathExpr): Unit = {
+        override def meet(node: algebra.MathExpr): Unit = {
             unsupported(node)
         }
 
-        override def meet(node: LocalName): Unit = {
+        override def meet(node: algebra.LocalName): Unit = {
             unsupported(node)
         }
 
-        override def meet(load: Load): Unit = {
+        override def meet(load: algebra.Load): Unit = {
             unsupported(load)
         }
 
-        override def meet(node: Like): Unit = {
+        override def meet(node: algebra.Like): Unit = {
             unsupported(node)
         }
 
-        override def meet(node: LeftJoin): Unit = {
+        override def meet(node: algebra.LeftJoin): Unit = {
             // Visit the nodes that aren't in the OPTIONAL.
             node.getLeftArg.visit(this)
 
@@ -790,24 +609,24 @@ object SearchParserV2 {
             wherePatterns.append(OptionalPattern(checkBlockPatterns(rightArgVisitor.getWherePatterns)))
         }
 
-        override def meet(node: LangMatches): Unit = {
+        override def meet(node: algebra.LangMatches): Unit = {
             unsupported(node)
         }
 
-        override def meet(node: Lang): Unit = {
+        override def meet(node: algebra.Lang): Unit = {
             unsupported(node)
         }
 
-        override def meet(node: Label): Unit = {
+        override def meet(node: algebra.Label): Unit = {
             unsupported(node)
         }
 
-        override def meet(node: Join): Unit = {
+        override def meet(node: algebra.Join): Unit = {
             // Successive statements are connected by Joins.
             node.visitChildren(this)
         }
 
-        override def meetOther(node: QueryModelNode): Unit = {
+        override def meetOther(node: algebra.QueryModelNode): Unit = {
             unsupported(node)
         }
     }

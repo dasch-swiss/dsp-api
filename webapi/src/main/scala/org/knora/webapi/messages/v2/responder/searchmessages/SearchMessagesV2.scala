@@ -23,7 +23,7 @@ package org.knora.webapi.messages.v2.responder.searchmessages
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v2.responder._
-import org.knora.webapi.util.search.v2.ConstructQuery
+import org.knora.webapi.util.search.ConstructQuery
 
 /**
   * An abstract trait for messages that can be sent to `SearchResponderV2`.
