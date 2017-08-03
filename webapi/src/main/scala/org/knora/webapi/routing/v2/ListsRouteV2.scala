@@ -24,7 +24,7 @@ import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
-import org.knora.webapi.messages.v2.responder.listmessages.{ListExtendedGetRequestV2, ListNodeInfoGetRequestV2, ListsGetRequestV2}
+import org.knora.webapi.messages.v2.responder.listmessages.{ListExtendedGetRequestV2, ListInfoGetRequestV2, ListNodeInfoGetRequestV2, ListsGetRequestV2}
 import org.knora.webapi.routing.{Authenticator, RouteUtilV2}
 import org.knora.webapi.util.InputValidation
 import org.knora.webapi.{BadRequestException, IRI, SettingsImpl}
@@ -96,7 +96,7 @@ object ListsRouteV2 extends Authenticator {
                     val userProfile = getUserProfileV1(requestContext)
                     val listIri = InputValidation.toIri(iri, () => throw BadRequestException(s"Invalid param list IRI: $iri"))
 
-                    val requestMessage = ListNodeInfoGetRequestV2(listIri, userProfile)
+                    val requestMessage = ListInfoGetRequestV2(listIri, userProfile)
 
                     RouteUtilV2.runJsonRoute(
                         requestMessage,

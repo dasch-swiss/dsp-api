@@ -20,10 +20,14 @@
 
 package org.knora.webapi.messages.v2.responder.listmessages
 
+import java.{lang, util}
+
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
+import com.github.jsonldjava.core.{JsonLdOptions, JsonLdProcessor}
+import com.github.jsonldjava.utils.JsonUtils
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
-import org.knora.webapi.messages.v2.responder.{KnoraRequestV2, KnoraResponseV2}
+import org.knora.webapi.messages.v2.responder.{KnoraRequestV2, KnoraResponseV2, ReadResourceUtil, ReadResourceV2}
 import spray.json._
 
 
@@ -175,13 +179,13 @@ case class SelectionGetResponseV2(selection: Seq[ListNodeV2]) extends ListGetRes
   * @param labels     the labels of the list in all available languages.
   * @param comments   the comments of the list in all available languages.
   */
-case class LisInfoGetResponseV2(id: IRI, projectIri: Option[IRI], labels: Seq[StringWithOptionalLang], comments: Seq[StringWithOptionalLang]) extends KnoraResponseV2 with ListV2JsonProtocol {
+case class ListInfoGetResponseV2(id: IRI, projectIri: Option[IRI], labels: Seq[StringWithOptionalLang], comments: Seq[StringWithOptionalLang]) extends KnoraResponseV2 with ListV2JsonProtocol with ListV2JsonLDProtocol {
 
-    def toJsValue: JsValue = listNodeInfoGetResponseV2Format.write(this)
+    def toJsValue: JsValue = listInfoGetResponseV2Format.write(this)
 
     def toXML: String = ???
 
-    def toJsonLDWithValueObject(settings: SettingsImpl): String = toJsValue.toString
+    def toJsonLDWithValueObject(settings: SettingsImpl): String = listInfoGetResponseV2Writer(this, settings)
 }
 
 /**
@@ -277,10 +281,10 @@ object PathType extends Enumeration {
 /**
   * Represents a string with an optional language tag.
   *
-  * @param value the string value.
-  * @param lang  the optional language tag.
+  * @param value    the string value.
+  * @param language the optional language tag.
   */
-case class StringWithOptionalLang(value: String, lang: Option[String])
+case class StringWithOptionalLang(value: String, language: Option[String])
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // JSON formatting
@@ -385,4 +389,45 @@ trait ListV2JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with 
     implicit val listsGetResponseV2Format: RootJsonFormat[ListsGetResponseV2] = jsonFormat(ListsGetResponseV2, "lists")
     implicit val listExtendedGetResponseV2Format: RootJsonFormat[ListExtendedGetResponseV2] = jsonFormat(ListExtendedGetResponseV2, "info", "nodes")
     implicit val listNodeInfoGetResponseV2Format: RootJsonFormat[ListNodeInfoGetResponseV2] = jsonFormat(ListNodeInfoGetResponseV2, "id", "labels", "comments")
+    implicit val listInfoGetResponseV2Format: RootJsonFormat[ListInfoGetResponseV2] = jsonFormat(ListInfoGetResponseV2, "id", "projectIri", "labels", "comments")
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// JSON-LD formatting
+
+/**
+  * A json-ld protocol for generating Knora API V2 JSON-LD providing data about lists.
+  */
+trait ListV2JsonLDProtocol {
+
+    def listInfoGetResponseV2Writer(p: ListInfoGetResponseV2, settings: SettingsImpl): String = {
+
+        val context = new util.HashMap[String, String]()
+        context.put("@vocab", "http://schema.org/")
+        context.put(OntologyConstants.KnoraApi.KnoraApiOntologyLabel, OntologyConstants.KnoraApiV2WithValueObject.KnoraApiV2PrefixExpansion)
+        context.put("rdfs", "http://www.w3.org/2000/01/rdf-schema#")
+
+        val json: util.HashMap[String, Object] = new util.HashMap[String, Object]()
+
+        val resSeq: util.List[util.Map[IRI, Object]] = resources.map {
+            (resource: ReadResourceV2) =>
+
+                ReadResourceUtil.createValueMapFromReadResourceV2(resource, settings)
+
+        }.asJava
+
+        json.put("@type", "ItemList")
+
+        json.put("http://schema.org/numberOfItems", new lang.Integer(numberOfResources))
+
+        json.put("http://schema.org/itemListElement", resSeq)
+
+        val compacted = JsonLdProcessor.compact(json, context, new JsonLdOptions())
+
+        JsonUtils.toPrettyString(compacted)
+
+
+    }
+
 }
