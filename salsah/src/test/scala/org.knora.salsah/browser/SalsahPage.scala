@@ -97,8 +97,8 @@ class SalsahPage(pageUrl: String, headless: Boolean) {
       * @param fullName user's full name
       */
     def doLogin(email: String, password: String, fullName: String): Unit = {
-        eventually {
-            val loginButton = driver.findElement(By.id("dologin"))
+
+            val loginButton = eventually(driver.findElement(By.id("dologin")))
             loginButton.click()
 
             val userInput = driver.findElement(By.id("user_id"))
@@ -111,6 +111,7 @@ class SalsahPage(pageUrl: String, headless: Boolean) {
 
             sendCredentials.click()
 
+        eventually {
             driver.findElement(By.xpath("//*[@id=\"userctrl\"]")).getText.contains(fullName)
             driver.findElement(By.id("dologout"))
         }
