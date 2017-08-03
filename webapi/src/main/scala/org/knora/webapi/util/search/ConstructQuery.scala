@@ -21,7 +21,6 @@
 package org.knora.webapi.util.search
 
 import org.knora.webapi._
-import org.knora.webapi.util.InputValidation
 
 /**
   * Represents something that can generate SPARQL source code.
@@ -51,10 +50,6 @@ case class QueryVariable(variableName: String) extends Entity {
   */
 case class IriRef(iri: IRI) extends Entity {
     def toSparql: String = s"<$iri>"
-
-    if (InputValidation.isInternalEntityIri(iri)) {
-        throw SparqlSearchException(s"Internal ontology entity IRI not allowed in search query: $iri")
-    }
 }
 
 /**
@@ -94,6 +89,14 @@ case class StatementPattern(subj: Entity, pred: Entity, obj: Entity, namedGraph:
                 triple + "\n"
         }
     }
+
+    /**
+      * A convenience function that returns a copy of this statement pattern, with its named graph set to
+      * `http://www.knora.org/explicit`, indicating that inference should be disabled for the pattern.
+      *
+      * @return a copy of this statement pattern with its named graph set to `http://www.knora.org/explicit`.
+      */
+    def toKnoraExplicit: StatementPattern = copy(namedGraph = Some(IriRef(OntologyConstants.NamedGraphs.KnoraExplicitNamedGraph)))
 }
 
 /**

@@ -105,13 +105,6 @@ class SearchParserV2Spec extends WordSpec with Matchers {
             val reparsed = SearchParserV2.parseSearchQuery(parsed.toSparql)
             reparsed should ===(parsed)
         }
-
-        "parse an extended search query containing a GRAPH clause" in {
-            val parsed: ConstructQuery = SearchParserV2.parseSearchQuery(QueryWithGraph)
-            parsed should ===(ParsedQueryWithGraph)
-            val reparsed = SearchParserV2.parseSearchQuery(parsed.toSparql)
-            reparsed should ===(parsed)
-        }
     }
 }
 
@@ -375,73 +368,6 @@ object SearchParserV2Spec {
             pred = IriRef(iri = "http://api.knora.org/ontology/knora-api/simple/v2#hasLinkTo"),
             subj = QueryVariable(variableName = "resource")
         )))
-    )
-
-    val ParsedQueryWithGraph = ConstructQuery(
-        whereClause = WhereClause(patterns = Vector(
-            StatementPattern(
-                namedGraph = None,
-                obj = IriRef(iri = "http://api.knora.org/ontology/anything/simple/v2#Thing"),
-                pred = IriRef(iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"),
-                subj = QueryVariable(variableName = "resource")
-            ),
-            StatementPattern(
-                namedGraph = None,
-                obj = IriRef(iri = "http://data.knora.org/a-thing"),
-                pred = IriRef(iri = "http://api.knora.org/ontology/knora-api/simple/v2#hasLinkTo"),
-                subj = QueryVariable(variableName = "resource")
-            ),
-            StatementPattern(
-                namedGraph = None,
-                obj = QueryVariable(variableName = "value"),
-                pred = IriRef(iri = "http://api.knora.org/ontology/knora-api/simple/v2#hasValue"),
-                subj = QueryVariable(variableName = "resource")
-            ),
-            StatementPattern(
-                namedGraph = Some(IriRef(iri = "http://www.ontotext.com/explicit")),
-                obj = IriRef(iri = "http://data.knora.org/a-thing"),
-                pred = QueryVariable(variableName = "linkProp"),
-                subj = QueryVariable(variableName = "resource")
-            ),
-            StatementPattern(
-                namedGraph = Some(IriRef(iri = "http://www.ontotext.com/explicit")),
-                obj = QueryVariable(variableName = "value"),
-                pred = QueryVariable(variableName = "valueProp"),
-                subj = QueryVariable(variableName = "resource")
-            )
-        )),
-        constructClause = ConstructClause(statements = Vector(
-            StatementPattern(
-                namedGraph = None,
-                obj = IriRef(iri = "http://api.knora.org/ontology/anything/simple/v2#Thing"),
-                pred = IriRef(iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"),
-                subj = QueryVariable(variableName = "resource")
-            ),
-            StatementPattern(
-                namedGraph = None,
-                obj = IriRef(iri = "http://data.knora.org/a-thing"),
-                pred = IriRef(iri = "http://api.knora.org/ontology/knora-api/simple/v2#hasLinkTo"),
-                subj = QueryVariable(variableName = "resource")
-            ),
-            StatementPattern(
-                namedGraph = None,
-                obj = IriRef(iri = "http://data.knora.org/a-thing"),
-                pred = QueryVariable(variableName = "linkProp"),
-                subj = QueryVariable(variableName = "resource")
-            ),
-            StatementPattern(
-                namedGraph = None,
-                obj = QueryVariable(variableName = "value"),
-                pred = IriRef(iri = "http://api.knora.org/ontology/knora-api/simple/v2#hasValue"),
-                subj = QueryVariable(variableName = "resource")
-            ),
-            StatementPattern(
-                namedGraph = None,
-                obj = QueryVariable(variableName = "value"),
-                pred = QueryVariable(variableName = "valueProp"),
-                subj = QueryVariable(variableName = "resource")
-            )
-        ))
     )
 
     val QueryWithBind: String =
@@ -744,28 +670,4 @@ object SearchParserV2Spec {
           |    <http://rdfh.ch/beol/6edJwtTSR8yjAWnYmt6AtA> a knora-api:Resource .
           |}
         """.stripMargin
-
-    val QueryWithGraph: String =
-        """
-          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-          |PREFIX anything: <http://api.knora.org/ontology/anything/simple/v2#>
-          |
-          |CONSTRUCT {
-          |    ?resource a anything:Thing .
-          |    ?resource knora-api:hasLinkTo <http://data.knora.org/a-thing> .
-          |    ?resource ?linkProp <http://data.knora.org/a-thing> .
-          |    ?resource knora-api:hasValue ?value .
-          |    ?resource ?valueProp ?value .
-          |} WHERE {
-          |    ?resource a anything:Thing .
-          |    ?resource knora-api:hasLinkTo <http://data.knora.org/a-thing> .
-          |    ?resource knora-api:hasValue ?value .
-          |
-          |    GRAPH <http://www.ontotext.com/explicit> {
-          |        ?resource ?linkProp <http://data.knora.org/a-thing> .
-          |        ?resource ?valueProp ?value .
-          |    }
-          |}
-        """.stripMargin
-
 }

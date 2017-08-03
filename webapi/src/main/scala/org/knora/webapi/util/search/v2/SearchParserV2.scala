@@ -25,7 +25,7 @@ import org.eclipse.rdf4j.query.algebra
 import org.eclipse.rdf4j.query.parser.ParsedQuery
 import org.eclipse.rdf4j.query.parser.sparql._
 import org.eclipse.rdf4j.query.MalformedQueryException
-import org.knora.webapi.util.search
+import org.knora.webapi.util.{InputValidation, search}
 import org.knora.webapi.util.search._
 import org.knora.webapi._
 
@@ -156,7 +156,13 @@ object SearchParserV2 {
         private def makeEntity(objVar: algebra.Var): Entity = {
             if (objVar.isAnonymous || objVar.isConstant) {
                 objVar.getValue match {
-                    case iri: rdf4j.model.IRI => IriRef(iri.stringValue)
+                    case iri: rdf4j.model.IRI =>
+                        if (InputValidation.isInternalEntityIri(iri.stringValue)) {
+                            throw SparqlSearchException(s"Internal ontology entity IRI not allowed in search query: $iri")
+                        }
+
+                        IriRef(iri.stringValue)
+
                     case literal: rdf4j.model.Literal => XsdLiteral(value = literal.stringValue, datatype = literal.getDatatype.stringValue)
                     case other => throw SparqlSearchException(s"Invalid object for triple patterns: $other")
                 }
@@ -170,15 +176,11 @@ object SearchParserV2 {
             val pred: Entity = makeEntity(node.getPredicateVar)
             val obj: Entity = makeEntity(node.getObjectVar)
 
-            val namedGraph = Option(node.getContextVar).map {
-                v =>
-                    makeEntity(v) match {
-                        case iriRef: IriRef => iriRef
-                        case other => throw SparqlSearchException(s"Invalid named graph: $other")
-                    }
+            if (Option(node.getContextVar).nonEmpty) {
+                throw SparqlSearchException("Named graphs are not supported in search queries")
             }
 
-            wherePatterns.append(StatementPattern(subj = subj, pred = pred, obj = obj, namedGraph = namedGraph))
+            wherePatterns.append(StatementPattern(subj = subj, pred = pred, obj = obj))
         }
 
         override def meet(node: algebra.Str): Unit = {
@@ -209,7 +211,8 @@ object SearchParserV2 {
         override def meet(node: algebra.Union): Unit = {
             // Get the block of query patterns on the left side of the UNION.
             val leftPatterns: Seq[QueryPattern] = node.getLeftArg match {
-                case _:algebra. Union => throw SparqlSearchException("Nested UNIONs are not allowed in search queries")
+                case _: algebra.Union => throw SparqlSearchException("Nested UNIONs are not allowed in search queries")
+
                 case otherLeftArg =>
                     val leftArgVisitor = new ConstructQueryModelVisitor
                     otherLeftArg.visit(leftArgVisitor)
@@ -442,7 +445,7 @@ object SearchParserV2 {
             unsupported(node)
         }
 
-        override def meet(node:algebra.ArbitraryLengthPath): Unit = {
+        override def meet(node: algebra.ArbitraryLengthPath): Unit = {
             unsupported(node)
         }
 
@@ -525,7 +528,12 @@ object SearchParserV2 {
                     case valueConstant: algebra.ValueConstant =>
                         valueConstant.getValue match {
                             case literal: rdf4j.model.Literal => XsdLiteral(value = literal.stringValue, datatype = literal.getDatatype.stringValue)
-                            case iri: org.eclipse.rdf4j.model.IRI => IriRef(iri = iri.toString)
+                            case iri: org.eclipse.rdf4j.model.IRI =>
+                                if (InputValidation.isInternalEntityIri(iri.stringValue)) {
+                                    throw SparqlSearchException(s"Internal ontology entity IRI not allowed in search query: $iri")
+                                }
+
+                                IriRef(iri = iri.stringValue)
                             case other => throw SparqlSearchException(s"Unsupported ValueConstant: $other with class ${other.getClass.getName}")
                         }
 

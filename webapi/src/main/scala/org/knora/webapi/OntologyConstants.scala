@@ -555,5 +555,7 @@ object OntologyConstants {
     object NamedGraphs {
         val AdminNamedGraph: IRI = "http://www.knora.org/data/admin"
         val PersistentMapNamedGraph: IRI = "http://www.knora.org/data/maps"
+        val KnoraExplicitNamedGraph: IRI = "http://www.knora.org/explicit"
+        val GraphDBExplicitNamedGraph: IRI = "http://www.ontotext.com/explicit"
     }
 }
