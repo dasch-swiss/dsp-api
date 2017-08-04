@@ -81,7 +81,7 @@ class AuthenticatorSpec extends CoreSpec("AuthenticationTestSystem") with Implic
             "succeed with the correct 'email' " in {
                 Authenticator invokePrivate getUserProfileV1ByEmail(rootUserEmail, system, timeout, executionContext) should be(rootUserProfileV1)
             }
-            
+
             "fail with the wrong 'email' " in {
                 an [BadCredentialsException] should be thrownBy {
                     Authenticator invokePrivate getUserProfileV1ByEmail("wronguser@example.com", system, timeout, executionContext)
