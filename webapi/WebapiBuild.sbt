@@ -162,6 +162,7 @@ lazy val webApiLibs = Seq(
     "org.joda" % "joda-convert" % "1.8",
     "com.sksamuel.diff" % "diff" % "1.1.11",
     "org.xmlunit" % "xmlunit-core" % "2.1.1",
+    "io.igl" %% "jwt" % "1.2.2",
     // testing
     "com.typesafe.akka" %% "akka-testkit" % akkaVersion % "test, fuseki, graphdb, tdb, it, fuseki-it",
     "com.typesafe.akka" %% "akka-http-testkit" % akkaHttpVersion % "test, fuseki, graphdb, tdb, it, fuseki-it",

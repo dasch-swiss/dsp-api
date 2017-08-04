@@ -1,6 +1,6 @@
 /*
  * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
+ * Tobias Schweizer, André Kilchenmann, and André Fatton.
  *
  * This file is part of Knora.
  *
@@ -18,15 +18,16 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.routing.v1
+package org.knora.webapi.routing
 
 import akka.actor.ActorDSL._
 import akka.testkit.ImplicitSender
 import akka.util.Timeout
 import com.typesafe.config.ConfigFactory
+import io.igl.jwt._
+import org.knora.webapi.messages.v1.responder.authenticatemessages.{KnoraCredentialsV1, SessionV1}
 import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_NAME
-import org.knora.webapi.routing.{Authenticator, KnoraCredentials, SessionV1}
 import org.knora.webapi.util.ActorUtil
 import org.knora.webapi.{BadCredentialsException, CoreSpec, SharedAdminTestData}
 import org.scalatest.PrivateMethodTester
@@ -44,14 +45,6 @@ object AuthenticatorSpec {
         """.stripMargin)
 }
 
-/*
- *  This test needs a running http layer, so that different api access authentication schemes can be tested
- *  - Browser basic auth
- *  - Basic auth over API
- *  - Username/password over API
- *  - API Key based authentication
- */
-
 class AuthenticatorSpec extends CoreSpec("AuthenticationTestSystem") with ImplicitSender with PrivateMethodTester {
 
     implicit val executionContext = system.dispatcher
@@ -60,6 +53,23 @@ class AuthenticatorSpec extends CoreSpec("AuthenticationTestSystem") with Implic
     val rootUserProfileV1 = SharedAdminTestData.rootUser
     val rootUserEmail = rootUserProfileV1.userData.email.get
     val rootUserPassword = "test"
+
+
+    val secretKey = "super-secret-key"
+    val algorithm = Algorithm.HS256
+    val requiredHeaders = Set[HeaderField](Typ)
+    val requiredClaims = Set[ClaimField](Iss, Sub, Aud)
+
+
+    val headers = Seq[HeaderValue](Typ("JWT"), Alg(algorithm))
+    val claims = Seq[ClaimValue](Iss("webapi"), Sub(rootUserProfileV1.userData.user_id.get), Aud("webapi"))
+
+    val jwt = new DecodedJwt(headers, claims)
+
+    val encodedJwt = jwt.encodedAndSigned(secretKey)
+
+
+
 
     val mockUsersActor = actor(RESPONDER_MANAGER_ACTOR_NAME)(new Act {
         become {
@@ -77,7 +87,7 @@ class AuthenticatorSpec extends CoreSpec("AuthenticationTestSystem") with Implic
     val authenticateCredentialsV1 = PrivateMethod[Try[SessionV1]]('authenticateCredentialsV1)
 
     "During Authentication" when {
-        "called, the 'getUserProfile' method " should {
+        "called, the 'getUserProfileV1ByEmail' method " should {
             "succeed with the correct 'email' " in {
                 Authenticator invokePrivate getUserProfileV1ByEmail(rootUserEmail, system, timeout, executionContext) should be(rootUserProfileV1)
             }
@@ -94,13 +104,13 @@ class AuthenticatorSpec extends CoreSpec("AuthenticationTestSystem") with Implic
                 }
             }
         }
-        "called, the 'authenticateCredentials' method " should {
+        "called, the 'authenticateCredentialsV1' method " should {
             "succeed with the correct 'email' / correct 'password' " in {
-                Authenticator invokePrivate authenticateCredentialsV1(KnoraCredentials(Some(rootUserEmail), Some(rootUserPassword), None), false, system, executionContext) should be(SessionV1(None, rootUserProfileV1))
+                Authenticator invokePrivate authenticateCredentialsV1(KnoraCredentialsV1(Some(rootUserEmail), Some(rootUserPassword), None), false, system, executionContext) should be(SessionV1(encodedJwt, rootUserProfileV1))
             }
             "fail with correct 'email' / wrong 'password' " in {
                 an [BadCredentialsException] should be thrownBy {
-                    Authenticator invokePrivate authenticateCredentialsV1(KnoraCredentials(Some(rootUserEmail), Some("wrongpassword"), None), false, system, executionContext)
+                    Authenticator invokePrivate authenticateCredentialsV1(KnoraCredentialsV1(Some(rootUserEmail), Some("wrongpassword"), None), false, system, executionContext)
                 }
             }
         }

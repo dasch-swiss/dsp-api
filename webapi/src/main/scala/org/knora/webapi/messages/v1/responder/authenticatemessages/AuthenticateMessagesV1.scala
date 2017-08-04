@@ -21,8 +21,8 @@
 package org.knora.webapi.messages.v1.responder.authenticatemessages
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import arq.iri
 import org.knora.webapi.IRI
+import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import spray.json._
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -36,6 +36,31 @@ import spray.json._
   */
 case class CreateSessionApiRequestV1(username: String, password: String)
 
+
+/**
+  * Represents credentials that a user can supply.
+  *
+  * @param email     the optionally supplied email.
+  * @param password  the optionally supplied password.
+  * @param sessionId the optionally supplied session id.
+  */
+case class KnoraCredentialsV1(email: Option[String] = None,
+                              password: Option[String] = None,
+                              sessionId: Option[String] = None) {
+
+    def isEmpty: Boolean = this.email.isEmpty && this.password.isEmpty && this.sessionId.isEmpty
+}
+
+
+/**
+  * Represents the session containing the id under which a user profile is stored and the user profile itself.
+  *
+  * @param sid           the session id (a true JSON web token).
+  * @param userProfileV1 the [[UserProfileV1]] the session id is referring to.
+  */
+case class SessionV1(sid: String, userProfileV1: UserProfileV1)
+
+
 /**
   * Representing user's credentials (iri, email, password)
   *
@@ -43,8 +68,10 @@ case class CreateSessionApiRequestV1(username: String, password: String)
   * @param email    the user's email.
   * @param password the user's password.
   */
-case class Credentials(userIri: IRI, email: String, password: String) {
+case class CredentialsV1(userIri: IRI, email: String, password: String) {
+
     def urlEncodedIri = java.net.URLEncoder.encode(userIri, "utf-8")
+
     def urlEncodedEmail = java.net.URLEncoder.encode(email, "utf-8")
 }
 

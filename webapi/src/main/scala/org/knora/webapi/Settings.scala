@@ -131,6 +131,8 @@ class SettingsImpl(config: Config) extends Extension {
 
     val skipAuthentication: Boolean = config.getBoolean("app.skip-authentication")
 
+    val jwtSecretKey: String = config.getString("app.jwt-secret-key")
+
     val fallbackLanguage: String = config.getString("user.default-language")
 
     val profileQueries: Boolean = config.getBoolean("app.triplestore.profile-queries")

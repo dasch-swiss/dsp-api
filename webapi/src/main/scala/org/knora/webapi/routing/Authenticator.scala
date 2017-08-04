@@ -20,7 +20,7 @@
 
 package org.knora.webapi.routing
 
-import java.util.UUID
+import java.nio.charset.StandardCharsets.UTF_8
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.model._
@@ -29,7 +29,9 @@ import akka.http.scaladsl.server.RequestContext
 import akka.pattern._
 import akka.util.{ByteString, Timeout}
 import com.typesafe.scalalogging.Logger
+import io.igl.jwt._
 import org.knora.webapi._
+import org.knora.webapi.messages.v1.responder.authenticatemessages.{KnoraCredentialsV1, SessionV1}
 import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_PATH
 import org.knora.webapi.util.CacheUtil
@@ -38,33 +40,10 @@ import spray.json.{JsNumber, JsObject, JsString}
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext}
-import scala.util.{Success, Try}
-
+import scala.util.{Failure, Success}
 
 // needs Java 1.8 !!!
 import java.util.Base64
-
-
-/**
-  * Represents credentials that a user can supply.
-  *
-  * @param email     the optionally supplied email.
-  * @param password  the optionally supplied password.
-  * @param sessionId the optionally supplied session id.
-  */
-case class KnoraCredentials(email: Option[String] = None,
-                            password: Option[String] = None,
-                            sessionId: Option[String] = None) {
-    def isEmpty: Boolean = this.email.isEmpty && this.password.isEmpty && this.sessionId.isEmpty
-}
-
-/**
-  * Represents the session containing the id under which a user profile is stored and the user profile itself.
-  *
-  * @param sid           the session id.
-  * @param userProfileV1 the [[UserProfileV1]] the session id is referring to.
-  */
-case class SessionV1(sid: Option[String], userProfileV1: UserProfileV1)
 
 /**
   * This trait is used in routes that need authentication support. It provides methods that use the [[RequestContext]]
@@ -91,11 +70,11 @@ trait Authenticator {
       */
     def doLoginV1(requestContext: RequestContext)(implicit system: ActorSystem, executionContext: ExecutionContext): HttpResponse = {
 
-        val credentials: KnoraCredentials = extractCredentials(requestContext)
+        val credentials: KnoraCredentialsV1 = extractCredentials(requestContext)
 
         // check if session was created
-        val (sId, userProfile) = authenticateCredentialsV1(credentials, sessionEnabled = true) match {
-            case SessionV1(Some(sId), userProfile) => (sId, userProfile)
+        val (sId, userProfile) = authenticateCredentialsV1(credentials) match {
+            case SessionV1(sId, userProfile) => (sId, userProfile)
             case _ => throw AuthenticationException("Session ID not created. Please report this as a possible bug.")
         }
 
@@ -114,6 +93,32 @@ trait Authenticator {
         )
     }
 
+    /**
+      * Checks if the provided credentials are valid, and if so returns a JWT token for the client to save.
+      *
+      * @param credentials the user supplied [[KnoraCredentialsV1]] containing the user's login information.
+      * @param system      the current [[ActorSystem]]
+      * @return a [[HttpResponse]] containing either a failure message or a message with a cookie header containing
+      *         the generated session id.
+      */
+    def doLoginV2(credentials: KnoraCredentialsV1)(implicit system: ActorSystem, executionContext: ExecutionContext): HttpResponse = {
+
+        val token = authenticateCredentialsV1(credentials) match {
+            case SessionV1(token, _) => token
+            case _ => throw AuthenticationException("Session ID not created. Please report this as a possible bug.")
+        }
+
+        HttpResponse(
+            status = StatusCodes.OK,
+            entity = HttpEntity(
+                ContentTypes.`application/json`,
+                JsObject(
+                    "token" -> JsString(token)
+                ).compactPrint
+            )
+        )
+    }
+
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Session Authentication ENTRY POINT
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -127,9 +132,9 @@ trait Authenticator {
       */
     def doSessionAuthenticationV1(requestContext: RequestContext): HttpResponse = {
 
-        val credentials: KnoraCredentials = extractCredentials(requestContext)
+        val credentials: KnoraCredentialsV1 = extractCredentials(requestContext)
 
-        getUserProfileV1FromSessionCache(credentials) match {
+        getUserProfileV1FromCache(credentials) match {
             case Some(userProfile) =>
                 HttpResponse(
                     status = StatusCodes.OK,
@@ -172,7 +177,7 @@ trait Authenticator {
 
         val credentials = extractCredentials(requestContext)
 
-        val userProfileV1 = authenticateCredentialsV1(credentials, sessionEnabled = false) match {
+        val userProfileV1 = authenticateCredentialsV1(credentials) match {
             case SessionV1(_, userProfileV1) => userProfileV1
             case _ => throw AuthenticationException()
         }
@@ -254,14 +259,14 @@ trait Authenticator {
             UserProfileV1()
         } else {
             // let us first try to get the user profile through the session id if available in the credentials
-            getUserProfileV1FromSessionCache(credentials) match {
+            getUserProfileV1FromCache(credentials) match {
                 case Some(userProfile: UserProfileV1) =>
                     log.debug(s"Got this UserProfileV1 through the session id: '${userProfile.toString}'")
                     /* we return the userProfileV1 without sensitive information */
                     userProfile.ofType(UserProfileTypeV1.RESTRICTED)
                 case None => {
                     log.debug("No session id found or not valid, so let's try with email / password")
-                    val session: SessionV1 = authenticateCredentialsV1(credentials, sessionEnabled = false)
+                    val session: SessionV1 = authenticateCredentialsV1(credentials)
                     log.debug("Supplied credentials pass authentication")
 
                     val userProfileV1 = session.userProfileV1
@@ -289,7 +294,7 @@ object Authenticator {
     val BAD_CRED_PASSWORD_MISMATCH = "bad credentials: user found, but password did not match"
     val BAD_CRED_USER_NOT_FOUND = "bad credentials: user not found"
     val BAD_CRED_EMAIL_NOT_SUPPLIED = "bad credentials: no email supplied"
-    val BAD_CRED_EMAIL_PASSWORD_NOT_EXTRACTABLE = "bad credentials: none found"
+    val BAD_CRED_EMAIL_PASSWORD_NOT_AVAILABLE = "bad credentials: none found"
     val BAD_CRED_USER_INACTIVE = "bad credentials: user inactive"
 
     val KNORA_AUTHENTICATION_COOKIE_NAME = "KnoraAuthentication"
@@ -300,20 +305,23 @@ object Authenticator {
     val log = Logger(LoggerFactory.getLogger(this.getClass))
 
     /**
-      * Tries to authenticate the credentials by getting the [[UserProfileV1]] from the triple store and checking if the
-      * password matches. Caches the user profile after successful authentication under a generated session id if
-      * 'sessionEnabled=true', and returns that said session id and user profile.
+      * Tries to authenticate the credentials by getting the [[UserProfileV1]] from the triple store and checking if
+      * the password matches. Caches the user profile after successful authentication under a generated id (JWT),
+      * and returns that said id and user profile.
       *
-      * @param credentials    the user supplied and extracted credentials.
-      * @param sessionEnabled a [[Boolean]] if set true then a session id will be created and the user profile cached
-      * @param system         the current [[ActorSystem]]
-      * @return a [[Try[String]] which is the session id under which the profile is stored if authentication was successful.
+      * @param credentials the user supplied and extracted credentials.
+      * @param system      the current [[ActorSystem]]
+      * @return a [[SessionV1]] which holds the generated id (JWT) and the user profile.
+      * @throws BadCredentialsException when email or password are empty; when user is not active; when the password
+      *                                 did not match.
       */
-    private def authenticateCredentialsV1(credentials: KnoraCredentials, sessionEnabled: Boolean)(implicit system: ActorSystem, executionContext: ExecutionContext): SessionV1 = {
+    private def authenticateCredentialsV1(credentials: KnoraCredentialsV1)(implicit system: ActorSystem, executionContext: ExecutionContext): SessionV1 = {
+
+        val settings = Settings(system)
 
         // check if email and password are provided
         if (credentials.email.isEmpty || credentials.password.isEmpty) {
-            throw BadCredentialsException(BAD_CRED_EMAIL_PASSWORD_NOT_EXTRACTABLE)
+            throw BadCredentialsException(BAD_CRED_EMAIL_PASSWORD_NOT_AVAILABLE)
         }
 
         val userProfileV1 = getUserProfileV1ByEmail(credentials.email.get)
@@ -325,17 +333,13 @@ object Authenticator {
             throw BadCredentialsException(BAD_CRED_USER_INACTIVE)
         }
 
-        /* check the password and if session is started, store it in the cache */
+        /* check the password and store it in the cache */
         if (userProfileV1.passwordMatch(credentials.password.get)) {
-            // create session id and cache user profile under this id
+            // create JWT and cache user profile under this id
             log.debug("authenticateCredentials - password matched")
-            if (sessionEnabled) {
-                val sId = UUID.randomUUID().toString
-                CacheUtil.put(AUTHENTICATION_CACHE_NAME, sId, userProfileV1)
-                SessionV1(Some(sId), userProfileV1)
-            } else {
-                SessionV1(None, userProfileV1)
-            }
+            val sId = createToken(userProfileV1.userData.user_id.get, settings.jwtSecretKey)
+            CacheUtil.put(AUTHENTICATION_CACHE_NAME, sId, userProfileV1)
+            SessionV1(sId, userProfileV1)
         } else {
             log.debug(s"authenticateCredentials - password did not match")
             throw BadCredentialsException(BAD_CRED_PASSWORD_MISMATCH)
@@ -348,9 +352,12 @@ object Authenticator {
       * @param knoraCredentials the user supplied credentials.
       * @return a [[ Option[UserProfileV1] ]]
       */
-    private def getUserProfileV1FromSessionCache(knoraCredentials: KnoraCredentials): Option[UserProfileV1] = {
+    private def getUserProfileV1FromCache(knoraCredentials: KnoraCredentialsV1): Option[UserProfileV1] = {
         knoraCredentials match {
-            case KnoraCredentials(_, _, Some(sessionId)) =>
+            case KnoraCredentialsV1(_, _, Some(sessionId)) =>
+
+                // FixMe: authenticate JWT
+
                 val value: Option[UserProfileV1] = CacheUtil.get[UserProfileV1](AUTHENTICATION_CACHE_NAME, sessionId)
                 log.debug(s"Found this session id: $sessionId leading to this content in the cache: $value")
                 value
@@ -368,9 +375,9 @@ object Authenticator {
       * Tries to extract the credentials from the requestContext (parameters, auth headers)
       *
       * @param requestContext a [[RequestContext]] containing the http request
-      * @return [[KnoraCredentials]]
+      * @return [[KnoraCredentialsV1]]
       */
-    private def extractCredentials(requestContext: RequestContext): KnoraCredentials = {
+    private def extractCredentials(requestContext: RequestContext): KnoraCredentialsV1 = {
         log.debug("extractCredentials start ...")
 
         val cookies: Seq[HttpCookiePair] = requestContext.request.cookies
@@ -437,19 +444,91 @@ object Authenticator {
         (email, password) match {
             case (e, p) if e.nonEmpty && p.nonEmpty => {
                 log.debug(s"found credentials: '$e' , '$p' ")
-                KnoraCredentials(email = e, password = p, sessionId)
+                KnoraCredentialsV1(email = e, password = p, sessionId)
             }
             case _ if sessionId.nonEmpty => {
                 log.debug("found session id: {}", sessionId.get)
-                KnoraCredentials(sessionId = sessionId)
+                KnoraCredentialsV1(sessionId = sessionId)
             }
             case _ => {
                 log.debug("No credentials could be extracted")
-                KnoraCredentials()
+                KnoraCredentialsV1()
             }
         }
     }
 
+
+    /**
+      * Create a JWT.
+      *
+      * @param userIri   the user IRI that will be encoded into the token.
+      * @param secretKey the secret key used for encoding.
+      * @return a [[String]] containg the JWT.
+      */
+    private def createToken(userIri: IRI, secretKey: String): String = {
+
+        val algorithm = Algorithm.HS256
+        val requiredHeaders = Set[HeaderField](Typ)
+        val requiredClaims = Set[ClaimField](Iss, Sub, Aud)
+
+
+        val headers = Seq[HeaderValue](Typ("JWT"), Alg(algorithm))
+        val claims = Seq[ClaimValue](Iss("webapi"), Sub(userIri), Aud("webapi"))
+
+        val jwt = new DecodedJwt(headers, claims)
+
+        jwt.encodedAndSigned(secretKey)
+    }
+
+    /**
+      * Validate a JWT.
+      *
+      * @param token  the JWT.
+      * @param secret the secret used to encode the token.
+      * @return a [[Boolean]].
+      */
+    private def validateToken(token: String, secret: String): Boolean = {
+
+        val algorithm = Algorithm.HS256
+        val requiredHeaders = Set[HeaderField](Typ)
+        val requiredClaims = Set[ClaimField](Iss, Sub, Aud)
+
+        DecodedJwt.validateEncodedJwt(
+            token,
+            secret,
+            algorithm,
+            requiredHeaders,
+            requiredClaims,
+            iss = Some(Iss("webapi")),
+            aud = Some(Aud("webapi"))
+        ).isSuccess
+    }
+
+    /**
+      * Extract the encoded user IRI.
+      *
+      * @param token  the JWT.
+      * @param secret the secret used to encode the token.
+      * @return an optional [[IRI]].
+      */
+    private def extractUserIriFromToken(token: String, secret: String): Option[IRI] = {
+        val algorithm = Algorithm.HS256
+        val requiredHeaders = Set[HeaderField](Typ)
+        val requiredClaims = Set[ClaimField](Iss, Sub, Aud)
+
+        DecodedJwt.validateEncodedJwt(
+            token,
+            secret,
+            algorithm,
+            requiredHeaders,
+            requiredClaims,
+            iss = Some(Iss("webapi")),
+            aud = Some(Aud("webapi"))
+        ) match {
+            case Success(jwt) => jwt.getClaim[Sub].map(_.value)
+            case _ => None
+        }
+    }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // TRIPLE STORE ACCESS

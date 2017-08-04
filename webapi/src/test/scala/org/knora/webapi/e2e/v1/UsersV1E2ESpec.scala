@@ -22,7 +22,7 @@ import akka.http.scaladsl.model.headers._
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import com.typesafe.config.ConfigFactory
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
-import org.knora.webapi.messages.v1.responder.authenticatemessages.Credentials
+import org.knora.webapi.messages.v1.responder.authenticatemessages.CredentialsV1
 import org.knora.webapi.messages.v1.responder.sessionmessages.SessionJsonProtocol
 import org.knora.webapi.util.{AkkaHttpUtils, MutableTestIri}
 import org.knora.webapi.{E2ESpec, IRI, SharedAdminTestData}
@@ -49,13 +49,13 @@ class UsersV1E2ESpec extends E2ESpec(UsersV1E2ESpec.config) with SessionJsonProt
 
     private val rdfDataObjects = List.empty[RdfDataObject]
 
-    val rootCreds = Credentials(
+    val rootCreds = CredentialsV1(
         SharedAdminTestData.rootUser.userData.user_id.get,
         SharedAdminTestData.rootUser.userData.email.get,
         "test"
     )
 
-    val normalUserCreds = Credentials(
+    val normalUserCreds = CredentialsV1(
         SharedAdminTestData.normalUser.userData.user_id.get,
         SharedAdminTestData.normalUser.userData.email.get,
         "test"
@@ -88,7 +88,7 @@ class UsersV1E2ESpec extends E2ESpec(UsersV1E2ESpec.config) with SessionJsonProt
       * @param userIri     the user's IRI.
       * @param credentials the credentials of the user making the request.
       */
-    private def getUserProjectMemberships(userIri: IRI, credentials: Credentials): Seq[IRI] = {
+    private def getUserProjectMemberships(userIri: IRI, credentials: CredentialsV1): Seq[IRI] = {
         val userIriEnc = java.net.URLEncoder.encode(userIri, "utf-8")
         val request = Get(baseApiUrl + "/v1/users/projects/" + userIriEnc) ~> addCredentials(BasicHttpCredentials(credentials.email, credentials.password))
         val response: HttpResponse = singleAwaitingRequest(request)
@@ -101,7 +101,7 @@ class UsersV1E2ESpec extends E2ESpec(UsersV1E2ESpec.config) with SessionJsonProt
       * @param userIri     the user's IRI.
       * @param credentials the credentials of the user making the request.
       */
-    private def getUserProjectAdminMemberships(userIri: IRI, credentials: Credentials): Seq[IRI] = {
+    private def getUserProjectAdminMemberships(userIri: IRI, credentials: CredentialsV1): Seq[IRI] = {
         val userIriEnc = java.net.URLEncoder.encode(userIri, "utf-8")
         val request = Get(baseApiUrl + "/v1/users/projects-admin/" + userIriEnc) ~> addCredentials(BasicHttpCredentials(credentials.email, credentials.password))
         val response: HttpResponse = singleAwaitingRequest(request)
@@ -114,7 +114,7 @@ class UsersV1E2ESpec extends E2ESpec(UsersV1E2ESpec.config) with SessionJsonProt
       * @param userIri     the user's IRI.
       * @param credentials the credentials of the user making the request.
       */
-    private def getUserGroupMemberships(userIri: IRI, credentials: Credentials): Seq[IRI] = {
+    private def getUserGroupMemberships(userIri: IRI, credentials: CredentialsV1): Seq[IRI] = {
         val userIriEnc = java.net.URLEncoder.encode(userIri, "utf-8")
         val request = Get(baseApiUrl + "/v1/users/groups/" + userIriEnc) ~> addCredentials(BasicHttpCredentials(credentials.email, credentials.password))
         val response: HttpResponse = singleAwaitingRequest(request)
