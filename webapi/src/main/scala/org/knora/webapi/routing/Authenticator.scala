@@ -30,7 +30,6 @@ import akka.pattern._
 import akka.util.{ByteString, Timeout}
 import com.typesafe.scalalogging.Logger
 import org.knora.webapi._
-import org.knora.webapi.messages.v1.responder.permissionmessages.PermissionDataV1
 import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_PATH
 import org.knora.webapi.util.CacheUtil
@@ -47,14 +46,34 @@ import java.util.Base64
 
 
 /**
+  * Represents credentials that a user can supply.
+  *
+  * @param email     the optionally supplied email.
+  * @param password  the optionally supplied password.
+  * @param sessionId the optionally supplied session id.
+  */
+case class KnoraCredentials(email: Option[String] = None,
+                            password: Option[String] = None,
+                            sessionId: Option[String] = None) {
+    def isEmpty: Boolean = this.email.isEmpty && this.password.isEmpty && this.sessionId.isEmpty
+}
+
+/**
+  * Represents the session containing the id under which a user profile is stored and the user profile itself.
+  *
+  * @param sid           the session id.
+  * @param userProfileV1 the [[UserProfileV1]] the session id is referring to.
+  */
+case class SessionV1(sid: Option[String], userProfileV1: UserProfileV1)
+
+/**
   * This trait is used in routes that need authentication support. It provides methods that use the [[RequestContext]]
   * to extract credentials, authenticate provided credentials, and look up cached credentials through the use of the
   * session id. All private methods used in this trait can be found in the companion object.
   */
 trait Authenticator {
 
-    /* Import companion object */
-
+    // Import companion object
     import Authenticator._
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -70,10 +89,15 @@ trait Authenticator {
       * @return a [[HttpResponse]] containing either a failure message or a message with a cookie header containing
       *         the generated session id.
       */
-    def doLogin(requestContext: RequestContext)(implicit system: ActorSystem, executionContext: ExecutionContext): HttpResponse = {
+    def doLoginV1(requestContext: RequestContext)(implicit system: ActorSystem, executionContext: ExecutionContext): HttpResponse = {
 
-        val sId = extractCredentialsAndAuthenticate(requestContext, session = true)
-        val userProfile = getUserProfileV1(requestContext)
+        val credentials: KnoraCredentials = extractCredentials(requestContext)
+
+        // check if session was created
+        val (sId, userProfile) = authenticateCredentialsV1(credentials, sessionEnabled = true) match {
+            case SessionV1(Some(sId), userProfile) => (sId, userProfile)
+            case _ => throw AuthenticationException("Session ID not created. Please report this as a possible bug.")
+        }
 
         HttpResponse(
             headers = List(headers.`Set-Cookie`(HttpCookie(KNORA_AUTHENTICATION_COOKIE_NAME, sId, path = Some("/")))), // set path to "/" to make the cookie valid for the whole domain (and not just a segment like v1 etc.)
@@ -84,7 +108,7 @@ trait Authenticator {
                     "status" -> JsNumber(0),
                     "message" -> JsString("credentials are OK"),
                     "sid" -> JsString(sId),
-                    "userProfile" -> userProfile.ofType(UserProfileType.RESTRICTED).toJsValue
+                    "userProfile" -> userProfile.ofType(UserProfileTypeV1.RESTRICTED).toJsValue
                 ).compactPrint
             )
         )
@@ -101,8 +125,11 @@ trait Authenticator {
       * @param requestContext a [[RequestContext]] containing the http request
       * @return a [[HttpRequest]]
       */
-    def doSessionAuthentication(requestContext: RequestContext): HttpResponse = {
-        getUserProfileV1FromSessionId(requestContext) match {
+    def doSessionAuthenticationV1(requestContext: RequestContext): HttpResponse = {
+
+        val credentials: KnoraCredentials = extractCredentials(requestContext)
+
+        getUserProfileV1FromSessionCache(credentials) match {
             case Some(userProfile) =>
                 HttpResponse(
                     status = StatusCodes.OK,
@@ -111,7 +138,7 @@ trait Authenticator {
                         JsObject(
                             "status" -> JsNumber(0),
                             "message" -> JsString("session credentials are OK"),
-                            "userProfile" -> userProfile.ofType(UserProfileType.RESTRICTED).toJsValue
+                            "userProfile" -> userProfile.ofType(UserProfileTypeV1.RESTRICTED).toJsValue
                         ).compactPrint
                     )
                 )
@@ -141,11 +168,14 @@ trait Authenticator {
       * @param system         the current [[ActorSystem]]
       * @return a [[RequestContext]]
       */
-    def doAuthenticate(requestContext: RequestContext)(implicit system: ActorSystem, executionContext: ExecutionContext): HttpResponse = {
+    def doAuthenticateV1(requestContext: RequestContext)(implicit system: ActorSystem, executionContext: ExecutionContext): HttpResponse = {
 
-        val sId = extractCredentialsAndAuthenticate(requestContext, session = false)
+        val credentials = extractCredentials(requestContext)
 
-        val userProfile = getUserProfileV1(requestContext)
+        val userProfileV1 = authenticateCredentialsV1(credentials, sessionEnabled = false) match {
+            case SessionV1(_, userProfileV1) => userProfileV1
+            case _ => throw AuthenticationException()
+        }
 
         HttpResponse(
             status = StatusCodes.OK,
@@ -154,7 +184,7 @@ trait Authenticator {
                 JsObject(
                     "status" -> JsNumber(0),
                     "message" -> JsString("credentials are OK"),
-                    "userProfile" -> userProfile.ofType(UserProfileType.RESTRICTED).toJsValue
+                    "userProfile" -> userProfileV1.ofType(UserProfileTypeV1.RESTRICTED).toJsValue
                 ).compactPrint
             )
         )
@@ -173,7 +203,7 @@ trait Authenticator {
       * @param system         the current [[ActorSystem]]
       * @return a [[HttpResponse]]
       */
-    def doLogout(requestContext: RequestContext)(implicit system: ActorSystem): HttpResponse = {
+    def doLogoutV1(requestContext: RequestContext)(implicit system: ActorSystem): HttpResponse = {
 
         val cookies: Seq[HttpCookiePair] = requestContext.request.cookies
         cookies.find(_.name == "KnoraAuthentication") match {
@@ -200,10 +230,10 @@ trait Authenticator {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     /**
-      * Returns a [[UserProfileV1]] matching the credentials found in the [[RequestContext]].
+      * Returns a UserProfile of the supplied type that match the credentials found in the [[RequestContext]].
       * The credentials can be email/password as parameters, auth headers, or email in a cookie if the profile is
-      * found in the cache. If no credentials are found, then a default [[UserProfileV1]] is returned. If the credentials
-      * not correct, then the corresponding error is returned.
+      * found in the cache. If no credentials are found, then a default UserProfile is returned. If the credentials
+      * are not correct, then the corresponding error is returned.
       *
       * @param requestContext a [[RequestContext]] containing the http request
       * @param system         the current [[ActorSystem]]
@@ -212,44 +242,41 @@ trait Authenticator {
     def getUserProfileV1(requestContext: RequestContext)(implicit system: ActorSystem, executionContext: ExecutionContext): UserProfileV1 = {
 
         val settings = Settings(system)
-        if (settings.skipAuthentication) {
-            UserProfileV1(
-                userData = UserDataV1(lang = settings.fallbackLanguage),
-                permissionData = PermissionDataV1(anonymousUser = true)
-            ).ofType(UserProfileType.RESTRICTED)
-        }
-        else {
-            // let us first try to get the user profile through the session id from the cookie
-            getUserProfileV1FromSessionId(requestContext) match {
-                case Some(userProfile) =>
+
+        val credentials = extractCredentials(requestContext)
+
+        val userProfileV1: UserProfileV1 = if (settings.skipAuthentication) {
+            // return anonymous if skipAuthentication
+            log.debug("Authentication skipping active, returning default UserProfileV1 with 'anonymousUser' inside 'permissionData' set to true!")
+            UserProfileV1()
+        } else if (credentials.isEmpty) {
+            log.debug("No credentials found, returning default UserProfileV1 with 'anonymousUser' inside 'permissionData' set to true!")
+            UserProfileV1()
+        } else {
+            // let us first try to get the user profile through the session id if available in the credentials
+            getUserProfileV1FromSessionCache(credentials) match {
+                case Some(userProfile: UserProfileV1) =>
                     log.debug(s"Got this UserProfileV1 through the session id: '${userProfile.toString}'")
                     /* we return the userProfileV1 without sensitive information */
-                    userProfile.ofType(UserProfileType.RESTRICTED)
+                    userProfile.ofType(UserProfileTypeV1.RESTRICTED)
                 case None => {
-                    log.debug("No cookie or valid session id, so let's look for supplied credentials")
-                    extractCredentials(requestContext) match {
-                        case Some((e, p)) =>
-                            log.debug(s"found some credentials '$e', '$p', lets try to authenticate them first")
+                    log.debug("No session id found or not valid, so let's try with email / password")
+                    val session: SessionV1 = authenticateCredentialsV1(credentials, sessionEnabled = false)
+                    log.debug("Supplied credentials pass authentication")
 
-                            authenticateCredentials(e, p, session = false)
-                            log.debug("Supplied credentials pass authentication, get the UserProfileV1")
+                    val userProfileV1 = session.userProfileV1
+                    log.debug(s"I got a UserProfileV1: {}", userProfileV1.toString)
 
-                            val userProfileV1 = getUserProfileByEmail(e)
-                            log.debug(s"I got a UserProfileV1 '${userProfileV1.toString}', which means that the password is a match")
-                            /* we return the userProfileV1 without sensitive information */
-                            userProfileV1.ofType(UserProfileType.RESTRICTED)
-
-                        case None =>
-                            log.debug("No credentials found, returning default UserProfileV1 with 'anonymousUser' inside 'permissionData' set to true!")
-                            UserProfileV1(
-                                userData = UserDataV1(lang = settings.fallbackLanguage),
-                                permissionData = PermissionDataV1(anonymousUser = true)
-                            )
-                    }
+                    /* we return the userProfileV1 without sensitive information */
+                    userProfileV1.ofType(UserProfileTypeV1.RESTRICTED)
                 }
             }
         }
+
+        userProfileV1
     }
+
+    // def getUserProfileV2(requestContext: RequestContext)(implicit system: ActorSystem, executionContext: ExecutionContext): UserProfileV2 = ???
 }
 
 /**
@@ -261,8 +288,8 @@ object Authenticator {
 
     val BAD_CRED_PASSWORD_MISMATCH = "bad credentials: user found, but password did not match"
     val BAD_CRED_USER_NOT_FOUND = "bad credentials: user not found"
-    val BAD_CRED_USERNAME_NOT_SUPPLIED = "bad credentials: no email supplied"
-    val BAD_CRED_USERNAME_PASSWORD_NOT_EXTRACTABLE = "bad credentials: none found"
+    val BAD_CRED_EMAIL_NOT_SUPPLIED = "bad credentials: no email supplied"
+    val BAD_CRED_EMAIL_PASSWORD_NOT_EXTRACTABLE = "bad credentials: none found"
     val BAD_CRED_USER_INACTIVE = "bad credentials: user inactive"
 
     val KNORA_AUTHENTICATION_COOKIE_NAME = "KnoraAuthentication"
@@ -272,41 +299,28 @@ object Authenticator {
     implicit val timeout: Timeout = Duration(5, SECONDS)
     val log = Logger(LoggerFactory.getLogger(this.getClass))
 
-
-    /**
-      * Tries to extract and then authenticate the credentials.
-      *
-      * @param requestContext a [[RequestContext]] containing the http request
-      * @param session        a flag if set true then the creation of the session id and caching of the user profile will be skipped
-      * @param system         the current [[ActorSystem]]
-      * @return [[ Try[String] ]] containing the session id if successful, which means that the credentials could be
-      *         extracted and authenticated. In the case where the credentials could not be extracted or could be
-      *         extracted but not authenticated, a corresponding exception is thrown.
-      */
-    private def extractCredentialsAndAuthenticate(requestContext: RequestContext, session: Boolean)(implicit system: ActorSystem, executionContext: ExecutionContext): String = {
-        extractCredentials(requestContext) match {
-            case Some((u, p)) => authenticateCredentials(u, p, session)
-            case None => throw BadCredentialsException(BAD_CRED_USERNAME_PASSWORD_NOT_EXTRACTABLE)
-        }
-    }
-
     /**
       * Tries to authenticate the credentials by getting the [[UserProfileV1]] from the triple store and checking if the
-      * password matches. Caches the user profile after successful authentication under a generated session id if 'session=true', and
-      * returns that said session id (or 0 if no session is needed).
+      * password matches. Caches the user profile after successful authentication under a generated session id if
+      * 'sessionEnabled=true', and returns that said session id and user profile.
       *
-      * @param email    the email of the user
-      * @param password the password of th user
-      * @param session  a [[Boolean]] if set true then a session id will be created and the user profile cached
-      * @param system   the current [[ActorSystem]]
+      * @param credentials    the user supplied and extracted credentials.
+      * @param sessionEnabled a [[Boolean]] if set true then a session id will be created and the user profile cached
+      * @param system         the current [[ActorSystem]]
       * @return a [[Try[String]] which is the session id under which the profile is stored if authentication was successful.
       */
-    private def authenticateCredentials(email: String, password: String, session: Boolean)(implicit system: ActorSystem, executionContext: ExecutionContext): String = {
-        val userProfileV1 = getUserProfileByEmail(email)
+    private def authenticateCredentialsV1(credentials: KnoraCredentials, sessionEnabled: Boolean)(implicit system: ActorSystem, executionContext: ExecutionContext): SessionV1 = {
+
+        // check if email and password are provided
+        if (credentials.email.isEmpty || credentials.password.isEmpty) {
+            throw BadCredentialsException(BAD_CRED_EMAIL_PASSWORD_NOT_EXTRACTABLE)
+        }
+
+        val userProfileV1 = getUserProfileV1ByEmail(credentials.email.get)
         //log.debug(s"authenticateCredentials - userProfileV1: $userProfileV1")
 
         /* check if the user is active, if not, then no need to check the password */
-        val isActiveUser = if (userProfileV1.isActive) {
+        val isActiveUser = if (userProfileV1.userData.status.get) {
             true
         } else {
             log.debug("authenticateCredentials - user is not active")
@@ -314,15 +328,15 @@ object Authenticator {
         }
 
         /* check the password and if session is started, store it in the cache */
-        if (userProfileV1.passwordMatch(password)) {
+        if (userProfileV1.passwordMatch(credentials.password.get)) {
             // create session id and cache user profile under this id
             log.debug("authenticateCredentials - password matched")
-            if (session) {
+            if (sessionEnabled) {
                 val sId = UUID.randomUUID().toString
                 CacheUtil.put(AUTHENTICATION_CACHE_NAME, sId, userProfileV1)
-                sId
+                SessionV1(Some(sId), userProfileV1)
             } else {
-                "0"
+                SessionV1(None, userProfileV1)
             }
         } else {
             log.debug(s"authenticateCredentials - password did not match")
@@ -333,17 +347,16 @@ object Authenticator {
     /**
       * Try to get the session id from the cookie and return a [[UserProfileV1]] if still in the cache.
       *
-      * @param requestContext a [[RequestContext]] containing the http request
+      * @param knoraCredentials the user supplied credentials.
       * @return a [[ Option[UserProfileV1] ]]
       */
-    private def getUserProfileV1FromSessionId(requestContext: RequestContext): Option[UserProfileV1] = {
-        val cookies: Seq[HttpCookiePair] = requestContext.request.cookies
-        cookies.find(_.name == "KnoraAuthentication") match {
-            case Some(authCookie) =>
-                val value: Option[UserProfileV1] = CacheUtil.get[UserProfileV1](AUTHENTICATION_CACHE_NAME, authCookie.value)
-                log.debug(s"Found this session id: ${authCookie.value} leading to this content in the cache: $value")
+    private def getUserProfileV1FromSessionCache(knoraCredentials: KnoraCredentials): Option[UserProfileV1] = {
+        knoraCredentials match {
+            case KnoraCredentials(_, _, Some(sessionId)) =>
+                val value: Option[UserProfileV1] = CacheUtil.get[UserProfileV1](AUTHENTICATION_CACHE_NAME, sessionId)
+                log.debug(s"Found this session id: $sessionId leading to this content in the cache: $value")
                 value
-            case None =>
+            case _ =>
                 log.debug(s"No session id found")
                 None
         }
@@ -357,28 +370,33 @@ object Authenticator {
       * Tries to extract the credentials from the requestContext (parameters, auth headers)
       *
       * @param requestContext a [[RequestContext]] containing the http request
-      * @return a [[Option[(String, String)]] either a [[Some]] containing a tuple with the email and password, or a [[None]]
-      *         if no credentials could be found.
+      * @return [[KnoraCredentials]]
       */
-    private def extractCredentials(requestContext: RequestContext): Option[(String, String)] = {
+    private def extractCredentials(requestContext: RequestContext): KnoraCredentials = {
         log.debug("extractCredentials start ...")
+
+        val cookies: Seq[HttpCookiePair] = requestContext.request.cookies
+        val sessionId: Option[String] = cookies.find(_.name == "KnoraAuthentication") match {
+            case Some(authCookie) =>
+                val value = authCookie.value
+                log.debug(s"Found this session id: $value")
+                Some(value)
+            case None =>
+                log.debug(s"No session id found")
+                None
+        }
+
         val params: Map[String, Seq[String]] = requestContext.request.uri.query().toMultiMap
         val headers: Seq[HttpHeader] = requestContext.request.headers
 
 
         // extract email / password from parameters
-        val usernameFromParams: String = params get "email" match {
-            case Some(value) => value.head
-            case None => ""
-        }
+        val emailFromParams: Option[String] = params get "email" map (_.head)
 
-        val passwordFromParams: String = params get "password" match {
-            case Some(value) => value.head
-            case None => ""
-        }
+        val passwordFromParams: Option[String] = params get "password" map (_.head)
 
-        if (usernameFromParams.length > 0 && passwordFromParams.length > 0) {
-            log.debug("usernameFromParams: " + usernameFromParams)
+        if (emailFromParams.nonEmpty && passwordFromParams.nonEmpty) {
+            log.debug("emailFromParams: " + emailFromParams)
             log.debug("passwordFromParams: " + passwordFromParams)
         } else {
             log.debug("no credentials sent as parameters")
@@ -394,33 +412,43 @@ object Authenticator {
 
         log.debug(s"authHeaderEncoded.nonEmpty: " + authHeaderEncoded.nonEmpty)
 
-        val (usernameFromHeader: String, passwordFromHeader: String) = if (authHeaderEncoded.nonEmpty) {
+        val (emailFromHeader: Option[String], passwordFromHeader: Option[String]) = if (authHeaderEncoded.nonEmpty) {
             val authHeaderDecoded = ByteString.fromArray(Base64.getDecoder.decode(authHeaderEncoded)).decodeString("UTF8")
             val authHeaderDecodedArr = authHeaderDecoded.split(":", 2)
-            (authHeaderDecodedArr(0), authHeaderDecodedArr(1))
+            (Some(authHeaderDecodedArr(0)), Some(authHeaderDecodedArr(1)))
         } else {
-            ("", "")
+            (None, None)
         }
 
-        if (usernameFromHeader.nonEmpty && passwordFromHeader.nonEmpty) {
-            log.debug("usernameFromHeader: " + usernameFromHeader)
+        if (emailFromHeader.nonEmpty && passwordFromHeader.nonEmpty) {
+            log.debug("emailFromHeader: " + emailFromHeader)
             log.debug("passwordFromHeader: " + passwordFromHeader)
         } else {
             log.debug("no credentials found in the header")
         }
 
         // get only one set of credentials based on precedence
-        val (username, password) = if (usernameFromParams.nonEmpty && passwordFromParams.nonEmpty) {
-            (usernameFromParams, passwordFromParams)
-        } else if (usernameFromHeader.nonEmpty && passwordFromHeader.nonEmpty) {
-            (usernameFromHeader, passwordFromHeader)
+        val (email: Option[String], password: Option[String]) = if (emailFromParams.nonEmpty && passwordFromParams.nonEmpty) {
+            (emailFromParams, passwordFromParams)
+        } else if (emailFromHeader.nonEmpty && passwordFromHeader.nonEmpty) {
+            (emailFromHeader, passwordFromHeader)
         } else {
-            ("", "")
+            (None, None)
         }
 
-        (username, password) match {
-            case (u, p) if u.nonEmpty && p.nonEmpty => log.debug(s"found credentials: '$u' , '$p' "); Some((u, p))
-            case _ => log.debug("No credentials could be extracted"); None
+        (email, password) match {
+            case (e, p) if e.nonEmpty && p.nonEmpty => {
+                log.debug(s"found credentials: '$e' , '$p' ")
+                KnoraCredentials(email = e, password = p, sessionId)
+            }
+            case _ if sessionId.nonEmpty => {
+                log.debug("found session id: {}", sessionId.get)
+                KnoraCredentials(sessionId = sessionId)
+            }
+            case _ => {
+                log.debug("No credentials could be extracted")
+                KnoraCredentials()
+            }
         }
     }
 
@@ -436,23 +464,24 @@ object Authenticator {
       * @param system           the current akka actor system
       * @param timeout          the timeout of the query
       * @param executionContext the current execution context
-      * @return a [[Option(UserProfileV1)]]
+      * @return a [[UserProfileV1]]
+      * @throws BadCredentialsException when no user can be found with the supplied IRI.
       */
-    private def getUserProfileByIri(iri: IRI)(implicit system: ActorSystem, timeout: Timeout, executionContext: ExecutionContext): UserProfileV1 = {
+    private def getUserProfileV1ByIri(iri: IRI)(implicit system: ActorSystem, timeout: Timeout, executionContext: ExecutionContext): UserProfileV1 = {
         val responderManager = system.actorSelection(RESPONDER_MANAGER_ACTOR_PATH)
         val userProfileV1Future = for {
-            maybeUserProfile <- (responderManager ? UserProfileByIRIGetV1(iri, UserProfileType.FULL)).mapTo[Option[UserProfileV1]]
+            maybeUserProfile <- (responderManager ? UserProfileByIRIGetV1(iri, UserProfileTypeV1.FULL)).mapTo[Option[UserProfileV1]]
             userProfileV1 = maybeUserProfile match {
                 case Some(up) => up
                 case None => {
-                        log.debug(s"getUserProfileByEmail - supplied email not found - throwing exception")
-                        throw BadCredentialsException(s"$BAD_CRED_USER_NOT_FOUND")
+                    log.debug(s"getUserProfileV1ByIri - supplied IRI not found - throwing exception")
+                    throw BadCredentialsException(s"$BAD_CRED_USER_NOT_FOUND")
                 }
             }
         } yield userProfileV1
 
         // TODO: return the future here instead of using Await.
-		Await.result(userProfileV1Future, Duration(3, SECONDS))
+        Await.result(userProfileV1Future, Duration(3, SECONDS))
     }
 
     /**
@@ -462,9 +491,10 @@ object Authenticator {
       * @param system           the current akka actor system
       * @param timeout          the timeout of the query
       * @param executionContext the current execution context
-      * @return a [[Success(UserProfileV1)]]
+      * @return a [[UserProfileV1]]
+      * @throws BadCredentialsException when either the supplied email is empty or no user with such an email could be found.
       */
-    private def getUserProfileByEmail(email: String)(implicit system: ActorSystem, timeout: Timeout, executionContext: ExecutionContext): UserProfileV1 = {
+    private def getUserProfileV1ByEmail(email: String)(implicit system: ActorSystem, timeout: Timeout, executionContext: ExecutionContext): UserProfileV1 = {
         val responderManager = system.actorSelection(RESPONDER_MANAGER_ACTOR_PATH)
 
         if (email.nonEmpty) {
@@ -472,28 +502,28 @@ object Authenticator {
             CacheUtil.get[UserProfileV1](AUTHENTICATION_CACHE_NAME, email) match {
                 case Some(userProfile) =>
                     // found a user profile in the cache
-                    log.debug(s"getUserProfileByEmail - cache hit: $userProfile")
+                    log.debug(s"getUserProfileV1ByEmail - cache hit: $userProfile")
                     userProfile
                 case None =>
-                    // didn't found one, so I will try to get it from the triple store
+                    // didn't find one, so I will try to get it from the triple store
                     val userProfileV1Future = for {
-                        maybeUserProfileV1 <- (responderManager ? UserProfileByEmailGetV1(email, UserProfileType.FULL)).mapTo[Option[UserProfileV1]]
+                        maybeUserProfileV1 <- (responderManager ? UserProfileByEmailGetV1(email, UserProfileTypeV1.FULL)).mapTo[Option[UserProfileV1]]
                         userProfileV1 = maybeUserProfileV1 match {
                             case Some(up) => up
                             case None => {
-                                log.debug(s"getUserProfileByEmail - supplied email not found - throwing exception")
+                                log.debug(s"getUserProfileV1ByEmail - supplied email not found - throwing exception")
                                 throw BadCredentialsException(s"$BAD_CRED_USER_NOT_FOUND")
                             }
                         }
                         _ = CacheUtil.put(AUTHENTICATION_CACHE_NAME, email, userProfileV1)
-                        _ = log.debug(s"getUserProfileByEmail - from triplestore: $userProfileV1")
+                        _ = log.debug(s"getUserProfileV1ByEmail - from triplestore: $userProfileV1")
                     } yield userProfileV1
 
                     // TODO: return the future here instead of using Await.
-					Await.result(userProfileV1Future, Duration(3, SECONDS))
+                    Await.result(userProfileV1Future, Duration(3, SECONDS))
             }
         } else {
-            throw BadCredentialsException(BAD_CRED_USERNAME_NOT_SUPPLIED)
+            throw BadCredentialsException(BAD_CRED_EMAIL_NOT_SUPPLIED)
         }
     }
 }

@@ -18,7 +18,7 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.routing
+package org.knora.webapi.routing.v1
 
 import akka.actor.ActorDSL._
 import akka.testkit.ImplicitSender
@@ -26,8 +26,9 @@ import akka.util.Timeout
 import com.typesafe.config.ConfigFactory
 import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_NAME
+import org.knora.webapi.routing.{Authenticator, KnoraCredentials, SessionV1}
 import org.knora.webapi.util.ActorUtil
-import org.knora.webapi.{BadCredentialsException, CoreSpec, NotFoundException, SharedAdminTestData}
+import org.knora.webapi.{BadCredentialsException, CoreSpec, SharedAdminTestData}
 import org.scalatest.PrivateMethodTester
 
 import scala.concurrent.Future
@@ -66,45 +67,42 @@ class AuthenticatorSpec extends CoreSpec("AuthenticationTestSystem") with Implic
                 if (submittedEmail == "root@example.com") {
                     ActorUtil.future2Message(sender, Future(Some(rootUserProfileV1)), logger)
                 } else {
-                    ActorUtil.future2Message(sender, Future.failed(throw NotFoundException(s"User '$submittedEmail' not found")), logger)
+                    ActorUtil.future2Message(sender, Future(None), logger)
                 }
             }
         }
     })
 
-    val getUserProfileByEmail = PrivateMethod[Try[UserProfileV1]]('getUserProfileByEmail)
-    val authenticateCredentials = PrivateMethod[Try[String]]('authenticateCredentials)
+    val getUserProfileV1ByEmail = PrivateMethod[Try[UserProfileV1]]('getUserProfileV1ByEmail)
+    val authenticateCredentialsV1 = PrivateMethod[Try[SessionV1]]('authenticateCredentialsV1)
 
     "During Authentication" when {
         "called, the 'getUserProfile' method " should {
             "succeed with the correct 'email' " in {
-                Authenticator invokePrivate getUserProfileByEmail(rootUserEmail, system, timeout, executionContext) should be(rootUserProfileV1)
+                Authenticator invokePrivate getUserProfileV1ByEmail(rootUserEmail, system, timeout, executionContext) should be(rootUserProfileV1)
             }
-
-            /* TODO: Find out how to mock correctly */
-            "fail with the wrong 'email' " ignore {
+            
+            "fail with the wrong 'email' " in {
                 an [BadCredentialsException] should be thrownBy {
-                    Authenticator invokePrivate getUserProfileByEmail("wronguser@example.com", system, timeout, executionContext)
+                    Authenticator invokePrivate getUserProfileV1ByEmail("wronguser@example.com", system, timeout, executionContext)
                 }
             }
 
             "fail when not providing a email " in {
                 an [BadCredentialsException] should be thrownBy {
-                    Authenticator invokePrivate getUserProfileByEmail("", system, timeout, executionContext)
+                    Authenticator invokePrivate getUserProfileV1ByEmail("", system, timeout, executionContext)
                 }
             }
         }
         "called, the 'authenticateCredentials' method " should {
             "succeed with the correct 'email' / correct 'password' " in {
-                Authenticator invokePrivate authenticateCredentials(rootUserEmail, rootUserPassword, false, system, executionContext) should be("0")
+                Authenticator invokePrivate authenticateCredentialsV1(KnoraCredentials(Some(rootUserEmail), Some(rootUserPassword), None), false, system, executionContext) should be(SessionV1(None, rootUserProfileV1))
             }
             "fail with correct 'email' / wrong 'password' " in {
                 an [BadCredentialsException] should be thrownBy {
-                    Authenticator invokePrivate authenticateCredentials(rootUserEmail, "wrongpass", false, system, executionContext)
+                    Authenticator invokePrivate authenticateCredentialsV1(KnoraCredentials(Some(rootUserEmail), Some("wrongpassword"), None), false, system, executionContext)
                 }
             }
         }
     }
-
-
 }
