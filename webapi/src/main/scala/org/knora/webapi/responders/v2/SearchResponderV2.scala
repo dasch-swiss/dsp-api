@@ -163,6 +163,7 @@ class SearchResponderV2 extends Responder {
         class NonTriplestoreSpecificQueryPatternTransformer(typeInspectionResult: TypeInspectionResult) extends QueryPatternTransformer {
             // TODO: refactor the code below and move it into this class.
 
+            // TODO: start here
             def transformStatementInConstruct(statementPattern: StatementPattern): Seq[StatementPattern] = ???
 
             def transformStatementInWhere(statementPattern: StatementPattern): Seq[QueryPattern] = ???
