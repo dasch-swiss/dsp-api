@@ -132,6 +132,7 @@ class SettingsImpl(config: Config) extends Extension {
     val skipAuthentication: Boolean = config.getBoolean("app.skip-authentication")
 
     val jwtSecretKey: String = config.getString("app.jwt-secret-key")
+    val jwtLongevity: Long = config.getLong("app.jwt-longevity")
 
     val fallbackLanguage: String = config.getString("user.default-language")
 

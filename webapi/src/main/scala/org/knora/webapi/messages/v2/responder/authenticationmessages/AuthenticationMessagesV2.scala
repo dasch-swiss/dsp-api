@@ -22,6 +22,7 @@ package org.knora.webapi.messages.v2.responder.authenticationmessages
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi.BadRequestException
+import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import spray.json._
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -52,6 +53,15 @@ case class KnoraCredentialsV2(email: Option[String] = None,
                               token: Option[String] = None) {
     def isEmpty: Boolean = this.email.isEmpty && this.password.isEmpty && this.token.isEmpty
 }
+
+
+/**
+  * Represents the session containing the identifier under which a user profile is stored and the user profile itself.
+  *
+  * @param token       the JWT used as identifier.
+  * @param userProfile the [[UserProfileV1]] the session identifier is referring to (will become UserProfileV2).
+  */
+case class SessionV2(token: String, userProfile: UserProfileV1)
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////

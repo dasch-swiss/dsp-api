@@ -20,8 +20,6 @@
 
 package org.knora.webapi.routing
 
-import java.nio.charset.StandardCharsets.UTF_8
-
 import akka.actor.ActorSystem
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.{HttpCookie, HttpCookiePair}
@@ -33,6 +31,7 @@ import io.igl.jwt._
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.authenticatemessages.{KnoraCredentialsV1, SessionV1}
 import org.knora.webapi.messages.v1.responder.usermessages._
+import org.knora.webapi.messages.v2.responder.authenticationmessages.{KnoraCredentialsV2, SessionV2}
 import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_PATH
 import org.knora.webapi.util.CacheUtil
 import org.slf4j.LoggerFactory
@@ -40,7 +39,7 @@ import spray.json.{JsNumber, JsObject, JsString}
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext}
-import scala.util.{Failure, Success}
+import scala.util.Success
 
 // needs Java 1.8 !!!
 import java.util.Base64
@@ -74,7 +73,10 @@ trait Authenticator {
 
         // check if session was created
         val (sId, userProfile) = authenticateCredentialsV1(credentials) match {
-            case SessionV1(sId, userProfile) => (sId, userProfile)
+            case session@SessionV1(id, profile) => {
+                writeUserProfileV1ToCache(session)
+                (id, profile)
+            }
             case _ => throw AuthenticationException("Session ID not created. Please report this as a possible bug.")
         }
 
@@ -101,10 +103,13 @@ trait Authenticator {
       * @return a [[HttpResponse]] containing either a failure message or a message with a cookie header containing
       *         the generated session id.
       */
-    def doLoginV2(credentials: KnoraCredentialsV1)(implicit system: ActorSystem, executionContext: ExecutionContext): HttpResponse = {
+    def doLoginV2(credentials: KnoraCredentialsV2)(implicit system: ActorSystem, executionContext: ExecutionContext): HttpResponse = {
 
-        val token = authenticateCredentialsV1(credentials) match {
-            case SessionV1(token, _) => token
+        val token = authenticateCredentialsV2(credentials) match {
+            case session@SessionV2(token, _) => {
+                writeUserProfileV2ToCache(session)
+                token
+            }
             case _ => throw AuthenticationException("Session ID not created. Please report this as a possible bug.")
         }
 
@@ -211,6 +216,39 @@ trait Authenticator {
     def doLogoutV1(requestContext: RequestContext)(implicit system: ActorSystem): HttpResponse = {
 
         val cookies: Seq[HttpCookiePair] = requestContext.request.cookies
+        cookies.find(_.name == "KnoraAuthentication") match {
+            case Some(authCookie) =>
+                // maybe the value is in the cache or maybe it expired in the meantime.
+                CacheUtil.remove(AUTHENTICATION_CACHE_NAME, authCookie.value)
+            case None => // no cookie, so I can't do anything really
+        }
+        HttpResponse(
+            headers = List(headers.`Set-Cookie`(HttpCookie(KNORA_AUTHENTICATION_COOKIE_NAME, "deleted", expires = Some(DateTime(1970, 1, 1, 0, 0, 0))))),
+            status = StatusCodes.OK,
+            entity = HttpEntity(
+                ContentTypes.`application/json`,
+                JsObject(
+                    "status" -> JsNumber(0),
+                    "message" -> JsString("Logout OK")
+                ).compactPrint
+            )
+        )
+    }
+
+    /**
+      * Used to logout the user, i.e. removes the [[UserProfileV1]] from the cache and puts the token on the 'invalidated' list.
+      *
+      * @param requestContext a [[RequestContext]] containing the http request
+      * @param system         the current [[ActorSystem]]
+      * @return a [[HttpResponse]]
+      */
+    def doLogoutV2(requestContext: RequestContext)(implicit system: ActorSystem): HttpResponse = {
+
+        val headers: Seq[HttpHeader] = requestContext.request.headers
+        headers.find(_.name == "Authorization") match {
+            case Some(authHeader: HttpHeader) =>
+                val token = authHeader.value().
+        }
         cookies.find(_.name == "KnoraAuthentication") match {
             case Some(authCookie) =>
                 // maybe the value is in the cache or maybe it expired in the meantime.
@@ -337,12 +375,83 @@ object Authenticator {
         if (userProfileV1.passwordMatch(credentials.password.get)) {
             // create JWT and cache user profile under this id
             log.debug("authenticateCredentials - password matched")
-            val sId = createToken(userProfileV1.userData.user_id.get, settings.jwtSecretKey)
-            CacheUtil.put(AUTHENTICATION_CACHE_NAME, sId, userProfileV1)
+            val sId = JWTHelper.createToken(userProfileV1.userData.user_id.get, settings.jwtSecretKey, settings.jwtLongevity)
             SessionV1(sId, userProfileV1)
         } else {
             log.debug(s"authenticateCredentials - password did not match")
             throw BadCredentialsException(BAD_CRED_PASSWORD_MISMATCH)
+        }
+    }
+
+    /**
+      * Tries to authenticate the credentials by getting the [[UserProfileV1]] from the triple store and checking if
+      * the password matches. Caches the user profile after successful authentication under a generated id (JWT),
+      * and returns that said id and user profile.
+      *
+      * @param credentials the user supplied and extracted credentials.
+      * @param system      the current [[ActorSystem]]
+      * @return a [[SessionV1]] which holds the generated id (JWT) and the user profile.
+      * @throws BadCredentialsException when email or password are empty; when user is not active; when the password
+      *                                 did not match.
+      */
+    private def authenticateCredentialsV2(credentials: KnoraCredentialsV2)(implicit system: ActorSystem, executionContext: ExecutionContext): SessionV2 = {
+
+        val settings = Settings(system)
+
+        // check if email and password are provided
+        if (credentials.email.isEmpty || credentials.password.isEmpty) {
+            throw BadCredentialsException(BAD_CRED_EMAIL_PASSWORD_NOT_AVAILABLE)
+        }
+
+        val userProfileV1 = getUserProfileV1ByEmail(credentials.email.get)
+        //log.debug(s"authenticateCredentials - userProfileV1: $userProfileV1")
+
+        /* check if the user is active, if not, then no need to check the password */
+        if (!userProfileV1.isActive) {
+            log.debug("authenticateCredentials - user is not active")
+            throw BadCredentialsException(BAD_CRED_USER_INACTIVE)
+        }
+
+        /* check the password and store it in the cache */
+        if (userProfileV1.passwordMatch(credentials.password.get)) {
+            // create JWT and cache user profile under this id
+            log.debug("authenticateCredentials - password matched")
+            val token = JWTHelper.createToken(userProfileV1.userData.user_id.get, settings.jwtSecretKey, settings.jwtLongevity)
+            SessionV2(token, userProfileV1)
+        } else {
+            log.debug(s"authenticateCredentials - password did not match")
+            throw BadCredentialsException(BAD_CRED_PASSWORD_MISMATCH)
+        }
+    }
+
+    /**
+      * Writes the user's profile to cache.
+      *
+      * @param session a [[SessionV1]] which holds the identifier (JWT) and the user profile.
+      * @return true if writing was successful.
+      */
+    private def writeUserProfileV1ToCache(session: SessionV1): Boolean = {
+        CacheUtil.put(AUTHENTICATION_CACHE_NAME, session.sid, session.userProfileV1)
+        if (CacheUtil.get(AUTHENTICATION_CACHE_NAME, session.sid).nonEmpty) {
+            true
+        } else {
+            throw ApplicationCacheException("Writing the user's profile to cache was not successful.")
+        }
+    }
+
+
+    /**
+      * Writes the user's profile to cache.
+      *
+      * @param session a [[SessionV2]] which holds the identifier (JWT) and the user profile.
+      * @return true if writing was successful.
+      */
+    private def writeUserProfileV2ToCache(session: SessionV2): Boolean = {
+        CacheUtil.put(AUTHENTICATION_CACHE_NAME, session.token, session.userProfile)
+        if (CacheUtil.get(AUTHENTICATION_CACHE_NAME, session.token).nonEmpty) {
+            true
+        } else {
+            throw ApplicationCacheException("Writing the user's profile to cache was not successful.")
         }
     }
 
@@ -458,78 +567,6 @@ object Authenticator {
     }
 
 
-    /**
-      * Create a JWT.
-      *
-      * @param userIri   the user IRI that will be encoded into the token.
-      * @param secretKey the secret key used for encoding.
-      * @return a [[String]] containg the JWT.
-      */
-    private def createToken(userIri: IRI, secretKey: String): String = {
-
-        val algorithm = Algorithm.HS256
-        val requiredHeaders = Set[HeaderField](Typ)
-        val requiredClaims = Set[ClaimField](Iss, Sub, Aud)
-
-
-        val headers = Seq[HeaderValue](Typ("JWT"), Alg(algorithm))
-        val claims = Seq[ClaimValue](Iss("webapi"), Sub(userIri), Aud("webapi"))
-
-        val jwt = new DecodedJwt(headers, claims)
-
-        jwt.encodedAndSigned(secretKey)
-    }
-
-    /**
-      * Validate a JWT.
-      *
-      * @param token  the JWT.
-      * @param secret the secret used to encode the token.
-      * @return a [[Boolean]].
-      */
-    private def validateToken(token: String, secret: String): Boolean = {
-
-        val algorithm = Algorithm.HS256
-        val requiredHeaders = Set[HeaderField](Typ)
-        val requiredClaims = Set[ClaimField](Iss, Sub, Aud)
-
-        DecodedJwt.validateEncodedJwt(
-            token,
-            secret,
-            algorithm,
-            requiredHeaders,
-            requiredClaims,
-            iss = Some(Iss("webapi")),
-            aud = Some(Aud("webapi"))
-        ).isSuccess
-    }
-
-    /**
-      * Extract the encoded user IRI.
-      *
-      * @param token  the JWT.
-      * @param secret the secret used to encode the token.
-      * @return an optional [[IRI]].
-      */
-    private def extractUserIriFromToken(token: String, secret: String): Option[IRI] = {
-        val algorithm = Algorithm.HS256
-        val requiredHeaders = Set[HeaderField](Typ)
-        val requiredClaims = Set[ClaimField](Iss, Sub, Aud)
-
-        DecodedJwt.validateEncodedJwt(
-            token,
-            secret,
-            algorithm,
-            requiredHeaders,
-            requiredClaims,
-            iss = Some(Iss("webapi")),
-            aud = Some(Aud("webapi"))
-        ) match {
-            case Success(jwt) => jwt.getClaim[Sub].map(_.value)
-            case _ => None
-        }
-    }
-
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // TRIPLE STORE ACCESS
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -603,5 +640,78 @@ object Authenticator {
             throw BadCredentialsException(BAD_CRED_EMAIL_NOT_SUPPLIED)
         }
     }
+}
+
+object JWTHelper {
+
+    private val algorithm = Algorithm.HS256
+    private val requiredHeaders = Set[HeaderField](Typ)
+    private val requiredClaims = Set[ClaimField](Iss, Sub, Aud, Iat, Exp)
+
+    /**
+      * Create a JWT.
+      *
+      * @param userIri   the user IRI that will be encoded into the token.
+      * @param secretKey the secret key used for encoding.
+      * @param longevity the token's longevity in days.
+      * @return a [[String]] containg the JWT.
+      */
+    def createToken(userIri: IRI, secretKey: String, longevity: Long): String = {
+
+        val headers = Seq[HeaderValue](Typ("JWT"), Alg(algorithm))
+
+        val now: Long = System.currentTimeMillis() / 1000l
+        val nowPlusLongevity: Long = now + longevity * 60 * 60 * 24
+
+        val claims = Seq[ClaimValue](Iss("webapi"), Sub(userIri), Aud("webapi"), Iat(now), Exp(nowPlusLongevity))
+
+        val jwt = new DecodedJwt(headers, claims)
+
+        jwt.encodedAndSigned(secretKey)
+    }
+
+    /**
+      * Validate a JWT.
+      *
+      * @param token  the JWT.
+      * @param secret the secret used to encode the token.
+      * @return a [[Boolean]].
+      */
+    def validateToken(token: String, secret: String): Boolean = {
+
+        DecodedJwt.validateEncodedJwt(
+            token,
+            secret,
+            algorithm,
+            requiredHeaders,
+            requiredClaims,
+            iss = Some(Iss("webapi")),
+            aud = Some(Aud("webapi"))
+        ).isSuccess
+    }
+
+    /**
+      * Extract the encoded user IRI.
+      *
+      * @param token  the JWT.
+      * @param secret the secret used to encode the token.
+      * @return an optional [[IRI]].
+      */
+    def extractUserIriFromToken(token: String, secret: String): Option[IRI] = {
+
+        DecodedJwt.validateEncodedJwt(
+            token,
+            secret,
+            algorithm,
+            requiredHeaders,
+            requiredClaims,
+            iss = Some(Iss("webapi")),
+            aud = Some(Aud("webapi"))
+        ) match {
+            case Success(jwt) => jwt.getClaim[Sub].map(_.value)
+            case _ => None
+        }
+    }
+
 }
 

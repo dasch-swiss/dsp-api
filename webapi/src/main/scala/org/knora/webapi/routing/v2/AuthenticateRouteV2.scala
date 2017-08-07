@@ -25,8 +25,7 @@ import akka.event.LoggingAdapter
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import org.knora.webapi.SettingsImpl
-import org.knora.webapi.messages.v1.responder.authenticatemessages.KnoraCredentialsV1
-import org.knora.webapi.messages.v2.responder.authenticationmessages.{AuthenticationV2JsonProtocol, LoginApiRequestPayloadV2}
+import org.knora.webapi.messages.v2.responder.authenticationmessages.{AuthenticationV2JsonProtocol, KnoraCredentialsV2, LoginApiRequestPayloadV2}
 import org.knora.webapi.routing.Authenticator
 
 /**
@@ -48,16 +47,16 @@ object AuthenticateRouteV2 extends Authenticator with AuthenticationV2JsonProtoc
                  */
                 entity(as[LoginApiRequestPayloadV2]) { apiRequest => requestContext =>
                     requestContext.complete {
-                        doLoginV2(KnoraCredentialsV1(email = Some(apiRequest.email), password = Some(apiRequest.password)))
+                        doLoginV2(KnoraCredentialsV2(email = Some(apiRequest.email), password = Some(apiRequest.password)))
                     }
                 }
-            } ~ delete {
-                /* invalidates the JWT token, by putting it on a blacklist
-                 * the token only needs to be on this blacklist until its expiration date
-                 */
-                requestContext => {
+            }
+        } ~
+        path("v2" / "logout") {
+            get {
+                requestContext =>
                     requestContext.complete {
-                        doLogoutV1(requestContext)
+                        doLogoutV2(requestContext)
                     }
                 }
             }
