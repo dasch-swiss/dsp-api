@@ -122,7 +122,7 @@ trait KnoraService {
             ListsRouteV1.knoraApiPath(system, settings, log) ~
             ResourceTypesRouteV1.knoraApiPath(system, settings, log) ~
             SearchRouteV1.knoraApiPath(system, settings, log) ~
-            AuthenticateRouteV1.knoraApiPath(system, settings, log) ~
+            AuthenticationRouteV1.knoraApiPath(system, settings, log) ~
             AssetsRouteV1.knoraApiPath(system, settings, log) ~
             CkanRouteV1.knoraApiPath(system, settings, log) ~
             StoreRouteV1.knoraApiPath(system, settings, log) ~

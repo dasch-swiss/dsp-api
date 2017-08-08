@@ -1,6 +1,6 @@
 /*
  * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
+ * Tobias Schweizer, André Kilchenmann, and André Fatton.
  *
  * This file is part of Knora.
  *
@@ -18,59 +18,50 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.routing.v1
+package org.knora.webapi.routing.v2
 
 import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import org.knora.webapi.SettingsImpl
+import org.knora.webapi.messages.v2.routing.authenticationmessages.{AuthenticationV2JsonProtocol, KnoraCredentialsV2, LoginApiRequestPayloadV2}
 import org.knora.webapi.routing.Authenticator
 
 /**
   * A route providing authentication support. It allows the creation of "sessions", which is used in the SALSAH app.
   */
-object AuthenticateRouteV1 extends Authenticator {
+object AuthenticationRouteV2 extends Authenticator with AuthenticationV2JsonProtocol {
 
     def knoraApiPath(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter): Route = {
         implicit val system = _system
         implicit val executionContext = system.dispatcher
         implicit val timeout = settings.defaultTimeout
 
-        path("v1" / "authenticate") {
-            get {
+        path("v2" / "authentication") {
+            get { // authenticate credentials
                 requestContext => {
                     requestContext.complete {
-                        doAuthenticateV1(requestContext)
+                        doAuthenticateV2(requestContext)
                     }
                 }
-            }
-        } ~ path("v1" / "session") {
-            get {
-                requestContext => {
+            } ~
+            post { // login
+                /* send email, password in body as: {"email": "usersemail", "password": "userspassword"}
+                 * returns a JWT token, which can be supplied with every request thereafter in the authorization
+                 * header with the bearer scheme: 'Authorization: Bearer abc.def.ghi'
+                 */
+                entity(as[LoginApiRequestPayloadV2]) { apiRequest => requestContext =>
                     requestContext.complete {
-                        val params = requestContext.request.uri.query().toMap
-                        if (params.contains("logout")) {
-                            doLogoutV1(requestContext)
-                        } else if (params.contains("login")) {
-                            doLoginV1(requestContext)
-                        } else {
-                            doSessionAuthenticationV1(requestContext)
-                        }
+                        doLoginV2(KnoraCredentialsV2(email = Some(apiRequest.email), password = Some(apiRequest.password)))
                     }
                 }
-            } ~ post {
-                requestContext => {
+            } ~
+            delete { // logout
+                requestContext =>
                     requestContext.complete {
-                        doLoginV1(requestContext)
+                        doLogoutV2(requestContext)
                     }
-                }
-            } ~ delete {
-                requestContext => {
-                    requestContext.complete {
-                        doLogoutV1(requestContext)
-                    }
-                }
             }
         }
     }

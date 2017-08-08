@@ -25,9 +25,11 @@ import akka.testkit.ImplicitSender
 import akka.util.Timeout
 import com.typesafe.config.ConfigFactory
 import io.igl.jwt._
-import org.knora.webapi.messages.v1.responder.authenticatemessages.{KnoraCredentialsV1, SessionV1}
 import org.knora.webapi.messages.v1.responder.usermessages._
+import org.knora.webapi.messages.v1.routing.authenticationmessages.{KnoraCredentialsV1, SessionV1}
+import org.knora.webapi.messages.v2.routing.authenticationmessages.{KnoraCredentialsV2, SessionV2}
 import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_NAME
+import org.knora.webapi.routing.JWTHelper.{algorithm, requiredClaims, requiredHeaders}
 import org.knora.webapi.util.ActorUtil
 import org.knora.webapi.{BadCredentialsException, CoreSpec, SharedAdminTestData}
 import org.scalatest.PrivateMethodTester
@@ -55,22 +57,6 @@ class AuthenticatorSpec extends CoreSpec("AuthenticationTestSystem") with Implic
     val rootUserPassword = "test"
 
 
-    val secretKey = "super-secret-key"
-    val algorithm = Algorithm.HS256
-    val requiredHeaders = Set[HeaderField](Typ)
-    val requiredClaims = Set[ClaimField](Iss, Sub, Aud)
-
-
-    val headers = Seq[HeaderValue](Typ("JWT"), Alg(algorithm))
-    val claims = Seq[ClaimValue](Iss("webapi"), Sub(rootUserProfileV1.userData.user_id.get), Aud("webapi"))
-
-    val jwt = new DecodedJwt(headers, claims)
-
-    val encodedJwt = jwt.encodedAndSigned(secretKey)
-
-
-
-
     val mockUsersActor = actor(RESPONDER_MANAGER_ACTOR_NAME)(new Act {
         become {
             case UserProfileByEmailGetV1(submittedEmail, userProfileType) => {
@@ -84,7 +70,8 @@ class AuthenticatorSpec extends CoreSpec("AuthenticationTestSystem") with Implic
     })
 
     val getUserProfileV1ByEmail = PrivateMethod[Try[UserProfileV1]]('getUserProfileV1ByEmail)
-    val authenticateCredentialsV1 = PrivateMethod[Try[SessionV1]]('authenticateCredentialsV1)
+    val authenticateCredentialsV1 = PrivateMethod[SessionV1]('authenticateCredentialsV1)
+    val authenticateCredentialsV2 = PrivateMethod[SessionV2]('authenticateCredentialsV2)
 
     "During Authentication" when {
         "called, the 'getUserProfileV1ByEmail' method " should {
@@ -106,13 +93,57 @@ class AuthenticatorSpec extends CoreSpec("AuthenticationTestSystem") with Implic
         }
         "called, the 'authenticateCredentialsV1' method " should {
             "succeed with the correct 'email' / correct 'password' " in {
-                Authenticator invokePrivate authenticateCredentialsV1(KnoraCredentialsV1(Some(rootUserEmail), Some(rootUserPassword), None), false, system, executionContext) should be(SessionV1(encodedJwt, rootUserProfileV1))
+                val res: SessionV1 = Authenticator invokePrivate authenticateCredentialsV1(KnoraCredentialsV1(Some(rootUserEmail), Some(rootUserPassword), None), system, executionContext)
+                res.userProfileV1 should be(rootUserProfileV1)
+
             }
             "fail with correct 'email' / wrong 'password' " in {
                 an [BadCredentialsException] should be thrownBy {
-                    Authenticator invokePrivate authenticateCredentialsV1(KnoraCredentialsV1(Some(rootUserEmail), Some("wrongpassword"), None), false, system, executionContext)
+                    Authenticator invokePrivate authenticateCredentialsV1(KnoraCredentialsV1(Some(rootUserEmail), Some("wrongpassword"), None), system, executionContext)
                 }
             }
+        }
+        "called, the 'authenticateCredentialsV2' method" should {
+            "succeed with the correct 'email' / correct 'password' " in {
+                val res: SessionV2 = Authenticator invokePrivate authenticateCredentialsV2(KnoraCredentialsV2(Some(rootUserEmail), Some(rootUserPassword), None), system, executionContext)
+                res.userProfile should be(rootUserProfileV1)
+            }
+            "fail with correct 'email' / wrong 'password' " in {
+                an [BadCredentialsException] should be thrownBy {
+                    Authenticator invokePrivate authenticateCredentialsV2(KnoraCredentialsV2(Some(rootUserEmail), Some("wrongpassword"), None), system, executionContext)
+                }
+            }
+        }
+    }
+
+
+    "The JWTHelper" should {
+
+        val secret = "123456"
+
+        "create token" in {
+            val token = JWTHelper.createToken("userIri", secret, 1)
+
+            val decodedJwt: Try[Jwt] = DecodedJwt.validateEncodedJwt(
+                token,
+                secret,
+                algorithm,
+                requiredHeaders,
+                requiredClaims,
+                iss = Some(Iss("webapi")),
+                aud = Some(Aud("webapi"))
+            )
+
+            decodedJwt.isSuccess should be(true)
+            decodedJwt.get.getClaim[Sub].map(_.value) should be(Some("userIri"))
+        }
+        "validate token" in {
+            val token = JWTHelper.createToken("userIri", secret, 1)
+            JWTHelper.validateToken(token, secret) should be(true)
+        }
+        "extract user's IRI" in {
+            val token = JWTHelper.createToken("userIri", secret, 1)
+            JWTHelper.extractUserIriFromToken(token, secret) should be(Some("userIri"))
         }
     }
 }

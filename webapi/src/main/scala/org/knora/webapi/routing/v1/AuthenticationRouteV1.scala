@@ -1,6 +1,6 @@
 /*
  * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
  *
  * This file is part of Knora.
  *
@@ -18,45 +18,57 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.routing.v2
+package org.knora.webapi.routing.v1
 
 import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import org.knora.webapi.SettingsImpl
-import org.knora.webapi.messages.v2.responder.authenticationmessages.{AuthenticationV2JsonProtocol, KnoraCredentialsV2, LoginApiRequestPayloadV2}
 import org.knora.webapi.routing.Authenticator
 
 /**
   * A route providing authentication support. It allows the creation of "sessions", which is used in the SALSAH app.
   */
-object AuthenticateRouteV2 extends Authenticator with AuthenticationV2JsonProtocol {
+object AuthenticationRouteV1 extends Authenticator {
 
     def knoraApiPath(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter): Route = {
         implicit val system = _system
         implicit val executionContext = system.dispatcher
         implicit val timeout = settings.defaultTimeout
 
-        path("v2" / "login") {
-            post {
-                /* send email, password in body as: {"email": "usersemail", "password": "userspassword"}
-                 * returns a JWT token, which can be supplied with every request thereafter in
-                 * the header:
-                 * Authentication: Bearer token.token.token
-                 */
-                entity(as[LoginApiRequestPayloadV2]) { apiRequest => requestContext =>
+        path("v1" / "authenticate") {
+            get {
+                requestContext => {
                     requestContext.complete {
-                        doLoginV2(KnoraCredentialsV2(email = Some(apiRequest.email), password = Some(apiRequest.password)))
+                        doAuthenticateV1(requestContext)
                     }
                 }
             }
-        } ~
-        path("v2" / "logout") {
+        } ~ path("v1" / "session") {
             get {
-                requestContext =>
+                requestContext => {
                     requestContext.complete {
-                        doLogoutV2(requestContext)
+                        val params = requestContext.request.uri.query().toMap
+                        if (params.contains("logout")) {
+                            doLogoutV1(requestContext)
+                        } else if (params.contains("login")) {
+                            doLoginV1(requestContext)
+                        } else {
+                            doSessionAuthenticationV1(requestContext)
+                        }
+                    }
+                }
+            } ~ post {
+                requestContext => {
+                    requestContext.complete {
+                        doLoginV1(requestContext)
+                    }
+                }
+            } ~ delete {
+                requestContext => {
+                    requestContext.complete {
+                        doLogoutV1(requestContext)
                     }
                 }
             }

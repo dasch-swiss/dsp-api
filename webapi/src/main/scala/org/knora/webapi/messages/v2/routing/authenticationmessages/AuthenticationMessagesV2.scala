@@ -18,7 +18,7 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.messages.v2.responder.authenticationmessages
+package org.knora.webapi.messages.v2.routing.authenticationmessages
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi.BadRequestException
@@ -51,7 +51,9 @@ case class LoginApiRequestPayloadV2(email: String,
 case class KnoraCredentialsV2(email: Option[String] = None,
                               password: Option[String] = None,
                               token: Option[String] = None) {
+
     def isEmpty: Boolean = this.email.isEmpty && this.password.isEmpty && this.token.isEmpty
+    def nonEmpty: Boolean = this.email.nonEmpty || this.password.nonEmpty || this.token.nonEmpty
 }
 
 

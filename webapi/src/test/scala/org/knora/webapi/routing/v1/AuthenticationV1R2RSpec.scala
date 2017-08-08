@@ -41,7 +41,7 @@ import scala.concurrent.duration._
 
 
 /**
-  * Route-to-Responder (R2R) test specification for testing authentication using [[AuthenticateRouteV1]]. This
+  * Route-to-Responder (R2R) test specification for testing authentication using [[AuthenticationRouteV1]]. This
   * specification uses the Spray Testkit as documented here: http://spray.io/documentation/1.2.2/spray-testkit/
   *
   * This spec tests the 'v1/authentication' and 'v1/session' route.
@@ -57,7 +57,7 @@ class AuthenticationV1R2RSpec extends R2RSpec with SessionJsonProtocol {
     private val responderManager = system.actorOf(Props(new ResponderManager with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
     private val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
 
-    private val authenticatePath = AuthenticateRouteV1.knoraApiPath(system, settings, log)
+    private val authenticatePath = AuthenticationRouteV1.knoraApiPath(system, settings, log)
     private val resourcesPath = ResourcesRouteV1.knoraApiPath(system, settings, log)
 
     private implicit val timeout: Timeout = 300.seconds

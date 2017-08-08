@@ -18,7 +18,7 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.messages.v1.responder.authenticatemessages
+package org.knora.webapi.messages.v1.routing.authenticationmessages
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi.IRI
@@ -49,6 +49,7 @@ case class KnoraCredentialsV1(email: Option[String] = None,
                               sessionId: Option[String] = None) {
 
     def isEmpty: Boolean = this.email.isEmpty && this.password.isEmpty && this.sessionId.isEmpty
+    def nonEmpty: Boolean = this.email.nonEmpty || this.password.nonEmpty || this.sessionId.nonEmpty
 }
 
 
