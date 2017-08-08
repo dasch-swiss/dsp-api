@@ -424,6 +424,8 @@ object Authenticator {
 
         val settings = Settings(system)
 
+        // FIXME: extend this, as I can now receive email/password or token as credentials
+
         // check if email and password are provided
         if (credentials.email.isEmpty || credentials.password.isEmpty) {
             throw BadCredentialsException(BAD_CRED_EMAIL_PASSWORD_NOT_AVAILABLE)
