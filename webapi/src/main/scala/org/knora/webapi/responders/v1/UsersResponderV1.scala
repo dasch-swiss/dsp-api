@@ -26,16 +26,15 @@ import akka.actor.Status
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
+import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v1.responder.groupmessages.{GroupInfoByIRIGetRequest, GroupInfoResponseV1}
 import org.knora.webapi.messages.v1.responder.permissionmessages._
 import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoByIRIGetV1, ProjectInfoV1}
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileTypeV1.UserProfileType
 import org.knora.webapi.messages.v1.responder.usermessages._
-import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.responders.{IriLocker, Responder}
-import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.util.ActorUtil._
-import org.knora.webapi.util.{CacheUtil, KnoraIdUtil, MessageUtil}
+import org.knora.webapi.util.{CacheUtil, KnoraIdUtil}
 import org.springframework.security.crypto.scrypt.SCryptPasswordEncoder
 
 import scala.concurrent.Future
@@ -50,6 +49,8 @@ class UsersResponderV1 extends Responder {
 
     // The IRI used to lock user creation and update
     val USERS_GLOBAL_LOCK_IRI = "http://data.knora.org/users"
+
+    val USER_PROFILE_CACHE_NAME = "userProfileCache"
 
     /**
       * Receives a message extending [[org.knora.webapi.messages.v1.responder.usermessages.UsersResponderRequestV1]], and returns a message of type [[UserProfileV1]]
@@ -167,7 +168,8 @@ class UsersResponderV1 extends Responder {
     }
 
     /**
-      * Gets information about a Knora user, and returns it in a [[UserProfileV1]].
+      * Gets information about a Knora user, and returns it in a [[UserProfileV1]]. If possible, tries to retrieve the
+      * user profile from cache. If not, it retrieves it from the triplestore and writes it to the cache.
       *
       * @param userIri     the IRI of the user.
       * @param profileType the type of the requested profile (restricted of full).
@@ -176,21 +178,34 @@ class UsersResponderV1 extends Responder {
     private def userProfileByIRIGetV1(userIri: IRI, profileType: UserProfileType): Future[Option[UserProfileV1]] = {
         // log.debug(s"userProfileByIRIGetV1: userIri = $userIRI', clean = '$profileType'")
 
-        for {
-            sparqlQueryString <- Future(queries.sparql.v1.txt.getUserByIri(
-                triplestore = settings.triplestoreType,
-                userIri = userIri
-            ).toString())
+        CacheUtil.get[UserProfileV1](USER_PROFILE_CACHE_NAME, userIri) match {
+            case Some(userProfile) =>
+                // found a user profile in the cache
+                log.debug(s"userProfileByIRIGetV1 - cache hit: $userProfile")
+                FastFuture.successful(Some(userProfile.ofType(profileType)))
+            case None => {
+                for {
+                    sparqlQueryString <- Future(queries.sparql.v1.txt.getUserByIri(
+                        triplestore = settings.triplestoreType,
+                        userIri = userIri
+                    ).toString())
 
-            // _ = log.debug(s"userProfileByIRIGetV1 - sparqlQueryString: {}", sparqlQueryString)
+                    // _ = log.debug(s"userProfileByIRIGetV1 - sparqlQueryString: {}", sparqlQueryString)
 
-            userDataQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResponse]
+                    userDataQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResponse]
 
-            maybeUserProfileV1 <- userDataQueryResponse2UserProfile(userDataQueryResponse, profileType)
+                    maybeUserProfileV1 <- userDataQueryResponse2UserProfile(userDataQueryResponse)
 
-            // _ = log.debug("userProfileByIRIGetV1 - maybeUserProfileV1: {}", MessageUtil.toSource(maybeUserProfileV1))
+                    _ = if (maybeUserProfileV1.nonEmpty) {
+                        writeUserProfileV1ToCache(maybeUserProfileV1.get)
+                    }
 
-        } yield maybeUserProfileV1 // UserProfileV1(userData, groups, projects_info, sessionId, isSystemUser, permissionData)
+                    result = maybeUserProfileV1.map(_.ofType(profileType))
+
+                    // _ = log.debug("userProfileByIRIGetV1 - maybeUserProfileV1: {}", MessageUtil.toSource(maybeUserProfileV1))
+                } yield result // UserProfileV1(userData, groups, projects_info, sessionId, isSystemUser, permissionData)
+            }
+        }
     }
 
     /**
@@ -212,7 +227,8 @@ class UsersResponderV1 extends Responder {
     }
 
     /**
-      * Gets information about a Knora user, and returns it in a [[UserProfileV1]].
+      * Gets information about a Knora user, and returns it in a [[UserProfileV1]]. If possible, tries to retrieve the user profile
+      * from cache. If not, it retrieves it from the triplestore and writes it to the cache.
       *
       * @param email       the email of the user.
       * @param profileType the type of the requested profile (restricted or full).
@@ -221,21 +237,37 @@ class UsersResponderV1 extends Responder {
     private def userProfileByEmailGetV1(email: String, profileType: UserProfileType): Future[Option[UserProfileV1]] = {
         // log.debug(s"userProfileByEmailGetV1: username = '{}', type = '{}'", email, profileType)
 
-        for {
-            sparqlQueryString <- Future(queries.sparql.v1.txt.getUserByEmail(
-                triplestore = settings.triplestoreType,
-                email = email
-            ).toString())
-            //_ = log.debug(s"userProfileByEmailGetV1 - sparqlQueryString: $sparqlQueryString")
+        CacheUtil.get[UserProfileV1](USER_PROFILE_CACHE_NAME, email) match {
+            case Some(userProfile) =>
+                // found a user profile in the cache
+                log.debug(s"userProfileByIRIGetV1 - cache hit: $userProfile")
+                FastFuture.successful(Some(userProfile.ofType(profileType)))
+            case None => {
+                for {
+                    sparqlQueryString <- Future(queries.sparql.v1.txt.getUserByEmail(
+                        triplestore = settings.triplestoreType,
+                        email = email
+                    ).toString())
+                    //_ = log.debug(s"userProfileByEmailGetV1 - sparqlQueryString: $sparqlQueryString")
 
-            userDataQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResponse]
+                    userDataQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResponse]
 
-            //_ = log.debug(MessageUtil.toSource(userDataQueryResponse))
-            maybeUserProfileV1 <- userDataQueryResponse2UserProfile(userDataQueryResponse, profileType)
+                    //_ = log.debug(MessageUtil.toSource(userDataQueryResponse))
+                    maybeUserProfileV1 <- userDataQueryResponse2UserProfile(userDataQueryResponse)
 
-            // _ = log.debug("userProfileByEmailGetV1 - maybeUserProfileV1: {}", MessageUtil.toSource(maybeUserProfileV1))
+                    _ = if (maybeUserProfileV1.nonEmpty) {
+                        writeUserProfileV1ToCache(maybeUserProfileV1.get)
+                    }
 
-        } yield maybeUserProfileV1 // UserProfileV1(userDataV1, groupIris, projectIris)
+                    result = maybeUserProfileV1.map(_.ofType(profileType))
+
+                    // _ = log.debug("userProfileByEmailGetV1 - maybeUserProfileV1: {}", MessageUtil.toSource(maybeUserProfileV1))
+
+                } yield result // UserProfileV1(userDataV1, groupIris, projectIris)
+            }
+        }
+
+
     }
 
     /**
@@ -323,12 +355,15 @@ class UsersResponderV1 extends Responder {
             userDataQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
 
             // create the user profile
-            maybeNewUserProfile <- userDataQueryResponse2UserProfile(userDataQueryResponse, UserProfileTypeV1.RESTRICTED)
+            maybeNewUserProfile <- userDataQueryResponse2UserProfile(userDataQueryResponse)
 
             newUserProfile = maybeNewUserProfile.getOrElse(throw UpdateNotPerformedException(s"User $userIri was not created. Please report this as a possible bug."))
 
+            // write the newly created user profile to cache
+            _ = writeUserProfileV1ToCache(newUserProfile)
+
             // create the user operation response
-            userOperationResponseV1 = UserOperationResponseV1(newUserProfile)
+            userOperationResponseV1 = UserOperationResponseV1(newUserProfile.ofType(UserProfileTypeV1.RESTRICTED))
 
         } yield userOperationResponseV1
 
@@ -1064,7 +1099,7 @@ class UsersResponderV1 extends Responder {
 
 
         for {
-        // run the task with an IRI lock
+            // run the task with an IRI lock
             taskResult <- IriLocker.runWithIriLock(
                 apiRequestID,
                 userIri,
@@ -1090,6 +1125,11 @@ class UsersResponderV1 extends Responder {
         // log.debug("updateUserV1 - userUpdatePayload: {}", userUpdatePayload)
 
         /* Remember: some checks on UserUpdatePayloadV1 are implemented in the case class */
+
+        if (userUpdatePayload.email.nonEmpty) {
+            // changing email address, so we need to invalidate the cached profile under this email
+            invalidateCachedUserProfileV1(email = userUpdatePayload.email)
+        }
 
         for {
             /* Update the user */
@@ -1146,20 +1186,12 @@ class UsersResponderV1 extends Responder {
                 if (updatedUserProfile.permissionData.isSystemAdmin != userUpdatePayload.systemAdmin.get) throw UpdateNotPerformedException("User's 'isInSystemAdminGroup' status was not updated. Please report this as a possible bug.")
             }
 
+            // write updated user profile to cache
+            _ = writeUserProfileV1ToCache(updatedUserProfile)
+
             // create the user operation response
-            userOperationResponseV1 = if (userIri == userProfile.userData.user_id.get) {
-                // the user is updating itself
+            userOperationResponseV1 = UserOperationResponseV1(updatedUserProfile.ofType(UserProfileTypeV1.RESTRICTED))
 
-                // update cache if session id is available
-                userProfile.sessionId match {
-                    case Some(sessionId) => CacheUtil.put[UserProfileV1](Authenticator.AUTHENTICATION_CACHE_NAME, sessionId, updatedUserProfile.setSessionId(sessionId))
-                    case None => // user has not session id, so no cache to update
-                }
-
-                UserOperationResponseV1(updatedUserProfile.ofType(UserProfileTypeV1.RESTRICTED))
-            } else {
-                UserOperationResponseV1(updatedUserProfile.ofType(UserProfileTypeV1.RESTRICTED))
-            }
         } yield userOperationResponseV1
     }
 
@@ -1213,10 +1245,9 @@ class UsersResponderV1 extends Responder {
       * Helper method used to create a [[UserProfileV1]] from the [[SparqlSelectResponse]] containing user data.
       *
       * @param userDataQueryResponse a [[SparqlSelectResponse]] containing user data.
-      * @param userProfileType       a flag denoting if sensitive information should be stripped from the returned [[UserProfileV1]]
       * @return a [[UserProfileV1]] containing the user's data.
       */
-    private def userDataQueryResponse2UserProfile(userDataQueryResponse: SparqlSelectResponse, userProfileType: UserProfileTypeV1.Value): Future[Option[UserProfileV1]] = {
+    private def userDataQueryResponse2UserProfile(userDataQueryResponse: SparqlSelectResponse): Future[Option[UserProfileV1]] = {
 
         // log.debug("userDataQueryResponse2UserProfile - userDataQueryResponse: {}", MessageUtil.toSource(userDataQueryResponse))
 
@@ -1266,11 +1297,7 @@ class UsersResponderV1 extends Responder {
 
             for {
             /* get the user's permission profile from the permissions responder */
-                permissionData <- if (userProfileType != UserProfileTypeV1.SHORT) {
-                    (responderManager ? PermissionDataGetV1(projectIris = projectIris, groupIris = groupIris, isInProjectAdminGroups = isInProjectAdminGroups, isInSystemAdminGroup = isInSystemAdminGroup)).mapTo[PermissionDataV1]
-                } else {
-                    Future(PermissionDataV1(anonymousUser = false))
-                }
+                permissionData <- (responderManager ? PermissionDataGetV1(projectIris = projectIris, groupIris = groupIris, isInProjectAdminGroups = isInProjectAdminGroups, isInSystemAdminGroup = isInSystemAdminGroup)).mapTo[PermissionDataV1]
 
                 maybeProjectInfoFutures: Seq[Future[Option[ProjectInfoV1]]] = projectIris.map {
                     projectIri => (responderManager ? ProjectInfoByIRIGetV1(iri = projectIri, userProfileV1 = None)).mapTo[Option[ProjectInfoV1]]
@@ -1290,11 +1317,11 @@ class UsersResponderV1 extends Responder {
                 )
                 // _ = log.debug(s"Retrieved UserProfileV1: ${up.toString}")
 
-                result: Option[UserProfileV1] = Some(up.ofType(userProfileType))
+                result: Option[UserProfileV1] = Some(up)
             } yield result
 
         } else {
-            Future(None)
+            FastFuture.successful(None)
         }
     }
 
@@ -1347,6 +1374,58 @@ class UsersResponderV1 extends Responder {
             result = checkUserExistsResponse.result
 
         } yield result
+    }
+
+    /**
+      * Writes the user profile to cache.
+      *
+      * @param userProfile a [[UserProfileV1]].
+      * @return true if writing was successful.
+      * @throws ApplicationCacheException when there is a problem with writing the user's profile to cache.
+      */
+    private def writeUserProfileV1ToCache(userProfile: UserProfileV1): Boolean = {
+
+        val iri = if (userProfile.userData.user_id.nonEmpty) {
+            userProfile.userData.user_id.get
+        } else {
+            throw ApplicationCacheException("A user profile without an IRI is invalid. Not writing to cache.")
+        }
+
+        val email = if (userProfile.userData.email.nonEmpty) {
+            userProfile.userData.email.get
+        } else {
+            throw ApplicationCacheException("A user profile without an email is invalid. Not writing to cache.")
+        }
+
+        CacheUtil.put(USER_PROFILE_CACHE_NAME, iri, userProfile)
+
+        if (CacheUtil.get(USER_PROFILE_CACHE_NAME, iri).isEmpty) {
+            throw ApplicationCacheException("Writing the user's profile to cache was not successful.")
+        }
+
+        CacheUtil.put(USER_PROFILE_CACHE_NAME, email, userProfile)
+        if (CacheUtil.get(USER_PROFILE_CACHE_NAME, email).isEmpty) {
+            throw ApplicationCacheException("Writing the user's profile to cache was not successful.")
+        }
+
+        true
+    }
+
+    /**
+      * Removes the user profile from cache.
+      *
+      * @param userIri the user's IRI und which a profile could be cached.
+      * @param email the user's email under which a profile could be cached.
+      */
+    private def invalidateCachedUserProfileV1(userIri: Option[IRI] = None, email: Option[String] = None): Unit = {
+
+        if (userIri.nonEmpty) {
+            CacheUtil.remove(USER_PROFILE_CACHE_NAME, userIri.get)
+        }
+
+        if (email.nonEmpty) {
+            CacheUtil.remove(USER_PROFILE_CACHE_NAME, email.get)
+        }
     }
 
 }

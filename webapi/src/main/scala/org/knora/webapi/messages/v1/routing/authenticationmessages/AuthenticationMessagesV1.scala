@@ -40,26 +40,39 @@ case class CreateSessionApiRequestV1(username: String, password: String)
 /**
   * Represents credentials that a user can supply.
   *
-  * @param email     the optionally supplied email.
-  * @param password  the optionally supplied password.
-  * @param sessionId the optionally supplied session id.
+  * @param passwordCredentials the optionally supplied email/password credentials.
+  * @param sessionCredentials  the optionally supplied session credentials.
   */
-case class KnoraCredentialsV1(email: Option[String] = None,
-                              password: Option[String] = None,
-                              sessionId: Option[String] = None) {
+case class KnoraCredentialsV1(passwordCredentials: Option[KnoraPasswordCredentialsV1] = None,
+                              sessionCredentials: Option[KnoraSessionCredentialsV1] = None) {
 
-    def isEmpty: Boolean = this.email.isEmpty && this.password.isEmpty && this.sessionId.isEmpty
-    def nonEmpty: Boolean = this.email.nonEmpty || this.password.nonEmpty || this.sessionId.nonEmpty
+    def isEmpty: Boolean = this.passwordCredentials.isEmpty && this.sessionCredentials.isEmpty
+
+    def nonEmpty: Boolean = this.passwordCredentials.nonEmpty || this.sessionCredentials.nonEmpty
 }
 
+/**
+  * Represents email/password credentials that a user can supply.
+  *
+  * @param email    the supplied email.
+  * @param password the supplied password.
+  */
+case class KnoraPasswordCredentialsV1(email: String, password: String)
 
 /**
-  * Represents the session containing the id under which a user profile is stored and the user profile itself.
+  * Represents session credentials that a user can supply.
   *
-  * @param sid           the session id (a true JSON web token).
-  * @param userProfileV1 the [[UserProfileV1]] the session id is referring to.
+  * @param token the supplied session token.
   */
-case class SessionV1(sid: String, userProfileV1: UserProfileV1)
+case class KnoraSessionCredentialsV1(token: String)
+
+/**
+  * Represents the session containing the token and the user's profile.
+  *
+  * @param token         the session token  (a true JSON web token).
+  * @param userProfileV1 the [[UserProfileV1]] the session token belongs to.
+  */
+case class SessionV1(token: String, userProfileV1: UserProfileV1)
 
 
 /**

@@ -25,7 +25,7 @@ import akka.event.LoggingAdapter
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import org.knora.webapi.SettingsImpl
-import org.knora.webapi.messages.v2.routing.authenticationmessages.{AuthenticationV2JsonProtocol, KnoraCredentialsV2, LoginApiRequestPayloadV2}
+import org.knora.webapi.messages.v2.routing.authenticationmessages.{AuthenticationV2JsonProtocol, KnoraCredentialsV2, KnoraPasswordCredentialsV2, LoginApiRequestPayloadV2}
 import org.knora.webapi.routing.Authenticator
 
 /**
@@ -53,7 +53,7 @@ object AuthenticationRouteV2 extends Authenticator with AuthenticationV2JsonProt
                  */
                 entity(as[LoginApiRequestPayloadV2]) { apiRequest => requestContext =>
                     requestContext.complete {
-                        doLoginV2(KnoraCredentialsV2(email = Some(apiRequest.email), password = Some(apiRequest.password)))
+                        doLoginV2(KnoraPasswordCredentialsV2(apiRequest.email, apiRequest.password))
                     }
                 }
             } ~

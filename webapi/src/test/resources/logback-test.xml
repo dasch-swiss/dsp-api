@@ -84,6 +84,7 @@
     <logger name="org.knora.webapi.e2e.v1.ProjectsV1E2ESpec" level="INFO"/>
     <logger name="org.knora.webapi.e2e.v1.GroupsV1E2ESpec" level="INFO"/>
     <logger name="org.knora.webapi.e2e.v2.AuthenticationV2E2ESpec" level="DEBUG"/>
+    <logger name="org.knora.webapi.routing.v1.AuthenticationV1R2RSpec" level="DEBUG"/>
 
 
     <root level="INFO">

@@ -42,19 +42,29 @@ case class LoginApiRequestPayloadV2(email: String,
 }
 
 /**
-  * Represents credentials that a user can supply.
-  *
-  * @param email    the optionally supplied email.
-  * @param password the optionally supplied password.
-  * @param token    the optionally supplied json web token.
+  * Represents all types of credentials that a user can supply.
   */
-case class KnoraCredentialsV2(email: Option[String] = None,
-                              password: Option[String] = None,
-                              token: Option[String] = None) {
+case class KnoraCredentialsV2(passwordCredentials: Option[KnoraPasswordCredentialsV2] = None,
+                              tokenCredentials: Option[KnoraTokenCredentialsV2] = None) {
 
-    def isEmpty: Boolean = this.email.isEmpty && this.password.isEmpty && this.token.isEmpty
-    def nonEmpty: Boolean = this.email.nonEmpty || this.password.nonEmpty || this.token.nonEmpty
+    def isEmpty: Boolean = passwordCredentials.isEmpty && tokenCredentials.isEmpty
+    def nonEmpty: Boolean = passwordCredentials.nonEmpty || tokenCredentials.nonEmpty
 }
+
+/**
+  * Represents email/password credentials.
+  *
+  * @param email    the supplied email.
+  * @param password the supplied password.
+  */
+case class KnoraPasswordCredentialsV2(email: String, password: String)
+
+/**
+  * Represents token credentials.
+  *
+  * @param token    the supplied json web token.
+  */
+case class KnoraTokenCredentialsV2(token: String)
 
 
 /**

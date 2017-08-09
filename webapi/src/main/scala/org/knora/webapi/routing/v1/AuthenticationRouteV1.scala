@@ -55,7 +55,7 @@ object AuthenticationRouteV1 extends Authenticator {
                         } else if (params.contains("login")) {
                             doLoginV1(requestContext)
                         } else {
-                            doSessionAuthenticationV1(requestContext)
+                            doAuthenticateV1(requestContext)
                         }
                     }
                 }

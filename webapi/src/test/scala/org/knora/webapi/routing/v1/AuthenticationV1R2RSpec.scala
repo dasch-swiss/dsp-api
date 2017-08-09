@@ -48,6 +48,8 @@ import scala.concurrent.duration._
   */
 class AuthenticationV1R2RSpec extends R2RSpec with SessionJsonProtocol {
 
+    implicit override val log = akka.event.Logging(system, this.getClass())
+
     override def testConfigSource =
         """
          akka.loglevel = "DEBUG"
@@ -133,16 +135,17 @@ class AuthenticationV1R2RSpec extends R2RSpec with SessionJsonProtocol {
         "succeed with 'login' and correct email / correct password " in {
             /* Correct username and correct password */
             Get(s"/v1/session?login&email=$rootEmailEnc&password=$testPass") ~> authenticatePath ~> check {
-                //log.debug("==>> " + responseAs[String])
+                log.debug("response: " + responseAs[String])
                 status should equal(StatusCodes.OK)
                 /* store session */
                 sid = Await.result(Unmarshal(response.entity).to[SessionResponse], 1.seconds).sid
+                log.debug("sid: " + sid)
                 header[`Set-Cookie`] should equal(Some(`Set-Cookie`(HttpCookie(KNORA_AUTHENTICATION_COOKIE_NAME, value = sid, path = Some("/")))))
             }
         }
 
         "succeed with authentication when using correct session id in cookie" in {
-            // authenticate by calling '/v2/session' without parameters but by providing session id in cookie from earlier login
+            // authenticate by calling '/v1/session' without parameters but by providing session id in cookie from earlier login
             Get("/v1/session") ~> Cookie(KNORA_AUTHENTICATION_COOKIE_NAME, sid) ~> authenticatePath ~> check {
                 //log.debug("==>> " + responseAs[String])
                 status should equal(StatusCodes.OK)

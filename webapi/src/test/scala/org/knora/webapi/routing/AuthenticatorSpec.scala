@@ -26,8 +26,8 @@ import akka.util.Timeout
 import com.typesafe.config.ConfigFactory
 import io.igl.jwt._
 import org.knora.webapi.messages.v1.responder.usermessages._
-import org.knora.webapi.messages.v1.routing.authenticationmessages.{KnoraCredentialsV1, SessionV1}
-import org.knora.webapi.messages.v2.routing.authenticationmessages.{KnoraCredentialsV2, SessionV2}
+import org.knora.webapi.messages.v1.routing.authenticationmessages.{KnoraCredentialsV1, KnoraPasswordCredentialsV1, SessionV1}
+import org.knora.webapi.messages.v2.routing.authenticationmessages.{KnoraCredentialsV2, KnoraPasswordCredentialsV2, SessionV2}
 import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_NAME
 import org.knora.webapi.routing.JWTHelper.{algorithm, requiredClaims, requiredHeaders}
 import org.knora.webapi.util.ActorUtil
@@ -70,8 +70,8 @@ class AuthenticatorSpec extends CoreSpec("AuthenticationTestSystem") with Implic
     })
 
     val getUserProfileV1ByEmail = PrivateMethod[Try[UserProfileV1]]('getUserProfileV1ByEmail)
-    val authenticateCredentialsV1 = PrivateMethod[SessionV1]('authenticateCredentialsV1)
-    val authenticateCredentialsV2 = PrivateMethod[SessionV2]('authenticateCredentialsV2)
+    val authenticateCredentialsV1 = PrivateMethod[UserProfileV1]('authenticateCredentialsV1)
+    val authenticateCredentialsV2 = PrivateMethod[Boolean]('authenticateCredentialsV2)
 
     "During Authentication" when {
         "called, the 'getUserProfileV1ByEmail' method " should {
@@ -93,24 +93,25 @@ class AuthenticatorSpec extends CoreSpec("AuthenticationTestSystem") with Implic
         }
         "called, the 'authenticateCredentialsV1' method " should {
             "succeed with the correct 'email' / correct 'password' " in {
-                val res: SessionV1 = Authenticator invokePrivate authenticateCredentialsV1(KnoraCredentialsV1(Some(rootUserEmail), Some(rootUserPassword), None), system, executionContext)
-                res.userProfileV1 should be(rootUserProfileV1)
-
+                val correctPasswordCreds = KnoraPasswordCredentialsV1(rootUserEmail, rootUserPassword)
+                Authenticator invokePrivate authenticateCredentialsV1(KnoraCredentialsV1(passwordCredentials = Some(correctPasswordCreds)), system, executionContext) should be(rootUserProfileV1)
             }
             "fail with correct 'email' / wrong 'password' " in {
                 an [BadCredentialsException] should be thrownBy {
-                    Authenticator invokePrivate authenticateCredentialsV1(KnoraCredentialsV1(Some(rootUserEmail), Some("wrongpassword"), None), system, executionContext)
+                    val wrongPasswordCreds = KnoraPasswordCredentialsV1(rootUserEmail, "wrongpassword")
+                    Authenticator invokePrivate authenticateCredentialsV1(KnoraCredentialsV1(passwordCredentials = Some(wrongPasswordCreds)), system, executionContext)
                 }
             }
         }
         "called, the 'authenticateCredentialsV2' method" should {
             "succeed with the correct 'email' / correct 'password' " in {
-                val res: SessionV2 = Authenticator invokePrivate authenticateCredentialsV2(KnoraCredentialsV2(Some(rootUserEmail), Some(rootUserPassword), None), system, executionContext)
-                res.userProfile should be(rootUserProfileV1)
+                val correctPasswordCreds = KnoraPasswordCredentialsV2(rootUserEmail, rootUserPassword)
+                Authenticator invokePrivate authenticateCredentialsV2(KnoraCredentialsV2(passwordCredentials = Some(correctPasswordCreds)), system, executionContext) should be (true)
             }
             "fail with correct 'email' / wrong 'password' " in {
                 an [BadCredentialsException] should be thrownBy {
-                    Authenticator invokePrivate authenticateCredentialsV2(KnoraCredentialsV2(Some(rootUserEmail), Some("wrongpassword"), None), system, executionContext)
+                    val wrongPasswordCreds = KnoraPasswordCredentialsV2(rootUserEmail, "wrongpassword")
+                    Authenticator invokePrivate authenticateCredentialsV2(KnoraCredentialsV2(passwordCredentials = Some(wrongPasswordCreds)), system, executionContext)
                 }
             }
         }
