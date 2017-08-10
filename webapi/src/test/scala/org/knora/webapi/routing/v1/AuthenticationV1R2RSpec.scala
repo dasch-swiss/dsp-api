@@ -31,6 +31,7 @@ import akka.util.Timeout
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent}
 import org.knora.webapi.messages.v1.responder.ontologymessages.LoadOntologiesRequest
 import org.knora.webapi.messages.v1.responder.sessionmessages.{SessionJsonProtocol, SessionResponse}
+import org.knora.webapi.messages.v1.responder.usermessages.UserProfileResponseV1
 import org.knora.webapi.responders.{ResponderManager, _}
 import org.knora.webapi.routing.Authenticator.KNORA_AUTHENTICATION_COOKIE_NAME
 import org.knora.webapi.store._
@@ -48,29 +49,28 @@ import scala.concurrent.duration._
   */
 class AuthenticationV1R2RSpec extends R2RSpec with SessionJsonProtocol {
 
-    implicit override val log = akka.event.Logging(system, this.getClass())
-
     override def testConfigSource =
         """
          akka.loglevel = "DEBUG"
          akka.stdout-loglevel = "DEBUG"
         """.stripMargin
 
+    implicit override val log = akka.event.Logging(system, this.getClass())
+
     private val responderManager = system.actorOf(Props(new ResponderManager with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
     private val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
 
     private val authenticatePath = AuthenticationRouteV1.knoraApiPath(system, settings, log)
-    private val resourcesPath = ResourcesRouteV1.knoraApiPath(system, settings, log)
+    private val usersPath = UsersRouteV1.knoraApiPath(system, settings, log)
 
     private implicit val timeout: Timeout = 300.seconds
 
     private implicit def default(implicit system: ActorSystem) = RouteTestTimeout(5.seconds)
 
-    private val rdfDataObjects = List(
-        RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/incunabula"),
-        RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/images")
-    )
+    private val rdfDataObjects = List.empty[RdfDataObject]
 
+    private val rootIri = SharedAdminTestData.rootUser.userData.user_id.get
+    private val rootIriEnc = java.net.URLEncoder.encode(rootIri, "utf-8")
     private val rootEmail = SharedAdminTestData.rootUser.userData.email.get
     private val rootEmailEnc = java.net.URLEncoder.encode(rootEmail, "utf-8")
     private val inactiveUser = java.net.URLEncoder.encode(SharedAdminTestData.inactiveUser.userData.email.get, "utf-8")
@@ -89,7 +89,7 @@ class AuthenticationV1R2RSpec extends R2RSpec with SessionJsonProtocol {
             /* Correct email and password */
             Get(s"/v1/authenticate?email=$rootEmailEnc&password=$testPass") ~> authenticatePath ~> check {
                 //log.debug("==>> " + responseAs[String])
-                status should equal(StatusCodes.OK)
+                status should be (StatusCodes.OK)
             }
         }
 
@@ -97,7 +97,7 @@ class AuthenticationV1R2RSpec extends R2RSpec with SessionJsonProtocol {
             /* Correct username / wrong password */
             Get(s"/v1/authenticate?email=$rootEmailEnc&password=$wrongPass") ~> authenticatePath ~> check {
                 //log.debug("==>> " + responseAs[String])
-                status should equal(StatusCodes.Unauthorized)
+                status should be (StatusCodes.Unauthorized)
             }
         }
 
@@ -106,7 +106,7 @@ class AuthenticationV1R2RSpec extends R2RSpec with SessionJsonProtocol {
             /* User not active */
             Get(s"/v1/authenticate?email=$inactiveUser&password=$testPass") ~> authenticatePath ~> check {
                 //log.debug("==>> " + responseAs[String])
-                status should equal(StatusCodes.Unauthorized)
+                status should be (StatusCodes.Unauthorized)
             }
         }
     }
@@ -115,8 +115,8 @@ class AuthenticationV1R2RSpec extends R2RSpec with SessionJsonProtocol {
         "succeed with authentication and correct email / correct password " in {
             /* Correct username / correct password */
             Get("/v1/authenticate") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass)) ~> authenticatePath ~> check {
-                //log.debug("==>> " + responseAs[String])
-                status should equal (StatusCodes.OK)
+                // log.debug("==>> " + responseAs[String])
+                status should be (StatusCodes.OK)
             }
         }
 
@@ -124,7 +124,7 @@ class AuthenticationV1R2RSpec extends R2RSpec with SessionJsonProtocol {
             /* Correct username / wrong password */
             Get("/v1/authenticate") ~> addCredentials(BasicHttpCredentials(rootEmail, wrongPass)) ~> authenticatePath ~> check {
                 //log.debug("==>> " + responseAs[String])
-                status should equal(StatusCodes.Unauthorized)
+                status should be (StatusCodes.Unauthorized)
             }
         }
 
@@ -136,19 +136,19 @@ class AuthenticationV1R2RSpec extends R2RSpec with SessionJsonProtocol {
             /* Correct username and correct password */
             Get(s"/v1/session?login&email=$rootEmailEnc&password=$testPass") ~> authenticatePath ~> check {
                 log.debug("response: " + responseAs[String])
-                status should equal(StatusCodes.OK)
+                status should be (StatusCodes.OK)
                 /* store session */
                 sid = Await.result(Unmarshal(response.entity).to[SessionResponse], 1.seconds).sid
                 log.debug("sid: " + sid)
-                header[`Set-Cookie`] should equal(Some(`Set-Cookie`(HttpCookie(KNORA_AUTHENTICATION_COOKIE_NAME, value = sid, path = Some("/")))))
+                header[`Set-Cookie`] should be (Some(`Set-Cookie`(HttpCookie(KNORA_AUTHENTICATION_COOKIE_NAME, value = sid, path = Some("/")))))
             }
         }
 
         "succeed with authentication when using correct session id in cookie" in {
             // authenticate by calling '/v1/session' without parameters but by providing session id in cookie from earlier login
             Get("/v1/session") ~> Cookie(KNORA_AUTHENTICATION_COOKIE_NAME, sid) ~> authenticatePath ~> check {
-                //log.debug("==>> " + responseAs[String])
-                status should equal(StatusCodes.OK)
+                log.debug("==>> " + responseAs[String])
+                status should be (StatusCodes.OK)
             }
         }
 
@@ -156,15 +156,15 @@ class AuthenticationV1R2RSpec extends R2RSpec with SessionJsonProtocol {
             // do logout with stored session id
             Get("/v1/session?logout") ~> Cookie(KNORA_AUTHENTICATION_COOKIE_NAME, sid) ~> authenticatePath ~> check {
                 //log.debug("==>> " + responseAs[String])
-                status should equal(StatusCodes.OK)
-                header[`Set-Cookie`] should equal(Some(`Set-Cookie`(HttpCookie(KNORA_AUTHENTICATION_COOKIE_NAME, "deleted", expires = Some(DateTime(1970, 1, 1, 0, 0, 0))))))
+                status should be (StatusCodes.OK)
+                header[`Set-Cookie`] should be (Some(`Set-Cookie`(HttpCookie(KNORA_AUTHENTICATION_COOKIE_NAME, "deleted", expires = Some(DateTime(1970, 1, 1, 0, 0, 0))))))
             }
         }
 
         "fail with authentication when providing the session cookie after logout" in {
             Get("/v1/session") ~> Cookie(KNORA_AUTHENTICATION_COOKIE_NAME, sid) ~> authenticatePath ~> check {
                 //log.debug("==>> " + responseAs[String])
-                status should equal(StatusCodes.Unauthorized)
+                status should be (StatusCodes.Unauthorized)
             }
         }
 
@@ -172,7 +172,7 @@ class AuthenticationV1R2RSpec extends R2RSpec with SessionJsonProtocol {
             /* Correct username and wrong password */
             Get(s"/v1/session?login&email=$rootEmailEnc&password=$wrongPass") ~> authenticatePath ~> check {
                 //log.debug("==>> " + responseAs[String])
-                status should equal(StatusCodes.Unauthorized)
+                status should be (StatusCodes.Unauthorized)
             }
         }
 
@@ -180,14 +180,14 @@ class AuthenticationV1R2RSpec extends R2RSpec with SessionJsonProtocol {
             /* wrong username */
             Get(s"/v1/session?login&email=$wrongEmailEnc&password=$testPass") ~> authenticatePath ~> check {
                 //log.debug("==>> " + responseAs[String])
-                status should equal(StatusCodes.Unauthorized)
+                status should be (StatusCodes.Unauthorized)
             }
         }
 
         "fail with authentication when using wrong session id in cookie " in {
             Get("/v1/session") ~> Cookie(KNORA_AUTHENTICATION_COOKIE_NAME, "123456") ~> authenticatePath ~> check {
                 //log.debug("==>> " + responseAs[String])
-                status should equal(StatusCodes.Unauthorized)
+                status should be (StatusCodes.Unauthorized)
             }
         }
 
@@ -199,7 +199,7 @@ class AuthenticationV1R2RSpec extends R2RSpec with SessionJsonProtocol {
             /* Correct email and correct password */
             Get("/v1/session?login") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass)) ~> authenticatePath ~> check {
                 //log.debug("==>> " + responseAs[String])
-                status should equal(StatusCodes.OK)
+                status should be (StatusCodes.OK)
             }
         }
 
@@ -207,7 +207,7 @@ class AuthenticationV1R2RSpec extends R2RSpec with SessionJsonProtocol {
             /* Correct email and wrong password */
             Get("/v1/session?login") ~> addCredentials(BasicHttpCredentials(rootEmail, wrongPass)) ~> authenticatePath ~> check {
                 //log.debug("==>> " + responseAs[String])
-                status should equal(StatusCodes.Unauthorized)
+                status should be (StatusCodes.Unauthorized)
             }
         }
 
@@ -215,52 +215,57 @@ class AuthenticationV1R2RSpec extends R2RSpec with SessionJsonProtocol {
             /* wrong email */
             Get("/v1/session?login") ~> addCredentials(BasicHttpCredentials(wrongEmail, testPass)) ~> authenticatePath ~> check {
                 //log.debug("==>> " + responseAs[String])
-                status should equal(StatusCodes.Unauthorized)
+                status should be (StatusCodes.Unauthorized)
             }
         }
 
     }
 
-    "The Resources Route using the Authenticator trait when accessed " should {
+    "The Users Route using the Authenticator trait when accessed " should {
 
         "succeed with authentication using URL parameters and correct email / correct password " in {
             /* Correct username / correct password */
-            Get(s"/v1/resources/http%3A%2F%2Fdata.knora.org%2Fc5058f3a?email=$rootEmailEnc&password=$testPass") ~> resourcesPath ~> check {
+            Get(s"/v1/users/$rootIriEnc?email=$rootEmailEnc&password=$testPass") ~> usersPath ~> check {
                 //log.debug("==>> " + responseAs[String])
-                status should equal(StatusCodes.OK)
+                status should be (StatusCodes.OK)
             }
         }
 
         "fail with authentication using URL parameters and correct email / wrong password " in {
             /* Correct username / wrong password */
-            Get(s"/v1/resources/http%3A%2F%2Fdata.knora.org%2Fc5058f3a?email=$rootEmailEnc&password=$wrongPass") ~> resourcesPath ~> check {
+            Get(s"/v1/users/$rootIriEnc?email=$rootEmailEnc&password=$wrongPass") ~> usersPath ~> check {
                 //log.debug("==>> " + responseAs[String])
-                status should equal(StatusCodes.Unauthorized)
+                status should be (StatusCodes.Unauthorized)
             }
         }
 
         "succeed with authentication using HTTP Basic Auth headers and correct email / correct password " in {
             /* Correct username / correct password */
-            Get("/v1/resources/http%3A%2F%2Fdata.knora.org%2Fc5058f3a") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass)) ~> resourcesPath ~> check {
+            Get(s"/v1/users/$rootIriEnc") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass)) ~> usersPath ~> check {
                 //log.debug("==>> " + responseAs[String])
-                status should equal(StatusCodes.OK)
+                status should be (StatusCodes.OK)
             }
         }
 
         "fail with authentication using HTTP Basic Auth headers and correct email / wrong password " in {
             /* Correct username / wrong password */
-            Get("/v1/resources/http%3A%2F%2Fdata.knora.org%2Fc5058f3a") ~> addCredentials(BasicHttpCredentials(rootEmail, wrongPass)) ~> resourcesPath ~> check {
+            Get(s"/v1/users/$rootIriEnc") ~> addCredentials(BasicHttpCredentials(rootEmail, wrongPass)) ~> usersPath ~> check {
                 //log.debug("==>> " + responseAs[String])
-                status should equal(StatusCodes.Unauthorized)
+                status should be (StatusCodes.Unauthorized)
             }
         }
 
         "not return sensitive information (token, password) in the response " in {
-            Get(s"/v1/resources/http%3A%2F%2Fdata.knora.org%2Fc5058f3a?email=$rootEmailEnc&password=$testPass") ~> resourcesPath ~> check {
-                //log.debug("==>> " + responseAs[String])
-                // assert(status === StatusCodes.OK)
-                assert(!responseAs[String].contains("\"password\""))
-                assert(!responseAs[String].contains("\"token\""))
+            Get(s"/v1/users/$rootIriEnc?email=$rootEmailEnc&password=$testPass") ~> usersPath ~> check {
+
+                import org.knora.webapi.messages.v1.responder.usermessages.UserV1JsonProtocol._
+
+                //log.debug("response: " + responseAs[String])
+                val up = responseAs[UserProfileResponseV1]
+
+                status should be (StatusCodes.OK)
+                up.userProfile.userData.password.isEmpty should be (true)
+                up.userProfile.userData.token.isEmpty should be (true)
             }
         }
 

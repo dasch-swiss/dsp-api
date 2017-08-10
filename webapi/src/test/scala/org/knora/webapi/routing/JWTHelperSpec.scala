@@ -24,9 +24,11 @@ import akka.testkit.ImplicitSender
 import akka.util.Timeout
 import com.typesafe.config.ConfigFactory
 import io.igl.jwt._
+import org.knora.webapi.routing.JWTHelper.{algorithm, requiredClaims, requiredHeaders}
 import org.knora.webapi.{CoreSpec, SharedAdminTestData}
 
 import scala.concurrent.duration._
+import scala.util.Try
 
 object JWTHelperSpec {
     val config = ConfigFactory.parseString(
@@ -60,20 +62,33 @@ class JWTHelperSpec extends CoreSpec("AuthenticationTestSystem") with ImplicitSe
 
     val encodedJwt = jwt.encodedAndSigned(secretKey)
 
-    "During Authentication" when {
-        "the JSON Web Token" should {
-            "be created" in {
+    "The JWTHelper" should {
 
-            }
+        val secret = "123456"
 
-            "be validated" in {
+        "create token" in {
+            val token = JWTHelper.createToken("userIri", secret, 1)
 
-            }
+            val decodedJwt: Try[Jwt] = DecodedJwt.validateEncodedJwt(
+                token,
+                secret,
+                algorithm,
+                requiredHeaders,
+                requiredClaims,
+                iss = Some(Iss("webapi")),
+                aud = Some(Aud("webapi"))
+            )
 
-            "be possible to extract the user IRI" in {
-
-            }
-
+            decodedJwt.isSuccess should be(true)
+            decodedJwt.get.getClaim[Sub].map(_.value) should be(Some("userIri"))
+        }
+        "validate token" in {
+            val token = JWTHelper.createToken("userIri", secret, 1)
+            JWTHelper.validateToken(token, secret) should be(true)
+        }
+        "extract user's IRI" in {
+            val token = JWTHelper.createToken("userIri", secret, 1)
+            JWTHelper.extractUserIriFromToken(token, secret) should be(Some("userIri"))
         }
     }
 }

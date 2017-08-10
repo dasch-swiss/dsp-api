@@ -20,6 +20,8 @@
 
 package org.knora.webapi.routing
 
+import java.util.UUID
+
 import akka.actor.ActorSystem
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.{HttpCookie, HttpCookiePair}
@@ -69,11 +71,11 @@ trait Authenticator {
       */
     def doLoginV1(requestContext: RequestContext)(implicit system: ActorSystem, executionContext: ExecutionContext): HttpResponse = {
 
-        val credentials: KnoraCredentialsV1 = extractCredentialsV1(requestContext)
-
         val settings = Settings(system)
 
-        val userProfile = authenticateCredentialsV1(credentials) // will throw exception if not valid and thus trigger the correct response
+        val credentials: KnoraCredentialsV1 = extractCredentialsV1(requestContext)
+
+        val userProfile = getUserProfileV1ThroughCredentialsV1(credentials) // will return or throw
 
         val sessionToken = JWTHelper.createToken(userProfile.userData.user_id.get, settings.jwtSecretKey, settings.jwtLongevity)
 
@@ -142,7 +144,7 @@ trait Authenticator {
 
         val credentials = extractCredentialsV1(requestContext)
 
-        val userProfileV1 = authenticateCredentialsV1(credentials)
+        val userProfile = getUserProfileV1ThroughCredentialsV1(credentials) // will authenticate and either return or throw
 
         HttpResponse(
             status = StatusCodes.OK,
@@ -151,7 +153,7 @@ trait Authenticator {
                 JsObject(
                     "status" -> JsNumber(0),
                     "message" -> JsString("credentials are OK"),
-                    "userProfile" -> userProfileV1.ofType(UserProfileTypeV1.RESTRICTED).toJsValue
+                    "userProfile" -> userProfile.ofType(UserProfileTypeV1.RESTRICTED).toJsValue
                 ).compactPrint
             )
         )
@@ -274,10 +276,7 @@ trait Authenticator {
             log.debug("getUserProfileV1 - No credentials found, returning default UserProfileV1 with 'anonymousUser' inside 'permissionData' set to true!")
             UserProfileV1()
         } else {
-            authenticateCredentialsV1(credentials)
-            log.debug("getUserProfileV1 - Supplied credentials pass authentication")
-
-            val userProfileV1 = getUserProfileV1ByEmail(credentials.passwordCredentials.get.email)
+            val userProfileV1 = getUserProfileV1ThroughCredentialsV1(credentials)
             log.debug("getUserProfileV1 - I got a UserProfileV1: {}", userProfileV1.toString)
 
             /* we return the userProfileV1 without sensitive information */
@@ -310,53 +309,79 @@ object Authenticator {
     val log = Logger(LoggerFactory.getLogger(this.getClass))
 
     /**
-      * Tries to authenticate the credentials (email/password) by getting the [[UserProfileV1]] from the triple store and checking if
-      * the password matches. Caches the user profile after successful authentication under a generated id (JWT),
-      * and returns that said id and user profile.
+      * Tries to authenticate the supplied credentials (email/password or token). In the case of email/password,
+      * authentication is performed checking if the supplied email/password combination is valid by retrieving the
+      * user's profile. In the case of the token, the token itself is validated. If both are supplied, then both need
+      * to be valid.
       *
       * @param credentials the user supplied and extracted credentials.
       * @param system      the current [[ActorSystem]]
-      * @return a [[SessionV1]] which holds the generated id (JWT) and the user profile.
-      * @throws BadCredentialsException when email or password are empty; when user is not active; when the password
-      *                                 did not match.
+      * @return true if the credentials are valid. If the credentials are invalid, then the corresponding exception
+      *         will be thrown.
+      * @throws BadCredentialsException when neither email/password or session token are supplied; when user is not
+      *                                 active; when the password does not match.
       */
-    private def authenticateCredentialsV1(credentials: KnoraCredentialsV1)(implicit system: ActorSystem, executionContext: ExecutionContext): UserProfileV1 = {
+    private def authenticateCredentialsV1(credentials: KnoraCredentialsV1)(implicit system: ActorSystem, executionContext: ExecutionContext): Boolean = {
 
-        // check if email and password are provided
-        val passwordCreds = if (credentials.passwordCredentials.nonEmpty) {
-            credentials.passwordCredentials.get
-        } else {
+        val settings = Settings(system)
+
+        if (credentials.isEmpty) {
             throw BadCredentialsException(BAD_CRED_NONE_SUPPLIED)
         }
 
-        val userProfileV1 = getUserProfileV1ByEmail(passwordCreds.email)
-        //log.debug(s"authenticateCredentials - userProfileV1: $userProfileV1")
+        val passValid: Boolean = if (credentials.passwordCredentials.nonEmpty) {
 
-        /* check if the user is active, if not, then no need to check the password */
-        if (!userProfileV1.isActive) {
-            log.debug("authenticateCredentialsV1 - user is not active")
-            throw BadCredentialsException(BAD_CRED_USER_INACTIVE)
+            val pc = credentials.passwordCredentials.get
+            val userProfile = getUserProfileV1ByEmail(pc.email)
+
+            /* check if the user is active, if not, then no need to check the password */
+            if (!userProfile.isActive) {
+                log.debug("authenticateCredentials - user is not active")
+                throw BadCredentialsException(BAD_CRED_USER_INACTIVE)
+            }
+
+            userProfile.passwordMatch(pc.password)
+        } else {
+            false
         }
 
-        /* check the password and store it in the cache */
-        if (userProfileV1.passwordMatch(passwordCreds.password)) {
-            // create JWT and cache user profile under this id
-            log.debug("authenticateCredentialsV1 - password matched")
-            userProfileV1
+        val tokenValid: Boolean = if (credentials.sessionCredentials.nonEmpty) {
+
+            val token = credentials.sessionCredentials.get.token
+
+            JWTHelper.validateToken(token, settings.jwtSecretKey)
         } else {
-            log.debug(s"authenticateCredentialsV1 - password did not match")
-            throw BadCredentialsException(BAD_CRED_PASSWORD_MISMATCH)
+            false
+        }
+
+        if (credentials.passwordCredentials.nonEmpty && credentials.sessionCredentials.nonEmpty && passValid && tokenValid) {
+            // both email/password and session token where supplied and both are valid
+            log.debug("authenticateCredentialsV1 - both email/password and token where supplied and both are valid")
+            true
+        } else if (credentials.passwordCredentials.nonEmpty && credentials.sessionCredentials.isEmpty && passValid) {
+            // only email/password supplied and valid
+            log.debug("authenticateCredentialsV1 - email/password supplied and valid")
+            true
+        } else if (credentials.passwordCredentials.isEmpty && credentials.sessionCredentials.nonEmpty && tokenValid) {
+            // only session token supplied and valid
+            log.debug("authenticateCredentialsV1 - token supplied and valid")
+            true
+        } else {
+            // either both supplied but one of them not valid or one supplied and this one not valid
+            log.debug("authenticateCredentialsV1 - not valid")
+            throw BadCredentialsException(BAD_CRED_NOT_VALID)
         }
     }
 
     /**
       * Tries to authenticate the supplied credentials (email/password or token). In the case of email/password,
       * authentication is performed checking if the supplied email/password combination is valid by retrieving the
-      * user's profile. In the case of the token, the token itself is validated.
+      * user's profile. In the case of the token, the token itself is validated. If both are supplied, then both need
+      * to be valid.
       *
       * @param credentials the user supplied and extracted credentials.
       * @param system      the current [[ActorSystem]]
-      * @return true if the credentials are valid. If the credentials are invalid, then the coresponding exception
+      * @return true if the credentials are valid. If the credentials are invalid, then the corresponding exception
       *         will be thrown.
       * @throws BadCredentialsException when email or password and token are not supplied; when user is not active;
       *                                 when the password does not match; when the supplied token is not valid.
@@ -653,6 +678,41 @@ object Authenticator {
         }
     }
 
+    /**
+      * Tries to retrieve a [[UserProfileV1]] based on the supplied credentials. If both email/password and session
+      * token are supplied, then the user profile for the session token is returned. This method should only be used
+      * with authenticated credentials.
+      * @param credentials the user supplied credentials.
+      * @return a [[UserProfileV1]]
+      * @throws AuthenticationException when the IRI can not be found inside the token, which is probably a bug.
+      */
+    private def getUserProfileV1ThroughCredentialsV1(credentials: KnoraCredentialsV1)(implicit system: ActorSystem, executionContext: ExecutionContext): UserProfileV1 = {
+
+        val settings = Settings(system)
+
+        authenticateCredentialsV1(credentials)
+
+        // at this point, at least one type of credentials was supplied. I both are, then I prefer the session token
+        val userProfile = if (credentials.sessionCredentials.nonEmpty) {
+            val token = credentials.sessionCredentials.get.token
+            val userIri: IRI = JWTHelper.extractUserIriFromToken(token, settings.jwtSecretKey) match {
+                case Some(iri) => iri
+                case None => {
+                    // should not happen, as the token is already validated
+                    throw AuthenticationException("No IRI found inside token. Please report this as a possible bug.")
+                }
+            }
+            log.debug("getUserProfileV1ThroughCredentialsV1 - used session token")
+            getUserProfileV1ByIri(userIri)
+        } else {
+            // since we must have at least one or the other
+            val email = credentials.passwordCredentials.get.email
+            log.debug("getUserProfileV1ThroughCredentialsV1 - used email")
+            getUserProfileV1ByEmail(email)
+        }
+        log.debug("getUserProfileV1ThroughCredentialsV1 - userProfile: {}", userProfile)
+        userProfile
+    }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // TRIPLE STORE ACCESS
@@ -726,7 +786,9 @@ object JWTHelper {
 
     val algorithm = Algorithm.HS256
     val requiredHeaders: Set[HeaderField] = Set[HeaderField](Typ)
-    val requiredClaims: Set[ClaimField] = Set[ClaimField](Iss, Sub, Aud, Iat, Exp)
+    val requiredClaims: Set[ClaimField] = Set[ClaimField](Iss, Sub, Aud, Iat, Exp, Jti)
+
+    val log = Logger(LoggerFactory.getLogger(this.getClass))
 
     /**
       * Create a JWT.
@@ -743,7 +805,9 @@ object JWTHelper {
         val now: Long = System.currentTimeMillis() / 1000l
         val nowPlusLongevity: Long = now + longevity * 60 * 60 * 24
 
-        val claims = Seq[ClaimValue](Iss("webapi"), Sub(userIri), Aud("webapi"), Iat(now), Exp(nowPlusLongevity))
+        val identifier: String = UUID.randomUUID().toString()
+
+        val claims = Seq[ClaimValue](Iss("webapi"), Sub(userIri), Aud("webapi"), Iat(now), Exp(nowPlusLongevity), Jti(identifier))
 
         val jwt = new DecodedJwt(headers, claims)
 
@@ -762,6 +826,7 @@ object JWTHelper {
 
         if (CacheUtil.get[UserProfileV1](AUTHENTICATION_INVALIDATION_CACHE_NAME, token).nonEmpty) {
             // token invalidated so no need to decode
+            log.debug("validateToken - token found in invalidation cache, so not valid")
             false
         } else {
             DecodedJwt.validateEncodedJwt(

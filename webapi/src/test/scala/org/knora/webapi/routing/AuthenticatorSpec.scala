@@ -70,7 +70,7 @@ class AuthenticatorSpec extends CoreSpec("AuthenticationTestSystem") with Implic
     })
 
     val getUserProfileV1ByEmail = PrivateMethod[Try[UserProfileV1]]('getUserProfileV1ByEmail)
-    val authenticateCredentialsV1 = PrivateMethod[UserProfileV1]('authenticateCredentialsV1)
+    val authenticateCredentialsV1 = PrivateMethod[Boolean]('authenticateCredentialsV1)
     val authenticateCredentialsV2 = PrivateMethod[Boolean]('authenticateCredentialsV2)
 
     "During Authentication" when {
@@ -94,7 +94,7 @@ class AuthenticatorSpec extends CoreSpec("AuthenticationTestSystem") with Implic
         "called, the 'authenticateCredentialsV1' method " should {
             "succeed with the correct 'email' / correct 'password' " in {
                 val correctPasswordCreds = KnoraPasswordCredentialsV1(rootUserEmail, rootUserPassword)
-                Authenticator invokePrivate authenticateCredentialsV1(KnoraCredentialsV1(passwordCredentials = Some(correctPasswordCreds)), system, executionContext) should be(rootUserProfileV1)
+                Authenticator invokePrivate authenticateCredentialsV1(KnoraCredentialsV1(passwordCredentials = Some(correctPasswordCreds)), system, executionContext) should be(true)
             }
             "fail with correct 'email' / wrong 'password' " in {
                 an [BadCredentialsException] should be thrownBy {
@@ -114,37 +114,6 @@ class AuthenticatorSpec extends CoreSpec("AuthenticationTestSystem") with Implic
                     Authenticator invokePrivate authenticateCredentialsV2(KnoraCredentialsV2(passwordCredentials = Some(wrongPasswordCreds)), system, executionContext)
                 }
             }
-        }
-    }
-
-
-    "The JWTHelper" should {
-
-        val secret = "123456"
-
-        "create token" in {
-            val token = JWTHelper.createToken("userIri", secret, 1)
-
-            val decodedJwt: Try[Jwt] = DecodedJwt.validateEncodedJwt(
-                token,
-                secret,
-                algorithm,
-                requiredHeaders,
-                requiredClaims,
-                iss = Some(Iss("webapi")),
-                aud = Some(Aud("webapi"))
-            )
-
-            decodedJwt.isSuccess should be(true)
-            decodedJwt.get.getClaim[Sub].map(_.value) should be(Some("userIri"))
-        }
-        "validate token" in {
-            val token = JWTHelper.createToken("userIri", secret, 1)
-            JWTHelper.validateToken(token, secret) should be(true)
-        }
-        "extract user's IRI" in {
-            val token = JWTHelper.createToken("userIri", secret, 1)
-            JWTHelper.extractUserIriFromToken(token, secret) should be(Some("userIri"))
         }
     }
 }
