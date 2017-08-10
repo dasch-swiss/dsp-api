@@ -242,7 +242,7 @@ class AuthenticationV1E2ESpec extends E2ESpec(AuthenticationV1E2ESpec.config) wi
         }
     }
 
-    "The Resources Route using the Authenticator trait " should {
+    "The Users Route using the Authenticator trait " should {
         "succeed with authentication using URL parameters and correct email / correct password " in {
             /* Correct email / correct password */
             val request = Get(baseApiUrl + s"/v1/users/$rootIriEnc?email=$rootEmailEnc&password=$testPass")

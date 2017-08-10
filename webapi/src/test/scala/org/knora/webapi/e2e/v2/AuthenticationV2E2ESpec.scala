@@ -55,6 +55,8 @@ class AuthenticationV2E2ESpec extends E2ESpec(AuthenticationV2E2ESpec.config) wi
         // RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/images")
     )
 
+    private val rootIri = SharedAdminTestData.rootUser.userData.user_id.get
+    private val rootIriEnc = java.net.URLEncoder.encode(rootIri, "utf-8")
     private val rootEmail = SharedAdminTestData.rootUser.userData.email.get
     private val rootEmailEnc = java.net.URLEncoder.encode(rootEmail, "utf-8")
     private val inactiveUserEmailEnc = java.net.URLEncoder.encode(SharedAdminTestData.inactiveUser.userData.email.get, "utf-8")
@@ -200,125 +202,54 @@ class AuthenticationV2E2ESpec extends E2ESpec(AuthenticationV2E2ESpec.config) wi
             assert(response.status === StatusCodes.Unauthorized)
         }
 
-        /*
-        "fail with 'login' and correct email / wrong password" in {
+
+        "fail 'login' with correct email / wrong password" in {
             /* Correct username and wrong password */
-            val request = Get(baseApiUrl + s"/v1/session?login&email=$rootEmailEnc&password=$wrongPass")
+
+            val params =
+                s"""
+                   |{
+                   |    "email": "$rootEmail",
+                   |    "password": "wrong"
+                   |}
+                """.stripMargin
+
+
+
+            val request = Post(baseApiUrl + s"/v2/authentication", HttpEntity(ContentTypes.`application/json`, params))
             val response = singleAwaitingRequest(request)
             //log.debug("==>> " + responseAs[String])
             assert(response.status === StatusCodes.Unauthorized)
         }
 
-        "fail with 'login' and wrong username" in {
+        "fail 'login' with wrong username" in {
             /* wrong username */
-            val request = Get(baseApiUrl + s"/v1/session?login&email=$wrongEmailEnc&password=$testPass")
+            val params =
+                s"""
+                   |{
+                   |    "email": "wrong",
+                   |    "password": "wrong"
+                   |}
+                """.stripMargin
+
+            val request = Post(baseApiUrl + s"/v2/authentication", HttpEntity(ContentTypes.`application/json`, params))
             val response = singleAwaitingRequest(request)
             //log.debug("==>> " + responseAs[String])
             assert(response.status === StatusCodes.Unauthorized)
         }
 
-        "fail with authentication when using wrong session id in cookie" in {
-            val request = Get(baseApiUrl + "/v1/session") ~> Cookie(KNORA_AUTHENTICATION_COOKIE_NAME, "123456")
-            val response = singleAwaitingRequest(request)
-            //log.debug("==>> " + responseAs[String])
-            assert(response.status === StatusCodes.Unauthorized)
-        }
-        */
-    }
-
-    /*
-    "The Session Route ('v1/session') with credentials supplied via Basic Auth" should {
-        var sid = ""
-        "succeed with 'login' and correct email / correct password" in {
-            /* Correct username and correct password */
-            val request = Get(baseApiUrl + "/v1/session?login") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
-            val response = singleAwaitingRequest(request)
-            //log.debug("==>> " + responseAs[String])
-            assert(response.status === StatusCodes.OK)
-
-            val sr: SessionResponse = Await.result(Unmarshal(response.entity).to[SessionResponse], 1.seconds)
-            sid = sr.sid
-
-            assert(response.headers.contains(`Set-Cookie`(HttpCookie(KNORA_AUTHENTICATION_COOKIE_NAME, value = sid, path = Some("/")))))
-
-            /* check for sensitive information leakage */
-            val body: String = Await.result(Unmarshal(response.entity).to[String], 1.seconds)
-            assert(body contains "\"password\":null")
-            assert(body contains "\"token\":null")
-        }
-
-        "not return sensitive information (token, password) in the response when checking session" in {
-            val request = Get(baseApiUrl + s"/v1/session") ~> Cookie(KNORA_AUTHENTICATION_COOKIE_NAME, sid)
-            val response = singleAwaitingRequest(request)
-            assert(response.status === StatusCodes.OK)
-
-            //println(response.toString)
-
-            val body: String = Await.result(Unmarshal(response.entity).to[String], 1.seconds)
-            assert(body contains "\"password\":null")
-            assert(body contains "\"token\":null")
-        }
-
-        "fail with 'login' and correct email / wrong password " in {
-            /* Correct username and wrong password */
-            val request = Get(baseApiUrl + "/v1/session?login") ~> addCredentials(BasicHttpCredentials(rootEmail, wrongPass))
+        "fail authentication with wrong token in header" in {
+            val request = Get(baseApiUrl + "/v2/authentication") ~> addCredentials(GenericHttpCredentials("Bearer", "123456"))
             val response = singleAwaitingRequest(request)
             //log.debug("==>> " + responseAs[String])
             assert(response.status === StatusCodes.Unauthorized)
         }
 
-        "fail with 'login' and wrong email " in {
-            /* wrong username */
-            val request = Get(baseApiUrl + "/v1/session?login") ~> addCredentials(BasicHttpCredentials(wrongEmail, testPass))
+        "fail authentication with wrong token as parameter" in {
+            val request = Get(baseApiUrl + "/v2/authentication?token=123456")
             val response = singleAwaitingRequest(request)
             //log.debug("==>> " + responseAs[String])
             assert(response.status === StatusCodes.Unauthorized)
         }
     }
-
-    "The Resources Route using the Authenticator trait " should {
-        "succeed with authentication using URL parameters and correct email / correct password " in {
-            /* Correct email / correct password */
-            val request = Get(baseApiUrl + s"/v1/resources/http%3A%2F%2Fdata.knora.org%2Fc5058f3a?email=$rootEmailEnc&password=$testPass")
-            val response = singleAwaitingRequest(request)
-            //log.debug("==>> " + responseAs[String])
-            assert(response.status === StatusCodes.OK)
-        }
-
-        "fail with authentication using URL parameters and correct email / wrong password " in {
-            /* Correct email / wrong password */
-            val request = Get(baseApiUrl + s"/v1/resources/http%3A%2F%2Fdata.knora.org%2Fc5058f3a?email=$rootEmailEnc&password=$wrongPass")
-
-            val response = singleAwaitingRequest(request)
-            //log.debug("==>> " + responseAs[String])
-            assert(response.status === StatusCodes.Unauthorized)
-        }
-
-        "succeed with authentication using HTTP Basic Auth headers and correct username / correct password " in {
-            /* Correct email / correct password */
-            val request = Get(baseApiUrl + "/v1/resources/http%3A%2F%2Fdata.knora.org%2Fc5058f3a") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
-            val response = singleAwaitingRequest(request)
-            //log.debug("==>> " + responseAs[String])
-            assert(response.status === StatusCodes.OK)
-        }
-
-        "fail with authentication using HTTP Basic Auth headers and correct username / wrong password " in {
-            /* Correct email / wrong password */
-            val request = Get(baseApiUrl + "/v1/resources/http%3A%2F%2Fdata.knora.org%2Fc5058f3a") ~> addCredentials(BasicHttpCredentials(rootEmail, wrongPass))
-            val response = singleAwaitingRequest(request)
-            //log.debug("==>> " + responseAs[String])
-            assert(response.status === StatusCodes.Unauthorized)
-        }
-
-        "not return sensitive information (token, password) in the response " in {
-            val request = Get(baseApiUrl + s"/v1/resources/http%3A%2F%2Fdata.knora.org%2Fc5058f3a?email=$rootEmailEnc&password=$testPass")
-            val response = singleAwaitingRequest(request)
-            //log.debug("==>> " + responseAs[String])
-            // assert(status === StatusCodes.OK)
-            val body: String = Await.result(Unmarshal(response.entity).to[String], 1.seconds)
-            assert(!body.contains("\"password\""))
-            assert(!body.contains("\"token\""))
-        }
-    }
-    */
 }
