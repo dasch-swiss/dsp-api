@@ -229,7 +229,7 @@ class UsersV1E2ESpec extends E2ESpec(UsersV1E2ESpec.config) with SessionJsonProt
                     """.stripMargin
 
 
-                val request1 = Put(baseApiUrl + s"/v1/users/" + rootCreds.urlEncodedIri, HttpEntity(ContentTypes.`application/json`, params01)) ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
+                val request1 = Put(baseApiUrl + s"/v1/users/" + rootCreds.urlEncodedIri, HttpEntity(ContentTypes.`application/json`, params01)) ~> addCredentials(BasicHttpCredentials(rootCreds.email, "test")) // old password
                 val response1: HttpResponse = singleAwaitingRequest(request1)
                 response1.status should be(StatusCodes.OK)
 
@@ -242,7 +242,7 @@ class UsersV1E2ESpec extends E2ESpec(UsersV1E2ESpec.config) with SessionJsonProt
                     """.stripMargin
 
 
-                val request2 = Put(baseApiUrl + s"/v1/users/" + rootCreds.urlEncodedIri, HttpEntity(ContentTypes.`application/json`, params02)) ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
+                val request2 = Put(baseApiUrl + s"/v1/users/" + rootCreds.urlEncodedIri, HttpEntity(ContentTypes.`application/json`, params02)) ~> addCredentials(BasicHttpCredentials(rootCreds.email, "test1234")) // new password
                 val response2: HttpResponse = singleAwaitingRequest(request2)
                 response2.status should be(StatusCodes.OK)
             }

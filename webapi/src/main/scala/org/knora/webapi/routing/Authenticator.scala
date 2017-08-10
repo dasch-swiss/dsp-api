@@ -23,8 +23,8 @@ package org.knora.webapi.routing
 import java.util.UUID
 
 import akka.actor.ActorSystem
-import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.{HttpCookie, HttpCookiePair}
+import akka.http.scaladsl.model.{headers, _}
 import akka.http.scaladsl.server.RequestContext
 import akka.pattern._
 import akka.util.{ByteString, Timeout}
@@ -32,8 +32,7 @@ import com.typesafe.scalalogging.Logger
 import io.igl.jwt._
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.usermessages._
-import org.knora.webapi.messages.v1.routing.authenticationmessages.{KnoraCredentialsV1, KnoraPasswordCredentialsV1, KnoraSessionCredentialsV1, SessionV1}
-import org.knora.webapi.messages.v2.routing.authenticationmessages.{KnoraCredentialsV2, KnoraPasswordCredentialsV2, KnoraTokenCredentialsV2, SessionV2}
+import org.knora.webapi.messages.v2.routing.authenticationmessages._
 import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_PATH
 import org.knora.webapi.util.CacheUtil
 import org.slf4j.LoggerFactory
@@ -73,9 +72,9 @@ trait Authenticator {
 
         val settings = Settings(system)
 
-        val credentials: KnoraCredentialsV1 = extractCredentialsV1(requestContext)
+        val credentials: Option[KnoraCredentialsV2] = extractCredentialsV2(requestContext)
 
-        val userProfile = getUserProfileV1ThroughCredentialsV1(credentials) // will return or throw
+        val userProfile = getUserProfileV1ThroughCredentialsV2(credentials) // will return or throw
 
         val sessionToken = JWTHelper.createToken(userProfile.userData.user_id.get, settings.jwtSecretKey, settings.jwtLongevity)
 
@@ -97,18 +96,14 @@ trait Authenticator {
     /**
       * Checks if the provided credentials are valid, and if so returns a JWT token for the client to save.
       *
-      * @param credentials the user supplied [[KnoraCredentialsV1]] containing the user's login information.
+      * @param credentials the user supplied [[KnoraPasswordCredentialsV2]] containing the user's login information.
       * @param system      the current [[ActorSystem]]
       * @return a [[HttpResponse]] containing either a failure message or a message with a cookie header containing
       *         the generated session id.
       */
     def doLoginV2(credentials: KnoraPasswordCredentialsV2)(implicit system: ActorSystem, executionContext: ExecutionContext): HttpResponse = {
 
-        authenticateCredentialsV2(
-            KnoraCredentialsV2(
-                passwordCredentials = Some(credentials)
-            )
-        ) // will throw exception if not valid and thus trigger the correct response
+        authenticateCredentialsV2(Some(credentials)) // will throw exception if not valid and thus trigger the correct response
 
         val settings = Settings(system)
 
@@ -142,9 +137,9 @@ trait Authenticator {
       */
     def doAuthenticateV1(requestContext: RequestContext)(implicit system: ActorSystem, executionContext: ExecutionContext): HttpResponse = {
 
-        val credentials = extractCredentialsV1(requestContext)
+        val credentials: Option[KnoraCredentialsV2] = extractCredentialsV2(requestContext)
 
-        val userProfile = getUserProfileV1ThroughCredentialsV1(credentials) // will authenticate and either return or throw
+        val userProfile = getUserProfileV1ThroughCredentialsV2(credentials) // will authenticate and either return or throw
 
         HttpResponse(
             status = StatusCodes.OK,
@@ -168,7 +163,7 @@ trait Authenticator {
       */
     def doAuthenticateV2(requestContext: RequestContext)(implicit system: ActorSystem, executionContext: ExecutionContext): HttpResponse = {
 
-        val credentials: KnoraCredentialsV2 = extractCredentialsV2(requestContext)
+        val credentials: Option[KnoraCredentialsV2] = extractCredentialsV2(requestContext)
 
         authenticateCredentialsV2(credentials) // will throw exception if not valid
 
@@ -189,38 +184,7 @@ trait Authenticator {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     /**
-      * Used to logout the user, i.e. returns a header deleting the cookie and removes the [[UserProfileV1]] from the
-      * cache.
-      *
-      * @param requestContext a [[RequestContext]] containing the http request
-      * @param system         the current [[ActorSystem]]
-      * @return a [[HttpResponse]]
-      */
-    def doLogoutV1(requestContext: RequestContext)(implicit system: ActorSystem): HttpResponse = {
-
-        val credentials = extractCredentialsV1(requestContext)
-
-        if (credentials.sessionCredentials.nonEmpty) {
-            // add token to invalidation list
-            val token = credentials.sessionCredentials.get.token
-            CacheUtil.put(AUTHENTICATION_INVALIDATION_CACHE_NAME, token, token)
-        }
-
-        HttpResponse(
-            headers = List(headers.`Set-Cookie`(HttpCookie(KNORA_AUTHENTICATION_COOKIE_NAME, "deleted", expires = Some(DateTime(1970, 1, 1, 0, 0, 0))))),
-            status = StatusCodes.OK,
-            entity = HttpEntity(
-                ContentTypes.`application/json`,
-                JsObject(
-                    "status" -> JsNumber(0),
-                    "message" -> JsString("Logout OK")
-                ).compactPrint
-            )
-        )
-    }
-
-    /**
-      * Used to logout the user, i.e. removes the [[UserProfileV1]] from the cache and puts the token on the 'invalidated' list.
+      * Used to logout the user, i.e. returns a header deleting the cookie and puts the token on the 'invalidated' list.
       *
       * @param requestContext a [[RequestContext]] containing the http request
       * @param system         the current [[ActorSystem]]
@@ -230,22 +194,51 @@ trait Authenticator {
 
         val credentials = extractCredentialsV2(requestContext)
 
-        if (credentials.tokenCredentials.nonEmpty) {
-            // add token to invalidation list
-            val token = credentials.tokenCredentials.get.token
-            CacheUtil.put(AUTHENTICATION_INVALIDATION_CACHE_NAME, token, token)
-        }
+        credentials match {
+            case Some(sessionCreds: KnoraSessionCredentialsV2) => {
+                CacheUtil.put(AUTHENTICATION_INVALIDATION_CACHE_NAME, sessionCreds.token, sessionCreds.token)
 
-        HttpResponse(
-            status = StatusCodes.OK,
-            entity = HttpEntity(
-                ContentTypes.`application/json`,
-                JsObject(
-                    "status" -> JsNumber(0),
-                    "message" -> JsString("Logout OK")
-                ).compactPrint
-            )
-        )
+                HttpResponse(
+                    headers = List(headers.`Set-Cookie`(HttpCookie(KNORA_AUTHENTICATION_COOKIE_NAME, "deleted", expires = Some(DateTime(1970, 1, 1, 0, 0, 0))))),
+                    status = StatusCodes.OK,
+                    entity = HttpEntity(
+                        ContentTypes.`application/json`,
+                        JsObject(
+                            "status" -> JsNumber(0),
+                            "message" -> JsString("Logout OK")
+                        ).compactPrint
+                    )
+                )
+
+            }
+            case Some(tokenCreds: KnoraTokenCredentialsV2) => {
+                CacheUtil.put(AUTHENTICATION_INVALIDATION_CACHE_NAME, tokenCreds.token, tokenCreds.token)
+
+                HttpResponse(
+                    status = StatusCodes.OK,
+                    entity = HttpEntity(
+                        ContentTypes.`application/json`,
+                        JsObject(
+                            "status" -> JsNumber(0),
+                            "message" -> JsString("Logout OK")
+                        ).compactPrint
+                    )
+                )
+            }
+            case _ => {
+                // nothing to do
+                HttpResponse(
+                    status = StatusCodes.OK,
+                    entity = HttpEntity(
+                        ContentTypes.`application/json`,
+                        JsObject(
+                            "status" -> JsNumber(0),
+                            "message" -> JsString("Logout OK")
+                        ).compactPrint
+                    )
+                )
+            }
+        }
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -266,7 +259,7 @@ trait Authenticator {
 
         val settings = Settings(system)
 
-        val credentials = extractCredentialsV1(requestContext)
+        val credentials: Option[KnoraCredentialsV2] = extractCredentialsV2(requestContext)
 
         if (settings.skipAuthentication) {
             // return anonymous if skipAuthentication
@@ -276,7 +269,7 @@ trait Authenticator {
             log.debug("getUserProfileV1 - No credentials found, returning default UserProfileV1 with 'anonymousUser' inside 'permissionData' set to true!")
             UserProfileV1()
         } else {
-            val userProfileV1 = getUserProfileV1ThroughCredentialsV1(credentials)
+            val userProfileV1 = getUserProfileV1ThroughCredentialsV2(credentials)
             log.debug("getUserProfileV1 - I got a UserProfileV1: {}", userProfileV1.toString)
 
             /* we return the userProfileV1 without sensitive information */
@@ -318,75 +311,10 @@ object Authenticator {
       * @param system      the current [[ActorSystem]]
       * @return true if the credentials are valid. If the credentials are invalid, then the corresponding exception
       *         will be thrown.
-      * @throws BadCredentialsException when neither email/password or session token are supplied; when user is not
-      *                                 active; when the password does not match.
-      */
-    private def authenticateCredentialsV1(credentials: KnoraCredentialsV1)(implicit system: ActorSystem, executionContext: ExecutionContext): Boolean = {
-
-        val settings = Settings(system)
-
-        if (credentials.isEmpty) {
-            throw BadCredentialsException(BAD_CRED_NONE_SUPPLIED)
-        }
-
-        val passValid: Boolean = if (credentials.passwordCredentials.nonEmpty) {
-
-            val pc = credentials.passwordCredentials.get
-            val userProfile = getUserProfileV1ByEmail(pc.email)
-
-            /* check if the user is active, if not, then no need to check the password */
-            if (!userProfile.isActive) {
-                log.debug("authenticateCredentials - user is not active")
-                throw BadCredentialsException(BAD_CRED_USER_INACTIVE)
-            }
-
-            userProfile.passwordMatch(pc.password)
-        } else {
-            false
-        }
-
-        val tokenValid: Boolean = if (credentials.sessionCredentials.nonEmpty) {
-
-            val token = credentials.sessionCredentials.get.token
-
-            JWTHelper.validateToken(token, settings.jwtSecretKey)
-        } else {
-            false
-        }
-
-        if (credentials.passwordCredentials.nonEmpty && credentials.sessionCredentials.nonEmpty && passValid && tokenValid) {
-            // both email/password and session token where supplied and both are valid
-            log.debug("authenticateCredentialsV1 - both email/password and token where supplied and both are valid")
-            true
-        } else if (credentials.passwordCredentials.nonEmpty && credentials.sessionCredentials.isEmpty && passValid) {
-            // only email/password supplied and valid
-            log.debug("authenticateCredentialsV1 - email/password supplied and valid")
-            true
-        } else if (credentials.passwordCredentials.isEmpty && credentials.sessionCredentials.nonEmpty && tokenValid) {
-            // only session token supplied and valid
-            log.debug("authenticateCredentialsV1 - token supplied and valid")
-            true
-        } else {
-            // either both supplied but one of them not valid or one supplied and this one not valid
-            log.debug("authenticateCredentialsV1 - not valid")
-            throw BadCredentialsException(BAD_CRED_NOT_VALID)
-        }
-    }
-
-    /**
-      * Tries to authenticate the supplied credentials (email/password or token). In the case of email/password,
-      * authentication is performed checking if the supplied email/password combination is valid by retrieving the
-      * user's profile. In the case of the token, the token itself is validated. If both are supplied, then both need
-      * to be valid.
-      *
-      * @param credentials the user supplied and extracted credentials.
-      * @param system      the current [[ActorSystem]]
-      * @return true if the credentials are valid. If the credentials are invalid, then the corresponding exception
-      *         will be thrown.
-      * @throws BadCredentialsException when email or password and token are not supplied; when user is not active;
+      * @throws BadCredentialsException when no credentials are supplied; when user is not active;
       *                                 when the password does not match; when the supplied token is not valid.
       */
-    private def authenticateCredentialsV2(credentials: KnoraCredentialsV2)(implicit system: ActorSystem, executionContext: ExecutionContext): Boolean = {
+    private def authenticateCredentialsV2(credentials: Option[KnoraCredentialsV2])(implicit system: ActorSystem, executionContext: ExecutionContext): Boolean = {
 
         val settings = Settings(system)
 
@@ -394,48 +322,40 @@ object Authenticator {
             throw BadCredentialsException(BAD_CRED_NONE_SUPPLIED)
         }
 
-        val passValid: Boolean = if (credentials.passwordCredentials.nonEmpty) {
+        credentials match {
+            case Some(passCreds: KnoraPasswordCredentialsV2) => {
+                val userProfile = getUserProfileV1ByEmail(passCreds.email)
 
-            val pc = credentials.passwordCredentials.get
-            val userProfile = getUserProfileV1ByEmail(pc.email)
+                /* check if the user is active, if not, then no need to check the password */
+                if (!userProfile.isActive) {
+                    log.debug("authenticateCredentials - user is not active")
+                    throw BadCredentialsException(BAD_CRED_USER_INACTIVE)
+                }
 
-            /* check if the user is active, if not, then no need to check the password */
-            if (!userProfile.isActive) {
-                log.debug("authenticateCredentials - user is not active")
-                throw BadCredentialsException(BAD_CRED_USER_INACTIVE)
+                if (!userProfile.passwordMatch(passCreds.password)) {
+                    log.debug("authenticateCredentialsV2 - password did not match")
+                    throw BadCredentialsException(BAD_CRED_NOT_VALID)
+                }
             }
-
-            userProfile.passwordMatch(pc.password)
-        } else {
-            false
+            case Some(tokenCreds: KnoraTokenCredentialsV2) => {
+                if (!JWTHelper.validateToken(tokenCreds.token, settings.jwtSecretKey)) {
+                    log.debug("authenticateCredentialsV2 - token was not valid")
+                    throw BadCredentialsException(BAD_CRED_NOT_VALID)
+                }
+            }
+            case Some(sessionCreds: KnoraSessionCredentialsV2) => {
+                if (!JWTHelper.validateToken(sessionCreds.token, settings.jwtSecretKey)) {
+                    log.debug("authenticateCredentialsV2 - session token was not valid")
+                    throw BadCredentialsException(BAD_CRED_NOT_VALID)
+                }
+            }
+            case None => {
+                log.debug("authenticateCredentialsV2 - no credentials supplied")
+                throw BadCredentialsException(BAD_CRED_NONE_SUPPLIED)
+            }
         }
 
-        val tokenValid: Boolean = if (credentials.tokenCredentials.nonEmpty) {
-
-            val token = credentials.tokenCredentials.get.token
-
-            JWTHelper.validateToken(token, settings.jwtSecretKey)
-        } else {
-            false
-        }
-
-        if (credentials.passwordCredentials.nonEmpty && credentials.tokenCredentials.nonEmpty && passValid && tokenValid) {
-            // both email/password and token where supplied and both are valid
-            log.debug("authenticateCredentialsV2 - both email/password and token where supplied and both are valid")
-            true
-        } else if (credentials.passwordCredentials.nonEmpty && credentials.tokenCredentials.isEmpty && passValid) {
-            // only email/password supplied and valid
-            log.debug("authenticateCredentialsV2 - email/password supplied and valid")
-            true
-        } else if (credentials.passwordCredentials.isEmpty && credentials.tokenCredentials.nonEmpty && tokenValid) {
-            // only token supplied and valid
-            log.debug("authenticateCredentialsV2 - token supplied and valid")
-            true
-        } else {
-            // either both supplied but one of them not valid or one supplied and this one not valid
-            log.debug("authenticateCredentialsV2 - not valid")
-            throw BadCredentialsException(BAD_CRED_NOT_VALID)
-        }
+        true
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -443,55 +363,25 @@ object Authenticator {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     /**
-      * Tries to extract the credentials from the requestContext (parameters, auth headers, session)
-      *
-      * @param requestContext a [[RequestContext]] containing the http request
-      * @return [[KnoraCredentialsV1]].
-      */
-    private def extractCredentialsV1(requestContext: RequestContext): KnoraCredentialsV1 = {
-        log.debug("extractCredentialsV1 start ...")
-
-        val credentialsFromParameters = extractCredentialsFromParametersV1(requestContext)
-        log.debug("extractCredentialsV1 - credentialsFromParameters: {}", credentialsFromParameters)
-
-        val credentialsFromHeader = extractCredentialsFromHeaderV1(requestContext)
-        log.debug("extractCredentialsV1 - credentialsFromHeader: {}", credentialsFromHeader)
-
-        // return found credentials based on precedence: 1. url parameters, 2. header (basic auth, session)
-        val credentials = if (credentialsFromParameters.nonEmpty) {
-            credentialsFromParameters
-        } else if (credentialsFromHeader.nonEmpty) {
-            credentialsFromHeader
-        } else {
-            KnoraCredentialsV1()
-        }
-
-        log.debug("extractCredentialsV1 - returned credentials: '{}'", credentials)
-        credentials
-    }
-
-    /**
       * Tries to extract the credentials from the requestContext (parameters, auth headers, token)
       *
       * @param requestContext a [[RequestContext]] containing the http request
       * @return [[KnoraCredentialsV1]].
       */
-    private def extractCredentialsV2(requestContext: RequestContext): KnoraCredentialsV2 = {
+    private def extractCredentialsV2(requestContext: RequestContext): Option[KnoraCredentialsV2] = {
         log.debug("extractCredentialsV2 start ...")
 
-        val credentialsFromParameters = extractCredentialsFromParametersV2(requestContext)
+        val credentialsFromParameters: Option[KnoraCredentialsV2] = extractCredentialsFromParametersV2(requestContext)
         log.debug("extractCredentialsV2 - credentialsFromParameters: {}", credentialsFromParameters)
 
-        val credentialsFromHeader = extractCredentialsFromHeaderV2(requestContext)
-        log.debug("extractCredentialsV2 - credentialsFromHeader: {}", credentialsFromHeader)
+        val credentialsFromHeaders: Option[KnoraCredentialsV2] = extractCredentialsFromHeaderV2(requestContext)
+        log.debug("extractCredentialsV2 - credentialsFromHeader: {}", credentialsFromHeaders)
 
         // return found credentials based on precedence: 1. url parameters, 2. header (basic auth, token)
         val credentials = if (credentialsFromParameters.nonEmpty) {
             credentialsFromParameters
-        } else if (credentialsFromHeader.nonEmpty) {
-            credentialsFromHeader
-        } else {
-            KnoraCredentialsV2()
+        } else  {
+            credentialsFromHeaders
         }
 
         log.debug("extractCredentialsV2 - returned credentials: '{}'", credentials)
@@ -504,32 +394,7 @@ object Authenticator {
       * @param requestContext the HTTP request context.
       * @return [[KnoraCredentialsV1]].
       */
-    private def extractCredentialsFromParametersV1(requestContext: RequestContext): KnoraCredentialsV1 = {
-        // extract email/password from parameters
-
-        val params: Map[String, Seq[String]] = requestContext.request.uri.query().toMultiMap
-
-        val maybeEmail: Option[String] = params get "email" map (_.head)
-        val maybePassword: Option[String] = params get "password" map (_.head)
-
-        val maybePassCreds: Option[KnoraPasswordCredentialsV1] = if (maybeEmail.nonEmpty && maybePassword.nonEmpty) {
-            Some(KnoraPasswordCredentialsV1(maybeEmail.get, maybePassword.get))
-        } else {
-            None
-        }
-
-        KnoraCredentialsV1(
-            passwordCredentials = maybePassCreds
-        )
-    }
-
-    /**
-      * Tries to extract credentials supplied as URL parameters.
-      *
-      * @param requestContext the HTTP request context.
-      * @return [[KnoraCredentialsV1]].
-      */
-    private def extractCredentialsFromParametersV2(requestContext: RequestContext): KnoraCredentialsV2 = {
+    private def extractCredentialsFromParametersV2(requestContext: RequestContext): Option[KnoraCredentialsV2] = {
         // extract email/password from parameters
 
         val params: Map[String, Seq[String]] = requestContext.request.uri.query().toMultiMap
@@ -551,85 +416,44 @@ object Authenticator {
             None
         }
 
-        KnoraCredentialsV2(maybePassCreds, maybeTokenCreds)
+        // prefer password credentials
+        if (maybePassCreds.nonEmpty) {
+            maybePassCreds
+        } else {
+            maybeTokenCreds
+        }
     }
 
     /**
-      * Tries to extract the credentials (email/password, session id) from the headers.
+      * Tries to extract the credentials (email/password, token) from the authorization header and the session token
+      * from the cookie header.
+      *
+      * The authorization header looks something like this: 'Authorization: Basic xyz, Bearer xyz.xyz.xyz'
+      * if both the email/password and token are sent.
+      *
+      * If more then one set of credentials is found, then they are selected as follows:
+      *    1. email/password
+      *    2. authorization token
+      *    3. session token
       *
       * @param requestContext the HTTP request context.
-      * @return optionally the session id.
+      * @return an optional [[KnoraCredentialsV2]].
       */
-    private def extractCredentialsFromHeaderV1(requestContext: RequestContext): KnoraCredentialsV1 = {
+    private def extractCredentialsFromHeaderV2(requestContext: RequestContext): Option[KnoraCredentialsV2] = {
 
-        // Session ID
+        // Session token from cookie header
         val cookies: Seq[HttpCookiePair] = requestContext.request.cookies
-        val maybeSessionId: Option[String] = cookies.find(_.name == "KnoraAuthentication") match {
+        val maybeSessionCreds: Option[KnoraSessionCredentialsV2] = cookies.find(_.name == "KnoraAuthentication") match {
             case Some(authCookie) =>
-                val value = authCookie.value
-                Some(value)
+                val value: String = authCookie.value
+                Some(KnoraSessionCredentialsV2(value))
             case None =>
                 None
         }
 
-        val maybeSessionCreds: Option[KnoraSessionCredentialsV1] = if (maybeSessionId.nonEmpty) {
-            Some(KnoraSessionCredentialsV1(maybeSessionId.get))
-        } else {
-            None
-        }
-
-        // Email/Password from basic auth
+        // Authorization header
         val headers: Seq[HttpHeader] = requestContext.request.headers
-        val (maybeEmail, maybePassword) = headers.find(_.name == "Authorization") match {
-            case Some(authHeader: HttpHeader) =>
-
-                // the authorization header can hold different schemes
-                val credsArr: Array[String] = authHeader.value().split(",")
-
-                // in v1 we only support the basic authentication scheme
-                val maybeBasicAuthValue = credsArr.find(_.contains("Basic"))
-
-                // try to decode email/password
-                maybeBasicAuthValue match {
-                    case Some(value) =>
-                        val trimmedValue = value.substring(5).trim() // remove 'Basic '
-                        val decodedValue = ByteString.fromArray(Base64.getDecoder.decode(trimmedValue)).decodeString("UTF8")
-                        val decodedValueArr = decodedValue.split(":", 2)
-                        (Some(decodedValueArr(0)), Some(decodedValueArr(1)))
-                    case None =>
-                        (None, None)
-                }
-            case None =>
-                (None, None)
-        }
-
-        val maybePassCreds: Option[KnoraPasswordCredentialsV1] = if (maybeEmail.nonEmpty && maybePassword.nonEmpty) {
-            Some(KnoraPasswordCredentialsV1(maybeEmail.get, maybePassword.get))
-        } else {
-            None
-        }
-
-        KnoraCredentialsV1(
-            passwordCredentials = maybePassCreds,
-            sessionCredentials = maybeSessionCreds
-        )
-    }
-
-    /**
-      * Tries to extract the credentials (email/password, token) from the authorization header.
-      *
-      * The header looks something like this: 'Authorization: Basic xyz, Bearer xyz.xyz.xyz'
-      * if both the email/password and token are sent.
-      *
-      * The possibilities are: only Basic, only Bearer or Basic and Bearer together
-      *
-      * @param requestContext the HTTP request context.
-      * @return [[KnoraCredentialsV2]].
-      */
-    private def extractCredentialsFromHeaderV2(requestContext: RequestContext): KnoraCredentialsV2 = {
-
-        val headers: Seq[HttpHeader] = requestContext.request.headers
-        headers.find(_.name == "Authorization") match {
+        val (maybePassCreds, maybeTokenCreds) = headers.find(_.name == "Authorization") match {
             case Some(authHeader: HttpHeader) =>
 
                 // the authorization header can hold different schemes
@@ -671,10 +495,19 @@ object Authenticator {
                     None
                 }
 
-                KnoraCredentialsV2(maybePassCreds, maybeTokenCreds)
+                (maybePassCreds, maybeTokenCreds)
 
             case None =>
-                KnoraCredentialsV2()
+                (None, None)
+        }
+
+        // prefer password over token over session
+        if (maybePassCreds.nonEmpty) {
+            maybePassCreds
+        } else if (maybeTokenCreds.nonEmpty) {
+            maybeTokenCreds
+        } else {
+            maybeSessionCreds
         }
     }
 
@@ -686,31 +519,46 @@ object Authenticator {
       * @return a [[UserProfileV1]]
       * @throws AuthenticationException when the IRI can not be found inside the token, which is probably a bug.
       */
-    private def getUserProfileV1ThroughCredentialsV1(credentials: KnoraCredentialsV1)(implicit system: ActorSystem, executionContext: ExecutionContext): UserProfileV1 = {
+    private def getUserProfileV1ThroughCredentialsV2(credentials: Option[KnoraCredentialsV2])(implicit system: ActorSystem, executionContext: ExecutionContext): UserProfileV1 = {
 
         val settings = Settings(system)
 
-        authenticateCredentialsV1(credentials)
+        authenticateCredentialsV2(credentials)
 
-        // at this point, at least one type of credentials was supplied. I both are, then I prefer the session token
-        val userProfile = if (credentials.sessionCredentials.nonEmpty) {
-            val token = credentials.sessionCredentials.get.token
-            val userIri: IRI = JWTHelper.extractUserIriFromToken(token, settings.jwtSecretKey) match {
-                case Some(iri) => iri
-                case None => {
-                    // should not happen, as the token is already validated
-                    throw AuthenticationException("No IRI found inside token. Please report this as a possible bug.")
-                }
+        val userProfile: UserProfileV1 = credentials match {
+            case Some(passCreds: KnoraPasswordCredentialsV2) => {
+                log.debug("getUserProfileV1ThroughCredentialsV2 - used email")
+                getUserProfileV1ByEmail(passCreds.email)
             }
-            log.debug("getUserProfileV1ThroughCredentialsV1 - used session token")
-            getUserProfileV1ByIri(userIri)
-        } else {
-            // since we must have at least one or the other
-            val email = credentials.passwordCredentials.get.email
-            log.debug("getUserProfileV1ThroughCredentialsV1 - used email")
-            getUserProfileV1ByEmail(email)
+            case Some(tokenCreds: KnoraTokenCredentialsV2) => {
+                val userIri: IRI = JWTHelper.extractUserIriFromToken(tokenCreds.token, settings.jwtSecretKey) match {
+                    case Some(iri) => iri
+                    case None => {
+                        // should not happen, as the token is already validated
+                        throw AuthenticationException("No IRI found inside token. Please report this as a possible bug.")
+                    }
+                }
+                log.debug("getUserProfileV1ThroughCredentialsV2 - used token")
+                getUserProfileV1ByIri(userIri)
+            }
+            case Some(sessionCreds: KnoraSessionCredentialsV2) => {
+                val userIri: IRI = JWTHelper.extractUserIriFromToken(sessionCreds.token, settings.jwtSecretKey) match {
+                    case Some(iri) => iri
+                    case None => {
+                        // should not happen, as the token is already validated
+                        throw AuthenticationException("No IRI found inside token. Please report this as a possible bug.")
+                    }
+                }
+                log.debug("getUserProfileV1ThroughCredentialsV2 - used session token")
+                getUserProfileV1ByIri(userIri)
+            }
+            case None => {
+                log.debug("getUserProfileV1ThroughCredentialsV2 - no credentials supplied")
+                throw BadCredentialsException(BAD_CRED_NONE_SUPPLIED)
+            }
         }
-        log.debug("getUserProfileV1ThroughCredentialsV1 - userProfile: {}", userProfile)
+
+        log.debug("getUserProfileV1ThroughCredentialsV2 - userProfile: {}", userProfile)
         userProfile
     }
 

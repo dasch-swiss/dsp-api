@@ -42,38 +42,33 @@ case class LoginApiRequestPayloadV2(email: String,
 }
 
 /**
-  * Represents all types of credentials that a user can supply.
+  * An abstract knora credentials class.
   */
-case class KnoraCredentialsV2(passwordCredentials: Option[KnoraPasswordCredentialsV2] = None,
-                              tokenCredentials: Option[KnoraTokenCredentialsV2] = None) {
-
-    def isEmpty: Boolean = passwordCredentials.isEmpty && tokenCredentials.isEmpty
-    def nonEmpty: Boolean = passwordCredentials.nonEmpty || tokenCredentials.nonEmpty
-}
+sealed abstract class KnoraCredentialsV2()
 
 /**
-  * Represents email/password credentials.
+  * Represents email/password credentials that a user can supply within the authorization header or as URL parameters.
   *
   * @param email    the supplied email.
   * @param password the supplied password.
   */
-case class KnoraPasswordCredentialsV2(email: String, password: String)
+case class KnoraPasswordCredentialsV2(email: String, password: String) extends KnoraCredentialsV2
 
 /**
-  * Represents token credentials.
+  * Represents token credentials that a user can supply withing the authorization header or as URL parameters.
   *
   * @param token    the supplied json web token.
   */
-case class KnoraTokenCredentialsV2(token: String)
+case class KnoraTokenCredentialsV2(token: String) extends KnoraCredentialsV2
 
 
 /**
-  * Represents the session containing the identifier under which a user profile is stored and the user profile itself.
+  * Represents session credentials that a user can supply within the cookie header.
   *
-  * @param token       the JWT used as identifier.
-  * @param userProfile the [[UserProfileV1]] the session identifier is referring to (will become UserProfileV2).
+  * @param token the supplied session token.
   */
-case class SessionV2(token: String, userProfile: UserProfileV1)
+case class KnoraSessionCredentialsV2(token: String) extends KnoraCredentialsV2
+
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////

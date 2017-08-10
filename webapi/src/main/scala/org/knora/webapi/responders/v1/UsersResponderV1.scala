@@ -1151,6 +1151,9 @@ class UsersResponderV1 extends Responder {
             //_ = log.debug(s"updateUserV1 - query: $updateUserSparqlString")
             createResourceResponse <- (storeManager ? SparqlUpdateRequest(updateUserSparqlString)).mapTo[SparqlUpdateResponse]
 
+            // need to invalidate cached user profile
+            _ = invalidateCachedUserProfileV1(Some(userIri), userUpdatePayload.email)
+
             /* Verify that the user was updated. */
             maybeUpdatedUserProfile <- userProfileByIRIGetV1(userIri, UserProfileTypeV1.FULL)
             updatedUserProfile = maybeUpdatedUserProfile.getOrElse(throw UpdateNotPerformedException("User was not updated. Please report this as a possible bug."))
@@ -1185,9 +1188,6 @@ class UsersResponderV1 extends Responder {
             _ = if (userUpdatePayload.systemAdmin.isDefined) {
                 if (updatedUserProfile.permissionData.isSystemAdmin != userUpdatePayload.systemAdmin.get) throw UpdateNotPerformedException("User's 'isInSystemAdminGroup' status was not updated. Please report this as a possible bug.")
             }
-
-            // write updated user profile to cache
-            _ = writeUserProfileV1ToCache(updatedUserProfile)
 
             // create the user operation response
             userOperationResponseV1 = UserOperationResponseV1(updatedUserProfile.ofType(UserProfileTypeV1.RESTRICTED))

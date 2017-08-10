@@ -51,7 +51,7 @@ object AuthenticationRouteV1 extends Authenticator {
                     requestContext.complete {
                         val params = requestContext.request.uri.query().toMap
                         if (params.contains("logout")) {
-                            doLogoutV1(requestContext)
+                            doLogoutV2(requestContext)
                         } else if (params.contains("login")) {
                             doLoginV1(requestContext)
                         } else {
@@ -68,7 +68,7 @@ object AuthenticationRouteV1 extends Authenticator {
             } ~ delete {
                 requestContext => {
                     requestContext.complete {
-                        doLogoutV1(requestContext)
+                        doLogoutV2(requestContext)
                     }
                 }
             }

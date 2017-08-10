@@ -252,4 +252,78 @@ class AuthenticationV2E2ESpec extends E2ESpec(AuthenticationV2E2ESpec.config) wi
             assert(response.status === StatusCodes.Unauthorized)
         }
     }
+
+    "The Users Route using the Authenticator trait " should {
+
+        var token = ""
+
+        "login in v2" in {
+            /* Correct username and correct password */
+
+            val params =
+                s"""
+                   |{
+                   |    "email": "$rootEmail",
+                   |    "password": "$testPass"
+                   |}
+                """.stripMargin
+
+            val request = Post(baseApiUrl + s"/v2/authentication", HttpEntity(ContentTypes.`application/json`, params))
+            val response: HttpResponse = singleAwaitingRequest(request)
+            assert(response.status == StatusCodes.OK)
+
+            //println(response.toString)
+
+            val lr: LoginResponse = Await.result(Unmarshal(response.entity).to[LoginResponse], 1.seconds)
+            token = lr.token
+
+            token.nonEmpty should be (true)
+            log.debug("token: {}", token)
+        }
+
+        "allow access with authentication using URL parameters and token from v2" in {
+            /* Correct email / correct password */
+            val request = Get(baseApiUrl + s"/v1/users/$rootIriEnc?token=$token")
+            val response = singleAwaitingRequest(request)
+            //log.debug("==>> " + responseAs[String])
+            assert(response.status === StatusCodes.OK)
+        }
+
+        "fail with authentication using URL parameters and wrong token" in {
+            /* Correct email / wrong password */
+            val request = Get(baseApiUrl + s"/v1/users/$rootIriEnc?token=wrong")
+
+            val response = singleAwaitingRequest(request)
+            //log.debug("==>> " + responseAs[String])
+            assert(response.status === StatusCodes.Unauthorized)
+        }
+
+        "allow access with authentication using HTTP Bearer Auth header and token from v2" in {
+            /* Correct email / correct password */
+            val request = Get(baseApiUrl + s"/v1/users/$rootIriEnc") ~> addCredentials(GenericHttpCredentials("Bearer", token))
+            val response = singleAwaitingRequest(request)
+            //log.debug("==>> " + responseAs[String])
+            assert(response.status === StatusCodes.OK)
+        }
+
+        "fail with authentication using HTTP Bearer Auth header and wrong token " in {
+            /* Correct email / wrong password */
+            val request = Get(baseApiUrl + s"/v1/users/$rootIriEnc") ~> addCredentials(GenericHttpCredentials("Bearer", "123456"))
+            val response = singleAwaitingRequest(request)
+            //log.debug("==>> " + responseAs[String])
+            assert(response.status === StatusCodes.Unauthorized)
+        }
+
+        "not return sensitive information (token, password) in the response " in {
+            val request = Get(baseApiUrl + s"/v1/users/$rootIriEnc?token=$token")
+            val response = singleAwaitingRequest(request)
+            //log.debug("==>> " + responseAs[String])
+            // assert(status === StatusCodes.OK)
+
+            /* check for sensitive information leakage */
+            val body: String = Await.result(Unmarshal(response.entity).to[String], 1.seconds)
+            assert(body contains "\"password\":null")
+            assert(body contains "\"token\":null")
+        }
+    }
 }

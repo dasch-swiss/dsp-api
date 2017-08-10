@@ -24,7 +24,7 @@ import akka.testkit.ImplicitSender
 import akka.util.Timeout
 import com.typesafe.config.ConfigFactory
 import io.igl.jwt._
-import org.knora.webapi.routing.JWTHelper.{algorithm, requiredClaims, requiredHeaders}
+import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.{CoreSpec, SharedAdminTestData}
 
 import scala.concurrent.duration._
@@ -44,23 +44,11 @@ class JWTHelperSpec extends CoreSpec("AuthenticationTestSystem") with ImplicitSe
     implicit val executionContext = system.dispatcher
     implicit val timeout: Timeout = Duration(5, SECONDS)
 
-    val rootUserProfileV1 = SharedAdminTestData.rootUser
-    val rootUserEmail = rootUserProfileV1.userData.email.get
-    val rootUserPassword = "test"
+    val rootUserProfileV1: UserProfileV1 = SharedAdminTestData.rootUser
+    val rootUserEmail: String = rootUserProfileV1.userData.email.get
+    val rootUserPassword: String = "test"
 
-
-    val secretKey = "super-secret-key"
-    val algorithm = Algorithm.HS256
-    val requiredHeaders = Set[HeaderField](Typ)
-    val requiredClaims = Set[ClaimField](Iss, Sub, Aud, Iat, Exp)
-
-
-    val headers = Seq[HeaderValue](Typ("JWT"), Alg(algorithm))
-    val claims = Seq[ClaimValue](Iss("webapi"), Sub(rootUserProfileV1.userData.user_id.get), Aud("webapi"))
-
-    val jwt = new DecodedJwt(headers, claims)
-
-    val encodedJwt = jwt.encodedAndSigned(secretKey)
+    val secretKey: String = "super-secret-key"
 
     "The JWTHelper" should {
 
@@ -72,9 +60,9 @@ class JWTHelperSpec extends CoreSpec("AuthenticationTestSystem") with ImplicitSe
             val decodedJwt: Try[Jwt] = DecodedJwt.validateEncodedJwt(
                 token,
                 secret,
-                algorithm,
-                requiredHeaders,
-                requiredClaims,
+                JWTHelper.algorithm,
+                JWTHelper.requiredHeaders,
+                JWTHelper.requiredClaims,
                 iss = Some(Iss("webapi")),
                 aud = Some(Aud("webapi"))
             )

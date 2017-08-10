@@ -22,7 +22,6 @@ package org.knora.webapi.messages.v1.routing.authenticationmessages
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi.IRI
-import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import spray.json._
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -35,45 +34,6 @@ import spray.json._
   * @param password
   */
 case class CreateSessionApiRequestV1(username: String, password: String)
-
-
-/**
-  * Represents credentials that a user can supply.
-  *
-  * @param passwordCredentials the optionally supplied email/password credentials.
-  * @param sessionCredentials  the optionally supplied session credentials.
-  */
-case class KnoraCredentialsV1(passwordCredentials: Option[KnoraPasswordCredentialsV1] = None,
-                              sessionCredentials: Option[KnoraSessionCredentialsV1] = None) {
-
-    def isEmpty: Boolean = this.passwordCredentials.isEmpty && this.sessionCredentials.isEmpty
-
-    def nonEmpty: Boolean = this.passwordCredentials.nonEmpty || this.sessionCredentials.nonEmpty
-}
-
-/**
-  * Represents email/password credentials that a user can supply.
-  *
-  * @param email    the supplied email.
-  * @param password the supplied password.
-  */
-case class KnoraPasswordCredentialsV1(email: String, password: String)
-
-/**
-  * Represents session credentials that a user can supply.
-  *
-  * @param token the supplied session token.
-  */
-case class KnoraSessionCredentialsV1(token: String)
-
-/**
-  * Represents the session containing the token and the user's profile.
-  *
-  * @param token         the session token  (a true JSON web token).
-  * @param userProfileV1 the [[UserProfileV1]] the session token belongs to.
-  */
-case class SessionV1(token: String, userProfileV1: UserProfileV1)
-
 
 /**
   * Representing user's credentials (iri, email, password)
