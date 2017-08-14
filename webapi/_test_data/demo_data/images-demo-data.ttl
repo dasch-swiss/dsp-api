@@ -4642,7 +4642,7 @@
 
 <http://data.knora.org/lists/d19af9ab> a knora-base:ListNode ;
 	knora-base:isRootNode true ;
-	rdfs:label "Jahreszeit"@de , "Jahreszeit"@de ;
+	rdfs:label "Jahreszeit"@de , "Season"@en ;
 	knora-base:attachedToProject <http://data.knora.org/projects/images> ;
 	knora-base:hasSubListNode <http://data.knora.org/lists/526f26ed04> , <http://data.knora.org/lists/eda2792605> .
 

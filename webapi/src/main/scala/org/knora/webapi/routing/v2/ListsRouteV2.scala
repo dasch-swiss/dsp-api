@@ -65,7 +65,7 @@ object ListsRouteV2 extends Authenticator {
         } ~
         path("v2" / "lists" / Segment) {iri =>
             get {
-                /* return a list */
+                /* return a list (a graph with all list nodes) */
                 requestContext =>
                     val userProfile = getUserProfileV1(requestContext)
                     val listIri = InputValidation.toIri(iri, () => throw BadRequestException(s"Invalid param list IRI: $iri"))
@@ -91,7 +91,7 @@ object ListsRouteV2 extends Authenticator {
         } ~
         path("v2" / "lists" / "infos" / Segment) {iri =>
             get {
-                /* return list information */
+                /* return list information (the root node of a list) */
                 requestContext =>
                     val userProfile = getUserProfileV1(requestContext)
                     val listIri = InputValidation.toIri(iri, () => throw BadRequestException(s"Invalid param list IRI: $iri"))
@@ -117,7 +117,7 @@ object ListsRouteV2 extends Authenticator {
         } ~
         path("v2" / "lists" / "nodes" / Segment) {iri =>
             get {
-                /* return a list node */
+                /* return a single list node */
                 requestContext =>
                     val userProfile = getUserProfileV1(requestContext)
                     val listIri = InputValidation.toIri(iri, () => throw BadRequestException(s"Invalid param list IRI: $iri"))

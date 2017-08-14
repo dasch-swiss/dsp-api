@@ -1,0 +1,4442 @@
+{
+  "@context": {
+    "dcterms": "http://purl.org/dc/terms/",
+    "foaf": "http://xmlns.com/foaf/0.1/",
+    "owl": "http://www.w3.org/2002/07/owl#",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "salsah-gui": "http://www.knora.org/ontology/salsah-gui#",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "@graph": [
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#hasGeometry",
+      "@type": "owl:ObjectProperty",
+      "http://www.knora.org/ontology/knora-base#objectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#GeomValue"
+      },
+      "http://www.knora.org/ontology/knora-base#subjectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#Region"
+      },
+      "rdfs:comment": {
+        "@language": "en",
+        "@value": "Represents a geometrical shape."
+      },
+      "rdfs:label": [
+        {
+          "@language": "it",
+          "@value": "Geometria"
+        },
+        {
+          "@language": "fr",
+          "@value": "Géometrie"
+        },
+        {
+          "@language": "en",
+          "@value": "Geometry"
+        },
+        {
+          "@language": "de",
+          "@value": "Geometrie"
+        }
+      ],
+      "rdfs:subPropertyOf": {
+        "@id": "http://www.knora.org/ontology/knora-base#hasValue"
+      },
+      "salsah-gui:guiAttribute": "width=95%;rows=4;wrap=soft",
+      "salsah-gui:guiElement": {
+        "@id": "salsah-gui:Geometry"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#isPartOfValue",
+      "@type": "owl:ObjectProperty",
+      "http://www.knora.org/ontology/knora-base#objectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#LinkValue"
+      },
+      "http://www.knora.org/ontology/knora-base#subjectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#Resource"
+      },
+      "rdfs:subPropertyOf": {
+        "@id": "http://www.knora.org/ontology/knora-base#hasLinkToValue"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#XMLToStandoffMapping",
+      "@type": "owl:Class",
+      "rdfs:comment": "Mapping from XML to standoff entities",
+      "rdfs:label": {
+        "@language": "en",
+        "@value": "Mapping from XML to standoff entities"
+      },
+      "rdfs:subClassOf": [
+        {
+          "@id": "_:ub20bL2583C21"
+        },
+        {
+          "@id": "_:ub20bL2579C21"
+        }
+      ]
+    },
+    {
+      "@id": "_:ub20bL1680C27",
+      "@type": "owl:Restriction",
+      "owl:cardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "1"
+      },
+      "owl:onProperty": {
+        "@id": "http://www.knora.org/ontology/knora-base#valueHasEndPrecision"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#standoffTagHasOriginalXMLID",
+      "@type": "owl:DatatypeProperty",
+      "http://www.knora.org/ontology/knora-base#objectDatatypeConstraint": {
+        "@id": "xsd:string"
+      },
+      "http://www.knora.org/ontology/knora-base#subjectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#StandoffTag"
+      },
+      "rdfs:subPropertyOf": {
+        "@id": "http://www.knora.org/ontology/knora-base#objectCannotBeMarkedAsDeleted"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#FileValue",
+      "@type": "owl:Class",
+      "rdfs:subClassOf": [
+        {
+          "@id": "_:ub20bL1791C28"
+        },
+        {
+          "@id": "_:ub20bL1787C28"
+        },
+        {
+          "@id": "http://www.knora.org/ontology/knora-base#Value"
+        },
+        {
+          "@id": "_:ub20bL1783C28"
+        },
+        {
+          "@id": "_:ub20bL1799C28"
+        },
+        {
+          "@id": "_:ub20bL1795C28"
+        }
+      ]
+    },
+    {
+      "@id": "_:ub20bL2579C21",
+      "@type": "owl:Restriction",
+      "owl:minCardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "1"
+      },
+      "owl:onProperty": {
+        "@id": "http://www.knora.org/ontology/knora-base#hasMappingElement"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#hasExtResValue",
+      "@type": "owl:ObjectProperty",
+      "http://www.knora.org/ontology/knora-base#objectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#ExternalResValue"
+      },
+      "http://www.knora.org/ontology/knora-base#subjectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#ExternalResource"
+      },
+      "rdfs:label": [
+        {
+          "@language": "fr",
+          "@value": "a valeur externe"
+        },
+        {
+          "@language": "en",
+          "@value": "has external Value"
+        },
+        {
+          "@language": "de",
+          "@value": "hat externen Wert"
+        },
+        {
+          "@language": "it",
+          "@value": "ha valore esterno"
+        }
+      ],
+      "rdfs:subPropertyOf": {
+        "@id": "http://www.knora.org/ontology/knora-base#hasValue"
+      }
+    },
+    {
+      "@id": "_:ub20bL2123C25",
+      "@type": "owl:Restriction",
+      "owl:cardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "1"
+      },
+      "owl:onProperty": {
+        "@id": "http://www.knora.org/ontology/knora-base#isRegionOfValue"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#mappingHasXMLClass",
+      "@type": "owl:DatatypeProperty",
+      "http://www.knora.org/ontology/knora-base#objectDatatypeConstraint": {
+        "@id": "xsd:string"
+      },
+      "http://www.knora.org/ontology/knora-base#subjectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#MappingElement"
+      },
+      "rdfs:comment": {
+        "@language": "en",
+        "@value": "class of the XML tag"
+      },
+      "rdfs:label": {
+        "@language": "en",
+        "@value": "class of the XML tag"
+      },
+      "rdfs:subPropertyOf": {
+        "@id": "http://www.knora.org/ontology/knora-base#objectCannotBeMarkedAsDeleted"
+      }
+    },
+    {
+      "@id": "_:ub20bL2262C27",
+      "@type": "owl:Restriction",
+      "owl:maxCardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "1"
+      },
+      "owl:onProperty": {
+        "@id": "http://www.knora.org/ontology/knora-base#standoffTagHasEndParent"
+      }
+    },
+    {
+      "@id": "_:ub20bL1692C27",
+      "@type": "owl:Restriction",
+      "owl:cardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "1"
+      },
+      "owl:onProperty": {
+        "@id": "http://www.knora.org/ontology/knora-base#valueHasStartJDN"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#ValueBase",
+      "@type": "owl:Class"
+    },
+    {
+      "@id": "_:ub20bL1900C26",
+      "@type": "owl:Restriction",
+      "owl:cardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "1"
+      },
+      "owl:onProperty": {
+        "@id": "http://www.knora.org/ontology/knora-base#valueHasUri"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#valueHasStartJDN",
+      "@type": "owl:DatatypeProperty",
+      "http://www.knora.org/ontology/knora-base#objectDatatypeConstraint": {
+        "@id": "xsd:integer"
+      },
+      "http://www.knora.org/ontology/knora-base#subjectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#DateBase"
+      },
+      "rdfs:comment": {
+        "@language": "en",
+        "@value": "Contains the start of a date as a Julian Day Number (JDN)"
+      },
+      "rdfs:subPropertyOf": {
+        "@id": "http://www.knora.org/ontology/knora-base#valueHas"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#valueHasEndJDN",
+      "@type": "owl:DatatypeProperty",
+      "http://www.knora.org/ontology/knora-base#objectDatatypeConstraint": {
+        "@id": "xsd:integer"
+      },
+      "http://www.knora.org/ontology/knora-base#subjectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#DateBase"
+      },
+      "rdfs:comment": {
+        "@language": "en",
+        "@value": "Contains the end of a date as a Julian Day Number (JDN)"
+      },
+      "rdfs:subPropertyOf": {
+        "@id": "http://www.knora.org/ontology/knora-base#valueHas"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#qualityLevel",
+      "@type": "owl:DatatypeProperty",
+      "http://www.knora.org/ontology/knora-base#objectDatatypeConstraint": {
+        "@id": "xsd:integer"
+      },
+      "http://www.knora.org/ontology/knora-base#subjectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#FileValue"
+      },
+      "rdfs:subPropertyOf": {
+        "@id": "http://www.knora.org/ontology/knora-base#valueHas"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#hasStillImageFileValue",
+      "@type": "owl:ObjectProperty",
+      "http://www.knora.org/ontology/knora-base#objectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#StillImageFileValue"
+      },
+      "http://www.knora.org/ontology/knora-base#subjectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#StillImageRepresentation"
+      },
+      "rdfs:comment": {
+        "@language": "en",
+        "@value": "Connects a Representation to an image file"
+      },
+      "rdfs:label": [
+        {
+          "@language": "it",
+          "@value": "ha file imagine"
+        },
+        {
+          "@language": "en",
+          "@value": "has image file"
+        },
+        {
+          "@language": "de",
+          "@value": "hat Bilddatei"
+        },
+        {
+          "@language": "fr",
+          "@value": "a fichier d'image"
+        }
+      ],
+      "rdfs:subPropertyOf": {
+        "@id": "http://www.knora.org/ontology/knora-base#hasFileValue"
+      },
+      "salsah-gui:guiElement": {
+        "@id": "salsah-gui:Fileupload"
+      }
+    },
+    {
+      "@id": "_:ub20bL1787C28",
+      "@type": "owl:Restriction",
+      "owl:maxCardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "1"
+      },
+      "owl:onProperty": {
+        "@id": "http://www.knora.org/ontology/knora-base#originalMimeType"
+      }
+    },
+    {
+      "@id": "_:ub20bL2475C37",
+      "@type": "owl:Restriction",
+      "owl:cardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "1"
+      },
+      "owl:onProperty": {
+        "@id": "http://www.knora.org/ontology/knora-base#hasTextFileValue"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#previousValue",
+      "@type": "owl:ObjectProperty",
+      "http://www.knora.org/ontology/knora-base#objectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#Value"
+      },
+      "http://www.knora.org/ontology/knora-base#subjectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#Value"
+      },
+      "rdfs:comment": {
+        "@language": "en",
+        "@value": "Points to the previous verson of a value"
+      },
+      "rdfs:subPropertyOf": {
+        "@id": "http://www.knora.org/ontology/knora-base#valueHas"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#valueHasGeonameCode",
+      "@type": "owl:DatatypeProperty",
+      "http://www.knora.org/ontology/knora-base#objectDatatypeConstraint": {
+        "@id": "xsd:string"
+      },
+      "http://www.knora.org/ontology/knora-base#subjectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#GeonameValue"
+      },
+      "rdfs:subPropertyOf": {
+        "@id": "http://www.knora.org/ontology/knora-base#valueHas"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#standoffTagHasStart",
+      "@type": "owl:DatatypeProperty",
+      "http://www.knora.org/ontology/knora-base#objectDatatypeConstraint": {
+        "@id": "xsd:integer"
+      },
+      "http://www.knora.org/ontology/knora-base#subjectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#StandoffTag"
+      },
+      "rdfs:subPropertyOf": {
+        "@id": "http://www.knora.org/ontology/knora-base#objectCannotBeMarkedAsDeleted"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#standoffParentClassConstraint",
+      "@type": "owl:ObjectProperty"
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#duration",
+      "@type": "owl:DatatypeProperty",
+      "http://www.knora.org/ontology/knora-base#objectDatatypeConstraint": {
+        "@id": "xsd:decimal"
+      },
+      "http://www.knora.org/ontology/knora-base#subjectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#FileValue"
+      },
+      "rdfs:subPropertyOf": {
+        "@id": "http://www.knora.org/ontology/knora-base#valueHas"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#hasMovingImageFileValue",
+      "@type": "owl:ObjectProperty",
+      "http://www.knora.org/ontology/knora-base#objectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#MovingImageFileValue"
+      },
+      "http://www.knora.org/ontology/knora-base#subjectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#MovingImageRepresentation"
+      },
+      "rdfs:comment": {
+        "@language": "en",
+        "@value": "Connects a Representation to a movie file"
+      },
+      "rdfs:label": [
+        {
+          "@language": "en",
+          "@value": "has movie file"
+        },
+        {
+          "@language": "it",
+          "@value": "ha file film"
+        },
+        {
+          "@language": "fr",
+          "@value": "a fichier de film"
+        },
+        {
+          "@language": "de",
+          "@value": "hat Filmdatei"
+        }
+      ],
+      "rdfs:subPropertyOf": {
+        "@id": "http://www.knora.org/ontology/knora-base#hasFileValue"
+      },
+      "salsah-gui:guiElement": {
+        "@id": "salsah-gui:Fileupload"
+      }
+    },
+    {
+      "@id": "_:ub20bL2204C27",
+      "@type": "owl:Restriction",
+      "owl:maxCardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "1"
+      },
+      "owl:onProperty": {
+        "@id": "http://www.knora.org/ontology/knora-base#deleteComment"
+      }
+    },
+    {
+      "@id": "_:ub20bL2618C24",
+      "@type": "owl:Restriction",
+      "owl:cardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "1"
+      },
+      "owl:onProperty": {
+        "@id": "http://www.knora.org/ontology/knora-base#valueCreationDate"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#Representation",
+      "@type": "owl:Class",
+      "rdfs:comment": {
+        "@language": "en",
+        "@value": "A resource that can store one or more FileValues"
+      },
+      "rdfs:label": [
+        {
+          "@language": "fr",
+          "@value": "Répresentation"
+        },
+        {
+          "@language": "en",
+          "@value": "Representation"
+        },
+        {
+          "@language": "de",
+          "@value": "Repräsentation"
+        },
+        {
+          "@language": "it",
+          "@value": "Rappresentazione"
+        }
+      ],
+      "rdfs:subClassOf": [
+        {
+          "@id": "http://www.knora.org/ontology/knora-base#Resource"
+        },
+        {
+          "@id": "_:ub20bL2143C33"
+        }
+      ]
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#standoffTagHasUUID",
+      "@type": "owl:DatatypeProperty",
+      "http://www.knora.org/ontology/knora-base#objectDatatypeConstraint": {
+        "@id": "xsd:string"
+      },
+      "http://www.knora.org/ontology/knora-base#subjectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#StandoffTag"
+      },
+      "rdfs:subPropertyOf": {
+        "@id": "http://www.knora.org/ontology/knora-base#objectCannotBeMarkedAsDeleted"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#hasPermissions",
+      "@type": "owl:DatatypeProperty",
+      "http://www.knora.org/ontology/knora-base#objectDatatypeConstraint": {
+        "@id": "xsd:string"
+      },
+      "rdfs:subPropertyOf": {
+        "@id": "http://www.knora.org/ontology/knora-base#objectCannotBeMarkedAsDeleted"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#standoffTagHasStartIndex",
+      "@type": "owl:DatatypeProperty",
+      "http://www.knora.org/ontology/knora-base#objectDatatypeConstraint": {
+        "@id": "xsd:integer"
+      },
+      "http://www.knora.org/ontology/knora-base#subjectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#StandoffTag"
+      },
+      "rdfs:subPropertyOf": {
+        "@id": "http://www.knora.org/ontology/knora-base#objectCannotBeMarkedAsDeleted"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#ExternalResValue",
+      "@type": "owl:Class",
+      "rdfs:subClassOf": [
+        {
+          "@id": "http://www.knora.org/ontology/knora-base#Value"
+        },
+        {
+          "@id": "_:ub20bL1741C35"
+        },
+        {
+          "@id": "_:ub20bL1749C35"
+        },
+        {
+          "@id": "_:ub20bL1745C35"
+        }
+      ]
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#DocumentRepresentation",
+      "@type": "owl:Class",
+      "rdfs:label": [
+        {
+          "@language": "de",
+          "@value": "Repräsentation (Dokument)"
+        },
+        {
+          "@language": "fr",
+          "@value": "Répresentation (Document)"
+        },
+        {
+          "@language": "en",
+          "@value": "Representation (Document)"
+        },
+        {
+          "@language": "it",
+          "@value": "Rappresentazione (Documento)"
+        }
+      ],
+      "rdfs:subClassOf": [
+        {
+          "@id": "_:ub20bL1729C33"
+        },
+        {
+          "@id": "http://www.knora.org/ontology/knora-base#Representation"
+        }
+      ]
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#IntervalBase",
+      "@type": "owl:Class",
+      "rdfs:subClassOf": [
+        {
+          "@id": "http://www.knora.org/ontology/knora-base#ValueBase"
+        },
+        {
+          "@id": "_:ub20bL1919C31"
+        },
+        {
+          "@id": "_:ub20bL1923C31"
+        }
+      ]
+    },
+    {
+      "@id": "_:ub20bL1992C28",
+      "@type": "owl:Restriction",
+      "owl:cardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "1"
+      },
+      "owl:onProperty": {
+        "@id": "rdf:object"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#mappingHasStandoffClass",
+      "@type": "owl:ObjectProperty",
+      "http://www.knora.org/ontology/knora-base#objectClassConstraint": {
+        "@id": "owl:Class"
+      },
+      "http://www.knora.org/ontology/knora-base#subjectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#MappingComponent"
+      },
+      "rdfs:comment": {
+        "@language": "en",
+        "@value": "IRI of the standoff class"
+      },
+      "rdfs:label": {
+        "@language": "en",
+        "@value": "IRI of the standoff class"
+      },
+      "rdfs:subPropertyOf": {
+        "@id": "http://www.knora.org/ontology/knora-base#objectCannotBeMarkedAsDeleted"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#valueHasRefCount",
+      "@type": "owl:DatatypeProperty",
+      "http://www.knora.org/ontology/knora-base#objectDatatypeConstraint": {
+        "@id": "xsd:integer"
+      },
+      "http://www.knora.org/ontology/knora-base#subjectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#LinkValue"
+      },
+      "rdfs:subPropertyOf": {
+        "@id": "http://www.knora.org/ontology/knora-base#valueHas"
+      }
+    },
+    {
+      "@id": "_:ub20bL2254C27",
+      "@type": "owl:Restriction",
+      "owl:maxCardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "1"
+      },
+      "owl:onProperty": {
+        "@id": "http://www.knora.org/ontology/knora-base#standoffTagHasEndIndex"
+      }
+    },
+    {
+      "@id": "_:ub20bL1741C35",
+      "@type": "owl:Restriction",
+      "owl:cardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "1"
+      },
+      "owl:onProperty": {
+        "@id": "http://www.knora.org/ontology/knora-base#extResId"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#DateValue",
+      "@type": "owl:Class",
+      "rdfs:comment": {
+        "@language": "en",
+        "@value": "Represents a Knora date value"
+      },
+      "rdfs:subClassOf": [
+        {
+          "@id": "http://www.knora.org/ontology/knora-base#Value"
+        },
+        {
+          "@id": "http://www.knora.org/ontology/knora-base#DateBase"
+        }
+      ]
+    },
+    {
+      "@id": "_:ub20bL2638C24",
+      "@type": "owl:Restriction",
+      "owl:cardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "1"
+      },
+      "owl:onProperty": {
+        "@id": "http://www.knora.org/ontology/knora-base#isDeleted"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#standoffTagHasEndIndex",
+      "@type": "owl:DatatypeProperty",
+      "http://www.knora.org/ontology/knora-base#objectDatatypeConstraint": {
+        "@id": "xsd:integer"
+      },
+      "http://www.knora.org/ontology/knora-base#subjectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#StandoffTag"
+      },
+      "rdfs:subPropertyOf": {
+        "@id": "http://www.knora.org/ontology/knora-base#objectCannotBeMarkedAsDeleted"
+      }
+    },
+    {
+      "@id": "_:ub20bL2013C27",
+      "@type": "owl:Restriction",
+      "owl:maxCardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "1"
+      },
+      "owl:onProperty": {
+        "@id": "http://www.knora.org/ontology/knora-base#listNodeName"
+      }
+    },
+    {
+      "@id": "_:ub20bL2302C31",
+      "@type": "owl:Restriction",
+      "owl:cardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "1"
+      },
+      "owl:onProperty": {
+        "@id": "http://www.knora.org/ontology/knora-base#standoffTagHasLink"
+      }
+    },
+    {
+      "@id": "_:ub20bL2081C33",
+      "@type": "owl:Restriction",
+      "owl:minCardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "1"
+      },
+      "owl:onProperty": {
+        "@id": "http://www.knora.org/ontology/knora-base#hasMovingImageFileValue"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#IntervalValue",
+      "@type": "owl:Class",
+      "rdfs:comment": {
+        "@language": "en",
+        "@value": "Represents a time interval, e.g. in an audio recording"
+      },
+      "rdfs:subClassOf": [
+        {
+          "@id": "http://www.knora.org/ontology/knora-base#Value"
+        },
+        {
+          "@id": "http://www.knora.org/ontology/knora-base#IntervalBase"
+        }
+      ]
+    },
+    {
+      "@id": "_:ub20bL1684C27",
+      "@type": "owl:Restriction",
+      "owl:cardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "1"
+      },
+      "owl:onProperty": {
+        "@id": "http://www.knora.org/ontology/knora-base#valueHasEndJDN"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#isMainResource",
+      "@type": "owl:DatatypeProperty",
+      "http://www.knora.org/ontology/knora-base#objectDatatypeConstraint": {
+        "@id": "xsd:boolean"
+      },
+      "http://www.knora.org/ontology/knora-base#subjectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#Resource"
+      },
+      "rdfs:comment": {
+        "@language": "en",
+        "@value": "Indicates if the given resource is the main resource of a request or a resource referred to by a link property."
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#valueHasIntervalEnd",
+      "@type": "owl:DatatypeProperty",
+      "http://www.knora.org/ontology/knora-base#objectDatatypeConstraint": {
+        "@id": "xsd:decimal"
+      },
+      "http://www.knora.org/ontology/knora-base#subjectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#IntervalBase"
+      },
+      "rdfs:subPropertyOf": {
+        "@id": "http://www.knora.org/ontology/knora-base#valueHas"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#mappingHasStandoffProperty",
+      "@type": "owl:ObjectProperty",
+      "http://www.knora.org/ontology/knora-base#objectClassConstraint": {
+        "@id": "owl:DatatypeProperty"
+      },
+      "http://www.knora.org/ontology/knora-base#subjectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#MappingXMLAttribute"
+      },
+      "rdfs:comment": {
+        "@language": "en",
+        "@value": "IRI of the standoff property"
+      },
+      "rdfs:label": {
+        "@language": "en",
+        "@value": "IRI of the standoff property"
+      },
+      "rdfs:subPropertyOf": {
+        "@id": "http://www.knora.org/ontology/knora-base#objectCannotBeMarkedAsDeleted"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#originalMimeType",
+      "@type": "owl:DatatypeProperty",
+      "http://www.knora.org/ontology/knora-base#objectDatatypeConstraint": {
+        "@id": "xsd:string"
+      },
+      "http://www.knora.org/ontology/knora-base#subjectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#FileValue"
+      },
+      "rdfs:subPropertyOf": {
+        "@id": "http://www.knora.org/ontology/knora-base#valueHas"
+      }
+    },
+    {
+      "@id": "_:ub20bL2005C27",
+      "@type": "owl:Restriction",
+      "owl:minCardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "0"
+      },
+      "owl:onProperty": {
+        "@id": "http://www.knora.org/ontology/knora-base#hasSubListNode"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#AudioRepresentation",
+      "@type": "owl:Class",
+      "rdfs:comment": {
+        "@language": "en",
+        "@value": "Represents a file containing audio data"
+      },
+      "rdfs:label": [
+        {
+          "@language": "de",
+          "@value": "Repräsentation (Audio)"
+        },
+        {
+          "@language": "fr",
+          "@value": "Répresentation (Audio)"
+        },
+        {
+          "@language": "en",
+          "@value": "Representation (Audio)"
+        },
+        {
+          "@language": "it",
+          "@value": "Rappresentazione (Audio)"
+        }
+      ],
+      "rdfs:subClassOf": [
+        {
+          "@id": "_:ub20bL1603C33"
+        },
+        {
+          "@id": "http://www.knora.org/ontology/knora-base#Representation"
+        }
+      ]
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#valueHasGeometry",
+      "@type": "owl:DatatypeProperty",
+      "http://www.knora.org/ontology/knora-base#objectDatatypeConstraint": {
+        "@id": "xsd:string"
+      },
+      "http://www.knora.org/ontology/knora-base#subjectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#GeomValue"
+      },
+      "rdfs:comment": {
+        "@language": "en",
+        "@value": "JSON string describing a geometry (e.g. a region). Currently geometries are limited to 2D unions of primitive objects like circles, squares and polygons."
+      },
+      "rdfs:subPropertyOf": {
+        "@id": "http://www.knora.org/ontology/knora-base#valueHas"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#valueHasUri",
+      "@type": "owl:DatatypeProperty",
+      "http://www.knora.org/ontology/knora-base#objectDatatypeConstraint": {
+        "@id": "xsd:anyURI"
+      },
+      "http://www.knora.org/ontology/knora-base#subjectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#UriBase"
+      },
+      "rdfs:subPropertyOf": {
+        "@id": "http://www.knora.org/ontology/knora-base#valueHas"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#XSLTransformation",
+      "@type": "owl:Class",
+      "rdfs:comment": {
+        "@language": "en",
+        "@value": "a TextRepresentation representing an XSL transformation that can be applied to an XML created from standoff.  The transformation's result is ecptected to be HTML."
+      },
+      "rdfs:label": {
+        "@language": "en",
+        "@value": "a TextRepresentation representing an XSL transformation that can be applied to an XML created from standoff. The transformation's result is ecptected to be HTML."
+      },
+      "rdfs:subClassOf": [
+        {
+          "@id": "_:ub20bL2475C37"
+        },
+        {
+          "@id": "http://www.knora.org/ontology/knora-base#TextRepresentation"
+        }
+      ]
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#extResId",
+      "@type": "owl:DatatypeProperty",
+      "http://www.knora.org/ontology/knora-base#objectDatatypeConstraint": {
+        "@id": "xsd:string"
+      },
+      "http://www.knora.org/ontology/knora-base#subjectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#ExternalResValue"
+      },
+      "rdfs:comment": {
+        "@language": "en",
+        "@value": "The ID of the external resource. The form of the ID is dependent on the provider."
+      },
+      "rdfs:subPropertyOf": {
+        "@id": "http://www.knora.org/ontology/knora-base#valueHas"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#BooleanValue",
+      "@type": "owl:Class",
+      "rdfs:comment": {
+        "@language": "en",
+        "@value": "Represents a boolean value"
+      },
+      "rdfs:subClassOf": [
+        {
+          "@id": "http://www.knora.org/ontology/knora-base#BooleanBase"
+        },
+        {
+          "@id": "http://www.knora.org/ontology/knora-base#Value"
+        }
+      ]
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#hasSubListNode",
+      "@type": "owl:ObjectProperty",
+      "http://www.knora.org/ontology/knora-base#objectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#ListNode"
+      },
+      "http://www.knora.org/ontology/knora-base#subjectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#ListNode"
+      },
+      "rdfs:comment": {
+        "@language": "en",
+        "@value": "A hierarchical list is formed using the \"hasSubListNode\"-property"
+      },
+      "rdfs:subPropertyOf": {
+        "@id": "http://www.knora.org/ontology/knora-base#objectCannotBeMarkedAsDeleted"
+      }
+    },
+    {
+      "@id": "_:ub20bL1603C33",
+      "@type": "owl:Restriction",
+      "owl:minCardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "1"
+      },
+      "owl:onProperty": {
+        "@id": "http://www.knora.org/ontology/knora-base#hasAudioFileValue"
+      }
+    },
+    {
+      "@id": "_:ub20bL2196C27",
+      "@type": "owl:Restriction",
+      "owl:maxCardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "1"
+      },
+      "owl:onProperty": {
+        "@id": "http://www.knora.org/ontology/knora-base#lastModificationDate"
+      }
+    },
+    {
+      "@id": "_:ub20bL2642C24",
+      "@type": "owl:Restriction",
+      "owl:maxCardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "1"
+      },
+      "owl:onProperty": {
+        "@id": "http://www.knora.org/ontology/knora-base#deleteDate"
+      }
+    },
+    {
+      "@id": "_:ub20bL2545C17",
+      "@type": "owl:Restriction",
+      "owl:maxCardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "1"
+      },
+      "owl:onProperty": {
+        "@id": "http://www.knora.org/ontology/knora-base#mappingHasXMLNamespace"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#valueHasStandoff",
+      "@type": "owl:ObjectProperty",
+      "http://www.knora.org/ontology/knora-base#objectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#StandoffTag"
+      },
+      "http://www.knora.org/ontology/knora-base#subjectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#TextValue"
+      },
+      "rdfs:subPropertyOf": {
+        "@id": "http://www.knora.org/ontology/knora-base#valueHas"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#standoffTagHasStartParent",
+      "@type": "owl:ObjectProperty",
+      "http://www.knora.org/ontology/knora-base#objectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#StandoffTag"
+      },
+      "http://www.knora.org/ontology/knora-base#subjectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#StandoffTag"
+      },
+      "rdfs:subPropertyOf": {
+        "@id": "http://www.knora.org/ontology/knora-base#objectCannotBeMarkedAsDeleted"
+      }
+    },
+    {
+      "@id": "_:ub20bL1655C33",
+      "@type": "owl:Restriction",
+      "owl:minCardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "1"
+      },
+      "owl:onProperty": {
+        "@id": "http://www.knora.org/ontology/knora-base#hasDDDFileValue"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#valueHasStartPrecision",
+      "@type": "owl:DatatypeProperty",
+      "http://www.knora.org/ontology/knora-base#objectDatatypeConstraint": {
+        "@id": "xsd:string"
+      },
+      "http://www.knora.org/ontology/knora-base#subjectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#DateBase"
+      },
+      "rdfs:comment": {
+        "@language": "en",
+        "@value": "The precision the start of a date. Allowed values are \"DAY\", \"MONTH\", or \"YEAR\"."
+      },
+      "rdfs:subPropertyOf": {
+        "@id": "http://www.knora.org/ontology/knora-base#valueHas"
+      }
+    },
+    {
+      "@id": "_:ub20bL1783C28",
+      "@type": "owl:Restriction",
+      "owl:maxCardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "1"
+      },
+      "owl:onProperty": {
+        "@id": "http://www.knora.org/ontology/knora-base#isPreview"
+      }
+    },
+    {
+      "@id": "_:ub20bL2250C27",
+      "@type": "owl:Restriction",
+      "owl:cardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "1"
+      },
+      "owl:onProperty": {
+        "@id": "http://www.knora.org/ontology/knora-base#standoffTagHasStartIndex"
+      }
+    },
+    {
+      "@id": "_:ub20bL2650C24",
+      "@type": "owl:Restriction",
+      "owl:maxCardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "1"
+      },
+      "owl:onProperty": {
+        "@id": "http://www.knora.org/ontology/knora-base#previousValue"
+      }
+    },
+    {
+      "@id": "_:ub20bL2454C37",
+      "@type": "owl:Restriction",
+      "owl:minCardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "1"
+      },
+      "owl:onProperty": {
+        "@id": "http://www.knora.org/ontology/knora-base#hasTextFileValue"
+      }
+    },
+    {
+      "@id": "_:ub20bL1953C26",
+      "@type": "owl:Restriction",
+      "owl:minCardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "0"
+      },
+      "owl:onProperty": {
+        "@id": "http://www.knora.org/ontology/knora-base#hasComment"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#deleteComment",
+      "@type": "owl:DatatypeProperty",
+      "http://www.knora.org/ontology/knora-base#objectDatatypeConstraint": {
+        "@id": "xsd:string"
+      },
+      "rdfs:comment": {
+        "@language": "en",
+        "@value": "A comment explaining why a resource or value was marked as deleted"
+      },
+      "rdfs:subPropertyOf": {
+        "@id": "http://www.knora.org/ontology/knora-base#objectCannotBeMarkedAsDeleted"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#valueCreationDate",
+      "@type": "owl:DatatypeProperty",
+      "http://www.knora.org/ontology/knora-base#objectDatatypeConstraint": {
+        "@id": "xsd:dateTimeStamp"
+      },
+      "http://www.knora.org/ontology/knora-base#subjectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#Value"
+      },
+      "rdfs:subPropertyOf": {
+        "@id": "http://www.knora.org/ontology/knora-base#valueHas"
+      }
+    },
+    {
+      "@id": "_:ub20bL1563C29",
+      "@type": "owl:Restriction",
+      "owl:minCardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "1"
+      },
+      "owl:onProperty": {
+        "@id": "http://www.knora.org/ontology/knora-base#isAnnotationOf"
+      }
+    },
+    {
+      "@id": "_:ub20bL1795C28",
+      "@type": "owl:Restriction",
+      "owl:cardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "1"
+      },
+      "owl:onProperty": {
+        "@id": "http://www.knora.org/ontology/knora-base#internalMimeType"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#subjectClassConstraint",
+      "@type": "owl:ObjectProperty",
+      "rdfs:comment": {
+        "@language": "en",
+        "@value": "Specifies the OWL class that the subject of a property must belong to"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#isPreview",
+      "@type": "owl:DatatypeProperty",
+      "http://www.knora.org/ontology/knora-base#objectDatatypeConstraint": {
+        "@id": "xsd:boolean"
+      },
+      "http://www.knora.org/ontology/knora-base#subjectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#FileValue"
+      },
+      "rdfs:subPropertyOf": {
+        "@id": "http://www.knora.org/ontology/knora-base#valueHas"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#listNodeName",
+      "@type": "owl:DatatypeProperty",
+      "http://www.knora.org/ontology/knora-base#objectDatatypeConstraint": {
+        "@id": "xsd:string"
+      },
+      "http://www.knora.org/ontology/knora-base#subjectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#ListNode"
+      },
+      "rdfs:subPropertyOf": {
+        "@id": "http://www.knora.org/ontology/knora-base#objectCannotBeMarkedAsDeleted"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#Value",
+      "@type": "owl:Class",
+      "rdfs:comment": {
+        "@language": "en",
+        "@value": "The base class of classes representing Knora values"
+      },
+      "rdfs:subClassOf": [
+        {
+          "@id": "_:ub20bL2642C24"
+        },
+        {
+          "@id": "_:ub20bL2654C24"
+        },
+        {
+          "@id": "_:ub20bL2618C24"
+        },
+        {
+          "@id": "http://www.knora.org/ontology/knora-base#ValueBase"
+        },
+        {
+          "@id": "_:ub20bL2622C24"
+        },
+        {
+          "@id": "_:ub20bL2650C24"
+        },
+        {
+          "@id": "_:ub20bL2626C24"
+        },
+        {
+          "@id": "_:ub20bL2646C24"
+        },
+        {
+          "@id": "_:ub20bL2634C24"
+        },
+        {
+          "@id": "_:ub20bL2630C24"
+        },
+        {
+          "@id": "_:ub20bL2638C24"
+        }
+      ]
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#address",
+      "@type": "owl:DatatypeProperty",
+      "http://www.knora.org/ontology/knora-base#objectDatatypeConstraint": {
+        "@id": "xsd:string"
+      },
+      "rdfs:comment": {
+        "@language": "en",
+        "@value": "Address of a person or an institution"
+      },
+      "rdfs:subPropertyOf": {
+        "@id": "http://www.knora.org/ontology/knora-base#objectCannotBeMarkedAsDeleted"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#website",
+      "@type": "owl:DatatypeProperty",
+      "http://www.knora.org/ontology/knora-base#objectDatatypeConstraint": {
+        "@id": "xsd:anyURI"
+      },
+      "rdfs:comment": {
+        "@language": "en",
+        "@value": "The URL of a web site"
+      },
+      "rdfs:subPropertyOf": {
+        "@id": "http://www.knora.org/ontology/knora-base#objectCannotBeMarkedAsDeleted"
+      }
+    },
+    {
+      "@id": "_:ub20bL2404C38",
+      "@type": "owl:Restriction",
+      "owl:cardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "1"
+      },
+      "owl:onProperty": {
+        "@id": "http://www.knora.org/ontology/knora-base#qualityLevel"
+      }
+    },
+    {
+      "@id": "_:ub20bL2168C27",
+      "@type": "owl:Restriction",
+      "owl:cardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "1"
+      },
+      "owl:onProperty": {
+        "@id": "http://www.knora.org/ontology/knora-base#isDeleted"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#DDDrepresentation",
+      "@type": "owl:Class",
+      "rdfs:comment": {
+        "@language": "en",
+        "@value": "Represents a file containg 3D data"
+      },
+      "rdfs:label": [
+        {
+          "@language": "it",
+          "@value": "Rappresentazione (3D)"
+        },
+        {
+          "@language": "fr",
+          "@value": "Répresentation (3D)"
+        },
+        {
+          "@language": "en",
+          "@value": "Representation (3D)"
+        },
+        {
+          "@language": "de",
+          "@value": "Repräsentation (3D)"
+        }
+      ],
+      "rdfs:subClassOf": [
+        {
+          "@id": "_:ub20bL1655C33"
+        },
+        {
+          "@id": "http://www.knora.org/ontology/knora-base#Representation"
+        }
+      ]
+    },
+    {
+      "@id": "_:ub20bL2063C39",
+      "@type": "owl:Restriction",
+      "owl:cardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "1"
+      },
+      "owl:onProperty": {
+        "@id": "http://www.knora.org/ontology/knora-base#qualityLevel"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#valueHasListNode",
+      "@type": "owl:ObjectProperty",
+      "http://www.knora.org/ontology/knora-base#objectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#ListNode"
+      },
+      "http://www.knora.org/ontology/knora-base#subjectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#ListValue"
+      },
+      "rdfs:subPropertyOf": {
+        "@id": "http://www.knora.org/ontology/knora-base#valueHas"
+      }
+    },
+    {
+      "@id": "_:ub20bL1988C28",
+      "@type": "owl:Restriction",
+      "owl:cardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "1"
+      },
+      "owl:onProperty": {
+        "@id": "rdf:predicate"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#standoffTagHasEnd",
+      "@type": "owl:DatatypeProperty",
+      "http://www.knora.org/ontology/knora-base#objectDatatypeConstraint": {
+        "@id": "xsd:integer"
+      },
+      "http://www.knora.org/ontology/knora-base#subjectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#StandoffTag"
+      },
+      "rdfs:subPropertyOf": {
+        "@id": "http://www.knora.org/ontology/knora-base#objectCannotBeMarkedAsDeleted"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#ListNode",
+      "@type": "owl:Class",
+      "rdfs:comment": {
+        "@language": "en",
+        "@value": "Represents a flat or hierarchical list"
+      },
+      "rdfs:subClassOf": [
+        {
+          "@id": "_:ub20bL2017C27"
+        },
+        {
+          "@id": "_:ub20bL2009C27"
+        },
+        {
+          "@id": "_:ub20bL2005C27"
+        },
+        {
+          "@id": "_:ub20bL2021C27"
+        },
+        {
+          "@id": "_:ub20bL2025C27"
+        },
+        {
+          "@id": "_:ub20bL2013C27"
+        }
+      ]
+    },
+    {
+      "@id": "_:ub20bL2188C27",
+      "@type": "owl:Restriction",
+      "owl:cardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "1"
+      },
+      "owl:onProperty": {
+        "@id": "http://www.knora.org/ontology/knora-base#hasPermissions"
+      }
+    },
+    {
+      "@id": "_:ub20bL2583C21",
+      "@type": "owl:Restriction",
+      "owl:maxCardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "1"
+      },
+      "owl:onProperty": {
+        "@id": "http://www.knora.org/ontology/knora-base#mappingHasDefaultXSLTransformation"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#objectClassConstraint",
+      "@type": "owl:ObjectProperty",
+      "rdfs:comment": {
+        "@language": "en",
+        "@value": "Specifies the OWL class that the object of a property must belong to"
+      }
+    },
+    {
+      "@id": "_:ub20bL2622C24",
+      "@type": "owl:Restriction",
+      "owl:cardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "1"
+      },
+      "owl:onProperty": {
+        "@id": "http://www.knora.org/ontology/knora-base#attachedToUser"
+      }
+    },
+    {
+      "@id": "_:ub20bL2180C27",
+      "@type": "owl:Restriction",
+      "owl:cardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "1"
+      },
+      "owl:onProperty": {
+        "@id": "http://www.knora.org/ontology/knora-base#attachedToUser"
+      }
+    },
+    {
+      "@id": "_:ub20bL1791C28",
+      "@type": "owl:Restriction",
+      "owl:cardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "1"
+      },
+      "owl:onProperty": {
+        "@id": "http://www.knora.org/ontology/knora-base#internalFilename"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#hasMappingElement",
+      "@type": "owl:ObjectProperty",
+      "http://www.knora.org/ontology/knora-base#objectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#MappingElement"
+      },
+      "http://www.knora.org/ontology/knora-base#subjectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#XMLToStandoffMapping"
+      },
+      "rdfs:comment": {
+        "@language": "en",
+        "@value": "Represents an element in a mapping"
+      },
+      "rdfs:label": {
+        "@language": "en",
+        "@value": "mapping element"
+      },
+      "rdfs:subPropertyOf": {
+        "@id": "http://www.knora.org/ontology/knora-base#objectCannotBeMarkedAsDeleted"
+      }
+    },
+    {
+      "@id": "_:ub20bL1957C26",
+      "@type": "owl:Restriction",
+      "owl:minCardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "1"
+      },
+      "owl:onProperty": {
+        "@id": "http://www.knora.org/ontology/knora-base#hasLinkTo"
+      }
+    },
+    {
+      "@id": "_:ub20bL1589C33",
+      "@type": "owl:Restriction",
+      "owl:cardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "1"
+      },
+      "owl:onProperty": {
+        "@id": "http://www.knora.org/ontology/knora-base#duration"
+      }
+    },
+    {
+      "@id": "_:ub20bL1984C28",
+      "@type": "owl:Restriction",
+      "owl:cardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "1"
+      },
+      "owl:onProperty": {
+        "@id": "rdf:subject"
+      }
+    },
+    {
+      "@id": "_:ub20bL2557C17",
+      "@type": "owl:Restriction",
+      "owl:minCardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "0"
+      },
+      "owl:onProperty": {
+        "@id": "http://www.knora.org/ontology/knora-base#mappingHasXMLAttribute"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#mappingHasXMLNamespace",
+      "@type": "owl:DatatypeProperty",
+      "http://www.knora.org/ontology/knora-base#objectDatatypeConstraint": {
+        "@id": "xsd:string"
+      },
+      "http://www.knora.org/ontology/knora-base#subjectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#MappingComponent"
+      },
+      "rdfs:comment": {
+        "@language": "en",
+        "@value": "namespace of the XML tag"
+      },
+      "rdfs:label": {
+        "@language": "en",
+        "@value": "namespace of the XML tag"
+      },
+      "rdfs:subPropertyOf": {
+        "@id": "http://www.knora.org/ontology/knora-base#objectCannotBeMarkedAsDeleted"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#ExternalResource",
+      "@type": "owl:Class",
+      "rdfs:comment": {
+        "@language": "en",
+        "@value": "Represents a proxy for an object stored by an external provider"
+      },
+      "rdfs:label": [
+        {
+          "@language": "en",
+          "@value": "External Resource"
+        },
+        {
+          "@language": "it",
+          "@value": "Risorsa esterna"
+        },
+        {
+          "@language": "de",
+          "@value": "Externe Ressource"
+        },
+        {
+          "@language": "fr",
+          "@value": "Ressource Externe"
+        }
+      ],
+      "rdfs:subClassOf": [
+        {
+          "@id": "http://www.knora.org/ontology/knora-base#Resource"
+        },
+        {
+          "@id": "_:ub20bL1761C35"
+        }
+      ]
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#Annotation",
+      "@type": "owl:Class",
+      "rdfs:comment": {
+        "@language": "en",
+        "@value": "A generic class for representing annotations"
+      },
+      "rdfs:label": [
+        {
+          "@language": "fr",
+          "@value": "Annotation"
+        },
+        {
+          "@language": "de",
+          "@value": "Annotation"
+        },
+        {
+          "@language": "it",
+          "@value": "Annotation"
+        },
+        {
+          "@language": "en",
+          "@value": "Annotation"
+        }
+      ],
+      "rdfs:subClassOf": [
+        {
+          "@id": "_:ub20bL1567C29"
+        },
+        {
+          "@id": "_:ub20bL1563C29"
+        },
+        {
+          "@id": "http://www.knora.org/ontology/knora-base#Resource"
+        },
+        {
+          "@id": "_:ub20bL1559C29"
+        }
+      ]
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#mappingHasXMLAttribute",
+      "@type": "owl:ObjectProperty",
+      "http://www.knora.org/ontology/knora-base#objectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#MappingXMLAttribute"
+      },
+      "http://www.knora.org/ontology/knora-base#subjectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#MappingElement"
+      },
+      "rdfs:comment": {
+        "@language": "en",
+        "@value": "name of the XML attribute"
+      },
+      "rdfs:label": {
+        "@language": "en",
+        "@value": "name of the XML attribute"
+      },
+      "rdfs:subPropertyOf": {
+        "@id": "http://www.knora.org/ontology/knora-base#objectCannotBeMarkedAsDeleted"
+      }
+    },
+    {
+      "@id": "_:ub20bL2143C33",
+      "@type": "owl:Restriction",
+      "owl:minCardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "1"
+      },
+      "owl:onProperty": {
+        "@id": "http://www.knora.org/ontology/knora-base#hasFileValue"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#GeomValue",
+      "@type": "owl:Class",
+      "rdfs:comment": {
+        "@language": "en",
+        "@value": "Represents a geometrical objects as JSON string"
+      },
+      "rdfs:subClassOf": [
+        {
+          "@id": "http://www.knora.org/ontology/knora-base#Value"
+        },
+        {
+          "@id": "_:ub20bL1832C28"
+        }
+      ]
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#hasRepresentationValue",
+      "@type": "owl:ObjectProperty",
+      "http://www.knora.org/ontology/knora-base#objectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#LinkValue"
+      },
+      "http://www.knora.org/ontology/knora-base#subjectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#Resource"
+      },
+      "rdfs:subPropertyOf": {
+        "@id": "http://www.knora.org/ontology/knora-base#hasLinkToValue"
+      }
+    },
+    {
+      "@id": "_:ub20bL1559C29",
+      "@type": "owl:Restriction",
+      "owl:minCardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "1"
+      },
+      "owl:onProperty": {
+        "@id": "http://www.knora.org/ontology/knora-base#hasComment"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#originalFilename",
+      "@type": "owl:DatatypeProperty",
+      "http://www.knora.org/ontology/knora-base#objectDatatypeConstraint": {
+        "@id": "xsd:string"
+      },
+      "http://www.knora.org/ontology/knora-base#subjectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#FileValue"
+      },
+      "rdfs:subPropertyOf": {
+        "@id": "http://www.knora.org/ontology/knora-base#valueHas"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#AudioFileValue",
+      "@type": "owl:Class",
+      "rdfs:comment": {
+        "@language": "en",
+        "@value": "Represents an audio file"
+      },
+      "rdfs:subClassOf": [
+        {
+          "@id": "_:ub20bL1589C33"
+        },
+        {
+          "@id": "http://www.knora.org/ontology/knora-base#FileValue"
+        }
+      ]
+    },
+    {
+      "@id": "_:ub20bL2115C25",
+      "@type": "owl:Restriction",
+      "owl:cardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "1"
+      },
+      "owl:onProperty": {
+        "@id": "http://www.knora.org/ontology/knora-base#isRegionOf"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#valueHasBoolean",
+      "@type": "owl:DatatypeProperty",
+      "http://www.knora.org/ontology/knora-base#objectDatatypeConstraint": {
+        "@id": "xsd:boolean"
+      },
+      "http://www.knora.org/ontology/knora-base#subjectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#BooleanBase"
+      },
+      "rdfs:subPropertyOf": {
+        "@id": "http://www.knora.org/ontology/knora-base#valueHas"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#UriValue",
+      "@type": "owl:Class",
+      "rdfs:comment": {
+        "@language": "en",
+        "@value": "Represents a URI"
+      },
+      "rdfs:subClassOf": [
+        {
+          "@id": "http://www.knora.org/ontology/knora-base#Value"
+        },
+        {
+          "@id": "http://www.knora.org/ontology/knora-base#UriBase"
+        }
+      ]
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#hasLinkTo",
+      "@type": "owl:ObjectProperty",
+      "http://www.knora.org/ontology/knora-base#objectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#Resource"
+      },
+      "http://www.knora.org/ontology/knora-base#subjectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#Resource"
+      },
+      "rdfs:comment": {
+        "@language": "en",
+        "@value": "Represents a direct connection between two resources"
+      },
+      "rdfs:label": [
+        {
+          "@language": "en",
+          "@value": "has Link to"
+        },
+        {
+          "@language": "it",
+          "@value": "ha Link verso"
+        },
+        {
+          "@language": "de",
+          "@value": "hat Link zu"
+        },
+        {
+          "@language": "fr",
+          "@value": "a lien vers"
+        }
+      ],
+      "rdfs:subPropertyOf": {
+        "@id": "http://www.knora.org/ontology/knora-base#resourceProperty"
+      }
+    },
+    {
+      "@id": "_:ub20bL2172C27",
+      "@type": "owl:Restriction",
+      "owl:minCardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "0"
+      },
+      "owl:onProperty": {
+        "@id": "http://www.knora.org/ontology/knora-base#hasStandoffLinkTo"
+      }
+    },
+    {
+      "@id": "_:ub20bL2164C27",
+      "@type": "owl:Restriction",
+      "owl:cardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "1"
+      },
+      "owl:onProperty": {
+        "@id": "rdfs:label"
+      }
+    },
+    {
+      "@id": "_:ub20bL1878C30",
+      "@type": "owl:Restriction",
+      "owl:cardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "1"
+      },
+      "owl:onProperty": {
+        "@id": "http://www.knora.org/ontology/knora-base#valueHasBoolean"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#UriBase",
+      "@type": "owl:Class",
+      "rdfs:subClassOf": [
+        {
+          "@id": "_:ub20bL1900C26"
+        },
+        {
+          "@id": "http://www.knora.org/ontology/knora-base#ValueBase"
+        }
+      ]
+    },
+    {
+      "@id": "_:ub20bL1749C35",
+      "@type": "owl:Restriction",
+      "owl:cardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "1"
+      },
+      "owl:onProperty": {
+        "@id": "http://www.knora.org/ontology/knora-base#extResAccessInfo"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#hasDDDFileValue",
+      "@type": "owl:ObjectProperty",
+      "http://www.knora.org/ontology/knora-base#objectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#DDDFileValue"
+      },
+      "http://www.knora.org/ontology/knora-base#subjectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#DDDRepresentation"
+      },
+      "rdfs:comment": {
+        "@language": "en",
+        "@value": "Connects a Representation to a 3D-file"
+      },
+      "rdfs:label": [
+        {
+          "@language": "de",
+          "@value": "hat 3D-Datei"
+        },
+        {
+          "@language": "fr",
+          "@value": "a ficher de 3D"
+        },
+        {
+          "@language": "it",
+          "@value": "ha file 3D"
+        },
+        {
+          "@language": "en",
+          "@value": "has 3D-file"
+        }
+      ],
+      "rdfs:subPropertyOf": {
+        "@id": "http://www.knora.org/ontology/knora-base#hasFileValue"
+      },
+      "salsah-gui:guiElement": {
+        "@id": "salsah-gui:Fileupload"
+      }
+    },
+    {
+      "@id": "_:ub20bL2630C24",
+      "@type": "owl:Restriction",
+      "owl:maxCardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "1"
+      },
+      "owl:onProperty": {
+        "@id": "http://www.knora.org/ontology/knora-base#valueHasOrder"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#valueHasEndPrecision",
+      "@type": "owl:DatatypeProperty",
+      "http://www.knora.org/ontology/knora-base#objectDatatypeConstraint": {
+        "@id": "xsd:string"
+      },
+      "http://www.knora.org/ontology/knora-base#subjectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#DateBase"
+      },
+      "rdfs:comment": {
+        "@language": "en",
+        "@value": "Precision of knowledge about the end of the date. Allowed are \"DAY\", \"MONTH\" or \"YEAR\"."
+      },
+      "rdfs:subPropertyOf": {
+        "@id": "http://www.knora.org/ontology/knora-base#valueHas"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#StandoffTag",
+      "@type": "owl:Class",
+      "rdfs:comment": {
+        "@language": "en",
+        "@value": "Represents a standoff tag in a TextValue"
+      },
+      "rdfs:subClassOf": [
+        {
+          "@id": "_:ub20bL2242C27"
+        },
+        {
+          "@id": "_:ub20bL2246C27"
+        },
+        {
+          "@id": "_:ub20bL2254C27"
+        },
+        {
+          "@id": "_:ub20bL2262C27"
+        },
+        {
+          "@id": "_:ub20bL2238C27"
+        },
+        {
+          "@id": "_:ub20bL2250C27"
+        },
+        {
+          "@id": "_:ub20bL2234C27"
+        },
+        {
+          "@id": "_:ub20bL2258C27"
+        },
+        {
+          "@id": "_:ub20bL2266C27"
+        }
+      ]
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#mappingHasXMLTagname",
+      "@type": "owl:DatatypeProperty",
+      "http://www.knora.org/ontology/knora-base#objectDatatypeConstraint": {
+        "@id": "xsd:string"
+      },
+      "http://www.knora.org/ontology/knora-base#subjectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#MappingElement"
+      },
+      "rdfs:comment": {
+        "@language": "en",
+        "@value": "name of the XML tag"
+      },
+      "rdfs:label": {
+        "@language": "en",
+        "@value": "name of the XML tag"
+      },
+      "rdfs:subPropertyOf": {
+        "@id": "http://www.knora.org/ontology/knora-base#objectCannotBeMarkedAsDeleted"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#ColorValue",
+      "@type": "owl:Class",
+      "rdfs:comment": {
+        "@language": "en",
+        "@value": "Represents a color in HTML format, e.g. \"#33eeff\""
+      },
+      "rdfs:subClassOf": [
+        {
+          "@id": "http://www.knora.org/ontology/knora-base#Value"
+        },
+        {
+          "@id": "http://www.knora.org/ontology/knora-base#ColorBase"
+        }
+      ]
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#extResAccessInfo",
+      "@type": "owl:DatatypeProperty",
+      "http://www.knora.org/ontology/knora-base#objectDatatypeConstraint": {
+        "@id": "xsd:string"
+      },
+      "http://www.knora.org/ontology/knora-base#subjectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#ExternalResValue"
+      },
+      "rdfs:comment": {
+        "@language": "en",
+        "@value": "Information (URL etc.) for accessing an external resource"
+      },
+      "rdfs:subPropertyOf": {
+        "@id": "http://www.knora.org/ontology/knora-base#valueHas"
+      }
+    },
+    {
+      "@id": "_:ub20bL2238C27",
+      "@type": "owl:Restriction",
+      "owl:cardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "1"
+      },
+      "owl:onProperty": {
+        "@id": "http://www.knora.org/ontology/knora-base#standoffTagHasEnd"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#dimX",
+      "@type": "owl:DatatypeProperty",
+      "http://www.knora.org/ontology/knora-base#objectDatatypeConstraint": {
+        "@id": "xsd:integer"
+      },
+      "http://www.knora.org/ontology/knora-base#subjectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#FileValue"
+      },
+      "rdfs:subPropertyOf": {
+        "@id": "http://www.knora.org/ontology/knora-base#valueHas"
+      }
+    },
+    {
+      "@id": "_:ub20bL2266C27",
+      "@type": "owl:Restriction",
+      "owl:maxCardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "1"
+      },
+      "owl:onProperty": {
+        "@id": "http://www.knora.org/ontology/knora-base#standoffParentClassConstraint"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#valueHasOrder",
+      "@type": "owl:DatatypeProperty",
+      "http://www.knora.org/ontology/knora-base#objectDatatypeConstraint": {
+        "@id": "xsd:integer"
+      },
+      "http://www.knora.org/ontology/knora-base#subjectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#Value"
+      },
+      "rdfs:subPropertyOf": {
+        "@id": "http://www.knora.org/ontology/knora-base#valueHas"
+      }
+    },
+    {
+      "@id": "_:ub20bL2039C28",
+      "@type": "owl:Restriction",
+      "owl:cardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "1"
+      },
+      "owl:onProperty": {
+        "@id": "http://www.knora.org/ontology/knora-base#valueHasListNode"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#DecimalBase",
+      "@type": "owl:Class",
+      "rdfs:subClassOf": [
+        {
+          "@id": "http://www.knora.org/ontology/knora-base#ValueBase"
+        },
+        {
+          "@id": "_:ub20bL1810C30"
+        }
+      ]
+    },
+    {
+      "@id": "_:ub20bL2522C22",
+      "@type": "owl:Restriction",
+      "owl:cardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "1"
+      },
+      "owl:onProperty": {
+        "@id": "http://www.knora.org/ontology/knora-base#mappingHasXMLNamespace"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#extResProvider",
+      "@type": "owl:DatatypeProperty",
+      "http://www.knora.org/ontology/knora-base#objectDatatypeConstraint": {
+        "@id": "xsd:string"
+      },
+      "http://www.knora.org/ontology/knora-base#subjectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#ExternalResValue"
+      },
+      "rdfs:comment": {
+        "@language": "en",
+        "@value": "The name of the external provider of the resource"
+      },
+      "rdfs:subPropertyOf": {
+        "@id": "http://www.knora.org/ontology/knora-base#valueHas"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#listNodePosition",
+      "@type": "owl:DatatypeProperty",
+      "http://www.knora.org/ontology/knora-base#objectDatatypeConstraint": {
+        "@id": "xsd:integer"
+      },
+      "http://www.knora.org/ontology/knora-base#subjectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#ListNode"
+      },
+      "rdfs:subPropertyOf": {
+        "@id": "http://www.knora.org/ontology/knora-base#objectCannotBeMarkedAsDeleted"
+      }
+    },
+    {
+      "@id": "_:ub20bL2009C27",
+      "@type": "owl:Restriction",
+      "owl:maxCardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "1"
+      },
+      "owl:onProperty": {
+        "@id": "http://www.knora.org/ontology/knora-base#listNodePosition"
+      }
+    },
+    {
+      "@id": "_:ub20bL2127C25",
+      "@type": "owl:Restriction",
+      "owl:minCardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "1"
+      },
+      "owl:onProperty": {
+        "@id": "http://www.knora.org/ontology/knora-base#hasComment"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#valueHasInteger",
+      "@type": "owl:DatatypeProperty",
+      "http://www.knora.org/ontology/knora-base#objectDatatypeConstraint": {
+        "@id": "xsd:integer"
+      },
+      "http://www.knora.org/ontology/knora-base#subjectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#IntBase"
+      },
+      "rdfs:subPropertyOf": {
+        "@id": "http://www.knora.org/ontology/knora-base#valueHas"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#LinkObj",
+      "@type": "owl:Class",
+      "http://www.knora.org/ontology/knora-base#resourceIcon": "link.gif",
+      "rdfs:comment": [
+        {
+          "@language": "de",
+          "@value": "Verknüpfung mehrerer Resourcen"
+        },
+        {
+          "@language": "en",
+          "@value": "Represents a generic link object"
+        }
+      ],
+      "rdfs:label": [
+        {
+          "@language": "fr",
+          "@value": "Objet de lien"
+        },
+        {
+          "@language": "it",
+          "@value": "Oggetto di connessione"
+        },
+        {
+          "@language": "en",
+          "@value": "Link Object"
+        },
+        {
+          "@language": "de",
+          "@value": "Verknüpfungsobjekt"
+        }
+      ],
+      "rdfs:subClassOf": [
+        {
+          "@id": "_:ub20bL1957C26"
+        },
+        {
+          "@id": "_:ub20bL1953C26"
+        },
+        {
+          "@id": "http://www.knora.org/ontology/knora-base#Resource"
+        },
+        {
+          "@id": "_:ub20bL1961C26"
+        }
+      ]
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#valueHas",
+      "@type": "rdf:Property",
+      "http://www.knora.org/ontology/knora-base#subjectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#ValueBase"
+      },
+      "rdfs:subPropertyOf": {
+        "@id": "http://www.knora.org/ontology/knora-base#objectCannotBeMarkedAsDeleted"
+      }
+    },
+    {
+      "@id": "_:ub20bL1745C35",
+      "@type": "owl:Restriction",
+      "owl:cardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "1"
+      },
+      "owl:onProperty": {
+        "@id": "http://www.knora.org/ontology/knora-base#extResProvider"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#valueHasMapping",
+      "@type": "owl:ObjectProperty",
+      "http://www.knora.org/ontology/knora-base#objectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#XMLToStandoffMapping"
+      },
+      "http://www.knora.org/ontology/knora-base#subjectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#TextValue"
+      },
+      "rdfs:subPropertyOf": {
+        "@id": "http://www.knora.org/ontology/knora-base#valueHas"
+      }
+    },
+    {
+      "@id": "_:ub20bL2067C39",
+      "@type": "owl:Restriction",
+      "owl:cardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "1"
+      },
+      "owl:onProperty": {
+        "@id": "http://www.knora.org/ontology/knora-base#duration"
+      }
+    },
+    {
+      "@id": "_:ub20bL2192C27",
+      "@type": "owl:Restriction",
+      "owl:cardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "1"
+      },
+      "owl:onProperty": {
+        "@id": "http://www.knora.org/ontology/knora-base#creationDate"
+      }
+    },
+    {
+      "@id": "_:ub20bL2561C17",
+      "@type": "owl:Restriction",
+      "owl:maxCardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "1"
+      },
+      "owl:onProperty": {
+        "@id": "http://www.knora.org/ontology/knora-base#mappingHasStandoffDataTypeClass"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#resourceIcon",
+      "@type": "owl:DatatypeProperty",
+      "http://www.knora.org/ontology/knora-base#objectDatatypeConstraint": {
+        "@id": "xsd:string"
+      },
+      "http://www.knora.org/ontology/knora-base#subjectClassConstraint": {
+        "@id": "owl:Class"
+      }
+    },
+    {
+      "@id": "_:ub20bL2025C27",
+      "@type": "owl:Restriction",
+      "owl:maxCardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "1"
+      },
+      "owl:onProperty": {
+        "@id": "http://www.knora.org/ontology/knora-base#attachedToProject"
+      }
+    },
+    {
+      "@id": "_:ub20bL2051C39",
+      "@type": "owl:Restriction",
+      "owl:cardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "1"
+      },
+      "owl:onProperty": {
+        "@id": "http://www.knora.org/ontology/knora-base#dimX"
+      }
+    },
+    {
+      "@id": "_:ub20bL2553C17",
+      "@type": "owl:Restriction",
+      "owl:cardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "1"
+      },
+      "owl:onProperty": {
+        "@id": "http://www.knora.org/ontology/knora-base#mappingHasStandoffClass"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#internalMimeType",
+      "@type": "owl:DatatypeProperty",
+      "http://www.knora.org/ontology/knora-base#objectDatatypeConstraint": {
+        "@id": "xsd:string"
+      },
+      "http://www.knora.org/ontology/knora-base#subjectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#FileValue"
+      },
+      "rdfs:subPropertyOf": {
+        "@id": "http://www.knora.org/ontology/knora-base#valueHas"
+      }
+    },
+    {
+      "@id": "_:ub20bL2549C17",
+      "@type": "owl:Restriction",
+      "owl:maxCardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "1"
+      },
+      "owl:onProperty": {
+        "@id": "http://www.knora.org/ontology/knora-base#mappingHasXMLClass"
+      }
+    },
+    {
+      "@id": "_:ub20bL2246C27",
+      "@type": "owl:Restriction",
+      "owl:maxCardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "1"
+      },
+      "owl:onProperty": {
+        "@id": "http://www.knora.org/ontology/knora-base#standoffTagHasOriginalXMLID"
+      }
+    },
+    {
+      "@id": "_:ub20bL2111C25",
+      "@type": "owl:Restriction",
+      "owl:cardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "1"
+      },
+      "owl:onProperty": {
+        "@id": "http://www.knora.org/ontology/knora-base#hasColor"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#mappingHasXMLAttributename",
+      "@type": "owl:DatatypeProperty",
+      "http://www.knora.org/ontology/knora-base#objectDatatypeConstraint": {
+        "@id": "xsd:string"
+      },
+      "http://www.knora.org/ontology/knora-base#subjectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#MappingComponent"
+      },
+      "rdfs:comment": {
+        "@language": "en",
+        "@value": "name of the XML attribute"
+      },
+      "rdfs:label": {
+        "@language": "en",
+        "@value": "name of the XML attribute"
+      },
+      "rdfs:subPropertyOf": {
+        "@id": "http://www.knora.org/ontology/knora-base#objectCannotBeMarkedAsDeleted"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#StillImageFileValue",
+      "@type": "owl:Class",
+      "rdfs:comment": {
+        "@language": "en",
+        "@value": "A file containing a two-dimensional still image"
+      },
+      "rdfs:subClassOf": [
+        {
+          "@id": "http://www.knora.org/ontology/knora-base#FileValue"
+        },
+        {
+          "@id": "_:ub20bL2400C38"
+        },
+        {
+          "@id": "_:ub20bL2408C38"
+        },
+        {
+          "@id": "_:ub20bL2404C38"
+        }
+      ]
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#TextFileValue",
+      "@type": "owl:Class",
+      "rdfs:comment": {
+        "@language": "en",
+        "@value": "A text file such as plain Unicode text, LaTeX, TEI/XML, etc."
+      },
+      "rdfs:subClassOf": {
+        "@id": "http://www.knora.org/ontology/knora-base#FileValue"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#DDDFileValue",
+      "@type": "owl:Class",
+      "rdfs:comment": {
+        "@language": "en",
+        "@value": "This represents some 3D-object with mesh data, point cloud, etc."
+      },
+      "rdfs:subClassOf": {
+        "@id": "http://www.knora.org/ontology/knora-base#FileValue"
+      }
+    },
+    {
+      "@id": "_:ub20bL2176C27",
+      "@type": "owl:Restriction",
+      "owl:minCardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "0"
+      },
+      "owl:onProperty": {
+        "@id": "http://www.knora.org/ontology/knora-base#hasStandoffLinkToValue"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#TextValue",
+      "@type": "owl:Class",
+      "rdfs:subClassOf": [
+        {
+          "@id": "http://www.knora.org/ontology/knora-base#Value"
+        },
+        {
+          "@id": "_:ub20bL2597C28"
+        },
+        {
+          "@id": "_:ub20bL2601C28"
+        }
+      ]
+    },
+    {
+      "@id": "_:ub20bL1846C31",
+      "@type": "owl:Restriction",
+      "owl:cardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "1"
+      },
+      "owl:onProperty": {
+        "@id": "http://www.knora.org/ontology/knora-base#valueHasGeonameCode"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#creationDate",
+      "@type": "owl:DatatypeProperty",
+      "http://www.knora.org/ontology/knora-base#objectDatatypeConstraint": {
+        "@id": "xsd:dateTimeStamp"
+      },
+      "http://www.knora.org/ontology/knora-base#subjectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#Resource"
+      },
+      "rdfs:comment": {
+        "@language": "en",
+        "@value": "Indicates when a resource was created"
+      },
+      "rdfs:subPropertyOf": {
+        "@id": "http://www.knora.org/ontology/knora-base#objectCannotBeMarkedAsDeleted"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#seqnum",
+      "@type": "owl:ObjectProperty",
+      "http://www.knora.org/ontology/knora-base#objectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#IntValue"
+      },
+      "rdfs:comment": {
+        "@language": "en",
+        "@value": "Indicates the position of a resource within a sequence"
+      },
+      "rdfs:label": [
+        {
+          "@language": "fr",
+          "@value": "Numéro de séquence"
+        },
+        {
+          "@language": "en",
+          "@value": "Sequence number"
+        },
+        {
+          "@language": "it",
+          "@value": "Numero di sequenza"
+        },
+        {
+          "@language": "de",
+          "@value": "Sequenznummer"
+        }
+      ],
+      "rdfs:subPropertyOf": {
+        "@id": "http://www.knora.org/ontology/knora-base#hasValue"
+      }
+    },
+    {
+      "@id": "_:ub20bL2258C27",
+      "@type": "owl:Restriction",
+      "owl:maxCardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "1"
+      },
+      "owl:onProperty": {
+        "@id": "http://www.knora.org/ontology/knora-base#standoffTagHasStartParent"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#description",
+      "@type": "owl:DatatypeProperty",
+      "http://www.knora.org/ontology/knora-base#objectDatatypeConstraint": {
+        "@id": "xsd:string"
+      },
+      "rdfs:comment": {
+        "@language": "en",
+        "@value": "A description of a resource class or a property class"
+      },
+      "rdfs:subPropertyOf": {
+        "@id": "http://www.knora.org/ontology/knora-base#objectCannotBeMarkedAsDeleted"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#valueHasCalendar",
+      "@type": "owl:DatatypeProperty",
+      "http://www.knora.org/ontology/knora-base#objectDatatypeConstraint": {
+        "@id": "xsd:string"
+      },
+      "http://www.knora.org/ontology/knora-base#subjectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#DateBase"
+      },
+      "rdfs:comment": {
+        "@language": "en",
+        "@value": "Name of the calendar to be used, such as \"GREGORIAN\" or \"JULIAN\"."
+      },
+      "rdfs:subPropertyOf": {
+        "@id": "http://www.knora.org/ontology/knora-base#valueHas"
+      }
+    },
+    {
+      "@id": "_:ub20bL2017C27",
+      "@type": "owl:Restriction",
+      "owl:maxCardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "1"
+      },
+      "owl:onProperty": {
+        "@id": "http://www.knora.org/ontology/knora-base#isRootNode"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#Region",
+      "@type": "owl:Class",
+      "http://www.knora.org/ontology/knora-base#resourceIcon": "region.gif",
+      "rdfs:comment": {
+        "@language": "en",
+        "@value": "Represents a geometric region of a resource. The geometry is represented currently as JSON string."
+      },
+      "rdfs:label": [
+        {
+          "@language": "it",
+          "@value": "Regione"
+        },
+        {
+          "@language": "fr",
+          "@value": "Région"
+        },
+        {
+          "@language": "de",
+          "@value": "Region"
+        },
+        {
+          "@language": "en",
+          "@value": "Region"
+        }
+      ],
+      "rdfs:subClassOf": [
+        {
+          "@id": "http://www.knora.org/ontology/knora-base#Resource"
+        },
+        {
+          "@id": "_:ub20bL2111C25"
+        },
+        {
+          "@id": "_:ub20bL2127C25"
+        },
+        {
+          "@id": "_:ub20bL2115C25"
+        },
+        {
+          "@id": "_:ub20bL2119C25"
+        },
+        {
+          "@id": "_:ub20bL2123C25"
+        }
+      ]
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#hasRootNode",
+      "@type": "owl:ObjectProperty",
+      "http://www.knora.org/ontology/knora-base#objectDatatypeConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#ListNode"
+      },
+      "http://www.knora.org/ontology/knora-base#subjectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#ListNode"
+      },
+      "rdfs:subPropertyOf": {
+        "@id": "http://www.knora.org/ontology/knora-base#objectCannotBeMarkedAsDeleted"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#hasRegionValue",
+      "@type": "owl:ObjectProperty",
+      "http://www.knora.org/ontology/knora-base#objectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#LinkValue"
+      },
+      "http://www.knora.org/ontology/knora-base#subjectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#Resource"
+      },
+      "rdfs:subPropertyOf": {
+        "@id": "http://www.knora.org/ontology/knora-base#hasLinkToValue"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#isRootNode",
+      "@type": "owl:DatatypeProperty",
+      "http://www.knora.org/ontology/knora-base#objectDatatypeConstraint": {
+        "@id": "xsd:boolean"
+      },
+      "http://www.knora.org/ontology/knora-base#subjectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#ListNode"
+      },
+      "rdfs:subPropertyOf": {
+        "@id": "http://www.knora.org/ontology/knora-base#objectCannotBeMarkedAsDeleted"
+      }
+    },
+    {
+      "@id": "_:ub20bL1923C31",
+      "@type": "owl:Restriction",
+      "owl:cardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "1"
+      },
+      "owl:onProperty": {
+        "@id": "http://www.knora.org/ontology/knora-base#valueHasIntervalStart"
+      }
+    },
+    {
+      "@id": "_:ub20bL2654C24",
+      "@type": "owl:Restriction",
+      "owl:cardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "1"
+      },
+      "owl:onProperty": {
+        "@id": "http://www.knora.org/ontology/knora-base#valueHasString"
+      }
+    },
+    {
+      "@id": "_:ub20bL1676C27",
+      "@type": "owl:Restriction",
+      "owl:cardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "1"
+      },
+      "owl:onProperty": {
+        "@id": "http://www.knora.org/ontology/knora-base#valueHasCalendar"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#hasFileValue",
+      "@type": "owl:ObjectProperty",
+      "http://www.knora.org/ontology/knora-base#objectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#FileValue"
+      },
+      "http://www.knora.org/ontology/knora-base#subjectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#Representation"
+      },
+      "rdfs:comment": {
+        "@language": "en",
+        "@value": "Connects a Representation to a file"
+      },
+      "rdfs:label": [
+        {
+          "@language": "en",
+          "@value": "has file"
+        },
+        {
+          "@language": "de",
+          "@value": "hat Datei"
+        },
+        {
+          "@language": "fr",
+          "@value": "a fichier"
+        },
+        {
+          "@language": "it",
+          "@value": "ha file"
+        }
+      ],
+      "rdfs:subPropertyOf": {
+        "@id": "http://www.knora.org/ontology/knora-base#hasValue"
+      },
+      "salsah-gui:guiElement": {
+        "@id": "salsah-gui:Fileupload"
+      }
+    },
+    {
+      "@id": "_:ub20bL1799C28",
+      "@type": "owl:Restriction",
+      "owl:maxCardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "1"
+      },
+      "owl:onProperty": {
+        "@id": "http://www.knora.org/ontology/knora-base#originalFilename"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#valueHasString",
+      "@type": "owl:DatatypeProperty",
+      "http://www.knora.org/ontology/knora-base#objectDatatypeConstraint": {
+        "@id": "xsd:string"
+      },
+      "http://www.knora.org/ontology/knora-base#subjectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#Value"
+      },
+      "rdfs:comment": {
+        "@language": "en",
+        "@value": "A string representation of a value, required for full-text searches and search results."
+      },
+      "rdfs:subPropertyOf": {
+        "@id": "http://www.knora.org/ontology/knora-base#valueHas"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#StandoffInternalReferenceTag",
+      "@type": "owl:Class",
+      "rdfs:comment": {
+        "@language": "en",
+        "@value": "Represents an internal reference in a TextValue"
+      },
+      "rdfs:subClassOf": [
+        {
+          "@id": "http://www.knora.org/ontology/knora-base#StandoffDataTypeTag"
+        },
+        {
+          "@id": "_:ub20bL2386C41"
+        },
+        {
+          "@id": "http://www.knora.org/ontology/knora-base#ValueBase"
+        }
+      ]
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#objectCannotBeMarkedAsDeleted",
+      "@type": "rdf:Property",
+      "rdfs:comment": {
+        "@language": "en",
+        "@value": "The base property of properties whose objects can't be marked as deleted"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#MappingXMLAttribute",
+      "@type": "owl:Class",
+      "rdfs:comment": "Mapping from XML attributes to standoff properties",
+      "rdfs:label": {
+        "@language": "en",
+        "@value": "Mapping from XML attributes to standoff properties"
+      },
+      "rdfs:subClassOf": [
+        {
+          "@id": "_:ub20bL2518C22"
+        },
+        {
+          "@id": "http://www.knora.org/ontology/knora-base#MappingComponent"
+        },
+        {
+          "@id": "_:ub20bL2526C22"
+        },
+        {
+          "@id": "_:ub20bL2522C22"
+        }
+      ]
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#valueHasDecimal",
+      "@type": "owl:DatatypeProperty",
+      "http://www.knora.org/ontology/knora-base#objectDatatypeConstraint": {
+        "@id": "xsd:decimal"
+      },
+      "http://www.knora.org/ontology/knora-base#subjectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#DecimalBase"
+      },
+      "rdfs:subPropertyOf": {
+        "@id": "http://www.knora.org/ontology/knora-base#valueHas"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#deleteDate",
+      "@type": "owl:DatatypeProperty",
+      "http://www.knora.org/ontology/knora-base#objectDatatypeConstraint": {
+        "@id": "xsd:dateTimeStamp"
+      },
+      "rdfs:comment": {
+        "@language": "en",
+        "@value": "Indicates when a resource or value was deleted"
+      },
+      "rdfs:subPropertyOf": {
+        "@id": "http://www.knora.org/ontology/knora-base#objectCannotBeMarkedAsDeleted"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#isPartOf",
+      "@type": "owl:ObjectProperty",
+      "http://www.knora.org/ontology/knora-base#objectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#Resource"
+      },
+      "http://www.knora.org/ontology/knora-base#subjectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#Resource"
+      },
+      "rdfs:comment": {
+        "@language": "en",
+        "@value": "Indicates that this resource is part of another resource"
+      },
+      "rdfs:label": [
+        {
+          "@language": "de",
+          "@value": "ist Teil von"
+        },
+        {
+          "@language": "en",
+          "@value": "is part of"
+        },
+        {
+          "@language": "it",
+          "@value": "fa parte di"
+        },
+        {
+          "@language": "fr",
+          "@value": "fait partie de"
+        }
+      ],
+      "rdfs:subPropertyOf": {
+        "@id": "http://www.knora.org/ontology/knora-base#hasLinkTo"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#isRegionOf",
+      "@type": "owl:ObjectProperty",
+      "http://www.knora.org/ontology/knora-base#objectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#Representation"
+      },
+      "http://www.knora.org/ontology/knora-base#subjectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#Region"
+      },
+      "rdfs:comment": {
+        "@language": "en",
+        "@value": "Region of interest within a digital object (e.g. an image)"
+      },
+      "rdfs:label": [
+        {
+          "@language": "en",
+          "@value": "is Region of"
+        },
+        {
+          "@language": "de",
+          "@value": "is Region von"
+        },
+        {
+          "@language": "fr",
+          "@value": "est Région de"
+        },
+        {
+          "@language": "it",
+          "@value": "e Region di"
+        }
+      ],
+      "rdfs:subPropertyOf": {
+        "@id": "http://www.knora.org/ontology/knora-base#hasLinkTo"
+      }
+    },
+    {
+      "@id": "_:ub20bL2503C22",
+      "@type": "owl:Restriction",
+      "owl:cardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "1"
+      },
+      "owl:onProperty": {
+        "@id": "http://www.knora.org/ontology/knora-base#mappingHasStandoffClass"
+      }
+    },
+    {
+      "@id": "_:ub20bL2597C28",
+      "@type": "owl:Restriction",
+      "owl:minCardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "0"
+      },
+      "owl:onProperty": {
+        "@id": "http://www.knora.org/ontology/knora-base#valueHasStandoff"
+      }
+    },
+    {
+      "@id": "_:ub20bL2021C27",
+      "@type": "owl:Restriction",
+      "owl:maxCardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "1"
+      },
+      "owl:onProperty": {
+        "@id": "http://www.knora.org/ontology/knora-base#hasRootNode"
+      }
+    },
+    {
+      "@id": "_:ub20bL2055C39",
+      "@type": "owl:Restriction",
+      "owl:cardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "1"
+      },
+      "owl:onProperty": {
+        "@id": "http://www.knora.org/ontology/knora-base#dimY"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#dimY",
+      "@type": "owl:DatatypeProperty",
+      "http://www.knora.org/ontology/knora-base#objectDatatypeConstraint": {
+        "@id": "xsd:integer"
+      },
+      "http://www.knora.org/ontology/knora-base#subjectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#FileValue"
+      },
+      "rdfs:subPropertyOf": {
+        "@id": "http://www.knora.org/ontology/knora-base#valueHas"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#standoffTagHasInternalReference",
+      "@type": "owl:ObjectProperty",
+      "http://www.knora.org/ontology/knora-base#objectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#StandoffTag"
+      },
+      "http://www.knora.org/ontology/knora-base#subjectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#StandoffInternalReferenceTag"
+      },
+      "rdfs:subPropertyOf": {
+        "@id": "http://www.knora.org/ontology/knora-base#objectCannotBeMarkedAsDeleted"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#hasRepresentation",
+      "@type": "owl:ObjectProperty",
+      "http://www.knora.org/ontology/knora-base#objectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#Representation"
+      },
+      "http://www.knora.org/ontology/knora-base#subjectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#Resource"
+      },
+      "rdfs:comment": {
+        "@language": "en",
+        "@value": "References an instance of a Representation. A Representation contains the metadata of a digital object (= file) which represents some physical entity such as an image, a sound, an encoded text etc."
+      },
+      "rdfs:label": [
+        {
+          "@language": "fr",
+          "@value": "a Répresentation"
+        },
+        {
+          "@language": "de",
+          "@value": "hat Repräsentation"
+        },
+        {
+          "@language": "it",
+          "@value": "ha Rappresentazione"
+        },
+        {
+          "@language": "en",
+          "@value": "has Representation"
+        }
+      ],
+      "rdfs:subPropertyOf": {
+        "@id": "http://www.knora.org/ontology/knora-base#hasLinkTo"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#MovingImageRepresentation",
+      "@type": "owl:Class",
+      "rdfs:comment": {
+        "@language": "en",
+        "@value": "A resource containing moving image data"
+      },
+      "rdfs:label": [
+        {
+          "@language": "de",
+          "@value": "Repräsentation (Video)"
+        },
+        {
+          "@language": "en",
+          "@value": "Representation (Movie)"
+        },
+        {
+          "@language": "fr",
+          "@value": "Répresentation (Film)"
+        },
+        {
+          "@language": "it",
+          "@value": "Rappresentazione (Film)"
+        }
+      ],
+      "rdfs:subClassOf": [
+        {
+          "@id": "_:ub20bL2081C33"
+        },
+        {
+          "@id": "http://www.knora.org/ontology/knora-base#Representation"
+        }
+      ]
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#StandoffColorTag",
+      "@type": "owl:Class",
+      "rdfs:comment": {
+        "@language": "en",
+        "@value": "Represents a color in a TextValue"
+      },
+      "rdfs:subClassOf": [
+        {
+          "@id": "http://www.knora.org/ontology/knora-base#ColorBase"
+        },
+        {
+          "@id": "http://www.knora.org/ontology/knora-base#StandoffDataTypeTag"
+        }
+      ]
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#isRegionOfValue",
+      "@type": "owl:ObjectProperty",
+      "http://www.knora.org/ontology/knora-base#objectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#LinkValue"
+      },
+      "http://www.knora.org/ontology/knora-base#subjectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#Region"
+      },
+      "rdfs:subPropertyOf": {
+        "@id": "http://www.knora.org/ontology/knora-base#hasLinkToValue"
+      }
+    },
+    {
+      "@id": "_:ub20bL2200C27",
+      "@type": "owl:Restriction",
+      "owl:maxCardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "1"
+      },
+      "owl:onProperty": {
+        "@id": "http://www.knora.org/ontology/knora-base#deleteDate"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#StandoffUriTag",
+      "@type": "owl:Class",
+      "rdfs:comment": {
+        "@language": "en",
+        "@value": "Represents an arbitrary URI in a TextValue"
+      },
+      "rdfs:subClassOf": [
+        {
+          "@id": "http://www.knora.org/ontology/knora-base#StandoffDataTypeTag"
+        },
+        {
+          "@id": "http://www.knora.org/ontology/knora-base#UriBase"
+        }
+      ]
+    },
+    {
+      "@id": "_:ub20bL2518C22",
+      "@type": "owl:Restriction",
+      "owl:cardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "1"
+      },
+      "owl:onProperty": {
+        "@id": "http://www.knora.org/ontology/knora-base#mappingHasXMLAttributename"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#lastModificationDate",
+      "@type": "owl:DatatypeProperty",
+      "http://www.knora.org/ontology/knora-base#objectDatatypeConstraint": {
+        "@id": "xsd:dateTimeStamp"
+      },
+      "rdfs:subPropertyOf": {
+        "@id": "http://www.knora.org/ontology/knora-base#objectCannotBeMarkedAsDeleted"
+      }
+    },
+    {
+      "@id": "_:ub20bL2400C38",
+      "@type": "owl:Restriction",
+      "owl:cardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "1"
+      },
+      "owl:onProperty": {
+        "@id": "http://www.knora.org/ontology/knora-base#dimY"
+      }
+    },
+    {
+      "@id": "_:ub20bL1761C35",
+      "@type": "owl:Restriction",
+      "owl:cardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "1"
+      },
+      "owl:onProperty": {
+        "@id": "http://www.knora.org/ontology/knora-base#hasExtResValue"
+      }
+    },
+    {
+      "@id": "_:ub20bL1832C28",
+      "@type": "owl:Restriction",
+      "owl:cardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "1"
+      },
+      "owl:onProperty": {
+        "@id": "http://www.knora.org/ontology/knora-base#valueHasGeometry"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#StandoffBooleanTag",
+      "@type": "owl:Class",
+      "rdfs:comment": {
+        "@language": "en",
+        "@value": "Represents a boolean in a TextValue"
+      },
+      "rdfs:subClassOf": [
+        {
+          "@id": "http://www.knora.org/ontology/knora-base#BooleanBase"
+        },
+        {
+          "@id": "http://www.knora.org/ontology/knora-base#StandoffDataTypeTag"
+        }
+      ]
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#hasAudioFileValue",
+      "@type": "owl:ObjectProperty",
+      "http://www.knora.org/ontology/knora-base#objectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#AudioFileValue"
+      },
+      "http://www.knora.org/ontology/knora-base#subjectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#AudioRepresentation"
+      },
+      "rdfs:comment": {
+        "@language": "en",
+        "@value": "Connects a Representation to an audio file"
+      },
+      "rdfs:label": [
+        {
+          "@language": "en",
+          "@value": "has audio file"
+        },
+        {
+          "@language": "it",
+          "@value": "ha file audio"
+        },
+        {
+          "@language": "de",
+          "@value": "hat Audiodatei"
+        },
+        {
+          "@language": "fr",
+          "@value": "a fichier d'audio"
+        }
+      ],
+      "rdfs:subPropertyOf": {
+        "@id": "http://www.knora.org/ontology/knora-base#hasFileValue"
+      },
+      "salsah-gui:guiElement": {
+        "@id": "salsah-gui:Fileupload"
+      }
+    },
+    {
+      "@id": "_:ub20bL2626C24",
+      "@type": "owl:Restriction",
+      "owl:cardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "1"
+      },
+      "owl:onProperty": {
+        "@id": "http://www.knora.org/ontology/knora-base#hasPermissions"
+      }
+    },
+    {
+      "@id": "_:ub20bL1624C28",
+      "@type": "owl:Restriction",
+      "owl:cardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "1"
+      },
+      "owl:onProperty": {
+        "@id": "http://www.knora.org/ontology/knora-base#valueHasColor"
+      }
+    },
+    {
+      "@id": "_:ub20bL2059C39",
+      "@type": "owl:Restriction",
+      "owl:cardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "1"
+      },
+      "owl:onProperty": {
+        "@id": "http://www.knora.org/ontology/knora-base#fps"
+      }
+    },
+    {
+      "@id": "_:ub20bL1810C30",
+      "@type": "owl:Restriction",
+      "owl:cardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "1"
+      },
+      "owl:onProperty": {
+        "@id": "http://www.knora.org/ontology/knora-base#valueHasDecimal"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#hasColor",
+      "@type": "owl:ObjectProperty",
+      "http://www.knora.org/ontology/knora-base#objectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#ColorValue"
+      },
+      "http://www.knora.org/ontology/knora-base#subjectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#Region"
+      },
+      "rdfs:comment": {
+        "@language": "en",
+        "@value": "Represents a color."
+      },
+      "rdfs:label": [
+        {
+          "@language": "it",
+          "@value": "Colore"
+        },
+        {
+          "@language": "de",
+          "@value": "Farbe"
+        },
+        {
+          "@language": "en",
+          "@value": "Color"
+        },
+        {
+          "@language": "fr",
+          "@value": "Couleur"
+        }
+      ],
+      "rdfs:subPropertyOf": {
+        "@id": "http://www.knora.org/ontology/knora-base#hasValue"
+      },
+      "salsah-gui:guiAttribute": "ncolors=8",
+      "salsah-gui:guiElement": {
+        "@id": "salsah-gui:Colorpicker"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#StandoffDecimalTag",
+      "@type": "owl:Class",
+      "rdfs:comment": {
+        "@language": "en",
+        "@value": "Represents a decimal (floating point) value in a TextValue"
+      },
+      "rdfs:subClassOf": [
+        {
+          "@id": "http://www.knora.org/ontology/knora-base#DecimalBase"
+        },
+        {
+          "@id": "http://www.knora.org/ontology/knora-base#StandoffDataTypeTag"
+        }
+      ]
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#objectDatatypeConstraint",
+      "@type": "owl:DatatypeProperty",
+      "rdfs:comment": {
+        "@language": "en",
+        "@value": "Specifies the type required as the object of a datatype property"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#hasLinkToValue",
+      "@type": "owl:ObjectProperty",
+      "http://www.knora.org/ontology/knora-base#objectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#LinkValue"
+      },
+      "http://www.knora.org/ontology/knora-base#subjectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#Resource"
+      },
+      "rdfs:comment": {
+        "@language": "en",
+        "@value": "Points to a LinkValue reification describing a link between two resources"
+      },
+      "rdfs:subPropertyOf": {
+        "@id": "http://www.knora.org/ontology/knora-base#hasValue"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#StandoffDateTag",
+      "@type": "owl:Class",
+      "rdfs:comment": {
+        "@language": "en",
+        "@value": "Represents a date in a TextValue"
+      },
+      "rdfs:subClassOf": [
+        {
+          "@id": "http://www.knora.org/ontology/knora-base#StandoffDataTypeTag"
+        },
+        {
+          "@id": "http://www.knora.org/ontology/knora-base#DateBase"
+        }
+      ]
+    },
+    {
+      "@id": "_:ub20bL2386C41",
+      "@type": "owl:Restriction",
+      "owl:cardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "1"
+      },
+      "owl:onProperty": {
+        "@id": "http://www.knora.org/ontology/knora-base#standoffTagHasInternalReference"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#isAnnotationOf",
+      "@type": "owl:ObjectProperty",
+      "http://www.knora.org/ontology/knora-base#objectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#Resource"
+      },
+      "http://www.knora.org/ontology/knora-base#subjectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#Annotation"
+      },
+      "rdfs:label": [
+        {
+          "@language": "it",
+          "@value": "è Annotation di"
+        },
+        {
+          "@language": "en",
+          "@value": "is Annotation of"
+        },
+        {
+          "@language": "fr",
+          "@value": "est Annotation de"
+        },
+        {
+          "@language": "de",
+          "@value": "ist Annotation von"
+        }
+      ],
+      "rdfs:subPropertyOf": {
+        "@id": "http://www.knora.org/ontology/knora-base#hasLinkTo"
+      }
+    },
+    {
+      "@id": "_:ub20bL2234C27",
+      "@type": "owl:Restriction",
+      "owl:cardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "1"
+      },
+      "owl:onProperty": {
+        "@id": "http://www.knora.org/ontology/knora-base#standoffTagHasStart"
+      }
+    },
+    {
+      "@id": "_:ub20bL1729C33",
+      "@type": "owl:Restriction",
+      "owl:minCardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "1"
+      },
+      "owl:onProperty": {
+        "@id": "http://www.knora.org/ontology/knora-base#hasDocumentFileValue"
+      }
+    },
+    {
+      "@id": "_:ub20bL2408C38",
+      "@type": "owl:Restriction",
+      "owl:cardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "1"
+      },
+      "owl:onProperty": {
+        "@id": "http://www.knora.org/ontology/knora-base#dimX"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#isAnnotationOfValue",
+      "@type": "owl:ObjectProperty",
+      "http://www.knora.org/ontology/knora-base#objectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#LinkValue"
+      },
+      "http://www.knora.org/ontology/knora-base#subjectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#Annotation"
+      },
+      "rdfs:subPropertyOf": {
+        "@id": "http://www.knora.org/ontology/knora-base#hasLinkToValue"
+      }
+    },
+    {
+      "@id": "_:ub20bL1567C29",
+      "@type": "owl:Restriction",
+      "owl:minCardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "1"
+      },
+      "owl:onProperty": {
+        "@id": "http://www.knora.org/ontology/knora-base#isAnnotationOfValue"
+      }
+    },
+    {
+      "@id": "_:ub20bL2184C27",
+      "@type": "owl:Restriction",
+      "owl:cardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "1"
+      },
+      "owl:onProperty": {
+        "@id": "http://www.knora.org/ontology/knora-base#attachedToProject"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#DateBase",
+      "@type": "owl:Class",
+      "rdfs:subClassOf": [
+        {
+          "@id": "http://www.knora.org/ontology/knora-base#ValueBase"
+        },
+        {
+          "@id": "_:ub20bL1684C27"
+        },
+        {
+          "@id": "_:ub20bL1688C27"
+        },
+        {
+          "@id": "_:ub20bL1680C27"
+        },
+        {
+          "@id": "_:ub20bL1692C27"
+        },
+        {
+          "@id": "_:ub20bL1676C27"
+        }
+      ]
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#hasTextFileValue",
+      "@type": "owl:ObjectProperty",
+      "http://www.knora.org/ontology/knora-base#objectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#TextFileValue"
+      },
+      "http://www.knora.org/ontology/knora-base#subjectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#TextRepresentation"
+      },
+      "rdfs:comment": {
+        "@language": "en",
+        "@value": "Connects a Representation to a text file"
+      },
+      "rdfs:label": [
+        {
+          "@language": "fr",
+          "@value": "a fichier de texte"
+        },
+        {
+          "@language": "de",
+          "@value": "hat Textdatei"
+        },
+        {
+          "@language": "it",
+          "@value": "ha file testo"
+        },
+        {
+          "@language": "en",
+          "@value": "has text file"
+        }
+      ],
+      "rdfs:subPropertyOf": {
+        "@id": "http://www.knora.org/ontology/knora-base#hasFileValue"
+      },
+      "salsah-gui:guiElement": {
+        "@id": "salsah-gui:Fileupload"
+      }
+    },
+    {
+      "@id": "_:ub20bL2499C22",
+      "@type": "owl:Restriction",
+      "owl:cardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "1"
+      },
+      "owl:onProperty": {
+        "@id": "http://www.knora.org/ontology/knora-base#mappingHasXMLAttributename"
+      }
+    },
+    {
+      "@id": "_:ub20bL2541C17",
+      "@type": "owl:Restriction",
+      "owl:cardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "1"
+      },
+      "owl:onProperty": {
+        "@id": "http://www.knora.org/ontology/knora-base#mappingHasXMLTagname"
+      }
+    },
+    {
+      "@id": "_:ub20bL1919C31",
+      "@type": "owl:Restriction",
+      "owl:cardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "1"
+      },
+      "owl:onProperty": {
+        "@id": "http://www.knora.org/ontology/knora-base#valueHasIntervalEnd"
+      }
+    },
+    {
+      "@id": "_:ub20bL2601C28",
+      "@type": "owl:Restriction",
+      "owl:maxCardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "1"
+      },
+      "owl:onProperty": {
+        "@id": "http://www.knora.org/ontology/knora-base#valueHasMapping"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#BooleanBase",
+      "@type": "owl:Class",
+      "rdfs:subClassOf": [
+        {
+          "@id": "_:ub20bL1878C30"
+        },
+        {
+          "@id": "http://www.knora.org/ontology/knora-base#ValueBase"
+        }
+      ]
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#DocumentFileValue",
+      "@type": "owl:Class",
+      "rdfs:subClassOf": {
+        "@id": "http://www.knora.org/ontology/knora-base#FileValue"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#internalFilename",
+      "@type": "owl:DatatypeProperty",
+      "http://www.knora.org/ontology/knora-base#objectDatatypeConstraint": {
+        "@id": "xsd:string"
+      },
+      "http://www.knora.org/ontology/knora-base#subjectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#FileValue"
+      },
+      "rdfs:subPropertyOf": {
+        "@id": "http://www.knora.org/ontology/knora-base#valueHas"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#MovingImageFileValue",
+      "@type": "owl:Class",
+      "rdfs:comment": {
+        "@language": "en",
+        "@value": "Represents a moving image file"
+      },
+      "rdfs:subClassOf": [
+        {
+          "@id": "_:ub20bL2059C39"
+        },
+        {
+          "@id": "http://www.knora.org/ontology/knora-base#FileValue"
+        },
+        {
+          "@id": "_:ub20bL2063C39"
+        },
+        {
+          "@id": "_:ub20bL2051C39"
+        },
+        {
+          "@id": "_:ub20bL2055C39"
+        },
+        {
+          "@id": "_:ub20bL2067C39"
+        }
+      ]
+    },
+    {
+      "@id": "_:ub20bL2634C24",
+      "@type": "owl:Restriction",
+      "owl:maxCardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "1"
+      },
+      "owl:onProperty": {
+        "@id": "http://www.knora.org/ontology/knora-base#valueHasComment"
+      }
+    },
+    {
+      "@id": "_:ub20bL1858C27",
+      "@type": "owl:Restriction",
+      "owl:cardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "1"
+      },
+      "owl:onProperty": {
+        "@id": "http://www.knora.org/ontology/knora-base#valueHasInteger"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#hasDocumentFileValue",
+      "@type": "owl:ObjectProperty",
+      "http://www.knora.org/ontology/knora-base#objectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#DocumentFileValue"
+      },
+      "http://www.knora.org/ontology/knora-base#subjectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#DocumentRepresentation"
+      },
+      "rdfs:comment": {
+        "@language": "en",
+        "@value": "Connects a Representation to a document"
+      },
+      "rdfs:label": [
+        {
+          "@language": "fr",
+          "@value": "a document"
+        },
+        {
+          "@language": "it",
+          "@value": "ha documento"
+        },
+        {
+          "@language": "en",
+          "@value": "has document"
+        },
+        {
+          "@language": "de",
+          "@value": "hat Dokument"
+        }
+      ],
+      "rdfs:subPropertyOf": {
+        "@id": "http://www.knora.org/ontology/knora-base#hasFileValue"
+      },
+      "salsah-gui:guiElement": {
+        "@id": "salsah-gui:Fileupload"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#standoffTagHasEndParent",
+      "@type": "owl:ObjectProperty",
+      "http://www.knora.org/ontology/knora-base#objectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#StandoffTag"
+      },
+      "http://www.knora.org/ontology/knora-base#subjectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#StandoffTag"
+      },
+      "rdfs:subPropertyOf": {
+        "@id": "http://www.knora.org/ontology/knora-base#objectCannotBeMarkedAsDeleted"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#standoffTagHasLink",
+      "@type": "owl:ObjectProperty",
+      "http://www.knora.org/ontology/knora-base#objectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#Resource"
+      },
+      "http://www.knora.org/ontology/knora-base#subjectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#StandoffLinkTag"
+      },
+      "rdfs:subPropertyOf": {
+        "@id": "http://www.knora.org/ontology/knora-base#objectCannotBeMarkedAsDeleted"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#fps",
+      "@type": "owl:DatatypeProperty",
+      "http://www.knora.org/ontology/knora-base#objectDatatypeConstraint": {
+        "@id": "xsd:decimal"
+      },
+      "http://www.knora.org/ontology/knora-base#subjectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#MovingImageFileValue"
+      },
+      "rdfs:label": {
+        "@language": "en",
+        "@value": "Frames per second"
+      },
+      "rdfs:subPropertyOf": {
+        "@id": "http://www.knora.org/ontology/knora-base#valueHas"
+      }
+    },
+    {
+      "@id": "_:ub20bL1688C27",
+      "@type": "owl:Restriction",
+      "owl:cardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "1"
+      },
+      "owl:onProperty": {
+        "@id": "http://www.knora.org/ontology/knora-base#valueHasStartPrecision"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#StandoffIntegerTag",
+      "@type": "owl:Class",
+      "rdfs:comment": {
+        "@language": "en",
+        "@value": "Represents an integer value in a TextValue"
+      },
+      "rdfs:subClassOf": [
+        {
+          "@id": "http://www.knora.org/ontology/knora-base#StandoffDataTypeTag"
+        },
+        {
+          "@id": "http://www.knora.org/ontology/knora-base#IntBase"
+        }
+      ]
+    },
+    {
+      "@id": "_:ub20bL2119C25",
+      "@type": "owl:Restriction",
+      "owl:minCardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "1"
+      },
+      "owl:onProperty": {
+        "@id": "http://www.knora.org/ontology/knora-base#hasGeometry"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#ListValue",
+      "@type": "owl:Class",
+      "rdfs:subClassOf": [
+        {
+          "@id": "_:ub20bL2039C28"
+        },
+        {
+          "@id": "http://www.knora.org/ontology/knora-base#Value"
+        }
+      ]
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#StandoffIntervalTag",
+      "@type": "owl:Class",
+      "rdfs:comment": {
+        "@language": "en",
+        "@value": "Represents an interval in a TextValue"
+      },
+      "rdfs:subClassOf": [
+        {
+          "@id": "http://www.knora.org/ontology/knora-base#StandoffDataTypeTag"
+        },
+        {
+          "@id": "http://www.knora.org/ontology/knora-base#IntervalBase"
+        }
+      ]
+    },
+    {
+      "@id": "_:ub20bL2565C17",
+      "@type": "owl:Restriction",
+      "owl:cardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "1"
+      },
+      "owl:onProperty": {
+        "@id": "http://www.knora.org/ontology/knora-base#mappingElementRequiresSeparator"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#MappingStandoffDataTypeClass",
+      "@type": "owl:Class",
+      "rdfs:comment": "Mapping from XML attributes to standoff properties",
+      "rdfs:label": {
+        "@language": "en",
+        "@value": "Mapping from XML attributes to standoff properties"
+      },
+      "rdfs:subClassOf": [
+        {
+          "@id": "_:ub20bL2499C22"
+        },
+        {
+          "@id": "http://www.knora.org/ontology/knora-base#MappingComponent"
+        },
+        {
+          "@id": "_:ub20bL2503C22"
+        }
+      ]
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#hasComment",
+      "@type": "owl:ObjectProperty",
+      "http://www.knora.org/ontology/knora-base#objectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#TextValue"
+      },
+      "http://www.knora.org/ontology/knora-base#subjectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#Resource"
+      },
+      "rdfs:comment": {
+        "@language": "de",
+        "@value": "Represents a comment on a resource as a knora-base:TextValue"
+      },
+      "rdfs:label": [
+        {
+          "@language": "fr",
+          "@value": "Commentaire"
+        },
+        {
+          "@language": "de",
+          "@value": "Kommentar"
+        },
+        {
+          "@language": "en",
+          "@value": "Comment"
+        },
+        {
+          "@language": "it",
+          "@value": "Commento"
+        }
+      ],
+      "rdfs:subPropertyOf": {
+        "@id": "http://www.knora.org/ontology/knora-base#hasValue"
+      },
+      "salsah-gui:guiElement": {
+        "@id": "salsah-gui:Richtext"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#StandoffDataTypeTag",
+      "@type": "owl:Class",
+      "rdfs:comment": {
+        "@language": "en",
+        "@value": "Represents a knora-base value type in a TextValue"
+      },
+      "rdfs:subClassOf": {
+        "@id": "http://www.knora.org/ontology/knora-base#StandoffTag"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#ColorBase",
+      "@type": "owl:Class",
+      "rdfs:subClassOf": [
+        {
+          "@id": "http://www.knora.org/ontology/knora-base#ValueBase"
+        },
+        {
+          "@id": "_:ub20bL1624C28"
+        }
+      ]
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#mappingElementRequiresSeparator",
+      "@type": "owl:DatatypeProperty",
+      "http://www.knora.org/ontology/knora-base#objectDatatypeConstraint": {
+        "@id": "xsd:boolean"
+      },
+      "http://www.knora.org/ontology/knora-base#subjectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#MappingElement"
+      },
+      "rdfs:comment": {
+        "@language": "en",
+        "@value": "indicates if the element requires a separator in the text"
+      },
+      "rdfs:label": {
+        "@language": "en",
+        "@value": "indicates if the element requires a separator in the text"
+      },
+      "rdfs:subPropertyOf": {
+        "@id": "http://www.knora.org/ontology/knora-base#objectCannotBeMarkedAsDeleted"
+      }
+    },
+    {
+      "@id": "_:ub20bL1980C28",
+      "@type": "owl:Restriction",
+      "owl:cardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "1"
+      },
+      "owl:onProperty": {
+        "@id": "http://www.knora.org/ontology/knora-base#valueHasRefCount"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#GeonameValue",
+      "@type": "owl:Class",
+      "rdfs:subClassOf": [
+        {
+          "@id": "http://www.knora.org/ontology/knora-base#Value"
+        },
+        {
+          "@id": "_:ub20bL1846C31"
+        }
+      ]
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#hasStandoffLinkToValue",
+      "@type": "owl:ObjectProperty",
+      "http://www.knora.org/ontology/knora-base#objectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#LinkValue"
+      },
+      "http://www.knora.org/ontology/knora-base#subjectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#Resource"
+      },
+      "rdfs:subPropertyOf": {
+        "@id": "http://www.knora.org/ontology/knora-base#hasLinkToValue"
+      }
+    },
+    {
+      "@id": "_:ub20bL2646C24",
+      "@type": "owl:Restriction",
+      "owl:maxCardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "1"
+      },
+      "owl:onProperty": {
+        "@id": "http://www.knora.org/ontology/knora-base#deleteComment"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#resourceProperty",
+      "@type": "owl:ObjectProperty",
+      "http://www.knora.org/ontology/knora-base#subjectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#Resource"
+      },
+      "rdfs:comment": {
+        "@language": "en",
+        "@value": "The base property of properties that point from Knora resources to Knora resources or values. These properties are required to have cardinalities in the resource classes in which they are used."
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#StillImageRepresentation",
+      "@type": "owl:Class",
+      "rdfs:comment": {
+        "@language": "en",
+        "@value": "A resource that can contain two-dimensional still image files"
+      },
+      "rdfs:label": [
+        {
+          "@language": "fr",
+          "@value": "Répresentation (Image)"
+        },
+        {
+          "@language": "de",
+          "@value": "Repräsentation (Bild)"
+        },
+        {
+          "@language": "en",
+          "@value": "Representation (Image)"
+        },
+        {
+          "@language": "it",
+          "@value": "Rappresentazione (Imagine)"
+        }
+      ],
+      "rdfs:subClassOf": [
+        {
+          "@id": "_:ub20bL2422C33"
+        },
+        {
+          "@id": "http://www.knora.org/ontology/knora-base#Representation"
+        }
+      ]
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#MappingComponent",
+      "@type": "owl:Class",
+      "rdfs:comment": "Component of a mapping",
+      "rdfs:label": {
+        "@language": "en",
+        "@value": "Component of a mapping"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#MappingElement",
+      "@type": "owl:Class",
+      "rdfs:comment": "Mapping from XML to standoff entities",
+      "rdfs:label": {
+        "@language": "en",
+        "@value": "Mapping from XML to standoff entities"
+      },
+      "rdfs:subClassOf": [
+        {
+          "@id": "_:ub20bL2549C17"
+        },
+        {
+          "@id": "_:ub20bL2545C17"
+        },
+        {
+          "@id": "_:ub20bL2557C17"
+        },
+        {
+          "@id": "http://www.knora.org/ontology/knora-base#MappingComponent"
+        },
+        {
+          "@id": "_:ub20bL2565C17"
+        },
+        {
+          "@id": "_:ub20bL2541C17"
+        },
+        {
+          "@id": "_:ub20bL2561C17"
+        },
+        {
+          "@id": "_:ub20bL2553C17"
+        }
+      ]
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#valueHasColor",
+      "@type": "owl:DatatypeProperty",
+      "http://www.knora.org/ontology/knora-base#objectDatatypeConstraint": {
+        "@id": "xsd:string"
+      },
+      "http://www.knora.org/ontology/knora-base#subjectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#ColorBase"
+      },
+      "rdfs:comment": {
+        "@language": "en",
+        "@value": "Color in the form of #rrggbb (as defining web colors)"
+      },
+      "rdfs:subPropertyOf": {
+        "@id": "http://www.knora.org/ontology/knora-base#valueHas"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#DecimalValue",
+      "@type": "owl:Class",
+      "rdfs:comment": {
+        "@language": "en",
+        "@value": "Represents an arbitrary-precision decimal value"
+      },
+      "rdfs:subClassOf": [
+        {
+          "@id": "http://www.knora.org/ontology/knora-base#Value"
+        },
+        {
+          "@id": "http://www.knora.org/ontology/knora-base#DecimalBase"
+        }
+      ]
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#IntBase",
+      "@type": "owl:Class",
+      "rdfs:subClassOf": [
+        {
+          "@id": "_:ub20bL1858C27"
+        },
+        {
+          "@id": "http://www.knora.org/ontology/knora-base#ValueBase"
+        }
+      ]
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#mappingHasStandoffDataTypeClass",
+      "@type": "owl:ObjectProperty",
+      "http://www.knora.org/ontology/knora-base#objectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#MappingStandoffDataTypeClass"
+      },
+      "http://www.knora.org/ontology/knora-base#subjectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#MappingElement"
+      },
+      "rdfs:comment": {
+        "@language": "en",
+        "@value": "datatype of the XML tag"
+      },
+      "rdfs:label": {
+        "@language": "en",
+        "@value": "datatype of the XML tag"
+      },
+      "rdfs:subPropertyOf": {
+        "@id": "http://www.knora.org/ontology/knora-base#objectCannotBeMarkedAsDeleted"
+      }
+    },
+    {
+      "@id": "_:ub20bL2422C33",
+      "@type": "owl:Restriction",
+      "owl:minCardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "1"
+      },
+      "owl:onProperty": {
+        "@id": "http://www.knora.org/ontology/knora-base#hasStillImageFileValue"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#valueHasComment",
+      "@type": "owl:DatatypeProperty",
+      "http://www.knora.org/ontology/knora-base#objectDatatypeConstraint": {
+        "@id": "xsd:string"
+      },
+      "http://www.knora.org/ontology/knora-base#subjectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#Value"
+      },
+      "rdfs:comment": {
+        "@language": "en",
+        "@value": "A comment on a value"
+      },
+      "rdfs:subPropertyOf": {
+        "@id": "http://www.knora.org/ontology/knora-base#valueHas"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#TextRepresentation",
+      "@type": "owl:Class",
+      "rdfs:comment": {
+        "@language": "en",
+        "@value": "A resource containing text files"
+      },
+      "rdfs:label": [
+        {
+          "@language": "de",
+          "@value": "Repräsentation (Text)"
+        },
+        {
+          "@language": "it",
+          "@value": "Rappresentazione (testo)"
+        },
+        {
+          "@language": "en",
+          "@value": "Representation (Text)"
+        },
+        {
+          "@language": "fr",
+          "@value": "Répresentation (Texte)"
+        }
+      ],
+      "rdfs:subClassOf": [
+        {
+          "@id": "http://www.knora.org/ontology/knora-base#Representation"
+        },
+        {
+          "@id": "_:ub20bL2454C37"
+        }
+      ]
+    },
+    {
+      "@id": "_:ub20bL1961C26",
+      "@type": "owl:Restriction",
+      "owl:minCardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "1"
+      },
+      "owl:onProperty": {
+        "@id": "http://www.knora.org/ontology/knora-base#hasLinkToValue"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#StandoffLinkTag",
+      "@type": "owl:Class",
+      "rdfs:comment": {
+        "@language": "en",
+        "@value": "Represents a reference to a Knora resource in a TextValue"
+      },
+      "rdfs:subClassOf": [
+        {
+          "@id": "_:ub20bL2302C31"
+        },
+        {
+          "@id": "http://www.knora.org/ontology/knora-base#StandoffTag"
+        }
+      ]
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#name",
+      "@type": "owl:DatatypeProperty",
+      "rdfs:subPropertyOf": [
+        {
+          "@id": "foaf:name"
+        },
+        {
+          "@id": "http://www.knora.org/ontology/knora-base#objectCannotBeMarkedAsDeleted"
+        }
+      ]
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#Resource",
+      "@type": "owl:Class",
+      "rdfs:comment": {
+        "@language": "en",
+        "@value": "Represents something in the world, or an abstract thing"
+      },
+      "rdfs:label": [
+        {
+          "@language": "fr",
+          "@value": "Ressource"
+        },
+        {
+          "@language": "de",
+          "@value": "Ressource"
+        },
+        {
+          "@language": "en",
+          "@value": "Resource"
+        },
+        {
+          "@language": "it",
+          "@value": "Risorsa"
+        }
+      ],
+      "rdfs:subClassOf": [
+        {
+          "@id": "_:ub20bL2200C27"
+        },
+        {
+          "@id": "_:ub20bL2188C27"
+        },
+        {
+          "@id": "_:ub20bL2168C27"
+        },
+        {
+          "@id": "_:ub20bL2172C27"
+        },
+        {
+          "@id": "_:ub20bL2196C27"
+        },
+        {
+          "@id": "_:ub20bL2184C27"
+        },
+        {
+          "@id": "_:ub20bL2164C27"
+        },
+        {
+          "@id": "_:ub20bL2180C27"
+        },
+        {
+          "@id": "_:ub20bL2192C27"
+        },
+        {
+          "@id": "_:ub20bL2204C27"
+        },
+        {
+          "@id": "_:ub20bL2176C27"
+        }
+      ]
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base",
+      "@type": "owl:Ontology"
+    },
+    {
+      "@id": "_:ub20bL2242C27",
+      "@type": "owl:Restriction",
+      "owl:cardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "1"
+      },
+      "owl:onProperty": {
+        "@id": "http://www.knora.org/ontology/knora-base#standoffTagHasUUID"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#hasValue",
+      "@type": "owl:ObjectProperty",
+      "http://www.knora.org/ontology/knora-base#objectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#Value"
+      },
+      "http://www.knora.org/ontology/knora-base#subjectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#Resource"
+      },
+      "rdfs:subPropertyOf": {
+        "@id": "http://www.knora.org/ontology/knora-base#resourceProperty"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#valueHasIntervalStart",
+      "@type": "owl:DatatypeProperty",
+      "http://www.knora.org/ontology/knora-base#objectDatatypeConstraint": {
+        "@id": "xsd:decimal"
+      },
+      "http://www.knora.org/ontology/knora-base#subjectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#IntervalBase"
+      },
+      "rdfs:subPropertyOf": {
+        "@id": "http://www.knora.org/ontology/knora-base#valueHas"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#hasStandoffLinkTo",
+      "@type": "owl:ObjectProperty",
+      "http://www.knora.org/ontology/knora-base#objectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#Resource"
+      },
+      "http://www.knora.org/ontology/knora-base#subjectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#Resource"
+      },
+      "rdfs:comment": {
+        "@language": "en",
+        "@value": "Represents a link in standoff markup from one resource to another."
+      },
+      "rdfs:label": [
+        {
+          "@language": "de",
+          "@value": "hat Standoff Link zu"
+        },
+        {
+          "@language": "it",
+          "@value": "ha standoff link verso"
+        },
+        {
+          "@language": "fr",
+          "@value": "a standoff lien vers"
+        },
+        {
+          "@language": "en",
+          "@value": "has Standoff Link to"
+        }
+      ],
+      "rdfs:subPropertyOf": {
+        "@id": "http://www.knora.org/ontology/knora-base#hasLinkTo"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#isDeleted",
+      "@type": "owl:DatatypeProperty",
+      "http://www.knora.org/ontology/knora-base#objectDatatypeConstraint": {
+        "@id": "xsd:boolean"
+      },
+      "rdfs:comment": {
+        "@language": "en",
+        "@value": "Exists and is true if the resource has been deleted"
+      },
+      "rdfs:subPropertyOf": {
+        "@id": "http://www.knora.org/ontology/knora-base#objectCannotBeMarkedAsDeleted"
+      }
+    },
+    {
+      "@id": "_:ub20bL2526C22",
+      "@type": "owl:Restriction",
+      "owl:cardinality": {
+        "@type": "xsd:nonNegativeInteger",
+        "@value": "1"
+      },
+      "owl:onProperty": {
+        "@id": "http://www.knora.org/ontology/knora-base#mappingHasStandoffProperty"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#mappingHasDefaultXSLTransformation",
+      "@type": "owl:ObjectProperty",
+      "http://www.knora.org/ontology/knora-base#objectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#XSLTransformation"
+      },
+      "http://www.knora.org/ontology/knora-base#subjectClassConstraint": {
+        "@id": "http://www.knora.org/ontology/knora-base#XMLToStandoffMapping"
+      },
+      "rdfs:comment": {
+        "@language": "en",
+        "@value": "default XSL Transformation for this mapping"
+      },
+      "rdfs:label": {
+        "@language": "en",
+        "@value": "default XSL Transformation"
+      },
+      "rdfs:subPropertyOf": {
+        "@id": "http://www.knora.org/ontology/knora-base#objectCannotBeMarkedAsDeleted"
+      }
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#IntValue",
+      "@type": "owl:Class",
+      "rdfs:comment": {
+        "@language": "en",
+        "@value": "Represents an integer value"
+      },
+      "rdfs:subClassOf": [
+        {
+          "@id": "http://www.knora.org/ontology/knora-base#IntBase"
+        },
+        {
+          "@id": "http://www.knora.org/ontology/knora-base#Value"
+        }
+      ]
+    },
+    {
+      "@id": "http://www.knora.org/ontology/knora-base#LinkValue",
+      "@type": "owl:Class",
+      "rdfs:comment": {
+        "@language": "en",
+        "@value": "A reification node that describes direct links between resources"
+      },
+      "rdfs:subClassOf": [
+        {
+          "@id": "_:ub20bL1988C28"
+        },
+        {
+          "@id": "http://www.knora.org/ontology/knora-base#Value"
+        },
+        {
+          "@id": "rdf:Statement"
+        },
+        {
+          "@id": "_:ub20bL1992C28"
+        },
+        {
+          "@id": "_:ub20bL1984C28"
+        },
+        {
+          "@id": "_:ub20bL1980C28"
+        }
+      ]
+    }
+  ]
+}
