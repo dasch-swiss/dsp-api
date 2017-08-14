@@ -20,17 +20,13 @@
 
 package org.knora.webapi.messages.v2.responder.listmessages
 
-import java.{lang, util}
+import java.util
 
-import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import com.github.jsonldjava.core.{JsonLdOptions, JsonLdProcessor}
 import com.github.jsonldjava.utils.JsonUtils
-import org.apache.jena.sparql.pfunction.library.seq
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v2.responder.{KnoraRequestV2, KnoraResponseV2}
-import org.knora.webapi.util.InputValidation
-import spray.json._
 
 import scala.collection.JavaConverters._
 
@@ -93,9 +89,7 @@ case class NodePathGetRequestV2(iri: IRI, userProfile: UserProfileV1) extends Li
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Responses
 
-case class ListsGetResponseV2(lists: Seq[ListInfoV2]) extends KnoraResponseV2 with ListV2JsonProtocol {
-
-    def toJsValue = listsGetResponseV2Format.write(this)
+case class ListsGetResponseV2(lists: Seq[ListInfoV2]) extends KnoraResponseV2 with ListV2JsonLDProtocol {
 
     def toXML: String = ???
 
@@ -113,9 +107,7 @@ sealed abstract class ListResponseV2 extends KnoraResponseV2
   * @param info  the basic information about a list.
   * @param nodes the whole list.
   */
-case class ListGetResponseV2(info: ListInfoV2, nodes: Seq[ListNodeV2]) extends ListResponseV2 with ListV2JsonProtocol {
-
-    def toJsValue = listExtendedGetResponseV2Format.write(this)
+case class ListGetResponseV2(info: ListInfoV2, nodes: Seq[ListNodeV2]) extends ListResponseV2 with ListV2JsonLDProtocol {
 
     def toXML: String = ???
 
@@ -130,9 +122,7 @@ case class ListGetResponseV2(info: ListInfoV2, nodes: Seq[ListNodeV2]) extends L
   * @param labels     the labels of the list in all available languages.
   * @param comments   the comments of the list in all available languages.
   */
-case class ListInfoGetResponseV2(id: IRI, projectIri: Option[IRI], labels: Seq[StringWithOptionalLang], comments: Seq[StringWithOptionalLang]) extends KnoraResponseV2 with ListV2JsonProtocol with ListV2JsonLDProtocol {
-
-    def toJsValue: JsValue = listInfoGetResponseV2Format.write(this)
+case class ListInfoGetResponseV2(id: IRI, projectIri: Option[IRI], labels: Seq[StringWithOptionalLang], comments: Seq[StringWithOptionalLang]) extends KnoraResponseV2 with ListV2JsonLDProtocol {
 
     def toXML: String = ???
 
@@ -146,9 +136,7 @@ case class ListInfoGetResponseV2(id: IRI, projectIri: Option[IRI], labels: Seq[S
   * @param labels   the labels of the list in all available languages.
   * @param comments the comments of the list in all available languages.
   */
-case class ListNodeInfoGetResponseV2(id: IRI, labels: Seq[StringWithOptionalLang], comments: Seq[StringWithOptionalLang]) extends KnoraResponseV2 with ListV2JsonProtocol {
-
-    def toJsValue: JsValue = listNodeInfoGetResponseV2Format.write(this)
+case class ListNodeInfoGetResponseV2(id: IRI, labels: Seq[StringWithOptionalLang], comments: Seq[StringWithOptionalLang]) extends KnoraResponseV2 with ListV2JsonLDProtocol {
 
     def toXML: String = ???
 
@@ -160,9 +148,7 @@ case class ListNodeInfoGetResponseV2(id: IRI, labels: Seq[StringWithOptionalLang
   *
   * @param nodelist a list of the nodes composing the path from the list's root node up to and including the specified node.
   */
-case class NodePathGetResponseV2(nodelist: Seq[NodePathElementV2]) extends ListResponseV2 with ListV2JsonProtocol {
-
-    def toJsValue = nodePathGetResponseV2Format.write(this)
+case class NodePathGetResponseV2(nodelist: Seq[NodePathElementV2]) extends ListResponseV2 {
 
     def toXML: String = ???
 
@@ -243,111 +229,7 @@ object PathType extends Enumeration {
   */
 case class StringWithOptionalLang(value: String, language: Option[String])
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// JSON formatting
 
-/**
-  * A spray-json protocol for generating Knora API V2 JSON providing data about lists.
-  */
-trait ListV2JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with NullOptions {
-
-    implicit object HierarchicalListV2JsonFormat extends JsonFormat[ListNodeV2] {
-        /**
-          * Recursively converts a [[ListNodeV2]] to a [[JsValue]].
-          *
-          * @param tree a [[ListNodeV2]].
-          * @return a [[JsValue]].
-          */
-        def write(tree: ListNodeV2): JsValue = {
-            // Does the node have children?
-            val childrenOption = if (tree.children.nonEmpty) {
-                // Yes: recursively convert them to JSON.
-                Some("children" -> JsArray(tree.children.map(write).toVector))
-            } else {
-                // No: don't include a "children" array in the output.
-                None
-            }
-
-            val fields = Map(
-                "id" -> tree.id.toJson,
-                "name" -> tree.name.toJson,
-                "label" -> tree.label.toJson,
-                "level" -> tree.level.toJson,
-                "position" -> tree.position.toJson
-            ) ++ childrenOption
-
-            JsObject(fields)
-        }
-
-        /**
-          * Not implemented.
-          */
-        def read(value: JsValue): ListNodeV2 = {
-
-            /*
-            value.asJsObject.getFields("id", "name", "children", "level", "position") match {
-                case Seq(JsString(id), JsString(name), JsString(label), Seq(children), JsNumber(level), JsNumber(position)) =>
-                    ListNodeV2(
-                        id = id,
-                        name = Some(name),
-                        label = Some(label),
-                        children = Seq.empty[ListNodeV2],
-                        level = level.toInt,
-                        position = position.toInt
-                    )
-                case _ => throw new DeserializationException("Color expected")
-            }
-            */
-
-
-            /*
-            val fields = value.asJsObject.fields
-
-            val name: Option[String] = {
-                val name = fields("name").convertTo[String]
-                if (name.nonEmpty) {
-                    Some(name)
-                } else {
-                    None
-                }
-            }
-
-            val label: Option[String] = {
-                val label = fields("label").convertTo[String]
-                if (label.nonEmpty) {
-                    Some(label)
-                } else {
-                    None
-                }
-            }
-
-            val children = Seq.empty[ListNodeV2]
-
-            ListNodeV2(
-                id = fields("id").convertTo[IRI],
-                name = name,
-                label = label,
-                children = children,
-                level = fields("level").convertTo[Int],
-                position = fields("position").convertTo[Int]
-            )
-            */
-
-            ???
-        }
-    }
-
-    implicit val hlistGetResponseV2Format: RootJsonFormat[HListGetResponseV2] = jsonFormat(HListGetResponseV2, "hlist")
-    implicit val selectionGetResponseV2Format: RootJsonFormat[SelectionGetResponseV2] = jsonFormat(SelectionGetResponseV2, "selection")
-    implicit val nodePathElementV2Format: JsonFormat[NodePathElementV2] = jsonFormat(NodePathElementV2, "id", "name", "label")
-    implicit val nodePathGetResponseV2Format: RootJsonFormat[NodePathGetResponseV2] = jsonFormat(NodePathGetResponseV2, "nodelist")
-    implicit val stringWithLangV2Format: JsonFormat[StringWithOptionalLang] = jsonFormat2(StringWithOptionalLang)
-    implicit val listInfoV2Format: JsonFormat[ListInfoV2] = jsonFormat4(ListInfoV2)
-    implicit val listsGetResponseV2Format: RootJsonFormat[ListsGetResponseV2] = jsonFormat(ListsGetResponseV2, "lists")
-    implicit val listExtendedGetResponseV2Format: RootJsonFormat[ListExtendedGetResponseV2] = jsonFormat(ListExtendedGetResponseV2, "info", "nodes")
-    implicit val listNodeInfoGetResponseV2Format: RootJsonFormat[ListNodeInfoGetResponseV2] = jsonFormat(ListNodeInfoGetResponseV2, "id", "labels", "comments")
-    implicit val listInfoGetResponseV2Format: RootJsonFormat[ListInfoGetResponseV2] = jsonFormat(ListInfoGetResponseV2, "id", "projectIri", "labels", "comments")
-}
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////

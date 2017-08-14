@@ -40,7 +40,7 @@ class ListsResponderV2 extends Responder {
 
     def receive = {
         case ListsGetRequestV2(projectIri, userProfile) => future2Message(sender(), listsGetRequestV2(projectIri, userProfile), log)
-        case ListExtendedGetRequestV2(listIri, userProfile) => future2Message(sender(), listExtendedGetRequestV2(listIri, userProfile), log)
+        case ListGetRequestV2(listIri, userProfile) => future2Message(sender(), listGetRequestV2(listIri, userProfile), log)
         case ListNodeInfoGetRequestV2(listIri, userProfile) => future2Message(sender(), listNodeInfoGetRequestV2(listIri, userProfile), log)
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }
@@ -93,7 +93,7 @@ class ListsResponderV2 extends Responder {
       * @param userProfile the profile of the user making the request.
       * @return a [[ListExtendedGetResponseV2]].
       */
-    def listExtendedGetRequestV2(rootNodeIri: IRI, userProfile: UserProfileV1): Future[ListExtendedGetResponseV2] = {
+    def listGetRequestV2(rootNodeIri: IRI, userProfile: UserProfileV1): Future[ListGetResponseV2] = {
 
         for {
             sparqlQuery <- Future(queries.sparql.v2.txt.getListNode(
