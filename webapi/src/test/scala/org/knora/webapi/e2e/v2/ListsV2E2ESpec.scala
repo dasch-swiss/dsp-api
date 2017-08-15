@@ -24,7 +24,7 @@ import com.typesafe.config.ConfigFactory
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
 import org.knora.webapi.messages.v1.responder.authenticatemessages.Credentials
 import org.knora.webapi.messages.v1.responder.sessionmessages.SessionJsonProtocol
-import org.knora.webapi.messages.v2.responder.listmessages.{ListInfoV2, ListNodeInfoGetResponseV2, ListV2JsonProtocol, StringWithOptionalLang}
+import org.knora.webapi.messages.v2.responder.listmessages.{ListInfoV2, ListNodeInfoGetResponseV2, ListV2JsonProtocol, StringWithOptionalLangV2}
 import org.knora.webapi.util.{AkkaHttpUtils, MutableTestIri}
 import org.knora.webapi.{E2ESpec, SharedAdminTestData}
 import spray.json._
@@ -131,8 +131,8 @@ class ListsV2E2ESpec extends E2ESpec(ListsV2E2ESpec.config) with SessionJsonProt
 
                 val expectedNodeInfo = ListNodeInfoGetResponseV2(
                     id = "http://data.knora.org/lists/73d0ec0302",
-                    labels = Seq(StringWithOptionalLang("Title", Some("en")), StringWithOptionalLang("Titel", Some("de")), StringWithOptionalLang("Titre", Some("fr"))),
-                    comments = Seq(StringWithOptionalLang("Hierarchisches Stichwortverzeichnis / Signatur der Bilder", Some("de")))
+                    labels = Seq(StringWithOptionalLangV2("Title", Some("en")), StringWithOptionalLangV2("Titel", Some("de")), StringWithOptionalLangV2("Titre", Some("fr"))),
+                    comments = Seq(StringWithOptionalLangV2("Hierarchisches Stichwortverzeichnis / Signatur der Bilder", Some("de")))
                 )
 
                 receivedNodeinfo should be (expectedNodeInfo)
@@ -154,8 +154,8 @@ class ListsV2E2ESpec extends E2ESpec(ListsV2E2ESpec.config) with SessionJsonProt
                 val expectedListInfo = ListInfoV2(
                     id = "http://data.knora.org/lists/73d0ec0302",
                     projectIri = Some("http://data.knora.org/projects/images"),
-                    labels = Seq(StringWithOptionalLang("Title", Some("en")), StringWithOptionalLang("Titel", Some("de")), StringWithOptionalLang("Titre", Some("fr"))),
-                    comments = Seq(StringWithOptionalLang("Hierarchisches Stichwortverzeichnis / Signatur der Bilder", Some("de")))
+                    labels = Seq(StringWithOptionalLangV2("Title", Some("en")), StringWithOptionalLangV2("Titel", Some("de")), StringWithOptionalLangV2("Titre", Some("fr"))),
+                    comments = Seq(StringWithOptionalLangV2("Hierarchisches Stichwortverzeichnis / Signatur der Bilder", Some("de")))
                 )
 
                 receivedListInfo should be (expectedListInfo)

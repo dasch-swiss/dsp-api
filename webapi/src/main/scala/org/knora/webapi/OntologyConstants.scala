@@ -233,7 +233,11 @@ object OntologyConstants {
         )
 
         val ListNode: IRI = KnoraBasePrefixExpansion + "ListNode"
-        val ListNodeName: String = KnoraBasePrefixExpansion + "listNodeName"
+        val ListNodeName: IRI = KnoraBasePrefixExpansion + "listNodeName"
+        val IsRootNode: IRI = KnoraBasePrefixExpansion + "isRootNode"
+        val HasRootNode: IRI = KnoraBasePrefixExpansion + "hasRootNode"
+        val HasSubListNode: IRI = KnoraBasePrefixExpansion + "hasSubListNode"
+        val ListNodePosition: IRI = KnoraBasePrefixExpansion + "listNodePosition"
 
         val IsDeleted: IRI = KnoraBasePrefixExpansion + "isDeleted"
 

@@ -76,8 +76,8 @@ class ListsResponderV2Spec extends CoreSpec(ListsResponderV2Spec.config) with Im
     val listInfo = ListInfoV2(
         id = "http://data.knora.org/lists/73d0ec0302",
         projectIri = Some("http://data.knora.org/projects/images"),
-        labels = Seq(StringWithOptionalLang("Title", Some("en")), StringWithOptionalLang("Titel", Some("de")), StringWithOptionalLang("Titre", Some("fr"))),
-        comments = Seq(StringWithOptionalLang("Hierarchisches Stichwortverzeichnis / Signatur der Bilder", Some("de")))
+        labels = Seq(StringWithOptionalLangV2("Title", Some("en")), StringWithOptionalLangV2("Titel", Some("de")), StringWithOptionalLangV2("Titre", Some("fr"))),
+        comments = Seq(StringWithOptionalLangV2("Hierarchisches Stichwortverzeichnis / Signatur der Bilder", Some("de")))
     )
 
     private val hKeywords = HListGetResponseV2(

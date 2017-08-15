@@ -47,13 +47,15 @@ class ListsResponderV2 extends Responder {
 
 
     /**
-      * Gets all lists and returns them as a sequence of [[ListInfoV2]].
+      * Gets all lists and returns them as a [[ReadListsSequenceV2]]. For performance reasons
+      * (as lists can be very large), we only return the head of the list, i.e. the root node without
+      * any children.
       *
       * @param projectIri  the IRI of the project the list belongs to.
       * @param userProfile the profile of the user making the request.
-      * @return
+      * @return a [[ReadListsSequenceV2]].
       */
-    def listsGetRequestV2(projectIri: Option[IRI], userProfile: UserProfileV1): Future[ListsGetResponseV2] = {
+    def listsGetRequestV2(projectIri: Option[IRI], userProfile: UserProfileV1): Future[ReadListsSequenceV2] = {
 
         log.debug("listsGetRequestV2")
 
@@ -70,30 +72,29 @@ class ListsResponderV2 extends Responder {
             // Seq(subjectIri, (objectIri -> Seq(stringWithOptionalLand))
             statements = listsResponse.statements.toList
 
-            lists = statements.map {
-                case (listIri: IRI, propsMap: Map[IRI, Seq[StringWithOptionalLang]]) =>
+            lists: Seq[ListRootNodeV2] = statements.map {
+                case (listIri: IRI, propsMap: Map[IRI, Seq[StringWithOptionalLangV2]]) =>
 
-                    ListInfoV2(
+                    ListRootNodeV2(
                         id = listIri,
                         projectIri = propsMap.get(OntologyConstants.KnoraBase.AttachedToProject).map(_.head.value),
-                        labels = propsMap.getOrElse(OntologyConstants.Rdfs.Label, Seq.empty[StringWithOptionalLang]),
-                        comments = propsMap.getOrElse(OntologyConstants.Rdfs.Comment, Seq.empty[StringWithOptionalLang])
+                        labels = propsMap.getOrElse(OntologyConstants.Rdfs.Label, Seq.empty[StringWithOptionalLangV2]),
+                        comments = propsMap.getOrElse(OntologyConstants.Rdfs.Comment, Seq.empty[StringWithOptionalLangV2]),
+                        children = Seq.empty[ListChildNodeV2]
                     )
             }.toVector
 
-        } yield ListsGetResponseV2(
-            lists = lists
-        )
+        } yield ReadListsSequenceV2(numberOfItems = lists.size, items = lists)
     }
 
     /**
-      * Retrieves a list from the triplestore and returns it as a [[ListExtendedGetResponseV2]].
+      * Retrieves a list from the triplestore and returns it as a [[ReadListsSequenceV2]].
       *
       * @param rootNodeIri the Iri if the root node of the list to be queried.
       * @param userProfile the profile of the user making the request.
-      * @return a [[ListExtendedGetResponseV2]].
+      * @return a [[ReadListsSequenceV2]].
       */
-    def listGetRequestV2(rootNodeIri: IRI, userProfile: UserProfileV1): Future[ListGetResponseV2] = {
+    def listGetRequestV2(rootNodeIri: IRI, userProfile: UserProfileV1): Future[ReadListsSequenceV2] = {
 
         for {
             sparqlQuery <- Future(queries.sparql.v2.txt.getListNode(
@@ -114,12 +115,12 @@ class ListsResponderV2 extends Responder {
             // _ = log.debug(s"listExtendedGetRequestV2 - statements: {}", MessageUtil.toSource(statements))
 
             listInfo = statements.head match {
-                case (nodeIri: IRI, propsMap: Map[IRI, Seq[StringWithOptionalLang]]) =>
+                case (nodeIri: IRI, propsMap: Map[IRI, Seq[StringWithOptionalLangV2]]) =>
                     ListInfoV2(
                         id = nodeIri,
                         projectIri = propsMap.get(OntologyConstants.KnoraBase.AttachedToProject).map(_.head.value),
-                        labels = propsMap.getOrElse(OntologyConstants.Rdfs.Label, Seq.empty[StringWithOptionalLang]),
-                        comments = propsMap.getOrElse(OntologyConstants.Rdfs.Comment, Seq.empty[StringWithOptionalLang])
+                        labels = propsMap.getOrElse(OntologyConstants.Rdfs.Label, Seq.empty[StringWithOptionalLangV2]),
+                        comments = propsMap.getOrElse(OntologyConstants.Rdfs.Comment, Seq.empty[StringWithOptionalLangV2])
 
                         // status = groupedListProperties.get(OntologyConstants.KnoraBase.Status).map(_.head.toBoolean)
                     )
@@ -156,11 +157,11 @@ class ListsResponderV2 extends Responder {
             // _ = log.debug(s"listNodeInfoGetRequestV2 - statements: {}", MessageUtil.toSource(statements))
 
             listNodeInfo: ListNodeInfoV2 = statements.head match {
-                case (nodeIri: IRI, propsMap: Map[IRI, Seq[StringWithOptionalLang]]) =>
+                case (nodeIri: IRI, propsMap: Map[IRI, Seq[StringWithOptionalLangV2]]) =>
                     ListNodeInfoV2(
                         id = nodeIri,
-                        labels = propsMap.getOrElse(OntologyConstants.Rdfs.Label, Seq.empty[StringWithOptionalLang]),
-                        comments = propsMap.getOrElse(OntologyConstants.Rdfs.Comment, Seq.empty[StringWithOptionalLang])
+                        labels = propsMap.getOrElse(OntologyConstants.Rdfs.Label, Seq.empty[StringWithOptionalLangV2]),
+                        comments = propsMap.getOrElse(OntologyConstants.Rdfs.Comment, Seq.empty[StringWithOptionalLangV2])
 
                         // status = groupedListProperties.get(OntologyConstants.KnoraBase.Status).map(_.head.toBoolean)
                     )
@@ -171,34 +172,6 @@ class ListsResponderV2 extends Responder {
         } yield ListNodeInfoGetResponseV2(id = listNodeInfo.id, labels = listNodeInfo.labels, comments = listNodeInfo.comments)
     }
 
-    /**
-      * Retrieves a list from the triplestore and returns it as a [[org.knora.webapi.messages.v2.responder.listmessages.ListGetResponseV2]].
-      * Due to compatibility with the old, crappy SALSAH-API, "hlists" and "selection" have to be differentiated in the response
-      * [[org.knora.webapi.messages.v2.responder.listmessages.ListGetResponseV2]] is the abstract super class of [[HListGetResponseV2]] and [[SelectionGetResponseV2]]
-      *
-      * @param rootNodeIri the Iri if the root node of the list to be queried.
-      * @param userProfile the profile of the user making the request.
-      * @param pathType    the type of the list (HList or Selection).
-      * @return a [[ListGetResponseV2]].
-      */
-    def listGetRequestV2(rootNodeIri: IRI, userProfile: UserProfileV1, pathType: PathType.Value): Future[ListGetResponseV2] = {
-
-        for {
-            maybeChildren <- listGetV2(rootNodeIri, userProfile)
-
-            children = maybeChildren match {
-                case children: Seq[ListNodeV2] if children.nonEmpty => children
-                case _ => throw NotFoundException(s"List not found: $rootNodeIri")
-            }
-
-            // consider routing path here ("hlists" | "selections") and return the correct case class
-            result = pathType match {
-                case PathType.HList => HListGetResponseV2(hlist = children)
-                case PathType.Selection => SelectionGetResponseV2(selection = children)
-            }
-
-        } yield result
-    }
 
     /**
       * Retrieves a list from the triplestore and returns it as a sequence of child nodes.
@@ -207,7 +180,7 @@ class ListsResponderV2 extends Responder {
       * @param userProfile the profile of the user making the request.
       * @return a sequence of [[ListNodeV2]].
       */
-    private def listGetV2(rootNodeIri: IRI, userProfile: UserProfileV1): Future[Seq[ListNodeV2]] = {
+    private def listGetChildrenV2(rootNodeIri: IRI, userProfile: UserProfileV1): Future[Seq[ListChildNodeV2]] = {
 
         /**
           * Compares the `position`-values of two nodes
@@ -216,8 +189,12 @@ class ListsResponderV2 extends Responder {
           * @param list2 node in the same list
           * @return true if the `position` of list1 is lower than the one of list2
           */
-        def orderNodes(list1: ListNodeV2, list2: ListNodeV2): Boolean = {
-            list1.position < list2.position
+        def orderNodes(list1: ListChildNodeV2, list2: ListChildNodeV2): Boolean = {
+            if (list1.position.nonEmpty && list2.position.nonEmpty) {
+                list1.position.get < list2.position.get
+            } else {
+                true
+            }
         }
 
         /**
@@ -228,7 +205,8 @@ class ListsResponderV2 extends Responder {
           *                         of SPARQL query results representing that node's children.
           * @return a [[ListNodeV2]].
           */
-        def createHierarchicalListV2(nodeIri: IRI, groupedByNodeIri: Map[IRI, Seq[VariableResultsRow]], level: Int): ListNodeV2 = {
+        def createListChildNodeV2(nodeIri: IRI, groupedByNodeIri: Map[IRI, Seq[VariableResultsRow]], level: Int): ListChildNodeV2 = {
+
             val childRows = groupedByNodeIri(nodeIri)
 
             /*
@@ -253,19 +231,24 @@ class ListsResponderV2 extends Responder {
 
             val firstRowMap = childRows.head.rowMap
 
-            ListNodeV2(
+            ListChildNodeV2(
                 id = nodeIri,
+                hasRootNode = "",
                 name = firstRowMap.get("nodeName"),
-                label = firstRowMap.get("label"),
+                labels = if (firstRowMap.get("label").nonEmpty) {
+                    Seq(StringWithOptionalLangV2(firstRowMap.get("label").get))
+                } else {
+                    Seq.empty[StringWithOptionalLangV2]
+                },
+                comments = Seq.empty[StringWithOptionalLangV2],
                 children = if (firstRowMap.get("child").isEmpty) {
                     // If this node has no children, childRows will just contain one row with no value for "child".
-                    Nil
+                    Seq.empty[ListChildNodeV2]
                 } else {
                     // Recursively get the child nodes.
-                    childRows.map(childRow => createHierarchicalListV2(childRow.rowMap("child"), groupedByNodeIri, level + 1)).sortWith(orderNodes)
+                    childRows.map(childRow => createListChildNodeV2(childRow.rowMap("child"), groupedByNodeIri, level + 1)).sortWith(orderNodes)
                 },
-                position = firstRowMap("position").toInt,
-                level = level
+                position = firstRowMap.get("position").map(_.toInt)
             )
         }
 
@@ -292,7 +275,7 @@ class ListsResponderV2 extends Responder {
             } else {
                 // Process each child of the root node.
                 rootNodeChildren.map {
-                    childRow => createHierarchicalListV2(childRow.rowMap("child"), groupedByNodeIri, 0)
+                    childRow => createListChildNodeV2(childRow.rowMap("child"), groupedByNodeIri, 0)
                 }.sortWith(orderNodes)
             }
 
