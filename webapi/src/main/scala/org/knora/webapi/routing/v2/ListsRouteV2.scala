@@ -24,10 +24,13 @@ import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
-import org.knora.webapi.messages.v2.responder.listmessages.{ListExtendedGetRequestV2, ListInfoGetRequestV2, ListNodeInfoGetRequestV2, ListsGetRequestV2}
+import akka.util.Timeout
+import org.knora.webapi.messages.v2.responder.listmessages._
 import org.knora.webapi.routing.{Authenticator, RouteUtilV2}
 import org.knora.webapi.util.InputValidation
 import org.knora.webapi.{BadRequestException, IRI, SettingsImpl}
+
+import scala.concurrent.ExecutionContextExecutor
 
 /**
   * Provides a spray-routing function for API routes that deal with lists.
@@ -36,8 +39,8 @@ object ListsRouteV2 extends Authenticator {
 
     def knoraApiPath(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter): Route = {
         implicit val system: ActorSystem = _system
-        implicit val executionContext = system.dispatcher
-        implicit val timeout = settings.defaultTimeout
+        implicit val executionContext: ExecutionContextExecutor = system.dispatcher
+        implicit val timeout: Timeout = settings.defaultTimeout
         val responderManager = system.actorSelection("/user/responderManager")
 
         path("v2" / "lists") {
@@ -70,7 +73,7 @@ object ListsRouteV2 extends Authenticator {
                     val userProfile = getUserProfileV1(requestContext)
                     val listIri = InputValidation.toIri(iri, () => throw BadRequestException(s"Invalid param list IRI: $iri"))
 
-                    val requestMessage = ListExtendedGetRequestV2(listIri, userProfile)
+                    val requestMessage = ListGetRequestV2(listIri, userProfile)
 
                     RouteUtilV2.runJsonRoute(
                         requestMessage,
@@ -88,32 +91,6 @@ object ListsRouteV2 extends Authenticator {
                 /* delete (deactivate) list */
                 ???
             }
-        } ~
-        path("v2" / "lists" / "infos" / Segment) {iri =>
-            get {
-                /* return list information (the root node of a list) */
-                requestContext =>
-                    val userProfile = getUserProfileV1(requestContext)
-                    val listIri = InputValidation.toIri(iri, () => throw BadRequestException(s"Invalid param list IRI: $iri"))
-
-                    val requestMessage = ListInfoGetRequestV2(listIri, userProfile)
-
-                    RouteUtilV2.runJsonRoute(
-                        requestMessage,
-                        requestContext,
-                        settings,
-                        responderManager,
-                        log
-                    )
-            } ~
-                    put {
-                        /* update list node */
-                        ???
-                    } ~
-                    delete {
-                        /* delete list node */
-                        ???
-                    }
         } ~
         path("v2" / "lists" / "nodes" / Segment) {iri =>
             get {

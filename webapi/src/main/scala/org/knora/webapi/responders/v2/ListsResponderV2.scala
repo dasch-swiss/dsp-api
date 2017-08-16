@@ -27,7 +27,6 @@ import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v2.responder.listmessages._
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.util.ActorUtil._
-import org.knora.webapi.util.MessageUtil
 
 import scala.annotation.tailrec
 import scala.collection.breakOut
@@ -57,7 +56,7 @@ class ListsResponderV2 extends Responder {
       */
     def listsGetRequestV2(projectIri: Option[IRI], userProfile: UserProfileV1): Future[ReadListsSequenceV2] = {
 
-        log.debug("listsGetRequestV2")
+        // log.debug("listsGetRequestV2")
 
         for {
             sparqlQuery <- Future(queries.sparql.v2.txt.getLists(
@@ -73,22 +72,22 @@ class ListsResponderV2 extends Responder {
             statements = listsResponse.statements.toList
 
             lists: Seq[ListRootNodeV2] = statements.map {
-                case (listIri: IRI, propsMap: Map[IRI, Seq[StringWithOptionalLangV2]]) =>
+                case (listIri: IRI, propsMap: Map[IRI, Seq[StringV2]]) =>
 
                     ListRootNodeV2(
                         id = listIri,
                         projectIri = propsMap.get(OntologyConstants.KnoraBase.AttachedToProject).map(_.head.value),
-                        labels = propsMap.getOrElse(OntologyConstants.Rdfs.Label, Seq.empty[StringWithOptionalLangV2]),
-                        comments = propsMap.getOrElse(OntologyConstants.Rdfs.Comment, Seq.empty[StringWithOptionalLangV2]),
+                        labels = propsMap.getOrElse(OntologyConstants.Rdfs.Label, Seq.empty[StringV2]),
+                        comments = propsMap.getOrElse(OntologyConstants.Rdfs.Comment, Seq.empty[StringV2]),
                         children = Seq.empty[ListChildNodeV2]
                     )
             }.toVector
 
-        } yield ReadListsSequenceV2(numberOfItems = lists.size, items = lists)
+        } yield ReadListsSequenceV2(items = lists)
     }
 
     /**
-      * Retrieves a list from the triplestore and returns it as a [[ReadListsSequenceV2]].
+      * Retrieves a complete list (root and all children) from the triplestore and returns it as a [[ReadListsSequenceV2]].
       *
       * @param rootNodeIri the Iri if the root node of the list to be queried.
       * @param userProfile the profile of the user making the request.
@@ -97,50 +96,55 @@ class ListsResponderV2 extends Responder {
     def listGetRequestV2(rootNodeIri: IRI, userProfile: UserProfileV1): Future[ReadListsSequenceV2] = {
 
         for {
+            // this query will give us only the information about the root node.
             sparqlQuery <- Future(queries.sparql.v2.txt.getListNode(
                 triplestore = settings.triplestoreType,
-                nodeIri = rootNodeIri,
-                isRootNode = true
+                nodeIri = rootNodeIri
             ).toString())
 
             listInfoResponse <- (storeManager ? SparqlExtendedConstructRequest(sparqlQuery)).mapTo[SparqlExtendedConstructResponse]
 
+            // check to see if list could be found
             _ = if (listInfoResponse.statements.isEmpty) {
                 throw NotFoundException(s"List not found: $rootNodeIri")
             }
+            // _ = log.debug(s"listExtendedGetRequestV2 - statements: {}", MessageUtil.toSource(statements))
+
+            // here we know that the list exists and it is fine if children is an empty list
+            children: Seq[ListChildNodeV2] <- listGetChildrenV2(rootNodeIri, userProfile)
 
             // Map(subjectIri -> (objectIri -> Seq(stringWithOptionalLand))
             statements = listInfoResponse.statements
-
-            // _ = log.debug(s"listExtendedGetRequestV2 - statements: {}", MessageUtil.toSource(statements))
-
-            listInfo = statements.head match {
-                case (nodeIri: IRI, propsMap: Map[IRI, Seq[StringWithOptionalLangV2]]) =>
-                    ListInfoV2(
+            list = statements.head match {
+                case (nodeIri: IRI, propsMap: Map[IRI, Seq[StringV2]]) =>
+                    ListRootNodeV2(
                         id = nodeIri,
                         projectIri = propsMap.get(OntologyConstants.KnoraBase.AttachedToProject).map(_.head.value),
-                        labels = propsMap.getOrElse(OntologyConstants.Rdfs.Label, Seq.empty[StringWithOptionalLangV2]),
-                        comments = propsMap.getOrElse(OntologyConstants.Rdfs.Comment, Seq.empty[StringWithOptionalLangV2])
-
+                        labels = propsMap.getOrElse(OntologyConstants.Rdfs.Label, Seq.empty[StringV2]),
+                        comments = propsMap.getOrElse(OntologyConstants.Rdfs.Comment, Seq.empty[StringV2]),
+                        children = children
                         // status = groupedListProperties.get(OntologyConstants.KnoraBase.Status).map(_.head.toBoolean)
                     )
             }
 
-            // here we know that the list exists and it is fine if children is an empty list
-            children: Seq[ListNodeV2] <- listGetV2(rootNodeIri, userProfile)
+            // _ = log.debug(s"listGetRequestV2 - list: {}", MessageUtil.toSource(list)")
 
-            // _ = log.debug(s"listExtendedGetRequestV2 - children: {}", MessageUtil.toSource(children)")
-
-        } yield ListExtendedGetResponseV2(info = listInfo, nodes = children)
+        } yield ReadListsSequenceV2(items = Seq(list))
     }
 
 
-    def listNodeInfoGetRequestV2(nodeIri: IRI, userProfile: UserProfileV1): Future[ListNodeInfoGetResponseV2] = {
+    /**
+      * Retrieves information about a single (child) node.
+      *
+      * @param nodeIri the Iri if the child node to be queried.
+      * @param userProfile the profile of the user making the request.
+      * @return a [[ReadListsSequenceV2]].
+      */
+    def listNodeInfoGetRequestV2(nodeIri: IRI, userProfile: UserProfileV1): Future[ReadListsSequenceV2] = {
         for {
             sparqlQuery <- Future(queries.sparql.v2.txt.getListNode(
                 triplestore = settings.triplestoreType,
-                nodeIri = nodeIri,
-                isRootNode = false
+                nodeIri = nodeIri
             ).toString())
 
             // _ = log.debug("listNodeInfoGetRequestV2 - sparqlQuery: {}", sparqlQuery)
@@ -156,20 +160,35 @@ class ListsResponderV2 extends Responder {
 
             // _ = log.debug(s"listNodeInfoGetRequestV2 - statements: {}", MessageUtil.toSource(statements))
 
-            listNodeInfo: ListNodeInfoV2 = statements.head match {
-                case (nodeIri: IRI, propsMap: Map[IRI, Seq[StringWithOptionalLangV2]]) =>
-                    ListNodeInfoV2(
-                        id = nodeIri,
-                        labels = propsMap.getOrElse(OntologyConstants.Rdfs.Label, Seq.empty[StringWithOptionalLangV2]),
-                        comments = propsMap.getOrElse(OntologyConstants.Rdfs.Comment, Seq.empty[StringWithOptionalLangV2])
+            node: ListNodeV2 = statements.head match {
+                case (nodeIri: IRI, propsMap: Map[IRI, Seq[StringV2]]) =>
 
-                        // status = groupedListProperties.get(OntologyConstants.KnoraBase.Status).map(_.head.toBoolean)
-                    )
+                    if (propsMap.get(OntologyConstants.KnoraBase.HasRootNode).nonEmpty) {
+                        // we have a child node, as only the child node has this property attached
+                        ListChildNodeV2 (
+                            id = nodeIri,
+                            name = propsMap.get(OntologyConstants.KnoraBase.ListNodeName).map(_.head.value),
+                            labels = propsMap.getOrElse(OntologyConstants.Rdfs.Label, Seq.empty[StringV2]),
+                            comments = propsMap.getOrElse(OntologyConstants.Rdfs.Comment, Seq.empty[StringV2]),
+                            children = Seq.empty[ListChildNodeV2],
+                            position = propsMap.get(OntologyConstants.KnoraBase.ListNodePosition).map(_.head.value.toInt)
+                            // status = groupedListProperties.get(OntologyConstants.KnoraBase.Status).map(_.head.toBoolean)
+                        )
+                    } else {
+                        ListRootNodeV2(
+                            id = nodeIri,
+                            projectIri = propsMap.get(OntologyConstants.KnoraBase.AttachedToProject).map(_.head.value),
+                            labels = propsMap.getOrElse(OntologyConstants.Rdfs.Label, Seq.empty[StringV2]),
+                            comments = propsMap.getOrElse(OntologyConstants.Rdfs.Comment, Seq.empty[StringV2]),
+                            children = Seq.empty[ListChildNodeV2]
+                            // status = groupedListProperties.get(OntologyConstants.KnoraBase.Status).map(_.head.toBoolean)
+                        )
+                    }
             }
 
-            _ = log.debug(s"listNodeInfoGetRequestV2 - listNodeInfo: {}", MessageUtil.toSource(listNodeInfo))
+            // _ = log.debug(s"listNodeInfoGetRequestV2 - node: {}", MessageUtil.toSource(node))
 
-        } yield ListNodeInfoGetResponseV2(id = listNodeInfo.id, labels = listNodeInfo.labels, comments = listNodeInfo.comments)
+        } yield ReadListsSequenceV2(Seq(node))
     }
 
 
@@ -233,14 +252,13 @@ class ListsResponderV2 extends Responder {
 
             ListChildNodeV2(
                 id = nodeIri,
-                hasRootNode = "",
                 name = firstRowMap.get("nodeName"),
                 labels = if (firstRowMap.get("label").nonEmpty) {
-                    Seq(StringWithOptionalLangV2(firstRowMap.get("label").get))
+                    Seq(StringV2(firstRowMap.get("label").get))
                 } else {
-                    Seq.empty[StringWithOptionalLangV2]
+                    Seq.empty[StringV2]
                 },
-                comments = Seq.empty[StringWithOptionalLangV2],
+                comments = Seq.empty[StringV2],
                 children = if (firstRowMap.get("child").isEmpty) {
                     // If this node has no children, childRows will just contain one row with no value for "child".
                     Seq.empty[ListChildNodeV2]
@@ -269,9 +287,9 @@ class ListsResponderV2 extends Responder {
 
             rootNodeChildren = groupedByNodeIri.getOrElse(rootNodeIri, Seq.empty[VariableResultsRow])
 
-            children: Seq[ListNodeV2] = if (rootNodeChildren.head.rowMap.get("child").isEmpty) {
+            children: Seq[ListChildNodeV2] = if (rootNodeChildren.head.rowMap.get("child").isEmpty) {
                 // The root node has no children, so we return an empty list.
-                Seq.empty[ListNodeV2]
+                Seq.empty[ListChildNodeV2]
             } else {
                 // Process each child of the root node.
                 rootNodeChildren.map {
@@ -288,7 +306,7 @@ class ListsResponderV2 extends Responder {
       * @param queryNodeIri the IRI of the node whose path is to be queried.
       * @param userProfile  the profile of the user making the request.
       */
-    private def getNodePathResponseV2(queryNodeIri: IRI, userProfile: UserProfileV1): Future[NodePathGetResponseV2] = {
+    private def getNodePathResponseV2(queryNodeIri: IRI, userProfile: UserProfileV1): Future[ReadListsSequenceV2] = {
         /**
           * Recursively constructs the path to a node.
           *
@@ -299,15 +317,22 @@ class ListsResponderV2 extends Responder {
           * @return the complete path to `node`.
           */
         @tailrec
-        def makePath(node: IRI, nodeMap: Map[IRI, Map[String, String]], parentMap: Map[IRI, IRI], path: Seq[NodePathElementV2]): Seq[NodePathElementV2] = {
+        def makePath(node: IRI, nodeMap: Map[IRI, Map[String, String]], parentMap: Map[IRI, IRI], path: Seq[ListChildNodeV2]): Seq[ListChildNodeV2] = {
             // Get the details of the node.
             val nodeData = nodeMap(node)
 
             // Construct a NodePathElementV2 containing those details.
-            val pathElement = NodePathElementV2(
+            val pathElement = ListChildNodeV2(
                 id = nodeData("node"),
                 name = nodeData.get("nodeName"),
-                label = nodeData.get("label")
+                labels = if (nodeData.contains("label")) {
+                    Seq(StringV2(nodeData("label")))
+                } else {
+                    Seq.empty[StringV2]
+                },
+                comments = Seq.empty[StringV2],
+                children = Seq.empty[ListChildNodeV2],
+                position = None
             )
 
             // Add it to the path.
@@ -364,8 +389,6 @@ class ListsResponderV2 extends Responder {
                         case None => acc
                     }
             }
-        } yield NodePathGetResponseV2(
-            nodelist = makePath(queryNodeIri, nodeMap, parentMap, Nil)
-        )
+        } yield ReadListsSequenceV2(items = makePath(queryNodeIri, nodeMap, parentMap, Nil))
     }
 }

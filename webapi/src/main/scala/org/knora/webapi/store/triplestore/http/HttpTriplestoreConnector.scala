@@ -36,7 +36,7 @@ import org.eclipse.rdf4j.rio.turtle._
 import org.knora.webapi.SettingsConstants._
 import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages._
-import org.knora.webapi.messages.v2.responder.listmessages.StringWithOptionalLangV2
+import org.knora.webapi.messages.v2.responder.listmessages.StringV2
 import org.knora.webapi.store.triplestore.RdfDataObjectFactory
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.FakeTriplestore
@@ -250,7 +250,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
             /**
               * A collection of all the statements in the input file, grouped and sorted by subject IRI.
               */
-            private var statements = Map.empty[IRI, Map[IRI, Seq[StringWithOptionalLangV2]]]
+            private var statements = Map.empty[IRI, Map[IRI, Seq[StringV2]]]
 
             override def handleComment(comment: IRI): Unit = {}
 
@@ -267,10 +267,10 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
                     case lit: SimpleLiteral => lit.getLanguage.asScala // needs the 'scala.compat.java8.OptionConverters._' import
                     case _ => None
                 }
-                val currentStatementsForSubject: Map[IRI, Seq[StringWithOptionalLangV2]] = statements.getOrElse(subjectIri, Map.empty[IRI, Seq[StringWithOptionalLangV2]])
-                val currentStatementsForPredicate: Seq[StringWithOptionalLangV2] = currentStatementsForSubject.getOrElse(predicateIri, Seq.empty[StringWithOptionalLangV2])
+                val currentStatementsForSubject: Map[IRI, Seq[StringV2]] = statements.getOrElse(subjectIri, Map.empty[IRI, Seq[StringV2]])
+                val currentStatementsForPredicate: Seq[StringV2] = currentStatementsForSubject.getOrElse(predicateIri, Seq.empty[StringV2])
 
-                val updatedPredicateStatements = currentStatementsForPredicate :+ StringWithOptionalLangV2(objectIri, objectLang)
+                val updatedPredicateStatements = currentStatementsForPredicate :+ StringV2(objectIri, objectLang)
                 val updatedSubjectStatements = currentStatementsForSubject + (predicateIri -> updatedPredicateStatements)
 
                 statements += (subjectIri -> updatedSubjectStatements)

@@ -60,13 +60,6 @@ case class ListsGetRequestV2(projectIri: Option[IRI] = None,
   */
 case class ListGetRequestV2(iri: IRI, userProfile: UserProfileV1) extends ListsResponderRequestV2
 
-/**
-  * Request basic information about a list. A successful response will be a [[ReadListsSequenceV2]]
-  *
-  * @param iri         the IRI of the list node.
-  * @param userProfile the profile of the user making the request.
-  */
-case class ListInfoGetRequestV2(iri: IRI, userProfile: UserProfileV1) extends ListsResponderRequestV2
 
 /**
   * Request basic information about a list node. A successful response will be a [[ReadListsSequenceV2]]
@@ -76,9 +69,10 @@ case class ListInfoGetRequestV2(iri: IRI, userProfile: UserProfileV1) extends Li
   */
 case class ListNodeInfoGetRequestV2(iri: IRI, userProfile: UserProfileV1) extends ListsResponderRequestV2
 
+
 /**
   * Requests the path from the root node of a list to a particular node. A successful response will be
-  * a [[ReadNodePathSequenceV2]].
+  * a [[ReadListsSequenceV2]].
   *
   * @param iri         the IRI of the node.
   * @param userProfile the profile of the user making the request.
@@ -90,28 +84,15 @@ case class NodePathGetRequestV2(iri: IRI, userProfile: UserProfileV1) extends Li
 // Responses
 
 /**
+  * Represents a sequence of list nodes.
   *
-  * @param numberOfItems
-  * @param items
+  * @param items the sequence of [[ListNodeV2]].
   */
-case class ReadListsSequenceV2(numberOfItems: Int, items: Seq[ListNodeV2]) extends KnoraResponseV2 with ListV2JsonLDProtocol {
+case class ReadListsSequenceV2(items: Seq[ListNodeV2]) extends KnoraResponseV2 with ListV2JsonLDProtocol {
 
     def toXML: String = ???
 
-    def toJsonLDWithValueObject(settings: SettingsImpl): String = readListsSequenceV2Writer(numberOfItems, items, settings)
-}
-
-/**
-  * Responds to a [[NodePathGetRequestV2]] by providing the path to a particular hierarchical list node.
-
-  * @param numberOfItems number of items in the list.
-  * @param items a list of the nodes composing the path from the list's root node up to and including the specified node.
-  */
-case class ReadNodePathSequenceV2(numberOfItems: Int, items: Seq[NodePathElementV2]) extends KnoraResponseV2 with ListV2JsonLDProtocol {
-
-    def toXML: String = ???
-
-    def toJsonLDWithValueObject(settings: SettingsImpl): String = readNodePathSequenceV2Writer(numberOfItems, items, settings)
+    def toJsonLDWithValueObject(settings: SettingsImpl): String = readListsSequenceV2Writer(items, settings)
 }
 
 
@@ -127,7 +108,7 @@ case class ReadNodePathSequenceV2(numberOfItems: Int, items: Seq[NodePathElement
   * @param comments   the comments attached to the list in all available languages.
   * @param children   the children of this list node.
   */
-sealed abstract class ListNodeV2(id: IRI, labels: Seq[StringWithOptionalLangV2], comments: Seq[StringWithOptionalLangV2], children: Seq[ListNodeV2])
+sealed abstract class ListNodeV2(id: IRI, labels: Seq[StringV2], comments: Seq[StringV2], children: Seq[ListNodeV2])
 
 /**
   * Represents information about a list. This information is found in the list's root node.
@@ -137,29 +118,19 @@ sealed abstract class ListNodeV2(id: IRI, labels: Seq[StringWithOptionalLangV2],
   * @param labels     the labels of the list in all available languages.
   * @param comments   the comments attached to the list in all available languages.
   */
-case class ListRootNodeV2(id: IRI, projectIri: Option[IRI], labels: Seq[StringWithOptionalLangV2], comments: Seq[StringWithOptionalLangV2], children: Seq[ListChildNodeV2]) extends ListNodeV2(id, labels, comments, children)
+case class ListRootNodeV2(id: IRI, projectIri: Option[IRI], labels: Seq[StringV2], comments: Seq[StringV2], children: Seq[ListChildNodeV2]) extends ListNodeV2(id, labels, comments, children)
 
 /**
   * Represents a hierarchical list node in Knora API V2 format.
   *
   * @param id             the IRI of the list node.
-  * @param hasRootNode  the root node this list node belongs to.
   * @param name           the name of the list node.
   * @param labels          the label(s) of the list node.
   * @param comments        the comment(s) attached to the list in a specific language (if language tags are used) .
   * @param children the list node's child nodes.
   * @param position       the position of the node among its siblings (optional).
   */
-case class ListChildNodeV2(id: IRI, hasRootNode: IRI, name: Option[String], labels: Seq[StringWithOptionalLangV2], comments: Seq[StringWithOptionalLangV2], children: Seq[ListChildNodeV2], position: Option[Int]) extends ListNodeV2(id, labels, comments, children)
-
-/**
-  * Represents a node on a hierarchical list path.
-  *
-  * @param id    the IRI of the list node.
-  * @param name  the name of the list node.
-  * @param label the label of the list node.
-  */
-case class NodePathElementV2(id: IRI, name: Option[String], label: Option[String])
+case class ListChildNodeV2(id: IRI, name: Option[String], labels: Seq[StringV2], comments: Seq[StringV2], children: Seq[ListChildNodeV2], position: Option[Int]) extends ListNodeV2(id, labels, comments, children)
 
 /**
   * Represents a string with an optional language tag.
@@ -167,7 +138,51 @@ case class NodePathElementV2(id: IRI, name: Option[String], label: Option[String
   * @param value    the string value.
   * @param language the optional language tag.
   */
-case class StringWithOptionalLangV2(value: String, language: Option[String] = None)
+case class StringV2(value: String, language: Option[String] = None) {
+
+    /**
+      * Returns the string representation.
+      *
+      * @return
+      */
+    override def toString: String = {
+        if (language.nonEmpty) {
+            "StringV2(%s, %s)".format(value, language.get)
+        } else {
+            value
+        }
+    }
+
+    /**
+      * Returns the value as an integer.
+      *
+      * @return
+      */
+    def toInt: Int = value.toInt
+
+    /**
+      * Returns the value as an IRI.
+      *
+      * @return
+      */
+    def toIri: IRI = value
+
+    /**
+      * Returns a java object.
+      *
+      * @return
+      */
+    def toObject: Object = {
+        if (language.nonEmpty) {
+            Map(
+                "@language" -> language.get,
+                "@value" -> value
+            ).asJava
+        } else {
+            value
+        }
+    }
+}
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -182,13 +197,13 @@ trait ListV2JsonLDProtocol {
     private val rdfsComment: IRI = "http://www.w3.org/2000/01/rdf-schema#comment"
 
     /**
-      * Returns an JSON-LD string.
-      * @param numberOfItems
-      * @param items
-      * @param settings
-      * @return
+      * Returns an JSON-LD string representing a sequence of list nodes.
+      *
+      * @param items the sequence of [[ListNodeV2]].
+      * @param settings the system settings.
+      * @return a JSON-LD [[String]].
       */
-    def readListsSequenceV2Writer(numberOfItems: Int, items: Seq[ListNodeV2], settings: SettingsImpl): String = {
+    def readListsSequenceV2Writer(items: Seq[ListNodeV2], settings: SettingsImpl): String = {
 
         val context = new util.HashMap[String, String]()
         context.put("@vocab", "http://schema.org/")
@@ -206,7 +221,7 @@ trait ListV2JsonLDProtocol {
 
         json.put("@type", "ItemList")
 
-        json.put("http://schema.org/numberOfItems", new lang.Integer(numberOfItems))
+        json.put("http://schema.org/numberOfItems", new lang.Integer(items.size))
 
         json.put("http://schema.org/itemListElement", listsSeq)
 
@@ -232,7 +247,7 @@ trait ListV2JsonLDProtocol {
 
         result.put("@type", OntologyConstants.KnoraBase.ListNode)
 
-        result.put(OntologyConstants.KnoraBase.IsRootNode, true)
+        result.put(OntologyConstants.KnoraBase.IsRootNode, new lang.Boolean(true))
 
         if (node.projectIri.nonEmpty) {
             result.put(OntologyConstants.KnoraBase.AttachedToProject, node.projectIri.get)
@@ -241,7 +256,7 @@ trait ListV2JsonLDProtocol {
         if (node.labels.nonEmpty) {
 
             val labels: util.List[Object] = node.labels.map {
-                label: StringWithOptionalLangV2 => stringWithOptionalLangV2Writer(label)
+                label: StringV2 => label.toObject
             }.asJava
 
             result.put(rdfsLabel, labels)
@@ -250,7 +265,7 @@ trait ListV2JsonLDProtocol {
         if (node.comments.nonEmpty) {
 
             val comments: util.List[Object] = node.comments.map {
-                comment: StringWithOptionalLangV2 => stringWithOptionalLangV2Writer(comment)
+                comment: StringV2 => comment.toObject
             }.asJava
 
             result.put(rdfsComment, comments)
@@ -285,8 +300,6 @@ trait ListV2JsonLDProtocol {
 
         result.put("@type", OntologyConstants.KnoraBase.ListNode)
 
-        result.put(OntologyConstants.KnoraBase.HasRootNode, node.hasRootNode)
-
         if (node.name.nonEmpty) {
             result.put(OntologyConstants.KnoraBase.ListNodeName, node.name.get)
         }
@@ -294,7 +307,7 @@ trait ListV2JsonLDProtocol {
         if (node.labels.nonEmpty) {
 
             val labels: util.List[Object] = node.labels.map {
-                label: StringWithOptionalLangV2 => stringWithOptionalLangV2Writer(label)
+                label: StringV2 => label.toObject
             }.asJava
 
             result.put(rdfsLabel, labels)
@@ -303,7 +316,7 @@ trait ListV2JsonLDProtocol {
         if (node.comments.nonEmpty) {
 
             val comments: util.List[Object] = node.comments.map {
-                comment: StringWithOptionalLangV2 => stringWithOptionalLangV2Writer(comment)
+                comment: StringV2 => comment.toObject
             }.asJava
 
             result.put(rdfsComment, comments)
@@ -318,39 +331,10 @@ trait ListV2JsonLDProtocol {
         }
 
         if (node.position.nonEmpty) {
-            result.put(OntologyConstants.KnoraBase.ListNodePosition, node.position.get)
+            result.put(OntologyConstants.KnoraBase.ListNodePosition, new lang.Integer(node.position.get))
         }
 
         result
-    }
-
-    /**
-      * Returns an JSON-LD string.
-      *
-      * @param numberOfItems
-      * @param items
-      * @param settings
-      * @return
-      */
-    def readNodePathSequenceV2Writer(numberOfItems: Int, items: Seq[NodePathElementV2], settings: SettingsImpl): String = ???
-
-    /**
-      * Returns
-      *
-      * @param s a string with an optional language tag.
-      * @return
-      */
-    def stringWithOptionalLangV2Writer(s: StringWithOptionalLangV2): Object = {
-
-        if (s.language.nonEmpty) {
-            Map(
-                "@language" -> s.language.get,
-                "@value" -> s.value
-            ).asJava
-        } else {
-            s.value
-        }
-
     }
 
 }

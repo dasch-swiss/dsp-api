@@ -66,7 +66,6 @@
     <logger name="org.knora.webapi.responders.v1.CkanResponderV1" level="INFO"/>
     <logger name="org.knora.webapi.responders.v1.GroupsResponderV1" level="INFO"/>
     <logger name="org.knora.webapi.responders.v1.ListsResponderV1" level="DEBUG"/>
-    <logger name="org.knora.webapi.responders.v1.ListsResponderV1Spec" level="DEBUG"/>
     <logger name="org.knora.webapi.responders.v1.UsersResponderV1" level="INFO"/>
     <logger name="org.knora.webapi.responders.v1.ProjectsResponderV1" level="INFO"/>
     <logger name="org.knora.webapi.responders.v1.GroupsResponderV1" level="INFO"/>
@@ -76,19 +75,24 @@
     <logger name="org.knora.webapi.responders.v1.StoreResponderV1" level="INFO"/>
     <logger name="org.knora.webapi.responders.v1.OntologyResponderV1" level="INFO"/>
     <logger name="org.knora.webapi.responders.v2.ListsResponderV2" level="DEBUG"/>
-    <logger name="org.knora.webapi.responders.v2.ListsResponderV2Spec" level="DEBUG"/>
     <logger name="org.knora.webapi.store.StoreManager" level="INFO"/>
     <logger name="org.knora.webapi.store.triplestore" level="INFO"/>
     <logger name="org.knora.webapi.store.triplestore.http.HttpTriplestoreConnector" level="INFO"/>
     <logger name="org.knora.webapi.viewhandlers.ResourceHtmlView" level="INFO"/>
-    <logger name="org.knora.webapi.other.v1.DrawingsGodsV1Spec" level="INFO"/>
-    <logger name="org.knora.webapi.other.v1.DrawingsGodsV1E2ESpec" level="INFO"/>
+
+    <!-- Spec Logging -->
+
+    <!-- V1 -->
+    <logger name="org.knora.webapi.responders.v1.ListsResponderV1Spec" level="DEBUG"/>
     <logger name="org.knora.webapi.e2e.v1.UsersV1E2ESpec" level="INFO"/>
     <logger name="org.knora.webapi.e2e.v1.ProjectsV1E2ESpec" level="INFO"/>
     <logger name="org.knora.webapi.e2e.v1.GroupsV1E2ESpec" level="INFO"/>
+    <logger name="org.knora.webapi.other.v1.DrawingsGodsV1Spec" level="INFO"/>
+    <logger name="org.knora.webapi.other.v1.DrawingsGodsV1E2ESpec" level="INFO"/>
+
+    <!-- V2 -->
+    <logger name="org.knora.webapi.responders.v2.ListsResponderV2Spec" level="DEBUG"/>
     <logger name="org.knora.webapi.e2e.v2.ListsV2E2ESpec" level="DEBUG"/>
-
-
 
     <root level="INFO">
         <appender-ref ref="stdout"/>
