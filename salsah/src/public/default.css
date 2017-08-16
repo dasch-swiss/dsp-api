@@ -692,6 +692,9 @@ table.searchres td {
   -khtml-box-shadow: 5px 5px 5px #222;
   box-shadow: 5px 5px 5px #222;
 }
+.searchinfowin table {
+  color: white;
+}
 /*////////////////////////////////////////////////////////////////////////////*/
 .mainpage_simplesearch {
   border-width: 0;
