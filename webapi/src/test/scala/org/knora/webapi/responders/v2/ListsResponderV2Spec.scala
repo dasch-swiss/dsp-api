@@ -4339,7 +4339,7 @@ class ListsResponderV2Spec extends CoreSpec(ListsResponderV2Spec.config) with Im
 
                 // log.debug("returned basic keyword list information: {}", MessageUtil.toSource(received.items.head))
 
-                received.items.head should be(keywordRootNode)
+                received.items.head.sorted should be(keywordRootNode.sorted)
             }
 
             "return an extended list response" in {
@@ -4352,7 +4352,7 @@ class ListsResponderV2Spec extends CoreSpec(ListsResponderV2Spec.config) with Im
 
                 // log.debug("returned whole keyword list: {}", MessageUtil.toSource(received.items.head))
 
-                received.items.head should be(keywordList)
+                received.items.head.sorted should be(keywordList.sorted)
             }
         }
 

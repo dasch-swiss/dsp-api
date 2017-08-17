@@ -108,7 +108,9 @@ case class ReadListsSequenceV2(items: Seq[ListNodeV2]) extends KnoraResponseV2 w
   * @param comments   the comments attached to the list in all available languages.
   * @param children   the children of this list node.
   */
-sealed abstract class ListNodeV2(id: IRI, labels: Seq[StringV2], comments: Seq[StringV2], children: Seq[ListNodeV2])
+sealed abstract class ListNodeV2(id: IRI, labels: Seq[StringV2], comments: Seq[StringV2], children: Seq[ListNodeV2]) {
+    def sorted: ListNodeV2
+}
 
 /**
   * Represents information about a list. This information is found in the list's root node.
@@ -118,7 +120,23 @@ sealed abstract class ListNodeV2(id: IRI, labels: Seq[StringV2], comments: Seq[S
   * @param labels     the labels of the list in all available languages.
   * @param comments   the comments attached to the list in all available languages.
   */
-case class ListRootNodeV2(id: IRI, projectIri: Option[IRI], labels: Seq[StringV2], comments: Seq[StringV2], children: Seq[ListChildNodeV2]) extends ListNodeV2(id, labels, comments, children)
+case class ListRootNodeV2(id: IRI, projectIri: Option[IRI], labels: Seq[StringV2], comments: Seq[StringV2], children: Seq[ListChildNodeV2]) extends ListNodeV2(id, labels, comments, children) {
+
+    /**
+      * Sorts the whole hierarchy.
+      *
+      * @return a sorted [[ListRootNodeV2]].
+      */
+    override def sorted: ListRootNodeV2 = {
+        ListRootNodeV2(
+            id = id,
+            projectIri = projectIri,
+            labels = labels.sortBy(_.value),
+            comments = comments.sortBy(_.value),
+            children = children.sortBy(_.id).map(_.sorted)
+        )
+    }
+}
 
 /**
   * Represents a hierarchical list node in Knora API V2 format.
@@ -130,7 +148,24 @@ case class ListRootNodeV2(id: IRI, projectIri: Option[IRI], labels: Seq[StringV2
   * @param children the list node's child nodes.
   * @param position       the position of the node among its siblings (optional).
   */
-case class ListChildNodeV2(id: IRI, name: Option[String], labels: Seq[StringV2], comments: Seq[StringV2], children: Seq[ListChildNodeV2], position: Option[Int]) extends ListNodeV2(id, labels, comments, children)
+case class ListChildNodeV2(id: IRI, name: Option[String], labels: Seq[StringV2], comments: Seq[StringV2], children: Seq[ListChildNodeV2], position: Option[Int]) extends ListNodeV2(id, labels, comments, children) {
+
+    /**
+      * Sorts the whole hierarchy.
+      *
+      * @return a sorted [[ListChildNodeV2]].
+      */
+    override def sorted: ListChildNodeV2 = {
+        ListChildNodeV2(
+            id = id,
+            name = name,
+            labels = labels.sortBy(_.value),
+            comments = comments.sortBy(_.value),
+            children = children.sortBy(_.id).map(_.sorted),
+            position = position
+        )
+    }
+}
 
 /**
   * Represents a string with an optional language tag.
