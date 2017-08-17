@@ -633,7 +633,7 @@ class SearchAndEditSpec extends SalsahSpec {
             page.doLogout()
         }
 
-        "change the partof property of a page" ignore {
+        "change the partof property of a page" in {
 
             page.open()
 
@@ -654,11 +654,10 @@ class SearchAndEditSpec extends SalsahSpec {
             // get a list of editing fields
             val editFields = page.getEditingFieldsFromMetadataSection(metadataSection)
 
-            val partOfField = editFields(2)
+            val partOfField = editFields(3)
 
             page.clickEditButton(partOfField)
 
-            // Note loic: fails here
             val input = page.getSearchBoxInputField(partOfField)
 
             input.sendKeys("Narrenschiff")
