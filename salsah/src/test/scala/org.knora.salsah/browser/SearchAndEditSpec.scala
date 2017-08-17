@@ -122,7 +122,7 @@ class SearchAndEditSpec extends SalsahSpec {
 
         }
 
-        "do a simple search for 'Zeitglöcklein' and open a search result row representing a book" in {
+        "do a simple search for 'Zeitglöcklein' and open a search result row representing a book" ignore {
 
             page.open()
 
