@@ -401,7 +401,7 @@ class SearchAndEditSpec extends SalsahSpec {
 
         }
 
-        "change the publication date of a book" ignore {
+        "change the publication date of a book" in {
 
             page.open()
 
@@ -429,7 +429,7 @@ class SearchAndEditSpec extends SalsahSpec {
             // get a list of editing fields
             val editFields = page.getEditingFieldsFromMetadataSection(metadataSection)
 
-            val pubdateField = editFields(10)
+            val pubdateField = editFields(7)
 
             page.clickEditButton(pubdateField)
 
@@ -471,7 +471,7 @@ class SearchAndEditSpec extends SalsahSpec {
 
         }
 
-        "edit the seqnum and the pagenumber of a page" ignore {
+        "edit the seqnum and the pagenumber of a page" in {
 
             page.open()
 
@@ -498,7 +498,7 @@ class SearchAndEditSpec extends SalsahSpec {
             //
 
             // get the field representing the seqnum of the page
-            val seqnumField = editFields(10)
+            val seqnumField = editFields(4)
 
             page.clickEditButton(seqnumField)
 
@@ -519,7 +519,7 @@ class SearchAndEditSpec extends SalsahSpec {
             //
 
             // get the field representing the pagenum of the page
-            val pagenumField = editFields(2)
+            val pagenumField = editFields(1)
 
             page.clickEditButton(pagenumField)
 
@@ -543,7 +543,7 @@ class SearchAndEditSpec extends SalsahSpec {
 
         }
 
-        "add a new creator to a book" ignore {
+        "add a new creator to a book" in {
 
             page.open()
 
@@ -566,7 +566,7 @@ class SearchAndEditSpec extends SalsahSpec {
             val editFields = page.getEditingFieldsFromMetadataSection(metadataSection)
 
             // get the field representing the seqnum of the page
-            val creatorField = editFields.head
+            val creatorField = editFields(2)
 
             page.clickAddButton(creatorField)
 
@@ -654,10 +654,11 @@ class SearchAndEditSpec extends SalsahSpec {
             // get a list of editing fields
             val editFields = page.getEditingFieldsFromMetadataSection(metadataSection)
 
-            val partOfField = editFields(1)
+            val partOfField = editFields(2)
 
             page.clickEditButton(partOfField)
 
+            // Note loic: fails here
             val input = page.getSearchBoxInputField(partOfField)
 
             input.sendKeys("Narrenschiff")
@@ -676,7 +677,7 @@ class SearchAndEditSpec extends SalsahSpec {
             page.doLogout()
         }
 
-        "change the season property of a image:bild to summer" ignore {
+        "change the season property of a image:bild to summer" in {
 
             page.open()
 
@@ -703,7 +704,7 @@ class SearchAndEditSpec extends SalsahSpec {
             // get a list of editing fields
             val editFields = page.getEditingFieldsFromMetadataSection(metadataSection)
 
-            val seasonField = editFields(14)
+            val seasonField = editFields(5)
 
             page.clickEditButton(seasonField)
 
@@ -725,7 +726,7 @@ class SearchAndEditSpec extends SalsahSpec {
 
         }
 
-        "add a season to a image:bild" ignore {
+        "add a season to a image:bild" in {
 
             page.open()
 
@@ -752,7 +753,7 @@ class SearchAndEditSpec extends SalsahSpec {
             // get a list of editing fields
             val editFields = page.getEditingFieldsFromMetadataSection(metadataSection)
 
-            val seasonField = editFields(14)
+            val seasonField = editFields(5)
 
             page.clickAddButton(seasonField)
 
@@ -774,7 +775,7 @@ class SearchAndEditSpec extends SalsahSpec {
 
         }
 
-        "display a compound resource without images" ignore {
+        "display a compound resource without images" in {
 
             page.open()
 
