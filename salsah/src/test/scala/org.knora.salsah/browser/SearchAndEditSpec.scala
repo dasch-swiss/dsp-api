@@ -633,7 +633,7 @@ class SearchAndEditSpec extends SalsahSpec {
             page.doLogout()
         }
 
-        "change the partof property of a page" ignore {
+        "change the partof property of a page" in {
 
             page.open()
 
