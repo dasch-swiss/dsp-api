@@ -22,11 +22,12 @@ package org.knora.webapi.messages.v2.responder.listmessages
 
 import java.{lang, util}
 
-import com.github.jsonldjava.core.{JsonLdOptions, JsonLdProcessor}
+import com.github.jsonldjava.core.{JsonLdOptions, JsonLdProcessor, JsonLdUtils}
 import com.github.jsonldjava.utils.JsonUtils
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v2.responder.{KnoraRequestV2, KnoraResponseV2}
+import spray.json.JsObject
 
 import scala.collection.JavaConverters._
 
@@ -260,7 +261,7 @@ trait ListV2JsonLDProtocol {
 
         json.put("http://schema.org/itemListElement", listsSeq)
 
-        val compacted = JsonLdProcessor.compact(json, context, new JsonLdOptions())
+        val compacted: util.Map[IRI, AnyRef] = JsonLdProcessor.compact(json, context, new JsonLdOptions())
 
         JsonUtils.toPrettyString(compacted)
     }
@@ -325,7 +326,7 @@ trait ListV2JsonLDProtocol {
       * @param settings
       * @return
       */
-    def listChildNodeV2Writer(node: ListChildNodeV2, settings: SettingsImpl): Object = {
+    private def listChildNodeV2Writer(node: ListChildNodeV2, settings: SettingsImpl): Object = {
 
         // ListChildNodeV2(id: IRI, hasRoot: IRI, name: Option[String], labels: Seq[StringWithOptionalLang], comments: Seq[StringWithOptionalLang], children: Seq[ListChildNodeV2], position: Option[Int]) extends ListNodeV2(id, labels, comments, children)
 
@@ -371,5 +372,22 @@ trait ListV2JsonLDProtocol {
 
         result
     }
+
+    implicit class ListV2JsonLDReaderProtocol(val s: JsObject) {
+
+        def toListNodeV2Seq: Seq[ListNodeV2] = {
+            println(s.toString())
+
+            println(JsonLdProcessor.expand(s.toString()).toString)
+
+            Seq.empty[ListNodeV2]
+        }
+
+    }
+
+    private def listRootNodeV2Reader(o: JsObject): ListRootNodeV2 = ???
+
+    private def listChildNodeV2Reader(o: JsObject): ListRootNodeV2 = ???
+
 
 }

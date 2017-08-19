@@ -1,11 +1,14 @@
 package org.knora.webapi.util
 
+import java.util
+
 import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.model.{HttpResponse, StatusCodes}
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.ActorMaterializer
 import akka.util.Timeout
+import com.github.jsonldjava.core.{JsonLdOptions, JsonLdProcessor}
 import spray.json._
 
 import scala.concurrent.duration._
@@ -37,6 +40,27 @@ object AkkaHttpUtils {
 
         //FIXME: There is probably a better non blocking way of doing it.
         Await.result(jsonFuture, Timeout(10.seconds).duration)
+    }
+
+    /**
+      * Given an [[HttpResponse]] containing json-ld, return the said json-ld in expanded form.
+      *
+      * @param response the [[HttpResponse]] containing json
+      * @return an [[JsObject]]
+      */
+    def httpResponseToJsonLDExpanded(response: HttpResponse)(implicit ec: ExecutionContext, system: ActorSystem, log: LoggingAdapter): util.List[Object] = {
+
+        val json: JsObject = httpResponseToJson(response)
+
+        println("json: " + json)
+
+
+
+        val opts: JsonLdOptions = new JsonLdOptions()
+        val expanded = JsonLdProcessor.expand(httpResponseToJson(response), opts)
+        println("expanded json-ld: " + expanded)
+
+        expanded
     }
 
 }
