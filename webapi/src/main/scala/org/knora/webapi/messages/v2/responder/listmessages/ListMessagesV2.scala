@@ -22,12 +22,14 @@ package org.knora.webapi.messages.v2.responder.listmessages
 
 import java.{lang, util}
 
-import com.github.jsonldjava.core.{JsonLdOptions, JsonLdProcessor, JsonLdUtils}
+import com.github.jsonldjava.core.{JsonLdOptions, JsonLdProcessor}
 import com.github.jsonldjava.utils.JsonUtils
+import org.apache.jena.sparql.function.library.leviathan.log
+import org.knora.jsonld.{KnoraJsonLDFormat, KnoraJsonLDSupport}
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v2.responder.{KnoraRequestV2, KnoraResponseV2}
-import spray.json.JsObject
+import spray.json.{JsArray, JsObject, JsValue}
 
 import scala.collection.JavaConverters._
 
@@ -93,7 +95,7 @@ case class ReadListsSequenceV2(items: Seq[ListNodeV2]) extends KnoraResponseV2 w
 
     def toXML: String = ???
 
-    def toJsonLDWithValueObject(settings: SettingsImpl): String = readListsSequenceV2Writer(items, settings)
+    def toJsonLDWithValueObject(settings: SettingsImpl): String = ReadListsSequenceV2JsonLDFormat.write(this)
 }
 
 
@@ -227,19 +229,49 @@ case class StringV2(value: String, language: Option[String] = None) {
 /**
   * A json-ld protocol for generating Knora API V2 JSON-LD providing data about lists.
   */
-trait ListV2JsonLDProtocol {
+trait ListV2JsonLDProtocol extends KnoraJsonLDSupport {
 
-    private val rdfsLabel: IRI = "http://www.w3.org/2000/01/rdf-schema#label"
-    private val rdfsComment: IRI = "http://www.w3.org/2000/01/rdf-schema#comment"
+    implicit object ReadListsSequenceV2JsonLDFormat extends KnoraJsonLDFormat[ReadListsSequenceV2] {
+        /**
+          * Recursively converts a [[ReadListsSequenceV2]] to a JSON-LD [[String]].
+          *
+          * @param seq a [[ReadListsSequenceV2]].
+          * @return a [[String]].
+          */
+        def write(seq: ReadListsSequenceV2): String = {
+            readListsSequenceV2Writer(seq.items)
+        }
+
+        /**
+          * Converts a [[JsObject]] to a [[ReadListsSequenceV2]].
+          *
+          * @param value a [[JsObject]].
+          * @return a [[ReadListsSequenceV2]].
+          */
+        def read(value: JsObject): ReadListsSequenceV2 = {
+            val seq = readListsSequenceV2Reader(value)
+
+            ReadListsSequenceV2(items = seq)
+        }
+    }
+
+    // FIXME: Solve the problem with JSON-LD expand, so that we can use the ontology constants
+    private val ListNode = "knora-base:" + "ListNode"
+    private val ListNodeName = "knora-base:" + "listNodeName"
+    private val IsRootNode = "knora-base:" + "isRootNode"
+    private val HasRootNode = "knora-base:" + "hasRootNode"
+    private val HasSubListNode = "knora-base:" + "hasSubListNode"
+    private val ListNodePosition = "knora-base:" + "listNodePosition"
+
+    private val ItemListElement = "itemListElement"
 
     /**
       * Returns an JSON-LD string representing a sequence of list nodes.
       *
       * @param items the sequence of [[ListNodeV2]].
-      * @param settings the system settings.
       * @return a JSON-LD [[String]].
       */
-    def readListsSequenceV2Writer(items: Seq[ListNodeV2], settings: SettingsImpl): String = {
+    private def readListsSequenceV2Writer(items: Seq[ListNodeV2]): String = {
 
         val context = new util.HashMap[String, String]()
         context.put("@vocab", "http://schema.org/")
@@ -250,8 +282,8 @@ trait ListV2JsonLDProtocol {
 
         val listsSeq: util.List[Object] = items.map {
             node: ListNodeV2 => node match {
-                case rootNode: ListRootNodeV2 => listRootNodeV2Writer(rootNode, settings)
-                case childNode: ListChildNodeV2 => listChildNodeV2Writer(childNode, settings)
+                case rootNode: ListRootNodeV2 => listRootNodeV2Writer(rootNode)
+                case childNode: ListChildNodeV2 => listChildNodeV2Writer(childNode)
             }
         }.asJava
 
@@ -270,10 +302,9 @@ trait ListV2JsonLDProtocol {
       *  Returns an object which will be part of an JSON-LD string.
       *
       * @param node
-      * @param settings
       * @return
       */
-    private def listRootNodeV2Writer(node: ListRootNodeV2, settings: SettingsImpl): Object = {
+    private def listRootNodeV2Writer(node: ListRootNodeV2): Object = {
 
         // ListRootNodeV2(id: IRI, projectIri: Option[IRI], labels: Seq[StringWithOptionalLang], comments: Seq[StringWithOptionalLang], children: Seq[ListChildNodeV2]) extends ListNodeV2(id, labels, comments, children)
 
@@ -295,7 +326,7 @@ trait ListV2JsonLDProtocol {
                 label: StringV2 => label.toObject
             }.asJava
 
-            result.put(rdfsLabel, labels)
+            result.put(OntologyConstants.Rdfs.Label, labels)
         }
 
         if (node.comments.nonEmpty) {
@@ -304,13 +335,13 @@ trait ListV2JsonLDProtocol {
                 comment: StringV2 => comment.toObject
             }.asJava
 
-            result.put(rdfsComment, comments)
+            result.put(OntologyConstants.Rdfs.Comment, comments)
         }
 
         if (node.children.nonEmpty) {
 
             val nodes: util.List[Object] = node.children.map {
-                child: ListChildNodeV2 => listChildNodeV2Writer(child, settings)
+                child: ListChildNodeV2 => listChildNodeV2Writer(child)
             }.asJava
 
             result.put(OntologyConstants.KnoraBase.HasSubListNode, nodes)
@@ -323,10 +354,9 @@ trait ListV2JsonLDProtocol {
       * Returns an object which will be part of an JSON-LD string.
       *
       * @param node
-      * @param settings
       * @return
       */
-    private def listChildNodeV2Writer(node: ListChildNodeV2, settings: SettingsImpl): Object = {
+    private def listChildNodeV2Writer(node: ListChildNodeV2): Object = {
 
         // ListChildNodeV2(id: IRI, hasRoot: IRI, name: Option[String], labels: Seq[StringWithOptionalLang], comments: Seq[StringWithOptionalLang], children: Seq[ListChildNodeV2], position: Option[Int]) extends ListNodeV2(id, labels, comments, children)
 
@@ -346,7 +376,7 @@ trait ListV2JsonLDProtocol {
                 label: StringV2 => label.toObject
             }.asJava
 
-            result.put(rdfsLabel, labels)
+            result.put(OntologyConstants.Rdfs.Label, labels)
         }
 
         if (node.comments.nonEmpty) {
@@ -355,12 +385,12 @@ trait ListV2JsonLDProtocol {
                 comment: StringV2 => comment.toObject
             }.asJava
 
-            result.put(rdfsComment, comments)
+            result.put(OntologyConstants.Rdfs.Comment, comments)
         }
 
         if (node.children.nonEmpty) {
             val nodes: util.List[Object] = node.children.map {
-                child: ListChildNodeV2 => listChildNodeV2Writer(child, settings)
+                child: ListChildNodeV2 => listChildNodeV2Writer(child)
             }.asJava
 
             result.put(OntologyConstants.KnoraBase.HasSubListNode, nodes)
@@ -373,21 +403,46 @@ trait ListV2JsonLDProtocol {
         result
     }
 
-    implicit class ListV2JsonLDReaderProtocol(val s: JsObject) {
+    private def readListsSequenceV2Reader(value: JsObject): Seq[ListNodeV2] = {
 
-        def toListNodeV2Seq: Seq[ListNodeV2] = {
-            println(s.toString())
+        val fields: Map[String, JsValue] = value.fields
 
-            println(JsonLdProcessor.expand(s.toString()).toString)
-
-            Seq.empty[ListNodeV2]
+        val items: Seq[JsObject] = fields.get(ItemListElement) match {
+            case Some(seq: JsArray) => seq.elements.map(_.asJsObject)
+            case Some(_) => throw BadRequestException(s"JSON-LD field: $ItemListElement must contain an array.")
+            case None => throw BadRequestException(s"JSON-LD field: $ItemListElement not found.")
         }
 
+        println("readListsSequenceV2Reader: " + items)
+
+        val result: Seq[ListNodeV2] = items map { (item: JsObject) =>
+            val props = item.fields
+            val objectType = props.getOrElse("@type", throw BadRequestException("Field '@type' is missing.")).toString()
+
+            objectType match {
+                case ListNode => listRootNodeV2Reader(item)
+                case other => throw BadRequestException(s"The sent items are of the wrong type. Only '$ListNode' is allowed..")
+            }
+
+        }
+
+        result
     }
 
-    private def listRootNodeV2Reader(o: JsObject): ListRootNodeV2 = ???
+    private def listRootNodeV2Reader(value: JsObject): ListRootNodeV2 = {
+        val props = value.fields
+
+        val id: IRI = props.getOrElse("@id", throw BadRequestException("Field '@id' is missing.")).toString()
+        val projectIri: String = props.get()
+
+        ListRootNodeV2(
+            id = id,
+            projectIri = ???,
+            labels = ???,
+            comments = ???,
+            children = ???
+        )
+    }
 
     private def listChildNodeV2Reader(o: JsObject): ListRootNodeV2 = ???
-
-
 }

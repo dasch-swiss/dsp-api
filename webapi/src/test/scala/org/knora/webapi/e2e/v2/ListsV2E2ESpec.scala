@@ -24,8 +24,8 @@ import com.typesafe.config.ConfigFactory
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
 import org.knora.webapi.messages.v1.responder.authenticatemessages.Credentials
 import org.knora.webapi.messages.v1.responder.sessionmessages.SessionJsonProtocol
-import org.knora.webapi.messages.v2.responder.listmessages.{ListNodeV2, ListV2JsonLDProtocol}
-import org.knora.webapi.util.{AkkaHttpUtils, MutableTestIri}
+import org.knora.webapi.messages.v2.responder.listmessages.{ListV2JsonLDProtocol, ReadListsSequenceV2}
+import org.knora.webapi.util.{AkkaHttpUtils, MessageUtil, MutableTestIri}
 import org.knora.webapi.{E2ESpec, SharedAdminTestData}
 import spray.json._
 
@@ -105,9 +105,13 @@ class ListsV2E2ESpec extends E2ESpec(ListsV2E2ESpec.config) with SessionJsonProt
 
                 //val lists: Seq[ListNodeV2]
 
+                val json = AkkaHttpUtils.httpResponseToJsonLDExpanded(response)
+                log.debug("httpResponseToJsonLDExpanded (not expanded): {}", json.toString)
 
-                log.debug(AkkaHttpUtils.httpResponseToJsonLDExpanded(response).toString)
-                //lists.size should be (6)
+                val seq: ReadListsSequenceV2 = json.convertToV2[ReadListsSequenceV2]
+                log.debug("seq: {}", seq)
+
+                seq.items.size should be (6)
             }
 
             "return all lists belonging to the images project (not implemented)" in {
