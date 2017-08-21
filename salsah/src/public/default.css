@@ -1349,6 +1349,19 @@ table.propedit tr td {
   background-color: #FF9;
   text-align: right;
 }
+.propedit pre {
+  background-color: black;
+  color: white;
+  padding-left: 1em;
+  margin-left: 1em;
+  border-left: gray 5px solid;
+}
+.propedit blockquote {
+  padding-left: 1em;
+  margin-left: 1em;
+  border-left: gray 5px solid;
+  background-color: wheat;
+}
 div.daysel {
   background-color: #fff;
   padding: 5px;
