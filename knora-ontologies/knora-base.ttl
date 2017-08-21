@@ -648,9 +648,9 @@
             rdfs:comment "Region of interest within a digital object (e.g. an image)"@en ;
 
             rdfs:label "is Region von"@de ,
-                       "is Region of"@en ,
-                       "est Région de"@fr ,
-                       "e Region di"@it ;
+                       "is region of"@en ,
+                       "est région de"@fr ,
+                       "è regione di"@it ;
 
             :subjectClassConstraint :Region ;
 
@@ -663,6 +663,13 @@
 ###  http://www.knora.org/ontology/knora-base#isRegionOfValue
 
 :isRegionOfValue rdf:type owl:ObjectProperty ;
+
+                rdfs:comment "Region of interest within a digital object (e.g. an image)"@en ;
+
+                rdfs:label "is Region von"@de ,
+                           "is region of"@en ,
+                           "est région de"@fr ,
+                           "è regione di"@it ;
 
                  :objectClassConstraint :LinkValue ;
 
