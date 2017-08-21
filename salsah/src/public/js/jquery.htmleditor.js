@@ -138,6 +138,7 @@
 
                 // specify allowed elements, attributes, and classes
                 // this must conform to the `STANDARD_MAPPING`
+                // CKEditor guide to filters: https://docs.ckeditor.com/#!/guide/dev_advanced_content_filter-section-custom-mode-example
                 var filter = ' p em strong strike u sub sup hr h1 h2 h3 h4 h5 h6 pre table tbody tr td ol ul li cite blockquote code; a[!href](salsah-link) ';
 
 				var config = {
