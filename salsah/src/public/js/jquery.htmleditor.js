@@ -150,6 +150,7 @@
                     format_h4:         { element : 'h4' },     // idem, `h4` instead of `p`
                     format_h5:         { element : 'h5' },     // idem, idem  
                     format_h6:         { element : 'h6' },     // end of the basic tag definition
+                    format_pre:        { element : 'pre'},     // prevent from adding <code> after <pre>
                     on: {
 						instanceReady: function(event) {
 
