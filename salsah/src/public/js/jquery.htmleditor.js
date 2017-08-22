@@ -140,21 +140,43 @@
                 // this must conform to the `STANDARD_MAPPING`
                 var filter = ' p em strong strike u sub sup; a[!href](salsah-link)';
 
+				CKEDITOR.editorConfig = function( config ) {
+					config.language = (SALSAH.userprofile && SALSAH.userprofile.userData && SALSAH.userprofile.userData.lang) ? SALSAH.userprofile.userData.lang : 'en' ,
+                    config.allowedContent = filter;
+                    config.pasteFilter = filter;
+					config.entities = false; // do not use entities (e.g. for Umlaut)
+
+					// configuration for toolbar buttons, must conform to `STANDARD_MAPPING`,
+					config.toolbarGroups = [
+						{ name: 'document',	   groups: [ 'mode', 'document', 'doctools' ] },
+						{name: 'clipboard', groups: ['clipboard', 'undo']},
+						{name: 'editing', groups: ['find', 'selection', 'spellchecker']},
+						{name: 'forms'},
+						{name: 'basicstyles', groups: ['basicstyles', 'cleanup']},
+						{name: 'paragraph', groups: ['list', 'indent', 'blocks', 'align', 'bidi']},
+						{name: 'links'},
+						{name: 'insert'},
+						{name: 'styles'},
+						{name: 'colors'},
+						{name: 'tools'},
+						{name: 'others'},
+						{name: 'about'}
+					];
+					config.removeButtons = 'Cut,Copy,Paste,Anchor,About';
+					config.removeDialogTabs = 'link:advanced';
+				};
+
 				var config = {
-					language: (SALSAH.userprofile && SALSAH.userprofile.userData && SALSAH.userprofile.userData.lang) ? SALSAH.userprofile.userData.lang : 'en' ,
-                    allowedContent: filter,
-                    pasteFilter: filter,
-					entities: false, // do not use entities (e.g. for Umlaut)
                     on: {
 						instanceReady: function(event) {
 
 							// init editor with the given html
                             event.editor.setData(htmlstr);
-                            
+
 							//
 							// bind drop event to editor: a link to a SALSAH ref should be created
 							//
-                            $(event.editor.document.$.body).dragndrop('makeDropable', function(ev, data, instance) {    
+                            $(event.editor.document.$.body).dragndrop('makeDropable', function(ev, data, instance) {
 
 								var attributes = {'href': data.resid, 'class': 'salsah-link'};
 								var style = new CKEDITOR.style( { element : 'a', attributes : attributes } );
@@ -162,7 +184,7 @@
 								style.apply(event.editor.document);
 
 							});
-							
+
 						}
 					},
 					toolbar: [ ['Bold', 'Italic', 'Underline', 'Strike', 'Subscript', 'Superscript', '-','RemoveFormat', 'Link', 'Unlink'] ], // configuration for toolbar buttons, must conform to `STANDARD_MAPPING`
@@ -170,6 +192,7 @@
 				};
 
 				// init editor (textarea will be replaced by an iframe)
+				//localdata.editor = CKEDITOR.replace(textarea[0]);
 				localdata.editor = CKEDITOR.replace(textarea[0], config);
 
 				//
