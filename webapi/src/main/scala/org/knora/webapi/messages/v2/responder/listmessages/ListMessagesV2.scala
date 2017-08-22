@@ -26,10 +26,13 @@ import com.github.jsonldjava.core.{JsonLdOptions, JsonLdProcessor}
 import com.github.jsonldjava.utils.JsonUtils
 import org.apache.jena.sparql.function.library.leviathan.log
 import org.knora.jsonld.{KnoraJsonLDFormat, KnoraJsonLDSupport}
+import org.knora.webapi.OntologyConstants.KnoraBase.KnoraBasePrefixExpansion
+import org.knora.jsonld._
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v2.responder.{KnoraRequestV2, KnoraResponseV2}
-import spray.json.{JsArray, JsObject, JsValue}
+import riotcmd.json
+import spray.json.{DeserializationException, JsArray, JsObject, JsValue}
 
 import scala.collection.JavaConverters._
 
@@ -256,6 +259,7 @@ trait ListV2JsonLDProtocol extends KnoraJsonLDSupport {
     }
 
     // FIXME: Solve the problem with JSON-LD expand, so that we can use the ontology constants
+    private val AttachedToProject = "knora-base:" + "attachedToProject"
     private val ListNode = "knora-base:" + "ListNode"
     private val ListNodeName = "knora-base:" + "listNodeName"
     private val IsRootNode = "knora-base:" + "isRootNode"
@@ -264,6 +268,8 @@ trait ListV2JsonLDProtocol extends KnoraJsonLDSupport {
     private val ListNodePosition = "knora-base:" + "listNodePosition"
 
     private val ItemListElement = "itemListElement"
+    private val ID = "@id"
+    private val TYPE = "@type"
 
     /**
       * Returns an JSON-LD string representing a sequence of list nodes.
@@ -409,19 +415,19 @@ trait ListV2JsonLDProtocol extends KnoraJsonLDSupport {
 
         val items: Seq[JsObject] = fields.get(ItemListElement) match {
             case Some(seq: JsArray) => seq.elements.map(_.asJsObject)
-            case Some(_) => throw BadRequestException(s"JSON-LD field: $ItemListElement must contain an array.")
-            case None => throw BadRequestException(s"JSON-LD field: $ItemListElement not found.")
+            case Some(_) => invalidJsonLDError(s"JSON-LD field: $ItemListElement must contain an array.")
+            case None => invalidJsonLDError(s"JSON-LD field: $ItemListElement not found.")
         }
 
         println("readListsSequenceV2Reader: " + items)
 
         val result: Seq[ListNodeV2] = items map { (item: JsObject) =>
             val props = item.fields
-            val objectType = props.getOrElse("@type", throw BadRequestException("Field '@type' is missing.")).toString()
+            val objectType = props.getOrElse(TYPE, invalidJsonLDError("Field '@type' is missing.")).toString()
 
             objectType match {
                 case ListNode => listRootNodeV2Reader(item)
-                case other => throw BadRequestException(s"The sent items are of the wrong type. Only '$ListNode' is allowed..")
+                case other => invalidJsonLDError(s"The sent items are of the wrong type. Only '$ListNode' is allowed.")
             }
 
         }
@@ -432,12 +438,16 @@ trait ListV2JsonLDProtocol extends KnoraJsonLDSupport {
     private def listRootNodeV2Reader(value: JsObject): ListRootNodeV2 = {
         val props = value.fields
 
-        val id: IRI = props.getOrElse("@id", throw BadRequestException("Field '@id' is missing.")).toString()
-        val projectIri: String = props.get()
+        val id: IRI = props.getOrElse(ID, invalidJsonLDError("Field '@id' is missing.")).toString()
+        val projectIri: Option[IRI] = props.get(AttachedToProject).map(_.toString)
+        val labels: Seq[StringV2] = props.get(OntologyConstants.Rdfs.Label) match {
+            case Some(value: JsValue) =>
+            case None => Seq.empty[StringV2]
+        }
 
         ListRootNodeV2(
             id = id,
-            projectIri = ???,
+            projectIri = projectIri,
             labels = ???,
             comments = ???,
             children = ???
@@ -445,4 +455,30 @@ trait ListV2JsonLDProtocol extends KnoraJsonLDSupport {
     }
 
     private def listChildNodeV2Reader(o: JsObject): ListRootNodeV2 = ???
+
+    private def stringV2SeqReader(json: JsValue): Seq[StringV2] = {
+
+        try {}
+
+    }
+
+    private def stringV2Reader(json: JsValue): StringV2 = {
+
+        try {
+            val jsonObject = json.asJsObject
+            val props = jsonObject.fields
+
+            props.getOrElse("@value", throw )
+
+        } catch {
+            case de: DeserializationException => {
+                // not an object
+
+
+            }
+            case e: Exception => throw e
+        }
+
+        if (json.asJsObject)
+    }
 }

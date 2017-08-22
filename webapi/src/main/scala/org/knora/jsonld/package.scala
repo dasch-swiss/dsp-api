@@ -16,7 +16,11 @@
 
 package org.knora
 
+import org.knora.webapi.InvalidJsonLDException
+
 package object jsonld {
+
+    def invalidJsonLDError(msg: String, cause: Throwable = null) = throw new InvalidJsonLDException(msg, cause)
 
     def knoraJsonLDReader[T](implicit reader: KnoraJsonLDReader[T]) = reader
     def knoraJsonLDWriter[T](implicit writer: KnoraJsonLDWriter[T]) = writer

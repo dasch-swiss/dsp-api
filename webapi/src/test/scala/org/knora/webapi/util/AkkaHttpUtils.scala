@@ -6,6 +6,8 @@ import akka.http.scaladsl.model.{HttpResponse, StatusCodes}
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.ActorMaterializer
 import akka.util.Timeout
+import de.heikoseeberger.akkahttpjackson
+
 import spray.json._
 
 import scala.concurrent.duration._
@@ -46,6 +48,8 @@ object AkkaHttpUtils {
       * @return an [[JsObject]]
       */
     def httpResponseToJsonLDExpanded(response: HttpResponse)(implicit ec: ExecutionContext, system: ActorSystem, log: LoggingAdapter): JsObject = {
+
+        import JacksonSupport._
 
         val json: JsObject = httpResponseToJson(response)
 

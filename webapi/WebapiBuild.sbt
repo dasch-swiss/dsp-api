@@ -81,7 +81,8 @@ lazy val webapi = (project in file(".")).
             javaOptions in Test ++= javaTestOptions,
             parallelExecution in Test := false,
             // enable publishing the jar produced by `sbt it:package`
-            publishArtifact in (IntegrationTest, packageBin) := true
+            publishArtifact in (IntegrationTest, packageBin) := true,
+            resolvers += Resolver.bintrayRepo("hseeberger", "maven")
         ).
         settings( // enable deployment staging with `sbt stage`
           mappings in Universal ++= {
@@ -113,69 +114,134 @@ lazy val akkaVersion = "2.4.19"
 lazy val akkaHttpVersion = "10.0.7"
 
 lazy val webApiLibs = Seq(
-    // akka
-    "com.typesafe.akka" %% "akka-actor" % akkaVersion,
-    "com.typesafe.akka" %% "akka-agent" % akkaVersion,
-    "com.typesafe.akka" %% "akka-stream" % akkaVersion,
-    "com.typesafe.akka" %% "akka-slf4j" % akkaVersion,
-    "com.typesafe.akka" %% "akka-http" % akkaHttpVersion,
-    "com.typesafe.akka" %% "akka-http-xml" % akkaHttpVersion,
-    "com.typesafe.akka" %% "akka-http-spray-json" % akkaHttpVersion,
-
-    "org.scala-lang.modules" %% "scala-xml" % "1.0.6",
-
-    // testing
-    "org.scalatest" %% "scalatest" % "3.0.0" % "test",
-    //CORS support
-    "ch.megard" %% "akka-http-cors" % "0.1.10",
-    // jena
-    "org.apache.jena" % "apache-jena-libs" % "3.0.0" exclude("org.slf4j", "slf4j-log4j12"),
-    "org.apache.jena" % "jena-text" % "3.0.0" exclude("org.slf4j", "slf4j-log4j12"),
-    // http client
-    // "net.databinder.dispatch" %% "dispatch-core" % "0.11.2",
-    // logging
-    "com.typesafe.scala-logging" %% "scala-logging" % "3.5.0",
-    "ch.qos.logback" % "logback-classic" % "1.1.7",
-    // input validation
-    "commons-validator" % "commons-validator" % "1.6",
-    // authentication
-    "org.bouncycastle" % "bcprov-jdk15on" % "1.56",
-    "org.springframework.security" % "spring-security-core" % "4.2.1.RELEASE",
-    // caching
-    "net.sf.ehcache" % "ehcache" % "2.10.0",
-    // monitoring - disabled for now
-    //"org.aspectj" % "aspectjweaver" % "1.8.7",
-    //"org.aspectj" % "aspectjrt" % "1.8.7",
-    //"io.kamon" %% "kamon-core" % "0.5.2",
-    //"io.kamon" %% "kamon-spray" % "0.5.2",
-    //"io.kamon" %% "kamon-statsd" % "0.5.2",
-    //"io.kamon" %% "kamon-log-reporter" % "0.5.2",
-    //"io.kamon" %% "kamon-system-metrics" % "0.5.2",
-    //"io.kamon" %% "kamon-newrelic" % "0.5.2",
-    // other
-    //"javax.transaction" % "transaction-api" % "1.1-rev-1",
-    "org.apache.commons" % "commons-lang3" % "3.4",
-    "commons-io" % "commons-io" % "2.4",
-    "commons-beanutils" % "commons-beanutils" % "1.9.2", // not used by us, but need newest version to prevent this problem: http://stackoverflow.com/questions/14402745/duplicate-classes-in-commons-collections-and-commons-beanutils
-    "org.jodd" % "jodd" % "3.2.6",
-    "joda-time" % "joda-time" % "2.9.1",
-    "org.joda" % "joda-convert" % "1.8",
-    "com.sksamuel.diff" % "diff" % "1.1.11",
-    "org.xmlunit" % "xmlunit-core" % "2.1.1",
-    // testing
-    "com.typesafe.akka" %% "akka-testkit" % akkaVersion % "test, fuseki, graphdb, tdb, it, fuseki-it",
-    "com.typesafe.akka" %% "akka-http-testkit" % akkaHttpVersion % "test, fuseki, graphdb, tdb, it, fuseki-it",
-    "com.typesafe.akka" %% "akka-stream-testkit" % akkaVersion % "test, fuseki, graphdb, tdb, it, fuseki-it",
-    "org.scalatest" %% "scalatest" % "3.0.0" % "test, fuseki, graphdb, tdb, it, fuseki-it",
-    "org.eclipse.rdf4j" % "rdf4j-rio-turtle" % "2.2.1",
-    "org.eclipse.rdf4j" % "rdf4j-queryparser-sparql" % "2.2.1",
-    "org.rogach" %% "scallop" % "2.0.5",
-    "com.google.gwt" % "gwt-servlet" % "2.8.0",
-    "net.sf.saxon" % "Saxon-HE" % "9.7.0-14",
-    "com.github.jsonld-java" % "jsonld-java" % "0.10.0",
-    "com.jsuereth" % "scala-arm_2.12" % "2.0",
-    "org.scala-lang.modules" % "scala-java8-compat_2.12" % "0.8.0"
+    library.akkaActor,
+    library.akkaAgent,
+    library.akkaHttp,
+    library.akkaHttpCirce,
+    library.akkaHttpCors,
+    library.akkaHttpSprayJson,
+    library.akkaHttpJacksonJava,
+    library.akkaHttpTestkit,
+    library.akkaHttpXml,
+    library.akkaSlf4j,
+    library.akkaStream,
+    library.akkaStreamTestkit,
+    library.akkaTestkit,
+    library.bcprov,
+    library.commonsBeanUtil,
+    library.commonsIo,
+    library.commonsLang3,
+    library.commonsValidator,
+    library.diff,
+    library.ehcache,
+    library.jacksonScala,
+    library.jsonldJava,
+    library.jodd,
+    library.jodaTime,
+    library.jodaConvert,
+    library.jenaLibs,
+    library.jenaTest,
+    library.logbackClassic,
+    library.scalaLogging,
+    library.scalaTest,
+    library.scalaXml,
+    library.springSecurityCore,
+    library.xmlunitCore,
+    library.rdf4jRioTurtle,
+    library.rdf4jQueryParserSparql,
+    library.scallop,
+    library.gwtServlet,
+    library.sayonHE,
+    library.scalaArm,
+    library.scalaJava8Compat
 )
+
+lazy val library =
+    new {
+        object Version {
+            val akkaBase = "2.4.19"
+            val akkaHttp = "10.0.9"
+            val jena = "3.0.0"
+            val aspectj = "1.8.7"
+            val kamon = "0.5.2"
+        }
+
+
+        // akka
+        val akkaActor              = "com.typesafe.akka"            %% "akka-actor"               % Version.akkaBase
+        val akkaAgent              = "com.typesafe.akka"            %% "akka-agent"               % Version.akkaBase
+        val akkaStream             = "com.typesafe.akka"            %% "akka-stream"              % Version.akkaBase
+        val akkaSlf4j              = "com.typesafe.akka"            %% "akka-slf4j"               % Version.akkaBase
+        val akkaHttp               = "com.typesafe.akka"            %% "akka-http"                % Version.akkaHttp
+        val akkaHttpXml            = "com.typesafe.akka"            %% "akka-http-xml"            % Version.akkaHttp
+        val akkaHttpSprayJson      = "com.typesafe.akka"            %% "akka-http-spray-json"     % Version.akkaHttp
+        val akkaHttpJacksonJava    = "com.typesafe.akka"            %% "akka-http-jackson"        % Version.akkaHttp
+
+        //CORS support
+        val akkaHttpCors           = "ch.megard"                    %% "akka-http-cors"           % "0.1.10"
+
+        // jena
+        val jenaLibs               = "org.apache.jena"               % "apache-jena-libs"         % Version.jena exclude("org.slf4j", "slf4j-log4j12")
+        val jenaTest               = "org.apache.jena"               % "jena-text"                % Version.jena exclude("org.slf4j", "slf4j-log4j12")
+
+        // logging
+        val scalaLogging           = "com.typesafe.scala-logging"   %% "scala-logging"            % "3.5.0"
+        val logbackClassic         = "ch.qos.logback"                % "logback-classic"          % "1.1.7"
+
+        // input validation
+        val commonsValidator       = "commons-validator"             % "commons-validator"        % "1.6"
+
+        // authentication
+        val bcprov                 = "org.bouncycastle"              % "bcprov-jdk15on"           % "1.56"
+        val springSecurityCore     = "org.springframework.security"  % "spring-security-core"     % "4.2.1.RELEASE"
+
+        // caching
+        val ehcache                = "net.sf.ehcache"                % "ehcache"                  % "2.10.0"
+
+        // monitoring - disabled for now
+        val aspectjWeaver          = "org.aspectj"                   % "aspectjweaver"            % Version.aspectj
+        val aspectjRt              = "org.aspectj"                   % "aspectjrt"                % Version.aspectj
+        val kamonCore              = "io.kamon"                     %% "kamon-core"               % Version.kamon
+        val kamonSpray             = "io.kamon"                     %% "kamon-spray"              % Version.kamon
+        val kamonStatsD            = "io.kamon"                     %% "kamon-statsd"             % Version.kamon
+        val kamonLogReporter       = "io.kamon"                     %% "kamon-log-reporter"       % Version.kamon
+        val kamonSystemMetrics     = "io.kamon"                     %% "kamon-system-metrics"     % Version.kamon
+        val kamonNewRelic          = "io.kamon"                     %% "kamon-newrelic"           % Version.kamon
+
+        // other
+        //"javax.transaction" % "transaction-api" % "1.1-rev-1",
+        val commonsLang3           = "org.apache.commons"            % "commons-lang3"            % "3.4"
+        val commonsIo              = "commons-io"                    % "commons-io"               % "2.4"
+        val commonsBeanUtil        = "commons-beanutils"             % "commons-beanutils"        % "1.9.2" // not used by us, but need newest version to prevent this problem: http://stackoverflow.com/questions/14402745/duplicate-classes-in-commons-collections-and-commons-beanutils
+        val jodd                   = "org.jodd"                      % "jodd"                     % "3.2.6"
+        val jodaTime               = "joda-time"                     % "joda-time"                % "2.9.1"
+        val jodaConvert            = "org.joda"                      % "joda-convert"             % "1.8"
+        val diff                   = "com.sksamuel.diff"             % "diff"                     % "1.1.11"
+        val xmlunitCore            = "org.xmlunit"                   % "xmlunit-core"             % "2.1.1"
+
+        // testing
+        val akkaTestkit            = "com.typesafe.akka"            %% "akka-testkit"             % akkaVersion     % "test, fuseki, graphdb, tdb, it, fuseki-it"
+        val akkaHttpTestkit        = "com.typesafe.akka"            %% "akka-http-testkit"        % akkaHttpVersion % "test, fuseki, graphdb, tdb, it, fuseki-it"
+        val akkaStreamTestkit      = "com.typesafe.akka"            %% "akka-stream-testkit"      % akkaVersion     % "test, fuseki, graphdb, tdb, it, fuseki-it"
+        val scalaTest              = "org.scalatest"                %% "scalatest"                % "3.0.0"         % "test, fuseki, graphdb, tdb, it, fuseki-it"
+
+        // other
+        val rdf4jRioTurtle         = "org.eclipse.rdf4j"             % "rdf4j-rio-turtle"         % "2.2.1"
+        val rdf4jQueryParserSparql = "org.eclipse.rdf4j"             % "rdf4j-queryparser-sparql" % "2.2.1"
+        val scallop                = "org.rogach"                   %% "scallop"                  % "2.0.5"
+        val gwtServlet             = "com.google.gwt"                % "gwt-servlet"              % "2.8.0"
+        val sayonHE                = "net.sf.saxon"                  % "Saxon-HE"                 % "9.7.0-14"
+
+        val scalaXml               = "org.scala-lang.modules"       %% "scala-xml"                % "1.0.6"
+        val scalaArm               = "com.jsuereth"                  % "scala-arm_2.12"           % "2.0"
+        val scalaJava8Compat       = "org.scala-lang.modules"        % "scala-java8-compat_2.12"  % "0.8.0"
+
+        // provides akka jackson (json) support
+        val akkaHttpCirce          = "de.heikoseeberger"            %% "akka-http-circe"          % "1.18.0"
+        val jacksonScala           = "com.fasterxml.jackson.module" %% "jackson-module-scala"     % "2.9.0"
+        val jsonldJava             = "com.github.jsonld-java"        % "jsonld-java"              % "0.10.0"
+
+    }
 
 lazy val javaRunOptions = Seq(
     // "-showversion",
