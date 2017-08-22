@@ -1513,3 +1513,8 @@ button.active {
   padding-right: 2px;
   line-height: normal;
 }
+.resadd,
+.resadd table tr td {
+  vertical-align: top;
+  border: none;
+}
