@@ -137,14 +137,7 @@ class SearchResponderV2 extends Responder {
                 val pred = preprocessEntity(statementPattern.pred)
                 val obj = preprocessEntity(statementPattern.obj)
 
-                val disableInference = inWhereClause && (pred match { // disable inference if `inWhereClause` is set to true and the statement's predicate is a variable.
-                    case variable: QueryVariable => true // disable inference to get the actual IRI for the predicate and not an inferred information
-                    // TODO: this has the effect that subproperties are not found by the query!
-                    // TODO: I think this may be omitted since we can get the actual property from the reification (ConstructResponseUtilV2 does not look at subproperties of hasLinkTo, this property is needed to get information about the resource referred to)
-                    case _ => false
-                })
-
-                val namedGraph = if (disableInference) Some(IriRef(OntologyConstants.NamedGraphs.KnoraExplicitNamedGraph)) else None
+                val namedGraph = None // use inference for all user-provided statements in Where clause
 
                 StatementPattern(
                     subj = subj,
@@ -166,16 +159,82 @@ class SearchResponderV2 extends Responder {
             // in order to prevent duplicates
             val processedTypeInformationKeys = mutable.Set.empty[TypeableEntity]
 
+            /**
+              * Convert an [[Entity]] to a [[TypeableEntity]] (key of type inspection results).
+              * The entity is expected to be a variable or an Iri, otherwise `None` is returned.
+              *
+              * @param entity the entity to be converted to a [[TypeableEntity]].
+              * @return an Option of a [[TypeableEntity]].
+              */
+            def toTypeableEntityKey(entity: Entity): Option[TypeableEntity] = {
+
+                entity match {
+                    case queryVar: QueryVariable => Some(TypeableVariable(queryVar.variableName))
+
+                    case iriRef: IriRef => Some(TypeableIri(iriRef.iri))
+
+                    case _ => None
+                }
+
+            }
+
             def transformStatementInConstruct(statementPattern: StatementPattern): Seq[StatementPattern] = {
 
                 Seq.empty[StatementPattern]
             }
 
+            /**
+              * Converts a statement from the Where clause of a user-provided Sparql Construct query (knora-api) to Sparql
+              * that is going to be sent to the triplestore (knora-base).
+              *
+              * @param statementPattern the statement to be transformed.
+              * @return the result of the transformation.
+              */
             def transformStatementInWhere(statementPattern: StatementPattern): Seq[QueryPattern] = {
-                //println(statementPattern)
+                // println(statementPattern)
 
-                // TODO: add processed TypeableEntity here (key `typeInspectionResult`)
-                // processedTypeInformationKeys +=
+                // convert given statement from Where clause, taking into consideration if inference is needed or not
+                // look at the statement's subject, predicate, and object and generate additional statements if needed
+                // transform the originally given statement if necessary
+
+                // create TypeableEntity keys from the given statement's elements
+                val subjTypeInfoKey: Option[TypeableEntity] = toTypeableEntityKey(statementPattern.subj)
+
+                val predTypeInfoKey: Option[TypeableEntity] = toTypeableEntityKey(statementPattern.pred)
+
+                val objTypeInfoKey: Option[TypeableEntity] = toTypeableEntityKey(statementPattern.obj)
+
+                // check if there exists type information for the given statement's subject
+                if (subjTypeInfoKey.nonEmpty && (typeInspectionResult.typedEntities -- processedTypeInformationKeys contains subjTypeInfoKey.get)) {
+                    // process type information for the subject into additional statements
+
+
+                }
+
+
+                // check if there exists type information for the given statement's predicate
+                if (predTypeInfoKey.nonEmpty && (typeInspectionResult.typedEntities -- processedTypeInformationKeys contains predTypeInfoKey.get)) {
+                    // process type information for the predicate into additional statements
+
+
+                }
+
+                // check if there exists type information for the given statement's object
+                if (predTypeInfoKey.nonEmpty && (typeInspectionResult.typedEntities -- processedTypeInformationKeys contains predTypeInfoKey.get)) {
+                    // process type information for the object into additional statements
+
+
+                }
+
+                // decide whether to keep the originally given statement or not
+                // if pred is a valueProp, do not return the original statement
+                // it had to be converted to comply with Knora's value object structure
+
+
+                // add TypeableEntity (keys of `typeInspectionResult`) in order to prevent duplicates
+                processedTypeInformationKeys ++ subjTypeInfoKey ++ predTypeInfoKey ++ objTypeInfoKey
+
+
 
                 Seq.empty[QueryPattern]
             }
