@@ -148,9 +148,6 @@
                     format_tags: 'p;h1;h2;h3;h4;h5;h6;pre',
 					entities: false, // do not use entities (e.g. for Umlaut)
                     coreStyles_strike: { element : 'strike' }, // defines the output for some tags, `s`-> `strike`
-                    format_h4:         { element : 'h4' },     // idem, `h4` instead of `p`
-                    format_h5:         { element : 'h5' },     // idem, idem  
-                    format_h6:         { element : 'h6' },     // end of the basic tag definition
                     on: {
 						instanceReady: function(event) {
 
