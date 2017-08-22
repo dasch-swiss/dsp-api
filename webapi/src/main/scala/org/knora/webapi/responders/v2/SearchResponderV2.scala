@@ -178,6 +178,23 @@ class SearchResponderV2 extends Responder {
 
             }
 
+            /**
+              * Based on the given type information, create additional statements for the given statement.
+              *
+              * @param typeInfo                      type information about the statement provided by the user.
+              * @param additionalStatementsForEntity the entity to create additional statements for.
+              * @param statementPattern              statement provided by the user.
+              * @return a sequence of [[QueryPattern]] representing additional statements created from the given type information.
+              */
+            def createAdditionalStatements(typeInfo: SparqlEntityTypeInfo, additionalStatementsForEntity: Entity, statementPattern: StatementPattern): Seq[QueryPattern] = {
+
+                // check which version of the api is used: simple or with value object
+
+                // check if typeInfo is a `PropertyTypeInfo` or a `NonPropertyTypeInfo`
+
+                Seq.empty[QueryPattern]
+            }
+
             def transformStatementInConstruct(statementPattern: StatementPattern): Seq[StatementPattern] = {
 
                 Seq.empty[StatementPattern]
@@ -205,25 +222,28 @@ class SearchResponderV2 extends Responder {
                 val objTypeInfoKey: Option[TypeableEntity] = toTypeableEntityKey(statementPattern.obj)
 
                 // check if there exists type information for the given statement's subject
-                if (subjTypeInfoKey.nonEmpty && (typeInspectionResult.typedEntities -- processedTypeInformationKeys contains subjTypeInfoKey.get)) {
+                val additionalStatementsForSubj: Seq[QueryPattern] = if (subjTypeInfoKey.nonEmpty && (typeInspectionResult.typedEntities -- processedTypeInformationKeys contains subjTypeInfoKey.get)) {
                     // process type information for the subject into additional statements
-
-
+                    createAdditionalStatements(typeInspectionResult.typedEntities(subjTypeInfoKey.get), statementPattern.subj, statementPattern)
+                } else {
+                    Seq.empty[QueryPattern]
                 }
 
 
                 // check if there exists type information for the given statement's predicate
-                if (predTypeInfoKey.nonEmpty && (typeInspectionResult.typedEntities -- processedTypeInformationKeys contains predTypeInfoKey.get)) {
+                val additionalStatementsForPred: Seq[QueryPattern] = if (predTypeInfoKey.nonEmpty && (typeInspectionResult.typedEntities -- processedTypeInformationKeys contains predTypeInfoKey.get)) {
                     // process type information for the predicate into additional statements
-
-
+                    createAdditionalStatements(typeInspectionResult.typedEntities(predTypeInfoKey.get), statementPattern.pred, statementPattern)
+                } else {
+                    Seq.empty[QueryPattern]
                 }
 
                 // check if there exists type information for the given statement's object
-                if (predTypeInfoKey.nonEmpty && (typeInspectionResult.typedEntities -- processedTypeInformationKeys contains predTypeInfoKey.get)) {
+                val additionalStatementsForObj: Seq[QueryPattern] = if (objTypeInfoKey.nonEmpty && (typeInspectionResult.typedEntities -- processedTypeInformationKeys contains objTypeInfoKey.get)) {
                     // process type information for the object into additional statements
-
-
+                    createAdditionalStatements(typeInspectionResult.typedEntities(subjTypeInfoKey.get), statementPattern.obj, statementPattern)
+                } else {
+                    Seq.empty[QueryPattern]
                 }
 
                 // decide whether to keep the originally given statement or not
@@ -234,9 +254,7 @@ class SearchResponderV2 extends Responder {
                 // add TypeableEntity (keys of `typeInspectionResult`) in order to prevent duplicates
                 processedTypeInformationKeys ++ subjTypeInfoKey ++ predTypeInfoKey ++ objTypeInfoKey
 
-
-
-                Seq.empty[QueryPattern]
+                additionalStatementsForSubj ++ additionalStatementsForPred ++ additionalStatementsForObj
             }
 
             def transformFilter(filterPattern: FilterPattern): Seq[QueryPattern] = {
