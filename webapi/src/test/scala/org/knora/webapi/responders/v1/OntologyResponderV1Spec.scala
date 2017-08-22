@@ -518,7 +518,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                         id = "http://www.knora.org/ontology/incunabula#title"
                     ),
                     PropertyTypeV1(
-                        label = "Beschreibung (Richtext)",
+                        label = "Description",
                         id = "http://www.knora.org/ontology/incunabula#description"
                     )
                 ),
@@ -567,7 +567,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                         id = "http://www.knora.org/ontology/incunabula#seqnum"
                     ),
                     PropertyTypeV1(
-                        label = "Beschreibung (Richtext)",
+                        label = "Description",
                         id = "http://www.knora.org/ontology/incunabula#description"
                     )
                 ),
@@ -588,7 +588,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                         "http://www.knora.org/ontology/knora-base#hasStillImageFileValue",
                         "has image file"),
                     PropertyTypeV1(
-                        label = "Beschreibung (Richtext)",
+                        label = "Description",
                         id = "http://www.knora.org/ontology/incunabula#description"
                     )
                 ),
