@@ -172,19 +172,31 @@
 							
 						}
 					},
-                    extraPlugins: 'codemirror,codesnippet',
-                    toolbarGroups: [
-                    		{ name: 'styles', groups: [ 'styles' ] }, // format
-                    		{ name: 'basicstyles', groups: [ 'basicstyles', 'cleanup' ] },
-                    		{ name: 'paragraph', groups: [ 'list', 'blocks' ] },
-                    		'/',
-                    		{ name: 'undo', groups: [ 'undo' ] },
-                    		{ name: 'links', groups: [ 'links' ] },
-                    		{ name: 'insert', groups: [ 'insert' ] }, // code snipet, table, hr
-                    		{ name: 'tools', groups: [ 'tools' ] } // maximize
-                    		//{ name: 'document', groups: [ 'mode', 'document', 'doctools' ] }, // source button
-                    	],
-                        removeButtons: 'Styles'
+                    // ways to build CKEditor:
+                    // 1. go to https://ckeditor.com/builder and start from the `basic` option
+                    // 2. add plugins: 
+                    //    - "Blockquote" : for cite
+                    //    - "Format" : for the drop-down format menu - h1, h2, ...
+                    //    - "Horizontal rule" : for tage <hr>
+                    //    - "Editor resize" : handy resize handle at the corner of the editor
+                    //    - "Maximize" : to enjoy a bigger editing zone
+                    //    - "Remove Format" : to remove format we added
+                    //    - "Soure editing area" : to check what's in (deactivated on prod)
+                    //    - "Table" : table editor
+                    //  3. choose a skin, add languages french, german, italian
+                    //  4. download and uncompress
+                    //  5. go to "ckeditor/samples/toolbarconfigurator/index.html" to work-out an editor tool bar
+                    //  documentation entry point: http://sdk.ckeditor.com/samples/toolbar.html
+                    toolbar: [
+                		{ name: 'basicstyles', items: [ 'Format', 'Bold', 'Italic', 'Strike', 'Underline', 'Subscript', 'Superscript', '-', 'RemoveFormat' ] },
+                		{ name: 'paragraph', items: [ 'NumberedList', 'BulletedList', '-', 'Blockquote' ] },
+                		{ name: 'links', items: [ 'Link', 'Unlink' ] },
+                		{ name: 'insert', items: [ 'Table', 'HorizontalRule'] },
+                		{ name: 'tools', items: [ 'Maximize' ] }
+	               ],
+                   
+                   // apply the same css as used in the rest of Salsah
+                   contentsCss: '/ckeditor.css',
 				};
 
 				// init editor (textarea will be replaced by an iframe)
