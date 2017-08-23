@@ -16,21 +16,21 @@
 
 package org.knora.jsonld
 
-import spray.json.{JsObject, JsValue}
+import java.util
 
-import annotation.implicitNotFound
+import scala.annotation.implicitNotFound
 
 /**
   * Provides the JSON-LD deserialization for type T.
   */
 @implicitNotFound(msg = "Cannot find KnoraJsonLDReader or KnoraJsonLDFormat type class for ${T}")
 trait KnoraJsonLDReader[T] {
-    def read(json: JsObject): T
+    def read(expanded: util.Map[String, Object]): T
 }
 
 object KnoraJsonLDReader {
-    implicit def func2Reader[T](f: JsValue => T): KnoraJsonLDReader[T] = new KnoraJsonLDReader[T] {
-        def read(json: JsObject) = f(json)
+    implicit def func2Reader[T](f: util.Map[String, Object] => T): KnoraJsonLDReader[T] = new KnoraJsonLDReader[T] {
+        def read(expanded: util.Map[String, Object]) = f(expanded)
     }
 }
 

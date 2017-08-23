@@ -75,6 +75,14 @@ object OntologyConstants {
         val Uri: IRI = XsdPrefixExpansion + "anyURI"
     }
 
+    /**
+      * http://schema.org
+      */
+    object SchemaOrg {
+        val ItemList        = "http://schema.org/" + "ItemList"
+        val ItemListElement = "http://schema.org/" + "itemListElement"
+    }
+
     object KnoraInternal {
         // The start and end of an internal Knora ontology IRI.
         val InternalOntologyStart = "http://www.knora.org/ontology/"

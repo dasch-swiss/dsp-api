@@ -236,6 +236,18 @@ trait ListV2JsonLDProtocol extends KnoraJsonLDSupport {
 
     implicit object ReadListsSequenceV2JsonLDFormat extends KnoraJsonLDFormat[ReadListsSequenceV2] {
         /**
+          * Converts a [[Map[String, AnyRef]]] to a [[ReadListsSequenceV2]].
+          *
+          * @param expanded a [[Map[String, AnyRef]]].
+          * @return a [[ReadListsSequenceV2]].
+          */
+        def read(expanded: Map[String, AnyRef]): ReadListsSequenceV2 = {
+            val seq = readListsSequenceV2Reader(expanded)
+
+            ReadListsSequenceV2(items = seq)
+        }
+
+        /**
           * Recursively converts a [[ReadListsSequenceV2]] to a JSON-LD [[String]].
           *
           * @param seq a [[ReadListsSequenceV2]].
@@ -243,18 +255,6 @@ trait ListV2JsonLDProtocol extends KnoraJsonLDSupport {
           */
         def write(seq: ReadListsSequenceV2): String = {
             readListsSequenceV2Writer(seq.items)
-        }
-
-        /**
-          * Converts a [[JsObject]] to a [[ReadListsSequenceV2]].
-          *
-          * @param value a [[JsObject]].
-          * @return a [[ReadListsSequenceV2]].
-          */
-        def read(value: JsObject): ReadListsSequenceV2 = {
-            val seq = readListsSequenceV2Reader(value)
-
-            ReadListsSequenceV2(items = seq)
         }
     }
 
@@ -409,18 +409,13 @@ trait ListV2JsonLDProtocol extends KnoraJsonLDSupport {
         result
     }
 
-    private def readListsSequenceV2Reader(value: JsObject): Seq[ListNodeV2] = {
+    private def readListsSequenceV2Reader(expanded: Map[String, AnyRef]): Seq[ListNodeV2] = {
 
-        val fields: Map[String, JsValue] = value.fields
-
-        val items: Seq[JsObject] = fields.get(ItemListElement) match {
-            case Some(seq: JsArray) => seq.elements.map(_.asJsObject)
-            case Some(_) => invalidJsonLDError(s"JSON-LD field: $ItemListElement must contain an array.")
-            case None => invalidJsonLDError(s"JSON-LD field: $ItemListElement not found.")
-        }
+        val items: Seq[AnyRef] = expanded.getOrElse(OntologyConstants.SchemaOrg.ItemListElement, invalidJsonLDError("Missing 'itemListElement")).asInstanceOf[Seq[AnyRef]]
 
         println("readListsSequenceV2Reader: " + items)
 
+        /*
         val result: Seq[ListNodeV2] = items map { (item: JsObject) =>
             val props = item.fields
             val objectType = props.getOrElse(TYPE, invalidJsonLDError("Field '@type' is missing.")).toString()
@@ -431,7 +426,9 @@ trait ListV2JsonLDProtocol extends KnoraJsonLDSupport {
             }
 
         }
+        */
 
+        val result = Seq.empty[ListNodeV2]
         result
     }
 
@@ -441,7 +438,7 @@ trait ListV2JsonLDProtocol extends KnoraJsonLDSupport {
         val id: IRI = props.getOrElse(ID, invalidJsonLDError("Field '@id' is missing.")).toString()
         val projectIri: Option[IRI] = props.get(AttachedToProject).map(_.toString)
         val labels: Seq[StringV2] = props.get(OntologyConstants.Rdfs.Label) match {
-            case Some(value: JsValue) =>
+            case Some(value: JsValue) => Seq(StringV2(value.toString))
             case None => Seq.empty[StringV2]
         }
 
@@ -456,29 +453,18 @@ trait ListV2JsonLDProtocol extends KnoraJsonLDSupport {
 
     private def listChildNodeV2Reader(o: JsObject): ListRootNodeV2 = ???
 
-    private def stringV2SeqReader(json: JsValue): Seq[StringV2] = {
-
-        try {}
-
-    }
+    private def stringV2SeqReader(json: JsValue): Seq[StringV2] = ???
 
     private def stringV2Reader(json: JsValue): StringV2 = {
 
-        try {
-            val jsonObject = json.asJsObject
-            val props = jsonObject.fields
 
-            props.getOrElse("@value", throw )
+        val jsonObject = json.asJsObject
+        val props = jsonObject.fields
 
-        } catch {
-            case de: DeserializationException => {
-                // not an object
+        val value = props.getOrElse("@value", throw invalidJsonLDError("Value is missing.")).toString
+        val language = props.getOrElse("@language", throw invalidJsonLDError("Language is missing.")).toString
 
+        StringV2(value = value, language = Some(language))
 
-            }
-            case e: Exception => throw e
-        }
-
-        if (json.asJsObject)
     }
 }

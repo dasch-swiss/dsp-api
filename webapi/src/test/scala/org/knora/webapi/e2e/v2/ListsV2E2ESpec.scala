@@ -16,6 +16,8 @@
 
 package org.knora.webapi.e2e.v2
 
+import java.util
+
 import akka.actor.ActorSystem
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers._
@@ -28,6 +30,7 @@ import org.knora.webapi.messages.v2.responder.listmessages.{ListV2JsonLDProtocol
 import org.knora.webapi.util.{AkkaHttpUtils, MessageUtil, MutableTestIri}
 import org.knora.webapi.{E2ESpec, SharedAdminTestData}
 import spray.json._
+import java.util._
 
 import scala.concurrent.duration._
 
@@ -105,10 +108,10 @@ class ListsV2E2ESpec extends E2ESpec(ListsV2E2ESpec.config) with SessionJsonProt
 
                 //val lists: Seq[ListNodeV2]
 
-                val json = AkkaHttpUtils.httpResponseToJsonLDExpanded(response)
-                log.debug("httpResponseToJsonLDExpanded (not expanded): {}", json.toString)
+                val expanded: util.Map[String, Object] = AkkaHttpUtils.httpResponseToJsonLDExpanded(response)
+                log.debug("httpResponseToJsonLDExpanded: {}", expanded.toString)
 
-                val seq: ReadListsSequenceV2 = json.convertToV2[ReadListsSequenceV2]
+                val seq: ReadListsSequenceV2 = expanded.convertToV2[ReadListsSequenceV2]
                 log.debug("seq: {}", seq)
 
                 seq.items.size should be (6)
