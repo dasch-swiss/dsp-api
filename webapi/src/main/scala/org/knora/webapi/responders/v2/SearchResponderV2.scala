@@ -161,7 +161,9 @@ class SearchResponderV2 extends Responder {
 
             // a map containing all additional StatementPattern that have been created based on the type information, FilterPattern excluded
             // will be integrated in the Construct clause
-            val additionalStatementsCreated = mutable.Map.empty[Entity, Seq[StatementPattern]]
+            val additionalStatementsCreatedForEntities = mutable.Map.empty[Entity, Seq[StatementPattern]]
+
+            val convertedStatementsCreatedForWholeStatements = mutable.Map.empty[StatementPattern, Seq[StatementPattern]]
 
             /**
               * Convert an [[Entity]] to a [[TypeableEntity]] (key of type inspection results).
@@ -182,14 +184,32 @@ class SearchResponderV2 extends Responder {
 
             }
 
+            def escapeEntityForVariable(entity: Entity): String = {
+                val entityStr = entity match {
+                    case QueryVariable(varName) => varName
+                    case IriRef(iriLiteral) => iriLiteral
+                    case _ => throw SparqlSearchException(s"A unique variable could not be made for $entity")
+                }
+
+                entityStr.replaceAll("[:/.]", "") // TODO: check if this is complete
+            }
+
+            def createUniqueVariableFromEntity(base: Entity, suffix: String): QueryVariable = {
+                QueryVariable(escapeEntityForVariable(base) + "__" + suffix)
+            }
+
+            def createUniqueVariableFromStatement(baseStatement: StatementPattern, suffix: String): QueryVariable = {
+                QueryVariable(escapeEntityForVariable(baseStatement.subj) + "__" + escapeEntityForVariable(baseStatement.pred) + "__" + escapeEntityForVariable(baseStatement.obj) + "__" + suffix)
+            }
+
             /**
               * Create additional statements for the given non property type information.
               *
-              * @param nonPropertyTypeInfo           type information about the statement provided by the user.
-              * @param additionalStatementsForEntity the entity to create additional statements for.
+              * @param nonPropertyTypeInfo type information about the statement provided by the user.
+              * @param inputEntity         the entity to create additional statements for.
               * @return a sequence of [[QueryPattern]] representing additional statements created from the given type information.
               */
-            def createAdditionalStatementsForNonPropertyType(nonPropertyTypeInfo: NonPropertyTypeInfo, additionalStatementsForEntity: Entity): Seq[QueryPattern] = {
+            def createAdditionalStatementsForNonPropertyType(nonPropertyTypeInfo: NonPropertyTypeInfo, inputEntity: Entity): Seq[QueryPattern] = {
 
                 val typeIriInternal = if (InputValidation.isKnoraApiEntityIri(nonPropertyTypeInfo.typeIri)) {
                     InputValidation.externalIriToInternalIri(nonPropertyTypeInfo.typeIri, () => throw BadRequestException(s"${nonPropertyTypeInfo.typeIri} is not a valid external knora-api entity Iri"))
@@ -199,35 +219,23 @@ class SearchResponderV2 extends Responder {
 
                 if (typeIriInternal == OntologyConstants.KnoraBase.Resource) {
 
-                    // additionalStatementsForEntity is either source or target of a linking property
+                    // inputEntity is either source or target of a linking property
                     // create additional statements in order to query permissions and other information for a resource
-
-                    // based on the given entity's identifier (either an Iri or a variable name),
-                    // create a base name in order to create unique but reproducible variable names (names of Where and Construct clause have to match)
-                    val variableBaseName: String = additionalStatementsForEntity match {
-                        case QueryVariable(varName) => varName
-
-                        case IriRef(iriLiteral) => iriLiteral.replaceAll("[:/.]", "") // remove these chars because the would violate Sparql Syntax
-
-                        case _ => throw SparqlSearchException(s"A resource identifier must either be a variable or an Iri: $additionalStatementsForEntity ")
-
-                    }
 
                     // if these statements are inside a Where clause, disable inference
                     val graph = Some(IriRef(OntologyConstants.NamedGraphs.KnoraExplicitNamedGraph))
 
-
                     Seq(
-                        StatementPattern(subj = additionalStatementsForEntity, pred = IriRef(OntologyConstants.Rdf.Type), obj = IriRef(OntologyConstants.KnoraBase.Resource), graph),
-                        StatementPattern(subj = additionalStatementsForEntity, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean), graph),
-                        StatementPattern(subj = additionalStatementsForEntity, pred = IriRef(OntologyConstants.Rdfs.Label), obj = QueryVariable(variableBaseName + "ResourceLabel"), graph),
-                        StatementPattern(subj = additionalStatementsForEntity, pred = IriRef(OntologyConstants.Rdf.Type), obj = QueryVariable(variableBaseName + "ResourceType"), graph),
-                        StatementPattern(subj = additionalStatementsForEntity, pred = IriRef(OntologyConstants.KnoraBase.AttachedToUser), obj = QueryVariable(variableBaseName + "ResourceCreator"), graph),
-                        StatementPattern(subj = additionalStatementsForEntity, pred = IriRef(OntologyConstants.KnoraBase.HasPermissions), obj = QueryVariable(variableBaseName + "ResourcePermissions"), graph),
-                        StatementPattern(subj = additionalStatementsForEntity, pred = IriRef(OntologyConstants.KnoraBase.AttachedToProject), obj = QueryVariable(variableBaseName + "ResourceProject"), graph)
+                        StatementPattern(subj = inputEntity, pred = IriRef(OntologyConstants.Rdf.Type), obj = IriRef(OntologyConstants.KnoraBase.Resource), graph),
+                        StatementPattern(subj = inputEntity, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean), graph),
+                        StatementPattern(subj = inputEntity, pred = IriRef(OntologyConstants.Rdfs.Label), obj = createUniqueVariableFromEntity(inputEntity, "ResourceLabel"), graph),
+                        StatementPattern(subj = inputEntity, pred = IriRef(OntologyConstants.Rdf.Type), obj = createUniqueVariableFromEntity(inputEntity, "ResourceType"), graph),
+                        StatementPattern(subj = inputEntity, pred = IriRef(OntologyConstants.KnoraBase.AttachedToUser), obj = createUniqueVariableFromEntity(inputEntity, "ResourceCreator"), graph),
+                        StatementPattern(subj = inputEntity, pred = IriRef(OntologyConstants.KnoraBase.HasPermissions), obj = createUniqueVariableFromEntity(inputEntity, "ResourcePermissions"), graph),
+                        StatementPattern(subj = inputEntity, pred = IriRef(OntologyConstants.KnoraBase.AttachedToProject), obj = createUniqueVariableFromEntity(inputEntity, "ResourceProject"), graph)
                     )
                 } else {
-                    // additionalStatementsForEntity is target of a value property
+                    // inputEntity is target of a value property
                     // properties are handled by `convertStatementForPropertyType`, no processing needed here
 
                     Seq.empty[QueryPattern]
@@ -258,14 +266,42 @@ class SearchResponderV2 extends Responder {
                     propertyTypeInfo.objectTypeIri
                 }
 
-                Seq.empty[QueryPattern]
+                objectIri match {
+                    case OntologyConstants.KnoraBase.Resource =>
+
+                        // the given statement pattern's object is of type resource
+                        // this means that the predicate of the statement pattern is a linking property
+                        // create statements in order to query the link value describing the link in question
+
+                        // variable referring to the link's value object (reification)
+                        val linkValueVar = createUniqueVariableFromStatement(statementPattern, "LinkObj") // A variable representing the reification
+                    val linkPropVar = createUniqueVariableFromStatement(statementPattern, "linkProp") // A variable representing the explicit property that actually points to the target resource
+                    val linkValuePropVar = createUniqueVariableFromStatement(statementPattern, "linkValueProp") // A variable representing the explicit property that actually points to the reification
+                    val linkValuePredVar = createUniqueVariableFromStatement(statementPattern, "linkValueObjProp") // A variable representing a predicate of the reification
+                    val linkValueObjVar = createUniqueVariableFromStatement(statementPattern, "linkValueObjProp") // A variable representing a predicate of the reification
+
+                        Seq(statementPattern, // keep the original statement pointing from the source to the target resource, using inference
+                            StatementPattern(subj = statementPattern.subj, pred = linkPropVar, obj = statementPattern.obj).toKnoraExplicit, // find out what the actual link property is
+                            StatementPattern(subj = statementPattern.subj, pred = IriRef(OntologyConstants.KnoraBase.HasValue), obj = linkValueVar), // include knora-base:hasValue pointing to the link value, because the construct clause needs it
+                            StatementPattern(subj = statementPattern.subj, pred = linkValuePropVar, obj = linkValueVar).toKnoraExplicit, // find out what the actual link value property is
+                            StatementPattern(subj = linkValueVar, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean)), // ensure the link value isn't deleted
+                            StatementPattern(subj = linkValueVar, pred = IriRef(OntologyConstants.Rdf.Type), obj = IriRef(OntologyConstants.KnoraBase.LinkValue)), // it's a link value
+                            StatementPattern(subj = linkValueVar, pred = IriRef(OntologyConstants.Rdf.Subject), obj = statementPattern.subj), // the rdf:subject of the link value must be the source resource
+                            StatementPattern(subj = linkValueVar, pred = IriRef(OntologyConstants.Rdf.Predicate), obj = linkPropVar), // the rdf:predicate of the link value must be the link property
+                            StatementPattern(subj = linkValueVar, pred = IriRef(OntologyConstants.Rdf.Object), obj = statementPattern.obj), // the rdf:object of the link value must be the target resource
+                            StatementPattern(subj = linkValueVar, pred = linkValuePredVar, obj = linkValueObjVar) // get any other statements about the link value
+                        )
+
+                }
+
+
             }
 
             /**
               * Process a given statement pattern based on type information.
               * This function is used for the Construct and Where clause of a user provided Sparql query.
               *
-              * @param statementPattern             the statement to be processed.
+              * @param statementPattern the statement to be processed.
               * @return a sequence of [[StatementPattern]].
               */
             def processStatementPatternFromWhereClause(statementPattern: StatementPattern): Seq[QueryPattern] = {
@@ -294,42 +330,21 @@ class SearchResponderV2 extends Responder {
 
                     val additionalStatements = createAdditionalStatementsForNonPropertyType(
                         nonPropertyTypeInfo = nonPropTypeInfo,
-                        additionalStatementsForEntity = statementPattern.subj
+                        inputEntity = statementPattern.subj
                     )
 
-                    val existingAdditionalStatementsCreated: Seq[StatementPattern] = additionalStatementsCreated.get(statementPattern.subj).toSeq.flatten
+                    val existingAdditionalStatementsCreated: Seq[StatementPattern] = additionalStatementsCreatedForEntities.get(statementPattern.subj).toSeq.flatten
 
                     val newAdditionalStatementPatterns: Seq[StatementPattern] = additionalStatements.collect {
                         // only include StatementPattern
                         case statementP: StatementPattern => statementP
                     }
 
-                    additionalStatementsCreated += statementPattern.subj -> (existingAdditionalStatementsCreated ++ newAdditionalStatementPatterns)
+                    additionalStatementsCreatedForEntities += statementPattern.subj -> (existingAdditionalStatementsCreated ++ newAdditionalStatementPatterns)
 
                     additionalStatements
                 } else {
                     Seq.empty[QueryPattern]
-                }
-
-                // process type information for the given statement's predicate, possibly converting the originally given statement (e.g., in case of a non linking property for the simple api)
-                val additionalStatementsForPred: Seq[QueryPattern] = if (predTypeInfoKey.nonEmpty && (typeInspectionResult.typedEntities contains predTypeInfoKey.get)) {
-                    // process type information for the predicate into additional statements
-
-                    val propTypeInfo = typeInspectionResult.typedEntities(predTypeInfoKey.get) match {
-                        case propInfo: PropertyTypeInfo => propInfo
-
-                        case _ => throw AssertionException(s"PropertyTypeInfo expected for ${predTypeInfoKey.get}")
-                    }
-
-                    val additionalStatements = convertStatementForPropertyType(
-                        propertyTypeInfo = propTypeInfo,
-                        statementPattern = statementPattern
-                    )
-
-                    additionalStatements
-                } else {
-                    // no type information given and thus no further processing needed, just return the originally given statement (e.g., rdf:type)
-                    Seq(statementPattern)
                 }
 
                 // check if there exists type information for the given statement's object
@@ -347,53 +362,99 @@ class SearchResponderV2 extends Responder {
 
                     val additionalStatements = createAdditionalStatementsForNonPropertyType(
                         nonPropertyTypeInfo = nonPropTypeInfo,
-                        additionalStatementsForEntity = statementPattern.obj
+                        inputEntity = statementPattern.obj
                     )
 
-                    val existingAdditionalStatementsCreated: Seq[StatementPattern] = additionalStatementsCreated.get(statementPattern.obj).toSeq.flatten
+                    val existingAdditionalStatementsCreated: Seq[StatementPattern] = additionalStatementsCreatedForEntities.get(statementPattern.obj).toSeq.flatten
 
                     val newAdditionalStatementPatterns: Seq[StatementPattern] = additionalStatements.collect {
                         // only include StatementPattern
                         case statementP: StatementPattern => statementP
                     }
 
-                    additionalStatementsCreated += statementPattern.obj -> (existingAdditionalStatementsCreated ++ newAdditionalStatementPatterns)
+                    additionalStatementsCreatedForEntities += statementPattern.obj -> (existingAdditionalStatementsCreated ++ newAdditionalStatementPatterns)
 
                     additionalStatements
                 } else {
                     Seq.empty[QueryPattern]
                 }
 
-                additionalStatementsForSubj ++ additionalStatementsForPred ++ additionalStatementsForObj
+
+                // Add additional statements based on the whole input statement, e.g. to deal with the value object or the link value, and transform the original statement.
+                val additionalStatementsForWholeStatement: Seq[QueryPattern] = if (predTypeInfoKey.nonEmpty && (typeInspectionResult.typedEntities contains predTypeInfoKey.get)) {
+                    // process type information for the predicate into additional statements
+
+                    val propTypeInfo = typeInspectionResult.typedEntities(predTypeInfoKey.get) match {
+                        case propInfo: PropertyTypeInfo => propInfo
+
+                        case _ => throw AssertionException(s"PropertyTypeInfo expected for ${predTypeInfoKey.get}")
+                    }
+
+                    val additionalStatements = convertStatementForPropertyType(
+                        propertyTypeInfo = propTypeInfo,
+                        statementPattern = statementPattern
+                    )
+
+                    val existingAdditionalStatementsCreated: Seq[StatementPattern] = convertedStatementsCreatedForWholeStatements.get(statementPattern).toSeq.flatten
+
+                    val newAdditionalStatementPatterns: Seq[StatementPattern] = additionalStatements.collect {
+                        // only include StatementPattern
+                        case statementP: StatementPattern => statementP
+                    }
+
+                    convertedStatementsCreatedForWholeStatements += statementPattern -> (existingAdditionalStatementsCreated ++ newAdditionalStatementPatterns)
+
+                    additionalStatements
+                } else {
+                    // no type information given and thus no further processing needed, just return the originally given statement (e.g., rdf:type)
+                    Seq(statementPattern)
+                }
+
+
+                additionalStatementsForSubj ++ additionalStatementsForWholeStatement ++ additionalStatementsForObj
             }
 
             def transformStatementInConstruct(statementPattern: StatementPattern): Seq[StatementPattern] = {
 
                 // check if there is an entry for the given statementPattern in additionalStatementsCreated
 
-                val additionalStatementsForSubj = additionalStatementsCreated.get(statementPattern.subj) match {
-                    case Some(statementPatterns: Seq[StatementPattern]) => statementPatterns.map {
-                       // set graph to None for Construct clause
-                       case additionalStatementP: StatementPattern =>
-                           additionalStatementsCreated -= statementPattern.subj
-                           additionalStatementP.copy(namedGraph = None)
-                    }
+                val additionalStatementsForSubj = additionalStatementsCreatedForEntities.get(statementPattern.subj) match {
+                    case Some(statementPatterns: Seq[StatementPattern]) =>
+                        additionalStatementsCreatedForEntities -= statementPattern.subj
+
+                        statementPatterns.map {
+                            // set graph to None for Construct clause
+                            additionalStatementP: StatementPattern => additionalStatementP.copy(namedGraph = None)
+                        }
+
+                    case None => Seq.empty[StatementPattern]
+                }
+
+                val additionalStatementsForObj = additionalStatementsCreatedForEntities.get(statementPattern.obj) match {
+                    case Some(statementPatterns: Seq[StatementPattern]) =>
+                        additionalStatementsCreatedForEntities -= statementPattern.obj
+
+                        statementPatterns.map {
+                            // set graph to None for Construct clause
+                            additionalStatementP: StatementPattern => additionalStatementP.copy(namedGraph = None)
+                        }
+
+                    case None => Seq.empty[StatementPattern]
+                }
+
+                val convertedStatementsForWholeStatement = convertedStatementsCreatedForWholeStatements.get(statementPattern) match {
+                    case Some(statementPatterns: Seq[StatementPattern]) =>
+                        convertedStatementsCreatedForWholeStatements -= statementPattern
+
+                        statementPatterns.map {
+                            // set graph to None for Construct clause
+                            additionalStatementP: StatementPattern => additionalStatementP.copy(namedGraph = None)
+                        }
 
                     case None => Seq(statementPattern)
                 }
 
-                val additionalStatementsForObj = additionalStatementsCreated.get(statementPattern.obj) match {
-                    case Some(statementPatterns: Seq[StatementPattern]) => statementPatterns.map {
-                        // set graph to None for Construct clause
-                        case additionalStatementP: StatementPattern =>
-                            additionalStatementsCreated -= statementPattern.obj
-                            additionalStatementP.copy(namedGraph = None)
-                    }
-
-                    case None => Seq(statementPattern)
-                }
-
-                additionalStatementsForSubj ++ additionalStatementsForObj
+                convertedStatementsForWholeStatement ++ additionalStatementsForSubj ++ additionalStatementsForObj
             }
 
             def transformStatementInWhere(statementPattern: StatementPattern): Seq[QueryPattern] = {
@@ -487,9 +548,30 @@ class SearchResponderV2 extends Responder {
 
             // Convert the result to a SPARQL string and send it to the triplestore.
 
+/*
+            statementsInWhereClause = triplestoreSpecificQuery.whereClause.patterns.collect {
+                case statementPattern: StatementPattern => statementPattern.toKnoraExplicit
+            }
+
+            nonStatementsInWhereClause = triplestoreSpecificQuery.whereClause.patterns.filter {
+                case statementPattern: StatementPattern => false
+                case _ => true
+            }
+
+            statementsInConstructClause = triplestoreSpecificQuery.constructClause.statements.map(_.toKnoraExplicit)
+
+
+            statementsInWhereButNotInConstruct = statementsInWhereClause.diff(statementsInConstructClause)
+            statementsInConstructButNotInWhere = statementsInConstructClause.diff(statementsInWhereClause)
+
+            _ = println(s"statementsInWhereButNotInConstruct: $statementsInWhereButNotInConstruct")
+            _ = println(s"statementsInConstructButNotInWhere: $statementsInConstructButNotInWhere")
+            _ = println(s"nonStatementsInWhereClause: $nonStatementsInWhereClause")
+*/
+
             triplestoreSpecificSparql: String = triplestoreSpecificQuery.toSparql
 
-            //_ = println(triplestoreSpecificQuery.toSparql)
+            _ = println(triplestoreSpecificQuery.toSparql)
 
             searchResponse: SparqlConstructResponse <- (storeManager ? SparqlConstructRequest(triplestoreSpecificSparql)).mapTo[SparqlConstructResponse]
 
