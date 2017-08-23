@@ -83,9 +83,9 @@ class SearchResponderV2 extends Responder {
           * and disabling inference for individual statements as necessary.
           */
         class Preprocessor extends QueryPatternTransformer {
-            def transformStatementInConstruct(statementPattern: StatementPattern): Seq[StatementPattern] = Seq(preprocessStatementPattern(statementPattern = statementPattern, inWhereClause = false))
+            def transformStatementInConstruct(statementPattern: StatementPattern): Seq[StatementPattern] = Seq(preprocessStatementPattern(statementPattern = statementPattern))
 
-            def transformStatementInWhere(statementPattern: StatementPattern): Seq[QueryPattern] = Seq(preprocessStatementPattern(statementPattern = statementPattern, inWhereClause = true))
+            def transformStatementInWhere(statementPattern: StatementPattern): Seq[StatementPattern] = Seq(preprocessStatementPattern(statementPattern = statementPattern))
 
             def transformFilter(filterPattern: FilterPattern): Seq[QueryPattern] = Seq(FilterPattern(preprocessFilterExpression(filterPattern.expression)))
 
@@ -131,7 +131,7 @@ class SearchResponderV2 extends Responder {
               * @param statementPattern a statement provided by SearchParserV2.
               * @return the preprocessed statement pattern.
               */
-            def preprocessStatementPattern(statementPattern: StatementPattern, inWhereClause: Boolean): StatementPattern = {
+            def preprocessStatementPattern(statementPattern: StatementPattern): StatementPattern = {
 
                 val subj = preprocessEntity(statementPattern.subj)
                 val pred = preprocessEntity(statementPattern.pred)
@@ -157,7 +157,8 @@ class SearchResponderV2 extends Responder {
 
             // a set containing all `TypeableEntity` (keys of `typeInspectionResult`) that have already been processed
             // in order to prevent duplicates
-            val processedTypeInformationKeys = mutable.Set.empty[TypeableEntity]
+            val processedTypeInformationKeysConstructClause = mutable.Set.empty[TypeableEntity]
+            val processedTypeInformationKeysWhereClause = mutable.Set.empty[TypeableEntity]
 
             /**
               * Convert an [[Entity]] to a [[TypeableEntity]] (key of type inspection results).
@@ -179,42 +180,56 @@ class SearchResponderV2 extends Responder {
             }
 
             /**
-              * Based on the given type information, create additional statements for the given statement.
+              * Create additional statements for the given non property type information.
               *
-              * @param typeInfo                      type information about the statement provided by the user.
+              * @param nonPropertyTypeInfo           type information about the statement provided by the user.
               * @param additionalStatementsForEntity the entity to create additional statements for.
               * @param statementPattern              statement provided by the user.
               * @return a sequence of [[QueryPattern]] representing additional statements created from the given type information.
               */
-            def createAdditionalStatements(typeInfo: SparqlEntityTypeInfo, additionalStatementsForEntity: Entity, statementPattern: StatementPattern): Seq[QueryPattern] = {
+            def createAdditionalStatementsForNonPropertyType(nonPropertyTypeInfo: NonPropertyTypeInfo, additionalStatementsForEntity: Entity, statementPattern: StatementPattern): Seq[StatementPattern] = {
+
+                //println(s"create statements for $nonPropertyTypeInfo about $additionalStatementsForEntity in statement $statementPattern")
 
                 // check which version of the api is used: simple or with value object
-
-                // check if typeInfo is a `PropertyTypeInfo` or a `NonPropertyTypeInfo`
-
-                Seq.empty[QueryPattern]
-            }
-
-            def transformStatementInConstruct(statementPattern: StatementPattern): Seq[StatementPattern] = {
 
                 Seq.empty[StatementPattern]
             }
 
             /**
-              * Converts a statement from the Where clause of a user-provided Sparql Construct query (knora-api) to Sparql
-              * that is going to be sent to the triplestore (knora-base).
+              * Create additional statements for the given property type information.
               *
-              * @param statementPattern the statement to be transformed.
-              * @return the result of the transformation.
+              * @param propertyTypeInfo type information about the statement provided by the user.
+              * @param statementPattern statement provided by the user.
+              * @return a sequence of [[QueryPattern]] representing additional statements created from the given type information.
               */
-            def transformStatementInWhere(statementPattern: StatementPattern): Seq[QueryPattern] = {
-                // println(statementPattern)
+            def convertStatementForPropertyType(propertyTypeInfo: PropertyTypeInfo, statementPattern: StatementPattern): Seq[StatementPattern] = {
 
-                // convert given statement from Where clause, taking into consideration if inference is needed or not
-                // look at the statement's subject, predicate, and object and generate additional statements if needed
-                // transform the originally given statement if necessary
+                //println(s"create statements for $propertyTypeInfo in $statementPattern")
 
-                // create TypeableEntity keys from the given statement's elements
+                // check which version of the api is used: simple or with value object
+
+                // decide whether to keep the originally given statement or not
+                // if pred is a valueProp and the simple api is used, do not return the original statement
+                // it had to be converted to comply with Knora's value object structure
+
+                Seq.empty[StatementPattern]
+            }
+
+            /**
+              * Process a given statement pattern based on type information.
+              * This function is used for the Construct and Where clause of a user provided Sparql query.
+              *
+              * @param processedTypeInformationKeys type information keys that already have been processed.
+              * @param statementPattern the statement to be processed.
+              * @param inWhereClause indicates whether the given statement is inside a Where clause or not (needed to handle inference).
+              * @return a sequence of [[StatementPattern]].
+              */
+            def processStatementPattern(processedTypeInformationKeys: mutable.Set[TypeableEntity], statementPattern: StatementPattern, inWhereClause: Boolean): Seq[StatementPattern] = {
+                // look at the statement's subject, predicate, and object and generate additional statements if needed based on the given type information.
+                // transform the originally given statement if necessary when processing the predicate
+
+                // create `TypeableEntity` (keys in `typeInspectionResult`) from the given statement's elements
                 val subjTypeInfoKey: Option[TypeableEntity] = toTypeableEntityKey(statementPattern.subj)
 
                 val predTypeInfoKey: Option[TypeableEntity] = toTypeableEntityKey(statementPattern.pred)
@@ -222,39 +237,72 @@ class SearchResponderV2 extends Responder {
                 val objTypeInfoKey: Option[TypeableEntity] = toTypeableEntityKey(statementPattern.obj)
 
                 // check if there exists type information for the given statement's subject
-                val additionalStatementsForSubj: Seq[QueryPattern] = if (subjTypeInfoKey.nonEmpty && (typeInspectionResult.typedEntities -- processedTypeInformationKeys contains subjTypeInfoKey.get)) {
+                val additionalStatementsForSubj: Seq[StatementPattern] = if (subjTypeInfoKey.nonEmpty && (typeInspectionResult.typedEntities -- processedTypeInformationKeys contains subjTypeInfoKey.get)) {
                     // process type information for the subject into additional statements
-                    createAdditionalStatements(typeInspectionResult.typedEntities(subjTypeInfoKey.get), statementPattern.subj, statementPattern)
+
+                    // add TypeableEntity (keys of `typeInspectionResult`) for subject in order to prevent duplicates
+                    processedTypeInformationKeys += subjTypeInfoKey.get
+
+                    val nonPropTypeInfo: NonPropertyTypeInfo = typeInspectionResult.typedEntities(subjTypeInfoKey.get) match {
+                        case nonPropInfo: NonPropertyTypeInfo => nonPropInfo
+
+                        case _ => throw AssertionException(s"NonPropertyTypeInfo expected for ${subjTypeInfoKey.get}")
+                    }
+
+                    createAdditionalStatementsForNonPropertyType(nonPropTypeInfo, statementPattern.subj, statementPattern)
                 } else {
-                    Seq.empty[QueryPattern]
+                    Seq.empty[StatementPattern]
                 }
 
-
-                // check if there exists type information for the given statement's predicate
-                val additionalStatementsForPred: Seq[QueryPattern] = if (predTypeInfoKey.nonEmpty && (typeInspectionResult.typedEntities -- processedTypeInformationKeys contains predTypeInfoKey.get)) {
+                // process type information for the given statement's predicate, possibly converting the originally given statement (e.g., in case of a non linking property for the simple api)
+                val additionalStatementsForPred: Seq[StatementPattern] = if (predTypeInfoKey.nonEmpty && (typeInspectionResult.typedEntities contains predTypeInfoKey.get)) {
                     // process type information for the predicate into additional statements
-                    createAdditionalStatements(typeInspectionResult.typedEntities(predTypeInfoKey.get), statementPattern.pred, statementPattern)
+
+                    val propTypeInfo = typeInspectionResult.typedEntities(predTypeInfoKey.get) match {
+                        case propInfo: PropertyTypeInfo => propInfo
+
+                        case _ => throw AssertionException(s"PropertyTypeInfo expected for ${predTypeInfoKey.get}")
+                    }
+
+                    convertStatementForPropertyType(propTypeInfo, statementPattern)
                 } else {
-                    Seq.empty[QueryPattern]
+                    // no type information given and thus no further processing needed, just return the originally given statement (e.g., rdf:type)
+                    Seq(statementPattern)
                 }
 
                 // check if there exists type information for the given statement's object
-                val additionalStatementsForObj: Seq[QueryPattern] = if (objTypeInfoKey.nonEmpty && (typeInspectionResult.typedEntities -- processedTypeInformationKeys contains objTypeInfoKey.get)) {
+                val additionalStatementsForObj: Seq[StatementPattern] = if (objTypeInfoKey.nonEmpty && (typeInspectionResult.typedEntities -- processedTypeInformationKeys contains objTypeInfoKey.get)) {
                     // process type information for the object into additional statements
-                    createAdditionalStatements(typeInspectionResult.typedEntities(subjTypeInfoKey.get), statementPattern.obj, statementPattern)
+
+                    // add TypeableEntity (keys of `typeInspectionResult`) for object in order to prevent duplicates
+                    processedTypeInformationKeys += objTypeInfoKey.get
+
+                    val nonPropTypeInfo: NonPropertyTypeInfo = typeInspectionResult.typedEntities(objTypeInfoKey.get) match {
+                        case nonPropInfo: NonPropertyTypeInfo => nonPropInfo
+
+                        case _ => throw AssertionException(s"NonPropertyTypeInfo expected for ${objTypeInfoKey.get}")
+                    }
+                    createAdditionalStatementsForNonPropertyType(nonPropTypeInfo, statementPattern.obj, statementPattern)
                 } else {
-                    Seq.empty[QueryPattern]
+                    Seq.empty[StatementPattern]
                 }
 
-                // decide whether to keep the originally given statement or not
-                // if pred is a valueProp, do not return the original statement
-                // it had to be converted to comply with Knora's value object structure
-
-
-                // add TypeableEntity (keys of `typeInspectionResult`) in order to prevent duplicates
-                processedTypeInformationKeys ++ subjTypeInfoKey ++ predTypeInfoKey ++ objTypeInfoKey
-
                 additionalStatementsForSubj ++ additionalStatementsForPred ++ additionalStatementsForObj
+            }
+
+            def transformStatementInConstruct(statementPattern: StatementPattern): Seq[StatementPattern] = {
+
+                processStatementPattern(processedTypeInformationKeys = processedTypeInformationKeysConstructClause,
+                    statementPattern = statementPattern,
+                    inWhereClause = false)
+            }
+
+            def transformStatementInWhere(statementPattern: StatementPattern): Seq[StatementPattern] = {
+
+                processStatementPattern(processedTypeInformationKeys = processedTypeInformationKeysWhereClause,
+                    statementPattern = statementPattern,
+                    inWhereClause = true)
+
             }
 
             def transformFilter(filterPattern: FilterPattern): Seq[QueryPattern] = {
@@ -271,7 +319,7 @@ class SearchResponderV2 extends Responder {
         class GraphDBQueryPatternTransformer extends QueryPatternTransformer {
             def transformStatementInConstruct(statementPattern: StatementPattern): Seq[StatementPattern] = Seq(statementPattern)
 
-            def transformStatementInWhere(statementPattern: StatementPattern): Seq[QueryPattern] = {
+            def transformStatementInWhere(statementPattern: StatementPattern): Seq[StatementPattern] = {
                 val transformedPattern = statementPattern.copy(
                     namedGraph = statementPattern.namedGraph match {
                         case Some(IriRef(OntologyConstants.NamedGraphs.KnoraExplicitNamedGraph)) => Some(IriRef(OntologyConstants.NamedGraphs.GraphDBExplicitNamedGraph))
@@ -292,7 +340,7 @@ class SearchResponderV2 extends Responder {
         class NoInferenceQueryPatternTransformer extends QueryPatternTransformer {
             def transformStatementInConstruct(statementPattern: StatementPattern): Seq[StatementPattern] = Seq(statementPattern)
 
-            def transformStatementInWhere(statementPattern: StatementPattern): Seq[QueryPattern] = {
+            def transformStatementInWhere(statementPattern: StatementPattern): Seq[StatementPattern] = {
                 // TODO: if OntologyConstants.NamedGraphs.KnoraExplicitNamedGraph occurs, remove it and use property path syntax to emulate inference.
                 Seq(statementPattern)
             }
@@ -320,6 +368,8 @@ class SearchResponderV2 extends Responder {
                 inputQuery = preprocessedQuery,
                 queryPatternTransformer = new NonTriplestoreSpecificQueryPatternTransformer(typeInspectionResult)
             )
+
+            _ = println(nonTriplestoreSpecificQuery)
 
             // Convert the non-triplestore-specific query to a triplestore-specific one.
 
