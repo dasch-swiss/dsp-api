@@ -184,16 +184,54 @@ class SearchResponderV2 extends Responder {
               *
               * @param nonPropertyTypeInfo           type information about the statement provided by the user.
               * @param additionalStatementsForEntity the entity to create additional statements for.
-              * @param statementPattern              statement provided by the user.
               * @return a sequence of [[QueryPattern]] representing additional statements created from the given type information.
               */
-            def createAdditionalStatementsForNonPropertyType(nonPropertyTypeInfo: NonPropertyTypeInfo, additionalStatementsForEntity: Entity, statementPattern: StatementPattern): Seq[StatementPattern] = {
+            def createAdditionalStatementsForNonPropertyType(nonPropertyTypeInfo: NonPropertyTypeInfo, additionalStatementsForEntity: Entity, inWhereClause: Boolean): Seq[StatementPattern] = {
 
-                //println(s"create statements for $nonPropertyTypeInfo about $additionalStatementsForEntity in statement $statementPattern")
+                val typeIriInternal = if (InputValidation.isKnoraApiEntityIri(nonPropertyTypeInfo.typeIri)) {
+                     InputValidation.externalIriToInternalIri(nonPropertyTypeInfo.typeIri, () => throw BadRequestException(s"${nonPropertyTypeInfo.typeIri} is not a valid external knora-api entity Iri"))
+                } else {
+                    nonPropertyTypeInfo.typeIri
+                }
 
-                // check which version of the api is used: simple or with value object
+                if (typeIriInternal == OntologyConstants.KnoraBase.Resource) {
 
-                Seq.empty[StatementPattern]
+                    // additionalStatementsForEntity is either source or target of a linking property
+                    // create additional statements in order to query permissions and other information for a resource
+
+                    // based on the given entity's identifier (either an Iri or a variable name),
+                    // create a base name in order to create unique but reproducible variable names (names of Where and Construct clause have to match)
+                    val variableBaseName: String = additionalStatementsForEntity match {
+                        case QueryVariable(varName) => varName
+
+                        case IriRef(iriLiteral) => iriLiteral.replaceAll("[:/.]", "") // remove these chars because the would violate Sparql Syntax
+
+                        case _ => throw SparqlSearchException(s"A resource identifier must either be a variable or an Iri: $additionalStatementsForEntity ")
+
+                    }
+
+                    // if these statements are inside a Where clause, disable inference
+                    val graph: Option[IriRef] = if (inWhereClause) {
+                        Some(IriRef(OntologyConstants.NamedGraphs.KnoraExplicitNamedGraph))
+                    } else {
+                        None
+                    }
+
+                    Seq(
+                        StatementPattern(subj = additionalStatementsForEntity, pred = IriRef(OntologyConstants.Rdf.Type), obj = IriRef(OntologyConstants.KnoraBase.Resource), graph),
+                        StatementPattern(subj = additionalStatementsForEntity, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean), graph),
+                        StatementPattern(subj = additionalStatementsForEntity, pred = IriRef(OntologyConstants.Rdfs.Label), obj = QueryVariable(variableBaseName + "ResourceLabel"), graph),
+                        StatementPattern(subj = additionalStatementsForEntity, pred = IriRef(OntologyConstants.Rdf.Type), obj = QueryVariable(variableBaseName + "ResourceType"), graph),
+                        StatementPattern(subj = additionalStatementsForEntity, pred = IriRef(OntologyConstants.KnoraBase.AttachedToUser), obj = QueryVariable(variableBaseName + "ResourceCreator"), graph),
+                        StatementPattern(subj = additionalStatementsForEntity, pred = IriRef(OntologyConstants.KnoraBase.HasPermissions), obj = QueryVariable(variableBaseName + "ResourcePermissions"), graph),
+                        StatementPattern(subj = additionalStatementsForEntity, pred = IriRef(OntologyConstants.KnoraBase.AttachedToProject), obj = QueryVariable(variableBaseName + "ResourceProject"), graph)
+                    )
+                } else {
+                    // additionalStatementsForEntity is target of a value property
+                    // properties are handled by `convertStatementForPropertyType`, no processing needed here
+
+                    Seq.empty[StatementPattern]
+                }
             }
 
             /**
@@ -203,7 +241,7 @@ class SearchResponderV2 extends Responder {
               * @param statementPattern statement provided by the user.
               * @return a sequence of [[QueryPattern]] representing additional statements created from the given type information.
               */
-            def convertStatementForPropertyType(propertyTypeInfo: PropertyTypeInfo, statementPattern: StatementPattern): Seq[StatementPattern] = {
+            def convertStatementForPropertyType(propertyTypeInfo: PropertyTypeInfo, statementPattern: StatementPattern, inWhereClause: Boolean): Seq[StatementPattern] = {
 
                 //println(s"create statements for $propertyTypeInfo in $statementPattern")
 
@@ -221,8 +259,8 @@ class SearchResponderV2 extends Responder {
               * This function is used for the Construct and Where clause of a user provided Sparql query.
               *
               * @param processedTypeInformationKeys type information keys that already have been processed.
-              * @param statementPattern the statement to be processed.
-              * @param inWhereClause indicates whether the given statement is inside a Where clause or not (needed to handle inference).
+              * @param statementPattern             the statement to be processed.
+              * @param inWhereClause                indicates whether the given statement is inside a Where clause or not (needed to handle inference).
               * @return a sequence of [[StatementPattern]].
               */
             def processStatementPattern(processedTypeInformationKeys: mutable.Set[TypeableEntity], statementPattern: StatementPattern, inWhereClause: Boolean): Seq[StatementPattern] = {
@@ -249,7 +287,11 @@ class SearchResponderV2 extends Responder {
                         case _ => throw AssertionException(s"NonPropertyTypeInfo expected for ${subjTypeInfoKey.get}")
                     }
 
-                    createAdditionalStatementsForNonPropertyType(nonPropTypeInfo, statementPattern.subj, statementPattern)
+                    createAdditionalStatementsForNonPropertyType(
+                        nonPropertyTypeInfo = nonPropTypeInfo,
+                        additionalStatementsForEntity = statementPattern.subj,
+                        inWhereClause = inWhereClause
+                    )
                 } else {
                     Seq.empty[StatementPattern]
                 }
@@ -264,7 +306,11 @@ class SearchResponderV2 extends Responder {
                         case _ => throw AssertionException(s"PropertyTypeInfo expected for ${predTypeInfoKey.get}")
                     }
 
-                    convertStatementForPropertyType(propTypeInfo, statementPattern)
+                    convertStatementForPropertyType(
+                        propertyTypeInfo = propTypeInfo,
+                        statementPattern = statementPattern,
+                        inWhereClause = inWhereClause
+                    )
                 } else {
                     // no type information given and thus no further processing needed, just return the originally given statement (e.g., rdf:type)
                     Seq(statementPattern)
@@ -282,7 +328,12 @@ class SearchResponderV2 extends Responder {
 
                         case _ => throw AssertionException(s"NonPropertyTypeInfo expected for ${objTypeInfoKey.get}")
                     }
-                    createAdditionalStatementsForNonPropertyType(nonPropTypeInfo, statementPattern.obj, statementPattern)
+                    
+                    createAdditionalStatementsForNonPropertyType(
+                        nonPropertyTypeInfo = nonPropTypeInfo,
+                        additionalStatementsForEntity = statementPattern.obj,
+                        inWhereClause = inWhereClause
+                    )
                 } else {
                     Seq.empty[StatementPattern]
                 }
@@ -369,8 +420,6 @@ class SearchResponderV2 extends Responder {
                 queryPatternTransformer = new NonTriplestoreSpecificQueryPatternTransformer(typeInspectionResult)
             )
 
-            _ = println(nonTriplestoreSpecificQuery)
-
             // Convert the non-triplestore-specific query to a triplestore-specific one.
 
             triplestoreSpecificQueryPatternTransformer: QueryPatternTransformer = {
@@ -391,6 +440,8 @@ class SearchResponderV2 extends Responder {
             // Convert the result to a SPARQL string and send it to the triplestore.
 
             triplestoreSpecificSparql: String = triplestoreSpecificQuery.toSparql
+
+            // _ = println(triplestoreSpecificQuery.toSparql)
 
             searchResponse: SparqlConstructResponse <- (storeManager ? SparqlConstructRequest(triplestoreSpecificSparql)).mapTo[SparqlConstructResponse]
 
