@@ -102,14 +102,14 @@ object ConstructQueryTransformer {
         // TODO: Should we enforce that statements in the Where clause have to be repeated in the Construct clause?
         // TODO: Or should we include Where patterns in the Construct clause for permission checking and filter them out later?
 
-        val transformedConstructStatements: Seq[StatementPattern] = inputQuery.constructClause.statements.flatMap {
-            statementPattern => queryPatternTransformer.transformStatementInConstruct(statementPattern)
-        }
-
         val transformedWherePatterns = transformWherePatterns(
             patterns = inputQuery.whereClause.patterns,
             queryPatternTransformer = queryPatternTransformer
         )
+
+        val transformedConstructStatements: Seq[StatementPattern] = inputQuery.constructClause.statements.flatMap {
+            statementPattern => queryPatternTransformer.transformStatementInConstruct(statementPattern)
+        }
 
         ConstructQuery(
             constructClause = ConstructClause(statements = transformedConstructStatements),

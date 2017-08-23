@@ -161,7 +161,7 @@ class SearchResponderV2 extends Responder {
 
             // a map containing all additional StatementPattern that have been created based on the type information, FilterPattern excluded
             // will be integrated in the Construct clause
-            val additionalStatementsCreated = mutable.Map.empty[StatementPattern, Seq[StatementPattern]]
+            val additionalStatementsCreated = mutable.Map.empty[Entity, Seq[StatementPattern]]
 
             /**
               * Convert an [[Entity]] to a [[TypeableEntity]] (key of type inspection results).
@@ -296,7 +296,16 @@ class SearchResponderV2 extends Responder {
                         nonPropertyTypeInfo = nonPropTypeInfo,
                         additionalStatementsForEntity = statementPattern.subj
                     )
-                    
+
+                    val existingAdditionalStatementsCreated: Seq[StatementPattern] = additionalStatementsCreated.get(statementPattern.subj).toSeq.flatten
+
+                    val newAdditionalStatementPatterns: Seq[StatementPattern] = additionalStatements.collect {
+                        // only include StatementPattern
+                        case statementP: StatementPattern => statementP
+                    }
+
+                    additionalStatementsCreated += statementPattern.subj -> (existingAdditionalStatementsCreated ++ newAdditionalStatementPatterns)
+
                     additionalStatements
                 } else {
                     Seq.empty[QueryPattern]
@@ -312,10 +321,12 @@ class SearchResponderV2 extends Responder {
                         case _ => throw AssertionException(s"PropertyTypeInfo expected for ${predTypeInfoKey.get}")
                     }
 
-                    convertStatementForPropertyType(
+                    val additionalStatements = convertStatementForPropertyType(
                         propertyTypeInfo = propTypeInfo,
                         statementPattern = statementPattern
                     )
+
+                    additionalStatements
                 } else {
                     // no type information given and thus no further processing needed, just return the originally given statement (e.g., rdf:type)
                     Seq(statementPattern)
@@ -334,10 +345,21 @@ class SearchResponderV2 extends Responder {
                         case _ => throw AssertionException(s"NonPropertyTypeInfo expected for ${objTypeInfoKey.get}")
                     }
 
-                    createAdditionalStatementsForNonPropertyType(
+                    val additionalStatements = createAdditionalStatementsForNonPropertyType(
                         nonPropertyTypeInfo = nonPropTypeInfo,
                         additionalStatementsForEntity = statementPattern.obj
                     )
+
+                    val existingAdditionalStatementsCreated: Seq[StatementPattern] = additionalStatementsCreated.get(statementPattern.obj).toSeq.flatten
+
+                    val newAdditionalStatementPatterns: Seq[StatementPattern] = additionalStatements.collect {
+                        // only include StatementPattern
+                        case statementP: StatementPattern => statementP
+                    }
+
+                    additionalStatementsCreated += statementPattern.obj -> (existingAdditionalStatementsCreated ++ newAdditionalStatementPatterns)
+
+                    additionalStatements
                 } else {
                     Seq.empty[QueryPattern]
                 }
@@ -347,7 +369,31 @@ class SearchResponderV2 extends Responder {
 
             def transformStatementInConstruct(statementPattern: StatementPattern): Seq[StatementPattern] = {
 
-                Seq.empty[StatementPattern]
+                // check if there is an entry for the given statementPattern in additionalStatementsCreated
+
+                val additionalStatementsForSubj = additionalStatementsCreated.get(statementPattern.subj) match {
+                    case Some(statementPatterns: Seq[StatementPattern]) => statementPatterns.map {
+                       // set graph to None for Construct clause
+                       case additionalStatementP: StatementPattern =>
+                           additionalStatementsCreated -= statementPattern.subj
+                           additionalStatementP.copy(namedGraph = None)
+                    }
+
+                    case None => Seq(statementPattern)
+                }
+
+                val additionalStatementsForObj = additionalStatementsCreated.get(statementPattern.obj) match {
+                    case Some(statementPatterns: Seq[StatementPattern]) => statementPatterns.map {
+                        // set graph to None for Construct clause
+                        case additionalStatementP: StatementPattern =>
+                            additionalStatementsCreated -= statementPattern.obj
+                            additionalStatementP.copy(namedGraph = None)
+                    }
+
+                    case None => Seq(statementPattern)
+                }
+
+                additionalStatementsForSubj ++ additionalStatementsForObj
             }
 
             def transformStatementInWhere(statementPattern: StatementPattern): Seq[QueryPattern] = {
@@ -443,7 +489,7 @@ class SearchResponderV2 extends Responder {
 
             triplestoreSpecificSparql: String = triplestoreSpecificQuery.toSparql
 
-            // _ = println(triplestoreSpecificQuery.toSparql)
+            //_ = println(triplestoreSpecificQuery.toSparql)
 
             searchResponse: SparqlConstructResponse <- (storeManager ? SparqlConstructRequest(triplestoreSpecificSparql)).mapTo[SparqlConstructResponse]
 
