@@ -40,7 +40,7 @@ trait QueryPatternTransformer {
       * @param statementPattern the statement to be transformed.
       * @return the result of the transformation.
       */
-    def transformStatementInWhere(statementPattern: StatementPattern): Seq[StatementPattern]
+    def transformStatementInWhere(statementPattern: StatementPattern): Seq[QueryPattern]
 
     /**
       * Transforms a [[FilterPattern]] in a WHERE clause into zero or more statement patterns.
