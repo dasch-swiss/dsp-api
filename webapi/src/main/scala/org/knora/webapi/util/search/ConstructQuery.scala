@@ -91,11 +91,10 @@ sealed trait QueryPattern extends SparqlGenerator
   * @param subj the subject of the statement.
   * @param pred the predicate of the statement.
   * @param obj  the object of the statement.
-  * @param namedGraph the named graph this statement should be searched in.
-  * @param includeInConstructClause indicates whether this statement should be included in the Construct clause of the query. Some statements are only needed in the Where clause.
-  *
+  * @param namedGraph the named graph this statement should be searched in. Defaults to `http://www.knora.org/explicit`, indicating that inference should be disabled for the pattern.
+  * @param includeInConstructClause indicates whether this statement should be copied from the WHERE clause into the CONSTRUCT clause during SPARQL generation.
   */
-case class StatementPattern(subj: Entity, pred: Entity, obj: Entity, namedGraph: Option[IriRef] = None, includeInConstructClause: Boolean = true) extends QueryPattern {
+case class StatementPattern(subj: Entity, pred: Entity, obj: Entity, namedGraph: Option[IriRef] = Some(IriRef(OntologyConstants.NamedGraphs.KnoraExplicitNamedGraph)), includeInConstructClause: Boolean = true) extends QueryPattern {
     def toSparql: String = {
         val triple = s"${subj.toSparql} ${pred.toSparql} ${obj.toSparql} ."
 
@@ -113,11 +112,11 @@ case class StatementPattern(subj: Entity, pred: Entity, obj: Entity, namedGraph:
 
     /**
       * A convenience function that returns a copy of this statement pattern, with its named graph set to
-      * `http://www.knora.org/explicit`, indicating that inference should be disabled for the pattern.
+      * `None`, indicating that inference should be enabled for the pattern.
       *
-      * @return a copy of this statement pattern with its named graph set to `http://www.knora.org/explicit`.
+      * @return a copy of this statement pattern with its named graph set to `None`.
       */
-    def toKnoraExplicit: StatementPattern = copy(namedGraph = Some(IriRef(OntologyConstants.NamedGraphs.KnoraExplicitNamedGraph)))
+    def toInferred: StatementPattern = copy(namedGraph = None)
 }
 
 /**
@@ -125,17 +124,17 @@ case class StatementPattern(subj: Entity, pred: Entity, obj: Entity, namedGraph:
   */
 object CompareExpressionOperator extends Enumeration {
 
-    val EQUALS = Value("=")
+    val EQUALS: CompareExpressionOperator.Value = Value("=")
 
-    val GREATERTHAN = Value(">")
+    val GREATER_THAN: CompareExpressionOperator.Value = Value(">")
 
-    val GREATERTHANEQUALS = Value(">=")
+    val GREATER_THAN_OR_EQUAL_TO: CompareExpressionOperator.Value = Value(">=")
 
-    val LOWERTHAN = Value("<")
+    val LESS_THAN: CompareExpressionOperator.Value = Value("<")
 
-    val LOWERTHANEQUALS = Value("<=")
+    val LESS_THAN_OR_EQUAL_TO: CompareExpressionOperator.Value = Value("<=")
 
-    val NOTEQUALS = Value("!=")
+    val NOT_EQUALS: CompareExpressionOperator.Value = Value("!=")
 
     val valueMap: Map[String, Value] = values.map(v => (v.toString, v)).toMap
 

@@ -141,14 +141,11 @@ class SearchResponderV2 extends Responder {
                 val pred = preprocessEntity(statementPattern.pred)
                 val obj = preprocessEntity(statementPattern.obj)
 
-                val namedGraph = None // use inference for all user-provided statements in Where clause
-
                 StatementPattern(
                     subj = subj,
                     pred = pred,
-                    obj = obj,
-                    namedGraph = namedGraph
-                )
+                    obj = obj
+                ).toInferred // use inference for all user-provided statements in Where clause
             }
         }
 
@@ -258,13 +255,13 @@ class SearchResponderV2 extends Responder {
                     // create additional statements in order to query permissions and other information for a resource
 
                     Seq(
-                        StatementPattern(subj = inputEntity, pred = IriRef(OntologyConstants.Rdf.Type), obj = IriRef(OntologyConstants.KnoraBase.Resource), None),
-                        StatementPattern(subj = inputEntity, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean)).toKnoraExplicit,
-                        StatementPattern(subj = inputEntity, pred = IriRef(OntologyConstants.Rdfs.Label), obj = createUniqueVariableFromEntity(inputEntity, "ResourceLabel")).toKnoraExplicit,
-                        StatementPattern(subj = inputEntity, pred = IriRef(OntologyConstants.Rdf.Type), obj = createUniqueVariableFromEntity(inputEntity, "ResourceType")).toKnoraExplicit,
-                        StatementPattern(subj = inputEntity, pred = IriRef(OntologyConstants.KnoraBase.AttachedToUser), obj = createUniqueVariableFromEntity(inputEntity, "ResourceCreator")).toKnoraExplicit,
-                        StatementPattern(subj = inputEntity, pred = IriRef(OntologyConstants.KnoraBase.HasPermissions), obj = createUniqueVariableFromEntity(inputEntity, "ResourcePermissions")).toKnoraExplicit,
-                        StatementPattern(subj = inputEntity, pred = IriRef(OntologyConstants.KnoraBase.AttachedToProject), obj = createUniqueVariableFromEntity(inputEntity, "ResourceProject")).toKnoraExplicit
+                        StatementPattern(subj = inputEntity, pred = IriRef(OntologyConstants.Rdf.Type), obj = IriRef(OntologyConstants.KnoraBase.Resource), None).toInferred,
+                        StatementPattern(subj = inputEntity, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean)),
+                        StatementPattern(subj = inputEntity, pred = IriRef(OntologyConstants.Rdfs.Label), obj = createUniqueVariableFromEntity(inputEntity, "ResourceLabel")),
+                        StatementPattern(subj = inputEntity, pred = IriRef(OntologyConstants.Rdf.Type), obj = createUniqueVariableFromEntity(inputEntity, "ResourceType")),
+                        StatementPattern(subj = inputEntity, pred = IriRef(OntologyConstants.KnoraBase.AttachedToUser), obj = createUniqueVariableFromEntity(inputEntity, "ResourceCreator")),
+                        StatementPattern(subj = inputEntity, pred = IriRef(OntologyConstants.KnoraBase.HasPermissions), obj = createUniqueVariableFromEntity(inputEntity, "ResourcePermissions")),
+                        StatementPattern(subj = inputEntity, pred = IriRef(OntologyConstants.KnoraBase.AttachedToProject), obj = createUniqueVariableFromEntity(inputEntity, "ResourceProject"))
                     )
                 } else {
                     // inputEntity is target of a value property
@@ -295,7 +292,7 @@ class SearchResponderV2 extends Responder {
                 }
 
                 objectIri match {
-                    case OntologyConstants.KnoraBase.Resource =>
+                    case OntologyConstants.KnoraBase.Resource => {
 
                         // the given statement pattern's object is of type resource
                         // this means that the predicate of the statement pattern is a linking property
@@ -303,24 +300,25 @@ class SearchResponderV2 extends Responder {
 
                         // variable referring to the link's value object (reification)
                         val linkValueVar = createUniqueVariableFromStatement(statementPattern, "linkObj") // A variable representing the reification
-                    val linkPropVar = createUniqueVariableFromStatement(statementPattern, "linkProp") // A variable representing the explicit property that actually points to the target resource
-                    val linkValuePropVar = createUniqueVariableFromStatement(statementPattern, "linkValueProp") // A variable representing the explicit property that actually points to the reification
-                    val linkValuePredVar = createUniqueVariableFromStatement(statementPattern, "linkValuePred") // A variable representing a predicate of the reification
-                    val linkValueObjVar = createUniqueVariableFromStatement(statementPattern, "linkValueObj") // A variable representing a predicate of the reification
+                        val linkPropVar = createUniqueVariableFromStatement(statementPattern, "linkProp") // A variable representing the explicit property that actually points to the target resource
+                        val linkValuePropVar = createUniqueVariableFromStatement(statementPattern, "linkValueProp") // A variable representing the explicit property that actually points to the reification
+                        val linkValuePredVar = createUniqueVariableFromStatement(statementPattern, "linkValuePred") // A variable representing a predicate of the reification
+                        val linkValueObjVar = createUniqueVariableFromStatement(statementPattern, "linkValueObj") // A variable representing a predicate of the reification
 
                         Seq(statementPattern, // keep the original statement pointing from the source to the target resource, using inference
-                            StatementPattern(subj = statementPattern.subj, pred = linkPropVar, obj = statementPattern.obj).toKnoraExplicit, // find out what the actual link property is
-                            StatementPattern(subj = statementPattern.subj, pred = IriRef(OntologyConstants.KnoraBase.HasValue), obj = linkValueVar), // include knora-base:hasValue pointing to the link value, because the construct clause needs it
-                            StatementPattern(subj = statementPattern.subj, pred = linkValuePropVar, obj = linkValueVar).toKnoraExplicit, // find out what the actual link value property is
-                            StatementPattern(subj = linkValueVar, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean)).toKnoraExplicit, // ensure the link value isn't deleted
-                            StatementPattern(subj = linkValueVar, pred = IriRef(OntologyConstants.Rdf.Type), obj = IriRef(OntologyConstants.KnoraBase.LinkValue)).toKnoraExplicit, // it's a link value
-                            StatementPattern(subj = linkValueVar, pred = IriRef(OntologyConstants.Rdf.Subject), obj = statementPattern.subj).toKnoraExplicit, // the rdf:subject of the link value must be the source resource
-                            StatementPattern(subj = linkValueVar, pred = IriRef(OntologyConstants.Rdf.Predicate), obj = linkPropVar).toKnoraExplicit, // the rdf:predicate of the link value must be the link property
-                            StatementPattern(subj = linkValueVar, pred = IriRef(OntologyConstants.Rdf.Object), obj = statementPattern.obj).toKnoraExplicit, // the rdf:object of the link value must be the target resource
-                            StatementPattern(subj = linkValueVar, pred = linkValuePredVar, obj = linkValueObjVar).toKnoraExplicit // get any other statements about the link value
+                            StatementPattern(subj = statementPattern.subj, pred = linkPropVar, obj = statementPattern.obj), // find out what the actual link property is
+                            StatementPattern(subj = statementPattern.subj, pred = IriRef(OntologyConstants.KnoraBase.HasValue), obj = linkValueVar).toInferred, // include knora-base:hasValue pointing to the link value, because the construct clause needs it
+                            StatementPattern(subj = statementPattern.subj, pred = linkValuePropVar, obj = linkValueVar), // find out what the actual link value property is
+                            StatementPattern(subj = linkValueVar, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean)), // ensure the link value isn't deleted
+                            StatementPattern(subj = linkValueVar, pred = IriRef(OntologyConstants.Rdf.Type), obj = IriRef(OntologyConstants.KnoraBase.LinkValue)), // it's a link value
+                            StatementPattern(subj = linkValueVar, pred = IriRef(OntologyConstants.Rdf.Subject), obj = statementPattern.subj), // the rdf:subject of the link value must be the source resource
+                            StatementPattern(subj = linkValueVar, pred = IriRef(OntologyConstants.Rdf.Predicate), obj = linkPropVar), // the rdf:predicate of the link value must be the link property
+                            StatementPattern(subj = linkValueVar, pred = IriRef(OntologyConstants.Rdf.Object), obj = statementPattern.obj), // the rdf:object of the link value must be the target resource
+                            StatementPattern(subj = linkValueVar, pred = linkValuePredVar, obj = linkValueObjVar) // get any other statements about the link value
                         )
+                    }
 
-                    case OntologyConstants.Xsd.Integer =>
+                    case OntologyConstants.Xsd.Integer => {
 
                         // the given statement pattern's object is of type xsd:integer
                         // this means that the predicate of the statement pattern is a value property
@@ -328,8 +326,8 @@ class SearchResponderV2 extends Responder {
 
                         // variable referring to the link's value object (reification)
                         val intPropVar = createUniqueVariableFromStatement(statementPattern, "intProp") // A variable representing the property pointing to the value object
-                    val integerValuePred = createUniqueVariableFromStatement(statementPattern, "intValuePred") // A variable representing a predicates of the integer value object
-                    val intValueObj = createUniqueVariableFromStatement(statementPattern, "intValueObj") // A variable representing a predicate of the reification
+                        val integerValuePred = createUniqueVariableFromStatement(statementPattern, "intValuePred") // A variable representing a predicates of the integer value object
+                        val intValueObj = createUniqueVariableFromStatement(statementPattern, "intValueObj") // A variable representing a predicate of the reification
 
                         // check if the statement pattern's object is a literal or a variable
                         statementPattern.obj match {
@@ -340,30 +338,31 @@ class SearchResponderV2 extends Responder {
                             case integerLiteral: XsdLiteral =>
 
                                 Seq(
-                                    StatementPattern(subj = statementPattern.subj, pred = IriRef(OntologyConstants.KnoraBase.HasValue), obj = statementPattern.obj), // include knora-base:hasValue pointing to the link value, because the construct clause needs it
-                                    StatementPattern(subj = statementPattern.subj, pred = statementPattern.pred, obj = statementPattern.obj, includeInConstructClause = false), // do not include the originally given  property in the Construct clause because inference is used
-                                    StatementPattern(subj = statementPattern.subj, pred = intPropVar, obj = statementPattern.obj).toKnoraExplicit, // the actually matching property
-                                    StatementPattern(subj = statementPattern.obj, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean)).toKnoraExplicit,
-                                    StatementPattern(subj = statementPattern.obj, pred = IriRef(OntologyConstants.Rdf.Type), obj = IriRef(OntologyConstants.KnoraBase.IntValue)).toKnoraExplicit,
-                                    StatementPattern(subj = statementPattern.obj, pred = integerValuePred, obj = intValueObj).toKnoraExplicit,
-                                    StatementPattern(subj = statementPattern.obj, pred = IriRef(OntologyConstants.KnoraBase.ValueHasInteger), obj = statementPattern.obj).toKnoraExplicit
+                                    StatementPattern(subj = statementPattern.subj, pred = IriRef(OntologyConstants.KnoraBase.HasValue), obj = statementPattern.obj).toInferred, // include knora-base:hasValue pointing to the link value, because the construct clause needs it
+                                    StatementPattern(subj = statementPattern.subj, pred = statementPattern.pred, obj = statementPattern.obj, includeInConstructClause = false).toInferred, // do not include the originally given  property in the Construct clause because inference is used
+                                    StatementPattern(subj = statementPattern.subj, pred = intPropVar, obj = statementPattern.obj), // the actually matching property
+                                    StatementPattern(subj = statementPattern.obj, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean)),
+                                    StatementPattern(subj = statementPattern.obj, pred = IriRef(OntologyConstants.Rdf.Type), obj = IriRef(OntologyConstants.KnoraBase.IntValue)),
+                                    StatementPattern(subj = statementPattern.obj, pred = integerValuePred, obj = intValueObj),
+                                    StatementPattern(subj = statementPattern.obj, pred = IriRef(OntologyConstants.KnoraBase.ValueHasInteger), obj = statementPattern.obj)
                                 )
 
                             case integerVar: QueryVariable =>
 
                                 // just create the statements to query the integer value object, possibly a Filter statement exists to restrict the possible integer values
                                 Seq(
-                                    StatementPattern(subj = statementPattern.subj, pred = IriRef(OntologyConstants.KnoraBase.HasValue), obj = statementPattern.obj), // include knora-base:hasValue pointing to the link value, because the construct clause needs it
-                                    StatementPattern(subj = statementPattern.subj, pred = statementPattern.pred, obj = statementPattern.obj, includeInConstructClause = false), // do not include the originally given property in the Construct clause because inference is used
-                                    StatementPattern(subj = statementPattern.subj, pred = intPropVar, obj = statementPattern.obj).toKnoraExplicit, // the actually matching property
-                                    StatementPattern(subj = statementPattern.obj, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean)).toKnoraExplicit,
-                                    StatementPattern(subj = statementPattern.obj, pred = IriRef(OntologyConstants.Rdf.Type), obj = IriRef(OntologyConstants.KnoraBase.IntValue)).toKnoraExplicit,
-                                    StatementPattern(subj = statementPattern.obj, pred = integerValuePred, obj = intValueObj).toKnoraExplicit
+                                    StatementPattern(subj = statementPattern.subj, pred = IriRef(OntologyConstants.KnoraBase.HasValue), obj = statementPattern.obj).toInferred, // include knora-base:hasValue pointing to the link value, because the construct clause needs it
+                                    StatementPattern(subj = statementPattern.subj, pred = statementPattern.pred, obj = statementPattern.obj, includeInConstructClause = false).toInferred, // do not include the originally given property in the Construct clause because inference is used
+                                    StatementPattern(subj = statementPattern.subj, pred = intPropVar, obj = statementPattern.obj), // the actually matching property
+                                    StatementPattern(subj = statementPattern.obj, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean)),
+                                    StatementPattern(subj = statementPattern.obj, pred = IriRef(OntologyConstants.Rdf.Type), obj = IriRef(OntologyConstants.KnoraBase.IntValue)),
+                                    StatementPattern(subj = statementPattern.obj, pred = integerValuePred, obj = intValueObj)
                                 )
 
                             case other => throw SparqlSearchException("Not supported as an object of type integer: $other")
 
                         }
+                    }
 
                     case _ => throw NotImplementedException(s"property type $objectIri not implemented yet.")
 
@@ -635,7 +634,6 @@ class SearchResponderV2 extends Responder {
                         )
 
 
-
                     case filterAnd: AndExpression =>
                         val filterExpressionLeft = transformFilterExpression(filterAnd.leftArg)
                         val filterExpressionRight = transformFilterExpression(filterAnd.rightArg)
@@ -738,7 +736,7 @@ class SearchResponderV2 extends Responder {
 
             /*
                         statementsInWhereClause = triplestoreSpecificQuery.whereClause.patterns.collect {
-                            case statementPattern: StatementPattern => statementPattern.toKnoraExplicit
+                            case statementPattern: StatementPattern => statementPattern
                         }
 
                         nonStatementsInWhereClause = triplestoreSpecificQuery.whereClause.patterns.filter {
@@ -746,7 +744,7 @@ class SearchResponderV2 extends Responder {
                             case _ => true
                         }
 
-                        statementsInConstructClause = triplestoreSpecificQuery.constructClause.statements.map(_.toKnoraExplicit)
+                        statementsInConstructClause = triplestoreSpecificQuery.constructClause.statements.map(_)
 
 
                         statementsInWhereButNotInConstruct = statementsInWhereClause.diff(statementsInConstructClause)
