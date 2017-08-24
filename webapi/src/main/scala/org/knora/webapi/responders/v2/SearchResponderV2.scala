@@ -226,7 +226,7 @@ class SearchResponderV2 extends Responder {
                     val graph = Some(IriRef(OntologyConstants.NamedGraphs.KnoraExplicitNamedGraph))
 
                     Seq(
-                        StatementPattern(subj = inputEntity, pred = IriRef(OntologyConstants.Rdf.Type), obj = IriRef(OntologyConstants.KnoraBase.Resource), graph),
+                        StatementPattern(subj = inputEntity, pred = IriRef(OntologyConstants.Rdf.Type), obj = IriRef(OntologyConstants.KnoraBase.Resource), None),
                         StatementPattern(subj = inputEntity, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean), graph),
                         StatementPattern(subj = inputEntity, pred = IriRef(OntologyConstants.Rdfs.Label), obj = createUniqueVariableFromEntity(inputEntity, "ResourceLabel"), graph),
                         StatementPattern(subj = inputEntity, pred = IriRef(OntologyConstants.Rdf.Type), obj = createUniqueVariableFromEntity(inputEntity, "ResourceType"), graph),
@@ -275,10 +275,10 @@ class SearchResponderV2 extends Responder {
 
                         // variable referring to the link's value object (reification)
                         val linkValueVar = createUniqueVariableFromStatement(statementPattern, "LinkObj") // A variable representing the reification
-                    val linkPropVar = createUniqueVariableFromStatement(statementPattern, "linkProp") // A variable representing the explicit property that actually points to the target resource
-                    val linkValuePropVar = createUniqueVariableFromStatement(statementPattern, "linkValueProp") // A variable representing the explicit property that actually points to the reification
-                    val linkValuePredVar = createUniqueVariableFromStatement(statementPattern, "linkValueObjProp") // A variable representing a predicate of the reification
-                    val linkValueObjVar = createUniqueVariableFromStatement(statementPattern, "linkValueObjProp") // A variable representing a predicate of the reification
+                        val linkPropVar = createUniqueVariableFromStatement(statementPattern, "linkProp") // A variable representing the explicit property that actually points to the target resource
+                        val linkValuePropVar = createUniqueVariableFromStatement(statementPattern, "linkValueProp") // A variable representing the explicit property that actually points to the reification
+                        val linkValuePredVar = createUniqueVariableFromStatement(statementPattern, "linkValuePred") // A variable representing a predicate of the reification
+                        val linkValueObjVar = createUniqueVariableFromStatement(statementPattern, "linkValueObj") // A variable representing a predicate of the reification
 
                         Seq(statementPattern, // keep the original statement pointing from the source to the target resource, using inference
                             StatementPattern(subj = statementPattern.subj, pred = linkPropVar, obj = statementPattern.obj).toKnoraExplicit, // find out what the actual link property is
@@ -548,26 +548,26 @@ class SearchResponderV2 extends Responder {
 
             // Convert the result to a SPARQL string and send it to the triplestore.
 
-/*
-            statementsInWhereClause = triplestoreSpecificQuery.whereClause.patterns.collect {
-                case statementPattern: StatementPattern => statementPattern.toKnoraExplicit
-            }
+            /*
+                        statementsInWhereClause = triplestoreSpecificQuery.whereClause.patterns.collect {
+                            case statementPattern: StatementPattern => statementPattern.toKnoraExplicit
+                        }
 
-            nonStatementsInWhereClause = triplestoreSpecificQuery.whereClause.patterns.filter {
-                case statementPattern: StatementPattern => false
-                case _ => true
-            }
+                        nonStatementsInWhereClause = triplestoreSpecificQuery.whereClause.patterns.filter {
+                            case statementPattern: StatementPattern => false
+                            case _ => true
+                        }
 
-            statementsInConstructClause = triplestoreSpecificQuery.constructClause.statements.map(_.toKnoraExplicit)
+                        statementsInConstructClause = triplestoreSpecificQuery.constructClause.statements.map(_.toKnoraExplicit)
 
 
-            statementsInWhereButNotInConstruct = statementsInWhereClause.diff(statementsInConstructClause)
-            statementsInConstructButNotInWhere = statementsInConstructClause.diff(statementsInWhereClause)
+                        statementsInWhereButNotInConstruct = statementsInWhereClause.diff(statementsInConstructClause)
+                        statementsInConstructButNotInWhere = statementsInConstructClause.diff(statementsInWhereClause)
 
-            _ = println(s"statementsInWhereButNotInConstruct: $statementsInWhereButNotInConstruct")
-            _ = println(s"statementsInConstructButNotInWhere: $statementsInConstructButNotInWhere")
-            _ = println(s"nonStatementsInWhereClause: $nonStatementsInWhereClause")
-*/
+                        _ = println(s"statementsInWhereButNotInConstruct: $statementsInWhereButNotInConstruct")
+                        _ = println(s"statementsInConstructButNotInWhere: $statementsInConstructButNotInWhere")
+                        _ = println(s"nonStatementsInWhereClause: $nonStatementsInWhereClause")
+            */
 
             triplestoreSpecificSparql: String = triplestoreSpecificQuery.toSparql
 
