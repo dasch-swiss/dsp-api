@@ -495,21 +495,56 @@ class SearchResponderV2 extends Responder {
                             case other => throw SparqlSearchException(s"Left argument of a Filter CompareExpression is expected to be a QueryVariable, but $other is given")
                         }
 
-
                         val queryVarTypeInfoKey = toTypeableEntityKey(queryVar)
 
                         // get information about the queryVar's type
                         if (queryVarTypeInfoKey.nonEmpty && (typeInspectionResult.typedEntities contains queryVarTypeInfoKey.get)) {
 
-                            println(typeInspectionResult.typedEntities(queryVarTypeInfoKey.get))
+                            val typeInfo: SparqlEntityTypeInfo = typeInspectionResult.typedEntities(queryVarTypeInfoKey.get)
+
+                            // check if type information is about a property or a value
+                            typeInfo match {
+
+                                case propInfo: PropertyTypeInfo =>
+                                    // the left arg (a variable) represents a property
+
+                                    // get the internal objectIri of the property type info
+                                    val typeIriInternal = if (InputValidation.isKnoraApiEntityIri(propInfo.objectTypeIri)) {
+                                        InputValidation.externalIriToInternalIri(propInfo.objectTypeIri, () => throw BadRequestException(s"${propInfo.objectTypeIri} is not a valid external knora-api entity Iri"))
+                                    } else {
+                                        propInfo.objectTypeIri
+                                    }
+
+                                    typeIriInternal match {
+
+                                        case OntologyConstants.KnoraBase.Resource =>
+                                            // left arg is variable representing a property pointing to a knora-base:Resource, so the right argument must be an Iri
+                                            filterCompare.rightArg match {
+                                                case iriRef: IriRef =>
+                                                    // make sure that the comparison operator is "="
+                                                    if (filterCompare.operator != "=") throw SparqlSearchException(s"Comparison operator in a CompareExpression for a property type is expected to be '=', but ${filterCompare.operator}")
+
+                                                    CompareExpression(filterCompare.leftArg, filterCompare.operator, filterCompare.rightArg)
+
+                                                case other => throw SparqlSearchException(s"right argument of CompareExpression is expected to be an Iri representing a property, but $other is given")
+                                            }
+
+                                    }
+
+                                case nonPropInfo: NonPropertyTypeInfo =>
+                                    // the left arg (a variable) represents a value
+
+                                    println(s"non prop type info: ${nonPropInfo.typeIri}")
+
+                                    throw NotImplementedException(s"non property types are not supported yet in FilterExpression")
+
+                            }
+
+
 
                         } else {
                             throw SparqlSearchException(s"type information about $queryVar is missing")
                         }
-
-                        // TODO: convert left and right arg base don given type information
-                        CompareExpression(filterCompare.leftArg, filterCompare.operator, filterCompare.rightArg)
-
 
 
                     case filterOr: OrExpression =>
@@ -641,7 +676,7 @@ class SearchResponderV2 extends Responder {
 
             triplestoreSpecificSparql: String = triplestoreSpecificQuery.toSparql
 
-            _ = println(triplestoreSpecificQuery.toSparql)
+            //_ = println(triplestoreSpecificQuery.toSparql)
 
             searchResponse: SparqlConstructResponse <- (storeManager ? SparqlConstructRequest(triplestoreSpecificSparql)).mapTo[SparqlConstructResponse]
 
