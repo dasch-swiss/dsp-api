@@ -94,12 +94,12 @@ class SearchResponderV2 extends Responder {
             def transformFilter(filterPattern: FilterPattern): Seq[QueryPattern] = Seq(FilterPattern(preprocessFilterExpression(filterPattern.expression)))
 
             /**
-              * Preprocesses a [[FilterExpression]] by converting external IRIs to internal ones.
+              * Preprocesses a [[Expression]] by converting external IRIs to internal ones.
               *
               * @param filterExpression a filter expression.
               * @return the preprocessed expression.
               */
-            def preprocessFilterExpression(filterExpression: FilterExpression): FilterExpression = {
+            def preprocessFilterExpression(filterExpression: Expression): Expression = {
                 filterExpression match {
                     case entity: Entity => preprocessEntity(entity)
                     case compareExpr: CompareExpression => CompareExpression(leftArg = preprocessFilterExpression(compareExpr.leftArg), operator = compareExpr.operator, rightArg = preprocessFilterExpression(compareExpr.rightArg))
@@ -183,7 +183,16 @@ class SearchResponderV2 extends Responder {
                 entity match {
                     case queryVar: QueryVariable => Some(TypeableVariable(queryVar.variableName))
 
-                    case iriRef: IriRef => Some(TypeableIri(iriRef.iri))
+                    case iriRef: IriRef =>
+                        // type info keys are external api v2 simple Iris,
+                        // so convert this internal Iri to an external api v2 simple if possible
+                        val externalIri = if (InputValidation.isInternalEntityIri(iriRef.iri)) {
+                            InputValidation.internalEntityIriToSimpleApiV2EntityIri(iriRef.iri, () => throw BadRequestException(s"${iriRef.iri} is not a valid internal knora-api entity Iri"))
+                        } else {
+                            iriRef.iri
+                        }
+
+                        Some(TypeableIri(externalIri))
 
                     case _ => None
                 }
@@ -203,13 +212,13 @@ class SearchResponderV2 extends Responder {
                     case _ => throw SparqlSearchException(s"A unique variable could not be made for $entity")
                 }
 
-                entityStr.replaceAll("[:/.]", "") // TODO: check if this is complete
+                entityStr.replaceAll("[:/.#-]", "") // TODO: check if this is complete
             }
 
             /**
               * Create a unique variable from the given entity and a suffix.
               *
-              * @param base the entity to use to create the variable base name.
+              * @param base   the entity to use to create the variable base name.
               * @param suffix the suffix to append to the base name.
               * @return a unique variable.
               */
@@ -221,7 +230,7 @@ class SearchResponderV2 extends Responder {
               * Create a unique variable from a whole statement.
               *
               * @param baseStatement the statement to be used to create the variable base name.
-              * @param suffix the suffix to be appended to the base name.
+              * @param suffix        the suffix to be appended to the base name.
               * @return a unique variable.
               */
             def createUniqueVariableFromStatement(baseStatement: StatementPattern, suffix: String): QueryVariable = {
@@ -293,11 +302,11 @@ class SearchResponderV2 extends Responder {
                         // create statements in order to query the link value describing the link in question
 
                         // variable referring to the link's value object (reification)
-                        val linkValueVar = createUniqueVariableFromStatement(statementPattern, "LinkObj") // A variable representing the reification
-                        val linkPropVar = createUniqueVariableFromStatement(statementPattern, "linkProp") // A variable representing the explicit property that actually points to the target resource
-                        val linkValuePropVar = createUniqueVariableFromStatement(statementPattern, "linkValueProp") // A variable representing the explicit property that actually points to the reification
-                        val linkValuePredVar = createUniqueVariableFromStatement(statementPattern, "linkValuePred") // A variable representing a predicate of the reification
-                        val linkValueObjVar = createUniqueVariableFromStatement(statementPattern, "linkValueObj") // A variable representing a predicate of the reification
+                        val linkValueVar = createUniqueVariableFromStatement(statementPattern, "linkObj") // A variable representing the reification
+                    val linkPropVar = createUniqueVariableFromStatement(statementPattern, "linkProp") // A variable representing the explicit property that actually points to the target resource
+                    val linkValuePropVar = createUniqueVariableFromStatement(statementPattern, "linkValueProp") // A variable representing the explicit property that actually points to the reification
+                    val linkValuePredVar = createUniqueVariableFromStatement(statementPattern, "linkValuePred") // A variable representing a predicate of the reification
+                    val linkValueObjVar = createUniqueVariableFromStatement(statementPattern, "linkValueObj") // A variable representing a predicate of the reification
 
                         Seq(statementPattern, // keep the original statement pointing from the source to the target resource, using inference
                             StatementPattern(subj = statementPattern.subj, pred = linkPropVar, obj = statementPattern.obj).toKnoraExplicit, // find out what the actual link property is
@@ -311,8 +320,54 @@ class SearchResponderV2 extends Responder {
                             StatementPattern(subj = linkValueVar, pred = linkValuePredVar, obj = linkValueObjVar).toKnoraExplicit // get any other statements about the link value
                         )
 
-                }
+                    case OntologyConstants.Xsd.Integer =>
 
+                        // the given statement pattern's object is of type xsd:integer
+                        // this means that the predicate of the statement pattern is a value property
+                        // the original statement is not included because it represents the value as a literal (in Knora, it is an object)
+
+                        // variable referring to the link's value object (reification)
+                        val intPropVar = createUniqueVariableFromStatement(statementPattern, "intProp") // A variable representing the property pointing to the value object
+                    val integerValuePred = createUniqueVariableFromStatement(statementPattern, "intValuePred") // A variable representing a predicates of the integer value object
+                    val intValueObj = createUniqueVariableFromStatement(statementPattern, "intValueObj") // A variable representing a predicate of the reification
+
+                        // check if the statement pattern's object is a literal or a variable
+                        statementPattern.obj match {
+
+                            // create statements in order to query the integer value object
+                            // AND match the given literal value with the integer value object's `valueHasInteger`
+
+                            case integerLiteral: XsdLiteral =>
+
+                                Seq(
+                                    StatementPattern(subj = statementPattern.subj, pred = IriRef(OntologyConstants.KnoraBase.HasValue), obj = statementPattern.obj), // include knora-base:hasValue pointing to the link value, because the construct clause needs it
+                                    StatementPattern(subj = statementPattern.subj, pred = statementPattern.pred, obj = statementPattern.obj, includeInConstructClause = false), // do not include the originally given  property in the Construct clause because inference is used
+                                    StatementPattern(subj = statementPattern.subj, pred = intPropVar, obj = statementPattern.obj).toKnoraExplicit, // the actually matching property
+                                    StatementPattern(subj = statementPattern.obj, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean)).toKnoraExplicit,
+                                    StatementPattern(subj = statementPattern.obj, pred = IriRef(OntologyConstants.Rdf.Type), obj = IriRef(OntologyConstants.KnoraBase.IntValue)).toKnoraExplicit,
+                                    StatementPattern(subj = statementPattern.obj, pred = integerValuePred, obj = intValueObj).toKnoraExplicit,
+                                    StatementPattern(subj = statementPattern.obj, pred = IriRef(OntologyConstants.KnoraBase.ValueHasInteger), obj = statementPattern.obj).toKnoraExplicit
+                                )
+
+                            case integerVar: QueryVariable =>
+
+                                // just create the statements to query the integer value object, possibly a Filter statement exists to restrict the possible integer values
+                                Seq(
+                                    StatementPattern(subj = statementPattern.subj, pred = IriRef(OntologyConstants.KnoraBase.HasValue), obj = statementPattern.obj), // include knora-base:hasValue pointing to the link value, because the construct clause needs it
+                                    StatementPattern(subj = statementPattern.subj, pred = statementPattern.pred, obj = statementPattern.obj, includeInConstructClause = false), // do not include the originally given property in the Construct clause because inference is used
+                                    StatementPattern(subj = statementPattern.subj, pred = intPropVar, obj = statementPattern.obj).toKnoraExplicit, // the actually matching property
+                                    StatementPattern(subj = statementPattern.obj, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean)).toKnoraExplicit,
+                                    StatementPattern(subj = statementPattern.obj, pred = IriRef(OntologyConstants.Rdf.Type), obj = IriRef(OntologyConstants.KnoraBase.IntValue)).toKnoraExplicit,
+                                    StatementPattern(subj = statementPattern.obj, pred = integerValuePred, obj = intValueObj).toKnoraExplicit
+                                )
+
+                            case other => throw SparqlSearchException("Not supported as an object of type integer: $other")
+
+                        }
+
+                    case _ => throw NotImplementedException(s"property type $objectIri not implemented yet.")
+
+                }
 
             }
 
@@ -398,7 +453,6 @@ class SearchResponderV2 extends Responder {
                     Seq.empty[QueryPattern]
                 }
 
-
                 // Add additional statements based on the whole input statement, e.g. to deal with the value object or the link value, and transform the original statement.
                 val additionalStatementsForWholeStatement: Seq[QueryPattern] = if (predTypeInfoKey.nonEmpty && (typeInspectionResult.typedEntities contains predTypeInfoKey.get)) {
                     // process type information for the predicate into additional statements
@@ -418,7 +472,11 @@ class SearchResponderV2 extends Responder {
 
                     val newAdditionalStatementPatterns: Seq[StatementPattern] = additionalStatements.collect {
                         // only include StatementPattern
-                        case statementP: StatementPattern => statementP
+
+                        // filter out those statements mentioning the originally given predicate (property) with inference turned on
+                        // this is necessary to return the explicit property to the user
+                        // the originally given property will only be needed in the Where clause and get all subproperties too
+                        case statementP: StatementPattern if statementP.includeInConstructClause => statementP
                     }
 
                     convertedStatementsCreatedForWholeStatements += statementPattern -> (existingAdditionalStatementsCreated ++ newAdditionalStatementPatterns)
@@ -484,7 +542,9 @@ class SearchResponderV2 extends Responder {
 
             }
 
-            def transformFilterExpression(filterExpression: FilterExpression): FilterExpression = {
+            case class TransformedFilterExpression(expression: Expression, additionalStatements: Seq[StatementPattern] = Seq.empty[StatementPattern])
+
+            def transformFilterExpression(filterExpression: Expression): TransformedFilterExpression = {
 
                 filterExpression match {
 
@@ -528,7 +588,7 @@ class SearchResponderV2 extends Responder {
                                                     // make sure that the comparison operator is "="
                                                     if (filterCompare.operator != CompareExpressionOperator.EQUALS) throw SparqlSearchException(s"Comparison operator in a CompareExpression for a property type is expected to be '=', but ${filterCompare.operator}")
 
-                                                    CompareExpression(filterCompare.leftArg, filterCompare.operator, filterCompare.rightArg)
+                                                    TransformedFilterExpression(CompareExpression(filterCompare.leftArg, filterCompare.operator, filterCompare.rightArg))
 
                                                 case other => throw SparqlSearchException(s"right argument of CompareExpression is expected to be an Iri representing a property, but $other is given")
                                             }
@@ -538,12 +598,26 @@ class SearchResponderV2 extends Responder {
                                 case nonPropInfo: NonPropertyTypeInfo =>
                                     // the left arg (a variable) represents a value
 
-                                    println(s"non prop type info: ${nonPropInfo.typeIri}")
+                                    nonPropInfo.typeIri match {
 
-                                    throw NotImplementedException(s"non property types are not supported yet in FilterExpression")
+                                        case OntologyConstants.Xsd.Integer =>
+
+                                            val intValHasInteger = createUniqueVariableFromEntity(queryVar, "intValueHasInteger")
+
+                                            TransformedFilterExpression(
+                                                CompareExpression(intValHasInteger, filterCompare.operator, filterCompare.rightArg),
+                                                Seq(
+                                                    StatementPattern(subj = queryVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasInteger), intValHasInteger)
+                                                )
+                                            )
+
+                                        case other => throw NotImplementedException(s"$other not supported in FilterExpression")
+
+
+                                    }
+
 
                             }
-
 
 
                         } else {
@@ -555,28 +629,33 @@ class SearchResponderV2 extends Responder {
                         val filterExpressionLeft = transformFilterExpression(filterOr.leftArg)
                         val filterExpressionRight = transformFilterExpression(filterOr.rightArg)
 
-                        OrExpression(filterExpressionLeft, filterExpressionRight)
+                        TransformedFilterExpression(
+                            OrExpression(filterExpressionLeft.expression, filterExpressionRight.expression),
+                            filterExpressionLeft.additionalStatements ++ filterExpressionRight.additionalStatements
+                        )
+
 
 
                     case filterAnd: AndExpression =>
                         val filterExpressionLeft = transformFilterExpression(filterAnd.leftArg)
                         val filterExpressionRight = transformFilterExpression(filterAnd.rightArg)
 
-                        AndExpression(filterExpressionLeft, filterExpressionRight)
+                        TransformedFilterExpression(
+                            AndExpression(filterExpressionLeft.expression, filterExpressionRight.expression),
+                            filterExpressionLeft.additionalStatements ++ filterExpressionRight.additionalStatements
+                        )
 
                     case other => throw NotImplementedException(s"$other not supported as FilterExpression")
                 }
-
 
 
             }
 
             def transformFilter(filterPattern: FilterPattern): Seq[QueryPattern] = {
 
-                val filterExpression: FilterExpression = transformFilterExpression(filterPattern.expression)
+                val filterExpression: TransformedFilterExpression = transformFilterExpression(filterPattern.expression)
 
-                Seq(FilterPattern(filterExpression))
-
+                filterExpression.additionalStatements :+ FilterPattern(filterExpression.expression)
             }
         }
 

@@ -33,7 +33,7 @@ sealed trait SparqlGenerator {
 /**
   * Represents something that can be the subject, predicate, or object of a triple pattern in a query.
   */
-sealed trait Entity extends FilterExpression
+sealed trait Entity extends Expression
 
 /**
   * Represents a variable in a query.
@@ -91,8 +91,11 @@ sealed trait QueryPattern extends SparqlGenerator
   * @param subj the subject of the statement.
   * @param pred the predicate of the statement.
   * @param obj  the object of the statement.
+  * @param namedGraph the named graph this statement should be searched in.
+  * @param includeInConstructClause indicates whether this statement should be included in the Construct clause of the query. Some statements are only needed in the Where clause.
+  *
   */
-case class StatementPattern(subj: Entity, pred: Entity, obj: Entity, namedGraph: Option[IriRef] = None) extends QueryPattern {
+case class StatementPattern(subj: Entity, pred: Entity, obj: Entity, namedGraph: Option[IriRef] = None, includeInConstructClause: Boolean = true) extends QueryPattern {
     def toSparql: String = {
         val triple = s"${subj.toSparql} ${pred.toSparql} ${obj.toSparql} ."
 
@@ -154,7 +157,7 @@ object CompareExpressionOperator extends Enumeration {
 /**
   * Represents an expression that can be used in a FILTER.
   */
-sealed trait FilterExpression extends SparqlGenerator
+sealed trait Expression extends SparqlGenerator
 
 /**
   * Represents a comparison expression in a FILTER.
@@ -163,7 +166,7 @@ sealed trait FilterExpression extends SparqlGenerator
   * @param operator the operator.
   * @param rightArg the right argument.
   */
-case class CompareExpression(leftArg: FilterExpression, operator: CompareExpressionOperator.Value, rightArg: FilterExpression) extends FilterExpression {
+case class CompareExpression(leftArg: Expression, operator: CompareExpressionOperator.Value, rightArg: Expression) extends Expression {
     def toSparql: String = s"(${leftArg.toSparql} $operator ${rightArg.toSparql})"
 }
 
@@ -173,7 +176,7 @@ case class CompareExpression(leftArg: FilterExpression, operator: CompareExpress
   * @param leftArg  the left argument.
   * @param rightArg the right argument.
   */
-case class AndExpression(leftArg: FilterExpression, rightArg: FilterExpression) extends FilterExpression {
+case class AndExpression(leftArg: Expression, rightArg: Expression) extends Expression {
     def toSparql: String = s"(${leftArg.toSparql} && ${rightArg.toSparql})"
 }
 
@@ -183,7 +186,7 @@ case class AndExpression(leftArg: FilterExpression, rightArg: FilterExpression) 
   * @param leftArg  the left argument.
   * @param rightArg the right argument.
   */
-case class OrExpression(leftArg: FilterExpression, rightArg: FilterExpression) extends FilterExpression {
+case class OrExpression(leftArg: Expression, rightArg: Expression) extends Expression {
     def toSparql: String = s"(${leftArg.toSparql} || ${rightArg.toSparql})"
 }
 
@@ -192,7 +195,7 @@ case class OrExpression(leftArg: FilterExpression, rightArg: FilterExpression) e
   *
   * @param expression the expression in the FILTER.
   */
-case class FilterPattern(expression: FilterExpression) extends QueryPattern {
+case class FilterPattern(expression: Expression) extends QueryPattern {
     def toSparql: String = s"FILTER(${expression.toSparql})\n"
 }
 

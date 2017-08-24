@@ -494,7 +494,7 @@ object SearchParserV2 {
         }
 
         override def meet(node: algebra.Filter): Unit = {
-            def makeFilterExpression(valueExpr: algebra.ValueExpr): FilterExpression = {
+            def makeFilterExpression(valueExpr: algebra.ValueExpr): Expression = {
                 valueExpr match {
                     case compare: algebra.Compare =>
                         val leftArg = makeFilterExpression(compare.getLeftArg)
@@ -547,7 +547,7 @@ object SearchParserV2 {
             node.getArg.visit(this)
 
             // Add the FILTER.
-            val filterExpression: FilterExpression = makeFilterExpression(node.getCondition)
+            val filterExpression: Expression = makeFilterExpression(node.getCondition)
             wherePatterns.append(FilterPattern(expression = filterExpression))
         }
 
