@@ -24,15 +24,10 @@ import java.{lang, util}
 
 import com.github.jsonldjava.core.{JsonLdOptions, JsonLdProcessor}
 import com.github.jsonldjava.utils.JsonUtils
-import org.apache.jena.sparql.function.library.leviathan.log
-import org.knora.jsonld.{KnoraJsonLDFormat, KnoraJsonLDSupport}
-import org.knora.webapi.OntologyConstants.KnoraBase.KnoraBasePrefixExpansion
-import org.knora.jsonld._
+import org.knora.jsonld.{KnoraJsonLDFormat, KnoraJsonLDSupport, _}
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v2.responder.{KnoraRequestV2, KnoraResponseV2}
-import riotcmd.json
-import spray.json.{DeserializationException, JsArray, JsObject, JsValue}
 
 import scala.collection.JavaConverters._
 
@@ -241,7 +236,7 @@ trait ListV2JsonLDProtocol extends KnoraJsonLDSupport {
           * @param expanded a [[Map[String, AnyRef]]].
           * @return a [[ReadListsSequenceV2]].
           */
-        def read(expanded: Map[String, AnyRef]): ReadListsSequenceV2 = {
+        def read(expanded: Map[String, Any]): ReadListsSequenceV2 = {
             val seq = readListsSequenceV2Reader(expanded)
 
             ReadListsSequenceV2(items = seq)
@@ -258,18 +253,75 @@ trait ListV2JsonLDProtocol extends KnoraJsonLDSupport {
         }
     }
 
-    // FIXME: Solve the problem with JSON-LD expand, so that we can use the ontology constants
-    private val AttachedToProject = "knora-base:" + "attachedToProject"
-    private val ListNode = "knora-base:" + "ListNode"
-    private val ListNodeName = "knora-base:" + "listNodeName"
-    private val IsRootNode = "knora-base:" + "isRootNode"
-    private val HasRootNode = "knora-base:" + "hasRootNode"
-    private val HasSubListNode = "knora-base:" + "hasSubListNode"
-    private val ListNodePosition = "knora-base:" + "listNodePosition"
-
-    private val ItemListElement = "itemListElement"
     private val ID = "@id"
     private val TYPE = "@type"
+
+    /******************************************************************************************************************/
+    /** READER                                                                                                        */
+    /******************************************************************************************************************/
+
+    private def readListsSequenceV2Reader(expanded: Map[String, Any]): Seq[ListNodeV2] = {
+
+        val items: Seq[Any] = expanded.getOrElse(OntologyConstants.SchemaOrg.ItemListElement, invalidJsonLDError("Missing 'itemListElement")).asInstanceOf[Seq[Any]]
+
+        val result: Seq[ListNodeV2] = items map {
+            case item: Map[String, Any] => {
+                val objectType = item.getOrElse(TYPE, invalidJsonLDError("Field '@type' is missing.")).toString()
+                objectType match {
+                    case OntologyConstants.KnoraBase.ListNode => listRootNodeV2Reader(item)
+                    case other => invalidJsonLDError(s"The sent items are of the wrong type. Only '${OntologyConstants.KnoraBase.ListNode}' is allowed.")
+                }
+            }
+            case _ => invalidJsonLDError("Expecting objects.")
+        }
+
+        result
+    }
+
+    private def listRootNodeV2Reader(item: Map[String, Any]): ListRootNodeV2 = {
+
+        val id: IRI = item.getOrElse(ID, invalidJsonLDError("Field '@id' is missing.")).toString()
+        val projectIri: Option[IRI] = item.get(OntologyConstants.KnoraBase.AttachedToProject).map(_.toString)
+        val labels: Seq[StringV2] = item.get(OntologyConstants.Rdfs.Label) match {
+            case Some(x: Seq[Any]) => x.map(stringV2Reader)
+            case Some(x: Any) => Seq(stringV2Reader(x))
+            case None => Seq.empty[StringV2]
+        }
+        val comments: Seq[StringV2] = item.get(OntologyConstants.Rdfs.Comment) match {
+            case Some(x: Seq[Any]) => x.map(stringV2Reader)
+            case Some(x: Any) => Seq(stringV2Reader(x))
+            case None => Seq.empty[StringV2]
+        }
+
+        ListRootNodeV2(
+            id = id,
+            projectIri = projectIri,
+            labels = labels,
+            comments = comments,
+            children = Seq.empty[ListChildNodeV2]
+        )
+    }
+
+    private def listChildNodeV2Reader(node: Any): ListRootNodeV2 = ???
+
+    private def stringV2Reader(label: Any): StringV2 = {
+
+        label match {
+            case l: Map[String, String] => {
+                val value = l.getOrElse("@value", throw invalidJsonLDError("Value is missing.")).toString
+                val language = l.getOrElse("@language", throw invalidJsonLDError("Language is missing.")).toString
+                StringV2(value = value, language = Some(language))
+            }
+            case l: String => {
+                StringV2(l)
+            }
+            case other => invalidJsonLDError("Expecting object or string value.")
+        }
+    }
+
+    /******************************************************************************************************************/
+    /** WRITER                                                                                                        */
+    /******************************************************************************************************************/
 
     /**
       * Returns an JSON-LD string representing a sequence of list nodes.
@@ -407,64 +459,5 @@ trait ListV2JsonLDProtocol extends KnoraJsonLDSupport {
         }
 
         result
-    }
-
-    private def readListsSequenceV2Reader(expanded: Map[String, AnyRef]): Seq[ListNodeV2] = {
-
-        val items: Seq[AnyRef] = expanded.getOrElse(OntologyConstants.SchemaOrg.ItemListElement, invalidJsonLDError("Missing 'itemListElement")).asInstanceOf[Seq[AnyRef]]
-
-        println("readListsSequenceV2Reader: " + items)
-
-        /*
-        val result: Seq[ListNodeV2] = items map { (item: JsObject) =>
-            val props = item.fields
-            val objectType = props.getOrElse(TYPE, invalidJsonLDError("Field '@type' is missing.")).toString()
-
-            objectType match {
-                case ListNode => listRootNodeV2Reader(item)
-                case other => invalidJsonLDError(s"The sent items are of the wrong type. Only '$ListNode' is allowed.")
-            }
-
-        }
-        */
-
-        val result = Seq.empty[ListNodeV2]
-        result
-    }
-
-    private def listRootNodeV2Reader(value: JsObject): ListRootNodeV2 = {
-        val props = value.fields
-
-        val id: IRI = props.getOrElse(ID, invalidJsonLDError("Field '@id' is missing.")).toString()
-        val projectIri: Option[IRI] = props.get(AttachedToProject).map(_.toString)
-        val labels: Seq[StringV2] = props.get(OntologyConstants.Rdfs.Label) match {
-            case Some(value: JsValue) => Seq(StringV2(value.toString))
-            case None => Seq.empty[StringV2]
-        }
-
-        ListRootNodeV2(
-            id = id,
-            projectIri = projectIri,
-            labels = ???,
-            comments = ???,
-            children = ???
-        )
-    }
-
-    private def listChildNodeV2Reader(o: JsObject): ListRootNodeV2 = ???
-
-    private def stringV2SeqReader(json: JsValue): Seq[StringV2] = ???
-
-    private def stringV2Reader(json: JsValue): StringV2 = {
-
-
-        val jsonObject = json.asJsObject
-        val props = jsonObject.fields
-
-        val value = props.getOrElse("@value", throw invalidJsonLDError("Value is missing.")).toString
-        val language = props.getOrElse("@language", throw invalidJsonLDError("Language is missing.")).toString
-
-        StringV2(value = value, language = Some(language))
-
     }
 }

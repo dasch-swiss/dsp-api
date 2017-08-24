@@ -16,8 +16,6 @@
 
 package org.knora.jsonld
 
-import java.util
-
 import scala.annotation.implicitNotFound
 
 /**
@@ -25,12 +23,12 @@ import scala.annotation.implicitNotFound
   */
 @implicitNotFound(msg = "Cannot find KnoraJsonLDReader or KnoraJsonLDFormat type class for ${T}")
 trait KnoraJsonLDReader[T] {
-    def read(expanded: util.Map[String, Object]): T
+    def read(expanded: Map[String, Any]): T
 }
 
 object KnoraJsonLDReader {
-    implicit def func2Reader[T](f: util.Map[String, Object] => T): KnoraJsonLDReader[T] = new KnoraJsonLDReader[T] {
-        def read(expanded: util.Map[String, Object]) = f(expanded)
+    implicit def func2Reader[T](f: Map[String, Any] => T): KnoraJsonLDReader[T] = new KnoraJsonLDReader[T] {
+        def read(expanded: Map[String, Any]) = f(expanded)
     }
 }
 

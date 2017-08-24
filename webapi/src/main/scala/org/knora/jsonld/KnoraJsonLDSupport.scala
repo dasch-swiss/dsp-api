@@ -16,17 +16,11 @@
 
 package org.knora.jsonld
 
-import java.util
-
-import riotcmd.json
-import spray.json.JsObject
-
 trait KnoraJsonLDSupport {
 
-    implicit class JsonLDImprovements(val expanded: util.Map[String, Object]) {
+    implicit class JsonLDImprovements(val expanded: Map[String, Any]) {
         def convertToV2[T :KnoraJsonLDReader]: T = knoraJsonLDReader[T].read(expanded)
     }
-
 }
 
 object KnoraJsonLDSupport extends KnoraJsonLDSupport

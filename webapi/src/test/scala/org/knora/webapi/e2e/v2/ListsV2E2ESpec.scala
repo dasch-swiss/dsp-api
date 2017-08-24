@@ -16,8 +16,6 @@
 
 package org.knora.webapi.e2e.v2
 
-import java.util
-
 import akka.actor.ActorSystem
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers._
@@ -27,10 +25,9 @@ import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, Tripl
 import org.knora.webapi.messages.v1.responder.authenticatemessages.Credentials
 import org.knora.webapi.messages.v1.responder.sessionmessages.SessionJsonProtocol
 import org.knora.webapi.messages.v2.responder.listmessages.{ListV2JsonLDProtocol, ReadListsSequenceV2}
-import org.knora.webapi.util.{AkkaHttpUtils, MessageUtil, MutableTestIri}
+import org.knora.webapi.util.{AkkaHttpUtils, MutableTestIri}
 import org.knora.webapi.{E2ESpec, SharedAdminTestData}
 import spray.json._
-import java.util._
 
 import scala.concurrent.duration._
 
@@ -108,13 +105,13 @@ class ListsV2E2ESpec extends E2ESpec(ListsV2E2ESpec.config) with SessionJsonProt
 
                 //val lists: Seq[ListNodeV2]
 
-                val expanded: util.Map[String, Object] = AkkaHttpUtils.httpResponseToJsonLDExpanded(response)
-                log.debug("httpResponseToJsonLDExpanded: {}", expanded.toString)
+                val expanded: Map[String, Any] = AkkaHttpUtils.httpResponseToJsonLDExpanded(response)
+                log.debug("expanded: {}", expanded.toString)
 
-                val seq: ReadListsSequenceV2 = expanded.convertToV2[ReadListsSequenceV2]
-                log.debug("seq: {}", seq)
+                val converted: ReadListsSequenceV2 = expanded.convertToV2[ReadListsSequenceV2]
+                log.debug("converted: {}", converted)
 
-                seq.items.size should be (6)
+                converted.items.size should be (6)
             }
 
             "return all lists belonging to the images project (not implemented)" in {

@@ -50,7 +50,7 @@ object AkkaHttpUtils {
       * @param response the [[HttpResponse]] containing json
       * @return an [[JsObject]]
       */
-    def httpResponseToJsonLDExpanded(response: HttpResponse)(implicit ec: ExecutionContext, system: ActorSystem, log: LoggingAdapter): util.Map[String, Object] = {
+    def httpResponseToJsonLDExpanded(response: HttpResponse)(implicit ec: ExecutionContext, system: ActorSystem, log: LoggingAdapter): Map[String, Any] = {
 
         implicit val materializer = ActorMaterializer()
 
@@ -68,13 +68,34 @@ object AkkaHttpUtils {
 
         val normalized: util.Map[String, Object] = JsonLdProcessor.compact(jsonObject, context, options)
 
+
+
         /*
         val opts: JsonLdOptions = new JsonLdOptions()
         val expanded = JsonLdProcessor.expand(httpResponseToJson(response), opts)
         println("expanded json-ld: " + expanded)
         */
 
-        normalized
+        convert(normalized).asInstanceOf[Map[String, Any]]
+    }
+
+    /**
+      * Deep conversion of a java collection into a scala collection.
+      *
+      * Usage: val y = convert(x).asInstanceOf[Map[String, Any]]
+      *
+      * @param x
+      * @return
+      */
+    private def convert(x:Any):Any =
+    {
+        import collection.JavaConverters._
+        x match
+        {
+            case x: java.util.HashMap[_,_] => x.asScala.toMap.mapValues(convert)
+            case x: java.util.ArrayList[_] => x.asScala.toList.map(convert)
+            case _ => x
+        }
     }
 
 }
