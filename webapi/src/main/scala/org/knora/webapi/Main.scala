@@ -34,7 +34,7 @@ object Main extends App with LiveCore with KnoraService  {
     val arglist = args.toList
 
     if (arglist.contains("loadDemoData")) StartupFlags.loadDemoData send true
-    if (arglist.contains("allowResetTriplestoreContentOperationOverHTTP")) StartupFlags.allowResetTriplestoreContentOperationOverHTTP send true
+    if (arglist.contains("allowReloadOverHTTP")) StartupFlags.allowReloadOverHTTP send true
 
     /* Start the HTTP layer, allowing access */
     startService()

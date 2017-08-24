@@ -68,7 +68,7 @@ class ResourceCreationSpec extends SalsahSpec {
     private val anythingProjectIri = "http://data.knora.org/projects/anything"
     private val incunabulaProjectIri = "http://data.knora.org/projects/77275339"
 
-    // In order to run these tests, start `webapi` using the option `allowResetTriplestoreContentOperationOverHTTP`
+    // In order to run these tests, start `webapi` using the option `allowReloadOverHTTP`
 
     "The SALSAH home page" should {
         "load test data" in {

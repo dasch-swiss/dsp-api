@@ -34,7 +34,7 @@ class InputValidationSpec extends WordSpec with Matchers {
 
         "not accept 2017-05-10" in {
             val dateString = "2017-05-10"
-            assertThrows[IllegalArgumentException] {
+            assertThrows[BadRequestException] {
                 InputValidation.toDate(dateString, () => throw BadRequestException(s"Not accepted ${dateString}"))
             }
         }
@@ -111,21 +111,21 @@ class InputValidationSpec extends WordSpec with Matchers {
         
         "not accept month 00" in {
             val dateString = "GREGORIAN:2017-00:2017-02"
-            assertThrows[IllegalArgumentException] {
+            assertThrows[BadRequestException] {
                 InputValidation.toDate(dateString, () => throw BadRequestException(s"month 00 in ${dateString} Not accepted" ))
             }
         }
         
         "not accept day 00" in {
             val dateString = "GREGORIAN:2017-01-00"
-            assertThrows[IllegalArgumentException] {
+            assertThrows[BadRequestException] {
                 InputValidation.toDate(dateString, () => throw BadRequestException(s"day 00 in ${dateString} Not accepted" ))
             }
         }
         
         "not accept year 0 " in {
             val dateString = "GREGORIAN:0 BC"
-            assertThrows[IllegalArgumentException] {
+            assertThrows[BadRequestException] {
                 InputValidation.toDate(dateString, () => throw BadRequestException(s"Year 0 is Not accepted ${dateString}"))
             }
         }

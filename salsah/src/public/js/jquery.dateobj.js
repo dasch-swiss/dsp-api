@@ -369,7 +369,7 @@
             year_sign = -1;
 		}
 
-		if (d_arr.length == 3) { 
+		if (d_arr.length == 3) {
 			d.precision = 'DAY';
 			d.jdc = SALSAH.date_to_jdc(d_arr[2], d_arr[1], d_arr[0] * year_sign, calendar, periodpart);
 		}
@@ -396,8 +396,8 @@
 
 		return d;
 	};
-	
-	
+
+
 /**
  * Dateobject:
  * - <i>name</i>.dateval1 (YYYY-MM-DD)
@@ -445,7 +445,7 @@
 							datestr = weekday[d1.weekday] + ' ' + d1.day + '. ' + months[dateobj.calendar][d1.month] + ' ' + d1_year_str;
 						}
 						else {
-							datestr = weekday[d1.weekday] + ' ' +  d1.day + '. ' + months[dateobj.calendar][d1.month] + ' ' + d1_year_str + '-' + d2.day + '. ' + months[dateobj.calendar][d2.month] + ' ' + d2_year_str;
+							datestr = weekday[d1.weekday] + ' ' +  d1.day + '. ' + months[dateobj.calendar][d1.month] + ' ' + d1_year_str + ' - ' + weekday[d2.weekday] + ' ' + d2.day + '. ' + months[dateobj.calendar][d2.month] + ' ' + d2_year_str;
 						}
 						break;
 					}
@@ -454,7 +454,7 @@
 							datestr = months[dateobj.calendar][d1.month] + ' ' + d1_year_str;
 						}
 						else {
-							datestr = months[dateobj.calendar][d1.month] + ' ' + d1.year + '-' + months[dateobj.calendar][d2.month] + ' ' + d2_year_str;
+							datestr = months[dateobj.calendar][d1.month] + ' ' + d1.year + ' - ' + months[dateobj.calendar][d2.month] + ' ' + d2_year_str;
 						}
 						break;
 					}
@@ -610,7 +610,7 @@
 			else {
 				period = true; // different date precisions imply a period!
 			}
-			
+
 			var no_day = false;
 			if ((defvals !== undefined) && (defvals.no_day !== undefined)) no_day = defvals.no_day
 			create_date_entry(datecontainer1, d1.jdc, d1.calendar, d1.precision, no_day);
@@ -711,7 +711,7 @@
 		},
 
 		value: function() {
-			var dateobj = {}; 
+			var dateobj = {};
 			var datecontainer1 = $(this.children('span').get(0));
 			var datecontainer2 = $(this.children('span').get(1));
 
