@@ -155,14 +155,16 @@ class SearchResponderV2 extends Responder {
           */
         class NonTriplestoreSpecificQueryPatternTransformer(typeInspectionResult: TypeInspectionResult) extends QueryPatternTransformer {
 
-            // a set containing all `TypeableEntity` (keys of `typeInspectionResult`) that have already been processed
+            // a Set containing all `TypeableEntity` (keys of `typeInspectionResult`) that have already been processed
             // in order to prevent duplicates
             val processedTypeInformationKeysWhereClause = mutable.Set.empty[TypeableEntity]
 
-            // a map containing all additional StatementPattern that have been created based on the type information, FilterPattern excluded
+            // a Map containing all additional StatementPattern that have been created based on the type information, FilterPattern excluded
             // will be integrated in the Construct clause
             val additionalStatementsCreatedForEntities = mutable.Map.empty[Entity, Seq[StatementPattern]]
 
+            // a Map containing all the statements of the Where clause (possibly converted) and additional statements created for them
+            // will be integrated in the Construct clause
             val convertedStatementsCreatedForWholeStatements = mutable.Map.empty[StatementPattern, Seq[StatementPattern]]
 
             /**
@@ -184,6 +186,12 @@ class SearchResponderV2 extends Responder {
 
             }
 
+            /**
+              * Create a syntactically valid variable base name, based on the given entity.
+              *
+              * @param entity the entity to be used to create a base name for a variable.
+              * @return a base name for a variable.
+              */
             def escapeEntityForVariable(entity: Entity): String = {
                 val entityStr = entity match {
                     case QueryVariable(varName) => varName
@@ -194,10 +202,24 @@ class SearchResponderV2 extends Responder {
                 entityStr.replaceAll("[:/.]", "") // TODO: check if this is complete
             }
 
+            /**
+              * Create a unique variable from the given entity and a suffix.
+              *
+              * @param base the entity to use to create the variable base name.
+              * @param suffix the suffix to append to the base name.
+              * @return a unique variable.
+              */
             def createUniqueVariableFromEntity(base: Entity, suffix: String): QueryVariable = {
                 QueryVariable(escapeEntityForVariable(base) + "__" + suffix)
             }
 
+            /**
+              * Create a unique variable from a whole statement.
+              *
+              * @param baseStatement the statement to be used to create the variable base name.
+              * @param suffix the suffix to be appended to the base name.
+              * @return a unique variable.
+              */
             def createUniqueVariableFromStatement(baseStatement: StatementPattern, suffix: String): QueryVariable = {
                 QueryVariable(escapeEntityForVariable(baseStatement.subj) + "__" + escapeEntityForVariable(baseStatement.pred) + "__" + escapeEntityForVariable(baseStatement.obj) + "__" + suffix)
             }
@@ -222,17 +244,14 @@ class SearchResponderV2 extends Responder {
                     // inputEntity is either source or target of a linking property
                     // create additional statements in order to query permissions and other information for a resource
 
-                    // if these statements are inside a Where clause, disable inference
-                    val graph = Some(IriRef(OntologyConstants.NamedGraphs.KnoraExplicitNamedGraph))
-
                     Seq(
                         StatementPattern(subj = inputEntity, pred = IriRef(OntologyConstants.Rdf.Type), obj = IriRef(OntologyConstants.KnoraBase.Resource), None),
-                        StatementPattern(subj = inputEntity, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean), graph),
-                        StatementPattern(subj = inputEntity, pred = IriRef(OntologyConstants.Rdfs.Label), obj = createUniqueVariableFromEntity(inputEntity, "ResourceLabel"), graph),
-                        StatementPattern(subj = inputEntity, pred = IriRef(OntologyConstants.Rdf.Type), obj = createUniqueVariableFromEntity(inputEntity, "ResourceType"), graph),
-                        StatementPattern(subj = inputEntity, pred = IriRef(OntologyConstants.KnoraBase.AttachedToUser), obj = createUniqueVariableFromEntity(inputEntity, "ResourceCreator"), graph),
-                        StatementPattern(subj = inputEntity, pred = IriRef(OntologyConstants.KnoraBase.HasPermissions), obj = createUniqueVariableFromEntity(inputEntity, "ResourcePermissions"), graph),
-                        StatementPattern(subj = inputEntity, pred = IriRef(OntologyConstants.KnoraBase.AttachedToProject), obj = createUniqueVariableFromEntity(inputEntity, "ResourceProject"), graph)
+                        StatementPattern(subj = inputEntity, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean)).toKnoraExplicit,
+                        StatementPattern(subj = inputEntity, pred = IriRef(OntologyConstants.Rdfs.Label), obj = createUniqueVariableFromEntity(inputEntity, "ResourceLabel")).toKnoraExplicit,
+                        StatementPattern(subj = inputEntity, pred = IriRef(OntologyConstants.Rdf.Type), obj = createUniqueVariableFromEntity(inputEntity, "ResourceType")).toKnoraExplicit,
+                        StatementPattern(subj = inputEntity, pred = IriRef(OntologyConstants.KnoraBase.AttachedToUser), obj = createUniqueVariableFromEntity(inputEntity, "ResourceCreator")).toKnoraExplicit,
+                        StatementPattern(subj = inputEntity, pred = IriRef(OntologyConstants.KnoraBase.HasPermissions), obj = createUniqueVariableFromEntity(inputEntity, "ResourcePermissions")).toKnoraExplicit,
+                        StatementPattern(subj = inputEntity, pred = IriRef(OntologyConstants.KnoraBase.AttachedToProject), obj = createUniqueVariableFromEntity(inputEntity, "ResourceProject")).toKnoraExplicit
                     )
                 } else {
                     // inputEntity is target of a value property
@@ -250,10 +269,6 @@ class SearchResponderV2 extends Responder {
               * @return a sequence of [[QueryPattern]] representing additional statements created from the given type information.
               */
             def convertStatementForPropertyType(propertyTypeInfo: PropertyTypeInfo, statementPattern: StatementPattern): Seq[QueryPattern] = {
-
-                //println(s"create statements for $propertyTypeInfo in $statementPattern")
-
-                // check which version of the api is used: simple or with value object
 
                 // decide whether to keep the originally given statement or not
                 // if pred is a valueProp and the simple api is used, do not return the original statement
@@ -284,12 +299,12 @@ class SearchResponderV2 extends Responder {
                             StatementPattern(subj = statementPattern.subj, pred = linkPropVar, obj = statementPattern.obj).toKnoraExplicit, // find out what the actual link property is
                             StatementPattern(subj = statementPattern.subj, pred = IriRef(OntologyConstants.KnoraBase.HasValue), obj = linkValueVar), // include knora-base:hasValue pointing to the link value, because the construct clause needs it
                             StatementPattern(subj = statementPattern.subj, pred = linkValuePropVar, obj = linkValueVar).toKnoraExplicit, // find out what the actual link value property is
-                            StatementPattern(subj = linkValueVar, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean)), // ensure the link value isn't deleted
-                            StatementPattern(subj = linkValueVar, pred = IriRef(OntologyConstants.Rdf.Type), obj = IriRef(OntologyConstants.KnoraBase.LinkValue)), // it's a link value
-                            StatementPattern(subj = linkValueVar, pred = IriRef(OntologyConstants.Rdf.Subject), obj = statementPattern.subj), // the rdf:subject of the link value must be the source resource
-                            StatementPattern(subj = linkValueVar, pred = IriRef(OntologyConstants.Rdf.Predicate), obj = linkPropVar), // the rdf:predicate of the link value must be the link property
-                            StatementPattern(subj = linkValueVar, pred = IriRef(OntologyConstants.Rdf.Object), obj = statementPattern.obj), // the rdf:object of the link value must be the target resource
-                            StatementPattern(subj = linkValueVar, pred = linkValuePredVar, obj = linkValueObjVar) // get any other statements about the link value
+                            StatementPattern(subj = linkValueVar, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean)).toKnoraExplicit, // ensure the link value isn't deleted
+                            StatementPattern(subj = linkValueVar, pred = IriRef(OntologyConstants.Rdf.Type), obj = IriRef(OntologyConstants.KnoraBase.LinkValue)).toKnoraExplicit, // it's a link value
+                            StatementPattern(subj = linkValueVar, pred = IriRef(OntologyConstants.Rdf.Subject), obj = statementPattern.subj).toKnoraExplicit, // the rdf:subject of the link value must be the source resource
+                            StatementPattern(subj = linkValueVar, pred = IriRef(OntologyConstants.Rdf.Predicate), obj = linkPropVar).toKnoraExplicit, // the rdf:predicate of the link value must be the link property
+                            StatementPattern(subj = linkValueVar, pred = IriRef(OntologyConstants.Rdf.Object), obj = statementPattern.obj).toKnoraExplicit, // the rdf:object of the link value must be the target resource
+                            StatementPattern(subj = linkValueVar, pred = linkValuePredVar, obj = linkValueObjVar).toKnoraExplicit // get any other statements about the link value
                         )
 
                 }
@@ -465,9 +480,64 @@ class SearchResponderV2 extends Responder {
 
             }
 
+            def transformFilterExpression(filterExpression: FilterExpression): FilterExpression = {
+
+                filterExpression match {
+
+                    case filterCompare: CompareExpression =>
+
+                        // left argument of a CompareExpression is expected to be a QueryVariable
+
+                        val queryVar: QueryVariable = filterCompare.leftArg match {
+
+                            case queryVar: QueryVariable => queryVar
+
+                            case other => throw SparqlSearchException(s"Left argument of a Filter CompareExpression is expected to be a QueryVariable, but $other is given")
+                        }
+
+
+                        val queryVarTypeInfoKey = toTypeableEntityKey(queryVar)
+
+                        // get information about the queryVar's type
+                        if (queryVarTypeInfoKey.nonEmpty && (typeInspectionResult.typedEntities contains queryVarTypeInfoKey.get)) {
+
+                            println(typeInspectionResult.typedEntities(queryVarTypeInfoKey.get))
+
+                        } else {
+                            throw SparqlSearchException(s"type information about $queryVar is missing")
+                        }
+
+                        // TODO: convert left and right arg base don given type information
+                        CompareExpression(filterCompare.leftArg, filterCompare.operator, filterCompare.rightArg)
+
+
+
+                    case filterOr: OrExpression =>
+                        val filterExpressionLeft = transformFilterExpression(filterOr.leftArg)
+                        val filterExpressionRight = transformFilterExpression(filterOr.rightArg)
+
+                        OrExpression(filterExpressionLeft, filterExpressionRight)
+
+
+                    case filterAnd: AndExpression =>
+                        val filterExpressionLeft = transformFilterExpression(filterAnd.leftArg)
+                        val filterExpressionRight = transformFilterExpression(filterAnd.rightArg)
+
+                        AndExpression(filterExpressionLeft, filterExpressionRight)
+
+                    case other => throw NotImplementedException(s"$other not supported as FilterExpression")
+                }
+
+
+
+            }
+
             def transformFilter(filterPattern: FilterPattern): Seq[QueryPattern] = {
 
-                Seq.empty[QueryPattern]
+                val filterExpression: FilterExpression = transformFilterExpression(filterPattern.expression)
+
+                Seq(FilterPattern(filterExpression))
+
             }
         }
 
