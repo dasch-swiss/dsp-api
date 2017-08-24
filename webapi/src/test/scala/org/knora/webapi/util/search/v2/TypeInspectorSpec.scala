@@ -50,24 +50,24 @@ class TypeInspectorSpec extends WordSpec with Matchers {
         FilterPattern(expression = OrExpression(
             rightArg = CompareExpression(
                 rightArg = IriRef(iri = "http://api.knora.org/ontology/beol/simple/v2#hasRecipient"),
-                operator = "=",
+                operator = CompareExpressionOperator.EQUALS,
                 leftArg = QueryVariable(variableName = "linkingProp2")
             ),
             leftArg = CompareExpression(
                 rightArg = IriRef(iri = "http://api.knora.org/ontology/beol/simple/v2#hasAuthor"),
-                operator = "=",
+                operator = CompareExpressionOperator.EQUALS,
                 leftArg = QueryVariable(variableName = "linkingProp2")
             )
         )),
         FilterPattern(expression = OrExpression(
             rightArg = CompareExpression(
                 rightArg = IriRef(iri = "http://api.knora.org/ontology/beol/simple/v2#hasRecipient"),
-                operator = "=",
+                operator = CompareExpressionOperator.EQUALS,
                 leftArg = QueryVariable(variableName = "linkingProp1")
             ),
             leftArg = CompareExpression(
                 rightArg = IriRef(iri = "http://api.knora.org/ontology/beol/simple/v2#hasAuthor"),
-                operator = "=",
+                operator = CompareExpressionOperator.EQUALS,
                 leftArg = QueryVariable(variableName = "linkingProp1")
             )
         ))

@@ -269,7 +269,7 @@ object SearchParserV2Spec {
                             datatype = "http://www.w3.org/2001/XMLSchema#integer",
                             value = "17"
                         ),
-                        operator = ">",
+                        operator = CompareExpressionOperator.GREATER_THAN,
                         leftArg = QueryVariable(variableName = "seqnum")
                     ))
                 )
@@ -279,7 +279,7 @@ object SearchParserV2Spec {
                     datatype = "http://www.w3.org/2001/XMLSchema#string",
                     value = "GREGORIAN:1500"
                 ),
-                operator = "<",
+                operator = CompareExpressionOperator.LESS_THAN,
                 leftArg = QueryVariable(variableName = "pubdate")
             ))
         )),
@@ -353,12 +353,12 @@ object SearchParserV2Spec {
             FilterPattern(expression = OrExpression(
                 rightArg = CompareExpression(
                     rightArg = IriRef(iri = "http://api.knora.org/ontology/anything/simple/v2#hasOtherThing"),
-                    operator = "=",
+                    operator = CompareExpressionOperator.EQUALS,
                     leftArg = QueryVariable(variableName = "linkingProp")
                 ),
                 leftArg = CompareExpression(
                     rightArg = IriRef(iri = "http://api.knora.org/ontology/anything/simple/v2#isPartOfOtherThing"),
-                    operator = "=",
+                    operator = CompareExpressionOperator.EQUALS,
                     leftArg = QueryVariable(variableName = "linkingProp")
                 )
             ))
