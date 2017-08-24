@@ -149,7 +149,7 @@ case class ResourceTypeResponseV1(restype_info: ResTypeInfoV1) extends KnoraResp
   * @param subClassIri   the IRI of the subclass.
   * @param superClassIri the IRI of the superclass.
   */
-case class CheckSubClassRequestV1(subClassIri: IRI, superClassIri: IRI) extends OntologyResponderRequestV1
+case class CheckSubClassRequestV1(subClassIri: IRI, superClassIri: IRI, userProfile: UserProfileV1) extends OntologyResponderRequestV1
 
 /**
   * Represents a response to a [[CheckSubClassRequestV1]].

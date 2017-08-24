@@ -25,18 +25,18 @@ import org.knora.webapi.responders._
 import org.knora.webapi.{ActorMaker, LiveActorMaker}
 
 /**
-  * A subclass of [[ResponderManagerV1]] that allows tests to substitute custom responders for the standard ones.
+  * A subclass of [[ResponderManager]] that allows tests to substitute custom responders for the standard ones.
   * Currently only supports a mock Sipi responder.
   *
   * @param mockResponders a [[Map]] containing the mock responders to be used instead of the live ones.
   *                       The name of the actor (a constant from [[org.knora.webapi.responders]] is used as the key in the map.
   */
-class TestResponderManagerV1(mockResponders: Map[String, ActorRef]) extends ResponderManagerV1 with LiveActorMaker {
+class TestResponderManager(mockResponders: Map[String, ActorRef]) extends ResponderManager with LiveActorMaker {
     this: ActorMaker =>
 
     /**
-      * Initialised to the value of the key [[SIPI_ROUTER_ACTOR_NAME]] in `mockResponders` if provided, otherwise
+      * Initialised to the value of the key [[SIPI_ROUTER_V1_ACTOR_NAME]] in `mockResponders` if provided, otherwise
       * the default Akka router provided by the base class for the Sipi responder.
       */
-    override val sipiRouter = mockResponders.getOrElse(SIPI_ROUTER_ACTOR_NAME, makeDefaultSipiRouter)
+    override val sipiRouterV1 = mockResponders.getOrElse(SIPI_ROUTER_V1_ACTOR_NAME, makeDefaultSipiRouterV1)
 }

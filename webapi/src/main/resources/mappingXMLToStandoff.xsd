@@ -23,8 +23,9 @@
     <!-- root element that contains all the elements of the mapping -->
     <xs:element name="mapping">
         <xs:complexType>
-            <xs:sequence maxOccurs="unbounded">
-                <xs:element ref="mappingElement"/>
+            <xs:sequence>
+                <xs:element ref="defaultXSLTransformation" minOccurs="0" maxOccurs="1"/>
+                <xs:element ref="mappingElement" minOccurs="1" maxOccurs="unbounded"/>
             </xs:sequence>
         </xs:complexType>
         <xs:unique name="tagname">
@@ -37,6 +38,15 @@
             <xs:selector xpath="mappingElement/standoffClass"/>
             <xs:field xpath="classIri"/>
         </xs:unique>
+    </xs:element>
+
+    <!-- default XSL transformation to convert XML to HTML -->
+    <xs:element name="defaultXSLTransformation">
+        <xs:simpleType>
+            <xs:restriction base="xs:anyURI">
+                <xs:minLength value="1"/>
+            </xs:restriction>
+        </xs:simpleType>
     </xs:element>
 
     <!-- an element mapping a tagname to a standoff class -->

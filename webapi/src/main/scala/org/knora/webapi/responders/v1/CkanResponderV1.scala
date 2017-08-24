@@ -34,7 +34,8 @@ import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoByShor
 import org.knora.webapi.messages.v1.responder.resourcemessages._
 import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
 import org.knora.webapi.messages.v1.responder.valuemessages.{DateValueV1, HierarchicalListValueV1, LinkV1, TextValueV1}
-import org.knora.webapi.messages.v1.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
+import org.knora.webapi.messages.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
+import org.knora.webapi.responders.Responder
 import org.knora.webapi.util.ActorUtil._
 
 import scala.concurrent.duration._
@@ -44,7 +45,7 @@ import scala.concurrent.{Await, Future}
   * This responder is used by the Ckan route, for serving data to the Ckan harverster, which is published
   * under http://data.humanities.ch
   */
-class CkanResponderV1 extends ResponderV1 {
+class CkanResponderV1 extends Responder {
 
 
     /**

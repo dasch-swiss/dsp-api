@@ -215,7 +215,7 @@ object DateUtilV1 {
       * @return a string in `YYYY[-MM[-DD] ]` format.
       */
     def julianDayNumber2DateString(julianDay: Int, calendarType: KnoraCalendarV1.Value, precision: KnoraPrecisionV1.Value): String = {
-        val gregorianCalendar = convertJulianDayNumberToDate(julianDay, calendarType)
+        val gregorianCalendar = convertJulianDayNumberToJavaGregorianCalendar(julianDay, calendarType)
         val year = gregorianCalendar.get(Calendar.YEAR)
         val month = gregorianCalendar.get(Calendar.MONTH) + 1
         // Attention: in java.util.Calendar, month count starts with 0
@@ -264,7 +264,7 @@ object DateUtilV1 {
       * @param calendarType the type of calendar to be used to configure the [[GregorianCalendar]].
       * @return a [[GregorianCalendar]].
       */
-    def convertJulianDayNumberToDate(julianDay: Int, calendarType: KnoraCalendarV1.Value): GregorianCalendar = {
+    def convertJulianDayNumberToJavaGregorianCalendar(julianDay: Int, calendarType: KnoraCalendarV1.Value): GregorianCalendar = {
         val conv = new JDateTime(julianDay.toDouble)
         val gregorianCalendar = new GregorianCalendar
 

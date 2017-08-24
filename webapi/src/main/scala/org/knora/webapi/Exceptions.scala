@@ -147,6 +147,13 @@ case class InvalidStandoffException(message: String) extends RequestRejectedExce
 case class StandoffConversionException(message: String) extends RequestRejectedException(message)
 
 /**
+  * An exception indicating that the SPARQL submitted to the API v2 search route was invalid.
+  * @param message a description of the error.
+  */
+case class SparqlSearchException(message: String) extends RequestRejectedException(message)
+
+
+/**
   * An abstract class for exceptions indicating that something went wrong and it's not the client's fault.
   *
   * @param message a description of the error.

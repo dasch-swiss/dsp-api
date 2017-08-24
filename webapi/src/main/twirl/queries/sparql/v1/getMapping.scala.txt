@@ -21,10 +21,9 @@
 @import org.knora.webapi.IRI
 
 @*
- * Gets an exisitng mapping.
+ * Gets a mapping for XML to standoff conversion from the triplestore.
  *
  * @param triplestore the name of the triplestore being used.
- * @param dataNamedGraph the named graph in which the mapping is stored.
  * @param mappingIri the Iri of the new mapping
  *@
 @(triplestore: String,
@@ -37,6 +36,8 @@ PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 CONSTRUCT {
     ?mapping rdfs:label ?label .
     ?mapping rdf:type ?mappingType .
+
+    ?mapping knora-base:mappingHasDefaultXSLTransformation ?defaultXSLTransformation .
 
     ?mappingElement rdf:type ?mappingElementType .
     ?mappingElement knora-base:mappingHasXMLTagname ?tagName .
@@ -61,35 +62,18 @@ CONSTRUCT {
 } WHERE {
     BIND(IRI("@mappingIri") as ?mapping)
 
-    ?mapping rdfs:label ?label .
+@if(triplestore.startsWith("graphdb")) {
+    GRAPH <http://www.ontotext.com/explicit> {
+        @{
+            queries.sparql.v1.txt.generateWhereStatementsForGetMapping()
 
-    ?mapping rdf:type ?mappingType .
-    ?mapping knora-base:hasMappingElement ?mappingElement .
-    ?mappingElement rdf:type ?mappingElementType .
-    ?mappingElement knora-base:mappingHasXMLTagname ?tagName .
-    ?mappingElement knora-base:mappingHasXMLNamespace ?tagNamespace .
-    ?mappingElement knora-base:mappingHasXMLClass ?tagClass .
-    ?mappingElement knora-base:mappingHasStandoffClass ?standoffClass .
-    ?mappingElement knora-base:mappingElementRequiresSeparator ?separatorRequired .
-
-    OPTIONAL {
-
-        ?mappingElement knora-base:mappingHasXMLAttribute ?attribute .
-        ?attribute rdf:type ?attributeType .
-        ?attribute knora-base:mappingHasXMLAttributename ?attributeName .
-        ?attribute knora-base:mappingHasXMLNamespace ?attributeNamespace .
-        ?attribute knora-base:mappingHasStandoffProperty ?standoffProperty .
+        }
     }
-
-    OPTIONAL {
-
-        ?mappingElement knora-base:mappingHasStandoffDataTypeClass ?datatypeClass .
-        ?datatypeClass rdf:type ?datatypeType .
-        ?datatypeClass knora-base:mappingHasXMLAttributename ?datatypeAttributeName .
-        ?datatypeClass knora-base:mappingHasStandoffClass ?datatypeStandoffClass .
-
+} else {
+    @{
+        queries.sparql.v1.txt.generateWhereStatementsForGetMapping()
     }
-
+}
 
 }
 

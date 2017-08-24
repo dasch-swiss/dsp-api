@@ -1216,7 +1216,7 @@ has permission to see the source and target resources.
 Internal Links in a TextValue
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Internal links in a ``TextValue`` can be using the data type standoff class ``StandoffInternalReferenceTag`` or a subclass of it.
+Internal links in a ``TextValue`` can be represented using the data type standoff class ``StandoffInternalReferenceTag`` or a subclass of it.
 It has the following property:
 
 ``standoffTagHasInternalReference`` (1)

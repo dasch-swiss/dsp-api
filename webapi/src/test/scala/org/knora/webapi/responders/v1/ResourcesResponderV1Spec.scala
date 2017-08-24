@@ -32,7 +32,7 @@ import org.knora.webapi.messages.v1.responder.resourcemessages._
 import org.knora.webapi.messages.v1.responder.sipimessages.SipiResponderConversionFileRequestV1
 import org.knora.webapi.messages.v1.responder.standoffmessages.StandoffDataTypeClasses
 import org.knora.webapi.messages.v1.responder.valuemessages._
-import org.knora.webapi.messages.v1.store.triplestoremessages._
+import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.responders._
 import org.knora.webapi.store._
 import org.knora.webapi.twirl.{StandoffTagIriAttributeV1, StandoffTagV1}
@@ -620,7 +620,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
     // Construct the actors needed for this test.
     private val actorUnderTest = TestActorRef[ResourcesResponderV1]
 
-    private val responderManager = system.actorOf(Props(new TestResponderManagerV1(Map(SIPI_ROUTER_ACTOR_NAME -> system.actorOf(Props(new MockSipiResponderV1))))), name = RESPONDER_MANAGER_ACTOR_NAME)
+    private val responderManager = system.actorOf(Props(new TestResponderManager(Map(SIPI_ROUTER_V1_ACTOR_NAME -> system.actorOf(Props(new MockSipiResponderV1))))), name = RESPONDER_MANAGER_ACTOR_NAME)
 
     private val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
 

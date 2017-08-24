@@ -59,6 +59,8 @@ Basically, a mapping expresses the relations between XML elements and attributes
 The relations expressed in a mapping are one-to-one relations, so the XML can be recreated from the data in RDF. However, since HTML offers a very limited set of elements, Knora mappings support the combination of element names
 and classes. In this way, the same element can be used several times in combination with another classname (please note that ``<a>`` without a class is a mere hyperlink whereas ``<a class="salsah-link">`` is an internal link/standoff link).
 
+With a mapping, a default XSL transformation may be provided to transform the XML to HTML before sending it back to the client. This is useful when the client is a web-browser expecting HTML (instead of XML).
+
 ----------------------------
 Basic Structure of a Mapping
 ----------------------------
@@ -66,6 +68,7 @@ Basic Structure of a Mapping
 The mapping is written in XML itself (for a formal description, see ``webapi/src/resources/mappingXMLToStandoff.xsd``). It has the following structure (the indentation corresponds to the nesting in XML):
 
 - ``<mapping>``: the root element
+    - ``<defaultXSLTransformation> (optional)``: the Iri of the default XSL transformation to be applied to the XML when reading it back from Knora. The XSL transformation is expected to produce HTML. If given, the Iri has to refer to a resource of type ``knora-base:XSLTransformation``.
     - ``<mappingElement>``: an element of the mapping (at least one)
        - ``<tag>``: information about the XML element that is mapped to a standoff class
            - ``<name>``: name of the XML element
@@ -86,6 +89,7 @@ The mapping is written in XML itself (for a formal description, see ``webapi/src
 XML structure of a mapping::
 
     <mapping>
+        <defaultXSLTransformation>Iri of a knora-base:XSLTransformation</defaultXSLTransformation>
         <mappingElement>
             <tag>
                 <name>XML element name</name>

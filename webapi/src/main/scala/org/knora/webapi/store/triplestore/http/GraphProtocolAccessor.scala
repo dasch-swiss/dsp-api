@@ -138,7 +138,7 @@ object GraphProtocolAccessor {
             response <- http.singleRequest(request)
 
             // Convert the HTTP response body to a string.
-            responseString <- response.entity.toStrict(5.seconds).map(_.data.decodeString("UTF-8"))
+            responseString <- response.entity.toStrict(10.seconds).map(_.data.decodeString("UTF-8"))
 
             _ = if (!response.status.isSuccess) {
                 throw TriplestoreResponseException(s"Unable to load file $filepath; triplestore responded with HTTP code ${response.status}: $responseString")

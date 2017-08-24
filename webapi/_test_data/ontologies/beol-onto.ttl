@@ -33,7 +33,8 @@
                       "Titolo"@it ,
                       "Title"@en ;
 
-           rdfs:comment """Titel"""@de ;
+           rdfs:comment """Titel"""@de ,
+                        """Title"""@en;
 
        knora-base:subjectClassConstraint :writtenSource ;
 
@@ -53,7 +54,8 @@
 
                   rdfs:subPropertyOf dc:date ;
 
-                  rdfs:label "Datum der Entstehung"@de ;
+                  rdfs:label "Datum der Entstehung"@de ,
+                             "Date of creation"@en ;
 
                   knora-base:subjectClassConstraint :writtenSource ;
 
@@ -66,7 +68,8 @@
                   salsah-gui:guiAttribute "size=16" ,
                                         "maxlength=32" ;
 
-                  rdfs:comment """Datum der Entstehung"""@de .
+                  rdfs:comment """Datum der Entstehung"""@de ,
+                               """Date of creation"""@en .
 
 
 ### ###########################################
@@ -76,15 +79,17 @@
 
            rdfs:subPropertyOf knora-base:hasLinkTo ;
 
-               rdfs:label "Creator"@de ;
+           rdfs:label "Autor/Verfasser"@de ,
+                      "Author"@en ;
 
-               rdfs:comment """Erzeuger/Autor"""@de ;
+           rdfs:comment """Autor/Verfasser"""@de ,
+                        """Author"""@en ;
 
            knora-base:subjectClassConstraint :writtenSource ;
 
            knora-base:objectClassConstraint :person ;
 
-               salsah-gui:guiOrder "2"^^xsd:integer ;
+           salsah-gui:guiOrder "2"^^xsd:integer ;
 
            salsah-gui:guiElement salsah-gui:Searchbox .
 
@@ -100,9 +105,11 @@
 
                 rdfs:subPropertyOf knora-base:hasLinkToValue ;
 
-                rdfs:label "Creator"@de ;
+                rdfs:label "Autor/Verfasser"@de ,
+                           "Author"@en ;
 
-                rdfs:comment """Erzeuger/Autor"""@de .
+                rdfs:comment """Autor/Verfasser"""@de ,
+                             """Author"""@en .
 
 ### ###########################################
 ### beol:hasRecipient
@@ -111,9 +118,11 @@
 
               rdfs:subPropertyOf knora-base:hasLinkTo ;
 
-              rdfs:label "Empfänger"@de ;
+              rdfs:label "Empfänger"@de ,
+                         "Recipient"@en ;
 
-              rdfs:comment """Empfänger"""@de ;
+              rdfs:comment """Empfänger"""@de ,
+                           """Recipient"""@en ;
 
               knora-base:subjectClassConstraint :letter ;
 
@@ -132,7 +141,13 @@
 
                    knora-base:subjectClassConstraint :letter ;
 
-                   rdfs:subPropertyOf knora-base:hasLinkToValue .
+                   rdfs:subPropertyOf knora-base:hasLinkToValue ;
+
+                   rdfs:label "Empfänger"@de ,
+                              "Recipient"@en ;
+
+                   rdfs:comment """Empfänger"""@de ,
+                                """Recipient"""@en .
 
 
 ### ###########################################
@@ -142,9 +157,11 @@
 
                 rdfs:subPropertyOf knora-base:hasLinkTo ;
 
-                rdfs:label "erwähnte Person"@de ;
+                rdfs:label "erwähnte Person"@de ,
+                           "mentioned person"@en ;
 
-                rdfs:comment """erwähnte Person"""@de ;
+                rdfs:comment """erwähnte Person"""@de ,
+                             """mentioned person"""@en ;
 
                 knora-base:subjectClassConstraint :letter ;
 
@@ -158,6 +175,12 @@
 ### beol:mentionsPersonValue
 
 :mentionsPersonValue rdf:type owl:ObjectProperty ;
+
+                     rdfs:label "erwähnte Person"@de ,
+                                "mentioned person"@en ;
+
+                     rdfs:comment """erwähnte Person"""@de ,
+                                  """mentioned person"""@en ;
 
                      knora-base:objectClassConstraint knora-base:LinkValue ;
 
@@ -197,7 +220,8 @@
                      "Postazione"@it ,
                      "Location"@en ;
 
-          rdfs:comment """Der Ort, wo sich das physische Original befindet"""@de ;
+          rdfs:comment """Der Ort, wo sich das physische Original befindet"""@de ,
+                       """Place where the physical original is located """@en ;
 
           knora-base:subjectClassConstraint :writtenSource ;
 
@@ -246,11 +270,12 @@
                    "fa parte di"@it ,
                    "is a part of"@en ;
 
-        rdfs:comment """Diese Property bezeichnet eine Verbindung zu einer anderen Resource, in dem ausgesagt wird, dass die vorliegende Resource ein integraler Teil der anderen Resource ist. Zum Beispiel ist eine Buchseite ein integraler Bestandteil genau eines Buches."""@de ;
+        rdfs:comment """Diese Property bezeichnet eine Verbindung zu einer anderen Resource, in dem ausgesagt wird, dass die vorliegende Resource ein integraler Teil der anderen Resource ist. Zum Beispiel ist eine Buchseite ein integraler Bestandteil genau eines Buches."""@de ,
+                     """Represents a relation to another resource of which this resource is a part (dependent)"""@en ;
 
         knora-base:subjectClassConstraint :page ;
 
-        knora-base:objectClassConstraint :manuscript ;
+        knora-base:objectClassConstraint :writtenSource ;
 
         salsah-gui:guiOrder "7"^^xsd:integer ;
 
@@ -321,7 +346,8 @@
                              "Commento"@it ,
                              "Comment"@en ;
 
-                  rdfs:comment """Bemerkungen"""@de ;
+                  rdfs:comment """Bemerkungen"""@de ,
+                               """Comment"""@en ;
 
                   knora-base:subjectClassConstraint knora-base:Resource ;
 
@@ -359,7 +385,8 @@
                              "testo"@it ,
                              "text"@en ;
 
-                  rdfs:comment """Text"""@de ;
+                  rdfs:comment """Text"""@de ,
+                               """Text"""@en ;
 
                   knora-base:subjectClassConstraint :writtenSource ;
 
@@ -406,9 +433,9 @@
                     knora-base:objectClassConstraint knora-base:LinkValue ;
 
                     rdfs:label "hat Sohn"@de ,
-                                                     "a fils"@fr ,
-                                                     "ha figlio"@it ,
-                                                     "has son"@en ;
+                               "a fils"@fr ,
+                               "ha figlio"@it ,
+                               "has son"@en ;
 
                     rdfs:comment """Repräsentiert eine Vater-Sohn Beziehung"""@de ;
 
@@ -799,6 +826,8 @@
                           owl:minCardinality "0"^^xsd:nonNegativeInteger
                         ];
 
+        knora-base:resourceIcon "letter.png" ;
+
         rdfs:label "Brief"@de ,
                    "Lettre"@fr ,
                    "Letter"@en ;
@@ -945,6 +974,8 @@
                       owl:minCardinality "0"^^xsd:nonNegativeInteger
                     ] ;
 
+    knora-base:resourceIcon "person.png" ;
+
     rdfs:label "Person"@de ,
                "Personne"@fr ,
                "Person"@en ;
@@ -1021,6 +1052,15 @@
               rdfs:comment "represents a break"@en .
 
               ###  http://www.knora.org/ontology/beol#StandoffBrTag
+
+
+###  http://www.knora.org/ontology/beol#StandoffPbTag
+
+:StandoffPbTag rdf:type owl:Class ;
+
+              rdfs:subClassOf knora-base:StandoffTag ;
+
+              rdfs:comment "represents a page break"@en .
 
 
 :StandoffHtmlTag rdf:type owl:Class ;

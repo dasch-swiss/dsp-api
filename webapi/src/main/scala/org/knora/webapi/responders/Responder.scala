@@ -18,7 +18,7 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.responders.v1
+package org.knora.webapi.responders
 
 import akka.actor.{Actor, ActorLogging}
 import org.knora.webapi.Settings
@@ -28,7 +28,7 @@ import scala.language.postfixOps
 /**
   * A trait providing values that are commonly used in Knora API v1 responders.
   */
-trait ResponderV1 extends Actor with ActorLogging {
+trait Responder extends Actor with ActorLogging {
     /**
       * The responder's Akka actor system.
       */

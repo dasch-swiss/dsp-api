@@ -34,8 +34,8 @@ import org.knora.webapi.messages.v1.responder.resourcemessages.{MultipleResource
 import org.knora.webapi.messages.v1.responder.sipimessages._
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.responder.valuemessages._
-import org.knora.webapi.messages.v1.store.triplestoremessages._
-import org.knora.webapi.responders.IriLocker
+import org.knora.webapi.messages.store.triplestoremessages._
+import org.knora.webapi.responders.{IriLocker, Responder}
 import org.knora.webapi.responders.v1.GroupedProps._
 import org.knora.webapi.twirl.SparqlTemplateResourceToCreate
 import org.knora.webapi.util.ActorUtil._
@@ -49,7 +49,7 @@ import scala.util.Try
 /**
   * Responds to requests for information about resources, and returns responses in Knora API v1 format.
   */
-class ResourcesResponderV1 extends ResponderV1 {
+class ResourcesResponderV1 extends Responder {
 
     // Converts SPARQL query results to ApiValueV1 objects.
     val valueUtilV1 = new ValueUtilV1(settings)
@@ -1452,7 +1452,8 @@ class ResourcesResponderV1 extends ResponderV1 {
                                         // suitable class.
                                         val checkSubClassRequest = CheckSubClassRequestV1(
                                             subClassIri = clientResourceIDsToResourceClasses(targetClientID),
-                                            superClassIri = propertyObjectClassConstraint
+                                            superClassIri = propertyObjectClassConstraint,
+                                            userProfile = userProfile
                                         )
 
                                         for {
@@ -1485,7 +1486,8 @@ class ResourcesResponderV1 extends ResponderV1 {
                                             propertyIri = propertyIri,
                                             propertyObjectClassConstraint = propertyObjectClassConstraint,
                                             valueType = otherValue.valueTypeIri,
-                                            responderManager = responderManager)
+                                            responderManager = responderManager,
+                                            userProfile = userProfile)
                                 }
                         }
                 }
@@ -1959,7 +1961,8 @@ class ResourcesResponderV1 extends ResponderV1 {
 
             checkSubClassRequest = CheckSubClassRequestV1(
                 subClassIri = resourceInfo.restype_id,
-                superClassIri = owlClass
+                superClassIri = owlClass,
+                userProfile = userProfile
             )
 
             subClassResponse <- (responderManager ? checkSubClassRequest).mapTo[CheckSubClassResponseV1]

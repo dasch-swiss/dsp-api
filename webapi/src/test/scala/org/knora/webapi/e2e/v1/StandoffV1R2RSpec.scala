@@ -24,17 +24,15 @@ import java.io.File
 import java.net.URLEncoder
 
 import akka.actor.{ActorSystem, Props}
-import akka.http.scaladsl.model.{HttpEntity, _}
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
+import akka.http.scaladsl.model.{HttpEntity, _}
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import akka.pattern._
 import akka.util.Timeout
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.ontologymessages.LoadOntologiesRequest
-import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
-import org.knora.webapi.messages.v1.store.triplestoremessages._
-import org.knora.webapi.responders._
-import org.knora.webapi.responders.v1.ResponderManagerV1
+import org.knora.webapi.messages.store.triplestoremessages._
+import org.knora.webapi.responders.{ResponderManager, _}
 import org.knora.webapi.routing.v1.{ResourcesRouteV1, StandoffRouteV1, ValuesRouteV1}
 import org.knora.webapi.store._
 import org.knora.webapi.util.{AkkaHttpUtils, MutableTestIri}
@@ -60,7 +58,7 @@ class StandoffV1R2RSpec extends R2RSpec {
          # akka.stdout-loglevel = "DEBUG"
         """.stripMargin
 
-    private val responderManager = system.actorOf(Props(new ResponderManagerV1 with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
+    private val responderManager = system.actorOf(Props(new ResponderManager with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
     private val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
 
     private val standoffPath = StandoffRouteV1.knoraApiPath(system, settings, log)

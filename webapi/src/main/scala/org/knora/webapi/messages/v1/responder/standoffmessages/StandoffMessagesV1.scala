@@ -75,6 +75,21 @@ case class GetMappingRequestV1(mappingIri: IRI, userProfile: UserProfileV1) exte
 case class GetMappingResponseV1(mappingIri: IRI, mapping: MappingXMLtoStandoff, standoffEntities: StandoffEntityInfoGetResponseV1)
 
 /**
+  * Represents a request that gets an XSL Transformation represented by a `knora-base:XSLTransformation`.
+  *
+  * @param xsltTextRepresentationIri    the IRI of the `knora-base:XSLTransformation`.
+  * @param userProfile                  the profile of the user making the request.
+  */
+case class GetXSLTransformationRequestV1(xsltTextRepresentationIri: IRI, userProfile: UserProfileV1) extends StandoffResponderRequestV1
+
+/**
+  * Represents a response to a [[GetXSLTransformationRequestV1]].
+  *
+  * @param xslt      the XSLT to be applied to the XML created from standoff.
+  */
+case class GetXSLTransformationResponseV1(xslt: String)
+
+/**
   * Represents a mapping between XML tags and standoff entities (classes and properties).
   *
   * Example:
@@ -84,8 +99,9 @@ case class GetMappingResponseV1(mappingIri: IRI, mapping: MappingXMLtoStandoff, 
   * The class names allow for the ruse of the same tag name. This is important when using HTML since the tag set is very limited.
   *
   * @param namespace a Map of XML namespaces and a Map of tag names and [[XMLTag]].
+  * @param defaultXSLTransformation the Iri of the default XSL transformation for the resulting XML, if any.
   */
-case class MappingXMLtoStandoff(namespace: Map[String, Map[String, Map[String, XMLTag]]])
+case class MappingXMLtoStandoff(namespace: Map[String, Map[String, Map[String, XMLTag]]], defaultXSLTransformation: Option[IRI])
 
 /**
   * Represents a mapping between an XML tag and standoff entities (classes and properties).

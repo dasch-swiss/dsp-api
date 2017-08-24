@@ -22,7 +22,7 @@ import akka.http.scaladsl.model.headers._
 import akka.http.scaladsl.model.{HttpEntity, _}
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi.ITKnoraFakeSpec
-import org.knora.webapi.messages.v1.store.triplestoremessages.TriplestoreJsonProtocol
+import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.util.{MutableTestIri, TestingUtilities}
 import spray.json._
 

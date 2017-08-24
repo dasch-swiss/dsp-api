@@ -22,7 +22,7 @@ import java.net.URLEncoder
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import com.typesafe.config.ConfigFactory
-import org.knora.webapi.messages.v1.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
+import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
 import org.knora.webapi.util.TestingUtilities
 import org.knora.webapi.{ITKnoraLiveSpec, InvalidApiJsonException}
 import spray.json._
