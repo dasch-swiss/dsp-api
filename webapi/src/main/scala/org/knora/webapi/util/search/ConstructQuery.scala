@@ -118,6 +118,40 @@ case class StatementPattern(subj: Entity, pred: Entity, obj: Entity, namedGraph:
 }
 
 /**
+  * Represents the supported logical operators in a [[CompareExpression]].
+  */
+object CompareExpressionOperator extends Enumeration {
+
+    val EQUALS = Value("=")
+
+    val GREATERTHAN = Value(">")
+
+    val GREATERTHANEQUALS = Value(">=")
+
+    val LOWERTHAN = Value("<")
+
+    val LOWERTHANEQUALS = Value("<=")
+
+    val NOTEQUALS = Value("!=")
+
+    val valueMap: Map[String, Value] = values.map(v => (v.toString, v)).toMap
+
+    /**
+      * Given the name of a value in this enumeration, returns the value. If the value is not found, the provided error function is called.
+      *
+      * @param name     the name of the value.
+      * @param errorFun the function to be called in case of an error.
+      * @return the requested value.
+      */
+    def lookup(name: String, errorFun: () => Nothing): Value = {
+        valueMap.get(name) match {
+            case Some(value) => value
+            case None => errorFun()
+        }
+    }
+}
+
+/**
   * Represents an expression that can be used in a FILTER.
   */
 sealed trait FilterExpression extends SparqlGenerator
@@ -129,7 +163,7 @@ sealed trait FilterExpression extends SparqlGenerator
   * @param operator the operator.
   * @param rightArg the right argument.
   */
-case class CompareExpression(leftArg: FilterExpression, operator: String, rightArg: FilterExpression) extends FilterExpression {
+case class CompareExpression(leftArg: FilterExpression, operator: CompareExpressionOperator.Value, rightArg: FilterExpression) extends FilterExpression {
     def toSparql: String = s"(${leftArg.toSparql} $operator ${rightArg.toSparql})"
 }
 

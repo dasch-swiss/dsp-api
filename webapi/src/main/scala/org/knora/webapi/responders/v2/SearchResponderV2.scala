@@ -78,6 +78,10 @@ class SearchResponderV2 extends Responder {
       */
     private def extendedSearchV2(inputQuery: ConstructQuery, apiSchema: ApiV2Schema.Value = ApiV2Schema.SIMPLE, userProfile: UserProfileV1): Future[ReadResourcesSequenceV2] = {
 
+        if (apiSchema != ApiV2Schema.SIMPLE) {
+            throw SparqlSearchException("Only api v2 simple is supported in v2 extended search")
+        }
+
         /**
           * A [[QueryPatternTransformer]] that preprocesses the input CONSTRUCT query by converting external IRIs to internal ones
           * and disabling inference for individual statements as necessary.
@@ -522,7 +526,7 @@ class SearchResponderV2 extends Responder {
                                             filterCompare.rightArg match {
                                                 case iriRef: IriRef =>
                                                     // make sure that the comparison operator is "="
-                                                    if (filterCompare.operator != "=") throw SparqlSearchException(s"Comparison operator in a CompareExpression for a property type is expected to be '=', but ${filterCompare.operator}")
+                                                    if (filterCompare.operator != CompareExpressionOperator.EQUALS) throw SparqlSearchException(s"Comparison operator in a CompareExpression for a property type is expected to be '=', but ${filterCompare.operator}")
 
                                                     CompareExpression(filterCompare.leftArg, filterCompare.operator, filterCompare.rightArg)
 
@@ -676,7 +680,7 @@ class SearchResponderV2 extends Responder {
 
             triplestoreSpecificSparql: String = triplestoreSpecificQuery.toSparql
 
-            //_ = println(triplestoreSpecificQuery.toSparql)
+            _ = println(triplestoreSpecificQuery.toSparql)
 
             searchResponse: SparqlConstructResponse <- (storeManager ? SparqlConstructRequest(triplestoreSpecificSparql)).mapTo[SparqlConstructResponse]
 

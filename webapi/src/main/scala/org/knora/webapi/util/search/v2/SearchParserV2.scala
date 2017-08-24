@@ -503,7 +503,7 @@ object SearchParserV2 {
 
                         CompareExpression(
                             leftArg = leftArg,
-                            operator = operator,
+                            operator = CompareExpressionOperator.lookup(operator, () => throw SparqlSearchException(s"Operator $operator is not supported in a CompareExpression")),
                             rightArg = rightArg
                         )
 
