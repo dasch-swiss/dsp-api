@@ -803,8 +803,6 @@ class SearchResponderV2 extends Responder {
 
                                             val dateValEndStatement = StatementPattern(subj = queryVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasEndJDN), obj = dateValueHasEndVar)
 
-                                            val dateStatements = Seq(dateValStartStatement, dateValEndStatement)
-
                                             // process filter expression based on given comparison operator
                                             filterCompare.operator match {
 
@@ -819,7 +817,9 @@ class SearchResponderV2 extends Responder {
 
                                                     TransformedFilterExpression(
                                                         filter,
-                                                        dateStatements
+                                                        Seq(
+                                                            dateValStartStatement, dateValEndStatement
+                                                        )
                                                     )
 
                                                 case CompareExpressionOperator.NOT_EQUALS =>
@@ -833,8 +833,51 @@ class SearchResponderV2 extends Responder {
 
                                                     TransformedFilterExpression(
                                                         filter,
-                                                        dateStatements
+                                                        Seq(
+                                                            dateValStartStatement, dateValEndStatement
+                                                        )
                                                     )
+
+                                                case CompareExpressionOperator.LESS_THAN =>
+
+                                                    // period ends before indicated period
+                                                    val filter = CompareExpression(dateValueHasEndVar, CompareExpressionOperator.LESS_THAN, XsdLiteral(date.dateval1.toString, OntologyConstants.Xsd.Integer))
+
+                                                    TransformedFilterExpression(
+                                                        filter,
+                                                        Seq(dateValEndStatement)
+                                                    )
+
+                                                case CompareExpressionOperator.LESS_THAN_OR_EQUAL_TO =>
+
+                                                    // period ends before indicated period or equals it (any overlap)
+                                                    val filter = CompareExpression(dateValueHasStartVar, CompareExpressionOperator.LESS_THAN_OR_EQUAL_TO, XsdLiteral(date.dateval2.toString, OntologyConstants.Xsd.Integer))
+
+                                                    TransformedFilterExpression(
+                                                        filter,
+                                                        Seq(dateValStartStatement)
+                                                    )
+
+                                                case CompareExpressionOperator.GREATER_THAN =>
+
+                                                    // period starts after end of indicated period
+                                                    val filter = CompareExpression(dateValueHasStartVar, CompareExpressionOperator.GREATER_THAN, XsdLiteral(date.dateval2.toString, OntologyConstants.Xsd.Integer))
+
+                                                    TransformedFilterExpression(
+                                                        filter,
+                                                        Seq(dateValStartStatement)
+                                                    )
+
+                                                case CompareExpressionOperator.GREATER_THAN_OR_EQUAL_TO =>
+
+                                                    // period starts after indicated period or equals it (any overlap)
+                                                    val filter = CompareExpression(dateValueHasEndVar, CompareExpressionOperator.GREATER_THAN_OR_EQUAL_TO, XsdLiteral(date.dateval1.toString, OntologyConstants.Xsd.Integer))
+
+                                                    TransformedFilterExpression(
+                                                        filter,
+                                                        Seq(dateValEndStatement)
+                                                    )
+
 
                                                 case other => throw SparqlSearchException(s"operator $other not supported in filter expressions for dates")
 

@@ -456,7 +456,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         }
 
-        /*"perform an extended search for books that have not been published on the first of March 1497 (Julian Calendar) 2" in {
+        "perform an extended search for books that have not been published on the first of March 1497 (Julian Calendar) 2" in {
             val sparqlSimplified =
                 """PREFIX incunabula: <http://api.knora.org/ontology/incunabula/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
@@ -721,7 +721,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         }
 
-        "get the regions belonging to a page" in {
+        /*"get the regions belonging to a page" in {
             val sparqlSimplified =
                 """    PREFIX incunabula: <http://api.knora.org/ontology/incunabula/simple/v2#>
                   |    PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
