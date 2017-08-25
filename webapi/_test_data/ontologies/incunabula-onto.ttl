@@ -205,9 +205,11 @@
 
              rdfs:subPropertyOf dc:description ;
 
-             rdfs:label "Beschreibung (Richtext)"@de ;
+             rdfs:label "Beschreibung (Richtext)"@de ,
+                        "Description"@en ;
 
-             rdfs:comment """Beschreibung"""@de ;
+             rdfs:comment """Beschreibung"""@de ,
+                          """Description"""@en ;
 
              knora-base:subjectClassConstraint knora-base:Resource ;
 
