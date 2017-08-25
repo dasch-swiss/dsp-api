@@ -210,7 +210,7 @@ class SearchResponderV2 extends Responder {
                     case _ => throw SparqlSearchException(s"A unique variable could not be made for $entity")
                 }
 
-                entityStr.replaceAll("[:/.#-]", "") // TODO: check if this is complete
+                entityStr.replaceAll("[:/.#-]", "").replaceAll("\\s","") // TODO: check if this is complete and if it could lea to collision of variable names
             }
 
             /**
@@ -331,7 +331,7 @@ class SearchResponderV2 extends Responder {
                         val linkValuePredVar = createUniqueVariableFromStatement(statementPattern, "linkValuePred") // A variable representing a predicate of the reification
                         val linkValueObjVar = createUniqueVariableFromStatement(statementPattern, "linkValueObj") // A variable representing a predicate of the reification
 
-                        // TODO: make use of createStatementPatternsForValueObject
+                        // TODO: make use of createStatementPatternsForValueObject if possible
                         Seq(statementPattern, // keep the original statement pointing from the source to the target resource, using inference
                             StatementPattern(subj = statementPattern.subj, pred = linkPropVar, obj = statementPattern.obj), // find out what the actual link property is
                             StatementPattern(subj = statementPattern.subj, pred = IriRef(OntologyConstants.KnoraBase.HasValue), obj = linkValueVar).toInferred, // include knora-base:hasValue pointing to the link value, because the construct clause needs it
@@ -351,8 +351,6 @@ class SearchResponderV2 extends Responder {
                         // this means that the predicate of the statement pattern is a value property
                         // the original statement is not included because it represents the value as a literal (in Knora, it is an object)
 
-
-
                         // check if the statement pattern's object is a literal or a variable
                         statementPattern.obj match {
 
@@ -369,7 +367,7 @@ class SearchResponderV2 extends Responder {
                                 )
 
                                 // match the given literal value with the integer value object's `valueHasInteger`
-                                valueObject :+ StatementPattern(subj = valueObjVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasInteger), obj = statementPattern.obj, includeInConstructClause = false) // this is for the Where clause only (restriction)
+                                valueObject :+ StatementPattern(subj = valueObjVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasInteger), obj = integerLiteral, includeInConstructClause = false) // this is for the Where clause only (restriction)
 
 
                             case integerVar: QueryVariable =>
@@ -377,13 +375,59 @@ class SearchResponderV2 extends Responder {
                                 // just create the statements to query the integer value object, possibly a Filter statement exists to restrict the integer values
                                 createStatementPatternsForValueObject(
                                     statementPattern,
-                                    statementPattern.obj, // user provided variable used to represent the value object
+                                    integerVar, // user provided variable used to represent the value object
                                     OntologyConstants.KnoraBase.IntValue
                                 )
 
                             case other => throw SparqlSearchException("Not supported as an object of type integer: $other")
 
                         }
+                    }
+
+                    case OntologyConstants.Xsd.String => {
+
+                        // the given statement pattern's object is of type xsd:string
+                        // this means that the predicate of the statement pattern is a value property
+                        // the original statement is not included because it represents the value as a literal (in Knora, it is an object)
+
+                        // check if the statement pattern's object is a literal or a variable
+                        statementPattern.obj match {
+
+                            // create statements in order to query the text value object
+
+                            case stringLiteral: XsdLiteral =>
+
+                                val valueObjVar = createUniqueVariableFromStatement(statementPattern, "voVar") // A variable representing the value object
+
+                                val valueObject = createStatementPatternsForValueObject(
+                                    statementPattern = statementPattern,
+                                    valueObject = valueObjVar,
+                                    valueType = OntologyConstants.KnoraBase.TextValue
+                                )
+
+                                // match the given literal value with the integer value object's `valueHasString`
+                                valueObject :+ StatementPattern(subj = valueObjVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasString), obj = stringLiteral, includeInConstructClause = false) // this is for the Where clause only (restriction)
+
+
+                            case stringVar: QueryVariable =>
+
+                                // just create the statements to query the text value object, possibly a Filter statement exists to restrict the integer values
+                                createStatementPatternsForValueObject(
+                                    statementPattern,
+                                    stringVar, // user provided variable used to represent the value object
+                                    OntologyConstants.KnoraBase.TextValue
+                                )
+
+                            case other => throw SparqlSearchException("Not supported as an object of type integer: $other")
+
+                        }
+
+                    }
+
+                    case OntologyConstants.KnoraBase.DateValue => {
+
+                        throw NotImplementedException(s"property type Date not implemented yet.")
+
                     }
 
                     case _ => throw NotImplementedException(s"property type $objectIri not implemented yet.")
@@ -629,6 +673,22 @@ class SearchResponderV2 extends Responder {
                                                 CompareExpression(intValHasInteger, filterCompare.operator, filterCompare.rightArg),
                                                 Seq(
                                                     StatementPattern(subj = queryVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasInteger), intValHasInteger)
+                                                )
+                                            )
+
+                                        case OntologyConstants.Xsd.String =>
+
+                                            val textValHasString = createUniqueVariableFromEntity(queryVar, "textValueHasString")
+
+                                            // check if operator is supported for string operations
+                                            if (!(filterCompare.operator.equals(CompareExpressionOperator.EQUALS) || filterCompare.operator.equals(CompareExpressionOperator.NOT_EQUALS))) {
+                                                throw SparqlSearchException(s"Filter expressions for a string value supports the following operators: ${CompareExpressionOperator.EQUALS}, ${CompareExpressionOperator.NOT_EQUALS}, but ${filterCompare.operator} given")
+                                            }
+
+                                            TransformedFilterExpression(
+                                                CompareExpression(textValHasString, filterCompare.operator, filterCompare.rightArg),
+                                                Seq(
+                                                    StatementPattern(subj = queryVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasString), textValHasString)
                                                 )
                                             )
 
