@@ -369,7 +369,7 @@ class SearchResponderV2 extends Responder {
                                 )
 
                                 // match the given literal value with the integer value object's `valueHasInteger`
-                                valueObject :+ StatementPattern(subj = valueObjVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasInteger), obj = statementPattern.obj)
+                                valueObject :+ StatementPattern(subj = valueObjVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasInteger), obj = statementPattern.obj, includeInConstructClause = false) // this is for the Where clause only (restriction)
 
 
                             case integerVar: QueryVariable =>
