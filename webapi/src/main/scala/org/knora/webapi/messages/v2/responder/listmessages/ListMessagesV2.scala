@@ -262,7 +262,10 @@ trait ListV2JsonLDProtocol extends KnoraJsonLDSupport {
 
     private def readListsSequenceV2Reader(expanded: Map[String, Any]): Seq[ListNodeV2] = {
 
-        val items: Seq[Any] = expanded.getOrElse(OntologyConstants.SchemaOrg.ItemListElement, invalidJsonLDError("Missing 'itemListElement")).asInstanceOf[Seq[Any]]
+        val items: Seq[Any] = expanded.getOrElse(OntologyConstants.SchemaOrg.ItemListElement, invalidJsonLDError("Missing 'itemListElement")) match {
+            case x: Seq[Any] => x
+            case x: Any => Seq(x)
+        }
 
         val result: Seq[ListNodeV2] = items map {
             case item: Map[String, Any] => {
@@ -287,10 +290,18 @@ trait ListV2JsonLDProtocol extends KnoraJsonLDSupport {
             case Some(x: Any) => Seq(stringV2Reader(x))
             case None => Seq.empty[StringV2]
         }
+
         val comments: Seq[StringV2] = item.get(OntologyConstants.Rdfs.Comment) match {
             case Some(x: Seq[Any]) => x.map(stringV2Reader)
             case Some(x: Any) => Seq(stringV2Reader(x))
             case None => Seq.empty[StringV2]
+        }
+
+        val children: Seq[ListChildNodeV2] = item.get(OntologyConstants.KnoraBase.HasSubListNode) match {
+            case Some(x: Seq[Map[String, Any]]) => x.map(listChildNodeV2Reader)
+            case Some(x: Map[String, Any]) => Seq(listChildNodeV2Reader(x))
+            case Some(_) => invalidJsonLDError("Expecting objects.")
+            case None => Seq.empty[ListChildNodeV2]
         }
 
         ListRootNodeV2(
@@ -298,11 +309,46 @@ trait ListV2JsonLDProtocol extends KnoraJsonLDSupport {
             projectIri = projectIri,
             labels = labels,
             comments = comments,
-            children = Seq.empty[ListChildNodeV2]
+            children = children
         )
     }
 
-    private def listChildNodeV2Reader(node: Any): ListRootNodeV2 = ???
+    private def listChildNodeV2Reader(node:  Map[String, Any]): ListChildNodeV2 = {
+
+        val id: IRI = node.getOrElse(ID, invalidJsonLDError("Field '@id' is missing.")).toString()
+
+        val name: Option[String] = node.get(OntologyConstants.KnoraBase.ListNodeName).map(_.toString)
+
+        val labels: Seq[StringV2] = node.get(OntologyConstants.Rdfs.Label) match {
+            case Some(x: Seq[Any]) => x.map(stringV2Reader)
+            case Some(x: Any) => Seq(stringV2Reader(x))
+            case None => Seq.empty[StringV2]
+        }
+
+        val comments: Seq[StringV2] = node.get(OntologyConstants.Rdfs.Comment) match {
+            case Some(x: Seq[Any]) => x.map(stringV2Reader)
+            case Some(x: Any) => Seq(stringV2Reader(x))
+            case None => Seq.empty[StringV2]
+        }
+
+        val children: Seq[ListChildNodeV2] = node.get(OntologyConstants.KnoraBase.HasSubListNode) match {
+            case Some(x: Seq[Map[String, Any]]) => x.map(listChildNodeV2Reader)
+            case Some(x: Map[String, Any]) => Seq(listChildNodeV2Reader(x))
+            case Some(_) => invalidJsonLDError("Expecting objects.")
+            case None => Seq.empty[ListChildNodeV2]
+        }
+
+        val position: Option[Int] = node.get(OntologyConstants.KnoraBase.ListNodePosition).map(_.toString.toInt)
+
+        ListChildNodeV2(
+            id = id,
+            name = name,
+            labels = labels,
+            comments = comments,
+            children = children,
+            position = position
+        )
+    }
 
     private def stringV2Reader(label: Any): StringV2 = {
 

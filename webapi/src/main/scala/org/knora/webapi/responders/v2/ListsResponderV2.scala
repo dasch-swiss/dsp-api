@@ -113,6 +113,8 @@ class ListsResponderV2 extends Responder {
             // here we know that the list exists and it is fine if children is an empty list
             children: Seq[ListChildNodeV2] <- listGetChildrenV2(rootNodeIri, userProfile)
 
+            // _ = log.debug(s"listGetRequestV2 - children count: {}", children.size)
+
             // Map(subjectIri -> (objectIri -> Seq(stringWithOptionalLand))
             statements = listInfoResponse.statements
             list = statements.head match {
@@ -123,11 +125,10 @@ class ListsResponderV2 extends Responder {
                         labels = propsMap.getOrElse(OntologyConstants.Rdfs.Label, Seq.empty[StringV2]),
                         comments = propsMap.getOrElse(OntologyConstants.Rdfs.Comment, Seq.empty[StringV2]),
                         children = children
-                        // status = groupedListProperties.get(OntologyConstants.KnoraBase.Status).map(_.head.toBoolean)
                     )
             }
 
-            // _ = log.debug(s"listGetRequestV2 - list: {}", MessageUtil.toSource(list)")
+            // _ = log.debug(s"listGetRequestV2 - list: {}", MessageUtil.toSource(list))
 
         } yield ReadListsSequenceV2(items = Seq(list))
     }
@@ -172,7 +173,6 @@ class ListsResponderV2 extends Responder {
                             comments = propsMap.getOrElse(OntologyConstants.Rdfs.Comment, Seq.empty[StringV2]),
                             children = Seq.empty[ListChildNodeV2],
                             position = propsMap.get(OntologyConstants.KnoraBase.ListNodePosition).map(_.head.value.toInt)
-                            // status = groupedListProperties.get(OntologyConstants.KnoraBase.Status).map(_.head.toBoolean)
                         )
                     } else {
                         ListRootNodeV2(
@@ -181,7 +181,6 @@ class ListsResponderV2 extends Responder {
                             labels = propsMap.getOrElse(OntologyConstants.Rdfs.Label, Seq.empty[StringV2]),
                             comments = propsMap.getOrElse(OntologyConstants.Rdfs.Comment, Seq.empty[StringV2]),
                             children = Seq.empty[ListChildNodeV2]
-                            // status = groupedListProperties.get(OntologyConstants.KnoraBase.Status).map(_.head.toBoolean)
                         )
                     }
             }
