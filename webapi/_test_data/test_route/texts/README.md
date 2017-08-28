@@ -18,9 +18,8 @@ Is the mapping used to translate html markup using the default mapping `Ontology
 - example text file: `StandardHTML`
 
 Note: that you can use this mapping to generate the default mapping that is distributed 
-as `knora-ontologies/standoff-data.ttl`, for example to extend it, but you have to rework the generated
-resources UUID to maintain backward compatibility.
-The Salsah default HTML editor should be able to produce this markup.
+as `knora-ontologies/standoff-data.ttl`.  
+Please read the official documentation about Standoff Standard Mapping.
 
 ## HTML
 Custom mapping of HTML for project specific tagging.
