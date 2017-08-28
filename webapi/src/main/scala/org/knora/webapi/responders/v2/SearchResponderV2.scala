@@ -385,7 +385,7 @@ class SearchResponderV2 extends Responder {
                                     OntologyConstants.KnoraBase.IntValue
                                 )
 
-                            case other => throw SparqlSearchException("Not supported as an object of type integer: $other")
+                            case other => throw SparqlSearchException(s"Not supported as an object of type integer: $other")
 
                         }
                     }
@@ -429,7 +429,97 @@ class SearchResponderV2 extends Responder {
                                     OntologyConstants.KnoraBase.TextValue
                                 )
 
-                            case other => throw SparqlSearchException("Not supported as an object of type string: $other")
+                            case other => throw SparqlSearchException(s"Not supported as an object of type string: $other")
+
+                        }
+
+                    }
+
+                    case OntologyConstants.Xsd.Decimal => {
+
+                        // the given statement pattern's object is of type xsd:decimal
+                        // this means that the predicate of the statement pattern is a value property
+                        // the original statement is not included because it represents the value as a literal (in Knora, it is an object)
+
+                        // check if the statement pattern's object is a literal or a variable
+                        statementPattern.obj match {
+
+                            // create statements in order to query the decimal value object
+
+                            case decimalLiteral: XsdLiteral =>
+
+                                // make sure the literal is of type decimal or integer
+                                if (decimalLiteral.datatype != OntologyConstants.Xsd.Decimal || decimalLiteral.datatype == OntologyConstants.Xsd.Integer) {
+                                    throw SparqlSearchException(s"an decimal or integer literal was expected, but ${decimalLiteral.datatype} given")
+                                }
+
+                                val valueObjVar = createUniqueVariableFromStatement(statementPattern, "voVar") // A variable representing the value object
+
+                                val valueObject = createStatementPatternsForValueObject(
+                                    statementPattern = statementPattern,
+                                    valueObject = valueObjVar,
+                                    valueType = OntologyConstants.KnoraBase.DecimalValue
+                                )
+
+                                // match the given literal value with the decimal value object's `valueHasDecimal`
+                                valueObject :+ StatementPattern(subj = valueObjVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasDecimal), obj = decimalLiteral, includeInConstructClause = false) // this is for the Where clause only (restriction)
+
+
+                            case decimalVar: QueryVariable =>
+
+                                // just create the statements to query the decimal value object, possibly a Filter statement exists to restrict the decimal values
+                                createStatementPatternsForValueObject(
+                                    statementPattern,
+                                    decimalVar, // user provided variable used to represent the value object
+                                    OntologyConstants.KnoraBase.DecimalValue
+                                )
+
+                            case other => throw SparqlSearchException(s"Not supported as an object of type string: $other")
+
+                        }
+
+                    }
+
+                    case OntologyConstants.Xsd.Boolean => {
+
+                        // the given statement pattern's object is of type xsd:boolean
+                        // this means that the predicate of the statement pattern is a value property
+                        // the original statement is not included because it represents the value as a literal (in Knora, it is an object)
+
+                        // check if the statement pattern's object is a literal or a variable
+                        statementPattern.obj match {
+
+                            // create statements in order to query the boolean value object
+
+                            case booleanLiteral: XsdLiteral =>
+
+                                // make sure the literal is of type boolean
+                                if (booleanLiteral.datatype != OntologyConstants.Xsd.Boolean) {
+                                    throw SparqlSearchException(s"an Boolean literal was expected, but ${booleanLiteral.datatype} given")
+                                }
+
+                                val valueObjVar = createUniqueVariableFromStatement(statementPattern, "voVar") // A variable representing the value object
+
+                                val valueObject = createStatementPatternsForValueObject(
+                                    statementPattern = statementPattern,
+                                    valueObject = valueObjVar,
+                                    valueType = OntologyConstants.KnoraBase.BooleanValue
+                                )
+
+                                // match the given literal value with the boolean value object's `valueHasBoolean`
+                                valueObject :+ StatementPattern(subj = valueObjVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasBoolean), obj = booleanLiteral, includeInConstructClause = false) // this is for the Where clause only (restriction)
+
+
+                            case booleanVar: QueryVariable =>
+
+                                // just create the statements to query the boolean value object, possibly a Filter statement exists to restrict the boolean value
+                                createStatementPatternsForValueObject(
+                                    statementPattern,
+                                    booleanVar, // user provided variable used to represent the value object
+                                    OntologyConstants.KnoraBase.BooleanValue
+                                )
+
+                            case other => throw SparqlSearchException(s"Not supported as an object of type string: $other")
 
                         }
 
@@ -491,7 +581,85 @@ class SearchResponderV2 extends Responder {
                                     valueType = OntologyConstants.KnoraBase.DateValue
                                 )
 
-                            case other => throw SparqlSearchException("Not supported as an object of type string: $other")
+                            case other => throw SparqlSearchException(s"Not supported as an object of type date: $other")
+                        }
+
+
+                    }
+
+                    case OntologyConstants.KnoraBase.Geom => {
+
+                        // the given statement pattern's object is of type knora-base:GeomValue
+                        // this means that the predicate of the statement pattern is a value property
+                        // the original statement is not included because it represents the value as a literal (in Knora, it is an object)
+
+                        // literals are not supported for geometry
+
+                        statementPattern.obj match {
+
+                            case geomVar: QueryVariable =>
+
+                                // just create the statements to query the date value object, possibly a Filter statement exists to restrict the date values
+                                createStatementPatternsForValueObject(
+                                    statementPattern = statementPattern,
+                                    valueObject = geomVar,
+                                    valueType = OntologyConstants.KnoraBase.GeomValue
+                                )
+
+                            case other => throw SparqlSearchException(s"Not supported as an object of type geom: $other (only variable allowed for geometry, no literal)")
+
+                        }
+
+
+                    }
+
+                    case OntologyConstants.KnoraBase.Color => {
+
+                        // the given statement pattern's object is of type knora-base:ColorValue
+                        // this means that the predicate of the statement pattern is a value property
+                        // the original statement is not included because it represents the value as a literal (in Knora, it is an object)
+
+                        // literals are not supported for color
+
+                        statementPattern.obj match {
+
+                            case colorVar: QueryVariable =>
+
+                                // just create the statements to query the date value object, possibly a Filter statement exists to restrict the color values
+                                createStatementPatternsForValueObject(
+                                    statementPattern = statementPattern,
+                                    valueObject = colorVar,
+                                    valueType = OntologyConstants.KnoraBase.ColorValue
+                                )
+
+                            case other => throw SparqlSearchException(s"Not supported as an object of type color: $other (only variable allowed for color, no literal)")
+
+                        }
+
+
+                    }
+
+                    case OntologyConstants.KnoraBase.StillImageFile => {
+
+                        // the given statement pattern's object is of type knora-base:StillImageFileValue
+                        // this means that the predicate of the statement pattern is a value property
+                        // the original statement is not included because it represents the value as a literal (in Knora, it is an object)
+
+                        // literals are not supported for StillImageFileValue
+
+                        statementPattern.obj match {
+
+                            case stillImageFileVar: QueryVariable =>
+
+                                // just create the statements to query the date value object, possibly a Filter statement exists to restrict the date values
+                                createStatementPatternsForValueObject(
+                                    statementPattern = statementPattern,
+                                    valueObject = stillImageFileVar,
+                                    valueType = OntologyConstants.KnoraBase.StillImageFileValue
+                                )
+
+                            case other => throw SparqlSearchException("Not supported as an object of type color: $other (only variable allowed for color, no literal)")
+
                         }
 
 
@@ -756,6 +924,47 @@ class SearchResponderV2 extends Responder {
                                                 CompareExpression(intValHasInteger, filterCompare.operator, integerLiteral),
                                                 Seq(
                                                     StatementPattern(subj = queryVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasInteger), intValHasInteger)
+                                                )
+                                            )
+
+                                        case OntologyConstants.Xsd.Decimal =>
+
+                                            // make sure that the right argument is a decimal literal
+                                            val decimalLiteral: XsdLiteral = filterCompare.rightArg match {
+                                                case decimalLiteral: XsdLiteral if decimalLiteral.datatype == OntologyConstants.Xsd.Decimal || decimalLiteral.datatype == OntologyConstants.Xsd.Integer => decimalLiteral
+
+                                                case other => throw SparqlSearchException(s"right argument in CompareExpression for decimal property was expected to be a decimal or an integer literal, but $other is given.")
+                                            }
+
+                                            val decimalValHasDecimal = createUniqueVariableFromEntity(queryVar, "decimalValueHasDecimal")
+
+                                            TransformedFilterExpression(
+                                                CompareExpression(decimalValHasDecimal, filterCompare.operator, decimalLiteral),
+                                                Seq(
+                                                    StatementPattern(subj = queryVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasDecimal), decimalValHasDecimal)
+                                                )
+                                            )
+
+                                        case OntologyConstants.Xsd.Boolean =>
+
+                                            // make sure that the right argument is an integer literal
+                                            val booleanLiteral: XsdLiteral = filterCompare.rightArg match {
+                                                case booleanLiteral: XsdLiteral if booleanLiteral.datatype == OntologyConstants.Xsd.Boolean => booleanLiteral
+
+                                                case other => throw SparqlSearchException(s"right argument in CompareExpression for boolean property was expected to be a boolean literal, but $other is given.")
+                                            }
+
+                                            val booleanValHasBoolean = createUniqueVariableFromEntity(queryVar, "booleanValueHasBoolean")
+
+                                            // check if operator is supported for string operations
+                                            if (!(filterCompare.operator.equals(CompareExpressionOperator.EQUALS) || filterCompare.operator.equals(CompareExpressionOperator.NOT_EQUALS))) {
+                                                throw SparqlSearchException(s"Filter expressions for a boolean value supports the following operators: ${CompareExpressionOperator.EQUALS}, ${CompareExpressionOperator.NOT_EQUALS}, but ${filterCompare.operator} given")
+                                            }
+
+                                            TransformedFilterExpression(
+                                                CompareExpression(booleanValHasBoolean, filterCompare.operator, booleanLiteral),
+                                                Seq(
+                                                    StatementPattern(subj = queryVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasBoolean), booleanValHasBoolean)
                                                 )
                                             )
 
@@ -1031,7 +1240,7 @@ class SearchResponderV2 extends Responder {
 
             triplestoreSpecificSparql: String = triplestoreSpecificQuery.toSparql
 
-            _ = println(triplestoreSpecificQuery.toSparql)
+            // _ = println(triplestoreSpecificQuery.toSparql)
 
             searchResponse: SparqlConstructResponse <- (storeManager ? SparqlConstructRequest(triplestoreSpecificSparql)).mapTo[SparqlConstructResponse]
 

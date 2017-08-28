@@ -86,10 +86,10 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
     private val itemListElementMember = "http://schema.org/itemListElement"
 
-    /*"Load test data" in {
+    "Load test data" in {
         Await.result(storeManager ? ResetTriplestoreContent(rdfDataObjects), 360.seconds)
         Await.result(responderManager ? LoadOntologiesRequest(SharedAdminTestData.rootUser), 10.seconds)
-    }*/
+    }
 
     /**
       * Checks for the number of expected results to be returned.
@@ -721,7 +721,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         }
 
-        /*"get the regions belonging to a page" in {
+        "get the regions belonging to a page" in {
             val sparqlSimplified =
                 """    PREFIX incunabula: <http://api.knora.org/ontology/incunabula/simple/v2#>
                   |    PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
@@ -998,7 +998,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
             }
 
-        }*/
+        }
 
     }
 }
