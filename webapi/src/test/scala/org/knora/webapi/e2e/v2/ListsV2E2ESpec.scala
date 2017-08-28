@@ -4313,7 +4313,7 @@ class ListsV2E2ESpec extends E2ESpec(ListsV2E2ESpec.config) with SessionJsonProt
                     children = Seq.empty[ListChildNodeV2]
                 )
 
-                converted.items.head should be (expectedListNode)
+                converted.items.head.sorted should be (expectedListNode.sorted)
             }
 
             "return a complete list" in {
@@ -4328,7 +4328,7 @@ class ListsV2E2ESpec extends E2ESpec(ListsV2E2ESpec.config) with SessionJsonProt
                 val converted: ReadListsSequenceV2 = expanded.convertToV2[ReadListsSequenceV2]
                 // log.debug("converted: {}", converted)
 
-                converted.items.head should be (bigList)
+                converted.items.head.sorted should be (bigList.sorted)
             }
         }
 
