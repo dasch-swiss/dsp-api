@@ -193,8 +193,9 @@
                    
                    // apply the same css as used in the rest of Salsah
                    contentsCss: '/ckeditor.css',
+                   customConfig: '/js/empty_config.js'
 				};
-
+                
 				// init editor (textarea will be replaced by an iframe)
 				localdata.editor = CKEDITOR.replace(textarea[0], config);
 
