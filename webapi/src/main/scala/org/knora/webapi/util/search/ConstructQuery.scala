@@ -252,11 +252,19 @@ case class WhereClause(patterns: Seq[QueryPattern]) extends SparqlGenerator {
 }
 
 /**
+  * Represents a criterion to order by.
+  *
+  * @param queryVariable the variable used for ordering.
+  * @param isAscending indicates if the order is ascending or descending.
+  */
+case class OrderCriterion(queryVariable: QueryVariable, isAscending: Boolean)
+
+/**
   * Represents a SPARQL CONSTRUCT query.
   *
   * @param constructClause the CONSTRUCT clause.
   * @param whereClause     the WHERE clause.
   */
-case class ConstructQuery(constructClause: ConstructClause, whereClause: WhereClause) extends SparqlGenerator {
+case class ConstructQuery(constructClause: ConstructClause, whereClause: WhereClause, orderBy: Seq[OrderCriterion] = Seq.empty[OrderCriterion]) extends SparqlGenerator {
     def toSparql: String = constructClause.toSparql + whereClause.toSparql
 }

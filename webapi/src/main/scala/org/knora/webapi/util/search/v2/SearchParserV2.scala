@@ -83,6 +83,9 @@ object SearchParserV2 {
         // A sequence of statement patterns in the WHERE clause.
         private val wherePatterns: collection.mutable.ArrayBuffer[QueryPattern] = collection.mutable.ArrayBuffer.empty[QueryPattern]
 
+        // A sequence of `OrderCriterion` representing the Order By statement.
+        private val orderBy: collection.mutable.ArrayBuffer[OrderCriterion] = collection.mutable.ArrayBuffer.empty[OrderCriterion]
+
         /**
           * After this visitor has visited the parse tree, this method returns a [[ConstructQuery]] representing
           * the query that was parsed.
@@ -128,7 +131,8 @@ object SearchParserV2 {
 
             ConstructQuery(
                 constructClause = ConstructClause(statements = constructStatements),
-                whereClause = WhereClause(patterns = getWherePatterns)
+                whereClause = WhereClause(patterns = getWherePatterns),
+                orderBy = orderBy
             )
         }
 
@@ -315,7 +319,22 @@ object SearchParserV2 {
         }
 
         override def meet(node: algebra.Order): Unit = {
-            unsupported(node)
+            for (orderElem: algebra.OrderElem <- node.getElements.asScala) {
+                val expression: algebra.ValueExpr = orderElem.getExpr()
+                val ascending = orderElem.isAscending()
+
+                val queryVariable: QueryVariable = expression match {
+                    case objVar: algebra.Var =>
+                        makeEntity(objVar) match {
+                            case queryVar: QueryVariable => queryVar
+                            case _ => throw SparqlSearchException(s"Entity $objVar not allowed in ORDER BY")
+                        }
+
+                    case _ => throw SparqlSearchException(s"Expression $expression not allowed in ORDER BY")
+                }
+
+                orderBy.append(OrderCriterion(queryVariable = queryVariable, isAscending = ascending))
+            }
         }
 
         override def meet(node: algebra.Or): Unit = {
