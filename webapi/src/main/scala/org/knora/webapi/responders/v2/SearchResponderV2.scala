@@ -151,6 +151,107 @@ class SearchResponderV2 extends Responder {
         }
 
         /**
+          * Transforms a preprocessed CONSTRUCT query into a SELECT query that returns only the IRIs and sort order of the main resources that matched
+          * the search criteria. This query will be used to get resource IRIs for a single page of results. These IRIs will be included in a CONSTRUCT
+          * query to get the actual results for the page.
+          *
+          * @param typeInspectionResult the result of type inspection of the original query.
+          */
+        class NonTriplestoreSpecificConstructToSelectTransformer(typeInspectionResult: TypeInspectionResult) extends ConstructToSelectTransformer {
+            val inputOrderBy: collection.mutable.ArrayBuffer[OrderCriterion] = collection.mutable.ArrayBuffer.empty[OrderCriterion]
+
+            var mainResourceVariable: Option[QueryVariable] = None
+
+            /**
+              * Collects information from the ORDER BY criteria, if any, in the input query. This method will be called
+              * before any invocations of `transformStatementInWhere`.
+              *
+              * @param orderBy the input ORDER by criteria, if any.
+              */
+            override def handleOrderBy(orderBy: Seq[OrderCriterion]): Unit = {
+                inputOrderBy.appendAll(orderBy)
+            }
+
+            /**
+              * Collects information from a statement pattern in the CONSTRUCT clause of the input query, e.g. variables
+              * that need to be returned by the SELECT.
+              *
+              * @param statementPattern the statement to be handled.
+              */
+            override def handleStatementInConstruct(statementPattern: StatementPattern): Unit = {
+                // Just identify the main resource variable and put it in mainResourceVariable.
+
+                statementPattern.pred match {
+                    case IriRef(OntologyConstants.KnoraBase.IsMainResource) =>
+                        statementPattern.obj match {
+                            case XsdLiteral("true", OntologyConstants.Xsd.Boolean) =>
+                                statementPattern.subj match {
+                                    case queryVariable: QueryVariable => mainResourceVariable = Some(queryVariable)
+                                    case _ => throw SparqlSearchException(s"The subject of ${OntologyConstants.KnoraBase.IsMainResource} must be a variable") // TODO: use the knora-api predicate in the error message?
+                                }
+
+                            case _ => ()
+                        }
+
+                    case _ => ()
+                }
+            }
+
+            /**
+              * Transforms a [[StatementPattern]] in a WHERE clause into zero or more query patterns.
+              *
+              * @param statementPattern the statement to be transformed.
+              * @return the result of the transformation.
+              */
+            override def transformStatementInWhere(statementPattern: StatementPattern): Seq[QueryPattern] = {
+                // Include any statements needed to meet the user's search criteria, but not statements that would be needed for permission checking or
+                // other information about the matching resources or values.
+
+                Seq.empty[QueryPattern]
+            }
+
+            /**
+              * Transforms a [[FilterPattern]] in a WHERE clause into zero or more statement patterns.
+              *
+              * @param filterPattern the filter to be transformed.
+              * @return the result of the transformation.
+              */
+            override def transformFilter(filterPattern: FilterPattern): Seq[QueryPattern] = {
+                Seq.empty[QueryPattern]
+            }
+
+            /**
+              * Returns the variables that should be included in the results of the SELECT query. This method will be called
+              * by [[ConstructTraverser]] after the whole input query has been traversed.
+              *
+              * @return the variables that should be returned by the SELECT.
+              */
+            override def getSelectVariables: Seq[QueryVariable] = {
+                // Return the main resource variable and the generated variable that we're using for ordering.
+
+                mainResourceVariable match {
+                    case Some(mainVar: QueryVariable) => Seq(mainVar) // TODO: append ORDER BY vars
+
+                    case None => throw SparqlSearchException(s"No ${OntologyConstants.KnoraBase.IsMainResource} found in CONSTRUCT query.")
+                }
+
+
+            }
+
+            /**
+              * Returns the criteria, if any, that should be used in the ORDER BY clause of the SELECT query. This method will be called
+              * by [[ConstructTraverser]] after the whole input query has been traversed.
+              *
+              * @return the ORDER BY criteria, if any.
+              */
+            override def getOrderBy: Seq[OrderCriterion] = {
+                // Return the generated variable that we're using for ordering.
+
+                Seq.empty[OrderCriterion]
+            }
+        }
+
+        /**
           * A [[ConstructToConstructTransformer]] that generates non-triplestore-specific SPARQL.
           *
           * @param typeInspectionResult the result of type inspection of the original query.
@@ -1191,6 +1292,17 @@ class SearchResponderV2 extends Responder {
                 transformer = new Preprocessor
             )
 
+            // Create a Select prequery. TODO: include OFFSET and LIMIT.
+            nonTriplestoreSpecficPrequery: SelectQuery = ConstructTraverser.transformConstructToSelect(
+                inputQuery = preprocessedQuery,
+                transformer = new NonTriplestoreSpecificConstructToSelectTransformer(typeInspectionResult)
+            )
+
+            // TODO: Run the prequery to get the IRIs of the current page of search results.
+
+
+            // TODO: include those IRIs in a FILTER in the CONSTRUCT clause.
+
             // Convert the preprocessed query to a non-triplestore-specific query.
 
             nonTriplestoreSpecificQuery: ConstructQuery = ConstructTraverser.transformConstructToConstruct(
@@ -1247,6 +1359,7 @@ class SearchResponderV2 extends Responder {
             // separate resources and value objects
             queryResultsSeparated: Map[IRI, ConstructResponseUtilV2.ResourceWithValueRdfData] = ConstructResponseUtilV2.splitResourcesAndValueRdfData(constructQueryResults = searchResponse, userProfile = userProfile)
 
+            // TODO: pass the ORDER BY criterion, if any
         } yield ReadResourcesSequenceV2(numberOfResources = queryResultsSeparated.size, resources = ConstructResponseUtilV2.createSearchResponse(queryResultsSeparated))
     }
 

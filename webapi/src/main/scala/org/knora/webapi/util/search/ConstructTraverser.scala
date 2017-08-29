@@ -62,6 +62,14 @@ trait ConstructToConstructTransformer extends WhereTransformer {
   */
 trait ConstructToSelectTransformer extends WhereTransformer {
     /**
+      * Collects information from the ORDER BY criteria, if any, in the input query. This method will be called
+      * before any invocations of `transformStatementInWhere`.
+      *
+      * @param orderBy the input ORDER by criteria, if any.
+      */
+    def handleOrderBy(orderBy: Seq[OrderCriterion]): Unit
+
+    /**
       * Collects information from a statement pattern in the CONSTRUCT clause of the input query, e.g. variables
       * that need to be returned by the SELECT.
       *
@@ -133,6 +141,8 @@ object ConstructTraverser {
       * @return the transformed query.
       */
     def transformConstructToSelect(inputQuery: ConstructQuery, transformer: ConstructToSelectTransformer): SelectQuery = {
+        transformer.handleOrderBy(inputQuery.orderBy)
+
         val transformedWherePatterns = transformWherePatterns(
             patterns = inputQuery.whereClause.patterns,
             whereTransformer = transformer
