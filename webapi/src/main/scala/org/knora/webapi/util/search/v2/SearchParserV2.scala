@@ -315,7 +315,7 @@ object SearchParserV2 {
         }
 
         override def meet(node: algebra.OrderElem): Unit = {
-            unsupported(node)
+            // Ignored, because it's handled in meet(algebra.Order)
         }
 
         override def meet(node: algebra.Order): Unit = {
@@ -335,6 +335,8 @@ object SearchParserV2 {
 
                 orderBy.append(OrderCriterion(queryVariable = queryVariable, isAscending = ascending))
             }
+
+            node.visitChildren(this)
         }
 
         override def meet(node: algebra.Or): Unit = {
