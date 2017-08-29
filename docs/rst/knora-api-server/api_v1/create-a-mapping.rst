@@ -27,8 +27,10 @@ XML to Standoff Mapping
 The Knora Standard Mapping
 **************************
 
+-----------
 Description
 -----------
+
 A mapping allows for the conversion of XML to standoff representation in RDF and back. In order to create a TextValue with markup, the text has to be provided in XML format, along with the IRI of the mapping that will be used to convert the markup to standoff.
 However, a mapping is only needed if a TextValue with markup should be created. If a text has no markup, it is submitted as a mere sequence of characters.
 
@@ -65,8 +67,10 @@ Knora offers a standard mapping with the IRI ``http://data.knora.org/projects/st
 The HTML produced by CKEditor is wrapped in an XML doctype and a pair of root tags ``<text>...</text>`` and then sent to Knora. The XML sent to the GUI by Knora is unwrapped accordingly (see ``jquery.htmleditor.js``).
 Although the GUI supports HTML5, it is treated as if it was XHTML in strict XML notation.
 
+-----------
 Maintenance
 -----------
+
 The standard mapping definition can be found at ``webapi/_test_data/test_route/texts/mappingForStandardHTML.xml``.  
 It was used to generate the default mapping, distributed 
 as ``knora-ontologies/standoff-data.ttl`` and that is loaded at a Knora installation.  
