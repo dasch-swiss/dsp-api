@@ -84,10 +84,10 @@ class SearchResponderV2 extends Responder {
         }
 
         /**
-          * A [[QueryPatternTransformer]] that preprocesses the input CONSTRUCT query by converting external IRIs to internal ones
+          * A [[ConstructToConstructTransformer]] that preprocesses the input CONSTRUCT query by converting external IRIs to internal ones
           * and disabling inference for individual statements as necessary.
           */
-        class Preprocessor extends QueryPatternTransformer {
+        class Preprocessor extends ConstructToConstructTransformer {
             def transformStatementInConstruct(statementPattern: StatementPattern): Seq[StatementPattern] = Seq(preprocessStatementPattern(statementPattern = statementPattern))
 
             def transformStatementInWhere(statementPattern: StatementPattern): Seq[QueryPattern] = Seq(preprocessStatementPattern(statementPattern = statementPattern))
@@ -151,11 +151,11 @@ class SearchResponderV2 extends Responder {
         }
 
         /**
-          * A [[QueryPatternTransformer]] that generates non-triplestore-specific SPARQL.
+          * A [[ConstructToConstructTransformer]] that generates non-triplestore-specific SPARQL.
           *
           * @param typeInspectionResult the result of type inspection of the original query.
           */
-        class NonTriplestoreSpecificQueryPatternTransformer(typeInspectionResult: TypeInspectionResult) extends QueryPatternTransformer {
+        class NonTriplestoreSpecificConstructToConstructTransformer(typeInspectionResult: TypeInspectionResult) extends ConstructToConstructTransformer {
 
             // a Set containing all `TypeableEntity` (keys of `typeInspectionResult`) that have already been processed
             // in order to prevent duplicates
@@ -1145,7 +1145,7 @@ class SearchResponderV2 extends Responder {
         /**
           * Transforms non-triplestore-specific query patterns to GraphDB-specific ones.
           */
-        class GraphDBQueryPatternTransformer extends QueryPatternTransformer {
+        class GraphDBConstructToConstructTransformer extends ConstructToConstructTransformer {
             def transformStatementInConstruct(statementPattern: StatementPattern): Seq[StatementPattern] = Seq(statementPattern)
 
             def transformStatementInWhere(statementPattern: StatementPattern): Seq[StatementPattern] = {
@@ -1166,7 +1166,7 @@ class SearchResponderV2 extends Responder {
         /**
           * Transforms non-triplestore-specific query patterns for a triplestore that does not have inference enabled.
           */
-        class NoInferenceQueryPatternTransformer extends QueryPatternTransformer {
+        class NoInferenceConstructToConstructTransformer extends ConstructToConstructTransformer {
             def transformStatementInConstruct(statementPattern: StatementPattern): Seq[StatementPattern] = Seq(statementPattern)
 
             def transformStatementInWhere(statementPattern: StatementPattern): Seq[StatementPattern] = {
@@ -1186,33 +1186,33 @@ class SearchResponderV2 extends Responder {
 
             // Preprocess the query to convert API IRIs to internal IRIs and to set inference per statement.
 
-            preprocessedQuery: ConstructQuery = ConstructQueryTransformer.transformQuery(
+            preprocessedQuery: ConstructQuery = ConstructTraverser.transformConstructToConstruct(
                 inputQuery = inputQuery.copy(whereClause = whereClauseWithoutAnnotations),
-                queryPatternTransformer = new Preprocessor
+                transformer = new Preprocessor
             )
 
             // Convert the preprocessed query to a non-triplestore-specific query.
 
-            nonTriplestoreSpecificQuery: ConstructQuery = ConstructQueryTransformer.transformQuery(
+            nonTriplestoreSpecificQuery: ConstructQuery = ConstructTraverser.transformConstructToConstruct(
                 inputQuery = preprocessedQuery,
-                queryPatternTransformer = new NonTriplestoreSpecificQueryPatternTransformer(typeInspectionResult)
+                transformer = new NonTriplestoreSpecificConstructToConstructTransformer(typeInspectionResult)
             )
 
             // Convert the non-triplestore-specific query to a triplestore-specific one.
 
-            triplestoreSpecificQueryPatternTransformer: QueryPatternTransformer = {
+            triplestoreSpecificQueryPatternTransformer: ConstructToConstructTransformer = {
                 if (settings.triplestoreType.startsWith("graphdb")) {
                     // GraphDB
-                    new GraphDBQueryPatternTransformer
+                    new GraphDBConstructToConstructTransformer
                 } else {
                     // Other
-                    new NoInferenceQueryPatternTransformer
+                    new NoInferenceConstructToConstructTransformer
                 }
             }
 
-            triplestoreSpecificQuery = ConstructQueryTransformer.transformQuery(
+            triplestoreSpecificQuery = ConstructTraverser.transformConstructToConstruct(
                 inputQuery = nonTriplestoreSpecificQuery,
-                queryPatternTransformer = triplestoreSpecificQueryPatternTransformer
+                transformer = triplestoreSpecificQueryPatternTransformer
             )
 
             // Convert the result to a SPARQL string and send it to the triplestore.
@@ -1240,7 +1240,7 @@ class SearchResponderV2 extends Responder {
 
             triplestoreSpecificSparql: String = triplestoreSpecificQuery.toSparql
 
-            //_ = println(triplestoreSpecificQuery.toSparql)
+            _ = println(triplestoreSpecificQuery.toSparql)
 
             searchResponse: SparqlConstructResponse <- (storeManager ? SparqlConstructRequest(triplestoreSpecificSparql)).mapTo[SparqlConstructResponse]
 

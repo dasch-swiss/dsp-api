@@ -257,14 +257,40 @@ case class WhereClause(patterns: Seq[QueryPattern]) extends SparqlGenerator {
   * @param queryVariable the variable used for ordering.
   * @param isAscending indicates if the order is ascending or descending.
   */
-case class OrderCriterion(queryVariable: QueryVariable, isAscending: Boolean)
+case class OrderCriterion(queryVariable: QueryVariable, isAscending: Boolean) extends SparqlGenerator {
+    def toSparql: String = if (isAscending) {
+        s"ASC(${queryVariable.toSparql})"
+    } else {
+        s"DESC(${queryVariable.toSparql})"
+    }
+}
 
 /**
   * Represents a SPARQL CONSTRUCT query.
   *
   * @param constructClause the CONSTRUCT clause.
   * @param whereClause     the WHERE clause.
+  * @param orderBy the variables that the results should be ordered by.
   */
 case class ConstructQuery(constructClause: ConstructClause, whereClause: WhereClause, orderBy: Seq[OrderCriterion] = Seq.empty[OrderCriterion]) extends SparqlGenerator {
     def toSparql: String = constructClause.toSparql + whereClause.toSparql
+}
+
+/**
+  * Represents a SPARQL SELECT query.
+  *
+  * @param variables the variables to be returned by the query.
+  * @param whereClause     the WHERE clause.
+  * @param orderBy the variables that the results should be ordered by.
+  */
+case class SelectQuery(variables: Seq[QueryVariable], whereClause: WhereClause, orderBy: Seq[OrderCriterion] = Seq.empty[OrderCriterion]) extends SparqlGenerator {
+    def toSparql: String = {
+        val selectWhere = "SELECT " + variables.map(_.toSparql).mkString(" ") + "\n" + whereClause.toSparql + "\n"
+
+        if (orderBy.nonEmpty) {
+            selectWhere + "ORDER BY " + orderBy.map(_.toSparql).mkString(" ")
+        } else {
+            selectWhere
+        }
+    }
 }
