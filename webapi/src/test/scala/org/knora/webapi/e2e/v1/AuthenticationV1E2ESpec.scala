@@ -47,7 +47,7 @@ object AuthenticationV1E2ESpec {
   */
 class AuthenticationV1E2ESpec extends E2ESpec(AuthenticationV1E2ESpec.config) with SessionJsonProtocol with TriplestoreJsonProtocol {
 
-    private implicit def default(implicit system: ActorSystem) = RouteTestTimeout(5.seconds)
+    private implicit def default(implicit system: ActorSystem) = RouteTestTimeout(30.seconds)
 
     private val rdfDataObjects = List(
         RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/incunabula"),

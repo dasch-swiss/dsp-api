@@ -421,7 +421,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
             response <- http.singleRequest(request)
 
             // Convert the HTTP response body to a string.
-            responseString <- response.entity.toStrict(11.seconds).map(_.data.decodeString("UTF-8"))
+            responseString <- response.entity.toStrict(20.seconds).map(_.data.decodeString("UTF-8"))
 
             _ = if (!response.status.isSuccess) {
                 throw TriplestoreResponseException(s"Triplestore responded with HTTP code ${response.status}: $responseString")

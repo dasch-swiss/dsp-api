@@ -259,7 +259,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         expectMsg(300.seconds, ResetTriplestoreContentACK())
 
         responderManager ! LoadOntologiesRequest(SharedAdminTestData.rootUser)
-        expectMsg(10.seconds, LoadOntologiesResponse())
+        expectMsg(30.seconds, LoadOntologiesResponse())
     }
 
     "The values responder" should {
