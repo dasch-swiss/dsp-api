@@ -433,6 +433,12 @@ class SearchResponderV2 extends Responder {
                         val linkValuePredVar = createUniqueVariableFromStatement(statementPattern, "linkValuePred") // A variable representing a predicate of the reification
                         val linkValueObjVar = createUniqueVariableFromStatement(statementPattern, "linkValueObj") // A variable representing a predicate of the reification
 
+                        // make sure that the statement's object is an Iri
+                        statementPattern.obj match {
+                            case iriRef: IriRef => ()
+                            case other => throw SparqlSearchException(s"Object of a linking statement must be an Iri, but $other given.")
+                        }
+
                         // TODO: make use of createStatementPatternsForValueObject if possible
                         Seq(statementPattern, // keep the original statement pointing from the source to the target resource, using inference
                             StatementPattern(subj = statementPattern.subj, pred = linkPropVar, obj = statementPattern.obj), // find out what the actual link property is

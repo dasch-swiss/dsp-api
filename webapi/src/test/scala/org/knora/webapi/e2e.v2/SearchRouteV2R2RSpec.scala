@@ -251,7 +251,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |    CONSTRUCT {
                   |        ?page knora-api:isMainResource true .
                   |
-                  |        ?page knora-api:partOf <http://data.knora.org/b6b5ff1eb703> .
+                  |        ?page knora-api:isPartOf <http://data.knora.org/b6b5ff1eb703> .
                   |
                   |        ?page incunabula:seqnum 10 .
                   |
@@ -291,7 +291,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |    CONSTRUCT {
                   |        ?page knora-api:isMainResource true .
                   |
-                  |        ?page knora-api:partOf <http://data.knora.org/b6b5ff1eb703> .
+                  |        ?page knora-api:isPartOf <http://data.knora.org/b6b5ff1eb703> .
                   |
                   |        ?page incunabula:seqnum ?seqnum .
                   |    } WHERE {
