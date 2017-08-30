@@ -138,13 +138,16 @@
 
                 // specify allowed elements, attributes, and classes
                 // this must conform to the `STANDARD_MAPPING`
-                var filter = ' p em strong strike u sub sup; a[!href](salsah-link)';
+                // CKEditor guide to filters: https://docs.ckeditor.com/#!/guide/dev_advanced_content_filter-section-custom-mode-example
+                var filter = ' p em strong strike u sub sup hr h1 h2 h3 h4 h5 h6 pre table tbody tr td ol ul li cite blockquote code; a[!href](salsah-link) ';
 
 				var config = {
 					language: (SALSAH.userprofile && SALSAH.userprofile.userData && SALSAH.userprofile.userData.lang) ? SALSAH.userprofile.userData.lang : 'en' ,
                     allowedContent: filter,
                     pasteFilter: filter,
+                    format_tags: 'p;h1;h2;h3;h4;h5;h6;pre',
 					entities: false, // do not use entities (e.g. for Umlaut)
+                    coreStyles_strike: { element : 'strike' }, // defines the output for some tags, `s`-> `strike`
                     on: {
 						instanceReady: function(event) {
 
@@ -165,10 +168,34 @@
 							
 						}
 					},
-					toolbar: [ ['Bold', 'Italic', 'Underline', 'Strike', 'Subscript', 'Superscript', '-','RemoveFormat', 'Link', 'Unlink'] ], // configuration for toolbar buttons, must conform to `STANDARD_MAPPING`
-					removeButtons: ''
+                    // ways to build CKEditor:
+                    // 1. go to https://ckeditor.com/builder and start from the `basic` option
+                    // 2. add plugins: 
+                    //    - "Blockquote" : for cite
+                    //    - "Format" : for the drop-down format menu - h1, h2, ...
+                    //    - "Horizontal rule" : for tage <hr>
+                    //    - "Editor resize" : handy resize handle at the corner of the editor
+                    //    - "Maximize" : to enjoy a bigger editing zone
+                    //    - "Remove Format" : to remove format we added
+                    //    - "Soure editing area" : to check what's in (deactivated on prod)
+                    //    - "Table" : table editor
+                    //  3. choose a skin, add languages french, german, italian
+                    //  4. download and uncompress
+                    //  5. go to "ckeditor/samples/toolbarconfigurator/index.html" to work-out an editor tool bar
+                    //  documentation entry point: http://sdk.ckeditor.com/samples/toolbar.html
+                    toolbar: [
+                		{ name: 'basicstyles', items: [ 'Format', 'Bold', 'Italic', 'Strike', 'Underline', 'Subscript', 'Superscript', '-', 'RemoveFormat' ] },
+                		{ name: 'paragraph', items: [ 'NumberedList', 'BulletedList', '-', 'Blockquote' ] },
+                		{ name: 'links', items: [ 'Link', 'Unlink' ] },
+                		{ name: 'insert', items: [ 'Table', 'HorizontalRule'] },
+                		{ name: 'tools', items: [ 'Maximize' ] }
+	               ],
+                   
+                   // apply the same css as used in the rest of Salsah
+                   contentsCss: '/ckeditor.css',
+                   customConfig: '/js/empty_config.js'
 				};
-
+                
 				// init editor (textarea will be replaced by an iframe)
 				localdata.editor = CKEDITOR.replace(textarea[0], config);
 
