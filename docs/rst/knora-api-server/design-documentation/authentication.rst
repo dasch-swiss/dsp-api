@@ -28,7 +28,8 @@ Scope
 
 Authentication is the process of making sure that if someone is accessing something then this someone is actually also
 the someone he pretends to be. The process of making sure that someone is authorized, i.e. has the permission to access
-something, is handled as described in the section on authorization in the Knora base ontology document. TODO: add a link to this.
+something, is handled as described in the section on authorization (see: :ref:`administration`) in the Knora base
+ontology document.
 
 Implementation
 --------------
@@ -94,11 +95,11 @@ Usage V2
 Login and Logout
 ^^^^^^^^^^^^^^^^
 
-A client sends a POST request (``{"email":"usersemail", "password":"userspassword"}``) to the
+A client sends a POST request (e.g., ``{"email":"usersemail", "password":"userspassword"}``) to the
 **/v2/authentication** route with *email* and *password* in the body. If the credentials are valid,
-a `JSON WEB Token`_ (JWT) will be sent back in the response. On all subsequent calls to any route,
-this token can be sent with each request (instead of *email*/*password*). If the token is successfully validated, then
-the user is deemed authenticated.
+a `JSON WEB Token`_ (JWT) will be sent back in the response (e.g., ``{"token": "eyJ0eXAiOiJ..."}``). On all subsequent
+calls to any route, this token can be sent with each request (instead of *email*/*password*). If the token is
+successfully validated, then the user is deemed authenticated.
 
 To **logout** the client sends a DELETE request to the same route **/v2/authentication** and the token (either as an
 URL parameter or authorization header). This will invalidate the token.

@@ -366,7 +366,7 @@ object Authenticator {
       * Tries to extract the credentials from the requestContext (parameters, auth headers, token)
       *
       * @param requestContext a [[RequestContext]] containing the http request
-      * @return [[KnoraCredentialsV1]].
+      * @return [[KnoraCredentialsV2]].
       */
     private def extractCredentialsV2(requestContext: RequestContext): Option[KnoraCredentialsV2] = {
         log.debug("extractCredentialsV2 start ...")
@@ -392,7 +392,7 @@ object Authenticator {
       * Tries to extract credentials supplied as URL parameters.
       *
       * @param requestContext the HTTP request context.
-      * @return [[KnoraCredentialsV1]].
+      * @return [[KnoraCredentialsV2]].
       */
     private def extractCredentialsFromParametersV2(requestContext: RequestContext): Option[KnoraCredentialsV2] = {
         // extract email/password from parameters
@@ -632,8 +632,14 @@ object JWTHelper {
 
     import Authenticator.AUTHENTICATION_INVALIDATION_CACHE_NAME
 
+    // the encryption algorithm we chose to use.
     val algorithm = Algorithm.HS256
+
+    // the headers which need to be present inside the JWT
     val requiredHeaders: Set[HeaderField] = Set[HeaderField](Typ)
+
+    // the claims that need to be present inside the JWT
+    // Iss: issuer, Sub: subject, Aud: audience, Iat: ussued at, Exp: expier date, Jti: unique identifier
     val requiredClaims: Set[ClaimField] = Set[ClaimField](Iss, Sub, Aud, Iat, Exp, Jti)
 
     val log = Logger(LoggerFactory.getLogger(this.getClass))
@@ -648,13 +654,18 @@ object JWTHelper {
       */
     def createToken(userIri: IRI, secretKey: String, longevity: Long): String = {
 
+        // create required headers
         val headers = Seq[HeaderValue](Typ("JWT"), Alg(algorithm))
 
         val now: Long = System.currentTimeMillis() / 1000l
+
+        // calculate longevity (days)
         val nowPlusLongevity: Long = now + longevity * 60 * 60 * 24
 
         val identifier: String = UUID.randomUUID().toString()
 
+        // Add required claims
+        // Iss: issuer, Sub: subject, Aud: audience, Iat: ussued at, Exp: expier date, Jti: unique identifier
         val claims = Seq[ClaimValue](Iss("webapi"), Sub(userIri), Aud("webapi"), Iat(now), Exp(nowPlusLongevity), Jti(identifier))
 
         val jwt = new DecodedJwt(headers, claims)
@@ -664,7 +675,7 @@ object JWTHelper {
 
     /**
       * Validates a JWT by also taking the invalidation cache into account. The invalidation cache holds invalidated
-      * tokens, which would otherwise validate.
+      * tokens, which would otherwise validate. Further, it makes sure that the required headers and claims are present.
       *
       * @param token  the JWT.
       * @param secret the secret used to encode the token.
@@ -678,11 +689,11 @@ object JWTHelper {
             false
         } else {
             DecodedJwt.validateEncodedJwt(
-                token,
-                secret,
-                algorithm,
-                requiredHeaders,
-                requiredClaims,
+                jwt = token,
+                key = secret,
+                requiredAlg = algorithm,
+                requiredHeaders = requiredHeaders,
+                requiredClaims = requiredClaims,
                 iss = Some(Iss("webapi")),
                 aud = Some(Aud("webapi"))
             ).isSuccess
@@ -690,7 +701,7 @@ object JWTHelper {
     }
 
     /**
-      * Extract the encoded user IRI.
+      * Extract the encoded user IRI. Further, it makes sure that the required headers and claims are present.
       *
       * @param token  the JWT.
       * @param secret the secret used to encode the token.
@@ -699,11 +710,11 @@ object JWTHelper {
     def extractUserIriFromToken(token: String, secret: String): Option[IRI] = {
 
         DecodedJwt.validateEncodedJwt(
-            token,
-            secret,
-            algorithm,
-            requiredHeaders,
-            requiredClaims,
+            jwt = token,
+            key = secret,
+            requiredAlg = algorithm,
+            requiredHeaders = requiredHeaders,
+            requiredClaims = requiredClaims,
             iss = Some(Iss("webapi")),
             aud = Some(Aud("webapi"))
         ) match {
