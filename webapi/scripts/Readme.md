@@ -15,7 +15,7 @@ This script will create the ``knora-test-unit`` repository and not load any data
  
 ### Initialize for using in the test / staging environment 
 
-This script will create the ``knora-test`` repository and load data specified in ``graphdb-se-knora-test-data.ttl``.
+This script will create the ``knora-test`` repository and load data specified in ``graphdb-knora-test-data.ttl``.
 
  - with GraphDB running inside a docker container:
  ```$ graphdb-se-docker-init-knora-test.sh```

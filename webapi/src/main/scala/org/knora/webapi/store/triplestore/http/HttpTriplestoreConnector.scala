@@ -72,7 +72,6 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
     // The path for SPARQL queries.
     private val queryRequestPath = triplestoreType match {
         case HTTP_GRAPH_DB_TS_TYPE | HTTP_GRAPH_DB_FREE_TS_TYPE => s"/repositories/${settings.triplestoreDatabaseName}"
-        case HTTP_SESAME_TS_TYPE => s"/openrdf-sesame/repositories/${settings.triplestoreDatabaseName}"
         case HTTP_FUSEKI_TS_TYPE if !settings.fusekiTomcat => s"/${settings.triplestoreDatabaseName}/query"
         case HTTP_FUSEKI_TS_TYPE if settings.fusekiTomcat => s"/${settings.fusekiTomcatContext}/${settings.triplestoreDatabaseName}/query"
     }
@@ -87,7 +86,6 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
     // The path for SPARQL update operations.
     private val updateRequestPath = triplestoreType match {
         case HTTP_GRAPH_DB_TS_TYPE | HTTP_GRAPH_DB_FREE_TS_TYPE => s"/repositories/${settings.triplestoreDatabaseName}/statements"
-        case HTTP_SESAME_TS_TYPE => s"/openrdf-sesame/repositories/${settings.triplestoreDatabaseName}/statements"
         case HTTP_FUSEKI_TS_TYPE if !settings.fusekiTomcat => s"/${settings.triplestoreDatabaseName}/update"
         case HTTP_FUSEKI_TS_TYPE if settings.fusekiTomcat => s"/${settings.fusekiTomcatContext}/${settings.triplestoreDatabaseName}/update"
     }

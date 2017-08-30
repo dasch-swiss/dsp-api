@@ -90,7 +90,6 @@ class SettingsImpl(config: Config) extends Extension {
     val triplestoreHost: String = config.getString("app.triplestore.host")
 
     val triplestorePort: Int = triplestoreType match {
-        case HTTP_SESAME_TS_TYPE => config.getInt("app.triplestore.sesame.port")
         case HTTP_GRAPH_DB_TS_TYPE => config.getInt("app.triplestore.graphdb.port")
         case HTTP_GRAPH_DB_FREE_TS_TYPE => config.getInt("app.triplestore.graphdb.port")
         case HTTP_FUSEKI_TS_TYPE => config.getInt("app.triplestore.fuseki.port")
@@ -98,7 +97,6 @@ class SettingsImpl(config: Config) extends Extension {
     }
 
     val triplestoreDatabaseName: String = triplestoreType match {
-        case HTTP_SESAME_TS_TYPE => config.getString("app.triplestore.sesame.repository-name")
         case HTTP_GRAPH_DB_TS_TYPE => config.getString("app.triplestore.graphdb.repository-name")
         case HTTP_GRAPH_DB_FREE_TS_TYPE => config.getString("app.triplestore.graphdb.repository-name")
         case HTTP_FUSEKI_TS_TYPE => config.getString("app.triplestore.fuseki.repository-name")

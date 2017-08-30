@@ -12,7 +12,7 @@ DELIMITER="*********************************************************************
 
 printf "${GREEN}${DELIMITER}Deleting repository${NO_COLOUR}\n\n"
 
-cat graphdb-se-drop-knora-prod-repository.ttl | $CONSOLE
+cat graphdb-drop-knora-prod-repository.ttl | $CONSOLE
 
 printf "\n${GREEN}${DELIMITER}Creating repository${NO_COLOUR}\n\n"
 
