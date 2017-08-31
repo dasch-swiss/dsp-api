@@ -98,22 +98,22 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
         "asked about an user identified by 'iri' " should {
 
             "return a profile if the user (root user) is known" in {
-                actorUnderTest ! UserProfileByIRIGetV1(rootUserIri, UserProfileType.FULL)
-                expectMsg(Some(rootUser.ofType(UserProfileType.FULL)))
+                actorUnderTest ! UserProfileByIRIGetV1(rootUserIri, UserProfileTypeV1.FULL)
+                expectMsg(Some(rootUser.ofType(UserProfileTypeV1.FULL)))
             }
 
             "return a profile if the user (incunabula user) is known" in {
-                actorUnderTest ! UserProfileByIRIGetV1(incunabulaUserIri, UserProfileType.FULL)
-                expectMsg(Some(incunabulaUser.ofType(UserProfileType.FULL)))
+                actorUnderTest ! UserProfileByIRIGetV1(incunabulaUserIri, UserProfileTypeV1.FULL)
+                expectMsg(Some(incunabulaUser.ofType(UserProfileTypeV1.FULL)))
             }
 
             "return 'NotFoundException' when the user is unknown " in {
-                actorUnderTest ! UserProfileByIRIGetRequestV1("http://data.knora.org/users/notexisting", UserProfileType.RESTRICTED, rootUser)
+                actorUnderTest ! UserProfileByIRIGetRequestV1("http://data.knora.org/users/notexisting", UserProfileTypeV1.RESTRICTED, rootUser)
                 expectMsg(Failure(NotFoundException(s"User 'http://data.knora.org/users/notexisting' not found")))
             }
 
             "return 'None' when the user is unknown " in {
-                actorUnderTest ! UserProfileByIRIGetV1("http://data.knora.org/users/notexisting", UserProfileType.RESTRICTED)
+                actorUnderTest ! UserProfileByIRIGetV1("http://data.knora.org/users/notexisting", UserProfileTypeV1.RESTRICTED)
                 expectMsg(None)
             }
         }
@@ -121,22 +121,22 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
         "asked about an user identified by 'email'" should {
 
             "return a profile if the user (root user) is known" in {
-                actorUnderTest ! UserProfileByEmailGetV1(rootUserEmail, UserProfileType.RESTRICTED)
-                expectMsg(Some(rootUser.ofType(UserProfileType.RESTRICTED)))
+                actorUnderTest ! UserProfileByEmailGetV1(rootUserEmail, UserProfileTypeV1.RESTRICTED)
+                expectMsg(Some(rootUser.ofType(UserProfileTypeV1.RESTRICTED)))
             }
 
             "return a profile if the user (incunabula user) is known" in {
-                actorUnderTest ! UserProfileByEmailGetV1(incunabulaUserEmail, UserProfileType.RESTRICTED)
-                expectMsg(Some(incunabulaUser.ofType(UserProfileType.RESTRICTED)))
+                actorUnderTest ! UserProfileByEmailGetV1(incunabulaUserEmail, UserProfileTypeV1.RESTRICTED)
+                expectMsg(Some(incunabulaUser.ofType(UserProfileTypeV1.RESTRICTED)))
             }
 
             "return 'NotFoundException' when the user is unknown" in {
-                actorUnderTest ! UserProfileByEmailGetRequestV1("userwrong@example.com", UserProfileType.RESTRICTED, rootUser)
+                actorUnderTest ! UserProfileByEmailGetRequestV1("userwrong@example.com", UserProfileTypeV1.RESTRICTED, rootUser)
                 expectMsg(Failure(NotFoundException(s"User 'userwrong@example.com' not found")))
             }
 
             "return 'None' when the user is unknown" in {
-                actorUnderTest ! UserProfileByEmailGetV1("userwrong@example.com", UserProfileType.RESTRICTED)
+                actorUnderTest ! UserProfileByEmailGetV1("userwrong@example.com", UserProfileTypeV1.RESTRICTED)
                 expectMsg(None)
             }
         }
@@ -454,7 +454,7 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
                 responderManager ! ProjectMembersByIRIGetRequestV1(imagesProjectIri, rootUser)
                 val received: ProjectMembersGetResponseV1 = expectMsgType[ProjectMembersGetResponseV1](timeout)
 
-                received.members should contain (normalUser.ofType(UserProfileType.SHORT).userData)
+                received.members should contain (normalUser.ofType(UserProfileTypeV1.SHORT).userData)
             }
 
             "DELETE user from project" in {
@@ -473,7 +473,7 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
                 responderManager ! ProjectMembersByIRIGetRequestV1(imagesProjectIri, rootUser)
                 val received: ProjectMembersGetResponseV1 = expectMsgType[ProjectMembersGetResponseV1](timeout)
 
-                received.members should not contain normalUser.ofType(UserProfileType.SHORT).userData
+                received.members should not contain normalUser.ofType(UserProfileTypeV1.SHORT).userData
             }
 
             "return a 'ForbiddenException' if the user requesting update is not the project or system admin" in {
@@ -507,7 +507,7 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
                 responderManager ! ProjectAdminMembersByIRIGetRequestV1(imagesProjectIri, rootUser)
                 val received: ProjectAdminMembersGetResponseV1 = expectMsgType[ProjectAdminMembersGetResponseV1](timeout)
 
-                received.members should contain (normalUser.ofType(UserProfileType.SHORT).userData)
+                received.members should contain (normalUser.ofType(UserProfileTypeV1.SHORT).userData)
             }
 
             "DELETE user from project admin group" in {
@@ -525,7 +525,7 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
                 responderManager ! ProjectAdminMembersByIRIGetRequestV1(imagesProjectIri, rootUser)
                 val received: ProjectAdminMembersGetResponseV1 = expectMsgType[ProjectAdminMembersGetResponseV1](timeout)
 
-                received.members should not contain normalUser.ofType(UserProfileType.SHORT).userData
+                received.members should not contain normalUser.ofType(UserProfileTypeV1.SHORT).userData
             }
 
             "return a 'ForbiddenException' if the user requesting update is not the project or system admin" in {
@@ -558,7 +558,7 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
                 responderManager ! GroupMembersByIRIGetRequestV1(imagesReviewerGroupIri, rootUser)
                 val received: GroupMembersResponseV1 = expectMsgType[GroupMembersResponseV1](timeout)
 
-                received.members should contain (normalUser.ofType(UserProfileType.SHORT).userData.user_id.get)
+                received.members should contain (normalUser.ofType(UserProfileTypeV1.SHORT).userData.user_id.get)
             }
 
             "DELETE user from group" in {
@@ -576,7 +576,7 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
                 responderManager ! GroupMembersByIRIGetRequestV1(imagesReviewerGroupIri, rootUser)
                 val received: GroupMembersResponseV1 = expectMsgType[GroupMembersResponseV1](timeout)
 
-                received.members should not contain normalUser.ofType(UserProfileType.SHORT).userData.user_id.get
+                received.members should not contain normalUser.ofType(UserProfileTypeV1.SHORT).userData.user_id.get
             }
 
             "return a 'ForbiddenException' if the user requesting update is not the project or system admin" in {

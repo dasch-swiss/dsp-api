@@ -92,10 +92,10 @@ object UsersRouteV1 extends Authenticator {
 
                         /* check if email or iri was supplied */
                         val requestMessage = if (identifier == "email") {
-                            UserProfileByEmailGetRequestV1(value, UserProfileType.RESTRICTED, userProfile)
+                            UserProfileByEmailGetRequestV1(value, UserProfileTypeV1.RESTRICTED, userProfile)
                         } else  {
                             val userIri = InputValidation.toIri(value, () => throw BadRequestException(s"Invalid user IRI $value"))
-                            UserProfileByIRIGetRequestV1(userIri, UserProfileType.RESTRICTED, userProfile)
+                            UserProfileByIRIGetRequestV1(userIri, UserProfileTypeV1.RESTRICTED, userProfile)
                         }
                         RouteUtilV1.runJsonRoute(
                             requestMessage,
