@@ -25,8 +25,6 @@ env:
     - WEBAPI_REPO=dhlabbasel/webapi
     - SALSAH_REPO=dhlabbasel/salsah
     - SIPI_REPO=dhlabbasel/sipi
-    - COMMIT=${TRAVIS_COMMIT::8}
-    - TAG=${TRAVIS_BRANCH//\//-}
     - DOCKERHOST=$(ip route get 8.8.8.8 | awk '{print $NF; exit}')
     - CHROME_BIN=google-chrome-stable
 
@@ -38,14 +36,14 @@ jobs:
   include:
     - stage: test
       script:
-        # start graphdb-free
-        - docker run -d -p 7200:7200 dhlabbasel/graphdb-free
+        # start and initialize graphdb-free
+        - docker run -d -p 7200:7200 dhlabbasel/graphdb-free && '(cd $TRAVIS_BUILD_DIR/webapi/scripts && ./graphdb-free-init-knora-test-unit.sh)'
         # start the built-in webapi server tests
         - cd $TRAVIS_BUILD_DIR/webapi/ && sbt test
     - stage: test
       script:
         # start graphdb-free
-        - docker run -d -p 7200:7200 dhlabbasel/graphdb-free
+        - docker run -d -p 7200:7200 dhlabbasel/graphdb-free && '(cd $TRAVIS_BUILD_DIR/webapi/scripts && ./graphdb-free-init-knora-test-unit.sh)'
         # start the sipi container (with production config)
         - docker run -d --add-host webapihost:$DOCKERHOST -v /tmp:/tmp -v $HOME:$HOME -p 1024:1024 $SIPI_REPO:develop
         # start the integration tests
@@ -76,19 +74,20 @@ jobs:
     #    - cd $TRAVIS_BUILD_DIR/salsah/ && sbt headless:test
     - stage: publish
       script:
+        # generally, only create, tag and push to docker if we are on 'develop'
         - docker login -u $DOCKER_USER -p $DOCKER_PASS
-        - docker build $TRAVIS_BUILD_DIR/webapi/ -t $WEBAPI_REPO:$COMMIT
-        - docker tag $WEBAPI_REPO:$COMMIT $WEBAPI_REPO:$TAG
-        # only push to docker if it is not a pull request
-        - if [ "$TRAVIS_EVENT_TYPE" != "pull_request" ]; then docker push $WEBAPI_REPO ; fi
-        - docker build $TRAVIS_BUILD_DIR/salsah/ -t $SALSAH_REPO:$COMMIT
-        - docker tag $SALSAH_REPO:$COMMIT $SALSAH_REPO:$TAG
-        # only push to docker if it is not a pull request
-        - if [ "$TRAVIS_EVENT_TYPE" != "pull_request" ]; then docker push $SALSAH_REPO ; fi
-        # get the develop sipi and tag it as 'develop-knora' so we know that this version is tested (only on the develop branch)
-        - docker pull $SIPI_REPO:develop
-        - if [ "$TAG" == "develop" ]; then docker tag $SIPI_REPO:develop $SIPI_REPO:knora-develop ; fi
-        - if [ "$TRAVIS_EVENT_TYPE" != "pull_request" ]; then docker push $SIPI_REPO ; fi
+        # webapi
+        - if [ "$TRAVIS_BRANCH" = "develop" ]; then docker build $TRAVIS_BUILD_DIR/webapi/ -t $WEBAPI_REPO:develop ; fi
+        - if [ "$TRAVIS_BRANCH" = "develop" ]; then docker tag $WEBAPI_REPO:develop $WEBAPI_REPO:latest ; fi
+        - if [ "$TRAVIS_BRANCH" = "develop" ]; then docker push $WEBAPI_REPO ; fi
+        # salsah
+        - if [ "$TRAVIS_BRANCH" = "develop" ]; then docker build $TRAVIS_BUILD_DIR/salsah/ -t $SALSAH_REPO:develop ; fi
+        - if [ "$TRAVIS_BRANCH" = "develop" ]; then docker tag $SALSAH_REPO:develop $SALSAH_REPO:latest ; fi
+        - if [ "$TRAVIS_BRANCH" = "develop" ]; then docker push $SALSAH_REPO ; fi
+        # sipi: get the develop sipi and tag it as 'develop-knora' so we know that this version is tested (only on the develop branch)
+        - if [ "$TRAVIS_BRANCH" = "develop" ]; then docker pull $SIPI_REPO:develop ; fi
+        - if [ "$TRAVIS_BRANCH" = "develop" ]; then then docker tag $SIPI_REPO:develop $SIPI_REPO:knora-develop ; fi
+        - if [ "$TRAVIS_BRANCH" = "develop" ]; then then docker push $SIPI_REPO ; fi
 
 notifications:
   slack:
