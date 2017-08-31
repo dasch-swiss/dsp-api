@@ -326,7 +326,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
                             PREFIX luc: <http://www.ontotext.com/owlim/lucene#>
                             INSERT DATA { luc:fullTextSearchIndex luc:updateIndex _:b1 . }
                     """
-                    Await.result(getTriplestoreHttpResponse(indexUpdateSparqlString, isUpdate = true), 5.seconds)
+                    Await.result(getTriplestoreHttpResponse(indexUpdateSparqlString, isUpdate = true), 30.seconds)
                 }
 
                 log.debug(s"added: ${elem.name}")

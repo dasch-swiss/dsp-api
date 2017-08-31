@@ -23,10 +23,10 @@ package org.knora.webapi.store.triplestore.http
 import java.io.File
 
 import akka.actor.ActorSystem
-import akka.http.javadsl.model.headers.Authorization
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.Uri.Query
 import akka.http.scaladsl.model._
+import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.stream.ActorMaterializer
 import org.knora.webapi.SettingsConstants._
 import org.knora.webapi.{BadRequestException, Settings, TriplestoreResponseException, TriplestoreUnsupportedFeatureException}
@@ -94,7 +94,7 @@ object GraphProtocolAccessor {
         val http = Http(_system)
 
         // Use HTTP basic authentication.
-        val authorization = Authorization.basic(settings.triplestoreUsername, settings.triplestorePassword)
+        val authorization = headers.Authorization(BasicHttpCredentials(settings.triplestoreUsername, settings.triplestorePassword))
 
         log.debug("==>> GraphProtocolAccessor START")
 
