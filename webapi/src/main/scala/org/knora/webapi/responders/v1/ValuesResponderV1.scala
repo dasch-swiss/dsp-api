@@ -29,7 +29,7 @@ import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoByIRIG
 import org.knora.webapi.messages.v1.responder.resourcemessages._
 import org.knora.webapi.messages.v1.responder.sipimessages.{SipiConstants, SipiResponderConversionPathRequestV1, SipiResponderConversionRequestV1, SipiResponderConversionResponseV1}
 import org.knora.webapi.messages.v1.responder.standoffmessages.StandoffDataTypeClasses
-import org.knora.webapi.messages.v1.responder.usermessages.{UserProfileByIRIGetV1, UserProfileType, UserProfileV1}
+import org.knora.webapi.messages.v1.responder.usermessages.{UserProfileByIRIGetV1, UserProfileTypeV1, UserProfileV1}
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.responders.{IriLocker, Responder}
@@ -88,7 +88,7 @@ class ValuesResponderV1 extends Responder {
             response <- maybeValueQueryResult match {
                 case Some(valueQueryResult) =>
                     for {
-                        maybeValueCreatorProfile <- (responderManager ? UserProfileByIRIGetV1(valueQueryResult.creatorIri, UserProfileType.RESTRICTED)).mapTo[Option[UserProfileV1]]
+                        maybeValueCreatorProfile <- (responderManager ? UserProfileByIRIGetV1(valueQueryResult.creatorIri, UserProfileTypeV1.RESTRICTED)).mapTo[Option[UserProfileV1]]
                         valueCreatorProfile = maybeValueCreatorProfile match {
                             case Some(up) => up
                             case None => throw NotFoundException(s"User ${valueQueryResult.creatorIri} not found")
@@ -1362,7 +1362,7 @@ class ValuesResponderV1 extends Responder {
             linkValueResponse <- maybeValueQueryResult match {
                 case Some(valueQueryResult) =>
                     for {
-                        maybeValueCreatorProfile <- (responderManager ? UserProfileByIRIGetV1(valueQueryResult.creatorIri, UserProfileType.RESTRICTED)).mapTo[Option[UserProfileV1]]
+                        maybeValueCreatorProfile <- (responderManager ? UserProfileByIRIGetV1(valueQueryResult.creatorIri, UserProfileTypeV1.RESTRICTED)).mapTo[Option[UserProfileV1]]
                         valueCreatorProfile = maybeValueCreatorProfile match {
                             case Some(up) => up
                             case None => throw NotFoundException(s"User ${valueQueryResult.creatorIri} not found")

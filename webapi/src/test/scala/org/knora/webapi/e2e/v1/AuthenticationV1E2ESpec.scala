@@ -25,6 +25,7 @@ import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi.{E2ESpec, SharedAdminTestData}
 import org.knora.webapi.messages.v1.responder.sessionmessages.{SessionJsonProtocol, SessionResponse}
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
+import org.knora.webapi.messages.v1.responder.usermessages.UserProfileResponseV1
 import org.knora.webapi.routing.Authenticator.KNORA_AUTHENTICATION_COOKIE_NAME
 import spray.json._
 
@@ -49,11 +50,10 @@ class AuthenticationV1E2ESpec extends E2ESpec(AuthenticationV1E2ESpec.config) wi
 
     private implicit def default(implicit system: ActorSystem) = RouteTestTimeout(5.seconds)
 
-    private val rdfDataObjects = List(
-        RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/incunabula"),
-        RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/images")
-    )
+    private val rdfDataObjects = List.empty[RdfDataObject]
 
+    private val rootIri = SharedAdminTestData.rootUser.userData.user_id.get
+    private val rootIriEnc = java.net.URLEncoder.encode(rootIri, "utf-8")
     private val rootEmail = SharedAdminTestData.rootUser.userData.email.get
     private val rootEmailEnc = java.net.URLEncoder.encode(rootEmail, "utf-8")
     private val inactiveUserEmailEnc = java.net.URLEncoder.encode(SharedAdminTestData.inactiveUser.userData.email.get, "utf-8")
@@ -242,10 +242,10 @@ class AuthenticationV1E2ESpec extends E2ESpec(AuthenticationV1E2ESpec.config) wi
         }
     }
 
-    "The Resources Route using the Authenticator trait " should {
+    "The Users Route using the Authenticator trait " should {
         "succeed with authentication using URL parameters and correct email / correct password " in {
             /* Correct email / correct password */
-            val request = Get(baseApiUrl + s"/v1/resources/http%3A%2F%2Fdata.knora.org%2Fc5058f3a?email=$rootEmailEnc&password=$testPass")
+            val request = Get(baseApiUrl + s"/v1/users/$rootIriEnc?email=$rootEmailEnc&password=$testPass")
             val response = singleAwaitingRequest(request)
             //log.debug("==>> " + responseAs[String])
             assert(response.status === StatusCodes.OK)
@@ -253,7 +253,7 @@ class AuthenticationV1E2ESpec extends E2ESpec(AuthenticationV1E2ESpec.config) wi
 
         "fail with authentication using URL parameters and correct email / wrong password " in {
             /* Correct email / wrong password */
-            val request = Get(baseApiUrl + s"/v1/resources/http%3A%2F%2Fdata.knora.org%2Fc5058f3a?email=$rootEmailEnc&password=$wrongPass")
+            val request = Get(baseApiUrl + s"/v1/users/$rootIriEnc?email=$rootEmailEnc&password=$wrongPass")
 
             val response = singleAwaitingRequest(request)
             //log.debug("==>> " + responseAs[String])
@@ -262,7 +262,7 @@ class AuthenticationV1E2ESpec extends E2ESpec(AuthenticationV1E2ESpec.config) wi
 
         "succeed with authentication using HTTP Basic Auth headers and correct username / correct password " in {
             /* Correct email / correct password */
-            val request = Get(baseApiUrl + "/v1/resources/http%3A%2F%2Fdata.knora.org%2Fc5058f3a") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
+            val request = Get(baseApiUrl + s"/v1/users/$rootIriEnc") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
             val response = singleAwaitingRequest(request)
             //log.debug("==>> " + responseAs[String])
             assert(response.status === StatusCodes.OK)
@@ -270,20 +270,22 @@ class AuthenticationV1E2ESpec extends E2ESpec(AuthenticationV1E2ESpec.config) wi
 
         "fail with authentication using HTTP Basic Auth headers and correct username / wrong password " in {
             /* Correct email / wrong password */
-            val request = Get(baseApiUrl + "/v1/resources/http%3A%2F%2Fdata.knora.org%2Fc5058f3a") ~> addCredentials(BasicHttpCredentials(rootEmail, wrongPass))
+            val request = Get(baseApiUrl + s"/v1/users/$rootIriEnc") ~> addCredentials(BasicHttpCredentials(rootEmail, wrongPass))
             val response = singleAwaitingRequest(request)
             //log.debug("==>> " + responseAs[String])
             assert(response.status === StatusCodes.Unauthorized)
         }
 
         "not return sensitive information (token, password) in the response " in {
-            val request = Get(baseApiUrl + s"/v1/resources/http%3A%2F%2Fdata.knora.org%2Fc5058f3a?email=$rootEmailEnc&password=$testPass")
+            val request = Get(baseApiUrl + s"/v1/users/$rootIriEnc?email=$rootEmailEnc&password=$testPass")
             val response = singleAwaitingRequest(request)
             //log.debug("==>> " + responseAs[String])
             // assert(status === StatusCodes.OK)
+
+            /* check for sensitive information leakage */
             val body: String = Await.result(Unmarshal(response.entity).to[String], 1.seconds)
-            assert(!body.contains("\"password\""))
-            assert(!body.contains("\"token\""))
+            assert(body contains "\"password\":null")
+            assert(body contains "\"token\":null")
         }
     }
 }

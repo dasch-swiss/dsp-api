@@ -30,7 +30,7 @@ import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse}
 import org.knora.webapi.messages.v1.responder.projectmessages._
-import org.knora.webapi.messages.v1.responder.usermessages.UserProfileType
+import org.knora.webapi.messages.v1.responder.usermessages.UserProfileTypeV1
 import org.knora.webapi.responders.{RESPONDER_MANAGER_ACTOR_NAME, ResponderManager}
 import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
 import org.knora.webapi.util.MutableTestIri
@@ -253,24 +253,24 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
                 actorUnderTest ! ProjectMembersByIRIGetRequestV1(SharedAdminTestData.imagesProjectInfo.id, SharedAdminTestData.rootUser)
                 val received: ProjectMembersGetResponseV1 = expectMsgType[ProjectMembersGetResponseV1](timeout)
                 received.members should contain allElementsOf Seq(
-                    SharedAdminTestData.imagesUser01.ofType(UserProfileType.SHORT).userData,
-                    SharedAdminTestData.imagesUser02.ofType(UserProfileType.SHORT).userData,
-                    SharedAdminTestData.multiuserUser.ofType(UserProfileType.SHORT).userData,
-                    SharedAdminTestData.imagesReviewerUser.ofType(UserProfileType.SHORT).userData
+                    SharedAdminTestData.imagesUser01.ofType(UserProfileTypeV1.SHORT).userData,
+                    SharedAdminTestData.imagesUser02.ofType(UserProfileTypeV1.SHORT).userData,
+                    SharedAdminTestData.multiuserUser.ofType(UserProfileTypeV1.SHORT).userData,
+                    SharedAdminTestData.imagesReviewerUser.ofType(UserProfileTypeV1.SHORT).userData
                 )
-                received.userDataV1 should equal (SharedAdminTestData.rootUser.ofType(UserProfileType.SHORT).userData)
+                received.userDataV1 should equal (SharedAdminTestData.rootUser.ofType(UserProfileTypeV1.SHORT).userData)
             }
 
             "return all members of a project identified by shortname" in {
                 actorUnderTest ! ProjectMembersByShortnameGetRequestV1(SharedAdminTestData.imagesProjectInfo.shortname, SharedAdminTestData.rootUser)
                 val received: ProjectMembersGetResponseV1 = expectMsgType[ProjectMembersGetResponseV1](timeout)
                 received.members should contain allElementsOf Seq(
-                    SharedAdminTestData.imagesUser01.ofType(UserProfileType.SHORT).userData,
-                    SharedAdminTestData.imagesUser02.ofType(UserProfileType.SHORT).userData,
-                    SharedAdminTestData.multiuserUser.ofType(UserProfileType.SHORT).userData,
-                    SharedAdminTestData.imagesReviewerUser.ofType(UserProfileType.SHORT).userData
+                    SharedAdminTestData.imagesUser01.ofType(UserProfileTypeV1.SHORT).userData,
+                    SharedAdminTestData.imagesUser02.ofType(UserProfileTypeV1.SHORT).userData,
+                    SharedAdminTestData.multiuserUser.ofType(UserProfileTypeV1.SHORT).userData,
+                    SharedAdminTestData.imagesReviewerUser.ofType(UserProfileTypeV1.SHORT).userData
                 )
-                received.userDataV1 should equal (SharedAdminTestData.rootUser.ofType(UserProfileType.SHORT).userData)
+                received.userDataV1 should equal (SharedAdminTestData.rootUser.ofType(UserProfileTypeV1.SHORT).userData)
             }
 
             "return 'NotFound' when the project IRI is unknown (project membership)" in {
@@ -287,20 +287,20 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
                 actorUnderTest ! ProjectAdminMembersByIRIGetRequestV1(SharedAdminTestData.IMAGES_PROJECT_IRI, SharedAdminTestData.rootUser)
                 val received: ProjectAdminMembersGetResponseV1 = expectMsgType[ProjectAdminMembersGetResponseV1](timeout)
                 received.members should contain allElementsOf Seq(
-                    SharedAdminTestData.imagesUser01.ofType(UserProfileType.SHORT).userData,
-                    SharedAdminTestData.multiuserUser.ofType(UserProfileType.SHORT).userData
+                    SharedAdminTestData.imagesUser01.ofType(UserProfileTypeV1.SHORT).userData,
+                    SharedAdminTestData.multiuserUser.ofType(UserProfileTypeV1.SHORT).userData
                 )
-                received.userDataV1 should equal (SharedAdminTestData.rootUser.ofType(UserProfileType.SHORT).userData)
+                received.userDataV1 should equal (SharedAdminTestData.rootUser.ofType(UserProfileTypeV1.SHORT).userData)
             }
 
             "return all project admin members of a project identified by shortname" in {
                 actorUnderTest ! ProjectAdminMembersByShortnameGetRequestV1(SharedAdminTestData.imagesProjectInfo.shortname, SharedAdminTestData.rootUser)
                 val received: ProjectAdminMembersGetResponseV1 = expectMsgType[ProjectAdminMembersGetResponseV1](timeout)
                 received.members should contain allElementsOf Seq(
-                    SharedAdminTestData.imagesUser01.ofType(UserProfileType.SHORT).userData,
-                    SharedAdminTestData.multiuserUser.ofType(UserProfileType.SHORT).userData
+                    SharedAdminTestData.imagesUser01.ofType(UserProfileTypeV1.SHORT).userData,
+                    SharedAdminTestData.multiuserUser.ofType(UserProfileTypeV1.SHORT).userData
                 )
-                received.userDataV1 should equal (SharedAdminTestData.rootUser.ofType(UserProfileType.SHORT).userData)
+                received.userDataV1 should equal (SharedAdminTestData.rootUser.ofType(UserProfileTypeV1.SHORT).userData)
             }
 
             "return 'NotFound' when the project IRI is unknown (project admin membership)" in {
