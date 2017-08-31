@@ -43,7 +43,7 @@ jobs:
     - stage: test
       script:
         # start graphdb-free
-        - docker run -d -p 7200:7200 dhlabbasel/graphdb-free && cd $TRAVIS_BUILD_DIR/webapi/scripts && ./graphdb-free-init-knora-test-unit.sh
+        - docker run -d -e GDB_HEAP_SIZE="3g" -p 7200:7200 dhlabbasel/graphdb-free && cd $TRAVIS_BUILD_DIR/webapi/scripts && ./graphdb-free-init-knora-test-unit.sh
         # start the sipi container (with production config)
         - docker run -d --add-host webapihost:$DOCKERHOST -v /tmp:/tmp -v $HOME:$HOME -p 1024:1024 $SIPI_REPO:develop
         # start the integration tests
