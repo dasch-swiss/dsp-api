@@ -91,10 +91,10 @@ sealed trait QueryPattern extends SparqlGenerator
   * @param subj the subject of the statement.
   * @param pred the predicate of the statement.
   * @param obj  the object of the statement.
-  * @param namedGraph the named graph this statement should be searched in. Defaults to `http://www.knora.org/explicit`, indicating that inference should be disabled for the pattern.
+  * @param namedGraph the named graph this statement should be searched in. Defaults to [[None]].
   * @param includeInConstructClause indicates whether this statement should be copied from the WHERE clause into the CONSTRUCT clause during SPARQL generation.
   */
-case class StatementPattern(subj: Entity, pred: Entity, obj: Entity, namedGraph: Option[IriRef] = Some(IriRef(OntologyConstants.NamedGraphs.KnoraExplicitNamedGraph)), includeInConstructClause: Boolean = true) extends QueryPattern {
+case class StatementPattern(subj: Entity, pred: Entity, obj: Entity, namedGraph: Option[IriRef] = None, includeInConstructClause: Boolean = true) extends QueryPattern {
     def toSparql: String = {
         val triple = s"${subj.toSparql} ${pred.toSparql} ${obj.toSparql} ."
 
@@ -109,14 +109,49 @@ case class StatementPattern(subj: Entity, pred: Entity, obj: Entity, namedGraph:
                 triple + "\n"
         }
     }
+}
+
+/**
+  * Provides convenience methods for making statement patterns that are marked as needing inference or not.
+  */
+object StatementPattern {
+    /**
+      * Makes a [[StatementPattern]] whose named graph is [[OntologyConstants.NamedGraphs.KnoraExplicitNamedGraph]].
+      *
+      * @param subj the subject of the statement.
+      * @param pred the predicate of the statement.
+      * @param obj  the object of the statement.
+      * @param includeInConstructClause indicates whether this statement should be copied from the WHERE clause into the CONSTRUCT clause during SPARQL generation.
+      * @return the statement pattern.
+      */
+    def makeExplicit(subj: Entity, pred: Entity, obj: Entity, includeInConstructClause: Boolean = true): StatementPattern = {
+        StatementPattern(
+            subj = subj,
+            pred = pred,
+            obj = obj,
+            namedGraph = Some(IriRef(OntologyConstants.NamedGraphs.KnoraExplicitNamedGraph)),
+            includeInConstructClause = includeInConstructClause
+        )
+    }
 
     /**
-      * A convenience function that returns a copy of this statement pattern, with its named graph set to
-      * `None`, indicating that inference should be enabled for the pattern.
+      * Makes a [[StatementPattern]] that doesn't specify a named graph.
       *
-      * @return a copy of this statement pattern with its named graph set to `None`.
+      * @param subj the subject of the statement.
+      * @param pred the predicate of the statement.
+      * @param obj  the object of the statement.
+      * @param includeInConstructClause indicates whether this statement should be copied from the WHERE clause into the CONSTRUCT clause during SPARQL generation.
+      * @return the statement pattern.
       */
-    def toInferred: StatementPattern = copy(namedGraph = None)
+    def makeInferred(subj: Entity, pred: Entity, obj: Entity, includeInConstructClause: Boolean = true): StatementPattern = {
+        StatementPattern(
+            subj = subj,
+            pred = pred,
+            obj = obj,
+            namedGraph = None,
+            includeInConstructClause = includeInConstructClause
+        )
+    }
 }
 
 /**

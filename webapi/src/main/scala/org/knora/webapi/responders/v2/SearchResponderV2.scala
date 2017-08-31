@@ -142,11 +142,11 @@ class SearchResponderV2 extends Responder {
                 val pred = preprocessEntity(statementPattern.pred)
                 val obj = preprocessEntity(statementPattern.obj)
 
-                StatementPattern(
+                StatementPattern.makeInferred(
                     subj = subj,
                     pred = pred,
                     obj = obj
-                ).toInferred // use inference for all user-provided statements in Where clause
+                ) // use inference for all user-provided statements in Where clause
             }
         }
 
@@ -358,13 +358,13 @@ class SearchResponderV2 extends Responder {
                     // create additional statements in order to query permissions and other information for a resource
 
                     Seq(
-                        StatementPattern(subj = inputEntity, pred = IriRef(OntologyConstants.Rdf.Type), obj = IriRef(OntologyConstants.KnoraBase.Resource), None).toInferred,
-                        StatementPattern(subj = inputEntity, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean)),
-                        StatementPattern(subj = inputEntity, pred = IriRef(OntologyConstants.Rdfs.Label), obj = createUniqueVariableFromEntity(inputEntity, "ResourceLabel")),
-                        StatementPattern(subj = inputEntity, pred = IriRef(OntologyConstants.Rdf.Type), obj = createUniqueVariableFromEntity(inputEntity, "ResourceType")),
-                        StatementPattern(subj = inputEntity, pred = IriRef(OntologyConstants.KnoraBase.AttachedToUser), obj = createUniqueVariableFromEntity(inputEntity, "ResourceCreator")),
-                        StatementPattern(subj = inputEntity, pred = IriRef(OntologyConstants.KnoraBase.HasPermissions), obj = createUniqueVariableFromEntity(inputEntity, "ResourcePermissions")),
-                        StatementPattern(subj = inputEntity, pred = IriRef(OntologyConstants.KnoraBase.AttachedToProject), obj = createUniqueVariableFromEntity(inputEntity, "ResourceProject"))
+                        StatementPattern.makeInferred(subj = inputEntity, pred = IriRef(OntologyConstants.Rdf.Type), obj = IriRef(OntologyConstants.KnoraBase.Resource)),
+                        StatementPattern.makeExplicit(subj = inputEntity, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean)),
+                        StatementPattern.makeExplicit(subj = inputEntity, pred = IriRef(OntologyConstants.Rdfs.Label), obj = createUniqueVariableFromEntity(inputEntity, "ResourceLabel")),
+                        StatementPattern.makeExplicit(subj = inputEntity, pred = IriRef(OntologyConstants.Rdf.Type), obj = createUniqueVariableFromEntity(inputEntity, "ResourceType")),
+                        StatementPattern.makeExplicit(subj = inputEntity, pred = IriRef(OntologyConstants.KnoraBase.AttachedToUser), obj = createUniqueVariableFromEntity(inputEntity, "ResourceCreator")),
+                        StatementPattern.makeExplicit(subj = inputEntity, pred = IriRef(OntologyConstants.KnoraBase.HasPermissions), obj = createUniqueVariableFromEntity(inputEntity, "ResourcePermissions")),
+                        StatementPattern.makeExplicit(subj = inputEntity, pred = IriRef(OntologyConstants.KnoraBase.AttachedToProject), obj = createUniqueVariableFromEntity(inputEntity, "ResourceProject"))
                     )
                 } else {
                     // inputEntity is target of a value property
@@ -390,12 +390,12 @@ class SearchResponderV2 extends Responder {
                 val valueObjObj = createUniqueVariableFromStatement(statementPattern, "voObj") // A variable representing the objects of the value object
 
                 Seq(
-                    StatementPattern(subj = statementPattern.subj, pred = IriRef(OntologyConstants.KnoraBase.HasValue), obj = valueObject).toInferred, // include knora-base:hasValue pointing to the value object, because the construct clause needs it
-                    StatementPattern(subj = statementPattern.subj, pred = statementPattern.pred, obj = valueObject, includeInConstructClause = false).toInferred, // do not include the originally given property in the Construct clause because inference is used
-                    StatementPattern(subj = statementPattern.subj, pred = valueObjPropVar, obj = valueObject), // the actually matching property
-                    StatementPattern(subj = valueObject, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean)), // make sure the value object is not marked as deleted
-                    StatementPattern(subj = valueObject, pred = IriRef(OntologyConstants.Rdf.Type), obj = IriRef(valueType)),
-                    StatementPattern(subj = valueObject, pred = valueObjPred, obj = valueObjObj)
+                    StatementPattern.makeInferred(subj = statementPattern.subj, pred = IriRef(OntologyConstants.KnoraBase.HasValue), obj = valueObject), // include knora-base:hasValue pointing to the value object, because the construct clause needs it
+                    StatementPattern.makeInferred(subj = statementPattern.subj, pred = statementPattern.pred, obj = valueObject, includeInConstructClause = false), // do not include the originally given property in the Construct clause because inference is used
+                    StatementPattern.makeExplicit(subj = statementPattern.subj, pred = valueObjPropVar, obj = valueObject), // the actually matching property
+                    StatementPattern.makeExplicit(subj = valueObject, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean)), // make sure the value object is not marked as deleted
+                    StatementPattern.makeExplicit(subj = valueObject, pred = IriRef(OntologyConstants.Rdf.Type), obj = IriRef(valueType)),
+                    StatementPattern.makeExplicit(subj = valueObject, pred = valueObjPred, obj = valueObjObj)
                 )
             }
 
@@ -441,15 +441,15 @@ class SearchResponderV2 extends Responder {
 
                         // TODO: make use of createStatementPatternsForValueObject if possible
                         Seq(statementPattern, // keep the original statement pointing from the source to the target resource, using inference
-                            StatementPattern(subj = statementPattern.subj, pred = linkPropVar, obj = statementPattern.obj), // find out what the actual link property is
-                            StatementPattern(subj = statementPattern.subj, pred = IriRef(OntologyConstants.KnoraBase.HasValue), obj = linkValueVar).toInferred, // include knora-base:hasValue pointing to the link value, because the construct clause needs it
-                            StatementPattern(subj = statementPattern.subj, pred = linkValuePropVar, obj = linkValueVar), // find out what the actual link value property is
-                            StatementPattern(subj = linkValueVar, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean)), // ensure the link value isn't deleted
-                            StatementPattern(subj = linkValueVar, pred = IriRef(OntologyConstants.Rdf.Type), obj = IriRef(OntologyConstants.KnoraBase.LinkValue)), // it's a link value
-                            StatementPattern(subj = linkValueVar, pred = IriRef(OntologyConstants.Rdf.Subject), obj = statementPattern.subj), // the rdf:subject of the link value must be the source resource
-                            StatementPattern(subj = linkValueVar, pred = IriRef(OntologyConstants.Rdf.Predicate), obj = linkPropVar), // the rdf:predicate of the link value must be the link property
-                            StatementPattern(subj = linkValueVar, pred = IriRef(OntologyConstants.Rdf.Object), obj = statementPattern.obj), // the rdf:object of the link value must be the target resource
-                            StatementPattern(subj = linkValueVar, pred = linkValuePredVar, obj = linkValueObjVar) // get any other statements about the link value
+                            StatementPattern.makeExplicit(subj = statementPattern.subj, pred = linkPropVar, obj = statementPattern.obj), // find out what the actual link property is
+                            StatementPattern.makeInferred(subj = statementPattern.subj, pred = IriRef(OntologyConstants.KnoraBase.HasValue), obj = linkValueVar), // include knora-base:hasValue pointing to the link value, because the construct clause needs it
+                            StatementPattern.makeExplicit(subj = statementPattern.subj, pred = linkValuePropVar, obj = linkValueVar), // find out what the actual link value property is
+                            StatementPattern.makeExplicit(subj = linkValueVar, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean)), // ensure the link value isn't deleted
+                            StatementPattern.makeExplicit(subj = linkValueVar, pred = IriRef(OntologyConstants.Rdf.Type), obj = IriRef(OntologyConstants.KnoraBase.LinkValue)), // it's a link value
+                            StatementPattern.makeExplicit(subj = linkValueVar, pred = IriRef(OntologyConstants.Rdf.Subject), obj = statementPattern.subj), // the rdf:subject of the link value must be the source resource
+                            StatementPattern.makeExplicit(subj = linkValueVar, pred = IriRef(OntologyConstants.Rdf.Predicate), obj = linkPropVar), // the rdf:predicate of the link value must be the link property
+                            StatementPattern.makeExplicit(subj = linkValueVar, pred = IriRef(OntologyConstants.Rdf.Object), obj = statementPattern.obj), // the rdf:object of the link value must be the target resource
+                            StatementPattern.makeExplicit(subj = linkValueVar, pred = linkValuePredVar, obj = linkValueObjVar) // get any other statements about the link value
                         )
                     }
 
@@ -480,7 +480,7 @@ class SearchResponderV2 extends Responder {
                                 )
 
                                 // match the given literal value with the integer value object's `valueHasInteger`
-                                valueObject :+ StatementPattern(subj = valueObjVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasInteger), obj = integerLiteral, includeInConstructClause = false) // this is for the Where clause only (restriction)
+                                valueObject :+ StatementPattern.makeExplicit(subj = valueObjVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasInteger), obj = integerLiteral, includeInConstructClause = false) // this is for the Where clause only (restriction)
 
 
                             case integerVar: QueryVariable =>
@@ -524,7 +524,7 @@ class SearchResponderV2 extends Responder {
                                 )
 
                                 // match the given literal value with the integer value object's `valueHasString`
-                                valueObject :+ StatementPattern(subj = valueObjVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasString), obj = stringLiteral, includeInConstructClause = false) // this is for the Where clause only (restriction)
+                                valueObject :+ StatementPattern.makeExplicit(subj = valueObjVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasString), obj = stringLiteral, includeInConstructClause = false) // this is for the Where clause only (restriction)
 
 
                             case stringVar: QueryVariable =>
@@ -569,7 +569,7 @@ class SearchResponderV2 extends Responder {
                                 )
 
                                 // match the given literal value with the decimal value object's `valueHasDecimal`
-                                valueObject :+ StatementPattern(subj = valueObjVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasDecimal), obj = decimalLiteral, includeInConstructClause = false) // this is for the Where clause only (restriction)
+                                valueObject :+ StatementPattern.makeExplicit(subj = valueObjVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasDecimal), obj = decimalLiteral, includeInConstructClause = false) // this is for the Where clause only (restriction)
 
 
                             case decimalVar: QueryVariable =>
@@ -614,7 +614,7 @@ class SearchResponderV2 extends Responder {
                                 )
 
                                 // match the given literal value with the boolean value object's `valueHasBoolean`
-                                valueObject :+ StatementPattern(subj = valueObjVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasBoolean), obj = booleanLiteral, includeInConstructClause = false) // this is for the Where clause only (restriction)
+                                valueObject :+ StatementPattern.makeExplicit(subj = valueObjVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasBoolean), obj = booleanLiteral, includeInConstructClause = false) // this is for the Where clause only (restriction)
 
 
                             case booleanVar: QueryVariable =>
@@ -665,9 +665,9 @@ class SearchResponderV2 extends Responder {
 
                                 val dateValueHasEndVar = createUniqueVariableFromStatement(statementPattern, "voDateValueEnd")
 
-                                val dateValStartStatement = StatementPattern(subj = valueObjVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasStartJDN), obj = dateValueHasStartVar, includeInConstructClause = false) // this is for the Where clause only (restriction)
+                                val dateValStartStatement = StatementPattern.makeExplicit(subj = valueObjVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasStartJDN), obj = dateValueHasStartVar, includeInConstructClause = false) // this is for the Where clause only (restriction)
 
-                                val dateValEndStatement = StatementPattern(subj = valueObjVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasEndJDN), obj = dateValueHasEndVar, includeInConstructClause = false) // this is for the Where clause only (restriction)
+                                val dateValEndStatement = StatementPattern.makeExplicit(subj = valueObjVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasEndJDN), obj = dateValueHasEndVar, includeInConstructClause = false) // this is for the Where clause only (restriction)
 
                                 // any overlap in considered as equality
                                 val leftArgFilter = CompareExpression(XsdLiteral(date.dateval1.toString, OntologyConstants.Xsd.Integer), CompareExpressionOperator.LESS_THAN_OR_EQUAL_TO, dateValueHasEndVar)
@@ -1030,7 +1030,7 @@ class SearchResponderV2 extends Responder {
                                             TransformedFilterExpression(
                                                 CompareExpression(intValHasInteger, filterCompare.operator, integerLiteral),
                                                 Seq(
-                                                    StatementPattern(subj = queryVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasInteger), intValHasInteger)
+                                                    StatementPattern.makeExplicit(subj = queryVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasInteger), intValHasInteger)
                                                 )
                                             )
 
@@ -1048,7 +1048,7 @@ class SearchResponderV2 extends Responder {
                                             TransformedFilterExpression(
                                                 CompareExpression(decimalValHasDecimal, filterCompare.operator, decimalLiteral),
                                                 Seq(
-                                                    StatementPattern(subj = queryVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasDecimal), decimalValHasDecimal)
+                                                    StatementPattern.makeExplicit(subj = queryVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasDecimal), decimalValHasDecimal)
                                                 )
                                             )
 
@@ -1071,7 +1071,7 @@ class SearchResponderV2 extends Responder {
                                             TransformedFilterExpression(
                                                 CompareExpression(booleanValHasBoolean, filterCompare.operator, booleanLiteral),
                                                 Seq(
-                                                    StatementPattern(subj = queryVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasBoolean), booleanValHasBoolean)
+                                                    StatementPattern.makeExplicit(subj = queryVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasBoolean), booleanValHasBoolean)
                                                 )
                                             )
 
@@ -1094,7 +1094,7 @@ class SearchResponderV2 extends Responder {
                                             TransformedFilterExpression(
                                                 CompareExpression(textValHasString, filterCompare.operator, stringLiteral),
                                                 Seq(
-                                                    StatementPattern(subj = queryVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasString), textValHasString)
+                                                    StatementPattern.makeExplicit(subj = queryVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasString), textValHasString)
                                                 )
                                             )
 
@@ -1115,9 +1115,9 @@ class SearchResponderV2 extends Responder {
 
                                             val dateValueHasEndVar = createUniqueVariableFromEntity(queryVar, "voDateValueEnd")
 
-                                            val dateValStartStatement = StatementPattern(subj = queryVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasStartJDN), obj = dateValueHasStartVar)
+                                            val dateValStartStatement = StatementPattern.makeExplicit(subj = queryVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasStartJDN), obj = dateValueHasStartVar)
 
-                                            val dateValEndStatement = StatementPattern(subj = queryVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasEndJDN), obj = dateValueHasEndVar)
+                                            val dateValEndStatement = StatementPattern.makeExplicit(subj = queryVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasEndJDN), obj = dateValueHasEndVar)
 
                                             // process filter expression based on given comparison operator
                                             filterCompare.operator match {
