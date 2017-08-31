@@ -30,7 +30,7 @@ import org.knora.webapi.routing.Authenticator
 /**
   * A route providing authentication support. It allows the creation of "sessions", which is used in the SALSAH app.
   */
-object AuthenticateRouteV1 extends Authenticator {
+object AuthenticationRouteV1 extends Authenticator {
 
     def knoraApiPath(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter): Route = {
         implicit val system = _system
@@ -41,7 +41,7 @@ object AuthenticateRouteV1 extends Authenticator {
             get {
                 requestContext => {
                     requestContext.complete {
-                        doAuthenticate(requestContext)
+                        doAuthenticateV1(requestContext)
                     }
                 }
             }
@@ -51,24 +51,24 @@ object AuthenticateRouteV1 extends Authenticator {
                     requestContext.complete {
                         val params = requestContext.request.uri.query().toMap
                         if (params.contains("logout")) {
-                            doLogout(requestContext)
+                            doLogoutV2(requestContext)
                         } else if (params.contains("login")) {
-                            doLogin(requestContext)
+                            doLoginV1(requestContext)
                         } else {
-                            doSessionAuthentication(requestContext)
+                            doAuthenticateV1(requestContext)
                         }
                     }
                 }
             } ~ post {
                 requestContext => {
                     requestContext.complete {
-                        doLogin(requestContext)
+                        doLoginV1(requestContext)
                     }
                 }
             } ~ delete {
                 requestContext => {
                     requestContext.complete {
-                        doLogout(requestContext)
+                        doLogoutV2(requestContext)
                     }
                 }
             }

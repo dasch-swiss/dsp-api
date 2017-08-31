@@ -73,7 +73,7 @@ class UserMessagesV1Spec extends WordSpecLike with Matchers {
                 sessionId = sessionId
             )
 
-            assert(rootUserProfileV1.ofType(UserProfileType.RESTRICTED) === rootUserProfileV1Safe)
+            assert(rootUserProfileV1.ofType(UserProfileTypeV1.RESTRICTED) === rootUserProfileV1Safe)
         }
         "allow checking the password (1)" in {
             //hashedPassword =  encoder.encode(createRequest.password);
