@@ -41,7 +41,7 @@ jobs:
         - unzip $TRAVIS_BUILD_DIR/triplestores/graphdb-free/graphdb-free-8.2.0-dist.zip -d /tmp && sudo mv /tmp/graphdb-free-8.2.0 /graphdb
         - cp $TRAVIS_BUILD_DIR/webapi/scripts/KnoraRules.pie /graphdb
         # start and initialize graphdb-free
-        - cd /graphdb && ./bin/graphdb &
+        - cd /graphdb && ./bin/graphdb > /dev/null 2>&1 &
         - sleep 15
         - cd $TRAVIS_BUILD_DIR/webapi/scripts && ./graphdb-free-init-knora-test-unit.sh
         # start the built-in webapi server tests
@@ -52,7 +52,7 @@ jobs:
         - unzip $TRAVIS_BUILD_DIR/triplestores/graphdb-free/graphdb-free-8.2.0-dist.zip -d /tmp && sudo mv /tmp/graphdb-free-8.2.0 /graphdb
         - cp $TRAVIS_BUILD_DIR/webapi/scripts/KnoraRules.pie /graphdb
         # start and initialize graphdb-free
-        - cd /graphdb && ./bin/graphdb &
+        - cd /graphdb && ./bin/graphdb > /dev/null 2>&1 &
         - sleep 15
         - cd $TRAVIS_BUILD_DIR/webapi/scripts && ./graphdb-free-init-knora-test-unit.sh
         # start the sipi container (with production config)
