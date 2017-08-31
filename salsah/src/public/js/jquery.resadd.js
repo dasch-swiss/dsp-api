@@ -270,10 +270,10 @@
 
 					var create_form = function(rtinfo, options) {
 						var form = localdata.form = $('<form>', {
-							'class': 'propedit'
+							'class': 'resadd'
 						});
 						var table = $('<table>', {
-							'class': 'propedit',
+							'class': 'resadd',
 							width: '100%'
 						});
 						var tline;

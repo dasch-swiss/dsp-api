@@ -30,7 +30,7 @@ import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v1.responder.groupmessages._
 import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse}
-import org.knora.webapi.messages.v1.responder.usermessages.UserProfileType
+import org.knora.webapi.messages.v1.responder.usermessages.UserProfileTypeV1
 import org.knora.webapi.responders.{RESPONDER_MANAGER_ACTOR_NAME, ResponderManager}
 import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
 import org.knora.webapi.util.MutableTestIri
@@ -217,8 +217,8 @@ class GroupsResponderV1Spec extends CoreSpec(GroupsResponderV1Spec.config) with 
                 )
                 val received: GroupMembersResponseV1 = expectMsgType[GroupMembersResponseV1](timeout)
                 received.members should contain allElementsOf Seq(
-                    SharedAdminTestData.multiuserUser.ofType(UserProfileType.SHORT).userData.user_id.get,
-                    SharedAdminTestData.imagesReviewerUser.ofType(UserProfileType.SHORT).userData.user_id.get
+                    SharedAdminTestData.multiuserUser.ofType(UserProfileTypeV1.SHORT).userData.user_id.get,
+                    SharedAdminTestData.imagesReviewerUser.ofType(UserProfileTypeV1.SHORT).userData.user_id.get
                 )
             }
 
@@ -230,8 +230,8 @@ class GroupsResponderV1Spec extends CoreSpec(GroupsResponderV1Spec.config) with 
                 )
                 val received: GroupMembersResponseV1 = expectMsgType[GroupMembersResponseV1](timeout)
                 received.members should contain allElementsOf Seq(
-                    SharedAdminTestData.multiuserUser.ofType(UserProfileType.SHORT).userData.user_id.get,
-                    SharedAdminTestData.imagesReviewerUser.ofType(UserProfileType.SHORT).userData.user_id.get
+                    SharedAdminTestData.multiuserUser.ofType(UserProfileTypeV1.SHORT).userData.user_id.get,
+                    SharedAdminTestData.imagesReviewerUser.ofType(UserProfileTypeV1.SHORT).userData.user_id.get
                 )
             }
 

@@ -1,0 +1,70 @@
+.cke_editable pre {
+  font-family: Courrier, monospace;
+  background-color: aliceblue;
+  color: black;
+  padding-left: 1em;
+  margin-left: 1em;
+  border-left: gray 5px solid;
+}
+.cke_editable blockquote {
+  padding-left: 1em;
+  margin-left: 1em;
+  border-left: gray 5px solid;
+  background-color: wheat;
+  font-style: italic;
+}
+.cke_editable code {
+    font-family: Courrier, monospace;
+    padding-left: 1em;
+    margin-left: 1em;
+    border-left: gray 5px solid;
+    background-color: black;
+    color: white;
+}
+.cke_editable h1 {
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 20px;
+  padding-bottom: 3px;
+  border-bottom: 1px solid black;
+}
+.cke_editable h2 {
+  font-size: 25px;
+  font-weight: 700;
+  line-height: 15px;
+  padding-left: 1em;
+}
+.cke_editable h3 {
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 15px;
+  padding-left: 2em;
+}
+.cke_editable h4 {
+  font-size: 20px;
+  font-weight: 300;
+  line-height: 15px;
+  padding-left: 3em;
+}
+.cke_editable h5 {
+  font-size: 15px;
+  font-weight: 300;
+  line-height: 15px;
+  padding-left: 5em;
+}
+.cke_editable h6 {
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 15px;
+  padding-left: 7em;
+}
+.cke_editable table {
+  border-collapse: collapse;
+  border: solid 1px black;
+}
+.cke_editable td {
+  border: 1px solid black;
+  padding-left: 2px;
+  padding-right: 2px;
+  line-height: normal;
+}

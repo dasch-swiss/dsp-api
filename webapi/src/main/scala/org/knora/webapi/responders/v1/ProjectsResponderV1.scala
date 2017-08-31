@@ -746,7 +746,7 @@ class ProjectsResponderV1 extends Responder {
         for {
             userDatas <- userDatasFuture
             result: Seq[UserDataV1] <- Future.sequence(userDatas)
-        } yield ProjectMembersGetResponseV1(result, userProfile.ofType(UserProfileType.SHORT).userData)
+        } yield ProjectMembersGetResponseV1(result, userProfile.ofType(UserProfileTypeV1.SHORT).userData)
 
     }
 
@@ -778,7 +778,7 @@ class ProjectsResponderV1 extends Responder {
         for {
             userDatas <- userDatasFuture
             result: Seq[UserDataV1] <- Future.sequence(userDatas)
-        } yield ProjectAdminMembersGetResponseV1(result, userProfile.ofType(UserProfileType.SHORT).userData)
+        } yield ProjectAdminMembersGetResponseV1(result, userProfile.ofType(UserProfileTypeV1.SHORT).userData)
     }
 
     /**

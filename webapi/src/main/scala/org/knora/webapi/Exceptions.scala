@@ -167,6 +167,13 @@ object InternalServerException {
 }
 
 /**
+  * An exception indicating that during authentication something unexpected happened.
+  *
+  * @param message a description of the error.
+  */
+case class AuthenticationException(message: String = "Error during authentication. Please report this as a possible bug.") extends InternalServerException(message)
+
+/**
   * An exception indicating that during file upload there was an error.
   *
   * @param message a description of the error.
