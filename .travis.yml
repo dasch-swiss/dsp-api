@@ -37,7 +37,7 @@ jobs:
     - stage: test
       script:
         # start and initialize graphdb-free
-        - docker run -d -p 7200:7200 dhlabbasel/graphdb-free && cd $TRAVIS_BUILD_DIR/webapi/scripts && ./graphdb-free-init-knora-test-unit.sh
+        - docker run -d -e GDB_HEAP_SIZE="3g" -p 7200:7200 dhlabbasel/graphdb-free && cd $TRAVIS_BUILD_DIR/webapi/scripts && ./graphdb-free-init-knora-test-unit.sh
         # start the built-in webapi server tests
         - cd $TRAVIS_BUILD_DIR/webapi/ && sbt test
     - stage: test
