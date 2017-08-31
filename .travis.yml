@@ -27,7 +27,7 @@ env:
     - SIPI_REPO=dhlabbasel/sipi
     - DOCKERHOST=$(ip route get 8.8.8.8 | awk '{print $NF; exit}')
     - CHROME_BIN=google-chrome-stable
-    - GDB_HEAP_SIZE="5.5g"
+    - GDB_HEAP_SIZE="4g"
 
 cache:
   directories:
