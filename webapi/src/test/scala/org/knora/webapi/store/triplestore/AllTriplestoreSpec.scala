@@ -204,158 +204,163 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
     * The Akka documentation describes a bunch of other methods
     * but this is the one I the most
     */
-    s"The Triplestore ($tsType) Actor " when {
-        "started " should {
-            "only start answering after initialization has finished " in {
-                storeManager ! Initialized()
-                expectMsg(InitializedResponse(true))
-            }
-        }
 
-        "receiving a Hello " should {
-            "reply " in {
-                within(1.seconds) {
-                    storeManager ! HelloTriplestore(tsType)
-                    expectMsg(HelloTriplestore(tsType))
-                }
-            }
-        }
-        "receiving a 'ResetTriplestoreContent' request " should {
-            "reset the data " in {
-                //println("==>> Reset test case start")
-                storeManager ! ResetTriplestoreContent(rdfDataObjects)
-                expectMsg(300.seconds, ResetTriplestoreContentACK())
-                //println("==>> Reset test case end")
+    Option(System.getenv("TRAVIS_BRANCH")) match {
+        case Some(_) => "Not running memory-intensive triplestore tests on Travis" in {}
 
-                storeManager ! SparqlSelectRequest(countTriplesQuery)
-                expectMsgPF(timeout) {
-                    case msg: SparqlSelectResponse => {
-                        //println(msg)
-                        afterLoadCount = msg.results.bindings.head.rowMap("no").toInt
-                        (afterLoadCount > 0) should ===(true)
-                    }
-                }
-            }
-        }
-        "receiving a Named Graph request " should {
-            "provide data " in {
-                //println("==>> Named Graph test case start")
-                storeManager ! SparqlSelectRequest(namedGraphQuery)
-                //println(result)
-                expectMsgPF(timeout) {
-                    case msg: SparqlSelectResponse => {
-                        //println(msg)
-                        msg.results.bindings.nonEmpty should ===(true)
-                    }
-                }
-                //println("==>> Named Graph test case end")
-            }
-        }
-        "receiving an update request " should {
-            "execute the update " in {
-                //println("==>> Update 1 test case start")
-
-
-                storeManager ! SparqlSelectRequest(countTriplesQuery)
-                expectMsgPF(timeout) {
-                    case msg: SparqlSelectResponse => {
-                        //println("vor insert: " + msg)
-                        msg.results.bindings.head.rowMap("no").toInt should ===(afterLoadCount)
+        case None =>
+            s"The Triplestore ($tsType) Actor " when {
+                "started " should {
+                    "only start answering after initialization has finished " in {
+                        storeManager ! Initialized()
+                        expectMsg(InitializedResponse(true))
                     }
                 }
 
-
-                storeManager ! SparqlUpdateRequest(insertQuery)
-                expectMsg(SparqlUpdateResponse())
-
-                storeManager ! SparqlSelectRequest(checkInsertQuery)
-                expectMsgPF(timeout) {
-                    case msg: SparqlSelectResponse => {
-                        //println(msg)
-                        msg.results.bindings.size should ===(3)
+                "receiving a Hello " should {
+                    "reply " in {
+                        within(1.seconds) {
+                            storeManager ! HelloTriplestore(tsType)
+                            expectMsg(HelloTriplestore(tsType))
+                        }
                     }
                 }
+                "receiving a 'ResetTriplestoreContent' request " should {
+                    "reset the data " in {
+                        //println("==>> Reset test case start")
+                        storeManager ! ResetTriplestoreContent(rdfDataObjects)
+                        expectMsg(300.seconds, ResetTriplestoreContentACK())
+                        //println("==>> Reset test case end")
 
-
-                storeManager ! SparqlSelectRequest(countTriplesQuery)
-                expectMsgPF(timeout) {
-                    case msg: SparqlSelectResponse => {
-                        //println("nach instert" + msg)
-                        afterChangeCount = msg.results.bindings.head.rowMap("no").toInt
-                        (afterChangeCount - afterLoadCount) should ===(3)
+                        storeManager ! SparqlSelectRequest(countTriplesQuery)
+                        expectMsgPF(timeout) {
+                            case msg: SparqlSelectResponse => {
+                                //println(msg)
+                                afterLoadCount = msg.results.bindings.head.rowMap("no").toInt
+                                (afterLoadCount > 0) should ===(true)
+                            }
+                        }
                     }
                 }
-
-
-
-                //println("==>> Update 1 test case end")
-            }
-            "revert back " in {
-                //println("==>> Update 2 test case start")
-
-
-                storeManager ! SparqlSelectRequest(countTriplesQuery)
-                expectMsgPF(timeout) {
-                    case msg: SparqlSelectResponse => {
-                        //println("vor revert: " + msg)
-                        msg.results.bindings.head.rowMap("no").toInt should ===(afterChangeCount)
+                "receiving a Named Graph request " should {
+                    "provide data " in {
+                        //println("==>> Named Graph test case start")
+                        storeManager ! SparqlSelectRequest(namedGraphQuery)
+                        //println(result)
+                        expectMsgPF(timeout) {
+                            case msg: SparqlSelectResponse => {
+                                //println(msg)
+                                msg.results.bindings.nonEmpty should ===(true)
+                            }
+                        }
+                        //println("==>> Named Graph test case end")
                     }
                 }
+                "receiving an update request " should {
+                    "execute the update " in {
+                        //println("==>> Update 1 test case start")
 
-                storeManager ! SparqlUpdateRequest(revertInsertQuery)
-                expectMsg(SparqlUpdateResponse())
 
-                storeManager ! SparqlSelectRequest(countTriplesQuery)
-                expectMsgPF(timeout) {
-                    case msg: SparqlSelectResponse => {
-                        //println("nach revert: " + msg)
-                        msg.results.bindings.head.rowMap("no").toInt should ===(afterLoadCount)
+                        storeManager ! SparqlSelectRequest(countTriplesQuery)
+                        expectMsgPF(timeout) {
+                            case msg: SparqlSelectResponse => {
+                                //println("vor insert: " + msg)
+                                msg.results.bindings.head.rowMap("no").toInt should ===(afterLoadCount)
+                            }
+                        }
+
+
+                        storeManager ! SparqlUpdateRequest(insertQuery)
+                        expectMsg(SparqlUpdateResponse())
+
+                        storeManager ! SparqlSelectRequest(checkInsertQuery)
+                        expectMsgPF(timeout) {
+                            case msg: SparqlSelectResponse => {
+                                //println(msg)
+                                msg.results.bindings.size should ===(3)
+                            }
+                        }
+
+
+                        storeManager ! SparqlSelectRequest(countTriplesQuery)
+                        expectMsgPF(timeout) {
+                            case msg: SparqlSelectResponse => {
+                                //println("nach instert" + msg)
+                                afterChangeCount = msg.results.bindings.head.rowMap("no").toInt
+                                (afterChangeCount - afterLoadCount) should ===(3)
+                            }
+                        }
+
+
+
+                        //println("==>> Update 1 test case end")
+                    }
+                    "revert back " in {
+                        //println("==>> Update 2 test case start")
+
+
+                        storeManager ! SparqlSelectRequest(countTriplesQuery)
+                        expectMsgPF(timeout) {
+                            case msg: SparqlSelectResponse => {
+                                //println("vor revert: " + msg)
+                                msg.results.bindings.head.rowMap("no").toInt should ===(afterChangeCount)
+                            }
+                        }
+
+                        storeManager ! SparqlUpdateRequest(revertInsertQuery)
+                        expectMsg(SparqlUpdateResponse())
+
+                        storeManager ! SparqlSelectRequest(countTriplesQuery)
+                        expectMsgPF(timeout) {
+                            case msg: SparqlSelectResponse => {
+                                //println("nach revert: " + msg)
+                                msg.results.bindings.head.rowMap("no").toInt should ===(afterLoadCount)
+                            }
+                        }
+
+
+                        storeManager ! SparqlSelectRequest(checkInsertQuery)
+                        expectMsgPF(timeout) {
+                            case msg: SparqlSelectResponse => {
+                                //println("check: " + msg)
+                                msg.results.bindings.size should ===(0)
+                            }
+                        }
+
+                        //println("==>> Update 2 test case end")
                     }
                 }
-
-
-                storeManager ! SparqlSelectRequest(checkInsertQuery)
-                expectMsgPF(timeout) {
-                    case msg: SparqlSelectResponse => {
-                        //println("check: " + msg)
-                        msg.results.bindings.size should ===(0)
+                "receiving a search request " should {
+                    "execute the search with the lucene index for 'knora-base:valueHasString' properties" in {
+                        within(1000.millis) {
+                            tsType match {
+                                case HTTP_GRAPH_DB_TS_TYPE | HTTP_GRAPH_DB_FREE_TS_TYPE => storeManager ! SparqlSelectRequest(textSearchQueryGraphDBValueHasString)
+                                case _ => storeManager ! SparqlSelectRequest(textSearchQueryFusekiValueHasString)
+                            }
+                            expectMsgPF(timeout) {
+                                case msg: SparqlSelectResponse => {
+                                    //println(msg)
+                                    msg.results.bindings.size should ===(35)
+                                }
+                            }
+                        }
                     }
-                }
 
-                //println("==>> Update 2 test case end")
-            }
-        }
-        "receiving a search request " should {
-            "execute the search with the lucene index for 'knora-base:valueHasString' properties" in {
-                within(1000.millis) {
-                    tsType match {
-                        case HTTP_GRAPH_DB_TS_TYPE | HTTP_GRAPH_DB_FREE_TS_TYPE => storeManager ! SparqlSelectRequest(textSearchQueryGraphDBValueHasString)
-                        case _ => storeManager ! SparqlSelectRequest(textSearchQueryFusekiValueHasString)
-                    }
-                    expectMsgPF(timeout) {
-                        case msg: SparqlSelectResponse => {
-                            //println(msg)
-                            msg.results.bindings.size should ===(35)
+                    "execute the search with the lucene index for 'rdfs:label' properties" in {
+                        within(1000.millis) {
+                            tsType match {
+                                case HTTP_GRAPH_DB_TS_TYPE | HTTP_GRAPH_DB_FREE_TS_TYPE => storeManager ! SparqlSelectRequest(textSearchQueryGraphDBRDFLabel)
+                                case _ => storeManager ! SparqlSelectRequest(textSearchQueryFusekiDRFLabel)
+                            }
+                            expectMsgPF(timeout) {
+                                case msg: SparqlSelectResponse => {
+                                    //println(msg)
+                                    msg.results.bindings.size should ===(1)
+                                }
+                            }
                         }
                     }
                 }
             }
-
-            "execute the search with the lucene index for 'rdfs:label' properties" in {
-                within(1000.millis) {
-                    tsType match {
-                        case HTTP_GRAPH_DB_TS_TYPE | HTTP_GRAPH_DB_FREE_TS_TYPE => storeManager ! SparqlSelectRequest(textSearchQueryGraphDBRDFLabel)
-                        case _ => storeManager ! SparqlSelectRequest(textSearchQueryFusekiDRFLabel)
-                    }
-                    expectMsgPF(timeout) {
-                        case msg: SparqlSelectResponse => {
-                            //println(msg)
-                            msg.results.bindings.size should ===(1)
-                        }
-                    }
-                }
-            }
-        }
     }
-
 }
