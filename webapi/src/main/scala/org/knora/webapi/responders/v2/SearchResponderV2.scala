@@ -994,8 +994,7 @@ class SearchResponderV2 extends Responder {
                                                 case iriRef: IriRef =>
 
                                                     // make sure that the comparison operator is a `CompareExpressionOperator.EQUALS`
-                                                    // TODO: shall we allow for `CompareExpressionOperator.NOT_EQUALS`?
-                                                    if (filterCompare.operator != CompareExpressionOperator.EQUALS) throw SparqlSearchException(s"Comparison operator in a CompareExpression for a property type is expected to be ${CompareExpressionOperator.EQUALS}, but ${filterCompare.operator}")
+                                                    if (filterCompare.operator != CompareExpressionOperator.EQUALS) throw SparqlSearchException(s"Comparison operator in a CompareExpression for a property type is expected to be ${CompareExpressionOperator.EQUALS}, but ${filterCompare.operator} given. For negations use 'FILTER NOT EXISTS' ")
 
                                                     TransformedFilterExpression(CompareExpression(filterCompare.leftArg, filterCompare.operator, filterCompare.rightArg))
 
