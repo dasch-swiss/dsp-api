@@ -53,6 +53,33 @@ object InputValidation {
       */
     val PrecisionSeparator: String = "-"
 
+    /**
+      * Separates a date (year, month, day) from the era in a Knora date.
+      */
+    val EraSeparator: String = " "
+
+    /**
+      * Before Christ (equivalent to BCE)
+      */
+    val Era_BC: String = "BC"
+
+    /**
+      * Before Common Era (equivalent to BC)
+      */
+    val Era_BCE: String = "BCE"
+
+    /**
+      * Anno Domini (equivalent to CE)
+      */
+    val Era_AD: String = "AD"
+
+    /**
+      * Common Era (equivalent to AD)
+      */
+    val Era_CE: String = "CE"
+
+
+
     // The expected format of a Knora date.
     // Calendar:YYYY[-MM[-DD]][ EE][:YYYY[-MM[-DD]][ EE]]
     // EE being the era: one of BC or AD
