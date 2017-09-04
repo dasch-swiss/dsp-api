@@ -66,7 +66,7 @@
         <standoffClass>
             <classIri>http://www.knora.org/ontology/beol#StandoffFacsimileTag</classIri>
             <datatype>
-                <type>http://www.knora.org/ontology/knora-base#StandoffUriTag</type>
+                <type>http://www.knora.org/ontology/knora-base#StandoffLinkTag</type>
                 <attributeName>src</attributeName>
             </datatype>
         </standoffClass>
