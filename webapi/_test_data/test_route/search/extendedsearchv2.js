@@ -16,33 +16,33 @@ queryArr.push(`
     CONSTRUCT {
         ?letter knora-api:isMainResource true .
     
-        ?letter ?linkingProp1  <http://rdfh.ch/beol/oU8fMNDJQ9SGblfBl5JamA> .
+        ?letter ?linkingProp1  <http://rdfh.ch/beol/ZkJcQg9yTmyMY_J6nnubxA> .
 
-        ?letter ?linkingProp2  <http://rdfh.ch/beol/6edJwtTSR8yjAWnYmt6AtA> .
+        ?letter ?linkingProp2  <http://rdfh.ch/beol/_yblAQMwT2un_xN7UaVWrg> .
 
 } WHERE {
         ?letter a knora-api:Resource .
         ?letter a beol:letter .
     
         # Scheuchzer, Johann Jacob 1672-1733
-        ?letter ?linkingProp1  <http://rdfh.ch/beol/oU8fMNDJQ9SGblfBl5JamA> .
+        ?letter ?linkingProp1  <http://rdfh.ch/beol/ZkJcQg9yTmyMY_J6nnubxA> .
         ?linkingProp1 knora-api:objectType knora-api:Resource .
         FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient )
     
-        <http://rdfh.ch/beol/oU8fMNDJQ9SGblfBl5JamA> a knora-api:Resource .
+        <http://rdfh.ch/beol/ZkJcQg9yTmyMY_J6nnubxA> a knora-api:Resource .
 
         # Hermann, Jacob 1678-1733
-        ?letter ?linkingProp2 <http://rdfh.ch/beol/6edJwtTSR8yjAWnYmt6AtA> .
+        ?letter ?linkingProp2 <http://rdfh.ch/beol/_yblAQMwT2un_xN7UaVWrg> .
         ?linkingProp2 knora-api:objectType knora-api:Resource .
     
-        FILTER(?linkingProp2 = beol:hasAuthor || ?linkingProp2 = beol:hasRecipient )
+        FILTER(?linkingProp2 = knora-api:hasLinkTo || ?linkingProp2 = knora-api:hasLinkTo )
     
-        <http://rdfh.ch/beol/6edJwtTSR8yjAWnYmt6AtA> a knora-api:Resource .
+        <http://rdfh.ch/beol/_yblAQMwT2un_xN7UaVWrg> a knora-api:Resource .
 }
 `);
 
 // search for a letter that has the given title and mentions Isaac Newton
-queryArr.push(`
+/*queryArr.push(`
       PREFIX beol: <http://api.knora.org/ontology/beol/simple/v2#>
       PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
       
@@ -182,7 +182,7 @@ queryArr.push(`
         ?file a knora-api:StillImageFile .
     
     }
-`);
+`);*/
 
 
 

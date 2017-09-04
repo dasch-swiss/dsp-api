@@ -56,19 +56,19 @@ trait ConstructToConstructTransformer extends WhereTransformer {
     def transformStatementInConstruct(statementPattern: StatementPattern): Seq[StatementPattern]
 }
 
+/**
+  * Returned by `ConstructToSelectTransformer.getOrderBy` to represent a transformed ORDER BY as well
+  * as any additional statement patterns that should be added to the WHERE clause to support the ORDER BY.
+  *
+  * @param statementPatterns any additional WHERE clause statements required by the ORDER BY.
+  * @param orderBy the ORDER BY criteria.
+  */
+case class TransformedOrderBy(statementPatterns: Seq[StatementPattern] = Vector.empty[StatementPattern], orderBy: Seq[OrderCriterion] = Vector.empty[OrderCriterion])
 
 /**
   * A trait for classes that transform SELECT queries into CONSTRUCT queries.
   */
 trait ConstructToSelectTransformer extends WhereTransformer {
-    /**
-      * Collects information from the ORDER BY criteria, if any, in the input query. This method will be called
-      * before any invocations of `transformStatementInWhere`.
-      *
-      * @param orderBy the input ORDER by criteria, if any.
-      */
-    def handleOrderBy(orderBy: Seq[OrderCriterion]): Unit
-
     /**
       * Collects information from a statement pattern in the CONSTRUCT clause of the input query, e.g. variables
       * that need to be returned by the SELECT.
@@ -89,9 +89,10 @@ trait ConstructToSelectTransformer extends WhereTransformer {
       * Returns the criteria, if any, that should be used in the ORDER BY clause of the SELECT query. This method will be called
       * by [[ConstructTraverser]] after the whole input query has been traversed.
       *
+      * @param inputOrderBy the ORDER BY criteria in the input query.
       * @return the ORDER BY criteria, if any.
       */
-    def getOrderBy: Seq[OrderCriterion]
+    def getOrderBy(inputOrderBy: Seq[OrderCriterion]): TransformedOrderBy
 }
 
 
@@ -141,8 +142,6 @@ object ConstructTraverser {
       * @return the transformed query.
       */
     def transformConstructToSelect(inputQuery: ConstructQuery, transformer: ConstructToSelectTransformer): SelectQuery = {
-        transformer.handleOrderBy(inputQuery.orderBy)
-
         val transformedWherePatterns = transformWherePatterns(
             patterns = inputQuery.whereClause.patterns,
             whereTransformer = transformer
@@ -152,10 +151,12 @@ object ConstructTraverser {
             transformer.handleStatementInConstruct(statement)
         }
 
+        val transformedOrderBy = transformer.getOrderBy(inputQuery.orderBy)
+
         SelectQuery(
             variables = transformer.getSelectVariables,
-            whereClause = WhereClause(patterns = transformedWherePatterns),
-            orderBy = transformer.getOrderBy
+            whereClause = WhereClause(patterns = transformedWherePatterns ++ transformedOrderBy.statementPatterns),
+            orderBy = transformedOrderBy.orderBy
         )
     }
 

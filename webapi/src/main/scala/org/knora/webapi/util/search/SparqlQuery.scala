@@ -92,9 +92,8 @@ sealed trait QueryPattern extends SparqlGenerator
   * @param pred the predicate of the statement.
   * @param obj  the object of the statement.
   * @param namedGraph the named graph this statement should be searched in. Defaults to [[None]].
-  * @param includeInConstructClause indicates whether this statement should be copied from the WHERE clause into the CONSTRUCT clause during SPARQL generation.
   */
-case class StatementPattern(subj: Entity, pred: Entity, obj: Entity, namedGraph: Option[IriRef] = None, includeInConstructClause: Boolean = true) extends QueryPattern {
+case class StatementPattern(subj: Entity, pred: Entity, obj: Entity, namedGraph: Option[IriRef] = None) extends QueryPattern {
     def toSparql: String = {
         val triple = s"${subj.toSparql} ${pred.toSparql} ${obj.toSparql} ."
 
@@ -121,16 +120,14 @@ object StatementPattern {
       * @param subj the subject of the statement.
       * @param pred the predicate of the statement.
       * @param obj  the object of the statement.
-      * @param includeInConstructClause indicates whether this statement should be copied from the WHERE clause into the CONSTRUCT clause during SPARQL generation.
       * @return the statement pattern.
       */
-    def makeExplicit(subj: Entity, pred: Entity, obj: Entity, includeInConstructClause: Boolean = true): StatementPattern = {
+    def makeExplicit(subj: Entity, pred: Entity, obj: Entity): StatementPattern = {
         StatementPattern(
             subj = subj,
             pred = pred,
             obj = obj,
-            namedGraph = Some(IriRef(OntologyConstants.NamedGraphs.KnoraExplicitNamedGraph)),
-            includeInConstructClause = includeInConstructClause
+            namedGraph = Some(IriRef(OntologyConstants.NamedGraphs.KnoraExplicitNamedGraph))
         )
     }
 
@@ -140,16 +137,14 @@ object StatementPattern {
       * @param subj the subject of the statement.
       * @param pred the predicate of the statement.
       * @param obj  the object of the statement.
-      * @param includeInConstructClause indicates whether this statement should be copied from the WHERE clause into the CONSTRUCT clause during SPARQL generation.
       * @return the statement pattern.
       */
-    def makeInferred(subj: Entity, pred: Entity, obj: Entity, includeInConstructClause: Boolean = true): StatementPattern = {
+    def makeInferred(subj: Entity, pred: Entity, obj: Entity): StatementPattern = {
         StatementPattern(
             subj = subj,
             pred = pred,
             obj = obj,
-            namedGraph = None,
-            includeInConstructClause = includeInConstructClause
+            namedGraph = None
         )
     }
 }

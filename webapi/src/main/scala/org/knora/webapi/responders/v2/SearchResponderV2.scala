@@ -151,26 +151,103 @@ class SearchResponderV2 extends Responder {
         }
 
         /**
+          * An abstract base class providing shared methods to query transformers.
+          */
+        abstract class AbstractTransformer extends WhereTransformer {
+            protected val valueVariablesUsedInFilters = mutable.Map.empty[QueryVariable, QueryVariable]
+
+            /**
+              * Convert an [[Entity]] to a [[TypeableEntity]] (key of type inspection results).
+              * The entity is expected to be a variable or an Iri, otherwise `None` is returned.
+              *
+              * @param entity the entity to be converted to a [[TypeableEntity]].
+              * @return an Option of a [[TypeableEntity]].
+              */
+            def toTypeableEntityKey(entity: Entity): Option[TypeableEntity] = {
+
+                entity match {
+                    case queryVar: QueryVariable => Some(TypeableVariable(queryVar.variableName))
+
+                    case iriRef: IriRef =>
+                        // type info keys are external api v2 simple Iris,
+                        // so convert this internal Iri to an external api v2 simple if possible
+                        val externalIri = if (InputValidation.isInternalEntityIri(iriRef.iri)) {
+                            InputValidation.internalEntityIriToSimpleApiV2EntityIri(iriRef.iri, () => throw BadRequestException(s"${iriRef.iri} is not a valid internal knora-api entity Iri"))
+                        } else {
+                            iriRef.iri
+                        }
+
+                        Some(TypeableIri(externalIri))
+
+                    case _ => None
+                }
+
+            }
+
+            /**
+              * Creates a syntactically valid variable base name, based on the given entity.
+              *
+              * @param entity the entity to be used to create a base name for a variable.
+              * @return a base name for a variable.
+              */
+            def escapeEntityForVariable(entity: Entity): String = {
+                val entityStr = entity match {
+                    case QueryVariable(varName) => varName
+                    case IriRef(iriLiteral) => iriLiteral
+                    case XsdLiteral(stringLiteral, _) => stringLiteral
+                    case _ => throw SparqlSearchException(s"A unique variable could not be made for $entity")
+                }
+
+                entityStr.replaceAll("[:/.#-]", "").replaceAll("\\s","") // TODO: check if this is complete and if it could lea to collision of variable names
+            }
+
+            /**
+              * Creates a unique variable name from the given entity and the local part of a property IRI.
+              *
+              * @param base   the entity to use to create the variable base name.
+              * @param propertyIri the IRI of the property whose local part will be used to form the unique name.
+              * @return a unique variable.
+              */
+            def createUniqueVariableNameFromEntityAndProperty(base: Entity, propertyIri: IRI): QueryVariable = {
+                val propertyHashIndex = propertyIri.lastIndexOf('#')
+
+                if (propertyHashIndex > 0) {
+                    val propertyName = propertyIri.substring(propertyHashIndex + 1)
+                    QueryVariable(escapeEntityForVariable(base) + "__" + escapeEntityForVariable(QueryVariable(propertyName)))
+                } else {
+                    throw AssertionException(s"Invalid property IRI: $propertyIri")
+                }
+            }
+
+            /**
+              * Create a unique variable from a whole statement.
+              *
+              * @param baseStatement the statement to be used to create the variable base name.
+              * @param suffix        the suffix to be appended to the base name.
+              * @return a unique variable.
+              */
+            def createUniqueVariableFromStatement(baseStatement: StatementPattern, suffix: String): QueryVariable = {
+                QueryVariable(escapeEntityForVariable(baseStatement.subj) + "__" + escapeEntityForVariable(baseStatement.pred) + "__" + escapeEntityForVariable(baseStatement.obj) + "__" + suffix)
+            }
+        }
+
+        /**
           * Transforms a preprocessed CONSTRUCT query into a SELECT query that returns only the IRIs and sort order of the main resources that matched
           * the search criteria. This query will be used to get resource IRIs for a single page of results. These IRIs will be included in a CONSTRUCT
           * query to get the actual results for the page.
           *
           * @param typeInspectionResult the result of type inspection of the original query.
           */
-        class NonTriplestoreSpecificConstructToSelectTransformer(typeInspectionResult: TypeInspectionResult) extends ConstructToSelectTransformer {
-            val inputOrderBy: collection.mutable.ArrayBuffer[OrderCriterion] = collection.mutable.ArrayBuffer.empty[OrderCriterion]
-
+        class NonTriplestoreSpecificConstructToSelectTransformer(typeInspectionResult: TypeInspectionResult) extends AbstractTransformer with ConstructToSelectTransformer {
             var mainResourceVariable: Option[QueryVariable] = None
 
-            /**
-              * Collects information from the ORDER BY criteria, if any, in the input query. This method will be called
-              * before any invocations of `transformStatementInWhere`.
-              *
-              * @param orderBy the input ORDER by criteria, if any.
-              */
-            override def handleOrderBy(orderBy: Seq[OrderCriterion]): Unit = {
-                inputOrderBy.appendAll(orderBy)
-            }
+            val literalTypesToValueTypeIris: Map[IRI, IRI] = Map(
+                OntologyConstants.Xsd.Integer -> OntologyConstants.KnoraBase.ValueHasInteger,
+                OntologyConstants.Xsd.Decimal -> OntologyConstants.KnoraBase.ValueHasDecimal,
+                OntologyConstants.Xsd.Boolean -> OntologyConstants.KnoraBase.ValueHasBoolean,
+                OntologyConstants.Xsd.String -> OntologyConstants.KnoraBase.ValueHasString,
+                OntologyConstants.KnoraBase.Date -> OntologyConstants.KnoraBase.ValueHasStartJDN
+            )
 
             /**
               * Collects information from a statement pattern in the CONSTRUCT clause of the input query, e.g. variables
@@ -244,10 +321,53 @@ class SearchResponderV2 extends Responder {
               *
               * @return the ORDER BY criteria, if any.
               */
-            override def getOrderBy: Seq[OrderCriterion] = {
-                // Return the generated variable that we're using for ordering.
+            override def getOrderBy(inputOrderBy: Seq[OrderCriterion]): TransformedOrderBy = {
+                val transformedOrderBy = inputOrderBy.foldLeft(TransformedOrderBy()) {
+                    case (acc, criterion) =>
+                        // Did a FILTER already generate a unique variable for the literal value of this value object?
 
-                Seq.empty[OrderCriterion]
+                        valueVariablesUsedInFilters.get(criterion.queryVariable) match {
+                            case Some(generatedVariable) =>
+                                // Yes. Use the already generated variable in the ORDER BY.
+                                acc.copy(
+                                    orderBy = acc.orderBy :+ OrderCriterion(queryVariable = generatedVariable, isAscending = criterion.isAscending)
+                                )
+
+                            case None =>
+                                // No. Generate such a variable and generate an additional statement to get its literal value in the WHERE clause.
+
+                                // What is the type of the literal value?
+                                val typeableEntity = TypeableVariable(criterion.queryVariable.variableName)
+                                val typeInfo: SparqlEntityTypeInfo = typeInspectionResult.typedEntities.getOrElse(typeableEntity, throw SparqlSearchException(s"No type information found for ${criterion.queryVariable}"))
+
+                                // Get the corresponding knora-base:valueHas* property so we can generate an appropriate variable name.
+                                val propertyIri: IRI = typeInfo match {
+                                    case nonPropertyTypeInfo: NonPropertyTypeInfo =>
+                                        literalTypesToValueTypeIris.getOrElse(nonPropertyTypeInfo.typeIri, throw SparqlSearchException(s"Type ${nonPropertyTypeInfo.typeIri} is not supported in ORDER BY"))
+
+                                    case _: PropertyTypeInfo => throw SparqlSearchException(s"Variable ${criterion.queryVariable.variableName} represents a property, and therefore cannot be used in ORDER BY")
+                                }
+
+                                // Generate the variable name.
+                                val variableForLiteral: QueryVariable = createUniqueVariableNameFromEntityAndProperty(criterion.queryVariable, propertyIri)
+
+                                // Generate a statement to get the literal value.
+                                val statementPattern = StatementPattern.makeExplicit(subj = criterion.queryVariable, pred = IriRef(propertyIri), obj = variableForLiteral)
+
+                                acc.copy(
+                                    statementPatterns = acc.statementPatterns :+ statementPattern,
+                                    orderBy = acc.orderBy :+ OrderCriterion(queryVariable = variableForLiteral, isAscending = criterion.isAscending)
+                                )
+                        }
+                }
+
+                // always order by include main resource (Order By criterion is optional)
+                transformedOrderBy.copy(
+                    orderBy = transformedOrderBy.orderBy :+ OrderCriterion(
+                        queryVariable = mainResourceVariable.getOrElse(throw SparqlSearchException("\"No ${OntologyConstants.KnoraBase.IsMainResource} found in CONSTRUCT query.")),
+                        isAscending = true
+                    )
+                )
             }
         }
 
@@ -256,86 +376,20 @@ class SearchResponderV2 extends Responder {
           *
           * @param typeInspectionResult the result of type inspection of the original query.
           */
-        class NonTriplestoreSpecificConstructToConstructTransformer(typeInspectionResult: TypeInspectionResult) extends ConstructToConstructTransformer {
+        class NonTriplestoreSpecificConstructToConstructTransformer(typeInspectionResult: TypeInspectionResult) extends AbstractTransformer with ConstructToConstructTransformer {
 
             // a Set containing all `TypeableEntity` (keys of `typeInspectionResult`) that have already been processed
             // in order to prevent duplicates
-            val processedTypeInformationKeysWhereClause = mutable.Set.empty[TypeableEntity]
+            private val processedTypeInformationKeysWhereClause = mutable.Set.empty[TypeableEntity]
 
             // a Map containing all additional StatementPattern that have been created based on the type information, FilterPattern excluded
             // will be integrated in the Construct clause
-            val additionalStatementsCreatedForEntities = mutable.Map.empty[Entity, Seq[StatementPattern]]
+            private val additionalStatementsCreatedForEntities = mutable.Map.empty[Entity, Seq[StatementPattern]]
 
             // a Map containing all the statements of the Where clause (possibly converted) and additional statements created for them
             // will be integrated in the Construct clause
-            val convertedStatementsCreatedForWholeStatements = mutable.Map.empty[StatementPattern, Seq[StatementPattern]]
+            private val convertedStatementsCreatedForWholeStatements = mutable.Map.empty[StatementPattern, Seq[StatementPattern]]
 
-            /**
-              * Convert an [[Entity]] to a [[TypeableEntity]] (key of type inspection results).
-              * The entity is expected to be a variable or an Iri, otherwise `None` is returned.
-              *
-              * @param entity the entity to be converted to a [[TypeableEntity]].
-              * @return an Option of a [[TypeableEntity]].
-              */
-            def toTypeableEntityKey(entity: Entity): Option[TypeableEntity] = {
-
-                entity match {
-                    case queryVar: QueryVariable => Some(TypeableVariable(queryVar.variableName))
-
-                    case iriRef: IriRef =>
-                        // type info keys are external api v2 simple Iris,
-                        // so convert this internal Iri to an external api v2 simple if possible
-                        val externalIri = if (InputValidation.isInternalEntityIri(iriRef.iri)) {
-                            InputValidation.internalEntityIriToSimpleApiV2EntityIri(iriRef.iri, () => throw BadRequestException(s"${iriRef.iri} is not a valid internal knora-api entity Iri"))
-                        } else {
-                            iriRef.iri
-                        }
-
-                        Some(TypeableIri(externalIri))
-
-                    case _ => None
-                }
-
-            }
-
-            /**
-              * Create a syntactically valid variable base name, based on the given entity.
-              *
-              * @param entity the entity to be used to create a base name for a variable.
-              * @return a base name for a variable.
-              */
-            def escapeEntityForVariable(entity: Entity): String = {
-                val entityStr = entity match {
-                    case QueryVariable(varName) => varName
-                    case IriRef(iriLiteral) => iriLiteral
-                    case XsdLiteral(stringLiteral, _) => stringLiteral
-                    case _ => throw SparqlSearchException(s"A unique variable could not be made for $entity")
-                }
-
-                entityStr.replaceAll("[:/.#-]", "").replaceAll("\\s","") // TODO: check if this is complete and if it could lea to collision of variable names
-            }
-
-            /**
-              * Create a unique variable from the given entity and a suffix.
-              *
-              * @param base   the entity to use to create the variable base name.
-              * @param suffix the suffix to append to the base name.
-              * @return a unique variable.
-              */
-            def createUniqueVariableFromEntity(base: Entity, suffix: String): QueryVariable = {
-                QueryVariable(escapeEntityForVariable(base) + "__" + suffix)
-            }
-
-            /**
-              * Create a unique variable from a whole statement.
-              *
-              * @param baseStatement the statement to be used to create the variable base name.
-              * @param suffix        the suffix to be appended to the base name.
-              * @return a unique variable.
-              */
-            def createUniqueVariableFromStatement(baseStatement: StatementPattern, suffix: String): QueryVariable = {
-                QueryVariable(escapeEntityForVariable(baseStatement.subj) + "__" + escapeEntityForVariable(baseStatement.pred) + "__" + escapeEntityForVariable(baseStatement.obj) + "__" + suffix)
-            }
 
             /**
               * Create additional statements for the given non property type information.
@@ -360,11 +414,11 @@ class SearchResponderV2 extends Responder {
                     Seq(
                         StatementPattern.makeInferred(subj = inputEntity, pred = IriRef(OntologyConstants.Rdf.Type), obj = IriRef(OntologyConstants.KnoraBase.Resource)),
                         StatementPattern.makeExplicit(subj = inputEntity, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean)),
-                        StatementPattern.makeExplicit(subj = inputEntity, pred = IriRef(OntologyConstants.Rdfs.Label), obj = createUniqueVariableFromEntity(inputEntity, "ResourceLabel")),
-                        StatementPattern.makeExplicit(subj = inputEntity, pred = IriRef(OntologyConstants.Rdf.Type), obj = createUniqueVariableFromEntity(inputEntity, "ResourceType")),
-                        StatementPattern.makeExplicit(subj = inputEntity, pred = IriRef(OntologyConstants.KnoraBase.AttachedToUser), obj = createUniqueVariableFromEntity(inputEntity, "ResourceCreator")),
-                        StatementPattern.makeExplicit(subj = inputEntity, pred = IriRef(OntologyConstants.KnoraBase.HasPermissions), obj = createUniqueVariableFromEntity(inputEntity, "ResourcePermissions")),
-                        StatementPattern.makeExplicit(subj = inputEntity, pred = IriRef(OntologyConstants.KnoraBase.AttachedToProject), obj = createUniqueVariableFromEntity(inputEntity, "ResourceProject"))
+                        StatementPattern.makeExplicit(subj = inputEntity, pred = IriRef(OntologyConstants.Rdfs.Label), obj = createUniqueVariableNameFromEntityAndProperty(inputEntity, OntologyConstants.Rdfs.Label)),
+                        StatementPattern.makeExplicit(subj = inputEntity, pred = IriRef(OntologyConstants.Rdf.Type), obj = createUniqueVariableNameFromEntityAndProperty(inputEntity, OntologyConstants.Rdf.Type)),
+                        StatementPattern.makeExplicit(subj = inputEntity, pred = IriRef(OntologyConstants.KnoraBase.AttachedToUser), obj = createUniqueVariableNameFromEntityAndProperty(inputEntity, OntologyConstants.KnoraBase.AttachedToUser)),
+                        StatementPattern.makeExplicit(subj = inputEntity, pred = IriRef(OntologyConstants.KnoraBase.HasPermissions), obj = createUniqueVariableNameFromEntityAndProperty(inputEntity, OntologyConstants.KnoraBase.HasPermissions)),
+                        StatementPattern.makeExplicit(subj = inputEntity, pred = IriRef(OntologyConstants.KnoraBase.AttachedToProject), obj = createUniqueVariableNameFromEntityAndProperty(inputEntity, OntologyConstants.KnoraBase.AttachedToProject))
                     )
                 } else {
                     // inputEntity is target of a value property
@@ -391,7 +445,7 @@ class SearchResponderV2 extends Responder {
 
                 Seq(
                     StatementPattern.makeInferred(subj = statementPattern.subj, pred = IriRef(OntologyConstants.KnoraBase.HasValue), obj = valueObject), // include knora-base:hasValue pointing to the value object, because the construct clause needs it
-                    StatementPattern.makeInferred(subj = statementPattern.subj, pred = statementPattern.pred, obj = valueObject, includeInConstructClause = false), // do not include the originally given property in the Construct clause because inference is used
+                    StatementPattern.makeInferred(subj = statementPattern.subj, pred = statementPattern.pred, obj = valueObject), // TODO: do not include the originally given property in the Construct clause because inference is used
                     StatementPattern.makeExplicit(subj = statementPattern.subj, pred = valueObjPropVar, obj = valueObject), // the actually matching property
                     StatementPattern.makeExplicit(subj = valueObject, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean)), // make sure the value object is not marked as deleted
                     StatementPattern.makeExplicit(subj = valueObject, pred = IriRef(OntologyConstants.Rdf.Type), obj = IriRef(valueType)),
@@ -480,7 +534,7 @@ class SearchResponderV2 extends Responder {
                                 )
 
                                 // match the given literal value with the integer value object's `valueHasInteger`
-                                valueObject :+ StatementPattern.makeExplicit(subj = valueObjVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasInteger), obj = integerLiteral, includeInConstructClause = false) // this is for the Where clause only (restriction)
+                                valueObject :+ StatementPattern.makeExplicit(subj = valueObjVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasInteger), obj = integerLiteral) // TODO: this is for the Where clause only (restriction)
 
 
                             case integerVar: QueryVariable =>
@@ -524,7 +578,7 @@ class SearchResponderV2 extends Responder {
                                 )
 
                                 // match the given literal value with the integer value object's `valueHasString`
-                                valueObject :+ StatementPattern.makeExplicit(subj = valueObjVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasString), obj = stringLiteral, includeInConstructClause = false) // this is for the Where clause only (restriction)
+                                valueObject :+ StatementPattern.makeExplicit(subj = valueObjVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasString), obj = stringLiteral) // TODO: this is for the Where clause only (restriction)
 
 
                             case stringVar: QueryVariable =>
@@ -569,7 +623,7 @@ class SearchResponderV2 extends Responder {
                                 )
 
                                 // match the given literal value with the decimal value object's `valueHasDecimal`
-                                valueObject :+ StatementPattern.makeExplicit(subj = valueObjVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasDecimal), obj = decimalLiteral, includeInConstructClause = false) // this is for the Where clause only (restriction)
+                                valueObject :+ StatementPattern.makeExplicit(subj = valueObjVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasDecimal), obj = decimalLiteral) // TODO: this is for the Where clause only (restriction)
 
 
                             case decimalVar: QueryVariable =>
@@ -614,7 +668,7 @@ class SearchResponderV2 extends Responder {
                                 )
 
                                 // match the given literal value with the boolean value object's `valueHasBoolean`
-                                valueObject :+ StatementPattern.makeExplicit(subj = valueObjVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasBoolean), obj = booleanLiteral, includeInConstructClause = false) // this is for the Where clause only (restriction)
+                                valueObject :+ StatementPattern.makeExplicit(subj = valueObjVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasBoolean), obj = booleanLiteral) // TODO: this is for the Where clause only (restriction)
 
 
                             case booleanVar: QueryVariable =>
@@ -665,9 +719,9 @@ class SearchResponderV2 extends Responder {
 
                                 val dateValueHasEndVar = createUniqueVariableFromStatement(statementPattern, "voDateValueEnd")
 
-                                val dateValStartStatement = StatementPattern.makeExplicit(subj = valueObjVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasStartJDN), obj = dateValueHasStartVar, includeInConstructClause = false) // this is for the Where clause only (restriction)
+                                val dateValStartStatement = StatementPattern.makeExplicit(subj = valueObjVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasStartJDN), obj = dateValueHasStartVar) // TODO: this is for the Where clause only (restriction)
 
-                                val dateValEndStatement = StatementPattern.makeExplicit(subj = valueObjVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasEndJDN), obj = dateValueHasEndVar, includeInConstructClause = false) // this is for the Where clause only (restriction)
+                                val dateValEndStatement = StatementPattern.makeExplicit(subj = valueObjVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasEndJDN), obj = dateValueHasEndVar) // TODO: this is for the Where clause only (restriction)
 
                                 // any overlap in considered as equality
                                 val leftArgFilter = CompareExpression(XsdLiteral(date.dateval1.toString, OntologyConstants.Xsd.Integer), CompareExpressionOperator.LESS_THAN_OR_EQUAL_TO, dateValueHasEndVar)
@@ -880,10 +934,10 @@ class SearchResponderV2 extends Responder {
                     val newAdditionalStatementPatterns: Seq[StatementPattern] = additionalStatements.collect {
                         // only include StatementPattern
 
-                        // filter out those statements mentioning the originally given predicate (property) with inference turned on
+                        // TODO: filter out those statements mentioning the originally given predicate (property) with inference turned on
                         // this is necessary to return the explicit property to the user
                         // the originally given property will only be needed in the Where clause and get all subproperties too
-                        case statementP: StatementPattern if statementP.includeInConstructClause => statementP
+                        case statementP: StatementPattern /*if statementP.includeInConstructClause*/ => statementP
                     }
 
                     convertedStatementsCreatedForWholeStatements += statementPattern -> (existingAdditionalStatementsCreated ++ newAdditionalStatementPatterns)
@@ -1024,7 +1078,7 @@ class SearchResponderV2 extends Responder {
                                                 case other => throw SparqlSearchException(s"right argument in CompareExpression for integer property was expected to be an integer literal, but $other is given.")
                                             }
 
-                                            val intValHasInteger = createUniqueVariableFromEntity(queryVar, "intValueHasInteger")
+                                            val intValHasInteger = createUniqueVariableNameFromEntityAndProperty(queryVar, OntologyConstants.KnoraBase.ValueHasInteger)
 
                                             TransformedFilterExpression(
                                                 CompareExpression(intValHasInteger, filterCompare.operator, integerLiteral),
@@ -1042,7 +1096,7 @@ class SearchResponderV2 extends Responder {
                                                 case other => throw SparqlSearchException(s"right argument in CompareExpression for decimal property was expected to be a decimal or an integer literal, but $other is given.")
                                             }
 
-                                            val decimalValHasDecimal = createUniqueVariableFromEntity(queryVar, "decimalValueHasDecimal")
+                                            val decimalValHasDecimal = createUniqueVariableNameFromEntityAndProperty(queryVar, OntologyConstants.KnoraBase.ValueHasDecimal)
 
                                             TransformedFilterExpression(
                                                 CompareExpression(decimalValHasDecimal, filterCompare.operator, decimalLiteral),
@@ -1060,7 +1114,7 @@ class SearchResponderV2 extends Responder {
                                                 case other => throw SparqlSearchException(s"right argument in CompareExpression for boolean property was expected to be a boolean literal, but $other is given.")
                                             }
 
-                                            val booleanValHasBoolean = createUniqueVariableFromEntity(queryVar, "booleanValueHasBoolean")
+                                            val booleanValHasBoolean = createUniqueVariableNameFromEntityAndProperty(queryVar, OntologyConstants.KnoraBase.ValueHasBoolean)
 
                                             // check if operator is supported for string operations
                                             if (!(filterCompare.operator.equals(CompareExpressionOperator.EQUALS) || filterCompare.operator.equals(CompareExpressionOperator.NOT_EQUALS))) {
@@ -1083,7 +1137,7 @@ class SearchResponderV2 extends Responder {
                                                 case other => throw SparqlSearchException(s"right argument in CompareExpression for string property was expected to be a string literal, but $other is given.")
                                             }
 
-                                            val textValHasString = createUniqueVariableFromEntity(queryVar, "textValueHasString")
+                                            val textValHasString = createUniqueVariableNameFromEntityAndProperty(queryVar, OntologyConstants.KnoraBase.ValueHasString)
 
                                             // check if operator is supported for string operations
                                             if (!(filterCompare.operator.equals(CompareExpressionOperator.EQUALS) || filterCompare.operator.equals(CompareExpressionOperator.NOT_EQUALS))) {
@@ -1110,9 +1164,9 @@ class SearchResponderV2 extends Responder {
 
                                             val date: JulianDayNumberValueV1 = DateUtilV1.createJDNValueV1FromDateString(dateStr)
 
-                                            val dateValueHasStartVar = createUniqueVariableFromEntity(queryVar, "voDateValueStart")
+                                            val dateValueHasStartVar = createUniqueVariableNameFromEntityAndProperty(queryVar, OntologyConstants.KnoraBase.ValueHasStartJDN)
 
-                                            val dateValueHasEndVar = createUniqueVariableFromEntity(queryVar, "voDateValueEnd")
+                                            val dateValueHasEndVar = createUniqueVariableNameFromEntityAndProperty(queryVar, OntologyConstants.KnoraBase.ValueHasEndJDN)
 
                                             val dateValStartStatement = StatementPattern.makeExplicit(subj = queryVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasStartJDN), obj = dateValueHasStartVar)
 
@@ -1299,7 +1353,7 @@ class SearchResponderV2 extends Responder {
 
             // Create a Select prequery. TODO: include OFFSET and LIMIT.
             nonTriplestoreSpecficPrequery: SelectQuery = ConstructTraverser.transformConstructToSelect(
-                inputQuery = preprocessedQuery,
+                inputQuery = preprocessedQuery.copy(orderBy = inputQuery.orderBy), // TODO: This is a workaround to get Order By into the transformer since the preprocessor does not know about it
                 transformer = new NonTriplestoreSpecificConstructToSelectTransformer(typeInspectionResult)
             )
 
