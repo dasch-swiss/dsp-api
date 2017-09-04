@@ -213,10 +213,10 @@ Usage:
     > reStart loadDemoData
 
 
-``allowResetTriplestoreContentOperationOverHTTP`` - Flag
+``allowReloadOverHTTP`` - Flag
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-When the webapi.server is started with the ``allowResetTriplestoreContentOperationOverHTTP`` flag, then the
+When the webapi.server is started with the ``allowReloadOverHTTP`` flag, then the
 ``v1/store/ResetTriplestoreContent`` route is activated. This route accepts a ``POST`` request, with a json payload
 consisting of the following exemplary content:
 
@@ -254,4 +254,4 @@ Usage:
 ::
 
     $ sbt
-    > reStart allowResetTriplestoreContentOperationOverHTTP
+    > reStart allowReloadOverHTTP

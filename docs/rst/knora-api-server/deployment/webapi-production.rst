@@ -50,12 +50,11 @@ To run the Knora API Server, unzip this package, and execute the `webapi` script
 inside the `bin` folder.
 
 Alternatively, the command `sbt stage` will create a folder with the same content as before,
-but will skip the zipping step. 
+but will skip the zipping step.
 
 
 Running a supported triplestore
 --------------------------------
 
-See the chapters on :ref:`starting-fuseki` and :ref:`starting-graphdb-se` on how
+See the chapters on :ref:`starting-graphdb` and :ref:`starting-fuseki` on how
 to start a supported triplestore.
-

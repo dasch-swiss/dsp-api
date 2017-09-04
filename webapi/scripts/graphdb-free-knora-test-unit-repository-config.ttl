@@ -11,7 +11,8 @@
      rep:repositoryType "graphdb:FreeSailRepository" ;
      sr:sailImpl [
        # owlim:ruleset "owl-horst-optimized" ;
-       owlim:ruleset "empty" ;
+       owlim:ruleset "/graphdb/KnoraRules.pie" ;
+       owlim:check-for-inconsistencies "true";
        sail:sailType "graphdb:FreeSail" ;
        owlim:base-URL "http://data.knora.org/" ;
        owlim:repository-type "file-repository" ;

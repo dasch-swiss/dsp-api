@@ -25,17 +25,20 @@ Choosing and Setting Up a Triplestore
 
 The Knora API server requires a standards-compliant RDF_ triplestore. A number
 of triplestore implementations are available, including `free software`_ as
-well as proprietary options. The Knora API server is tested and configured to
-work out of the box with the following triplestores:
+well as proprietary options.
 
-* `Ontotext GraphDB`_, a high-performance, proprietary triplestore. The Knora
-  API server is tested with GraphDB Standard Edition and GraphDB Free (which
-  is proprietary but available free of charge).
+The Knora API server is designed to work with any standards-compliant triplestore.
+It is primarily tested with `Ontotext GraphDB`_, a high-performance, proprietary
+triplestore. We recommend GraphDB Standard Edition, but GraphDB Free (which is
+proprietary but available free of charge) also works.
 
-* `Apache Jena`_, which is `free software`_. Knora comes bundled with Jena and with
-  its standalone SPARQL server, Fuseki.
+Knora includes support for `Apache Jena`_, which is `free software`_, but use of
+Jena is deprecated, and support for it will probably be removed in the future.
 
-See the chapters on :ref:`starting-fuseki` and :ref:`starting-graphdb-se` for more details.
+Built-in support and configuration for other triplestores is planned.
+
+See the chapters on :ref:`starting-graphdb` and :ref:`starting-fuseki`
+for more details.
 
 
 Creating Repositories and Loading Test Data
@@ -45,10 +48,12 @@ To create a test repository called ``knora-test`` and load test data into it,
 go to ``webapi/scripts`` and run the script for the triplestore you have
 chosen.
 
-* For Fuseki, run ``fuseki-load-test-data.sh``.
-* For GraphDB:
+* For GraphDB SE:
     * If you are running GraphDB directly from its installation directory (using its ``graphdb`` script), run ``graphdb-se-local-init-knora-test.sh``.
     * If you are running GraphDB from a Docker image, run ``graphdb-se-docker-init-knora-test.sh``.
+* For GraphDB Free:
+    * Configuration is currently provided only for running GraphDB Free in Docker. To create a test repository, run ``graphdb-free-init-knora-test.sh``
+* For Fuseki, run ``fuseki-load-test-data.sh``.
 
 You can create your own scripts based on these scripts, to create new
 repositories and optionally to load existing Knora-compliant RDF data into
@@ -90,11 +95,11 @@ includes a command-line program that works on RDF data files in Turtle_ format. 
 
   > run-main org.knora.webapi.util.TransformData --help
   [info] Running org.knora.webapi.util.TransformData --help
-  [info] 
+  [info]
   [info] Updates the structure of Knora repository data to accommodate changes in Knora.
-  [info] 
+  [info]
   [info] Usage: org.knora.webapi.util.TransformData -t [deleted|permissions|strings|standoff|all] input output
-  [info]             
+  [info]
   [info]   -t, --transform  <arg>   Selects a transformation. Available transformations:
   [info]                            'deleted' (adds missing 'knora-base:isDeleted'
   [info]                            statements), 'permissions' (combines old-style
@@ -109,7 +114,7 @@ includes a command-line program that works on RDF data files in Turtle_ format. 
   [info]                            it will add permissions that where not there before),
   [info]                            'all' (all of the above minus 'owner')
   [info]       --help               Show help message
-  [info] 
+  [info]
   [info]  trailing arguments:
   [info]   input (required)    Input Turtle file
   [info]   output (required)   Output Turtle file

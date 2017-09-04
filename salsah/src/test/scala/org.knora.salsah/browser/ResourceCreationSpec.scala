@@ -68,7 +68,7 @@ class ResourceCreationSpec extends SalsahSpec {
     private val anythingProjectIri = "http://data.knora.org/projects/anything"
     private val incunabulaProjectIri = "http://data.knora.org/projects/77275339"
 
-    // In order to run these tests, start `webapi` using the option `allowResetTriplestoreContentOperationOverHTTP`
+    // In order to run these tests, start `webapi` using the option `allowReloadOverHTTP`
 
     "The SALSAH home page" should {
         "load test data" in {
@@ -148,6 +148,24 @@ class ResourceCreationSpec extends SalsahSpec {
             val resource1TextVal = page.getFormFieldByName("http://www.knora.org/ontology/anything#hasText")
 
             resource1TextVal.sendKeys("Dies ist ein Test")
+
+            val resource1DateVal = page.getFormFieldByName("http://www.knora.org/ontology/anything#hasDate")
+
+            val resource1Monthsel1 = page.getMonthSelection(resource1DateVal, 1)
+
+            // choose 15 March 44 BCE
+
+            resource1Monthsel1.selectByValue("3")
+
+            val resource1Days1 = page.getDays(resource1DateVal, 1)
+            resource1Days1(15).click()
+
+            val resource1Yearsel1 = page.getYearField(resource1DateVal, 1)
+            resource1Yearsel1.clear()
+            resource1Yearsel1.sendKeys("44")
+
+            val resource1Erasel1 = page.getEraSelection(resource1DateVal, 1)
+            resource1Erasel1.selectByIndex(1)
 
             page.clickSaveButtonForResourceCreationForm()
 

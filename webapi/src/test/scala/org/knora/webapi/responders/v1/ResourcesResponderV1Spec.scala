@@ -1044,6 +1044,8 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
                 DateValueV1(
                     dateval1 = "1487",
                     dateval2 = "1490",
+                    era1 = "CE",
+                    era2 = "CE",
                     calendar = KnoraCalendarV1.JULIAN
                 )
             )
@@ -1157,7 +1159,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
             val publoc = TextValueSimpleV1("Entenhausen")
 
             val pubdateRequest = DateUtilV1.createJDNValueV1FromDateString("GREGORIAN:2015-12-03")
-            val pubdateResponse = DateValueV1(dateval1 = "2015-12-03", dateval2 = "2015-12-03", calendar = KnoraCalendarV1.GREGORIAN)
+            val pubdateResponse = DateValueV1(dateval1 = "2015-12-03", dateval2 = "2015-12-03", era1="CE",era2="CE", calendar = KnoraCalendarV1.GREGORIAN)
 
             val valuesToBeCreated: Map[IRI, Seq[CreateValueV1WithComment]] = Map(
                 "http://www.knora.org/ontology/incunabula#title" -> Vector(CreateValueV1WithComment(title1)),

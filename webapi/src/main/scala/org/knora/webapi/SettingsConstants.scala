@@ -32,5 +32,4 @@ object SettingsConstants {
     val HTTP_GRAPH_DB_TS_TYPE = "graphdb"
     val HTTP_GRAPH_DB_FREE_TS_TYPE = "graphdb-free"
     val HTTP_FUSEKI_TS_TYPE = "fuseki"
-    val HTTP_SESAME_TS_TYPE = "sesame"
 }

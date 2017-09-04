@@ -30,6 +30,7 @@
  * @param linkSourceIri the resource that is the source of the link.
  * @param linkUpdate a [[SparqlTemplateLinkUpdate]] specifying how to update the link.
  * @param maybeComment an optional comment explaining why the link is being deleted.
+ * @param currentTime an xsd:dateTimeStamp that will be attached to the resources.
  *
  * To find out whether the update succeeded, the application must query the deleted link.
  *@
@@ -37,7 +38,8 @@
   triplestore: String,
   linkSourceIri: IRI,
   linkUpdate: SparqlTemplateLinkUpdate,
-  maybeComment: Option[String])
+  maybeComment: Option[String],
+  currentTime: String)
 
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -72,10 +74,10 @@ INSERT {
             rdf:subject ?linkSource ;
             rdf:predicate ?linkProperty ;
             rdf:object ?linkTarget ;
-            knora-base:valueHasString "@linkUpdate.linkTargetIri" ;
+            knora-base:valueHasString "@linkUpdate.linkTargetIri"^^xsd:string ;
             knora-base:valueHasRefCount @linkUpdate.newReferenceCount ;
-            knora-base:valueCreationDate ?currentTime ;
-            knora-base:deleteDate ?currentTime ;
+            knora-base:valueCreationDate "@currentTime"^^xsd:dateTimeStamp ;
+            knora-base:deleteDate "@currentTime"^^xsd:dateTimeStamp ;
             knora-base:previousValue ?currentLinkValue ;
             @maybeComment match {
                 case Some(comment) => {
@@ -91,13 +93,13 @@ INSERT {
             }
 
         ?newLinkValue knora-base:attachedToUser <@linkUpdate.newLinkValueCreator> ;
-            knora-base:hasPermissions "@linkUpdate.newLinkValuePermissions" .
+            knora-base:hasPermissions "@linkUpdate.newLinkValuePermissions"^^xsd:string .
 
         @* Attach the new LinkValue to its containing resource. *@
         ?linkSource ?linkValueProperty ?newLinkValue .
 
         @* Update the link source's last modification date. *@
-        ?linkSource knora-base:lastModificationDate ?currentTime .
+        ?linkSource knora-base:lastModificationDate "@currentTime"^^xsd:dateTimeStamp .
     }
 }
 @* Ensure that inference is not used in the WHERE clause of this update. *@
@@ -111,7 +113,6 @@ WHERE {
     BIND(IRI("@{linkUpdate.linkPropertyIri}Value") AS ?linkValueProperty)
     BIND(IRI("@linkUpdate.linkTargetIri") AS ?linkTarget)
     BIND(IRI("@linkUpdate.newLinkValueIri") AS ?newLinkValue)
-    BIND(NOW() AS ?currentTime)
 
     @* Do nothing if the link source doesn't exist, is marked as deleted, or isn't a knora-base:Resource. *@
 

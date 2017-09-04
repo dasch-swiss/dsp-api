@@ -12,7 +12,7 @@ DELIMITER="*********************************************************************
 
 printf "${GREEN}${DELIMITER}Deleting repository${NO_COLOUR}\n\n"
 
-cat graphdb-se-drop-knora-test-repository.ttl | $CONSOLE
+cat graphdb-drop-knora-test-repository.ttl | $CONSOLE
 
 printf "\n${GREEN}${DELIMITER}Creating repository${NO_COLOUR}\n\n"
 
@@ -25,7 +25,7 @@ curl -X POST -H "Content-Type:application/x-turtle" -d "<http://www.knora.org/co
 
 printf "${GREEN}Repository created.\n\n${DELIMITER}Loading test data${NO_COLOUR}\n\n"
 
-cat graphdb-se-knora-test-data.ttl | $CONSOLE
+cat graphdb-knora-test-data.ttl | $CONSOLE
 
 printf "\n${GREEN}${DELIMITER}Creating Lucene index${NO_COLOUR}\n\n"
 
@@ -37,4 +37,3 @@ then
 else
     printf "${RED}Building of Lucene index failed: ${STATUS}${NO_COLOUR}\n\n"
 fi
-
