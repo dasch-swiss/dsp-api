@@ -37,8 +37,8 @@ jobs:
   include:
     - stage: test
       script:
-        #- TODO: re-enable this when the build environment has enough memory for it.
-        sleep 1
+        # TODO: re-enable this when the build environment has enough memory for it.
+        - sleep 1
         # unzip graphdb-free
         #- unzip $TRAVIS_BUILD_DIR/triplestores/graphdb-free/graphdb-free-8.2.0-dist.zip -d /tmp && sudo mv /tmp/graphdb-free-8.2.0 /graphdb
         #- cp $TRAVIS_BUILD_DIR/webapi/scripts/KnoraRules.pie /graphdb
