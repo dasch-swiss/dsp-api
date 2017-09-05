@@ -234,10 +234,10 @@ class SearchResponderV2 extends Responder {
               * Creates additional statements for a given [[Entity]] based on type information using `conversionFuncForNonPropertyType`
               * for a non property type (e.g., a resource).
               *
-              * @param entity               the entity to be taken into consideration (a statement's subject or object).
-              * @param typeInspection       type information.
-              * @param processedTypeInfo    the keys of type information that have already been looked at.
-              * @param conversionFuncForNonPropertyType       the function to use to create additional statements.
+              * @param entity                           the entity to be taken into consideration (a statement's subject or object).
+              * @param typeInspection                   type information.
+              * @param processedTypeInfo                the keys of type information that have already been looked at.
+              * @param conversionFuncForNonPropertyType the function to use to create additional statements.
               * @return a sequence of [[QueryPattern]] representing the additional statements.
               */
             def checkForNonPropertyTypeInfoForEntity(entity: Entity, typeInspection: TypeInspectionResult, processedTypeInfo: mutable.Set[TypeableEntity], conversionFuncForNonPropertyType: (NonPropertyTypeInfo, Entity) => Seq[QueryPattern]): Seq[QueryPattern] = {
@@ -264,6 +264,37 @@ class SearchResponderV2 extends Responder {
                     Seq.empty[QueryPattern]
                 }
 
+            }
+
+            /**
+              * Converts the given statement based on the given type information using `conversionFuncForPropertyType`.
+              *
+              * @param statementPattern              the statement to be converted.
+              * @param typeInspection                type information.
+              * @param conversionFuncForPropertyType the function to use for the conversion.
+              * @return a sequence of [[QueryPattern]] representing the converted statement.
+              */
+            def checkForPropertyTypeInfoForStatement(statementPattern: StatementPattern, typeInspection: TypeInspectionResult, conversionFuncForPropertyType: (PropertyTypeInfo, StatementPattern) => Seq[QueryPattern]) = {
+                val predTypeInfoKey: Option[TypeableEntity] = toTypeableEntityKey(statementPattern.pred)
+
+                if (predTypeInfoKey.nonEmpty && (typeInspection.typedEntities contains predTypeInfoKey.get)) {
+                    // process type information for the predicate into additional statements
+
+                    val propTypeInfo = typeInspection.typedEntities(predTypeInfoKey.get) match {
+                        case propInfo: PropertyTypeInfo => propInfo
+
+                        case _ => throw AssertionException(s"PropertyTypeInfo expected for ${predTypeInfoKey.get}")
+                    }
+
+                    conversionFuncForPropertyType(
+                        propTypeInfo,
+                        statementPattern
+                    )
+
+                } else {
+                    // no type information given and thus no further processing needed, just return the originally given statement (e.g., rdf:type)
+                    Seq(statementPattern)
+                }
             }
         }
 
@@ -295,7 +326,7 @@ class SearchResponderV2 extends Responder {
               * Creates additional statements for a non property type (e.g., a resource).
               *
               * @param nonPropertyTypeInfo type information about non property type.
-              * @param inputEntity  the [[Entity]] to make the statements about.
+              * @param inputEntity         the [[Entity]] to make the statements about.
               * @return a sequence of [[QueryPattern]] representing the additional statements.
               */
             def createAdditionalStatementsForNonPropertyType(nonPropertyTypeInfo: NonPropertyTypeInfo, inputEntity: Entity): Seq[QueryPattern] = {
@@ -344,10 +375,6 @@ class SearchResponderV2 extends Responder {
                 // look at the statement's subject, predicate, and object and generate additional statements if needed based on the given type information.
                 // transform the originally given statement if necessary when processing the predicate
 
-                // create `TypeableEntity` (keys in `typeInspectionResult`) from the given statement's elements
-
-                val predTypeInfoKey: Option[TypeableEntity] = toTypeableEntityKey(statementPattern.pred)
-
                 // check if there exists type information for the given statement's subject
                 val additionalStatementsForSubj: Seq[QueryPattern] = checkForNonPropertyTypeInfoForEntity(statementPattern.subj, typeInspectionResult, processedTypeInformationKeysWhereClause, createAdditionalStatementsForNonPropertyType)
 
@@ -355,27 +382,7 @@ class SearchResponderV2 extends Responder {
                 val additionalStatementsForObj: Seq[QueryPattern] = checkForNonPropertyTypeInfoForEntity(statementPattern.obj, typeInspectionResult, processedTypeInformationKeysWhereClause, createAdditionalStatementsForNonPropertyType)
 
                 // Add additional statements based on the whole input statement, e.g. to deal with the value object or the link value, and transform the original statement.
-                val additionalStatementsForWholeStatement: Seq[QueryPattern] = if (predTypeInfoKey.nonEmpty && (typeInspectionResult.typedEntities contains predTypeInfoKey.get)) {
-                    // process type information for the predicate into additional statements
-
-                    val propTypeInfo = typeInspectionResult.typedEntities(predTypeInfoKey.get) match {
-                        case propInfo: PropertyTypeInfo => propInfo
-
-                        case _ => throw AssertionException(s"PropertyTypeInfo expected for ${predTypeInfoKey.get}")
-                    }
-
-                    val additionalStatements = convertStatementForPropertyType(
-                        propertyTypeInfo = propTypeInfo,
-                        statementPattern = statementPattern
-                    )
-
-                    additionalStatements
-
-                } else {
-                    // no type information given and thus no further processing needed, just return the originally given statement (e.g., rdf:type)
-                    Seq(statementPattern)
-                }
-
+                val additionalStatementsForWholeStatement: Seq[QueryPattern] = checkForPropertyTypeInfoForStatement(statementPattern, typeInspectionResult, convertStatementForPropertyType)
 
                 additionalStatementsForSubj ++ additionalStatementsForWholeStatement ++ additionalStatementsForObj
 
