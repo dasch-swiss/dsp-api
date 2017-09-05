@@ -494,7 +494,7 @@ DateValue
 Humanities data includes many different types of dates. In Knora, a date
 has a specified calendar, and is always represented as a period with
 start and end points (which may be equal), each of which has a precision
-(``DAY``, ``MONTH``, or ``YEAR``). Internally, the start and end points
+(``DAY``, ``MONTH``, or ``YEAR``). An optional ERA indicator term (``BCE``, ``CE``, or ``BC``, ``AD``) can be added to the date, when no era is provided the default era ``AD`` will be considered. Internally, the start and end points
 are stored as two Julian Day Numbers. This calendar-independent
 representation makes it possible to compare and search for dates
 regardless of the calendar in which they were entered. Properties:
@@ -1216,7 +1216,7 @@ has permission to see the source and target resources.
 Internal Links in a TextValue
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Internal links in a ``TextValue`` can be using the data type standoff class ``StandoffInternalReferenceTag`` or a subclass of it.
+Internal links in a ``TextValue`` can be represented using the data type standoff class ``StandoffInternalReferenceTag`` or a subclass of it.
 It has the following property:
 
 ``standoffTagHasInternalReference`` (1)

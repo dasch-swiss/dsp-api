@@ -32,6 +32,7 @@
  * @param maybeDeleteComment an optional comment explaining why the value is being deleted.
  * @param linkUpdates a list of [[SparqlTemplateLinkUpdate]] objects describing LinkValues that need to be
  *        updated for resource references in standoff markup.
+ * @param currentTime an xsd:dateTimeStamp that will be attached to the resources.
  *@
 @(dataNamedGraph: IRI,
   triplestore: String,
@@ -39,7 +40,8 @@
   propertyIri: IRI,
   valueIri: IRI,
   maybeDeleteComment: Option[String],
-  linkUpdates: Seq[SparqlTemplateLinkUpdate])
+  linkUpdates: Seq[SparqlTemplateLinkUpdate],
+  currentTime: String)
 
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -71,7 +73,7 @@ DELETE {
     GRAPH ?dataNamedGraph {
         @* Mark the value as deleted. *@
         ?value knora-base:isDeleted true ;
-            knora-base:deleteDate ?currentTime .
+            knora-base:deleteDate "@currentTime"^^xsd:dateTimeStamp .
 
         @* Add the delete comment, if any. *@
         @maybeDeleteComment match {
@@ -97,15 +99,15 @@ DELETE {
                 rdf:subject ?resource ;
                 rdf:predicate <@linkUpdate.linkPropertyIri> ;
                 rdf:object <@linkUpdate.linkTargetIri> ;
-                knora-base:valueHasString "@linkUpdate.linkTargetIri" ;
+                knora-base:valueHasString "@linkUpdate.linkTargetIri"^^xsd:string ;
                 knora-base:valueHasRefCount @linkUpdate.newReferenceCount ;
                 @if(linkUpdate.newReferenceCount == 0) {
                     knora-base:isDeleted true ;
-                    knora-base:deleteDate ?currentTime ;
+                    knora-base:deleteDate "@currentTime"^^xsd:dateTimeStamp ;
                 } else {
                     knora-base:isDeleted false ;
                 }
-                knora-base:valueCreationDate ?currentTime .
+                knora-base:valueCreationDate "@currentTime"^^xsd:dateTimeStamp .
 
             <@linkUpdate.newLinkValueIri> knora-base:attachedToUser <@linkUpdate.newLinkValueCreator> ;
                 knora-base:hasPermissions "@linkUpdate.newLinkValuePermissions" .
@@ -120,7 +122,7 @@ DELETE {
         }
 
         @* Update the resource's last modification date. *@
-        ?resource knora-base:lastModificationDate ?currentTime .
+        ?resource knora-base:lastModificationDate "@currentTime"^^xsd:dateTimeStamp .
     }
 }
 @* Ensure that inference is not used in the WHERE clause of this update. *@
@@ -132,7 +134,6 @@ WHERE {
     BIND(IRI("@resourceIri") AS ?resource)
     BIND(IRI("@propertyIri") AS ?property)
     BIND(IRI("@valueIri") AS ?value)
-    BIND(NOW() AS ?currentTime)
 
     ?resource ?property ?value .
     ?value rdf:type ?valueClass ;

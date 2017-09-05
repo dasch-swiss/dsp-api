@@ -4,14 +4,14 @@
 	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 	<meta name="creator" content="Lukas Rosenthaler" />
 	<title>System for Annotation and Linkage of Sources in Arts and Humanities</title>
-	<script src="http://code.jquery.com/jquery-2.1.4.min.js"></script>
+	<script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
 	<script src="vendor/jQuery/jquery-ui.min.js"></script>
 	<script src="vendor/jQuery/jquery.sortElements.js"></script>
 	<script src="vendor/jQuery/jquery.mousewheel.min.js"></script>
 	<script src="vendor/jQuery/jquery.fixedheadertable.min.js"></script>
 	<script src="vendor/jQuery/jquery.zoom.min.js"></script>
 	<script src="vendor/jQuery/bootstrap.min.js"></script>
-	<script src="vendor/ckeditor/ckeditor.js" charset="utf-8"></script>
+	<script src="vendor/ckeditor-4.7.2-Editor/ckeditor.js" charset="utf-8"></script>
 	<script src="vendor/arbor/arbor.js" charset="utf-8"></script>
 	
 	<script src="js/00_init_javascript.js"></script>
@@ -203,6 +203,7 @@
 				salsah_username: $('#user_id').val(),
 				salsah_password: $('#password').val()
 			};
+			$('#password').val('')
             SALSAH.ApiPost('session', {username: credentials.salsah_username, password: credentials.salsah_password}, function(data) {
 
 				if (data.status == ApiErrors.OK) {
@@ -269,6 +270,7 @@
 		});
 
 		$('#logout_button').on('click', function() {
+			$('#user_id').val('')
             SALSAH.ApiDelete('session', function(data) {
 				if (data.status == ApiErrors.OK) {
 					window.sessionStorage.removeItem('userprofile');

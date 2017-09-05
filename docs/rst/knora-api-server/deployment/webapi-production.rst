@@ -32,96 +32,29 @@ is advised.
     description. The general idea should be usable on all platforms with
     small changes.
 
-To run the Knora API server, we have two main components. First, the ``jar``
+To run the Knora API server, we have two main components. First, the zipped
 distribution of the server and second a supported triplestore.
 
-.. todo::
-    Add link to where the official Knora API server distributions can be
-    downloaded and to the description of how to create a distribution.
 
-The jar distribution of the server can be either run manually or as a service
-for which we will use ``supervisord`` as described in the
-:ref:`supervisord-label` section.
+Creating and running the distribution package
+---------------------------------------------
 
-The supported triplestore can also be run manually (as described in the
-documentation of each distribution) or it can be run under an application
-server as described in the :ref:`tomcat-application-label` section.
+Inside the `knora/webapi` folder run the following `sbt` commands:
 
-.. _supervisord-label:
+```
+$ sbt packageBin
+```
 
-Supervisord
------------
+This will create a `zip` file inside the `knora/webapi/target/universal` folder.
+To run the Knora API Server, unzip this package, and execute the `webapi` script
+inside the `bin` folder.
 
-For running Knora-API we will use supervisord, which allows us to run
-our java application easily as a service.
-
--  https://serversforhackers.com/monitoring-processes-with-supervisord
-
-Configuration
-^^^^^^^^^^^^^
-
--  /etc/supervisord.d/knora-api.conf
-
-::
-
-    [program:knora-api]
-    command=sh run.sh
-    directory=/var/www/vhosts/api.knora.org
-    autostart=true
-    autorestart=true
-    startretries=3
-    stderr_logfile=/var/log/knora-api/knora-api.err.log
-    stdout_logfile=/var/log/knora-api/knora-api.out.log
-    user=root
-    environment=
-
-We need to create the directory for the log files!
-
-Controlling Processes
-^^^^^^^^^^^^^^^^^^^^^^
-
-::
-
-    $ supervisorctl reread $ supervisorctl update $ supervisorctl
-
-.. _tomcat-application-label:
-
-Tomcat Application Server (Fuseki 2)
-------------------------------------
-
-Fuseki 2 provides a ``.war`` packaged distribution, which alows a deployment under
-an application server. We chose Tomcat, but there are other options available,
-e.g., Glassfish, Jetty, etc.
-
-Installation
-^^^^^^^^^^^^
-
-We use yum to install Tomcat:
-
-::
-    $ yum install tomcat
+Alternatively, the command `sbt stage` will create a folder with the same content as before,
+but will skip the zipping step.
 
 
-Configuration
-^^^^^^^^^^^^^
+Running a supported triplestore
+--------------------------------
 
-Fuseki 2 and GraphDB are deployed using tomcat.
-
-The relevant directories are as follows:
-
- * Tomcat Webapps folder, where both the Fuseki 2 and GraphDB ``.war`` file is
-     dropped in: ``/var/lib/tomcat/webapps``
- * Fuseki configuration folder: ``/etc/fuseki``
- * Data folder: ``/usr/share/tomcat``
-    - for Fuseki: ``usr/share/tomcat/.fuseki``
-
-
-Administration
-^^^^^^^^^^^^^^
-
- * ``systemctl status tomcat``
- * ``systemctl start tomcat``
- * ``systemctl stop tomcat``
-
-If someting is wrong, first check the log files:
- * ``/var/log/tomcat/``
+See the chapters on :ref:`starting-graphdb` and :ref:`starting-fuseki` on how
+to start a supported triplestore.

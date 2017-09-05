@@ -29,11 +29,13 @@ import org.knora.webapi
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.ckanmessages._
 import org.knora.webapi.messages.v1.responder.listmessages.{NodePathGetRequestV1, NodePathGetResponseV1}
+import org.knora.webapi.messages.v1.responder.permissionmessages.PermissionDataV1
 import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoByShortnameGetRequestV1, ProjectInfoResponseV1, ProjectInfoV1}
 import org.knora.webapi.messages.v1.responder.resourcemessages._
 import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
 import org.knora.webapi.messages.v1.responder.valuemessages.{DateValueV1, HierarchicalListValueV1, LinkV1, TextValueV1}
-import org.knora.webapi.messages.v1.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
+import org.knora.webapi.messages.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
+import org.knora.webapi.responders.Responder
 import org.knora.webapi.util.ActorUtil._
 
 import scala.concurrent.duration._
@@ -43,8 +45,17 @@ import scala.concurrent.{Await, Future}
   * This responder is used by the Ckan route, for serving data to the Ckan harverster, which is published
   * under http://data.humanities.ch
   */
-class CkanResponderV1 extends ResponderV1 {
+class CkanResponderV1 extends Responder {
 
+
+    /**
+      * A user representing the Knora API server, used in those cases where a user is required.
+      */
+    private val systemUser = UserProfileV1(
+        userData = UserDataV1(lang = "en"),
+        isSystemUser = true,
+        permissionData = PermissionDataV1(anonymousUser = false)
+    )
 
     def receive = {
         case CkanRequestV1(projects, limit, info, userProfile) => future2Message(sender(), getCkanResponseV1(projects, limit, info, userProfile), log)
@@ -448,16 +459,16 @@ class CkanResponderV1 extends ResponderV1 {
     private def dateValue2String(date: DateValueV1): String = {
 
         if (date.dateval1 == date.dateval2) {
-            date.dateval1.toString + ", " + date.calendar.toString
+            date.dateval1.toString + " " + date.era1+ ", " + date.calendar.toString + " " + date.era2
         } else {
-            date.dateval1.toString + ", " + date.dateval2 + ", " + date.calendar.toString
+            date.dateval1.toString + " " + date.era1+ ", " + date.dateval2 + ", " + date.calendar.toString + " " + date.era2
         }
     }
 
     private def listValue2String(list: HierarchicalListValueV1, responderManager: ActorSelection): String = {
 
 
-        val resultFuture = responderManager ? NodePathGetRequestV1(list.hierarchicalListIri, UserProfileV1(UserDataV1("en")))
+        val resultFuture = responderManager ? NodePathGetRequestV1(list.hierarchicalListIri, systemUser)
         val nodePath = Await.result(resultFuture, Duration(3, SECONDS)).asInstanceOf[NodePathGetResponseV1]
 
         val labels = nodePath.nodelist map {

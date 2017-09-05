@@ -22,7 +22,6 @@ import org.knora.webapi.messages.v1.responder.permissionmessages.PermissionDataT
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectV1JsonProtocol
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
-import org.knora.webapi.util.MessageUtil
 import spray.json._
 
 
@@ -193,13 +192,14 @@ case class DefaultObjectAccessPermissionForIriGetRequestV1(defaultObjectAccessPe
 case class DefaultObjectAccessPermissionsStringForResourceClassGetV1(projectIri: IRI, resourceClassIri: IRI, permissionData: PermissionDataV1) extends PermissionsResponderRequestV1
 
 /**
-  * A message that requests default object access permissions for a resource class inside a specific project. A successful response will be a
+  * A message that requests default object access permissions for a resource class / property combination inside a specific project. A successful response will be a
   * [[DefaultObjectAccessPermissionsStringResponseV1]].
   *
   * @param projectIri  the project for which the default object permissions need to be retrieved.
+  * @param resourceClassIri the resource class which can also cary default object access permissions.
   * @param propertyIri the property type which can also cary default object access permissions.
   */
-case class DefaultObjectAccessPermissionsStringForPropertyGetV1(projectIri: IRI, propertyIri: IRI, permissionData: PermissionDataV1) extends PermissionsResponderRequestV1
+case class DefaultObjectAccessPermissionsStringForPropertyGetV1(projectIri: IRI, resourceClassIri: IRI, propertyIri: IRI, permissionData: PermissionDataV1) extends PermissionsResponderRequestV1
 
 /**
   * Create a single [[DefaultObjectAccessPermissionV1]].
@@ -360,11 +360,12 @@ case class DefaultObjectAccessPermissionOperationResponseV1(success: Boolean,
   *
   * @param groupsPerProject                         the groups the user belongs to for each project.
   * @param administrativePermissionsPerProject      the user's administrative permissions for each project.
-  * @param defaultObjectAccessPermissionsPerProject the user's default object access permissions for each project.
+  * @param anonymousUser                            the type of user.
   */
 case class PermissionDataV1(groupsPerProject: Map[IRI, Seq[IRI]] = Map.empty[IRI, Seq[IRI]],
                             administrativePermissionsPerProject: Map[IRI, Set[PermissionV1]] = Map.empty[IRI, Set[PermissionV1]],
-                            defaultObjectAccessPermissionsPerProject: Map[IRI, Set[PermissionV1]] = Map.empty[IRI, Set[PermissionV1]]) {
+                            anonymousUser: Boolean
+                           ) {
 
     /**
       * Returns [[PermissionDataV1]] of the requested type.
@@ -374,22 +375,20 @@ case class PermissionDataV1(groupsPerProject: Map[IRI, Seq[IRI]] = Map.empty[IRI
     def ofType(permissionProfileType: PermissionProfileType): PermissionDataV1 = {
         permissionProfileType match {
 
-            case PermissionDataType.RESTRICTED => {
-
+            case PermissionDataType.RESTRICTED =>
                 PermissionDataV1(
                     groupsPerProject = groupsPerProject,
                     administrativePermissionsPerProject = Map.empty[IRI, Set[PermissionV1]], // remove administrative permission information
-                    defaultObjectAccessPermissionsPerProject = Map.empty[IRI, Set[PermissionV1]] // remove default object access permission information
+                    anonymousUser = anonymousUser
                 )
-            }
-            case PermissionDataType.FULL => {
 
+            case PermissionDataType.FULL =>
                 PermissionDataV1(
                     groupsPerProject = groupsPerProject,
                     administrativePermissionsPerProject = administrativePermissionsPerProject,
-                    defaultObjectAccessPermissionsPerProject = defaultObjectAccessPermissionsPerProject
+                    anonymousUser = anonymousUser
                 )
-            }
+
             case _ => throw BadRequestException(s"The requested userProfileType: $permissionProfileType is invalid.")
         }
     }
@@ -399,18 +398,20 @@ case class PermissionDataV1(groupsPerProject: Map[IRI, Seq[IRI]] = Map.empty[IRI
         groupsPerProject.getOrElse(OntologyConstants.KnoraBase.SystemProject, List.empty[IRI]).contains(OntologyConstants.KnoraBase.SystemAdmin)
     }
 
-    /* Does the user have the 'ProjectAllAdmin' permission for the project */
+    /* Is the user a member of the ProjectAdmin group */
+    def isProjectAdmin(projectIri: IRI): Boolean = {
+        groupsPerProject.getOrElse(projectIri, List.empty[IRI]).contains(OntologyConstants.KnoraBase.ProjectAdmin)
+    }
+
+    /* Does the user have the 'ProjectAdminAllPermission' permission for the project */
     def hasProjectAdminAllPermissionFor(projectIri: IRI): Boolean = {
         administrativePermissionsPerProject.get(projectIri) match {
-            case Some(permissions) => {
-                permissions(PermissionV1.ProjectAdminAllPermission)
-            }
+            case Some(permissions) => permissions(PermissionV1.ProjectAdminAllPermission)
             case None => false
         }
     }
 
 
-    /*  */
     /**
       * Given an operation, checks if the user is allowed to perform it.
       *
@@ -431,7 +432,7 @@ case class PermissionDataV1(groupsPerProject: Map[IRI, Seq[IRI]] = Map.empty[IRI
                 case ResourceCreateOperation(resourceClassIri) => {
                     this.administrativePermissionsPerProject.get(insideProject) match {
                         case Some(set) => {
-                            set(PermissionV1.ProjectResourceCreateAllPermission)
+                            set(PermissionV1.ProjectResourceCreateAllPermission) || set(PermissionV1.projectResourceCreateRestrictedPermission(resourceClassIri))
                         }
                         case None => {
                             // println("FALSE: No administrative permissions defined for this project.")
@@ -445,7 +446,7 @@ case class PermissionDataV1(groupsPerProject: Map[IRI, Seq[IRI]] = Map.empty[IRI
     }
 
     /* custom equality implementation with additional debugging output */
-    def canEqual(a: Any) = a.isInstanceOf[PermissionDataV1]
+    def canEqual(a: Any): Boolean = a.isInstanceOf[PermissionDataV1]
 
     override def equals(that: Any): Boolean =
         that match {
@@ -469,25 +470,15 @@ case class PermissionDataV1(groupsPerProject: Map[IRI, Seq[IRI]] = Map.empty[IRI
                     true
                 }
 
-                val doapppEqual = if (this.defaultObjectAccessPermissionsPerProject.hashCode != that.defaultObjectAccessPermissionsPerProject.hashCode) {
-                    println("defaultObjectAccessPermissionsPerProject not equal")
-                    println(s"this (expected): ${this.defaultObjectAccessPermissionsPerProject}")
-                    println(s"that (found): ${that.defaultObjectAccessPermissionsPerProject}")
-                    false
-                } else {
-                    true
-                }
-
-                gppEqual && apppEqual & doapppEqual
+                gppEqual && apppEqual
             }
             case _ => false
         }
 
     def toSourceString: String = {
         "PermissionDataV1( \n" +
-            s"\t groupsPerProject = ${MessageUtil.toSource(groupsPerProject)} \n" +
-            s"\t administrativePermissionsPerProject = ${MessageUtil.toSource(administrativePermissionsPerProject)} \n" +
-            s"\t defaultObjectAccessPermissionsPerProject = ${MessageUtil.toSource(defaultObjectAccessPermissionsPerProject)}" + "\n" +
+            s"\t groupsPerProject = ${groupsPerProject.toString} \n" +
+            s"\t administrativePermissionsPerProject = ${administrativePermissionsPerProject.toString} \n" +
             ")"
     }
 }

@@ -1,6 +1,6 @@
 /.project
 **/.idea
-*.iml
+**/*.iml
 /logs/
 /bin/
 /info.aduna.logging.dir_IS_UNDEFINED/
@@ -13,8 +13,10 @@ native
 docs/env
 docs/_build
 docs/_format_docu
-project/
-target/
+/project/
+*/project/target/
+*/project/project/
+/target/
 *.aux
 *.bbl
 *.bcf
@@ -25,6 +27,7 @@ target/
 *.synctex.gz
 *.tdo
 *.toc
+*.bak
 .sbtrc
 webapi/_fuseki/run
 triplestores/graphdb-se-7

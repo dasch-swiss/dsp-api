@@ -20,11 +20,7 @@
 
 package org.knora.salsah.browser
 
-import akka.actor.ActorSystem
-import akka.util.Timeout
 import org.openqa.selenium.WebElement
-
-import scala.concurrent.duration._
 
 /**
   * Tests the SALSAH web interface using Selenium.
@@ -39,17 +35,14 @@ class ResourceCreationSpec extends SalsahSpec {
        for more documentation.
 
      */
-
-    private val page = new SalsahPage
+    private val headless = settings.headless
+    private val pageUrl = s"http://${settings.hostName}:${settings.httpPort}/index.html"
+    private val page = new SalsahPage(pageUrl, headless)
 
     // How long to wait for results obtained using the 'eventually' function
     implicit private val patienceConfig = page.patienceConfig
 
-    implicit private val timeout = Timeout(180.seconds)
 
-    implicit private val system = ActorSystem()
-
-    implicit private val dispatcher = system.dispatcher
 
     private val rdfDataObjectsJsonList: String =
         """
@@ -75,7 +68,7 @@ class ResourceCreationSpec extends SalsahSpec {
     private val anythingProjectIri = "http://data.knora.org/projects/anything"
     private val incunabulaProjectIri = "http://data.knora.org/projects/77275339"
 
-    // In order to run these tests, start `webapi` using the option `allowResetTriplestoreContentOperationOverHTTP`
+    // In order to run these tests, start `webapi` using the option `allowReloadOverHTTP`
 
     "The SALSAH home page" should {
         "load test data" in {
@@ -83,14 +76,14 @@ class ResourceCreationSpec extends SalsahSpec {
         }
 
         "have the correct title" in {
-            page.load()
+            page.open()
             page.getPageTitle should be("System for Annotation and Linkage of Sources in Arts and Humanities")
 
         }
 
         "log in as anything user" in {
 
-            page.load()
+            page.open()
             page.doLogin(email = anythingUserEmail, password = testPassword, fullName = anythingUserFullName)
             page.doLogout()
 
@@ -98,7 +91,7 @@ class ResourceCreationSpec extends SalsahSpec {
 
         "create a resource of type images:person" in {
 
-            page.load()
+            page.open()
 
             page.doLogin(email = imagesUserEmail, password = testPassword, fullName = imagesUserFullName)
 
@@ -110,7 +103,7 @@ class ResourceCreationSpec extends SalsahSpec {
 
             label.sendKeys("Robin Hood")
 
-            val firstname = page.getFormFieldByName("http://www.knora.org/ontology/images#firstname")
+            val firstname: WebElement = page.getFormFieldByName("http://www.knora.org/ontology/images#firstname")
 
             firstname.sendKeys("Robin")
 
@@ -132,7 +125,7 @@ class ResourceCreationSpec extends SalsahSpec {
 
         "create two resources of type anything:thing in two different projects as the multi-project user" in {
 
-            page.load()
+            page.open()
 
             page.doLogin(email = multiUserEmail, password = testPassword, fullName = multiUserFullName)
 
@@ -155,6 +148,24 @@ class ResourceCreationSpec extends SalsahSpec {
             val resource1TextVal = page.getFormFieldByName("http://www.knora.org/ontology/anything#hasText")
 
             resource1TextVal.sendKeys("Dies ist ein Test")
+
+            val resource1DateVal = page.getFormFieldByName("http://www.knora.org/ontology/anything#hasDate")
+
+            val resource1Monthsel1 = page.getMonthSelection(resource1DateVal, 1)
+
+            // choose 15 March 44 BCE
+
+            resource1Monthsel1.selectByValue("3")
+
+            val resource1Days1 = page.getDays(resource1DateVal, 1)
+            resource1Days1(15).click()
+
+            val resource1Yearsel1 = page.getYearField(resource1DateVal, 1)
+            resource1Yearsel1.clear()
+            resource1Yearsel1.sendKeys("44")
+
+            val resource1Erasel1 = page.getEraSelection(resource1DateVal, 1)
+            resource1Erasel1.selectByIndex(1)
 
             page.clickSaveButtonForResourceCreationForm()
 

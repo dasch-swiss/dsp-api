@@ -116,6 +116,7 @@ object ValuesRouteV1 extends Authenticator {
                                 textWithStandoffTags: TextWithStandoffTagsV1 <- RouteUtilV1.convertXMLtoStandoffTagV1(
                                     xml = richtext.xml.get,
                                     mappingIri = mappingIri,
+                                    acceptStandoffLinksToClientIDs = false,
                                     userProfile = userProfile,
                                     settings = settings,
                                     responderManager = responderManager,
@@ -216,6 +217,7 @@ object ValuesRouteV1 extends Authenticator {
                                 textWithStandoffTags: TextWithStandoffTagsV1 <- RouteUtilV1.convertXMLtoStandoffTagV1(
                                     xml = richtext.xml.get,
                                     mappingIri = mappingIri,
+                                    acceptStandoffLinksToClientIDs = false,
                                     userProfile = userProfile,
                                     settings = settings,
                                     responderManager = responderManager,

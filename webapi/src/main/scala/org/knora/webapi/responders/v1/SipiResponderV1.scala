@@ -33,7 +33,8 @@ import org.knora.webapi.messages.v1.responder.sipimessages.SipiConstants.FileTyp
 import org.knora.webapi.messages.v1.responder.sipimessages._
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.responder.valuemessages.{FileValueV1, StillImageFileValueV1, TextFileValueV1}
-import org.knora.webapi.messages.v1.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
+import org.knora.webapi.messages.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
+import org.knora.webapi.responders.Responder
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.{InputValidation, PermissionUtilV1}
 import spray.json._
@@ -45,7 +46,7 @@ import scala.concurrent.duration._
   * Responds to requests for information about binary representations of resources, and returns responses in Knora API
   * v1 format.
   */
-class SipiResponderV1 extends ResponderV1 {
+class SipiResponderV1 extends Responder {
 
     implicit val materializer = ActorMaterializer()
 
@@ -90,7 +91,7 @@ class SipiResponderV1 extends ResponderV1 {
                 (row: VariableResultsRow) =>
                     row.rowMap("fileValue")
             }
-            _ = if(groupedByResourceIri.size > 1) throw InconsistentTriplestoreDataException(s"filename $filename is referred to from more than one file value")
+            _ = if (groupedByResourceIri.size > 1) throw InconsistentTriplestoreDataException(s"filename $filename is referred to from more than one file value")
 
             valueProps = valueUtilV1.createValueProps(filename, rows)
 
@@ -103,6 +104,33 @@ class SipiResponderV1 extends ResponderV1 {
         } yield SipiFileInfoGetResponseV1(
             permissionCode = permissionCode.getOrElse(0) // Sipi expects a permission code from 0 to 8
         )
+    }
+
+
+    /**
+      * Convert a file that has been sent to Knora (non GUI-case).
+      *
+      * @param conversionRequest the information about the file (uploaded by Knora).
+      * @return a [[SipiResponderConversionResponseV1]] representing the file values to be added to the triplestore.
+      */
+    private def convertPathV1(conversionRequest: SipiResponderConversionPathRequestV1): Future[SipiResponderConversionResponseV1] = {
+        val url = s"${settings.sipiImageConversionUrl}/${settings.sipiPathConversionRoute}"
+
+        callSipiConvertRoute(url, conversionRequest)
+
+    }
+
+
+    /**
+      * Convert a file that is already managed by Sipi (GUI-case).
+      *
+      * @param conversionRequest the information about the file (managed by Sipi).
+      * @return a [[SipiResponderConversionResponseV1]] representing the file values to be added to the triplestore.
+      */
+    private def convertFileV1(conversionRequest: SipiResponderConversionFileRequestV1): Future[SipiResponderConversionResponseV1] = {
+        val url = s"${settings.sipiImageConversionUrl}/${settings.sipiFileConversionRoute}"
+
+        callSipiConvertRoute(url, conversionRequest)
     }
 
 
@@ -132,6 +160,10 @@ class SipiResponderV1 extends ResponderV1 {
         // handle unsuccessful requests to Sipi
         //
         val recoveredConversionResultFuture = conversionResultFuture.recoverWith {
+            case noResponse: akka.http.impl.engine.HttpConnectionTimeoutException =>
+                // this problem is hardly the user's fault. Create a SipiException
+                throw SipiException(message = "Sipi not reachable", e = noResponse, log = log)
+
             case err =>
                 throw SipiException(message = s"Unknown error: ${err.toString}", e = err, log = log)
         }
@@ -245,29 +277,6 @@ class SipiResponderV1 extends ResponderV1 {
     }
 
 
-    /**
-      * Convert a file that has been sent to Knora (non GUI-case).
-      *
-      * @param conversionRequest the information about the file (uploaded by Knora).
-      * @return a [[SipiResponderConversionResponseV1]] representing the file values to be added to the triplestore.
-      */
-    private def convertPathV1(conversionRequest: SipiResponderConversionPathRequestV1): Future[SipiResponderConversionResponseV1] = {
-        val url = s"${settings.sipiImageConversionUrl}/${settings.sipiPathConversionRoute}"
 
-        callSipiConvertRoute(url, conversionRequest)
-
-    }
-
-    /**
-      * Convert a file that is already managed by Sipi (GUI-case).
-      *
-      * @param conversionRequest the information about the file (managed by Sipi).
-      * @return a [[SipiResponderConversionResponseV1]] representing the file values to be added to the triplestore.
-      */
-    private def convertFileV1(conversionRequest: SipiResponderConversionFileRequestV1): Future[SipiResponderConversionResponseV1] = {
-        val url = s"${settings.sipiImageConversionUrl}/${settings.sipiFileConversionRoute}"
-
-        callSipiConvertRoute(url, conversionRequest)
-    }
 
 }

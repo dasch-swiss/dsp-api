@@ -24,17 +24,15 @@ import java.io.File
 import java.net.URLEncoder
 
 import akka.actor.{ActorSystem, Props}
-import akka.http.scaladsl.model.{HttpEntity, _}
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
+import akka.http.scaladsl.model.{HttpEntity, _}
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import akka.pattern._
 import akka.util.Timeout
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.ontologymessages.LoadOntologiesRequest
-import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
-import org.knora.webapi.messages.v1.store.triplestoremessages._
-import org.knora.webapi.responders._
-import org.knora.webapi.responders.v1.ResponderManagerV1
+import org.knora.webapi.messages.store.triplestoremessages._
+import org.knora.webapi.responders.{ResponderManager, _}
 import org.knora.webapi.routing.v1.{ResourcesRouteV1, StandoffRouteV1, ValuesRouteV1}
 import org.knora.webapi.store._
 import org.knora.webapi.util.{AkkaHttpUtils, MutableTestIri}
@@ -60,7 +58,7 @@ class StandoffV1R2RSpec extends R2RSpec {
          # akka.stdout-loglevel = "DEBUG"
         """.stripMargin
 
-    private val responderManager = system.actorOf(Props(new ResponderManagerV1 with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
+    private val responderManager = system.actorOf(Props(new ResponderManager with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
     private val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
 
     private val standoffPath = StandoffRouteV1.knoraApiPath(system, settings, log)
@@ -75,7 +73,7 @@ class StandoffV1R2RSpec extends R2RSpec {
 
     implicit private val timeout: Timeout = settings.defaultRestoreTimeout
 
-    implicit def default(implicit system: ActorSystem) = RouteTestTimeout(new DurationInt(15).second)
+    implicit def default(implicit system: ActorSystem) = RouteTestTimeout(new DurationInt(30).second)
 
     implicit val ec = system.dispatcher
 
@@ -88,7 +86,7 @@ class StandoffV1R2RSpec extends R2RSpec {
 
     "Load test data" in {
         Await.result(storeManager ? ResetTriplestoreContent(rdfDataObjects), 360.seconds)
-        Await.result(responderManager ? LoadOntologiesRequest(SharedAdminTestData.rootUser), 10.seconds)
+        Await.result(responderManager ? LoadOntologiesRequest(SharedAdminTestData.rootUser), 30.seconds)
     }
 
     private val firstTextValueIri = new MutableTestIri
@@ -144,6 +142,9 @@ class StandoffV1R2RSpec extends R2RSpec {
                |  "mappingName": "HTMLMapping"
                |}
              """.stripMargin
+
+        // Standard HTML is the html code that can be translated into Standoff markup with the OntologyConstants.KnoraBase.StandardMapping
+        val pathToStandardHTML = "_test_data/test_route/texts/StandardHTML.xml"
 
         val pathToHTMLMapping = "_test_data/test_route/texts/mappingForHTML.xml"
 
@@ -874,6 +875,60 @@ class StandoffV1R2RSpec extends R2RSpec {
 
         }
 
+        "create a TextValue from StandardXML representing HTML (in strict XML notation)" in {
+
+            val xmlFileToSend = new File(RequestParams.pathToStandardHTML)
+
+            val newValueParams =
+                s"""
+                {
+                  "project_id": "http://data.knora.org/projects/anything",
+                  "res_id": "http://data.knora.org/a-thing",
+                  "prop": "http://www.knora.org/ontology/anything#hasText",
+                  "richtext_value": {
+                        "xml": ${JsString(Source.fromFile(xmlFileToSend).mkString)},
+                        "mapping_id": "${OntologyConstants.KnoraBase.StandardMapping}"
+                  }
+                }
+                """
+
+            // create standoff from XML
+            Post("/v1/values", HttpEntity(ContentTypes.`application/json`, newValueParams)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> valuesPath ~> check {
+
+                assert(status == StatusCodes.OK, "creation of a TextValue from XML returned a non successful HTTP status code: " + responseAs[String])
+
+                thirdTextValueIri.set(ResponseUtils.getStringMemberFromResponse(response, "id"))
+
+
+            }
+
+        }
+
+        "read the TextValue back to XML and compare it to the (Standard) HTML that was originally sent" in {
+
+            val htmlFile = new File(RequestParams.pathToStandardHTML)
+
+            Get("/v1/values/" + URLEncoder.encode(thirdTextValueIri.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> valuesPath ~> check {
+
+                assert(response.status == StatusCodes.OK, "reading back text value to XML failed")
+
+                val xml = AkkaHttpUtils.httpResponseToJson(response).fields.get("value") match {
+                    case Some(value: JsObject) => value.fields.get("xml") match {
+                        case Some(JsString(xml: String)) => xml
+                        case _ => throw new InvalidApiJsonException("member 'xml' not given")
+                    }
+                    case _ => throw new InvalidApiJsonException("member 'value' not given")
+                }
+
+                // Compare the original XML with the regenerated XML.
+                val xmlDiff: Diff = DiffBuilder.compare(Input.fromString(Source.fromFile(htmlFile)(Codec.UTF8).mkString)).withTest(Input.fromString(xml)).build()
+
+                xmlDiff.hasDifferences should be(false)
+
+            }
+
+        }
+
         "create a TextValue from XML representing HTML (in strict XML notation)" in {
 
             val xmlFileToSend = new File(RequestParams.pathToHTML)
@@ -1099,6 +1154,41 @@ class StandoffV1R2RSpec extends R2RSpec {
 
                 // the error message should inform the user that the format of the date is invalid
                 assert(responseAs[String].contains("2017"))
+
+
+            }
+
+        }
+
+        "attempt to create a TextValue providing an invalid mapping Iri" in {
+
+            val xml = """<?xml version="1.0" encoding="UTF-8"?>
+                <text documentType="html">
+                    <p>
+                        This an a text with an invalid mapping.
+                    </p>
+                </text>""".stripMargin
+
+            val newValueParams =
+                s"""
+                {
+                  "project_id": "http://data.knora.org/projects/anything",
+                  "res_id": "http://data.knora.org/a-thing",
+                  "prop": "http://www.knora.org/ontology/anything#hasText",
+                  "richtext_value": {
+                        "xml": ${JsString(xml)},
+                        "mapping_id": "${anythingProjectIri}/invalidPathForMappings/HTMLMapping"
+                  }
+                }
+                """
+
+            // create standoff from XML
+            Post("/v1/values", HttpEntity(ContentTypes.`application/json`, newValueParams)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> valuesPath ~> check {
+
+                assert(status == StatusCodes.BadRequest, response.toString)
+
+                // the error message should inform the user that the provided mapping Iri is invalid
+                assert(responseAs[String].contains(s"mapping ${anythingProjectIri}/invalidPathForMappings/HTMLMapping does not exist"))
 
 
             }

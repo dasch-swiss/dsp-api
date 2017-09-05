@@ -46,4 +46,10 @@ WHERE {
     ?s knora-base:groupName "@name"^^xsd:string .
     ?s knora-base:belongsToProject <@projectIri> .
     ?s ?p ?o .
+    FILTER (?s != <http://www.knora.org/ontology/knora-base#UnknownUser>) .
+    FILTER (?s != <http://www.knora.org/ontology/knora-base#KnownUser>) .
+    FILTER (?s != <http://www.knora.org/ontology/knora-base#Creator>) .
+    FILTER (?s != <http://www.knora.org/ontology/knora-base#ProjectMember>) .
+    FILTER (?s != <http://www.knora.org/ontology/knora-base#ProjectAdmin>) .
+    FILTER (?s != <http://www.knora.org/ontology/knora-base#SystemAdmin>) .
 }

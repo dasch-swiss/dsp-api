@@ -52,18 +52,6 @@
                       knora-base:hasPermissions "M knora-base:Creator,knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser"^^xsd:string .
 
 
-### Default Object Access Permissions on SystemAdmin Group.
-### Will be used in cases where system admin is creating something in other projects.
-<http://data.knora.org/permissions/001-d4>
-
-                      rdf:type knora-base:DefaultObjectAccessPermission ;
-
-                      knora-base:forProject knora-base:SystemProject ;
-
-                      knora-base:forGroup knora-base:SystemAdmin ;
-
-                      knora-base:hasPermissions "CR knora-base:ProjectAdmin|M knora-base:ProjectMember"^^xsd:string .
-
 
 ##########################################################
 #
@@ -93,6 +81,18 @@
                       knora-base:forGroup knora-base:ProjectAdmin ;
 
                       knora-base:hasPermissions "ProjectResourceCreateAllPermission|ProjectAdminAllPermission"^^xsd:string .
+
+
+### Administrative Permissions on 'images-reviewer'
+<http://data.knora.org/permissions/002-a3>
+
+                      rdf:type knora-base:AdministrativePermission ;
+
+                      knora-base:forProject <http://data.knora.org/projects/images> ;
+
+                      knora-base:forGroup <http://data.knora.org/groups/images-reviewer> ;
+
+                      knora-base:hasPermissions "ProjectResourceCreateRestrictedPermission http://www.knora.org/ontology/images#bild,http://www.knora.org/ontology/images#bildformat"^^xsd:string .
 
 
 ### Default Object Access Permissions on ProjectMember Group
@@ -226,6 +226,9 @@
                       knora-base:forGroup knora-base:ProjectMember ;
 
                       knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser"^^xsd:string .
+
+
+
 
 
 ##########################################################

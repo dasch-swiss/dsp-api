@@ -16,6 +16,7 @@
    You should have received a copy of the GNU Affero General Public
    License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
+.. _administration:
 
 Administration (Users, Projects, Groups, Institutions, Permissions)
 ====================================================================
@@ -253,15 +254,8 @@ permissions correspond to the earlier described object access permission:
         - value: ``CR`` followed by a comma-separated list of ``knora-base:UserGroup``
 
 A single instance of ``knora-base:DefaultObjectAccessPermission`` must always reference a project, but can only
-reference **either** a group (``knora-base:forGroup`` property), a resource class (``knora-base:forResourceClass``), or
-a property (``knora-base:forProperty``).
-
-If the user creating a new object is a member of more than one group with such attached permissions, and additionally
-default object access permission are defined on resource classes and/or properties, then the final set of default object
-access permissions that will result is **additive** and **most permissive**.
-
-The default object access permissions defined on the **SystemAdmin** group are additionally used for system admin users,
-and are added to the calculated final set of permissions.
+reference **either** a group (``knora-base:forGroup`` property), a resource class (``knora-base:forResourceClass``), a
+property (``knora-base:forProperty``), or a combination of resource class **and** property.
 
 Example default object access permission instance:
 
@@ -276,6 +270,37 @@ Example default object access permission instance:
 This instance is setting default object access permissions to the project member group of a project, giving change
 right permission to the creator, modify permission to all project members, and view permission to known users. Further,
 this **implicitly** applies to all resource classes and all their properties inside the project.
+
+
+Permission Precedence Rules 
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+For both administrative permissions and default object access permissions, the resulting permissions are derived by
+applying precedence rules, for the case that the user is member of more than one group.
+
+The following list is sorted by the permission precedence level in descending order:
+
+    - permissions on ``knora-base:ProjectAdmin`` (highest level)
+    - permissions on resource classes and property combination (own project)
+    - permissions on resource classes and property combination (``knora-base:SystemProject``)
+    - permissions on resource classes / properties (own project)
+    - permissions on resource classes / properties (``knora-base:SystemProject``)
+    - permissions on custom groups
+    - permissions on ``knora-base:ProjectMember``
+    - permissions on ``knora-base:KnownUser`` (lowest level)
+
+The permissions on resource classes / properties are only relevant for default object access permissions.
+
+**Administrative Permissions**: When a user performs an operation requiring administrative permissions, then **only**
+the permissions from the **highest level** are taken into account. If a user is a member of more than one group on the
+same level (only possible for custom groups) then the defined permissions are summed up and all are taken into account.
+
+**Default Object Access Permissions**: When a user creates a resource or value, then **only** the default object
+permissions from the **highest level** are applied. If a user is a member of more than one group on the same level
+(only possible for custom groups) then the defined permissions are summed up and the most permissive are applied.
+
+In the case of users belonging to the **SystemAdmin** group, but which are not members of a project and thus no group
+belonging to the project, the *default object access permissions* from the **highest defined level** will apply.
 
 
 Implicit Permissions
@@ -650,9 +675,19 @@ Example Data stored in the permissions graph
        knora-base:forProperty <http://www.knora.org/ontology/images#lastname> ;
        knora-base:hasPermissions "D knora-base:ProjectMember,knora-base:Creator|
                                   V knora-base:KnownUser,knora-base:UnknownUser"^^ .
-       
-       
-       
+
+
+**Default object access permission on a resource class and property:**
+::
+
+  <http://data.knora.org/permissions/[UUID]> rdf:type knora-base:DefaultObjectAccessPermission ;
+       knora-base:forProject <http://data.knora.org/projects/[UUID]> ;
+       knora-base:forResourceClass <http://www.knora.org/ontology/images#person> ;
+       knora-base:forProperty <http://www.knora.org/ontology/images#lastname> ;
+       knora-base:hasPermissions "CR knora-base:Creator,knora-base:ProjectMember|
+                                   V knora-base:KnownUser,knora-base:UnknownUser"^^xsd:string .
+
+
 **Default object access permission on a knora-base property:**
 ::
 
@@ -735,23 +770,127 @@ All information regarding users, projects and groups is stored in the ``http://w
 
 
 Users Endpoint
-^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^
+
+**Get users**
+  - GET: ``/v1/users``
+
+**Get user**
+  - GET:``/v1/users/<userIri>``
+
 **Create user**:
   - Required permission: none, self-registration is allowed
-  - Required information: username, given name, family name, email, password
-  - Optional information: phone
-  - Returns IRI of newly created user
+  - Required information: email (unique), given name, family name, password, password, status, systemAdmin
+  - Returns information about the newly created user
+  - TypeScript Docs: userFormats - CreateUserApiRequestV1
+  - POST: ``/v1/users/``
+  - BODY:
 
+::
 
-**Update user**:
+  {
+    "email": "donald.duck@example.org",
+    "givenName": "Donald",
+    "familyName": "Duck",
+    "password": "test",
+    "status": true,
+    "lang": "en",
+    "systemAdmin": false
+  }
+
+**Update user information**:
   - Required permission: SystemAdmin / User
-  - Changeable information: username, given name, family name, email, password, phone
+  - Changeable information: email, given name, family name, password, status, SystemAdmin membership
+  - Remark: There are four distinct use case / payload combination. It is not possible to mix cases, e.g., sending
+    ``newUserStatus`` and basic user information at the same time will result in an error: (1) change password:
+    oldPassword, newPassword, (2) change status: newUserStatus, (3) change system admin membership: newSystemAdminMembershipStatus,
+    and (4) change basic user information: email, givenName, familyName, lang
+  - TypeScript Docs: userFormats - ChangeUserApiRequestV1
+  - PUT: ``/v1/users/<userIRI>``
+  - BODY:
 
+::
 
-**Delete user (-> update user)**:
+  {
+    "email": "donald.big.duck@example.org",
+    "givenName": "Big Donald",
+    "familyName": "Duckmann",
+    "lang": "de"
+  }
+
+**Update user's password**
+  - Required permission: User
+  - Changeable information: password
+  - PUT: ``/v1/users/<userIri>``
+  - BODY:
+
+::
+
+  {
+    "oldPassword": "test",
+    "newPassword": "test1234"
+  }
+
+**Delete user**:
   - Required permission: SystemAdmin / User
-  - Effects property: ``knora-base:isActiveUser`` with value ``true`` or ``false``
+  - Remark: The same as updating a user and changing ``status`` to ``false``. To un-delete, set ``status`` to ``true``.
+  - PUT: ``/v1/users/<userIRI>``
+  - BODY:
 
+::
+
+  {
+    "status": false // true or false
+  }
+
+**Delete user (-> update user)**
+  - Required permission: SystemAdmin / User
+  - Remark: The same as updating a user and changing ``status`` to ``false``. To un-delete, set ``status`` to ``true``.
+  - DELETE: ``/v1/projects/projectIRI``
+  - BODY: empty
+
+**Get user's project memberships**
+  - GET: ``/v1/users/projects/<userIRI>``
+
+**Add/remove user to/from project**:
+  - Required permission: SystemAdmin / ProjectAdmin / User (if project self-assignment is enabled)
+  - Required information: project IRI, user IRI
+  - Effects: ``knora-base:isInProject`` user property
+  - POST / DELETE: ``/v1/users/projects/<userIRI>/<projectIRI>``
+  - BODY: empty
+
+**Get user's project admin memberships**
+  - GET: ``/v1/users/projects-admin/<userIri>``
+
+**Add/remove user to/from project admin group**
+  - Required permission: SystemAdmin / ProjectAdmin
+  - Required information: project IRI, user IRI
+  - Effects: ``knora-base:isInProjectAdminGroup`` user property
+  - POST / DELETE: ``/v1/users/projects-admin/<userIRI>/<projectIRI>``
+  - BODY: empty
+
+**Get user's group memberships**
+  - GET: ``/v1/users/groups/<userIri>``
+
+**Add/remove user to/from 'normal' group** (not *SystemAdmin* or *ProjectAdmin*):
+  - Required permission: SystemAdmin / hasProjectAllAdminPermission / hasProjectAllGroupAdminPermission /
+    hasProjectRestrictedGroupAdminPermission (for this group) / User (if group self-assignment is enabled)
+  - Required information: group IRI, user IRI
+  - Effects: ``knora-base:isInGroup``
+  - POST / DELETE: ``/v1/users/groups/<userIRI>/<groupIRI>``
+  - BODY: empty
+
+**Add/remove user to/from system admin group**:
+  - Required permission: SystemAdmin / User
+  - Effects property: ``knora-base:isInSystemAdminGroup`` with value ``true`` or ``false``
+  - PUT: ``/v1/users/<userIri>``
+  - BODY:
+
+::
+
+  {
+    "newSystemAdminMembershipStatus": false // true or false
+  }
 
 Example User Information stored in admin graph:
 ::
@@ -774,40 +913,58 @@ Projects Endpoint
 ^^^^^^^^^^^^^^^^^^
 **Create project**:
   - Required permission: SystemAdmin
-  - Required information: projectShortname (unique; used for named graphs), projectBasepath
-  - Optional information: projectLongname, projectDescription, projectKeyword, projectLogo
-  - Returns IRI of newly created project
-  - Effects:
-      - create project
-      - create group named *ProjectAdmin*, give group *hasProjectAllAdminPermission* and *hasProjectResourceCreateAllPermission*
-      - create group named *ProjectMember*, give group *hasProjectResourceCreateAllPermission*,
-        *knora-base:hasDefaultChangeRightsPermission* for *knora-base:Creator*,
-        *knora-base:hasDefaultModifyPermission* for this *ProjectMember* group, and
-        *knora-base:hasDefaultViewPermission* for *knora-base:KnownUser*
+  - Required information: shortname (unique; used for named graphs), status, selfjoin
+  - Optional information: longname, description, keywords, logo
+  - Returns information about the newly created project
+  - Remark: There are two distinct use cases / payload combination: (1) change ontology and data graph: ontologygraph,
+    datagraph, (2) basic project information: shortname, longname, description, keywords, logo, institution, status,
+    selfjoin
+  - TypeScript Docs: projectFormats - CreateProjectApiRequestV1
+  - POST: ``/v1/projects/``
+  - BODY:
 
+::
+
+  {
+    "shortname": "newproject",
+    "longname": "project longname",
+    "description": "project description",
+    "keywords": "keywords",
+    "logo": "/fu/bar/baz.jpg",
+    "status": true,
+    "selfjoin": false
+  }
 
 **Update project information**:
   - Required permission: SystemAdmin / ProjectAdmin
-  - Changeable information: longname, description
-  - Effects property: ``knora-base:projectLongname``, ``knora-base:description``
+  - Changeable information: shortname, longname, description, keywords, logo, status, selfjoin
+  - TypeScript Docs: projectFormats - ChangeProjectApiRequestV1
+  - PUT: ``/v1/projects/<projectIRI>``
+  - BODY:
+
+::
+
+  {
+    "shortname": "newproject",
+    "longname": "project longname",
+    "description": "project description",
+    "keywords": "keywords",
+    "logo": "/fu/bar/baz.jpg",
+    "status": true,
+    "selfjoin": false
+  }
 
 
-**Add/remove user to/from project**:
-  - Required permission: SystemAdmin / ProjectAdmin / User (if project self-assignment is enabled)
-  - Required information: project IRI, user IRI
-  - Optional information: admin status
-  - Effects: ``knora-base:isInProject`` and ``knora-base:isInGroup`` named ``ProjectMember`` of current project
-
-
-**Delete/Un-Delete project (-> update project)**:
+**Get project members**
   - Required permission: SystemAdmin / ProjectAdmin
-  - Effects property: ``knora-base:isActiveProject`` with value ``true`` or ``false``
+  - Required information: project IRI
+  - GET: ``/v1/projects/members/<projectIRI>``
 
-
-**Enable/disable self-join**:
+**Delete project (-> update project)**:
   - Required permission: SystemAdmin / ProjectAdmin
-  - Effects property: ``knora-base:hasSelfAssignmentEnabled`` with value ``true`` or ``false``
-
+  - Remark: The same as updating a project and changing ``status`` to ``false``. To un-delete, set ``status`` to ``true``.
+  - DELETE: ``/v1/projects/<projectIRI>``
+  - BODY: empty
 
 Example Project Information stored in admin named graph:
 ::
@@ -828,52 +985,45 @@ Groups Endpoint
 
 **Create group**:
   - Required permission: SystemAdmin / hasProjectAllAdminPermission / hasProjectAllGroupAdminPermission
-  - Required information: group name (unique inside project), project IRI
+  - Required information: name (unique inside project), project IRI
   - Optional information: group description
-  - Returns IRI of newly created group
+  - Returns information about the newly created group
+  - TypeScript Docs: groupFormats - CreateGroupApiRequestV1
+  - POST: ``/v1/groups``
+  - BODY:
+
+::
+
+  {
+    "name": "NewGroup",
+    "description": "NewGroupDescription",
+    "project": "http://data.knora.org/projects/images",
+    "status": true,
+    "selfjoin": false
+  }
 
 
 **Update group information**:
   - Required permission: SystemAdmin / hasProjectAllAdminPermission /  hasProjectAllGroupAdminPermission /
     hasProjectRestrictedGroupAdminPermission (for this group)
-  - Changeable information: name, group description
-  - Effects property: ``<http://xmlns.com/foaf/0.1/name>``, ``knora-base:groupDescription``
+  - Changeable information: name, description, status, selfjoin
+  - TypeScript Docs: groupFormats - ChangeGroupApiRequestV1
+  - PUT: ``/v1/groups/<groupIRI>``
+  - BODY:
 
+::
 
-**Add/remove user to/from 'normal' group** (not *SystemAdmin* or *ProjectAdmin*):
-  - Required permission: SystemAdmin / hasProjectAllAdminPermission / hasProjectAllGroupAdminPermission /
-    hasProjectRestrictedGroupAdminPermission (for this group) / User (if group self-assignment is enabled)
-  - Required information: group IRI, user IRI
-  - Effects: ``knora-base:isInGroup``
+  {
+    "name": "UpdatedGroupName",
+    "description": "UpdatedGroupDescription".
+    "status": true,
+    "selfjoin": false
+  }
 
-
-**Add/remove user to/from SystemAdmin group**:
-  - Required permission: SystemAdmin
-  - Required information: group IRI (http://www.knora.org/ontology/knora-base#SystemAdmin), user IRI
-  - Effects: ``knora-base:isInGroup``
-
-
-**Add/remove user to/from ProjectAdmin group**:
-  - Required permission: SystemAdmin, ProjectAdmin
-  - Required information: project IRI, group IRI, user IRI
-  - Effects: ``knora-base:isInGroup``
-
-
-**Enable/disable self-join**:
-  - Required permission: SystemAdmin / hasProjectAllAdminPermission / hasProjectAllGroupAdminPermission /
-    hasProjectRestrictedGroupAdminPermission (for this group)
-  - Effects property: ``knora-base:hasSelfAssignmentEnabled`` with value ``true`` or ``false``
-
-
-**Add/change administrative permissions to a group**:
-  - Required permission: SystemAdmin / hasProjectAllAdminPermission / hasProjectRightsAdminPermission
-  - Effects property: resource creation permissions, project administration permissions, default permissions
-
-
-**Delete group**:
+**Delete group (-> update group)**:
   - Required permission: SystemAdmin / hasProjectAllAdminPermission
-  - Effect: ``knora-base:isInGroup`` / removes group from any object permissions
-
+  - Remark: The same as updating a group and changing ``status`` to ``false``. To un-delete, set ``status`` to ``true``.
+  - DELETE: ``/v1/groups/<groupIRI>``
 
 Example Group Information stored in admin named graph:
 ::
@@ -885,6 +1035,17 @@ Example Group Information stored in admin named graph:
         knora-base:belongsToProject <http://data.knora.org/projects/[UUID]> ;
         knora-base:status "true"^^xsd:boolean ;
         knora-base:hasSelfJoinEnabled "false"^^xsd:boolean .
+
+
+
+Permissions Endpoint
+^^^^^^^^^^^^^^^^^^^^^
+
+**Add/change/delete administrative permissions**:
+  - Required permission: SystemAdmin / hasProjectAllAdminPermission / hasProjectRightsAdminPermission
+
+**Add/change/delete default object access permissions**:
+  - Required permission: SystemAdmin / hasProjectAllAdminPermission / hasProjectRightsAdminPermission
 
 
 Redesign / Questions June 2016

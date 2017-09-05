@@ -1,0 +1,89 @@
+@*
+ * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
+ * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
+ *
+ * This file is part of Knora.
+ *
+ * Knora is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Knora is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public
+ * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ *@
+
+@import org.knora.webapi.IRI
+@import org.knora.webapi.SparqlGenerationException
+
+@*
+ * Performs a search for resources by their label.
+ *
+ * @param searchTerms search terms to look for in the resources' label.
+ *@
+@(searchTerms: String)
+
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+CONSTRUCT {
+    ?resource rdfs:label ?label ;
+        a knora-base:Resource ;
+        knora-base:isMainResource true ;
+		a ?resourceType ;
+        knora-base:attachedToUser ?resourceCreator ;
+        knora-base:hasPermissions ?resourcePermissions ;
+        knora-base:attachedToProject ?referredResourceProject .
+
+        # include this inferred information in the results, needed to identify value properties
+    ?resource knora-base:hasValue ?valueObject ;
+        ?resourceValueProperty ?valueObject .
+    ?valueObject ?valueObjectProperty ?valueObjectValue .
+
+} WHERE {
+    {
+        SELECT DISTINCT ?resource ?label WHERE {
+            ?resource a knora-base:Resource ;
+                knora-base:isDeleted false ;
+
+            GRAPH <http://www.ontotext.com/explicit> {
+                    ?resource rdfs:label ?label .
+                }
+
+            ?label <http://www.ontotext.com/owlim/lucene#fullTextSearchIndex> '@searchTerms' .
+
+        } LIMIT 500
+    }
+
+    GRAPH <http://www.ontotext.com/explicit> {
+        ?resource a ?resourceType .
+    }
+
+    ?resource knora-base:attachedToUser ?resourceCreator ;
+            knora-base:hasPermissions ?resourcePermissions ;
+            knora-base:attachedToProject ?referredResourceProject  .
+
+    # there might by resources that have neither values nor links
+    OPTIONAL {
+
+            ?resource knora-base:hasValue ?valueObject .
+
+            ?valueObject a knora-base:Value ;
+                knora-base:isDeleted false .
+
+
+                GRAPH <http://www.ontotext.com/explicit> {
+                    ?resource ?resourceValueProperty ?valueObject .
+
+                    ?valueObject a ?valueObjectType ;
+                        ?valueObjectProperty ?valueObjectValue .
+                }
+    }
+
+
+
+}

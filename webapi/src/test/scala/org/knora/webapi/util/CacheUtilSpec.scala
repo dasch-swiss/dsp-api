@@ -38,10 +38,10 @@ class CacheUtilSpec extends CoreSpec("CachingTestSystem") with ImplicitSender wi
 
     implicit val executionContext = system.dispatcher
 
-    val cacheName = "authenticationCache"
+    val cacheName = Authenticator.AUTHENTICATION_INVALIDATION_CACHE_NAME
     val sessionId = System.currentTimeMillis().toString
 
-    "Caching " should {
+    "Caching" should {
 
         "allow to set and get the value " in {
             CacheUtil.put(cacheName, sessionId, SharedAdminTestData.rootUser)

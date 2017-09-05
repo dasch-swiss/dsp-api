@@ -1,7 +1,7 @@
 import sbt._
 import sbt.Keys._
 import spray.revolver.RevolverPlugin._
-import com.typesafe.sbt.SbtNativePackager.autoImport._
+import NativePackagerHelper._
 
 connectInput in run := true
 
@@ -11,10 +11,10 @@ connectInput in run := true
 lazy val webapi = (project in file(".")).
         configs(
             FusekiTest,
-            FusekiTomcatTest,
+            FusekiIntegrationTest,
             GraphDBTest,
             GraphDBFreeTest,
-            SesameTest,
+            GraphDBFreeIntegrationTest,
             EmbeddedJenaTDBTest,
             IntegrationTest
         ).
@@ -26,10 +26,10 @@ lazy val webapi = (project in file(".")).
                 testOptions += Tests.Argument("-oDF") // show full stack traces and test case durations
             )
         ): _*).
-        settings(inConfig(FusekiTomcatTest)(
+        settings(inConfig(FusekiIntegrationTest)(
             Defaults.testTasks ++ Seq(
                 fork := true,
-                javaOptions ++= javaFusekiTomcatTestOptions,
+                javaOptions ++= javaFusekiIntegrationTestOptions,
                 testOptions += Tests.Argument("-oDF") // show full stack traces and test case durations
             )
         ): _*).
@@ -47,10 +47,10 @@ lazy val webapi = (project in file(".")).
                 testOptions += Tests.Argument("-oDF") // show full stack traces and test case durations
             )
         ): _*).
-        settings(inConfig(SesameTest)(
+        settings(inConfig(GraphDBFreeIntegrationTest)(
             Defaults.testTasks ++ Seq(
                 fork := true,
-                javaOptions ++= javaSesameTestOptions,
+                javaOptions ++= javaGraphDBFreeIntegrationTestOptions,
                 testOptions += Tests.Argument("-oDF") // show full stack traces and test case durations
             )
         ): _*).
@@ -69,15 +69,6 @@ lazy val webapi = (project in file(".")).
             )
         ): _*).
         settings(
-            //javaOptions in FusekiTest ++= javaFusekiTestOptions,
-            //javaOptions in FusekiTomcatTest ++= javaFusekiTomcatTestOptions,
-            //javaOptions in GraphDBTest ++= javaGraphDBTestOptions,
-            //javaOptions in EmbeddedJenaTDBTest ++= javaEmbeddedJenaTDBTestOptions,
-            //fork in FusekiTest := true,
-            //parallelExecution in FusekiTest := false,
-            //testOptions in FusekiTest += Tests.Argument("-oDF")
-        ).
-        settings(
             libraryDependencies ++= webApiLibs,
             scalacOptions ++= Seq("-feature", "-unchecked", "-deprecation", "-Yresolve-term-conflict:package"),
             logLevel := Level.Info,
@@ -88,21 +79,38 @@ lazy val webapi = (project in file(".")).
             mainClass in (Compile, run) := Some("org.knora.webapi.Main"),
             fork in Test := true,
             javaOptions in Test ++= javaTestOptions,
-            parallelExecution in Test := false
+            parallelExecution in Test := false,
+            // enable publishing the jar produced by `sbt it:package`
+            publishArtifact in (IntegrationTest, packageBin) := true
+        ).
+        settings( // enable deployment staging with `sbt stage`
+          mappings in Universal ++= {
+            // copy the scripts folder
+            directory("scripts") ++
+            // copy configuration files to config directory
+            contentOf("src/main/resources").toMap.mapValues("config/" + _)
+          },
+          // add 'config' directory first in the classpath of the start script,
+          scriptClasspath := Seq("../config/") ++ scriptClasspath.value,
+          // add license
+          licenses := Seq(("GNU AGPL", url("https://www.gnu.org/licenses/agpl-3.0"))),
+          // need this here, but why?
+          mainClass in Compile := Some("org.knora.webapi.Main")
         ).
         settings(Revolver.settings: _*).
-        enablePlugins(SbtTwirl) // Enable the SbtTwirl plugin
+        enablePlugins(SbtTwirl). // Enable the SbtTwirl plugin
+        enablePlugins(JavaAppPackaging) // Enable the sbt-native-packager plugin
 
 lazy val webApiCommonSettings = Seq(
     organization := "org.knora",
     name := "webapi",
-    version := "0.1.0",
+    version := "0.1.0-beta",
     ivyScala := ivyScala.value map { _.copy(overrideScalaVersion = true) },
     scalaVersion := "2.12.1"
 )
 
-lazy val akkaVersion = "2.4.16"
-lazy val akkaHttpVersion = "10.0.3"
+lazy val akkaVersion = "2.4.19"
+lazy val akkaHttpVersion = "10.0.7"
 
 lazy val webApiLibs = Seq(
     // akka
@@ -129,7 +137,7 @@ lazy val webApiLibs = Seq(
     "com.typesafe.scala-logging" %% "scala-logging" % "3.5.0",
     "ch.qos.logback" % "logback-classic" % "1.1.7",
     // input validation
-    "commons-validator" % "commons-validator" % "1.4.1",
+    "commons-validator" % "commons-validator" % "1.6",
     // authentication
     "org.bouncycastle" % "bcprov-jdk15on" % "1.56",
     "org.springframework.security" % "spring-security-core" % "4.2.1.RELEASE",
@@ -154,21 +162,25 @@ lazy val webApiLibs = Seq(
     "org.joda" % "joda-convert" % "1.8",
     "com.sksamuel.diff" % "diff" % "1.1.11",
     "org.xmlunit" % "xmlunit-core" % "2.1.1",
+    "io.igl" %% "jwt" % "1.2.2",
     // testing
-    "com.typesafe.akka" %% "akka-testkit" % akkaVersion % "test, fuseki, fuseki-tomcat, graphdb, tdb, it",
-    "com.typesafe.akka" %% "akka-http-testkit" % akkaHttpVersion % "test, fuseki, fuseki-tomcat, graphdb, tdb, it",
-    "com.typesafe.akka" %% "akka-stream-testkit" % akkaVersion % "test, fuseki, fuseki-tomcat, graphdb, tdb, it",
-    "org.scalatest" %% "scalatest" % "3.0.0" % "test, fuseki, fuseki-tomcat, graphdb, tdb, it",
-    "org.eclipse.rdf4j" % "rdf4j-rio-turtle" % "2.0M3",
+    "com.typesafe.akka" %% "akka-testkit" % akkaVersion % "test, fuseki, graphdb, tdb, it, fuseki-it, graphdb-free-it",
+    "com.typesafe.akka" %% "akka-http-testkit" % akkaHttpVersion % "test, fuseki, graphdb, tdb, it, fuseki-it, graphdb-free-it",
+    "com.typesafe.akka" %% "akka-stream-testkit" % akkaVersion % "test, fuseki, graphdb, tdb, it, fuseki-it, graphdb-free-it",
+    "org.scalatest" %% "scalatest" % "3.0.0" % "test, fuseki, graphdb, tdb, it, fuseki-it, graphdb-free-it",
+    "org.eclipse.rdf4j" % "rdf4j-rio-turtle" % "2.2.1",
+    "org.eclipse.rdf4j" % "rdf4j-queryparser-sparql" % "2.2.1",
     "org.rogach" %% "scallop" % "2.0.5",
     "com.google.gwt" % "gwt-servlet" % "2.8.0",
-    "net.sf.saxon" % "Saxon-HE" % "9.7.0-14"
+    "net.sf.saxon" % "Saxon-HE" % "9.7.0-14",
+    "com.github.jsonld-java" % "jsonld-java" % "0.10.0",
+    "com.jsuereth" % "scala-arm_2.12" % "2.0"
 )
 
 lazy val javaRunOptions = Seq(
     // "-showversion",
-    "-Xms2048m",
-    "-Xmx4096m"
+    "-Xms1G",
+    "-Xmx1G"
     // "-verbose:gc",
     //"-XX:+UseG1GC",
     //"-XX:MaxGCPauseMillis=500"
@@ -176,8 +188,8 @@ lazy val javaRunOptions = Seq(
 
 lazy val javaTestOptions = Seq(
     // "-showversion",
-    "-Xms2048m",
-    "-Xmx4096m"
+    "-Xms2G",
+    "-Xmx4G"
     // "-verbose:gc",
     //"-XX:+UseG1GC",
     //"-XX:MaxGCPauseMillis=500",
@@ -189,9 +201,9 @@ lazy val javaFusekiTestOptions = Seq(
     "-Dconfig.resource=fuseki.conf"
 ) ++ javaTestOptions
 
-lazy val FusekiTomcatTest = config("fuseki-tomcat") extend(Test)
-lazy val javaFusekiTomcatTestOptions = Seq(
-    "-Dconfig.resource=fuseki-tomcat.conf"
+lazy val FusekiIntegrationTest = config("fuseki-it") extend(IntegrationTest)
+lazy val javaFusekiIntegrationTestOptions = Seq(
+    "-Dconfig.resource=fuseki.conf"
 ) ++ javaTestOptions
 
 lazy val GraphDBTest = config("graphdb") extend(Test)
@@ -204,9 +216,9 @@ lazy val javaGraphDBFreeTestOptions = Seq(
     "-Dconfig.resource=graphdb-free.conf"
 ) ++ javaTestOptions
 
-lazy val SesameTest = config("sesame") extend(Test)
-lazy val javaSesameTestOptions = Seq(
-    "-Dconfig.resource=sesame.conf"
+lazy val GraphDBFreeIntegrationTest = config("graphdb-free-it") extend(IntegrationTest)
+lazy val javaGraphDBFreeIntegrationTestOptions = Seq(
+    "-Dconfig.resource=graphdb-free.conf"
 ) ++ javaTestOptions
 
 lazy val EmbeddedJenaTDBTest = config("tdb") extend(Test)
@@ -220,32 +232,3 @@ lazy val javaEmbeddedJenaTDBTestOptions = Seq(
 lazy val javaIntegrationTestOptions = Seq(
     "-Dconfig.resource=graphdb.conf"
 ) ++ javaTestOptions
-
-// skip test before creating fat-jar
-test in assembly := {}
-
-// set fat-jar main class
-mainClass in assembly := Some("org.knora.webapi.Main")
-
-// change merge strategy for fat-jar
-assemblyMergeStrategy in assembly := {
-    case PathList("org", "apache", "commons", "logging", xs @ _*)   => MergeStrategy.first
-    case PathList("META-INF", xs @ _*) =>
-    xs.map(_.toLowerCase) match {
-        case ("manifest.mf" :: Nil) | ("index.list" :: Nil) | ("dependencies" :: Nil) =>
-        MergeStrategy.discard
-        case ps @ (x :: xs) if ps.last.endsWith(".sf") || ps.last.endsWith(".dsa") || ps.last.endsWith("license") || ps.last.endsWith("license.txt") || ps.last.endsWith("notice") || ps.last.endsWith("notice.txt") =>
-        MergeStrategy.discard
-        case "plexus" :: xs =>
-        MergeStrategy.discard
-        case "services" :: xs =>
-        MergeStrategy.filterDistinctLines
-        case ("spring.schemas" :: Nil) | ("spring.handlers" :: Nil) =>
-        MergeStrategy.filterDistinctLines
-        case ps@(x :: xs) if ps.last.endsWith("aop.xml") => MergeStrategy.first
-        case _ => MergeStrategy.deduplicate
-    }
-    case x =>
-    val oldStrategy = (assemblyMergeStrategy in assembly).value
-    oldStrategy(x)
-}

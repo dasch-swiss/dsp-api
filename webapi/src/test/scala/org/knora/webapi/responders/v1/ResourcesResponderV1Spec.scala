@@ -32,7 +32,7 @@ import org.knora.webapi.messages.v1.responder.resourcemessages._
 import org.knora.webapi.messages.v1.responder.sipimessages.SipiResponderConversionFileRequestV1
 import org.knora.webapi.messages.v1.responder.standoffmessages.StandoffDataTypeClasses
 import org.knora.webapi.messages.v1.responder.valuemessages._
-import org.knora.webapi.messages.v1.store.triplestoremessages._
+import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.responders._
 import org.knora.webapi.store._
 import org.knora.webapi.twirl.{StandoffTagIriAttributeV1, StandoffTagV1}
@@ -206,7 +206,7 @@ object ResourcesResponderV1Spec {
             targetResourceIri = "http://data.knora.org/project-thing-2"
         )),
         occurrence = Some("0-n"),
-        attributes = "restypeid=http://www.knora.org/ontology/anything#Thing",
+        attributes = "size=45;restypeid=http://www.knora.org/ontology/anything#Thing",
         label = Some("Ein anderes Ding"),
         guielement = Some("searchbox"),
         guiorder = Some(1),
@@ -620,7 +620,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
     // Construct the actors needed for this test.
     private val actorUnderTest = TestActorRef[ResourcesResponderV1]
 
-    private val responderManager = system.actorOf(Props(new TestResponderManagerV1(Map(SIPI_ROUTER_ACTOR_NAME -> system.actorOf(Props(new MockSipiResponderV1))))), name = RESPONDER_MANAGER_ACTOR_NAME)
+    private val responderManager = system.actorOf(Props(new TestResponderManager(Map(SIPI_ROUTER_V1_ACTOR_NAME -> system.actorOf(Props(new MockSipiResponderV1))))), name = RESPONDER_MANAGER_ACTOR_NAME)
 
     private val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
 
@@ -875,7 +875,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
             }
         }
 
-        "return a region with a comment containing standoff information (disabled because of issue 17)" ignore {
+        "return a region with a comment containing standoff information" in {
             // http://localhost:3333/v1/resources/http%3A%2F%2Fdata.knora.org%2F047db418ae06
             actorUnderTest ! ResourceFullGetRequestV1(iri = "http://data.knora.org/047db418ae06", userProfile = SharedAdminTestData.incunabulaMemberUser)
 
@@ -1044,6 +1044,8 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
                 DateValueV1(
                     dateval1 = "1487",
                     dateval2 = "1490",
+                    era1 = "CE",
+                    era2 = "CE",
                     calendar = KnoraCalendarV1.JULIAN
                 )
             )
@@ -1157,7 +1159,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
             val publoc = TextValueSimpleV1("Entenhausen")
 
             val pubdateRequest = DateUtilV1.createJDNValueV1FromDateString("GREGORIAN:2015-12-03")
-            val pubdateResponse = DateValueV1(dateval1 = "2015-12-03", dateval2 = "2015-12-03", calendar = KnoraCalendarV1.GREGORIAN)
+            val pubdateResponse = DateValueV1(dateval1 = "2015-12-03", dateval2 = "2015-12-03", era1="CE",era2="CE", calendar = KnoraCalendarV1.GREGORIAN)
 
             val valuesToBeCreated: Map[IRI, Seq[CreateValueV1WithComment]] = Map(
                 "http://www.knora.org/ontology/incunabula#title" -> Vector(CreateValueV1WithComment(title1)),

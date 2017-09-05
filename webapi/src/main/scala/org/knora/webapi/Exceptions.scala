@@ -147,6 +147,13 @@ case class InvalidStandoffException(message: String) extends RequestRejectedExce
 case class StandoffConversionException(message: String) extends RequestRejectedException(message)
 
 /**
+  * An exception indicating that the SPARQL submitted to the API v2 search route was invalid.
+  * @param message a description of the error.
+  */
+case class SparqlSearchException(message: String) extends RequestRejectedException(message)
+
+
+/**
   * An abstract class for exceptions indicating that something went wrong and it's not the client's fault.
   *
   * @param message a description of the error.
@@ -158,6 +165,13 @@ object InternalServerException {
     // So we can match instances of InternalServerException, even though it's an abstract class
     def unapply(e: InternalServerException): Option[InternalServerException] = Option(e)
 }
+
+/**
+  * An exception indicating that during authentication something unexpected happened.
+  *
+  * @param message a description of the error.
+  */
+case class AuthenticationException(message: String = "Error during authentication. Please report this as a possible bug.") extends InternalServerException(message)
 
 /**
   * An exception indicating that during file upload there was an error.

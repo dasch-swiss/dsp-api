@@ -247,7 +247,7 @@ Ensuring Data Consistency
 
 Knora enforces consistency constraints using three redundant mechanisms:
 
-1. By doing pre-update checks in SPARQL SELECT queries.
+1. By doing pre-update checks using SPARQL SELECT queries and cached ontology data.
 2. By doing checks in the ``WHERE`` clauses of SPARQL updates.
 3. By using GraphDB's built-in consistency checker (see :ref:`consistency-checking`).
 
@@ -271,13 +271,14 @@ the ``WHERE`` clause are not met (e.g. because the data to be updated does not
 exist), the ``WHERE`` clause should return no results; as a result, the update
 will not be performed.
 
-Regardless of whether the update succeeds or not, it returns nothing. So the
-only way to find out whether it was successful is to do a ``SELECT``
-afterwards. Moreover, if the update failed, there is no straightforward way to
-find out why. This is one reason why Knora does pre-update checks by means of
-separate ``SELECT`` queries, *before* performing the update. This makes it
-possible to return specific error messages to the user to indicate why an
-update cannot be performed.
+Regardless of whether the update changes the contents of the triplestore, it
+returns nothing. If the update did nothing because the conditions of the WHERE
+clause were not met, the only way to find out is to do a ``SELECT``
+afterwards. Moreover, in this case, there is no straightforward way to
+find out which conditions was not met. This is one reason why Knora does
+pre-update checks using separate ``SELECT`` queries and/or cached ontology
+data, *before* performing the update. This makes it possible to return specific
+error messages to the user to indicate why an update cannot be performed.
 
 Moreover, while some checks are easy to do in a SPARQL update, others are
 difficult, impractical, or impossible. Easy checks include checking whether a
@@ -288,6 +289,15 @@ poorly on Jena. Knora does not do permission checks in SPARQL, because its
 permission-checking algorithm is too complex to be implemented in SPARQL. For
 this reason, Knora's check for duplicate values cannot be done in SPARQL
 update code, because it relies on permission checks.
+
+In a bulk import operation, which can create a large number of resources in
+a single SPARQL update, a ``WHERE`` clause can become very expensive for the
+triplestore, in terms of memory as well as execution time. Moreover, RDF4J
+(and hence GraphDB) uses a recursive algorithm to parse SPARQL queries with
+``WHERE`` clauses, so the size of a ``WHERE`` clause is limited by the stack space
+available to the Java Virtual Machine. Therefore, in bulk import operations,
+Knora uses ``INSERT DATA``, which does not involve a ``WHERE`` clause. Bulk
+imports thus rely on checks (1) and (3) above.
 
 SPARQL Update Examples
 ----------------------

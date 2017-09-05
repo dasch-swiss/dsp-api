@@ -27,6 +27,10 @@ XML to Standoff Mapping
 The Knora Standard Mapping
 **************************
 
+-----------
+Description
+-----------
+
 A mapping allows for the conversion of XML to standoff representation in RDF and back. In order to create a TextValue with markup, the text has to be provided in XML format, along with the IRI of the mapping that will be used to convert the markup to standoff.
 However, a mapping is only needed if a TextValue with markup should be created. If a text has no markup, it is submitted as a mere sequence of characters.
 
@@ -45,10 +49,35 @@ Knora offers a standard mapping with the IRI ``http://data.knora.org/projects/st
  - ``<strike>`` -> ``standoff:StandoffStrikeTag``
  - ``<a href="URL">`` -> ``knora-base:StandoffUriTag``
  - ``<a class="salsah-link" href="Knora IRI">`` -> ``knora-base:StandoffLinkTag``
+ - ``<h1>`` to ``<h6>`` -> ``standoff:StandoffHeader1Tag`` to ``standoff:StandoffHeader6Tag``
+ - ``<ol>`` -> ``standoff:StandoffOrderedListTag``
+ - ``<ul>`` -> ``standoff:StandoffUnrderedListTag``
+ - ``<li>`` -> ``standoff:StandoffListElementTag``
+ - ``<tbody>`` -> ``standoff:StandoffTableBodyTag``
+ - ``<table>`` -> ``standoff:StandoffTableTag``
+ - ``<tr>`` -> ``standoff:StandoffTableRowTag``
+ - ``<td>`` -> ``standoff:StandoffTableCellTag``
  - ``<br>`` -> ``standoff:StandoffBrTag``
+ - ``<hr>`` -> ``standoff:StandoffLineTag``
+ - ``<pre>`` -> ``standoff:StandoffPreTag``
+ - ``<cite>`` -> ``standoff:StandoffCiteTag``
+ - ``<blockquote>`` -> ``standoff:StandoffBlockquoteTag``
+ - ``<code>`` -> ``standoff:StandoffCodeTag``
 
 The HTML produced by CKEditor is wrapped in an XML doctype and a pair of root tags ``<text>...</text>`` and then sent to Knora. The XML sent to the GUI by Knora is unwrapped accordingly (see ``jquery.htmleditor.js``).
 Although the GUI supports HTML5, it is treated as if it was XHTML in strict XML notation.
+
+-----------
+Maintenance
+-----------
+
+The standard mapping definition can be found at ``webapi/_test_data/test_route/texts/mappingForStandardHTML.xml``.  
+It was used to generate the default mapping, distributed 
+as ``knora-ontologies/standoff-data.ttl`` and that is loaded at a Knora installation.  
+It should be used to re-generate it, whenever we want to amend or extend it. 
+
+Note: once the mapping has been generated, one has to rework the resources' UUID in order to maintain backward compatibility. 
+
 
 *************************
 Creating a custom Mapping
@@ -59,6 +88,8 @@ Basically, a mapping expresses the relations between XML elements and attributes
 The relations expressed in a mapping are one-to-one relations, so the XML can be recreated from the data in RDF. However, since HTML offers a very limited set of elements, Knora mappings support the combination of element names
 and classes. In this way, the same element can be used several times in combination with another classname (please note that ``<a>`` without a class is a mere hyperlink whereas ``<a class="salsah-link">`` is an internal link/standoff link).
 
+With a mapping, a default XSL transformation may be provided to transform the XML to HTML before sending it back to the client. This is useful when the client is a web-browser expecting HTML (instead of XML).
+
 ----------------------------
 Basic Structure of a Mapping
 ----------------------------
@@ -66,6 +97,7 @@ Basic Structure of a Mapping
 The mapping is written in XML itself (for a formal description, see ``webapi/src/resources/mappingXMLToStandoff.xsd``). It has the following structure (the indentation corresponds to the nesting in XML):
 
 - ``<mapping>``: the root element
+    - ``<defaultXSLTransformation> (optional)``: the Iri of the default XSL transformation to be applied to the XML when reading it back from Knora. The XSL transformation is expected to produce HTML. If given, the Iri has to refer to a resource of type ``knora-base:XSLTransformation``.
     - ``<mappingElement>``: an element of the mapping (at least one)
        - ``<tag>``: information about the XML element that is mapped to a standoff class
            - ``<name>``: name of the XML element
@@ -77,7 +109,7 @@ The mapping is written in XML itself (for a formal description, see ``webapi/src
            - ``<attributes>``: XML attributes to be mapped to standoff properties (other than ``id`` or ``class``), if any
                - ``<attribute>``: an XML attribute to be mapped to a standoff property, may be repeated
                    - ``<attributeName>``: the name of the XML attribute
-                   - ``<namespace>``: the namespace the attribute belogs to, if any. If the attribute does not belong to a namespace, the keyword ``noNamespace`` has to be used.
+                   - ``<namespace>``: the namespace the attribute belongs to, if any. If the attribute does not belong to a namespace, the keyword ``noNamespace`` has to be used.
                    - ``<propertyIri>``: the Iri of the standoff property the XML attribute is mapped to.
            - ``<datatype>``: the data type of the standoff class, if any.
                - ``<type>``: the Iri of the data type standoff class
@@ -86,6 +118,7 @@ The mapping is written in XML itself (for a formal description, see ``webapi/src
 XML structure of a mapping::
 
     <mapping>
+        <defaultXSLTransformation>Iri of a knora-base:XSLTransformation</defaultXSLTransformation>
         <mappingElement>
             <tag>
                 <name>XML element name</name>
@@ -101,6 +134,7 @@ XML structure of a mapping::
                         <namespace>XML namespace or "noNamespace"</namespace>
                         <propertyIri>standoff property Iri</propertyIri>
                     </attribute>
+                </attributes>
                 <datatype>
                     <type>standoff data type class</type>
                     <attributeName>XML attribute with the typed value</attributeName>
@@ -194,7 +228,7 @@ The following simple mapping illustrates this principle::
                 </datatype>
             </standoffClass>
         </mappingElement>
-    <mapping>
+    </mapping>
 
 ``<datatype>`` **must** hold the Iri of a standoff data type class (see list above). The ``<classIri>`` must be a subclass of this type or this type itself (the latter is probably not recommendable since semantics are missing: what is the meaning of the date?).
 In the example above, the standoff class is ``anything:StandoffEventTag`` which has the following definition in the ontology ``anything-onto.ttl``::
@@ -316,7 +350,7 @@ The standoff ontology ``standoff-onto.ttl`` offers a set of predefined standoff 
                 <classIri>http://www.knora.org/ontology/standoff#StandoffItalicTag</classIri>
             </standoffClass>
         </mappingElement>
-    <mapping>
+    </mapping>
 
 Predefined standoff classes may be used by various projects, each providing a custom mapping to be able to recreate the original XML from RDF.
 Predefined standoff classes may also be inherited and extended in project specific ontologies.

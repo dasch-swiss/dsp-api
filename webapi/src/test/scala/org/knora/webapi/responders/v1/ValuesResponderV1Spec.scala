@@ -29,13 +29,12 @@ import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.ontologymessages._
 import org.knora.webapi.messages.v1.responder.resourcemessages.{LocationV1, ResourceFullGetRequestV1, ResourceFullResponseV1}
 import org.knora.webapi.messages.v1.responder.sipimessages.SipiResponderConversionFileRequestV1
-import org.knora.webapi.messages.v1.responder.standoffmessages.{GetMappingResponseV1, MappingXMLtoStandoff, StandoffDataTypeClasses, XMLTag}
-import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
+import org.knora.webapi.messages.v1.responder.standoffmessages.{MappingXMLtoStandoff, StandoffDataTypeClasses, XMLTag}
 import org.knora.webapi.messages.v1.responder.valuemessages._
-import org.knora.webapi.messages.v1.store.triplestoremessages._
+import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.responders._
 import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
-import org.knora.webapi.twirl.{StandoffTagAttributeV1, StandoffTagIriAttributeV1, StandoffTagV1}
+import org.knora.webapi.twirl.{StandoffTagIriAttributeV1, StandoffTagV1}
 import org.knora.webapi.util.MutableTestIri
 
 import scala.concurrent.duration._
@@ -87,18 +86,15 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
     import ValuesResponderV1Spec._
 
-    private val actorUnderTest = TestActorRef[ValuesResponderV1]
-
-    val responderManager = system.actorOf(Props(new TestResponderManagerV1(Map(SIPI_ROUTER_ACTOR_NAME -> system.actorOf(Props(new MockSipiResponderV1))))), name = RESPONDER_MANAGER_ACTOR_NAME)
-
-    private val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
+    val responderManager = system.actorOf(Props(new TestResponderManager(Map(SIPI_ROUTER_V1_ACTOR_NAME -> system.actorOf(Props(new MockSipiResponderV1))))), name = RESPONDER_MANAGER_ACTOR_NAME)
 
     val rdfDataObjects = Vector(
         RdfDataObject(path = "_test_data/responders.v1.ValuesResponderV1Spec/incunabula-data.ttl", name = "http://www.knora.org/data/incunabula"),
         RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/images"),
         RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/anything")
     )
-
+    private val actorUnderTest = TestActorRef[ValuesResponderV1]
+    private val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
     // The default timeout for receiving reply messages from actors.
     private val timeout = 30.seconds
 
@@ -113,6 +109,29 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
     private val currentColorValueIri = new MutableTestIri
     private val currentGeomValueIri = new MutableTestIri
     private val partOfLinkValueIri = new MutableTestIri
+    // a sample set of standoff tags
+    private val sampleStandoff: Vector[StandoffTagV1] = Vector(
+        StandoffTagV1(
+            standoffTagClassIri = OntologyConstants.Standoff.StandoffBoldTag,
+            startPosition = 0,
+            endPosition = 7,
+            uuid = UUID.randomUUID().toString,
+            originalXMLID = None,
+            startIndex = 0
+        ),
+        StandoffTagV1(
+            standoffTagClassIri = OntologyConstants.Standoff.StandoffParagraphTag,
+            startPosition = 0,
+            endPosition = 10,
+            uuid = UUID.randomUUID().toString,
+            originalXMLID = None,
+            startIndex = 0
+        )
+    )
+    private val dummyMapping = MappingXMLtoStandoff(
+            namespace = Map.empty[String, Map[String, Map[String, XMLTag]]],
+        defaultXSLTransformation = None
+    )
 
     private def checkComment1aResponse(response: CreateValueResponseV1, utf8str: String, standoff: Seq[StandoffTagV1] = Seq.empty[StandoffTagV1]): Unit = {
         assert(response.rights == 8, "rights was not 8")
@@ -226,26 +245,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         }
     }
 
-    // a sample set of standoff tags
-    private val sampleStandoff: Vector[StandoffTagV1] = Vector(
-        StandoffTagV1(
-            standoffTagClassIri = OntologyConstants.Standoff.StandoffBoldTag,
-            startPosition = 0,
-            endPosition = 7,
-            uuid = UUID.randomUUID().toString,
-            originalXMLID = None,
-            startIndex = 0
-        ),
-        StandoffTagV1(
-            standoffTagClassIri = OntologyConstants.Standoff.StandoffParagraphTag,
-            startPosition = 0,
-            endPosition = 10,
-            uuid = UUID.randomUUID().toString,
-            originalXMLID = None,
-            startIndex = 0
-        )
-    )
-
     private def checkImageFileValueChange(received: ChangeFileValueResponseV1, request: ChangeFileValueRequestV1): Unit = {
         assert(received.locations.size == 2, "Expected two file values to have been changed (thumb and full quality)")
 
@@ -254,17 +253,13 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         }
     }
 
-    private val dummyMapping = MappingXMLtoStandoff(
-            namespace = Map.empty[String, Map[String, Map[String, XMLTag]]]
-    )
-
 
     "Load test data" in {
         storeManager ! ResetTriplestoreContent(rdfDataObjects)
         expectMsg(300.seconds, ResetTriplestoreContentACK())
 
         responderManager ! LoadOntologiesRequest(SharedAdminTestData.rootUser)
-        expectMsg(10.seconds, LoadOntologiesResponse())
+        expectMsg(30.seconds, LoadOntologiesResponse())
     }
 
     "The values responder" should {
@@ -1264,7 +1259,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             expectMsgPF(timeout) {
                 case msg: CreateValueResponseV1 =>
                     currentPubdateValueIri.set(msg.id)
-                    msg.value should ===(DateValueV1("2000", "2015-01-21", KnoraCalendarV1.GREGORIAN))
+                    msg.value should ===(DateValueV1("2000", "2015-01-21", "CE","CE", KnoraCalendarV1.GREGORIAN))
             }
         }
 
@@ -1286,7 +1281,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             expectMsgPF(timeout) {
                 case msg: ChangeValueResponseV1 =>
                     currentPubdateValueIri.set(msg.id)
-                    msg.value should ===(DateValueV1("1491-07-28", "1491-07-28", KnoraCalendarV1.JULIAN))
+                    msg.value should ===(DateValueV1("1491-07-28", "1491-07-28", "CE", "CE", KnoraCalendarV1.JULIAN))
             }
 
         }

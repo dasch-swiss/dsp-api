@@ -20,32 +20,36 @@
 
 package org.knora.webapi.responders.v1
 
+import java.time.Instant
 import java.util.UUID
 
 import akka.actor.Status
+import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.ontologymessages._
-import org.knora.webapi.messages.v1.responder.permissionmessages.{DefaultObjectAccessPermissionsStringForResourceClassGetV1, DefaultObjectAccessPermissionsStringResponseV1, ResourceCreateOperation}
+import org.knora.webapi.messages.v1.responder.permissionmessages.{DefaultObjectAccessPermissionsStringForPropertyGetV1, DefaultObjectAccessPermissionsStringForResourceClassGetV1, DefaultObjectAccessPermissionsStringResponseV1, ResourceCreateOperation}
 import org.knora.webapi.messages.v1.responder.projectmessages._
 import org.knora.webapi.messages.v1.responder.resourcemessages.{MultipleResourceCreateResponseV1, _}
 import org.knora.webapi.messages.v1.responder.sipimessages._
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.responder.valuemessages._
-import org.knora.webapi.messages.v1.store.triplestoremessages._
-import org.knora.webapi.responders.IriLocker
+import org.knora.webapi.messages.store.triplestoremessages._
+import org.knora.webapi.responders.{IriLocker, Responder}
 import org.knora.webapi.responders.v1.GroupedProps._
-import org.knora.webapi.twirl.ResourceToCreate
+import org.knora.webapi.twirl.SparqlTemplateResourceToCreate
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util._
 import spray.json._
 
+import scala.collection.immutable
 import scala.concurrent.Future
+import scala.util.Try
 
 /**
   * Responds to requests for information about resources, and returns responses in Knora API v1 format.
   */
-class ResourcesResponderV1 extends ResponderV1 {
+class ResourcesResponderV1 extends Responder {
 
     // Converts SPARQL query results to ApiValueV1 objects.
     val valueUtilV1 = new ValueUtilV1(settings)
@@ -67,7 +71,6 @@ class ResourcesResponderV1 extends ResponderV1 {
         case ResourceSearchGetRequestV1(searchString: String, resourceIri: Option[IRI], numberOfProps: Int, limitOfResults: Int, userProfile: UserProfileV1) => future2Message(sender(), getResourceSearchResponseV1(searchString, resourceIri, numberOfProps, limitOfResults, userProfile), log)
         case ResourceCreateRequestV1(resourceTypeIri, label, values, convertRequest, projectIri, userProfile, apiRequestID) => future2Message(sender(), createNewResource(resourceTypeIri, label, values, convertRequest, projectIri, userProfile, apiRequestID), log)
         case MultipleResourceCreateRequestV1(resourcesToCreate, projectIri, userProfile, apiRequestID) => future2Message(sender(), createMultipleNewResources(resourcesToCreate, projectIri, userProfile, apiRequestID), log)
-
         case ResourceCheckClassRequestV1(resourceIri: IRI, owlClass: IRI, userProfile: UserProfileV1) => future2Message(sender(), checkResourceClass(resourceIri, owlClass, userProfile), log)
         case PropertiesGetRequestV1(resourceIri: IRI, userProfile: UserProfileV1) => future2Message(sender(), getPropertiesV1(resourceIri = resourceIri, userProfile = userProfile), log)
         case resourceDeleteRequest: ResourceDeleteRequestV1 => future2Message(sender(), deleteResourceV1(resourceDeleteRequest), log)
@@ -1177,65 +1180,6 @@ class ResourcesResponderV1 extends ResponderV1 {
 
 
     /**
-      * Implements a pre-update check to ensure that an [[UpdateValueV1]] has the correct type for the `knora-base:objectClassConstraint` of
-      * the property that is supposed to point to it.
-      *
-      * @param propertyIri                   the IRI of the property.
-      * @param propertyObjectClassConstraint the IRI of the `knora-base:objectClassConstraint` of the property.
-      * @param updateValueV1                 the value to be updated.
-      * @param userProfile                   the profile of the user making the request.
-      * @return an empty [[Future]] on success, or a failed [[Future]] if the value has the wrong type.
-      */
-    def checkPropertyObjectClassConstraintForValue(propertyIri: IRI, propertyObjectClassConstraint: IRI, updateValueV1: UpdateValueV1, userProfile: UserProfileV1): Future[Unit] = {
-        for {
-            result <- updateValueV1 match {
-                case linkUpdate: LinkUpdateV1 =>
-                    // We're creating a link. Check the OWL class of the target resource.
-                    for {
-                        checkTargetClassResponse <- checkResourceClass(
-                            resourceIri = linkUpdate.targetResourceIri,
-                            owlClass = propertyObjectClassConstraint,
-                            userProfile = userProfile
-                        ).mapTo[ResourceCheckClassResponseV1]
-
-                        _ = if (!checkTargetClassResponse.isInClass) {
-                            throw OntologyConstraintException(s"Resource ${linkUpdate.targetResourceIri} cannot be the target of property $propertyIri, because it is not a member of OWL class $propertyObjectClassConstraint")
-                        }
-                    } yield ()
-
-                case otherValue =>
-                    // We're creating an ordinary value. Check that its type is valid for the property's knora-base:objectClassConstraint.
-                    valueUtilV1.checkValueTypeForPropertyObjectClassConstraint(
-                        propertyIri = propertyIri,
-                        propertyObjectClassConstraint = propertyObjectClassConstraint,
-                        valueType = otherValue.valueTypeIri,
-                        responderManager = responderManager)
-            }
-        } yield result
-    }
-
-    /**
-      * For every `LinkValue` to be created, change the link's target from a resource label to a resource IRI.
-      *
-      * @param valuesToCreate collection of the values to be created.
-      * @param resourceInfo   Map [label, IRI] of the resources to be created.
-      * @return a Seq[CreateValueV1WithComment] updated collection of values to be created.
-      */
-    def changeIriLinkValues(valuesToCreate: Seq[CreateValueV1WithComment], resourceInfo: Map[String, IRI]): Seq[CreateValueV1WithComment] = {
-        valuesToCreate.map {
-            case (valueToCreate) =>
-                if (valueToCreate.updateValueV1.isInstanceOf[LinkUpdateV1]) {
-                    val label = valueToCreate.updateValueV1.toString.split("#")
-                    val resIri = resourceInfo(label(1))
-
-                    CreateValueV1WithComment(LinkUpdateV1(resIri))
-                } else {
-                    valueToCreate
-                }
-        }
-    }
-
-    /**
       * Create multiple resources and attach the given values to them.
       *
       * @param resourcesToCreate collection of ResourceRequests .
@@ -1269,185 +1213,287 @@ class ResourcesResponderV1 extends ResponderV1 {
 
             namedGraph = projectInfoResponse.project_info.dataNamedGraph
 
-            // create random IRIs for resources, collect in Map[label, IRI]
-            resourceInfo: Map[String, IRI] = resourcesToCreate.map(
-                resRequest => resRequest.label -> knoraIdUtil.makeRandomResourceIri(projectInfoResponse.project_info.shortname)
-            ).toMap
+            // Create random IRIs for resources, collect in Map[clientResourceID, IRI]
+            clientResourceIDsToResourceIris: Map[String, IRI] = new ErrorHandlingMap(
+                toWrap = resourcesToCreate.map(resRequest => resRequest.clientResourceID -> knoraIdUtil.makeRandomResourceIri(projectInfoResponse.project_info.shortname)).toMap,
+                errorTemplateFun = { key => s"Resource $key is the target of a link, but was not provided in the request" },
+                errorFun = { errorMsg => throw BadRequestException(errorMsg) }
+            )
 
-            resourceClasses: Map[String, IRI] = resourcesToCreate.map(
-                resRequest => resRequest.label -> resRequest.resourceTypeIri
-            ).toMap
+            // Map each clientResourceID to its resource class IRI
+            clientResourceIDsToResourceClasses: Map[String, IRI] = new ErrorHandlingMap(
+                toWrap = resourcesToCreate.map(resRequest => resRequest.clientResourceID -> resRequest.resourceTypeIri).toMap,
+                errorTemplateFun = { key => s"Resource $key is the target of a link, but was not provided in the request" },
+                errorFun = { errorMsg => throw BadRequestException(errorMsg) }
+            )
 
-            sequenceOfFutures: Seq[Future[ResourceToCreate]] = resourcesToCreate.zipWithIndex.map {
-                case (resRequest, index) =>
+            // Get ontology information about all the resource classes and properties used in the request.
+
+            resourceClasses: Set[IRI] = resourcesToCreate.map(_.resourceTypeIri).toSet
+
+            resourceClassesEntityInfoResponse: EntityInfoGetResponseV1 <- (responderManager ? EntityInfoGetRequestV1(
+                resourceClassIris = resourceClasses,
+                propertyIris = Set.empty[IRI],
+                userProfile = userProfile
+            )).mapTo[EntityInfoGetResponseV1]
+
+            allPropertyIris: Set[IRI] = resourceClassesEntityInfoResponse.resourceEntityInfoMap.flatMap {
+                case (_, resourceEntityInfo) =>
+                    resourceEntityInfo.cardinalities.keySet
+            }.toSet
+
+            propertyEntityInfoResponse: EntityInfoGetResponseV1 <- (responderManager ? EntityInfoGetRequestV1(
+                resourceClassIris = Set.empty[IRI],
+                propertyIris = allPropertyIris,
+                userProfile = userProfile
+            )).mapTo[EntityInfoGetResponseV1]
+
+            propertyEntityInfoMapsPerResource: Map[IRI, Map[IRI, PropertyEntityInfoV1]] = resourceClassesEntityInfoResponse.resourceEntityInfoMap.map {
+                case (resourceClassIri, resourceEntityInfo) =>
+                    val propertyEntityInfoMapForResource: Map[IRI, PropertyEntityInfoV1] = resourceEntityInfo.cardinalities.keySet.map {
+                        propertyIri =>
+                            (propertyIri, propertyEntityInfoResponse.propertyEntityInfoMap(propertyIri))
+                    }.toMap
+
+                    (resourceClassIri, propertyEntityInfoMapForResource)
+            }
+
+            // Get the default object access permissions for all the resource classes and properties used in the request.
+
+            defaultResourceClassAccessPermissionsFutures: Vector[Future[(IRI, String)]] = resourceClasses.toVector.map {
+                resourceClassIri =>
+                    for {
+                        defaultObjectAccessPermissions <- {
+                            responderManager ? DefaultObjectAccessPermissionsStringForResourceClassGetV1(projectIri = projectIri, resourceClassIri = resourceClassIri, userProfile.permissionData)
+                        }.mapTo[DefaultObjectAccessPermissionsStringResponseV1]
+                    } yield (resourceClassIri, defaultObjectAccessPermissions.permissionLiteral)
+            }
+
+            defaultResourceClassAccessPermissionsSeq: Vector[(IRI, String)] <- Future.sequence(defaultResourceClassAccessPermissionsFutures)
+            defaultResourceClassAccessPermissionsMap = new ErrorHandlingMap(defaultResourceClassAccessPermissionsSeq.toMap, { key: IRI => s"No default resource class access permissions found for resource class $key" })
+
+            defaultPropertyAccessPermissionsFutures: Map[IRI, Future[Map[IRI, String]]] = propertyEntityInfoMapsPerResource.map {
+                case (resourceClassIri, propertyEntityInfoMap) =>
+                    val propertyPermissionFutures = propertyEntityInfoMap.keys.map {
+                        propertyIri =>
+                            for {
+                                defaultObjectAccessPermissions <- {
+                                    responderManager ? DefaultObjectAccessPermissionsStringForPropertyGetV1(
+                                        projectIri = projectIri,
+                                        resourceClassIri = resourceClassIri,
+                                        propertyIri = propertyIri,
+                                        userProfile.permissionData)
+                                }.mapTo[DefaultObjectAccessPermissionsStringResponseV1]
+                            } yield (propertyIri, defaultObjectAccessPermissions.permissionLiteral)
+                    }
+
+                    val propertyPermissionsFuture: Future[Map[IRI, String]] = Future.sequence(propertyPermissionFutures).map(_.toMap)
+                    (resourceClassIri, propertyPermissionsFuture)
+            }
+
+            defaultPropertyAccessPermissions: immutable.Iterable[(IRI, Map[IRI, String])] <- Future.traverse(defaultPropertyAccessPermissionsFutures) {
+                case (resourceClassIri: IRI, propertyPermissionsFuture: Future[Map[IRI, String]]) =>
+                    for {
+                        propertyPermissions <- propertyPermissionsFuture
+                    } yield resourceClassIri -> new ErrorHandlingMap(propertyPermissions, { key: IRI => s"No default access permissions found for property $key in resource class $resourceClassIri" })
+            }
+
+            defaultPropertyAccessPermissionsMap: Map[IRI, Map[IRI, String]] = new ErrorHandlingMap(defaultPropertyAccessPermissions.toMap, { key: IRI => s"No default property access permissions found for resource class $key" })
+
+            // Make a timestamp for the new resources and their values.
+            currentTime: String = Instant.now.toString
+
+            resourceCreationFutures: Seq[Future[SparqlTemplateResourceToCreate]] = resourcesToCreate.map {
+                resourceCreateRequest: OneOfMultipleResourceCreateRequestV1 =>
                     for {
                     // Check user's PermissionProfile (part of UserProfileV1) to see if the user has the permission to
                     // create a new resource in the given project.
-                        defaultObjectAccessPermissions <- {
-                            responderManager ? DefaultObjectAccessPermissionsStringForResourceClassGetV1(projectIri = projectIri, resourceClassIri = resRequest.resourceTypeIri, userProfile.permissionData)
-                        }.mapTo[DefaultObjectAccessPermissionsStringResponseV1]
+                        defaultObjectAccessPermissions: String <- FastFuture(Try(defaultResourceClassAccessPermissionsMap(resourceCreateRequest.resourceTypeIri)))
 
-                        _ = log.debug(s"createNewResource - defaultObjectAccessPermissions: $defaultObjectAccessPermissions")
+                        // _ = log.debug(s"createNewResource - defaultObjectAccessPermissions: $defaultObjectAccessPermissions")
 
-                        _ = if (resRequest.resourceTypeIri == OntologyConstants.KnoraBase.Resource) {
+                        _ = if (resourceCreateRequest.resourceTypeIri == OntologyConstants.KnoraBase.Resource) {
                             throw BadRequestException(s"Instances of knora-base:Resource cannot be created, only instances of subclasses")
                         }
 
-                        resourceIri = resourceInfo(resRequest.label)
-                        propertyIris = resRequest.values.keySet
+                        resourceIri = clientResourceIDsToResourceIris(resourceCreateRequest.clientResourceID)
 
-                        // check every resource to be created with respect of ontology and cardinalities
+                        // Check every resource to be created with respect of ontology and cardinalities. Links are still
+                        // represented by LinkToClientIDUpdateV1 instances here.
                         fileValues <- checkResource(
-                            resourceClassIri = resRequest.resourceTypeIri,
-                            propertyIris = propertyIris,
-                            values = resRequest.values,
-                            sipiConversionRequest = None,
-                            checkObj = false,
-                            resourceClasses = resourceClasses,
+                            resourceClassIri = resourceCreateRequest.resourceTypeIri,
+                            resourceClassInfo = resourceClassesEntityInfoResponse.resourceEntityInfoMap(resourceCreateRequest.resourceTypeIri),
+                            propertyEntityInfoMap = propertyEntityInfoMapsPerResource(resourceCreateRequest.resourceTypeIri),
+                            values = resourceCreateRequest.values,
+                            sipiConversionRequest = resourceCreateRequest.file,
+                            clientResourceIDsToResourceClasses = clientResourceIDsToResourceClasses,
                             userProfile = userProfile
                         )
 
-                        // for LinkValues to be created change the key of target resource from label to IRI
-                        resValues: Map[IRI, Seq[CreateValueV1WithComment]] = resRequest.values.map {
-                            case (propertyIri, valuesWithComment) =>
-                                val linkValuesWithIris = changeIriLinkValues(valuesWithComment, resourceInfo)
-                                propertyIri -> linkValuesWithIris
+                        // Convert each LinkToClientIDUpdateV1 into a LinkUpdateV1.
+                        resourceValuesWithLinkTargetIris: Map[IRI, Seq[CreateValueV1WithComment]] = resourceCreateRequest.values.map {
+                            case (propertyIri, valuesWithComments) =>
+                                val valuesWithLinkTargetIris = valuesWithComments.map {
+                                    valueToCreate =>
+                                        valueToCreate.updateValueV1 match {
+                                            case LinkToClientIDUpdateV1(clientIDForTargetResource) =>
+                                                CreateValueV1WithComment(
+                                                    LinkUpdateV1(
+                                                        targetResourceIri = clientResourceIDsToResourceIris(clientIDForTargetResource),
+                                                        targetExists = false
+                                                    )
+                                                )
+                                            case _ => valueToCreate
+                                        }
+                                }
+
+                                propertyIri -> valuesWithLinkTargetIris
                         }
 
                         // generate sparql for every resource
                         generateSparqlForValuesResponse <- generateSparqlForValuesOfNewResource(
                             projectIri = projectIri,
                             resourceIri = resourceIri,
-                            resourceClassIri = resRequest.resourceTypeIri,
-                            resourceIndex = index,
-                            checkObj = false,
-                            values = resValues,
+                            resourceClassIri = resourceCreateRequest.resourceTypeIri,
+                            defaultPropertyAccessPermissions = defaultPropertyAccessPermissionsMap(resourceCreateRequest.resourceTypeIri),
+                            values = resourceValuesWithLinkTargetIris,
+                            clientResourceIDsToResourceIris = clientResourceIDsToResourceIris,
+                            currentTime = currentTime,
                             fileValues = fileValues,
                             userProfile = userProfile,
                             apiRequestID = apiRequestID
                         )
 
-                    } yield ResourceToCreate(
+                    } yield SparqlTemplateResourceToCreate(
                         resourceIri = resourceIri,
-                        permissions = defaultObjectAccessPermissions.permissionLiteral,
+                        permissions = defaultObjectAccessPermissions,
                         generateSparqlForValuesResponse = generateSparqlForValuesResponse,
-                        resourceClassIri = resRequest.resourceTypeIri,
-                        resourceIndex = index,
-                        resourceLabel = resRequest.label
+                        resourceClassIri = resourceCreateRequest.resourceTypeIri,
+                        resourceLabel = resourceCreateRequest.label
                     )
             }
 
             // change sequence of futures to future of sequences
-            resourcesToCreate: Seq[ResourceToCreate] <- Future.sequence(sequenceOfFutures)
+            sparqlTemplateResourcesToCreate: Seq[SparqlTemplateResourceToCreate] <- Future.sequence(resourceCreationFutures)
 
             //create a sparql query for all the resources to be created
             createMultipleResourcesSparql: String = generateSparqlForNewResources(
-                resourcesToCreate = resourcesToCreate,
+                resourcesToCreate = sparqlTemplateResourcesToCreate,
                 projectIri = projectIri,
                 namedGraph = namedGraph,
-                creatorIri = userIri
+                creatorIri = userIri,
+                currentTime = currentTime
             )
 
             // Do the update.
             createResourceResponse <- (storeManager ? SparqlUpdateRequest(createMultipleResourcesSparql)).mapTo[SparqlUpdateResponse]
 
-            apiResponses: Seq[Future[ResourceCreateResponseV1]] = resourcesToCreate.map {
-                resourceToCreate =>
-                    for {
-                    // verify the created resource
-                        apiResponse <- verifyResourceCreated(
-                            resourceIri = resourceToCreate.resourceIri,
-                            creatorIri = userIri,
-                            createNewResourceSparql = createMultipleResourcesSparql,
-                            generateSparqlForValuesResponse = resourceToCreate.generateSparqlForValuesResponse,
-                            userProfile = userProfile
-                        )
-                    } yield apiResponse
-            }
+            // We don't query the newly created resources to verify that they and their values were actually created,
+            // because this would be too expensive. In any case, since the update is done with INSERT DATA, i.e. there is no WHERE clause,
+            // any failure should result in an HTTP error from the triplestore (SPARQL 1.1 Protocol §2.2.5, "Failure Responses").
 
-            responses: Seq[ResourceCreateResponseV1] <- Future.sequence(apiResponses)
-            responsesJson: Seq[JsValue] = responses.map(_.toJsValue)
-        } yield MultipleResourceCreateResponseV1(responsesJson)
+            responses: Seq[OneOfMultipleResourcesCreateResponseV1] = resourcesToCreate.map {
+                resourceToCreate: OneOfMultipleResourceCreateRequestV1 =>
+                    OneOfMultipleResourcesCreateResponseV1(
+                        clientResourceID = resourceToCreate.clientResourceID,
+                        resourceIri = clientResourceIDsToResourceIris(resourceToCreate.clientResourceID),
+                        label = resourceToCreate.label
+                    )
+            }
+       } yield MultipleResourceCreateResponseV1(responses)
     }
 
     /**
       * Check the resource to be created.
       *
-      * @param resourceClassIri      type of resource.
-      * @param propertyIris          properties of resource.
-      * @param values                values to be created for resource.
-      * @param sipiConversionRequest a file (binary representation) to be attached to the resource (GUI and non GUI-case).
-      * @param checkObj              flag for checking the object class constraints
-      * @param resourceClasses       for each resource label, the IRI of its resource class.
-      * @param userProfile           the profile of the user making the request.
-      * @return a tuple [(IRI, Vector[CreateValueV1WithComment])] containing the IRI of the resource and a collection of holders of [[UpdateValueV1]] and comment.
+      * @param resourceClassIri                   type of resource.
+      * @param resourceClassInfo                  ontology information about the resource class.
+      * @param propertyEntityInfoMap              ontology information about the properties attached to the resource class.
+      * @param values                             values to be created for resource. If `linkTargetsAlreadyExist` is true, any links must be represented as [[LinkUpdateV1]] instances.
+      *                                           Otherwise, they must be represented as [[LinkToClientIDUpdateV1]] instances, so that appropriate error messages can
+      *                                           be generated for links to missing resources.
+      * @param sipiConversionRequest              a file (binary representation) to be attached to the resource (GUI and non GUI-case).
+      * @param clientResourceIDsToResourceClasses for each client resource ID, the IRI of the resource's class. Used only if `linkTargetsAlreadyExist` is false.
+      * @param userProfile                        the profile of the user making the request.
+      * @return a tuple (IRI, Vector[CreateValueV1WithComment]) containing the IRI of the resource and a collection of holders of [[UpdateValueV1]] and comment.
       */
     private def checkResource(resourceClassIri: IRI,
-                              propertyIris: Set[String],
+                              resourceClassInfo: ResourceEntityInfoV1,
+                              propertyEntityInfoMap: Map[IRI, PropertyEntityInfoV1],
                               values: Map[IRI, Seq[CreateValueV1WithComment]],
                               sipiConversionRequest: Option[SipiResponderConversionRequestV1],
-                              checkObj: Boolean,
-                              resourceClasses: Map[IRI, IRI],
+                              clientResourceIDsToResourceClasses: Map[String, IRI] = new ErrorHandlingMap[IRI, IRI](
+                                  toWrap = Map.empty[IRI, IRI],
+                                  errorTemplateFun = { key => s"Resource $key is the target of a link, but was not provided in the request" },
+                                  errorFun = { errorMsg => throw BadRequestException(errorMsg) }
+                              ),
                               userProfile: UserProfileV1): Future[Option[(IRI, Vector[CreateValueV1WithComment])]] = {
 
         for {
         // Get ontology information about the resource class's cardinalities and about each property's knora-base:objectClassConstraint.
 
-            entityInfoResponse: EntityInfoGetResponseV1 <- (responderManager ? EntityInfoGetRequestV1(
-                resourceClassIris = Set(resourceClassIri),
-                propertyIris = propertyIris,
-                userProfile = userProfile
-            )).mapTo[EntityInfoGetResponseV1]
 
-            // Check that each submitted value is consistent with the knora-base:objectClassConstraint of the property that is supposed to
-            // point to it.
+        // Check that each submitted value is consistent with the knora-base:objectClassConstraint of the property that is supposed to
+        // point to it.
             propertyObjectClassConstraintChecks: Seq[Unit] <- Future.sequence {
                 values.foldLeft(Vector.empty[Future[Unit]]) {
                     case (acc, (propertyIri, valuesWithComments)) =>
-                        val propertyInfo = entityInfoResponse.propertyEntityInfoMap(propertyIri)
+                        val propertyInfo = propertyEntityInfoMap(propertyIri)
                         val propertyObjectClassConstraint = propertyInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint).getOrElse {
                             throw InconsistentTriplestoreDataException(s"Property $propertyIri has no knora-base:objectClassConstraint")
                         }
 
                         acc ++ valuesWithComments.map {
                             valueV1WithComment: CreateValueV1WithComment =>
-                                if (checkObj) {
-                                    checkPropertyObjectClassConstraintForValue(
-                                        propertyIri = propertyIri,
-                                        propertyObjectClassConstraint = propertyObjectClassConstraint,
-                                        updateValueV1 = valueV1WithComment.updateValueV1,
-                                        userProfile = userProfile
-                                    )
-                                } else {
-                                    if (valueV1WithComment.updateValueV1.isInstanceOf[LinkUpdateV1]) {
-                                        val targetVal = valueV1WithComment.updateValueV1.toString.split("#")
+                                valueV1WithComment.updateValueV1 match {
+                                    case LinkToClientIDUpdateV1(targetClientID) =>
+                                        // We're creating a link to a resource that doesn't exist yet, because it
+                                        // will be created in the same transaction. Check that it will belong to a
+                                        // suitable class.
                                         val checkSubClassRequest = CheckSubClassRequestV1(
-                                            subClassIri = resourceClasses(targetVal(1)),
-                                            superClassIri = propertyObjectClassConstraint
+                                            subClassIri = clientResourceIDsToResourceClasses(targetClientID),
+                                            superClassIri = propertyObjectClassConstraint,
+                                            userProfile = userProfile
                                         )
 
                                         for {
                                             subClassResponse <- (responderManager ? checkSubClassRequest).mapTo[CheckSubClassResponseV1]
 
                                             _ = if (!subClassResponse.isSubClass) {
-                                                throw OntologyConstraintException(s"Resource ${resourceClasses(targetVal(1))} cannot be the target of property $propertyIri, because it is not a member of OWL class $propertyObjectClassConstraint")
+                                                throw OntologyConstraintException(s"Resource $targetClientID cannot be the target of property $propertyIri, because it is not a member of OWL class $propertyObjectClassConstraint")
                                             }
                                         } yield ()
-                                    } else {
 
+                                    case linkUpdate: LinkUpdateV1 =>
+                                        // We're creating a link to an existing resource. Check that it belongs to a
+                                        // suitable class.
+                                        for {
+                                            checkTargetClassResponse <- checkResourceClass(
+                                                resourceIri = linkUpdate.targetResourceIri,
+                                                owlClass = propertyObjectClassConstraint,
+                                                userProfile = userProfile
+                                            ).mapTo[ResourceCheckClassResponseV1]
+
+                                            _ = if (!checkTargetClassResponse.isInClass) {
+                                                throw OntologyConstraintException(s"Resource ${linkUpdate.targetResourceIri} cannot be the target of property $propertyIri, because it is not a member of OWL class $propertyObjectClassConstraint")
+                                            }
+                                        } yield ()
+
+                                    case otherValue =>
+                                        // We're creating an ordinary value. Check that its type is valid for the property's
+                                        // knora-base:objectClassConstraint.
                                         valueUtilV1.checkValueTypeForPropertyObjectClassConstraint(
                                             propertyIri = propertyIri,
                                             propertyObjectClassConstraint = propertyObjectClassConstraint,
-                                            valueType = valueV1WithComment.updateValueV1.valueTypeIri,
-                                            responderManager = responderManager)
-                                    }
+                                            valueType = otherValue.valueTypeIri,
+                                            responderManager = responderManager,
+                                            userProfile = userProfile)
                                 }
                         }
                 }
             }
 
             // Check that the resource class has a suitable cardinality for each submitted value.
-            resourceClassInfo = entityInfoResponse.resourceEntityInfoMap(resourceClassIri)
 
             _ = values.foreach {
                 case (propertyIri, valuesForProperty) =>
@@ -1466,8 +1512,10 @@ class ResourcesResponderV1 extends ResponderV1 {
                 case (propIri, cardinality) => cardinality == Cardinality.MustHaveOne || cardinality == Cardinality.MustHaveSome
             }.keySet -- resourceClassInfo.linkValueProperties -- resourceClassInfo.fileValueProperties // exclude link value and file value properties from checking
 
-            _ = if (!requiredProps.subsetOf(propertyIris)) {
-                val missingProps = (requiredProps -- propertyIris).mkString(", ")
+            submittedPropertyIris = values.keySet
+
+            _ = if (!requiredProps.subsetOf(submittedPropertyIris)) {
+                val missingProps = (requiredProps -- submittedPropertyIris).mkString(", ")
                 throw OntologyConstraintException(s"Values were not submitted for the following property or properties, which are required by resource class $resourceClassIri: $missingProps")
             }
 
@@ -1493,9 +1541,9 @@ class ResourcesResponderV1 extends ResponderV1 {
                 // TODO: in all cases of an error, the tmp file has to be deleted
                 sipiConversionRequest match {
                     case None => Future(None) // expected behaviour
-                    case Some(sipiConversionFileRequest: SipiResponderConversionFileRequestV1) =>
+                    case Some(_: SipiResponderConversionFileRequestV1) =>
                         throw BadRequestException(s"File params (GUI-case) are given but resource class $resourceClassIri does not allow any representation")
-                    case Some(sipiConversionPathRequest: SipiResponderConversionPathRequestV1) =>
+                    case Some(_: SipiResponderConversionPathRequestV1) =>
                         throw BadRequestException(s"A binary file was provided (non GUI-case) but resource class $resourceClassIri does not have any binary representation")
                 }
             }
@@ -1504,26 +1552,29 @@ class ResourcesResponderV1 extends ResponderV1 {
     }
 
     /**
-      * Generates SPARQL to create the values fo a resource.
+      * Generates SPARQL to create the values for a resource.
       *
-      * @param projectIri       Iri of the project .
-      * @param resourceClassIri type of resource .
-      * @param resourceIndex    Index of the resource
-      * @param checkObj         flag for checking the object class constraints
-      * @param values           values to be created for resource.
-      * @param fileValues       file value required by the ontology
-      * @param userProfile      the profile of the user making the request.
-      * @param apiRequestID     the the ID of the API request.
+      * @param projectIri                       the IRI of the project.
+      * @param resourceIri                      the IRI of the resource to be created.
+      * @param resourceClassIri                 the IRI of the resource class.
+      * @param defaultPropertyAccessPermissions the default object access permissions of each property attached to the resource class.
+      * @param values                           the values to be created for resource.
+      * @param fileValues                       the file values to be created with the resource.
+      * @param clientResourceIDsToResourceIris  a map of client resource IDs (which may appear in standoff link tags
+      *                                         in values passed to this method) to the IRIs that will be used for
+      *                                         those resources.
+      * @param userProfile                      the profile of the user making the request.
+      * @param apiRequestID                     the the ID of the API request.
       * @return a [[GenerateSparqlToCreateMultipleValuesResponseV1]] returns response of generation of SPARQL for multiple values.
       */
-
     def generateSparqlForValuesOfNewResource(projectIri: IRI,
                                              resourceIri: IRI,
                                              resourceClassIri: IRI,
-                                             resourceIndex: Int,
-                                             checkObj: Boolean,
+                                             defaultPropertyAccessPermissions: Map[IRI, String],
                                              values: Map[IRI, Seq[CreateValueV1WithComment]],
                                              fileValues: Option[(IRI, Vector[CreateValueV1WithComment])],
+                                             clientResourceIDsToResourceIris: Map[String, IRI],
+                                             currentTime: String,
                                              userProfile: UserProfileV1,
                                              apiRequestID: UUID): Future[GenerateSparqlToCreateMultipleValuesResponseV1] = {
         for {
@@ -1532,9 +1583,10 @@ class ResourcesResponderV1 extends ResponderV1 {
                 projectIri = projectIri,
                 resourceIri = resourceIri,
                 resourceClassIri = resourceClassIri,
-                resourceIndex = resourceIndex,
-                checkObj = checkObj,
+                defaultPropertyAccessPermissions = defaultPropertyAccessPermissions,
                 values = values ++ fileValues,
+                clientResourceIDsToResourceIris = clientResourceIDsToResourceIris,
+                currentTime = currentTime,
                 userProfile = userProfile,
                 apiRequestID = apiRequestID
             ))
@@ -1552,14 +1604,15 @@ class ResourcesResponderV1 extends ResponderV1 {
       * @param namedGraph        the named graph the resources belongs to.
       * @return a [String] returns a Sparql query for creating the resources and their values .
       */
-    def generateSparqlForNewResources(resourcesToCreate: Seq[ResourceToCreate], projectIri: IRI, namedGraph: IRI, creatorIri: IRI): String = {
+    def generateSparqlForNewResources(resourcesToCreate: Seq[SparqlTemplateResourceToCreate], projectIri: IRI, namedGraph: IRI, creatorIri: IRI, currentTime: String): String = {
         // Generate SPARQL for creating the resources, and include the SPARQL for creating the values of every resource.
         queries.sparql.v1.txt.createNewResources(
             dataNamedGraph = namedGraph,
             triplestore = settings.triplestoreType,
             resourcesToCreate = resourcesToCreate,
             projectIri = projectIri,
-            creatorIri = creatorIri
+            creatorIri = creatorIri,
+            currentTime = currentTime
         ).toString()
     }
 
@@ -1623,7 +1676,6 @@ class ResourcesResponderV1 extends ResponderV1 {
       *
       * @param resourceIri  the IRI of the resource to be created.
       * @param values       the values to be attached to the resource.
-      * @param permissions  the permissions to be attached.
       * @param creatorIri   the creator of the resource to be created.
       * @param namedGraph   the named graph the resource belongs to.
       * @param apiRequestID the request ID used for locking the resource.
@@ -1635,45 +1687,85 @@ class ResourcesResponderV1 extends ResponderV1 {
                                resourceIri: IRI,
                                values: Map[IRI, Seq[CreateValueV1WithComment]],
                                sipiConversionRequest: Option[SipiResponderConversionRequestV1],
-                               permissions: String,
                                creatorIri: IRI,
                                namedGraph: IRI,
                                userProfile: UserProfileV1,
                                apiRequestID: UUID): Future[ResourceCreateResponseV1] = {
-        val propertyIris = values.keySet
-        val resourceClasses = Map(label -> resourceClassIri)
-
         for {
+        // Get ontology information about the resource class and its properties.
+
+            resourceClassEntityInfoResponse: EntityInfoGetResponseV1 <- (responderManager ? EntityInfoGetRequestV1(
+                resourceClassIris = Set(resourceClassIri),
+                propertyIris = Set.empty[IRI],
+                userProfile = userProfile
+            )).mapTo[EntityInfoGetResponseV1]
+
+            resourceClassInfo = resourceClassEntityInfoResponse.resourceEntityInfoMap(resourceClassIri)
+
+            propertyEntityInfoResponse: EntityInfoGetResponseV1 <- (responderManager ? EntityInfoGetRequestV1(
+                resourceClassIris = Set.empty[IRI],
+                propertyIris = resourceClassInfo.cardinalities.keySet,
+                userProfile = userProfile
+            )).mapTo[EntityInfoGetResponseV1]
+
+            propertyEntityInfoMap = propertyEntityInfoResponse.propertyEntityInfoMap
+
+            // Get the default object access permissions of the resource class and its properties.
+
+            defaultResourceClassAccessPermissionsResponse: DefaultObjectAccessPermissionsStringResponseV1 <- {
+                responderManager ? DefaultObjectAccessPermissionsStringForResourceClassGetV1(projectIri = projectIri, resourceClassIri = resourceClassIri, userProfile.permissionData)
+            }.mapTo[DefaultObjectAccessPermissionsStringResponseV1]
+
+            defaultResourceClassAccessPermissions = defaultResourceClassAccessPermissionsResponse.permissionLiteral
+
+            defaultPropertyAccessPermissionsFutures: Iterable[Future[(IRI, String)]] = propertyEntityInfoResponse.propertyEntityInfoMap.keys.map {
+                propertyIri =>
+                    for {
+                        defaultObjectAccessPermissions <- {
+                            responderManager ? DefaultObjectAccessPermissionsStringForPropertyGetV1(
+                                projectIri = projectIri,
+                                resourceClassIri = resourceClassIri,
+                                propertyIri = propertyIri,
+                                userProfile.permissionData)
+                        }.mapTo[DefaultObjectAccessPermissionsStringResponseV1]
+                    } yield (propertyIri, defaultObjectAccessPermissions.permissionLiteral)
+            }
+
+            defaultPropertyAccessPermissionsIterable: Iterable[(IRI, String)] <- Future.sequence(defaultPropertyAccessPermissionsFutures)
+            defaultPropertyAccessPermissions = defaultPropertyAccessPermissionsIterable.toMap
+
             fileValues <- checkResource(
                 resourceClassIri = resourceClassIri,
-                propertyIris = propertyIris,
+                resourceClassInfo = resourceClassInfo,
+                propertyEntityInfoMap = propertyEntityInfoMap,
                 values = values,
                 sipiConversionRequest = sipiConversionRequest,
-                checkObj = true,
-                resourceClasses = resourceClasses,
                 userProfile = userProfile
             )
 
             // Everything looks OK, so we can create the resource and its values.
 
+            // Make a timestamp for the resource and its values.
+            currentTime: String = Instant.now.toString
+
             generateSparqlForValuesResponse <- generateSparqlForValuesOfNewResource(
                 projectIri = projectIri,
                 resourceIri = resourceIri,
                 resourceClassIri = resourceClassIri,
-                resourceIndex = 0,
-                checkObj = true,
+                defaultPropertyAccessPermissions = defaultPropertyAccessPermissions,
                 values = values,
                 fileValues = fileValues,
+                clientResourceIDsToResourceIris = Map.empty[String, IRI],
+                currentTime = currentTime,
                 userProfile = userProfile,
                 apiRequestID = apiRequestID
             )
 
-            resourcesToCreate: Seq[ResourceToCreate] = Seq(ResourceToCreate(
+            resourcesToCreate: Seq[SparqlTemplateResourceToCreate] = Seq(SparqlTemplateResourceToCreate(
                 resourceIri = resourceIri,
-                permissions = permissions,
+                permissions = defaultResourceClassAccessPermissions,
                 generateSparqlForValuesResponse = generateSparqlForValuesResponse,
                 resourceClassIri = resourceClassIri,
-                resourceIndex = 0,
                 resourceLabel = label)
             )
 
@@ -1681,7 +1773,8 @@ class ResourcesResponderV1 extends ResponderV1 {
                 resourcesToCreate = resourcesToCreate,
                 projectIri = projectIri,
                 namedGraph = namedGraph,
-                creatorIri = creatorIri
+                creatorIri = creatorIri,
+                currentTime = currentTime
             )
 
             // Do the update.
@@ -1741,11 +1834,6 @@ class ResourcesResponderV1 extends ResponderV1 {
                 throw ForbiddenException(s"User $userIri does not have permissions to create a resource in project $projectIri")
             }
 
-            defaultObjectAccessPermissions <- {
-                responderManager ? DefaultObjectAccessPermissionsStringForResourceClassGetV1(projectIri = projectIri, resourceClassIri = resourceClassIri, userProfile.permissionData)
-            }.mapTo[DefaultObjectAccessPermissionsStringResponseV1]
-            _ = log.debug(s"createNewResource - defaultObjectAccessPermissions: $defaultObjectAccessPermissions")
-
             result: ResourceCreateResponseV1 <- IriLocker.runWithIriLock(
                 apiRequestID,
                 resourceIri,
@@ -1755,7 +1843,6 @@ class ResourcesResponderV1 extends ResponderV1 {
                     resourceIri,
                     values,
                     sipiConversionRequest,
-                    permissions = defaultObjectAccessPermissions.permissionLiteral,
                     creatorIri = userIri,
                     namedGraph,
                     userProfile,
@@ -1796,19 +1883,28 @@ class ResourcesResponderV1 extends ResponderV1 {
                     throw ForbiddenException(s"User $userIri does not have permission to mark resource ${resourceDeleteRequest.resourceIri} as deleted")
                 }
 
-                projectInfo <- {
+                maybeProjectInfo <- {
                     responderManager ? ProjectInfoByIRIGetV1(
                         resourceInfo.project_id,
                         None
                     )
-                }.mapTo[ProjectInfoV1]
+                }.mapTo[Option[ProjectInfoV1]]
+
+                projectInfo = maybeProjectInfo match {
+                    case Some(pi) => pi
+                    case None => throw NotFoundException(s"Project '${resourceInfo.project_id}' not found.")
+                }
+
+                // Make a timestamp to indicate when the resource was marked as deleted.
+                currentTime: String = Instant.now.toString
 
                 // Create update sparql string
                 sparqlUpdate = queries.sparql.v1.txt.deleteResource(
                     dataNamedGraph = projectInfo.dataNamedGraph,
                     triplestore = settings.triplestoreType,
                     resourceIri = resourceDeleteRequest.resourceIri,
-                    maybeDeleteComment = resourceDeleteRequest.deleteComment
+                    maybeDeleteComment = resourceDeleteRequest.deleteComment,
+                    currentTime = currentTime
                 ).toString()
 
                 // Do the update.
@@ -1865,7 +1961,8 @@ class ResourcesResponderV1 extends ResponderV1 {
 
             checkSubClassRequest = CheckSubClassRequestV1(
                 subClassIri = resourceInfo.restype_id,
-                superClassIri = owlClass
+                superClassIri = owlClass,
+                userProfile = userProfile
             )
 
             subClassResponse <- (responderManager ? checkSubClassRequest).mapTo[CheckSubClassResponseV1]
@@ -1895,22 +1992,31 @@ class ResourcesResponderV1 extends ResponderV1 {
                     throw ForbiddenException(s"User $userIri does not have permission to change the label of resource $resourceIri")
                 }
 
-                projectInfo <- {
+                maybeProjectInfo <- {
                     responderManager ? ProjectInfoByIRIGetV1(
                         resourceInfo.project_id,
                         None
                     )
-                }.mapTo[ProjectInfoV1]
+                }.mapTo[Option[ProjectInfoV1]]
+
+                projectInfo = maybeProjectInfo match {
+                    case Some(pi) => pi
+                    case None => throw NotFoundException(s"Project '${resourceInfo.project_id}' not found.")
+                }
 
                 // get the named graph the resource is contained in by the resource's project
                 namedGraph = projectInfo.dataNamedGraph
+
+                // Make a timestamp to indicate when the resource was updated.
+                currentTime: String = Instant.now.toString
 
                 // the user has sufficient permissions to change the resource's label
                 sparqlUpdate = queries.sparql.v1.txt.changeResourceLabel(
                     dataNamedGraph = namedGraph,
                     triplestore = settings.triplestoreType,
                     resourceIri = resourceIri,
-                    label = label
+                    label = label,
+                    currentTime = currentTime
                 ).toString()
 
                 //_ = print(sparqlUpdate)

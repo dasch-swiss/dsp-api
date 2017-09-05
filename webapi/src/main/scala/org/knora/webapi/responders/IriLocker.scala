@@ -61,7 +61,7 @@ object IriLocker {
     /**
       * The number of times to try to acquire a lock before giving up.
       */
-    private val MAX_LOCK_RETRIES = 10
+    private val MAX_LOCK_RETRIES = 20
 
     /**
       * The total number of milliseconds that an API request should wait before giving up on acquiring a lock.
@@ -70,24 +70,30 @@ object IriLocker {
 
     /**
       * Acquires an update lock on an IRI, then runs a task that updates the IRI. The lock implementation
-      * is reentrant: if the API request requesting the lock already has it, this will not cause a deadlock. After the
-      * completion of all tasks that used the lock for the same the API request, the lock is released. If the lock cannot
-      * be acquired because another API request has it, this method waits and retries. (The wait duration and maximum
-      * number of retries are defined in this class. The waiting is done in a [[Future]], so this method does not block.)
-      * If this method still cannot acquire the lock after the maximum number of retries, it throws
-      * [[ApplicationLockException]].
+      * is reentrant: if the API request requesting the lock already has it, this will not cause a deadlock. The lock is
+      * released after all tasks that used it for the same API request have either completed or failed. (Failure means
+      * either throwing an exception or returning a failed `Future`.) If the lock cannot be acquired because another API
+      * request has it, this method waits and retries. (The wait duration and maximum number of retries are defined in
+      * this class. The waiting is done in a [[Future]], so this method does not block.) If this method still cannot
+      * acquire the lock after the maximum number of retries, it throws [[ApplicationLockException]].
       *
       * @param apiRequestID the ID of the API request that needs the lock.
       * @param iri  the IRI to be locked.
       * @param task         a function returning a [[Future]] that performs the update. This function will be called only after
-      *                     the lock has been acquired.
+      *                     the lock has been acquired. If the task throws an exception or returns a failed `Future`,
+      *                     this method will return a failed `Future`.
       * @return the result of the task.
       */
     def runWithIriLock[T](apiRequestID: UUID, iri: IRI, task: () => Future[T])(implicit executionContext: ExecutionContext): Future[T] = {
+        // Try to acquire the lock in a future. If we can't acquire the lock, this future will fail without running
+        // the task.
         Future(acquireOrIncrementLock(iri, apiRequestID, MAX_LOCK_RETRIES)).flatMap {
-            _ => task().andThen {
-                case _ => decrementOrReleaseLock(iri, apiRequestID)
-            }
+            _ =>
+                // Once we've acquired the lock, run the task in a future, because it might throw an exception rather than
+                // returning a future. Flatten nested futures into one, then decrement or release the lock.
+                Future(task()).flatten.andThen {
+                    case _ => decrementOrReleaseLock(iri, apiRequestID)
+                }
         }
     }
 
@@ -121,11 +127,13 @@ object IriLocker {
         // Do we have the lock?
         if (newLock.apiRequestID == apiRequestID) {
             // Yes.
+            // println(s"acquired lock on $iri for $apiRequestID")
             ()
         } else {
             // No, another API request has it. Can we wait and retry?
             if (tries > 1) {
                 // Yes.
+                // println(s"waiting for lock on $iri for $apiRequestID")
                 Thread.sleep(LOCK_RETRY_MILLIS)
                 acquireOrIncrementLock(iri, apiRequestID, tries - 1)
             } else {
@@ -149,12 +157,14 @@ object IriLocker {
                 Option(maybeCurrentLock) match {
                     case Some(currentLock) =>
                         if (currentLock.apiRequestID == apiRequestID) {
-                            // We have the lock.
+                            // We have the lock. Should we decrement its entry count or release it?
                             if (currentLock.entryCount > 1) {
                                 // Decrement its entry count.
+                                // println(s"decrementing lock on $iri for $apiRequestID")
                                 currentLock.copy(entryCount = currentLock.entryCount - 1)
                             } else {
                                 // Release it.
+                                // println(s"releasing lock on $iri for $apiRequestID")
                                 null
                             }
                         } else {

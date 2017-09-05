@@ -23,10 +23,10 @@ package org.knora.webapi.store.triplestore.http
 import java.io.File
 
 import akka.actor.ActorSystem
-import akka.http.javadsl.model.headers.Authorization
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.Uri.Query
 import akka.http.scaladsl.model._
+import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.stream.ActorMaterializer
 import org.knora.webapi.SettingsConstants._
 import org.knora.webapi.{BadRequestException, Settings, TriplestoreResponseException, TriplestoreUnsupportedFeatureException}
@@ -94,14 +94,13 @@ object GraphProtocolAccessor {
         val http = Http(_system)
 
         // Use HTTP basic authentication.
-        val authorization = Authorization.basic(settings.triplestoreUsername, settings.triplestorePassword)
+        val authorization = headers.Authorization(BasicHttpCredentials(settings.triplestoreUsername, settings.triplestorePassword))
 
         log.debug("==>> GraphProtocolAccessor START")
 
         // HTTP paths for the SPARQL 1.1 Graph Store HTTP Protocol
         val requestPath = settings.triplestoreType match {
             case HTTP_GRAPH_DB_TS_TYPE | HTTP_GRAPH_DB_FREE_TS_TYPE => s"/repositories/${settings.triplestoreDatabaseName}/rdf-graphs/service"
-            case HTTP_SESAME_TS_TYPE => s"/openrdf-sesame/repositories/${settings.triplestoreDatabaseName}/rdf-graphs/service"
             case HTTP_FUSEKI_TS_TYPE if !settings.fusekiTomcat => s"/${settings.triplestoreDatabaseName}/data"
             case HTTP_FUSEKI_TS_TYPE if settings.fusekiTomcat => s"/${settings.fusekiTomcatContext}/${settings.triplestoreDatabaseName}/data"
             case ts_type => throw TriplestoreUnsupportedFeatureException(s"GraphProtocolAccessor does not support: $ts_type")
@@ -138,7 +137,7 @@ object GraphProtocolAccessor {
             response <- http.singleRequest(request)
 
             // Convert the HTTP response body to a string.
-            responseString <- response.entity.toStrict(5.seconds).map(_.data.decodeString("UTF-8"))
+            responseString <- response.entity.toStrict(10.seconds).map(_.data.decodeString("UTF-8"))
 
             _ = if (!response.status.isSuccess) {
                 throw TriplestoreResponseException(s"Unable to load file $filepath; triplestore responded with HTTP code ${response.status}: $responseString")

@@ -149,7 +149,7 @@ case class ResourceTypeResponseV1(restype_info: ResTypeInfoV1) extends KnoraResp
   * @param subClassIri   the IRI of the subclass.
   * @param superClassIri the IRI of the superclass.
   */
-case class CheckSubClassRequestV1(subClassIri: IRI, superClassIri: IRI) extends OntologyResponderRequestV1
+case class CheckSubClassRequestV1(subClassIri: IRI, superClassIri: IRI, userProfile: UserProfileV1) extends OntologyResponderRequestV1
 
 /**
   * Represents a response to a [[CheckSubClassRequestV1]].
@@ -249,6 +249,15 @@ case class SubClassesGetRequestV1(resourceClassIri: IRI, userProfile: UserProfil
 case class SubClassesGetResponseV1(subClasses: Seq[SubClassInfoV1]) extends KnoraResponseV1 {
     def toJsValue = ResourceTypeV1JsonProtocol.subClassesGetResponseV1Format.write(this)
 }
+
+/**
+  * Requests information about the ontology entities in the specified named graph. A successful response will be a
+  * [[NamedGraphEntityInfoV1]].
+  *
+  * @param namedGraphIri the IRI of the named graph.
+  * @param userProfile   the profile of the user making the request.
+  */
+case class NamedGraphEntityInfoRequestV1(namedGraphIri: IRI, userProfile: UserProfileV1) extends OntologyResponderRequestV1
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////

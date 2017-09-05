@@ -1,17 +1,107 @@
+dist: trusty
 sudo: required
+
+addons:
+  chrome: stable
+
 git:
-    depth: 5
+  depth: 1
+
 language: scala
+
 scala:
-- 2.11.7
+- 2.12.1
+
 jdk:
 - oraclejdk8
+
+services:
+  - docker
+
+env:
+  global:
+    - secure: "Sj0D8wR3Vx0J0h+LBUIh9t1PWjLJ2NEiKILf3JO5nuGdlU7dPhbFomR4w08q85O4d60km38ml7zpapC4noDQnbAFQHC6XeOe5CWPYFXCxkw7ueBoxhy/vkfSzypXp0UTNUX3S7+RcGJcTxLaZcUC9u+UaoWB0LMkmOcIlrKIDuzm3HcefMsml8gYX1xhS2TQJ8P7ZerzBmm0kERYLUabhxTnj5WAvue0d1xbUtzCzT1LpignOfsUZ9kHTagQEA15JsU0iNrMCvlDcxRWj8OzLhHRoHui4bJPQQfKEA8oMnTkPyzBRLmqafqHvmGcNQp9iGhuU04gb+FkF4gubBkLrxEvgTL/D5vIin3BHQvnZna9zSnUguZS+jw4sfEYcjZgYRzgMRPma/630ZM08FSZZ/qjSTCut4Cjua5aw2Vf9pYhf+Aad5rR0T2JmVYKp6Ik92aLhPOF9U40MacKRPPT54RIjCYcakZlmU4vl+kK37l3sYjvD57LeSs3PlqvkpSxwJzaQDhZFOZ+c7ICo+zU7DcQnWkN7k+ErKBOE7r0mIqvYuBYhdteBVKfo8a4rpDzYJDXaWzBdjc8ZKiEFQvFHngnZjR2UtKc0CAc6Y7ieCWIvBZYdMoHhKsBwFDaO1iuWwDLW3cswXaPEqENonlVAnXePu7KkQeB2acwDzPkhlI=" #DOCKER_USER
+    - secure: "iM3Wjt3f5yUaU16yKstwBEEFA8WKx8qcTVnOwF+o9+sooD1SZ39nYJDPgpHHNwFZ1aSkre5ATPEw+dfslr7SnnwYQeYHjYldcqudB+7pq4dmY5U3rCTsjZCH1XmLnnLO45CZRy05pIAUSxWpIiX5khWoHZd704UlDncqIU/6paWWNkywPb2P4UBZ5Xeai1NTS1URHRz0A4aD+dqwKS6P+baq4CyKLC/AqjsTDI+TV4C26FXXTgS0Ly9VfBVZ55D+SdVHgCZXJaHerAixjSX6zvenfkd/87GR6NEAgJ9QofF2nDEXBZZm4jPv5d285Cc4iUvRo1HLbI1VlALya3qUA9Prbno8QQaChNdjRS7mSplkCxZZKzBItpjvI009NPl20zX6GROb/JCjWHRZ4R358cebFKKqE4W1GBArS0piVbdqZyWA/t5KANouQIdrh+lepAf/Xq5JRcDP9r+Rk2hHLk2Rmj97gv001eRf9GjSEC1Qo1kwu1FabZok1UIemJHpY7yWO4d3ZKSOCyQ0WdW6rLMFGkouoByrFVfNPBVxLqDJ3YVL/4x5jc0Q9+G5jm6omqNwQSsn60nUizZJp1fuLGQRUNj8EDvRhxLgVkOJqFf4P/4qRas47k1wkWBk2iBlpNp2eQTY42IZovPIyT+NCfbdg0yyZRyHThpfc+KfTeg=" #DOCKER_PASS
+    - WEBAPI_REPO=dhlabbasel/webapi
+    - SALSAH_REPO=dhlabbasel/salsah
+    - SIPI_REPO=dhlabbasel/sipi
+    - DOCKERHOST=$(ip route get 8.8.8.8 | awk '{print $NF; exit}')
+    - CHROME_BIN=google-chrome-stable
+    - GDB_HEAP_SIZE="4g"
+
 cache:
   directories:
     - $HOME/.ivy2
-script:
-- cd triplestores/fuseki/ && ./fuseki-server &
-- cd webapi/ && sbt test
+
+jobs:
+  include:
+    - stage: test
+      script:
+        # TODO: re-enable this when the build environment has enough memory for it.
+        - sleep 1
+        # unzip graphdb-free
+        #- unzip $TRAVIS_BUILD_DIR/triplestores/graphdb-free/graphdb-free-8.2.0-dist.zip -d /tmp && sudo mv /tmp/graphdb-free-8.2.0 /graphdb
+        #- cp $TRAVIS_BUILD_DIR/webapi/scripts/KnoraRules.pie /graphdb
+        # start and initialize graphdb-free
+        #- cd /graphdb && ./bin/graphdb > /dev/null 2>&1 &
+        #- sleep 15
+        #- cd $TRAVIS_BUILD_DIR/webapi/scripts && ./graphdb-free-init-knora-test-unit.sh
+        # start the built-in webapi server tests
+        # - cd $TRAVIS_BUILD_DIR/webapi/ && sbt test
+    - stage: test
+      script:
+        # unzip graphdb-free
+        - unzip $TRAVIS_BUILD_DIR/triplestores/graphdb-free/graphdb-free-8.2.0-dist.zip -d /tmp && sudo mv /tmp/graphdb-free-8.2.0 /graphdb
+        - cp $TRAVIS_BUILD_DIR/webapi/scripts/KnoraRules.pie /graphdb
+        # start and initialize graphdb-free
+        - cd /graphdb && ./bin/graphdb > /dev/null 2>&1 &
+        - sleep 15
+        - cd $TRAVIS_BUILD_DIR/webapi/scripts && ./graphdb-free-init-knora-test-unit.sh
+        # start the sipi container (with production config)
+        - docker run -d --add-host webapihost:$DOCKERHOST -v /tmp:/tmp -v $HOME:$HOME -p 1024:1024 $SIPI_REPO:develop
+        # start the integration tests
+        - cd $TRAVIS_BUILD_DIR/webapi/ && sbt graphdb-free-it:test
+    #- stage: webapi-graphdb
+    #  script:
+    #    # start graphdb
+    #    - cd $TRAVIS_BUILD_DIR/triplestores/fuseki/ && ./fuseki-server &
+    #    # start the built-in webapi server tests
+    #    - cd $TRAVIS_BUILD_DIR/webapi/ && sbt test
+    #- stage: test
+    #  script:
+    #    #- "export DISPLAY=:99.0"
+    #    #- "sh -e /etc/init.d/xvfb start"
+    #    #- sleep 3 # give xvfb some time to start
+    #    # start fuseki
+    #    - cd $TRAVIS_BUILD_DIR/triplestores/fuseki/ && ./fuseki-server &
+    #    # start the sipi container (with test config)
+    #    - docker run -d --add-host webapihost:$DOCKERHOST -v /tmp:/tmp -v $HOME:$HOME -p 1024:1024 $SIPI_REPO:develop /sipi/local/bin/sipi --config=/sipi/config/sipi.knora-test-docker-config.lua
+    #    # start the webapi and salsah server
+    #    - cd $TRAVIS_BUILD_DIR/webapi/ && sbt "run allowResetTriplestoreContentOperationOverHTTP" &
+    #    - cd $TRAVIS_BUILD_DIR/salsah/ && sbt run &
+    #    # wait for the webapi server to start before we proceed with running the salsah tests
+    #    - until netstat -an 2>/dev/null | grep '3333.*LISTEN'; do true; done
+    #    # unzip chromedriver
+    #    - cd $TRAVIS_BUILD_DIR/salsah/lib/chromedriver/ && unzip chromedriver_linux64.zip
+    #    # start built-in salsah browser tests
+    #    - cd $TRAVIS_BUILD_DIR/salsah/ && sbt headless:test
+    - stage: publish
+      script:
+        # generally, only create, tag and push to docker if we are on 'develop'
+        - docker login -u $DOCKER_USER -p $DOCKER_PASS
+        # webapi
+        - if [ "$TRAVIS_BRANCH" = "develop" ]; then docker build $TRAVIS_BUILD_DIR/webapi/ -t $WEBAPI_REPO:develop ; fi
+        - if [ "$TRAVIS_BRANCH" = "develop" ]; then docker tag $WEBAPI_REPO:develop $WEBAPI_REPO:latest ; fi
+        - if [ "$TRAVIS_BRANCH" = "develop" ]; then docker push $WEBAPI_REPO ; fi
+        # salsah
+        - if [ "$TRAVIS_BRANCH" = "develop" ]; then docker build $TRAVIS_BUILD_DIR/salsah/ -t $SALSAH_REPO:develop ; fi
+        - if [ "$TRAVIS_BRANCH" = "develop" ]; then docker tag $SALSAH_REPO:develop $SALSAH_REPO:latest ; fi
+        - if [ "$TRAVIS_BRANCH" = "develop" ]; then docker push $SALSAH_REPO ; fi
+        # sipi: get the develop sipi and tag it as 'develop-knora' so we know that this version is tested (only on the develop branch)
+        - if [ "$TRAVIS_BRANCH" = "develop" ]; then docker pull $SIPI_REPO:develop ; fi
+        - if [ "$TRAVIS_BRANCH" = "develop" ]; then docker tag $SIPI_REPO:develop $SIPI_REPO:knora-develop ; fi
+        - if [ "$TRAVIS_BRANCH" = "develop" ]; then docker push $SIPI_REPO ; fi
+
 notifications:
   slack:
-    secure: AJZARDC7P6bwjFwk6gpe+p2ozLj+bH3h83PapfCTL0xi7frHd4y6/jXOs9ac+m7ia5FlnzgBxrf0lmaE+IkqlRzxo5dPNYkDIbMC3nrf48kS+uQjf87X1Pn6bDVBLL56L1xIeaEXAqLLWNZ8m1UQ3ykVHgUbUbimjm43eCMpUiretgOqQgreZuLGVxPDU4KrGYZ93FvT2Nzp1Iagld0KXJ1up/uKlpSZAIpJPhgWYIhSGwj9hYG50iENvtsOX/zTe2hjhKWaPmVxHWo8qNyyHfX/+3ODQhvKu3LQsFXbW8WQ1r86EUDrGWeT6mlCYbjR1Wk/7wEKvGts/7vnTNJ8H2xDG9ADc4zIzIpnz0+gndIXuguxuMZEdm1H9okcDqraa4OV01bobr43RVC4hTZCiEBt7wCd/c+C1lJahAQUQoKsbmp5idKrjUyESJ0ZbU6hgkKeOvEvUqv0msYJGWW/C5BlUlro08AgZ9h6nOfu8jJQ49x9QbSWLjTVDg8CEq3w8FDATGA6FKdDqgmsi/3ROjgdewPgyxE3XZ2UpAbAdMPeuGvFoU91X8gScm6ys6abLy0vdCL3LyqmBu/Vzdg1RzU7oqUqSbR5LSMh8pwAwy26j6Awp+pDEzBtyL59yN6r6wgxmbJ5KT+XJReEH6Ao0C6ay23E8T/3YmI3qbjX8xE=
+    secure: gaazomUbAB4q7bH2XOiZXqHvU2gd/X/jIRLAJW9vjcRbY6o48eiEdNXF2umraHG0q+5UUEJ5dfvxiPtC4PiUq8uD6J+R0fEWrWznYoIeEWEXjKxRxWplrWJ9Ke+PJb3wCV6cXBGMfxDpvYQbVjsy7n0aQmjNs4Drz+llqL5SilTdswTylwvUdufad0QaovXklL+p0w9vRHRKzQkYKa9phL10VcJa8TPI74tuFcTHnK6TcMNW6p0vzAaF6JVgzoRPzUgXnEPCw4pI8zqOF1ghPpQByNXKiYofPWt1yTFgb60LQarDEiHXunXAA/sf2gx616pWLVjDFGziXVzhiGUDUjM5I1p7hPyA2rTB63AAZustFcGeD+jbHNHIFhcvvCHVHjJfp8M7LrUR+MBqz5mJNi/9KgxyZ8I9Df28TxmKxGFaGW8t4PZdA75/49Hos0TqtIp5m+eo8mTksUJogEJJokRZUKraMBhC0cNCry0kp+EQ06F4usLoDyZTUar4OSuNSiymf+zwz6jZo8dF/cluRYellwewE9NJiNWGN4DiBhk2vGJ7OtWMDPkl1tqkG8npoqbT4s38esjxfa/XcworGfeqE+9mzugVzkIKIX2lB6QxZp0AKQVOiy7JwwdtcjVMLvceiNPEWfe8fhLMX02oqYz2uoibRmHMxKPa5CpmUIg=

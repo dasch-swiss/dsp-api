@@ -55,10 +55,16 @@ WHERE {
 
     @if(maybeResourceClassIri.nonEmpty) {
         ?s knora-base:forResourceClass <@maybeResourceClassIri.get> .
+    } else {
+        OPTIONAL { ?s knora-base:forResourceClass ?class } .
+        FILTER ( !bound(?class) )
     }
 
     @if(maybePropertyIri.nonEmpty) {
         ?s knora-base:forProperty <@maybePropertyIri.get> .
+    } else {
+        OPTIONAL { ?s knora-base:forProperty ?prop } .
+        FILTER ( !bound(?prop) )
     }
 
     ?s ?p ?o .

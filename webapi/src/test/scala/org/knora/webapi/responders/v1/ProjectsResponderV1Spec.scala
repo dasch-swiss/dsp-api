@@ -27,11 +27,13 @@ import akka.actor.Status.Failure
 import akka.testkit.{ImplicitSender, TestActorRef}
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi._
+import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse}
 import org.knora.webapi.messages.v1.responder.projectmessages._
-import org.knora.webapi.messages.v1.store.triplestoremessages._
-import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_NAME
+import org.knora.webapi.messages.v1.responder.usermessages.UserProfileTypeV1
+import org.knora.webapi.responders.{RESPONDER_MANAGER_ACTOR_NAME, ResponderManager}
 import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
+import org.knora.webapi.util.MutableTestIri
 
 import scala.concurrent.duration._
 
@@ -56,7 +58,7 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
     private val rootUserProfileV1 = SharedAdminTestData.rootUser
 
     private val actorUnderTest = TestActorRef[ProjectsResponderV1]
-    private val responderManager = system.actorOf(Props(new ResponderManagerV1 with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
+    private val responderManager = system.actorOf(Props(new ResponderManager with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
     private val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
 
     val rdfDataObjects = List()
@@ -72,26 +74,18 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
 
     "The ProjectsResponderV1 " when {
 
-        "asked about all projects " should {
+        "used to query for project information" should {
 
-            "return project info for every project" in {
+            "return information for every project" in {
 
                 actorUnderTest ! ProjectsGetRequestV1(Some(rootUserProfileV1))
-                expectMsgPF(timeout) {
-                    case ProjectsResponseV1(projects) => {
-                        //println(projects)
-                        assert(projects.contains(SharedAdminTestData.imagesProjectInfo))
-                        assert(projects.contains(SharedAdminTestData.incunabulaProjectInfo))
-                    }
-                }
+                val received = expectMsgType[ProjectsResponseV1](timeout)
 
+                assert(received.projects.contains(SharedAdminTestData.imagesProjectInfo))
+                assert(received.projects.contains(SharedAdminTestData.incunabulaProjectInfo))
             }
 
-        }
-
-        "asked about a project identified by 'iri' " should {
-
-            "return full project info if the project is known " in {
+            "return information about a project identified by IRI" in {
 
                 /* Incunabula project */
                 actorUnderTest ! ProjectInfoByIRIGetRequestV1(
@@ -116,31 +110,30 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
 
             }
 
-            "return 'NotFoundException' when the project is unknown " in {
+            "return information about a project identified by shortname" in {
+                actorUnderTest ! ProjectInfoByShortnameGetRequestV1(SharedAdminTestData.incunabulaProjectInfo.shortname, Some(rootUserProfileV1))
+                expectMsg(ProjectInfoResponseV1(SharedAdminTestData.incunabulaProjectInfo))
+            }
+
+            "return 'NotFoundException' when the project IRI is unknown" in {
 
                 actorUnderTest ! ProjectInfoByIRIGetRequestV1("http://data.knora.org/projects/notexisting", Some(rootUserProfileV1))
                 expectMsg(Failure(NotFoundException(s"Project 'http://data.knora.org/projects/notexisting' not found")))
 
             }
 
-        }
-        "asked about a project identified by 'shortname' " should {
-
-            "return 'full' project info if the project is known " in {
-                actorUnderTest ! ProjectInfoByShortnameGetRequestV1(SharedAdminTestData.incunabulaProjectInfo.shortname, Some(rootUserProfileV1))
-                expectMsg(ProjectInfoResponseV1(SharedAdminTestData.incunabulaProjectInfo))
-            }
-
-            "return 'NotFoundException' when the project is unknown " in {
+            "return 'NotFoundException' when the project shortname unknown " in {
                 actorUnderTest ! ProjectInfoByShortnameGetRequestV1("projectwrong", Some(rootUserProfileV1))
                 expectMsg(Failure(NotFoundException(s"Project 'projectwrong' not found")))
             }
 
         }
 
-        "asked to create a new project " should {
+        "used to modify project information" should {
 
-            "create the project with using a permissions template, and return the 'full' project info if the supplied shortname is unique " in {
+            val newProjectIri = new MutableTestIri
+
+            "CREATE the project and return the project info if the supplied shortname is unique" in {
                 actorUnderTest ! ProjectCreateRequestV1(
                     CreateProjectApiRequestV1(
                         shortname = "newproject",
@@ -148,26 +141,24 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
                         description = Some("project description"),
                         keywords = Some("keywords"),
                         logo = Some("/fu/bar/baz.jpg"),
-                        basepath = "/fu/bar",
                         status = true,
-                        hasSelfJoinEnabled = false
+                        selfjoin = false
                     ),
                     SharedAdminTestData.rootUser,
                     UUID.randomUUID()
                 )
-                expectMsgPF(timeout) {
-                    case ProjectOperationResponseV1(newProjectInfo) => {
-                        //println(newProjectInfo)
-                        assert(newProjectInfo.shortname.equals("newproject"))
-                        assert(newProjectInfo.longname.contains("project longname"))
-                        assert(newProjectInfo.description.contains("project description"))
-                        assert(newProjectInfo.ontologyNamedGraph.equals("http://www.knora.org/ontology/newproject"))
-                        assert(newProjectInfo.dataNamedGraph.equals("http://www.knora.org/data/newproject"))
-                    }
-                }
+                val received: ProjectOperationResponseV1 = expectMsgType[ProjectOperationResponseV1](timeout)
+                assert(received.project_info.shortname.equals("newproject"))
+                assert(received.project_info.longname.contains("project longname"))
+                assert(received.project_info.description.contains("project description"))
+                assert(received.project_info.ontologyNamedGraph.equals("http://www.knora.org/ontology/newproject"))
+                assert(received.project_info.dataNamedGraph.equals("http://www.knora.org/data/newproject"))
+
+                newProjectIri.set(received.project_info.id)
+                //println(s"newProjectIri: ${newProjectIri.get}")
             }
 
-            "return a 'DuplicateValueException' if the supplied project shortname is not unique " in {
+            "return a 'DuplicateValueException' if the supplied project shortname during creation is not unique" in {
                 actorUnderTest ! ProjectCreateRequestV1(
                     CreateProjectApiRequestV1(
                         shortname = "newproject",
@@ -175,9 +166,8 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
                         description = Some("project description"),
                         keywords = Some("keywords"),
                         logo = Some("/fu/bar/baz.jpg"),
-                        basepath = "/fu/bar",
                         status = true,
-                        hasSelfJoinEnabled = false
+                        selfjoin = false
                     ),
                     SharedAdminTestData.rootUser,
                     UUID.randomUUID()
@@ -185,7 +175,7 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
                 expectMsg(Failure(DuplicateValueException(s"Project with the shortname: 'newproject' already exists")))
             }
 
-            "return 'BadRequestException' if 'shortname' is missing" in {
+            "return 'BadRequestException' if project 'shortname' during creation is missing" in {
 
                 actorUnderTest ! ProjectCreateRequestV1(
                     CreateProjectApiRequestV1(
@@ -194,9 +184,8 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
                         description = Some("project description"),
                         keywords = Some("keywords"),
                         logo = Some("/fu/bar/baz.jpg"),
-                        basepath = "/fu/bar",
                         status = true,
-                        hasSelfJoinEnabled = false
+                        selfjoin = false
                     ),
                     SharedAdminTestData.rootUser,
                     UUID.randomUUID()
@@ -204,91 +193,126 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
                 expectMsg(Failure(BadRequestException("'Shortname' cannot be empty")))
             }
 
-        }
-        /*
-        "asked to update a project " should {
-            "update the project " in {
-
-                /* User information is updated by the user */
-                actorUnderTest ! UserUpdateRequestV1(
-                    userIri = SharedTestData.normaluserUserProfileV1.userData.user_id.get,
-                    propertyIri = OntologyConstants.Foaf.GivenName,
-                    newValue = "Donald",
-                    userProfile = SharedTestData.normaluserUserProfileV1,
-                    UUID.randomUUID
+            "UPDATE a project" in {
+                actorUnderTest ! ProjectChangeRequestV1(
+                    projectIri = newProjectIri.get,
+                    changeProjectRequest = ChangeProjectApiRequestV1(
+                        shortname = None,
+                        longname = Some("updated project longname"),
+                        description = Some("updated project description"),
+                        keywords = Some("updated keywords"),
+                        logo = Some("/fu/bar/baz-updated.jpg"),
+                        institution = Some("http://data.knora.org/institutions/dhlab-basel"),
+                        status = Some(false),
+                        selfjoin = Some(true)
+                    ),
+                    SharedAdminTestData.rootUser,
+                    UUID.randomUUID()
                 )
-                expectMsgPF(timeout) {
-                    case UserOperationResponseV1(updatedUserProfile, requestingUserData) => {
-                        // check if information was changed
-                        assert(updatedUserProfile.userData.firstname.contains("Donald"))
-
-                        // check if correct and updated userdata is returned
-                        assert(requestingUserData.firstname.contains("Donald"))
-                    }
-                }
-
-                /* User information is updated by a system admin */
-                actorUnderTest ! UserUpdateRequestV1(
-                    userIri = SharedTestData.normaluserUserProfileV1.userData.user_id.get,
-                    propertyIri = OntologyConstants.Foaf.FamilyName,
-                    newValue = "Duck",
-                    userProfile = SharedTestData.superuserUserProfileV1,
-                    UUID.randomUUID
-                )
-                expectMsgPF(timeout) {
-                    case UserOperationResponseV1(updatedUserProfile, requestingUserData) => {
-                        // check if information was changed
-                        assert(updatedUserProfile.userData.lastname.contains("Duck"))
-
-                        // check if the correct userdata is returned
-                        assert(requestingUserData.user_id.contains(SharedTestData.superuserUserProfileV1.userData.user_id.get))
-                    }
-                }
-
+                val received: ProjectOperationResponseV1 = expectMsgType[ProjectOperationResponseV1](timeout)
+                received.project_info.longname should be (Some("updated project longname"))
+                received.project_info.description should be (Some("updated project description"))
+                received.project_info.keywords should be (Some("updated keywords"))
+                received.project_info.logo should be (Some("/fu/bar/baz-updated.jpg"))
+                received.project_info.institution should be (Some("http://data.knora.org/institutions/dhlab-basel"))
+                received.project_info.ontologyNamedGraph should be ("http://www.knora.org/ontology/newproject")
+                received.project_info.dataNamedGraph should be ("http://www.knora.org/data/newproject")
+                received.project_info.status should be (false)
+                received.project_info.selfjoin should be (true)
             }
 
-            "return a 'ForbiddenException' if the user requesting the update does not have the necessary permission" in {
-
-                /* User information is updated by other normal user */
-                actorUnderTest ! UserUpdateRequestV1(
-                    userIri = SharedTestData.superuserUserProfileV1.userData.user_id.get,
-                    propertyIri = OntologyConstants.Foaf.GivenName,
-                    newValue = "Donald",
-                    userProfile = SharedTestData.normaluserUserProfileV1,
-                    UUID.randomUUID
+            "return 'NotFound' if a not existing project IRI is submitted during update" in {
+                actorUnderTest ! ProjectChangeRequestV1(
+                    projectIri = "http://data.knora.org/projects/notexisting",
+                    changeProjectRequest = ChangeProjectApiRequestV1(longname = Some("new long name")),
+                    SharedAdminTestData.rootUser,
+                    UUID.randomUUID()
                 )
-                expectMsg(Failure(ForbiddenException("User information can only be changed by the user itself or a system administrator")))
-
-                /* User information is updated by anonymous */
-                actorUnderTest ! UserUpdateRequestV1(
-                    userIri = SharedTestData.superuserUserProfileV1.userData.user_id.get,
-                    propertyIri = OntologyConstants.Foaf.GivenName,
-                    newValue = ("Donald"),
-                    userProfile = SharedTestData.anonymousUserProfileV1,
-                    UUID.randomUUID
-                )
-                expectMsg(Failure(ForbiddenException("User information can only be changed by the user itself or a system administrator")))
-
+                expectMsg(Failure(NotFoundException(s"Project 'http://data.knora.org/projects/notexisting' not found. Aborting update request.")))
             }
 
-            "update the project, (deleting) making it inactive " in {
-                actorUnderTest ! UserUpdateRequestV1(
-                    userIri = SharedTestData.normaluserUserProfileV1.userData.user_id.get,
-                    propertyIri = OntologyConstants.KnoraBase.IsActiveUser,
-                    newValue = false,
-                    userProfile = SharedTestData.superuserUserProfileV1,
-                    UUID.randomUUID
-                )
-                expectMsgPF(timeout) {
-                    case UserOperationResponseV1(updatedUserProfile, requestingUserData) => {
-                        // check if information was changed
-                        assert(updatedUserProfile.userData.isActiveUser.contains(false))
-                    }
-                }
+            "return 'BadRequest' if nothing would be changed during the update" in {
 
+                an [BadRequestException] should be thrownBy ChangeProjectApiRequestV1(None, None, None, None, None, None, None, None, None, None)
+
+                /*
+                actorUnderTest ! ProjectChangeRequestV1(
+                    projectIri = "http://data.knora.org/projects/notexisting",
+                    changeProjectRequest = ChangeProjectApiRequestV1(None, None, None, None, None, None, None, None, None, None),
+                    SharedAdminTestData.rootUser,
+                    UUID.randomUUID()
+                )
+                expectMsg(Failure(BadRequestException("No data would be changed. Aborting update request.")))
+                */
             }
         }
-        */
+
+        "used to query members" should {
+
+            "return all members of a project identified by IRI" in {
+                actorUnderTest ! ProjectMembersByIRIGetRequestV1(SharedAdminTestData.imagesProjectInfo.id, SharedAdminTestData.rootUser)
+                val received: ProjectMembersGetResponseV1 = expectMsgType[ProjectMembersGetResponseV1](timeout)
+                received.members should contain allElementsOf Seq(
+                    SharedAdminTestData.imagesUser01.ofType(UserProfileTypeV1.SHORT).userData,
+                    SharedAdminTestData.imagesUser02.ofType(UserProfileTypeV1.SHORT).userData,
+                    SharedAdminTestData.multiuserUser.ofType(UserProfileTypeV1.SHORT).userData,
+                    SharedAdminTestData.imagesReviewerUser.ofType(UserProfileTypeV1.SHORT).userData
+                )
+                received.userDataV1 should equal (SharedAdminTestData.rootUser.ofType(UserProfileTypeV1.SHORT).userData)
+            }
+
+            "return all members of a project identified by shortname" in {
+                actorUnderTest ! ProjectMembersByShortnameGetRequestV1(SharedAdminTestData.imagesProjectInfo.shortname, SharedAdminTestData.rootUser)
+                val received: ProjectMembersGetResponseV1 = expectMsgType[ProjectMembersGetResponseV1](timeout)
+                received.members should contain allElementsOf Seq(
+                    SharedAdminTestData.imagesUser01.ofType(UserProfileTypeV1.SHORT).userData,
+                    SharedAdminTestData.imagesUser02.ofType(UserProfileTypeV1.SHORT).userData,
+                    SharedAdminTestData.multiuserUser.ofType(UserProfileTypeV1.SHORT).userData,
+                    SharedAdminTestData.imagesReviewerUser.ofType(UserProfileTypeV1.SHORT).userData
+                )
+                received.userDataV1 should equal (SharedAdminTestData.rootUser.ofType(UserProfileTypeV1.SHORT).userData)
+            }
+
+            "return 'NotFound' when the project IRI is unknown (project membership)" in {
+                actorUnderTest ! ProjectMembersByIRIGetRequestV1("http://data.knora.org/projects/notexisting", SharedAdminTestData.rootUser)
+                expectMsg(Failure(NotFoundException(s"Project 'http://data.knora.org/projects/notexisting' not found.")))
+            }
+
+            "return 'NotFound' when the project shortname is unknown (project membership)" in {
+                actorUnderTest ! ProjectMembersByShortnameGetRequestV1("projectwrong", SharedAdminTestData.rootUser)
+                expectMsg(Failure(NotFoundException(s"Project 'projectwrong' not found.")))
+            }
+
+            "return all project admin members of a project identified by IRI" in {
+                actorUnderTest ! ProjectAdminMembersByIRIGetRequestV1(SharedAdminTestData.IMAGES_PROJECT_IRI, SharedAdminTestData.rootUser)
+                val received: ProjectAdminMembersGetResponseV1 = expectMsgType[ProjectAdminMembersGetResponseV1](timeout)
+                received.members should contain allElementsOf Seq(
+                    SharedAdminTestData.imagesUser01.ofType(UserProfileTypeV1.SHORT).userData,
+                    SharedAdminTestData.multiuserUser.ofType(UserProfileTypeV1.SHORT).userData
+                )
+                received.userDataV1 should equal (SharedAdminTestData.rootUser.ofType(UserProfileTypeV1.SHORT).userData)
+            }
+
+            "return all project admin members of a project identified by shortname" in {
+                actorUnderTest ! ProjectAdminMembersByShortnameGetRequestV1(SharedAdminTestData.imagesProjectInfo.shortname, SharedAdminTestData.rootUser)
+                val received: ProjectAdminMembersGetResponseV1 = expectMsgType[ProjectAdminMembersGetResponseV1](timeout)
+                received.members should contain allElementsOf Seq(
+                    SharedAdminTestData.imagesUser01.ofType(UserProfileTypeV1.SHORT).userData,
+                    SharedAdminTestData.multiuserUser.ofType(UserProfileTypeV1.SHORT).userData
+                )
+                received.userDataV1 should equal (SharedAdminTestData.rootUser.ofType(UserProfileTypeV1.SHORT).userData)
+            }
+
+            "return 'NotFound' when the project IRI is unknown (project admin membership)" in {
+                actorUnderTest ! ProjectAdminMembersByIRIGetRequestV1("http://data.knora.org/projects/notexisting", SharedAdminTestData.rootUser)
+                expectMsg(Failure(NotFoundException(s"Project 'http://data.knora.org/projects/notexisting' not found.")))
+            }
+
+            "return 'NotFound' when the project shortname is unknown (project admin membership)" in {
+                actorUnderTest ! ProjectAdminMembersByShortnameGetRequestV1("projectwrong", SharedAdminTestData.rootUser)
+                expectMsg(Failure(NotFoundException(s"Project 'projectwrong' not found.")))
+            }
+        }
     }
 
 }

@@ -158,6 +158,50 @@
                                          knora-base:isInSystemAdminGroup "false"^^xsd:boolean .
 
 
+## Images Reviewer
+<http://data.knora.org/users/images-reviewer-user> rdf:type knora-base:User ;
+
+                                         knora-base:email "images-reviewer-user@example.com"^^xsd:string ;
+
+                                         knora-base:givenName "User03"^^xsd:string ;
+
+                                         knora-base:familyName "User"^^xsd:string ;
+
+                                         knora-base:password "$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"^^xsd:string ;
+
+                                         knora-base:preferredLanguage "de"^^xsd:string ;
+
+                                         knora-base:status "true"^^xsd:boolean ;
+
+                                         knora-base:isInProject <http://data.knora.org/projects/images> ;
+
+                                         knora-base:isInGroup <http://data.knora.org/groups/images-reviewer> ;
+
+                                         knora-base:isInSystemAdminGroup "false"^^xsd:boolean .
+
+
+## Images Reviewer
+<http://data.knora.org/users/images-reviewer-user> rdf:type knora-base:User ;
+
+                                         knora-base:email "images-reviewer-user@example.com"^^xsd:string ;
+
+                                         knora-base:givenName "User03"^^xsd:string ;
+
+                                         knora-base:familyName "User"^^xsd:string ;
+
+                                         knora-base:password "$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"^^xsd:string ;
+
+                                         knora-base:preferredLanguage "de"^^xsd:string ;
+
+                                         knora-base:status "true"^^xsd:boolean ;
+
+                                         knora-base:isInProject <http://data.knora.org/projects/images> ;
+
+                                         knora-base:isInGroup <http://data.knora.org/groups/images-reviewer> ;
+
+                                         knora-base:isInSystemAdminGroup "false"^^xsd:boolean .
+
+
 
 <http://data.knora.org/groups/images-reviewer> rdf:type knora-base:UserGroup ;
 
@@ -170,6 +214,10 @@
                                                knora-base:status "true"^^xsd:boolean ;
 
                                                knora-base:hasSelfJoinEnabled "false"^^xsd:boolean .
+
+
+<http://data.knora.org/institutions/dhlab-basel> rdf:type knora-base:Institution ;
+                                                 knora-base:institutionName "Digital Humanities Lab, Basel" .
 
 
 ##########################################################
@@ -320,45 +368,46 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 ###################################
 
 <http://data.knora.org/projects/anything> a knora-base:knoraProject ;
-	knora-base:projectShortname "anything"^^xsd:string ;
-	knora-base:projectLongname "Anything Project"^^xsd:string ;
-	knora-base:projectDescription "Anything Project"^^xsd:string ;
-	knora-base:projectOntologyGraph "http://www.knora.org/ontology/anything"^^xsd:string ;
+  knora-base:projectShortname "anything"^^xsd:string ;
+  knora-base:projectLongname "Anything Project"^^xsd:string ;
+  knora-base:projectDescription "Anything Project"^^xsd:string ;
+  knora-base:projectOntologyGraph "http://www.knora.org/ontology/anything"^^xsd:string ;
   knora-base:projectDataGraph "http://www.knora.org/data/anything"^^xsd:string ;
   knora-base:status "true"^^xsd:boolean ;
   knora-base:hasSelfJoinEnabled "false"^^xsd:boolean .
 
 <http://data.knora.org/users/9XBCrDV3SRa7kS1WwynB4Q> a knora-base:User ;
-	knora-base:userid "anything-user"^^xsd:string ;
-	knora-base:givenName "Anything"^^xsd:string ;
-	knora-base:familyName "User01"^^xsd:string ;
-	knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="^^xsd:string ;
-	knora-base:email "anything.user01@example.org"^^xsd:string ;
-	knora-base:preferredLanguage "de"^^xsd:string ;
-	knora-base:status "true"^^xsd:boolean ;
-	knora-base:isInProject <http://data.knora.org/projects/anything> ;
-	knora-base:isInSystemAdminGroup "false"^^xsd:boolean .
+  knora-base:userid "anything-user"^^xsd:string ;
+  knora-base:givenName "Anything"^^xsd:string ;
+  knora-base:familyName "User01"^^xsd:string ;
+  knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="^^xsd:string ;
+  knora-base:email "anything.user01@example.org"^^xsd:string ;
+  knora-base:preferredLanguage "de"^^xsd:string ;
+  knora-base:status "true"^^xsd:boolean ;
+  knora-base:isInProject <http://data.knora.org/projects/anything> ;
+  knora-base:isInSystemAdminGroup "false"^^xsd:boolean ;
+  knora-base:isInProjectAdminGroup <http://data.knora.org/projects/anything> .
 
 <http://data.knora.org/users/BhkfBc3hTeS_IDo-JgXRbQ> a knora-base:User ;
-	knora-base:userid "anything-user-2" ;
-	knora-base:givenName "Anything" ;
-	knora-base:familyName "User02" ;
-	knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU=" ;
-	knora-base:email "anything.user02@example.org" ;
-	knora-base:preferredLanguage "de"^^xsd:string ;
-	knora-base:status "true"^^xsd:boolean ;
-	knora-base:isInProject <http://data.knora.org/projects/anything> ;
-	knora-base:isInSystemAdminGroup "false"^^xsd:boolean .
+  knora-base:userid "anything-user-2" ;
+  knora-base:givenName "Anything" ;
+  knora-base:familyName "User02" ;
+  knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU=" ;
+  knora-base:email "anything.user02@example.org" ;
+  knora-base:preferredLanguage "de"^^xsd:string ;
+  knora-base:status "true"^^xsd:boolean ;
+  knora-base:isInProject <http://data.knora.org/projects/anything> ;
+  knora-base:isInSystemAdminGroup "false"^^xsd:boolean .
 
 ###################################
 # DOKUBIB                         #
 ###################################
 
 <http://data.knora.org/projects/b83b99ca01> a knora-base:knoraProject ;
-	knora-base:projectShortname "dokubib"^^xsd:string ;
-	knora-base:projectLongname "Dokubib"^^xsd:string ;
+  knora-base:projectShortname "dokubib"^^xsd:string ;
+  knora-base:projectLongname "Dokubib"^^xsd:string ;
   knora-base:projectDescription "Dokubib"^^xsd:string ;
-	knora-base:projectOntologyGraph "http://www.knora.org/ontology/dokubib"^^xsd:string ;
+  knora-base:projectOntologyGraph "http://www.knora.org/ontology/dokubib"^^xsd:string ;
   knora-base:projectDataGraph "http://www.knora.org/data/dokubib"^^xsd:string ;
   knora-base:status "false"^^xsd:boolean ;
   knora-base:hasSelfJoinEnabled "false"^^xsd:boolean .
@@ -369,25 +418,25 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 ###################################
 
 <http://data.knora.org/projects/yTerZGyxjZVqFMNNKXCDPF> a knora-base:knoraProject ;
-	knora-base:projectShortname "beol"^^xsd:string ;
-	knora-base:projectLongname "Bernoulli-Euler Online"^^xsd:string ;
+  knora-base:projectShortname "beol"^^xsd:string ;
+  knora-base:projectLongname "Bernoulli-Euler Online"^^xsd:string ;
   knora-base:projectDescription "Bernoulli-Euler Online"^^xsd:string ;
-	knora-base:projectOntologyGraph "http://www.knora.org/ontology/beol"^^xsd:string ;
+  knora-base:projectOntologyGraph "http://www.knora.org/ontology/beol"^^xsd:string ;
   knora-base:projectDataGraph "http://www.knora.org/data/beol"^^xsd:string ;
   knora-base:status "true"^^xsd:boolean ;
   knora-base:hasSelfJoinEnabled "false"^^xsd:boolean .
 
 
 <http://data.knora.org/users/PSGbemdjZi4kQ6GHJVkLGF> a knora-base:User ;
-	knora-base:userid "beol"^^xsd:string ;
-	knora-base:familyName "BEOL"^^xsd:string ;
-	knora-base:givenName "BEOL"^^xsd:string ;
-	knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="^^xsd:string ;
-	knora-base:email "t.schweizer@unibas.ch"^^xsd:string ;
-	knora-base:preferredLanguage "de"^^xsd:string ;
-	knora-base:status "true"^^xsd:boolean ;
-	knora-base:isInProject <http://data.knora.org/projects/yTerZGyxjZVqFMNNKXCDPF> ;
-	knora-base:isInSystemAdminGroup "false"^^xsd:boolean .
+  knora-base:userid "beol"^^xsd:string ;
+  knora-base:familyName "BEOL"^^xsd:string ;
+  knora-base:givenName "BEOL"^^xsd:string ;
+  knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="^^xsd:string ;
+  knora-base:email "t.schweizer@unibas.ch"^^xsd:string ;
+  knora-base:preferredLanguage "de"^^xsd:string ;
+  knora-base:status "true"^^xsd:boolean ;
+  knora-base:isInProject <http://data.knora.org/projects/yTerZGyxjZVqFMNNKXCDPF> ;
+  knora-base:isInSystemAdminGroup "false"^^xsd:boolean .
 
 
 
@@ -396,22 +445,23 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 ###################################
 
 <http://data.knora.org/projects/DczxPs-sR6aZN91qV92ZmQ> a knora-base:knoraProject ;
-	knora-base:projectShortname "biblio"^^xsd:string ;
-	knora-base:projectLongname "Bibliography"^^xsd:string ;
+  knora-base:projectShortname "biblio"^^xsd:string ;
+  knora-base:projectLongname "Bibliography"^^xsd:string ;
   knora-base:projectDescription "Bibliography"^^xsd:string ;
-	knora-base:projectOntologyGraph "http://www.knora.org/ontology/biblio"^^xsd:string ;
+  knora-base:projectOntologyGraph "http://www.knora.org/ontology/biblio"^^xsd:string ;
   knora-base:projectDataGraph "http://www.knora.org/data/biblio"^^xsd:string ;
   knora-base:status "true"^^xsd:boolean ;
   knora-base:hasSelfJoinEnabled "false"^^xsd:boolean .
 
 
 <http://data.knora.org/users/Q-6Sssu8TBWrcCGuVJ0lVw> a knora-base:User ;
-	knora-base:userid "biblio"^^xsd:string ;
-	knora-base:familyName "biblio"^^xsd:string ;
-	knora-base:givenName "biblio"^^xsd:string ;
-	knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="^^xsd:string ;
-    knora-base:email "biblio@example.com"^^xsd:string ;
-	knora-base:preferredLanguage "de"^^xsd:string ;
-	knora-base:status "true"^^xsd:boolean ;
-	knora-base:isInProject <http://data.knora.org/projects/DczxPs-sR6aZN91qV92ZmQ> ;
-	knora-base:isInSystemAdminGroup "false"^^xsd:boolean .
+  knora-base:userid "biblio"^^xsd:string ;
+  knora-base:familyName "biblio"^^xsd:string ;
+  knora-base:givenName "biblio"^^xsd:string ;
+  knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="^^xsd:string ;
+  knora-base:email "biblio@example.com"^^xsd:string ;
+  knora-base:preferredLanguage "de"^^xsd:string ;
+  knora-base:status "true"^^xsd:boolean ;
+  knora-base:isInProject <http://data.knora.org/projects/DczxPs-sR6aZN91qV92ZmQ> ;
+  knora-base:isInSystemAdminGroup "false"^^xsd:boolean ;
+  knora-base:isInProjectAdminGroup <http://data.knora.org/projects/DczxPs-sR6aZN91qV92ZmQ> .

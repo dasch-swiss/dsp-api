@@ -1,6 +1,6 @@
 /*
  * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
+ * Tobias Schweizer, André Kilchenmann, and André Fatton.
  *
  * This file is part of Knora.
  *
@@ -25,9 +25,11 @@ import akka.testkit.ImplicitSender
 import akka.util.Timeout
 import com.typesafe.config.ConfigFactory
 import org.knora.webapi.messages.v1.responder.usermessages._
+import org.knora.webapi.messages.v2.routing.authenticationmessages.{KnoraPasswordCredentialsV2, KnoraTokenCredentialsV2}
 import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_NAME
-import org.knora.webapi.util.ActorUtil
-import org.knora.webapi.{BadCredentialsException, CoreSpec, NotFoundException, SharedAdminTestData}
+import org.knora.webapi.routing.Authenticator.AUTHENTICATION_INVALIDATION_CACHE_NAME
+import org.knora.webapi.util.{ActorUtil, CacheUtil}
+import org.knora.webapi.{BadCredentialsException, CoreSpec, SharedAdminTestData}
 import org.scalatest.PrivateMethodTester
 
 import scala.concurrent.Future
@@ -43,14 +45,6 @@ object AuthenticatorSpec {
         """.stripMargin)
 }
 
-/*
- *  This test needs a running http layer, so that different api access authentication schemes can be tested
- *  - Browser basic auth
- *  - Basic auth over API
- *  - Username/password over API
- *  - API Key based authentication
- */
-
 class AuthenticatorSpec extends CoreSpec("AuthenticationTestSystem") with ImplicitSender with PrivateMethodTester {
 
     implicit val executionContext = system.dispatcher
@@ -60,51 +54,77 @@ class AuthenticatorSpec extends CoreSpec("AuthenticationTestSystem") with Implic
     val rootUserEmail = rootUserProfileV1.userData.email.get
     val rootUserPassword = "test"
 
+
     val mockUsersActor = actor(RESPONDER_MANAGER_ACTOR_NAME)(new Act {
         become {
             case UserProfileByEmailGetV1(submittedEmail, userProfileType) => {
                 if (submittedEmail == "root@example.com") {
-                    ActorUtil.future2Message(sender, Future(rootUserProfileV1), logger)
+                    ActorUtil.future2Message(sender, Future(Some(rootUserProfileV1)), logger)
                 } else {
-                    ActorUtil.future2Message(sender, Future.failed(throw NotFoundException(s"User '$submittedEmail' not found")), logger)
+                    ActorUtil.future2Message(sender, Future(None), logger)
                 }
             }
         }
     })
 
-    val getUserProfileByEmail = PrivateMethod[Try[UserProfileV1]]('getUserProfileByEmail)
-    val authenticateCredentials = PrivateMethod[Try[String]]('authenticateCredentials)
+    val getUserProfileV1ByEmail = PrivateMethod[Try[UserProfileV1]]('getUserProfileV1ByEmail)
+    val authenticateCredentialsV2 = PrivateMethod[Boolean]('authenticateCredentialsV2)
 
     "During Authentication" when {
-        "called, the 'getUserProfile' method " should {
+        "called, the 'getUserProfileV1ByEmail' method " should {
             "succeed with the correct 'email' " in {
-                Authenticator invokePrivate getUserProfileByEmail(rootUserEmail, system, timeout, executionContext) should be(rootUserProfileV1)
+                Authenticator invokePrivate getUserProfileV1ByEmail(rootUserEmail, system, timeout, executionContext) should be(rootUserProfileV1)
             }
 
-            /* TODO: Find out how to mock correctly */
-            "fail with the wrong 'email' " ignore {
+            "fail with the wrong 'email' " in {
                 an [BadCredentialsException] should be thrownBy {
-                    Authenticator invokePrivate getUserProfileByEmail("wronguser@example.com", system, timeout, executionContext)
+                    Authenticator invokePrivate getUserProfileV1ByEmail("wronguser@example.com", system, timeout, executionContext)
                 }
             }
 
             "fail when not providing a email " in {
                 an [BadCredentialsException] should be thrownBy {
-                    Authenticator invokePrivate getUserProfileByEmail("", system, timeout, executionContext)
+                    Authenticator invokePrivate getUserProfileV1ByEmail("", system, timeout, executionContext)
                 }
             }
         }
-        "called, the 'authenticateCredentials' method " should {
-            "succeed with the correct 'email' / correct 'password' " in {
-                Authenticator invokePrivate authenticateCredentials(rootUserEmail, rootUserPassword, false, system, executionContext) should be("0")
+        "called, the 'authenticateCredentialsV2' method" should {
+            "succeed with correct email/password" in {
+                val correctPasswordCreds = KnoraPasswordCredentialsV2(rootUserEmail, rootUserPassword)
+                Authenticator invokePrivate authenticateCredentialsV2(Some(correctPasswordCreds), system, executionContext) should be (true)
             }
-            "fail with correct 'email' / wrong 'password' " in {
+            "fail with unknown email" in {
                 an [BadCredentialsException] should be thrownBy {
-                    Authenticator invokePrivate authenticateCredentials(rootUserEmail, "wrongpass", false, system, executionContext)
+                    val wrongPasswordCreds = KnoraPasswordCredentialsV2("wrongemail", "wrongpassword")
+                    Authenticator invokePrivate authenticateCredentialsV2(Some(wrongPasswordCreds), system, executionContext)
                 }
             }
+            "fail with wrong password" in {
+                an [BadCredentialsException] should be thrownBy {
+                    val wrongPasswordCreds = KnoraPasswordCredentialsV2(rootUserEmail, "wrongpassword")
+                    Authenticator invokePrivate authenticateCredentialsV2(Some(wrongPasswordCreds), system, executionContext)
+                }
+            }
+            "succeed with correct token" in {
+                val token = JWTHelper.createToken("myuseriri", settings.jwtSecretKey, settings.jwtLongevity)
+                val tokenCreds = KnoraTokenCredentialsV2(token)
+                Authenticator invokePrivate authenticateCredentialsV2(Some(tokenCreds), system, executionContext) should be (true)
+            }
+            "fail with invalidated token" in {
+                an [BadCredentialsException] should be thrownBy {
+                    val token = JWTHelper.createToken("myuseriri", settings.jwtSecretKey, settings.jwtLongevity)
+                    val tokenCreds = KnoraTokenCredentialsV2(token)
+                    CacheUtil.put(AUTHENTICATION_INVALIDATION_CACHE_NAME, tokenCreds.token, tokenCreds.token)
+                    Authenticator invokePrivate authenticateCredentialsV2(Some(tokenCreds), system, executionContext)
+                }
+            }
+            "fail with wrong token" in {
+                an [BadCredentialsException] should be thrownBy {
+                    val tokenCreds = KnoraTokenCredentialsV2("123456")
+                    Authenticator invokePrivate authenticateCredentialsV2(Some(tokenCreds), system, executionContext)
+                }
+            }
+
         }
     }
-
-
 }
