@@ -46,6 +46,7 @@ import spray.json._
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContextExecutor, Future}
+import scala.util.Random
 import scala.xml.{Node, NodeSeq, XML}
 
 /**
@@ -86,7 +87,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
 
     implicit private val timeout: Timeout = settings.defaultRestoreTimeout
 
-    implicit def default(implicit system: ActorSystem) = RouteTestTimeout(new DurationInt(15).second)
+    implicit def default(implicit system: ActorSystem) = RouteTestTimeout(new DurationInt(360).second)
 
     implicit val ec: ExecutionContextExecutor = system.dispatcher
 
@@ -100,7 +101,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
 
     "Load test data" in {
         Await.result(storeManager ? ResetTriplestoreContent(rdfDataObjects), 360.seconds)
-        Await.result(responderManager ? LoadOntologiesRequest(SharedAdminTestData.rootUser), 10.seconds)
+        Await.result(responderManager ? LoadOntologiesRequest(SharedAdminTestData.rootUser), 30.seconds)
     }
 
     private val firstThingIri = new MutableTestIri
@@ -1192,6 +1193,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    |        <knoraXmlImport:label>Niels Henrik Abel</knoraXmlImport:label>
                    |        <beol:hasFamilyName knoraType="richtext_value">Abel</beol:hasFamilyName>
                    |        <beol:hasGivenName knoraType="richtext_value">Niels Henrik</beol:hasGivenName>
+                   |        <beol:personHasTitle knoraType="richtext_value">Sir</beol:personHasTitle>
                    |    </beol:person>
                    |    <beol:person id="holmes">
                    |        <knoraXmlImport:label>Sherlock Holmes</knoraXmlImport:label>
@@ -1218,7 +1220,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    |        <biblio:publicationHasAuthor>
                    |            <beol:person knoraType="link_value" linkType="ref" target="holmes"/>
                    |        </biblio:publicationHasAuthor>
-                   |        <biblio:publicationHasDate knoraType="date_value">GREGORIAN:1976</biblio:publicationHasDate>
+                   |        <biblio:publicationHasDate knoraType="date_value">GREGORIAN:500 BC:400 BC</biblio:publicationHasDate>
                    |        <biblio:publicationHasTitle knoraType="richtext_value">Strings in the 16th and 17th Centuries</biblio:publicationHasTitle>
                    |        <biblio:publicationHasTitle knoraType="richtext_value">An alternate title</biblio:publicationHasTitle>
                    |        <biblio:startPage knoraType="richtext_value">48</biblio:startPage>
@@ -1234,8 +1236,8 @@ class ResourcesV1R2RSpec extends R2RSpec {
 
                 val responseJson: JsObject = AkkaHttpUtils.httpResponseToJson(response)
                 val createdResources: Seq[JsValue] = responseJson.fields("createdResources").asInstanceOf[JsArray].elements
-                abelAuthorIri.set(createdResources.head.asJsObject.fields("res_id").asInstanceOf[JsString].value)
-                mathIntelligencerIri.set(createdResources(2).asJsObject.fields("res_id").asInstanceOf[JsString].value)
+                abelAuthorIri.set(createdResources.head.asJsObject.fields("resourceIri").asInstanceOf[JsString].value)
+                mathIntelligencerIri.set(createdResources(2).asJsObject.fields("resourceIri").asInstanceOf[JsString].value)
             }
         }
 
@@ -1378,7 +1380,8 @@ class ResourcesV1R2RSpec extends R2RSpec {
                     var zipEntry: ZipEntry = null
 
                     while ( {
-                        zipEntry = zipInputStream.getNextEntry; zipEntry != null
+                        zipEntry = zipInputStream.getNextEntry
+                        zipEntry != null
                     }) {
                         zippedFilenames.add(zipEntry.getName)
                     }
@@ -1387,5 +1390,116 @@ class ResourcesV1R2RSpec extends R2RSpec {
                 assert(zippedFilenames == Set("beol.xsd", "biblio.xsd", "knoraXmlImport.xsd"))
             }
         }
+
+        "create 10,000 anything:Thing resources with random contents" in {
+            def maybeAppendValue(random: Random, xmlStringBuilder: StringBuilder, value: String): Unit = {
+                if (random.nextBoolean) {
+                    xmlStringBuilder.append(value)
+                }
+            }
+
+            val xmlStringBuilder = new StringBuilder
+            val random = new Random
+
+            xmlStringBuilder.append(
+                """<?xml version="1.0" encoding="UTF-8"?>
+                  |<knoraXmlImport:resources xmlns="http://api.knora.org/ontology/anything/xml-import/v1#"
+                  |    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  |    xsi:schemaLocation="http://api.knora.org/ontology/anything/xml-import/v1# anything.xsd"
+                  |    xmlns:anything="http://api.knora.org/ontology/anything/xml-import/v1#"
+                  |    xmlns:knoraXmlImport="http://api.knora.org/ontology/knoraXmlImport/v1#">
+                  |
+                """.stripMargin)
+
+            for (i <- 1 to 10000) {
+                xmlStringBuilder.append(
+                    s"""
+                       |<anything:Thing id="test_thing_$i">
+                       |<knoraXmlImport:label>This is thing $i</knoraXmlImport:label>
+                    """.stripMargin)
+
+                maybeAppendValue(random = random,
+                    xmlStringBuilder = xmlStringBuilder,
+                    value =
+                        """
+                          |<anything:hasBoolean knoraType="boolean_value">true</anything:hasBoolean>
+                        """.stripMargin)
+
+                maybeAppendValue(random = random,
+                    xmlStringBuilder = xmlStringBuilder,
+                    value =
+                        """
+                          |<anything:hasColor knoraType="color_value">#4169E1</anything:hasColor>
+                        """.stripMargin)
+
+                maybeAppendValue(random = random,
+                    xmlStringBuilder = xmlStringBuilder,
+                    value =
+                        """
+                          |<anything:hasDate knoraType="date_value">JULIAN:1291-08-01:1291-08-01</anything:hasDate>
+                        """.stripMargin)
+
+                maybeAppendValue(random = random,
+                    xmlStringBuilder = xmlStringBuilder,
+                    value =
+                        s"""
+                           |<anything:hasDecimal knoraType="decimal_value">$i.$i</anything:hasDecimal>
+                        """.stripMargin)
+
+                maybeAppendValue(random = random,
+                    xmlStringBuilder = xmlStringBuilder,
+                    value =
+                        s"""
+                           |<anything:hasInteger knoraType="int_value">$i</anything:hasInteger>
+                        """.stripMargin)
+
+                maybeAppendValue(random = random,
+                    xmlStringBuilder = xmlStringBuilder,
+                    value =
+                        """
+                          |<anything:hasInterval knoraType="interval_value">1000000000000000.0000000000000001,1000000000000000.0000000000000002</anything:hasInterval>
+                        """.stripMargin)
+
+                maybeAppendValue(random = random,
+                    xmlStringBuilder = xmlStringBuilder,
+                    value =
+                        """
+                          |<anything:hasListItem knoraType="hlist_value">http://data.knora.org/anything/treeList10</anything:hasListItem>
+                        """.stripMargin)
+
+                maybeAppendValue(random = random,
+                    xmlStringBuilder = xmlStringBuilder,
+                    value =
+                        s"""
+                           |<anything:hasText knoraType="richtext_value">This is a test in thing $i.</anything:hasText>
+                        """.stripMargin)
+
+                maybeAppendValue(random = random,
+                    xmlStringBuilder = xmlStringBuilder,
+                    value =
+                        """
+                          |<anything:hasUri knoraType="uri_value">http://dhlab.unibas.ch</anything:hasUri>
+                        """.stripMargin)
+
+                xmlStringBuilder.append(
+                    """
+                      |</anything:Thing>
+                    """.stripMargin)
+            }
+
+            xmlStringBuilder.append(
+                """
+                  |</knoraXmlImport:resources>
+                """.stripMargin)
+
+            val projectIri = URLEncoder.encode("http://data.knora.org/projects/anything", "UTF-8")
+
+            Post(s"/v1/resources/xmlimport/$projectIri", HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), xmlStringBuilder.toString)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPath ~> check {
+                val responseStr = responseAs[String]
+                assert(status == StatusCodes.OK, responseStr)
+                responseStr should include("createdResources")
+            }
+        }
     }
+
 }

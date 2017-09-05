@@ -118,7 +118,13 @@
 
 	var day_popoup_is_open = false;
 
-	var open_daysel_popup = function(daysel, month, year, current_cal, precision) {
+	var open_daysel_popup = function(daysel, month, year, era, current_cal, precision) {
+	    // console.log("open_daysel_popup: year is " + year.toString() + ", era is " + era.toString());
+
+	    if (era === "BCE" || era === "BC") {
+	        year = -year;
+        }
+
 		var p = daysel.offset(); // relative to browser window
 		var tmpcss = {
 			position: 'fixed',
@@ -191,7 +197,7 @@
 			cal: current_cal
 		};
 		var tmparr;
-		var day, month, year;
+		var day, month, year, era;
 
 		switch (current_cal) {
 			case 'GREGORIAN':
@@ -225,7 +231,17 @@
 			}
 		}
 
-		var daysel, monthsel, yearsel;
+		if (year < 0) {
+		    era = "BCE";
+        } else {
+		    era = "CE";
+        }
+
+        year = Math.abs(year);
+
+		// console.log("year is " + year.toString() + ", era is " + era.toString());
+
+		var daysel, monthsel, yearsel, erasel;
 		var dayval;
 
 		//
@@ -243,7 +259,7 @@
 		}
 		daysel = $('<input>').attr(dayselattr).addClass('propedit').addClass('daysel').on('click.dayselin', function(e){
 			e.stopPropagation();
-			ele.append(open_daysel_popup(daysel, monthsel.val(), yearsel.val(), current_cal, precision));
+			ele.append(open_daysel_popup(daysel, monthsel.val(), yearsel.val(), erasel.val(), current_cal, precision));
 		}).val(dayval).appendTo(ele);
 		if ((no_day !== undefined) && no_day) {
 			daysel.css('display', 'none');
@@ -326,29 +342,49 @@
 				}
 			}))
 		);
+
+		erasel = $('<select>', {'class': 'propedit erasel'});
+		var ceOption = $('<option>').append('CE');
+		var bceOption = $('<option>').append('BCE');
+
+        if (era === "BCE") {
+            bceOption.attr({selected: 'selected'});
+        } else {
+            ceOption.attr({selected: 'selected'});
+        }
+
+        ceOption.appendTo(erasel);
+        bceOption.appendTo(erasel);
+        ele.append(erasel);
 	};
 
 
-	var parse_datestr = function(datestr, calendar, periodpart) {
+	var parse_datestr = function(datestr, calendar, era, periodpart) {
 		var d = {};
 		var dd;
 		var d_arr = datestr.split('-');
-		
-		if (d_arr.length == 3) { 
+		var year_sign = 1;
+
+		if (era === "BC" || era === "BCE") {
+            year_sign = -1;
+		}
+
+		if (d_arr.length == 3) {
 			d.precision = 'DAY';
-			d.jdc = SALSAH.date_to_jdc(d_arr[2], d_arr[1], d_arr[0], calendar, periodpart);
+			d.jdc = SALSAH.date_to_jdc(d_arr[2], d_arr[1], d_arr[0] * year_sign, calendar, periodpart);
 		}
 		else if (d_arr.length == 2) {
 			d.precision = 'MONTH';
-			d.jdc = SALSAH.date_to_jdc(0, d_arr[1], d_arr[0], calendar, periodpart);
+			d.jdc = SALSAH.date_to_jdc(0, d_arr[1], d_arr[0] * year_sign, calendar, periodpart);
 		}
 		else if (d_arr.length == 1) {
 			d.precision = 'YEAR';
-			d.jdc = SALSAH.date_to_jdc(0, 0, d_arr[0], calendar, periodpart);
+			d.jdc = SALSAH.date_to_jdc(0, 0, d_arr[0] * year_sign, calendar, periodpart);
 		}
 		else {
 			alert('ERROR: Invalid datestr: ' + datestr);
 		}
+
 		dd = SALSAH.jdc_to_date(d.jdc, calendar);
 		d.year = dd.year;
 		d.month = dd.month;
@@ -356,10 +392,12 @@
 		d.weekday = dd.weekday;
 		d.calendar = calendar;
 
+        // console.log("in parse_datestr: datestr is " + datestr.toString() + ", era is " + era + ", and d is " + JSON.stringify(d));
+
 		return d;
 	};
-	
-	
+
+
 /**
  * Dateobject:
  * - <i>name</i>.dateval1 (YYYY-MM-DD)
@@ -371,10 +409,30 @@
 			var $that = this;
 			var d1;
 			var d2;
+			var d1_abs_year, d2_abs_year;
+			var d1_era, d2_era;
+			var d1_year_str, d2_year_str;
 
-			d1 = parse_datestr(dateobj.dateval1, dateobj.calendar, 'START');
-			d2 = parse_datestr(dateobj.dateval2, dateobj.calendar, 'END');
+			d1 = parse_datestr(dateobj.dateval1, dateobj.calendar, dateobj.era1, 'START');
+			d2 = parse_datestr(dateobj.dateval2, dateobj.calendar, dateobj.era2, 'END');
 
+			if (d1.year < 0) {
+			    d1_era = "BCE";
+            } else {
+			    d1_era = "CE";
+            }
+
+            if (d2.year < 0) {
+                d2_era = "BCE";
+            } else {
+                d2_era = "CE";
+            }
+
+            d1_abs_year = Math.abs(d1.year);
+            d2_abs_year = Math.abs(d2.year);
+
+            d1_year_str = d1_abs_year + ' ' + d1_era;
+            d2_year_str = d2_abs_year + ' ' + d2_era;
 
 			var datestr = '';
 			if (d1.precision == d2.precision) {
@@ -384,28 +442,28 @@
 				switch (d1.precision) {
 					case 'DAY': {
 						if ((d1.year == d2.year) && (d1.month == d2.month) && (d1.day == d2.day)) {
-							datestr = weekday[d1.weekday] + ' ' + d1.day + '. ' + months[dateobj.calendar][d1.month] + ' ' + d1.year;
+							datestr = weekday[d1.weekday] + ' ' + d1.day + '. ' + months[dateobj.calendar][d1.month] + ' ' + d1_year_str;
 						}
 						else {
-							datestr = weekday[d1.weekday] + ' ' +  d1.day + '. ' + months[dateobj.calendar][d1.month] + ' ' + d1.year + '-' + d2.day + '. ' + months[dateobj.calendar][d2.month] + ' ' + d2.year;
+							datestr = weekday[d1.weekday] + ' ' +  d1.day + '. ' + months[dateobj.calendar][d1.month] + ' ' + d1_year_str + ' - ' + weekday[d2.weekday] + ' ' + d2.day + '. ' + months[dateobj.calendar][d2.month] + ' ' + d2_year_str;
 						}
 						break;
 					}
 					case 'MONTH': {
 						if ((d1.year == d2.year) && (d1.month == d2.month)) {
-							datestr = months[dateobj.calendar][d1.month] + ' ' + d1.year;
+							datestr = months[dateobj.calendar][d1.month] + ' ' + d1_year_str;
 						}
 						else {
-							datestr = months[dateobj.calendar][d1.month] + ' ' + d1.year + '-' + months[dateobj.calendar][d2.month] + ' ' + d2.year;
+							datestr = months[dateobj.calendar][d1.month] + ' ' + d1.year + ' - ' + months[dateobj.calendar][d2.month] + ' ' + d2_year_str;
 						}
 						break;
 					}
 					case 'YEAR': {
 						if (d1.year == d2.year) {
-							datestr = d1.year;
+							datestr = d1_year_str;
 						}
 						else {
-							datestr = d1.year + ' - ' + d2.year;
+							datestr = d1.year + ' - ' + d2_year_str;
 						}
 						break;
 					}
@@ -417,30 +475,30 @@
 				//
 				switch (d1.precision) {
 					case 'DAY': {
-						datestr = weekday[d1.weekday] + ' ' +  d1.day + '. ' + months[dateobj.calendar][d1.month] + ' ' + d1.year;
+						datestr = weekday[d1.weekday] + ' ' +  d1.day + '. ' + months[dateobj.calendar][d1.month] + ' ' + d1_year_str;
 						break;
 					}
 					case 'MONTH': {
-						datestr = months[dateobj.calendar][d1.month] + ' ' + d1.year;
+						datestr = months[dateobj.calendar][d1.month] + ' ' + d1_year_str;
 						break;
 					}
 					case 'YEAR': {
-						datestr = d1.year;
+						datestr = d1_year_str;
 						break;
 					}
 				} // switch(propinfo.values[value_index].precision1)
 				datestr += ' - ';
 				switch (d2.precision) {
 					case 'DAY': {
-						datestr += weekday[d2.weekday] + ' ' +  d2.day + '. ' + months[dateobj.calendar][d2.month] + ' ' + d2.year;
+						datestr += weekday[d2.weekday] + ' ' +  d2.day + '. ' + months[dateobj.calendar][d2.month] + ' ' + d2_year_str;
 						break;
 					}
 					case 'MONTH': {
-						datestr += months[dateobj.calendar][d2.month] + ' ' + d2.year;
+						datestr += months[dateobj.calendar][d2.month] + ' ' + d2_year_str;
 						break;
 					}
 					case 'YEAR': {
-						datestr += d2.year;
+						datestr += d2_year_str;
 						break;
 					}
 				} // switch(precision2)
@@ -522,8 +580,8 @@
 					var dateprecision2 = dateobj.dateprecision2;
 				}
 				else {
-					d1 = parse_datestr(dateobj.dateval1, dateobj.calendar, 'START');
-					d2 = parse_datestr(dateobj.dateval2, dateobj.calendar, 'END');
+					d1 = parse_datestr(dateobj.dateval1, dateobj.calendar, dateobj.era1, 'START');
+					d2 = parse_datestr(dateobj.dateval2, dateobj.calendar, dateobj.era2, 'END');
 				}
 			}
 
@@ -552,7 +610,7 @@
 			else {
 				period = true; // different date precisions imply a period!
 			}
-			
+
 			var no_day = false;
 			if ((defvals !== undefined) && (defvals.no_day !== undefined)) no_day = defvals.no_day
 			create_date_entry(datecontainer1, d1.jdc, d1.calendar, d1.precision, no_day);
@@ -653,7 +711,7 @@
 		},
 
 		value: function() {
-			var dateobj = {}; 
+			var dateobj = {};
 			var datecontainer1 = $(this.children('span').get(0));
 			var datecontainer2 = $(this.children('span').get(1));
 
@@ -676,6 +734,8 @@
 				}
 			}
 
+            dateobj.era1 = datecontainer1.find('.erasel').val();
+
 			if (period) {
 				dateobj.dateval2 = '';
 				var year2 = datecontainer2.find('.yearsel').val();
@@ -692,8 +752,13 @@
 						dateobj.dateval2 += '-' + day2;
 					}
 				}
-			}
-			return dateobj;
+
+                dateobj.era2 = datecontainer2.find('.erasel').val();
+            }
+
+            // console.log("in function value: dateobj is " + JSON.stringify(dateobj));
+
+            return dateobj;
 		},
 	}
 

@@ -46,7 +46,7 @@ object ProjectsV1E2ESpec {
   */
 class ProjectsV1E2ESpec extends E2ESpec(ProjectsV1E2ESpec.config) with SessionJsonProtocol with ProjectV1JsonProtocol with TriplestoreJsonProtocol {
 
-    implicit def default(implicit system: ActorSystem) = RouteTestTimeout(5.seconds)
+    implicit def default(implicit system: ActorSystem) = RouteTestTimeout(30.seconds)
 
     implicit override lazy val log = akka.event.Logging(system, this.getClass())
 

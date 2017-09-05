@@ -20,6 +20,8 @@
 
 package org.knora.webapi.responders.v1
 
+import java.time.Instant
+
 import akka.actor.Status
 import akka.pattern._
 import org.knora.webapi._
@@ -39,8 +41,7 @@ import org.knora.webapi.util._
 
 import scala.annotation.tailrec
 import scala.collection.breakOut
-import scala.concurrent.duration._
-import scala.concurrent.{Await, Future}
+import scala.concurrent.Future
 
 /**
   * Updates Knora values.
@@ -291,15 +292,15 @@ class ValuesResponderV1 extends Responder {
               * Assists in collecting generated SPARQL as well as other information about values to be created for
               * a particular property.
               *
-              * @param whereSparql    statements to be included in the SPARQL WHERE clause.
               * @param insertSparql   statements to be included in the SPARQL INSERT clause.
               * @param valuesToVerify information about each value to be created.
               * @param valueIndexes   the value index of each value described by this object (so they can be sorted).
               */
-            case class SparqlGenerationResultForProperty(whereSparql: Vector[String] = Vector.empty[String],
-                                                         insertSparql: Vector[String] = Vector.empty[String],
+            case class SparqlGenerationResultForProperty(insertSparql: Vector[String] = Vector.empty[String],
                                                          valuesToVerify: Vector[UnverifiedValueV1] = Vector.empty[UnverifiedValueV1],
                                                          valueIndexes: Vector[Int] = Vector.empty[Int])
+
+
 
             for {
             ////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -381,8 +382,9 @@ class ValuesResponderV1 extends Responder {
 
                 // Generate INSERT clause statements based on those SparqlTemplateLinkUpdates.
                 standoffLinkInsertSparql: String = queries.sparql.v1.txt.generateInsertStatementsForStandoffLinks(
+                    resourceIri = createMultipleValuesRequest.resourceIri,
                     linkUpdates = standoffLinkUpdates,
-                    resourceIndex = createMultipleValuesRequest.resourceIndex
+                    currentTime = createMultipleValuesRequest.currentTime
                 ).toString()
 
                 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -419,16 +421,9 @@ class ValuesResponderV1 extends Responder {
                 // Make a SparqlGenerationResultForProperty for each property.
                 sparqlGenerationResults: Map[IRI, SparqlGenerationResultForProperty] = groupedNumberedValuesWithValueHasOrder.map {
                     case (propertyIri: IRI, valuesToCreate: Seq[NumberedValueToCreate]) =>
-                        val defaultObjectAccessPermissionsF = {
-                            responderManager ? DefaultObjectAccessPermissionsStringForPropertyGetV1(
-                                projectIri = createMultipleValuesRequest.projectIri,
-                                resourceClassIri = createMultipleValuesRequest.resourceClassIri,
-                                propertyIri = propertyIri,
-                                createMultipleValuesRequest.userProfile.permissionData)
-                        }.mapTo[DefaultObjectAccessPermissionsStringResponseV1]
+                        val defaultPropertyAccessPermissions: String = createMultipleValuesRequest.defaultPropertyAccessPermissions(propertyIri)
 
-                        val defaultObjectAccessPermissions = Await.result(defaultObjectAccessPermissionsF, 5.second)
-                        // log.debug(s"createValueV1 - defaultObjectAccessPermissions: $defaultObjectAccessPermissions")
+                        // log.debug(s"createValueV1 - defaultPropertyAccessPermissions: $defaultPropertyAccessPermissions")
 
                         // For each property, construct a SparqlGenerationResultForProperty containing WHERE clause statements, INSERT clause statements, and UnverifiedValueV1s.
                         val sparqlGenerationResultForProperty: SparqlGenerationResultForProperty = valuesToCreate.foldLeft(SparqlGenerationResultForProperty()) {
@@ -437,7 +432,7 @@ class ValuesResponderV1 extends Responder {
                                 val newValueIri = knoraIdUtil.makeRandomValueIri(createMultipleValuesRequest.resourceIri)
 
                                 // How we generate the SPARQL depends on whether we're creating a link or an ordinary value.
-                                val (whereSparql: String, insertSparql: String) = valueToCreate.createValueV1WithComment.updateValueV1 match {
+                                val insertSparql: String = valueToCreate.createValueV1WithComment.updateValueV1 match {
                                     case linkUpdateV1: LinkUpdateV1 =>
                                         // We're creating a link.
 
@@ -455,42 +450,20 @@ class ValuesResponderV1 extends Responder {
                                             currentReferenceCount = 0,
                                             newReferenceCount = 1,
                                             newLinkValueCreator = userIri,
-                                            newLinkValuePermissions = defaultObjectAccessPermissions.permissionLiteral
+                                            newLinkValuePermissions = defaultPropertyAccessPermissions
                                         )
 
-                                        // Generate WHERE clause statements for the link.
-                                        val whereSparql = queries.sparql.v1.txt.generateWhereStatementsForCreateLink(
-                                            resourceIndex = createMultipleValuesRequest.resourceIndex,
-                                            valueIndex = valueToCreate.valueIndex,
+                                        // Generate INSERT DATA clause statements for the link.
+                                        queries.sparql.v1.txt.generateInsertStatementsForCreateLink(
                                             resourceIri = createMultipleValuesRequest.resourceIri,
                                             linkUpdate = sparqlTemplateLinkUpdate,
+                                            currentTime = createMultipleValuesRequest.currentTime,
+                                            maybeComment = valueToCreate.createValueV1WithComment.comment,
                                             maybeValueHasOrder = Some(valueToCreate.valueHasOrder)
                                         ).toString()
-
-                                        // Generate INSERT clause statements for the link.
-                                        val insertSparql = queries.sparql.v1.txt.generateInsertStatementsForCreateLink(
-                                            resourceIndex = createMultipleValuesRequest.resourceIndex,
-                                            valueIndex = valueToCreate.valueIndex,
-                                            linkUpdate = sparqlTemplateLinkUpdate,
-                                            maybeComment = valueToCreate.createValueV1WithComment.comment
-                                        ).toString()
-
-                                        (whereSparql, insertSparql)
 
                                     case _ =>
                                         // We're creating an ordinary value.
-
-                                        // Generate WHERE clause statements for the value.
-                                        val whereSparql = queries.sparql.v1.txt.generateWhereStatementsForCreateValue(
-                                            resourceIndex = createMultipleValuesRequest.resourceIndex,
-                                            valueIndex = valueToCreate.valueIndex,
-                                            resourceIri = createMultipleValuesRequest.resourceIri,
-                                            propertyIri = propertyIri,
-                                            newValueIri = newValueIri,
-                                            valueTypeIri = updateValueV1.valueTypeIri,
-                                            linkUpdates = Seq.empty[SparqlTemplateLinkUpdate], // This is empty because we have to generate SPARQL for standoff links separately.
-                                            maybeValueHasOrder = Some(valueToCreate.valueHasOrder)
-                                        ).toString()
 
                                         // If this is a text value and we're creating values as part of a bulk import, some of the target IRIs of
                                         // standoff link tags in the text value might be client IDs for resources rather than real resource IRIs.
@@ -522,42 +495,37 @@ class ValuesResponderV1 extends Responder {
                                             case otherValue => otherValue
                                         }
 
-                                        // Generate INSERT clause statements for the value.
-                                        val insertSparql = queries.sparql.v1.txt.generateInsertStatementsForCreateValue(
-                                            resourceIndex = createMultipleValuesRequest.resourceIndex,
-                                            valueIndex = valueToCreate.valueIndex,
+                                        // Generate INSERT DATA clause statements for the value.
+                                        queries.sparql.v1.txt.generateInsertStatementsForCreateValue(
+                                            resourceIri = createMultipleValuesRequest.resourceIri,
                                             propertyIri = propertyIri,
                                             value = valueWithRealStandoffLinkIris,
                                             newValueIri = newValueIri,
                                             linkUpdates = Seq.empty[SparqlTemplateLinkUpdate], // This is empty because we have to generate SPARQL for standoff links separately.
                                             maybeComment = valueToCreate.createValueV1WithComment.comment,
                                             valueCreator = userIri,
-                                            valuePermissions = defaultObjectAccessPermissions.permissionLiteral
+                                            valuePermissions = defaultPropertyAccessPermissions,
+                                            currentTime = createMultipleValuesRequest.currentTime,
+                                            maybeValueHasOrder = Some(valueToCreate.valueHasOrder)
                                         ).toString()
-
-                                        //println(insertSparql)
-
-                                        (whereSparql, insertSparql)
                                 }
 
                                 // For each value of the property, accumulate the generated SPARQL and an UnverifiedValueV1
                                 // in the SparqlGenerationResultForProperty.
                                 propertyAcc.copy(
-                                    whereSparql = propertyAcc.whereSparql :+ whereSparql,
                                     insertSparql = propertyAcc.insertSparql :+ insertSparql,
                                     valuesToVerify = propertyAcc.valuesToVerify :+ UnverifiedValueV1(newValueIri = newValueIri, value = updateValueV1),
                                     valueIndexes = propertyAcc.valueIndexes :+ valueToCreate.valueIndex
                                 )
                         }
 
-                        propertyIri -> sparqlGenerationResultForProperty
+                        (propertyIri, sparqlGenerationResultForProperty)
                 }
 
                 // Concatenate all the generated SPARQL into one string for the WHERE clause and one string for the INSERT clause, sorting
                 // the values by their indexes.
 
                 resultsForAllProperties: Iterable[SparqlGenerationResultForProperty] = sparqlGenerationResults.values
-                allWhereSparql: String = resultsForAllProperties.flatMap(result => result.whereSparql.zip(result.valueIndexes)).toSeq.sortBy(_._2).map(_._1).mkString("\n\n")
 
                 // The SPARQL for the INSERT clause also contains the SPARQL that was generated to insert standoff links.
                 allInsertSparql: String = resultsForAllProperties.flatMap(result => result.insertSparql.zip(result.valueIndexes)).toSeq.sortBy(_._2).map(_._1).mkString("\n\n") + standoffLinkInsertSparql
@@ -568,7 +536,6 @@ class ValuesResponderV1 extends Responder {
                 }
 
             } yield GenerateSparqlToCreateMultipleValuesResponseV1(
-                whereSparql = allWhereSparql,
                 insertSparql = allInsertSparql,
                 unverifiedValues = allUnverifiedValues
             )
@@ -1031,6 +998,9 @@ class ValuesResponderV1 extends Responder {
                     case None => throw NotFoundException(s"Project '${findResourceWithValueResult.projectIri}' not found.")
                 }
 
+                // Make a timestamp to indicate when the value was updated.
+                currentTime: String = Instant.now.toString
+
                 // Generate a SPARQL update.
                 sparqlUpdate = queries.sparql.v1.txt.changeComment(
                     dataNamedGraph = projectInfo.dataNamedGraph,
@@ -1039,7 +1009,8 @@ class ValuesResponderV1 extends Responder {
                     propertyIri = findResourceWithValueResult.propertyIri,
                     currentValueIri = changeCommentRequest.valueIri,
                     newValueIri = newValueIri,
-                    maybeComment = changeCommentRequest.comment
+                    maybeComment = changeCommentRequest.comment,
+                    currentTime = currentTime
                 ).toString()
 
                 // Do the update.
@@ -1105,6 +1076,9 @@ class ValuesResponderV1 extends Responder {
                 throw ForbiddenException(s"User $userIri does not have permission to delete value ${deleteValueRequest.valueIri}")
             }
 
+            // Make a timestamp to indicate when the value was marked as deleted.
+            currentTime: String = Instant.now.toString
+
             // The way we delete the value depends on whether it's a link value or an ordinary value.
 
             (sparqlUpdate, deletedValueIri) <- currentValueQueryResult.value match {
@@ -1148,7 +1122,8 @@ class ValuesResponderV1 extends Responder {
                             triplestore = settings.triplestoreType,
                             linkSourceIri = findResourceWithValueResult.resourceIri,
                             linkUpdate = sparqlTemplateLinkUpdate,
-                            maybeComment = deleteValueRequest.deleteComment
+                            maybeComment = deleteValueRequest.deleteComment,
+                            currentTime = currentTime
                         ).toString()
                     } yield (sparqlUpdate, sparqlTemplateLinkUpdate.newLinkValueIri)
 
@@ -1199,7 +1174,8 @@ class ValuesResponderV1 extends Responder {
                             propertyIri = findResourceWithValueResult.propertyIri,
                             valueIri = deleteValueRequest.valueIri,
                             maybeDeleteComment = deleteValueRequest.deleteComment,
-                            linkUpdates = linkUpdates
+                            linkUpdates = linkUpdates,
+                            currentTime = currentTime
                         ).toString()
                     } yield (sparqlUpdate, deleteValueRequest.valueIri)
             }
@@ -2019,14 +1995,16 @@ class ValuesResponderV1 extends Responder {
                 userProfile = userProfile
             )
 
+            currentTime: String = Instant.now.toString
+
             // Generate a SPARQL update string.
             //resourceIndex = 0 because this method isn't used when creating multiple resources
             sparqlUpdate = queries.sparql.v1.txt.createLink(
-                resourceIndex = 0,
                 dataNamedGraph = dataNamedGraph,
                 triplestore = settings.triplestoreType,
                 resourceIri = resourceIri,
                 linkUpdate = sparqlTemplateLinkUpdate,
+                currentTime = currentTime,
                 maybeComment = comment
             ).toString()
 
@@ -2067,6 +2045,7 @@ class ValuesResponderV1 extends Responder {
                                                  userProfile: UserProfileV1): Future[UnverifiedValueV1] = {
         // Generate an IRI for the new value.
         val newValueIri = knoraIdUtil.makeRandomValueIri(resourceIri)
+        val currentTime: String = Instant.now.toString
 
         for {
         // If we're creating a text value, update direct links and LinkValues for any resource references in standoff.
@@ -2099,7 +2078,6 @@ class ValuesResponderV1 extends Responder {
             sparqlUpdate = queries.sparql.v1.txt.createValue(
                 dataNamedGraph = dataNamedGraph,
                 triplestore = settings.triplestoreType,
-                resourceIndex = 0,
                 resourceIri = resourceIri,
                 propertyIri = propertyIri,
                 newValueIri = newValueIri,
@@ -2108,7 +2086,8 @@ class ValuesResponderV1 extends Responder {
                 linkUpdates = standoffLinkUpdates,
                 maybeComment = comment,
                 valueCreator = valueCreator,
-                valuePermissions = valuePermissions
+                valuePermissions = valuePermissions,
+                currentTime = currentTime
             ).toString()
 
             /*
@@ -2184,6 +2163,9 @@ class ValuesResponderV1 extends Responder {
                 case None => throw NotFoundException(s"Project '$projectIri' not found.")
             }
 
+            // Make a timestamp to indicate when the link value was updated.
+            currentTime: String = Instant.now.toString
+
             // Generate a SPARQL update string.
             sparqlUpdate = queries.sparql.v1.txt.changeLink(
                 dataNamedGraph = projectInfo.dataNamedGraph,
@@ -2191,7 +2173,8 @@ class ValuesResponderV1 extends Responder {
                 linkSourceIri = resourceIri,
                 linkUpdateForCurrentLink = sparqlTemplateLinkUpdateForCurrentLink,
                 linkUpdateForNewLink = sparqlTemplateLinkUpdateForNewLink,
-                maybeComment = comment
+                maybeComment = comment,
+                currentTime = currentTime
             ).toString()
 
             /*
@@ -2325,6 +2308,9 @@ class ValuesResponderV1 extends Responder {
                 case None => throw NotFoundException(s"Project '$projectIri' not found.")
             }
 
+            // Make a timestamp to indicate when the value was updated.
+            currentTime: String = Instant.now.toString
+
             // Generate a SPARQL update.
             sparqlUpdate = queries.sparql.v1.txt.addValueVersion(
                 dataNamedGraph = projectInfo.dataNamedGraph,
@@ -2338,7 +2324,8 @@ class ValuesResponderV1 extends Responder {
                 valueCreator = valueCreator,
                 valuePermissions = valuePermissions,
                 maybeComment = comment,
-                linkUpdates = standoffLinkUpdates
+                linkUpdates = standoffLinkUpdates,
+                currentTime = currentTime
             ).toString()
 
             /*

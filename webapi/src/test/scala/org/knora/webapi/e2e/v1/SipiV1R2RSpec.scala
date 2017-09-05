@@ -70,7 +70,7 @@ class SipiV1R2RSpec extends R2RSpec {
 
 
 
-    implicit def default(implicit system: ActorSystem) = RouteTestTimeout(new DurationInt(15).second)
+    implicit def default(implicit system: ActorSystem) = RouteTestTimeout(new DurationInt(30).second)
 
     private val rootEmail = SharedAdminTestData.rootUser.userData.email.get
     private val incunabulaProjectAdminEmail = SharedAdminTestData.incunabulaProjectAdminUser.userData.email.get
@@ -83,7 +83,7 @@ class SipiV1R2RSpec extends R2RSpec {
 
     "Load test data" in {
         Await.result(storeManager ? ResetTriplestoreContent(rdfDataObjects), 300.seconds)
-        Await.result(responderManager ? LoadOntologiesRequest(SharedAdminTestData.rootUser), 10.seconds)
+        Await.result(responderManager ? LoadOntologiesRequest(SharedAdminTestData.rootUser), 30.seconds)
     }
 
     object RequestParams {

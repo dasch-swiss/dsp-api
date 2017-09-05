@@ -63,8 +63,8 @@ class StoreRouteV1E2ESpec extends E2ESpec(StoreRouteV1E2ESpec.config) with Tripl
               * curl -H "Content-Type: application/json" -X POST -d '[{"path":"../knora-ontologies/knora-base.ttl","name":"http://www.knora.org/ontology/knora-base"}]' http://localhost:3333/v1/store/ResetTriplestoreContent
               */
 
-			StartupFlags.allowResetTriplestoreContentOperationOverHTTP send true
-			log.debug(s"StartupFlags.allowResetTriplestoreContentOperationOverHTTP = ${StartupFlags.allowResetTriplestoreContentOperationOverHTTP.get}")
+			StartupFlags.allowReloadOverHTTP send true
+			log.debug(s"StartupFlags.allowReloadOverHTTP = ${StartupFlags.allowReloadOverHTTP.get}")
 
             val request = Post(baseApiUrl + "/v1/store/ResetTriplestoreContent", HttpEntity(ContentTypes.`application/json`, rdfDataObjects.toJson.compactPrint))
             val response = singleAwaitingRequest(request, 300.seconds)
@@ -74,7 +74,7 @@ class StoreRouteV1E2ESpec extends E2ESpec(StoreRouteV1E2ESpec.config) with Tripl
 
 
         "fail with resetting if startup flag is not set" in {
-            StartupFlags.allowResetTriplestoreContentOperationOverHTTP send false
+            StartupFlags.allowReloadOverHTTP send false
             //log.debug("==>> before")
             val request = Post(baseApiUrl + "/v1/store/ResetTriplestoreContent", HttpEntity(ContentTypes.`application/json`, rdfDataObjects.toJson.compactPrint))
             val response = singleAwaitingRequest(request, 300.seconds)

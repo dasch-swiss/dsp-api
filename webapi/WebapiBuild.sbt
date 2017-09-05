@@ -14,7 +14,7 @@ lazy val webapi = (project in file(".")).
             FusekiIntegrationTest,
             GraphDBTest,
             GraphDBFreeTest,
-            SesameTest,
+            GraphDBFreeIntegrationTest,
             EmbeddedJenaTDBTest,
             IntegrationTest
         ).
@@ -47,10 +47,10 @@ lazy val webapi = (project in file(".")).
                 testOptions += Tests.Argument("-oDF") // show full stack traces and test case durations
             )
         ): _*).
-        settings(inConfig(SesameTest)(
+        settings(inConfig(GraphDBFreeIntegrationTest)(
             Defaults.testTasks ++ Seq(
                 fork := true,
-                javaOptions ++= javaSesameTestOptions,
+                javaOptions ++= javaGraphDBFreeIntegrationTestOptions,
                 testOptions += Tests.Argument("-oDF") // show full stack traces and test case durations
             )
         ): _*).
@@ -164,10 +164,10 @@ lazy val webApiLibs = Seq(
     "org.xmlunit" % "xmlunit-core" % "2.1.1",
     "io.igl" %% "jwt" % "1.2.2",
     // testing
-    "com.typesafe.akka" %% "akka-testkit" % akkaVersion % "test, fuseki, graphdb, tdb, it, fuseki-it",
-    "com.typesafe.akka" %% "akka-http-testkit" % akkaHttpVersion % "test, fuseki, graphdb, tdb, it, fuseki-it",
-    "com.typesafe.akka" %% "akka-stream-testkit" % akkaVersion % "test, fuseki, graphdb, tdb, it, fuseki-it",
-    "org.scalatest" %% "scalatest" % "3.0.0" % "test, fuseki, graphdb, tdb, it, fuseki-it",
+    "com.typesafe.akka" %% "akka-testkit" % akkaVersion % "test, fuseki, graphdb, tdb, it, fuseki-it, graphdb-free-it",
+    "com.typesafe.akka" %% "akka-http-testkit" % akkaHttpVersion % "test, fuseki, graphdb, tdb, it, fuseki-it, graphdb-free-it",
+    "com.typesafe.akka" %% "akka-stream-testkit" % akkaVersion % "test, fuseki, graphdb, tdb, it, fuseki-it, graphdb-free-it",
+    "org.scalatest" %% "scalatest" % "3.0.0" % "test, fuseki, graphdb, tdb, it, fuseki-it, graphdb-free-it",
     "org.eclipse.rdf4j" % "rdf4j-rio-turtle" % "2.2.1",
     "org.eclipse.rdf4j" % "rdf4j-queryparser-sparql" % "2.2.1",
     "org.rogach" %% "scallop" % "2.0.5",
@@ -216,9 +216,9 @@ lazy val javaGraphDBFreeTestOptions = Seq(
     "-Dconfig.resource=graphdb-free.conf"
 ) ++ javaTestOptions
 
-lazy val SesameTest = config("sesame") extend(Test)
-lazy val javaSesameTestOptions = Seq(
-    "-Dconfig.resource=sesame.conf"
+lazy val GraphDBFreeIntegrationTest = config("graphdb-free-it") extend(IntegrationTest)
+lazy val javaGraphDBFreeIntegrationTestOptions = Seq(
+    "-Dconfig.resource=graphdb-free.conf"
 ) ++ javaTestOptions
 
 lazy val EmbeddedJenaTDBTest = config("tdb") extend(Test)

@@ -57,7 +57,7 @@ class ValuesV1R2RSpec extends R2RSpec {
 
     implicit val timeout: Timeout = settings.defaultRestoreTimeout
 
-    implicit def default(implicit system: ActorSystem) = RouteTestTimeout(new DurationInt(15).second)
+    implicit def default(implicit system: ActorSystem) = RouteTestTimeout(new DurationInt(30).second)
 
     private val integerValueIri = new MutableTestIri
     private val textValueIri = new MutableTestIri
@@ -77,7 +77,7 @@ class ValuesV1R2RSpec extends R2RSpec {
 
     "Load test data" in {
         Await.result(storeManager ? ResetTriplestoreContent(rdfDataObjects), 300.seconds)
-        Await.result(responderManager ? LoadOntologiesRequest(incunabulaUser), 10.seconds)
+        Await.result(responderManager ? LoadOntologiesRequest(incunabulaUser), 30.seconds)
     }
 
     "The Values Endpoint" should {

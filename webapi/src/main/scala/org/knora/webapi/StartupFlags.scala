@@ -29,7 +29,7 @@ object StartupFlags {
     /**
       * Startup Flag Value: Reset Triplestore Content Operation Over HTTP
       */
-    val allowResetTriplestoreContentOperationOverHTTP = Agent(false)
+    val allowReloadOverHTTP = Agent(false)
 
     /**
       * Startup Flag Value: Load Demo Data

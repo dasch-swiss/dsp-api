@@ -43,6 +43,26 @@ export module valueResponseFormats {
          */
         value: basicMessageComponents.knoraValue;
 
+        /**
+         * Comment on the value.
+         */
+        comment:string | null;
+
+        /**
+         * The name of the user who created the value.
+         */
+        valuecreatorname: string;
+
+        /**
+         * The date and time when the value was created.
+         */
+        valuecreationdate: string;
+
+        /**
+         * The email address of the user who created the value.
+         */
+        valuecreator: string;
+
     }
 
     /**
@@ -133,6 +153,26 @@ export module valueResponseFormats {
          * Description of the link
          */
         value: linkValue
+
+        /**
+         * The name of the user who created the link.
+         */
+        valuecreatorname: string;
+
+        /**
+         * The date and time when the link was created.
+         */
+        valuecreationdate: string;
+
+        /**
+         * The email address of the user who created the link.
+         */
+        valuecreator: string;
+
+        /**
+         * Comment on the link.
+         */
+        comment:string | null;
 
     }
 

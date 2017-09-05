@@ -73,7 +73,7 @@ class StandoffV1R2RSpec extends R2RSpec {
 
     implicit private val timeout: Timeout = settings.defaultRestoreTimeout
 
-    implicit def default(implicit system: ActorSystem) = RouteTestTimeout(new DurationInt(15).second)
+    implicit def default(implicit system: ActorSystem) = RouteTestTimeout(new DurationInt(30).second)
 
     implicit val ec = system.dispatcher
 
@@ -86,7 +86,7 @@ class StandoffV1R2RSpec extends R2RSpec {
 
     "Load test data" in {
         Await.result(storeManager ? ResetTriplestoreContent(rdfDataObjects), 360.seconds)
-        Await.result(responderManager ? LoadOntologiesRequest(SharedAdminTestData.rootUser), 10.seconds)
+        Await.result(responderManager ? LoadOntologiesRequest(SharedAdminTestData.rootUser), 30.seconds)
     }
 
     private val firstTextValueIri = new MutableTestIri

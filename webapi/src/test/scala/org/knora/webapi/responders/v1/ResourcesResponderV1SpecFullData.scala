@@ -280,7 +280,9 @@ object ResourcesResponderV1SpecFullData {
                 values = Vector(DateValueV1(
                     calendar = KnoraCalendarV1.JULIAN,
                     dateval2 = "1492",
-                    dateval1 = "1492"
+                    dateval1 = "1492",
+                    era1="CE",
+                    era2="CE"
                 )),
                 occurrence = Some("0-1"),
                 attributes = "size=16;maxlength=32",
