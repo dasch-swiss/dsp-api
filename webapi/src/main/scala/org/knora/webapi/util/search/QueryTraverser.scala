@@ -43,6 +43,20 @@ trait WhereTransformer {
 }
 
 /**
+  * A trait for classes that transform SELECT queries into other SELECT queries.
+  */
+trait SelectToSelectTransformer extends WhereTransformer {
+
+    /**
+      * Transforms a [[StatementPattern]] in a SELECT's WHERE clause into zero or more statement patterns.
+      *
+      * @param statementPattern the statement to be transformed.
+      * @return the result of the transformation.
+      */
+    def transformStatementInSelect(statementPattern: StatementPattern): Seq[StatementPattern]
+}
+
+/**
   * A trait for classes that transform CONSTRUCT queries into other CONSTRUCT queries.
   */
 trait ConstructToConstructTransformer extends WhereTransformer {
@@ -61,7 +75,7 @@ trait ConstructToConstructTransformer extends WhereTransformer {
   * as any additional statement patterns that should be added to the WHERE clause to support the ORDER BY.
   *
   * @param statementPatterns any additional WHERE clause statements required by the ORDER BY.
-  * @param orderBy the ORDER BY criteria.
+  * @param orderBy           the ORDER BY criteria.
   */
 case class TransformedOrderBy(statementPatterns: Seq[StatementPattern] = Vector.empty[StatementPattern], orderBy: Seq[OrderCriterion] = Vector.empty[OrderCriterion])
 
@@ -79,7 +93,7 @@ trait ConstructToSelectTransformer extends WhereTransformer {
 
     /**
       * Returns the variables that should be included in the results of the SELECT query. This method will be called
-      * by [[ConstructTraverser]] after the whole input query has been traversed.
+      * by [[QueryTraverser]] after the whole input query has been traversed.
       *
       * @return the variables that should be returned by the SELECT.
       */
@@ -87,7 +101,7 @@ trait ConstructToSelectTransformer extends WhereTransformer {
 
     /**
       * Returns the criteria, if any, that should be used in the ORDER BY clause of the SELECT query. This method will be called
-      * by [[ConstructTraverser]] after the whole input query has been traversed.
+      * by [[QueryTraverser]] after the whole input query has been traversed.
       *
       * @param inputOrderBy the ORDER BY criteria in the input query.
       * @return the ORDER BY criteria, if any.
@@ -100,7 +114,7 @@ trait ConstructToSelectTransformer extends WhereTransformer {
   * Assists in the transformation of CONSTRUCT queries by traversing the query, delegating work to a [[ConstructToConstructTransformer]]
   * or [[ConstructToSelectTransformer]].
   */
-object ConstructTraverser {
+object QueryTraverser {
 
     private def transformWherePatterns(patterns: Seq[QueryPattern], whereTransformer: WhereTransformer): Seq[QueryPattern] = {
         patterns.flatMap {
@@ -157,6 +171,17 @@ object ConstructTraverser {
             variables = transformer.getSelectVariables,
             whereClause = WhereClause(patterns = transformedWherePatterns ++ transformedOrderBy.statementPatterns),
             orderBy = transformedOrderBy.orderBy
+        )
+    }
+
+    def transformSelectToSelect(inputQuery: SelectQuery, transformer: SelectToSelectTransformer): SelectQuery = {
+        inputQuery.copy(
+            whereClause = WhereClause(
+                patterns = transformWherePatterns(
+                    patterns = inputQuery.whereClause.patterns,
+                    whereTransformer = transformer
+                )
+            )
         )
     }
 
