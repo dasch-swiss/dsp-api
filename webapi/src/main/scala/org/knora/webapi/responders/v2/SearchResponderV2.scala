@@ -229,6 +229,42 @@ class SearchResponderV2 extends Responder {
             def createUniqueVariableFromStatement(baseStatement: StatementPattern, suffix: String): QueryVariable = {
                 QueryVariable(escapeEntityForVariable(baseStatement.subj) + "__" + escapeEntityForVariable(baseStatement.pred) + "__" + escapeEntityForVariable(baseStatement.obj) + "__" + suffix)
             }
+
+            /**
+              * Creates additional statements for a given [[Entity]] based on type information using `conversionFuncForNonPropertyType`
+              * for a non property type (e.g., a resource).
+              *
+              * @param entity               the entity to be taken into consideration (a statement's subject or object).
+              * @param typeInspection       type information.
+              * @param processedTypeInfo    the keys of type information that have already been looked at.
+              * @param conversionFuncForNonPropertyType       the function to use to create additional statements.
+              * @return a sequence of [[QueryPattern]] representing the additional statements.
+              */
+            def checkForNonPropertyTypeInfoForEntity(entity: Entity, typeInspection: TypeInspectionResult, processedTypeInfo: mutable.Set[TypeableEntity], conversionFuncForNonPropertyType: (NonPropertyTypeInfo, Entity) => Seq[QueryPattern]): Seq[QueryPattern] = {
+
+                val typeInfoKey = toTypeableEntityKey(entity)
+
+                if (typeInfoKey.nonEmpty && (typeInspection.typedEntities -- processedTypeInfo contains typeInfoKey.get)) {
+
+                    val nonPropTypeInfo: NonPropertyTypeInfo = typeInspection.typedEntities(typeInfoKey.get) match {
+                        case nonPropInfo: NonPropertyTypeInfo => nonPropInfo
+
+                        case _ => throw AssertionException(s"NonPropertyTypeInfo expected for ${typeInfoKey.get}")
+                    }
+
+                    // add TypeableEntity (keys of `typeInspection`) for subject in order to prevent duplicates
+                    processedTypeInfo += typeInfoKey.get
+
+                    conversionFuncForNonPropertyType(
+                        nonPropTypeInfo,
+                        entity
+                    )
+
+                } else {
+                    Seq.empty[QueryPattern]
+                }
+
+            }
         }
 
         /**
@@ -255,6 +291,13 @@ class SearchResponderV2 extends Responder {
                 OntologyConstants.KnoraBase.Date -> OntologyConstants.KnoraBase.ValueHasStartJDN
             )
 
+            /**
+              * Creates additional statements for a non property type (e.g., a resource).
+              *
+              * @param nonPropertyTypeInfo type information about non property type.
+              * @param inputEntity  the [[Entity]] to make the statements about.
+              * @return a sequence of [[QueryPattern]] representing the additional statements.
+              */
             def createAdditionalStatementsForNonPropertyType(nonPropertyTypeInfo: NonPropertyTypeInfo, inputEntity: Entity): Seq[QueryPattern] = {
 
                 val typeIriInternal = if (InputValidation.isKnoraApiEntityIri(nonPropertyTypeInfo.typeIri)) {
@@ -302,61 +345,14 @@ class SearchResponderV2 extends Responder {
                 // transform the originally given statement if necessary when processing the predicate
 
                 // create `TypeableEntity` (keys in `typeInspectionResult`) from the given statement's elements
-                val subjTypeInfoKey: Option[TypeableEntity] = toTypeableEntityKey(statementPattern.subj)
 
                 val predTypeInfoKey: Option[TypeableEntity] = toTypeableEntityKey(statementPattern.pred)
 
-                val objTypeInfoKey: Option[TypeableEntity] = toTypeableEntityKey(statementPattern.obj)
-
                 // check if there exists type information for the given statement's subject
-                val additionalStatementsForSubj: Seq[QueryPattern] = if (subjTypeInfoKey.nonEmpty && (typeInspectionResult.typedEntities -- processedTypeInformationKeysWhereClause contains subjTypeInfoKey.get)) {
-                    // process type information for the subject into additional statements
-
-                    // add TypeableEntity (keys of `typeInspectionResult`) for subject in order to prevent duplicates
-                    processedTypeInformationKeysWhereClause += subjTypeInfoKey.get
-
-                    val nonPropTypeInfo: NonPropertyTypeInfo = typeInspectionResult.typedEntities(subjTypeInfoKey.get) match {
-                        case nonPropInfo: NonPropertyTypeInfo => nonPropInfo
-
-                        case _ => throw AssertionException(s"NonPropertyTypeInfo expected for ${subjTypeInfoKey.get}")
-                    }
-
-                    val additionalStatements = createAdditionalStatementsForNonPropertyType(
-                        nonPropertyTypeInfo = nonPropTypeInfo,
-                        inputEntity = statementPattern.subj
-                    )
-
-                    additionalStatements
-
-
-                } else {
-                    Seq.empty[QueryPattern]
-                }
+                val additionalStatementsForSubj: Seq[QueryPattern] = checkForNonPropertyTypeInfoForEntity(statementPattern.subj, typeInspectionResult, processedTypeInformationKeysWhereClause, createAdditionalStatementsForNonPropertyType)
 
                 // check if there exists type information for the given statement's object
-                val additionalStatementsForObj: Seq[QueryPattern] = if (objTypeInfoKey.nonEmpty && (typeInspectionResult.typedEntities -- processedTypeInformationKeysWhereClause contains objTypeInfoKey.get)) {
-                    // process type information for the object into additional statements
-
-                    // add TypeableEntity (keys of `typeInspectionResult`) for object in order to prevent duplicates
-                    processedTypeInformationKeysWhereClause += objTypeInfoKey.get
-
-                    val nonPropTypeInfo: NonPropertyTypeInfo = typeInspectionResult.typedEntities(objTypeInfoKey.get) match {
-                        case nonPropInfo: NonPropertyTypeInfo => nonPropInfo
-
-                        case _ => throw AssertionException(s"NonPropertyTypeInfo expected for ${objTypeInfoKey.get}")
-                    }
-
-                    val additionalStatements = createAdditionalStatementsForNonPropertyType(
-                        nonPropertyTypeInfo = nonPropTypeInfo,
-                        inputEntity = statementPattern.obj
-                    )
-
-                    additionalStatements
-
-
-                } else {
-                    Seq.empty[QueryPattern]
-                }
+                val additionalStatementsForObj: Seq[QueryPattern] = checkForNonPropertyTypeInfoForEntity(statementPattern.obj, typeInspectionResult, processedTypeInformationKeysWhereClause, createAdditionalStatementsForNonPropertyType)
 
                 // Add additional statements based on the whole input statement, e.g. to deal with the value object or the link value, and transform the original statement.
                 val additionalStatementsForWholeStatement: Seq[QueryPattern] = if (predTypeInfoKey.nonEmpty && (typeInspectionResult.typedEntities contains predTypeInfoKey.get)) {
@@ -1438,20 +1434,29 @@ class SearchResponderV2 extends Responder {
             }
         }
 
+        /**
+          * Transform the the Knora explicit graph name to GraphDB explicit graph name.
+          *
+          * @param statement the given statement whose graph name has to be renamed.
+          * @return the statement with the renamed graph, if given.
+          */
+        def transformKnoraExplicitToGraphDBExplicit(statement: StatementPattern): Seq[StatementPattern] = {
+            val transformedPattern = statement.copy(
+                namedGraph = statement.namedGraph match {
+                    case Some(IriRef(OntologyConstants.NamedGraphs.KnoraExplicitNamedGraph)) => Some(IriRef(OntologyConstants.NamedGraphs.GraphDBExplicitNamedGraph))
+                    case Some(IriRef(_)) => throw AssertionException(s"Named graphs other than ${OntologyConstants.NamedGraphs.KnoraExplicitNamedGraph} cannot occur in non-triplestore-specific generated search query SPARQL")
+                    case None => None
+                }
+            )
+
+            Seq(transformedPattern)
+        }
 
         class GraphDBSelectToSelectTransformer extends SelectToSelectTransformer {
             def transformStatementInSelect(statementPattern: StatementPattern): Seq[StatementPattern] = Seq(statementPattern)
 
             def transformStatementInWhere(statementPattern: StatementPattern): Seq[StatementPattern] = {
-                val transformedPattern = statementPattern.copy(
-                    namedGraph = statementPattern.namedGraph match {
-                        case Some(IriRef(OntologyConstants.NamedGraphs.KnoraExplicitNamedGraph)) => Some(IriRef(OntologyConstants.NamedGraphs.GraphDBExplicitNamedGraph))
-                        case Some(IriRef(_)) => throw AssertionException(s"Named graphs other than ${OntologyConstants.NamedGraphs.KnoraExplicitNamedGraph} cannot occur in non-triplestore-specific generated search query SPARQL")
-                        case None => None
-                    }
-                )
-
-                Seq(transformedPattern)
+                transformKnoraExplicitToGraphDBExplicit(statementPattern)
             }
 
             def transformFilter(filterPattern: FilterPattern): Seq[QueryPattern] = Seq(filterPattern)
@@ -1462,15 +1467,8 @@ class SearchResponderV2 extends Responder {
             def transformStatementInSelect(statementPattern: StatementPattern): Seq[StatementPattern] = Seq(statementPattern)
 
             def transformStatementInWhere(statementPattern: StatementPattern): Seq[StatementPattern] = {
-                val transformedPattern = statementPattern.copy(
-                    namedGraph = statementPattern.namedGraph match {
-                        case Some(IriRef(OntologyConstants.NamedGraphs.KnoraExplicitNamedGraph)) => Some(IriRef(OntologyConstants.NamedGraphs.GraphDBExplicitNamedGraph))
-                        case Some(IriRef(_)) => throw AssertionException(s"Named graphs other than ${OntologyConstants.NamedGraphs.KnoraExplicitNamedGraph} cannot occur in non-triplestore-specific generated search query SPARQL")
-                        case None => None
-                    }
-                )
-
-                Seq(transformedPattern)
+                // TODO: if OntologyConstants.NamedGraphs.KnoraExplicitNamedGraph occurs, remove it and use property path syntax to emulate inference.
+                Seq(statementPattern)
             }
 
             def transformFilter(filterPattern: FilterPattern): Seq[QueryPattern] = Seq(filterPattern)
@@ -1484,15 +1482,7 @@ class SearchResponderV2 extends Responder {
             def transformStatementInConstruct(statementPattern: StatementPattern): Seq[StatementPattern] = Seq(statementPattern)
 
             def transformStatementInWhere(statementPattern: StatementPattern): Seq[StatementPattern] = {
-                val transformedPattern = statementPattern.copy(
-                    namedGraph = statementPattern.namedGraph match {
-                        case Some(IriRef(OntologyConstants.NamedGraphs.KnoraExplicitNamedGraph)) => Some(IriRef(OntologyConstants.NamedGraphs.GraphDBExplicitNamedGraph))
-                        case Some(IriRef(_)) => throw AssertionException(s"Named graphs other than ${OntologyConstants.NamedGraphs.KnoraExplicitNamedGraph} cannot occur in non-triplestore-specific generated search query SPARQL")
-                        case None => None
-                    }
-                )
-
-                Seq(transformedPattern)
+                transformKnoraExplicitToGraphDBExplicit(statementPattern)
             }
 
             def transformFilter(filterPattern: FilterPattern): Seq[QueryPattern] = Seq(filterPattern)
@@ -1560,7 +1550,7 @@ class SearchResponderV2 extends Responder {
                 transformer = triplestoreSpecificQueryPatternTransformerSelect
             )
 
-            // _ = println(triplestoreSpecificPrequery.toSparql)
+            _ = println(triplestoreSpecificPrequery.toSparql)
 
             triplestoreSpecificQueryPatternTransformerConstruct: ConstructToConstructTransformer = {
                 if (settings.triplestoreType.startsWith("graphdb")) {

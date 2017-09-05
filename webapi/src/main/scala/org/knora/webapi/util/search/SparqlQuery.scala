@@ -88,9 +88,9 @@ sealed trait QueryPattern extends SparqlGenerator
 /**
   * Represents a statement pattern in a query.
   *
-  * @param subj the subject of the statement.
-  * @param pred the predicate of the statement.
-  * @param obj  the object of the statement.
+  * @param subj       the subject of the statement.
+  * @param pred       the predicate of the statement.
+  * @param obj        the object of the statement.
   * @param namedGraph the named graph this statement should be searched in. Defaults to [[None]].
   */
 case class StatementPattern(subj: Entity, pred: Entity, obj: Entity, namedGraph: Option[IriRef] = None) extends QueryPattern {
@@ -285,7 +285,7 @@ case class WhereClause(patterns: Seq[QueryPattern]) extends SparqlGenerator {
   * Represents a criterion to order by.
   *
   * @param queryVariable the variable used for ordering.
-  * @param isAscending indicates if the order is ascending or descending.
+  * @param isAscending   indicates if the order is ascending or descending.
   */
 case class OrderCriterion(queryVariable: QueryVariable, isAscending: Boolean) extends SparqlGenerator {
     def toSparql: String = if (isAscending) {
@@ -300,7 +300,7 @@ case class OrderCriterion(queryVariable: QueryVariable, isAscending: Boolean) ex
   *
   * @param constructClause the CONSTRUCT clause.
   * @param whereClause     the WHERE clause.
-  * @param orderBy the variables that the results should be ordered by.
+  * @param orderBy         the variables that the results should be ordered by.
   */
 case class ConstructQuery(constructClause: ConstructClause, whereClause: WhereClause, orderBy: Seq[OrderCriterion] = Seq.empty[OrderCriterion]) extends SparqlGenerator {
     def toSparql: String = constructClause.toSparql + whereClause.toSparql
@@ -309,13 +309,20 @@ case class ConstructQuery(constructClause: ConstructClause, whereClause: WhereCl
 /**
   * Represents a SPARQL SELECT query.
   *
-  * @param variables the variables to be returned by the query.
-  * @param whereClause     the WHERE clause.
-  * @param orderBy the variables that the results should be ordered by.
+  * @param variables   the variables to be returned by the query.
+  * @param useDistinct indicates if DISTINCT should be used.
+  * @param whereClause the WHERE clause.
+  * @param orderBy     the variables that the results should be ordered by.
   */
-case class SelectQuery(variables: Seq[QueryVariable], whereClause: WhereClause, orderBy: Seq[OrderCriterion] = Seq.empty[OrderCriterion]) extends SparqlGenerator {
+case class SelectQuery(variables: Seq[QueryVariable], useDistinct: Boolean = true, whereClause: WhereClause, orderBy: Seq[OrderCriterion] = Seq.empty[OrderCriterion]) extends SparqlGenerator {
     def toSparql: String = {
-        val selectWhere = "SELECT " + variables.map(_.toSparql).mkString(" ") + "\n" + whereClause.toSparql + "\n"
+        val selectWhere = "SELECT " + {
+            if (useDistinct) {
+                "DISTINCT "
+            } else {
+                ""
+            }
+        } + variables.map(_.toSparql).mkString(" ") + "\n" + whereClause.toSparql + "\n"
 
         if (orderBy.nonEmpty) {
             selectWhere + "ORDER BY " + orderBy.map(_.toSparql).mkString(" ")
