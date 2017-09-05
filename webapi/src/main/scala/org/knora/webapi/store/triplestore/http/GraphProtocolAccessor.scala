@@ -31,7 +31,7 @@ import akka.stream.ActorMaterializer
 import org.knora.webapi.SettingsConstants._
 import org.knora.webapi.{BadRequestException, Settings, TriplestoreResponseException, TriplestoreUnsupportedFeatureException}
 
-import scala.concurrent.Await
+import scala.concurrent.{Await, ExecutionContextExecutor}
 import scala.concurrent.duration._
 
 
@@ -90,7 +90,7 @@ object GraphProtocolAccessor {
 
         val log = akka.event.Logging(_system, this.getClass)
         val settings = Settings(_system)
-        implicit val executionContext = _system.dispatcher
+        implicit val executionContext: ExecutionContextExecutor = _system.dispatcher
         val http = Http(_system)
 
         // Use HTTP basic authentication.
@@ -103,6 +103,7 @@ object GraphProtocolAccessor {
             case HTTP_GRAPH_DB_TS_TYPE | HTTP_GRAPH_DB_FREE_TS_TYPE => s"/repositories/${settings.triplestoreDatabaseName}/rdf-graphs/service"
             case HTTP_FUSEKI_TS_TYPE if !settings.fusekiTomcat => s"/${settings.triplestoreDatabaseName}/data"
             case HTTP_FUSEKI_TS_TYPE if settings.fusekiTomcat => s"/${settings.fusekiTomcatContext}/${settings.triplestoreDatabaseName}/data"
+            case HTTP_VIRTUOSO_TYPE => "/sparql-graph-crud-auth"
             case ts_type => throw TriplestoreUnsupportedFeatureException(s"GraphProtocolAccessor does not support: $ts_type")
         }
 

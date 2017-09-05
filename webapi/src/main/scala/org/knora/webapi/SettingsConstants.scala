@@ -31,5 +31,6 @@ object SettingsConstants {
     val EMBEDDED_GRAPH_DB_TS_TYPE = "embedded-jena-graphdb"
     val HTTP_GRAPH_DB_TS_TYPE = "graphdb"
     val HTTP_GRAPH_DB_FREE_TS_TYPE = "graphdb-free"
+    val HTTP_VIRTUOSO_TYPE = "virtuoso"
     val HTTP_FUSEKI_TS_TYPE = "fuseki"
 }

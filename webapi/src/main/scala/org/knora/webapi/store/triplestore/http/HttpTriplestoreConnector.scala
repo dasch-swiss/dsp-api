@@ -74,6 +74,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
         case HTTP_GRAPH_DB_TS_TYPE | HTTP_GRAPH_DB_FREE_TS_TYPE => s"/repositories/${settings.triplestoreDatabaseName}"
         case HTTP_FUSEKI_TS_TYPE if !settings.fusekiTomcat => s"/${settings.triplestoreDatabaseName}/query"
         case HTTP_FUSEKI_TS_TYPE if settings.fusekiTomcat => s"/${settings.fusekiTomcatContext}/${settings.triplestoreDatabaseName}/query"
+        case HTTP_VIRTUOSO_TYPE => "/sparql/"
     }
 
     // The URI for SPARQL queries.
@@ -88,6 +89,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
         case HTTP_GRAPH_DB_TS_TYPE | HTTP_GRAPH_DB_FREE_TS_TYPE => s"/repositories/${settings.triplestoreDatabaseName}/statements"
         case HTTP_FUSEKI_TS_TYPE if !settings.fusekiTomcat => s"/${settings.triplestoreDatabaseName}/update"
         case HTTP_FUSEKI_TS_TYPE if settings.fusekiTomcat => s"/${settings.fusekiTomcatContext}/${settings.triplestoreDatabaseName}/update"
+        case HTTP_VIRTUOSO_TYPE => "/sparql/"
     }
 
     // The URI for SPARQL update operations.
