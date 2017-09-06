@@ -136,6 +136,7 @@ object OntologyConstants {
         val Region: IRI = KnoraBasePrefixExpansion + "Region"
         val IsRegionOf: IRI = KnoraBasePrefixExpansion + "isRegionOf"
 
+        val Value: IRI = KnoraBasePrefixExpansion + "Value"
         val ValueHas: IRI = KnoraBasePrefixExpansion + "valueHas"
         val ObjectCannotBeMarkedAsDeleted: IRI = KnoraBasePrefixExpansion + "objectCannotBeMarkedAsDeleted"
 

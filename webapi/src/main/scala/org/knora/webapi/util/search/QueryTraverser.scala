@@ -145,6 +145,8 @@ object QueryTraverser {
                 }
 
                 Seq(UnionPattern(blocks = transformedBlocks))
+
+            case valuesPattern: ValuesPattern => Seq(valuesPattern)
         }
     }
 

@@ -23,7 +23,7 @@ package org.knora.webapi.responders.v2
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
-import org.knora.webapi.messages.store.triplestoremessages.{SparqlConstructRequest, SparqlConstructResponse}
+import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.responder.valuemessages.JulianDayNumberValueV1
 import org.knora.webapi.messages.v2.responder._
@@ -606,6 +606,30 @@ class SearchResponderV2 extends Responder {
                 }
 
             }
+
+        }
+
+        /**
+          * Checks if a statement represents the knora-base:isMainResource statement and returns the query variable representing the main resource if so.
+          *
+          * @param statementPattern the statement pattern to be checked.
+          * @return query variable representing the main resource or None.
+          */
+        def isMainResourceVariable(statementPattern: StatementPattern): Option[QueryVariable] = {
+            statementPattern.pred match {
+                case IriRef(OntologyConstants.KnoraBase.IsMainResource) =>
+                    statementPattern.obj match {
+                        case XsdLiteral("true", OntologyConstants.Xsd.Boolean) =>
+                            statementPattern.subj match {
+                                case queryVariable: QueryVariable => Some(queryVariable)
+                                case _ => throw SparqlSearchException(s"The subject of ${OntologyConstants.KnoraBase.IsMainResource} must be a variable") // TODO: use the knora-api predicate in the error message?
+                            }
+
+                        case _ => None
+                    }
+
+                case _ => None
+            }
         }
 
         /**
@@ -729,20 +753,11 @@ class SearchResponderV2 extends Responder {
             override def handleStatementInConstruct(statementPattern: StatementPattern): Unit = {
                 // Just identify the main resource variable and put it in mainResourceVariable.
 
-                statementPattern.pred match {
-                    case IriRef(OntologyConstants.KnoraBase.IsMainResource) =>
-                        statementPattern.obj match {
-                            case XsdLiteral("true", OntologyConstants.Xsd.Boolean) =>
-                                statementPattern.subj match {
-                                    case queryVariable: QueryVariable => mainResourceVariable = Some(queryVariable)
-                                    case _ => throw SparqlSearchException(s"The subject of ${OntologyConstants.KnoraBase.IsMainResource} must be a variable") // TODO: use the knora-api predicate in the error message?
-                                }
-
-                            case _ => ()
-                        }
-
-                    case _ => ()
+                isMainResourceVariable(statementPattern) match {
+                    case Some(queryVariable: QueryVariable) => mainResourceVariable = Some(queryVariable)
+                    case None => ()
                 }
+
             }
 
             /**
@@ -868,14 +883,6 @@ class SearchResponderV2 extends Responder {
             // will be integrated in the Construct clause
             private val convertedStatementsCreatedForWholeStatements = mutable.Map.empty[StatementPattern, Seq[StatementPattern]]
 
-
-            /**
-              * Create additional statements for the given non property type information.
-              *
-              * @param nonPropertyTypeInfo type information about the statement provided by the user.
-              * @param inputEntity         the entity to create additional statements for.
-              * @return a sequence of [[QueryPattern]] representing additional statements created from the given type information.
-              */
             def createAdditionalStatementsForNonPropertyType(nonPropertyTypeInfo: NonPropertyTypeInfo, inputEntity: Entity): Seq[QueryPattern] = {
 
                 val typeIriInternal = if (InputValidation.isKnoraApiEntityIri(nonPropertyTypeInfo.typeIri)) {
@@ -889,7 +896,7 @@ class SearchResponderV2 extends Responder {
                     // inputEntity is either source or target of a linking property
                     // create additional statements in order to query permissions and other information for a resource
 
-                    Seq(
+                    val addedStatementsForResource = Seq(
                         StatementPattern.makeInferred(subj = inputEntity, pred = IriRef(OntologyConstants.Rdf.Type), obj = IriRef(OntologyConstants.KnoraBase.Resource)),
                         StatementPattern.makeExplicit(subj = inputEntity, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean)),
                         StatementPattern.makeExplicit(subj = inputEntity, pred = IriRef(OntologyConstants.Rdfs.Label), obj = createUniqueVariableNameFromEntityAndProperty(inputEntity, OntologyConstants.Rdfs.Label)),
@@ -898,47 +905,50 @@ class SearchResponderV2 extends Responder {
                         StatementPattern.makeExplicit(subj = inputEntity, pred = IriRef(OntologyConstants.KnoraBase.HasPermissions), obj = createUniqueVariableNameFromEntityAndProperty(inputEntity, OntologyConstants.KnoraBase.HasPermissions)),
                         StatementPattern.makeExplicit(subj = inputEntity, pred = IriRef(OntologyConstants.KnoraBase.AttachedToProject), obj = createUniqueVariableNameFromEntityAndProperty(inputEntity, OntologyConstants.KnoraBase.AttachedToProject))
                     )
+
+                    // TODO: only query a resource's values if properties are requested for this resource because this makes the query slow
+
+                    // TODO: only do it if subj is a query var (workaround!!!!!!!!)
+                    /*inputEntity match {
+                       case queryVar: QueryVariable =>*/
+                    val valueObjectVar = createUniqueVariableNameFromEntityAndProperty(inputEntity, OntologyConstants.KnoraBase.Value)
+                    val valuePropVar = createUniqueVariableNameFromEntityAndProperty(inputEntity, OntologyConstants.KnoraBase.HasValue)
+                    val valueObjectType = createUniqueVariableNameFromEntityAndProperty(valueObjectVar, OntologyConstants.Rdf.Type)
+                    val valueObjectProp = createUniqueVariableNameFromEntityAndProperty(valueObjectVar, OntologyConstants.KnoraBase.HasValue)
+                    val valueObjectValue = createUniqueVariableNameFromEntityAndProperty(valueObjectVar, OntologyConstants.KnoraBase.Value)
+
+                    val addedStatementsForValues = Seq(StatementPattern.makeInferred(subj = inputEntity, pred = IriRef(OntologyConstants.KnoraBase.HasValue), obj = valueObjectVar),
+                        StatementPattern.makeExplicit(subj = inputEntity, pred = valuePropVar, obj = valueObjectVar),
+                        StatementPattern.makeExplicit(subj = valueObjectVar, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean)),
+                        StatementPattern.makeExplicit(subj = valueObjectVar, pred = IriRef(OntologyConstants.Rdf.Type), obj = valueObjectType),
+                        StatementPattern.makeExplicit(subj = valueObjectVar, pred = valueObjectProp, obj = valueObjectValue))
+
+                    /*case _ =>
+                        Seq.empty[StatementPattern]
+                }*/
+
+
+                    // Add statements to `additionalStatementsCreatedForEntities` since they are needed in the query's CONSTRUCT clause
+                    val existingAdditionalStatementsCreated: Seq[StatementPattern] = additionalStatementsCreatedForEntities.get(inputEntity).toSeq.flatten
+
+                    additionalStatementsCreatedForEntities += inputEntity -> (existingAdditionalStatementsCreated ++ addedStatementsForResource ++ addedStatementsForValues)
+
+                    addedStatementsForResource ++ addedStatementsForValues
+
+
                 } else {
                     // inputEntity is target of a value property
                     // properties are handled by `convertStatementForPropertyType`, no processing needed here
 
                     Seq.empty[QueryPattern]
                 }
+
+
             }
 
-            /**
-              * Create the necessary statements to represent a value object, based on the statement pointing to the value from a resource via a property.
-              *
-              * @param statementPattern the statement pattern pointing to the value (its subject is a resource, its predicate a property, and its object a value)
-              * @param valueObject      the [[Entity]] representing the value object.
-              * @param valueType        the type of the value object.
-              * @return a sequence of [[StatementPattern]] representing the value object.
-              */
-            def createStatementPatternsForValueObject(statementPattern: StatementPattern, valueObject: Entity, valueType: IRI): Seq[StatementPattern] = {
-
-                // variable referring to the value object
-                val valueObjPropVar = createUniqueVariableFromStatement(statementPattern, "voProp") // A variable representing the property pointing to the value object
-                val valueObjPred = createUniqueVariableFromStatement(statementPattern, "voPred") // A variable representing the predicates of the value object
-                val valueObjObj = createUniqueVariableFromStatement(statementPattern, "voObj") // A variable representing the objects of the value object
-
-                Seq(
-                    StatementPattern.makeInferred(subj = statementPattern.subj, pred = IriRef(OntologyConstants.KnoraBase.HasValue), obj = valueObject), // include knora-base:hasValue pointing to the value object, because the construct clause needs it
-                    StatementPattern.makeInferred(subj = statementPattern.subj, pred = statementPattern.pred, obj = valueObject), // TODO: do not include the originally given property in the Construct clause because inference is used
-                    StatementPattern.makeExplicit(subj = statementPattern.subj, pred = valueObjPropVar, obj = valueObject), // the actually matching property
-                    StatementPattern.makeExplicit(subj = valueObject, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean)), // make sure the value object is not marked as deleted
-                    StatementPattern.makeExplicit(subj = valueObject, pred = IriRef(OntologyConstants.Rdf.Type), obj = IriRef(valueType)),
-                    StatementPattern.makeExplicit(subj = valueObject, pred = valueObjPred, obj = valueObjObj)
-                )
-            }
-
-            /**
-              * Create additional statements for the given property type information.
-              *
-              * @param propertyTypeInfo type information about the statement provided by the user.
-              * @param statementPattern statement provided by the user.
-              * @return a sequence of [[QueryPattern]] representing additional statements created from the given type information.
-              */
             def convertStatementForPropertyType(propertyTypeInfo: PropertyTypeInfo, statementPattern: StatementPattern): Seq[QueryPattern] = {
+
+                // Add statements to `convertedStatementsCreatedForWholeStatements` if they are needed in the query's CONSTRUCT clause
 
                 // decide whether to keep the originally given statement or not
                 // if pred is a valueProp and the simple api is used, do not return the original statement
@@ -954,358 +964,44 @@ class SearchResponderV2 extends Responder {
                 objectIri match {
                     case OntologyConstants.KnoraBase.Resource => {
 
-                        // the given statement pattern's object is of type resource
-                        // this means that the predicate of the statement pattern is a linking property
-                        // create statements in order to query the link value describing the link in question
-
-                        // variable referring to the link's value object (reification)
-                        val linkValueVar = createUniqueVariableFromStatement(statementPattern, "linkObj") // A variable representing the reification
-                        val linkPropVar = createUniqueVariableFromStatement(statementPattern, "linkProp") // A variable representing the explicit property that actually points to the target resource
-                        val linkValuePropVar = createUniqueVariableFromStatement(statementPattern, "linkValueProp") // A variable representing the explicit property that actually points to the reification
-                        val linkValuePredVar = createUniqueVariableFromStatement(statementPattern, "linkValuePred") // A variable representing a predicate of the reification
-                        val linkValueObjVar = createUniqueVariableFromStatement(statementPattern, "linkValueObj") // A variable representing a predicate of the reification
-
-                        // make sure that the statement's object is an Iri
+                        // make sure that the object is either an Iri or a variable (cannot be a literal)
                         statementPattern.obj match {
                             case iriRef: IriRef => ()
-                            case other => throw SparqlSearchException(s"Object of a linking statement must be an Iri, but $other given.")
+                            case queryVar: QueryVariable => ()
+                            case other => throw SparqlSearchException(s"Object of a linking statement must be an Iri or a QueryVariable, but $other given.")
                         }
 
-                        // TODO: make use of createStatementPatternsForValueObject if possible
-                        Seq(statementPattern, // keep the original statement pointing from the source to the target resource, using inference
-                            StatementPattern.makeExplicit(subj = statementPattern.subj, pred = linkPropVar, obj = statementPattern.obj), // find out what the actual link property is
-                            StatementPattern.makeInferred(subj = statementPattern.subj, pred = IriRef(OntologyConstants.KnoraBase.HasValue), obj = linkValueVar), // include knora-base:hasValue pointing to the link value, because the construct clause needs it
-                            StatementPattern.makeExplicit(subj = statementPattern.subj, pred = linkValuePropVar, obj = linkValueVar), // find out what the actual link value property is
-                            StatementPattern.makeExplicit(subj = linkValueVar, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean)), // ensure the link value isn't deleted
-                            StatementPattern.makeExplicit(subj = linkValueVar, pred = IriRef(OntologyConstants.Rdf.Type), obj = IriRef(OntologyConstants.KnoraBase.LinkValue)), // it's a link value
-                            StatementPattern.makeExplicit(subj = linkValueVar, pred = IriRef(OntologyConstants.Rdf.Subject), obj = statementPattern.subj), // the rdf:subject of the link value must be the source resource
-                            StatementPattern.makeExplicit(subj = linkValueVar, pred = IriRef(OntologyConstants.Rdf.Predicate), obj = linkPropVar), // the rdf:predicate of the link value must be the link property
-                            StatementPattern.makeExplicit(subj = linkValueVar, pred = IriRef(OntologyConstants.Rdf.Object), obj = statementPattern.obj), // the rdf:object of the link value must be the target resource
-                            StatementPattern.makeExplicit(subj = linkValueVar, pred = linkValuePredVar, obj = linkValueObjVar) // get any other statements about the link value
-                        )
+                        val existingConvertedStatements: Seq[StatementPattern] = convertedStatementsCreatedForWholeStatements.get(statementPattern).toSeq.flatten
+
+                        // include the original statement relating the subject to the target in the query's CONSTRUCT clause
+                        convertedStatementsCreatedForWholeStatements += statementPattern -> (existingConvertedStatements :+ statementPattern)
+
+                        // linking property: just include the original statement relating the subject to the target of the link
+                        Seq(statementPattern)
                     }
 
-                    case OntologyConstants.Xsd.Integer => {
+                    case literalType: IRI => {
+                        // value property
 
-                        // the given statement pattern's object is of type xsd:integer
-                        // this means that the predicate of the statement pattern is a value property
-                        // the original statement is not included because it represents the value as a literal (in Knora, it is an object)
-
-                        // check if the statement pattern's object is a literal or a variable
+                        // make sure that the object is a query variable (literals are not supported yet)
                         statementPattern.obj match {
-
-                            // create statements in order to query the integer value object
-
-                            case integerLiteral: XsdLiteral =>
-
-                                // make sure the literal is of type integer
-                                if (integerLiteral.datatype != OntologyConstants.Xsd.Integer) {
-                                    throw SparqlSearchException(s"an integer literal was expected, but ${integerLiteral.datatype} given")
-                                }
-
-                                val valueObjVar = createUniqueVariableFromStatement(statementPattern, "voVar") // A variable representing the value object
-
-                                val valueObject = createStatementPatternsForValueObject(
-                                    statementPattern = statementPattern,
-                                    valueObject = valueObjVar,
-                                    valueType = OntologyConstants.KnoraBase.IntValue
-                                )
-
-                                // match the given literal value with the integer value object's `valueHasInteger`
-                                valueObject :+ StatementPattern.makeExplicit(subj = valueObjVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasInteger), obj = integerLiteral) // TODO: this is for the Where clause only (restriction)
-
-
-                            case integerVar: QueryVariable =>
-
-                                // just create the statements to query the integer value object, possibly a Filter statement exists to restrict the integer values
-                                createStatementPatternsForValueObject(
-                                    statementPattern,
-                                    integerVar, // user provided variable used to represent the value object
-                                    OntologyConstants.KnoraBase.IntValue
-                                )
-
-                            case other => throw SparqlSearchException(s"Not supported as an object of type integer: $other")
-
-                        }
-                    }
-
-                    case OntologyConstants.Xsd.String => {
-
-                        // the given statement pattern's object is of type xsd:string
-                        // this means that the predicate of the statement pattern is a value property
-                        // the original statement is not included because it represents the value as a literal (in Knora, it is an object)
-
-                        // check if the statement pattern's object is a literal or a variable
-                        statementPattern.obj match {
-
-                            // create statements in order to query the text value object
-
-                            case stringLiteral: XsdLiteral =>
-
-                                // make sure the literal is of type string
-                                if (stringLiteral.datatype != OntologyConstants.Xsd.String) {
-                                    throw SparqlSearchException(s"an string literal was expected, but ${stringLiteral.datatype} given")
-                                }
-
-                                val valueObjVar = createUniqueVariableFromStatement(statementPattern, "voVar") // A variable representing the value object
-
-                                val valueObject = createStatementPatternsForValueObject(
-                                    statementPattern = statementPattern,
-                                    valueObject = valueObjVar,
-                                    valueType = OntologyConstants.KnoraBase.TextValue
-                                )
-
-                                // match the given literal value with the integer value object's `valueHasString`
-                                valueObject :+ StatementPattern.makeExplicit(subj = valueObjVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasString), obj = stringLiteral) // TODO: this is for the Where clause only (restriction)
-
-
-                            case stringVar: QueryVariable =>
-
-                                // just create the statements to query the text value object, possibly a Filter statement exists to restrict the string values
-                                createStatementPatternsForValueObject(
-                                    statementPattern,
-                                    stringVar, // user provided variable used to represent the value object
-                                    OntologyConstants.KnoraBase.TextValue
-                                )
-
-                            case other => throw SparqlSearchException(s"Not supported as an object of type string: $other")
-
+                            case queryVar: QueryVariable => ()
+                            case other => throw SparqlSearchException(s"Object of a value property statement must be a QueryVariable, but $other given.")
                         }
 
+                        val existingConvertedStatements: Seq[StatementPattern] = convertedStatementsCreatedForWholeStatements.get(statementPattern).toSeq.flatten
+
+                        // do not include the original statement relating the subject to a value object in the query's CONSTRUCT clause
+                        convertedStatementsCreatedForWholeStatements += statementPattern -> (existingConvertedStatements ++ Seq.empty[StatementPattern])
+
+                        // check that value object is not marked as deleted
+                        val valueObjectIsNotDeleted = StatementPattern.makeExplicit(subj = statementPattern.obj, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean))
+
+                        // the query variable stands for a value object
+                        // if there is a filter statement, the literal of the value object has to be checked: e.g., valueHasInteger etc.
+                        // include the original statement relating the subject to a value object
+                        Seq(statementPattern, valueObjectIsNotDeleted)
                     }
-
-                    case OntologyConstants.Xsd.Decimal => {
-
-                        // the given statement pattern's object is of type xsd:decimal
-                        // this means that the predicate of the statement pattern is a value property
-                        // the original statement is not included because it represents the value as a literal (in Knora, it is an object)
-
-                        // check if the statement pattern's object is a literal or a variable
-                        statementPattern.obj match {
-
-                            // create statements in order to query the decimal value object
-
-                            case decimalLiteral: XsdLiteral =>
-
-                                // make sure the literal is of type decimal or integer
-                                if (decimalLiteral.datatype != OntologyConstants.Xsd.Decimal || decimalLiteral.datatype == OntologyConstants.Xsd.Integer) {
-                                    throw SparqlSearchException(s"an decimal or integer literal was expected, but ${decimalLiteral.datatype} given")
-                                }
-
-                                val valueObjVar = createUniqueVariableFromStatement(statementPattern, "voVar") // A variable representing the value object
-
-                                val valueObject = createStatementPatternsForValueObject(
-                                    statementPattern = statementPattern,
-                                    valueObject = valueObjVar,
-                                    valueType = OntologyConstants.KnoraBase.DecimalValue
-                                )
-
-                                // match the given literal value with the decimal value object's `valueHasDecimal`
-                                valueObject :+ StatementPattern.makeExplicit(subj = valueObjVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasDecimal), obj = decimalLiteral) // TODO: this is for the Where clause only (restriction)
-
-
-                            case decimalVar: QueryVariable =>
-
-                                // just create the statements to query the decimal value object, possibly a Filter statement exists to restrict the decimal values
-                                createStatementPatternsForValueObject(
-                                    statementPattern,
-                                    decimalVar, // user provided variable used to represent the value object
-                                    OntologyConstants.KnoraBase.DecimalValue
-                                )
-
-                            case other => throw SparqlSearchException(s"Not supported as an object of type string: $other")
-
-                        }
-
-                    }
-
-                    case OntologyConstants.Xsd.Boolean => {
-
-                        // the given statement pattern's object is of type xsd:boolean
-                        // this means that the predicate of the statement pattern is a value property
-                        // the original statement is not included because it represents the value as a literal (in Knora, it is an object)
-
-                        // check if the statement pattern's object is a literal or a variable
-                        statementPattern.obj match {
-
-                            // create statements in order to query the boolean value object
-
-                            case booleanLiteral: XsdLiteral =>
-
-                                // make sure the literal is of type boolean
-                                if (booleanLiteral.datatype != OntologyConstants.Xsd.Boolean) {
-                                    throw SparqlSearchException(s"an Boolean literal was expected, but ${booleanLiteral.datatype} given")
-                                }
-
-                                val valueObjVar = createUniqueVariableFromStatement(statementPattern, "voVar") // A variable representing the value object
-
-                                val valueObject = createStatementPatternsForValueObject(
-                                    statementPattern = statementPattern,
-                                    valueObject = valueObjVar,
-                                    valueType = OntologyConstants.KnoraBase.BooleanValue
-                                )
-
-                                // match the given literal value with the boolean value object's `valueHasBoolean`
-                                valueObject :+ StatementPattern.makeExplicit(subj = valueObjVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasBoolean), obj = booleanLiteral) // TODO: this is for the Where clause only (restriction)
-
-
-                            case booleanVar: QueryVariable =>
-
-                                // just create the statements to query the boolean value object, possibly a Filter statement exists to restrict the boolean value
-                                createStatementPatternsForValueObject(
-                                    statementPattern,
-                                    booleanVar, // user provided variable used to represent the value object
-                                    OntologyConstants.KnoraBase.BooleanValue
-                                )
-
-                            case other => throw SparqlSearchException(s"Not supported as an object of type string: $other")
-
-                        }
-
-                    }
-
-                    case OntologyConstants.KnoraBase.Date => {
-
-
-                        // the given statement pattern's object is of type knora-base:DateValue
-                        // this means that the predicate of the statement pattern is a value property
-                        // the original statement is not included because it represents the value as a literal (in Knora, it is an object)
-
-                        // check if the statement pattern's object is a literal or a variable
-                        statementPattern.obj match {
-
-                            case dateLiteral: XsdLiteral =>
-
-                                // make sure the literal representing a date is of type string
-                                if (dateLiteral.datatype != OntologyConstants.Xsd.String) {
-                                    throw SparqlSearchException(s"an string literal representing a date was expected, but ${dateLiteral.datatype} given")
-                                }
-
-                                val dateStr = InputValidation.toDate(dateLiteral.value, () => throw BadRequestException(s"${dateLiteral.value} is not a valid date string"))
-
-                                val date: JulianDayNumberValueV1 = DateUtilV1.createJDNValueV1FromDateString(dateStr)
-
-                                val valueObjVar = createUniqueVariableFromStatement(statementPattern, "voVar") // A variable representing the value object
-
-                                val valueObject = createStatementPatternsForValueObject(
-                                    statementPattern = statementPattern,
-                                    valueObject = valueObjVar,
-                                    valueType = OntologyConstants.KnoraBase.DateValue
-                                )
-
-                                val dateValueHasStartVar = createUniqueVariableFromStatement(statementPattern, "voDateValueStart")
-
-                                val dateValueHasEndVar = createUniqueVariableFromStatement(statementPattern, "voDateValueEnd")
-
-                                val dateValStartStatement = StatementPattern.makeExplicit(subj = valueObjVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasStartJDN), obj = dateValueHasStartVar) // TODO: this is for the Where clause only (restriction)
-
-                                val dateValEndStatement = StatementPattern.makeExplicit(subj = valueObjVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasEndJDN), obj = dateValueHasEndVar) // TODO: this is for the Where clause only (restriction)
-
-                                // any overlap in considered as equality
-                                val leftArgFilter = CompareExpression(XsdLiteral(date.dateval1.toString, OntologyConstants.Xsd.Integer), CompareExpressionOperator.LESS_THAN_OR_EQUAL_TO, dateValueHasEndVar)
-
-                                val rightArgFilter = CompareExpression(XsdLiteral(date.dateval2.toString, OntologyConstants.Xsd.Integer), CompareExpressionOperator.GREATER_THAN_OR_EQUAL_TO, dateValueHasStartVar)
-
-                                val filter = FilterPattern(AndExpression(leftArgFilter, rightArgFilter))
-
-                                valueObject ++ Seq(dateValStartStatement, dateValEndStatement, filter)
-
-
-                            case dateVar: QueryVariable =>
-
-                                // just create the statements to query the date value object, possibly a Filter statement exists to restrict the date values
-                                createStatementPatternsForValueObject(
-                                    statementPattern = statementPattern,
-                                    valueObject = dateVar,
-                                    valueType = OntologyConstants.KnoraBase.DateValue
-                                )
-
-                            case other => throw SparqlSearchException(s"Not supported as an object of type date: $other")
-                        }
-
-
-                    }
-
-                    case OntologyConstants.KnoraBase.Geom => {
-
-                        // the given statement pattern's object is of type knora-base:GeomValue
-                        // this means that the predicate of the statement pattern is a value property
-                        // the original statement is not included because it represents the value as a literal (in Knora, it is an object)
-
-                        // literals are not supported for geometry
-
-                        statementPattern.obj match {
-
-                            case geomVar: QueryVariable =>
-
-                                // just create the statements to query the date value object, possibly a Filter statement exists to restrict the date values
-                                createStatementPatternsForValueObject(
-                                    statementPattern = statementPattern,
-                                    valueObject = geomVar,
-                                    valueType = OntologyConstants.KnoraBase.GeomValue
-                                )
-
-                            case other => throw SparqlSearchException(s"Not supported as an object of type geom: $other (only variable allowed for geometry, no literal)")
-
-                        }
-
-
-                    }
-
-                    case OntologyConstants.KnoraBase.Color => {
-
-                        // the given statement pattern's object is of type knora-base:ColorValue
-                        // this means that the predicate of the statement pattern is a value property
-                        // the original statement is not included because it represents the value as a literal (in Knora, it is an object)
-
-                        // literals are not supported for color
-
-                        statementPattern.obj match {
-
-                            case colorVar: QueryVariable =>
-
-                                // just create the statements to query the date value object, possibly a Filter statement exists to restrict the color values
-                                createStatementPatternsForValueObject(
-                                    statementPattern = statementPattern,
-                                    valueObject = colorVar,
-                                    valueType = OntologyConstants.KnoraBase.ColorValue
-                                )
-
-                            case other => throw SparqlSearchException(s"Not supported as an object of type color: $other (only variable allowed for color, no literal)")
-
-                        }
-
-
-                    }
-
-                    case OntologyConstants.KnoraBase.StillImageFile => {
-
-                        // the given statement pattern's object is of type knora-base:StillImageFileValue
-                        // this means that the predicate of the statement pattern is a value property
-                        // the original statement is not included because it represents the value as a literal (in Knora, it is an object)
-
-                        // literals are not supported for StillImageFileValue
-
-                        statementPattern.obj match {
-
-                            case stillImageFileVar: QueryVariable =>
-
-                                // just create the statements to query the date value object, possibly a Filter statement exists to restrict the date values
-                                createStatementPatternsForValueObject(
-                                    statementPattern = statementPattern,
-                                    valueObject = stillImageFileVar,
-                                    valueType = OntologyConstants.KnoraBase.StillImageFileValue
-                                )
-
-                            case other => throw SparqlSearchException("Not supported as an object of type color: $other (only variable allowed for color, no literal)")
-
-                        }
-
-
-                    }
-
-                    case _ => throw NotImplementedException(s"property type $objectIri not implemented yet.")
-
                 }
 
             }
@@ -1321,113 +1017,17 @@ class SearchResponderV2 extends Responder {
                 // look at the statement's subject, predicate, and object and generate additional statements if needed based on the given type information.
                 // transform the originally given statement if necessary when processing the predicate
 
-                // create `TypeableEntity` (keys in `typeInspectionResult`) from the given statement's elements
-                val subjTypeInfoKey: Option[TypeableEntity] = toTypeableEntityKey(statementPattern.subj)
-
-                val predTypeInfoKey: Option[TypeableEntity] = toTypeableEntityKey(statementPattern.pred)
-
-                val objTypeInfoKey: Option[TypeableEntity] = toTypeableEntityKey(statementPattern.obj)
-
                 // check if there exists type information for the given statement's subject
-                val additionalStatementsForSubj: Seq[QueryPattern] = if (subjTypeInfoKey.nonEmpty && (typeInspectionResult.typedEntities -- processedTypeInformationKeysWhereClause contains subjTypeInfoKey.get)) {
-                    // process type information for the subject into additional statements
-
-                    // add TypeableEntity (keys of `typeInspectionResult`) for subject in order to prevent duplicates
-                    processedTypeInformationKeysWhereClause += subjTypeInfoKey.get
-
-                    val nonPropTypeInfo: NonPropertyTypeInfo = typeInspectionResult.typedEntities(subjTypeInfoKey.get) match {
-                        case nonPropInfo: NonPropertyTypeInfo => nonPropInfo
-
-                        case _ => throw AssertionException(s"NonPropertyTypeInfo expected for ${subjTypeInfoKey.get}")
-                    }
-
-                    val additionalStatements = createAdditionalStatementsForNonPropertyType(
-                        nonPropertyTypeInfo = nonPropTypeInfo,
-                        inputEntity = statementPattern.subj
-                    )
-
-                    val existingAdditionalStatementsCreated: Seq[StatementPattern] = additionalStatementsCreatedForEntities.get(statementPattern.subj).toSeq.flatten
-
-                    val newAdditionalStatementPatterns: Seq[StatementPattern] = additionalStatements.collect {
-                        // only include StatementPattern
-                        case statementP: StatementPattern => statementP
-                    }
-
-                    additionalStatementsCreatedForEntities += statementPattern.subj -> (existingAdditionalStatementsCreated ++ newAdditionalStatementPatterns)
-
-                    additionalStatements
-                } else {
-                    Seq.empty[QueryPattern]
-                }
+                val additionalStatementsForSubj: Seq[QueryPattern] = checkForNonPropertyTypeInfoForEntity(statementPattern.subj, typeInspectionResult, processedTypeInformationKeysWhereClause, createAdditionalStatementsForNonPropertyType)
 
                 // check if there exists type information for the given statement's object
-                val additionalStatementsForObj: Seq[QueryPattern] = if (objTypeInfoKey.nonEmpty && (typeInspectionResult.typedEntities -- processedTypeInformationKeysWhereClause contains objTypeInfoKey.get)) {
-                    // process type information for the object into additional statements
-
-                    // add TypeableEntity (keys of `typeInspectionResult`) for object in order to prevent duplicates
-                    processedTypeInformationKeysWhereClause += objTypeInfoKey.get
-
-                    val nonPropTypeInfo: NonPropertyTypeInfo = typeInspectionResult.typedEntities(objTypeInfoKey.get) match {
-                        case nonPropInfo: NonPropertyTypeInfo => nonPropInfo
-
-                        case _ => throw AssertionException(s"NonPropertyTypeInfo expected for ${objTypeInfoKey.get}")
-                    }
-
-                    val additionalStatements = createAdditionalStatementsForNonPropertyType(
-                        nonPropertyTypeInfo = nonPropTypeInfo,
-                        inputEntity = statementPattern.obj
-                    )
-
-                    val existingAdditionalStatementsCreated: Seq[StatementPattern] = additionalStatementsCreatedForEntities.get(statementPattern.obj).toSeq.flatten
-
-                    val newAdditionalStatementPatterns: Seq[StatementPattern] = additionalStatements.collect {
-                        // only include StatementPattern
-                        case statementP: StatementPattern => statementP
-                    }
-
-                    additionalStatementsCreatedForEntities += statementPattern.obj -> (existingAdditionalStatementsCreated ++ newAdditionalStatementPatterns)
-
-                    additionalStatements
-                } else {
-                    Seq.empty[QueryPattern]
-                }
+                val additionalStatementsForObj: Seq[QueryPattern] = checkForNonPropertyTypeInfoForEntity(statementPattern.obj, typeInspectionResult, processedTypeInformationKeysWhereClause, createAdditionalStatementsForNonPropertyType)
 
                 // Add additional statements based on the whole input statement, e.g. to deal with the value object or the link value, and transform the original statement.
-                val additionalStatementsForWholeStatement: Seq[QueryPattern] = if (predTypeInfoKey.nonEmpty && (typeInspectionResult.typedEntities contains predTypeInfoKey.get)) {
-                    // process type information for the predicate into additional statements
-
-                    val propTypeInfo = typeInspectionResult.typedEntities(predTypeInfoKey.get) match {
-                        case propInfo: PropertyTypeInfo => propInfo
-
-                        case _ => throw AssertionException(s"PropertyTypeInfo expected for ${predTypeInfoKey.get}")
-                    }
-
-                    val additionalStatements = convertStatementForPropertyType(
-                        propertyTypeInfo = propTypeInfo,
-                        statementPattern = statementPattern
-                    )
-
-                    val existingAdditionalStatementsCreated: Seq[StatementPattern] = convertedStatementsCreatedForWholeStatements.get(statementPattern).toSeq.flatten
-
-                    val newAdditionalStatementPatterns: Seq[StatementPattern] = additionalStatements.collect {
-                        // only include StatementPattern
-
-                        // TODO: filter out those statements mentioning the originally given predicate (property) with inference turned on
-                        // this is necessary to return the explicit property to the user
-                        // the originally given property will only be needed in the Where clause and get all subproperties too
-                        case statementP: StatementPattern /*if statementP.includeInConstructClause*/ => statementP
-                    }
-
-                    convertedStatementsCreatedForWholeStatements += statementPattern -> (existingAdditionalStatementsCreated ++ newAdditionalStatementPatterns)
-
-                    additionalStatements
-                } else {
-                    // no type information given and thus no further processing needed, just return the originally given statement (e.g., rdf:type)
-                    Seq(statementPattern)
-                }
-
+                val additionalStatementsForWholeStatement: Seq[QueryPattern] = checkForPropertyTypeInfoForStatement(statementPattern, typeInspectionResult, convertStatementForPropertyType)
 
                 additionalStatementsForSubj ++ additionalStatementsForWholeStatement ++ additionalStatementsForObj
+
             }
 
             def transformStatementInConstruct(statementPattern: StatementPattern): Seq[StatementPattern] = {
@@ -1577,18 +1177,6 @@ class SearchResponderV2 extends Responder {
                 transformer = new NonTriplestoreSpecificConstructToSelectTransformer(typeInspectionResult)
             )
 
-            // TODO: Run the prequery to get the IRIs of the current page of search results.
-
-
-            // TODO: include those IRIs in a FILTER in the CONSTRUCT clause.
-
-            // Convert the preprocessed query to a non-triplestore-specific query.
-
-            nonTriplestoreSpecificQuery: ConstructQuery = QueryTraverser.transformConstructToConstruct(
-                inputQuery = preprocessedQuery,
-                transformer = new NonTriplestoreSpecificConstructToConstructTransformer(typeInspectionResult)
-            )
-
             // Convert the non-triplestore-specific query to a triplestore-specific one.
             triplestoreSpecificQueryPatternTransformerSelect: SelectToSelectTransformer = {
                 if (settings.triplestoreType.startsWith("graphdb")) {
@@ -1600,12 +1188,41 @@ class SearchResponderV2 extends Responder {
                 }
             }
 
+            // Convert the preprocessed query to a non-triplestore-specific query.
             triplestoreSpecificPrequery = QueryTraverser.transformSelectToSelect(
                 inputQuery = nonTriplestoreSpecficPrequery,
                 transformer = triplestoreSpecificQueryPatternTransformerSelect
             )
 
-            _ = println(triplestoreSpecificPrequery.toSparql)
+            // _ = println(triplestoreSpecificPrequery.toSparql)
+
+            prequeryResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(triplestoreSpecificPrequery.toSparql)).mapTo[SparqlSelectResponse]
+
+            nonTriplestoreSpecificQuery: ConstructQuery = QueryTraverser.transformConstructToConstruct(
+                inputQuery = preprocessedQuery,
+                transformer = new NonTriplestoreSpecificConstructToConstructTransformer(typeInspectionResult)
+            )
+
+            // TODO: include those IRIs in a FILTER in the CONSTRUCT clause.
+            mainResourceVar: QueryVariable = nonTriplestoreSpecificQuery.constructClause.statements.collect {
+                case statement if isMainResourceVariable(statement).nonEmpty => isMainResourceVariable(statement).get
+            }.headOption.getOrElse(throw SparqlSearchException("Non main resource found in CONSTRUCT query"))
+
+            // a sequence of resource Iris that match the search criteria
+            matchingResourceIris: Seq[IRI] = prequeryResponse.results.bindings.map {
+                case resultRow: VariableResultsRow =>
+                    resultRow.rowMap(mainResourceVar.variableName)
+            }
+
+            valuesPattern: ValuesPattern = ValuesPattern(mainResourceVar, matchingResourceIris.map(iri => IriRef(iri)))
+
+
+            // TODO: take all available resource Iris
+            /*filterPattern: FilterPattern = filterExpressions.foldLeft(FilterPattern()) {
+
+            }*/
+
+            //_ = println(filterPattern)
 
             triplestoreSpecificQueryPatternTransformerConstruct: ConstructToConstructTransformer = {
                 if (settings.triplestoreType.startsWith("graphdb")) {
@@ -1618,7 +1235,7 @@ class SearchResponderV2 extends Responder {
             }
 
             triplestoreSpecificQuery = QueryTraverser.transformConstructToConstruct(
-                inputQuery = nonTriplestoreSpecificQuery,
+                inputQuery = nonTriplestoreSpecificQuery.copy(whereClause = nonTriplestoreSpecificQuery.whereClause.copy(patterns = valuesPattern +: nonTriplestoreSpecificQuery.whereClause.patterns)),
                 transformer = triplestoreSpecificQueryPatternTransformerConstruct
             )
 
@@ -1647,7 +1264,7 @@ class SearchResponderV2 extends Responder {
 
             triplestoreSpecificSparql: String = triplestoreSpecificQuery.toSparql
 
-            // _ = println(triplestoreSpecificQuery.toSparql)
+            _ = println(triplestoreSpecificQuery.toSparql)
 
             searchResponse: SparqlConstructResponse <- (storeManager ? SparqlConstructRequest(triplestoreSpecificSparql)).mapTo[SparqlConstructResponse]
 
