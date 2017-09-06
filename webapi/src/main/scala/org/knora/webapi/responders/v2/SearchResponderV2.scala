@@ -274,7 +274,7 @@ class SearchResponderV2 extends Responder {
               * @param conversionFuncForPropertyType the function to use for the conversion.
               * @return a sequence of [[QueryPattern]] representing the converted statement.
               */
-            def checkForPropertyTypeInfoForStatement(statementPattern: StatementPattern, typeInspection: TypeInspectionResult, conversionFuncForPropertyType: (PropertyTypeInfo, StatementPattern) => Seq[QueryPattern]) = {
+            def checkForPropertyTypeInfoForStatement(statementPattern: StatementPattern, typeInspection: TypeInspectionResult, conversionFuncForPropertyType: (PropertyTypeInfo, StatementPattern) => Seq[QueryPattern]): Seq[QueryPattern] = {
                 val predTypeInfoKey: Option[TypeableEntity] = toTypeableEntityKey(statementPattern.pred)
 
                 if (predTypeInfoKey.nonEmpty && (typeInspection.typedEntities contains predTypeInfoKey.get)) {
@@ -296,6 +296,16 @@ class SearchResponderV2 extends Responder {
                     Seq(statementPattern)
                 }
             }
+
+            // A Map of XSD types to the corresponding knora-base value predicates that point to literals.
+            // This allows us to handle different types of values (value objects).
+            val literalTypesToValueTypeIris: Map[IRI, IRI] = Map(
+                OntologyConstants.Xsd.Integer -> OntologyConstants.KnoraBase.ValueHasInteger,
+                OntologyConstants.Xsd.Decimal -> OntologyConstants.KnoraBase.ValueHasDecimal,
+                OntologyConstants.Xsd.Boolean -> OntologyConstants.KnoraBase.ValueHasBoolean,
+                OntologyConstants.Xsd.String -> OntologyConstants.KnoraBase.ValueHasString,
+                OntologyConstants.KnoraBase.Date -> OntologyConstants.KnoraBase.ValueHasStartJDN
+            )
         }
 
         /**
@@ -311,16 +321,7 @@ class SearchResponderV2 extends Responder {
             // in order to prevent duplicates
             private val processedTypeInformationKeysWhereClause = mutable.Set.empty[TypeableEntity]
 
-            var mainResourceVariable: Option[QueryVariable] = None
-
-            // A Map of XSD types to the corresponding knora-base value predicates that point to literals. This allows us to generate a variable name for using a value in an ORDER BY.
-            val literalTypesToValueTypeIris: Map[IRI, IRI] = Map(
-                OntologyConstants.Xsd.Integer -> OntologyConstants.KnoraBase.ValueHasInteger,
-                OntologyConstants.Xsd.Decimal -> OntologyConstants.KnoraBase.ValueHasDecimal,
-                OntologyConstants.Xsd.Boolean -> OntologyConstants.KnoraBase.ValueHasBoolean,
-                OntologyConstants.Xsd.String -> OntologyConstants.KnoraBase.ValueHasString,
-                OntologyConstants.KnoraBase.Date -> OntologyConstants.KnoraBase.ValueHasStartJDN
-            )
+            private var mainResourceVariable: Option[QueryVariable] = None
 
             /**
               * Creates additional statements for a non property type (e.g., a resource).
@@ -355,7 +356,6 @@ class SearchResponderV2 extends Responder {
             }
 
             def convertStatementForPropertyType(propertyTypeInfo: PropertyTypeInfo, statementPattern: StatementPattern): Seq[QueryPattern] = {
-
                 // decide whether to keep the originally given statement or not
                 // if pred is a valueProp and the simple api is used, do not return the original statement
                 // it had to be converted to comply with Knora's value object structure
@@ -367,7 +367,36 @@ class SearchResponderV2 extends Responder {
                     propertyTypeInfo.objectTypeIri
                 }
 
-                Seq(statementPattern)
+                objectIri match {
+                    case OntologyConstants.KnoraBase.Resource => {
+
+                        // make sure that the object is either an Iri or a variable (cannot be a literal)
+                        statementPattern.obj match {
+                            case iriRef: IriRef => ()
+                            case queryVar: QueryVariable => ()
+                            case other => throw SparqlSearchException(s"Object of a linking statement must be an Iri or a QueryVariable, but $other given.")
+                        }
+
+                        // linking property: just include the original statement relating the subject to the target of the link
+                        Seq(statementPattern)
+                    }
+
+                    case literalType: IRI => {
+                        // value property
+
+                        // make sure that the object is a query variable (literals are not supported yet)
+                        statementPattern.obj match {
+                            case queryVar: QueryVariable => ()
+                            case other => throw SparqlSearchException(s"Object of a value property statement must be a QueryVariable, but $other given.")
+                        }
+
+                        // the query variable stands for a value object
+                        // if there is a filter statement, the literal of the value object has to be checked: e.g., valueHasInteger etc.
+                        // include the original statement relating the subject to a value object
+                        Seq(statementPattern)
+                    }
+                }
+
             }
 
             private def processStatementPatternFromWhereClause(statementPattern: StatementPattern): Seq[QueryPattern] = {
