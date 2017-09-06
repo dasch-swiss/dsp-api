@@ -314,9 +314,9 @@ case class ConstructQuery(constructClause: ConstructClause, whereClause: WhereCl
   * @param whereClause the WHERE clause.
   * @param orderBy     the variables that the results should be ordered by.
   */
-case class SelectQuery(variables: Seq[QueryVariable], useDistinct: Boolean = true, whereClause: WhereClause, orderBy: Seq[OrderCriterion] = Seq.empty[OrderCriterion]) extends SparqlGenerator {
+case class SelectQuery(variables: Seq[QueryVariable], useDistinct: Boolean = true, whereClause: WhereClause, orderBy: Seq[OrderCriterion] = Seq.empty[OrderCriterion], limit: Option[Int] = None, offset: Int = 0) extends SparqlGenerator {
     def toSparql: String = {
-        val selectWhere = "SELECT " + {
+        val selectWhereSparql = "SELECT " + {
             if (useDistinct) {
                 "DISTINCT "
             } else {
@@ -324,10 +324,22 @@ case class SelectQuery(variables: Seq[QueryVariable], useDistinct: Boolean = tru
             }
         } + variables.map(_.toSparql).mkString(" ") + "\n" + whereClause.toSparql + "\n"
 
-        if (orderBy.nonEmpty) {
-            selectWhere + "ORDER BY " + orderBy.map(_.toSparql).mkString(" ")
+        val orderBySparql = if (orderBy.nonEmpty) {
+            "ORDER BY " + orderBy.map(_.toSparql).mkString(" ")
         } else {
-            selectWhere
+            ""
         }
+
+        val offsetSparql = s"\nOFFSET $offset"
+
+        val limitSparql = if (limit.nonEmpty) {
+            s"\nLIMIT ${limit.get}"
+        } else {
+            ""
+        }
+
+        selectWhereSparql + orderBySparql + offsetSparql + limitSparql
+
+
     }
 }

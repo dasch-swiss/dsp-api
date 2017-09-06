@@ -169,8 +169,10 @@ object QueryTraverser {
 
         SelectQuery(
             variables = transformer.getSelectVariables,
+            useDistinct = true,
             whereClause = WhereClause(patterns = transformedWherePatterns ++ transformedOrderBy.statementPatterns),
-            orderBy = transformedOrderBy.orderBy
+            orderBy = transformedOrderBy.orderBy,
+            limit = Some(25) // TODO: add offset
         )
     }
 

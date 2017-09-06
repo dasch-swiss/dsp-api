@@ -154,7 +154,8 @@ class SearchResponderV2 extends Responder {
           * An abstract base class providing shared methods to query transformers.
           */
         abstract class AbstractTransformer extends WhereTransformer {
-            protected val valueVariablesUsedInFilters = mutable.Map.empty[QueryVariable, QueryVariable]
+
+            val valueVariablesUsedInFilters = mutable.Map.empty[QueryVariable, QueryVariable]
 
             /**
               * Convert an [[Entity]] to a [[TypeableEntity]] (key of type inspection results).
@@ -306,6 +307,296 @@ class SearchResponderV2 extends Responder {
                 OntologyConstants.Xsd.String -> OntologyConstants.KnoraBase.ValueHasString,
                 OntologyConstants.KnoraBase.Date -> OntologyConstants.KnoraBase.ValueHasStartJDN
             )
+
+            case class TransformedFilterExpression(expression: Expression, additionalStatements: Seq[StatementPattern] = Seq.empty[StatementPattern])
+
+            def transformFilterExpression(filterExpression: Expression, typeInspection: TypeInspectionResult): TransformedFilterExpression = {
+
+                filterExpression match {
+
+                    case filterCompare: CompareExpression =>
+
+                        // left argument of a CompareExpression is expected to be a QueryVariable
+
+                        val queryVar: QueryVariable = filterCompare.leftArg match {
+
+                            case queryVar: QueryVariable => queryVar
+
+                            case other => throw SparqlSearchException(s"Left argument of a Filter CompareExpression is expected to be a QueryVariable, but $other is given")
+                        }
+
+                        val queryVarTypeInfoKey = toTypeableEntityKey(queryVar)
+
+                        // get information about the queryVar's type
+                        if (queryVarTypeInfoKey.nonEmpty && (typeInspection.typedEntities contains queryVarTypeInfoKey.get)) {
+
+                            val typeInfo: SparqlEntityTypeInfo = typeInspection.typedEntities(queryVarTypeInfoKey.get)
+
+                            // check if type information is about a property or a value
+                            typeInfo match {
+
+                                case propInfo: PropertyTypeInfo =>
+                                    // the left arg (a variable) represents a property
+
+                                    // get the internal objectIri of the property type info
+                                    val typeIriInternal = if (InputValidation.isKnoraApiEntityIri(propInfo.objectTypeIri)) {
+                                        InputValidation.externalIriToInternalIri(propInfo.objectTypeIri, () => throw BadRequestException(s"${propInfo.objectTypeIri} is not a valid external knora-api entity Iri"))
+                                    } else {
+                                        propInfo.objectTypeIri
+                                    }
+
+                                    typeIriInternal match {
+
+                                        case OntologyConstants.KnoraBase.Resource =>
+                                            // left arg is variable representing a property pointing to a knora-base:Resource, so the right argument must be an Iri
+                                            filterCompare.rightArg match {
+                                                case iriRef: IriRef =>
+
+                                                    // make sure that the comparison operator is a `CompareExpressionOperator.EQUALS`
+                                                    if (filterCompare.operator != CompareExpressionOperator.EQUALS) throw SparqlSearchException(s"Comparison operator in a CompareExpression for a property type is expected to be ${CompareExpressionOperator.EQUALS}, but ${filterCompare.operator} given. For negations use 'FILTER NOT EXISTS' ")
+
+                                                    TransformedFilterExpression(CompareExpression(filterCompare.leftArg, filterCompare.operator, filterCompare.rightArg))
+
+                                                case other => throw SparqlSearchException(s"right argument of CompareExpression is expected to be an Iri representing a property, but $other is given")
+                                            }
+
+                                    }
+
+                                case nonPropInfo: NonPropertyTypeInfo =>
+                                    // the left arg (a variable) represents a value
+
+                                    // get the internal type Iri of the non property type info
+                                    val typeIriInternal = if (InputValidation.isKnoraApiEntityIri(nonPropInfo.typeIri)) {
+                                        InputValidation.externalIriToInternalIri(nonPropInfo.typeIri, () => throw BadRequestException(s"${nonPropInfo.typeIri} is not a valid external knora-api entity Iri"))
+                                    } else {
+                                        nonPropInfo.typeIri
+                                    }
+
+                                    typeIriInternal match {
+
+                                        case OntologyConstants.Xsd.Integer =>
+
+                                            // make sure that the right argument is an integer literal
+                                            val integerLiteral: XsdLiteral = filterCompare.rightArg match {
+                                                case intLiteral: XsdLiteral if intLiteral.datatype == OntologyConstants.Xsd.Integer => intLiteral
+
+                                                case other => throw SparqlSearchException(s"right argument in CompareExpression for integer property was expected to be an integer literal, but $other is given.")
+                                            }
+
+                                            val intValHasInteger: QueryVariable = createUniqueVariableNameFromEntityAndProperty(queryVar, OntologyConstants.KnoraBase.ValueHasInteger)
+
+                                            valueVariablesUsedInFilters.put(queryVar, intValHasInteger)
+
+                                            TransformedFilterExpression(
+                                                CompareExpression(intValHasInteger, filterCompare.operator, integerLiteral),
+                                                Seq(
+                                                    StatementPattern.makeExplicit(subj = queryVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasInteger), intValHasInteger)
+                                                )
+                                            )
+
+                                        case OntologyConstants.Xsd.Decimal =>
+
+                                            // make sure that the right argument is a decimal literal
+                                            val decimalLiteral: XsdLiteral = filterCompare.rightArg match {
+                                                case decimalLiteral: XsdLiteral if decimalLiteral.datatype == OntologyConstants.Xsd.Decimal || decimalLiteral.datatype == OntologyConstants.Xsd.Integer => decimalLiteral
+
+                                                case other => throw SparqlSearchException(s"right argument in CompareExpression for decimal property was expected to be a decimal or an integer literal, but $other is given.")
+                                            }
+
+                                            val decimalValHasDecimal = createUniqueVariableNameFromEntityAndProperty(queryVar, OntologyConstants.KnoraBase.ValueHasDecimal)
+
+                                            TransformedFilterExpression(
+                                                CompareExpression(decimalValHasDecimal, filterCompare.operator, decimalLiteral),
+                                                Seq(
+                                                    StatementPattern.makeExplicit(subj = queryVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasDecimal), decimalValHasDecimal)
+                                                )
+                                            )
+
+                                        case OntologyConstants.Xsd.Boolean =>
+
+                                            // make sure that the right argument is an integer literal
+                                            val booleanLiteral: XsdLiteral = filterCompare.rightArg match {
+                                                case booleanLiteral: XsdLiteral if booleanLiteral.datatype == OntologyConstants.Xsd.Boolean => booleanLiteral
+
+                                                case other => throw SparqlSearchException(s"right argument in CompareExpression for boolean property was expected to be a boolean literal, but $other is given.")
+                                            }
+
+                                            val booleanValHasBoolean = createUniqueVariableNameFromEntityAndProperty(queryVar, OntologyConstants.KnoraBase.ValueHasBoolean)
+
+                                            // check if operator is supported for string operations
+                                            if (!(filterCompare.operator.equals(CompareExpressionOperator.EQUALS) || filterCompare.operator.equals(CompareExpressionOperator.NOT_EQUALS))) {
+                                                throw SparqlSearchException(s"Filter expressions for a boolean value supports the following operators: ${CompareExpressionOperator.EQUALS}, ${CompareExpressionOperator.NOT_EQUALS}, but ${filterCompare.operator} given")
+                                            }
+
+                                            TransformedFilterExpression(
+                                                CompareExpression(booleanValHasBoolean, filterCompare.operator, booleanLiteral),
+                                                Seq(
+                                                    StatementPattern.makeExplicit(subj = queryVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasBoolean), booleanValHasBoolean)
+                                                )
+                                            )
+
+                                        case OntologyConstants.Xsd.String =>
+
+                                            // make sure that the right argument is a string literal
+                                            val stringLiteral: XsdLiteral = filterCompare.rightArg match {
+                                                case strLiteral: XsdLiteral if strLiteral.datatype == OntologyConstants.Xsd.String => strLiteral
+
+                                                case other => throw SparqlSearchException(s"right argument in CompareExpression for string property was expected to be a string literal, but $other is given.")
+                                            }
+
+                                            val textValHasString = createUniqueVariableNameFromEntityAndProperty(queryVar, OntologyConstants.KnoraBase.ValueHasString)
+
+                                            // check if operator is supported for string operations
+                                            if (!(filterCompare.operator.equals(CompareExpressionOperator.EQUALS) || filterCompare.operator.equals(CompareExpressionOperator.NOT_EQUALS))) {
+                                                throw SparqlSearchException(s"Filter expressions for a string value supports the following operators: ${CompareExpressionOperator.EQUALS}, ${CompareExpressionOperator.NOT_EQUALS}, but ${filterCompare.operator} given")
+                                            }
+
+                                            TransformedFilterExpression(
+                                                CompareExpression(textValHasString, filterCompare.operator, stringLiteral),
+                                                Seq(
+                                                    StatementPattern.makeExplicit(subj = queryVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasString), textValHasString)
+                                                )
+                                            )
+
+                                        case OntologyConstants.KnoraBase.Date =>
+
+                                            // make sure that the right argument is a string literal
+                                            val dateStringLiteral: _root_.org.knora.webapi.util.search.XsdLiteral = filterCompare.rightArg match {
+                                                case dateStrLiteral: XsdLiteral if dateStrLiteral.datatype == OntologyConstants.Xsd.String => dateStrLiteral
+
+                                                case other => throw SparqlSearchException(s"right argument in CompareExpression for date property was expected to be a string literal representing a date, but $other is given.")
+                                            }
+
+                                            val dateStr = InputValidation.toDate(dateStringLiteral.value, () => throw BadRequestException(s"${dateStringLiteral.value} is not a valid date string"))
+
+                                            val date: JulianDayNumberValueV1 = DateUtilV1.createJDNValueV1FromDateString(dateStr)
+
+                                            val dateValueHasStartVar = createUniqueVariableNameFromEntityAndProperty(queryVar, OntologyConstants.KnoraBase.ValueHasStartJDN)
+
+                                            val dateValueHasEndVar = createUniqueVariableNameFromEntityAndProperty(queryVar, OntologyConstants.KnoraBase.ValueHasEndJDN)
+
+                                            val dateValStartStatement = StatementPattern.makeExplicit(subj = queryVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasStartJDN), obj = dateValueHasStartVar)
+
+                                            val dateValEndStatement = StatementPattern.makeExplicit(subj = queryVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasEndJDN), obj = dateValueHasEndVar)
+
+                                            // process filter expression based on given comparison operator
+                                            filterCompare.operator match {
+
+                                                case CompareExpressionOperator.EQUALS =>
+
+                                                    // any overlap in considered as equality
+                                                    val leftArgFilter = CompareExpression(XsdLiteral(date.dateval1.toString, OntologyConstants.Xsd.Integer), CompareExpressionOperator.LESS_THAN_OR_EQUAL_TO, dateValueHasEndVar)
+
+                                                    val rightArgFilter = CompareExpression(XsdLiteral(date.dateval2.toString, OntologyConstants.Xsd.Integer), CompareExpressionOperator.GREATER_THAN_OR_EQUAL_TO, dateValueHasStartVar)
+
+                                                    val filter = AndExpression(leftArgFilter, rightArgFilter)
+
+                                                    TransformedFilterExpression(
+                                                        filter,
+                                                        Seq(
+                                                            dateValStartStatement, dateValEndStatement
+                                                        )
+                                                    )
+
+                                                case CompareExpressionOperator.NOT_EQUALS =>
+
+                                                    // no overlap in considered as inequality
+                                                    val leftArgFilter = CompareExpression(XsdLiteral(date.dateval1.toString, OntologyConstants.Xsd.Integer), CompareExpressionOperator.GREATER_THAN, dateValueHasEndVar)
+
+                                                    val rightArgFilter = CompareExpression(XsdLiteral(date.dateval2.toString, OntologyConstants.Xsd.Integer), CompareExpressionOperator.LESS_THAN, dateValueHasStartVar)
+
+                                                    val filter = OrExpression(leftArgFilter, rightArgFilter)
+
+                                                    TransformedFilterExpression(
+                                                        filter,
+                                                        Seq(
+                                                            dateValStartStatement, dateValEndStatement
+                                                        )
+                                                    )
+
+                                                case CompareExpressionOperator.LESS_THAN =>
+
+                                                    // period ends before indicated period
+                                                    val filter = CompareExpression(dateValueHasEndVar, CompareExpressionOperator.LESS_THAN, XsdLiteral(date.dateval1.toString, OntologyConstants.Xsd.Integer))
+
+                                                    TransformedFilterExpression(
+                                                        filter,
+                                                        Seq(dateValEndStatement)
+                                                    )
+
+                                                case CompareExpressionOperator.LESS_THAN_OR_EQUAL_TO =>
+
+                                                    // period ends before indicated period or equals it (any overlap)
+                                                    val filter = CompareExpression(dateValueHasStartVar, CompareExpressionOperator.LESS_THAN_OR_EQUAL_TO, XsdLiteral(date.dateval2.toString, OntologyConstants.Xsd.Integer))
+
+                                                    TransformedFilterExpression(
+                                                        filter,
+                                                        Seq(dateValStartStatement)
+                                                    )
+
+                                                case CompareExpressionOperator.GREATER_THAN =>
+
+                                                    // period starts after end of indicated period
+                                                    val filter = CompareExpression(dateValueHasStartVar, CompareExpressionOperator.GREATER_THAN, XsdLiteral(date.dateval2.toString, OntologyConstants.Xsd.Integer))
+
+                                                    TransformedFilterExpression(
+                                                        filter,
+                                                        Seq(dateValStartStatement)
+                                                    )
+
+                                                case CompareExpressionOperator.GREATER_THAN_OR_EQUAL_TO =>
+
+                                                    // period starts after indicated period or equals it (any overlap)
+                                                    val filter = CompareExpression(dateValueHasEndVar, CompareExpressionOperator.GREATER_THAN_OR_EQUAL_TO, XsdLiteral(date.dateval1.toString, OntologyConstants.Xsd.Integer))
+
+                                                    TransformedFilterExpression(
+                                                        filter,
+                                                        Seq(dateValEndStatement)
+                                                    )
+
+
+                                                case other => throw SparqlSearchException(s"operator $other not supported in filter expressions for dates")
+
+
+                                            }
+
+                                        case other => throw NotImplementedException(s"$other not supported in FilterExpression")
+
+
+                                    }
+
+
+                            }
+
+
+                        } else {
+                            throw SparqlSearchException(s"type information about $queryVar is missing")
+                        }
+
+
+                    case filterOr: OrExpression =>
+                        val filterExpressionLeft = transformFilterExpression(filterOr.leftArg, typeInspection)
+                        val filterExpressionRight = transformFilterExpression(filterOr.rightArg, typeInspection)
+
+                        TransformedFilterExpression(
+                            OrExpression(filterExpressionLeft.expression, filterExpressionRight.expression),
+                            filterExpressionLeft.additionalStatements ++ filterExpressionRight.additionalStatements
+                        )
+
+
+                    case filterAnd: AndExpression =>
+                        val filterExpressionLeft = transformFilterExpression(filterAnd.leftArg, typeInspection)
+                        val filterExpressionRight = transformFilterExpression(filterAnd.rightArg, typeInspection)
+
+                        TransformedFilterExpression(
+                            AndExpression(filterExpressionLeft.expression, filterExpressionRight.expression),
+                            filterExpressionLeft.additionalStatements ++ filterExpressionRight.additionalStatements
+                        )
+
+                    case other => throw NotImplementedException(s"$other not supported as FilterExpression")
+                }
+
+            }
         }
 
         /**
@@ -390,10 +681,13 @@ class SearchResponderV2 extends Responder {
                             case other => throw SparqlSearchException(s"Object of a value property statement must be a QueryVariable, but $other given.")
                         }
 
+                        // check that value object is not marked as deleted
+                        val valueObjectIsNotDeleted = StatementPattern.makeExplicit(subj = statementPattern.obj, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean))
+
                         // the query variable stands for a value object
                         // if there is a filter statement, the literal of the value object has to be checked: e.g., valueHasInteger etc.
                         // include the original statement relating the subject to a value object
-                        Seq(statementPattern)
+                        Seq(statementPattern, valueObjectIsNotDeleted)
                     }
                 }
 
@@ -464,7 +758,11 @@ class SearchResponderV2 extends Responder {
               * @return the result of the transformation.
               */
             override def transformFilter(filterPattern: FilterPattern): Seq[QueryPattern] = {
-                Seq.empty[QueryPattern]
+
+                val filterExpression: TransformedFilterExpression = transformFilterExpression(filterPattern.expression, typeInspection = typeInspectionResult)
+
+                filterExpression.additionalStatements :+ FilterPattern(filterExpression.expression)
+
             }
 
             /**
@@ -492,6 +790,7 @@ class SearchResponderV2 extends Responder {
               * @return the ORDER BY criteria, if any.
               */
             override def getOrderBy(inputOrderBy: Seq[OrderCriterion]): TransformedOrderBy = {
+
                 val transformedOrderBy = inputOrderBy.foldLeft(TransformedOrderBy()) {
                     case (acc, criterion) =>
                         // Did a FILTER already generate a unique variable for the literal value of this value object?
@@ -1173,298 +1472,9 @@ class SearchResponderV2 extends Responder {
 
             }
 
-            case class TransformedFilterExpression(expression: Expression, additionalStatements: Seq[StatementPattern] = Seq.empty[StatementPattern])
-
-            def transformFilterExpression(filterExpression: Expression): TransformedFilterExpression = {
-
-                filterExpression match {
-
-                    case filterCompare: CompareExpression =>
-
-                        // left argument of a CompareExpression is expected to be a QueryVariable
-
-                        val queryVar: QueryVariable = filterCompare.leftArg match {
-
-                            case queryVar: QueryVariable => queryVar
-
-                            case other => throw SparqlSearchException(s"Left argument of a Filter CompareExpression is expected to be a QueryVariable, but $other is given")
-                        }
-
-                        val queryVarTypeInfoKey = toTypeableEntityKey(queryVar)
-
-                        // get information about the queryVar's type
-                        if (queryVarTypeInfoKey.nonEmpty && (typeInspectionResult.typedEntities contains queryVarTypeInfoKey.get)) {
-
-                            val typeInfo: SparqlEntityTypeInfo = typeInspectionResult.typedEntities(queryVarTypeInfoKey.get)
-
-                            // check if type information is about a property or a value
-                            typeInfo match {
-
-                                case propInfo: PropertyTypeInfo =>
-                                    // the left arg (a variable) represents a property
-
-                                    // get the internal objectIri of the property type info
-                                    val typeIriInternal = if (InputValidation.isKnoraApiEntityIri(propInfo.objectTypeIri)) {
-                                        InputValidation.externalIriToInternalIri(propInfo.objectTypeIri, () => throw BadRequestException(s"${propInfo.objectTypeIri} is not a valid external knora-api entity Iri"))
-                                    } else {
-                                        propInfo.objectTypeIri
-                                    }
-
-                                    typeIriInternal match {
-
-                                        case OntologyConstants.KnoraBase.Resource =>
-                                            // left arg is variable representing a property pointing to a knora-base:Resource, so the right argument must be an Iri
-                                            filterCompare.rightArg match {
-                                                case iriRef: IriRef =>
-
-                                                    // make sure that the comparison operator is a `CompareExpressionOperator.EQUALS`
-                                                    if (filterCompare.operator != CompareExpressionOperator.EQUALS) throw SparqlSearchException(s"Comparison operator in a CompareExpression for a property type is expected to be ${CompareExpressionOperator.EQUALS}, but ${filterCompare.operator} given. For negations use 'FILTER NOT EXISTS' ")
-
-                                                    TransformedFilterExpression(CompareExpression(filterCompare.leftArg, filterCompare.operator, filterCompare.rightArg))
-
-                                                case other => throw SparqlSearchException(s"right argument of CompareExpression is expected to be an Iri representing a property, but $other is given")
-                                            }
-
-                                    }
-
-                                case nonPropInfo: NonPropertyTypeInfo =>
-                                    // the left arg (a variable) represents a value
-
-                                    // get the internal type Iri of the non property type info
-                                    val typeIriInternal = if (InputValidation.isKnoraApiEntityIri(nonPropInfo.typeIri)) {
-                                        InputValidation.externalIriToInternalIri(nonPropInfo.typeIri, () => throw BadRequestException(s"${nonPropInfo.typeIri} is not a valid external knora-api entity Iri"))
-                                    } else {
-                                        nonPropInfo.typeIri
-                                    }
-
-                                    typeIriInternal match {
-
-                                        case OntologyConstants.Xsd.Integer =>
-
-                                            // make sure that the right argument is an integer literal
-                                            val integerLiteral: XsdLiteral = filterCompare.rightArg match {
-                                                case intLiteral: XsdLiteral if intLiteral.datatype == OntologyConstants.Xsd.Integer => intLiteral
-
-                                                case other => throw SparqlSearchException(s"right argument in CompareExpression for integer property was expected to be an integer literal, but $other is given.")
-                                            }
-
-                                            val intValHasInteger = createUniqueVariableNameFromEntityAndProperty(queryVar, OntologyConstants.KnoraBase.ValueHasInteger)
-
-                                            TransformedFilterExpression(
-                                                CompareExpression(intValHasInteger, filterCompare.operator, integerLiteral),
-                                                Seq(
-                                                    StatementPattern.makeExplicit(subj = queryVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasInteger), intValHasInteger)
-                                                )
-                                            )
-
-                                        case OntologyConstants.Xsd.Decimal =>
-
-                                            // make sure that the right argument is a decimal literal
-                                            val decimalLiteral: XsdLiteral = filterCompare.rightArg match {
-                                                case decimalLiteral: XsdLiteral if decimalLiteral.datatype == OntologyConstants.Xsd.Decimal || decimalLiteral.datatype == OntologyConstants.Xsd.Integer => decimalLiteral
-
-                                                case other => throw SparqlSearchException(s"right argument in CompareExpression for decimal property was expected to be a decimal or an integer literal, but $other is given.")
-                                            }
-
-                                            val decimalValHasDecimal = createUniqueVariableNameFromEntityAndProperty(queryVar, OntologyConstants.KnoraBase.ValueHasDecimal)
-
-                                            TransformedFilterExpression(
-                                                CompareExpression(decimalValHasDecimal, filterCompare.operator, decimalLiteral),
-                                                Seq(
-                                                    StatementPattern.makeExplicit(subj = queryVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasDecimal), decimalValHasDecimal)
-                                                )
-                                            )
-
-                                        case OntologyConstants.Xsd.Boolean =>
-
-                                            // make sure that the right argument is an integer literal
-                                            val booleanLiteral: XsdLiteral = filterCompare.rightArg match {
-                                                case booleanLiteral: XsdLiteral if booleanLiteral.datatype == OntologyConstants.Xsd.Boolean => booleanLiteral
-
-                                                case other => throw SparqlSearchException(s"right argument in CompareExpression for boolean property was expected to be a boolean literal, but $other is given.")
-                                            }
-
-                                            val booleanValHasBoolean = createUniqueVariableNameFromEntityAndProperty(queryVar, OntologyConstants.KnoraBase.ValueHasBoolean)
-
-                                            // check if operator is supported for string operations
-                                            if (!(filterCompare.operator.equals(CompareExpressionOperator.EQUALS) || filterCompare.operator.equals(CompareExpressionOperator.NOT_EQUALS))) {
-                                                throw SparqlSearchException(s"Filter expressions for a boolean value supports the following operators: ${CompareExpressionOperator.EQUALS}, ${CompareExpressionOperator.NOT_EQUALS}, but ${filterCompare.operator} given")
-                                            }
-
-                                            TransformedFilterExpression(
-                                                CompareExpression(booleanValHasBoolean, filterCompare.operator, booleanLiteral),
-                                                Seq(
-                                                    StatementPattern.makeExplicit(subj = queryVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasBoolean), booleanValHasBoolean)
-                                                )
-                                            )
-
-                                        case OntologyConstants.Xsd.String =>
-
-                                            // make sure that the right argument is a string literal
-                                            val stringLiteral: XsdLiteral = filterCompare.rightArg match {
-                                                case strLiteral: XsdLiteral if strLiteral.datatype == OntologyConstants.Xsd.String => strLiteral
-
-                                                case other => throw SparqlSearchException(s"right argument in CompareExpression for string property was expected to be a string literal, but $other is given.")
-                                            }
-
-                                            val textValHasString = createUniqueVariableNameFromEntityAndProperty(queryVar, OntologyConstants.KnoraBase.ValueHasString)
-
-                                            // check if operator is supported for string operations
-                                            if (!(filterCompare.operator.equals(CompareExpressionOperator.EQUALS) || filterCompare.operator.equals(CompareExpressionOperator.NOT_EQUALS))) {
-                                                throw SparqlSearchException(s"Filter expressions for a string value supports the following operators: ${CompareExpressionOperator.EQUALS}, ${CompareExpressionOperator.NOT_EQUALS}, but ${filterCompare.operator} given")
-                                            }
-
-                                            TransformedFilterExpression(
-                                                CompareExpression(textValHasString, filterCompare.operator, stringLiteral),
-                                                Seq(
-                                                    StatementPattern.makeExplicit(subj = queryVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasString), textValHasString)
-                                                )
-                                            )
-
-                                        case OntologyConstants.KnoraBase.Date =>
-
-                                            // make sure that the right argument is a string literal
-                                            val dateStringLiteral: _root_.org.knora.webapi.util.search.XsdLiteral = filterCompare.rightArg match {
-                                                case dateStrLiteral: XsdLiteral if dateStrLiteral.datatype == OntologyConstants.Xsd.String => dateStrLiteral
-
-                                                case other => throw SparqlSearchException(s"right argument in CompareExpression for date property was expected to be a string literal representing a date, but $other is given.")
-                                            }
-
-                                            val dateStr = InputValidation.toDate(dateStringLiteral.value, () => throw BadRequestException(s"${dateStringLiteral.value} is not a valid date string"))
-
-                                            val date: JulianDayNumberValueV1 = DateUtilV1.createJDNValueV1FromDateString(dateStr)
-
-                                            val dateValueHasStartVar = createUniqueVariableNameFromEntityAndProperty(queryVar, OntologyConstants.KnoraBase.ValueHasStartJDN)
-
-                                            val dateValueHasEndVar = createUniqueVariableNameFromEntityAndProperty(queryVar, OntologyConstants.KnoraBase.ValueHasEndJDN)
-
-                                            val dateValStartStatement = StatementPattern.makeExplicit(subj = queryVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasStartJDN), obj = dateValueHasStartVar)
-
-                                            val dateValEndStatement = StatementPattern.makeExplicit(subj = queryVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasEndJDN), obj = dateValueHasEndVar)
-
-                                            // process filter expression based on given comparison operator
-                                            filterCompare.operator match {
-
-                                                case CompareExpressionOperator.EQUALS =>
-
-                                                    // any overlap in considered as equality
-                                                    val leftArgFilter = CompareExpression(XsdLiteral(date.dateval1.toString, OntologyConstants.Xsd.Integer), CompareExpressionOperator.LESS_THAN_OR_EQUAL_TO, dateValueHasEndVar)
-
-                                                    val rightArgFilter = CompareExpression(XsdLiteral(date.dateval2.toString, OntologyConstants.Xsd.Integer), CompareExpressionOperator.GREATER_THAN_OR_EQUAL_TO, dateValueHasStartVar)
-
-                                                    val filter = AndExpression(leftArgFilter, rightArgFilter)
-
-                                                    TransformedFilterExpression(
-                                                        filter,
-                                                        Seq(
-                                                            dateValStartStatement, dateValEndStatement
-                                                        )
-                                                    )
-
-                                                case CompareExpressionOperator.NOT_EQUALS =>
-
-                                                    // no overlap in considered as inequality
-                                                    val leftArgFilter = CompareExpression(XsdLiteral(date.dateval1.toString, OntologyConstants.Xsd.Integer), CompareExpressionOperator.GREATER_THAN, dateValueHasEndVar)
-
-                                                    val rightArgFilter = CompareExpression(XsdLiteral(date.dateval2.toString, OntologyConstants.Xsd.Integer), CompareExpressionOperator.LESS_THAN, dateValueHasStartVar)
-
-                                                    val filter = OrExpression(leftArgFilter, rightArgFilter)
-
-                                                    TransformedFilterExpression(
-                                                        filter,
-                                                        Seq(
-                                                            dateValStartStatement, dateValEndStatement
-                                                        )
-                                                    )
-
-                                                case CompareExpressionOperator.LESS_THAN =>
-
-                                                    // period ends before indicated period
-                                                    val filter = CompareExpression(dateValueHasEndVar, CompareExpressionOperator.LESS_THAN, XsdLiteral(date.dateval1.toString, OntologyConstants.Xsd.Integer))
-
-                                                    TransformedFilterExpression(
-                                                        filter,
-                                                        Seq(dateValEndStatement)
-                                                    )
-
-                                                case CompareExpressionOperator.LESS_THAN_OR_EQUAL_TO =>
-
-                                                    // period ends before indicated period or equals it (any overlap)
-                                                    val filter = CompareExpression(dateValueHasStartVar, CompareExpressionOperator.LESS_THAN_OR_EQUAL_TO, XsdLiteral(date.dateval2.toString, OntologyConstants.Xsd.Integer))
-
-                                                    TransformedFilterExpression(
-                                                        filter,
-                                                        Seq(dateValStartStatement)
-                                                    )
-
-                                                case CompareExpressionOperator.GREATER_THAN =>
-
-                                                    // period starts after end of indicated period
-                                                    val filter = CompareExpression(dateValueHasStartVar, CompareExpressionOperator.GREATER_THAN, XsdLiteral(date.dateval2.toString, OntologyConstants.Xsd.Integer))
-
-                                                    TransformedFilterExpression(
-                                                        filter,
-                                                        Seq(dateValStartStatement)
-                                                    )
-
-                                                case CompareExpressionOperator.GREATER_THAN_OR_EQUAL_TO =>
-
-                                                    // period starts after indicated period or equals it (any overlap)
-                                                    val filter = CompareExpression(dateValueHasEndVar, CompareExpressionOperator.GREATER_THAN_OR_EQUAL_TO, XsdLiteral(date.dateval1.toString, OntologyConstants.Xsd.Integer))
-
-                                                    TransformedFilterExpression(
-                                                        filter,
-                                                        Seq(dateValEndStatement)
-                                                    )
-
-
-                                                case other => throw SparqlSearchException(s"operator $other not supported in filter expressions for dates")
-
-
-                                            }
-
-                                        case other => throw NotImplementedException(s"$other not supported in FilterExpression")
-
-
-                                    }
-
-
-                            }
-
-
-                        } else {
-                            throw SparqlSearchException(s"type information about $queryVar is missing")
-                        }
-
-
-                    case filterOr: OrExpression =>
-                        val filterExpressionLeft = transformFilterExpression(filterOr.leftArg)
-                        val filterExpressionRight = transformFilterExpression(filterOr.rightArg)
-
-                        TransformedFilterExpression(
-                            OrExpression(filterExpressionLeft.expression, filterExpressionRight.expression),
-                            filterExpressionLeft.additionalStatements ++ filterExpressionRight.additionalStatements
-                        )
-
-
-                    case filterAnd: AndExpression =>
-                        val filterExpressionLeft = transformFilterExpression(filterAnd.leftArg)
-                        val filterExpressionRight = transformFilterExpression(filterAnd.rightArg)
-
-                        TransformedFilterExpression(
-                            AndExpression(filterExpressionLeft.expression, filterExpressionRight.expression),
-                            filterExpressionLeft.additionalStatements ++ filterExpressionRight.additionalStatements
-                        )
-
-                    case other => throw NotImplementedException(s"$other not supported as FilterExpression")
-                }
-
-
-            }
-
             def transformFilter(filterPattern: FilterPattern): Seq[QueryPattern] = {
 
-                val filterExpression: TransformedFilterExpression = transformFilterExpression(filterPattern.expression)
+                val filterExpression: TransformedFilterExpression = transformFilterExpression(filterPattern.expression, typeInspection = typeInspectionResult)
 
                 filterExpression.additionalStatements :+ FilterPattern(filterExpression.expression)
             }
