@@ -155,7 +155,7 @@ class SearchResponderV2 extends Responder {
           */
         abstract class AbstractTransformer extends WhereTransformer {
 
-            val valueVariablesUsedInFilters = mutable.Map.empty[QueryVariable, QueryVariable]
+            val valueVariablesCreatedInFilters = mutable.Map.empty[QueryVariable, QueryVariable]
 
             /**
               * Convert an [[Entity]] to a [[TypeableEntity]] (key of type inspection results).
@@ -385,7 +385,7 @@ class SearchResponderV2 extends Responder {
 
                                             val intValHasInteger: QueryVariable = createUniqueVariableNameFromEntityAndProperty(queryVar, OntologyConstants.KnoraBase.ValueHasInteger)
 
-                                            valueVariablesUsedInFilters.put(queryVar, intValHasInteger)
+                                            valueVariablesCreatedInFilters.put(queryVar, intValHasInteger)
 
                                             TransformedFilterExpression(
                                                 CompareExpression(intValHasInteger, filterCompare.operator, integerLiteral),
@@ -405,6 +405,8 @@ class SearchResponderV2 extends Responder {
 
                                             val decimalValHasDecimal = createUniqueVariableNameFromEntityAndProperty(queryVar, OntologyConstants.KnoraBase.ValueHasDecimal)
 
+                                            valueVariablesCreatedInFilters.put(queryVar, decimalValHasDecimal)
+
                                             TransformedFilterExpression(
                                                 CompareExpression(decimalValHasDecimal, filterCompare.operator, decimalLiteral),
                                                 Seq(
@@ -422,6 +424,8 @@ class SearchResponderV2 extends Responder {
                                             }
 
                                             val booleanValHasBoolean = createUniqueVariableNameFromEntityAndProperty(queryVar, OntologyConstants.KnoraBase.ValueHasBoolean)
+
+                                            valueVariablesCreatedInFilters.put(queryVar, booleanValHasBoolean)
 
                                             // check if operator is supported for string operations
                                             if (!(filterCompare.operator.equals(CompareExpressionOperator.EQUALS) || filterCompare.operator.equals(CompareExpressionOperator.NOT_EQUALS))) {
@@ -445,6 +449,8 @@ class SearchResponderV2 extends Responder {
                                             }
 
                                             val textValHasString = createUniqueVariableNameFromEntityAndProperty(queryVar, OntologyConstants.KnoraBase.ValueHasString)
+
+                                            valueVariablesCreatedInFilters.put(queryVar, textValHasString)
 
                                             // check if operator is supported for string operations
                                             if (!(filterCompare.operator.equals(CompareExpressionOperator.EQUALS) || filterCompare.operator.equals(CompareExpressionOperator.NOT_EQUALS))) {
@@ -472,6 +478,9 @@ class SearchResponderV2 extends Responder {
                                             val date: JulianDayNumberValueV1 = DateUtilV1.createJDNValueV1FromDateString(dateStr)
 
                                             val dateValueHasStartVar = createUniqueVariableNameFromEntityAndProperty(queryVar, OntologyConstants.KnoraBase.ValueHasStartJDN)
+
+                                            // sort dates by their period's start
+                                            valueVariablesCreatedInFilters.put(queryVar, dateValueHasStartVar)
 
                                             val dateValueHasEndVar = createUniqueVariableNameFromEntityAndProperty(queryVar, OntologyConstants.KnoraBase.ValueHasEndJDN)
 
@@ -795,7 +804,7 @@ class SearchResponderV2 extends Responder {
                     case (acc, criterion) =>
                         // Did a FILTER already generate a unique variable for the literal value of this value object?
 
-                        valueVariablesUsedInFilters.get(criterion.queryVariable) match {
+                        valueVariablesCreatedInFilters.get(criterion.queryVariable) match {
                             case Some(generatedVariable) =>
                                 // Yes. Use the already generated variable in the ORDER BY.
                                 acc.copy(
