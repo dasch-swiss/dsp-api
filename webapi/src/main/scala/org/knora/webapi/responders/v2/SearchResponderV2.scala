@@ -928,11 +928,11 @@ class SearchResponderV2 extends Responder {
                     // Add statements to `additionalStatementsCreatedForEntities` since they are needed in the query's CONSTRUCT clause
                     val existingAdditionalStatementsCreated: Seq[StatementPattern] = additionalStatementsCreatedForEntities.get(inputEntity).toSeq.flatten
 
-                    additionalStatementsCreatedForEntities += inputEntity -> (existingAdditionalStatementsCreated ++ addedStatementsForResource/* ++ addedStatementsForValues*/)
+                    additionalStatementsCreatedForEntities += inputEntity -> (existingAdditionalStatementsCreated ++ addedStatementsForResource ++ addedStatementsForValues)
 
-                    //Seq(UnionPattern(blocks = Seq(addedStatementsForResource ++ filterNotExists, addedStatementsForValues)))
+                    Seq(UnionPattern(blocks = Seq(addedStatementsForResource ++ filterNotExists, addedStatementsForValues)))
 
-                    addedStatementsForResource ++ filterNotExists
+                    //addedStatementsForResource ++ filterNotExists
 
                 } else {
                     // inputEntity is target of a value property
@@ -1201,7 +1201,7 @@ class SearchResponderV2 extends Responder {
                 transformer = new NonTriplestoreSpecificConstructToConstructTransformer(typeInspectionResult)
             )
 
-            // TODO: include those IRIs in a FILTER in the CONSTRUCT clause.
+            // include those IRIs in a VALUES in the CONSTRUCT clause.
             mainResourceVar: QueryVariable = nonTriplestoreSpecificQuery.constructClause.statements.collect {
                 case statement if isMainResourceVariable(statement).nonEmpty => isMainResourceVariable(statement).get
             }.headOption.getOrElse(throw SparqlSearchException("Non main resource found in CONSTRUCT query"))
@@ -1240,8 +1240,7 @@ class SearchResponderV2 extends Responder {
             // separate resources and value objects
             queryResultsSeparated: Map[IRI, ConstructResponseUtilV2.ResourceWithValueRdfData] = ConstructResponseUtilV2.splitResourcesAndValueRdfData(constructQueryResults = searchResponse, userProfile = userProfile)
 
-        // TODO: pass the ORDER BY criterion, if any
-        } yield ReadResourcesSequenceV2(numberOfResources = queryResultsSeparated.size, resources = ConstructResponseUtilV2.createSearchResponse(queryResultsSeparated))
+        } yield ReadResourcesSequenceV2(numberOfResources = queryResultsSeparated.size, resources = ConstructResponseUtilV2.createSearchResponse(searchResults = queryResultsSeparated, orderByIri = matchingResourceIris))
     }
 
     /**

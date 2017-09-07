@@ -20,15 +20,17 @@
 
 package org.knora.webapi.util
 
+import org.knora.webapi._
+import org.knora.webapi.messages.store.triplestoremessages.SparqlConstructResponse
 import org.knora.webapi.messages.v1.responder.ontologymessages.StandoffEntityInfoGetResponseV1
-import org.knora.webapi.messages.v1.responder.standoffmessages.{GetMappingResponseV1, MappingXMLtoStandoff}
+import org.knora.webapi.messages.v1.responder.standoffmessages.MappingXMLtoStandoff
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.responder.valuemessages.{KnoraCalendarV1, KnoraPrecisionV1}
-import org.knora.webapi.messages.store.triplestoremessages.SparqlConstructResponse
 import org.knora.webapi.messages.v2.responder._
 import org.knora.webapi.twirl._
 import org.knora.webapi.util.standoff.StandoffTagUtilV1
-import org.knora.webapi._
+
+import scala.collection.immutable.ListMap
 
 
 object ConstructResponseUtilV2 {
@@ -495,16 +497,32 @@ object ConstructResponseUtilV2 {
       * @param searchResults the results returned by the triplestore.
       * @return a collection of [[ReadResourceV2]], representing the search results.
       */
-    def createSearchResponse(searchResults: Map[IRI, ResourceWithValueRdfData]): Vector[ReadResourceV2] = {
+    def createSearchResponse(searchResults: Map[IRI, ResourceWithValueRdfData], orderByIri: Seq[IRI] = Seq.empty[IRI]): Vector[ReadResourceV2] = {
+
+        // if orderByIri is given, use it to sort search results
+        val sortedResults: Map[IRI, ResourceWithValueRdfData] = if (orderByIri.nonEmpty) {
+
+            if (searchResults.keySet != orderByIri.toSet) throw AssertionException("searchResults and orderByIri do not contain the same Iris")
+
+            // iterate over orderByIri and return a ListMap of the search results
+            orderByIri.foldLeft(ListMap.empty[IRI, ResourceWithValueRdfData]) {
+                (acc: ListMap[IRI, ResourceWithValueRdfData], resIri: IRI) =>
+                    acc + (resIri -> searchResults(resIri))
+            }
+        } else {
+            // no order given
+            searchResults
+        }
 
         // each entry represents a resource that matches the search criteria
         // this is because linking properties are excluded from fulltext search
-        searchResults.map {
+        sortedResults.map {
             case (resourceIri: IRI, assertions: ResourceWithValueRdfData) =>
 
                 // TODO: check if the query path is represented by the resource's values the user has permissions to see
 
                 constructReadResourceV2(resourceIri, assertions, mappings = Map.empty[IRI, MappingAndXSLTransformation])
         }.toVector
+
     }
 }
