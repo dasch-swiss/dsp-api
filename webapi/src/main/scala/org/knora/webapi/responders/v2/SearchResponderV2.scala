@@ -32,7 +32,7 @@ import org.knora.webapi.responders.Responder
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.search._
 import org.knora.webapi.util.search.v2.{ApiV2Schema, _}
-import org.knora.webapi.util.{ConstructResponseUtilV2, DateUtilV1, InputValidation}
+import org.knora.webapi.util.{ConstructResponseUtilV2, DateUtilV1, InputValidation, KnoraIdUtil}
 
 import scala.collection.mutable
 import scala.concurrent.Future
@@ -883,6 +883,8 @@ class SearchResponderV2 extends Responder {
             // will be integrated in the Construct clause
             private val convertedStatementsCreatedForWholeStatements = mutable.Map.empty[StatementPattern, Seq[StatementPattern]]
 
+            private val knoraIdUtil = new KnoraIdUtil
+
             def createAdditionalStatementsForNonPropertyType(nonPropertyTypeInfo: NonPropertyTypeInfo, inputEntity: Entity): Seq[QueryPattern] = {
 
                 val typeIriInternal = if (InputValidation.isKnoraApiEntityIri(nonPropertyTypeInfo.typeIri)) {
@@ -909,13 +911,14 @@ class SearchResponderV2 extends Responder {
                         patterns = Seq(StatementPattern.makeInferred(subj = inputEntity, pred = IriRef(OntologyConstants.KnoraBase.ResourceProperty), obj = resourcePropObjVar))
                     ))
 
+
                     // Only query a resource's values if properties are requested for this resource because this makes the query slow
-                    val statementsForInputEntityAsSubjectWithProps = whereClause.patterns.collect {
+                    val requestedPropsForInputEntity: Seq[IriRef] = whereClause.patterns.collect {
                         // check if the given inputEntity is the subject of statements in Where clause
                         case statementPattern: StatementPattern if statementPattern.subj == inputEntity => statementPattern
                     }.filter {
                         statementPattern =>
-                            // check if the predicate is a knora entity (ignore statements mentioning rdf:type etc.)
+                            // check if the predicate is a Knora entity (ignore statements mentioning rdf:type etc.)
                             val infoKey = toTypeableEntityKey(statementPattern.pred)
 
                             infoKey match {
@@ -923,13 +926,51 @@ class SearchResponderV2 extends Responder {
                                 case _ => false
                             }
 
+                    }.map {
+                        (statementPattern: StatementPattern) =>
+                            statementPattern.pred
+                    }.collect {
+
+                        case simpleIri: IriRef =>
+
+                            // check if it is a linking property and convert ot to a link value prop if necessary
+                            val infoKey = toTypeableEntityKey(simpleIri)
+
+                            val typeInfo: SparqlEntityTypeInfo = typeInspectionResult.typedEntities(infoKey.get)
+
+                            val simplifiedApiPropTypeInfo: PropertyTypeInfo = typeInfo match {
+                                case propInfo: PropertyTypeInfo => propInfo
+
+                                case nonPropInfo: NonPropertyTypeInfo => throw SparqlSearchException(s"PropertyTypeInfo expected for ${infoKey.get}")
+                            }
+
+                            val internalPropTypeInfo: IRI = if (InputValidation.isKnoraApiEntityIri(simplifiedApiPropTypeInfo.objectTypeIri)) {
+                                InputValidation.externalIriToInternalIri(simplifiedApiPropTypeInfo.objectTypeIri, () => throw BadRequestException(s"${simplifiedApiPropTypeInfo.objectTypeIri} is not a valid external knora-api entity Iri"))
+                            } else {
+                                simplifiedApiPropTypeInfo.objectTypeIri
+                            }
+
+                            // convert to internal Iri
+                            val internalIri = InputValidation.externalIriToInternalIri(simpleIri.iri, () => throw BadRequestException(s"${simpleIri.iri} is not a valid external knora-api entity Iri"))
+
+                            internalPropTypeInfo match {
+                                case OntologyConstants.KnoraBase.Resource =>
+                                    IriRef(knoraIdUtil.linkPropertyIriToLinkValuePropertyIri(internalIri))
+
+                                case _ => IriRef(internalIri)
+
+                            }
+
+                        // TODO: what about variables representing properties?
+                        //case queryVar: QueryVariable => ()
+
                     }
 
-                    // Add statements to `additionalStatementsCreatedForEntities` since they are needed in the query's CONSTRUCT clause
+                    // save existing statements for this inputEntity
                     val existingAdditionalStatementsCreated: Seq[StatementPattern] = additionalStatementsCreatedForEntities.get(inputEntity).toSeq.flatten
 
-                    // If statementsForInputEntityAsSubjectWithProps is not empty, properties are requested for the given inputEntity
-                    if (statementsForInputEntityAsSubjectWithProps.nonEmpty) {
+                    // If requestedPropsForInputEntity is not empty, properties are requested for the given inputEntity
+                    if (requestedPropsForInputEntity.nonEmpty) {
 
                         // query the resource's properties
 
@@ -946,22 +987,10 @@ class SearchResponderV2 extends Responder {
                         )
 
                         // restrict to requested properties
-                        // TODO: get also linkvalue prop!!!!! Maybe this can be done in `convertStatementForPropertyType`
-                        val restrictByPredicate: Seq[IriRef] = statementsForInputEntityAsSubjectWithProps.map {
-                            (statementPattern: StatementPattern) =>
-                                statementPattern.pred
-                        }.collect {
-                            case simpleIri: IriRef => simpleIri
-                        }.map {
-                            (simpleIri: IriRef) =>
-                                // convert to internal Iri
-                                val internalIri = InputValidation.externalIriToInternalIri(simpleIri.iri, () => throw BadRequestException(s"${simpleIri.iri} is not a valid external knora-api entity Iri"))
 
-                                IriRef(internalIri)
-                        }
+                        val values = ValuesPattern(variable = valuePropVar, values = requestedPropsForInputEntity)
 
-                        val values = ValuesPattern(variable = valuePropVar, values = restrictByPredicate)
-
+                        // Add statements to `additionalStatementsCreatedForEntities` since they are needed in the query's CONSTRUCT clause
                         additionalStatementsCreatedForEntities += inputEntity -> (existingAdditionalStatementsCreated ++ addedStatementsForResource ++ addedStatementsForValues)
 
                         Seq(UnionPattern(blocks = Seq(addedStatementsForResource ++ filterNotExists, addedStatementsForValues :+ values)))
@@ -970,6 +999,7 @@ class SearchResponderV2 extends Responder {
 
                         // no properties requested for resource
 
+                        // Add statements to `additionalStatementsCreatedForEntities` since they are needed in the query's CONSTRUCT clause
                         additionalStatementsCreatedForEntities += inputEntity -> (existingAdditionalStatementsCreated ++ addedStatementsForResource)
 
                         addedStatementsForResource ++ filterNotExists
