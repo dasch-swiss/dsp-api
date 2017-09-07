@@ -35,7 +35,7 @@ queryArr.push(`
         ?letter ?linkingProp2 <http://rdfh.ch/beol/_yblAQMwT2un_xN7UaVWrg> .
         ?linkingProp2 knora-api:objectType knora-api:Resource .
     
-        FILTER(?linkingProp2 = knora-api:hasLinkTo || ?linkingProp2 = knora-api:hasLinkTo )
+        FILTER(?linkingProp2 = beol:hasAuthor || ?linkingProp2 = beol:hasRecipient )
     
         <http://rdfh.ch/beol/_yblAQMwT2un_xN7UaVWrg> a knora-api:Resource .
 }

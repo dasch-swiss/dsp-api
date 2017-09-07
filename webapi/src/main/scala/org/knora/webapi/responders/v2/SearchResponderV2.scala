@@ -913,7 +913,7 @@ class SearchResponderV2 extends Responder {
 
 
                     // Only query a resource's values if properties are requested for this resource because this makes the query slow
-                    val requestedPropsForInputEntity: Seq[Entity] = whereClause.patterns.collect {
+                    val requestedPropsForInputEntity: Set[IriRef] = whereClause.patterns.collect {
                         // check if the given inputEntity is the subject of statements in Where clause
                         case statementPattern: StatementPattern if statementPattern.subj == inputEntity => statementPattern
                     }.filter {
@@ -955,16 +955,102 @@ class SearchResponderV2 extends Responder {
 
                             internalPropTypeInfo match {
                                 case OntologyConstants.KnoraBase.Resource =>
-                                    IriRef(knoraIdUtil.linkPropertyIriToLinkValuePropertyIri(internalIri))
+                                    Seq(IriRef(knoraIdUtil.linkPropertyIriToLinkValuePropertyIri(internalIri)))
 
-                                case _ => IriRef(internalIri)
+                                case _ => Seq(IriRef(internalIri))
 
                             }
 
-                        // variables representing properties?
-                        case queryVar: QueryVariable => queryVar
+                        // variables representing a property
+                        case queryVar: QueryVariable =>
 
-                    }
+                            // figure out if it is a linking prop
+                            // if so look for filter patterns that restrict this var to an Iri
+                            // make these Iris link value properties
+
+                            val infoKey = toTypeableEntityKey(queryVar)
+
+                            val typeInfo: SparqlEntityTypeInfo = typeInspectionResult.typedEntities(infoKey.get)
+
+                            val simplifiedApiPropTypeInfo: PropertyTypeInfo = typeInfo match {
+                                case propInfo: PropertyTypeInfo => propInfo
+
+                                case nonPropInfo: NonPropertyTypeInfo => throw SparqlSearchException(s"PropertyTypeInfo expected for ${infoKey.get}")
+                            }
+
+                            val internalPropTypeInfo: IRI = if (InputValidation.isKnoraApiEntityIri(simplifiedApiPropTypeInfo.objectTypeIri)) {
+                                InputValidation.externalIriToInternalIri(simplifiedApiPropTypeInfo.objectTypeIri, () => throw BadRequestException(s"${simplifiedApiPropTypeInfo.objectTypeIri} is not a valid external knora-api entity Iri"))
+                            } else {
+                                simplifiedApiPropTypeInfo.objectTypeIri
+                            }
+
+                            val filterPatterns = whereClause.patterns.collect {
+                                case filterPattern: FilterPattern => filterPattern
+                            }
+
+                            // look for queryVar as the left argument of a FilterExpression
+
+                            val propertyRestrictions = mutable.Set.empty[IRI]
+
+                            def findQueryVarInExpressions(queryVar: QueryVariable, expression: Expression): Unit = {
+
+                                expression match {
+                                    case compareExpressionWithQueryVar: CompareExpression if compareExpressionWithQueryVar.leftArg == queryVar =>
+                                        compareExpressionWithQueryVar.rightArg match {
+                                            case iriRef: IriRef =>
+                                                propertyRestrictions.add(iriRef.iri)
+
+                                            case _ => findQueryVarInExpressions(queryVar, compareExpressionWithQueryVar.rightArg)
+                                        }
+
+                                    case compareExpression: CompareExpression =>
+                                        findQueryVarInExpressions(queryVar, compareExpression.leftArg)
+                                        findQueryVarInExpressions(queryVar, compareExpression.rightArg)
+
+                                    case orExpression: OrExpression =>
+                                        findQueryVarInExpressions(queryVar, orExpression.leftArg)
+                                        findQueryVarInExpressions(queryVar, orExpression.rightArg)
+
+                                    case andExpression: AndExpression =>
+                                        findQueryVarInExpressions(queryVar, andExpression.leftArg)
+                                        findQueryVarInExpressions(queryVar, andExpression.rightArg)
+
+                                    case _ => ()
+                                }
+
+                            }
+
+                            filterPatterns.foreach {
+                                (filterP: FilterPattern) =>
+                                    findQueryVarInExpressions(queryVar, filterP.expression)
+                            }
+
+
+                            internalPropTypeInfo match {
+                                case OntologyConstants.KnoraBase.Resource =>
+
+                                    // try to find restrictions for this variable representing a linking property and convert it to a link value property
+                                    //IriRef(knoraIdUtil.linkPropertyIriToLinkValuePropertyIri(internalIri))
+
+                                    val linkPropIris: Seq[IriRef] = propertyRestrictions.map {
+                                        linkProp =>
+                                            // convert to internal Iri
+                                            val internalIri = InputValidation.externalIriToInternalIri(linkProp, () => throw BadRequestException(s"${linkProp} is not a valid external knora-api entity Iri"))
+
+                                            IriRef(knoraIdUtil.linkPropertyIriToLinkValuePropertyIri(internalIri))
+                                    }.toSeq
+
+                                    linkPropIris
+
+                                case otherProp =>
+
+                                    propertyRestrictions.map(iri => IriRef(iri)).toSeq
+
+                            }
+
+                    }.flatten.toSet
+
+                    println(requestedPropsForInputEntity)
 
                     // save existing statements for this inputEntity
                     val existingAdditionalStatementsCreated: Seq[StatementPattern] = additionalStatementsCreatedForEntities.get(inputEntity).toSeq.flatten
@@ -988,10 +1074,11 @@ class SearchResponderV2 extends Responder {
 
                         // restrict to requested properties
 
-                        // TODO: support query var propts using a FILTER
                         val valuePatterns = ValuesPattern(variable = valuePropVar, values = requestedPropsForInputEntity.collect {
                             case iriRef: IriRef => iriRef
                         })
+
+
 
                         /*val compareExpressions: Seq[CompareExpression] = requestedPropsForInputEntity.map {
                             entity =>
@@ -1311,7 +1398,7 @@ class SearchResponderV2 extends Responder {
                     resultRow.rowMap(mainResourceVar.variableName)
             }
 
-            valuesPattern: ValuesPattern = ValuesPattern(mainResourceVar, matchingResourceIris.map(iri => IriRef(iri)))
+            valuesPattern: ValuesPattern = ValuesPattern(mainResourceVar, matchingResourceIris.map(iri => IriRef(iri)).toSet)
 
             triplestoreSpecificQueryPatternTransformerConstruct: ConstructToConstructTransformer = {
                 if (settings.triplestoreType.startsWith("graphdb")) {
@@ -1332,7 +1419,7 @@ class SearchResponderV2 extends Responder {
 
             triplestoreSpecificSparql: String = triplestoreSpecificQuery.toSparql
 
-            // _ = println(triplestoreSpecificQuery.toSparql)
+            _ = println(triplestoreSpecificQuery.toSparql)
 
             searchResponse: SparqlConstructResponse <- (storeManager ? SparqlConstructRequest(triplestoreSpecificSparql)).mapTo[SparqlConstructResponse]
 
