@@ -896,21 +896,23 @@ class SearchResponderV2 extends Responder {
                     // inputEntity is either source or target of a linking property
                     // create additional statements in order to query permissions and other information for a resource
 
+                    val resourcePropVar = createUniqueVariableNameFromEntityAndProperty(inputEntity, OntologyConstants.KnoraBase.KnoraBasePrefixExpansion + "ResProp")
+                    val resourcePropObjVar = createUniqueVariableNameFromEntityAndProperty(inputEntity, OntologyConstants.KnoraBase.KnoraBasePrefixExpansion + "ResObj")
+
                     val addedStatementsForResource = Seq(
                         StatementPattern.makeInferred(subj = inputEntity, pred = IriRef(OntologyConstants.Rdf.Type), obj = IriRef(OntologyConstants.KnoraBase.Resource)),
                         StatementPattern.makeExplicit(subj = inputEntity, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean)),
-                        StatementPattern.makeExplicit(subj = inputEntity, pred = IriRef(OntologyConstants.Rdfs.Label), obj = createUniqueVariableNameFromEntityAndProperty(inputEntity, OntologyConstants.Rdfs.Label)),
-                        StatementPattern.makeExplicit(subj = inputEntity, pred = IriRef(OntologyConstants.Rdf.Type), obj = createUniqueVariableNameFromEntityAndProperty(inputEntity, OntologyConstants.Rdf.Type)),
-                        StatementPattern.makeExplicit(subj = inputEntity, pred = IriRef(OntologyConstants.KnoraBase.AttachedToUser), obj = createUniqueVariableNameFromEntityAndProperty(inputEntity, OntologyConstants.KnoraBase.AttachedToUser)),
-                        StatementPattern.makeExplicit(subj = inputEntity, pred = IriRef(OntologyConstants.KnoraBase.HasPermissions), obj = createUniqueVariableNameFromEntityAndProperty(inputEntity, OntologyConstants.KnoraBase.HasPermissions)),
-                        StatementPattern.makeExplicit(subj = inputEntity, pred = IriRef(OntologyConstants.KnoraBase.AttachedToProject), obj = createUniqueVariableNameFromEntityAndProperty(inputEntity, OntologyConstants.KnoraBase.AttachedToProject))
+                        StatementPattern.makeExplicit(subj = inputEntity, pred = resourcePropVar, obj = resourcePropObjVar)
                     )
+
+                    val filterNotExists = Seq(FilterNotExistsPattern(
+                        patterns = Seq(StatementPattern.makeInferred(subj = inputEntity, pred = IriRef(OntologyConstants.KnoraBase.ResourceProperty), obj = resourcePropObjVar))
+                    ))
 
                     // TODO: only query a resource's values if properties are requested for this resource because this makes the query slow
 
-                    // TODO: only do it if subj is a query var (workaround!!!!!!!!)
-                    /*inputEntity match {
-                       case queryVar: QueryVariable =>*/
+
+
                     val valueObjectVar = createUniqueVariableNameFromEntityAndProperty(inputEntity, OntologyConstants.KnoraBase.Value)
                     val valuePropVar = createUniqueVariableNameFromEntityAndProperty(inputEntity, OntologyConstants.KnoraBase.HasValue)
                     val valueObjectType = createUniqueVariableNameFromEntityAndProperty(valueObjectVar, OntologyConstants.Rdf.Type)
@@ -920,21 +922,17 @@ class SearchResponderV2 extends Responder {
                     val addedStatementsForValues = Seq(StatementPattern.makeInferred(subj = inputEntity, pred = IriRef(OntologyConstants.KnoraBase.HasValue), obj = valueObjectVar),
                         StatementPattern.makeExplicit(subj = inputEntity, pred = valuePropVar, obj = valueObjectVar),
                         StatementPattern.makeExplicit(subj = valueObjectVar, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean)),
-                        StatementPattern.makeExplicit(subj = valueObjectVar, pred = IriRef(OntologyConstants.Rdf.Type), obj = valueObjectType),
-                        StatementPattern.makeExplicit(subj = valueObjectVar, pred = valueObjectProp, obj = valueObjectValue))
-
-                    /*case _ =>
-                        Seq.empty[StatementPattern]
-                }*/
-
+                        StatementPattern.makeExplicit(subj = valueObjectVar, pred = valueObjectProp, obj = valueObjectValue)
+                    )
 
                     // Add statements to `additionalStatementsCreatedForEntities` since they are needed in the query's CONSTRUCT clause
                     val existingAdditionalStatementsCreated: Seq[StatementPattern] = additionalStatementsCreatedForEntities.get(inputEntity).toSeq.flatten
 
-                    additionalStatementsCreatedForEntities += inputEntity -> (existingAdditionalStatementsCreated ++ addedStatementsForResource ++ addedStatementsForValues)
+                    additionalStatementsCreatedForEntities += inputEntity -> (existingAdditionalStatementsCreated ++ addedStatementsForResource/* ++ addedStatementsForValues*/)
 
-                    addedStatementsForResource ++ addedStatementsForValues
+                    //Seq(UnionPattern(blocks = Seq(addedStatementsForResource ++ filterNotExists, addedStatementsForValues)))
 
+                    addedStatementsForResource ++ filterNotExists
 
                 } else {
                     // inputEntity is target of a value property
@@ -1194,7 +1192,7 @@ class SearchResponderV2 extends Responder {
                 transformer = triplestoreSpecificQueryPatternTransformerSelect
             )
 
-            // _ = println(triplestoreSpecificPrequery.toSparql)
+            _ = println(triplestoreSpecificPrequery.toSparql)
 
             prequeryResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(triplestoreSpecificPrequery.toSparql)).mapTo[SparqlSelectResponse]
 
@@ -1216,14 +1214,6 @@ class SearchResponderV2 extends Responder {
 
             valuesPattern: ValuesPattern = ValuesPattern(mainResourceVar, matchingResourceIris.map(iri => IriRef(iri)))
 
-
-            // TODO: take all available resource Iris
-            /*filterPattern: FilterPattern = filterExpressions.foldLeft(FilterPattern()) {
-
-            }*/
-
-            //_ = println(filterPattern)
-
             triplestoreSpecificQueryPatternTransformerConstruct: ConstructToConstructTransformer = {
                 if (settings.triplestoreType.startsWith("graphdb")) {
                     // GraphDB
@@ -1240,27 +1230,6 @@ class SearchResponderV2 extends Responder {
             )
 
             // Convert the result to a SPARQL string and send it to the triplestore.
-
-            /*
-                        statementsInWhereClause = triplestoreSpecificQuery.whereClause.patterns.collect {
-                            case statementPattern: StatementPattern => statementPattern
-                        }
-
-                        nonStatementsInWhereClause = triplestoreSpecificQuery.whereClause.patterns.filter {
-                            case statementPattern: StatementPattern => false
-                            case _ => true
-                        }
-
-                        statementsInConstructClause = triplestoreSpecificQuery.constructClause.statements.map(_)
-
-
-                        statementsInWhereButNotInConstruct = statementsInWhereClause.diff(statementsInConstructClause)
-                        statementsInConstructButNotInWhere = statementsInConstructClause.diff(statementsInWhereClause)
-
-                        _ = println(s"statementsInWhereButNotInConstruct: $statementsInWhereButNotInConstruct")
-                        _ = println(s"statementsInConstructButNotInWhere: $statementsInConstructButNotInWhere")
-                        _ = println(s"nonStatementsInWhereClause: $nonStatementsInWhereClause")
-            */
 
             triplestoreSpecificSparql: String = triplestoreSpecificQuery.toSparql
 

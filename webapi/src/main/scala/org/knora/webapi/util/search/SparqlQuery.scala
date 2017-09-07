@@ -229,6 +229,15 @@ case class FilterPattern(expression: Expression) extends QueryPattern {
 }
 
 /**
+  * Represents a FILTER NOT EXISTS in a query.
+  *
+  * @param patterns the patterns contained in the FILTER NOT EXISTS.
+  */
+case class FilterNotExistsPattern(patterns: Seq[QueryPattern]) extends QueryPattern {
+    def toSparql: String = s"FILTER NOT EXISTS {\n ${patterns.map(_.toSparql).mkString}\n}\n"
+}
+
+/**
   * Represents VALUES in a query.
   *
   * @param variable the variable that the values will be assigned to.
