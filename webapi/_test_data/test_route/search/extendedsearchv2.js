@@ -42,7 +42,7 @@ queryArr.push(`
 `);
 
 // search for a letter that has the given title and mentions Isaac Newton
-/*queryArr.push(`
+queryArr.push(`
       PREFIX beol: <http://api.knora.org/ontology/beol/simple/v2#>
       PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
       
@@ -53,7 +53,7 @@ queryArr.push(`
       
           ?letter beol:title ?title .
       
-          ?letter beol:mentionsPerson <http://rdfh.ch/beol/NUkE4PxyT1uEm3K9db63wQ> .
+          ?letter beol:mentionsPerson <http://rdfh.ch/beol/BPW4_gnxQBC4iWm3F6ni8w> .
       
       } WHERE {
           ?letter a knora-api:Resource .
@@ -66,10 +66,10 @@ queryArr.push(`
           FILTER(?title = "1707-05-18_2_Hermann_Jacob-Scheuchzer_Johann_Jakob")
       
           # Newton,  Isaac 1643-1727
-          ?letter beol:mentionsPerson <http://rdfh.ch/beol/NUkE4PxyT1uEm3K9db63wQ> .
+          ?letter beol:mentionsPerson <http://rdfh.ch/beol/BPW4_gnxQBC4iWm3F6ni8w> .
           beol:mentionsPerson  knora-api:objectType knora-api:Resource .
       
-          <http://rdfh.ch/beol/NUkE4PxyT1uEm3K9db63wQ> a knora-api:Resource .
+          <http://rdfh.ch/beol/BPW4_gnxQBC4iWm3F6ni8w> a knora-api:Resource .
       }
 `);
 
@@ -85,7 +85,7 @@ queryArr.push(`
       
           ?letter beol:title ?title .
       
-          ?letter beol:mentionsPerson <http://rdfh.ch/beol/NUkE4PxyT1uEm3K9db63wQ> .
+          ?letter beol:mentionsPerson <http://rdfh.ch/beol/BPW4_gnxQBC4iWm3F6ni8w> .
       
       } WHERE {
           ?letter a knora-api:Resource .
@@ -100,10 +100,10 @@ queryArr.push(`
           FILTER(?title = "1707-05-18_2_Hermann_Jacob-Scheuchzer_Johann_Jakob")
       
           # Newton,  Isaac 1643-1727
-          ?letter beol:mentionsPerson <http://rdfh.ch/beol/NUkE4PxyT1uEm3K9db63wQ> .
+          ?letter beol:mentionsPerson <http://rdfh.ch/beol/BPW4_gnxQBC4iWm3F6ni8w> .
           beol:mentionsPerson  knora-api:objectType knora-api:Resource .
       
-          <http://rdfh.ch/beol/NUkE4PxyT1uEm3K9db63wQ> a knora-api:Resource .
+          <http://rdfh.ch/beol/BPW4_gnxQBC4iWm3F6ni8w> a knora-api:Resource .
       }
 `);
 
@@ -131,7 +131,10 @@ CONSTRUCT {
     knora-api:hasStandoffLinkTo knora-api:objectType knora-api:Resource .
     ?anotherLetter a knora-api:Resource .
 
-    ?letter beol:title "1708-03-11_Scheuchzer_Johannes-Bernoulli_Johann_I" .
+    ?letter beol:title ?title .
+    FILTER(?title = "1708-03-11_Scheuchzer_Johannes-Bernoulli_Johann_I")
+    
+    ?title a xsd:string .
     beol:title knora-api:objectType xsd:string .
 
     ?anotherLetter beol:hasAuthor ?author .
@@ -141,48 +144,15 @@ CONSTRUCT {
     ?author a beol:person .
     ?author a knora-api:Resource .
 
-    ?author beol:hasIAFIdentifier "120379260" .
+    ?author beol:hasIAFIdentifier ?gnd .
+    FILTER(?gnd = "120379260")
+    
+    ?gnd a xsd:string .
     beol:hasIAFIdentifier knora-api:objectType xsd:string .
 }
 `);
 
 
-queryArr.push(`
-    PREFIX beol: <http://api.knora.org/ontology/beol/simple/v2#>
-    PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
- 
-    CONSTRUCT {
-        ?page knora-api:isMainResource true .
-        
-        ?page a beol:page .
-        
-        ?page knora-api:isPartOf <http://rdfh.ch/beol/dQ1D0AjmSMCS_j4yLaSmFw> .
-        
-        ?page beol:seqnum ?seqnum .
-        
-        ?page knora-api:hasStillImageFileValue ?file .
-    } WHERE {
-    
-        ?page a beol:page .
-        ?page a knora-api:Resource .
-        
-        ?page knora-api:isPartOf <http://rdfh.ch/beol/dQ1D0AjmSMCS_j4yLaSmFw> .
-        knora-api:isPartOf knora-api:objectType knora-api:Resource .
-        
-        <http://rdfh.ch/beol/dQ1D0AjmSMCS_j4yLaSmFw> a knora-api:Resource .
-    
-        ?page beol:seqnum ?seqnum .
-        beol:seqnum knora-api:objectType xsd:integer .
-    
-        ?seqnum a xsd:integer .
-    
-        ?page knora-api:hasStillImageFileValue ?file .
-        knora-api:hasStillImageFileValue knora-api:objectType knora-api:StillImageFile .
-        
-        ?file a knora-api:StillImageFile .
-    
-    }
-`);*/
 
 
 

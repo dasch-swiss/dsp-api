@@ -338,28 +338,17 @@ class SearchResponderV2 extends Responder {
                                 case propInfo: PropertyTypeInfo =>
                                     // the left arg (a variable) represents a property
 
-                                    // get the internal objectIri of the property type info
-                                    val typeIriInternal = if (InputValidation.isKnoraApiEntityIri(propInfo.objectTypeIri)) {
-                                        InputValidation.externalIriToInternalIri(propInfo.objectTypeIri, () => throw BadRequestException(s"${propInfo.objectTypeIri} is not a valid external knora-api entity Iri"))
-                                    } else {
-                                        propInfo.objectTypeIri
-                                    }
+                                    // left arg is variable representing a property
+                                    // therefore the right argument must be an Iri restricting the property variable to a certain property
+                                    filterCompare.rightArg match {
+                                        case iriRef: IriRef =>
 
-                                    typeIriInternal match {
+                                            // make sure that the comparison operator is a `CompareExpressionOperator.EQUALS`
+                                            if (filterCompare.operator != CompareExpressionOperator.EQUALS) throw SparqlSearchException(s"Comparison operator in a CompareExpression for a property type is expected to be ${CompareExpressionOperator.EQUALS}, but ${filterCompare.operator} given. For negations use 'FILTER NOT EXISTS' ")
 
-                                        case OntologyConstants.KnoraBase.Resource =>
-                                            // left arg is variable representing a property pointing to a knora-base:Resource, so the right argument must be an Iri
-                                            filterCompare.rightArg match {
-                                                case iriRef: IriRef =>
+                                            TransformedFilterExpression(CompareExpression(filterCompare.leftArg, filterCompare.operator, filterCompare.rightArg))
 
-                                                    // make sure that the comparison operator is a `CompareExpressionOperator.EQUALS`
-                                                    if (filterCompare.operator != CompareExpressionOperator.EQUALS) throw SparqlSearchException(s"Comparison operator in a CompareExpression for a property type is expected to be ${CompareExpressionOperator.EQUALS}, but ${filterCompare.operator} given. For negations use 'FILTER NOT EXISTS' ")
-
-                                                    TransformedFilterExpression(CompareExpression(filterCompare.leftArg, filterCompare.operator, filterCompare.rightArg))
-
-                                                case other => throw SparqlSearchException(s"right argument of CompareExpression is expected to be an Iri representing a property, but $other is given")
-                                            }
-
+                                        case other => throw SparqlSearchException(s"right argument of CompareExpression is expected to be an Iri representing a property, but $other is given")
                                     }
 
                                 case nonPropInfo: NonPropertyTypeInfo =>
@@ -1050,8 +1039,6 @@ class SearchResponderV2 extends Responder {
 
                     }.flatten.toSet
 
-                    println(requestedPropsForInputEntity)
-
                     // save existing statements for this inputEntity
                     val existingAdditionalStatementsCreated: Seq[StatementPattern] = additionalStatementsCreatedForEntities.get(inputEntity).toSeq.flatten
 
@@ -1077,7 +1064,6 @@ class SearchResponderV2 extends Responder {
                         val valuePatterns = ValuesPattern(variable = valuePropVar, values = requestedPropsForInputEntity.collect {
                             case iriRef: IriRef => iriRef
                         })
-
 
 
                         /*val compareExpressions: Seq[CompareExpression] = requestedPropsForInputEntity.map {
@@ -1419,7 +1405,7 @@ class SearchResponderV2 extends Responder {
 
             triplestoreSpecificSparql: String = triplestoreSpecificQuery.toSparql
 
-            _ = println(triplestoreSpecificQuery.toSparql)
+            // _ = println(triplestoreSpecificQuery.toSparql)
 
             searchResponse: SparqlConstructResponse <- (storeManager ? SparqlConstructRequest(triplestoreSpecificSparql)).mapTo[SparqlConstructResponse]
 
