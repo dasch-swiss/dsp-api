@@ -913,7 +913,7 @@ class SearchResponderV2 extends Responder {
 
 
                     // Only query a resource's values if properties are requested for this resource because this makes the query slow
-                    val requestedPropsForInputEntity: Seq[IriRef] = whereClause.patterns.collect {
+                    val requestedPropsForInputEntity: Seq[Entity] = whereClause.patterns.collect {
                         // check if the given inputEntity is the subject of statements in Where clause
                         case statementPattern: StatementPattern if statementPattern.subj == inputEntity => statementPattern
                     }.filter {
@@ -961,8 +961,8 @@ class SearchResponderV2 extends Responder {
 
                             }
 
-                        // TODO: what about variables representing properties?
-                        //case queryVar: QueryVariable => ()
+                        // variables representing properties?
+                        case queryVar: QueryVariable => queryVar
 
                     }
 
@@ -988,12 +988,38 @@ class SearchResponderV2 extends Responder {
 
                         // restrict to requested properties
 
-                        val values = ValuesPattern(variable = valuePropVar, values = requestedPropsForInputEntity)
+                        // TODO: support query var propts using a FILTER
+                        val valuePatterns = ValuesPattern(variable = valuePropVar, values = requestedPropsForInputEntity.collect {
+                            case iriRef: IriRef => iriRef
+                        })
+
+                        /*val compareExpressions: Seq[CompareExpression] = requestedPropsForInputEntity.map {
+                            entity =>
+                            CompareExpression(leftArg = valuePropVar, operator = CompareExpressionOperator.EQUALS, rightArg = entity)
+                        }
+
+                        def createOrExpression(compareExpression: CompareExpression, remainingCompareExpressions: Seq[CompareExpression]): _root_.org.knora.webapi.util.search.OrExpression = {
+
+                            if (remainingCompareExpressions.length == 1) {
+                                OrExpression(leftArg = compareExpression, rightArg = remainingCompareExpressions.head)
+                            } else {
+                                OrExpression(leftArg = compareExpression, rightArg = createOrExpression(remainingCompareExpressions.head, remainingCompareExpressions.tail))
+                            }
+
+                        }
+
+                        val filterExpression: Expression = if (compareExpressions.length > 1) {
+                            createOrExpression(compareExpressions.head, compareExpressions.tail)
+                        } else {
+                            compareExpressions.head
+                        }
+
+                        val filterPattern = FilterPattern(expression = filterExpression)*/
 
                         // Add statements to `additionalStatementsCreatedForEntities` since they are needed in the query's CONSTRUCT clause
                         additionalStatementsCreatedForEntities += inputEntity -> (existingAdditionalStatementsCreated ++ addedStatementsForResource ++ addedStatementsForValues)
 
-                        Seq(UnionPattern(blocks = Seq(addedStatementsForResource ++ filterNotExists, addedStatementsForValues :+ values)))
+                        Seq(UnionPattern(blocks = Seq(addedStatementsForResource ++ filterNotExists, addedStatementsForValues :+ valuePatterns)))
 
                     } else {
 
@@ -1043,24 +1069,6 @@ class SearchResponderV2 extends Responder {
 
                         val existingConvertedStatements: Seq[StatementPattern] = convertedStatementsCreatedForWholeStatements.get(statementPattern).toSeq.flatten
 
-                        // variable referring to the link's value object (reification)
-                        /*val linkValueVar = createUniqueVariableFromStatement(statementPattern, "linkObj") // A variable representing the reification
-                        val linkPropVar = createUniqueVariableFromStatement(statementPattern, "linkProp") // A variable representing the explicit property that actually points to the target resource
-                        val linkValuePropVar = createUniqueVariableFromStatement(statementPattern, "linkValueProp") // A variable representing the explicit property that actually points to the reification
-                        val linkValuePredVar = createUniqueVariableFromStatement(statementPattern, "linkValuePred") // A variable representing a predicate of the reification
-                        val linkValueObjVar = createUniqueVariableFromStatement(statementPattern, "linkValueObj") // A variable representing a predicate of the reification
-
-                        val linkValue = Seq(statementPattern, // keep the original statement pointing from the source to the target resource, using inference
-                            StatementPattern.makeExplicit(subj = statementPattern.subj, pred = linkPropVar, obj = statementPattern.obj), // find out what the actual link property is
-                            StatementPattern.makeInferred(subj = statementPattern.subj, pred = IriRef(OntologyConstants.KnoraBase.HasValue), obj = linkValueVar), // include knora-base:hasValue pointing to the link value, because the construct clause needs it
-                            StatementPattern.makeExplicit(subj = statementPattern.subj, pred = linkValuePropVar, obj = linkValueVar), // find out what the actual link value property is
-                            StatementPattern.makeExplicit(subj = linkValueVar, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean)), // ensure the link value isn't deleted
-                            StatementPattern.makeExplicit(subj = linkValueVar, pred = IriRef(OntologyConstants.Rdf.Type), obj = IriRef(OntologyConstants.KnoraBase.LinkValue)), // it's a link value
-                            StatementPattern.makeExplicit(subj = linkValueVar, pred = IriRef(OntologyConstants.Rdf.Subject), obj = statementPattern.subj), // the rdf:subject of the link value must be the source resource
-                            StatementPattern.makeExplicit(subj = linkValueVar, pred = IriRef(OntologyConstants.Rdf.Predicate), obj = linkPropVar), // the rdf:predicate of the link value must be the link property
-                            StatementPattern.makeExplicit(subj = linkValueVar, pred = IriRef(OntologyConstants.Rdf.Object), obj = statementPattern.obj), // the rdf:object of the link value must be the target resource
-                            StatementPattern.makeExplicit(subj = linkValueVar, pred = linkValuePredVar, obj = linkValueObjVar) // get any other statements about the link value
-                        )*/
 
                         // include the original statement relating the subject to the target in the query's CONSTRUCT clause
                         convertedStatementsCreatedForWholeStatements += statementPattern -> (existingConvertedStatements :+ statementPattern)
