@@ -869,7 +869,7 @@ class SearchResponderV2 extends Responder {
           *
           * @param typeInspectionResult the result of type inspection of the original query.
           */
-        class NonTriplestoreSpecificConstructToConstructTransformer(typeInspectionResult: TypeInspectionResult) extends AbstractTransformer with ConstructToConstructTransformer {
+        class NonTriplestoreSpecificConstructToConstructTransformer(typeInspectionResult: TypeInspectionResult, whereClause: WhereClause) extends AbstractTransformer with ConstructToConstructTransformer {
 
             // a Set containing all `TypeableEntity` (keys of `typeInspectionResult`) that have already been processed
             // in order to prevent duplicates
@@ -909,30 +909,72 @@ class SearchResponderV2 extends Responder {
                         patterns = Seq(StatementPattern.makeInferred(subj = inputEntity, pred = IriRef(OntologyConstants.KnoraBase.ResourceProperty), obj = resourcePropObjVar))
                     ))
 
-                    // TODO: only query a resource's values if properties are requested for this resource because this makes the query slow
+                    // Only query a resource's values if properties are requested for this resource because this makes the query slow
+                    val statementsForInputEntityAsSubjectWithProps = whereClause.patterns.collect {
+                        // check if the given inputEntity is the subject of statements in Where clause
+                        case statementPattern: StatementPattern if statementPattern.subj == inputEntity => statementPattern
+                    }.filter {
+                        statementPattern =>
+                            // check if the predicate is a knora entity (ignore statements mentioning rdf:type etc.)
+                            val infoKey = toTypeableEntityKey(statementPattern.pred)
 
+                            infoKey match {
+                                case Some(key) => typeInspectionResult.typedEntities.get(key).nonEmpty
+                                case _ => false
+                            }
 
-
-                    val valueObjectVar = createUniqueVariableNameFromEntityAndProperty(inputEntity, OntologyConstants.KnoraBase.Value)
-                    val valuePropVar = createUniqueVariableNameFromEntityAndProperty(inputEntity, OntologyConstants.KnoraBase.HasValue)
-                    val valueObjectType = createUniqueVariableNameFromEntityAndProperty(valueObjectVar, OntologyConstants.Rdf.Type)
-                    val valueObjectProp = createUniqueVariableNameFromEntityAndProperty(valueObjectVar, OntologyConstants.KnoraBase.HasValue)
-                    val valueObjectValue = createUniqueVariableNameFromEntityAndProperty(valueObjectVar, OntologyConstants.KnoraBase.Value)
-
-                    val addedStatementsForValues = Seq(StatementPattern.makeInferred(subj = inputEntity, pred = IriRef(OntologyConstants.KnoraBase.HasValue), obj = valueObjectVar),
-                        StatementPattern.makeExplicit(subj = inputEntity, pred = valuePropVar, obj = valueObjectVar),
-                        StatementPattern.makeExplicit(subj = valueObjectVar, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean)),
-                        StatementPattern.makeExplicit(subj = valueObjectVar, pred = valueObjectProp, obj = valueObjectValue)
-                    )
+                    }
 
                     // Add statements to `additionalStatementsCreatedForEntities` since they are needed in the query's CONSTRUCT clause
                     val existingAdditionalStatementsCreated: Seq[StatementPattern] = additionalStatementsCreatedForEntities.get(inputEntity).toSeq.flatten
 
-                    additionalStatementsCreatedForEntities += inputEntity -> (existingAdditionalStatementsCreated ++ addedStatementsForResource ++ addedStatementsForValues)
+                    // If statementsForInputEntityAsSubjectWithProps is not empty, properties are requested for the given inputEntity
+                    if (statementsForInputEntityAsSubjectWithProps.nonEmpty) {
 
-                    Seq(UnionPattern(blocks = Seq(addedStatementsForResource ++ filterNotExists, addedStatementsForValues)))
+                        // query the resource's properties
 
-                    //addedStatementsForResource ++ filterNotExists
+                        val valueObjectVar = createUniqueVariableNameFromEntityAndProperty(inputEntity, OntologyConstants.KnoraBase.Value)
+                        val valuePropVar = createUniqueVariableNameFromEntityAndProperty(inputEntity, OntologyConstants.KnoraBase.HasValue)
+                        val valueObjectType = createUniqueVariableNameFromEntityAndProperty(valueObjectVar, OntologyConstants.Rdf.Type)
+                        val valueObjectProp = createUniqueVariableNameFromEntityAndProperty(valueObjectVar, OntologyConstants.KnoraBase.HasValue)
+                        val valueObjectValue = createUniqueVariableNameFromEntityAndProperty(valueObjectVar, OntologyConstants.KnoraBase.Value)
+
+                        val addedStatementsForValues = Seq(StatementPattern.makeInferred(subj = inputEntity, pred = IriRef(OntologyConstants.KnoraBase.HasValue), obj = valueObjectVar),
+                            StatementPattern.makeExplicit(subj = inputEntity, pred = valuePropVar, obj = valueObjectVar),
+                            StatementPattern.makeExplicit(subj = valueObjectVar, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean)),
+                            StatementPattern.makeExplicit(subj = valueObjectVar, pred = valueObjectProp, obj = valueObjectValue)
+                        )
+
+                        // restrict to requested properties
+                        // TODO: get also linkvalue prop!!!!! Maybe this can be done in `convertStatementForPropertyType`
+                        val restrictByPredicate: Seq[IriRef] = statementsForInputEntityAsSubjectWithProps.map {
+                            (statementPattern: StatementPattern) =>
+                                statementPattern.pred
+                        }.collect {
+                            case simpleIri: IriRef => simpleIri
+                        }.map {
+                            (simpleIri: IriRef) =>
+                                // convert to internal Iri
+                                val internalIri = InputValidation.externalIriToInternalIri(simpleIri.iri, () => throw BadRequestException(s"${simpleIri.iri} is not a valid external knora-api entity Iri"))
+
+                                IriRef(internalIri)
+                        }
+
+                        val values = ValuesPattern(variable = valuePropVar, values = restrictByPredicate)
+
+                        additionalStatementsCreatedForEntities += inputEntity -> (existingAdditionalStatementsCreated ++ addedStatementsForResource ++ addedStatementsForValues)
+
+                        Seq(UnionPattern(blocks = Seq(addedStatementsForResource ++ filterNotExists, addedStatementsForValues :+ values)))
+
+                    } else {
+
+                        // no properties requested for resource
+
+                        additionalStatementsCreatedForEntities += inputEntity -> (existingAdditionalStatementsCreated ++ addedStatementsForResource)
+
+                        addedStatementsForResource ++ filterNotExists
+                    }
+
 
                 } else {
                     // inputEntity is target of a value property
@@ -970,6 +1012,25 @@ class SearchResponderV2 extends Responder {
                         }
 
                         val existingConvertedStatements: Seq[StatementPattern] = convertedStatementsCreatedForWholeStatements.get(statementPattern).toSeq.flatten
+
+                        // variable referring to the link's value object (reification)
+                        /*val linkValueVar = createUniqueVariableFromStatement(statementPattern, "linkObj") // A variable representing the reification
+                        val linkPropVar = createUniqueVariableFromStatement(statementPattern, "linkProp") // A variable representing the explicit property that actually points to the target resource
+                        val linkValuePropVar = createUniqueVariableFromStatement(statementPattern, "linkValueProp") // A variable representing the explicit property that actually points to the reification
+                        val linkValuePredVar = createUniqueVariableFromStatement(statementPattern, "linkValuePred") // A variable representing a predicate of the reification
+                        val linkValueObjVar = createUniqueVariableFromStatement(statementPattern, "linkValueObj") // A variable representing a predicate of the reification
+
+                        val linkValue = Seq(statementPattern, // keep the original statement pointing from the source to the target resource, using inference
+                            StatementPattern.makeExplicit(subj = statementPattern.subj, pred = linkPropVar, obj = statementPattern.obj), // find out what the actual link property is
+                            StatementPattern.makeInferred(subj = statementPattern.subj, pred = IriRef(OntologyConstants.KnoraBase.HasValue), obj = linkValueVar), // include knora-base:hasValue pointing to the link value, because the construct clause needs it
+                            StatementPattern.makeExplicit(subj = statementPattern.subj, pred = linkValuePropVar, obj = linkValueVar), // find out what the actual link value property is
+                            StatementPattern.makeExplicit(subj = linkValueVar, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean)), // ensure the link value isn't deleted
+                            StatementPattern.makeExplicit(subj = linkValueVar, pred = IriRef(OntologyConstants.Rdf.Type), obj = IriRef(OntologyConstants.KnoraBase.LinkValue)), // it's a link value
+                            StatementPattern.makeExplicit(subj = linkValueVar, pred = IriRef(OntologyConstants.Rdf.Subject), obj = statementPattern.subj), // the rdf:subject of the link value must be the source resource
+                            StatementPattern.makeExplicit(subj = linkValueVar, pred = IriRef(OntologyConstants.Rdf.Predicate), obj = linkPropVar), // the rdf:predicate of the link value must be the link property
+                            StatementPattern.makeExplicit(subj = linkValueVar, pred = IriRef(OntologyConstants.Rdf.Object), obj = statementPattern.obj), // the rdf:object of the link value must be the target resource
+                            StatementPattern.makeExplicit(subj = linkValueVar, pred = linkValuePredVar, obj = linkValueObjVar) // get any other statements about the link value
+                        )*/
 
                         // include the original statement relating the subject to the target in the query's CONSTRUCT clause
                         convertedStatementsCreatedForWholeStatements += statementPattern -> (existingConvertedStatements :+ statementPattern)
@@ -1192,13 +1253,13 @@ class SearchResponderV2 extends Responder {
                 transformer = triplestoreSpecificQueryPatternTransformerSelect
             )
 
-            _ = println(triplestoreSpecificPrequery.toSparql)
+            // _ = println(triplestoreSpecificPrequery.toSparql)
 
             prequeryResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(triplestoreSpecificPrequery.toSparql)).mapTo[SparqlSelectResponse]
 
             nonTriplestoreSpecificQuery: ConstructQuery = QueryTraverser.transformConstructToConstruct(
                 inputQuery = preprocessedQuery,
-                transformer = new NonTriplestoreSpecificConstructToConstructTransformer(typeInspectionResult)
+                transformer = new NonTriplestoreSpecificConstructToConstructTransformer(typeInspectionResult, whereClauseWithoutAnnotations)
             )
 
             // include those IRIs in a VALUES in the CONSTRUCT clause.
@@ -1233,7 +1294,7 @@ class SearchResponderV2 extends Responder {
 
             triplestoreSpecificSparql: String = triplestoreSpecificQuery.toSparql
 
-            _ = println(triplestoreSpecificQuery.toSparql)
+            // _ = println(triplestoreSpecificQuery.toSparql)
 
             searchResponse: SparqlConstructResponse <- (storeManager ? SparqlConstructRequest(triplestoreSpecificSparql)).mapTo[SparqlConstructResponse]
 
