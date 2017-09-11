@@ -149,6 +149,41 @@
                    rdfs:comment """Empfänger"""@de ,
                                 """Recipient"""@en .
 
+### ###########################################
+### beol:letterHasFigure
+
+:letterHasFigure rdf:type owl:ObjectProperty ;
+
+              rdfs:subPropertyOf knora-base:hasLinkTo ;
+
+              rdfs:label "Zeichen"@de ,
+                         "Figure"@en ;
+
+              rdfs:comment """Zeichen von Brief"""@de ,
+                           """Figure of Letter"""@en ;
+
+              knora-base:subjectClassConstraint :letter ;
+
+              knora-base:objectClassConstraint :figure ;
+
+              salsah-gui:guiElement salsah-gui:Searchbox .
+
+### ###########################################
+### beol:letterHasFigureValue
+
+:letterHasFigureValue rdf:type owl:ObjectProperty ;
+
+                   knora-base:objectClassConstraint knora-base:LinkValue ;
+
+                   knora-base:subjectClassConstraint :letter ;
+
+                   rdfs:subPropertyOf knora-base:hasLinkToValue ;
+
+                   rdfs:label "Zeichen"@de ,
+                              "Figure"@en ;
+
+                   rdfs:comment """Zeichen von Brief"""@de ,
+                                """Figure of Letter"""@en .
 
 ### ###########################################
 ### beol:mentionsPerson
@@ -193,19 +228,25 @@
 
 :letterHasNumber rdf:type owl:ObjectProperty ;
 
-      rdfs:label "Briefnummer"@de ,
-                 "Letter Number"@en ;
+          rdfs:subPropertyOf knora-base:hasValue ;
 
-      rdfs:comment """Number of the letter"""@de ;
+          rdfs:label "Briefnummer"@de ,
+                     "Letter Number"@en ;
 
-      knora-base:subjectClassConstraint :letter ;
+          rdfs:comment """Der Nummer des Briefes"""@de ,
+                       """Number of the letter """@en ;
 
-      knora-base:objectClassConstraint knora-base:TextValue ;
+          knora-base:subjectClassConstraint :letter ;
 
-      salsah-gui:guiElement salsah-gui:SimpleText ;
+          knora-base:objectClassConstraint knora-base:TextValue ;
 
-      salsah-gui:guiAttribute "size=80" ,
-                              "maxlength=255" .
+          salsah-gui:guiOrder "6"^^xsd:integer ;
+
+          salsah-gui:guiElement salsah-gui:Textarea ;
+
+          salsah-gui:guiAttribute "cols=60" ,
+                                  "rows=4" ,
+                                  "wrap=soft" .
 
 
 ### ###########################################
@@ -708,23 +749,27 @@
 
                  rdfs:subPropertyOf knora-base:hasValue .
 
+
    ### ###########################################
    ### beol:figureHasText
    :figureHasText rdf:type owl:ObjectProperty ;
 
-                                  rdfs:label "Figure Text"@de ,
-                                            "subtext of figure"@en ;
+                      rdfs:subPropertyOf knora-base:hasValue ;
 
-                                  rdfs:comment """Represents dubtext of a figure."""@en ;
+                      rdfs:label "Text des Zeichens"@de ,
+                                 "Text of Figure"@en ;
 
+                      rdfs:comment """Text des Zeichens"""@de ,
+                                   """Text of figure"""@en ;
 
-                                  knora-base:subjectClassConstraint :figure ;
+                      knora-base:subjectClassConstraint :figure ;
 
-                                  knora-base:objectClassConstraint knora-base:TextValue ;
+                      knora-base:objectClassConstraint knora-base:TextValue ;
 
-                                  salsah-gui:guiOrder "11"^^xsd:integer ;
+                      salsah-gui:guiOrder "11"^^xsd:integer ;
 
-                                  salsah-gui:guiElement salsah-gui:Richtext .
+                      salsah-gui:guiElement salsah-gui:Richtext .
+
 
     ##########################################################
     #
@@ -799,7 +844,7 @@
 
 :letter rdf:type owl:Class ;
 
-        rdfs:subClassOf :writtenSource,
+        rdfs:subClassOf :writtenSource ,
                         [
                           rdf:type owl:Restriction ;
                           owl:onProperty :hasRecipient ;
@@ -813,6 +858,16 @@
                         [
                           rdf:type owl:Restriction ;
                           owl:onProperty :letterHasNumber ;
+                          owl:minCardinality "0"^^xsd:nonNegativeInteger
+                        ],
+                        [
+                          rdf:type owl:Restriction ;
+                          owl:onProperty :letterHasFigure ;
+                          owl:minCardinality "0"^^xsd:nonNegativeInteger
+                        ],
+                        [
+                          rdf:type owl:Restriction ;
+                          owl:onProperty :letterHasFigureValue ;
                           owl:minCardinality "0"^^xsd:nonNegativeInteger
                         ],
                         [
@@ -839,12 +894,11 @@
 ### beol:figure
 :figure rdf:type owl:Class ;
 
-        rdfs:subClassOf knora-base:StillImageRepresentation,
-
+        rdfs:subClassOf knora-base:StillImageRepresentation ,
                         [
                           rdf:type owl:Restriction ;
                           owl:onProperty :figureHasText ;
-                          owl:minCardinality "0"^^xsd:nonNegativeInteger
+                          owl:maxCardinality "1"^^xsd:nonNegativeInteger
                         ];
 
         rdfs:label "Figur"@de ,
@@ -996,15 +1050,6 @@
                       rdfs:subClassOf knora-base:StandoffUriTag ;
 
                       rdfs:comment "a URI referring to a facsimile"@en .
-
-
-###  http://www.knora.org/ontology/beol#StandoffFigureTag
-
-:StandoffFigureTag rdf:type owl:Class ;
-
-                      rdfs:subClassOf knora-base:StandoffUriTag ;
-
-                      rdfs:comment "a URI referring to a figure"@en .
 
 
 ###  http://www.knora.org/ontology/beol#StandoffMathTag
@@ -1206,9 +1251,8 @@
 
              rdfs:comment "represents an endnote (<endnote>) tag in text"@en .
 
+:StandoffEntityTag  rdf:type owl:Class ;
 
-:StandoffFigureTag  rdf:type owl:Class ;
+             rdfs:subClassOf knora-base:StandoffLinkTag ;
 
-              rdfs:subClassOf knora-base:StandoffTag ;
-
-              rdfs:comment "represents a figure (<figure>) tag in text"@en .
+             rdfs:comment "represents an entity (<entity>) tag in text"@en .
