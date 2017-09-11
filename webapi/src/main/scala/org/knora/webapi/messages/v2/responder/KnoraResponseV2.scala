@@ -30,6 +30,7 @@ import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.ontologymessages._
 import org.knora.webapi.messages.v1.responder.standoffmessages.MappingXMLtoStandoff
 import org.knora.webapi.messages.v1.responder.valuemessages.{KnoraCalendarV1, KnoraPrecisionV1}
+import org.knora.webapi.messages.v2.responder.ontologymessages.{Cardinality, PredicateInfoV2, PropertyEntityInfoV2, ResourceEntityInfoV2}
 import org.knora.webapi.twirl.StandoffTagV1
 import org.knora.webapi.util.{DateUtilV2, InputValidation}
 import org.knora.webapi.util.standoff.StandoffTagUtilV1
@@ -647,8 +648,8 @@ case class ReadNamedGraphsV2(namedGraphs: Set[IRI]) extends KnoraResponseV2 {
   *
   */
 case class ReadEntityDefinitionsV2(ontologies: Map[IRI, Set[IRI]] = Map.empty[IRI, Set[IRI]],
-                                   resourceClasses: Map[IRI, ResourceEntityInfoV1] = Map.empty[IRI, ResourceEntityInfoV1],
-                                   properties: Map[IRI, PropertyEntityInfoV1] = Map.empty[IRI, PropertyEntityInfoV1], language: String) extends KnoraResponseV2 {
+                                   resourceClasses: Map[IRI, ResourceEntityInfoV2] = Map.empty[IRI, ResourceEntityInfoV2],
+                                   properties: Map[IRI, PropertyEntityInfoV2] = Map.empty[IRI, PropertyEntityInfoV2], language: String) extends KnoraResponseV2 {
 
     /**
       * Gets an object from predicate infos.
@@ -658,12 +659,12 @@ case class ReadEntityDefinitionsV2(ontologies: Map[IRI, Set[IRI]] = Map.empty[IR
       * @param lang           the language in which the object has to be returned.
       * @return the requested object.
       */
-    private def getObjectFromPredicateInfo(predicateInfos: Map[IRI, PredicateInfoV1], predicateIri: IRI, settings: SettingsImpl, lang: Option[String] = None): Map[IRI, String] = {
+    private def getObjectFromPredicateInfo(predicateInfos: Map[IRI, PredicateInfoV2], predicateIri: IRI, settings: SettingsImpl, lang: Option[String] = None): Map[IRI, String] = {
 
         val fallbackLang: String = settings.fallbackLanguage
 
         predicateInfos.get(predicateIri) match {
-            case Some(pred: PredicateInfoV1) =>
+            case Some(pred: PredicateInfoV2) =>
                 if (lang.nonEmpty) {
                     // search for information in the given language
 
@@ -723,7 +724,7 @@ case class ReadEntityDefinitionsV2(ontologies: Map[IRI, Set[IRI]] = Map.empty[IR
         // resource classes
 
         val resClasses = resourceClasses.map {
-            case (resClassIri: IRI, resourceEntity: ResourceEntityInfoV1) =>
+            case (resClassIri: IRI, resourceEntity: ResourceEntityInfoV2) =>
 
                 val cardinalities = resourceEntity.cardinalities.map {
 
@@ -768,7 +769,7 @@ case class ReadEntityDefinitionsV2(ontologies: Map[IRI, Set[IRI]] = Map.empty[IR
         // properties
 
         val props: util.Map[IRI, util.Map[IRI, IRI]] = properties.map {
-            case (propIri: IRI, propEntity: PropertyEntityInfoV1) =>
+            case (propIri: IRI, propEntity: PropertyEntityInfoV2) =>
 
                 InputValidation.internalEntityIriToApiV2WithValueObjectEntityIri(propIri, () => throw InconsistentTriplestoreDataException(s"internal property $propIri could not be converted to knora-api v2 with value object property Iri")) -> (Map(
                     "@id" -> InputValidation.internalEntityIriToApiV2WithValueObjectEntityIri(propEntity.propertyIri, () => throw InconsistentTriplestoreDataException(s"internal property $propIri could not be converted to knora-api v2 with value object property Iri")),
