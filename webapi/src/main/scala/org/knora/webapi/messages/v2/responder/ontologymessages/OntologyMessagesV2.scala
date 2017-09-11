@@ -25,6 +25,9 @@ import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v2.responder._
 import org.knora.webapi.{IRI, InconsistentTriplestoreDataException, OntologyConstants, SettingsImpl}
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Messages
+
 /**
   * An abstract trait for messages that can be sent to `ResourcesResponderV2`.
   */
@@ -32,7 +35,6 @@ sealed trait OntologiesResponderRequestV2 extends KnoraRequestV2 {
 
     def userProfile: UserProfileV1
 }
-
 
 /**
   * Requests that all ontologies in the repository are loaded. This message must be sent only once, when the application
@@ -145,14 +147,6 @@ case class CheckSubClassResponseV2(isSubClass: Boolean)
 case class SubClassesGetRequestV2(resourceClassIri: IRI, userProfile: UserProfileV1) extends OntologiesResponderRequestV2
 
 /**
-  * Represents information about a subclass of a resource class.
-  *
-  * @param id    the IRI of the subclass.
-  * @param label the `rdfs:label` of the subclass.
-  */
-case class SubClassInfoV2(id: IRI, label: String)
-
-/**
   * Provides information about the subclasses of a Knora resource class.
   *
   * @param subClasses a list of [[SubClassInfoV2]] representing the subclasses of the specified class.
@@ -167,17 +161,6 @@ case class SubClassesGetResponseV2(subClasses: Seq[SubClassInfoV2])
   * @param userProfile the profile of the user making the request.
   */
 case class NamedGraphEntitiesRequestV2(namedGraph: IRI, userProfile: UserProfileV1) extends OntologiesResponderRequestV2
-
-/**
-  * Represents the assertions about a given named graph entity.
-  *
-  * @param namedGraphIri   the Iri of the named graph.
-  * @param resourceClasses the resource classes defined in the named graph.
-  * @param propertyIris    the properties defined in the named graph.
-  */
-case class NamedGraphEntityInfoV2(namedGraphIri: IRI,
-                                  resourceClasses: Set[IRI],
-                                  propertyIris: Set[IRI])
 
 /**
   * Requests the existing named graphs.
@@ -209,6 +192,12 @@ case class ResourceClassesGetRequestV2(resourceClassIris: Set[IRI], userProfile:
   * @param userProfile  the profile of the user making the request.
   */
 case class PropertyEntitiesGetRequestV2(propertyIris: Set[IRI], userProfile: UserProfileV1) extends OntologiesResponderRequestV2
+
+
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Components of messages
 
 /**
   * Represents a predicate that is asserted about a given ontology entity, and the objects of that predicate.
@@ -420,3 +409,22 @@ case class StandoffPropertyEntityInfoV2(standoffPropertyIri: IRI,
                                         ontologyIri: IRI,
                                         predicates: Map[IRI, PredicateInfoV2],
                                         isSubPropertyOf: Set[IRI]) extends EntityInfoV2
+
+/**
+  * Represents the assertions about a given named graph entity.
+  *
+  * @param namedGraphIri   the Iri of the named graph.
+  * @param resourceClasses the resource classes defined in the named graph.
+  * @param propertyIris    the properties defined in the named graph.
+  */
+case class NamedGraphEntityInfoV2(namedGraphIri: IRI,
+                                  resourceClasses: Set[IRI],
+                                  propertyIris: Set[IRI])
+
+/**
+  * Represents information about a subclass of a resource class.
+  *
+  * @param id    the IRI of the subclass.
+  * @param label the `rdfs:label` of the subclass.
+  */
+case class SubClassInfoV2(id: IRI, label: String)
