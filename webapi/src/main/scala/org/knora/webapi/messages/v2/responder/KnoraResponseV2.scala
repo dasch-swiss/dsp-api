@@ -695,7 +695,7 @@ case class ReadEntityDefinitionsV2(ontologies: Map[IRI, Set[IRI]] = Map.empty[IR
 
     }
 
-    def toJsonLDWithValueObject(settings: SettingsImpl) = {
+    def toJsonLDWithValueObject(settings: SettingsImpl): String = {
 
         val context = new util.HashMap[String, String]()
         context.put(OntologyConstants.KnoraApi.KnoraApiOntologyLabel, OntologyConstants.KnoraApiV2WithValueObject.KnoraApiV2PrefixExpansion)

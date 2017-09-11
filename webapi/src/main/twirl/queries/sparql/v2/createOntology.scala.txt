@@ -1,0 +1,55 @@
+@*
+ * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
+ * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
+ *
+ * This file is part of Knora.
+ *
+ * Knora is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Knora is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public
+ * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ *@
+
+@import org.knora.webapi.IRI
+
+@*
+ * Creates a new, empty ontology. If the ontology already exists, this update does nothing.
+ *
+ * @param triplestore the name of the triplestore being used.
+ * @param ontologyNamedGraphIri the IRI of the named graph where the ontology should be stored.
+ * @param ontologyIri the IRI of the ontology to be created.
+ *@
+@(triplestore: String,
+  ontologyNamedGraphIri: IRI,
+  ontologyIri: IRI)
+
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+
+INSERT {
+    GRAPH ?ontologyNamedGraph {
+        ?ontology rdf:type owl:Ontology .
+    }
+}
+@* Ensure that inference is not used in the WHERE clause of this update. *@
+@if(triplestore.startsWith("graphdb")) {
+    USING <http://www.ontotext.com/explicit>
+}
+WHERE {
+    BIND(IRI("@ontologyNamedGraphIri") AS ?ontologyNamedGraph)
+    BIND(IRI("@ontologyIri") AS ?ontology)
+
+    FILTER NOT EXISTS {
+        ?ontology rdf:type ?existingOntologyType .
+    }
+}
