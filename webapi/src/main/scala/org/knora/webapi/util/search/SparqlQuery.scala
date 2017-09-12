@@ -332,6 +332,8 @@ case class ConstructQuery(constructClause: ConstructClause, whereClause: WhereCl
   * @param useDistinct indicates if DISTINCT should be used.
   * @param whereClause the WHERE clause.
   * @param orderBy     the variables that the results should be ordered by.
+  * @param limit       the maximum number of result rows to be returned.
+  * @param offset      the offset to be used (limit of the previous query + 1 to do paging).
   */
 case class SelectQuery(variables: Seq[QueryVariable], useDistinct: Boolean = true, whereClause: WhereClause, orderBy: Seq[OrderCriterion] = Seq.empty[OrderCriterion], limit: Option[Int] = None, offset: Int = 0) extends SparqlGenerator {
     def toSparql: String = {
