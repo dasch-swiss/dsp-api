@@ -20,10 +20,17 @@
 
 package org.knora.webapi.messages.v2.responder.ontologymessages
 
+import java.util
+
+import com.github.jsonldjava.core.{JsonLdOptions, JsonLdProcessor}
+import com.github.jsonldjava.utils.JsonUtils
 import org.knora.webapi.messages.v1.responder.standoffmessages.StandoffDataTypeClasses
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v2.responder._
+import org.knora.webapi.util.InputValidation
 import org.knora.webapi.{IRI, InconsistentTriplestoreDataException, OntologyConstants, SettingsImpl}
+
+import scala.collection.JavaConverters._
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Messages
@@ -194,7 +201,75 @@ case class ResourceClassesGetRequestV2(resourceClassIris: Set[IRI], userProfile:
 case class PropertyEntitiesGetRequestV2(propertyIris: Set[IRI], userProfile: UserProfileV1) extends OntologiesResponderRequestV2
 
 
+/**
+  * Return information about ontology entities.
+  *
+  * @param ontologies      named graphs and their resource classes.
+  * @param resourceClasses information about resource classes.
+  * @param properties      information about properties.
+  * @param userLang        the preferred language in which the information should be returned.
+  *
+  */
+case class ReadEntityDefinitionsV2(ontologies: Map[IRI, Set[IRI]] = Map.empty[IRI, Set[IRI]],
+                                   resourceClasses: Map[IRI, ResourceEntityInfoV2] = Map.empty[IRI, ResourceEntityInfoV2],
+                                   properties: Map[IRI, PropertyEntityInfoV2] = Map.empty[IRI, PropertyEntityInfoV2], userLang: String) extends KnoraResponseV2 {
 
+
+    def toJsonLDWithValueObject(settings: SettingsImpl): String = {
+        val context = new util.HashMap[String, String]()
+        context.put(OntologyConstants.KnoraApi.KnoraApiOntologyLabel, OntologyConstants.KnoraApiV2WithValueObject.KnoraApiV2PrefixExpansion)
+        context.put("rdfs", "http://www.w3.org/2000/01/rdf-schema#")
+        context.put("rdf", "http://www.w3.org/1999/02/22-rdf-syntax-ns#")
+        context.put("owl", "http://www.w3.org/2002/07/owl#")
+
+        val json: util.HashMap[String, Object] = new util.HashMap[String, Object]()
+
+        // ontologies with their resource classes
+
+        val ontos: util.Map[IRI, util.List[IRI]] = ontologies.map {
+            case (namedGraphIri: IRI, resourceClassIris: Set[IRI]) =>
+                val resClassIris = seqAsJavaList(resourceClassIris.toSeq.map {
+                    resClass =>
+                        InputValidation.internalEntityIriToApiV2WithValueObjectEntityIri(resClass, () => throw InconsistentTriplestoreDataException(s"internal resource class Iri $resClass could not be converted to knora-api v2 with value object entity Iri"))
+                })
+
+                InputValidation.internalOntologyIriToApiV2WithValueObjectOntologyIri(namedGraphIri, () => throw InconsistentTriplestoreDataException(s"internal ontology Iri could not be converted to knora-api v2 with value object ontology Iri")) -> resClassIris
+
+        }.asJava
+
+        json.put(OntologyConstants.KnoraApiV2WithValueObject.HasOntologiesWithResourceClasses, ontos)
+
+        // resource classes
+
+        val resClasses: util.Map[IRI, util.Map[IRI, Object]] = resourceClasses.map {
+            case (resClassIri: IRI, resourceEntity: ResourceEntityInfoV2) =>
+                InputValidation.internalEntityIriToApiV2WithValueObjectEntityIri(
+                    resClassIri,
+                    () => throw InconsistentTriplestoreDataException(s"internal resource class Iri $resClassIri could not be converted to a knora-api v2 with value object resource class Iri")
+                ) -> resourceEntity.toJsonLD(userLang = userLang, settings = settings)
+        }.asJava
+
+        json.put(OntologyConstants.KnoraApiV2WithValueObject.HasResourceClasses, resClasses)
+
+        // properties
+
+        val props: util.Map[IRI, util.Map[IRI, String]] = properties.map {
+            case (propIri: IRI, propEntity: PropertyEntityInfoV2) =>
+                InputValidation.internalEntityIriToApiV2WithValueObjectEntityIri(
+                    propIri,
+                    () => throw InconsistentTriplestoreDataException(s"internal property $propIri could not be converted to knora-api v2 with value object property Iri")
+                ) -> propEntity.toJsonLD(userLang = userLang, settings = settings)
+        }.asJava
+
+        json.put(OntologyConstants.KnoraApiV2WithValueObject.HasProperties, props)
+
+        val compacted = JsonLdProcessor.compact(json, context, new JsonLdOptions())
+        JsonUtils.toPrettyString(compacted)
+    }
+
+    def toXML = ???
+
+}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Components of messages
@@ -377,7 +452,27 @@ case class PropertyEntityInfoV2(propertyIri: IRI,
                                 isLinkProp: Boolean,
                                 isLinkValueProp: Boolean,
                                 isFileValueProp: Boolean,
-                                predicates: Map[IRI, PredicateInfoV2]) extends EntityInfoV2
+                                predicates: Map[IRI, PredicateInfoV2]) extends EntityInfoV2 {
+    def toJsonLD(userLang: String, settings: SettingsImpl): util.Map[IRI, String] = {
+        val objectClassConstraint: Option[(IRI, String)] = getPredicateAndObject(OntologyConstants.KnoraBase.ObjectClassConstraint, settings) match {
+            case Some((objectClassConstrPred: IRI, objectClassConstrObj: IRI)) =>
+                Some(InputValidation.internalEntityIriToApiV2WithValueObjectEntityIri(
+                    objectClassConstrPred,
+                    () => throw InconsistentTriplestoreDataException(s"internal property $objectClassConstrPred could not be converted to knora-api v2 with value object property Iri")) -> InputValidation.internalEntityIriToApiV2WithValueObjectEntityIri(objectClassConstrObj, () => throw InconsistentTriplestoreDataException("")
+                ))
+
+            case None => None
+        }
+
+        (Map(
+            "@id" -> InputValidation.internalEntityIriToApiV2WithValueObjectEntityIri(propertyIri, () => throw InconsistentTriplestoreDataException(s"internal property $propertyIri could not be converted to knora-api v2 with value object property Iri")),
+            OntologyConstants.KnoraApiV2WithValueObject.BelongsToOntology -> InputValidation.internalOntologyIriToApiV2WithValueObjectOntologyIri(ontologyIri, () => throw InconsistentTriplestoreDataException(s"internal ontology $ontologyIri could not be converted to knora-api v2 with value object ontology Iri"))
+        ) ++ getPredicateAndObject(OntologyConstants.Rdf.Type, settings)
+            ++ getPredicateAndObject(OntologyConstants.Rdfs.Label, settings, Some(userLang))
+            ++ getPredicateAndObject(OntologyConstants.Rdfs.Comment, settings, Some(userLang))
+            ++ objectClassConstraint).asJava
+    }
+}
 
 /**
   * Represents the assertions about a given resource class.
@@ -399,7 +494,49 @@ case class ResourceEntityInfoV2(resourceClassIri: IRI,
                                 cardinalities: Map[IRI, Cardinality.Value],
                                 linkProperties: Set[IRI],
                                 linkValueProperties: Set[IRI],
-                                fileValueProperties: Set[IRI]) extends EntityInfoV2
+                                fileValueProperties: Set[IRI]) extends EntityInfoV2 {
+
+    def toJsonLD(userLang: String, settings: SettingsImpl): util.Map[IRI, Object] = {
+        val owlCardinalities = cardinalities.map {
+            case (propertyIri: IRI, cardinality: Cardinality.Value) =>
+
+                val prop2card: (IRI, Int) = cardinality match {
+                    case Cardinality.MayHaveMany =>
+                        OntologyConstants.Owl.MinCardinality -> 0
+
+                    case Cardinality.MayHaveOne =>
+                        OntologyConstants.Owl.MaxCardinality -> 1
+
+                    case Cardinality.MustHaveOne =>
+                        OntologyConstants.Owl.Cardinality -> 1
+
+                    case Cardinality.MustHaveSome =>
+                        OntologyConstants.Owl.MinCardinality -> 1
+                }
+
+                Map(
+                    "@type" -> OntologyConstants.Owl.Restriction,
+                    OntologyConstants.Owl.OnProperty -> InputValidation.internalEntityIriToApiV2WithValueObjectEntityIri(propertyIri, () => throw InconsistentTriplestoreDataException(s"internal property Iri $propertyIri could not be converted to knora-api v2 with value object property Iri")),
+                    prop2card
+                ).asJava
+        }.toSeq.asJava
+
+        val resourceIcon: Option[(IRI, String)] = getPredicateAndObject(OntologyConstants.KnoraBase.ResourceIcon, settings) match {
+            case Some((hasResIcon, resIcon)) =>
+                Some(InputValidation.internalEntityIriToApiV2WithValueObjectEntityIri(hasResIcon, () => throw InconsistentTriplestoreDataException(s"internal property $hasResIcon could not be converted to knora-api v2 with value object property Iri")) -> resIcon)
+            case None => None
+        }
+
+        (Map(
+            "@id" -> InputValidation.internalEntityIriToApiV2WithValueObjectEntityIri(resourceClassIri, () => throw InconsistentTriplestoreDataException("")),
+            OntologyConstants.KnoraApiV2WithValueObject.BelongsToOntology -> InputValidation.internalOntologyIriToApiV2WithValueObjectOntologyIri(ontologyIri, () => throw InconsistentTriplestoreDataException(s"internal ontology Iri $ontologyIri could not be converted to knora-api v2 with value object ontology Iri")),
+            "@type" -> OntologyConstants.Owl.Class, // TODO: does this need to be coming from the triplestore?
+            OntologyConstants.Rdfs.SubClassOf -> owlCardinalities
+        ) ++ resourceIcon
+            ++ getPredicateAndObject(OntologyConstants.Rdfs.Label, settings, Some(userLang))
+            ++ getPredicateAndObject(OntologyConstants.Rdfs.Comment, settings, Some(userLang))).asJava
+    }
+}
 
 /**
   * Represents the assertions about a given standoff class.
