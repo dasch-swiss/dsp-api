@@ -250,6 +250,31 @@
 
 
 ### ###########################################
+### beol:endnoteHasNumber
+
+:endnoteHasNumber rdf:type owl:ObjectProperty ;
+
+          rdfs:subPropertyOf knora-base:hasValue ;
+
+          rdfs:label "Endnote-Nummer"@de ,
+                     "Endnote Number"@en ;
+
+          rdfs:comment """Der Nummer der Note"""@de ,
+                       """Number of the endnote """@en ;
+
+          knora-base:subjectClassConstraint :endnote ;
+
+          knora-base:objectClassConstraint knora-base:TextValue ;
+
+          salsah-gui:guiOrder "6"^^xsd:integer ;
+
+          salsah-gui:guiElement salsah-gui:Textarea ;
+
+          salsah-gui:guiAttribute "cols=60" ,
+                                  "rows=4" ,
+                                  "wrap=soft" .
+
+### ###########################################
 ### beol:location
 
 :location rdf:type owl:ObjectProperty ;
@@ -428,8 +453,6 @@
 
                   rdfs:comment """Text"""@de ,
                                """Text"""@en ;
-
-                  knora-base:subjectClassConstraint :writtenSource ;
 
                   knora-base:objectClassConstraint knora-base:TextValue ;
 
@@ -750,26 +773,6 @@
                  rdfs:subPropertyOf knora-base:hasValue .
 
 
-   ### ###########################################
-   ### beol:figureHasText
-   :figureHasText rdf:type owl:ObjectProperty ;
-
-                      rdfs:subPropertyOf knora-base:hasValue ;
-
-                      rdfs:label "Text des Zeichens"@de ,
-                                 "Text of Figure"@en ;
-
-                      rdfs:comment """Text des Zeichens"""@de ,
-                                   """Text of figure"""@en ;
-
-                      knora-base:subjectClassConstraint :figure ;
-
-                      knora-base:objectClassConstraint knora-base:TextValue ;
-
-                      salsah-gui:guiOrder "11"^^xsd:integer ;
-
-                      salsah-gui:guiElement salsah-gui:Richtext .
-
 
     ##########################################################
     #
@@ -897,7 +900,7 @@
         rdfs:subClassOf knora-base:StillImageRepresentation ,
                         [
                           rdf:type owl:Restriction ;
-                          owl:onProperty :figureHasText ;
+                          owl:onProperty :hasText ;
                           owl:maxCardinality "1"^^xsd:nonNegativeInteger
                         ];
 
@@ -906,6 +909,27 @@
                    "Figure"@en ;
 
         rdfs:comment "A resource representing a figure"@en .
+
+### ###########################################
+### beol:endnote
+:endnote rdf:type owl:Class ;
+
+        rdfs:subClassOf knora-base:Resource ,
+                        [
+                          rdf:type owl:Restriction ;
+                          owl:onProperty :endnoteHasNumber ;
+                          owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                        ],
+                        [
+                          rdf:type owl:Restriction ;
+                          owl:onProperty :hasText ;
+                          owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                        ];
+
+        rdfs:label "Endnote"@de ,
+                   "Endnote"@en ;
+
+        rdfs:comment "A resource representing an endnote"@en .
 
 ### ###########################################
 ### beol:writtenSource
