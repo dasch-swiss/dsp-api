@@ -27,10 +27,9 @@ import javax.xml.transform.stream.StreamSource
 import com.github.jsonldjava.core._
 import com.github.jsonldjava.utils._
 import org.knora.webapi._
-import org.knora.webapi.messages.v1.responder.ontologymessages._
 import org.knora.webapi.messages.v1.responder.standoffmessages.MappingXMLtoStandoff
 import org.knora.webapi.messages.v1.responder.valuemessages.{KnoraCalendarV1, KnoraPrecisionV1}
-import org.knora.webapi.messages.v2.responder.ontologymessages.{Cardinality, PredicateInfoV2, PropertyEntityInfoV2, ResourceEntityInfoV2}
+import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.twirl.StandoffTagV1
 import org.knora.webapi.util.{DateUtilV2, InputValidation}
 import org.knora.webapi.util.standoff.StandoffTagUtilV1
@@ -117,7 +116,7 @@ case class DateValueContentV2(valueHasString: String,
                               valueHasCalendar: KnoraCalendarV1.Value,
                               comment: Option[String]) extends ValueContentV2 {
 
-    def valueTypeIri = OntologyConstants.KnoraBase.DateValue
+    def valueTypeIri: IRI = OntologyConstants.KnoraBase.DateValue
 
     /**
       * Create knora-api assertions.
@@ -149,7 +148,7 @@ case class DateValueContentV2(valueHasString: String,
   */
 case class TextValueContentV2(valueHasString: String, standoff: Option[StandoffAndMapping], comment: Option[String]) extends ValueContentV2 {
 
-    def valueTypeIri = OntologyConstants.KnoraBase.TextValue
+    def valueTypeIri: IRI = OntologyConstants.KnoraBase.TextValue
 
     def toApiV2WithValueObject(settings: SettingsImpl): Map[IRI, String] = {
 
@@ -219,7 +218,7 @@ case class StandoffAndMapping(standoff: Seq[StandoffTagV1], mappingIri: IRI, map
   */
 case class IntegerValueContentV2(valueHasString: String, valueHasInteger: Int, comment: Option[String]) extends ValueContentV2 {
 
-    def valueTypeIri = OntologyConstants.KnoraBase.IntValue
+    def valueTypeIri: IRI = OntologyConstants.KnoraBase.IntValue
 
     def toApiV2WithValueObject(settings: SettingsImpl): Map[IRI, Int] = {
         Map(
@@ -237,7 +236,7 @@ case class IntegerValueContentV2(valueHasString: String, valueHasInteger: Int, c
   */
 case class DecimalValueContentV2(valueHasString: String, valueHasDecimal: BigDecimal, comment: Option[String]) extends ValueContentV2 {
 
-    def valueTypeIri = OntologyConstants.KnoraBase.DecimalValue
+    def valueTypeIri: IRI = OntologyConstants.KnoraBase.DecimalValue
 
     def toApiV2WithValueObject(settings: SettingsImpl): Map[IRI, BigDecimal] = {
         Map(
@@ -256,7 +255,7 @@ case class DecimalValueContentV2(valueHasString: String, valueHasDecimal: BigDec
   */
 case class BooleanValueContentV2(valueHasString: String, valueHasBoolean: Boolean, comment: Option[String]) extends ValueContentV2 {
 
-    def valueTypeIri = OntologyConstants.KnoraBase.BooleanValue
+    def valueTypeIri: IRI = OntologyConstants.KnoraBase.BooleanValue
 
     def toApiV2WithValueObject(settings: SettingsImpl): Map[IRI, Boolean] = {
         Map(
@@ -274,7 +273,7 @@ case class BooleanValueContentV2(valueHasString: String, valueHasBoolean: Boolea
   */
 case class GeomValueContentV2(valueHasString: String, valueHasGeometry: String, comment: Option[String]) extends ValueContentV2 {
 
-    def valueTypeIri = OntologyConstants.KnoraBase.GeomValue
+    def valueTypeIri: IRI = OntologyConstants.KnoraBase.GeomValue
 
     def toApiV2WithValueObject(settings: SettingsImpl): Map[IRI, String] = {
         Map(
@@ -294,7 +293,7 @@ case class GeomValueContentV2(valueHasString: String, valueHasGeometry: String, 
   */
 case class IntervalValueContentV2(valueHasString: String, valueHasIntervalStart: BigDecimal, valueHasIntervalEnd: BigDecimal, comment: Option[String]) extends ValueContentV2 {
 
-    def valueTypeIri = OntologyConstants.KnoraBase.IntervalValue
+    def valueTypeIri: IRI = OntologyConstants.KnoraBase.IntervalValue
 
     def toApiV2WithValueObject(settings: SettingsImpl): Map[IRI, BigDecimal] = {
         Map(
@@ -314,7 +313,7 @@ case class IntervalValueContentV2(valueHasString: String, valueHasIntervalStart:
   */
 case class HierarchicalListValueContentV2(valueHasString: String, valueHasListNode: IRI, comment: Option[String]) extends ValueContentV2 {
 
-    def valueTypeIri = OntologyConstants.KnoraBase.ListValue
+    def valueTypeIri: IRI = OntologyConstants.KnoraBase.ListValue
 
     def toApiV2WithValueObject(settings: SettingsImpl): Map[IRI, IRI] = {
         Map(
@@ -333,7 +332,7 @@ case class HierarchicalListValueContentV2(valueHasString: String, valueHasListNo
   */
 case class ColorValueContentV2(valueHasString: String, valueHasColor: String, comment: Option[String]) extends ValueContentV2 {
 
-    def valueTypeIri = OntologyConstants.KnoraBase.ColorValue
+    def valueTypeIri: IRI = OntologyConstants.KnoraBase.ColorValue
 
     def toApiV2WithValueObject(settings: SettingsImpl): Map[IRI, String] = {
         Map(
@@ -352,7 +351,7 @@ case class ColorValueContentV2(valueHasString: String, valueHasColor: String, co
   */
 case class UriValueContentV2(valueHasString: String, valueHasUri: String, comment: Option[String]) extends ValueContentV2 {
 
-    def valueTypeIri = OntologyConstants.KnoraBase.UriValue
+    def valueTypeIri: IRI = OntologyConstants.KnoraBase.UriValue
 
     def toApiV2WithValueObject(settings: SettingsImpl): Map[IRI, String] = {
         Map(
@@ -371,7 +370,7 @@ case class UriValueContentV2(valueHasString: String, valueHasUri: String, commen
   */
 case class GeonameValueContentV2(valueHasString: String, valueHasGeonameCode: String, comment: Option[String]) extends ValueContentV2 {
 
-    def valueTypeIri = OntologyConstants.KnoraBase.GeonameValue
+    def valueTypeIri: IRI = OntologyConstants.KnoraBase.GeonameValue
 
     def toApiV2WithValueObject(settings: SettingsImpl): Map[IRI, String] = {
         Map(
@@ -424,7 +423,7 @@ case class StillImageFileValueContentV2(valueHasString: String,
                                         isPreview: Boolean,
                                         comment: Option[String]) extends FileValueContentV2 with ValueContentV2 {
 
-    def valueTypeIri = OntologyConstants.KnoraBase.StillImageFileValue
+    def valueTypeIri: IRI = OntologyConstants.KnoraBase.StillImageFileValue
 
     /**
       * Creates the URL to retrieve the file.
@@ -432,7 +431,7 @@ case class StillImageFileValueContentV2(valueHasString: String,
       * @return the path to file value as an absolute URL.
       */
     def toURL(settings: SettingsImpl): String = {
-        s"${settings.sipiIIIFGetUrl}/${internalFilename}/full/${dimX},${dimY}/0/default.jpg"
+        s"${settings.sipiIIIFGetUrl}/$internalFilename/full/$dimX,$dimY/0/default.jpg"
     }
 
     def toApiV2WithValueObject(settings: SettingsImpl): Map[IRI, Any] = {
@@ -466,7 +465,7 @@ case class TextFileValueContentV2(valueHasString: String, internalMimeType: Stri
                                   originalMimeType: Option[String],
                                   comment: Option[String]) extends ValueContentV2 {
 
-    def valueTypeIri = OntologyConstants.KnoraBase.TextFileValue
+    def valueTypeIri: IRI = OntologyConstants.KnoraBase.TextFileValue
 
     /**
       * Creates the URL to retrieve the file.
@@ -474,7 +473,7 @@ case class TextFileValueContentV2(valueHasString: String, internalMimeType: Stri
       * @return the path to file value as an absolute URL.
       */
     def toURL(settings: SettingsImpl): String = {
-        s"${settings.sipiFileServerGetUrl}/${internalFilename}"
+        s"${settings.sipiFileServerGetUrl}/$internalFilename"
     }
 
     def toApiV2WithValueObject(settings: SettingsImpl): Map[IRI, String] = {
@@ -500,7 +499,7 @@ case class TextFileValueContentV2(valueHasString: String, internalMimeType: Stri
   */
 case class LinkValueContentV2(valueHasString: String, subject: IRI, predicate: IRI, referredResourceIri: IRI, comment: Option[String], referredResource: Option[ReadResourceV2]) extends ValueContentV2 {
 
-    def valueTypeIri = OntologyConstants.KnoraBase.LinkValue
+    def valueTypeIri: IRI = OntologyConstants.KnoraBase.LinkValue
 
     def toApiV2WithValueObject(settings: SettingsImpl): Map[IRI, Object] = {
         // check if the referred resource has to be included in the JSON response
@@ -644,55 +643,30 @@ case class ReadNamedGraphsV2(namedGraphs: Set[IRI]) extends KnoraResponseV2 {
   * @param ontologies      named graphs and their resource classes.
   * @param resourceClasses information about resource classes.
   * @param properties      information about properties.
-  * @param language        the preferred language in which the information should be returned.
+  * @param userLang        the preferred language in which the information should be returned.
   *
   */
 case class ReadEntityDefinitionsV2(ontologies: Map[IRI, Set[IRI]] = Map.empty[IRI, Set[IRI]],
                                    resourceClasses: Map[IRI, ResourceEntityInfoV2] = Map.empty[IRI, ResourceEntityInfoV2],
-                                   properties: Map[IRI, PropertyEntityInfoV2] = Map.empty[IRI, PropertyEntityInfoV2], language: String) extends KnoraResponseV2 {
+                                   properties: Map[IRI, PropertyEntityInfoV2] = Map.empty[IRI, PropertyEntityInfoV2], userLang: String) extends KnoraResponseV2 {
 
     /**
-      * Gets an object from predicate infos.
+      * Gets a predicate and its object from an entity
       *
-      * @param predicateInfos information about predicates.
-      * @param predicateIri   the Iri of the predicate whose object should be returned.
-      * @param lang           the language in which the object has to be returned.
-      * @return the requested object.
+      * @param entity       the entity whose predicate is to be queried.
+      * @param predicateIri the IRI of the predicate.
+      * @param lang         the language in which the object should to be returned.
+      * @return the requested predicate and object.
       */
-    private def getObjectFromPredicateInfo(predicateInfos: Map[IRI, PredicateInfoV2], predicateIri: IRI, settings: SettingsImpl, lang: Option[String] = None): Map[IRI, String] = {
+    private def getPredicateAndObjectFromEntityInfo(entity: EntityInfoV2, predicateIri: IRI, settings: SettingsImpl, lang: Option[String] = None): Option[(IRI, String)] = {
+        val preferredLangs: Option[(String, String)] = lang.map(userLang => (userLang, settings.fallbackLanguage))
 
-        val fallbackLang: String = settings.fallbackLanguage
+        val maybeObj: Option[String] = entity.getPredicateObject(
+            predicateIri = predicateIri,
+            preferredLangs = preferredLangs
+        )
 
-        predicateInfos.get(predicateIri) match {
-            case Some(pred: PredicateInfoV2) =>
-                if (lang.nonEmpty) {
-                    // search for information in the given language
-
-                    pred.objectsWithLang.get(lang.get) match {
-                        case Some(obj: String) =>
-                            Map(predicateIri -> obj)
-                        case None =>
-                            // information does not exist in the given language, try fallback language
-                            pred.objectsWithLang.get(fallbackLang) match {
-                                case Some(obj: String) =>
-                                    Map(predicateIri -> obj)
-                                case None => Map.empty[IRI, String]
-                            }
-
-                    }
-                } else {
-
-                    pred.objects.headOption match {
-                        case Some(obj: String) =>
-                            Map(predicateIri -> obj)
-
-                        case None => Map.empty[IRI, String]
-                    }
-                }
-
-            case None => Map.empty[IRI, String]
-        }
-
+        maybeObj.map(obj => predicateIri -> obj)
     }
 
     def toJsonLDWithValueObject(settings: SettingsImpl): String = {
@@ -723,7 +697,7 @@ case class ReadEntityDefinitionsV2(ontologies: Map[IRI, Set[IRI]] = Map.empty[IR
 
         // resource classes
 
-        val resClasses = resourceClasses.map {
+        val resClasses: util.Map[IRI, util.Map[IRI, Object]] = resourceClasses.map {
             case (resClassIri: IRI, resourceEntity: ResourceEntityInfoV2) =>
 
                 val cardinalities = resourceEntity.cardinalities.map {
@@ -751,38 +725,49 @@ case class ReadEntityDefinitionsV2(ontologies: Map[IRI, Set[IRI]] = Map.empty[IR
                         ).asJava
                 }.toSeq.asJava
 
-                InputValidation.internalEntityIriToApiV2WithValueObjectEntityIri(resClassIri, () => throw InconsistentTriplestoreDataException(s"internal resource class Iri $resClassIri could not be converted to a knora-api v2 with value object resource class Iri")) -> (Map(
+                val resourceIcon: Option[(IRI, String)] = getPredicateAndObjectFromEntityInfo(resourceEntity, OntologyConstants.KnoraBase.ResourceIcon, settings) match {
+                    case Some((hasResIcon, resIcon)) =>
+                        Some(InputValidation.internalEntityIriToApiV2WithValueObjectEntityIri(hasResIcon, () => throw InconsistentTriplestoreDataException(s"internal property $hasResIcon could not be converted to knora-api v2 with value object property Iri")) -> resIcon)
+                    case None => None
+                }
+
+                InputValidation.internalEntityIriToApiV2WithValueObjectEntityIri(
+                    resClassIri,
+                    () => throw InconsistentTriplestoreDataException(s"internal resource class Iri $resClassIri could not be converted to a knora-api v2 with value object resource class Iri")
+                ) -> (Map(
                     "@id" -> InputValidation.internalEntityIriToApiV2WithValueObjectEntityIri(resourceEntity.resourceClassIri, () => throw InconsistentTriplestoreDataException("")),
                     OntologyConstants.KnoraApiV2WithValueObject.BelongsToOntology -> InputValidation.internalOntologyIriToApiV2WithValueObjectOntologyIri(resourceEntity.ontologyIri, () => throw InconsistentTriplestoreDataException(s"internal ontology Iri ${resourceEntity.ontologyIri} could not be converted to knora-api v2 with value object ontology Iri")),
                     "@type" -> OntologyConstants.Owl.Class, // TODO: does this need to be coming from the triplestore?
                     OntologyConstants.Rdfs.SubClassOf -> cardinalities
-                ) ++ getObjectFromPredicateInfo(resourceEntity.predicates, OntologyConstants.KnoraBase.ResourceIcon, settings).map {
-                    case (hasResIcon, resIcon) =>
-                        InputValidation.internalEntityIriToApiV2WithValueObjectEntityIri(hasResIcon, () => throw InconsistentTriplestoreDataException(s"internal property $hasResIcon could not be converted to knora-api v2 with value object property Iri")) -> resIcon
-                }
-                    ++ getObjectFromPredicateInfo(resourceEntity.predicates, OntologyConstants.Rdfs.Label, settings, Some(language))
-                    ++ getObjectFromPredicateInfo(resourceEntity.predicates, OntologyConstants.Rdfs.Comment, settings, Some(language))).asJava
+                ) ++ resourceIcon
+                    ++ getPredicateAndObjectFromEntityInfo(resourceEntity, OntologyConstants.Rdfs.Label, settings, Some(userLang))
+                    ++ getPredicateAndObjectFromEntityInfo(resourceEntity, OntologyConstants.Rdfs.Comment, settings, Some(userLang))).asJava
         }.asJava
 
         json.put(OntologyConstants.KnoraApiV2WithValueObject.HasResourceClasses, resClasses)
 
         // properties
 
-        val props: util.Map[IRI, util.Map[IRI, IRI]] = properties.map {
+        val props: util.Map[IRI, util.Map[IRI, String]] = properties.map {
             case (propIri: IRI, propEntity: PropertyEntityInfoV2) =>
+
+                val objectClassConstraint: Option[(IRI, String)] = getPredicateAndObjectFromEntityInfo(propEntity, OntologyConstants.KnoraBase.ObjectClassConstraint, settings) match {
+                    case Some((objectClassConstrPred: IRI, objectClassConstrObj: IRI)) =>
+                        Some(InputValidation.internalEntityIriToApiV2WithValueObjectEntityIri(
+                            objectClassConstrPred,
+                            () => throw InconsistentTriplestoreDataException(s"internal property $objectClassConstrPred could not be converted to knora-api v2 with value object property Iri")) -> InputValidation.internalEntityIriToApiV2WithValueObjectEntityIri(objectClassConstrObj, () => throw InconsistentTriplestoreDataException("")
+                        ))
+
+                    case None => None
+                }
 
                 InputValidation.internalEntityIriToApiV2WithValueObjectEntityIri(propIri, () => throw InconsistentTriplestoreDataException(s"internal property $propIri could not be converted to knora-api v2 with value object property Iri")) -> (Map(
                     "@id" -> InputValidation.internalEntityIriToApiV2WithValueObjectEntityIri(propEntity.propertyIri, () => throw InconsistentTriplestoreDataException(s"internal property $propIri could not be converted to knora-api v2 with value object property Iri")),
                     OntologyConstants.KnoraApiV2WithValueObject.BelongsToOntology -> InputValidation.internalOntologyIriToApiV2WithValueObjectOntologyIri(propEntity.ontologyIri, () => throw InconsistentTriplestoreDataException(s"internal ontology ${propEntity.ontologyIri} could not be converted to knora-api v2 with value object ontology Iri"))
-                ) ++ getObjectFromPredicateInfo(propEntity.predicates, OntologyConstants.Rdf.Type, settings)
-                    ++ getObjectFromPredicateInfo(propEntity.predicates, OntologyConstants.Rdfs.Label, settings, Some(language))
-                    ++ getObjectFromPredicateInfo(propEntity.predicates, OntologyConstants.Rdfs.Comment, settings, Some(language))
-                    ++ getObjectFromPredicateInfo(propEntity.predicates, OntologyConstants.KnoraBase.ObjectClassConstraint, settings).map {
-                    case (objectClassConstrPred: IRI, objectClassConstrObj: IRI) =>
-                        InputValidation.internalEntityIriToApiV2WithValueObjectEntityIri(objectClassConstrPred, () => throw InconsistentTriplestoreDataException(s"internal property $objectClassConstrPred could not be converted to knora-api v2 with value object property Iri")) -> InputValidation.internalEntityIriToApiV2WithValueObjectEntityIri(objectClassConstrObj, () => throw InconsistentTriplestoreDataException(""))
-                }).asJava
-
-
+                ) ++ getPredicateAndObjectFromEntityInfo(propEntity, OntologyConstants.Rdf.Type, settings)
+                    ++ getPredicateAndObjectFromEntityInfo(propEntity, OntologyConstants.Rdfs.Label, settings, Some(userLang))
+                    ++ getPredicateAndObjectFromEntityInfo(propEntity, OntologyConstants.Rdfs.Comment, settings, Some(userLang))
+                    ++ objectClassConstraint).asJava
         }.asJava
 
         json.put(OntologyConstants.KnoraApiV2WithValueObject.HasProperties, props)
@@ -839,7 +824,7 @@ object ReadResourceUtil {
   */
 case class ReadResourcesSequenceV2(numberOfResources: Int, resources: Seq[ReadResourceV2]) extends KnoraResponseV2 {
 
-    def toJsonLDWithValueObject(settings: SettingsImpl) = {
+    def toJsonLDWithValueObject(settings: SettingsImpl): String = {
 
         val context = new util.HashMap[String, String]()
         context.put("@vocab", "http://schema.org/")
