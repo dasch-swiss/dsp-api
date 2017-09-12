@@ -276,6 +276,24 @@ sealed trait EntityInfoV2 {
     val predicates: Map[IRI, PredicateInfoV2]
 
     /**
+      * Gets a predicate and its object from an entity.
+      *
+      * @param predicateIri the IRI of the predicate.
+      * @param lang         the language in which the object should to be returned.
+      * @return the requested predicate and object.
+      */
+    def getPredicateAndObject(predicateIri: IRI, settings: SettingsImpl, lang: Option[String] = None): Option[(IRI, String)] = {
+        val preferredLangs: Option[(String, String)] = lang.map(userLang => (userLang, settings.fallbackLanguage))
+
+        val maybeObj: Option[String] = getPredicateObject(
+            predicateIri = predicateIri,
+            preferredLangs = preferredLangs
+        )
+
+        maybeObj.map(obj => predicateIri -> obj)
+    }
+
+    /**
       * Returns an object for a given predicate. If requested, attempts to return the object in the user's preferred
       * language, in the system's default language, or in any language, in that order.
       *

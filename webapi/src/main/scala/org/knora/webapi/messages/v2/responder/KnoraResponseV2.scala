@@ -650,24 +650,6 @@ case class ReadEntityDefinitionsV2(ontologies: Map[IRI, Set[IRI]] = Map.empty[IR
                                    resourceClasses: Map[IRI, ResourceEntityInfoV2] = Map.empty[IRI, ResourceEntityInfoV2],
                                    properties: Map[IRI, PropertyEntityInfoV2] = Map.empty[IRI, PropertyEntityInfoV2], userLang: String) extends KnoraResponseV2 {
 
-    /**
-      * Gets a predicate and its object from an entity
-      *
-      * @param entity       the entity whose predicate is to be queried.
-      * @param predicateIri the IRI of the predicate.
-      * @param lang         the language in which the object should to be returned.
-      * @return the requested predicate and object.
-      */
-    private def getPredicateAndObjectFromEntityInfo(entity: EntityInfoV2, predicateIri: IRI, settings: SettingsImpl, lang: Option[String] = None): Option[(IRI, String)] = {
-        val preferredLangs: Option[(String, String)] = lang.map(userLang => (userLang, settings.fallbackLanguage))
-
-        val maybeObj: Option[String] = entity.getPredicateObject(
-            predicateIri = predicateIri,
-            preferredLangs = preferredLangs
-        )
-
-        maybeObj.map(obj => predicateIri -> obj)
-    }
 
     def toJsonLDWithValueObject(settings: SettingsImpl): String = {
 
@@ -725,7 +707,7 @@ case class ReadEntityDefinitionsV2(ontologies: Map[IRI, Set[IRI]] = Map.empty[IR
                         ).asJava
                 }.toSeq.asJava
 
-                val resourceIcon: Option[(IRI, String)] = getPredicateAndObjectFromEntityInfo(resourceEntity, OntologyConstants.KnoraBase.ResourceIcon, settings) match {
+                val resourceIcon: Option[(IRI, String)] = resourceEntity.getPredicateAndObject(OntologyConstants.KnoraBase.ResourceIcon, settings) match {
                     case Some((hasResIcon, resIcon)) =>
                         Some(InputValidation.internalEntityIriToApiV2WithValueObjectEntityIri(hasResIcon, () => throw InconsistentTriplestoreDataException(s"internal property $hasResIcon could not be converted to knora-api v2 with value object property Iri")) -> resIcon)
                     case None => None
@@ -740,8 +722,8 @@ case class ReadEntityDefinitionsV2(ontologies: Map[IRI, Set[IRI]] = Map.empty[IR
                     "@type" -> OntologyConstants.Owl.Class, // TODO: does this need to be coming from the triplestore?
                     OntologyConstants.Rdfs.SubClassOf -> cardinalities
                 ) ++ resourceIcon
-                    ++ getPredicateAndObjectFromEntityInfo(resourceEntity, OntologyConstants.Rdfs.Label, settings, Some(userLang))
-                    ++ getPredicateAndObjectFromEntityInfo(resourceEntity, OntologyConstants.Rdfs.Comment, settings, Some(userLang))).asJava
+                    ++ resourceEntity.getPredicateAndObject(OntologyConstants.Rdfs.Label, settings, Some(userLang))
+                    ++ resourceEntity.getPredicateAndObject(OntologyConstants.Rdfs.Comment, settings, Some(userLang))).asJava
         }.asJava
 
         json.put(OntologyConstants.KnoraApiV2WithValueObject.HasResourceClasses, resClasses)
@@ -751,7 +733,7 @@ case class ReadEntityDefinitionsV2(ontologies: Map[IRI, Set[IRI]] = Map.empty[IR
         val props: util.Map[IRI, util.Map[IRI, String]] = properties.map {
             case (propIri: IRI, propEntity: PropertyEntityInfoV2) =>
 
-                val objectClassConstraint: Option[(IRI, String)] = getPredicateAndObjectFromEntityInfo(propEntity, OntologyConstants.KnoraBase.ObjectClassConstraint, settings) match {
+                val objectClassConstraint: Option[(IRI, String)] = propEntity.getPredicateAndObject(OntologyConstants.KnoraBase.ObjectClassConstraint, settings) match {
                     case Some((objectClassConstrPred: IRI, objectClassConstrObj: IRI)) =>
                         Some(InputValidation.internalEntityIriToApiV2WithValueObjectEntityIri(
                             objectClassConstrPred,
@@ -764,9 +746,9 @@ case class ReadEntityDefinitionsV2(ontologies: Map[IRI, Set[IRI]] = Map.empty[IR
                 InputValidation.internalEntityIriToApiV2WithValueObjectEntityIri(propIri, () => throw InconsistentTriplestoreDataException(s"internal property $propIri could not be converted to knora-api v2 with value object property Iri")) -> (Map(
                     "@id" -> InputValidation.internalEntityIriToApiV2WithValueObjectEntityIri(propEntity.propertyIri, () => throw InconsistentTriplestoreDataException(s"internal property $propIri could not be converted to knora-api v2 with value object property Iri")),
                     OntologyConstants.KnoraApiV2WithValueObject.BelongsToOntology -> InputValidation.internalOntologyIriToApiV2WithValueObjectOntologyIri(propEntity.ontologyIri, () => throw InconsistentTriplestoreDataException(s"internal ontology ${propEntity.ontologyIri} could not be converted to knora-api v2 with value object ontology Iri"))
-                ) ++ getPredicateAndObjectFromEntityInfo(propEntity, OntologyConstants.Rdf.Type, settings)
-                    ++ getPredicateAndObjectFromEntityInfo(propEntity, OntologyConstants.Rdfs.Label, settings, Some(userLang))
-                    ++ getPredicateAndObjectFromEntityInfo(propEntity, OntologyConstants.Rdfs.Comment, settings, Some(userLang))
+                ) ++ propEntity.getPredicateAndObject(OntologyConstants.Rdf.Type, settings)
+                    ++ propEntity.getPredicateAndObject(OntologyConstants.Rdfs.Label, settings, Some(userLang))
+                    ++ propEntity.getPredicateAndObject(OntologyConstants.Rdfs.Comment, settings, Some(userLang))
                     ++ objectClassConstraint).asJava
         }.asJava
 
