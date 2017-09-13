@@ -27,7 +27,7 @@ import org.knora.webapi.messages.v1.responder.projectmessages.ProjectsNamedGraph
 import org.knora.webapi.messages.v1.responder.standoffmessages.StandoffDataTypeClasses
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
-import org.knora.webapi.messages.v2.responder._
+import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.OwlCardinalityInfo
 import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.util.ActorUtil.{future2Message, handleUnexpectedMessage}
@@ -36,7 +36,7 @@ import org.knora.webapi.{ApplicationCacheException, IRI, InconsistentTriplestore
 
 import scala.concurrent.Future
 
-class OntologiesResponderV2 extends Responder {
+class OntologyResponderV2 extends Responder {
 
     private val knoraIdUtil = new KnoraIdUtil
     private val valueFactory = SimpleValueFactory.getInstance()
@@ -107,12 +107,12 @@ class OntologiesResponderV2 extends Responder {
           * @param isLinkValueProp  `true` if the property is a subproperty of `knora-base:hasLinkToValue`.
           * @param isFileValueProp  `true` if the property is a subproperty of `knora-base:hasFileValue`.
           */
-        case class OwlCardinality(propertyIri: IRI,
-                                  cardinalityIri: IRI,
-                                  cardinalityValue: Int,
-                                  isLinkProp: Boolean = false,
-                                  isLinkValueProp: Boolean = false,
-                                  isFileValueProp: Boolean = false)
+        case class OwlCardinalityOnProperty(propertyIri: IRI,
+                                            cardinalityIri: IRI,
+                                            cardinalityValue: Int,
+                                            isLinkProp: Boolean = false,
+                                            isLinkValueProp: Boolean = false,
+                                            isFileValueProp: Boolean = false)
 
         /**
           * Gets the IRI of the ontology that an entity belongs to. This is assumed to be the namespace
@@ -157,11 +157,11 @@ class OntologiesResponderV2 extends Responder {
         def inheritCardinalities(resourceClassIri: IRI,
                                  directSubClassOfRelations: Map[IRI, Set[IRI]],
                                  allSubPropertyOfRelations: Map[IRI, Set[IRI]],
-                                 directResourceClassCardinalities: Map[IRI, Map[IRI, OwlCardinality]]): Map[IRI, OwlCardinality] = {
+                                 directResourceClassCardinalities: Map[IRI, Map[IRI, OwlCardinalityOnProperty]]): Map[IRI, OwlCardinalityOnProperty] = {
             // Recursively get properties that are available to inherit from base classes. If we have no information about
             // a class, that could mean that it isn't a subclass of knora-base:Resource (e.g. it's something like
             // foaf:Person), in which case we assume that it has no base classes.
-            val cardinalitiesAvailableToInherit: Map[IRI, OwlCardinality] = directSubClassOfRelations.getOrElse(resourceClassIri, Set.empty[IRI]).foldLeft(Map.empty[IRI, OwlCardinality]) {
+            val cardinalitiesAvailableToInherit: Map[IRI, OwlCardinalityOnProperty] = directSubClassOfRelations.getOrElse(resourceClassIri, Set.empty[IRI]).foldLeft(Map.empty[IRI, OwlCardinalityOnProperty]) {
                 case (acc, baseClass) =>
                     acc ++ inheritCardinalities(
                         resourceClassIri = baseClass,
@@ -173,11 +173,11 @@ class OntologiesResponderV2 extends Responder {
 
             // Get the properties that have cardinalities defined directly on this class. Again, if we have no information
             // about a class, we assume that it has no cardinalities.
-            val thisClassCardinalities: Map[IRI, OwlCardinality] = directResourceClassCardinalities.getOrElse(resourceClassIri, Map.empty[IRI, OwlCardinality])
+            val thisClassCardinalities: Map[IRI, OwlCardinalityOnProperty] = directResourceClassCardinalities.getOrElse(resourceClassIri, Map.empty[IRI, OwlCardinalityOnProperty])
 
             // From the properties that are available to inherit, filter out the ones that are overridden by properties
             // with cardinalities defined directly on this class.
-            val inheritedCardinalities: Map[IRI, OwlCardinality] = cardinalitiesAvailableToInherit.filterNot {
+            val inheritedCardinalities: Map[IRI, OwlCardinalityOnProperty] = cardinalitiesAvailableToInherit.filterNot {
                 case (baseClassProp, baseClassCardinality) => thisClassCardinalities.exists {
                     case (thisClassProp, cardinality) =>
                         allSubPropertyOfRelations.get(thisClassProp) match {
@@ -288,14 +288,14 @@ class OntologiesResponderV2 extends Responder {
 
             // Make a map of the cardinalities defined directly on each resource class. Each resource class IRI points to a map of
             // property IRIs to OwlCardinality objects.
-            directResourceClassCardinalities: Map[IRI, Map[IRI, OwlCardinality]] = resourceDefsGrouped.map {
+            directResourceClassCardinalities: Map[IRI, Map[IRI, OwlCardinalityOnProperty]] = resourceDefsGrouped.map {
                 case (resourceClassIri, rows) =>
-                    val resourceClassCardinalities: Map[IRI, OwlCardinality] = rows.filter(_.rowMap.contains("cardinalityProp")).map {
+                    val resourceClassCardinalities: Map[IRI, OwlCardinalityOnProperty] = rows.filter(_.rowMap.contains("cardinalityProp")).map {
                         cardinalityRow =>
                             val cardinalityRowMap = cardinalityRow.rowMap
                             val propertyIri = cardinalityRowMap("cardinalityProp")
 
-                            val owlCardinality = OwlCardinality(
+                            val owlCardinality = OwlCardinalityOnProperty(
                                 propertyIri = propertyIri,
                                 cardinalityIri = cardinalityRowMap("cardinality"),
                                 cardinalityValue = cardinalityRowMap("cardinalityVal").toInt,
@@ -311,9 +311,9 @@ class OntologiesResponderV2 extends Responder {
             }
 
             // Allow each resource class to inherit cardinalities from its base classes.
-            resourceCardinalitiesWithInheritance: Map[IRI, Set[OwlCardinality]] = resourceClassIris.map {
+            resourceCardinalitiesWithInheritance: Map[IRI, Set[OwlCardinalityOnProperty]] = resourceClassIris.map {
                 resourceClassIri =>
-                    val resourceClassCardinalities: Set[OwlCardinality] = inheritCardinalities(
+                    val resourceClassCardinalities: Set[OwlCardinalityOnProperty] = inheritCardinalities(
                         resourceClassIri = resourceClassIri,
                         directSubClassOfRelations = directResourceSubClassOfRelations,
                         allSubPropertyOfRelations = allSubPropertyOfRelations,
@@ -378,8 +378,10 @@ class OntologiesResponderV2 extends Responder {
                                 // Convert the OWL cardinality to a Knora Cardinality enum value.
                                 owlCardinality.propertyIri -> Cardinality.owlCardinality2KnoraCardinality(
                                     propertyIri = owlCardinality.propertyIri,
-                                    owlCardinalityIri = owlCardinality.cardinalityIri,
-                                    owlCardinalityValue = owlCardinality.cardinalityValue
+                                    OwlCardinalityInfo(
+                                        owlCardinalityIri = owlCardinality.cardinalityIri,
+                                        owlCardinalityValue = owlCardinality.cardinalityValue
+                                    )
                                 )
                         }.toMap,
                         linkProperties = linkProps,
@@ -493,14 +495,14 @@ class OntologiesResponderV2 extends Responder {
 
             // Make a map of the cardinalities defined directly on each value base class. Each value base class IRI points to a map of
             // property IRIs to OwlCardinality objects.
-            valueBaseClassCardinalities: Map[IRI, Map[IRI, OwlCardinality]] = valueBaseClassesGrouped.map {
+            valueBaseClassCardinalities: Map[IRI, Map[IRI, OwlCardinalityOnProperty]] = valueBaseClassesGrouped.map {
                 case (valueBaseClassIri, rows) =>
-                    val valueBaseClassCardinalities: Map[IRI, OwlCardinality] = rows.filter(_.rowMap.contains("cardinalityProp")).map {
+                    val valueBaseClassCardinalities: Map[IRI, OwlCardinalityOnProperty] = rows.filter(_.rowMap.contains("cardinalityProp")).map {
                         cardinalityRow =>
                             val cardinalityRowMap = cardinalityRow.rowMap
                             val propertyIri = cardinalityRowMap("cardinalityProp")
 
-                            val owlCardinality = OwlCardinality(
+                            val owlCardinality = OwlCardinalityOnProperty(
                                 propertyIri = propertyIri,
                                 cardinalityIri = cardinalityRowMap("cardinality"),
                                 cardinalityValue = cardinalityRowMap("cardinalityVal").toInt
@@ -514,14 +516,14 @@ class OntologiesResponderV2 extends Responder {
 
             // Make a map of the cardinalities defined directly on each standoff class. Each standoff class IRI points to a map of
             // property IRIs to OwlCardinality objects.
-            directStandoffClassCardinalities: Map[IRI, Map[IRI, OwlCardinality]] = standoffClassesGrouped.map {
+            directStandoffClassCardinalities: Map[IRI, Map[IRI, OwlCardinalityOnProperty]] = standoffClassesGrouped.map {
                 case (standoffClassIri, rows) =>
-                    val standoffClassCardinalities: Map[IRI, OwlCardinality] = rows.filter(_.rowMap.contains("cardinalityProp")).map {
+                    val standoffClassCardinalities: Map[IRI, OwlCardinalityOnProperty] = rows.filter(_.rowMap.contains("cardinalityProp")).map {
                         cardinalityRow =>
                             val cardinalityRowMap = cardinalityRow.rowMap
                             val propertyIri = cardinalityRowMap("cardinalityProp")
 
-                            val owlCardinality = OwlCardinality(
+                            val owlCardinality = OwlCardinalityOnProperty(
                                 propertyIri = propertyIri,
                                 cardinalityIri = cardinalityRowMap("cardinality"),
                                 cardinalityValue = cardinalityRowMap("cardinalityVal").toInt
@@ -536,7 +538,7 @@ class OntologiesResponderV2 extends Responder {
             // Allow each standoff class to inherit cardinalities from its base classes.
             standoffCardinalitiesWithInheritance = standoffClassIris.map {
                 standoffClassIri =>
-                    val standoffClassCardinalities: Set[OwlCardinality] = inheritCardinalities(
+                    val standoffClassCardinalities: Set[OwlCardinalityOnProperty] = inheritCardinalities(
                         resourceClassIri = standoffClassIri,
                         directSubClassOfRelations = directStandoffSubClassOfRelations,
                         allSubPropertyOfRelations = directStandoffSubPropertyOfRelations,
@@ -544,11 +546,13 @@ class OntologiesResponderV2 extends Responder {
                     ).values.toSet
 
                     val prop2Card: Map[IRI, Cardinality.Value] = standoffClassCardinalities.map {
-                        (card: OwlCardinality) =>
+                        (card: OwlCardinalityOnProperty) =>
                             card.propertyIri -> Cardinality.owlCardinality2KnoraCardinality(
                                 propertyIri = card.propertyIri,
-                                owlCardinalityIri = card.cardinalityIri,
-                                owlCardinalityValue = card.cardinalityValue
+                                OwlCardinalityInfo(
+                                    owlCardinalityIri = card.cardinalityIri,
+                                    owlCardinalityValue = card.cardinalityValue
+                                )
                             )
                     }.toMap
 
@@ -809,7 +813,7 @@ class OntologiesResponderV2 extends Responder {
 
     private def getNamedGraphsV2(userProfile: UserProfileV1) = {
         for {
-            // TODO: refactor this for V2
+        // TODO: refactor this for V2
             projectsNamedGraph: Seq[NamedGraphV1] <- (responderManager ? ProjectsNamedGraphGetV1(userProfile)).mapTo[Seq[NamedGraphV1]]
 
             response = ReadNamedGraphsV2(
@@ -822,7 +826,7 @@ class OntologiesResponderV2 extends Responder {
       * Requests the resource classes defined in the given named graphs.
       *
       * @param namedGraphIris the Iris of the named graphs to be queried.
-      * @param userProfile the profile of the user making the request.
+      * @param userProfile    the profile of the user making the request.
       * @return a [[ReadEntityDefinitionsV2]].
       */
     private def getEntitiesForNamedGraphV2(namedGraphIris: Set[IRI], userProfile: UserProfileV1): Future[ReadEntityDefinitionsV2] = {
@@ -841,10 +845,10 @@ class OntologiesResponderV2 extends Responder {
             // get rid of the Future
             resourceClassesForNamedGraph: Iterable[(IRI, Set[IRI])] <- Future.traverse(resourceClassesForNamedGraphWithFuture) {
                 case (namedGraph, resourceClassesWithFuture) =>
-                for {
-                    resourceClasses <- resourceClassesWithFuture
+                    for {
+                        resourceClasses <- resourceClassesWithFuture
 
-                } yield namedGraph -> resourceClasses
+                    } yield namedGraph -> resourceClasses
             }
 
             // collect all resource class Iris

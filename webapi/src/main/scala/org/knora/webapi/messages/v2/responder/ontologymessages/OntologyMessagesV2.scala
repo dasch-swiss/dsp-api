@@ -310,6 +310,27 @@ case class ReadNamedGraphsV2(namedGraphs: Set[IRI]) extends KnoraResponseV2 {
 case class PredicateInfoV2(predicateIri: IRI, ontologyIri: IRI, objects: Set[String], objectsWithLang: Map[String, String])
 
 object Cardinality extends Enumeration {
+
+    /**
+      * Represents information about an OWL cardinality.
+      *
+      * @param owlCardinalityIri   the IRI of the OWL cardinality, which must be a member of the set
+      *                            [[OntologyConstants.Owl.cardinalityOWLRestrictions]].
+      * @param owlCardinalityValue the value of the OWL cardinality, which must be 0 or 1.
+      * @return a [[Value]].
+      */
+    case class OwlCardinalityInfo(owlCardinalityIri: IRI, owlCardinalityValue: Int) {
+        if (!OntologyConstants.Owl.cardinalityOWLRestrictions.contains(owlCardinalityIri)) {
+            throw InconsistentTriplestoreDataException(s"Invalid OWL cardinality property $owlCardinalityIri")
+        }
+
+        if (!(owlCardinalityValue == 0 || owlCardinalityValue == 1)) {
+            throw InconsistentTriplestoreDataException(s"Invalid OWL cardinality value $owlCardinalityValue")
+        }
+
+        override def toString: String = s"<$owlCardinalityIri> $owlCardinalityValue"
+    }
+
     type Cardinality = Value
 
     val MayHaveOne: Value = Value(0, "0-1")
@@ -318,6 +339,20 @@ object Cardinality extends Enumeration {
     val MustHaveSome: Value = Value(3, "1-n")
 
     val valueMap: Map[String, Value] = values.map(v => (v.toString, v)).toMap
+
+    /**
+      * The valid mappings between Knora cardinalities and OWL cardinalities.
+      */
+    private val knoraCardinality2OwlCardinalityMap: Map[Value, OwlCardinalityInfo] = Map(
+        MayHaveOne -> OwlCardinalityInfo(owlCardinalityIri = OntologyConstants.Owl.MaxCardinality, owlCardinalityValue = 1),
+        MayHaveMany -> OwlCardinalityInfo(owlCardinalityIri = OntologyConstants.Owl.MinCardinality, owlCardinalityValue = 0),
+        MustHaveOne -> OwlCardinalityInfo(owlCardinalityIri = OntologyConstants.Owl.Cardinality, owlCardinalityValue = 1),
+        MustHaveSome -> OwlCardinalityInfo(owlCardinalityIri = OntologyConstants.Owl.MinCardinality, owlCardinalityValue = 1)
+    )
+
+    private val owlCardinality2KnoraCardinalityMap: Map[OwlCardinalityInfo, Value] = knoraCardinality2OwlCardinalityMap.map {
+        case (knoraC, owlC) => (owlC, knoraC)
+    }
 
     /**
       * Given the name of a value in this enumeration, returns the value. If the value is not found, throws an
@@ -336,35 +371,21 @@ object Cardinality extends Enumeration {
     /**
       * Converts information about an OWL cardinality restriction to a [[Value]] of this enumeration.
       *
-      * @param propertyIri         the IRI of the property that the OWL cardinality applies to.
-      * @param owlCardinalityIri   the IRI of the OWL cardinality, which must be a member of the set
-      *                            [[OntologyConstants.Owl.cardinalityOWLRestrictions]]. Qualified and unqualified
-      *                            cardinalities are treated as equivalent.
-      * @param owlCardinalityValue the integer value associated with the cardinality.
+      * @param propertyIri    the IRI of the property that the OWL cardinality applies to.
+      * @param owlCardinality information about an OWL cardinality.
       * @return a [[Value]].
       */
-    def owlCardinality2KnoraCardinality(propertyIri: IRI, owlCardinalityIri: IRI, owlCardinalityValue: Int): Value = {
-        owlCardinalityIri match {
-            case OntologyConstants.Owl.MinCardinality =>
-                if (owlCardinalityValue == 0) {
-                    Cardinality.MayHaveMany
-                } else if (owlCardinalityValue == 1) {
-                    Cardinality.MustHaveSome
-                } else {
-                    throw new InconsistentTriplestoreDataException(s"Invalid cardinality restriction $owlCardinalityIri $owlCardinalityValue for $propertyIri")
-                }
-
-            case OntologyConstants.Owl.Cardinality if owlCardinalityValue == 1 =>
-                Cardinality.MustHaveOne
-
-            case OntologyConstants.Owl.MaxCardinality if owlCardinalityValue == 1 =>
-                Cardinality.MayHaveOne
-
-            case _ =>
-                // if none of the cases above match, the data is inconsistent
-                throw new InconsistentTriplestoreDataException(s"Invalid cardinality restriction $owlCardinalityIri $owlCardinalityValue for $propertyIri")
-        }
+    def owlCardinality2KnoraCardinality(propertyIri: IRI, owlCardinality: OwlCardinalityInfo): Value = {
+        owlCardinality2KnoraCardinalityMap.getOrElse(owlCardinality, throw InconsistentTriplestoreDataException(s"Invalid OWL cardinality $owlCardinality for $propertyIri"))
     }
+
+    /**
+      * Converts a [[Value]] of this enumeration to information about an OWL cardinality restriction.
+      *
+      * @param knoraCardinality a [[Value]].
+      * @return an [[OwlCardinalityInfo]].
+      */
+    def knoraCardinality2OwlCardinality(knoraCardinality: Value): OwlCardinalityInfo = knoraCardinality2OwlCardinalityMap(knoraCardinality)
 }
 
 

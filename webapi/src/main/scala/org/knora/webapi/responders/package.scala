@@ -71,8 +71,8 @@ package object responders {
     // --------------------------------------- V2 Routers ---------------------------------------
     // ------------------------------------------------------------------------------------------
 
-    val ONTOLOGIES_ROUTER_V2_ACTOR_NAME = "ontologiesRouterV2"
-    val ONTOLOGIES_ROUTER_V2_ACTOR_PATH = RESPONDER_MANAGER_ACTOR_PATH + "/" + ONTOLOGIES_ROUTER_V2_ACTOR_NAME
+    val ONTOLOGY_ROUTER_V2_ACTOR_NAME = "ontologyRouterV2"
+    val ONTOLOGY_ROUTER_V2_ACTOR_PATH = RESPONDER_MANAGER_ACTOR_PATH + "/" + ONTOLOGY_ROUTER_V2_ACTOR_NAME
 
     val SEARCH_ROUTER_V2_ACTOR_NAME = "searchRouterV2"
     val SEARCH_ROUTER_V2_ACTOR_PATH = RESPONDER_MANAGER_ACTOR_PATH + "/" + SEARCH_ROUTER_V2_ACTOR_NAME
