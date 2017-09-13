@@ -61,7 +61,6 @@ class OntologyResponderV2 extends Responder {
       * @param resourceSuperClassOfRelations       a map of IRIs of resource classes to sets of the IRIs of their subclasses.
       * @param propertyDefs                        a map of property IRIs to property definitions.
       */
-    // TODO: rename and move v1 case classes to v2 (v1 may use V2, but not vice versa)
     case class OntologyCacheData(namedGraphResourceClasses: Map[IRI, Set[IRI]],
                                  namedGraphProperties: Map[IRI, Set[IRI]],
                                  resourceClassDefs: Map[IRI, ResourceEntityInfoV2],
