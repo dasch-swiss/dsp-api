@@ -32,7 +32,7 @@ import org.knora.webapi.responders.Responder
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.search._
 import org.knora.webapi.util.search.v2.{ApiV2Schema, _}
-import org.knora.webapi.util.{ConstructResponseUtilV2, DateUtilV1, InputValidation, KnoraIdUtil}
+import org.knora.webapi.util.{ConstructResponseUtilV2, DateUtilV1, InputValidation}
 
 import scala.collection.mutable
 import scala.concurrent.Future
@@ -634,7 +634,11 @@ class SearchResponderV2 extends Responder {
             // in order to prevent duplicates
             private val processedTypeInformationKeysWhereClause = mutable.Set.empty[TypeableEntity]
 
+            // Contains the variable representing the main resource: knora-base:isMainResource
             private var mainResourceVariable: Option[QueryVariable] = None
+
+            // Contains the variables of dependent resources
+            private var dependentResourceVariables = mutable.Set.empty[QueryVariable]
 
             /**
               * Creates additional statements for a non property type (e.g., a resource).
@@ -655,6 +659,25 @@ class SearchResponderV2 extends Responder {
 
                     // inputEntity is either source or target of a linking property
                     // create additional statements in order to query permissions and other information for a resource
+
+                    // add the inputEntity (a variable representing a resource) to the SELECT
+                    inputEntity match {
+                        case queryVar: QueryVariable =>
+                            // make sure that this is not the mainVar
+                            mainResourceVariable match {
+                                case Some(mainVar: QueryVariable) =>
+
+                                    if (mainVar != queryVar) {
+                                        // it is a variable representing a dependent resource
+                                        dependentResourceVariables += queryVar
+                                    }
+
+                                case None =>
+
+                            }
+
+                        case _ =>
+                    }
 
                     Seq(
                         StatementPattern.makeInferred(subj = inputEntity, pred = IriRef(OntologyConstants.Rdf.Type), obj = IriRef(OntologyConstants.KnoraBase.Resource)),
@@ -788,11 +811,10 @@ class SearchResponderV2 extends Responder {
                 // Return the main resource variable and the generated variable that we're using for ordering.
 
                 mainResourceVariable match {
-                    case Some(mainVar: QueryVariable) => Seq(mainVar) // TODO: append ORDER BY vars
+                    case Some(mainVar: QueryVariable) => Seq(mainVar) ++ dependentResourceVariables
 
                     case None => throw SparqlSearchException(s"No ${OntologyConstants.KnoraBase.IsMainResource} found in CONSTRUCT query.")
                 }
-
 
             }
 
@@ -850,412 +872,6 @@ class SearchResponderV2 extends Responder {
                         isAscending = true
                     )
                 )
-            }
-        }
-
-        /**
-          * A [[ConstructToConstructTransformer]] that generates non-triplestore-specific SPARQL.
-          *
-          * @param typeInspectionResult the result of type inspection of the original query.
-          */
-        class NonTriplestoreSpecificConstructToConstructTransformer(typeInspectionResult: TypeInspectionResult, whereClause: WhereClause) extends AbstractTransformer with ConstructToConstructTransformer {
-
-            // a Set containing all `TypeableEntity` (keys of `typeInspectionResult`) that have already been processed
-            // in order to prevent duplicates
-            private val processedTypeInformationKeysWhereClause = mutable.Set.empty[TypeableEntity]
-
-            // a Map containing all additional StatementPattern that have been created based on the type information, FilterPattern excluded
-            // will be integrated in the Construct clause
-            private val additionalStatementsCreatedForEntities = mutable.Map.empty[Entity, Seq[StatementPattern]]
-
-            // a Map containing all the statements of the Where clause (possibly converted) and additional statements created for them
-            // will be integrated in the Construct clause
-            private val convertedStatementsCreatedForWholeStatements = mutable.Map.empty[StatementPattern, Seq[StatementPattern]]
-
-            private val knoraIdUtil = new KnoraIdUtil
-
-            def createAdditionalStatementsForNonPropertyType(nonPropertyTypeInfo: NonPropertyTypeInfo, inputEntity: Entity): Seq[QueryPattern] = {
-
-                val typeIriInternal = if (InputValidation.isKnoraApiEntityIri(nonPropertyTypeInfo.typeIri)) {
-                    InputValidation.externalIriToInternalIri(nonPropertyTypeInfo.typeIri, () => throw BadRequestException(s"${nonPropertyTypeInfo.typeIri} is not a valid external knora-api entity Iri"))
-                } else {
-                    nonPropertyTypeInfo.typeIri
-                }
-
-                if (typeIriInternal == OntologyConstants.KnoraBase.Resource) {
-
-                    // inputEntity is either source or target of a linking property
-                    // create additional statements in order to query permissions and other information for a resource
-
-                    val resourcePropVar = createUniqueVariableNameFromEntityAndProperty(inputEntity, OntologyConstants.KnoraBase.KnoraBasePrefixExpansion + "ResProp")
-                    val resourcePropObjVar = createUniqueVariableNameFromEntityAndProperty(inputEntity, OntologyConstants.KnoraBase.KnoraBasePrefixExpansion + "ResObj")
-
-                    val addedStatementsForResource = Seq(
-                        StatementPattern.makeInferred(subj = inputEntity, pred = IriRef(OntologyConstants.Rdf.Type), obj = IriRef(OntologyConstants.KnoraBase.Resource)),
-                        StatementPattern.makeExplicit(subj = inputEntity, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean)),
-                        StatementPattern.makeExplicit(subj = inputEntity, pred = resourcePropVar, obj = resourcePropObjVar)
-                    )
-
-                    val filterNotExists = Seq(FilterNotExistsPattern(
-                        patterns = Seq(StatementPattern.makeInferred(subj = inputEntity, pred = IriRef(OntologyConstants.KnoraBase.ResourceProperty), obj = resourcePropObjVar))
-                    ))
-
-
-                    // Only query a resource's values if properties are requested for this resource because this makes the query slow
-                    val requestedPropsForInputEntity: Set[IriRef] = whereClause.patterns.collect {
-                        // check if the given inputEntity is the subject of statements in Where clause
-                        case statementPattern: StatementPattern if statementPattern.subj == inputEntity => statementPattern
-                    }.filter {
-                        statementPattern =>
-                            // check if the predicate is a Knora entity (ignore statements mentioning rdf:type etc.)
-                            val infoKey = toTypeableEntityKey(statementPattern.pred)
-
-                            infoKey match {
-                                case Some(key) => typeInspectionResult.typedEntities.get(key).nonEmpty
-                                case _ => false
-                            }
-
-                    }.map {
-                        (statementPattern: StatementPattern) =>
-                            statementPattern.pred
-                    }.collect {
-
-                        case simpleIri: IriRef =>
-
-                            // check if it is a linking property and convert ot to a link value prop if necessary
-                            val infoKey = toTypeableEntityKey(simpleIri)
-
-                            val typeInfo: SparqlEntityTypeInfo = typeInspectionResult.typedEntities(infoKey.get)
-
-                            val simplifiedApiPropTypeInfo: PropertyTypeInfo = typeInfo match {
-                                case propInfo: PropertyTypeInfo => propInfo
-
-                                case nonPropInfo: NonPropertyTypeInfo => throw SparqlSearchException(s"PropertyTypeInfo expected for ${infoKey.get}")
-                            }
-
-                            val internalPropTypeInfo: IRI = if (InputValidation.isKnoraApiEntityIri(simplifiedApiPropTypeInfo.objectTypeIri)) {
-                                InputValidation.externalIriToInternalIri(simplifiedApiPropTypeInfo.objectTypeIri, () => throw BadRequestException(s"${simplifiedApiPropTypeInfo.objectTypeIri} is not a valid external knora-api entity Iri"))
-                            } else {
-                                simplifiedApiPropTypeInfo.objectTypeIri
-                            }
-
-                            // convert to internal Iri
-                            val internalIri = InputValidation.externalIriToInternalIri(simpleIri.iri, () => throw BadRequestException(s"${simpleIri.iri} is not a valid external knora-api entity Iri"))
-
-                            internalPropTypeInfo match {
-                                case OntologyConstants.KnoraBase.Resource =>
-                                    Seq(IriRef(knoraIdUtil.linkPropertyIriToLinkValuePropertyIri(internalIri)))
-
-                                case _ => Seq(IriRef(internalIri))
-
-                            }
-
-                        // variables representing a property
-                        case queryVar: QueryVariable =>
-
-                            // figure out if it is a linking prop
-                            // if so look for filter patterns that restrict this var to an Iri
-                            // make these Iris link value properties
-
-                            val infoKey = toTypeableEntityKey(queryVar)
-
-                            val typeInfo: SparqlEntityTypeInfo = typeInspectionResult.typedEntities(infoKey.get)
-
-                            val simplifiedApiPropTypeInfo: PropertyTypeInfo = typeInfo match {
-                                case propInfo: PropertyTypeInfo => propInfo
-
-                                case nonPropInfo: NonPropertyTypeInfo => throw SparqlSearchException(s"PropertyTypeInfo expected for ${infoKey.get}")
-                            }
-
-                            val internalPropTypeInfo: IRI = if (InputValidation.isKnoraApiEntityIri(simplifiedApiPropTypeInfo.objectTypeIri)) {
-                                InputValidation.externalIriToInternalIri(simplifiedApiPropTypeInfo.objectTypeIri, () => throw BadRequestException(s"${simplifiedApiPropTypeInfo.objectTypeIri} is not a valid external knora-api entity Iri"))
-                            } else {
-                                simplifiedApiPropTypeInfo.objectTypeIri
-                            }
-
-                            val filterPatterns = whereClause.patterns.collect {
-                                case filterPattern: FilterPattern => filterPattern
-                            }
-
-                            // look for queryVar as the left argument of a FilterExpression
-
-                            val propertyRestrictions = mutable.Set.empty[IRI]
-
-                            def findQueryVarInExpressions(queryVar: QueryVariable, expression: Expression): Unit = {
-
-                                expression match {
-                                    case compareExpressionWithQueryVar: CompareExpression if compareExpressionWithQueryVar.leftArg == queryVar =>
-                                        compareExpressionWithQueryVar.rightArg match {
-                                            case iriRef: IriRef =>
-                                                propertyRestrictions.add(iriRef.iri)
-
-                                            case _ => findQueryVarInExpressions(queryVar, compareExpressionWithQueryVar.rightArg)
-                                        }
-
-                                    case compareExpression: CompareExpression =>
-                                        findQueryVarInExpressions(queryVar, compareExpression.leftArg)
-                                        findQueryVarInExpressions(queryVar, compareExpression.rightArg)
-
-                                    case orExpression: OrExpression =>
-                                        findQueryVarInExpressions(queryVar, orExpression.leftArg)
-                                        findQueryVarInExpressions(queryVar, orExpression.rightArg)
-
-                                    case andExpression: AndExpression =>
-                                        findQueryVarInExpressions(queryVar, andExpression.leftArg)
-                                        findQueryVarInExpressions(queryVar, andExpression.rightArg)
-
-                                    case _ => ()
-                                }
-
-                            }
-
-                            filterPatterns.foreach {
-                                (filterP: FilterPattern) =>
-                                    findQueryVarInExpressions(queryVar, filterP.expression)
-                            }
-
-
-                            internalPropTypeInfo match {
-                                case OntologyConstants.KnoraBase.Resource =>
-
-                                    // try to find restrictions for this variable representing a linking property and convert it to a link value property
-                                    //IriRef(knoraIdUtil.linkPropertyIriToLinkValuePropertyIri(internalIri))
-
-                                    val linkPropIris: Seq[IriRef] = propertyRestrictions.map {
-                                        linkProp =>
-                                            // convert to internal Iri
-                                            val internalIri = InputValidation.externalIriToInternalIri(linkProp, () => throw BadRequestException(s"${linkProp} is not a valid external knora-api entity Iri"))
-
-                                            IriRef(knoraIdUtil.linkPropertyIriToLinkValuePropertyIri(internalIri))
-                                    }.toSeq
-
-                                    linkPropIris
-
-                                case otherProp =>
-
-                                    propertyRestrictions.map(iri => IriRef(iri)).toSeq
-
-                            }
-
-                    }.flatten.toSet
-
-                    // save existing statements for this inputEntity
-                    val existingAdditionalStatementsCreated: Seq[StatementPattern] = additionalStatementsCreatedForEntities.get(inputEntity).toSeq.flatten
-
-                    // If requestedPropsForInputEntity is not empty, properties are requested for the given inputEntity
-                    if (requestedPropsForInputEntity.nonEmpty) {
-
-                        // query the resource's properties
-
-                        val valueObjectVar = createUniqueVariableNameFromEntityAndProperty(inputEntity, OntologyConstants.KnoraBase.Value)
-                        val valuePropVar = createUniqueVariableNameFromEntityAndProperty(inputEntity, OntologyConstants.KnoraBase.HasValue)
-                        val valueObjectType = createUniqueVariableNameFromEntityAndProperty(valueObjectVar, OntologyConstants.Rdf.Type)
-                        val valueObjectProp = createUniqueVariableNameFromEntityAndProperty(valueObjectVar, OntologyConstants.KnoraBase.HasValue)
-                        val valueObjectValue = createUniqueVariableNameFromEntityAndProperty(valueObjectVar, OntologyConstants.KnoraBase.Value)
-
-                        val addedStatementsForValues = Seq(StatementPattern.makeInferred(subj = inputEntity, pred = IriRef(OntologyConstants.KnoraBase.HasValue), obj = valueObjectVar),
-                            StatementPattern.makeExplicit(subj = inputEntity, pred = valuePropVar, obj = valueObjectVar),
-                            StatementPattern.makeExplicit(subj = valueObjectVar, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean)),
-                            StatementPattern.makeExplicit(subj = valueObjectVar, pred = valueObjectProp, obj = valueObjectValue)
-                        )
-
-                        // restrict to requested properties
-
-                        val valuePatterns = ValuesPattern(variable = valuePropVar, values = requestedPropsForInputEntity.collect {
-                            case iriRef: IriRef => iriRef
-                        })
-
-
-                        /*val compareExpressions: Seq[CompareExpression] = requestedPropsForInputEntity.map {
-                            entity =>
-                            CompareExpression(leftArg = valuePropVar, operator = CompareExpressionOperator.EQUALS, rightArg = entity)
-                        }
-
-                        def createOrExpression(compareExpression: CompareExpression, remainingCompareExpressions: Seq[CompareExpression]): _root_.org.knora.webapi.util.search.OrExpression = {
-
-                            if (remainingCompareExpressions.length == 1) {
-                                OrExpression(leftArg = compareExpression, rightArg = remainingCompareExpressions.head)
-                            } else {
-                                OrExpression(leftArg = compareExpression, rightArg = createOrExpression(remainingCompareExpressions.head, remainingCompareExpressions.tail))
-                            }
-
-                        }
-
-                        val filterExpression: Expression = if (compareExpressions.length > 1) {
-                            createOrExpression(compareExpressions.head, compareExpressions.tail)
-                        } else {
-                            compareExpressions.head
-                        }
-
-                        val filterPattern = FilterPattern(expression = filterExpression)*/
-
-                        // Add statements to `additionalStatementsCreatedForEntities` since they are needed in the query's CONSTRUCT clause
-                        additionalStatementsCreatedForEntities += inputEntity -> (existingAdditionalStatementsCreated ++ addedStatementsForResource ++ addedStatementsForValues)
-
-                        Seq(UnionPattern(blocks = Seq(addedStatementsForResource ++ filterNotExists, addedStatementsForValues :+ valuePatterns)))
-
-                    } else {
-
-                        // no properties requested for resource
-
-                        // Add statements to `additionalStatementsCreatedForEntities` since they are needed in the query's CONSTRUCT clause
-                        additionalStatementsCreatedForEntities += inputEntity -> (existingAdditionalStatementsCreated ++ addedStatementsForResource)
-
-                        addedStatementsForResource ++ filterNotExists
-                    }
-
-
-                } else {
-                    // inputEntity is target of a value property
-                    // properties are handled by `convertStatementForPropertyType`, no processing needed here
-
-                    Seq.empty[QueryPattern]
-                }
-
-
-            }
-
-            def convertStatementForPropertyType(propertyTypeInfo: PropertyTypeInfo, statementPattern: StatementPattern): Seq[QueryPattern] = {
-
-                // Add statements to `convertedStatementsCreatedForWholeStatements` if they are needed in the query's CONSTRUCT clause
-
-                // decide whether to keep the originally given statement or not
-                // if pred is a valueProp and the simple api is used, do not return the original statement
-                // it had to be converted to comply with Knora's value object structure
-
-                // convert the type information into an internal Knora Iri if possible
-                val objectIri = if (InputValidation.isKnoraApiEntityIri(propertyTypeInfo.objectTypeIri)) {
-                    InputValidation.externalIriToInternalIri(propertyTypeInfo.objectTypeIri, () => throw BadRequestException(s"${propertyTypeInfo.objectTypeIri} is not a valid external knora-api entity Iri"))
-                } else {
-                    propertyTypeInfo.objectTypeIri
-                }
-
-                objectIri match {
-                    case OntologyConstants.KnoraBase.Resource => {
-
-                        // make sure that the object is either an Iri or a variable (cannot be a literal)
-                        statementPattern.obj match {
-                            case iriRef: IriRef => ()
-                            case queryVar: QueryVariable => ()
-                            case other => throw SparqlSearchException(s"Object of a linking statement must be an Iri or a QueryVariable, but $other given.")
-                        }
-
-                        val existingConvertedStatements: Seq[StatementPattern] = convertedStatementsCreatedForWholeStatements.get(statementPattern).toSeq.flatten
-
-
-                        // include the original statement relating the subject to the target in the query's CONSTRUCT clause
-                        convertedStatementsCreatedForWholeStatements += statementPattern -> (existingConvertedStatements :+ statementPattern)
-
-                        // linking property: just include the original statement relating the subject to the target of the link
-                        Seq(statementPattern)
-                    }
-
-                    case literalType: IRI => {
-                        // value property
-
-                        // make sure that the object is a query variable (literals are not supported yet)
-                        statementPattern.obj match {
-                            case queryVar: QueryVariable => ()
-                            case other => throw SparqlSearchException(s"Object of a value property statement must be a QueryVariable, but $other given.")
-                        }
-
-                        val existingConvertedStatements: Seq[StatementPattern] = convertedStatementsCreatedForWholeStatements.get(statementPattern).toSeq.flatten
-
-                        // do not include the original statement relating the subject to a value object in the query's CONSTRUCT clause
-                        convertedStatementsCreatedForWholeStatements += statementPattern -> (existingConvertedStatements ++ Seq.empty[StatementPattern])
-
-                        // check that value object is not marked as deleted
-                        val valueObjectIsNotDeleted = StatementPattern.makeExplicit(subj = statementPattern.obj, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean))
-
-                        // the query variable stands for a value object
-                        // if there is a filter statement, the literal of the value object has to be checked: e.g., valueHasInteger etc.
-                        // include the original statement relating the subject to a value object
-                        Seq(statementPattern, valueObjectIsNotDeleted)
-                    }
-                }
-
-            }
-
-            /**
-              * Process a given statement pattern based on type information.
-              * This function is used for the Construct and Where clause of a user provided Sparql query.
-              *
-              * @param statementPattern the statement to be processed.
-              * @return a sequence of [[StatementPattern]].
-              */
-            def processStatementPatternFromWhereClause(statementPattern: StatementPattern): Seq[QueryPattern] = {
-                // look at the statement's subject, predicate, and object and generate additional statements if needed based on the given type information.
-                // transform the originally given statement if necessary when processing the predicate
-
-                // check if there exists type information for the given statement's subject
-                val additionalStatementsForSubj: Seq[QueryPattern] = checkForNonPropertyTypeInfoForEntity(statementPattern.subj, typeInspectionResult, processedTypeInformationKeysWhereClause, createAdditionalStatementsForNonPropertyType)
-
-                // check if there exists type information for the given statement's object
-                val additionalStatementsForObj: Seq[QueryPattern] = checkForNonPropertyTypeInfoForEntity(statementPattern.obj, typeInspectionResult, processedTypeInformationKeysWhereClause, createAdditionalStatementsForNonPropertyType)
-
-                // Add additional statements based on the whole input statement, e.g. to deal with the value object or the link value, and transform the original statement.
-                val additionalStatementsForWholeStatement: Seq[QueryPattern] = checkForPropertyTypeInfoForStatement(statementPattern, typeInspectionResult, convertStatementForPropertyType)
-
-                additionalStatementsForSubj ++ additionalStatementsForWholeStatement ++ additionalStatementsForObj
-
-            }
-
-            def transformStatementInConstruct(statementPattern: StatementPattern): Seq[StatementPattern] = {
-
-                // check if there is an entry for the given statementPattern in additionalStatementsCreated
-
-                val additionalStatementsForSubj = additionalStatementsCreatedForEntities.get(statementPattern.subj) match {
-                    case Some(statementPatterns: Seq[StatementPattern]) =>
-                        additionalStatementsCreatedForEntities -= statementPattern.subj
-
-                        statementPatterns.map {
-                            // set graph to None for Construct clause
-                            additionalStatementP: StatementPattern => additionalStatementP.copy(namedGraph = None)
-                        }
-
-                    case None => Seq.empty[StatementPattern]
-                }
-
-                val additionalStatementsForObj = additionalStatementsCreatedForEntities.get(statementPattern.obj) match {
-                    case Some(statementPatterns: Seq[StatementPattern]) =>
-                        additionalStatementsCreatedForEntities -= statementPattern.obj
-
-                        statementPatterns.map {
-                            // set graph to None for Construct clause
-                            additionalStatementP: StatementPattern => additionalStatementP.copy(namedGraph = None)
-                        }
-
-                    case None => Seq.empty[StatementPattern]
-                }
-
-                val convertedStatementsForWholeStatement = convertedStatementsCreatedForWholeStatements.get(statementPattern) match {
-                    case Some(statementPatterns: Seq[StatementPattern]) =>
-                        convertedStatementsCreatedForWholeStatements -= statementPattern
-
-                        statementPatterns.map {
-                            // set graph to None for Construct clause
-                            additionalStatementP: StatementPattern => additionalStatementP.copy(namedGraph = None)
-                        }
-
-                    case None => Seq(statementPattern)
-                }
-
-                convertedStatementsForWholeStatement ++ additionalStatementsForSubj ++ additionalStatementsForObj
-            }
-
-            def transformStatementInWhere(statementPattern: StatementPattern): Seq[QueryPattern] = {
-
-                processStatementPatternFromWhereClause(
-                    statementPattern = statementPattern
-                )
-
-            }
-
-            def transformFilter(filterPattern: FilterPattern): Seq[QueryPattern] = {
-
-                val filterExpression: TransformedFilterExpression = transformFilterExpression(filterPattern.expression, typeInspection = typeInspectionResult)
-
-                filterExpression.additionalStatements :+ FilterPattern(filterExpression.expression)
             }
         }
 
@@ -1327,6 +943,72 @@ class SearchResponderV2 extends Responder {
             def transformFilter(filterPattern: FilterPattern): Seq[QueryPattern] = Seq(filterPattern)
         }
 
+        /**
+          * Creates the main query to be sent to the triplestore.
+          * Requests two sets of information: about the main resources and the dependent resources.
+          *
+          * @param mainResourceVar                     the variable representing the main resources.
+          * @param valuesPatternForMainResources        Iris of the main reource variable.
+          * @param dependentResourceVar                 the variable representing the dependent resources.
+          * @param valuesPatternForDependentResources   Iris of the dependent resources.
+          * @return the main [[ConstructQuery]] query to be executed.
+          */
+        def createMainQuery(mainResourceVar: QueryVariable, valuesPatternForMainResources: ValuesPattern, dependentResourceVar: QueryVariable, valuesPatternForDependentResources: ValuesPattern): ConstructQuery = {
+
+            val mainResourcePropVar = QueryVariable("mainResourceProp")
+            val mainResourceObjectVar = QueryVariable("mainResourceObj")
+            val mainResourceValueObject = QueryVariable("mainResourceValueObject")
+            val mainResourceValueProp = QueryVariable("mainResourceValueProp")
+            val mainResourceValueObjectProp = QueryVariable("mainResourceValueObjectProp")
+            val mainResourceValueObjectObj = QueryVariable("mainResourceValueObjectObj")
+
+            val wherePatternsForMainResources = Seq(
+                valuesPatternForMainResources,
+                StatementPattern.makeExplicit(subj = mainResourceVar, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean)),
+                StatementPattern.makeExplicit(subj = mainResourceVar, pred = mainResourcePropVar, obj = mainResourceObjectVar),
+                StatementPattern.makeInferred(subj = mainResourceVar, pred = IriRef(OntologyConstants.KnoraBase.HasValue), obj = mainResourceValueObject),
+                StatementPattern.makeExplicit(subj = mainResourceVar, pred = mainResourceValueProp, obj = mainResourceValueObject),
+                StatementPattern.makeExplicit(subj = mainResourceValueObject, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean)),
+                StatementPattern.makeExplicit(subj = mainResourceValueObject, pred = mainResourceValueObjectProp, obj = mainResourceValueObjectObj)
+            )
+
+            val dependentResourcePropVar = QueryVariable("dependentResourceProp")
+            val dependentResourceObjectVar = QueryVariable("dependentResourceObj")
+            val dependentResourceValueObject = QueryVariable("dependentResourceValueObject")
+            val dependentResourceValueProp = QueryVariable("dependentResourceValueProp")
+            val dependentResourceValueObjectProp = QueryVariable("dependentResourceValueObjectProp")
+            val dependentResourceValueObjectObj = QueryVariable("dependentResourceValueObjectObj")
+
+            val wherePatternsForDependentResources = Seq(
+                valuesPatternForDependentResources,
+                StatementPattern.makeExplicit(subj = dependentResourceVar, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean)),
+                StatementPattern.makeExplicit(subj = dependentResourceVar, pred = dependentResourcePropVar, obj = dependentResourceObjectVar),
+                StatementPattern.makeInferred(subj = dependentResourceVar, pred = IriRef(OntologyConstants.KnoraBase.HasValue), obj = dependentResourceValueObject),
+                StatementPattern.makeExplicit(subj = dependentResourceVar, pred = dependentResourceValueProp, obj = dependentResourceValueObject),
+                StatementPattern.makeExplicit(subj = dependentResourceValueObject, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean)),
+                StatementPattern.makeExplicit(subj = dependentResourceValueObject, pred = dependentResourceValueObjectProp, obj = dependentResourceValueObjectObj)
+            )
+
+            ConstructQuery(
+                constructClause = ConstructClause(
+                    Seq(
+                        StatementPattern(subj = mainResourceVar, pred = IriRef(OntologyConstants.KnoraBase.IsMainResource), obj = XsdLiteral(value = "true", datatype = OntologyConstants.Xsd.Boolean)),
+                        StatementPattern(subj = mainResourceVar, pred = IriRef(OntologyConstants.Rdf.Type), obj = IriRef(OntologyConstants.KnoraBase.Resource)),
+                        StatementPattern(subj = mainResourceVar, pred = mainResourcePropVar, obj = mainResourceObjectVar),
+                        StatementPattern(subj = mainResourceVar, pred = IriRef(OntologyConstants.KnoraBase.HasValue), obj = mainResourceValueObject),
+                        StatementPattern(subj = mainResourceVar, pred = mainResourceValueProp, obj = mainResourceValueObject),
+                        StatementPattern(subj = mainResourceValueObject, pred = mainResourceValueObjectProp, obj = mainResourceValueObjectObj),
+                        StatementPattern(subj = dependentResourceVar, pred = IriRef(OntologyConstants.Rdf.Type), obj = IriRef(OntologyConstants.KnoraBase.Resource)),
+                        StatementPattern(subj = dependentResourceVar, pred = dependentResourcePropVar, obj = dependentResourceObjectVar),
+                        StatementPattern(subj = dependentResourceVar, pred = IriRef(OntologyConstants.KnoraBase.HasValue), obj = dependentResourceValueObject),
+                        StatementPattern(subj = dependentResourceVar, pred = dependentResourceValueProp, obj = dependentResourceValueObject),
+                        StatementPattern(subj = dependentResourceValueObject, pred = dependentResourceValueObjectProp, obj = dependentResourceValueObjectObj)
+                    )
+                ),
+                whereClause = WhereClause(Seq(UnionPattern(Seq(wherePatternsForMainResources, wherePatternsForDependentResources))))
+            )
+        }
+
         for {
         // Do type inspection and remove type annotations from the WHERE clause.
 
@@ -1368,23 +1050,56 @@ class SearchResponderV2 extends Responder {
 
             prequeryResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(triplestoreSpecificPrequery.toSparql)).mapTo[SparqlSelectResponse]
 
-            nonTriplestoreSpecificQuery: ConstructQuery = QueryTraverser.transformConstructToConstruct(
-                inputQuery = preprocessedQuery,
-                transformer = new NonTriplestoreSpecificConstructToConstructTransformer(typeInspectionResult, whereClauseWithoutAnnotations)
-            )
+            // variables returned by prequery
+            prequeryResultsVariableNames: Seq[String] = prequeryResponse.head.vars
 
-            // include those IRIs in a VALUES in the CONSTRUCT clause.
-            mainResourceVar: QueryVariable = nonTriplestoreSpecificQuery.constructClause.statements.collect {
-                case statement if isMainResourceVariable(statement).nonEmpty => isMainResourceVariable(statement).get
-            }.headOption.getOrElse(throw SparqlSearchException("Non main resource found in CONSTRUCT query"))
+            // variable representing the main resources
+            mainResourceVar: QueryVariable = QueryVariable(prequeryResultsVariableNames.headOption.getOrElse(throw SparqlSearchException("SELECT prequery returned no variable")))
 
             // a sequence of resource Iris that match the search criteria
-            matchingResourceIris: Seq[IRI] = prequeryResponse.results.bindings.map {
+            mainResourceIris: Seq[IRI] = prequeryResponse.results.bindings.map {
                 case resultRow: VariableResultsRow =>
                     resultRow.rowMap(mainResourceVar.variableName)
             }
 
-            valuesPattern: ValuesPattern = ValuesPattern(mainResourceVar, matchingResourceIris.map(iri => IriRef(iri)).toSet)
+            // a ValuePattern representing all the possible Iris for the main resource variable
+            valuesPatternForMainResources: ValuesPattern = ValuesPattern(mainResourceVar, mainResourceIris.map(iri => IriRef(iri)).toSet)
+
+            // the tail of prequeryResultsVariableNames contains variables representing dependent resources
+            dependentResourceVariables: Seq[String] = prequeryResultsVariableNames.tail
+
+            // get all the Iris for variables representing dependent resources
+            // iterate over all variables representing dependent resources
+            dependentResourceIrisFromPrequery: Set[IRI] = dependentResourceVariables.foldLeft(Set.empty[IRI]) {
+                case (acc, resVar) =>
+                    // collect all the values for the current var from prequery response
+                    val resIris: Seq[IRI] = prequeryResponse.results.bindings.map {
+                        case resultRow: VariableResultsRow =>
+                            resultRow.rowMap(resVar)
+                    }
+
+                acc ++ resIris
+            }
+
+            // the user may have defined Iris of dependent resources in the input query (type annotations)
+            dependentResourceIrisFromTypeInspection: Set[IRI] = typeInspectionResult.typedEntities.collect {
+                case (iri: TypeableIri, nonPropTypeInfo: NonPropertyTypeInfo) => iri.iri
+            }.toSet
+
+            // variable representing dependent resources
+            dependentResourceVar = QueryVariable("dependentResource")
+
+            // a ValuePattern representing all the possible Iris for dependent resources
+            valuesPatternForDependentResources = ValuesPattern(dependentResourceVar, (dependentResourceIrisFromPrequery ++ dependentResourceIrisFromTypeInspection).map(iri => IriRef(iri)))
+
+            // create the main query
+            // it is a Union of two sets: the main resources and the dependent resources
+            mainQuery = createMainQuery(
+                mainResourceVar = mainResourceVar,
+                valuesPatternForMainResources = valuesPatternForMainResources,
+                dependentResourceVar = dependentResourceVar,
+                valuesPatternForDependentResources = valuesPatternForDependentResources
+            )
 
             triplestoreSpecificQueryPatternTransformerConstruct: ConstructToConstructTransformer = {
                 if (settings.triplestoreType.startsWith("graphdb")) {
@@ -1397,12 +1112,11 @@ class SearchResponderV2 extends Responder {
             }
 
             triplestoreSpecificQuery = QueryTraverser.transformConstructToConstruct(
-                inputQuery = nonTriplestoreSpecificQuery.copy(whereClause = nonTriplestoreSpecificQuery.whereClause.copy(patterns = valuesPattern +: nonTriplestoreSpecificQuery.whereClause.patterns)),
+                inputQuery = mainQuery,
                 transformer = triplestoreSpecificQueryPatternTransformerConstruct
             )
 
             // Convert the result to a SPARQL string and send it to the triplestore.
-
             triplestoreSpecificSparql: String = triplestoreSpecificQuery.toSparql
 
             // _ = println(triplestoreSpecificQuery.toSparql)
@@ -1412,7 +1126,7 @@ class SearchResponderV2 extends Responder {
             // separate resources and value objects
             queryResultsSeparated: Map[IRI, ConstructResponseUtilV2.ResourceWithValueRdfData] = ConstructResponseUtilV2.splitResourcesAndValueRdfData(constructQueryResults = searchResponse, userProfile = userProfile)
 
-        } yield ReadResourcesSequenceV2(numberOfResources = queryResultsSeparated.size, resources = ConstructResponseUtilV2.createSearchResponse(searchResults = queryResultsSeparated, orderByIri = matchingResourceIris))
+        } yield ReadResourcesSequenceV2(numberOfResources = queryResultsSeparated.size, resources = ConstructResponseUtilV2.createSearchResponse(searchResults = queryResultsSeparated, orderByIri = mainResourceIris))
     }
 
     /**

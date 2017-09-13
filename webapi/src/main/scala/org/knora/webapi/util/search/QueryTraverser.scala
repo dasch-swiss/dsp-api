@@ -176,14 +176,15 @@ object QueryTraverser {
       * @return the transformed query.
       */
     def transformConstructToSelect(inputQuery: ConstructQuery, transformer: ConstructToSelectTransformer): SelectQuery = {
-        val transformedWherePatterns = transformWherePatterns(
-            patterns = inputQuery.whereClause.patterns,
-            whereTransformer = transformer
-        )
 
         for (statement <- inputQuery.constructClause.statements) {
             transformer.handleStatementInConstruct(statement)
         }
+
+        val transformedWherePatterns = transformWherePatterns(
+            patterns = inputQuery.whereClause.patterns,
+            whereTransformer = transformer
+        )
 
         val transformedOrderBy = transformer.getOrderBy(inputQuery.orderBy)
 
