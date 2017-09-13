@@ -27,8 +27,8 @@ import org.knora.webapi.util.search._
   * Indicates which API schema is being used in a search query.
   */
 object ApiV2Schema extends Enumeration {
-    val SIMPLE = Value(0, "SIMPLE")
-    val WITH_VALUE_OBJECTS = Value(1, "WITH_VALUE_OBJECTS")
+    val SIMPLE: Value = Value(0, "SIMPLE")
+    val WITH_VALUE_OBJECTS: Value = Value(1, "WITH_VALUE_OBJECTS")
 }
 
 /**
@@ -51,8 +51,8 @@ class ExplicitTypeInspectorV2(apiType: ApiV2Schema.Value) extends TypeInspector 
     private object TypeAnnotationPropertiesV2 extends Enumeration {
         import Ordering.Tuple2 // scala compiler issue: https://issues.scala-lang.org/browse/SI-8541
 
-        val RDF_TYPE = Value(0, OntologyConstants.Rdf.Type)
-        val OBJECT_TYPE = Value(1, OntologyConstants.KnoraApiV2Simplified.ObjectType)
+        val RDF_TYPE: Value = Value(0, OntologyConstants.Rdf.Type)
+        val OBJECT_TYPE: Value = Value(1, OntologyConstants.KnoraApiV2Simplified.ObjectType)
 
         val valueMap: Map[IRI, Value] = values.map(v => (v.toString, v)).toMap
     }
@@ -161,6 +161,10 @@ class ExplicitTypeInspectorV2(apiType: ApiV2Schema.Value) extends TypeInspector 
 
             case optionalPattern: OptionalPattern => OptionalPattern(removeTypeAnnotationsFromPatterns(optionalPattern.patterns))
 
+            case filterNotExistsPattern: FilterNotExistsPattern => FilterNotExistsPattern(removeTypeAnnotationsFromPatterns(filterNotExistsPattern.patterns))
+
+            case minusPattern: MinusPattern => MinusPattern(removeTypeAnnotationsFromPatterns(minusPattern.patterns))
+
             case unionPattern: UnionPattern =>
                 val blocksWithoutAnnotations = unionPattern.blocks.map {
                     patterns: Seq[QueryPattern] => removeTypeAnnotationsFromPatterns(patterns)
@@ -188,6 +192,10 @@ class ExplicitTypeInspectorV2(apiType: ApiV2Schema.Value) extends TypeInspector 
                 }
 
             case optionalPattern: OptionalPattern => getExplicitAnnotations(optionalPattern.patterns)
+
+            case filterNotExistsPattern: FilterNotExistsPattern => getExplicitAnnotations(filterNotExistsPattern.patterns)
+
+            case minusPattern: MinusPattern => getExplicitAnnotations(minusPattern.patterns)
 
             case unionPattern: UnionPattern =>
                 unionPattern.blocks.flatMap {
@@ -281,6 +289,10 @@ class ExplicitTypeInspectorV2(apiType: ApiV2Schema.Value) extends TypeInspector 
                 }
 
             case optionalPattern: OptionalPattern => getTypableEntitiesFromPatterns(optionalPattern.patterns)
+
+            case filterNotExistsPattern: FilterNotExistsPattern => getTypableEntitiesFromPatterns(filterNotExistsPattern.patterns)
+
+            case minusPattern: MinusPattern => getTypableEntitiesFromPatterns(minusPattern.patterns)
 
             case unionPattern: UnionPattern =>
                 unionPattern.blocks.flatMap {
