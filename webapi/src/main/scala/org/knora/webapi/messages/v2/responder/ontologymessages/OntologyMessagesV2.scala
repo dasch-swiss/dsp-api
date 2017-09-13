@@ -271,6 +271,32 @@ case class ReadEntityDefinitionsV2(ontologies: Map[IRI, Set[IRI]] = Map.empty[IR
 
 }
 
+case class ReadNamedGraphsV2(namedGraphs: Set[IRI]) extends KnoraResponseV2 {
+
+    def toJsonLDWithValueObject(settings: SettingsImpl): String = {
+
+        val context = new util.HashMap[String, String]()
+        context.put(OntologyConstants.KnoraApi.KnoraApiOntologyLabel, OntologyConstants.KnoraApiV2WithValueObject.KnoraApiV2PrefixExpansion)
+
+        val json: util.HashMap[String, Object] = new util.HashMap[String, Object]()
+
+        val namedGraphIris: util.List[IRI] = namedGraphs.toSeq.map {
+            namedGraphIri =>
+                // translate an internal ontology Iri to knora-api v2 with value object ontology Iri
+                InputValidation.internalOntologyIriToApiV2WithValueObjectOntologyIri(namedGraphIri, () => throw InconsistentTriplestoreDataException(s"internal ontology Iri $namedGraphIri could not be converted to knora-api v2 with value object ontology Iri"))
+        }.asJava
+
+        json.put(OntologyConstants.KnoraApiV2WithValueObject.HasOntologies, namedGraphIris)
+
+        val compacted = JsonLdProcessor.compact(json, context, new JsonLdOptions())
+
+        JsonUtils.toPrettyString(compacted)
+
+    }
+
+    def toXML = ???
+}
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Components of messages
 
