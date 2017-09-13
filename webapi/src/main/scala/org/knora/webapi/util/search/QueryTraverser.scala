@@ -136,6 +136,15 @@ object QueryTraverser {
 
                 Seq(FilterNotExistsPattern(patterns = transformedPatterns))
 
+
+            case minusPattern: MinusPattern =>
+                val transformedPatterns: Seq[QueryPattern] = transformWherePatterns(
+                    patterns = minusPattern.patterns,
+                    whereTransformer = whereTransformer
+                )
+
+                Seq(MinusPattern(patterns = transformedPatterns))
+
             case optionalPattern: OptionalPattern =>
                 val transformedPatterns = transformWherePatterns(
                     patterns = optionalPattern.patterns,

@@ -51,7 +51,7 @@ case class QueryVariable(variableName: String) extends Entity {
   */
 case class IriRef(iri: IRI) extends Entity {
     val isInternalEntityIri: Boolean = InputValidation.isInternalEntityIri(iri)
-    val isApiEntityIri = InputValidation.isKnoraApiEntityIri(iri)
+    val isApiEntityIri: Boolean = InputValidation.isKnoraApiEntityIri(iri)
     val isEntityIri: Boolean = isApiEntityIri || isInternalEntityIri
 
     /**
@@ -229,15 +229,6 @@ case class FilterPattern(expression: Expression) extends QueryPattern {
 }
 
 /**
-  * Represents a FILTER NOT EXISTS in a query.
-  *
-  * @param patterns the patterns contained in the FILTER NOT EXISTS.
-  */
-case class FilterNotExistsPattern(patterns: Seq[QueryPattern]) extends QueryPattern {
-    def toSparql: String = s"FILTER NOT EXISTS {\n ${patterns.map(_.toSparql).mkString}\n}\n"
-}
-
-/**
   * Represents VALUES in a query.
   *
   * @param variable the variable that the values will be assigned to.
@@ -283,6 +274,25 @@ case class OptionalPattern(patterns: Seq[QueryPattern]) extends QueryPattern {
 }
 
 /**
+  * Represents a FILTER NOT EXISTS in a query.
+  *
+  * @param patterns the patterns contained in the FILTER NOT EXISTS.
+  */
+case class FilterNotExistsPattern(patterns: Seq[QueryPattern]) extends QueryPattern {
+    def toSparql: String = s"FILTER NOT EXISTS {\n ${patterns.map(_.toSparql).mkString}\n}\n"
+}
+
+/**
+  * Represents a MINUS in a query.
+  *
+  * @param patterns the patterns contained in the MINUS.
+  */
+case class MinusPattern(patterns: Seq[QueryPattern]) extends QueryPattern {
+    def toSparql: String = s"MINUS {\n ${patterns.map(_.toSparql).mkString}\n}\n"
+}
+
+
+/**
   * Represents a CONSTRUCT clause in a query.
   *
   * @param statements the statements in the CONSTRUCT clause.
@@ -321,7 +331,7 @@ case class OrderCriterion(queryVariable: QueryVariable, isAscending: Boolean) ex
   * @param whereClause     the WHERE clause.
   * @param orderBy         the variables that the results should be ordered by.
   */
-case class ConstructQuery(constructClause: ConstructClause, whereClause: WhereClause, orderBy: Seq[OrderCriterion] = Seq.empty[OrderCriterion]) extends SparqlGenerator {
+case class ConstructQuery(constructClause: ConstructClause, whereClause: WhereClause, orderBy: Seq[OrderCriterion] = Seq.empty[OrderCriterion], offset: Long = 0) extends SparqlGenerator {
     def toSparql: String = constructClause.toSparql + whereClause.toSparql
 }
 
@@ -335,7 +345,7 @@ case class ConstructQuery(constructClause: ConstructClause, whereClause: WhereCl
   * @param limit       the maximum number of result rows to be returned.
   * @param offset      the offset to be used (limit of the previous query + 1 to do paging).
   */
-case class SelectQuery(variables: Seq[QueryVariable], useDistinct: Boolean = true, whereClause: WhereClause, orderBy: Seq[OrderCriterion] = Seq.empty[OrderCriterion], limit: Option[Int] = None, offset: Int = 0) extends SparqlGenerator {
+case class SelectQuery(variables: Seq[QueryVariable], useDistinct: Boolean = true, whereClause: WhereClause, orderBy: Seq[OrderCriterion] = Seq.empty[OrderCriterion], limit: Option[Int] = None, offset: Long = 0) extends SparqlGenerator {
     def toSparql: String = {
         val selectWhereSparql = "SELECT " + {
             if (useDistinct) {

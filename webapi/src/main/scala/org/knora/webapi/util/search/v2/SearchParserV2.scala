@@ -86,6 +86,9 @@ object SearchParserV2 {
         // A sequence of `OrderCriterion` representing the Order By statement.
         private val orderBy: collection.mutable.ArrayBuffer[OrderCriterion] = collection.mutable.ArrayBuffer.empty[OrderCriterion]
 
+        // The OFFSET specified in the input query.
+        private var offset: Long = 0
+
         /**
           * After this visitor has visited the parse tree, this method returns a [[ConstructQuery]] representing
           * the query that was parsed.
@@ -132,7 +135,8 @@ object SearchParserV2 {
             ConstructQuery(
                 constructClause = ConstructClause(statements = constructStatements),
                 whereClause = WhereClause(patterns = getWherePatterns),
-                orderBy = orderBy
+                orderBy = orderBy,
+                offset = offset
             )
         }
 
@@ -148,7 +152,17 @@ object SearchParserV2 {
         }
 
         override def meet(node: algebra.Slice): Unit = {
-            unsupported(node)
+            if (node.hasLimit) {
+                throw SparqlSearchException("LIMIT not supported in search query")
+            }
+
+            node.getArg.visit(this)
+
+            if (node.hasOffset) {
+                offset = node.getOffset
+            } else {
+                throw SparqlSearchException(s"Invalid OFFSET: ${node.getOffset}")
+            }
         }
 
         /**
@@ -320,8 +334,8 @@ object SearchParserV2 {
 
         override def meet(node: algebra.Order): Unit = {
             for (orderElem: algebra.OrderElem <- node.getElements.asScala) {
-                val expression: algebra.ValueExpr = orderElem.getExpr()
-                val ascending = orderElem.isAscending()
+                val expression: algebra.ValueExpr = orderElem.getExpr
+                val ascending = orderElem.isAscending
 
                 val queryVariable: QueryVariable = expression match {
                     case objVar: algebra.Var =>
@@ -435,7 +449,13 @@ object SearchParserV2 {
         }
 
         override def meet(node: algebra.Difference): Unit = {
-            unsupported(node)
+            // Visit the nodes that the MINUS applies to.
+            node.getLeftArg.visit(this)
+
+            // Get the patterns inside the MINUS.
+            val subQueryVisitor = new ConstructQueryModelVisitor
+            node.getRightArg.visit(subQueryVisitor)
+            wherePatterns.append(MinusPattern(subQueryVisitor.getWherePatterns))
         }
 
         override def meet(deleteData: algebra.DeleteData): Unit = {
@@ -515,6 +535,17 @@ object SearchParserV2 {
         }
 
         override def meet(node: algebra.Filter): Unit = {
+            def makeFilterNotExists(not: algebra.Not): FilterNotExistsPattern = {
+                not.getArg match {
+                    case exists: algebra.Exists =>
+                        val subQueryVisitor = new ConstructQueryModelVisitor
+                        exists.getSubQuery.visit(subQueryVisitor)
+                        FilterNotExistsPattern(subQueryVisitor.getWherePatterns)
+
+                    case _ => throw SparqlSearchException(s"Unsupported NOT expression: $not")
+                }
+            }
+
             def makeFilterExpression(valueExpr: algebra.ValueExpr): Expression = {
                 valueExpr match {
                     case compare: algebra.Compare =>
@@ -564,12 +595,23 @@ object SearchParserV2 {
                 }
             }
 
+
             // Visit the nodes that the filter applies to.
             node.getArg.visit(this)
 
+            // Is this a FILTER with an expression, or a FILTER NOT EXISTS?
+            val filterQueryPattern: QueryPattern = node.getCondition match {
+                case not: algebra.Not =>
+                    // It's a FILTER NOT EXISTS.
+                    makeFilterNotExists(not)
+
+                case other =>
+                    // It's a FILTER with an expression.
+                    FilterPattern(expression = makeFilterExpression(other))
+            }
+
             // Add the FILTER.
-            val filterExpression: Expression = makeFilterExpression(node.getCondition)
-            wherePatterns.append(FilterPattern(expression = filterExpression))
+            wherePatterns.append(filterQueryPattern)
         }
 
         override def meet(node: algebra.FunctionCall): Unit = {

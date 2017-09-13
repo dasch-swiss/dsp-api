@@ -105,6 +105,26 @@ class SearchParserV2Spec extends WordSpec with Matchers {
             val reparsed = SearchParserV2.parseSearchQuery(parsed.toSparql)
             reparsed should ===(parsed)
         }
+
+        "parse an extended search query with FILTER NOT EXISTS" in {
+            val parsed: ConstructQuery = SearchParserV2.parseSearchQuery(QueryWithFilterNotExists)
+            parsed should ===(ParsedQueryWithFilterNotExists)
+            val reparsed = SearchParserV2.parseSearchQuery(parsed.toSparql)
+            reparsed should ===(parsed)
+        }
+
+        "parse an extended search query with MINUS" in {
+            val parsed: ConstructQuery = SearchParserV2.parseSearchQuery(QueryWithMinus)
+            parsed should ===(ParsedQueryWithMinus)
+            val reparsed = SearchParserV2.parseSearchQuery(parsed.toSparql)
+            reparsed should ===(parsed)
+        }
+
+        "parse an extended search query with OFFSET" in {
+            val parsed: ConstructQuery = SearchParserV2.parseSearchQuery(QueryWithOffset)
+            parsed should ===(ParsedQueryWithOffset)
+        }
+
     }
 }
 
@@ -343,6 +363,179 @@ object SearchParserV2Spec {
           |    ?thing anything:hasOtherThing ?aThing .
           |}
         """.stripMargin
+
+    val QueryWithFilterNotExists: String =
+        """
+          |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+          |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+          |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |PREFIX anything: <http://api.knora.org/ontology/anything/simple/v2#>
+          |
+          |CONSTRUCT {
+          |    ?thing a ?thingType .
+          |    ?thing rdfs:label ?thingLabel .
+          |} WHERE {
+          |    ?thing a anything:Thing .
+          |
+          |    FILTER NOT EXISTS {
+          |        ?thing anything:hasOtherThing ?aThing .
+          |    }
+          |}
+        """.stripMargin
+
+    val ParsedQueryWithFilterNotExists: ConstructQuery = ConstructQuery(
+        orderBy = Nil,
+        whereClause = WhereClause(patterns = Vector(
+            StatementPattern(
+                namedGraph = None,
+                obj = IriRef(
+                    iri = "http://api.knora.org/ontology/anything/simple/v2#Thing"
+                ),
+                pred = IriRef(
+                    iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
+                ),
+                subj = QueryVariable(variableName = "thing")
+            ),
+            FilterNotExistsPattern(patterns = Vector(StatementPattern(
+                namedGraph = None,
+                obj = QueryVariable(variableName = "aThing"),
+                pred = IriRef(
+                    iri = "http://api.knora.org/ontology/anything/simple/v2#hasOtherThing"
+                ),
+                subj = QueryVariable(variableName = "thing")
+            )))
+        )),
+        constructClause = ConstructClause(statements = Vector(
+            StatementPattern(
+                namedGraph = None,
+                obj = QueryVariable(variableName = "thingType"),
+                pred = IriRef(
+                    iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
+                ),
+                subj = QueryVariable(variableName = "thing")
+            ),
+            StatementPattern(
+                namedGraph = None,
+                obj = QueryVariable(variableName = "thingLabel"),
+                pred = IriRef(
+                    iri = "http://www.w3.org/2000/01/rdf-schema#label"
+                ),
+                subj = QueryVariable(variableName = "thing")
+            )
+        ))
+    )
+
+    val QueryWithMinus: String =
+        """
+          |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+          |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+          |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |PREFIX anything: <http://api.knora.org/ontology/anything/simple/v2#>
+          |
+          |CONSTRUCT {
+          |    ?thing a ?thingType .
+          |    ?thing rdfs:label ?thingLabel .
+          |} WHERE {
+          |    ?thing a anything:Thing .
+          |
+          |    MINUS {
+          |        ?thing anything:hasOtherThing ?aThing .
+          |    }
+          |}
+        """.stripMargin
+
+    val ParsedQueryWithMinus: ConstructQuery = ConstructQuery(
+        orderBy = Nil,
+        whereClause = WhereClause(patterns = Vector(
+            StatementPattern(
+                namedGraph = None,
+                obj = IriRef(
+                    iri = "http://api.knora.org/ontology/anything/simple/v2#Thing"
+                ),
+                pred = IriRef(
+                    iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
+                ),
+                subj = QueryVariable(variableName = "thing")
+            ),
+            MinusPattern(patterns = Vector(StatementPattern(
+                namedGraph = None,
+                obj = QueryVariable(variableName = "aThing"),
+                pred = IriRef(
+                    iri = "http://api.knora.org/ontology/anything/simple/v2#hasOtherThing"
+                ),
+                subj = QueryVariable(variableName = "thing")
+            )))
+        )),
+        constructClause = ConstructClause(statements = Vector(
+            StatementPattern(
+                namedGraph = None,
+                obj = QueryVariable(variableName = "thingType"),
+                pred = IriRef(
+                    iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
+                ),
+                subj = QueryVariable(variableName = "thing")
+            ),
+            StatementPattern(
+                namedGraph = None,
+                obj = QueryVariable(variableName = "thingLabel"),
+                pred = IriRef(
+                    iri = "http://www.w3.org/2000/01/rdf-schema#label"
+                ),
+                subj = QueryVariable(variableName = "thing")
+            )
+        ))
+    )
+
+    val QueryWithOffset: String =
+        """
+          |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+          |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+          |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |PREFIX anything: <http://api.knora.org/ontology/anything/simple/v2#>
+          |
+          |CONSTRUCT {
+          |    ?thing a ?thingType .
+          |    ?thing rdfs:label ?thingLabel .
+          |} WHERE {
+          |    ?thing a anything:Thing .
+          |} OFFSET 10
+        """.stripMargin
+
+    val ParsedQueryWithOffset: ConstructQuery = ConstructQuery(
+        offset = 10,
+        orderBy = Nil,
+        whereClause = WhereClause(patterns = Vector(StatementPattern(
+            namedGraph = None,
+            obj = IriRef(
+                iri = "http://api.knora.org/ontology/anything/simple/v2#Thing"
+            ),
+            pred = IriRef(
+                iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
+            ),
+            subj = QueryVariable(variableName = "thing")
+        ))),
+        constructClause = ConstructClause(statements = Vector(
+            StatementPattern(
+                namedGraph = None,
+                obj = QueryVariable(variableName = "thingType"),
+                pred = IriRef(
+                    iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
+                ),
+                subj = QueryVariable(variableName = "thing")
+            ),
+            StatementPattern(
+                namedGraph = None,
+                obj = QueryVariable(variableName = "thingLabel"),
+                pred = IriRef(
+                    iri = "http://www.w3.org/2000/01/rdf-schema#label"
+                ),
+                subj = QueryVariable(variableName = "thing")
+            )
+        ))
+    )
 
     val QueryWithWrongFilter: String =
         """
