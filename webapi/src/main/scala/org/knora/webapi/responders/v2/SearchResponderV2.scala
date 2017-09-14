@@ -865,12 +865,26 @@ class SearchResponderV2 extends Responder {
                         }
                 }
 
-                // always order by include main resource (Order By criterion is optional)
+                // main resource variable as order by criterion
+                val orderByMainResVar: OrderCriterion = OrderCriterion(
+                    queryVariable = mainResourceVariable.getOrElse(throw SparqlSearchException("No ${OntologyConstants.KnoraBase.IsMainResource} found in CONSTRUCT query.")),
+                    isAscending = true
+                )
+
+                // dependent resource variables as order by criteria
+                val orderByDependentResVars: Seq[OrderCriterion] = dependentResourceVariables.map {
+                    (resVar: QueryVariable) =>
+                        OrderCriterion(
+                            queryVariable = resVar,
+                            isAscending = true
+                        )
+                }.toSeq
+
+                // order by: user provided variables, main resource variable, dependent resource variables
+                // all variables must be included in the order by statements to make the results predictable for paging
+                // in case more than one value is returned for a dependent resource variable, there will be more than one row for the same main resource variable
                 transformedOrderBy.copy(
-                    orderBy = transformedOrderBy.orderBy :+ OrderCriterion(
-                        queryVariable = mainResourceVariable.getOrElse(throw SparqlSearchException("\"No ${OntologyConstants.KnoraBase.IsMainResource} found in CONSTRUCT query.")),
-                        isAscending = true
-                    )
+                    orderBy = transformedOrderBy.orderBy ++ (orderByMainResVar +: orderByDependentResVars)
                 )
             }
         }
@@ -947,10 +961,10 @@ class SearchResponderV2 extends Responder {
           * Creates the main query to be sent to the triplestore.
           * Requests two sets of information: about the main resources and the dependent resources.
           *
-          * @param mainResourceVar                     the variable representing the main resources.
-          * @param valuesPatternForMainResources        Iris of the main reource variable.
-          * @param dependentResourceVar                 the variable representing the dependent resources.
-          * @param valuesPatternForDependentResources   Iris of the dependent resources.
+          * @param mainResourceVar                    the variable representing the main resources.
+          * @param valuesPatternForMainResources      Iris of the main reource variable.
+          * @param dependentResourceVar               the variable representing the dependent resources.
+          * @param valuesPatternForDependentResources Iris of the dependent resources.
           * @return the main [[ConstructQuery]] query to be executed.
           */
         def createMainQuery(mainResourceVar: QueryVariable, valuesPatternForMainResources: ValuesPattern, dependentResourceVar: QueryVariable, valuesPatternForDependentResources: ValuesPattern): ConstructQuery = {
@@ -1078,7 +1092,7 @@ class SearchResponderV2 extends Responder {
                             resultRow.rowMap(resVar)
                     }
 
-                acc ++ resIris
+                    acc ++ resIris
             }
 
             // the user may have defined Iris of dependent resources in the input query (type annotations)
