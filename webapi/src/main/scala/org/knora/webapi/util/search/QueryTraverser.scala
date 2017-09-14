@@ -107,6 +107,22 @@ trait ConstructToSelectTransformer extends WhereTransformer {
       * @return the ORDER BY criteria, if any.
       */
     def getOrderBy(inputOrderBy: Seq[OrderCriterion]): TransformedOrderBy
+
+    /**
+      * Returns the limit representing the maximum amount of result rows returned by the SELECT query.
+      *
+      * @return the LIMIT, if any.
+      */
+    def getLimit: Int
+
+    /**
+      * Returns the OFFSET to be used in the SELECT query.
+      * Provided the OFFSET submitted in the input query, calculates the actual offset in result rows depending on LIMIT.
+      *
+      * @param inputQueryOffset the OFFSET provided in the input query.
+      * @return the OFFSET.
+      */
+    def getOffset(inputQueryOffset: Long, limit: Int): Long
 }
 
 
@@ -188,12 +204,17 @@ object QueryTraverser {
 
         val transformedOrderBy = transformer.getOrderBy(inputQuery.orderBy)
 
+        val limit: Int = transformer.getLimit
+
+        val offset = transformer.getOffset(inputQuery.offset, limit)
+
         SelectQuery(
             variables = transformer.getSelectVariables,
             useDistinct = true,
             whereClause = WhereClause(patterns = transformedWherePatterns ++ transformedOrderBy.statementPatterns),
             orderBy = transformedOrderBy.orderBy,
-            limit = Some(25) // TODO: add offset
+            limit = Some(limit),
+            offset = offset
         )
     }
 

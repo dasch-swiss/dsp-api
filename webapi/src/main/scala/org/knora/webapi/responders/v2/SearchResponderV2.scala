@@ -887,6 +887,28 @@ class SearchResponderV2 extends Responder {
                     orderBy = transformedOrderBy.orderBy ++ (orderByMainResVar +: orderByDependentResVars)
                 )
             }
+
+            def getLimit: Int = {
+                // get LIMIT from settings
+                settings.v2ExtendedSearchResultsPerPage
+            }
+
+            def getOffset(inputQueryOffset: Long, limit: Int): Long = {
+
+                if (inputQueryOffset < 0) throw AssertionException("Negative OFFSET is illegal.")
+
+                if (inputQueryOffset == 0) {
+                    // first page, offset is zero
+                    0
+                } else {
+                    // subsequent page -> multiply offset with limit
+                    // for instance: the user requests offset 1, meaning that he wants to get the second page of results.
+                    // the OFFSET equals the amount of previous pages multiplied with the LIMIT used.
+                    inputQueryOffset * limit
+                }
+
+            }
+
         }
 
         /**
@@ -1039,7 +1061,7 @@ class SearchResponderV2 extends Responder {
 
             // Create a Select prequery. TODO: include OFFSET and LIMIT.
             nonTriplestoreSpecficPrequery: SelectQuery = QueryTraverser.transformConstructToSelect(
-                inputQuery = preprocessedQuery.copy(orderBy = inputQuery.orderBy), // TODO: This is a workaround to get Order By into the transformer since the preprocessor does not know about it
+                inputQuery = preprocessedQuery.copy(orderBy = inputQuery.orderBy, offset = inputQuery.offset), // TODO: This is a workaround to get Order By and OFFSET into the transformer since the preprocessor does not know about it
                 transformer = new NonTriplestoreSpecificConstructToSelectTransformer(typeInspectionResult)
             )
 
