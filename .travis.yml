@@ -37,6 +37,12 @@ cache:
 before_install:
   - openssl aes-256-cbc -K $encrypted_6254b38dc8d5_key -iv $encrypted_6254b38dc8d5_iv -in $TRAVIS_BUILD_DIR/private/graphdb.license.enc -out $TRAVIS_BUILD_DIR/private/graphdb.license -d
 
+stages:
+  - test
+  # generally, only publish if we are on 'develop'
+  - name: deploy
+      if: branch = develop
+
 jobs:
   include:
     - stage: test
@@ -87,20 +93,19 @@ jobs:
     #    - cd $TRAVIS_BUILD_DIR/salsah/ && sbt headless:test
     - stage: publish
       script:
-        # generally, only create, tag and push to hub.docker.com if we are on 'develop'
         - docker login -u $DOCKER_USER -p $DOCKER_PASS
         # webapi
-        - if [ "$TRAVIS_BRANCH" = "develop" ]; then docker build $TRAVIS_BUILD_DIR/webapi/ -t $WEBAPI_REPO:develop ; fi
-        - if [ "$TRAVIS_BRANCH" = "develop" ]; then docker tag $WEBAPI_REPO:develop $WEBAPI_REPO:latest ; fi
-        - if [ "$TRAVIS_BRANCH" = "develop" ]; then docker push $WEBAPI_REPO ; fi
+        - docker build $TRAVIS_BUILD_DIR/webapi/ -t $WEBAPI_REPO:develop
+        - docker tag $WEBAPI_REPO:develop $WEBAPI_REPO:latest
+        - docker push $WEBAPI_REPO
         # salsah
-        - if [ "$TRAVIS_BRANCH" = "develop" ]; then docker build $TRAVIS_BUILD_DIR/salsah/ -t $SALSAH_REPO:develop ; fi
-        - if [ "$TRAVIS_BRANCH" = "develop" ]; then docker tag $SALSAH_REPO:develop $SALSAH_REPO:latest ; fi
-        - if [ "$TRAVIS_BRANCH" = "develop" ]; then docker push $SALSAH_REPO ; fi
+        - docker build $TRAVIS_BUILD_DIR/salsah/ -t $SALSAH_REPO:develop
+        - docker tag $SALSAH_REPO:develop $SALSAH_REPO:latest
+        - docker push $SALSAH_REPO
         # sipi: get the develop sipi and tag it as 'develop-knora' so we know that this version is tested (only on the develop branch)
-        - if [ "$TRAVIS_BRANCH" = "develop" ]; then docker pull $SIPI_REPO:develop ; fi
-        - if [ "$TRAVIS_BRANCH" = "develop" ]; then docker tag $SIPI_REPO:develop $SIPI_REPO:knora-develop ; fi
-        - if [ "$TRAVIS_BRANCH" = "develop" ]; then docker push $SIPI_REPO ; fi
+        - docker pull $SIPI_REPO:develop
+        - docker tag $SIPI_REPO:develop $SIPI_REPO:knora-develop
+        - docker push $SIPI_REPO
 
 notifications:
   slack:
