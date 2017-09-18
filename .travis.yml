@@ -39,8 +39,7 @@ before_install:
 
 stages:
   - test
-  # generally, only publish if we are on 'develop'
-  - name: deploy
+  - name: publish # generally, only publish if we are on 'develop'
       if: branch = develop
 
 jobs:
