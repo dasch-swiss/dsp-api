@@ -41,7 +41,6 @@ jobs:
   include:
     - stage: test
       script:
-        # TODO: re-enable this when the build environment has enough memory for it.
         # prepare needed graphdb-se files
         - mkdir -p $TRAVIS_BUILD_DIR/data/conf
         - cp $TRAVIS_BUILD_DIR/private/graphdb.license $TRAVIS_BUILD_DIR/data/conf/graphdb.license
@@ -55,23 +54,19 @@ jobs:
         - cd $TRAVIS_BUILD_DIR/webapi/ && sbt graphdb:test
     - stage: test
       script:
-        # unzip graphdb-free
-        - unzip $TRAVIS_BUILD_DIR/triplestores/graphdb-free/graphdb-free-8.2.0-dist.zip -d /tmp && sudo mv /tmp/graphdb-free-8.2.0 /graphdb
-        - cp $TRAVIS_BUILD_DIR/webapi/scripts/KnoraRules.pie /graphdb
-        # start and initialize graphdb-free
-        - cd /graphdb && ./bin/graphdb > /dev/null 2>&1 &
+        # prepare needed graphdb-se files
+        - mkdir -p $TRAVIS_BUILD_DIR/data/conf
+        - cp $TRAVIS_BUILD_DIR/private/graphdb.license $TRAVIS_BUILD_DIR/data/conf/graphdb.license
+        - mkdir -p $TRAVIS_BUILD_DIR/graphdb
+        - cp $TRAVIS_BUILD_DIR/webapi/scripts/KnoraRules.pie $TRAVIS_BUILD_DIR/graphdb
+        # start and initialize graphdb-se
+        - docker run -d -p 127.0.0.1:7200:7200 -v $TRAVIS_BUILD_DIR/data:/opt/graphdb/home -v $TRAVIS_BUILD_DIR/graphdb:/graphdb ontotext/graphdb:8.2.0-se
         - sleep 15
-        - cd $TRAVIS_BUILD_DIR/webapi/scripts && ./graphdb-free-init-knora-test-unit.sh
+        - cd $TRAVIS_BUILD_DIR/webapi/scripts && ./graphdb-se-docker-init-knora-test-unit.sh
         # start the sipi container (with production config)
         - docker run -d --add-host webapihost:$DOCKERHOST -v /tmp:/tmp -v $HOME:$HOME -p 1024:1024 $SIPI_REPO:develop
         # start the integration tests
-        - cd $TRAVIS_BUILD_DIR/webapi/ && sbt graphdb-free-it:test
-    #- stage: webapi-graphdb
-    #  script:
-    #    # start graphdb
-    #    - cd $TRAVIS_BUILD_DIR/triplestores/fuseki/ && ./fuseki-server &
-    #    # start the built-in webapi server tests
-    #    - cd $TRAVIS_BUILD_DIR/webapi/ && sbt test
+        - cd $TRAVIS_BUILD_DIR/webapi/ && sbt it:test
     #- stage: test
     #  script:
     #    #- "export DISPLAY=:99.0"
@@ -92,7 +87,7 @@ jobs:
     #    - cd $TRAVIS_BUILD_DIR/salsah/ && sbt headless:test
     - stage: publish
       script:
-        # generally, only create, tag and push to docker if we are on 'develop'
+        # generally, only create, tag and push to hub.docker.com if we are on 'develop'
         - docker login -u $DOCKER_USER -p $DOCKER_PASS
         # webapi
         - if [ "$TRAVIS_BRANCH" = "develop" ]; then docker build $TRAVIS_BUILD_DIR/webapi/ -t $WEBAPI_REPO:develop ; fi
