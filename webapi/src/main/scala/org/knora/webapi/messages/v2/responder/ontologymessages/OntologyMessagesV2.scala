@@ -21,15 +21,11 @@
 package org.knora.webapi.messages.v2.responder.ontologymessages
 
 
-import com.github.jsonldjava.core.{JsonLdOptions, JsonLdProcessor}
-import com.github.jsonldjava.utils.JsonUtils
 import org.knora.webapi.messages.v1.responder.standoffmessages.StandoffDataTypeClasses
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v2.responder._
-import org.knora.webapi.util.{InputValidation, JavaUtil, JsonLDUtil}
+import org.knora.webapi.util.{InputValidation, JsonLDUtil}
 import org.knora.webapi.{IRI, InconsistentTriplestoreDataException, OntologyConstants, SettingsImpl}
-
-import scala.collection.mutable
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Messages
@@ -54,7 +50,7 @@ case class LoadOntologiesRequestV2(userProfile: UserProfileV1) extends Ontologie
   * Indicates that all ontologies were loaded.
   */
 case class LoadOntologiesResponseV2() extends KnoraResponseV2 {
-    def toJsonLDWithValueObject(settings: SettingsImpl) = """{"result": "Ontologies loaded."}"""
+    def toJsonLDWithValueObject(settings: SettingsImpl) = KnoraJsonLDResponse(body = Map("result" -> "Ontologies loaded."))
 
     def toXML = ???
 }
@@ -179,7 +175,7 @@ case class NamedGraphsGetRequestV2(userProfile: UserProfileV1) extends Ontologie
   * Requests entity definitions for the given named graphs.
   *
   * @param namedGraphIris the named graphs to query for.
-  * @param allLanguages true if information in all available languages should be returned.
+  * @param allLanguages   true if information in all available languages should be returned.
   * @param userProfile    the profile of the user making the request.
   */
 case class NamedGraphEntitiesGetRequestV2(namedGraphIris: Set[IRI], allLanguages: Boolean, userProfile: UserProfileV1) extends OntologiesResponderRequestV2
@@ -188,10 +184,10 @@ case class NamedGraphEntitiesGetRequestV2(namedGraphIris: Set[IRI], allLanguages
   * Requests the entity definitions for the given resource class Iris. A successful response will be a [[ReadEntityDefinitionsV2]].
   *
   * @param resourceClassIris the IRIs of the resource classes to be queried.
-  * @param allLanguages true if information in all available languages should be returned.
+  * @param allLanguages      true if information in all available languages should be returned.
   * @param userProfile       the profile of the user making the request.
   */
-case class ResourceClassesGetRequestV2(resourceClassIris: Set[IRI],allLanguages: Boolean,  userProfile: UserProfileV1) extends OntologiesResponderRequestV2
+case class ResourceClassesGetRequestV2(resourceClassIris: Set[IRI], allLanguages: Boolean, userProfile: UserProfileV1) extends OntologiesResponderRequestV2
 
 /**
   * Requests the entity definitions for the given property Iris. A successful response will be a [[ReadEntityDefinitionsV2]].
@@ -217,14 +213,13 @@ case class ReadEntityDefinitionsV2(ontologies: Map[IRI, Set[IRI]] = Map.empty[IR
                                    properties: Map[IRI, PropertyEntityInfoV2] = Map.empty[IRI, PropertyEntityInfoV2], userLang: Option[String]) extends KnoraResponseV2 {
 
 
-    def toJsonLDWithValueObject(settings: SettingsImpl): String = {
-        val context = mutable.Map.empty[String, String]
-        context.put(OntologyConstants.KnoraApi.KnoraApiOntologyLabel, OntologyConstants.KnoraApiV2WithValueObject.KnoraApiV2PrefixExpansion)
-        context.put("rdfs", "http://www.w3.org/2000/01/rdf-schema#")
-        context.put("rdf", "http://www.w3.org/1999/02/22-rdf-syntax-ns#")
-        context.put("owl", "http://www.w3.org/2002/07/owl#")
-
-        val json: mutable.Map[String, Any] = mutable.Map.empty[String, Any]
+    def toJsonLDWithValueObject(settings: SettingsImpl): KnoraJsonLDResponse = {
+        val context = Map(
+            OntologyConstants.KnoraApi.KnoraApiOntologyLabel -> OntologyConstants.KnoraApiV2WithValueObject.KnoraApiV2PrefixExpansion,
+            "rdfs" -> "http://www.w3.org/2000/01/rdf-schema#",
+            "rdf" -> "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+            "owl" -> "http://www.w3.org/2002/07/owl#"
+        )
 
         // ontologies with their resource classes
 
@@ -238,8 +233,6 @@ case class ReadEntityDefinitionsV2(ontologies: Map[IRI, Set[IRI]] = Map.empty[IR
                 InputValidation.internalOntologyIriToApiV2WithValueObjectOntologyIri(namedGraphIri, () => throw InconsistentTriplestoreDataException(s"internal ontology Iri could not be converted to knora-api v2 with value object ontology Iri")) -> resClassIris
 
         }
-
-        json.put(OntologyConstants.KnoraApiV2WithValueObject.HasOntologiesWithResourceClasses, ontos)
 
         // resource classes
 
@@ -258,8 +251,6 @@ case class ReadEntityDefinitionsV2(ontologies: Map[IRI, Set[IRI]] = Map.empty[IR
                 apiResClassIri -> resourceEntityJson
         }
 
-        json.put(OntologyConstants.KnoraApiV2WithValueObject.HasResourceClasses, resClasses)
-
         // properties
 
         val props: Map[IRI, Map[IRI, Any]] = properties.map {
@@ -277,12 +268,13 @@ case class ReadEntityDefinitionsV2(ontologies: Map[IRI, Set[IRI]] = Map.empty[IR
                 apiPropIri -> propJson
         }
 
-        json.put(OntologyConstants.KnoraApiV2WithValueObject.HasProperties, props)
+        val json = Map(
+            OntologyConstants.KnoraApiV2WithValueObject.HasOntologiesWithResourceClasses -> ontos,
+            OntologyConstants.KnoraApiV2WithValueObject.HasProperties -> props,
+            OntologyConstants.KnoraApiV2WithValueObject.HasResourceClasses -> resClasses
+        )
 
-        val contextAsJava = JavaUtil.deepScalaToJava(context).asInstanceOf[java.util.Map[String, Any]]
-        val jsonAsJava = JavaUtil.deepScalaToJava(json).asInstanceOf[java.util.Map[String, Any]]
-        val compacted = JsonLdProcessor.compact(jsonAsJava, contextAsJava, new JsonLdOptions())
-        JsonUtils.toPrettyString(compacted)
+        KnoraJsonLDResponse(body = json, context = context)
     }
 
     def toXML = ???
@@ -291,12 +283,11 @@ case class ReadEntityDefinitionsV2(ontologies: Map[IRI, Set[IRI]] = Map.empty[IR
 
 case class ReadNamedGraphsV2(namedGraphs: Set[IRI]) extends KnoraResponseV2 {
 
-    def toJsonLDWithValueObject(settings: SettingsImpl): String = {
+    def toJsonLDWithValueObject(settings: SettingsImpl): KnoraJsonLDResponse = {
 
-        val context = mutable.Map.empty[String, String]
-        context.put(OntologyConstants.KnoraApi.KnoraApiOntologyLabel, OntologyConstants.KnoraApiV2WithValueObject.KnoraApiV2PrefixExpansion)
-
-        val json: mutable.Map[String, Object] = mutable.Map.empty[String, Object]
+        val context = Map(
+            OntologyConstants.KnoraApi.KnoraApiOntologyLabel -> OntologyConstants.KnoraApiV2WithValueObject.KnoraApiV2PrefixExpansion
+        )
 
         val namedGraphIris: Seq[IRI] = namedGraphs.toSeq.map {
             namedGraphIri =>
@@ -304,13 +295,11 @@ case class ReadNamedGraphsV2(namedGraphs: Set[IRI]) extends KnoraResponseV2 {
                 InputValidation.internalOntologyIriToApiV2WithValueObjectOntologyIri(namedGraphIri, () => throw InconsistentTriplestoreDataException(s"internal ontology Iri $namedGraphIri could not be converted to knora-api v2 with value object ontology Iri"))
         }
 
-        json.put(OntologyConstants.KnoraApiV2WithValueObject.HasOntologies, namedGraphIris)
+        val json = Map(
+            OntologyConstants.KnoraApiV2WithValueObject.HasOntologies -> namedGraphIris
+        )
 
-        val contextAsJava = JavaUtil.deepScalaToJava(context).asInstanceOf[java.util.Map[String, Any]]
-        val jsonAsJava = JavaUtil.deepScalaToJava(json).asInstanceOf[java.util.Map[String, Any]]
-        val compacted = JsonLdProcessor.compact(jsonAsJava, contextAsJava, new JsonLdOptions())
-        JsonUtils.toPrettyString(compacted)
-
+        KnoraJsonLDResponse(body = json, context = context)
     }
 
     def toXML = ???
@@ -627,17 +616,10 @@ case class ResourceEntityInfoV2(resourceClassIri: IRI,
             case (propertyIri: IRI, cardinality: Cardinality.Value) =>
 
                 val prop2card: (IRI, Int) = cardinality match {
-                    case Cardinality.MayHaveMany =>
-                        OntologyConstants.Owl.MinCardinality -> 0
-
-                    case Cardinality.MayHaveOne =>
-                        OntologyConstants.Owl.MaxCardinality -> 1
-
-                    case Cardinality.MustHaveOne =>
-                        OntologyConstants.Owl.Cardinality -> 1
-
-                    case Cardinality.MustHaveSome =>
-                        OntologyConstants.Owl.MinCardinality -> 1
+                    case Cardinality.MayHaveMany => OntologyConstants.Owl.MinCardinality -> 0
+                    case Cardinality.MayHaveOne => OntologyConstants.Owl.MaxCardinality -> 1
+                    case Cardinality.MustHaveOne => OntologyConstants.Owl.Cardinality -> 1
+                    case Cardinality.MustHaveSome => OntologyConstants.Owl.MinCardinality -> 1
                 }
 
                 Map(

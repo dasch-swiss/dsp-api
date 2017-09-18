@@ -21,20 +21,14 @@
 package org.knora.webapi.messages.v2.responder
 
 import java.io.{StringReader, StringWriter}
-import java.{lang, util}
 import javax.xml.transform.stream.StreamSource
 
-import com.github.jsonldjava.core._
-import com.github.jsonldjava.utils._
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.standoffmessages.MappingXMLtoStandoff
 import org.knora.webapi.messages.v1.responder.valuemessages.{KnoraCalendarV1, KnoraPrecisionV1}
-import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.twirl.StandoffTagV1
-import org.knora.webapi.util.{DateUtilV2, InputValidation}
 import org.knora.webapi.util.standoff.StandoffTagUtilV1
-
-import scala.collection.JavaConverters._
+import org.knora.webapi.util.{DateUtilV2, InputValidation}
 
 /**
   * The value of a Knora property in the context of some particular input or output operation.
@@ -506,7 +500,7 @@ case class LinkValueContentV2(valueHasString: String, subject: IRI, predicate: I
         referredResource match {
             case Some(targetResource: ReadResourceV2) =>
                 // include the referred resource as a nested structure
-                val referredResourceAsJsValue: util.Map[IRI, Object] = ReadResourceUtil.createValueMapFromReadResourceV2(targetResource, settings)
+                val referredResourceAsJsValue: Map[IRI, Any] = ReadResourceUtil.createValueMapFromReadResourceV2(targetResource, settings)
                 Map(OntologyConstants.KnoraApiV2WithValueObject.LinkValueHasTarget -> referredResourceAsJsValue)
 
             case None =>
@@ -589,6 +583,14 @@ case class DecimalLiteralV2(value: BigDecimal) extends LiteralV2
 case class BooleanLiteralV2(value: Boolean) extends LiteralV2
 
 /**
+  * A JSON-LD representation of a [[KnoraResponseV2]], in the form of Scala collections.
+  *
+  * @param body    the body of the JSON-LD response.
+  * @param context the context of the JSON-LD response.
+  */
+case class KnoraJsonLDResponse(body: Map[String, Any], context: Map[String, Any] = Map.empty[String, Any])
+
+/**
   *
   * A trait for Knora API V2 response messages. Any response can be converted into JSON or XML.
   *
@@ -600,7 +602,7 @@ trait KnoraResponseV2 {
       *
       * @return a string in JSON-LD format.
       */
-    def toJsonLDWithValueObject(settings: SettingsImpl): String
+    def toJsonLDWithValueObject(settings: SettingsImpl): KnoraJsonLDResponse
 
     /**
       * Serialize the response to XML.
@@ -619,27 +621,27 @@ object ReadResourceUtil {
       * @param resource the resource to be turned into `JsValue`.
       * @return a map of value properties to `JsValue`.
       */
-    def createValueMapFromReadResourceV2(resource: ReadResourceV2, settings: SettingsImpl): util.Map[IRI, Object] = {
+    def createValueMapFromReadResourceV2(resource: ReadResourceV2, settings: SettingsImpl): Map[IRI, Any] = {
 
-        val values: Map[IRI, util.List[util.Map[IRI, Any]]] = resource.values.map {
+        val values: Map[IRI, Seq[Map[IRI, Any]]] = resource.values.map {
             case (propIri: IRI, readValues: Seq[ReadValueV2]) =>
-                val valuesMap: util.List[util.Map[IRI, Any]] = readValues.map {
+                val valuesMap: Seq[Map[IRI, Any]] = readValues.map {
                     (readValue: ReadValueV2) =>
                         val valAsMap: Map[IRI, Any] = readValue.valueContent.toApiV2WithValueObject(settings)
 
-                        (Map("@id" -> readValue.valueIri,
-                            "@type" -> InputValidation.internalEntityIriToApiV2WithValueObjectEntityIri(readValue.valueContent.valueTypeIri, () => throw InconsistentTriplestoreDataException(s"internal value type Iri ${readValue.valueContent.valueTypeIri} could not be converted to a knora-api v2 with value type Iri"))) ++ valAsMap).asJava
-                }.asJava
+                        Map("@id" -> readValue.valueIri,
+                            "@type" -> InputValidation.internalEntityIriToApiV2WithValueObjectEntityIri(readValue.valueContent.valueTypeIri, () => throw InconsistentTriplestoreDataException(s"internal value type Iri ${readValue.valueContent.valueTypeIri} could not be converted to a knora-api v2 with value type Iri"))) ++ valAsMap
+                }
 
                 (InputValidation.internalEntityIriToApiV2WithValueObjectEntityIri(propIri, () => throw InconsistentTriplestoreDataException(s"internal property $propIri could not be converted to knora-api v2 with value object property Iri")), valuesMap)
 
         }
 
-        (Map(
+        Map(
             "@type" -> InputValidation.internalEntityIriToApiV2WithValueObjectEntityIri(resource.resourceClass, () => throw InconsistentTriplestoreDataException(s"internal resource class Iri ${resource.resourceClass} could not be converted to a knora-api v2 with value object resource class Iri")),
             "http://schema.org/name" -> resource.label,
             "@id" -> resource.resourceIri
-        ) ++ values).asJava
+        ) ++ values
 
     }
 }
@@ -652,32 +654,25 @@ object ReadResourceUtil {
   */
 case class ReadResourcesSequenceV2(numberOfResources: Int, resources: Seq[ReadResourceV2]) extends KnoraResponseV2 {
 
-    def toJsonLDWithValueObject(settings: SettingsImpl): String = {
+    def toJsonLDWithValueObject(settings: SettingsImpl): KnoraJsonLDResponse = {
 
-        val context = new util.HashMap[String, String]()
-        context.put("@vocab", "http://schema.org/")
-        context.put(OntologyConstants.KnoraApi.KnoraApiOntologyLabel, OntologyConstants.KnoraApiV2WithValueObject.KnoraApiV2PrefixExpansion)
-        context.put("rdfs", "http://www.w3.org/2000/01/rdf-schema#")
+        val context = Map(
+            "@vocab" -> "http://schema.org/",
+            OntologyConstants.KnoraApi.KnoraApiOntologyLabel -> OntologyConstants.KnoraApiV2WithValueObject.KnoraApiV2PrefixExpansion,
+            "rdfs" -> "http://www.w3.org/2000/01/rdf-schema#"
+        )
 
-        val json: util.HashMap[String, Object] = new util.HashMap[String, Object]()
+        val resourcesJson = resources.map {
+            (resource: ReadResourceV2) => ReadResourceUtil.createValueMapFromReadResourceV2(resource, settings)
+        }
 
-        val resSeq: util.List[util.Map[IRI, Object]] = resources.map {
-            (resource: ReadResourceV2) =>
+        val json = Map(
+            "@type" -> "ItemList",
+            "http://schema.org/numberOfItems" -> numberOfResources,
+            "http://schema.org/itemListElement" -> resourcesJson
+        )
 
-                ReadResourceUtil.createValueMapFromReadResourceV2(resource, settings)
-
-        }.asJava
-
-        json.put("@type", "ItemList")
-
-        json.put("http://schema.org/numberOfItems", new lang.Integer(numberOfResources))
-
-        json.put("http://schema.org/itemListElement", resSeq)
-
-        val compacted = JsonLdProcessor.compact(json, context, new JsonLdOptions())
-
-        JsonUtils.toPrettyString(compacted)
-
+        KnoraJsonLDResponse(body = json, context = context)
     }
 
     def toXML = ???

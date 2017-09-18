@@ -26,8 +26,11 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.{RequestContext, RouteResult}
 import akka.pattern._
 import akka.util.Timeout
+import com.github.jsonldjava.core.{JsonLdOptions, JsonLdProcessor}
+import com.github.jsonldjava.utils.JsonUtils
 import org.knora.webapi._
 import org.knora.webapi.messages.v2.responder.{KnoraRequestV2, KnoraResponseV2}
+import org.knora.webapi.util.JavaUtil
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -39,7 +42,7 @@ object RouteUtilV2 {
     /**
       * Sends a message to a responder and completes the HTTP request by returning the response as JSON.
       *
-      * @param requestMessage  a future containing a [[KnoraRequestV2]] message that should be sent to the responder manager.
+      * @param requestMessage   a future containing a [[KnoraRequestV2]] message that should be sent to the responder manager.
       * @param requestContext   the akka-http [[RequestContext]].
       * @param settings         the application's settings.
       * @param responderManager a reference to the responder manager.
@@ -60,7 +63,7 @@ object RouteUtilV2 {
         }
 
         val httpResponse: Future[HttpResponse] = for {
-            // Make sure the responder sent a reply of type KnoraResponseV2.
+        // Make sure the responder sent a reply of type KnoraResponseV2.
             knoraResponse <- (responderManager ? requestMessage).map {
                 case replyMessage: KnoraResponseV2 => replyMessage
 
@@ -78,13 +81,16 @@ object RouteUtilV2 {
             // TODO: check whether to send back JSON-LD or XML (content negotiation: HTTP accept header)
 
             // The request was successful
-            jsonResponseWithStatus = knoraResponse.toJsonLDWithValueObject(settings)
-
+            jsonLDResponse = knoraResponse.toJsonLDWithValueObject(settings)
+            contextAsJava = JavaUtil.deepScalaToJava(jsonLDResponse.context).asInstanceOf[java.util.Map[String, Any]]
+            jsonAsJava = JavaUtil.deepScalaToJava(jsonLDResponse.body).asInstanceOf[java.util.Map[String, Any]]
+            compacted = JsonLdProcessor.compact(jsonAsJava, contextAsJava, new JsonLdOptions())
+            jsonLDString = JsonUtils.toPrettyString(compacted)
         } yield HttpResponse(
             status = StatusCodes.OK,
             entity = HttpEntity(
                 ContentTypes.`application/json`,
-                jsonResponseWithStatus
+                jsonLDString
             )
         )
 
