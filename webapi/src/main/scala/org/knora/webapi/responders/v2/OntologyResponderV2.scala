@@ -80,9 +80,9 @@ class OntologyResponderV2 extends Responder {
         case CheckSubClassRequestV2(subClassIri, superClassIri, userProfile) => future2Message(sender(), checkSubClassV2(subClassIri, superClassIri, userProfile), log)
         case SubClassesGetRequestV2(resourceClassIri, userProfile) => future2Message(sender(), getSubClassesV2(resourceClassIri, userProfile), log)
         case NamedGraphEntitiesRequestV2(namedGraphIri, userProfile) => future2Message(sender(), getNamedGraphEntityInfoV2ForNamedGraphV2(namedGraphIri, userProfile), log)
-        case NamedGraphEntitiesGetRequestV2(namedGraphIris, userProfile) => future2Message(sender(), getEntitiesForNamedGraphV2(namedGraphIris, userProfile), log)
-        case ResourceClassesGetRequestV2(resourceClassIris, userProfile) => future2Message(sender(), getResourceClassDefinitionsWithCardinalitiesV2(resourceClassIris, userProfile), log)
-        case PropertyEntitiesGetRequestV2(propertyIris, userProfile) => future2Message(sender(), getPropertyDefinitionsV2(propertyIris, userProfile), log)
+        case NamedGraphEntitiesGetRequestV2(namedGraphIris, allLanguages, userProfile) => future2Message(sender(), getEntitiesForNamedGraphV2(namedGraphIris, allLanguages, userProfile), log)
+        case ResourceClassesGetRequestV2(resourceClassIris, allLanguages, userProfile) => future2Message(sender(), getResourceClassDefinitionsWithCardinalitiesV2(resourceClassIris, allLanguages, userProfile), log)
+        case PropertyEntitiesGetRequestV2(propertyIris, allLanguages, userProfile) => future2Message(sender(), getPropertyDefinitionsV2(propertyIris, allLanguages, userProfile), log)
         case NamedGraphsGetRequestV2(userProfile) => future2Message(sender(), getNamedGraphsV2(userProfile), log)
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }
@@ -828,7 +828,7 @@ class OntologyResponderV2 extends Responder {
       * @param userProfile    the profile of the user making the request.
       * @return a [[ReadEntityDefinitionsV2]].
       */
-    private def getEntitiesForNamedGraphV2(namedGraphIris: Set[IRI], userProfile: UserProfileV1): Future[ReadEntityDefinitionsV2] = {
+    private def getEntitiesForNamedGraphV2(namedGraphIris: Set[IRI], allLanguages: Boolean, userProfile: UserProfileV1): Future[ReadEntityDefinitionsV2] = {
 
         for {
 
@@ -853,7 +853,7 @@ class OntologyResponderV2 extends Responder {
             // collect all resource class Iris
             resourceClassIris: Set[IRI] = resourceClassesForNamedGraph.toMap.values.flatten.toSet
 
-            readEntityDefs: ReadEntityDefinitionsV2 <- getResourceClassDefinitionsWithCardinalitiesV2(resourceClassIris, userProfile = userProfile)
+            readEntityDefs: ReadEntityDefinitionsV2 <- getResourceClassDefinitionsWithCardinalitiesV2(resourceClassIris, allLanguages, userProfile = userProfile)
 
         } yield readEntityDefs.copy(
             ontologies = resourceClassesForNamedGraph.toMap
@@ -867,7 +867,7 @@ class OntologyResponderV2 extends Responder {
       * @param userProfile       the profile of the user making the request.
       * @return a [[ReadEntityDefinitionsV2]].
       */
-    private def getResourceClassDefinitionsWithCardinalitiesV2(resourceClassIris: Set[IRI], userProfile: UserProfileV1): Future[ReadEntityDefinitionsV2] = {
+    private def getResourceClassDefinitionsWithCardinalitiesV2(resourceClassIris: Set[IRI], allLanguages: Boolean, userProfile: UserProfileV1): Future[ReadEntityDefinitionsV2] = {
         for {
 
         // request information about the given resource class Iris
@@ -890,8 +890,16 @@ class OntologyResponderV2 extends Responder {
             // request information about the properties for which cardinalities are defined
             propertiesResponse: EntityInfoGetResponseV2 <- getEntityInfoResponseV2(propertyIris = propertyIris, userProfile = userProfile)
 
-        } yield ReadEntityDefinitionsV2(resourceClasses = resourceClassResponse.resourceEntityInfoMap, properties = propertiesResponse.propertyEntityInfoMap, userLang = userProfile.userData.lang)
+            // Are we returning data in the user's preferred language, or in all available languages?
+            userLang = if (!allLanguages) {
+                // Just the user's preferred language.
+                Some(userProfile.userData.lang)
+            } else {
+                // All available languages.
+                None
+            }
 
+        } yield ReadEntityDefinitionsV2(resourceClasses = resourceClassResponse.resourceEntityInfoMap, properties = propertiesResponse.propertyEntityInfoMap, userLang = userLang)
     }
 
     /**
@@ -901,15 +909,21 @@ class OntologyResponderV2 extends Responder {
       * @param userProfile  the profile of the user making the request.
       * @return a [[ReadEntityDefinitionsV2]].
       */
-    private def getPropertyDefinitionsV2(propertyIris: Set[IRI], userProfile: UserProfileV1) = {
+    private def getPropertyDefinitionsV2(propertyIris: Set[IRI], allLanguages: Boolean, userProfile: UserProfileV1) = {
 
         for {
 
             propertiesResponse: EntityInfoGetResponseV2 <- getEntityInfoResponseV2(propertyIris = propertyIris, userProfile = userProfile)
 
+            // Are we returning data in the user's preferred language, or in all available languages?
+            userLang = if (!allLanguages) {
+                // Just the user's preferred language.
+                Some(userProfile.userData.lang)
+            } else {
+                // All available languages.
+                None
+            }
 
-        } yield ReadEntityDefinitionsV2(properties = propertiesResponse.propertyEntityInfoMap, userLang = userProfile.userData.lang)
-
+        } yield ReadEntityDefinitionsV2(properties = propertiesResponse.propertyEntityInfoMap, userLang = userLang)
     }
-
 }

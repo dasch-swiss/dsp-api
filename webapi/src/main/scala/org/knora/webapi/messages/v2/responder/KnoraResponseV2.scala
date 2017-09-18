@@ -611,7 +611,6 @@ trait KnoraResponseV2 {
 
 }
 
-
 object ReadResourceUtil {
     /**
       * Creates a map of value properties to [[Object]] from a [[ReadResourceV2]].

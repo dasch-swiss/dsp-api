@@ -20,19 +20,23 @@
 
 package org.knora.webapi.util
 
-import java.util.function.BiFunction
-
 /**
-  * Utility functions for working with Java functions.
+  * Utility functions for working with JSON-LD.
   */
-object JavaFunctionUtil {
-
+object JsonLDUtil {
     /**
-      * Converts a 2-argument Scala function into a Java [[BiFunction]].
+      * Given a map of language codes to predicate values, returns a JSON-LD array in which each element
+      * has a `@value` predicate and a `@language` predicate.
       *
-      * @param f the Scala function.
-      * @return a [[BiFunction]] that calls the Scala function.
+      * @param objectsWithLangs a map of language codes to predicate values.
+      * @return a JSON-LD array in which each element has a `@value` predicate and a `@language` predicate.
       */
-    def biFunction[A, B, C](f: (A, B) => C): BiFunction[A, B, C] =
-        (a: A, b: B) => f(a, b)
+    def objectsWithLangsToJsonLDArray(objectsWithLangs: Map[String, String]): Seq[Map[String, String]] = {
+        objectsWithLangs.toSeq.map {
+            case (lang, obj) => Map(
+                "@value" -> obj,
+                "@language" -> lang
+            )
+        }
+    }
 }
