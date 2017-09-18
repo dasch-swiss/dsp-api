@@ -33,21 +33,26 @@ cache:
   directories:
     - $HOME/.ivy2
 
+
+before_install:
+  - openssl aes-256-cbc -K $encrypted_6254b38dc8d5_key -iv $encrypted_6254b38dc8d5_iv -in $TRAVIS_BUILD_DIR/private/graphdb.license.enc -out $TRAVIS_BUILD_DIR/private/graphdb.license -d
+
 jobs:
   include:
     - stage: test
       script:
         # TODO: re-enable this when the build environment has enough memory for it.
-        - sleep 1
-        # unzip graphdb-free
-        #- unzip $TRAVIS_BUILD_DIR/triplestores/graphdb-free/graphdb-free-8.2.0-dist.zip -d /tmp && sudo mv /tmp/graphdb-free-8.2.0 /graphdb
-        #- cp $TRAVIS_BUILD_DIR/webapi/scripts/KnoraRules.pie /graphdb
-        # start and initialize graphdb-free
-        #- cd /graphdb && ./bin/graphdb > /dev/null 2>&1 &
-        #- sleep 15
-        #- cd $TRAVIS_BUILD_DIR/webapi/scripts && ./graphdb-free-init-knora-test-unit.sh
+        # prepare needed graphdb-se files
+        - mkdir -p $TRAVIS_BUILD_DIR/data/conf
+        - cp $TRAVIS_BUILD_DIR/private/graphdb.license $TRAVIS_BUILD_DIR/data/conf/graphdb.license
+        - mkdir -p $TRAVIS_BUILD_DIR/graphdb
+        - cp $TRAVIS_BUILD_DIR/webapi/scripts/KnoraRules.pie $TRAVIS_BUILD_DIR/graphdb
+        # start and initialize graphdb-se
+        - docker run -d -p 127.0.0.1:7200:7200 -v $TRAVIS_BUILD_DIR/data:/opt/graphdb/home -v $TRAVIS_BUILD_DIR/graphdb:/graphdb ontotext/graphdb:8.2.0-se
+        - sleep 15
+        - cd $TRAVIS_BUILD_DIR/webapi/scripts && ./graphdb-se-docker-init-knora-test-unit.sh
         # start the built-in webapi server tests
-        # - cd $TRAVIS_BUILD_DIR/webapi/ && sbt test
+        - cd $TRAVIS_BUILD_DIR/webapi/ && sbt graphdb:test
     - stage: test
       script:
         # unzip graphdb-free

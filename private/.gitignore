@@ -1,0 +1,5 @@
+# Ignore everything in this directory
+*
+# Except this file and the encrypted tar with private stuff
+!.gitignore
+!*.enc
