@@ -110,9 +110,9 @@ object OntologyConstants {
         val mappingElementRequiresSeparator: IRI = KnoraBasePrefixExpansion + "mappingElementRequiresSeparator"
 
         val XSLTransformation: IRI = KnoraBasePrefixExpansion + "XSLTransformation"
-        val mappingHasDefaultXSLTransformation = KnoraBasePrefixExpansion + "mappingHasDefaultXSLTransformation"
+        val mappingHasDefaultXSLTransformation: IRI = KnoraBasePrefixExpansion + "mappingHasDefaultXSLTransformation"
 
-        val IsMainResource = KnoraBasePrefixExpansion + "isMainResource"
+        val IsMainResource: IRI = KnoraBasePrefixExpansion + "isMainResource"
 
 
         val AbstractResourceClasses = Set(

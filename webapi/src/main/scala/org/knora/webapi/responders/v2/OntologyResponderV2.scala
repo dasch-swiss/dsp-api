@@ -439,10 +439,10 @@ class OntologyResponderV2 extends Responder {
             // get ontology information about the standoff classes
             standoffClassesSparql <- Future(queries.sparql.v2.txt.getStandoffClassDefinitions(triplestore = settings.triplestoreType).toString())
             standoffClassesResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(standoffClassesSparql)).mapTo[SparqlSelectResponse]
-            standoffClassRows: Seq[VariableResultsRow] = standoffClassesResponse.results.bindings
+            allStandoffClassRows: Seq[VariableResultsRow] = standoffClassesResponse.results.bindings
 
             // add the property Iris of the value base classes since they may be used by some standoff classes
-            combinedStandoffClasses = valueBaseClassesRows ++ standoffClassRows
+            combinedStandoffClasses = valueBaseClassesRows ++ allStandoffClassRows
 
             // collect all the standoff property Iris from the cardinalities
             standoffPropertyIris = combinedStandoffClasses.foldLeft(Set.empty[IRI]) {
@@ -463,10 +463,9 @@ class OntologyResponderV2 extends Responder {
 
             // Group the rows representing value base class definitions by value base class IRI.
             valueBaseClassesGrouped: Map[IRI, Seq[VariableResultsRow]] = valueBaseClassesRows.groupBy(_.rowMap("valueBaseClass"))
-            valueBaseClassIris = valueBaseClassesGrouped.keySet
 
             // Group the rows representing standoff class definitions by standoff class IRI.
-            standoffClassesGrouped: Map[IRI, Seq[VariableResultsRow]] = standoffClassRows.groupBy(_.rowMap("standoffClass"))
+            standoffClassesGrouped: Map[IRI, Seq[VariableResultsRow]] = allStandoffClassRows.groupBy(_.rowMap("standoffClass"))
             standoffClassIris = standoffClassesGrouped.keySet
 
             // Group the rows representing property definitions by property IRI.
@@ -832,7 +831,7 @@ class OntologyResponderV2 extends Responder {
 
         for {
 
-        // collect resource class Iris fro given named graphs
+        // collect resource class IRIs from given named graphs
             resourceClassesForNamedGraphWithFuture: Map[IRI, Future[Set[IRI]]] <- Future(namedGraphIris.foldLeft(Map.empty[IRI, Future[Set[IRI]]]) {
                 case (acc: Map[IRI, Future[Set[IRI]]], namedGraphIri: IRI) =>
                     val resourceClassesFuture: Future[Set[IRI]] = for {
