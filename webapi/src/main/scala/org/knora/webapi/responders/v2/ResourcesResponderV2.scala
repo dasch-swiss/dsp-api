@@ -38,7 +38,7 @@ class ResourcesResponderV2 extends Responder {
 
     def receive = {
         case ResourcesGetRequestV2(resIris, userProfile) => future2Message(sender(), getResources(resIris, userProfile), log)
-        case ResourcePreviewRequestV2(resIri, userProfile) => future2Message(sender(), getResourcePreview(resIri, userProfile), log)
+        case ResourcePreviewRequestV2(resIris, userProfile) => future2Message(sender(), getResourcePreview(resIris, userProfile), log)
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }
 
@@ -46,37 +46,47 @@ class ResourcesResponderV2 extends Responder {
       * Get one or several resources and return them as a sequence.
       *
       * @param resourceIris the resources to query for.
-      * @param userProfile the profile of the client making the request.
+      * @param userProfile  the profile of the client making the request.
       * @return a [[ReadResourcesSequenceV2]].
       */
-    private def getResources(resourceIris: Set[IRI], userProfile: UserProfileV1): Future[ReadResourcesSequenceV2] = {
+    private def getResources(resourceIris: Seq[IRI], userProfile: UserProfileV1): Future[ReadResourcesSequenceV2] = {
 
-        // TODO: get all the resources: possibly more than one resource is requested
-        val resourceIri = resourceIris.head
+        // eliminate duplicate Iris
+        val resourceIrisDistinct: Seq[IRI] = resourceIris.distinct
 
         for {
             resourceRequestSparql <- Future(queries.sparql.v2.txt.getResourcePropertiesAndValues(
                 triplestore = settings.triplestoreType,
-                resourceIri = resourceIri
+                resourceIris = resourceIrisDistinct
             ).toString())
+
+            // _ = println(resourceRequestSparql)
 
             resourceRequestResponse: SparqlConstructResponse <- (storeManager ? SparqlConstructRequest(resourceRequestSparql)).mapTo[SparqlConstructResponse]
 
             // separate resources and values
             queryResultsSeparated: Map[IRI, ResourceWithValueRdfData] = ConstructResponseUtilV2.splitResourcesAndValueRdfData(constructQueryResults = resourceRequestResponse, userProfile = userProfile)
 
-            // check if the requested resource was returned
-            _ = if (queryResultsSeparated.get(resourceIri).isEmpty) {
-                throw NotFoundException(s"The requested resource $resourceIri could not be found: maybe you do not have the right to see it or it is marked as deleted.")
+            // check if all the requested resources were returned
+            requestedButMissing = resourceIrisDistinct.toSet -- queryResultsSeparated.keySet
+
+            _ = if (requestedButMissing.nonEmpty) {
+                throw NotFoundException(
+                    s"""Not all the requested resources from ${resourceIrisDistinct.mkString(", ")} could not be found:
+                        maybe you do not have the right to see all of them or some are marked as deleted.
+                        Missing: ${requestedButMissing.mkString(", ")}""".stripMargin)
+
             }
 
-            // collect the Iris of the mappings referred to in text values
-            mappingIris: Set[IRI] = ConstructResponseUtilV2.getMappingIrisFromValuePropertyAssertions(queryResultsSeparated(resourceIri).valuePropertyAssertions)
+            // collect the Iris of the mappings referred to in the resources' text values
+            mappingIris: Set[IRI] = resourceIrisDistinct.flatMap {
+                (resIri: IRI) =>
+                    ConstructResponseUtilV2.getMappingIrisFromValuePropertyAssertions(queryResultsSeparated(resIri).valuePropertyAssertions)
+            }.toSet
 
             // get all the mappings
             mappingResponsesFuture: Vector[Future[GetMappingResponseV1]] = mappingIris.map {
                 mappingIri =>
-
                     for {
                         mappingResponse: GetMappingResponseV1 <- (responderManager ? GetMappingRequestV1(mappingIri = mappingIris.head, userProfile = userProfile)).mapTo[GetMappingResponseV1]
                     } yield mappingResponse
@@ -89,7 +99,7 @@ class ResourcesResponderV2 extends Responder {
                 (mapping: GetMappingResponseV1) =>
 
                     for {
-                    // if given, get the default XSL Transformation
+                    // if given, get the default XSL transformation
                         xsltOption: Option[String] <- if (mapping.mapping.defaultXSLTransformation.nonEmpty) {
                             for {
                                 xslTransformation: GetXSLTransformationResponseV1 <- (responderManager ? GetXSLTransformationRequestV1(mapping.mapping.defaultXSLTransformation.get, userProfile = userProfile)).mapTo[GetXSLTransformationResponseV1]
@@ -102,25 +112,33 @@ class ResourcesResponderV2 extends Responder {
             }
 
             mappings: Vector[(IRI, MappingAndXSLTransformation)] <- Future.sequence(mappingsWithFuture)
+            mappingsAsMap: Map[IRI, MappingAndXSLTransformation] = mappings.toMap
 
-            // TODO: possibly more than one resource was requested!
-        }  yield ReadResourcesSequenceV2(numberOfResources = 1, resources = Vector(ConstructResponseUtilV2.createFullResourceResponse(resourceIri, queryResultsSeparated(resourceIri), mappings = mappings.toMap)))
+            resourcesResponse: Vector[ReadResourceV2] = resourceIrisDistinct.map {
+                (resIri: IRI) =>
+                    ConstructResponseUtilV2.createFullResourceResponse(resIri, queryResultsSeparated(resIri), mappings = mappingsAsMap)
+            }.toVector
+
+        } yield ReadResourcesSequenceV2(numberOfResources = resourceIrisDistinct.size, resources = resourcesResponse)
 
     }
 
     /**
       * Get the preview of a resource.
       *
-      * @param resourceIri the resource to query for.
-      * @param userProfile the profile of the client making the request.
+      * @param resourceIris the resource to query for.
+      * @param userProfile  the profile of the client making the request.
       * @return a [[ReadResourcesSequenceV2]].
       */
-    private def getResourcePreview(resourceIri: IRI, userProfile: UserProfileV1): Future[ReadResourcesSequenceV2] = {
+    private def getResourcePreview(resourceIris: Seq[IRI], userProfile: UserProfileV1): Future[ReadResourcesSequenceV2] = {
+
+        // eliminate duplicate Iris
+        val resourceIrisDistinct: Seq[IRI] = resourceIris.distinct
 
         for {
             resourcePreviewRequestSparql <- Future(queries.sparql.v2.txt.getResourcePropertiesAndValues(
                 triplestore = settings.triplestoreType,
-                resourceIri = resourceIri,
+                resourceIris = resourceIrisDistinct,
                 preview = true
             ).toString())
 
@@ -129,7 +147,23 @@ class ResourcesResponderV2 extends Responder {
             // separate resources and values
             queryResultsSeparated: Map[IRI, ResourceWithValueRdfData] = ConstructResponseUtilV2.splitResourcesAndValueRdfData(constructQueryResults = resourcePreviewRequestResponse, userProfile = userProfile)
 
-        } yield ReadResourcesSequenceV2(numberOfResources = 1, resources = Vector(ConstructResponseUtilV2.createFullResourceResponse(resourceIri, queryResultsSeparated(resourceIri), mappings = Map.empty[IRI, MappingAndXSLTransformation])))
+            // check if all the requested resources were returned
+            requestedButMissing = resourceIrisDistinct.toSet -- queryResultsSeparated.keySet
+
+            _ = if (requestedButMissing.nonEmpty) {
+                throw NotFoundException(
+                    s"""Not all the requested resources from ${resourceIrisDistinct.mkString(", ")} could not be found:
+                        maybe you do not have the right to see all of them or some are marked as deleted.
+                        Missing: ${requestedButMissing.mkString(", ")}""".stripMargin)
+
+            }
+
+            resourcesResponse: Vector[ReadResourceV2] = resourceIrisDistinct.map {
+                (resIri: IRI) =>
+                    ConstructResponseUtilV2.createFullResourceResponse(resIri, queryResultsSeparated(resIri), mappings = Map.empty[IRI, MappingAndXSLTransformation])
+            }.toVector
+
+        } yield ReadResourcesSequenceV2(numberOfResources = resourceIrisDistinct.size, resources = resourcesResponse)
 
     }
 

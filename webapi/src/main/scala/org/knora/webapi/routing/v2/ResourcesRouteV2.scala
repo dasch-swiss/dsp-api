@@ -43,15 +43,17 @@ object ResourcesRouteV2 extends Authenticator {
         implicit val timeout = settings.defaultTimeout
         val responderManager = system.actorSelection("/user/responderManager")
 
-        path("v2" / "resources" / Segments) { (resIris: List[String]) =>
+        path("v2" / "resources" / Segments) { (resIris: Seq[String]) =>
             get {
                 requestContext => {
                     val userProfile = getUserProfileV1(requestContext)
 
-                    val resourceIris: Set[IRI] = resIris.map {
+                    if (resIris.size > settings.v2ExtendedSearchResultsPerPage) throw BadRequestException(s"List of provided resource Iris exceeds limit of ${settings.v2ExtendedSearchResultsPerPage}")
+
+                    val resourceIris: Seq[IRI] = resIris.map {
                         resIri: String =>
                             InputValidation.toIri(resIri, () => throw BadRequestException(s"Invalid resource Iri: '$resIri'"))
-                    }.toSet
+                    }
 
                     val requestMessage = ResourcesGetRequestV2(resourceIris = resourceIris, userProfile = userProfile)
 
@@ -64,14 +66,19 @@ object ResourcesRouteV2 extends Authenticator {
                     )
                 }
             }
-        } ~ path("v2" / "resourcepreview" / Segment ) { resIri =>
+        } ~ path("v2" / "resourcespreview" / Segments ) { (resIris: Seq[String]) =>
             get {
                 requestContext => {
                     val userProfile = getUserProfileV1(requestContext)
 
-                    val resourceIri: IRI = InputValidation.toIri(resIri, () => throw BadRequestException(s"Invalid resource Iri: '$resIri'"))
+                    if (resIris.size > settings.v2ExtendedSearchResultsPerPage) throw BadRequestException(s"List of provided resource Iris exceeds limit of ${settings.v2ExtendedSearchResultsPerPage}")
 
-                    val requestMessage = ResourcePreviewRequestV2(resourceIri = resourceIri, userProfile = userProfile)
+                    val resourceIris: Seq[IRI] = resIris.map {
+                            resIri: String =>
+                                InputValidation.toIri(resIri, () => throw BadRequestException(s"Invalid resource Iri: '$resIri'"))
+                        }
+
+                    val requestMessage = ResourcePreviewRequestV2(resourceIris = resourceIris, userProfile = userProfile)
 
                     RouteUtilV2.runJsonRoute(
                         requestMessage,
