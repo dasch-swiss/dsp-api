@@ -38,6 +38,7 @@ import org.knora.webapi.responders.{IriLocker, Responder}
 import org.knora.webapi.twirl.{SparqlTemplateLinkUpdate, StandoffTagIriAttributeV1, StandoffTagV1}
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util._
+import org.knora.webapi.util.StringUtils._
 
 import scala.annotation.tailrec
 import scala.collection.breakOut
@@ -1710,7 +1711,7 @@ class ValuesResponderV1 extends Responder {
                     throw ForbiddenException(s"User $userIri does not have permission to see value $linkValueIri")
                 }
 
-                directLinkExists = firstRowMap.get("directLinkExists").exists(_.toBoolean)
+                directLinkExists = firstRowMap.get("directLinkExists").exists(_.toBooleanExtended)
                 targetResourceClass = firstRowMap.get("targetResourceClass")
 
             } yield Some(

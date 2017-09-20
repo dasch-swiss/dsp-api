@@ -40,6 +40,7 @@ import org.knora.webapi.responders.v1.GroupedProps._
 import org.knora.webapi.twirl.SparqlTemplateResourceToCreate
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util._
+import org.knora.webapi.util.StringUtils._
 import spray.json._
 
 import scala.collection.immutable
@@ -2309,10 +2310,10 @@ class ResourcesResponderV1 extends Responder {
             resPropsResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
 
             // Partition the property result rows into rows with value properties and rows with link properties.
-            (rowsWithLinks: Seq[VariableResultsRow], rowsWithValues: Seq[VariableResultsRow]) = resPropsResponse.results.bindings.partition(_.rowMap.get("isLinkProp").exists(_.toBoolean))
+            (rowsWithLinks: Seq[VariableResultsRow], rowsWithValues: Seq[VariableResultsRow]) = resPropsResponse.results.bindings.partition(_.rowMap.get("isLinkProp").exists(_.toBooleanExtended))
 
             // Partition the rows with values into rows with ordinary values and rows with link values (reifications).
-            (rowsWithLinkValues: Seq[VariableResultsRow], rowsWithOrdinaryValues: Seq[VariableResultsRow]) = rowsWithValues.partition(_.rowMap.get("isLinkValueProp").exists(_.toBoolean))
+            (rowsWithLinkValues: Seq[VariableResultsRow], rowsWithOrdinaryValues: Seq[VariableResultsRow]) = rowsWithValues.partition(_.rowMap.get("isLinkValueProp").exists(_.toBooleanExtended))
 
         } yield valueUtilV1.createGroupedPropsByType(rowsWithOrdinaryValues = rowsWithOrdinaryValues, rowsWithLinkValues = rowsWithLinkValues, rowsWithLinks = rowsWithLinks)
     }

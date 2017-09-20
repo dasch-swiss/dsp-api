@@ -34,6 +34,7 @@ import org.knora.webapi.messages.v1.responder.usermessages.UserProfileTypeV1.Use
 import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.responders.{IriLocker, Responder}
 import org.knora.webapi.util.ActorUtil._
+import org.knora.webapi.util.StringUtils._
 import org.knora.webapi.util.{CacheUtil, KnoraIdUtil}
 import org.springframework.security.crypto.scrypt.SCryptPasswordEncoder
 
@@ -90,7 +91,7 @@ class UsersResponderV1 extends Responder {
       */
     private def usersGetV1: Future[Seq[UserDataV1]] = {
 
-        //log.debug("usersGetV1")
+        // log.debug("usersGetV1")
 
         for {
             sparqlQueryString <- Future(queries.sparql.v1.txt.getUsers(
@@ -105,6 +106,8 @@ class UsersResponderV1 extends Responder {
                 case (userIri: IRI, rows: Seq[VariableResultsRow]) => (userIri, rows.map(row => (row.rowMap("p"), row.rowMap("o"))).toMap)
             }
 
+            // _ = log.debug("usersGetV1 - usersWithProperties: {}", MessageUtil.toSource(usersWithProperties))
+
             users = usersWithProperties.map {
                 case (userIri: IRI, propsMap: Map[String, String]) =>
 
@@ -117,7 +120,7 @@ class UsersResponderV1 extends Responder {
                         email = propsMap.get(OntologyConstants.KnoraBase.Email),
                         firstname = propsMap.get(OntologyConstants.KnoraBase.GivenName),
                         lastname = propsMap.get(OntologyConstants.KnoraBase.FamilyName),
-                        status = propsMap.get(OntologyConstants.KnoraBase.Status).map(_.toBoolean)
+                        status = propsMap.get(OntologyConstants.KnoraBase.Status).map(_.toBooleanExtended)
                     )
             }.toSeq
 
@@ -1232,7 +1235,7 @@ class UsersResponderV1 extends Responder {
                 password = if (!short) {
                     groupedUserData.get(OntologyConstants.KnoraBase.Password).map(_.head)
                 } else None,
-                status = groupedUserData.get(OntologyConstants.KnoraBase.Status).map(_.head.toBoolean)
+                status = groupedUserData.get(OntologyConstants.KnoraBase.Status).map(_.head.toBooleanExtended)
             )
             // _ = log.debug(s"userDataQueryResponse - userDataV1: {}", MessageUtil.toSource(userDataV1)")
             FastFuture.successful(Some(userDataV1))
@@ -1270,7 +1273,7 @@ class UsersResponderV1 extends Responder {
                 firstname = groupedUserData.get(OntologyConstants.KnoraBase.GivenName).map(_.head),
                 lastname = groupedUserData.get(OntologyConstants.KnoraBase.FamilyName).map(_.head),
                 password = groupedUserData.get(OntologyConstants.KnoraBase.Password).map(_.head),
-                status = groupedUserData.get(OntologyConstants.KnoraBase.Status).map(_.head.toBoolean)
+                status = groupedUserData.get(OntologyConstants.KnoraBase.Status).map(_.head.toBooleanExtended)
             )
             // log.debug("userDataQueryResponse2UserProfile - userDataV1: {}", MessageUtil.toSource(userDataV1)")
 
@@ -1293,7 +1296,7 @@ class UsersResponderV1 extends Responder {
             val isInProjectAdminGroups = groupedUserData.getOrElse(OntologyConstants.KnoraBase.IsInProjectAdminGroup, Vector.empty[IRI])
 
             /* is the user implicitly considered a member of the 'http://www.knora.org/ontology/knora-base#SystemAdmin' group */
-            val isInSystemAdminGroup = groupedUserData.get(OntologyConstants.KnoraBase.IsInSystemAdminGroup).exists(p => p.head.toBoolean)
+            val isInSystemAdminGroup = groupedUserData.get(OntologyConstants.KnoraBase.IsInSystemAdminGroup).exists(p => p.head.toBooleanExtended)
 
             for {
             /* get the user's permission profile from the permissions responder */

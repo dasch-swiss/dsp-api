@@ -222,19 +222,29 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
         }
         "receiving a 'ResetTriplestoreContent' request " should {
             "reset the data " in {
-                //println("==>> Reset test case start")
-                storeManager ! ResetTriplestoreContent(rdfDataObjects)
-                expectMsg(300.seconds, ResetTriplestoreContentACK())
-                //println("==>> Reset test case end")
 
-                storeManager ! SparqlSelectRequest(countTriplesQuery)
-                expectMsgPF(timeout) {
-                    case msg: SparqlSelectResponse => {
-                        //println(msg)
-                        afterLoadCount = msg.results.bindings.head.rowMap("no").toInt
-                        (afterLoadCount > 0) should ===(true)
-                    }
-                }
+                storeManager ! DropAllTriplestoreContent()
+                expectMsg(400.seconds, DropAllTriplestoreContentACK())
+
+                storeManager ! TriplestoreStatusRequest
+                val res1 = expectMsgType[TriplestoreStatusResponse]
+                val graphCountBefore = res1.nrOfGraphs
+                val tripleCountBefore = res1.nrOfTriples
+
+                graphCountBefore should be (0)
+                tripleCountBefore should be (0)
+
+                storeManager ! ResetTriplestoreContent(rdfDataObjects)
+                expectMsg(400.seconds, ResetTriplestoreContentACK())
+
+                storeManager ! TriplestoreStatusRequest
+                val res2 = expectMsgType[TriplestoreStatusResponse]
+                val graphCountAfter = res2.nrOfGraphs
+                val tripleCountAfter = res2.nrOfTriples
+
+                graphCountAfter should be (13)
+                tripleCountAfter should be (5972)
+
             }
         }
         "receiving a Named Graph request " should {

@@ -30,6 +30,7 @@ import akka.http.scaladsl.model.headers.Accept
 import akka.http.scaladsl.util.FastFuture
 import akka.stream.ActorMaterializer
 import org.apache.commons.lang3.StringUtils
+import org.apache.jena.sparql.function.library.leviathan.log
 import org.eclipse.rdf4j.model.Statement
 import org.eclipse.rdf4j.rio.RDFHandler
 import org.eclipse.rdf4j.rio.turtle._
@@ -114,8 +115,9 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
         case ResetTriplestoreContent(rdfDataObjects) => future2Message(sender(), resetTripleStoreContent(rdfDataObjects), log)
         case DropAllTriplestoreContent() => future2Message(sender(), dropAllTriplestoreContent(), log)
         case InsertTriplestoreContent(rdfDataObjects) => future2Message(sender(), insertDataIntoTriplestore(rdfDataObjects), log)
+        case TriplestoreStatusRequest => future2Message(sender(), triplestoreStatusRequest(), log)
         case HelloTriplestore(msg) if msg == triplestoreType => sender ! HelloTriplestore(triplestoreType)
-        case CheckConnection => checkTriplestore()
+
         case other => sender ! Status.Failure(UnexpectedMessageException(s"Unexpected message $other of type ${other.getClass.getCanonicalName}"))
     }
 
@@ -293,11 +295,42 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
 
         try {
             log.debug("==>> Drop All Data Start")
-            val dropAllSparqlString =
-                """
-                    DROP ALL
-                """
-            Await.result(getTriplestoreHttpResponse(dropAllSparqlString, isUpdate = true), 180.seconds)
+
+            if (triplestoreType == HTTP_VIRTUOSO_TYPE) {
+
+                /* for virtuoso we need to drop only the knora graphs which is very slow for graphdb */
+                val getKnoraGraphsSparqlString =
+                    """
+                        SELECT DISTINCT ?g
+                        WHERE {
+                            GRAPH ?g { ?s ?p ?o }
+                            FILTER ( regex(str(?g), "knora" ))
+                        }
+                    """
+                val knoraGraphsResponse: SparqlSelectResponse = Await.result(sparqlHttpSelect(getKnoraGraphsSparqlString), 10.seconds)
+
+                val graphResponseRows: Seq[VariableResultsRow] = knoraGraphsResponse.results.bindings
+
+                val graphs: Seq[String] = graphResponseRows.groupBy(_.rowMap("g")).map{
+                    case (g: IRI, rows: Seq[VariableResultsRow]) => g
+                }.toSeq
+
+                // log.debug("dropAllTriplestoreContent - graphs: {}", graphs)
+
+                graphs.map {
+                    g: String => {
+                        log.debug(s"dropping: $g")
+                        val dropString = s"DROP SILENT GRAPH <$g>"
+                        Await.result(getTriplestoreHttpResponse(dropString, isUpdate = true), 180.seconds)
+                    }
+                }
+            } else {
+                val dropAllSparqlString =
+                        """
+                            DROP ALL
+                        """
+                Await.result(getTriplestoreHttpResponse(dropAllSparqlString, isUpdate = true), 180.seconds)
+            }
 
             log.debug("==>> Drop All Data End")
             Future.successful(DropAllTriplestoreContentACK())
@@ -343,15 +376,47 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
 
     }
 
-    private def checkTriplestore() {
-        val sparql = "SELECT ?s ?p ?o WHERE { ?s ?p ?o  } LIMIT 10"
+    /**
+      * Counts the triples in the triplestore and returns the result as [[TriplestoreStatusResponse]].
+      *
+      * @return the [[TriplestoreStatusResponse]]
+      */
+    private def triplestoreStatusRequest(): Future[TriplestoreStatusResponse] = {
 
-        val responseStrFuture = getTriplestoreHttpResponse(sparql = sparql, isUpdate = false)
 
-        responseStrFuture.onComplete {
-            case Success(responseStr) => log.info(s"Connection OK: ${responseStr.length}")
-            case Failure(t) => log.error("Failed to connect to triplestore: " + t.getMessage)
-        }
+        /* get a list of all graphs */
+
+        val getKnoraGraphsSparqlString =
+            """
+                SELECT DISTINCT ?g
+                WHERE {
+                    GRAPH ?g { ?s ?p ?o }
+                    FILTER ( regex(str(?g), "knora" ))
+                }
+            """
+        val knoraGraphsResponse: SparqlSelectResponse = Await.result(sparqlHttpSelect(getKnoraGraphsSparqlString), 10.seconds)
+
+        val graphResponseRows: Seq[VariableResultsRow] = knoraGraphsResponse.results.bindings
+
+        val graphs: Seq[String] = graphResponseRows.groupBy(_.rowMap("g")).map{
+            case (g: IRI, rows: Seq[VariableResultsRow]) => g
+        }.toSeq
+
+        val graphCounts: Map[String, Int] = graphs.map {
+            g: String => {
+                val countQueryString = s"SELECT (COUNT(*) as ?count) FROM <$g> WHERE { ?s ?p ?o . }"
+                val response: SparqlSelectResponse = Await.result(sparqlHttpSelect(sparql = countQueryString), 30.seconds)
+                val count = response.results.bindings.head.rowMap.get("count").get.toInt
+                (g, count)
+            }
+        }.toMap
+
+        val result = TriplestoreStatusResponse(
+            nrOfGraphs = graphs.size,
+            nrOfTriples = graphCounts.foldLeft(0){ case (a, (k, v)) => a+v }
+        )
+
+        FastFuture.successful(result)
     }
 
     /**

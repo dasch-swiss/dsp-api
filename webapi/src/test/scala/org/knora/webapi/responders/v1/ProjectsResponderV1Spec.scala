@@ -66,7 +66,7 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
     "Load test data" in {
 
         storeManager ! ResetTriplestoreContent(rdfDataObjects)
-        expectMsg(300.seconds, ResetTriplestoreContentACK())
+        expectMsg(400.seconds, ResetTriplestoreContentACK())
 
         responderManager ! LoadOntologiesRequest(SharedAdminTestData.rootUser)
         expectMsg(10.seconds, LoadOntologiesResponse())

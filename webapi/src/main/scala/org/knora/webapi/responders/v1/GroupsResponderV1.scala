@@ -28,6 +28,7 @@ import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.responders.{IriLocker, Responder}
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.KnoraIdUtil
+import org.knora.webapi.util.StringUtils._
 import org.knora.webapi.{DuplicateValueException, _}
 
 import scala.concurrent.Future
@@ -98,8 +99,8 @@ class GroupsResponderV1 extends Responder with GroupV1JsonProtocol {
                         name = propsMap.getOrElse(OntologyConstants.KnoraBase.GroupName, throw InconsistentTriplestoreDataException(s"Group $groupIri has no name attached")),
                         description = propsMap.get(OntologyConstants.KnoraBase.GroupDescription),
                         project = propsMap.getOrElse(OntologyConstants.KnoraBase.BelongsToProject, throw InconsistentTriplestoreDataException(s"Group $groupIri has no project attached")),
-                        status = propsMap(OntologyConstants.KnoraBase.Status).toBoolean,
-                        selfjoin = propsMap(OntologyConstants.KnoraBase.HasSelfJoinEnabled).toBoolean
+                        status = propsMap(OntologyConstants.KnoraBase.Status).toBooleanExtended,
+                        selfjoin = propsMap(OntologyConstants.KnoraBase.HasSelfJoinEnabled).toBooleanExtended
                     )
             }.toVector
         } yield GroupsResponseV1(
@@ -571,8 +572,8 @@ class GroupsResponderV1 extends Responder with GroupV1JsonProtocol {
             name = groupProperties.getOrElse(OntologyConstants.KnoraBase.GroupName, throw InconsistentTriplestoreDataException(s"Group $groupIri has no groupName attached")),
             description = groupProperties.get(OntologyConstants.KnoraBase.GroupDescription),
             project = groupProperties.getOrElse(OntologyConstants.KnoraBase.BelongsToProject, throw InconsistentTriplestoreDataException(s"Group $groupIri has no project attached")),
-            status = groupProperties(OntologyConstants.KnoraBase.Status).toBoolean,
-            selfjoin = groupProperties(OntologyConstants.KnoraBase.HasSelfJoinEnabled).toBoolean)
+            status = groupProperties(OntologyConstants.KnoraBase.Status).toBooleanExtended,
+            selfjoin = groupProperties(OntologyConstants.KnoraBase.HasSelfJoinEnabled).toBooleanExtended)
     }
 
     /**

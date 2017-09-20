@@ -31,16 +31,17 @@ import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.{StatusCodes, _}
 import akka.pattern._
 import akka.stream.ActorMaterializer
+import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v1.responder.ontologymessages._
 import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoByIRIGetRequestV1, ProjectInfoResponseV1}
 import org.knora.webapi.messages.v1.responder.resourcemessages.{LocationV1, ResourceFullGetRequestV1, ResourceFullResponseV1}
 import org.knora.webapi.messages.v1.responder.standoffmessages._
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.responder.valuemessages._
-import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.responders.{IriLocker, Responder}
 import org.knora.webapi.twirl.{MappingElement, MappingStandoffDatatypeClass, MappingXMLAttribute}
 import org.knora.webapi.util.ActorUtil._
+import org.knora.webapi.util.StringUtils._
 import org.knora.webapi.util.standoff.StandoffTagUtilV1.XMLTagItem
 import org.knora.webapi.util.standoff._
 import org.knora.webapi.util.{CacheUtil, InputValidation, KnoraIdUtil}
@@ -643,7 +644,7 @@ class StandoffResponderV1 extends Responder {
                             case None => None
                         },
                         attributes = attributes,
-                        separatorRequired = assertionsAsMap(OntologyConstants.KnoraBase.mappingElementRequiresSeparator).toBoolean
+                        separatorRequired = assertionsAsMap(OntologyConstants.KnoraBase.mappingElementRequiresSeparator).toBooleanExtended
                     )
 
             }.toSeq

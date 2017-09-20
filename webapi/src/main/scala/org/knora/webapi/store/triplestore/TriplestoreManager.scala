@@ -25,7 +25,7 @@ import akka.event.LoggingReceive
 import akka.pattern._
 import akka.routing.FromConfig
 import org.knora.webapi.SettingsConstants._
-import org.knora.webapi.messages.store.triplestoremessages.{CheckConnection, InitializedResponse, ResetTriplestoreContent, ResetTriplestoreContentACK, _}
+import org.knora.webapi.messages.store.triplestoremessages.{InitializedResponse, ResetTriplestoreContent, ResetTriplestoreContentACK, _}
 import org.knora.webapi.store._
 import org.knora.webapi.store.triplestore.embedded.JenaTDBActor
 import org.knora.webapi.store.triplestore.http.HttpTriplestoreConnector
@@ -34,6 +34,7 @@ import org.knora.webapi.{ActorMaker, Settings, UnsuportedTriplestoreException}
 
 import scala.collection.JavaConverters._
 import scala.concurrent.Await
+import scala.concurrent.duration._
 
 /**
   * This actor receives messages representing SPARQL requests, and forwards them to instances of one of the configured triple stores (embedded or remote).
@@ -78,7 +79,10 @@ class TriplestoreManager extends Actor with ActorLogging {
         }
 
         // Checking the connection to the triple store on startup
-        storeActorRef ! CheckConnection
+
+        val response = Await.result(storeActorRef ? TriplestoreStatusRequest, 30.seconds).asInstanceOf[TriplestoreStatusResponse]
+
+        log.info(s"Triplestore Status OK - nrOfGraphs: {}, nrOfTriples: {}", response.nrOfGraphs, response.nrOfTriples)
 
         //println(rdfDataObjectList.length)
         val reloadDataOnStart = settings.tripleStoreConfig.getBoolean("reload-on-start")

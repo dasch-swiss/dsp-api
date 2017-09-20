@@ -29,6 +29,7 @@ import org.knora.webapi.messages.v1.responder.standoffmessages._
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.twirl._
 import org.knora.webapi.util.{DateUtilV1, InputValidation}
+import org.knora.webapi.util.StringUtils._
 
 object StandoffTagUtilV1 {
 
@@ -738,7 +739,7 @@ object StandoffTagUtilV1 {
                                     StandoffTagDecimalAttributeV1(standoffPropertyIri = propIri, value = BigDecimal(value))
 
                                 case Some(OntologyConstants.Xsd.Boolean) =>
-                                    StandoffTagBooleanAttributeV1(standoffPropertyIri = propIri, value = value.toBoolean)
+                                    StandoffTagBooleanAttributeV1(standoffPropertyIri = propIri, value = value.toBooleanExtended)
 
                                 case Some(OntologyConstants.Xsd.Uri) => StandoffTagIriAttributeV1(standoffPropertyIri = propIri, value = value)
 

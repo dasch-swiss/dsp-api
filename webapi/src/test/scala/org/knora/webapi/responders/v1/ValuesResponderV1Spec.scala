@@ -36,6 +36,7 @@ import org.knora.webapi.responders._
 import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
 import org.knora.webapi.twirl.{StandoffTagIriAttributeV1, StandoffTagV1}
 import org.knora.webapi.util.MutableTestIri
+import org.knora.webapi.util.StringUtils._
 
 import scala.concurrent.duration._
 
@@ -838,7 +839,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
                     val rows = response.results.bindings
                     rows.groupBy(_.rowMap("linkValue")).size should ===(1)
                     rows.exists(_.rowMap("objPred") == OntologyConstants.KnoraBase.PreviousValue) should ===(false)
-                    rows.head.rowMap.get("directLinkExists").exists(_.toBoolean) should ===(true)
+                    rows.head.rowMap.get("directLinkExists").exists(_.toBooleanExtended) should ===(true)
             }
 
         }
@@ -925,7 +926,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
                     val rows = response.results.bindings
                     rows.groupBy(_.rowMap("linkValue")).size should ===(1)
                     rows.exists(_.rowMap("objPred") == OntologyConstants.KnoraBase.PreviousValue) should ===(false)
-                    rows.head.rowMap.get("directLinkExists").exists(_.toBoolean) should ===(true)
+                    rows.head.rowMap.get("directLinkExists").exists(_.toBooleanExtended) should ===(true)
             }
         }
 
@@ -1002,7 +1003,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
                     val rows = response.results.bindings
                     rows.groupBy(_.rowMap("linkValue")).size should ===(1)
                     rows.exists(_.rowMap("objPred") == OntologyConstants.KnoraBase.PreviousValue) should ===(true)
-                    rows.head.rowMap.get("directLinkExists").exists(_.toBoolean) should ===(true)
+                    rows.head.rowMap.get("directLinkExists").exists(_.toBooleanExtended) should ===(true)
             }
         }
 
@@ -1060,7 +1061,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
                     val rows = response.results.bindings
                     rows.groupBy(_.rowMap("linkValue")).size should ===(1)
                     rows.exists(_.rowMap("objPred") == OntologyConstants.KnoraBase.PreviousValue) should ===(true)
-                    rows.head.rowMap.get("directLinkExists").exists(_.toBoolean) should ===(true)
+                    rows.head.rowMap.get("directLinkExists").exists(_.toBooleanExtended) should ===(true)
             }
 
             // The LinkValue should have 3 versions in its version history.
@@ -1123,9 +1124,9 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
                     standoffLinkValueIri.unset()
                     val rows = response.results.bindings
                     rows.groupBy(_.rowMap("linkValue")).size should ===(1)
-                    rows.exists(row => row.rowMap("objPred") == OntologyConstants.KnoraBase.IsDeleted && row.rowMap("objObj").toBoolean) should ===(true)
+                    rows.exists(row => row.rowMap("objPred") == OntologyConstants.KnoraBase.IsDeleted && row.rowMap("objObj").toBooleanExtended) should ===(true)
                     rows.exists(_.rowMap("objPred") == OntologyConstants.KnoraBase.PreviousValue) should ===(true)
-                    rows.head.rowMap.get("directLinkExists").exists(_.toBoolean) should ===(false)
+                    rows.head.rowMap.get("directLinkExists").exists(_.toBooleanExtended) should ===(false)
             }
         }
 
@@ -1198,7 +1199,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
                     val rows = response.results.bindings
                     rows.groupBy(_.rowMap("linkValue")).size should ===(1)
                     rows.exists(_.rowMap("objPred") == OntologyConstants.KnoraBase.PreviousValue) should ===(false)
-                    rows.head.rowMap.get("directLinkExists").exists(_.toBoolean) should ===(true)
+                    rows.head.rowMap.get("directLinkExists").exists(_.toBooleanExtended) should ===(true)
             }
         }
 
@@ -1322,7 +1323,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
                     val rows = response.results.bindings
                     rows.groupBy(_.rowMap("linkValue")).size should ===(1)
                     rows.exists(_.rowMap("objPred") == OntologyConstants.KnoraBase.PreviousValue) should ===(false)
-                    rows.head.rowMap.get("directLinkExists").exists(_.toBoolean) should ===(true)
+                    rows.head.rowMap.get("directLinkExists").exists(_.toBooleanExtended) should ===(true)
             }
         }
 
@@ -1398,9 +1399,9 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
                 case response: SparqlSelectResponse =>
                     val rows = response.results.bindings
                     rows.groupBy(_.rowMap("linkValue")).size should ===(1)
-                    rows.exists(row => row.rowMap("objPred") == OntologyConstants.KnoraBase.IsDeleted && row.rowMap("objObj").toBoolean) should ===(true)
+                    rows.exists(row => row.rowMap("objPred") == OntologyConstants.KnoraBase.IsDeleted && row.rowMap("objObj").toBooleanExtended) should ===(true)
                     rows.exists(_.rowMap("objPred") == OntologyConstants.KnoraBase.PreviousValue) should ===(true)
-                    rows.head.rowMap.get("directLinkExists").exists(_.toBoolean) should ===(false)
+                    rows.head.rowMap.get("directLinkExists").exists(_.toBooleanExtended) should ===(false)
             }
 
             // The new LinkValue should have no previous version, and there should be a direct link between the resources.
@@ -1419,7 +1420,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
                     val rows = response.results.bindings
                     rows.groupBy(_.rowMap("linkValue")).size should ===(1)
                     rows.exists(_.rowMap("objPred") == OntologyConstants.KnoraBase.PreviousValue) should ===(false)
-                    rows.head.rowMap.get("directLinkExists").exists(_.toBoolean) should ===(true)
+                    rows.head.rowMap.get("directLinkExists").exists(_.toBooleanExtended) should ===(true)
             }
 
             // Check that the link source's last modification date got updated.
@@ -1460,9 +1461,9 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
                 case response: SparqlSelectResponse =>
                     val rows = response.results.bindings
                     rows.groupBy(_.rowMap("linkValue")).size should ===(1)
-                    rows.exists(row => row.rowMap("objPred") == OntologyConstants.KnoraBase.IsDeleted && row.rowMap("objObj").toBoolean) should ===(true)
+                    rows.exists(row => row.rowMap("objPred") == OntologyConstants.KnoraBase.IsDeleted && row.rowMap("objObj").toBooleanExtended) should ===(true)
                     rows.exists(_.rowMap("objPred") == OntologyConstants.KnoraBase.PreviousValue) should ===(true)
-                    rows.head.rowMap.get("directLinkExists").exists(_.toBoolean) should ===(false)
+                    rows.head.rowMap.get("directLinkExists").exists(_.toBooleanExtended) should ===(false)
                     rows.exists(row => row.rowMap("objPred") == OntologyConstants.KnoraBase.ValueHasComment && row.rowMap("objObj") == comment) should ===(true)
             }
 
@@ -1800,7 +1801,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
                     val rows = response.results.bindings
                     rows.groupBy(_.rowMap("linkValue")).size should ===(1)
                     rows.exists(_.rowMap("objPred") == OntologyConstants.KnoraBase.PreviousValue) should ===(false)
-                    rows.head.rowMap.get("directLinkExists").exists(_.toBoolean) should ===(true)
+                    rows.head.rowMap.get("directLinkExists").exists(_.toBooleanExtended) should ===(true)
             }
 
             // Now delete the first text value.
@@ -1865,7 +1866,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
                     val rows = response.results.bindings
                     rows.groupBy(_.rowMap("linkValue")).size should ===(1)
                     rows.exists(_.rowMap("objPred") == OntologyConstants.KnoraBase.PreviousValue) should ===(true)
-                    rows.head.rowMap.get("directLinkExists").exists(_.toBoolean) should ===(true)
+                    rows.head.rowMap.get("directLinkExists").exists(_.toBooleanExtended) should ===(true)
             }
 
             // Now delete the second text value.
@@ -1923,9 +1924,9 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
                     standoffLinkValueIri.unset()
                     val rows = response.results.bindings
                     rows.groupBy(_.rowMap("linkValue")).size should ===(1)
-                    rows.exists(row => row.rowMap("objPred") == OntologyConstants.KnoraBase.IsDeleted && row.rowMap("objObj").toBoolean) should ===(true)
+                    rows.exists(row => row.rowMap("objPred") == OntologyConstants.KnoraBase.IsDeleted && row.rowMap("objObj").toBooleanExtended) should ===(true)
                     rows.exists(_.rowMap("objPred") == OntologyConstants.KnoraBase.PreviousValue) should ===(true)
-                    rows.head.rowMap.get("directLinkExists").exists(_.toBoolean) should ===(false)
+                    rows.head.rowMap.get("directLinkExists").exists(_.toBooleanExtended) should ===(false)
             }
         }
 

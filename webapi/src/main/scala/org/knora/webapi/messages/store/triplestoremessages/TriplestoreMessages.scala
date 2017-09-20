@@ -38,7 +38,14 @@ case class HelloTriplestore(txt: String) extends TriplestoreRequest
 /**
   * Simple message for checking the connection to the triplestore.
   */
-case object CheckConnection extends TriplestoreRequest
+case object TriplestoreStatusRequest extends TriplestoreRequest
+
+/**
+  * Represents a response to a [[TriplestoreStatusRequest]].
+  * @param nrOfGraphs the total number of knora graphs.
+  * @param nrOfTriples the total number of triples over all knora graphs.
+  */
+case class TriplestoreStatusResponse(nrOfGraphs: Int, nrOfTriples: Int)
 
 /**
   * Represents a SPARQL SELECT query to be sent to the triplestore. A successful response will be a [[SparqlSelectResponse]].

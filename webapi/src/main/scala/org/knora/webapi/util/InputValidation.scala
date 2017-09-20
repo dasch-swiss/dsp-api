@@ -25,7 +25,7 @@ import java.nio.file.{Files, Paths}
 
 import akka.event.LoggingAdapter
 import com.google.gwt.safehtml.shared.UriUtils._
-import org.apache.commons.lang3.StringUtils
+import org.knora.webapi.util.StringUtils._
 import org.apache.commons.validator.routines.UrlValidator
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
@@ -336,6 +336,9 @@ object InputValidation {
       * @return the same string, escaped or unescaped as requested.
       */
     def toSparqlEncodedString(s: String, errorFun: () => Nothing, revert: Boolean = false): String = {
+
+        import org.apache.commons.lang3.StringUtils
+
         if (s.isEmpty || s.contains("\r")) errorFun()
 
         // http://www.morelab.deusto.es/code_injection/
@@ -416,7 +419,7 @@ object InputValidation {
       */
     def toBoolean(s: String, errorFun: () => Nothing): Boolean = {
         try {
-            s.toBoolean
+            s.toBooleanExtended
         } catch {
             case e: Exception => errorFun() // value could not be converted to Boolean
         }
@@ -475,6 +478,8 @@ object InputValidation {
         }
     }
 
+
+
     /**
       * Turn a possibly empty value returned by the triplestore into a Boolean value.
       * Returns false if the value is empty or if the given String is cannot be converted to a Boolean `true`.
@@ -482,8 +487,7 @@ object InputValidation {
       * @param maybe the value returned by the triplestore.
       * @return a Boolean.
       */
-    def optionStringToBoolean(maybe: Option[String]): Boolean = maybe.exists(_.toBoolean)
-
+    def optionStringToBoolean(maybe: Option[String]): Boolean = maybe.exists(_.toBooleanExtended)
 
     /**
       *

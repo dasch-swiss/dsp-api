@@ -34,6 +34,7 @@ import org.knora.webapi.responders.v1.GroupedProps._
 import org.knora.webapi.twirl._
 import org.knora.webapi.util.standoff.StandoffTagUtilV1
 import org.knora.webapi.util.{DateUtilV1, ErrorHandlingMap, InputValidation}
+import org.knora.webapi.util.StringUtils._
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -401,7 +402,7 @@ class ValueUtilV1(private val settings: SettingsImpl) {
     private def makeBooleanValue(valueProps: ValueProps, responderManager: ActorSelection, userProfile: UserProfileV1)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ApiValueV1] = {
         val predicates = valueProps.literalData
 
-        Future(BooleanValueV1(predicates(OntologyConstants.KnoraBase.ValueHasBoolean).literals.head.toBoolean))
+        Future(BooleanValueV1(predicates(OntologyConstants.KnoraBase.ValueHasBoolean).literals.head.toBooleanExtended))
     }
 
     /**

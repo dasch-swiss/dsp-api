@@ -28,6 +28,7 @@ import org.knora.webapi.messages.store.triplestoremessages.SparqlConstructRespon
 import org.knora.webapi.messages.v2.responder._
 import org.knora.webapi.twirl._
 import org.knora.webapi.util.standoff.StandoffTagUtilV1
+import org.knora.webapi.util.StringUtils._
 import org.knora.webapi._
 
 
@@ -112,7 +113,7 @@ object ConstructResponseUtilV2 {
                 // check for the knora-base:isMainResource flag created by the SPARQL CONSTRUCT query
                 val isMainResource: Boolean = assertions.exists {
                     case (pred, obj) =>
-                        pred == OntologyConstants.KnoraBase.IsMainResource && obj.toBoolean
+                        pred == OntologyConstants.KnoraBase.IsMainResource && obj.toBooleanExtended
                 }
 
                 // Make a set of all the value object IRIs, because we're going to associate them with their properties.
@@ -362,7 +363,7 @@ object ConstructResponseUtilV2 {
                 DecimalValueContentV2(valueHasString = valueObjectValueHasString, valueHasDecimal = BigDecimal(valueObject.assertions(OntologyConstants.KnoraBase.ValueHasDecimal)), comment = valueCommentOption)
 
             case OntologyConstants.KnoraBase.BooleanValue =>
-                BooleanValueContentV2(valueHasString = valueObjectValueHasString, valueHasBoolean = valueObject.assertions(OntologyConstants.KnoraBase.ValueHasBoolean).toBoolean, comment = valueCommentOption)
+                BooleanValueContentV2(valueHasString = valueObjectValueHasString, valueHasBoolean = valueObject.assertions(OntologyConstants.KnoraBase.ValueHasBoolean).toBooleanExtended, comment = valueCommentOption)
 
             case OntologyConstants.KnoraBase.UriValue =>
                 UriValueContentV2(valueHasString = valueObjectValueHasString, valueHasUri = valueObject.assertions(OntologyConstants.KnoraBase.ValueHasUri), comment = valueCommentOption)
