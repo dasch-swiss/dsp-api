@@ -22,37 +22,80 @@ package org.knora.webapi.util.jsonld
 
 import org.knora.webapi.IRI
 
+/**
+  * Represents a value in a JSON-LD document.
+  */
 sealed trait JsonLDValue {
-    def toJsonLDApiValue: Any
+    /**
+      * Converts this JSON-LD value to a Scala object that can be passed to [[org.knora.webapi.util.JavaUtil.deepScalaToJava]],
+      * whose return value can then be passed to the JSON-LD Java library.
+      */
+    def toAny: Any
 }
 
+/**
+  * Represents a string value in a JSON-LD document.
+  *
+  * @param value the underlying string.
+  */
 case class JsonLDString(value: String) extends JsonLDValue {
-    override def toJsonLDApiValue: Any = value
+    override def toAny: Any = value
 }
 
+/**
+  * Represents an integer value in a JSON-LD document.
+  *
+  * @param value the underlying integer.
+  */
 case class JsonLDInt(value: Int) extends JsonLDValue {
-    override def toJsonLDApiValue: Any = value
+    override def toAny: Any = value
 }
 
+/**
+  * Represents a decimal value in a JSON-LD document.
+  *
+  * @param value the underlying decimal value.
+  */
 case class JsonLDDecimal(value: BigDecimal) extends JsonLDValue {
-    override def toJsonLDApiValue: Any = value
+    override def toAny: Any = value
 }
 
+/**
+  * Represents a boolean value in a JSON-LD document.
+  *
+  * @param value the underlying boolean value.
+  */
 case class JsonLDBoolean(value: Boolean) extends JsonLDValue {
-    override def toJsonLDApiValue: Any = value
+    override def toAny: Any = value
 }
 
+/**
+  * Represents a JSON object in a JSON-LD document.
+  *
+  * @param value a map of keys to JSON-LD values.
+  */
 case class JsonLDObject(value: Map[IRI, JsonLDValue]) extends JsonLDValue {
-    override def toJsonLDApiValue: Map[IRI, Any] = value.map {
-        case (k, v) => (k, v.toJsonLDApiValue)
+    override def toAny: Map[IRI, Any] = value.map {
+        case (k, v) => (k, v.toAny)
     }
 }
 
+/**
+  * Represents a JSON array in a JSON-LD document.
+  *
+  * @param value a sequence of JSON-LD values.
+  */
 case class JsonLDArray(value: Seq[JsonLDValue]) extends JsonLDValue {
-    override def toJsonLDApiValue: Seq[Any] = value.map(_.toJsonLDApiValue)
+    override def toAny: Seq[Any] = value.map(_.toAny)
 }
 
-case class JsonLDDocument(body: JsonLDObject, context: JsonLDObject = JsonLDObject(Map.empty[IRI, JsonLDValue]))
+/**
+  * Represents a JSON-LD document.
+  *
+  * @param body the body of the JSON-LD document.
+  * @param context the context of the JSON-LD document.
+  */
+case class JsonLDDocument(body: JsonLDObject, context: JsonLDObject)
 
 
 /**

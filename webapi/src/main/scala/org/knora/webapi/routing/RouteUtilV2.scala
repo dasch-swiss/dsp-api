@@ -83,8 +83,8 @@ object RouteUtilV2 {
 
             // The request was successful
             jsonLDDocument: JsonLDDocument = knoraResponse.toJsonLDDocument(ApiV2Schema.WITH_VALUE_OBJECTS, settings)
-            contextAsJava = JavaUtil.deepScalaToJava(jsonLDDocument.context.toJsonLDApiValue).asInstanceOf[java.util.Map[String, Any]]
-            jsonAsJava = JavaUtil.deepScalaToJava(jsonLDDocument.body.toJsonLDApiValue).asInstanceOf[java.util.Map[String, Any]]
+            contextAsJava = JavaUtil.deepScalaToJava(jsonLDDocument.context.toAny)
+            jsonAsJava = JavaUtil.deepScalaToJava(jsonLDDocument.body.toAny)
             compacted = JsonLdProcessor.compact(jsonAsJava, contextAsJava, new JsonLdOptions())
             jsonLDString = JsonUtils.toPrettyString(compacted)
         } yield HttpResponse(

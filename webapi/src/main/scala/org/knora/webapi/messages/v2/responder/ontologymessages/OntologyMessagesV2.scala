@@ -51,7 +51,14 @@ case class LoadOntologiesRequestV2(userProfile: UserProfileV1) extends Ontologie
   * Indicates that all ontologies were loaded.
   */
 case class LoadOntologiesResponseV2() extends KnoraResponseV2 {
-    def toJsonLDDocument(apiV2Schema: ApiV2Schema.Value, settings: SettingsImpl) = JsonLDDocument(body = JsonLDObject(Map("result" -> JsonLDString("Ontologies loaded."))))
+    def toJsonLDDocument(apiV2Schema: ApiV2Schema.Value, settings: SettingsImpl) = JsonLDDocument(
+        body = JsonLDObject(
+            Map("knora-api:result" -> JsonLDString("Ontologies loaded."))
+        ),
+        context = JsonLDObject(
+            Map(OntologyConstants.KnoraApi.KnoraApiOntologyLabel -> JsonLDString(OntologyConstants.KnoraApiV2WithValueObject.KnoraApiV2PrefixExpansion))
+        )
+    )
 }
 
 /**
@@ -213,6 +220,12 @@ case class ReadEntityDefinitionsV2(ontologies: Map[IRI, Set[IRI]] = Map.empty[IR
 
 
     def toJsonLDDocument(apiV2Schema: ApiV2Schema.Value, settings: SettingsImpl): JsonLDDocument = {
+        // TODO: check apiV2Schema and return JSON-LD accordingly.
+
+        // TODO: when returning information from a built-in knora-api ontology, don't convert entity IRIs from internal to external.
+
+        // Make JSON-LD prefixes for the project-specific ontologies used in the response.
+
         val ontologiesFromResourceClasses: Set[IRI] = resourceClasses.values.map {
             resourceClass => resourceClass.ontologyIri
         }.toSet
@@ -221,21 +234,23 @@ case class ReadEntityDefinitionsV2(ontologies: Map[IRI, Set[IRI]] = Map.empty[IR
             property => property.ontologyIri
         }.toSet
 
-        val ontologiesUsed: Set[IRI] = (ontologiesFromResourceClasses ++ ontologiesFromProperties) - OntologyConstants.KnoraBase.KnoraBaseOntologyIri
+        val internalProjectSpecificOntologiesUsed: Set[IRI] = (ontologiesFromResourceClasses ++ ontologiesFromProperties) - OntologyConstants.KnoraBase.KnoraBaseOntologyIri
 
-        val ontologyPrefixes: Map[String, JsonLDString] = ontologiesUsed.map {
+        val projectSpecificOntologyPrefixes: Map[String, JsonLDString] = internalProjectSpecificOntologiesUsed.map {
             internalOntologyIri =>
                 val prefix = InputValidation.getOntologyPrefixLabelFromInternalOntologyIri(internalOntologyIri, () => throw InconsistentTriplestoreDataException(s"Can't parse $internalOntologyIri as an internal ontology IRI"))
                 val externalOntologyIri = InputValidation.internalOntologyIriToApiV2WithValueObjectOntologyIri(internalOntologyIri, () => throw InconsistentTriplestoreDataException(s"Can't parse $internalOntologyIri as an internal ontology IRI"))
                 prefix -> JsonLDString(externalOntologyIri + "#")
         }.toMap
 
+        // Make the JSON-LD context.
+
         val context = JsonLDObject(Map(
             OntologyConstants.KnoraApi.KnoraApiOntologyLabel -> JsonLDString(OntologyConstants.KnoraApiV2WithValueObject.KnoraApiV2PrefixExpansion),
             "rdfs" -> JsonLDString("http://www.w3.org/2000/01/rdf-schema#"),
             "rdf" -> JsonLDString("http://www.w3.org/1999/02/22-rdf-syntax-ns#"),
             "owl" -> JsonLDString("http://www.w3.org/2002/07/owl#")
-        ) ++ ontologyPrefixes)
+        ) ++ projectSpecificOntologyPrefixes)
 
         // ontologies with their resource classes
 
@@ -298,6 +313,9 @@ case class ReadEntityDefinitionsV2(ontologies: Map[IRI, Set[IRI]] = Map.empty[IR
 case class ReadNamedGraphsV2(namedGraphs: Set[IRI]) extends KnoraResponseV2 {
 
     def toJsonLDDocument(apiV2Schema: ApiV2Schema.Value, settings: SettingsImpl): JsonLDDocument = {
+        // TODO: check apiV2Schema and return JSON-LD accordingly.
+
+        // TODO: when returning information about a built-in knora-api ontology, don't convert entity IRIs from internal to external.
 
         val context = JsonLDObject(Map(
             OntologyConstants.KnoraApi.KnoraApiOntologyLabel -> JsonLDString(OntologyConstants.KnoraApiV2WithValueObject.KnoraApiV2PrefixExpansion)

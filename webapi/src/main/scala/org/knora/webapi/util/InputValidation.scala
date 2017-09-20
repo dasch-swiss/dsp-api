@@ -842,7 +842,7 @@ object InputValidation {
       * @param iri the IRI to be checked.
       * @return `true` if the IRI is the IRI of an external ontology entity.
       */
-    def isKnoraApiEntityIri(iri: IRI) = {
+    def isKnoraApiEntityIri(iri: IRI): Boolean = {
         iri match {
             case KnoraApiOntologyEntityRegex(_*) => true
             case _ => false

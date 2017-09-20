@@ -58,13 +58,11 @@ object JavaUtil {
 
         x match {
             case x: List[_] => x.map(deepScalaToJava).asJava
+            case x: Seq[_] => x.map(deepScalaToJava).asJava
             case x: collection.mutable.Map[_, _] => x.mapValues(deepScalaToJava).asJava
             case x: collection.immutable.Map[_, _] => x.mapValues(deepScalaToJava).asJava
             case x: collection.Map[_, _] => x.mapValues(deepScalaToJava).asJava
             case x: collection.mutable.Set[_] => x.map(deepScalaToJava).asJava
-            case x: collection.mutable.Buffer[_] => x.map(deepScalaToJava).asJava
-            case x: Iterable[_] => x.map(deepScalaToJava).asJava
-            case x: Iterator[_] => x.map(deepScalaToJava).asJava
             case x: Array[_] => x.map(deepScalaToJava)
             case _ => x
         }
