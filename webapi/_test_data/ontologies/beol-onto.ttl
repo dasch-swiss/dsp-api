@@ -150,9 +150,9 @@
                                 """Recipient"""@en .
 
 ### ###########################################
-### beol:letterHasFigure
+### beol:hasFigure
 
-:letterHasFigure rdf:type owl:ObjectProperty ;
+:hasFigure rdf:type owl:ObjectProperty ;
 
               rdfs:subPropertyOf knora-base:hasLinkTo ;
 
@@ -162,20 +162,16 @@
               rdfs:comment """Zeichen von Brief"""@de ,
                            """Figure of Letter"""@en ;
 
-              knora-base:subjectClassConstraint :letter ;
-
               knora-base:objectClassConstraint :figure ;
 
               salsah-gui:guiElement salsah-gui:Searchbox .
 
 ### ###########################################
-### beol:letterHasFigureValue
+### beol:hasFigureValue
 
-:letterHasFigureValue rdf:type owl:ObjectProperty ;
+:hasFigureValue rdf:type owl:ObjectProperty ;
 
                    knora-base:objectClassConstraint knora-base:LinkValue ;
-
-                   knora-base:subjectClassConstraint :letter ;
 
                    rdfs:subPropertyOf knora-base:hasLinkToValue ;
 
@@ -184,6 +180,42 @@
 
                    rdfs:comment """Zeichen von Brief"""@de ,
                                 """Figure of Letter"""@en .
+
+### ###########################################
+### beol:letterHasTranslation
+
+:letterHasTranslation rdf:type owl:ObjectProperty ;
+
+              rdfs:subPropertyOf knora-base:hasLinkTo ;
+
+              rdfs:label "Übersetzung"@de ,
+                         "Translation"@en ;
+
+              rdfs:comment """Übersetzung"""@de ,
+                           """Translation"""@en ;
+
+              knora-base:subjectClassConstraint :letter ;
+
+              knora-base:objectClassConstraint :letter ;
+
+              salsah-gui:guiElement salsah-gui:Searchbox .
+
+### ###########################################
+### beol:letterHasTranslationValue
+
+:letterHasTranslationValue rdf:type owl:ObjectProperty ;
+
+                   knora-base:objectClassConstraint knora-base:LinkValue ;
+
+                   knora-base:subjectClassConstraint :writtenSource ;
+
+                   rdfs:subPropertyOf knora-base:hasLinkToValue ;
+
+                   rdfs:label "Übersetzung"@de ,
+                              "Translation"@en ;
+
+                   rdfs:comment """Übersetzung"""@de ,
+                                """Translation"""@en .
 
 ### ###########################################
 ### beol:mentionsPerson
@@ -864,13 +896,23 @@
                           owl:minCardinality "0"^^xsd:nonNegativeInteger
                         ],
                         [
+                            rdf:type owl:Restriction ;
+                            owl:onProperty :letterHasTranslationValue ;
+                            owl:minCardinality "0"^^xsd:nonNegativeInteger
+                        ],
+                        [
+                            rdf:type owl:Restriction ;
+                            owl:onProperty :letterHasTranslation ;
+                            owl:minCardinality "0"^^xsd:nonNegativeInteger
+                        ],
+                        [
                           rdf:type owl:Restriction ;
-                          owl:onProperty :letterHasFigure ;
+                          owl:onProperty :hasFigure ;
                           owl:minCardinality "0"^^xsd:nonNegativeInteger
                         ],
                         [
                           rdf:type owl:Restriction ;
-                          owl:onProperty :letterHasFigureValue ;
+                          owl:onProperty :hasFigureValue ;
                           owl:minCardinality "0"^^xsd:nonNegativeInteger
                         ],
                         [
@@ -919,6 +961,16 @@
                           rdf:type owl:Restriction ;
                           owl:onProperty :endnoteHasNumber ;
                           owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                        ],
+                        [
+                          rdf:type owl:Restriction ;
+                          owl:onProperty :hasFigure ;
+                          owl:minCardinality "0"^^xsd:nonNegativeInteger
+                        ],
+                        [
+                          rdf:type owl:Restriction ;
+                          owl:onProperty :hasFigureValue ;
+                          owl:minCardinality "0"^^xsd:nonNegativeInteger
                         ],
                         [
                           rdf:type owl:Restriction ;
@@ -1269,11 +1321,13 @@
                owl:maxCardinality "1"^^xsd:nonNegativeInteger
              ] .
 
-:StandoffEndnoteTag  rdf:type owl:Class ;
+###  http://www.knora.org/ontology/beol#StandoffSmallcapsTag
 
-             rdfs:subClassOf knora-base:StandoffTag ;
+:StandoffSmallTag rdf:type owl:Class ;
 
-             rdfs:comment "represents an endnote (<endnote>) tag in text"@en .
+                rdfs:subClassOf standoff:StandoffVisualTag ;
+
+                rdfs:comment "Represents text in small letters format in a TextValue"@en .
 
 :StandoffEntityTag  rdf:type owl:Class ;
 
