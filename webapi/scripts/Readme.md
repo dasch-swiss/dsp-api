@@ -37,4 +37,4 @@ This script will create the ``knora-prod`` repository and load data specified in
 
 ## Fuseki
 
-Nothing neede to do. Simply run Fuseki, either in a docker container or locally by using the supplied distribution.
+Simply run Fuseki, either in a docker container or locally by using the supplied distribution.
