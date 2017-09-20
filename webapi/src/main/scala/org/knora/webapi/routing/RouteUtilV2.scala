@@ -29,8 +29,9 @@ import akka.util.Timeout
 import com.github.jsonldjava.core.{JsonLdOptions, JsonLdProcessor}
 import com.github.jsonldjava.utils.JsonUtils
 import org.knora.webapi._
-import org.knora.webapi.messages.v2.responder.{KnoraJsonLDResponse, KnoraRequestV2, KnoraResponseV2}
+import org.knora.webapi.messages.v2.responder.{KnoraRequestV2, KnoraResponseV2}
 import org.knora.webapi.util.JavaUtil
+import org.knora.webapi.util.jsonld.JsonLDDocument
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -81,9 +82,9 @@ object RouteUtilV2 {
             // TODO: check whether to send back JSON-LD or XML (content negotiation: HTTP accept header)
 
             // The request was successful
-            jsonLDResponse: KnoraJsonLDResponse = knoraResponse.toJsonLDWithValueObject(settings)
-            contextAsJava = JavaUtil.deepScalaToJava(jsonLDResponse.context).asInstanceOf[java.util.Map[String, Any]]
-            jsonAsJava = JavaUtil.deepScalaToJava(jsonLDResponse.body).asInstanceOf[java.util.Map[String, Any]]
+            jsonLDDocument: JsonLDDocument = knoraResponse.toJsonLDDocument(ApiV2Schema.WITH_VALUE_OBJECTS, settings)
+            contextAsJava = JavaUtil.deepScalaToJava(jsonLDDocument.context.toJsonLDApiValue).asInstanceOf[java.util.Map[String, Any]]
+            jsonAsJava = JavaUtil.deepScalaToJava(jsonLDDocument.body.toJsonLDApiValue).asInstanceOf[java.util.Map[String, Any]]
             compacted = JsonLdProcessor.compact(jsonAsJava, contextAsJava, new JsonLdOptions())
             jsonLDString = JsonUtils.toPrettyString(compacted)
         } yield HttpResponse(

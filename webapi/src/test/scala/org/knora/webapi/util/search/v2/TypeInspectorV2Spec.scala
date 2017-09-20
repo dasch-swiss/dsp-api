@@ -1,5 +1,6 @@
 package org.knora.webapi.util.search.v2
 
+import org.knora.webapi.ApiV2Schema
 import org.knora.webapi.util.MessageUtil
 import org.scalatest.{Matchers, WordSpec}
 

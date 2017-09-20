@@ -478,6 +478,8 @@ object OntologyConstants {
 
         val KnoraApiV2PrefixExpansion: IRI = KnoraApi.KnoraApiOntologyIri + VersionSegment + "#"
 
+        val ObjectType: IRI = KnoraApiV2PrefixExpansion + "objectType"
+
         val HasOntologies = KnoraApiV2PrefixExpansion + "hasOntologies"
 
         val HasOntologiesWithResourceClasses = KnoraApiV2PrefixExpansion + "hasOntologiesWithResourceClasses"

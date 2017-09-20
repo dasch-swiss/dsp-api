@@ -27,7 +27,7 @@ import org.knora.webapi.messages.v2.responder._
 import org.knora.webapi.messages.v2.responder.searchmessages._
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.util.ActorUtil._
-import org.knora.webapi.util.search.v2.{ApiV2Schema, _}
+import org.knora.webapi.util.search.v2.{_}
 import org.knora.webapi.util.{ConstructResponseUtilV2, DateUtilV1, DateUtilV2, InputValidation}
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.valuemessages.JulianDayNumberValueV1

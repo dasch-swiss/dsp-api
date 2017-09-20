@@ -69,14 +69,6 @@ case class TypeableIriV2(iri: IRI) extends TypeableEntityV2
 case class TypeInspectionResultV2(typedEntities: Map[TypeableEntityV2, SparqlEntityTypeInfoV2])
 
 /**
-  * Indicates which API schema is being used in a search query.
-  */
-object ApiV2Schema extends Enumeration {
-    val SIMPLE = Value(0, "SIMPLE")
-    val WITH_VALUE_OBJECTS = Value(1, "WITH_VALUE_OBJECTS")
-}
-
-/**
   * A trait for classes that can get type information from a parsed SPARQL search query in different ways.
   */
 sealed trait TypeInspectorV2 {
