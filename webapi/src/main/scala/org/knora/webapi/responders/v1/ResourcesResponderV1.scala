@@ -26,7 +26,9 @@ import java.util.UUID
 import akka.actor.Status
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
+import org.apache.jena.sparql.function.library.leviathan.log
 import org.knora.webapi._
+import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v1.responder.ontologymessages._
 import org.knora.webapi.messages.v1.responder.permissionmessages.{DefaultObjectAccessPermissionsStringForPropertyGetV1, DefaultObjectAccessPermissionsStringForResourceClassGetV1, DefaultObjectAccessPermissionsStringResponseV1, ResourceCreateOperation}
 import org.knora.webapi.messages.v1.responder.projectmessages._
@@ -34,14 +36,12 @@ import org.knora.webapi.messages.v1.responder.resourcemessages.{MultipleResource
 import org.knora.webapi.messages.v1.responder.sipimessages._
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.responder.valuemessages._
-import org.knora.webapi.messages.store.triplestoremessages._
-import org.knora.webapi.responders.{IriLocker, Responder}
 import org.knora.webapi.responders.v1.GroupedProps._
+import org.knora.webapi.responders.{IriLocker, Responder}
 import org.knora.webapi.twirl.SparqlTemplateResourceToCreate
 import org.knora.webapi.util.ActorUtil._
-import org.knora.webapi.util._
 import org.knora.webapi.util.StringUtils._
-import spray.json._
+import org.knora.webapi.util._
 
 import scala.collection.immutable
 import scala.concurrent.Future
@@ -2079,8 +2079,10 @@ class ResourcesResponderV1 extends Responder {
                 triplestore = settings.triplestoreType,
                 resourceIri = resourceIri
             ).toString())
+            _ = log.debug("getResourceInfoV1 - sparqlQuery: {}", sparqlQuery)
             resInfoResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
             resInfoResponseRows = resInfoResponse.results.bindings
+            _ = log.debug("getResourceInfoV1 - resInfoResponseRows: {}", MessageUtil.toSource(resInfoResponseRows))
             resInfo: (Option[Int], ResourceInfoV1) <- makeResourceInfoV1(resourceIri, resInfoResponseRows, userProfile, queryOntology)
         } yield resInfo
     }
