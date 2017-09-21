@@ -51,7 +51,7 @@ case class LoadOntologiesRequestV2(userProfile: UserProfileV1) extends Ontologie
   * Indicates that all ontologies were loaded.
   */
 case class LoadOntologiesResponseV2() extends KnoraResponseV2 {
-    def toJsonLDDocument(apiV2Schema: ApiV2Schema.Value, settings: SettingsImpl) = JsonLDDocument(
+    def toJsonLDDocument(targetSchema: ApiV2Schema, settings: SettingsImpl) = JsonLDDocument(
         body = JsonLDObject(
             Map("knora-api:result" -> JsonLDString("Ontologies loaded."))
         ),
@@ -219,8 +219,8 @@ case class ReadEntityDefinitionsV2(ontologies: Map[IRI, Set[IRI]] = Map.empty[IR
                                    properties: Map[IRI, PropertyEntityInfoV2] = Map.empty[IRI, PropertyEntityInfoV2], userLang: Option[String]) extends KnoraResponseV2 {
 
 
-    def toJsonLDDocument(apiV2Schema: ApiV2Schema.Value, settings: SettingsImpl): JsonLDDocument = {
-        // TODO: check apiV2Schema and return JSON-LD accordingly.
+    def toJsonLDDocument(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDDocument = {
+        // TODO: check targetSchema and return JSON-LD accordingly.
 
         // TODO: when returning information from a built-in knora-api ontology, don't convert entity IRIs from internal to external.
 
@@ -275,8 +275,8 @@ case class ReadEntityDefinitionsV2(ontologies: Map[IRI, Set[IRI]] = Map.empty[IR
                 )
 
                 val resourceEntityJson = userLang match {
-                    case Some(lang) => resourceEntity.toJsonLDWithSingleLanguage(userLang = lang, settings = settings)
-                    case None => resourceEntity.toJsonLDWithAllLanguages
+                    case Some(lang) => resourceEntity.toJsonLDWithSingleLanguage(targetSchema = targetSchema, userLang = lang, settings = settings)
+                    case None => resourceEntity.toJsonLDWithAllLanguages(targetSchema = targetSchema)
                 }
 
                 apiResClassIri -> resourceEntityJson
@@ -292,8 +292,8 @@ case class ReadEntityDefinitionsV2(ontologies: Map[IRI, Set[IRI]] = Map.empty[IR
                 )
 
                 val propJson = userLang match {
-                    case Some(lang) => propEntity.toJsonLDWithSingleLanguage(userLang = lang, settings = settings)
-                    case None => propEntity.toJsonLDWithAllLanguages
+                    case Some(lang) => propEntity.toJsonLDWithSingleLanguage(targetSchema = targetSchema, userLang = lang, settings = settings)
+                    case None => propEntity.toJsonLDWithAllLanguages(targetSchema = targetSchema)
                 }
 
                 apiPropIri -> propJson
@@ -312,8 +312,8 @@ case class ReadEntityDefinitionsV2(ontologies: Map[IRI, Set[IRI]] = Map.empty[IR
 
 case class ReadNamedGraphsV2(namedGraphs: Set[IRI]) extends KnoraResponseV2 {
 
-    def toJsonLDDocument(apiV2Schema: ApiV2Schema.Value, settings: SettingsImpl): JsonLDDocument = {
-        // TODO: check apiV2Schema and return JSON-LD accordingly.
+    def toJsonLDDocument(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDDocument = {
+        // TODO: check targetSchema and return JSON-LD accordingly.
 
         // TODO: when returning information about a built-in knora-api ontology, don't convert entity IRIs from internal to external.
 
@@ -542,9 +542,9 @@ sealed trait EntityInfoV2 {
   */
 sealed trait EntityInfoWithLabelAndCommentV2 extends EntityInfoV2 {
 
-    protected def getNonLanguageSpecific: Map[IRI, JsonLDValue]
+    protected def getNonLanguageSpecific(targetSchema: ApiV2Schema): Map[IRI, JsonLDValue]
 
-    def toJsonLDWithSingleLanguage(userLang: String, settings: SettingsImpl): JsonLDObject = {
+    def toJsonLDWithSingleLanguage(targetSchema: ApiV2Schema, userLang: String, settings: SettingsImpl): JsonLDObject = {
         val label: Option[(IRI, JsonLDString)] = getPredicateAndObjectWithLang(OntologyConstants.Rdfs.Label, settings, userLang).map {
             case (k, v: String) => (k, JsonLDString(v))
         }
@@ -553,10 +553,10 @@ sealed trait EntityInfoWithLabelAndCommentV2 extends EntityInfoV2 {
             case (k, v: String) => (k, JsonLDString(v))
         }
 
-        JsonLDObject(getNonLanguageSpecific ++ label ++ comment)
+        JsonLDObject(getNonLanguageSpecific(targetSchema) ++ label ++ comment)
     }
 
-    def toJsonLDWithAllLanguages: JsonLDObject = {
+    def toJsonLDWithAllLanguages(targetSchema: ApiV2Schema): JsonLDObject = {
         val labelObjs: Map[String, String] = getPredicateObjectsWithLangs(OntologyConstants.Rdfs.Label)
 
         val labels: Option[(IRI, JsonLDArray)] = if (labelObjs.nonEmpty) {
@@ -573,7 +573,7 @@ sealed trait EntityInfoWithLabelAndCommentV2 extends EntityInfoV2 {
             None
         }
 
-        JsonLDObject(getNonLanguageSpecific ++ labels ++ comments)
+        JsonLDObject(getNonLanguageSpecific(targetSchema) ++ labels ++ comments)
     }
 }
 
@@ -586,14 +586,19 @@ sealed trait EntityInfoWithLabelAndCommentV2 extends EntityInfoV2 {
   * @param isLinkValueProp `true` if the property is a subproperty of `knora-base:hasLinkToValue`.
   * @param isFileValueProp `true` if the property is a subproperty of `knora-base:hasFileValue`.
   * @param predicates      a [[Map]] of predicate IRIs to [[PredicateInfoV2]] objects.
+  * @param ontologySchema  indicates whether this ontology entity belongs to an internal ontology (for use in the
+  *                        triplestore) or an external one (for use in the Knora API).
   */
 case class PropertyEntityInfoV2(propertyIri: IRI,
                                 ontologyIri: IRI,
                                 isLinkProp: Boolean,
                                 isLinkValueProp: Boolean,
                                 isFileValueProp: Boolean,
-                                predicates: Map[IRI, PredicateInfoV2]) extends EntityInfoWithLabelAndCommentV2 {
-    def getNonLanguageSpecific: Map[IRI, JsonLDValue] = {
+                                predicates: Map[IRI, PredicateInfoV2],
+                                ontologySchema: OntologySchema) extends EntityInfoWithLabelAndCommentV2 {
+    def getNonLanguageSpecific(targetSchema: ApiV2Schema): Map[IRI, JsonLDValue] = {
+        // TODO: Check the ontology schema and the target schema, and convert IRIs if necessary.
+
         val objectClassConstraint: Option[(IRI, JsonLDString)] = getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint) match {
             case Some(objectClassConstrObj) =>
                 val checkedObj = InputValidation.internalEntityIriToApiV2WithValueObjectEntityIri(
@@ -636,6 +641,8 @@ case class PropertyEntityInfoV2(propertyIri: IRI,
   *                            that point to `LinkValue` objects.
   * @param fileValueProperties a [[Set]] of IRIs of properties of the resource class
   *                            that point to `FileValue` objects.
+  * @param ontologySchema      indicates whether this ontology entity belongs to an internal ontology (for use in the
+  *                            triplestore) or an external one (for use in the Knora API).
   */
 case class ResourceEntityInfoV2(resourceClassIri: IRI,
                                 ontologyIri: IRI,
@@ -643,9 +650,12 @@ case class ResourceEntityInfoV2(resourceClassIri: IRI,
                                 cardinalities: Map[IRI, Cardinality.Value],
                                 linkProperties: Set[IRI],
                                 linkValueProperties: Set[IRI],
-                                fileValueProperties: Set[IRI]) extends EntityInfoWithLabelAndCommentV2 {
+                                fileValueProperties: Set[IRI],
+                                ontologySchema: OntologySchema) extends EntityInfoWithLabelAndCommentV2 {
 
-    def getNonLanguageSpecific: Map[IRI, JsonLDValue] = {
+    def getNonLanguageSpecific(targetSchema: ApiV2Schema): Map[IRI, JsonLDValue] = {
+        // TODO: Check the ontology schema and the target schema, and convert IRIs if necessary.
+
         val owlCardinalities: Seq[JsonLDObject] = cardinalities.map {
             case (propertyIri: IRI, cardinality: Cardinality.Value) =>
 

@@ -74,7 +74,7 @@ class SearchResponderV2 extends Responder {
       * @param userProfile          the profile of the client making the request.
       * @return a [[ReadResourcesSequenceV2]] representing the resources that have been found.
       */
-    private def extendedSearchV2(simpleConstructQuery: SimpleConstructQuery, apiSchema: ApiV2Schema.Value = ApiV2Schema.SIMPLE, userProfile: UserProfileV1): Future[ReadResourcesSequenceV2] = {
+    private def extendedSearchV2(simpleConstructQuery: SimpleConstructQuery, apiSchema: ApiV2Schema = ApiV2Simple, userProfile: UserProfileV1): Future[ReadResourcesSequenceV2] = {
 
         /**
           * Converts a [[FilterExpression]] to an [[ExtendedSearchFilterExpression]].
@@ -254,7 +254,7 @@ class SearchResponderV2 extends Responder {
                     ), typeInfoKeysProcessed = typeInfoKeysProcessed)
                 case OntologyConstants.Xsd.String =>
 
-                    if (apiSchema == ApiV2Schema.SIMPLE) {
+                    if (apiSchema == ApiV2Simple) {
                         // the direct statement from the resource to a string literal (simplified) has to be translated to a value object (extra level).
                         // please note that the original direct statement will be filtered out and not end up in the Sparql submitted to the triplestore.
 
@@ -304,7 +304,7 @@ class SearchResponderV2 extends Responder {
 
 
                 case OntologyConstants.Xsd.Boolean =>
-                    if (apiSchema == ApiV2Schema.SIMPLE) {
+                    if (apiSchema == ApiV2Simple) {
                         // do not include the given statement pattern in the answer because a direct statement from the resource to a string literal (simplified) has to be translated to a value object (extra level).
 
                         statementPattern.obj match {
@@ -348,7 +348,7 @@ class SearchResponderV2 extends Responder {
                     }
 
                 case OntologyConstants.Xsd.Integer =>
-                    if (apiSchema == ApiV2Schema.SIMPLE) {
+                    if (apiSchema == ApiV2Simple) {
                         // do not include the given statement pattern in the answer because a direct statement from the resource to a string literal (simplified) has to be translated to a value object (extra level).
 
                         statementPattern.obj match {
@@ -392,7 +392,7 @@ class SearchResponderV2 extends Responder {
                     }
 
                 case OntologyConstants.Xsd.Decimal =>
-                    if (apiSchema == ApiV2Schema.SIMPLE) {
+                    if (apiSchema == ApiV2Simple) {
                         // do not include the given statement pattern in the answer because a direct statement from the resource to a string literal (simplified) has to be translated to a value object (extra level).
 
                         statementPattern.obj match {
@@ -436,7 +436,7 @@ class SearchResponderV2 extends Responder {
                     }
 
                 case OntologyConstants.KnoraBase.Date =>
-                    if (apiSchema == ApiV2Schema.SIMPLE) {
+                    if (apiSchema == ApiV2Simple) {
                         // do not include the given statement pattern in the answer because a direct statement from the resource to a string literal (simplified) has to be translated to a value object (extra level).
 
                         statementPattern.obj match {
@@ -487,7 +487,7 @@ class SearchResponderV2 extends Responder {
                     }
 
                 case OntologyConstants.KnoraBase.StillImageFile =>
-                    if (apiSchema == ApiV2Schema.SIMPLE) {
+                    if (apiSchema == ApiV2Simple) {
 
                         statementPattern.obj match {
 
@@ -516,7 +516,7 @@ class SearchResponderV2 extends Responder {
                     }
 
                 case OntologyConstants.KnoraBase.Geom =>
-                    if (apiSchema == ApiV2Schema.SIMPLE) {
+                    if (apiSchema == ApiV2Simple) {
                         // do not include the given statement pattern in the answer because a direct statement from the resource to a string literal (simplified) has to be translated to a value object (extra level).
 
                         statementPattern.obj match {
@@ -539,7 +539,7 @@ class SearchResponderV2 extends Responder {
                     }
 
                 case OntologyConstants.KnoraBase.Color =>
-                    if (apiSchema == ApiV2Schema.SIMPLE) {
+                    if (apiSchema == ApiV2Simple) {
                         // do not include the given statement pattern in the answer because a direct statement from the resource to a string literal (simplified) has to be translated to a value object (extra level).
 
                         statementPattern.obj match {
@@ -672,7 +672,7 @@ class SearchResponderV2 extends Responder {
 
                 case iriPred: ExtendedSearchInternalEntityIri =>
 
-                    val key = if (apiSchema == ApiV2Schema.SIMPLE) {
+                    val key = if (apiSchema == ApiV2Simple) {
                         // convert this Iri to knora-api simple since the type inspector uses knora-api simple Iris
                         TypeableIriV2(InputValidation.internalEntityIriToSimpleApiV2EntityIri(iriPred.iri, () => throw AssertionException(s"${iriPred.iri} could not be converted back to knora-api simple format")))
                     } else {
@@ -742,7 +742,7 @@ class SearchResponderV2 extends Responder {
             }
 
             // decide whether the given statement has to be included
-            if (apiSchema == ApiV2Schema.SIMPLE) {
+            if (apiSchema == ApiV2Simple) {
 
                 // if pred is a valueProp, do not return the original statement
                 // it had to be converted to comply with Knora's value object structure

@@ -82,7 +82,7 @@ object RouteUtilV2 {
             // TODO: check whether to send back JSON-LD or XML (content negotiation: HTTP accept header)
 
             // The request was successful
-            jsonLDDocument: JsonLDDocument = knoraResponse.toJsonLDDocument(ApiV2Schema.WITH_VALUE_OBJECTS, settings)
+            jsonLDDocument: JsonLDDocument = knoraResponse.toJsonLDDocument(ApiV2WithValueObjects, settings)
             contextAsJava = JavaUtil.deepScalaToJava(jsonLDDocument.context.toAny)
             jsonAsJava = JavaUtil.deepScalaToJava(jsonLDDocument.body.toAny)
             compacted = JsonLdProcessor.compact(jsonAsJava, contextAsJava, new JsonLdOptions())

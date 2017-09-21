@@ -85,11 +85,11 @@ sealed trait ValueContentV2 {
     /**
       * A representation of the `ValueContentV2` a [[JsonLDValue]].
       *
-      * @param apiV2Schema the API schema to be used.
+      * @param targetSchema the API schema to be used.
       * @param settings the configuration options.
       * @return a [[JsonLDValue]] that can be used to generate JSON-LD representing this value.
       */
-    def toJsonLDValue(apiV2Schema: ApiV2Schema.Value, settings: SettingsImpl): JsonLDValue
+    def toJsonLDValue(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDValue
 
 }
 
@@ -114,9 +114,9 @@ case class DateValueContentV2(valueHasString: String,
 
     def internalValueTypeIri: IRI = OntologyConstants.KnoraBase.DateValue
 
-    def toJsonLDValue(apiV2Schema: ApiV2Schema.Value, settings: SettingsImpl): JsonLDValue = {
+    def toJsonLDValue(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDValue = {
 
-        // TODO: check apiV2Schema and return JSON-LD accordingly.
+        // TODO: check targetSchema and return JSON-LD accordingly.
 
         JsonLDObject(Map(
             OntologyConstants.KnoraApiV2WithValueObject.ValueAsString -> JsonLDString(valueHasString),
@@ -154,9 +154,9 @@ case class TextValueContentV2(valueHasString: String, standoff: Option[StandoffA
 
     def internalValueTypeIri: IRI = OntologyConstants.KnoraBase.TextValue
 
-    def toJsonLDValue(apiV2Schema: ApiV2Schema.Value, settings: SettingsImpl): JsonLDValue = {
+    def toJsonLDValue(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDValue = {
 
-        // TODO: check apiV2Schema and return JSON-LD accordingly.
+        // TODO: check targetSchema and return JSON-LD accordingly.
 
         val objectMap: Map[IRI, JsonLDValue] = if (standoff.nonEmpty) {
 
@@ -227,9 +227,9 @@ case class IntegerValueContentV2(valueHasString: String, valueHasInteger: Int, c
 
     def internalValueTypeIri: IRI = OntologyConstants.KnoraBase.IntValue
 
-    def toJsonLDValue(apiV2Schema: ApiV2Schema.Value, settings: SettingsImpl): JsonLDValue = {
+    def toJsonLDValue(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDValue = {
 
-        // TODO: check apiV2Schema and return JSON-LD accordingly.
+        // TODO: check targetSchema and return JSON-LD accordingly.
 
         JsonLDObject(Map(OntologyConstants.KnoraApiV2WithValueObject.IntegerValueAsInteger -> JsonLDInt(valueHasInteger)))
     }
@@ -247,9 +247,9 @@ case class DecimalValueContentV2(valueHasString: String, valueHasDecimal: BigDec
 
     def internalValueTypeIri: IRI = OntologyConstants.KnoraBase.DecimalValue
 
-    def toJsonLDValue(apiV2Schema: ApiV2Schema.Value, settings: SettingsImpl): JsonLDValue = {
+    def toJsonLDValue(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDValue = {
 
-        // TODO: check apiV2Schema and return JSON-LD accordingly.
+        // TODO: check targetSchema and return JSON-LD accordingly.
 
         JsonLDObject(Map(OntologyConstants.KnoraApiV2WithValueObject.DecimalValueAsDecimal -> JsonLDDecimal(valueHasDecimal)))
     }
@@ -267,8 +267,8 @@ case class BooleanValueContentV2(valueHasString: String, valueHasBoolean: Boolea
 
     def internalValueTypeIri: IRI = OntologyConstants.KnoraBase.BooleanValue
 
-    def toJsonLDValue(apiV2Schema: ApiV2Schema.Value, settings: SettingsImpl): JsonLDValue = {
-        // TODO: check apiV2Schema and return JSON-LD accordingly.
+    def toJsonLDValue(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDValue = {
+        // TODO: check targetSchema and return JSON-LD accordingly.
 
         JsonLDObject(Map(OntologyConstants.KnoraApiV2WithValueObject.BooleanValueAsBoolean -> JsonLDBoolean(valueHasBoolean)))
     }
@@ -285,8 +285,8 @@ case class GeomValueContentV2(valueHasString: String, valueHasGeometry: String, 
 
     def internalValueTypeIri: IRI = OntologyConstants.KnoraBase.GeomValue
 
-    def toJsonLDValue(apiV2Schema: ApiV2Schema.Value, settings: SettingsImpl): JsonLDValue = {
-        // TODO: check apiV2Schema and return JSON-LD accordingly.
+    def toJsonLDValue(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDValue = {
+        // TODO: check targetSchema and return JSON-LD accordingly.
 
         JsonLDObject(Map(OntologyConstants.KnoraApiV2WithValueObject.GeometryValueAsGeometry -> JsonLDString(valueHasGeometry)))
     }
@@ -305,8 +305,8 @@ case class IntervalValueContentV2(valueHasString: String, valueHasIntervalStart:
 
     def internalValueTypeIri: IRI = OntologyConstants.KnoraBase.IntervalValue
 
-    def toJsonLDValue(apiV2Schema: ApiV2Schema.Value, settings: SettingsImpl): JsonLDValue = {
-        // TODO: check apiV2Schema and return JSON-LD accordingly.
+    def toJsonLDValue(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDValue = {
+        // TODO: check targetSchema and return JSON-LD accordingly.
 
         JsonLDObject(Map(
             OntologyConstants.KnoraApiV2WithValueObject.IntervalValueHasStart -> JsonLDDecimal(valueHasIntervalStart),
@@ -327,8 +327,8 @@ case class HierarchicalListValueContentV2(valueHasString: String, valueHasListNo
 
     def internalValueTypeIri: IRI = OntologyConstants.KnoraBase.ListValue
 
-    def toJsonLDValue(apiV2Schema: ApiV2Schema.Value, settings: SettingsImpl): JsonLDValue = {
-        // TODO: check apiV2Schema and return JSON-LD accordingly.
+    def toJsonLDValue(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDValue = {
+        // TODO: check targetSchema and return JSON-LD accordingly.
 
         JsonLDObject(Map(OntologyConstants.KnoraApiV2WithValueObject.HierarchicalListValueAsListNode -> JsonLDString(valueHasListNode)))
     }
@@ -346,8 +346,8 @@ case class ColorValueContentV2(valueHasString: String, valueHasColor: String, co
 
     def internalValueTypeIri: IRI = OntologyConstants.KnoraBase.ColorValue
 
-    def toJsonLDValue(apiV2Schema: ApiV2Schema.Value, settings: SettingsImpl): JsonLDValue = {
-        // TODO: check apiV2Schema and return JSON-LD accordingly.
+    def toJsonLDValue(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDValue = {
+        // TODO: check targetSchema and return JSON-LD accordingly.
 
         JsonLDObject(Map(OntologyConstants.KnoraApiV2WithValueObject.ColorValueAsColor -> JsonLDString(valueHasColor)))
     }
@@ -365,8 +365,8 @@ case class UriValueContentV2(valueHasString: String, valueHasUri: String, commen
 
     def internalValueTypeIri: IRI = OntologyConstants.KnoraBase.UriValue
 
-    def toJsonLDValue(apiV2Schema: ApiV2Schema.Value, settings: SettingsImpl): JsonLDValue = {
-        // TODO: check apiV2Schema and return JSON-LD accordingly.
+    def toJsonLDValue(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDValue = {
+        // TODO: check targetSchema and return JSON-LD accordingly.
 
         JsonLDObject(Map(OntologyConstants.KnoraApiV2WithValueObject.UriValueAsUri -> JsonLDString(valueHasUri)))
     }
@@ -384,8 +384,8 @@ case class GeonameValueContentV2(valueHasString: String, valueHasGeonameCode: St
 
     def internalValueTypeIri: IRI = OntologyConstants.KnoraBase.GeonameValue
 
-    def toJsonLDValue(apiV2Schema: ApiV2Schema.Value, settings: SettingsImpl): JsonLDValue = {
-        // TODO: check apiV2Schema and return JSON-LD accordingly.
+    def toJsonLDValue(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDValue = {
+        // TODO: check targetSchema and return JSON-LD accordingly.
 
         JsonLDObject(Map(OntologyConstants.KnoraApiV2WithValueObject.GeonameValueAsGeonameCode -> JsonLDString(valueHasGeonameCode)))
     }
@@ -446,8 +446,8 @@ case class StillImageFileValueContentV2(valueHasString: String,
         s"${settings.sipiIIIFGetUrl}/$internalFilename/full/$dimX,$dimY/0/default.jpg"
     }
 
-    def toJsonLDValue(apiV2Schema: ApiV2Schema.Value, settings: SettingsImpl): JsonLDValue = {
-        // TODO: check apiV2Schema and return JSON-LD accordingly.
+    def toJsonLDValue(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDValue = {
+        // TODO: check targetSchema and return JSON-LD accordingly.
 
         val imagePath: String = toURL(settings)
 
@@ -490,8 +490,8 @@ case class TextFileValueContentV2(valueHasString: String, internalMimeType: Stri
         s"${settings.sipiFileServerGetUrl}/$internalFilename"
     }
 
-    def toJsonLDValue(apiV2Schema: ApiV2Schema.Value, settings: SettingsImpl): JsonLDValue = {
-        // TODO: check apiV2Schema and return JSON-LD accordingly.
+    def toJsonLDValue(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDValue = {
+        // TODO: check targetSchema and return JSON-LD accordingly.
 
         val imagePath: String = toURL(settings)
 
@@ -517,8 +517,8 @@ case class LinkValueContentV2(valueHasString: String, subject: IRI, predicate: I
 
     def internalValueTypeIri: IRI = OntologyConstants.KnoraBase.LinkValue
 
-    def toJsonLDValue(apiV2Schema: ApiV2Schema.Value, settings: SettingsImpl): JsonLDValue = {
-        // TODO: check apiV2Schema and return JSON-LD accordingly.
+    def toJsonLDValue(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDValue = {
+        // TODO: check targetSchema and return JSON-LD accordingly.
 
         // check if the referred resource has to be included in the JSON response
         val objectMap: Map[IRI, JsonLDValue] = referredResource match {
@@ -526,7 +526,7 @@ case class LinkValueContentV2(valueHasString: String, subject: IRI, predicate: I
                 // include the referred resource as a nested structure
                 val referredResourceAsJsonLDValue: JsonLDObject = ReadResourceUtil.createJsonLDObjectFromReadResourceV2(
                     resource = targetResource,
-                    apiV2Schema = apiV2Schema,
+                    targetSchema = targetSchema,
                     settings = settings
                 )
 
@@ -624,9 +624,10 @@ trait KnoraResponseV2 {
     /**
       * Converts the response to a data structure that can be used to generate JSON-LD.
       *
+      * @param targetSchema the Knora API schema to be used in the JSON-LD document.
       * @return a [[JsonLDDocument]] representing the response.
       */
-    def toJsonLDDocument(apiV2Schema: ApiV2Schema.Value, settings: SettingsImpl): JsonLDDocument
+    def toJsonLDDocument(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDDocument
 }
 
 object ReadResourceUtil {
@@ -637,14 +638,14 @@ object ReadResourceUtil {
       * @param resource the resource to be turned into JSON-LD.
       * @return a JSON-LD object.
       */
-    def createJsonLDObjectFromReadResourceV2(resource: ReadResourceV2, apiV2Schema: ApiV2Schema.Value, settings: SettingsImpl): JsonLDObject = {
-        // TODO: check apiV2Schema and return JSON-LD accordingly.
+    def createJsonLDObjectFromReadResourceV2(resource: ReadResourceV2, targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDObject = {
+        // TODO: check targetSchema and return JSON-LD accordingly.
 
         val values: Map[IRI, JsonLDArray] = resource.values.map {
             case (propIri: IRI, readValues: Seq[ReadValueV2]) =>
                 val jsonLDValues: Seq[JsonLDObject] = readValues.map {
                     (readValue: ReadValueV2) =>
-                        val valAsMap: Map[IRI, JsonLDValue] = readValue.valueContent.toJsonLDValue(apiV2Schema, settings) match {
+                        val valAsMap: Map[IRI, JsonLDValue] = readValue.valueContent.toJsonLDValue(targetSchema, settings) match {
                             case jsonLDObject: JsonLDObject => jsonLDObject.value
                             case other => throw AssertionException(s"ValueContentV2.toJsonLDValue should have returned a JsonLDObject, but it returned $other")
                         }
@@ -677,8 +678,8 @@ object ReadResourceUtil {
   */
 case class ReadResourcesSequenceV2(numberOfResources: Int, resources: Seq[ReadResourceV2]) extends KnoraResponseV2 {
 
-    def toJsonLDDocument(apiV2Schema: ApiV2Schema.Value, settings: SettingsImpl): JsonLDDocument = {
-        // TODO: check apiV2Schema and return JSON-LD accordingly.
+    def toJsonLDDocument(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDDocument = {
+        // TODO: check targetSchema and return JSON-LD accordingly.
 
         // Make JSON-LD prefixes for the project-specific ontologies used in the response.
 
@@ -702,7 +703,7 @@ case class ReadResourcesSequenceV2(numberOfResources: Int, resources: Seq[ReadRe
                 (prefix, JsonLDString(externalOntologyIri + "#"))
         }.toMap
 
-        // TODO: check apiV2Schema and return JSON-LD accordingly.
+        // TODO: check targetSchema and return JSON-LD accordingly.
 
         val context = JsonLDObject(Map(
             "schema" -> JsonLDString("http://schema.org/"),
@@ -714,7 +715,7 @@ case class ReadResourcesSequenceV2(numberOfResources: Int, resources: Seq[ReadRe
         val resourcesJsonObjects: Seq[JsonLDObject] = resources.map {
             (resource: ReadResourceV2) => ReadResourceUtil.createJsonLDObjectFromReadResourceV2(
                 resource = resource,
-                apiV2Schema = apiV2Schema,
+                targetSchema = targetSchema,
                 settings = settings
             )
         }

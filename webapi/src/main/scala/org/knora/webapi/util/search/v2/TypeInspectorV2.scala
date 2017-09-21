@@ -96,7 +96,7 @@ sealed trait TypeInspectorV2 {
   *
   * @param apiType specifies which API schema is being used in the search query.
   */
-class ExplicitTypeInspectorV2(apiType: ApiV2Schema.Value) extends TypeInspectorV2 {
+class ExplicitTypeInspectorV2(apiType: ApiV2Schema) extends TypeInspectorV2 {
 
     /**
       * An enumeration of the properties that are used in type annotations.
@@ -104,8 +104,8 @@ class ExplicitTypeInspectorV2(apiType: ApiV2Schema.Value) extends TypeInspectorV
     private object TypeAnnotationPropertiesV2 extends Enumeration {
         import Ordering.Tuple2 // scala compiler issue: https://issues.scala-lang.org/browse/SI-8541
 
-        val RDF_TYPE = Value(0, OntologyConstants.Rdf.Type)
-        val OBJECT_TYPE = Value(1, OntologyConstants.KnoraApiV2Simplified.ObjectType)
+        val RDF_TYPE: Value = Value(0, OntologyConstants.Rdf.Type)
+        val OBJECT_TYPE: Value = Value(1, OntologyConstants.KnoraApiV2Simplified.ObjectType)
 
         val valueMap: Map[IRI, Value] = values.map(v => (v.toString, v)).toMap
     }
@@ -144,7 +144,7 @@ class ExplicitTypeInspectorV2(apiType: ApiV2Schema.Value) extends TypeInspectorV
       */
     private case class ExplicitAnnotationV2Simple(typeableEntity: TypeableEntityV2, annotationProp: TypeAnnotationPropertiesV2.Value, typeIri: IRI)
 
-    if (apiType != ApiV2Schema.SIMPLE) {
+    if (apiType != ApiV2Simple) {
         throw NotImplementedException("Type inspection with value objects is not yet implemented")
     }
 

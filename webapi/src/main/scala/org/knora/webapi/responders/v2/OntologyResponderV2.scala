@@ -32,7 +32,7 @@ import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.util.ActorUtil.{future2Message, handleUnexpectedMessage}
 import org.knora.webapi.util.{CacheUtil, ErrorHandlingMap, KnoraIdUtil}
-import org.knora.webapi.{ApplicationCacheException, IRI, InconsistentTriplestoreDataException, OntologyConstants}
+import org.knora.webapi._
 
 import scala.concurrent.Future
 
@@ -385,7 +385,8 @@ class OntologyResponderV2 extends Responder {
                         }.toMap,
                         linkProperties = linkProps,
                         linkValueProperties = linkValueProps,
-                        fileValueProperties = fileValueProps
+                        fileValueProperties = fileValueProps,
+                        ontologySchema = InternalSchema
                     )
 
                     resourceClassIri -> resourceEntityInfo
@@ -421,7 +422,8 @@ class OntologyResponderV2 extends Responder {
                         isLinkProp = linkProps.contains(propertyIri),
                         isLinkValueProp = linkValueProps.contains(propertyIri),
                         isFileValueProp = fileValueProps.contains(propertyIri),
-                        predicates = predicates
+                        predicates = predicates,
+                        ontologySchema = InternalSchema
                     )
 
                     propertyIri -> propertyEntityInfo
