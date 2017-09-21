@@ -26,7 +26,7 @@ This script will create the ``knora-test`` repository and load test data specifi
 
 ### Initialize for using in the production environment
 
-This script will create the ``knora-prod`` repository and load data specified in ``graphdb-se-knora-prod-data.ttl``.
+This script will create the ``knora-prod`` repository and load data specified in ``graphdb-knora-prod-data.expect``.
 
  - with GraphDB running inside a docker container:
  ```$ graphdb-se-docker-init-knora-prod.sh```

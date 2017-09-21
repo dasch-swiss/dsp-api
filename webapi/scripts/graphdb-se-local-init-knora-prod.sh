@@ -24,7 +24,7 @@ curl -X POST -H "Content-Type:application/x-turtle" -d "<http://www.knora.org/co
 
 printf "${GREEN}Repository created.\n\n${DELIMITER}Loading test data${NO_COLOUR}\n\n"
 
-cat graphdb-se-knora-prod-data.ttl | $CONSOLE
+./graphdb-knora-prod-data.expect $GRAPHDB
 
 printf "\n${GREEN}${DELIMITER}Creating Lucene index${NO_COLOUR}\n\n"
 
