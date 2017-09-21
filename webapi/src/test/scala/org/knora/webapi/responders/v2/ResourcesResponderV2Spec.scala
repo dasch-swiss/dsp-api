@@ -110,6 +110,16 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         }
 
+        "return a full description of the book 'Reise ins Heilige Land' in the Incunabula test data" in {
+
+            actorUnderTest ! ResourcesGetRequestV2(Seq("http://data.knora.org/2a6221216701"), userProfile)
+
+            expectMsgPF(timeout) {
+                case response: ReadResourcesSequenceV2 => compareResourceFullResponses(received = response, expected = ResourcesResponderV2SpecFullData.expectedFullResourceResponseForReise)
+            }
+
+        }
+
         "return two full description of the book 'Zeitglöcklein des Lebens und Leidens Christi' and the book 'Reise ins Heilige Land' in the Incunabula test data" in {
 
             actorUnderTest ! ResourcesGetRequestV2(Seq("http://data.knora.org/c5058f3a", "http://data.knora.org/2a6221216701"), userProfile)

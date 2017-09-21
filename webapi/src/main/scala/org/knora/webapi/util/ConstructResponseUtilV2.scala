@@ -71,11 +71,12 @@ object ConstructResponseUtilV2 {
     /**
       * A [[SparqlConstructResponse]] may contain both resources and value RDF data objects as well as standoff.
       * This method turns a graph (i.e. triples) into a structure organized by the principle of resources and their values, i.e. a map of resource Iris to [[ResourceWithValueRdfData]].
+      * The resource Iris represent main resources, dependent resources are contained in the link values as nested structures.
       *
       * @param constructQueryResults the results of a SPARQL construct query representing resources and their values.
       * @return a Map[resource Iri -> [[ResourceWithValueRdfData]]].
       */
-    def splitResourcesAndValueRdfData(constructQueryResults: SparqlConstructResponse, userProfile: UserProfileV1): Map[IRI, ResourceWithValueRdfData] = {
+    def splitMainResourcesAndValueRdfData(constructQueryResults: SparqlConstructResponse, userProfile: UserProfileV1): Map[IRI, ResourceWithValueRdfData] = {
 
         // split statements about resources and other statements (value objects and standoff)
         // resources are identified by the triple "resourceIri a knora-base:Resource" which is an inferred information returned by the SPARQL Construct query.
@@ -226,8 +227,8 @@ object ConstructResponseUtilV2 {
                         property -> valueRdfData
                 }.filterNot {
                     // filter out those properties that do not have value objects (they may have been filtered out because the user does not have sufficient permissions to see them)
-                    case (_, valObj: Seq[ValueRdfData]) =>
-                        valObj.isEmpty
+                    case (_, valObjs: Seq[ValueRdfData]) =>
+                        valObjs.isEmpty
                 }
 
                 // create a map of resource Iris to a `ResourceWithValueRdfData`
@@ -275,7 +276,7 @@ object ConstructResponseUtilV2 {
         }
 
         val mainResourceIris: Set[IRI] = flatResourcesWithValues.filter {
-            case (_, resource) => resource.isMainResource
+            case (_, resource) => resource.isMainResource // only main resources are present on the top level, dependent resources are nested in the link values
         }.map {
             case (resourceIri, _) => resourceIri
         }.toSet
@@ -459,8 +460,17 @@ object ConstructResponseUtilV2 {
         // get the resource's values
         val valueObjects: Map[IRI, Seq[ReadValueV2]] = resourceWithValueRdfData.valuePropertyAssertions.map {
             case (property: IRI, valObjs: Seq[ValueRdfData]) =>
-                (property, valObjs.map {
-                    valObj =>
+                (property, valObjs.sortBy { // order values by knora-base:valueHasOrder
+                    (valObj: ValueRdfData) =>
+
+                        valObj.assertions.get(OntologyConstants.KnoraBase.ValueHasOrder) match {
+                            case Some(orderLiteral: String) => orderLiteral.toInt
+
+                            case None => 0 // set order to zero if not given
+                        }
+
+                }.map {
+                    (valObj: ValueRdfData) =>
                         val readValue = createValueContentV2FromValueRdfData(valObj, mappings = mappings)
 
                         ReadValueV2(valObj.valueObjectIri, readValue)
@@ -492,37 +502,42 @@ object ConstructResponseUtilV2 {
     }
 
     /**
-      * Creates a response to a fulltext search.
+      * Creates a response to a fulltext or extended search.
       *
       * @param searchResults the results returned by the triplestore.
-      * @return a collection of [[ReadResourceV2]], representing the search results.
+      * @param orderByResourceIri the order in which the resources should be returned.
+      * @return a collection of [[ReadResourceV2]] representing the search results.
       */
-    def createSearchResponse(searchResults: Map[IRI, ResourceWithValueRdfData], orderByIri: Seq[IRI] = Seq.empty[IRI]): Vector[ReadResourceV2] = {
+    def createSearchResponse(searchResults: Map[IRI, ResourceWithValueRdfData], orderByResourceIri: Seq[IRI] = Seq.empty[IRI]): Vector[ReadResourceV2] = {
 
-        // if orderByIri is given, use it to sort search results
-        val sortedResults: Map[IRI, ResourceWithValueRdfData] = if (orderByIri.nonEmpty) {
+        // if orderByResourceIris is given, use it to sort search results
+        // attention: orderByResourceIris does not consider permissions
+        if (orderByResourceIri.nonEmpty) {
 
-            if (searchResults.keySet != orderByIri.toSet) throw AssertionException("searchResults and orderByIri do not contain the same Iris")
+            // iterate over orderByResourceIris and construct the response in the correct order
+            orderByResourceIri.foldLeft(Vector.empty[ReadResourceV2]) {
+                (acc: Vector[ReadResourceV2], resourceIri: IRI) =>
 
-            // iterate over orderByIri and return a ListMap of the search results
-            orderByIri.foldLeft(ListMap.empty[IRI, ResourceWithValueRdfData]) {
-                (acc: ListMap[IRI, ResourceWithValueRdfData], resIri: IRI) =>
-                    acc + (resIri -> searchResults(resIri))
+                    // the user may not have the permissions to see the resource
+                    // i.e. it may not be contained in searchResults
+                    searchResults.get(resourceIri) match {
+                        case Some(assertions: ResourceWithValueRdfData) =>
+                            // sufficient permissions
+                            // add the resource to the list of results
+                            acc :+ constructReadResourceV2(resourceIri, assertions, mappings = Map.empty[IRI, MappingAndXSLTransformation])
+
+                        case None => acc // insufficient permissions on resource, skip it
+                    }
             }
         } else {
             // no order given
-            searchResults
+            searchResults.map {
+                case (resourceIri: IRI, assertions: ResourceWithValueRdfData) =>
+                    constructReadResourceV2(resourceIri, assertions, mappings = Map.empty[IRI, MappingAndXSLTransformation])
+            }.toVector
+
         }
 
-        // each entry represents a resource that matches the search criteria
-        // this is because linking properties are excluded from fulltext search
-        sortedResults.map {
-            case (resourceIri: IRI, assertions: ResourceWithValueRdfData) =>
-
-                // TODO: check if the query path is represented by the resource's values the user has permissions to see
-
-                constructReadResourceV2(resourceIri, assertions, mappings = Map.empty[IRI, MappingAndXSLTransformation])
-        }.toVector
 
     }
 }

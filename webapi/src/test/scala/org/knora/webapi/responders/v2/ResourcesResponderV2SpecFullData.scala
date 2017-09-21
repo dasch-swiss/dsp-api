@@ -338,6 +338,11 @@ object ResourcesResponderV2SpecFullData {
         numberOfResources = 1
     )
 
+    val expectedFullResourceResponseForReise = ReadResourcesSequenceV2(
+        resources = Vector(expectedReadResourceV2ForReiseInsHeiligeland),
+        numberOfResources = 1
+    )
+
     val expectedFullResourceResponseForZeitgloeckleinAndReise = ReadResourcesSequenceV2(
         resources = Vector(expectedReadResourceV2ForZeitgloecklein, expectedReadResourceV2ForReiseInsHeiligeland),
         numberOfResources = 2
