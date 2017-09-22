@@ -210,7 +210,7 @@ case class TextValueContentV2(valueHasString: String, standoff: Option[StandoffA
   * May include an XSL transformation.
   *
   * @param standoff   a sequence of [[StandoffTagV1]].
-  * @param mappingIri the Iri of the mapping
+  * @param mappingIri the IRI of the mapping
   * @param mapping    a mapping between XML and standoff.
   * @param XSLT       an XSL transformation.
   */
@@ -320,7 +320,7 @@ case class IntervalValueContentV2(valueHasString: String, valueHasIntervalStart:
   * Represents a value pointing to a Knora hierarchical list node.
   *
   * @param valueHasString   the string representation of the hierarchical list node value.
-  * @param valueHasListNode the Iri of the hierarchical list node pointed to.
+  * @param valueHasListNode the IRI of the hierarchical list node pointed to.
   * @param comment          a comment on this `GeomValueContentV2`, if any.
   */
 case class HierarchicalListValueContentV2(valueHasString: String, valueHasListNode: IRI, comment: Option[String]) extends ValueContentV2 {
@@ -533,7 +533,7 @@ case class LinkValueContentV2(valueHasString: String, subject: IRI, predicate: I
                 Map(OntologyConstants.KnoraApiV2WithValueObject.LinkValueHasTarget -> referredResourceAsJsonLDValue)
 
             case None =>
-                // just include the referred resource's Iri
+                // just include the referred resource's IRI
                 Map(OntologyConstants.KnoraApiV2WithValueObject.LinkValueHasTargetIri -> JsonLDString(referredResourceIri))
         }
 
@@ -562,7 +562,7 @@ sealed trait ResourceV2 {
 /**
   * Represents a Knora resource when being read back from the triplestore.
   *
-  * @param resourceIri   the Iri of the resource.
+  * @param resourceIri   the IRI of the resource.
   * @param label         the resource's label.
   * @param resourceClass the class the resource belongs to.
   * @param values        the resource's values.
@@ -653,17 +653,17 @@ object ReadResourceUtil {
                         JsonLDObject(
                             Map(
                                 "@id" -> JsonLDString(readValue.valueIri),
-                                "@type" -> JsonLDString(InputValidation.internalEntityIriToApiV2WithValueObjectEntityIri(readValue.valueContent.internalValueTypeIri, () => throw InconsistentTriplestoreDataException(s"internal value type Iri ${readValue.valueContent.internalValueTypeIri} could not be converted to a knora-api v2 with value type Iri")))
+                                "@type" -> JsonLDString(InputValidation.internalEntityIriToApiV2WithValueObjectEntityIri(readValue.valueContent.internalValueTypeIri, () => throw InconsistentTriplestoreDataException(s"internal value type IRI ${readValue.valueContent.internalValueTypeIri} could not be converted to a knora-api v2 with value type IRI")))
                             ) ++ valAsMap
                         )
                 }
 
-                (InputValidation.internalEntityIriToApiV2WithValueObjectEntityIri(propIri, () => throw InconsistentTriplestoreDataException(s"internal property $propIri could not be converted to knora-api v2 with value object property Iri")), JsonLDArray(jsonLDValues))
+                (InputValidation.internalEntityIriToApiV2WithValueObjectEntityIri(propIri, () => throw InconsistentTriplestoreDataException(s"internal property $propIri could not be converted to knora-api v2 with value object property IRI")), JsonLDArray(jsonLDValues))
 
         }
 
         JsonLDObject(Map(
-            "@type" -> JsonLDString(InputValidation.internalEntityIriToApiV2WithValueObjectEntityIri(resource.resourceClass, () => throw InconsistentTriplestoreDataException(s"internal resource class Iri ${resource.resourceClass} could not be converted to a knora-api v2 with value object resource class Iri"))),
+            "@type" -> JsonLDString(InputValidation.internalEntityIriToApiV2WithValueObjectEntityIri(resource.resourceClass, () => throw InconsistentTriplestoreDataException(s"internal resource class IRI ${resource.resourceClass} could not be converted to a knora-api v2 with value object resource class IRI"))),
             "http://schema.org/name" -> JsonLDString(resource.label),
             "@id" -> JsonLDString(resource.resourceIri)
         ) ++ values)

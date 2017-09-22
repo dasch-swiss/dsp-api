@@ -52,7 +52,10 @@ object OntologyConstants {
         val MinCardinality: IRI = OwlPrefixExpansion + "minCardinality"
         val MaxCardinality: IRI = OwlPrefixExpansion + "maxCardinality"
 
-        val Class = OwlPrefixExpansion + "Class"
+        val ObjectProperty: IRI = OwlPrefixExpansion + "ObjectProperty"
+        val DatatypeProperty: IRI = OwlPrefixExpansion + "DatatypeProperty"
+
+        val Class: IRI = OwlPrefixExpansion + "Class"
 
         /**
           * Cardinality IRIs expressed as OWL restrictions, which specify the properties that resources of
@@ -480,60 +483,63 @@ object OntologyConstants {
 
         val ObjectType: IRI = KnoraApiV2PrefixExpansion + "objectType"
 
-        val HasOntologies = KnoraApiV2PrefixExpansion + "hasOntologies"
+        val HasOntologies: IRI = KnoraApiV2PrefixExpansion + "hasOntologies"
 
-        val HasOntologiesWithResourceClasses = KnoraApiV2PrefixExpansion + "hasOntologiesWithResourceClasses"
+        val HasOntologiesWithResourceClasses: IRI = KnoraApiV2PrefixExpansion + "hasOntologiesWithResourceClasses"
 
-        val HasProperties = KnoraApiV2PrefixExpansion + "hasProperties"
+        val HasProperties: IRI = KnoraApiV2PrefixExpansion + "hasProperties"
 
-        val BelongsToOntology = KnoraApiV2PrefixExpansion + "belongsToOntology"
+        val BelongsToOntology: IRI = KnoraApiV2PrefixExpansion + "belongsToOntology"
 
-        val HasResourceClasses = KnoraApiV2PrefixExpansion + "hasResourceClasses"
+        val HasResourceClasses: IRI = KnoraApiV2PrefixExpansion + "hasResourceClasses"
 
-        val ValueAsString = KnoraApiV2PrefixExpansion + "valueAsString"
+        val ValueAsString: IRI = KnoraApiV2PrefixExpansion + "valueAsString"
 
-        val DateValueHasStartYear = KnoraApiV2PrefixExpansion + "dateValueHasStartYear"
-        val DateValueHasEndYear = KnoraApiV2PrefixExpansion + "dateValueHasEndYear"
-        val DateValueHasStartMonth = KnoraApiV2PrefixExpansion + "dateValueHasStartMonth"
-        val DateValueHasEndMonth = KnoraApiV2PrefixExpansion + "dateValueHasEndMonth"
-        val DateValueHasStartDay = KnoraApiV2PrefixExpansion + "dateValueHasStartDay"
-        val DateValueHasEndDay = KnoraApiV2PrefixExpansion + "dateValueHasEndDay"
-        val DateValueHasCalendar = KnoraApiV2PrefixExpansion + "dateValueHasCalendar"
+        val DateValueHasStartYear: IRI = KnoraApiV2PrefixExpansion + "dateValueHasStartYear"
+        val DateValueHasEndYear: IRI = KnoraApiV2PrefixExpansion + "dateValueHasEndYear"
+        val DateValueHasStartMonth: IRI = KnoraApiV2PrefixExpansion + "dateValueHasStartMonth"
+        val DateValueHasEndMonth: IRI = KnoraApiV2PrefixExpansion + "dateValueHasEndMonth"
+        val DateValueHasStartDay: IRI = KnoraApiV2PrefixExpansion + "dateValueHasStartDay"
+        val DateValueHasEndDay: IRI = KnoraApiV2PrefixExpansion + "dateValueHasEndDay"
+        val DateValueHasCalendar: IRI = KnoraApiV2PrefixExpansion + "dateValueHasCalendar"
 
-        val TextValueAsHtml = KnoraApiV2PrefixExpansion + "textValueAsHtml"
-        val TextValueAsXml = KnoraApiV2PrefixExpansion + "textValueAsXml"
-        val TextValueHasMapping = KnoraApiV2PrefixExpansion + "textValueHasMapping"
+        val TextValueAsHtml: IRI = KnoraApiV2PrefixExpansion + "textValueAsHtml"
+        val TextValueAsXml: IRI = KnoraApiV2PrefixExpansion + "textValueAsXml"
+        val TextValueHasMapping: IRI = KnoraApiV2PrefixExpansion + "textValueHasMapping"
 
-        val IntegerValueAsInteger = KnoraApiV2PrefixExpansion + "integerValueAsInteger"
+        val IntegerValueAsInteger: IRI = KnoraApiV2PrefixExpansion + "integerValueAsInteger"
 
-        val DecimalValueAsDecimal = KnoraApiV2PrefixExpansion + "decimalValueAsDecimal"
+        val DecimalValueAsDecimal: IRI = KnoraApiV2PrefixExpansion + "decimalValueAsDecimal"
 
-        val GeometryValueAsGeometry = KnoraApiV2PrefixExpansion + "GeometryValueAsGeometry"
+        val GeometryValueAsGeometry: IRI = KnoraApiV2PrefixExpansion + "GeometryValueAsGeometry"
 
-        val LinkValueHasTarget = KnoraApiV2PrefixExpansion + "linkValueHasTarget"
-        val LinkValueHasTargetIri = KnoraApiV2PrefixExpansion + "linkValueHasTargetIri"
+        val LinkValueHasTarget: IRI = KnoraApiV2PrefixExpansion + "linkValueHasTarget"
+        val LinkValueHasTargetIri: IRI = KnoraApiV2PrefixExpansion + "linkValueHasTargetIri"
 
-        val FileValueAsUrl = KnoraApiV2PrefixExpansion + "fileValueAsUrl"
-        val FileValueIsPreview = KnoraApiV2PrefixExpansion + "fileValueIsPreview"
-        val FileValueHasFilename = KnoraApiV2PrefixExpansion + "fileValueHasFilename"
+        val FileValueAsUrl: IRI = KnoraApiV2PrefixExpansion + "fileValueAsUrl"
+        val FileValueIsPreview: IRI = KnoraApiV2PrefixExpansion + "fileValueIsPreview"
+        val FileValueHasFilename: IRI = KnoraApiV2PrefixExpansion + "fileValueHasFilename"
 
-        val StillImageFileValueHasDimX = KnoraApiV2PrefixExpansion + "stillImageFileValueHasDimX"
-        val StillImageFileValueHasDimY = KnoraApiV2PrefixExpansion + "stillImageFileValueHasDimY"
-        val StillImageFileValueHasIIIFBaseUrl = KnoraApiV2PrefixExpansion + "stillImageFileValueHasIIIFBaseUrl"
+        val StillImageFileValueHasDimX: IRI = KnoraApiV2PrefixExpansion + "stillImageFileValueHasDimX"
+        val StillImageFileValueHasDimY: IRI = KnoraApiV2PrefixExpansion + "stillImageFileValueHasDimY"
+        val StillImageFileValueHasIIIFBaseUrl: IRI = KnoraApiV2PrefixExpansion + "stillImageFileValueHasIIIFBaseUrl"
 
 
-        val IntervalValueHasStart = KnoraApiV2PrefixExpansion + "intervalValueHasStart"
-        val IntervalValueHasEnd = KnoraApiV2PrefixExpansion + "intervalValueHasEnd"
+        val IntervalValueHasStart: IRI = KnoraApiV2PrefixExpansion + "intervalValueHasStart"
+        val IntervalValueHasEnd: IRI = KnoraApiV2PrefixExpansion + "intervalValueHasEnd"
 
-        val BooleanValueAsBoolean = KnoraApiV2PrefixExpansion + "booleanValueAsBoolean"
+        val BooleanValueAsBoolean: IRI = KnoraApiV2PrefixExpansion + "booleanValueAsBoolean"
 
-        val HierarchicalListValueAsListNode = KnoraApiV2PrefixExpansion + "hierarchicalListValueAsListNode"
+        val HierarchicalListValueAsListNode: IRI = KnoraApiV2PrefixExpansion + "hierarchicalListValueAsListNode"
 
-        val ColorValueAsColor = KnoraApiV2PrefixExpansion + "colorValueAsColor"
+        val ColorValueAsColor: IRI = KnoraApiV2PrefixExpansion + "colorValueAsColor"
 
-        val UriValueAsUri = KnoraApiV2PrefixExpansion + "uriValueAsUri"
+        val UriValueAsUri: IRI = KnoraApiV2PrefixExpansion + "uriValueAsUri"
 
-        val GeonameValueAsGeonameCode = KnoraApiV2PrefixExpansion + "geonameValueAsGeonameCode"
+        val GeonameValueAsGeonameCode: IRI = KnoraApiV2PrefixExpansion + "geonameValueAsGeonameCode"
+
+        val ResourceIcon: IRI = KnoraApiV2PrefixExpansion + "resourceIcon"
+
     }
 
     object KnoraApiV2Simplified {
@@ -552,6 +558,37 @@ object OntologyConstants {
         val Geom: IRI = KnoraApiV2PrefixExpansion + "Geom"
 
         val Color: IRI =  KnoraApiV2PrefixExpansion + "Color"
+
+        val ResourceIcon: IRI = KnoraApiV2PrefixExpansion + "resourceIcon"
+
+        val BelongsToOntology: IRI = KnoraApiV2PrefixExpansion + "belongsToOntology"
+
+        val HasOntologiesWithResourceClasses: IRI = KnoraApiV2PrefixExpansion + "hasOntologiesWithResourceClasses"
+
+        val HasProperties: IRI = KnoraApiV2PrefixExpansion + "hasProperties"
+
+        val HasResourceClasses: IRI = KnoraApiV2PrefixExpansion + "hasResourceClasses"
+
+
+        /**
+          * Maps internal knora-base value types to the literal XSD types that represent them in the simplified API.
+          *
+          * TODO: decide whether this is correct. Should dates and intervals really be string literals?
+          */
+        val LiteralValueTypes: Map[IRI, IRI] = Map(
+            KnoraBase.TextValue -> Xsd.String,
+            KnoraBase.IntValue -> Xsd.Integer,
+            KnoraBase.BooleanValue -> Xsd.Boolean,
+            KnoraBase.UriValue -> Xsd.Uri,
+            KnoraBase.DecimalValue -> Xsd.Decimal,
+            KnoraBase.DateValue -> Xsd.String,
+            KnoraBase.ColorValue -> Xsd.String,
+            KnoraBase.GeomValue -> Xsd.String,
+            KnoraBase.ListValue -> Xsd.String,
+            KnoraBase.IntervalValue -> Xsd.String,
+            KnoraBase.GeonameValue -> Xsd.String
+        )
+
     }
 
     object NamedGraphs {

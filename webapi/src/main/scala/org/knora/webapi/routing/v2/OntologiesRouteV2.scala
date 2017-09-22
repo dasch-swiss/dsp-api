@@ -71,10 +71,10 @@ object OntologiesRouteV2 extends Authenticator {
                     val internalOntologyIris: Set[IRI] = externalOntologyIris.map {
                         (namedGraph: String) =>
 
-                            // translate the given external ontology Iri to an internal ontology Iri
-                            val internalOntologyIri = InputValidation.externalOntologyIriApiV2WithValueObjectToInternalOntologyIri(namedGraph, () => throw BadRequestException(s"given named graph $namedGraph is not a valid external ontology Iri"))
+                            // translate the given external ontology IRI to an internal ontology IRI
+                            val internalOntologyIri = InputValidation.externalOntologyIriApiV2WithValueObjectToInternalOntologyIri(namedGraph, () => throw BadRequestException(s"given named graph $namedGraph is not a valid external ontology IRI"))
 
-                            InputValidation.toIri(internalOntologyIri, () => throw BadRequestException(s"Invalid named graph Iri: '$internalOntologyIri'"))
+                            InputValidation.toIri(internalOntologyIri, () => throw BadRequestException(s"Invalid named graph IRI: '$internalOntologyIri'"))
                     }.toSet
 
                     val params: Map[String, String] = requestContext.request.uri.query().toMap
@@ -104,10 +104,10 @@ object OntologiesRouteV2 extends Authenticator {
                     val internalResourceClassIris: Set[IRI] = externalResourceClassIris.map {
                         (resourceClassIri: String) =>
 
-                            // translate the given external resource class Iri to an internal Iri
-                            val internalResClassIri = InputValidation.externalApiV2WithValueObjectEntityIriToInternalEntityIri(resourceClassIri, () => throw BadRequestException(s"invalid external resource class Iri: $resourceClassIri"))
+                            // translate the given external resource class IRI to an internal IRI
+                            val internalResClassIri = InputValidation.externalApiV2WithValueObjectEntityIriToInternalEntityIri(resourceClassIri, () => throw BadRequestException(s"invalid external resource class IRI: $resourceClassIri"))
 
-                            InputValidation.toIri(internalResClassIri, () => throw BadRequestException(s"Invalid resource class Iri: '$internalResClassIri'"))
+                            InputValidation.toIri(internalResClassIri, () => throw BadRequestException(s"Invalid resource class IRI: '$internalResClassIri'"))
                     }.toSet
 
                     val params: Map[String, String] = requestContext.request.uri.query().toMap
@@ -137,10 +137,10 @@ object OntologiesRouteV2 extends Authenticator {
                     val internalPropertyIris: Set[IRI] = externalPropertyIris.map {
                         (propIri: String) =>
 
-                            // translate the given external property Iri to an internal Iri
-                            val internalPropIri = InputValidation.externalApiV2WithValueObjectEntityIriToInternalEntityIri(propIri, () => throw BadRequestException(s"invalid external property Iri: $propIri"))
+                            // translate the given external property IRI to an internal IRI
+                            val internalPropIri = InputValidation.externalApiV2WithValueObjectEntityIriToInternalEntityIri(propIri, () => throw BadRequestException(s"invalid external property IRI: $propIri"))
 
-                            InputValidation.toIri(internalPropIri, () => throw BadRequestException(s"Invalid property Iri: '$internalPropIri'"))
+                            InputValidation.toIri(internalPropIri, () => throw BadRequestException(s"Invalid property IRI: '$internalPropIri'"))
                     }.toSet
 
                     val params: Map[String, String] = requestContext.request.uri.query().toMap

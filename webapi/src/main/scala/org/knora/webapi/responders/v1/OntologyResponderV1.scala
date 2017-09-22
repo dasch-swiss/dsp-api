@@ -261,7 +261,7 @@ class OntologyResponderV1 extends Responder {
     /**
       * Gets the [[NamedGraphEntityInfoV1]] for a named graph
       *
-      * @param namedGraphIri the Iri of the named graph to query
+      * @param namedGraphIri the IRI of the named graph to query
       * @param userProfile   the profile of the user making the request.
       * @return a [[NamedGraphEntityInfoV1]].
       */
@@ -274,7 +274,7 @@ class OntologyResponderV1 extends Responder {
     /**
       * Gets all the resource classes and their properties for a named graph.
       *
-      * @param namedGraphIriOption the Iri of the named graph or None if all the named graphs should be queried.
+      * @param namedGraphIriOption the IRI of the named graph or None if all the named graphs should be queried.
       * @param userProfile         the profile of the user making the request.
       * @return [[ResourceTypesForNamedGraphResponseV1]].
       */
@@ -317,7 +317,7 @@ class OntologyResponderV1 extends Responder {
             } yield resourceTypes
         }
 
-        // get resource types for named graph depending on given Iri-Option
+        // get resource types for named graph depending on given IRI-Option
         namedGraphIriOption match {
             case Some(namedGraphIri) => // get the resource types for the given named graph
                 for {
@@ -337,7 +337,7 @@ class OntologyResponderV1 extends Responder {
     /**
       * Gets the property types defined in the given named graph. If there is no named graph defined, get property types for all existing named graphs.
       *
-      * @param namedGraphIriOption the Iri of the named graph or None if all the named graphs should be queried.
+      * @param namedGraphIriOption the IRI of the named graph or None if all the named graphs should be queried.
       * @param userProfile         the profile of the user making the request.
       * @return a [[PropertyTypesForNamedGraphResponseV1]].
       */
@@ -409,7 +409,7 @@ class OntologyResponderV1 extends Responder {
     /**
       * Gets the property types defined for the given resource class.
       *
-      * @param resourceClassIri the Iri of the resource class to query for.
+      * @param resourceClassIri the IRI of the resource class to query for.
       * @param userProfile      the profile of the user making the request.
       * @return a [[PropertyTypesForResourceTypeResponseV1]].
       */

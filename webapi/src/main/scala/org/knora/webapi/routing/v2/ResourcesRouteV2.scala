@@ -50,7 +50,7 @@ object ResourcesRouteV2 extends Authenticator {
 
                     val resourceIris: Set[IRI] = resIris.map {
                         resIri: String =>
-                            InputValidation.toIri(resIri, () => throw BadRequestException(s"Invalid resource Iri: '$resIri'"))
+                            InputValidation.toIri(resIri, () => throw BadRequestException(s"Invalid resource IRI: '$resIri'"))
                     }.toSet
 
                     val requestMessage = ResourcesGetRequestV2(resourceIris = resourceIris, userProfile = userProfile)
@@ -69,7 +69,7 @@ object ResourcesRouteV2 extends Authenticator {
                 requestContext => {
                     val userProfile = getUserProfileV1(requestContext)
 
-                    val resourceIri: IRI = InputValidation.toIri(resIri, () => throw BadRequestException(s"Invalid resource Iri: '$resIri'"))
+                    val resourceIri: IRI = InputValidation.toIri(resIri, () => throw BadRequestException(s"Invalid resource IRI: '$resIri'"))
 
                     val requestMessage = ResourcePreviewRequestV2(resourceIri = resourceIri, userProfile = userProfile)
 

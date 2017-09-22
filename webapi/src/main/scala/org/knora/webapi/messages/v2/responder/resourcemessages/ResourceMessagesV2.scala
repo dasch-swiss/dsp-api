@@ -43,7 +43,7 @@ case class ResourcesGetRequestV2(resourceIris: Set[IRI], userProfile: UserProfil
 /**
   * Requests a preview of a resource.
   *
-  * @param resourceIri the Iri of the resource to obtain a preview for.
+  * @param resourceIri the IRI of the resource to obtain a preview for.
   * @param userProfile the profile of the user making the request.
   */
 case class ResourcePreviewRequestV2(resourceIri: IRI, userProfile: UserProfileV1) extends ResourcesResponderRequestV2

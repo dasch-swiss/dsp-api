@@ -749,8 +749,8 @@ class OntologyResponderV2 extends Responder {
     /**
       * Checks whether a certain Knora resource or value class is a subclass of another class.
       *
-      * @param subClassIri   the Iri of the resource or value class whose subclassOf relations have to be checked.
-      * @param superClassIri the Iri of the resource or value class to check for (whether it is a a super class of `subClassIri` or not).
+      * @param subClassIri   the IRI of the resource or value class whose subclassOf relations have to be checked.
+      * @param superClassIri the IRI of the resource or value class to check for (whether it is a a super class of `subClassIri` or not).
       * @return a [[CheckSubClassResponseV1]].
       */
     private def checkSubClassV2(subClassIri: IRI, superClassIri: IRI, userProfile: UserProfileV1): Future[CheckSubClassResponseV2] = {
@@ -765,7 +765,7 @@ class OntologyResponderV2 extends Responder {
     /**
       * Gets the IRIs of the subclasses of a resource class.
       *
-      * @param resourceClassIri the Iri of the resource class whose subclasses should be returned.
+      * @param resourceClassIri the IRI of the resource class whose subclasses should be returned.
       * @return a [[SubClassesGetResponseV1]].
       */
     private def getSubClassesV2(resourceClassIri: IRI, userProfile: UserProfileV1): Future[SubClassesGetResponseV2] = {
@@ -796,7 +796,7 @@ class OntologyResponderV2 extends Responder {
     /**
       * Gets the [[NamedGraphEntityInfoV1]] for a named graph
       *
-      * @param namedGraphIri the Iri of the named graph to query
+      * @param namedGraphIri the IRI of the named graph to query
       * @param userProfile   the profile of the user making the request.
       * @return a [[NamedGraphEntityInfoV1]].
       */

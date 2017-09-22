@@ -42,7 +42,7 @@ object ConstructResponseUtilV2 {
     /**
       * Represents the RDF data about a value, possibly including standoff.
       *
-      * @param valueObjectIri the value object's Iri.
+      * @param valueObjectIri the value object's IRI.
       * @param assertions     the value objects assertions.
       * @param standoff       standoff assertions, if any.
       */
@@ -72,7 +72,7 @@ object ConstructResponseUtilV2 {
       * This method turns a graph (i.e. triples) into a structure organized by the principle of resources and their values, i.e. a map of resource Iris to [[ResourceWithValueRdfData]].
       *
       * @param constructQueryResults the results of a SPARQL construct query representing resources and their values.
-      * @return a Map[resource Iri -> [[ResourceWithValueRdfData]]].
+      * @return a Map[resource IRI -> [[ResourceWithValueRdfData]]].
       */
     def splitResourcesAndValueRdfData(constructQueryResults: SparqlConstructResponse, userProfile: UserProfileV1): Map[IRI, ResourceWithValueRdfData] = {
 
@@ -165,18 +165,18 @@ object ConstructResponseUtilV2 {
                             valObjIri: IRI =>
 
                                 // get all the standoff node Iris possibly belonging to this value object
-                                // do so by accessing the non resource statements using the value object Iri as a key
+                                // do so by accessing the non resource statements using the value object IRI as a key
                                 val standoffNodeIris: Set[IRI] = nonResourceStatements(valObjIri).filter {
                                     case (pred: IRI, _) =>
                                         pred == OntologyConstants.KnoraBase.ValueHasStandoff
                                 }.map {
                                     case (_, obj: IRI) =>
-                                        // we are only interested in the standoff node Iri
+                                        // we are only interested in the standoff node IRI
                                         obj
                                 }.toSet
 
                                 // given the standoff node Iris, get the standoff assertions
-                                // do so by accessing the non resource statements using the standoff node Iri as a key
+                                // do so by accessing the non resource statements using the standoff node IRI as a key
                                 val (standoffAssertions: Map[IRI, Seq[(IRI, String)]], valueAssertions: Map[IRI, Seq[(IRI, String)]]) = nonResourceStatements.partition {
                                     case (subjIri: IRI, _) =>
                                         standoffNodeIris(subjIri)
@@ -328,8 +328,8 @@ object ConstructResponseUtilV2 {
 
                 if (valueObject.standoff.nonEmpty) {
                     // standoff nodes given
-                    // get the Iri of the mapping
-                    val mappingIri: IRI = valueObject.assertions.getOrElse(OntologyConstants.KnoraBase.ValueHasMapping, throw InconsistentTriplestoreDataException(s"no mapping Iri associated with standoff belonging to textValue ${valueObject.valueObjectIri}"))
+                    // get the IRI of the mapping
+                    val mappingIri: IRI = valueObject.assertions.getOrElse(OntologyConstants.KnoraBase.ValueHasMapping, throw InconsistentTriplestoreDataException(s"no mapping IRI associated with standoff belonging to textValue ${valueObject.valueObjectIri}"))
 
                     val mapping: MappingAndXSLTransformation = mappings(mappingIri)
 
@@ -447,7 +447,7 @@ object ConstructResponseUtilV2 {
       *
       * Creates a [[ReadResourceV2]] from a [[ResourceWithValueRdfData]].
       *
-      * @param resourceIri              the Iri of the resource.
+      * @param resourceIri              the IRI of the resource.
       * @param resourceWithValueRdfData the Rdf data belonging to the resource.
       * @return a [[ReadResourceV2]].
       */
@@ -483,7 +483,7 @@ object ConstructResponseUtilV2 {
     /**
       * Creates a response to a full resource request.
       *
-      * @param resourceIri     the Iri of the requested resource.
+      * @param resourceIri     the IRI of the requested resource.
       * @param resourceRdfData the results returned by the triplestore.
       * @param mappings        the mappings needed for standoff conversions and XSL transformations.
       * @return a [[ReadResourceV2]].

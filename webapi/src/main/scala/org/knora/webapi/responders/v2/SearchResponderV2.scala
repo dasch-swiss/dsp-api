@@ -101,9 +101,9 @@ class SearchResponderV2 extends Responder {
             // convert external Iris to internal Iris if needed
 
             entity match {
-                case iriRef: IriRef => // if an Iri is an external knora-api entity (with value object or simple), convert it to an internal Iri
+                case iriRef: IriRef => // if an IRI is an external knora-api entity (with value object or simple), convert it to an internal IRI
                     if (InputValidation.isKnoraApiEntityIri(iriRef.iri)) {
-                        ExtendedSearchInternalEntityIri(InputValidation.externalIriToInternalIri(iriRef.iri, () => throw BadRequestException(s"${iriRef.iri} is not a valid external knora-api entity Iri")))
+                        ExtendedSearchInternalEntityIri(InputValidation.externalToInternalEntityIri(iriRef.iri, () => throw BadRequestException(s"${iriRef.iri} is not a valid external knora-api entity IRI")))
                     } else {
                         ExtendedSearchIri(InputValidation.toIri(iriRef.iri, () => throw BadRequestException(s"$iriRef is not a valid IRI")))
                     }
@@ -185,16 +185,16 @@ class SearchResponderV2 extends Responder {
         val extendedSearchWhereClausePatternsWithOriginalFilters: Seq[ExtendedSearchQueryPattern] = convertSearchParserQueryPatternsToExtendedSearchPatterns(whereClauseWithoutAnnotations.patterns)
 
         /**
-          * Creates additional statements based on a non property type Iri.
+          * Creates additional statements based on a non property type IRI.
           *
-          * @param typeIriExternal       the non property type Iri.
+          * @param typeIriExternal       the non property type IRI.
           * @param subject               the entity that is the subject in the additional statement to be generated.
           * @param typeInfoKeysProcessed a Set of keys that indicates which type info entries already habe been processed.
           * @param index                 the index to be used to create variables in Sparql.
           * @return a sequence of [[ExtendedSearchStatementPattern]].
           */
         def createAdditionalStatementsForNonPropertyType(typeIriExternal: IRI, subject: ExtendedSearchEntity, typeInfoKeysProcessed: Set[TypeableEntityV2], index: Int): AdditionalStatements = {
-            val typeIriInternal = InputValidation.externalIriToInternalIri(typeIriExternal, () => throw BadRequestException(s"${typeIriExternal} is not a valid external knora-api entity Iri"))
+            val typeIriInternal = InputValidation.externalToInternalEntityIri(typeIriExternal, () => throw BadRequestException(s"${typeIriExternal} is not a valid external knora-api entity IRI"))
 
             if (typeIriInternal == OntologyConstants.KnoraBase.Resource) {
 
@@ -215,10 +215,10 @@ class SearchResponderV2 extends Responder {
         }
 
         /**
-          * Creates additional statements based on a property type Iri.
+          * Creates additional statements based on a property type IRI.
           * The predicate of the given statement pattern is a property (value property or linking property).
           *
-          * @param typeIriExternal       the property type Iri as an external Knora Iri (the type of the thing the property/predicate points to).
+          * @param typeIriExternal       the property type IRI as an external Knora IRI (the type of the thing the property/predicate points to).
           * @param statementPattern      the statement to be processed (its predicate is the property whose type is given above).
           * @param typeInfoKeysProcessed a Set of keys that indicates which type info entries already have been processed (to be returned to the calling context to avoid multiple processing of the same type information).
           * @param index                 the index to be used to create unique variable names in Sparql.
@@ -226,9 +226,9 @@ class SearchResponderV2 extends Responder {
           */
         def createAdditionalStatementsForPropertyType(typeIriExternal: IRI, statementPattern: ExtendedSearchStatementPattern, typeInfoKeysProcessed: Set[TypeableEntityV2], index: Int): AdditionalStatements = {
 
-            // convert the type information into an internal Knora Iri if possible
+            // convert the type information into an internal Knora IRI if possible
             val objectIri = if (InputValidation.isKnoraApiEntityIri(typeIriExternal)) {
-                InputValidation.externalIriToInternalIri(typeIriExternal, () => throw BadRequestException(s"${typeIriExternal} is not a valid external knora-api entity Iri"))
+                InputValidation.externalToInternalEntityIri(typeIriExternal, () => throw BadRequestException(s"${typeIriExternal} is not a valid external knora-api entity IRI"))
             } else {
                 typeIriExternal
             }
@@ -645,7 +645,7 @@ class SearchResponderV2 extends Responder {
                     AdditionalStatements()
             }
 
-            // check the predicate: must be either a variable or an Iri (cannot be a literal)
+            // check the predicate: must be either a variable or an IRI (cannot be a literal)
             // the predicate represents a property
             val additionalStatementsForPred: AdditionalStatements = statementP.pred match {
                 case variablePred: ExtendedSearchVar =>
@@ -673,13 +673,13 @@ class SearchResponderV2 extends Responder {
                 case iriPred: ExtendedSearchInternalEntityIri =>
 
                     val key = if (apiSchema == ApiV2Simple) {
-                        // convert this Iri to knora-api simple since the type inspector uses knora-api simple Iris
-                        TypeableIriV2(InputValidation.internalEntityIriToSimpleApiV2EntityIri(iriPred.iri, () => throw AssertionException(s"${iriPred.iri} could not be converted back to knora-api simple format")))
+                        // convert this IRI to knora-api simple since the type inspector uses knora-api simple Iris
+                        TypeableIriV2(InputValidation.internalEntityIriToApiV2SimpleEntityIri(iriPred.iri, () => throw AssertionException(s"${iriPred.iri} could not be converted back to knora-api simple format")))
                     } else {
                         throw NotImplementedException("The extended search for knora-api with value object has not been implemented yet")
                     }
 
-                    // get type information about the predicate Iri (if not already processed before)
+                    // get type information about the predicate IRI (if not already processed before)
                     if (typeInspectionResultWhere.typedEntities -- typeInfoKeysProcessedInStatements contains key) {
 
                         val additionalStatements: AdditionalStatements = typeInspectionResultWhere.typedEntities(key) match {
@@ -703,7 +703,7 @@ class SearchResponderV2 extends Responder {
                     // externalIri could be rdf:type for instance
                     AdditionalStatements()
 
-                case other => throw SparqlSearchException(s"predicate (property) must either be a variable or an Iri, not $other")
+                case other => throw SparqlSearchException(s"predicate (property) must either be a variable or an IRI, not $other")
             }
 
             val additionalStatementsForObj: AdditionalStatements = statementP.obj match {
@@ -750,15 +750,15 @@ class SearchResponderV2 extends Responder {
                 statementP.pred match {
                     case internalIriPred: ExtendedSearchInternalEntityIri =>
 
-                        // convert this Iri to knora-api simple since the type inspector uses knora-api simple Iris
-                        val key = TypeableIriV2(InputValidation.internalEntityIriToSimpleApiV2EntityIri(internalIriPred.iri, () => throw AssertionException(s"${internalIriPred.iri} could not be converted back to knora-api simple format")))
+                        // convert this IRI to knora-api simple since the type inspector uses knora-api simple Iris
+                        val key = TypeableIriV2(InputValidation.internalEntityIriToApiV2SimpleEntityIri(internalIriPred.iri, () => throw AssertionException(s"${internalIriPred.iri} could not be converted back to knora-api simple format")))
 
                         typeInspectionResultWhere.typedEntities.get(key) match {
                             case Some(propTypeInfo: PropertyTypeInfoV2) =>
                                 // value types like xsd:string are not recognised as Knora entity Iris
 
                                 if (InputValidation.isKnoraApiEntityIri(propTypeInfo.objectTypeIri)) {
-                                    val internalIri = InputValidation.externalIriToInternalIri(propTypeInfo.objectTypeIri, () => throw BadRequestException(s"${propTypeInfo.objectTypeIri} is not a valid external knora-api entity Iri"))
+                                    val internalIri = InputValidation.externalToInternalEntityIri(propTypeInfo.objectTypeIri, () => throw BadRequestException(s"${propTypeInfo.objectTypeIri} is not a valid external knora-api entity IRI"))
 
                                     if (internalIri == OntologyConstants.KnoraBase.Resource) {
                                         // linking prop
@@ -798,7 +798,7 @@ class SearchResponderV2 extends Responder {
                                 // value types like xsd:string are not recognised as Knora entity Iris
 
                                 if (InputValidation.isKnoraApiEntityIri(propTypeInfo.objectTypeIri)) {
-                                    val internalIri = InputValidation.externalIriToInternalIri(propTypeInfo.objectTypeIri, () => throw BadRequestException(s"${propTypeInfo.objectTypeIri} is not a valid external knora-api entity Iri"))
+                                    val internalIri = InputValidation.externalToInternalEntityIri(propTypeInfo.objectTypeIri, () => throw BadRequestException(s"${propTypeInfo.objectTypeIri} is not a valid external knora-api entity IRI"))
 
                                     if (internalIri == OntologyConstants.KnoraBase.Resource) {
                                         // linking prop

@@ -88,7 +88,7 @@ object StandoffTagUtilV1 {
             // map over all non data type attributes, ignore the "class" attribute ("class" is only used in the mapping to allow for the reuse of the same tag name, not to store actual data).
             val attrs: Seq[StandoffTagAttributeV1] = standoffNodeFromXML.attributes.filterNot(attr => (xmlToStandoffMapping.dataType.nonEmpty && xmlToStandoffMapping.dataType.get.dataTypeXMLAttribute == attr.key) || attr.key == classAttribute).map {
                 attr: StandoffTagAttribute =>
-                    // get the standoff property Iri for this XML attribute
+                    // get the standoff property IRI for this XML attribute
 
                     val xmlNamespace = attr.xmlNamespace match {
                         case None => noNamespace
@@ -440,7 +440,7 @@ object StandoffTagUtilV1 {
 
                         val uriString: String = getDataTypeAttribute(standoffDefFromMapping, StandoffDataTypeClasses.StandoffUriTag, standoffNodeFromXML)
 
-                        val uriValue = StandoffTagIriAttributeV1(standoffPropertyIri = OntologyConstants.KnoraBase.ValueHasUri, value = InputValidation.toIri(uriString, () => throw BadRequestException(s"Iri invalid: $uriString")))
+                        val uriValue = StandoffTagIriAttributeV1(standoffPropertyIri = OntologyConstants.KnoraBase.ValueHasUri, value = InputValidation.toIri(uriString, () => throw BadRequestException(s"IRI invalid: $uriString")))
 
                         val classSpecificProps = cardinalities -- StandoffProperties.systemProperties -- StandoffProperties.uriProperties
 
@@ -642,7 +642,7 @@ object StandoffTagUtilV1 {
 
         // check for duplicate standoff class Iris
         if (classIris.size != classIris.toSet.size) {
-            throw BadRequestException("the same standoff class Iri is used more than once in the mapping")
+            throw BadRequestException("the same standoff class IRI is used more than once in the mapping")
         }
 
         mappingXMLtoStandoff.namespace.flatMap {
@@ -663,7 +663,7 @@ object StandoffTagUtilV1 {
 
                                 // check for duplicate property Iris
                                 if (propIris.size != propIris.toSet.size) {
-                                    throw BadRequestException(s"the same property Iri is used more than once for the attributes mapping for tag $tagname")
+                                    throw BadRequestException(s"the same property IRI is used more than once for the attributes mapping for tag $tagname")
                                 }
 
                                 // inverts the mapping and makes standoff property Iris keys (for attributes)
@@ -677,7 +677,7 @@ object StandoffTagUtilV1 {
                                         }
                                 }
 
-                                // standoff class Iri -> XMLTagItem(... attributes -> attrItems)
+                                // standoff class IRI -> XMLTagItem(... attributes -> attrItems)
                                 tagItem.mapping.standoffClassIri -> XMLTagItem(namespace = tagNamespace, tagname = tagname, classname = classname, tagItem = tagItem, attributes = attrItems)
                         }
 
@@ -793,7 +793,7 @@ object StandoffTagUtilV1 {
         attributes.map {
             attr =>
 
-                val attrItem: XMLAttrItem = mapping.getOrElse(attr.standoffPropertyIri, throw NotFoundException(s"property Iri ${attr.standoffPropertyIri} could not be found in mapping"))
+                val attrItem: XMLAttrItem = mapping.getOrElse(attr.standoffPropertyIri, throw NotFoundException(s"property IRI ${attr.standoffPropertyIri} could not be found in mapping"))
 
                 StandoffTagAttribute(
                     key = attrItem.attrname,
@@ -824,7 +824,7 @@ object StandoffTagUtilV1 {
         val standoffTags: Seq[StandoffTag] = standoff.map {
             (standoffTagV1: StandoffTagV1) =>
 
-                val xmlItemForStandoffClass: XMLTagItem = mappingStandoffToXML.getOrElse(standoffTagV1.standoffTagClassIri, throw NotFoundException(s"standoff class Iri ${standoffTagV1.standoffTagClassIri} not found in mapping"))
+                val xmlItemForStandoffClass: XMLTagItem = mappingStandoffToXML.getOrElse(standoffTagV1.standoffTagClassIri, throw NotFoundException(s"standoff class IRI ${standoffTagV1.standoffTagClassIri} not found in mapping"))
 
                 // recreate data type specific attributes (optional)
                 val attributes: Seq[StandoffTagAttribute] = standoffTagV1.dataType match {

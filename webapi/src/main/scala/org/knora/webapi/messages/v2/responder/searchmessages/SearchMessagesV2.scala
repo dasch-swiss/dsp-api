@@ -126,7 +126,7 @@ case class ExtendedSearchVar(variableName: String) extends ExtendedSearchEntity 
 /**
   * Represents a Knora internal entity in a Sparql query (property or resource class).
   *
-  * @param iri the Iri of the internal entity.
+  * @param iri the IRI of the internal entity.
   */
 case class ExtendedSearchInternalEntityIri(iri: IRI) extends ExtendedSearchEntity {
 
@@ -134,9 +134,9 @@ case class ExtendedSearchInternalEntityIri(iri: IRI) extends ExtendedSearchEntit
 }
 
 /**
-  * Represents an Iri in a Sparql query that is not a Knora internal entity.
+  * Represents an IRI in a Sparql query that is not a Knora internal entity.
   *
-  * @param iri the Iri of the external entity.
+  * @param iri the IRI of the external entity.
   */
 case class ExtendedSearchIri(iri: IRI) extends ExtendedSearchEntity {
 

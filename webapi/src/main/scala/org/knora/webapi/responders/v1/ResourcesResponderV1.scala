@@ -1600,7 +1600,7 @@ class ResourcesResponderV1 extends Responder {
       * Generates SPARQL to create multiple resources in a single update operation.
       *
       * @param resourcesToCreate Collection of the resources to be created .
-      * @param projectIri        Iri of the project .
+      * @param projectIri        IRI of the project .
       * @param creatorIri        the creator of the resources to be created.
       * @param namedGraph        the named graph the resources belongs to.
       * @return a [String] returns a Sparql query for creating the resources and their values .
@@ -1620,7 +1620,7 @@ class ResourcesResponderV1 extends Responder {
     /**
       * Verifies the created resource and its values.
       *
-      * @param resourceIri                     Iri of the created resource .
+      * @param resourceIri                     IRI of the created resource .
       * @param creatorIri                      the creator of the resources to be created.
       * @param createNewResourceSparql         Sparql query to create the resource .
       * @param generateSparqlForValuesResponse Sparql statement for creation of values of resource.
@@ -2089,7 +2089,7 @@ class ResourcesResponderV1 extends Responder {
       *
       * Queries the properties for the given resource.
       *
-      * @param resourceIri the Iri of the given resource.
+      * @param resourceIri the IRI of the given resource.
       * @param userProfile the profile of the user making the request.
       * @return a [[PropertiesGetResponseV1]] representing the properties of the given resource.
       */
