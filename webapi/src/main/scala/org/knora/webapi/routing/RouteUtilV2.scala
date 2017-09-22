@@ -39,6 +39,9 @@ import scala.concurrent.{ExecutionContext, Future}
   * Convenience methods for Knora routes.
   */
 object RouteUtilV2 {
+    // TODO: get this from the request.
+    val ResponseSchema: ApiV2Schema = ApiV2WithValueObjects
+    // val ResponseSchema: ApiV2Schema = ApiV2Simple
 
     /**
       * Sends a message to a responder and completes the HTTP request by returning the response as JSON.
@@ -82,7 +85,7 @@ object RouteUtilV2 {
             // TODO: check whether to send back JSON-LD or XML (content negotiation: HTTP accept header)
 
             // The request was successful
-            jsonLDDocument: JsonLDDocument = knoraResponse.toJsonLDDocument(ApiV2WithValueObjects, settings)
+            jsonLDDocument: JsonLDDocument = knoraResponse.toJsonLDDocument(ResponseSchema, settings)
             contextAsJava = JavaUtil.deepScalaToJava(jsonLDDocument.context.toAny)
             jsonAsJava = JavaUtil.deepScalaToJava(jsonLDDocument.body.toAny)
             compacted = JsonLdProcessor.compact(jsonAsJava, contextAsJava, new JsonLdOptions())

@@ -758,7 +758,17 @@ case class ResourceEntityInfoV2(resourceClassIri: IRI,
                                 ontologySchema: OntologySchema) extends EntityInfoWithLabelAndCommentV2 {
 
     def getNonLanguageSpecific(targetSchema: ApiV2Schema): Map[IRI, JsonLDValue] = {
-        val owlCardinalities: Seq[JsonLDObject] = cardinalities.map {
+        // If we're using the simplified API, don't return link value properties.
+        val filteredCardinalities = if (targetSchema == ApiV2Simple) {
+            cardinalities.filterNot {
+                case (propertyIri, _) => linkValueProperties.contains(propertyIri)
+            }
+        } else {
+            cardinalities
+        }
+
+        // Convert OWL cardinalities to JSON-LD.
+        val owlCardinalities: Seq[JsonLDObject] = filteredCardinalities.map {
             case (propertyIri: IRI, cardinality: Cardinality.Value) =>
 
                 val prop2card: (IRI, JsonLDInt) = cardinality match {
