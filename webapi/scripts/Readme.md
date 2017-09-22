@@ -23,10 +23,9 @@ This script will create the ``knora-test`` repository and load test data specifi
  - with GraphDB running locally, e.g., graphdb distribution:
  ```$ graphdb-se-local-init-knora-test.sh ```
 
-
 ### Initialize for using in the production environment
 
-This script will create the ``knora-prod`` repository and load data specified in ``graphdb-se-knora-prod-data.ttl``.
+This script will create the ``knora-prod`` repository and load data specified in ``graphdb-knora-prod-data.expect``.
 
  - with GraphDB running inside a docker container:
  ```$ graphdb-se-docker-init-knora-prod.sh```
@@ -37,4 +36,5 @@ This script will create the ``knora-prod`` repository and load data specified in
 
 ## Fuseki
 
-Nothing neede to do. Simply run Fuseki, either in a docker container or locally by using the supplied distribution.
+Simply run Fuseki, either in a docker container or locally by using the supplied distribution.
+>>>>>>> develop
