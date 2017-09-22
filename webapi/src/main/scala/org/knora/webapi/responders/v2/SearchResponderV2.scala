@@ -31,7 +31,7 @@ import org.knora.webapi.messages.v2.responder.searchmessages._
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.search._
-import org.knora.webapi.util.search.v2.{ApiV2Schema, _}
+import org.knora.webapi.util.search.v2._
 import org.knora.webapi.util.{ConstructResponseUtilV2, DateUtilV1, InputValidation}
 
 import scala.collection.mutable
@@ -77,9 +77,9 @@ class SearchResponderV2 extends Responder {
       * @param userProfile the profile of the client making the request.
       * @return a [[ReadResourcesSequenceV2]] representing the resources that have been found.
       */
-    private def extendedSearchV2(inputQuery: ConstructQuery, apiSchema: ApiV2Schema.Value = ApiV2Schema.SIMPLE, userProfile: UserProfileV1): Future[ReadResourcesSequenceV2] = {
+    private def extendedSearchV2(inputQuery: ConstructQuery, apiSchema: ApiV2Schema = ApiV2Simple, userProfile: UserProfileV1): Future[ReadResourcesSequenceV2] = {
 
-        if (apiSchema != ApiV2Schema.SIMPLE) {
+        if (apiSchema != ApiV2Simple) {
             throw SparqlSearchException("Only api v2 simple is supported in v2 extended search")
         }
 

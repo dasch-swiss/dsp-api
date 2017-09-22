@@ -24,14 +24,6 @@ import org.knora.webapi._
 import org.knora.webapi.util.search._
 
 /**
-  * Indicates which API schema is being used in a search query.
-  */
-object ApiV2Schema extends Enumeration {
-    val SIMPLE: Value = Value(0, "SIMPLE")
-    val WITH_VALUE_OBJECTS: Value = Value(1, "WITH_VALUE_OBJECTS")
-}
-
-/**
   * A [[TypeInspector]] that relies on explicit type annotations in SPARQL. There are two kinds of type annotations:
   *
   * 1. For every variable or IRI representing a resource or value, there must be a triple whose subject is the variable
@@ -43,7 +35,7 @@ object ApiV2Schema extends Enumeration {
   *
   * @param apiType specifies which API schema is being used in the search query.
   */
-class ExplicitTypeInspectorV2(apiType: ApiV2Schema.Value) extends TypeInspector {
+class ExplicitTypeInspectorV2(apiType: ApiV2Schema) extends TypeInspector {
 
     /**
       * An enumeration of the properties that are used in type annotations.
@@ -91,7 +83,7 @@ class ExplicitTypeInspectorV2(apiType: ApiV2Schema.Value) extends TypeInspector 
       */
     private case class ExplicitAnnotationV2Simple(typeableEntity: TypeableEntity, annotationProp: TypeAnnotationPropertiesV2.Value, typeIri: IRI)
 
-    if (apiType != ApiV2Schema.SIMPLE) {
+    if (apiType != ApiV2Simple) {
         throw NotImplementedException("Type inspection with value objects is not yet implemented")
     }
 
