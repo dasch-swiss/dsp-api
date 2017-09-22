@@ -25,7 +25,7 @@ import java.time.Instant
 import akka.actor.Status
 import akka.pattern._
 import org.knora.webapi._
-import org.knora.webapi.messages.v1.responder.ontologymessages.{Cardinality, EntityInfoGetRequestV1, EntityInfoGetResponseV1}
+import org.knora.webapi.messages.v1.responder.ontologymessages.{EntityInfoGetRequestV1, EntityInfoGetResponseV1}
 import org.knora.webapi.messages.v1.responder.permissionmessages.{DefaultObjectAccessPermissionsStringForPropertyGetV1, DefaultObjectAccessPermissionsStringResponseV1}
 import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoByIRIGetV1, ProjectInfoV1}
 import org.knora.webapi.messages.v1.responder.resourcemessages._
@@ -34,6 +34,7 @@ import org.knora.webapi.messages.v1.responder.standoffmessages.StandoffDataTypeC
 import org.knora.webapi.messages.v1.responder.usermessages.{UserProfileByIRIGetV1, UserProfileTypeV1, UserProfileV1}
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.store.triplestoremessages._
+import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality
 import org.knora.webapi.responders.{IriLocker, Responder}
 import org.knora.webapi.twirl.{SparqlTemplateLinkUpdate, StandoffTagIriAttributeV1, StandoffTagV1}
 import org.knora.webapi.util.ActorUtil._
@@ -1191,7 +1192,7 @@ class ValuesResponderV1 extends Responder {
             sparqlSelectResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
             rows = sparqlSelectResponse.results.bindings
 
-            _ = if (rows.isEmpty || !InputValidation.optionStringToBoolean(rows.head.rowMap.get("isDeleted"))) {
+            _ = if (rows.isEmpty || !InputValidation.optionStringToBoolean(rows.head.rowMap.get("isDeleted"), () => throw InconsistentTriplestoreDataException(s"Invalid boolean for isDeleted: ${rows.head.rowMap.get("isDeleted")}"))) {
                 throw UpdateNotPerformedException(s"The request to mark value ${deleteValueRequest.valueIri} (or a new version of that value) as deleted did not succeed. Please report this as a possible bug.")
             }
         } yield DeleteValueResponseV1(id = deletedValueIri)
@@ -1279,7 +1280,7 @@ class ValuesResponderV1 extends Responder {
                     val valuePermissions = rowMap("valuePermissions")
 
                     // Permission-checking on LinkValues is special, because they can be system-created rather than user-created.
-                    val valuePermissionCode = if (InputValidation.optionStringToBoolean(rowMap.get("isLinkValue"))) {
+                    val valuePermissionCode = if (InputValidation.optionStringToBoolean(rowMap.get("isLinkValue"), () => throw InconsistentTriplestoreDataException(s"Invalid boolean for isLinkValue: ${rowMap.get("isLinkValue")}"))) {
                         // It's a LinkValue.
                         PermissionUtilV1.getUserPermissionV1(
                             subjectIri = valueIri,

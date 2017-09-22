@@ -24,23 +24,25 @@ import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
+import akka.util.Timeout
 import org.knora.webapi.messages.v2.responder.ontologymessages.{NamedGraphEntitiesGetRequestV2, NamedGraphsGetRequestV2, PropertyEntitiesGetRequestV2, ResourceClassesGetRequestV2}
 import org.knora.webapi.routing.{Authenticator, RouteUtilV2}
 import org.knora.webapi.util.InputValidation
 import org.knora.webapi.{BadRequestException, IRI, SettingsImpl}
 
+import scala.concurrent.ExecutionContextExecutor
 import scala.language.postfixOps
 
 /**
   * Provides a spray-routing function for API routes that deal with search.
   */
 object OntologiesRouteV2 extends Authenticator {
-
+    val ALL_LANGUAGES = "allLanguages"
 
     def knoraApiPath(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter): Route = {
-        implicit val system = _system
-        implicit val executionContext = system.dispatcher
-        implicit val timeout = settings.defaultTimeout
+        implicit val system: ActorSystem = _system
+        implicit val executionContext: ExecutionContextExecutor = system.dispatcher
+        implicit val timeout: Timeout = settings.defaultTimeout
         val responderManager = system.actorSelection("/user/responderManager")
 
         // TODO: accept both v2 simple Iris and such with value object and create a corresponding answer
@@ -75,7 +77,15 @@ object OntologiesRouteV2 extends Authenticator {
                             InputValidation.toIri(internalOntologyIri, () => throw BadRequestException(s"Invalid named graph Iri: '$internalOntologyIri'"))
                     }.toSet
 
-                    val requestMessage = NamedGraphEntitiesGetRequestV2(internalOntologyIris, userProfile = userProfile)
+                    val params: Map[String, String] = requestContext.request.uri.query().toMap
+                    val allLanguagesStr = params.get(ALL_LANGUAGES)
+                    val allLanguages = InputValidation.optionStringToBoolean(params.get(ALL_LANGUAGES), () => throw BadRequestException(s"Invalid boolean for $ALL_LANGUAGES: $allLanguagesStr"))
+
+                    val requestMessage = NamedGraphEntitiesGetRequestV2(
+                        namedGraphIris = internalOntologyIris,
+                        allLanguages = allLanguages,
+                        userProfile = userProfile
+                    )
 
                     RouteUtilV2.runJsonRoute(
                         requestMessage,
@@ -100,7 +110,15 @@ object OntologiesRouteV2 extends Authenticator {
                             InputValidation.toIri(internalResClassIri, () => throw BadRequestException(s"Invalid resource class Iri: '$internalResClassIri'"))
                     }.toSet
 
-                    val requestMessage = ResourceClassesGetRequestV2(internalResourceClassIris, userProfile = userProfile)
+                    val params: Map[String, String] = requestContext.request.uri.query().toMap
+                    val allLanguagesStr = params.get(ALL_LANGUAGES)
+                    val allLanguages = InputValidation.optionStringToBoolean(params.get(ALL_LANGUAGES), () => throw BadRequestException(s"Invalid boolean for $ALL_LANGUAGES: $allLanguagesStr"))
+
+                    val requestMessage = ResourceClassesGetRequestV2(
+                        resourceClassIris = internalResourceClassIris,
+                        allLanguages = allLanguages,
+                        userProfile = userProfile
+                    )
 
                     RouteUtilV2.runJsonRoute(
                         requestMessage,
@@ -125,7 +143,15 @@ object OntologiesRouteV2 extends Authenticator {
                             InputValidation.toIri(internalPropIri, () => throw BadRequestException(s"Invalid property Iri: '$internalPropIri'"))
                     }.toSet
 
-                    val requestMessage = PropertyEntitiesGetRequestV2(internalPropertyIris, userProfile = userProfile)
+                    val params: Map[String, String] = requestContext.request.uri.query().toMap
+                    val allLanguagesStr = params.get(ALL_LANGUAGES)
+                    val allLanguages = InputValidation.optionStringToBoolean(params.get(ALL_LANGUAGES), () => throw BadRequestException(s"Invalid boolean for $ALL_LANGUAGES: $allLanguagesStr"))
+
+                    val requestMessage = PropertyEntitiesGetRequestV2(
+                        propertyIris = internalPropertyIris,
+                        allLanguages = allLanguages,
+                        userProfile = userProfile
+                    )
 
                     RouteUtilV2.runJsonRoute(
                         requestMessage,

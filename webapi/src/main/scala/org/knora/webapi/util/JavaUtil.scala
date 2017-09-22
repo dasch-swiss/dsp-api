@@ -25,7 +25,7 @@ import java.util.function.BiFunction
 /**
   * Utility functions for working with Java functions.
   */
-object JavaFunctionUtil {
+object JavaUtil {
 
     /**
       * Converts a 2-argument Scala function into a Java [[BiFunction]].
@@ -35,4 +35,36 @@ object JavaFunctionUtil {
       */
     def biFunction[A, B, C](f: (A, B) => C): BiFunction[A, B, C] =
         (a: A, b: B) => f(a, b)
+
+    /**
+      * Deep conversion of a java collection into a scala collection.
+      *
+      * Usage: val y = deepScalaToJava(x).asInstanceOf[Map[String, Any]]
+      *
+      * @param x
+      * @return
+      */
+    def deepJavatoScala(x: Any): Any = {
+        import collection.JavaConverters._
+        x match {
+            case x: java.util.HashMap[_, _] => x.asScala.toMap.mapValues(deepJavatoScala)
+            case x: java.util.ArrayList[_] => x.asScala.toList.map(deepJavatoScala)
+            case _ => x
+        }
+    }
+
+    def deepScalaToJava(x: Any): Any = {
+        import collection.JavaConverters._
+
+        x match {
+            case x: List[_] => x.map(deepScalaToJava).asJava
+            case x: Seq[_] => x.map(deepScalaToJava).asJava
+            case x: collection.mutable.Map[_, _] => x.mapValues(deepScalaToJava).asJava
+            case x: collection.immutable.Map[_, _] => x.mapValues(deepScalaToJava).asJava
+            case x: collection.Map[_, _] => x.mapValues(deepScalaToJava).asJava
+            case x: collection.mutable.Set[_] => x.map(deepScalaToJava).asJava
+            case x: Array[_] => x.map(deepScalaToJava)
+            case _ => x
+        }
+    }
 }

@@ -40,6 +40,7 @@ import akka.http.scaladsl.server.directives.FileInfo
 import akka.pattern._
 import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.FileIO
+import akka.util.Timeout
 import com.typesafe.scalalogging.Logger
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.ontologymessages._
@@ -48,6 +49,7 @@ import org.knora.webapi.messages.v1.responder.resourcemessages._
 import org.knora.webapi.messages.v1.responder.sipimessages.{SipiResponderConversionFileRequestV1, SipiResponderConversionPathRequestV1}
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.responder.valuemessages._
+import org.knora.webapi.messages.v2.responder.ontologymessages.PropertyEntityInfoV2
 import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
 import org.knora.webapi.util.InputValidation.XmlImportNamespaceInfoV1
 import org.knora.webapi.util.standoff.StandoffTagUtilV1.TextWithStandoffTagsV1
@@ -60,7 +62,7 @@ import spray.json._
 
 import scala.collection.immutable
 import scala.concurrent.duration._
-import scala.concurrent.{Future, Promise}
+import scala.concurrent.{ExecutionContextExecutor, Future, Promise}
 import scala.util.{Failure, Success, Try}
 import scala.xml._
 
@@ -75,9 +77,9 @@ object ResourcesRouteV1 extends Authenticator {
     def knoraApiPath(_system: ActorSystem, settings: SettingsImpl, loggingAdapter: LoggingAdapter): Route = {
 
         implicit val system: ActorSystem = _system
-        implicit val materializer = ActorMaterializer()
-        implicit val executionContext = system.dispatcher
-        implicit val timeout = settings.defaultTimeout
+        implicit val materializer: ActorMaterializer = ActorMaterializer()
+        implicit val executionContext: ExecutionContextExecutor = system.dispatcher
+        implicit val timeout: Timeout = settings.defaultTimeout
         val responderManager = system.actorSelection("/user/responderManager")
 
         val log = Logger(LoggerFactory.getLogger(this.getClass))
@@ -488,7 +490,7 @@ object ResourcesRouteV1 extends Authenticator {
 
                 // Collect all the property definitions in a single Map. Since any schema could use any property, we will
                 // pass this Map to the schema generation template for every schema.
-                propertyEntityInfoMap: Map[IRI, PropertyEntityInfoV1] = entityInfoResponsesMap.values.flatMap(_.propertyEntityInfoMap).toMap
+                propertyEntityInfoMap: Map[IRI, PropertyEntityInfoV2] = entityInfoResponsesMap.values.flatMap(_.propertyEntityInfoMap).toMap
 
                 // Make a map of internal ontology IRIs to XmlImportNamespaceInfoV1 objects describing the XML namespace
                 // of each schema to be generated. Don't generate a schema for knora-base, because the built-in Knora
