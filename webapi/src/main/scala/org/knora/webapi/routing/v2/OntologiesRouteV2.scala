@@ -78,7 +78,8 @@ object OntologiesRouteV2 extends Authenticator {
                     }.toSet
 
                     val params: Map[String, String] = requestContext.request.uri.query().toMap
-                    val allLanguages = InputValidation.optionStringToBoolean(params.get(ALL_LANGUAGES))
+                    val allLanguagesStr = params.get(ALL_LANGUAGES)
+                    val allLanguages = InputValidation.optionStringToBoolean(params.get(ALL_LANGUAGES), () => throw BadRequestException(s"Invalid boolean for $ALL_LANGUAGES: $allLanguagesStr"))
 
                     val requestMessage = NamedGraphEntitiesGetRequestV2(
                         namedGraphIris = internalOntologyIris,
@@ -110,7 +111,8 @@ object OntologiesRouteV2 extends Authenticator {
                     }.toSet
 
                     val params: Map[String, String] = requestContext.request.uri.query().toMap
-                    val allLanguages = InputValidation.optionStringToBoolean(params.get(ALL_LANGUAGES))
+                    val allLanguagesStr = params.get(ALL_LANGUAGES)
+                    val allLanguages = InputValidation.optionStringToBoolean(params.get(ALL_LANGUAGES), () => throw BadRequestException(s"Invalid boolean for $ALL_LANGUAGES: $allLanguagesStr"))
 
                     val requestMessage = ResourceClassesGetRequestV2(
                         resourceClassIris = internalResourceClassIris,
@@ -142,7 +144,8 @@ object OntologiesRouteV2 extends Authenticator {
                     }.toSet
 
                     val params: Map[String, String] = requestContext.request.uri.query().toMap
-                    val allLanguages = InputValidation.optionStringToBoolean(params.get(ALL_LANGUAGES))
+                    val allLanguagesStr = params.get(ALL_LANGUAGES)
+                    val allLanguages = InputValidation.optionStringToBoolean(params.get(ALL_LANGUAGES), () => throw BadRequestException(s"Invalid boolean for $ALL_LANGUAGES: $allLanguagesStr"))
 
                     val requestMessage = PropertyEntitiesGetRequestV2(
                         propertyIris = internalPropertyIris,
