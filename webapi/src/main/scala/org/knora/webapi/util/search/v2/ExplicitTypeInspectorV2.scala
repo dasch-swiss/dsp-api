@@ -21,71 +21,10 @@
 package org.knora.webapi.util.search.v2
 
 import org.knora.webapi._
+import org.knora.webapi.util.search._
 
 /**
-  * Represents the type information that was found concerning a SPARQL entity.
-  */
-sealed trait SparqlEntityTypeInfoV2
-
-/**
-  * Represents type information about a property.
-  *
-  * @param objectTypeIri an IRI representing the type of the objects of the property.
-  */
-case class PropertyTypeInfoV2(objectTypeIri: IRI) extends SparqlEntityTypeInfoV2
-
-/**
-  * Represents type information about a SPARQL entity that's not a property, meaning that it is either a variable
-  * or an IRI.
-  *
-  * @param typeIri an IRI representing the entity's type.
-  */
-case class NonPropertyTypeInfoV2(typeIri: IRI) extends SparqlEntityTypeInfoV2
-
-/**
-  * Represents a SPARQL entity that we can get type information about.
-  */
-sealed trait TypeableEntityV2
-
-/**
-  * Represents a SPARQL variable.
-  *
-  * @param variableName the name of the variable.
-  */
-case class TypeableVariableV2(variableName: String) extends TypeableEntityV2
-
-/**
-  * Represents an IRI that we need type information about.
-  *
-  * @param iri the IRI.
-  */
-case class TypeableIriV2(iri: IRI) extends TypeableEntityV2
-
-/**
-  * Represents the result of type inspection.
-  *
-  * @param typedEntities a map of SPARQL entities to the types that were determined for them.
-  */
-case class TypeInspectionResultV2(typedEntities: Map[TypeableEntityV2, SparqlEntityTypeInfoV2])
-
-/**
-  * A trait for classes that can get type information from a parsed SPARQL search query in different ways.
-  */
-sealed trait TypeInspectorV2 {
-    /**
-      * Given the WHERE clause from a parsed SPARQL search query, returns information about the types found
-      * in the query.
-      *
-      * TODO: change this method signature so it has a way of getting info about entity IRIs in the API ontologies.
-      *
-      * @param whereClause the SPARQL WHERE clause.
-      * @return information about the types that were found in the query.
-      */
-    def inspectTypes(whereClause: SimpleWhereClause): TypeInspectionResultV2
-}
-
-/**
-  * A [[TypeInspectorV2]] that relies on explicit type annotations in SPARQL. There are two kinds of type annotations:
+  * A [[TypeInspector]] that relies on explicit type annotations in SPARQL. There are two kinds of type annotations:
   *
   * 1. For every variable or IRI representing a resource or value, there must be a triple whose subject is the variable
   *    or IRI, whose predicate is `rdf:type`, and whose object is `knora-api:Resource`, another `knora-api` type
@@ -96,7 +35,7 @@ sealed trait TypeInspectorV2 {
   *
   * @param apiType specifies which API schema is being used in the search query.
   */
-class ExplicitTypeInspectorV2(apiType: ApiV2Schema) extends TypeInspectorV2 {
+class ExplicitTypeInspectorV2(apiType: ApiV2Schema) extends TypeInspector {
 
     /**
       * An enumeration of the properties that are used in type annotations.
@@ -142,17 +81,17 @@ class ExplicitTypeInspectorV2(apiType: ApiV2Schema) extends TypeInspectorV2 {
       * @param annotationProp the annotation property.
       * @param typeIri the type IRI that was given in the annotation.
       */
-    private case class ExplicitAnnotationV2Simple(typeableEntity: TypeableEntityV2, annotationProp: TypeAnnotationPropertiesV2.Value, typeIri: IRI)
+    private case class ExplicitAnnotationV2Simple(typeableEntity: TypeableEntity, annotationProp: TypeAnnotationPropertiesV2.Value, typeIri: IRI)
 
     if (apiType != ApiV2Simple) {
         throw NotImplementedException("Type inspection with value objects is not yet implemented")
     }
 
-    def inspectTypes(whereClause: SimpleWhereClause): TypeInspectionResultV2 = {
-        val maybeTypedEntities = collection.mutable.Map.empty[TypeableEntityV2, Option[SparqlEntityTypeInfoV2]]
+    def inspectTypes(whereClause: WhereClause): TypeInspectionResult = {
+        val maybeTypedEntities = collection.mutable.Map.empty[TypeableEntity, Option[SparqlEntityTypeInfo]]
 
         // Make a set of all the entities to be typed in the WHERE clause.
-        val entitiesToType: Set[TypeableEntityV2] = getTypableEntitiesFromPatterns(whereClause.patterns)
+        val entitiesToType: Set[TypeableEntity] = getTypableEntitiesFromPatterns(whereClause.patterns)
 
         // We don't yet have type information about any of the entities, so set each variable's type info to None.
         for (typedEntity <- entitiesToType) {
@@ -168,16 +107,16 @@ class ExplicitTypeInspectorV2(apiType: ApiV2Schema) extends TypeInspectorV2 {
         for (explicitAnnotation: ExplicitAnnotationV2Simple <- explicitAnnotations) {
             explicitAnnotation.annotationProp match {
                 case TypeAnnotationPropertiesV2.RDF_TYPE =>
-                    maybeTypedEntities.put(explicitAnnotation.typeableEntity, Some(NonPropertyTypeInfoV2(explicitAnnotation.typeIri)))
+                    maybeTypedEntities.put(explicitAnnotation.typeableEntity, Some(NonPropertyTypeInfo(explicitAnnotation.typeIri)))
 
                 case TypeAnnotationPropertiesV2.OBJECT_TYPE =>
-                    maybeTypedEntities.put(explicitAnnotation.typeableEntity, Some(PropertyTypeInfoV2(explicitAnnotation.typeIri)))
+                    maybeTypedEntities.put(explicitAnnotation.typeableEntity, Some(PropertyTypeInfo(explicitAnnotation.typeIri)))
             }
         }
 
         // If any entities still don't have types, throw an exception.
 
-        val nonTypedEntities: Vector[TypeableEntityV2] = maybeTypedEntities.filter {
+        val nonTypedEntities: Vector[TypeableEntity] = maybeTypedEntities.filter {
             case (_, typeInfo) => typeInfo.isEmpty
         }.keys.toVector
 
@@ -185,11 +124,11 @@ class ExplicitTypeInspectorV2(apiType: ApiV2Schema) extends TypeInspectorV2 {
             throw SparqlSearchException(s"Types could not be determined for the following SPARQL entities: ${nonTypedEntities.mkString(", ")}")
         }
 
-        val typedEntities: Map[TypeableEntityV2, SparqlEntityTypeInfoV2] = maybeTypedEntities.map {
+        val typedEntities: Map[TypeableEntity, SparqlEntityTypeInfo] = maybeTypedEntities.map {
             case (typedEntity, typeInfo) => (typedEntity, typeInfo.get)
         }.toMap
 
-        TypeInspectionResultV2(typedEntities = typedEntities)
+        TypeInspectionResult(typedEntities = typedEntities)
     }
 
     /**
@@ -198,8 +137,8 @@ class ExplicitTypeInspectorV2(apiType: ApiV2Schema) extends TypeInspectorV2 {
       * @param whereClause the WHERE clause to be filtered.
       * @return the same WHERE clause, minus any type annotations.
       */
-    def removeTypeAnnotations(whereClause: SimpleWhereClause): SimpleWhereClause = {
-        SimpleWhereClause(removeTypeAnnotationsFromPatterns(whereClause.patterns))
+    def removeTypeAnnotations(whereClause: WhereClause): WhereClause = {
+        WhereClause(removeTypeAnnotationsFromPatterns(whereClause.patterns))
     }
 
     /**
@@ -213,6 +152,10 @@ class ExplicitTypeInspectorV2(apiType: ApiV2Schema) extends TypeInspectorV2 {
             case statementPattern: StatementPattern if !isAnnotationStatement(statementPattern) => statementPattern
 
             case optionalPattern: OptionalPattern => OptionalPattern(removeTypeAnnotationsFromPatterns(optionalPattern.patterns))
+
+            case filterNotExistsPattern: FilterNotExistsPattern => FilterNotExistsPattern(removeTypeAnnotationsFromPatterns(filterNotExistsPattern.patterns))
+
+            case minusPattern: MinusPattern => MinusPattern(removeTypeAnnotationsFromPatterns(minusPattern.patterns))
 
             case unionPattern: UnionPattern =>
                 val blocksWithoutAnnotations = unionPattern.blocks.map {
@@ -241,6 +184,10 @@ class ExplicitTypeInspectorV2(apiType: ApiV2Schema) extends TypeInspectorV2 {
                 }
 
             case optionalPattern: OptionalPattern => getExplicitAnnotations(optionalPattern.patterns)
+
+            case filterNotExistsPattern: FilterNotExistsPattern => getExplicitAnnotations(filterNotExistsPattern.patterns)
+
+            case minusPattern: MinusPattern => getExplicitAnnotations(minusPattern.patterns)
 
             case unionPattern: UnionPattern =>
                 unionPattern.blocks.flatMap {
@@ -324,7 +271,7 @@ class ExplicitTypeInspectorV2(apiType: ApiV2Schema) extends TypeInspectorV2 {
       * @param patterns the patterns to be searched.
       * @return a set of typeable entities.
       */
-    private def getTypableEntitiesFromPatterns(patterns: Seq[QueryPattern]): Set[TypeableEntityV2] = {
+    private def getTypableEntitiesFromPatterns(patterns: Seq[QueryPattern]): Set[TypeableEntity] = {
         patterns.collect {
             case statementPattern: StatementPattern =>
                 // Don't look for a type annotation of an IRI that's the object of rdf:type.
@@ -335,6 +282,10 @@ class ExplicitTypeInspectorV2(apiType: ApiV2Schema) extends TypeInspectorV2 {
 
             case optionalPattern: OptionalPattern => getTypableEntitiesFromPatterns(optionalPattern.patterns)
 
+            case filterNotExistsPattern: FilterNotExistsPattern => getTypableEntitiesFromPatterns(filterNotExistsPattern.patterns)
+
+            case minusPattern: MinusPattern => getTypableEntitiesFromPatterns(minusPattern.patterns)
+
             case unionPattern: UnionPattern =>
                 unionPattern.blocks.flatMap {
                     patterns: Seq[QueryPattern] => getTypableEntitiesFromPatterns(patterns)
@@ -343,30 +294,30 @@ class ExplicitTypeInspectorV2(apiType: ApiV2Schema) extends TypeInspectorV2 {
     }
 
     /**
-      * Given a SPARQL entity that is known to need type information, converts it to a [[TypeableEntityV2]].
+      * Given a SPARQL entity that is known to need type information, converts it to a [[TypeableEntity]].
       *
       * @param entity a SPARQL entity that is known to need type information.
-      * @return a [[TypeableEntityV2]].
+      * @return a [[TypeableEntity]].
       */
-    private def toTypeableEntity(entity: Entity): TypeableEntityV2 = {
+    private def toTypeableEntity(entity: Entity): TypeableEntity = {
         entity match {
-            case QueryVariable(variableName) => TypeableVariableV2(variableName)
-            case IriRef(iri) => TypeableIriV2(iri)
+            case QueryVariable(variableName) => TypeableVariable(variableName)
+            case IriRef(iri) => TypeableIri(iri)
             case _ => throw AssertionException(s"Entity cannot be typed: $entity")
         }
     }
 
     /**
       * Given a sequence of entities, finds the ones that need type information and returns them as
-      * [[TypeableEntityV2]] objects.
+      * [[TypeableEntity]] objects.
       *
       * @param entities the entities to be checked.
       * @return a sequence of typeable entities.
       */
-    private def toTypeableEntities(entities: Seq[Entity]): Set[TypeableEntityV2] = {
+    private def toTypeableEntities(entities: Seq[Entity]): Set[TypeableEntity] = {
         entities.collect {
-            case QueryVariable(variableName) => TypeableVariableV2(variableName)
-            case IriRef(iri) if !TypeInspectionConstantsV2.ApiV2SimpleNonTypeableIris(iri) => TypeableIriV2(iri)
+            case QueryVariable(variableName) => TypeableVariable(variableName)
+            case IriRef(iri) if !TypeInspectionConstantsV2.ApiV2SimpleNonTypeableIris(iri) => TypeableIri(iri)
         }.toSet
     }
 }

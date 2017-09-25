@@ -21,7 +21,7 @@
 package org.knora.webapi.util.search.v2
 
 import org.knora.webapi.SparqlSearchException
-import org.knora.webapi.util.MessageUtil
+import org.knora.webapi.util.search._
 import org.scalatest.{Matchers, WordSpec}
 
 /**
@@ -32,78 +32,104 @@ class SearchParserV2Spec extends WordSpec with Matchers {
     import SearchParserV2Spec._
 
     "The SearchParserV2 object" should {
-        "parse a simple CONSTRUCT query for an extended search" in {
-            SearchParserV2.parseSearchQuery(SimpleSparqlConstructQueryStr) should ===(SimpleParsedSparqlConstructQuery)
+        "parse a CONSTRUCT query for an extended search" in {
+            val parsed: ConstructQuery = SearchParserV2.parseSearchQuery(Query)
+            parsed should ===(ParsedQuery)
+            val reparsed = SearchParserV2.parseSearchQuery(parsed.toSparql)
+            reparsed should ===(parsed)
         }
 
-        "reject a simple CONSTRUCT query with a BIND" in {
+        "reject a CONSTRUCT query with a BIND" in {
             assertThrows[SparqlSearchException] {
-                SearchParserV2.parseSearchQuery(SimpleSparqlConstructQueryWithBind)
+                SearchParserV2.parseSearchQuery(QueryWithBind)
             }
         }
 
         "reject a SELECT query" in {
             assertThrows[SparqlSearchException] {
-                SearchParserV2.parseSearchQuery(SimpleSparqlSelectQueryStr)
+                SearchParserV2.parseSearchQuery(SparqlSelect)
             }
         }
 
         "reject a DESCRIBE query" in {
             assertThrows[SparqlSearchException] {
-                SearchParserV2.parseSearchQuery(SimpleSparqlDescribeQueryStr)
+                SearchParserV2.parseSearchQuery(SparqlDescribe)
             }
         }
 
         "reject an INSERT" in {
             assertThrows[SparqlSearchException] {
-                SearchParserV2.parseSearchQuery(SimpleSparqlInsertStr)
+                SearchParserV2.parseSearchQuery(SparqlInsert)
             }
         }
 
         "reject a DELETE" in {
             assertThrows[SparqlSearchException] {
-                SearchParserV2.parseSearchQuery(SimpleSparqlDeleteStr)
+                SearchParserV2.parseSearchQuery(SparqlDelete)
             }
         }
 
         "reject an internal ontology IRI" in {
             assertThrows[SparqlSearchException] {
-                SearchParserV2.parseSearchQuery(SimpleSparqlConstructQueryStrWithInternalEntityIri)
+                SearchParserV2.parseSearchQuery(QueryWithInternalEntityIri)
             }
         }
 
         "reject left-nested UNIONs" in {
             assertThrows[SparqlSearchException] {
-                SearchParserV2.parseSearchQuery(SimpleSparqlConstructQueryStrWithLeftNestedUnion)
+                SearchParserV2.parseSearchQuery(QueryWithLeftNestedUnion)
             }
         }
 
         "reject right-nested UNIONs" in {
             assertThrows[SparqlSearchException] {
-                SearchParserV2.parseSearchQuery(SimpleSparqlConstructQueryStrWithRightNestedUnion)
+                SearchParserV2.parseSearchQuery(QueryStrWithRightNestedUnion)
             }
         }
 
         "reject a nested OPTIONAL" in {
             assertThrows[SparqlSearchException] {
-                SearchParserV2.parseSearchQuery(SimpleSparqlConstructQueryStrWithNestedOptional)
+                SearchParserV2.parseSearchQuery(QueryStrWithNestedOptional)
             }
         }
 
         "reject an unsupported FILTER" in {
             assertThrows[SparqlSearchException] {
-                SearchParserV2.parseSearchQuery(SimpleSparqlConstructQueryStrWithWrongFilter)
+                SearchParserV2.parseSearchQuery(QueryWithWrongFilter)
             }
         }
 
         "parse an extended search query with a FILTER containing a Boolean operator" in {
-            SearchParserV2.parseSearchQuery(extendSearchQueryForAThingRelatingToAnotherThing) should ===(SimpleParsedSparqlConstructQueryWithBooleanOperatorInFilter)
+            val parsed: ConstructQuery = SearchParserV2.parseSearchQuery(QueryForAThingRelatingToAnotherThing)
+            parsed should ===(ParsedQueryForAThingRelatingToAnotherThing)
+            val reparsed = SearchParserV2.parseSearchQuery(parsed.toSparql)
+            reparsed should ===(parsed)
         }
+
+        "parse an extended search query with FILTER NOT EXISTS" in {
+            val parsed: ConstructQuery = SearchParserV2.parseSearchQuery(QueryWithFilterNotExists)
+            parsed should ===(ParsedQueryWithFilterNotExists)
+            val reparsed = SearchParserV2.parseSearchQuery(parsed.toSparql)
+            reparsed should ===(parsed)
+        }
+
+        "parse an extended search query with MINUS" in {
+            val parsed: ConstructQuery = SearchParserV2.parseSearchQuery(QueryWithMinus)
+            parsed should ===(ParsedQueryWithMinus)
+            val reparsed = SearchParserV2.parseSearchQuery(parsed.toSparql)
+            reparsed should ===(parsed)
+        }
+
+        "parse an extended search query with OFFSET" in {
+            val parsed: ConstructQuery = SearchParserV2.parseSearchQuery(QueryWithOffset)
+            parsed should ===(ParsedQueryWithOffset)
+        }
+
     }
 }
 
 object SearchParserV2Spec {
-    val SimpleSparqlConstructQueryStr: String =
+    val Query: String =
         """
           |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
           |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -115,6 +141,7 @@ object SearchParserV2Spec {
           |    ?book a ?bookType .
           |    ?book rdfs:label ?bookLabel .
           |    ?book incunabula:publisher ?bookPublisher .
+          |    ?book incunabula:publoc ?bookPubLoc .
           |    ?book knora-api:isMainResource "true"^^xsd:boolean .
           |    ?page a ?pageType .
           |    ?page rdfs:label ?pageLabel .
@@ -125,6 +152,7 @@ object SearchParserV2Spec {
           |
           |    OPTIONAL {
           |        ?book incunabula:publisher ?bookPublisher .
+          |        ?book incunabula:publoc ?bookPubLoc .
           |    }
           |
           |    ?book incunabula:pubdate ?pubdate .
@@ -147,27 +175,52 @@ object SearchParserV2Spec {
           |}
         """.stripMargin
 
-    val SimpleParsedSparqlConstructQuery = SimpleConstructQuery(
-        whereClause = SimpleWhereClause(patterns = Vector(
+    val ParsedQuery = ConstructQuery(
+        orderBy = Nil,
+        whereClause = WhereClause(patterns = Vector(
             StatementPattern(
-                obj = QueryVariable(variableName = "pubdate"),
-                pred = IriRef(iri = "http://api.knora.org/ontology/incunabula/simple/v2#pubdate"),
-                subj = QueryVariable(variableName = "book")
+                obj = IriRef("http://api.knora.org/ontology/incunabula/simple/v2#book"),
+                pred = IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"),
+                subj = QueryVariable("book")
             ),
             StatementPattern(
-                obj = IriRef(iri = "http://api.knora.org/ontology/incunabula/simple/v2#page"),
-                pred = IriRef(iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"),
-                subj = QueryVariable(variableName = "page")
+                obj = QueryVariable("bookLabel"),
+                pred = IriRef("http://www.w3.org/2000/01/rdf-schema#label"),
+                subj = QueryVariable("book")
+            ),
+            OptionalPattern(patterns = Vector(
+                StatementPattern(
+                    obj = QueryVariable("bookPublisher"),
+                    pred = IriRef("http://api.knora.org/ontology/incunabula/simple/v2#publisher"
+                    ),
+                    subj = QueryVariable("book")
+                ),
+                StatementPattern(
+                    obj = QueryVariable("bookPubLoc"),
+                    pred = IriRef("http://api.knora.org/ontology/incunabula/simple/v2#publoc"
+                    ),
+                    subj = QueryVariable("book")
+                )
+            )),
+            StatementPattern(
+                obj = QueryVariable("pubdate"),
+                pred = IriRef("http://api.knora.org/ontology/incunabula/simple/v2#pubdate"),
+                subj = QueryVariable("book")
             ),
             StatementPattern(
-                obj = QueryVariable(variableName = "pageLabel"),
-                pred = IriRef(iri = "http://www.w3.org/2000/01/rdf-schema#label"),
-                subj = QueryVariable(variableName = "page")
+                obj = IriRef("http://api.knora.org/ontology/incunabula/simple/v2#page"),
+                pred = IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"),
+                subj = QueryVariable("page")
             ),
             StatementPattern(
-                obj = QueryVariable(variableName = "book"),
-                pred = IriRef(iri = "http://api.knora.org/ontology/incunabula/simple/v2#isPartOf"),
-                subj = QueryVariable(variableName = "page")
+                obj = QueryVariable("pageLabel"),
+                pred = IriRef("http://www.w3.org/2000/01/rdf-schema#label"),
+                subj = QueryVariable("page")
+            ),
+            StatementPattern(
+                obj = QueryVariable("book"),
+                pred = IriRef("http://api.knora.org/ontology/incunabula/simple/v2#isPartOf"),
+                subj = QueryVariable("page")
             ),
             UnionPattern(blocks = Vector(
                 Vector(
@@ -176,16 +229,18 @@ object SearchParserV2Spec {
                             datatype = "http://www.w3.org/2001/XMLSchema#string",
                             value = "a7r"
                         ),
-                        pred = IriRef(iri = "http://api.knora.org/ontology/incunabula/simple/v2#pagenum"),
-                        subj = QueryVariable(variableName = "page")
+                        pred = IriRef("http://api.knora.org/ontology/incunabula/simple/v2#pagenum"
+                        ),
+                        subj = QueryVariable("page")
                     ),
                     StatementPattern(
                         obj = XsdLiteral(
                             datatype = "http://www.w3.org/2001/XMLSchema#integer",
                             value = "14"
                         ),
-                        pred = IriRef(iri = "http://api.knora.org/ontology/incunabula/simple/v2#seqnum"),
-                        subj = QueryVariable(variableName = "page")
+                        pred = IriRef("http://api.knora.org/ontology/incunabula/simple/v2#seqnum"
+                        ),
+                        subj = QueryVariable("page")
                     )
                 ),
                 Vector(
@@ -194,16 +249,18 @@ object SearchParserV2Spec {
                             datatype = "http://www.w3.org/2001/XMLSchema#string",
                             value = "a8r"
                         ),
-                        pred = IriRef(iri = "http://api.knora.org/ontology/incunabula/simple/v2#pagenum"),
-                        subj = QueryVariable(variableName = "page")
+                        pred = IriRef("http://api.knora.org/ontology/incunabula/simple/v2#pagenum"
+                        ),
+                        subj = QueryVariable("page")
                     ),
                     StatementPattern(
                         obj = XsdLiteral(
                             datatype = "http://www.w3.org/2001/XMLSchema#integer",
                             value = "16"
                         ),
-                        pred = IriRef(iri = "http://api.knora.org/ontology/incunabula/simple/v2#seqnum"),
-                        subj = QueryVariable(variableName = "page")
+                        pred = IriRef("http://api.knora.org/ontology/incunabula/simple/v2#seqnum"
+                        ),
+                        subj = QueryVariable("page")
                     )
                 ),
                 Vector(
@@ -212,39 +269,24 @@ object SearchParserV2Spec {
                             datatype = "http://www.w3.org/2001/XMLSchema#string",
                             value = "a9r"
                         ),
-                        pred = IriRef(iri = "http://api.knora.org/ontology/incunabula/simple/v2#pagenum"),
-                        subj = QueryVariable(variableName = "page")
+                        pred = IriRef("http://api.knora.org/ontology/incunabula/simple/v2#pagenum"
+                        ),
+                        subj = QueryVariable("page")
                     ),
                     StatementPattern(
-                        obj = QueryVariable(variableName = "seqnum"),
-                        pred = IriRef(iri = "http://api.knora.org/ontology/incunabula/simple/v2#seqnum"),
-                        subj = QueryVariable(variableName = "page")
+                        obj = QueryVariable("seqnum"),
+                        pred = IriRef("http://api.knora.org/ontology/incunabula/simple/v2#seqnum"
+                        ),
+                        subj = QueryVariable("page")
                     ),
                     FilterPattern(expression = CompareExpression(
                         rightArg = XsdLiteral(
                             datatype = "http://www.w3.org/2001/XMLSchema#integer",
                             value = "17"
                         ),
-                        operator = ">",
-                        leftArg = QueryVariable(variableName = "seqnum")
+                        operator = CompareExpressionOperator.GREATER_THAN,
+                        leftArg = QueryVariable("seqnum")
                     ))
-                )
-            )),
-            OptionalPattern(patterns = Vector(
-                StatementPattern(
-                    obj = IriRef(iri = "http://api.knora.org/ontology/incunabula/simple/v2#book"),
-                    pred = IriRef(iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"),
-                    subj = QueryVariable(variableName = "book")
-                ),
-                StatementPattern(
-                    obj = QueryVariable(variableName = "bookLabel"),
-                    pred = IriRef(iri = "http://www.w3.org/2000/01/rdf-schema#label"),
-                    subj = QueryVariable(variableName = "book")
-                ),
-                StatementPattern(
-                    obj = QueryVariable(variableName = "bookPublisher"),
-                    pred = IriRef(iri = "http://api.knora.org/ontology/incunabula/simple/v2#publisher"),
-                    subj = QueryVariable(variableName = "book")
                 )
             )),
             FilterPattern(expression = CompareExpression(
@@ -252,85 +294,59 @@ object SearchParserV2Spec {
                     datatype = "http://www.w3.org/2001/XMLSchema#string",
                     value = "GREGORIAN:1500"
                 ),
-                operator = "<",
-                leftArg = QueryVariable(variableName = "pubdate")
+                operator = CompareExpressionOperator.LESS_THAN,
+                leftArg = QueryVariable("pubdate")
             ))
         )),
-        constructClause = SimpleConstructClause(statements = Vector(
+        constructClause = ConstructClause(statements = Vector(
             StatementPattern(
-                obj = QueryVariable(variableName = "bookType"),
-                pred = IriRef(iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"),
-                subj = QueryVariable(variableName = "book")
+                obj = QueryVariable("bookType"),
+                pred = IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"),
+                subj = QueryVariable("book")
             ),
             StatementPattern(
-                obj = QueryVariable(variableName = "bookLabel"),
-                pred = IriRef(iri = "http://www.w3.org/2000/01/rdf-schema#label"),
-                subj = QueryVariable(variableName = "book")
+                obj = QueryVariable("bookLabel"),
+                pred = IriRef("http://www.w3.org/2000/01/rdf-schema#label"),
+                subj = QueryVariable("book")
             ),
             StatementPattern(
-                obj = QueryVariable(variableName = "bookPublisher"),
-                pred = IriRef(iri = "http://api.knora.org/ontology/incunabula/simple/v2#publisher"),
-                subj = QueryVariable(variableName = "book")
+                obj = QueryVariable("bookPublisher"),
+                pred = IriRef("http://api.knora.org/ontology/incunabula/simple/v2#publisher"),
+                subj = QueryVariable("book")
+            ),
+            StatementPattern(
+                obj = QueryVariable("bookPubLoc"),
+                pred = IriRef("http://api.knora.org/ontology/incunabula/simple/v2#publoc"),
+                subj = QueryVariable("book")
             ),
             StatementPattern(
                 obj = XsdLiteral(
                     datatype = "http://www.w3.org/2001/XMLSchema#boolean",
                     value = "true"
                 ),
-                pred = IriRef(iri = "http://api.knora.org/ontology/knora-api/simple/v2#isMainResource"),
-                subj = QueryVariable(variableName = "book")
+                pred = IriRef("http://api.knora.org/ontology/knora-api/simple/v2#isMainResource"),
+                subj = QueryVariable("book")
             ),
             StatementPattern(
-                obj = QueryVariable(variableName = "pageType"),
-                pred = IriRef(iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"),
-                subj = QueryVariable(variableName = "page")
+                obj = QueryVariable("pageType"),
+                pred = IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"),
+                subj = QueryVariable("page")
             ),
             StatementPattern(
-                obj = QueryVariable(variableName = "pageLabel"),
-                pred = IriRef(iri = "http://www.w3.org/2000/01/rdf-schema#label"),
-                subj = QueryVariable(variableName = "page")
+                obj = QueryVariable("pageLabel"),
+                pred = IriRef("http://www.w3.org/2000/01/rdf-schema#label"),
+                subj = QueryVariable("page")
             ),
             StatementPattern(
-                obj = QueryVariable(variableName = "book"),
-                pred = IriRef(iri = "http://api.knora.org/ontology/incunabula/simple/v2#isPartOf"),
-                subj = QueryVariable(variableName = "page")
+                obj = QueryVariable("book"),
+                pred = IriRef("http://api.knora.org/ontology/incunabula/simple/v2#isPartOf"),
+                subj = QueryVariable("page")
             )
         ))
     )
 
-    val SimpleParsedSparqlConstructQueryWithBooleanOperatorInFilter = SimpleConstructQuery(
-        whereClause = SimpleWhereClause(patterns = Vector(
-            StatementPattern(
-                obj = IriRef(iri = "http://api.knora.org/ontology/anything/simple/v2#Thing"),
-                pred = IriRef(iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"),
-                subj = QueryVariable(variableName = "resource")
-            ),
-            StatementPattern(
-                obj = IriRef(iri = "http://data.knora.org/a-thing"),
-                pred = QueryVariable(variableName = "linkingProp"),
-                subj = QueryVariable(variableName = "resource")
-            ),
-            FilterPattern(expression = OrExpression(
-                rightArg = CompareExpression(
-                    rightArg = IriRef(iri = "http://api.knora.org/ontology/anything/simple/v2#hasOtherThing"),
-                    operator = "=",
-                    leftArg = QueryVariable(variableName = "linkingProp")
-                ),
-                leftArg = CompareExpression(
-                    rightArg = IriRef(iri = "http://api.knora.org/ontology/anything/simple/v2#isPartOfOtherThing"),
-                    operator = "=",
-                    leftArg = QueryVariable(variableName = "linkingProp")
-                )
-            ))
-        )),
-        constructClause = SimpleConstructClause(statements = Vector(StatementPattern(
-            obj = IriRef(iri = "http://data.knora.org/a-thing"),
-            pred = IriRef(iri = "http://api.knora.org/ontology/knora-api/simple/v2#hasLinkTo"),
-            subj = QueryVariable(variableName = "resource")
-        )))
-    )
 
-    val SimpleSparqlConstructQueryWithBind: String =
+    val QueryWithBind: String =
         """
           |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
           |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -348,7 +364,180 @@ object SearchParserV2Spec {
           |}
         """.stripMargin
 
-    val SimpleSparqlConstructQueryStrWithWrongFilter: String =
+    val QueryWithFilterNotExists: String =
+        """
+          |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+          |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+          |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |PREFIX anything: <http://api.knora.org/ontology/anything/simple/v2#>
+          |
+          |CONSTRUCT {
+          |    ?thing a ?thingType .
+          |    ?thing rdfs:label ?thingLabel .
+          |} WHERE {
+          |    ?thing a anything:Thing .
+          |
+          |    FILTER NOT EXISTS {
+          |        ?thing anything:hasOtherThing ?aThing .
+          |    }
+          |}
+        """.stripMargin
+
+    val ParsedQueryWithFilterNotExists: ConstructQuery = ConstructQuery(
+        orderBy = Nil,
+        whereClause = WhereClause(patterns = Vector(
+            StatementPattern(
+                namedGraph = None,
+                obj = IriRef(
+                    iri = "http://api.knora.org/ontology/anything/simple/v2#Thing"
+                ),
+                pred = IriRef(
+                    iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
+                ),
+                subj = QueryVariable(variableName = "thing")
+            ),
+            FilterNotExistsPattern(patterns = Vector(StatementPattern(
+                namedGraph = None,
+                obj = QueryVariable(variableName = "aThing"),
+                pred = IriRef(
+                    iri = "http://api.knora.org/ontology/anything/simple/v2#hasOtherThing"
+                ),
+                subj = QueryVariable(variableName = "thing")
+            )))
+        )),
+        constructClause = ConstructClause(statements = Vector(
+            StatementPattern(
+                namedGraph = None,
+                obj = QueryVariable(variableName = "thingType"),
+                pred = IriRef(
+                    iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
+                ),
+                subj = QueryVariable(variableName = "thing")
+            ),
+            StatementPattern(
+                namedGraph = None,
+                obj = QueryVariable(variableName = "thingLabel"),
+                pred = IriRef(
+                    iri = "http://www.w3.org/2000/01/rdf-schema#label"
+                ),
+                subj = QueryVariable(variableName = "thing")
+            )
+        ))
+    )
+
+    val QueryWithMinus: String =
+        """
+          |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+          |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+          |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |PREFIX anything: <http://api.knora.org/ontology/anything/simple/v2#>
+          |
+          |CONSTRUCT {
+          |    ?thing a ?thingType .
+          |    ?thing rdfs:label ?thingLabel .
+          |} WHERE {
+          |    ?thing a anything:Thing .
+          |
+          |    MINUS {
+          |        ?thing anything:hasOtherThing ?aThing .
+          |    }
+          |}
+        """.stripMargin
+
+    val ParsedQueryWithMinus: ConstructQuery = ConstructQuery(
+        orderBy = Nil,
+        whereClause = WhereClause(patterns = Vector(
+            StatementPattern(
+                namedGraph = None,
+                obj = IriRef(
+                    iri = "http://api.knora.org/ontology/anything/simple/v2#Thing"
+                ),
+                pred = IriRef(
+                    iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
+                ),
+                subj = QueryVariable(variableName = "thing")
+            ),
+            MinusPattern(patterns = Vector(StatementPattern(
+                namedGraph = None,
+                obj = QueryVariable(variableName = "aThing"),
+                pred = IriRef(
+                    iri = "http://api.knora.org/ontology/anything/simple/v2#hasOtherThing"
+                ),
+                subj = QueryVariable(variableName = "thing")
+            )))
+        )),
+        constructClause = ConstructClause(statements = Vector(
+            StatementPattern(
+                namedGraph = None,
+                obj = QueryVariable(variableName = "thingType"),
+                pred = IriRef(
+                    iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
+                ),
+                subj = QueryVariable(variableName = "thing")
+            ),
+            StatementPattern(
+                namedGraph = None,
+                obj = QueryVariable(variableName = "thingLabel"),
+                pred = IriRef(
+                    iri = "http://www.w3.org/2000/01/rdf-schema#label"
+                ),
+                subj = QueryVariable(variableName = "thing")
+            )
+        ))
+    )
+
+    val QueryWithOffset: String =
+        """
+          |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+          |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+          |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |PREFIX anything: <http://api.knora.org/ontology/anything/simple/v2#>
+          |
+          |CONSTRUCT {
+          |    ?thing a ?thingType .
+          |    ?thing rdfs:label ?thingLabel .
+          |} WHERE {
+          |    ?thing a anything:Thing .
+          |} OFFSET 10
+        """.stripMargin
+
+    val ParsedQueryWithOffset: ConstructQuery = ConstructQuery(
+        offset = 10,
+        orderBy = Nil,
+        whereClause = WhereClause(patterns = Vector(StatementPattern(
+            namedGraph = None,
+            obj = IriRef(
+                iri = "http://api.knora.org/ontology/anything/simple/v2#Thing"
+            ),
+            pred = IriRef(
+                iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
+            ),
+            subj = QueryVariable(variableName = "thing")
+        ))),
+        constructClause = ConstructClause(statements = Vector(
+            StatementPattern(
+                namedGraph = None,
+                obj = QueryVariable(variableName = "thingType"),
+                pred = IriRef(
+                    iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
+                ),
+                subj = QueryVariable(variableName = "thing")
+            ),
+            StatementPattern(
+                namedGraph = None,
+                obj = QueryVariable(variableName = "thingLabel"),
+                pred = IriRef(
+                    iri = "http://www.w3.org/2000/01/rdf-schema#label"
+                ),
+                subj = QueryVariable(variableName = "thing")
+            )
+        ))
+    )
+
+    val QueryWithWrongFilter: String =
         """
           |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
           |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -367,7 +556,7 @@ object SearchParserV2Spec {
           |}
         """.stripMargin
 
-    val SimpleSparqlConstructQueryStrWithInternalEntityIri: String =
+    val QueryWithInternalEntityIri: String =
         """
           |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
           |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -386,7 +575,7 @@ object SearchParserV2Spec {
           |}
         """.stripMargin
 
-    val SimpleSparqlSelectQueryStr: String =
+    val SparqlSelect: String =
         """
           |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
           |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -402,7 +591,7 @@ object SearchParserV2Spec {
           |}
         """.stripMargin
 
-    val SimpleSparqlDescribeQueryStr: String =
+    val SparqlDescribe: String =
         """
           |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
           |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -418,7 +607,7 @@ object SearchParserV2Spec {
           |}
         """.stripMargin
 
-    val SimpleSparqlInsertStr: String =
+    val SparqlInsert: String =
         """
           |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
           |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -431,7 +620,7 @@ object SearchParserV2Spec {
           |}
         """.stripMargin
 
-    val SimpleSparqlDeleteStr: String =
+    val SparqlDelete: String =
         """
           |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
           |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -448,7 +637,7 @@ object SearchParserV2Spec {
           |}
         """.stripMargin
 
-    val SimpleSparqlConstructQueryStrWithLeftNestedUnion: String =
+    val QueryWithLeftNestedUnion: String =
         """
           |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
           |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -494,7 +683,7 @@ object SearchParserV2Spec {
           |}
         """.stripMargin
 
-    val SimpleSparqlConstructQueryStrWithRightNestedUnion: String =
+    val QueryStrWithRightNestedUnion: String =
         """
           |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
           |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -540,7 +729,7 @@ object SearchParserV2Spec {
           |}
         """.stripMargin
 
-    val SimpleSparqlConstructQueryStrWithNestedOptional: String =
+    val QueryStrWithNestedOptional: String =
         """
           |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
           |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -573,7 +762,7 @@ object SearchParserV2Spec {
           |}
         """.stripMargin
 
-    val extendSearchQueryForAThingRelatingToAnotherThing: String =
+    val QueryForAThingRelatingToAnotherThing: String =
         """
           |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
           |PREFIX anything: <http://api.knora.org/ontology/anything/simple/v2#>
@@ -589,7 +778,41 @@ object SearchParserV2Spec {
           |}
         """.stripMargin
 
-    val SimpleSparqlConstructQueryWithExplicitTypeAnnotations: String =
+    val ParsedQueryForAThingRelatingToAnotherThing = ConstructQuery(
+        orderBy = Nil,
+        whereClause = WhereClause(patterns = Vector(
+            StatementPattern(
+                obj = IriRef("http://api.knora.org/ontology/anything/simple/v2#Thing"),
+                pred = IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"),
+                subj = QueryVariable(variableName = "resource")
+            ),
+            StatementPattern(
+                obj = IriRef("http://data.knora.org/a-thing"),
+                pred = QueryVariable(variableName = "linkingProp"),
+                subj = QueryVariable(variableName = "resource")
+            ),
+            FilterPattern(expression = OrExpression(
+                rightArg = CompareExpression(
+                    rightArg = IriRef("http://api.knora.org/ontology/anything/simple/v2#hasOtherThing"),
+                    operator = CompareExpressionOperator.EQUALS,
+                    leftArg = QueryVariable(variableName = "linkingProp")
+                ),
+                leftArg = CompareExpression(
+                    rightArg = IriRef("http://api.knora.org/ontology/anything/simple/v2#isPartOfOtherThing"),
+                    operator = CompareExpressionOperator.EQUALS,
+                    leftArg = QueryVariable(variableName = "linkingProp")
+                )
+            ))
+        )),
+        constructClause = ConstructClause(statements = Vector(StatementPattern(
+            obj = IriRef("http://data.knora.org/a-thing"),
+            pred = IriRef("http://api.knora.org/ontology/knora-api/simple/v2#hasLinkTo"),
+            subj = QueryVariable(variableName = "resource")
+        )))
+    )
+
+
+    val QueryWithExplicitTypeAnnotations: String =
         """
           |PREFIX beol: <http://api.knora.org/ontology/beol/simple/v2#>
           |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>

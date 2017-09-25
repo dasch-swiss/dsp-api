@@ -2,7 +2,7 @@
 <text documentType="letter">
     <p id="first">
         textus novus
-        <facsimile src="http://localhost/noFacsimile.jpg"/>
+        <facsimile src="http://rdfh.ch/beol/page_resource"/>
         Vir Clarissime et Celeberrime Fautor Honoratissime
     </p>
     <p>Ecce mitto ut promiseram enodationem difficultatis paulo ante discessum meum a Te motae contra infinitorum
@@ -86,7 +86,7 @@
         hic ni fallor est sensus objectionis Tuae; ad quam ut breviter respondeam, velim consideres, <math>AS</math> nunquam
         posse assumi absolute <math>=0</math>, nam punctum
         <math>P</math>
-        <facsimile src="http://localhost/noFacsimile.jpg"/>
+        <facsimile src="http://rdfh.ch/beol/page_resource"/>
         semper existere debet in hyperbola nunquam vero in asymtoto <math>AG</math>; et quamvis in infinitum
         intelligatur removeri a puncto <math>C</math> ita ut ad asymtoton data quavis assignabili propius accedat,
         distantia tamen in ipso infinito non omnino evanescet sed erit <i>aliquid</i> licet infinite exigua: Hocque
@@ -117,7 +117,7 @@
             n
         </math> unitate major est, difficultas Tua semper occurrit, nempe quia tunc semper rectangulum <math>AKH</math> evadit
         infinitum et comparabile cum spatio <math>HKBCF</math>, adeoque minime negli<facsimile
-                src="http://localhost/noFacsimile.jpg"/>gendum; sed contra quotiescunque <math>n</math> unitate minor
+                src="http://rdfh.ch/beol/page_resource"/>gendum; sed contra quotiescunque <math>n</math> unitate minor
         vel eidem aequalis, tunc cessat objectio, quoniam scilicet rectangulum <math>AKH</math> nunc fit infinite parvum
         vel finitum et incomparabile spatio <math>HKBCF</math> adeoque tuto negligi potest. Unde vides et vel hoc nomine
         genuinam esse responsionem quam hic dedi ad difficultatem Tuam; non dubito quin sit Tibi satisfactura.
