@@ -63,13 +63,13 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
     // The default timeout for receiving reply messages from actors.
     private val timeout = 10.seconds
 
-    /*"Load test data" in {
+    "Load test data" in {
         storeManager ! ResetTriplestoreContent(rdfDataObjects)
         expectMsg(300.seconds, ResetTriplestoreContentACK())
 
         responderManager ! LoadOntologiesRequest(userProfile)
         expectMsg(10.seconds, LoadOntologiesResponse())
-    }*/
+    }
 
     "The search responder v2" should {
 
