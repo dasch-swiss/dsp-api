@@ -25,15 +25,11 @@ import akka.testkit.{ImplicitSender, TestActorRef}
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent, ResetTriplestoreContentACK}
 import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse}
 import org.knora.webapi.messages.v2.responder.ReadResourcesSequenceV2
-import org.knora.webapi.messages.v2.responder.resourcemessages.ResourcesGetRequestV2
-import org.knora.webapi.messages.v2.responder.searchmessages.{ExtendedSearchGetRequestV2, FulltextSearchGetRequestV2}
-import org.knora.webapi.responders.v2.ResourcesResponderV2Spec.userProfile
+import org.knora.webapi.messages.v2.responder.searchmessages._
+import org.knora.webapi.responders.v2.ResponseCheckerV2.compareReadResourcesSequenceV2Response
 import org.knora.webapi.responders.{RESPONDER_MANAGER_ACTOR_NAME, ResponderManager}
 import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
-import org.knora.webapi.util.MessageUtil
 import org.knora.webapi.{CoreSpec, LiveActorMaker, SharedAdminTestData}
-import ResponseCheckerV2.compareReadResourcesSequenceV2Response
-import org.knora.webapi.util.search._
 
 import scala.concurrent.duration._
 
@@ -127,6 +123,22 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
                 case response: ReadResourcesSequenceV2 =>
                     // TODO: do better testing once JSON-LD can be converted back into case classes
                     assert(response.numberOfResources == 18, s"18 books were expected, but ${response.numberOfResources} given.")
+            }
+
+        }
+
+        "perform a search by label for incunabula:book that contain 'Narrenschiff'" in {
+
+            actorUnderTest ! SearchResourceByLabelRequestV2(
+                searchValue = "Narrenschiff",
+                limitToProject = None,
+                limitToResourceClass = Some("http://www.knora.org/ontology/incunabula#book"), // internal Iri!
+                userProfile = SharedAdminTestData.anonymousUser
+            )
+
+            expectMsgPF(timeout) {
+                case response: ReadResourcesSequenceV2 =>
+                    assert(response.numberOfResources == 3, s"3 results were expected, but ${response.numberOfResources} given")
             }
 
         }
