@@ -20,6 +20,7 @@
 
 package org.knora.webapi.messages.v2.responder.searchmessages
 
+import org.knora.webapi.IRI
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v2.responder._
 import org.knora.webapi.util.search.ConstructQuery
@@ -56,7 +57,11 @@ case class ExtendedSearchGetRequestV2(constructQuery: ConstructQuery,
   * Requests a search of resources by their label. A successful response will be a [[ReadResourcesSequenceV2]].
   *
   * @param searchValue the values to search for.
+  * @param limitToProject limit search to given project.
+  * @param limitToResourceClass limit search to given resource class.
   * @param userProfile the profile of the user making the request.
   */
 case class SearchResourceByLabelRequestV2(searchValue: String,
+                                          limitToProject: Option[IRI],
+                                          limitToResourceClass: Option[IRI],
                                           userProfile: UserProfileV1) extends SearchResponderRequestV2

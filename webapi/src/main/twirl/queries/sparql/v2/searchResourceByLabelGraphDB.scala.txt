@@ -26,7 +26,9 @@
  *
  * @param searchTerms search terms to look for in the resources' label.
  *@
-@(searchTerms: String)
+@(searchTerms: String,
+  limitToProject: Option[IRI],
+  limitToResourceClass: Option[IRI])
 
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
@@ -48,7 +50,15 @@ CONSTRUCT {
     {
         SELECT DISTINCT ?resource ?label WHERE {
             ?resource a knora-base:Resource ;
-                knora-base:isDeleted false ;
+                knora-base:isDeleted false .
+
+            @if(limitToResourceClass.nonEmpty) {
+                ?resource a <@limitToResourceClass.get> .
+            }
+
+            @if(limitToProject.nonEmpty) {
+                ?resource knora-base:attachedToProject <@limitToProject.get>
+            }
 
             GRAPH <http://www.ontotext.com/explicit> {
                     ?resource rdfs:label ?label .
@@ -56,7 +66,10 @@ CONSTRUCT {
 
             ?label <http://www.ontotext.com/owlim/lucene#fullTextSearchIndex> '@searchTerms' .
 
-        } LIMIT 500
+        }
+        @* TODO: support paging (OFFSET) *@
+        ORDER BY ?resource
+        LIMIT 500
     }
 
     GRAPH <http://www.ontotext.com/explicit> {

@@ -42,7 +42,7 @@ class SearchResponderV2 extends Responder {
     def receive = {
         case FulltextSearchGetRequestV2(searchValue, userProfile) => future2Message(sender(), fulltextSearchV2(searchValue, userProfile), log)
         case ExtendedSearchGetRequestV2(query, userProfile) => future2Message(sender(), extendedSearchV2(inputQuery = query, userProfile = userProfile), log)
-        case SearchResourceByLabelRequestV2(searchValue, userProfile) => future2Message(sender(), searchResourcesByLabelV2(searchValue, userProfile), log)
+        case SearchResourceByLabelRequestV2(searchValue, limitToProject, limitToResourceClass, userProfile) => future2Message(sender(), searchResourcesByLabelV2(searchValue, limitToProject, limitToResourceClass, userProfile), log)
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }
 
@@ -1221,18 +1221,22 @@ class SearchResponderV2 extends Responder {
     }
 
     /**
-      * Performs a search for resources by their label.
+      * Performs a search for resources by their rdf:label.
       *
       * @param searchValue the values to search for.
+      * @param limitToProject limit search to given project.
+      * @param limitToResourceClass limit search to given resource class.
       * @param userProfile the profile of the client making the request.
       * @return a [[ReadResourcesSequenceV2]] representing the resources that have been found.
       */
-    private def searchResourcesByLabelV2(searchValue: String, userProfile: UserProfileV1): Future[ReadResourcesSequenceV2] = {
+    private def searchResourcesByLabelV2(searchValue: String, limitToProject: Option[IRI], limitToResourceClass: Option[IRI], userProfile: UserProfileV1): Future[ReadResourcesSequenceV2] = {
 
         for {
             searchResourceByLabelSparql <- Future(queries.sparql.v2.txt.searchResourceByLabel(
                 triplestore = settings.triplestoreType,
-                searchTerms = searchValue
+                searchTerms = searchValue,
+                limitToProject = limitToProject,
+                limitToResourceClass = limitToResourceClass
             ).toString())
 
             searchResourceByLabelResponse: SparqlConstructResponse <- (storeManager ? SparqlConstructRequest(searchResourceByLabelSparql)).mapTo[SparqlConstructResponse]

@@ -31,15 +31,25 @@
  * @param searchTerms search terms.
  *@
 @(triplestore: String,
-  searchTerms: String)
+  searchTerms: String,
+  limitToProject: Option[IRI],
+  limitToResourceClass: Option[IRI])
 
 @if(triplestore.startsWith("graphdb")) {
     @{
-        queries.sparql.v2.txt.searchResourceByLabelGraphDB(searchTerms = searchTerms)
+        queries.sparql.v2.txt.searchResourceByLabelGraphDB(
+            searchTerms = searchTerms,
+            limitToProject = limitToProject,
+            limitToResourceClass = limitToResourceClass
+        )
     }
 } else {
     @{
-        queries.sparql.v2.txt.searchResourceByLabelStandard(triplestore = triplestore,
-                                                     searchTerms = searchTerms)
+        queries.sparql.v2.txt.searchResourceByLabelStandard(
+            triplestore = triplestore,
+            searchTerms = searchTerms,
+            limitToProject = limitToProject,
+            limitToResourceClass = limitToResourceClass
+        )
     }
 }
