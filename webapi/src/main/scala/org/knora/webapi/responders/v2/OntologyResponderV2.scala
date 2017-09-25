@@ -63,7 +63,7 @@ class OntologyResponderV2 extends Responder {
       */
     case class OntologyCacheData(namedGraphResourceClasses: Map[IRI, Set[IRI]],
                                  namedGraphProperties: Map[IRI, Set[IRI]],
-                                 resourceClassDefs: Map[IRI, ResourceEntityInfoV2],
+                                 resourceClassDefs: Map[IRI, ClassEntityInfoV2],
                                  resourceAndValueSubClassOfRelations: Map[IRI, Set[IRI]],
                                  resourceSuperClassOfRelations: Map[IRI, Set[IRI]],
                                  propertyDefs: Map[IRI, PropertyEntityInfoV2],
@@ -326,8 +326,8 @@ class OntologyResponderV2 extends Responder {
             // instantiated directly.
             concreteResourceDefsGrouped = resourceDefsGrouped -- OntologyConstants.KnoraBase.AbstractResourceClasses
 
-            // Construct a ResourceEntityInfoV2 for each resource class.
-            resourceEntityInfos: Map[IRI, ResourceEntityInfoV2] = concreteResourceDefsGrouped.map {
+            // Construct a ClassEntityInfoV2 for each resource class.
+            resourceEntityInfos: Map[IRI, ClassEntityInfoV2] = concreteResourceDefsGrouped.map {
                 case (resourceClassIri, resourceClassRows) =>
                     // Group the rows for each resource class by predicate IRI.
                     val groupedByPredicate: Map[IRI, Seq[VariableResultsRow]] = resourceClassRows.filter(_.rowMap.contains("resourceClassPred")).groupBy(_.rowMap("resourceClassPred")) - OntologyConstants.Rdfs.SubClassOf
@@ -368,8 +368,8 @@ class OntologyResponderV2 extends Responder {
                         throw InconsistentTriplestoreDataException(s"Resource class $resourceClassIri has cardinalities for one or more link value properties without corresponding link properties. The missing link property or properties: ${missingLinkProps.mkString(", ")}")
                     }
 
-                    val resourceEntityInfo = ResourceEntityInfoV2(
-                        resourceClassIri = resourceClassIri,
+                    val resourceEntityInfo = ClassEntityInfoV2(
+                        classIri = resourceClassIri,
                         ontologyIri = getOntologyIri(resourceClassIri),
                         predicates = new ErrorHandlingMap(predicates, { key: IRI => s"Predicate $key not found for resource class $resourceClassIri" }),
                         cardinalities = owlCardinalities.map {
@@ -653,7 +653,7 @@ class OntologyResponderV2 extends Responder {
             ontologyCacheData: OntologyCacheData = OntologyCacheData(
                 namedGraphResourceClasses = new ErrorHandlingMap[IRI, Set[IRI]](graphClassMap, { key => s"Named graph not found: $key" }),
                 namedGraphProperties = new ErrorHandlingMap[IRI, Set[IRI]](graphPropMap, { key => s"Named graph not found: $key" }),
-                resourceClassDefs = new ErrorHandlingMap[IRI, ResourceEntityInfoV2](resourceEntityInfos, { key => s"Resource class not found: $key" }),
+                resourceClassDefs = new ErrorHandlingMap[IRI, ClassEntityInfoV2](resourceEntityInfos, { key => s"Resource class not found: $key" }),
                 resourceAndValueSubClassOfRelations = new ErrorHandlingMap[IRI, Set[IRI]](allResourceSubClassOfRelations ++ allValueSubClassOfRelations, { key => s"Class not found: $key" }),
                 resourceSuperClassOfRelations = new ErrorHandlingMap[IRI, Set[IRI]](allResourceSuperClassOfRelations, { key => s"Class not found: $key" }),
                 propertyDefs = new ErrorHandlingMap[IRI, PropertyEntityInfoV2](propertyEntityInfos, { key => s"Property not found: $key" }),
@@ -776,7 +776,7 @@ class OntologyResponderV2 extends Responder {
 
             subClasses = subClassIris.map {
                 subClassIri =>
-                    val resourceClassInfo: ResourceEntityInfoV2 = cacheData.resourceClassDefs(subClassIri)
+                    val resourceClassInfo: ClassEntityInfoV2 = cacheData.resourceClassDefs(subClassIri)
 
                     SubClassInfoV2(
                         id = subClassIri,
@@ -884,7 +884,7 @@ class OntologyResponderV2 extends Responder {
 
             // get all property Iris from cardinalities
             propertyIris: Set[IRI] = resourceClassResponse.resourceEntityInfoMap.values.foldLeft(Set.empty[IRI]) {
-                case (acc: Set[IRI], resourceEntityInfo: ResourceEntityInfoV2) =>
+                case (acc: Set[IRI], resourceEntityInfo: ClassEntityInfoV2) =>
                     acc ++ resourceEntityInfo.cardinalities.keySet
             }
 

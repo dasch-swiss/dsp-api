@@ -148,7 +148,7 @@ class OntologyResponderV1 extends Responder {
         for {
         // Get all information about the resource type, including its property cardinalities.
             resourceClassInfoResponse: EntityInfoGetResponseV1 <- getEntityInfoResponseV1(resourceClassIris = Set(resourceTypeIri), userProfile = userProfile)
-            resourceClassInfo: ResourceEntityInfoV2 = resourceClassInfoResponse.resourceEntityInfoMap.getOrElse(resourceTypeIri, throw NotFoundException(s"Resource class $resourceTypeIri not found"))
+            resourceClassInfo: ClassEntityInfoV2 = resourceClassInfoResponse.resourceEntityInfoMap.getOrElse(resourceTypeIri, throw NotFoundException(s"Resource class $resourceTypeIri not found"))
 
             // Get all information about those properties.
             propertyInfo: EntityInfoGetResponseV1 <- getEntityInfoResponseV1(propertyIris = resourceClassInfo.cardinalities.keySet, userProfile = userProfile)

@@ -35,7 +35,7 @@ import org.knora.webapi.messages.v1.responder.sipimessages._
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.store.triplestoremessages._
-import org.knora.webapi.messages.v2.responder.ontologymessages.{Cardinality, PredicateInfoV2, PropertyEntityInfoV2, ResourceEntityInfoV2}
+import org.knora.webapi.messages.v2.responder.ontologymessages.{Cardinality, PredicateInfoV2, PropertyEntityInfoV2, ClassEntityInfoV2}
 import org.knora.webapi.responders.{IriLocker, Responder}
 import org.knora.webapi.responders.v1.GroupedProps._
 import org.knora.webapi.twirl.SparqlTemplateResourceToCreate
@@ -996,7 +996,7 @@ class ResourcesResponderV1 extends Responder {
                                     userProfile = userProfile
                                 )).mapTo[EntityInfoGetResponseV1]
 
-                                regionInfo: ResourceEntityInfoV2 = entityInfoResponse.resourceEntityInfoMap(resClass)
+                                regionInfo: ClassEntityInfoV2 = entityInfoResponse.resourceEntityInfoMap(resClass)
 
                                 resClassIcon: Option[String] = regionInfo.predicates.get(OntologyConstants.KnoraBase.ResourceIcon) match {
                                     case Some(predicateInfo: PredicateInfoV2) =>
@@ -1419,7 +1419,7 @@ class ResourcesResponderV1 extends Responder {
       * @return a tuple (IRI, Vector[CreateValueV1WithComment]) containing the IRI of the resource and a collection of holders of [[UpdateValueV1]] and comment.
       */
     private def checkResource(resourceClassIri: IRI,
-                              resourceClassInfo: ResourceEntityInfoV2,
+                              resourceClassInfo: ClassEntityInfoV2,
                               propertyEntityInfoMap: Map[IRI, PropertyEntityInfoV2],
                               values: Map[IRI, Seq[CreateValueV1WithComment]],
                               sipiConversionRequest: Option[SipiResponderConversionRequestV1],
@@ -2135,14 +2135,14 @@ class ResourcesResponderV1 extends Responder {
             groupedPropsByType: GroupedPropertiesByType <- getGroupedProperties(resourceIri)
 
             // TODO: Should we get rid of the tuple and replace it by a case class?
-            (propertyEntityInfoMap: Map[IRI, PropertyEntityInfoV2], resourceEntityInfoMap: Map[IRI, ResourceEntityInfoV2], propsAndCardinalities: Map[IRI, Cardinality.Value]) <- maybeResourceTypeIri match {
+            (propertyEntityInfoMap: Map[IRI, PropertyEntityInfoV2], resourceEntityInfoMap: Map[IRI, ClassEntityInfoV2], propsAndCardinalities: Map[IRI, Cardinality.Value]) <- maybeResourceTypeIri match {
                 case Some(resourceTypeIri) =>
                     val propertyEntityIris: Set[IRI] = groupedPropsByType.groupedOrdinaryValueProperties.groupedProperties.keySet ++ groupedPropsByType.groupedLinkProperties.groupedProperties.keySet
                     val resourceEntityIris: Set[IRI] = Set(resourceTypeIri)
 
                     for {
                         entityInfoResponse <- (responderManager ? EntityInfoGetRequestV1(resourceClassIris = resourceEntityIris, propertyIris = propertyEntityIris, userProfile = userProfile)).mapTo[EntityInfoGetResponseV1]
-                        resourceEntityInfoMap: Map[IRI, ResourceEntityInfoV2] = entityInfoResponse.resourceEntityInfoMap
+                        resourceEntityInfoMap: Map[IRI, ClassEntityInfoV2] = entityInfoResponse.resourceEntityInfoMap
                         propertyEntityInfoMap: Map[IRI, PropertyEntityInfoV2] = entityInfoResponse.propertyEntityInfoMap
 
                         resourceTypeEntityInfo = resourceEntityInfoMap(resourceTypeIri)
@@ -2155,7 +2155,7 @@ class ResourcesResponderV1 extends Responder {
                     } yield (propertyEntityInfoMap, resourceEntityInfoMap, propsAndCardinalities)
 
                 case None =>
-                    Future((Map.empty[IRI, PropertyEntityInfoV2], Map.empty[IRI, ResourceEntityInfoV2], Map.empty[IRI, Cardinality.Value]))
+                    Future((Map.empty[IRI, PropertyEntityInfoV2], Map.empty[IRI, ClassEntityInfoV2], Map.empty[IRI, Cardinality.Value]))
             }
 
             queryResult <- queryResults2PropertyV1s(
@@ -2325,7 +2325,7 @@ class ResourcesResponderV1 extends Responder {
       * @param groupedPropertiesByType The [[GroupedPropertiesByType]] returned by `getGroupedProperties` containing the resuls of the SPARQL query.
       * @param propertyEntityInfoMap   a [[Map]] of entity IRIs to [[PropertyEntityInfoV2]] objects. If this [[Map]] is not empty, it will be used to include
       *                                ontology-based information in the returned [[PropertyV1]] objects.
-      * @param resourceEntityInfoMap   a [[Map]] of entity IRIs to [[ResourceEntityInfoV2]] objects. If this [[Map]] is not empty, it will be used to include
+      * @param resourceEntityInfoMap   a [[Map]] of entity IRIs to [[ClassEntityInfoV2]] objects. If this [[Map]] is not empty, it will be used to include
       *                                ontology-based information for linking properties in the returned [[PropertyV1]] objects.
       * @param propsAndCardinalities   a [[Map]] of property IRIs to their cardinalities in the class of the queried resource. If this [[Map]] is not
       *                                empty, it will be used to include cardinalities in the returned [[PropertyV1]] objects.
@@ -2335,7 +2335,7 @@ class ResourcesResponderV1 extends Responder {
     private def queryResults2PropertyV1s(containingResourceIri: IRI,
                                          groupedPropertiesByType: GroupedPropertiesByType,
                                          propertyEntityInfoMap: Map[IRI, PropertyEntityInfoV2],
-                                         resourceEntityInfoMap: Map[IRI, ResourceEntityInfoV2],
+                                         resourceEntityInfoMap: Map[IRI, ClassEntityInfoV2],
                                          propsAndCardinalities: Map[IRI, Cardinality.Value],
                                          userProfile: UserProfileV1): Future[Seq[PropertyV1]] = {
         /**

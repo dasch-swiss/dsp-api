@@ -32,6 +32,7 @@ object OntologyConstants {
         val Subject: IRI = RdfPrefixExpansion + "subject"
         val Predicate: IRI = RdfPrefixExpansion + "predicate"
         val Object: IRI = RdfPrefixExpansion + "object"
+        val Property: IRI = RdfPrefixExpansion + "Property"
     }
 
     object Rdfs {
@@ -481,6 +482,8 @@ object OntologyConstants {
 
         val KnoraApiV2PrefixExpansion: IRI = KnoraApi.KnoraApiOntologyIri + VersionSegment + "#"
 
+        val SubjectType: IRI = KnoraApiV2PrefixExpansion + "subjectType"
+
         val ObjectType: IRI = KnoraApiV2PrefixExpansion + "objectType"
 
         val HasOntologies: IRI = KnoraApiV2PrefixExpansion + "hasOntologies"
@@ -494,6 +497,42 @@ object OntologyConstants {
         val HasResourceClasses: IRI = KnoraApiV2PrefixExpansion + "hasResourceClasses"
 
         val ValueAsString: IRI = KnoraApiV2PrefixExpansion + "valueAsString"
+
+        val Resource: IRI = KnoraApiV2PrefixExpansion + "Resource"
+        val Region: IRI = KnoraApiV2PrefixExpansion + "Region"
+        val Representation: IRI = KnoraApiV2PrefixExpansion + "Representation"
+        val StillImageRepresentation: IRI = KnoraApiV2PrefixExpansion + "StillImageRepresentation"
+        val MovingImageRepresentation: IRI = KnoraApiV2PrefixExpansion + "MovingImageRepresentation"
+        val AudioRepresentation: IRI = KnoraApiV2PrefixExpansion + "AudioRepresentation"
+        val DDDRepresentation: IRI = KnoraApiV2PrefixExpansion + "DDDRepresentation"
+        val TextRepresentation: IRI = KnoraApiV2PrefixExpansion + "TextRepresentation"
+        val DocumentRepresentation: IRI = KnoraApiV2PrefixExpansion + "DocumentRepresentation"
+
+        val Value: IRI = KnoraApiV2PrefixExpansion + "Value"
+        val TextValue: IRI = KnoraApiV2PrefixExpansion + "TextValue"
+        val FileValue: IRI = KnoraApiV2PrefixExpansion + "FileValue"
+        val ColorValue: IRI = KnoraApiV2PrefixExpansion + "ColorValue"
+        val StillImageFileValue: IRI = KnoraApiV2PrefixExpansion + "StillImageFileValue"
+        val MovingImageFileValue: IRI = KnoraApiV2PrefixExpansion + "MovingImageFileValue"
+        val AudioFileValue: IRI = KnoraApiV2PrefixExpansion + "AudioFileValue"
+        val DDDFileValue: IRI = KnoraApiV2PrefixExpansion + "DDDFileValue"
+        val TextFileValue: IRI = KnoraApiV2PrefixExpansion + "TextFileValue"
+        val DocumentFileValue: IRI = KnoraApiV2PrefixExpansion + "DocumentFileValue"
+
+        val ResourceProperty: IRI = KnoraApiV2PrefixExpansion + "resourceProperty"
+        val HasValue: IRI = KnoraApiV2PrefixExpansion + "hasValue"
+        val ValueHas: IRI = KnoraApiV2PrefixExpansion + "valueHas"
+        val HasLinkTo: IRI = KnoraApiV2PrefixExpansion + "hasLinkTo"
+
+        val HasColor: IRI = KnoraApiV2PrefixExpansion + "hasColor"
+        val HasComment: IRI = KnoraApiV2PrefixExpansion + "hasComment"
+        val HasFileValue: IRI = KnoraApiV2PrefixExpansion + "hasFileValue"
+        val HasStillImageFileValue: IRI = KnoraApiV2PrefixExpansion + "hasStillImageFileValue"
+        val HasMovingImageFileValue: IRI = KnoraApiV2PrefixExpansion + "hasMovingImageFileValue"
+        val HasAudioFileValue: IRI = KnoraApiV2PrefixExpansion + "hasAudioFileValue"
+        val HasDDDFileValue: IRI = KnoraApiV2PrefixExpansion + "hasDDDFileValue"
+        val HasTextFileValue: IRI = KnoraApiV2PrefixExpansion + "hasTextFileValue"
+        val HasDocumentFileValue: IRI = KnoraApiV2PrefixExpansion + "hasDocumentFileValue"
 
         val DateValueHasStartYear: IRI = KnoraApiV2PrefixExpansion + "dateValueHasStartYear"
         val DateValueHasEndYear: IRI = KnoraApiV2PrefixExpansion + "dateValueHasEndYear"
@@ -547,6 +586,8 @@ object OntologyConstants {
         val VersionSegment = "/simple/v2"
 
         val KnoraApiV2PrefixExpansion: IRI = KnoraApi.KnoraApiOntologyIri + VersionSegment + "#"
+
+        val SubjectType: IRI = KnoraApiV2PrefixExpansion + "subjectType"
 
         val ObjectType: IRI = KnoraApiV2PrefixExpansion + "objectType"
 

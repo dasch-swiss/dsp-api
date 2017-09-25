@@ -64,10 +64,10 @@ case class EntityInfoGetRequestV1(resourceClassIris: Set[IRI] = Set.empty[IRI], 
 /**
   * Represents assertions about one or more ontology entities (resource classes and/or properties).
   *
-  * @param resourceEntityInfoMap a [[Map]] of resource entity IRIs to [[ResourceEntityInfoV2]] objects.
+  * @param resourceEntityInfoMap a [[Map]] of resource entity IRIs to [[ClassEntityInfoV2]] objects.
   * @param propertyEntityInfoMap a [[Map]] of property entity IRIs to [[PropertyEntityInfoV2]] objects.
   */
-case class EntityInfoGetResponseV1(resourceEntityInfoMap: Map[IRI, ResourceEntityInfoV2],
+case class EntityInfoGetResponseV1(resourceEntityInfoMap: Map[IRI, ClassEntityInfoV2],
                                    propertyEntityInfoMap: Map[IRI, PropertyEntityInfoV2])
 
 

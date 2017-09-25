@@ -74,10 +74,10 @@ case class EntityInfoGetRequestV2(resourceClassIris: Set[IRI] = Set.empty[IRI], 
 /**
   * Represents assertions about one or more ontology entities (resource classes and/or properties).
   *
-  * @param resourceEntityInfoMap a [[Map]] of resource entity IRIs to [[ResourceEntityInfoV2]] objects.
+  * @param resourceEntityInfoMap a [[Map]] of resource entity IRIs to [[ClassEntityInfoV2]] objects.
   * @param propertyEntityInfoMap a [[Map]] of property entity IRIs to [[PropertyEntityInfoV2]] objects.
   */
-case class EntityInfoGetResponseV2(resourceEntityInfoMap: Map[IRI, ResourceEntityInfoV2],
+case class EntityInfoGetResponseV2(resourceEntityInfoMap: Map[IRI, ClassEntityInfoV2],
                                    propertyEntityInfoMap: Map[IRI, PropertyEntityInfoV2])
 
 /**
@@ -215,7 +215,7 @@ case class PropertyEntitiesGetRequestV2(propertyIris: Set[IRI], allLanguages: Bo
   *                        should be returned in all available languages.
   */
 case class ReadEntityDefinitionsV2(ontologies: Map[IRI, Set[IRI]] = Map.empty[IRI, Set[IRI]],
-                                   resourceClasses: Map[IRI, ResourceEntityInfoV2] = Map.empty[IRI, ResourceEntityInfoV2],
+                                   resourceClasses: Map[IRI, ClassEntityInfoV2] = Map.empty[IRI, ClassEntityInfoV2],
                                    properties: Map[IRI, PropertyEntityInfoV2] = Map.empty[IRI, PropertyEntityInfoV2], userLang: Option[String]) extends KnoraResponseV2 {
 
 
@@ -278,7 +278,7 @@ case class ReadEntityDefinitionsV2(ontologies: Map[IRI, Set[IRI]] = Map.empty[IR
         // resource classes
 
         val resClasses: Map[IRI, JsonLDObject] = resourceClasses.map {
-            case (resClassIri: IRI, resourceEntity: ResourceEntityInfoV2) =>
+            case (resClassIri: IRI, resourceEntity: ClassEntityInfoV2) =>
                 val apiResClassIri = InputValidation.toExternalEntityIri(
                     entityIri = resClassIri,
                     targetSchema = targetSchema
@@ -379,7 +379,10 @@ case class ReadNamedGraphsV2(namedGraphs: Set[IRI]) extends KnoraResponseV2 {
   * @param objects         the objects of the predicate that have no language codes.
   * @param objectsWithLang the objects of the predicate that have language codes: a Map of language codes to literals.
   */
-case class PredicateInfoV2(predicateIri: IRI, ontologyIri: IRI, objects: Set[String], objectsWithLang: Map[String, String])
+case class PredicateInfoV2(predicateIri: IRI,
+                           ontologyIri: IRI,
+                           objects: Set[String] = Set.empty[String],
+                           objectsWithLang: Map[String, String] = Map.empty[String, String])
 
 object Cardinality extends Enumeration {
 
@@ -572,7 +575,7 @@ sealed trait EntityInfoV2 {
   * Represents information about an ontology entity that has mostly non-language-specific predicates, plus
   * language specific `rdfs:label` and `rdfs:comment` predicates.
   *
-  * It is extended by [[ResourceEntityInfoV2]] and [[PropertyEntityInfoV2]].
+  * It is extended by [[ClassEntityInfoV2]] and [[PropertyEntityInfoV2]].
   */
 sealed trait EntityInfoWithLabelAndCommentV2 extends EntityInfoV2 {
 
@@ -625,11 +628,14 @@ sealed trait EntityInfoWithLabelAndCommentV2 extends EntityInfoV2 {
   */
 case class PropertyEntityInfoV2(propertyIri: IRI,
                                 ontologyIri: IRI,
-                                isLinkProp: Boolean,
-                                isLinkValueProp: Boolean,
-                                isFileValueProp: Boolean,
-                                predicates: Map[IRI, PredicateInfoV2],
+                                isLinkProp: Boolean = false,
+                                isLinkValueProp: Boolean = false,
+                                isFileValueProp: Boolean = false,
+                                predicates: Map[IRI, PredicateInfoV2] = Map.empty[IRI, PredicateInfoV2],
                                 ontologySchema: OntologySchema) extends EntityInfoWithLabelAndCommentV2 {
+    // TODO: support :subjectType
+    // TODO: support rdf:Property
+
     def getNonLanguageSpecific(targetSchema: ApiV2Schema): Map[IRI, JsonLDValue] = {
         // If this is an internal property IRI, convert it to an external one.
         val convertedPropertyIri = InputValidation.toExternalEntityIri(
@@ -733,29 +739,29 @@ case class PropertyEntityInfoV2(propertyIri: IRI,
 }
 
 /**
-  * Represents the assertions about a given resource class.
+  * Represents the assertions about a given OWL class.
   *
-  * @param resourceClassIri    the IRI of the resource class.
-  * @param ontologyIri         the IRI of the ontology in which the resource class.
+  * @param classIri            the IRI of the class.
+  * @param ontologyIri         the IRI of the ontology in which the class is defined.
   * @param predicates          a [[Map]] of predicate IRIs to [[PredicateInfoV2]] objects.
-  * @param cardinalities       a [[Map]] of properties to [[Cardinality.Value]] objects representing the resource class's
+  * @param cardinalities       a [[Map]] of properties to [[Cardinality.Value]] objects representing the class's
   *                            cardinalities on those properties.
-  * @param linkProperties      a [[Set]] of IRIs of properties of the resource class that point to other resources.
-  * @param linkValueProperties a [[Set]] of IRIs of properties of the resource class
+  * @param linkProperties      a [[Set]] of IRIs of properties of the class that point to resources.
+  * @param linkValueProperties a [[Set]] of IRIs of properties of the class
   *                            that point to `LinkValue` objects.
-  * @param fileValueProperties a [[Set]] of IRIs of properties of the resource class
+  * @param fileValueProperties a [[Set]] of IRIs of properties of the class
   *                            that point to `FileValue` objects.
   * @param ontologySchema      indicates whether this ontology entity belongs to an internal ontology (for use in the
   *                            triplestore) or an external one (for use in the Knora API).
   */
-case class ResourceEntityInfoV2(resourceClassIri: IRI,
-                                ontologyIri: IRI,
-                                predicates: Map[IRI, PredicateInfoV2],
-                                cardinalities: Map[IRI, Cardinality.Value],
-                                linkProperties: Set[IRI],
-                                linkValueProperties: Set[IRI],
-                                fileValueProperties: Set[IRI],
-                                ontologySchema: OntologySchema) extends EntityInfoWithLabelAndCommentV2 {
+case class ClassEntityInfoV2(classIri: IRI,
+                             ontologyIri: IRI,
+                             predicates: Map[IRI, PredicateInfoV2] = Map.empty[IRI, PredicateInfoV2],
+                             cardinalities: Map[IRI, Cardinality.Value] = Map.empty[IRI, Cardinality.Value],
+                             linkProperties: Set[IRI] = Set.empty[IRI],
+                             linkValueProperties: Set[IRI] = Set.empty[IRI],
+                             fileValueProperties: Set[IRI] = Set.empty[IRI],
+                             ontologySchema: OntologySchema) extends EntityInfoWithLabelAndCommentV2 {
 
     def getNonLanguageSpecific(targetSchema: ApiV2Schema): Map[IRI, JsonLDValue] = {
         // If we're using the simplified API, don't return link value properties.
@@ -791,7 +797,7 @@ case class ResourceEntityInfoV2(resourceClassIri: IRI,
         }.toSeq
 
         val convertedResourceClassIri = InputValidation.toExternalEntityIri(
-            entityIri = resourceClassIri,
+            entityIri = classIri,
             targetSchema = targetSchema
         )
 
