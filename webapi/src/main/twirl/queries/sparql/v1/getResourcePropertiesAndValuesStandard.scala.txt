@@ -35,13 +35,12 @@ prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 prefix knora-base: <http://www.knora.org/ontology/knora-base#>
 
-SELECT ?prop ?isLinkProp ?isLinkValueProp ?obj ?objPred ?objObj ?predStandoff ?objStandoff
+SELECT DISTINCT ?prop ?isLinkProp ?isLinkValueProp ?obj ?objPred ?objObj ?predStandoff ?objStandoff
 WHERE {
     BIND(IRI("@resourceIri") as ?resource)
 
-    ?resource rdf:type ?resourceClass ;
-        knora-base:isDeleted false .
-    ?resourceClass rdfs:subClassOf* knora-base:Resource .
+    ?resource rdf:type/rdfs:subClassOf* knora-base:Resource .
+    ?resource knora-base:isDeleted false .
 
     {
         @* Get properties that point to Value objects. *@

@@ -26,7 +26,6 @@ import java.util.UUID
 import akka.actor.Status
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
-import org.apache.jena.sparql.function.library.leviathan.log
 import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v1.responder.ontologymessages._
@@ -2308,8 +2307,10 @@ class ResourcesResponderV1 extends Responder {
                 triplestore = settings.triplestoreType,
                 resourceIri = resourceIri
             ).toString())
-            // _ = println(sparqlQuery)
+            _ = log.debug("getGroupedProperties - sparqlQuery: {}", sparqlQuery)
+
             resPropsResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
+            _ = log.debug("getGroupedProperties - resPropsResponse: {}", MessageUtil.toSource(resPropsResponse))
 
             // Partition the property result rows into rows with value properties and rows with link properties.
             (rowsWithLinks: Seq[VariableResultsRow], rowsWithValues: Seq[VariableResultsRow]) = resPropsResponse.results.bindings.partition(_.rowMap.get("isLinkProp").exists(_.toBooleanExtended))
