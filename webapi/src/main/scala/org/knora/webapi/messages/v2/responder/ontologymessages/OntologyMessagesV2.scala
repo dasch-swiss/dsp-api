@@ -208,20 +208,20 @@ case class PropertyEntitiesGetRequestV2(propertyIris: Set[IRI], allLanguages: Bo
 /**
   * Returns information about ontology entities.
   *
-  * @param ontologies      named graphs and their resource classes.
-  * @param resourceClasses information about resource classes.
-  * @param properties      information about properties.
-  * @param userLang        the preferred language in which the information should be returned, or [[None]] if information
-  *                        should be returned in all available languages.
+  * @param ontologies named graphs and their classes.
+  * @param classes    information about classes.
+  * @param properties information about properties.
+  * @param userLang   the preferred language in which the information should be returned, or [[None]] if information
+  *                   should be returned in all available languages.
   */
 case class ReadEntityDefinitionsV2(ontologies: Map[IRI, Set[IRI]] = Map.empty[IRI, Set[IRI]],
-                                   resourceClasses: Map[IRI, ClassEntityInfoV2] = Map.empty[IRI, ClassEntityInfoV2],
+                                   classes: Map[IRI, ClassEntityInfoV2] = Map.empty[IRI, ClassEntityInfoV2],
                                    properties: Map[IRI, PropertyEntityInfoV2] = Map.empty[IRI, PropertyEntityInfoV2], userLang: Option[String]) extends KnoraResponseV2 {
 
 
     def toJsonLDDocument(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDDocument = {
         // Make JSON-LD prefixes for the project-specific ontologies used in the response.
-        val ontologiesFromResourceClasses: Set[IRI] = resourceClasses.values.map {
+        val ontologiesFromResourceClasses: Set[IRI] = classes.values.map {
             resourceClass => resourceClass.ontologyIri
         }.toSet
 
@@ -254,14 +254,14 @@ case class ReadEntityDefinitionsV2(ontologies: Map[IRI, Set[IRI]] = Map.empty[IR
             "owl" -> JsonLDString("http://www.w3.org/2002/07/owl#")
         ) ++ projectSpecificOntologyPrefixes)
 
-        // ontologies with their resource classes
+        // ontologies with their classes
 
-        val ontoObjMap: Map[IRI, JsonLDArray] = ontologies.map {
-            case (namedGraphIri: IRI, resourceClassIris: Set[IRI]) =>
-                val resClassIris = resourceClassIris.toSeq.map {
-                    resClassIri =>
+        val jsonOntologies: Map[IRI, JsonLDArray] = ontologies.map {
+            case (namedGraphIri: IRI, classIris: Set[IRI]) =>
+                val classIrisInOntology = classIris.toSeq.map {
+                    classIri =>
                         JsonLDString(InputValidation.toExternalEntityIri(
-                            entityIri = resClassIri,
+                            entityIri = classIri,
                             targetSchema = targetSchema
                         ))
                 }
@@ -271,25 +271,25 @@ case class ReadEntityDefinitionsV2(ontologies: Map[IRI, Set[IRI]] = Map.empty[IR
                     targetSchema = targetSchema
                 )
 
-                convertedNamedGraphIri -> JsonLDArray(resClassIris)
+                convertedNamedGraphIri -> JsonLDArray(classIrisInOntology)
 
         }
 
-        // resource classes
+        // classes
 
-        val resClasses: Map[IRI, JsonLDObject] = resourceClasses.map {
-            case (resClassIri: IRI, resourceEntity: ClassEntityInfoV2) =>
-                val apiResClassIri = InputValidation.toExternalEntityIri(
-                    entityIri = resClassIri,
+        val jsonClasses: Map[IRI, JsonLDObject] = classes.map {
+            case (classIri: IRI, resourceEntity: ClassEntityInfoV2) =>
+                val apiClassIri = InputValidation.toExternalEntityIri(
+                    entityIri = classIri,
                     targetSchema = targetSchema
                 )
 
-                val resourceEntityJson = userLang match {
+                val jsonClass = userLang match {
                     case Some(lang) => resourceEntity.toJsonLDWithSingleLanguage(targetSchema = targetSchema, userLang = lang, settings = settings)
                     case None => resourceEntity.toJsonLDWithAllLanguages(targetSchema = targetSchema)
                 }
 
-                apiResClassIri -> resourceEntityJson
+                apiClassIri -> jsonClass
         }
 
         // properties
@@ -303,7 +303,7 @@ case class ReadEntityDefinitionsV2(ontologies: Map[IRI, Set[IRI]] = Map.empty[IR
             properties
         }
 
-        val props: Map[IRI, JsonLDObject] = filteredProperties.map {
+        val jsonProperties: Map[IRI, JsonLDObject] = filteredProperties.map {
             case (propIri: IRI, propEntity: PropertyEntityInfoV2) =>
                 val apiPropIri = InputValidation.toExternalEntityIri(
                     entityIri = propIri,
@@ -318,9 +318,9 @@ case class ReadEntityDefinitionsV2(ontologies: Map[IRI, Set[IRI]] = Map.empty[IR
                 apiPropIri -> propJson
         }
 
-        val hasOntologiesWithResourceClassesProp = targetSchema match {
-            case ApiV2Simple => OntologyConstants.KnoraApiV2Simplified.HasOntologiesWithResourceClasses
-            case ApiV2WithValueObjects => OntologyConstants.KnoraApiV2WithValueObject.HasOntologiesWithResourceClasses
+        val hasOntologiesWithClassesProp = targetSchema match {
+            case ApiV2Simple => OntologyConstants.KnoraApiV2Simplified.HasOntologiesWithClasses
+            case ApiV2WithValueObjects => OntologyConstants.KnoraApiV2WithValueObject.HasOntologiesWithClasses
         }
 
         val hasPropertiesProp = targetSchema match {
@@ -328,15 +328,15 @@ case class ReadEntityDefinitionsV2(ontologies: Map[IRI, Set[IRI]] = Map.empty[IR
             case ApiV2WithValueObjects => OntologyConstants.KnoraApiV2WithValueObject.HasProperties
         }
 
-        val hasResourceClassesProp = targetSchema match {
-            case ApiV2Simple => OntologyConstants.KnoraApiV2Simplified.HasResourceClasses
-            case ApiV2WithValueObjects => OntologyConstants.KnoraApiV2WithValueObject.HasResourceClasses
+        val hasClassesProp = targetSchema match {
+            case ApiV2Simple => OntologyConstants.KnoraApiV2Simplified.HasClasses
+            case ApiV2WithValueObjects => OntologyConstants.KnoraApiV2WithValueObject.HasClasses
         }
 
         val body = JsonLDObject(Map(
-            hasOntologiesWithResourceClassesProp -> JsonLDObject(ontoObjMap),
-            hasPropertiesProp -> JsonLDObject(props),
-            hasResourceClassesProp -> JsonLDObject(resClasses)
+            hasOntologiesWithClassesProp -> JsonLDObject(jsonOntologies),
+            hasPropertiesProp -> JsonLDObject(jsonProperties),
+            hasClassesProp -> JsonLDObject(jsonClasses)
         ))
 
         JsonLDDocument(body = body, context = context)

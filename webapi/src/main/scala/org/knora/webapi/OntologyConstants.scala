@@ -488,13 +488,13 @@ object OntologyConstants {
 
         val HasOntologies: IRI = KnoraApiV2PrefixExpansion + "hasOntologies"
 
-        val HasOntologiesWithResourceClasses: IRI = KnoraApiV2PrefixExpansion + "hasOntologiesWithResourceClasses"
+        val HasOntologiesWithClasses: IRI = KnoraApiV2PrefixExpansion + "hasOntologiesWithClasses"
 
         val HasProperties: IRI = KnoraApiV2PrefixExpansion + "hasProperties"
 
         val BelongsToOntology: IRI = KnoraApiV2PrefixExpansion + "belongsToOntology"
 
-        val HasResourceClasses: IRI = KnoraApiV2PrefixExpansion + "hasResourceClasses"
+        val HasClasses: IRI = KnoraApiV2PrefixExpansion + "hasClasses"
 
         val ValueAsString: IRI = KnoraApiV2PrefixExpansion + "valueAsString"
 
@@ -508,12 +508,20 @@ object OntologyConstants {
         val TextRepresentation: IRI = KnoraApiV2PrefixExpansion + "TextRepresentation"
         val DocumentRepresentation: IRI = KnoraApiV2PrefixExpansion + "DocumentRepresentation"
         val XMLToStandoffMapping: IRI = KnoraApiV2PrefixExpansion + "XMLToStandoffMapping"
+        val ListNode: IRI = KnoraApiV2PrefixExpansion + "ListNode"
 
         val Value: IRI = KnoraApiV2PrefixExpansion + "Value"
         val TextValue: IRI = KnoraApiV2PrefixExpansion + "TextValue"
         val IntegerValue: IRI = KnoraApiV2PrefixExpansion + "IntegerValue"
+        val DecimalValue: IRI = KnoraApiV2PrefixExpansion + "DecimalValue"
+        val BooleanValue: IRI = KnoraApiV2PrefixExpansion + "BooleanValue"
         val DateValue: IRI = KnoraApiV2PrefixExpansion + "DateValue"
+        val GeomValue: IRI = KnoraApiV2PrefixExpansion + "GeomValue"
+        val IntervalValue: IRI = KnoraApiV2PrefixExpansion + "IntervalValue"
         val LinkValue: IRI = KnoraApiV2PrefixExpansion + "LinkValue"
+        val ListValue: IRI = KnoraApiV2PrefixExpansion + "ListValue"
+        val UriValue: IRI = KnoraApiV2PrefixExpansion + "UriValue"
+        val GeonameValue: IRI = KnoraApiV2PrefixExpansion + "GeonameValue"
         val FileValue: IRI = KnoraApiV2PrefixExpansion + "FileValue"
         val ColorValue: IRI = KnoraApiV2PrefixExpansion + "ColorValue"
         val StillImageFileValue: IRI = KnoraApiV2PrefixExpansion + "StillImageFileValue"
@@ -567,6 +575,13 @@ object OntologyConstants {
         val StillImageFileValueHasDimY: IRI = KnoraApiV2PrefixExpansion + "stillImageFileValueHasDimY"
         val StillImageFileValueHasIIIFBaseUrl: IRI = KnoraApiV2PrefixExpansion + "stillImageFileValueHasIIIFBaseUrl"
 
+        val MovingImageFileValueHasDimX: IRI = KnoraApiV2PrefixExpansion + "movingImageFileValueHasDimX"
+        val MovingImageFileValueHasDimY: IRI = KnoraApiV2PrefixExpansion + "movingImageFileValueHasDimY"
+        val MovingImageFileValueHasFps: IRI = KnoraApiV2PrefixExpansion + "movingImageFileValueHasFps"
+        val MovingImageFileValueHasQualityLevel: IRI = KnoraApiV2PrefixExpansion + "movingImageFileValueHasQualityLevel"
+        val MovingImageFileValueHasDuration: IRI = KnoraApiV2PrefixExpansion + "movingImageFileValueHasDuration"
+
+        val AudioFileValueHasDuration: IRI = KnoraApiV2PrefixExpansion + "audioFileValueHasDuration"
 
         val IntervalValueHasStart: IRI = KnoraApiV2PrefixExpansion + "intervalValueHasStart"
         val IntervalValueHasEnd: IRI = KnoraApiV2PrefixExpansion + "intervalValueHasEnd"
@@ -608,11 +623,11 @@ object OntologyConstants {
 
         val BelongsToOntology: IRI = KnoraApiV2PrefixExpansion + "belongsToOntology"
 
-        val HasOntologiesWithResourceClasses: IRI = KnoraApiV2PrefixExpansion + "hasOntologiesWithResourceClasses"
+        val HasOntologiesWithClasses: IRI = KnoraApiV2PrefixExpansion + "hasOntologiesWithClasses"
 
         val HasProperties: IRI = KnoraApiV2PrefixExpansion + "hasProperties"
 
-        val HasResourceClasses: IRI = KnoraApiV2PrefixExpansion + "hasResourceClasses"
+        val HasClasses: IRI = KnoraApiV2PrefixExpansion + "hasClasses"
 
 
         /**

@@ -900,7 +900,7 @@ class OntologyResponderV2 extends Responder {
                 None
             }
 
-        } yield ReadEntityDefinitionsV2(resourceClasses = resourceClassResponse.resourceEntityInfoMap, properties = propertiesResponse.propertyEntityInfoMap, userLang = userLang)
+        } yield ReadEntityDefinitionsV2(classes = resourceClassResponse.resourceEntityInfoMap, properties = propertiesResponse.propertyEntityInfoMap, userLang = userLang)
     }
 
     /**
