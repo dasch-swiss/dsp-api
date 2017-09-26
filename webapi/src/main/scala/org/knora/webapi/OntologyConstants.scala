@@ -507,9 +507,13 @@ object OntologyConstants {
         val DDDRepresentation: IRI = KnoraApiV2PrefixExpansion + "DDDRepresentation"
         val TextRepresentation: IRI = KnoraApiV2PrefixExpansion + "TextRepresentation"
         val DocumentRepresentation: IRI = KnoraApiV2PrefixExpansion + "DocumentRepresentation"
+        val XMLToStandoffMapping: IRI = KnoraApiV2PrefixExpansion + "XMLToStandoffMapping"
 
         val Value: IRI = KnoraApiV2PrefixExpansion + "Value"
         val TextValue: IRI = KnoraApiV2PrefixExpansion + "TextValue"
+        val IntegerValue: IRI = KnoraApiV2PrefixExpansion + "IntegerValue"
+        val DateValue: IRI = KnoraApiV2PrefixExpansion + "DateValue"
+        val LinkValue: IRI = KnoraApiV2PrefixExpansion + "LinkValue"
         val FileValue: IRI = KnoraApiV2PrefixExpansion + "FileValue"
         val ColorValue: IRI = KnoraApiV2PrefixExpansion + "ColorValue"
         val StillImageFileValue: IRI = KnoraApiV2PrefixExpansion + "StillImageFileValue"
