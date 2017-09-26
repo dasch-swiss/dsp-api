@@ -528,7 +528,7 @@ object KnoraApiV2WithValueObjects {
             OntologyConstants.KnoraApiV2WithValueObject.DateValueHasEndMonth -> Cardinality.MayHaveOne,
             OntologyConstants.KnoraApiV2WithValueObject.DateValueHasStartDay -> Cardinality.MayHaveOne,
             OntologyConstants.KnoraApiV2WithValueObject.DateValueHasEndDay -> Cardinality.MayHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObject.DateValueHasCalendar -> Cardinality.MayHaveOne,
+            OntologyConstants.KnoraApiV2WithValueObject.DateValueHasCalendar -> Cardinality.MayHaveOne
         )
     )
 
