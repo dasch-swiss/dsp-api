@@ -73,8 +73,8 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
     // The path for SPARQL queries.
     private val queryRequestPath = triplestoreType match {
         case HTTP_GRAPH_DB_TS_TYPE | HTTP_GRAPH_DB_FREE_TS_TYPE => s"/repositories/${settings.triplestoreDatabaseName}"
-        case HTTP_FUSEKI_TS_TYPE if !settings.fusekiTomcat => s"/${settings.triplestoreDatabaseName}/query"
-        case HTTP_FUSEKI_TS_TYPE if settings.fusekiTomcat => s"/${settings.fusekiTomcatContext}/${settings.triplestoreDatabaseName}/query"
+        case HTTP_STARDOG_TS_TYPE => s"/${settings.triplestoreDatabaseName}/query"
+        case HTTP_FUSEKI_TS_TYPE => s"/${settings.triplestoreDatabaseName}/query"
         case HTTP_VIRTUOSO_TYPE => "/sparql/"
     }
 
@@ -88,8 +88,8 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
     // The path for SPARQL update operations.
     private val updateRequestPath = triplestoreType match {
         case HTTP_GRAPH_DB_TS_TYPE | HTTP_GRAPH_DB_FREE_TS_TYPE => s"/repositories/${settings.triplestoreDatabaseName}/statements"
-        case HTTP_FUSEKI_TS_TYPE if !settings.fusekiTomcat => s"/${settings.triplestoreDatabaseName}/update"
-        case HTTP_FUSEKI_TS_TYPE if settings.fusekiTomcat => s"/${settings.fusekiTomcatContext}/${settings.triplestoreDatabaseName}/update"
+        case HTTP_STARDOG_TS_TYPE => s"/${settings.triplestoreDatabaseName}/update"
+        case HTTP_FUSEKI_TS_TYPE => s"/${settings.triplestoreDatabaseName}/update"
         case HTTP_VIRTUOSO_TYPE => "/sparql/"
     }
 
@@ -274,22 +274,15 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
         } yield SparqlAskResponse(result)
     }
 
-    private def resetTripleStoreContent(rdfDataObjects: Seq[RdfDataObject]): Future[ResetTriplestoreContentACK] = {
-        log.debug("resetTripleStoreContent")
-        val resetTriplestoreResult = for {
+    private def resetTripleStoreContent(rdfDataObjects: Seq[RdfDataObject]): Future[ResetTriplestoreContentACK] = for {
 
         // drop old content
-            dropResult <- dropAllTriplestoreContent()
+        dropResult <- dropAllTriplestoreContent()
 
-            // insert new content
-            insertResult <- insertDataIntoTriplestore(rdfDataObjects)
+        // insert new content
+        insertResult <- insertDataIntoTriplestore(rdfDataObjects)
 
-            // any errors throwing exceptions until now are already covered so we can ACK the request
-            result = ResetTriplestoreContentACK()
-        } yield result
-
-        resetTriplestoreResult
-    }
+    } yield ResetTriplestoreContentACK()
 
     private def dropAllTriplestoreContent(): Future[DropAllTriplestoreContentACK] = {
 
@@ -367,6 +360,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
                 log.debug(s"added: ${elem.name}")
             }
 
+            log.debug("==>> Status: {}", Await.result(triplestoreStatusRequest(), 30.seconds))
             log.debug("==>> Loading Data End")
             Future.successful(InsertTriplestoreContentACK())
         } catch {

@@ -121,12 +121,6 @@ class SettingsImpl(config: Config) extends Extension {
     //used in the store package
     val tripleStoreConfig: Config = config.getConfig("app.triplestore")
 
-    val (fusekiTomcat, fusekiTomcatContext) = if (triplestoreType == HTTP_FUSEKI_TS_TYPE) {
-        (config.getBoolean("app.triplestore.fuseki.tomcat"), config.getString("app.triplestore.fuseki.tomcat-context"))
-    } else {
-        (false, "")
-    }
-
     private val fakeTriplestore: String = config.getString("app.triplestore.fake-triplestore")
     val prepareFakeTriplestore: Boolean = fakeTriplestore == "prepare"
     val useFakeTriplestore: Boolean = fakeTriplestore == "use"

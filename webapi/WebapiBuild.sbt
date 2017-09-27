@@ -15,6 +15,8 @@ lazy val webapi = (project in file(".")).
             GraphDBTest,
             GraphDBFreeTest,
             GraphDBFreeIntegrationTest,
+            StardogTest,
+            StardogIntegrationTest,
             VirtuosoTest,
             VirtuosoIntegrationTest,
             EmbeddedJenaTDBTest,
@@ -53,6 +55,20 @@ lazy val webapi = (project in file(".")).
             Defaults.testTasks ++ Seq(
                 fork := true,
                 javaOptions ++= javaGraphDBFreeIntegrationTestOptions,
+                testOptions += Tests.Argument("-oDF") // show full stack traces and test case durations
+            )
+        ): _*).
+        settings(inConfig(StardogTest)(
+            Defaults.testTasks ++ Seq(
+                fork := true,
+                javaOptions ++= javaStardogTestOptions,
+                testOptions += Tests.Argument("-oDF") // show full stack traces and test case durations
+            )
+        ): _*).
+        settings(inConfig(StardogIntegrationTest)(
+            Defaults.testTasks ++ Seq(
+                fork := true,
+                javaOptions ++= javaStardogIntegrationTestOptions,
                 testOptions += Tests.Argument("-oDF") // show full stack traces and test case durations
             )
         ): _*).
@@ -180,10 +196,10 @@ lazy val webApiLibs = Seq(
     "org.xmlunit" % "xmlunit-core" % "2.1.1",
     "io.igl" %% "jwt" % "1.2.2",
     // testing
-    "com.typesafe.akka" %% "akka-testkit" % akkaVersion % "test, fuseki, graphdb, tdb, it, fuseki-it, graphdb-free-it, virtuoso, virtuoso-it",
-    "com.typesafe.akka" %% "akka-http-testkit" % akkaHttpVersion % "test, fuseki, graphdb, tdb, it, fuseki-it, graphdb-free-it, virtuoso, virtuoso-it",
-    "com.typesafe.akka" %% "akka-stream-testkit" % akkaVersion % "test, fuseki, graphdb, tdb, it, fuseki-it, graphdb-free-it, virtuoso, virtuoso-it",
-    "org.scalatest" %% "scalatest" % "3.0.0" % "test, fuseki, graphdb, tdb, it, fuseki-it, graphdb-free-it, virtuoso, virtuoso-it",
+    "com.typesafe.akka" %% "akka-testkit" % akkaVersion,
+    "com.typesafe.akka" %% "akka-http-testkit" % akkaHttpVersion,
+    "com.typesafe.akka" %% "akka-stream-testkit" % akkaVersion,
+    "org.scalatest" %% "scalatest" % "3.0.0",
     "org.eclipse.rdf4j" % "rdf4j-rio-turtle" % "2.2.1",
     "org.eclipse.rdf4j" % "rdf4j-queryparser-sparql" % "2.2.1",
     "org.rogach" %% "scallop" % "2.0.5",
@@ -235,6 +251,16 @@ lazy val javaGraphDBFreeTestOptions = Seq(
 lazy val GraphDBFreeIntegrationTest = config("graphdb-free-it") extend(IntegrationTest)
 lazy val javaGraphDBFreeIntegrationTestOptions = Seq(
     "-Dconfig.resource=graphdb-free.conf"
+) ++ javaTestOptions
+
+lazy val StardogTest = config("stardog") extend(Test)
+lazy val javaStardogTestOptions = Seq(
+    "-Dconfig.resource=stardog.conf"
+) ++ javaTestOptions
+
+lazy val StardogIntegrationTest = config("stardog-it") extend(IntegrationTest)
+lazy val javaStardogIntegrationTestOptions = Seq(
+    "-Dconfig.resource=stardog.conf"
 ) ++ javaTestOptions
 
 lazy val VirtuosoTest = config("virtuoso") extend(Test)
