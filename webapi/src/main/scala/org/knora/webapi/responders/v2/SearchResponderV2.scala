@@ -884,7 +884,12 @@ class SearchResponderV2 extends Responder {
                                 // Get the corresponding knora-base:valueHas* property so we can generate an appropriate variable name.
                                 val propertyIri: IRI = typeInfo match {
                                     case nonPropertyTypeInfo: NonPropertyTypeInfo =>
-                                        literalTypesToValueTypeIris.getOrElse(nonPropertyTypeInfo.typeIri, throw SparqlSearchException(s"Type ${nonPropertyTypeInfo.typeIri} is not supported in ORDER BY"))
+                                        val internalTypeIri = if (InputValidation.isKnoraApiEntityIri(nonPropertyTypeInfo.typeIri)) {
+                                            IriRef(InputValidation.externalIriToInternalIri(nonPropertyTypeInfo.typeIri, () => throw BadRequestException(s"${nonPropertyTypeInfo.typeIri} is not a valid external knora-api entity Iri")))
+                                        } else {
+                                            IriRef(InputValidation.toIri(nonPropertyTypeInfo.typeIri, () => throw BadRequestException(s"${nonPropertyTypeInfo.typeIri} is not a valid IRI")))
+                                        }
+                                        literalTypesToValueTypeIris.getOrElse(internalTypeIri.iri, throw SparqlSearchException(s"Type ${internalTypeIri.iri} is not supported in ORDER BY"))
 
                                     case _: PropertyTypeInfo => throw SparqlSearchException(s"Variable ${criterion.queryVariable.variableName} represents a property, and therefore cannot be used in ORDER BY")
                                 }

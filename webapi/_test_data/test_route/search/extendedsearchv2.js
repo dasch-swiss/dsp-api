@@ -20,9 +20,14 @@ queryArr.push(`
 
         ?letter ?linkingProp2  <http://rdfh.ch/beol/_yblAQMwT2un_xN7UaVWrg> .
 
-} WHERE {
+    } WHERE {
         ?letter a knora-api:Resource .
         ?letter a beol:letter .
+        
+        ?letter beol:creationDate ?date .
+        beol:creationDate knora-api:objectType knora-api:Date .
+        
+        ?date a knora-api:Date .
     
         # Scheuchzer, Johann Jacob 1672-1733
         ?letter ?linkingProp1  <http://rdfh.ch/beol/ZkJcQg9yTmyMY_J6nnubxA> .
@@ -38,7 +43,7 @@ queryArr.push(`
         FILTER(?linkingProp2 = beol:hasAuthor || ?linkingProp2 = beol:hasRecipient )
     
         <http://rdfh.ch/beol/_yblAQMwT2un_xN7UaVWrg> a knora-api:Resource .
-}
+    } ORDER BY ?date
 `);
 
 // search for a letter that has the given title and mentions Isaac Newton
@@ -70,7 +75,7 @@ queryArr.push(`
           beol:mentionsPerson  knora-api:objectType knora-api:Resource .
       
           <http://rdfh.ch/beol/BPW4_gnxQBC4iWm3F6ni8w> a knora-api:Resource .
-      }
+      } ORDER BY ?title
 `);
 
 // search for a letter that has the given title and mentions Isaac Newton using a var as a value prop pred
@@ -209,7 +214,7 @@ function runQuery(queryStrArr, index) {
                 let timeEnd = new Date();
                 let duration = timeEnd - timeStart;
                 const parsedData = JSON.parse(rawData);
-                console.log(parsedData['numberOfItems'])
+                console.log(parsedData['schema:numberOfItems']);
                 console.log(rawData);
                 console.log(`Duration in millis: ${duration}`);
                 console.log("++++++++++")
