@@ -56,28 +56,28 @@ case class LoadOntologiesResponseV2() extends KnoraResponseV2 {
             Map("knora-api:result" -> JsonLDString("Ontologies loaded."))
         ),
         context = JsonLDObject(
-            Map(OntologyConstants.KnoraApi.KnoraApiOntologyLabel -> JsonLDString(OntologyConstants.KnoraApiV2WithValueObject.KnoraApiV2PrefixExpansion))
+            Map(OntologyConstants.KnoraApi.KnoraApiOntologyLabel -> JsonLDString(OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiV2PrefixExpansion))
         )
     )
 }
 
 /**
-  * Requests all available information about a list of ontology entities (resource classes and/or properties). A successful response will be an
+  * Requests all available information about a list of ontology entities (classes and/or properties). A successful response will be an
   * [[EntityInfoGetResponseV2]].
   *
-  * @param resourceClassIris the IRIs of the resource entities to be queried.
-  * @param propertyIris      the IRIs of the property entities to be queried.
-  * @param userProfile       the profile of the user making the request.
+  * @param classIris    the IRIs of the class entities to be queried.
+  * @param propertyIris the IRIs of the property entities to be queried.
+  * @param userProfile  the profile of the user making the request.
   */
-case class EntityInfoGetRequestV2(resourceClassIris: Set[IRI] = Set.empty[IRI], propertyIris: Set[IRI] = Set.empty[IRI], userProfile: UserProfileV1) extends OntologiesResponderRequestV2
+case class EntityInfoGetRequestV2(classIris: Set[IRI] = Set.empty[IRI], propertyIris: Set[IRI] = Set.empty[IRI], userProfile: UserProfileV1) extends OntologiesResponderRequestV2
 
 /**
   * Represents assertions about one or more ontology entities (resource classes and/or properties).
   *
-  * @param resourceEntityInfoMap a [[Map]] of resource entity IRIs to [[ClassEntityInfoV2]] objects.
+  * @param classEntityInfoMap    a [[Map]] of class entity IRIs to [[ClassEntityInfoV2]] objects.
   * @param propertyEntityInfoMap a [[Map]] of property entity IRIs to [[PropertyEntityInfoV2]] objects.
   */
-case class EntityInfoGetResponseV2(resourceEntityInfoMap: Map[IRI, ClassEntityInfoV2],
+case class EntityInfoGetResponseV2(classEntityInfoMap: Map[IRI, ClassEntityInfoV2],
                                    propertyEntityInfoMap: Map[IRI, PropertyEntityInfoV2])
 
 /**
@@ -187,13 +187,13 @@ case class NamedGraphsGetRequestV2(userProfile: UserProfileV1) extends Ontologie
 case class NamedGraphEntitiesGetRequestV2(namedGraphIris: Set[IRI], allLanguages: Boolean, userProfile: UserProfileV1) extends OntologiesResponderRequestV2
 
 /**
-  * Requests the entity definitions for the given resource class Iris. A successful response will be a [[ReadEntityDefinitionsV2]].
+  * Requests the entity definitions for the given class IRIs. A successful response will be a [[ReadEntityDefinitionsV2]].
   *
-  * @param resourceClassIris the IRIs of the resource classes to be queried.
+  * @param resourceClassIris the IRIs of the classes to be queried.
   * @param allLanguages      true if information in all available languages should be returned.
   * @param userProfile       the profile of the user making the request.
   */
-case class ResourceClassesGetRequestV2(resourceClassIris: Set[IRI], allLanguages: Boolean, userProfile: UserProfileV1) extends OntologiesResponderRequestV2
+case class ClassesGetRequestV2(resourceClassIris: Set[IRI], allLanguages: Boolean, userProfile: UserProfileV1) extends OntologiesResponderRequestV2
 
 /**
   * Requests the entity definitions for the given property Iris. A successful response will be a [[ReadEntityDefinitionsV2]].
@@ -231,7 +231,8 @@ case class ReadEntityDefinitionsV2(ontologies: Map[IRI, Set[IRI]] = Map.empty[IR
 
         val internalProjectSpecificOntologiesUsed: Set[IRI] = (ontologiesFromResourceClasses ++ ontologiesFromProperties) -
             OntologyConstants.KnoraBase.KnoraBaseOntologyIri -
-            OntologyConstants.KnoraApi.KnoraApiOntologyIri
+            OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiOntologyIri -
+            OntologyConstants.KnoraApiV2Simple.KnoraApiOntologyIri
 
         val projectSpecificOntologyPrefixes: Map[String, JsonLDString] = internalProjectSpecificOntologiesUsed.map {
             internalOntologyIri =>
@@ -242,8 +243,8 @@ case class ReadEntityDefinitionsV2(ontologies: Map[IRI, Set[IRI]] = Map.empty[IR
 
         // Determine which ontology to use as the knora-api prefix expansion.
         val knoraApiPrefixExpansion = targetSchema match {
-            case ApiV2Simple => OntologyConstants.KnoraApiV2Simplified.KnoraApiV2PrefixExpansion
-            case ApiV2WithValueObjects => OntologyConstants.KnoraApiV2WithValueObject.KnoraApiV2PrefixExpansion
+            case ApiV2Simple => OntologyConstants.KnoraApiV2Simple.KnoraApiV2PrefixExpansion
+            case ApiV2WithValueObjects => OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiV2PrefixExpansion
         }
 
         // Make the JSON-LD context.
@@ -319,18 +320,18 @@ case class ReadEntityDefinitionsV2(ontologies: Map[IRI, Set[IRI]] = Map.empty[IR
         }
 
         val hasOntologiesWithClassesProp = targetSchema match {
-            case ApiV2Simple => OntologyConstants.KnoraApiV2Simplified.HasOntologiesWithClasses
-            case ApiV2WithValueObjects => OntologyConstants.KnoraApiV2WithValueObject.HasOntologiesWithClasses
+            case ApiV2Simple => OntologyConstants.KnoraApiV2Simple.HasOntologiesWithClasses
+            case ApiV2WithValueObjects => OntologyConstants.KnoraApiV2WithValueObjects.HasOntologiesWithClasses
         }
 
         val hasPropertiesProp = targetSchema match {
-            case ApiV2Simple => OntologyConstants.KnoraApiV2Simplified.HasProperties
-            case ApiV2WithValueObjects => OntologyConstants.KnoraApiV2WithValueObject.HasProperties
+            case ApiV2Simple => OntologyConstants.KnoraApiV2Simple.HasProperties
+            case ApiV2WithValueObjects => OntologyConstants.KnoraApiV2WithValueObjects.HasProperties
         }
 
         val hasClassesProp = targetSchema match {
-            case ApiV2Simple => OntologyConstants.KnoraApiV2Simplified.HasClasses
-            case ApiV2WithValueObjects => OntologyConstants.KnoraApiV2WithValueObject.HasClasses
+            case ApiV2Simple => OntologyConstants.KnoraApiV2Simple.HasClasses
+            case ApiV2WithValueObjects => OntologyConstants.KnoraApiV2WithValueObjects.HasClasses
         }
 
         val body = JsonLDObject(Map(
@@ -347,22 +348,26 @@ case class ReadEntityDefinitionsV2(ontologies: Map[IRI, Set[IRI]] = Map.empty[IR
 case class ReadNamedGraphsV2(namedGraphs: Set[IRI]) extends KnoraResponseV2 {
 
     def toJsonLDDocument(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDDocument = {
-        // TODO: check targetSchema and return JSON-LD accordingly.
-
-        // TODO: when returning information about a built-in knora-api ontology, don't convert entity IRIs from internal to external.
+        val knoraApiOntologyPrefixExpansion = targetSchema match {
+            case ApiV2Simple => OntologyConstants.KnoraApiV2Simple.KnoraApiV2PrefixExpansion
+            case ApiV2WithValueObjects => OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiV2PrefixExpansion
+        }
 
         val context = JsonLDObject(Map(
-            OntologyConstants.KnoraApi.KnoraApiOntologyLabel -> JsonLDString(OntologyConstants.KnoraApiV2WithValueObject.KnoraApiV2PrefixExpansion)
+            OntologyConstants.KnoraApi.KnoraApiOntologyLabel -> JsonLDString(knoraApiOntologyPrefixExpansion)
         ))
 
         val namedGraphIris: Seq[JsonLDString] = namedGraphs.toSeq.map {
-            namedGraphIri =>
-                // translate an internal ontology IRI to knora-api v2 with value object ontology IRI
-                JsonLDString(InputValidation.internalOntologyIriToApiV2WithValueObjectOntologyIri(namedGraphIri, () => throw InconsistentTriplestoreDataException(s"internal ontology IRI $namedGraphIri could not be converted to knora-api v2 with value object ontology IRI")))
+            namedGraphIri => JsonLDString(InputValidation.toExternalOntologyIri(namedGraphIri, targetSchema))
+        }
+
+        val hasOntologiesProp = targetSchema match {
+            case ApiV2Simple => OntologyConstants.KnoraApiV2Simple.HasOntologies
+            case ApiV2WithValueObjects => OntologyConstants.KnoraApiV2WithValueObjects.HasOntologies
         }
 
         val body = JsonLDObject(Map(
-            OntologyConstants.KnoraApiV2WithValueObject.HasOntologies -> JsonLDArray(namedGraphIris)
+            hasOntologiesProp -> JsonLDArray(namedGraphIris)
         ))
 
         JsonLDDocument(body = body, context = context)
@@ -633,9 +638,6 @@ case class PropertyEntityInfoV2(propertyIri: IRI,
                                 isFileValueProp: Boolean = false,
                                 predicates: Map[IRI, PredicateInfoV2] = Map.empty[IRI, PredicateInfoV2],
                                 ontologySchema: OntologySchema) extends EntityInfoWithLabelAndCommentV2 {
-    // TODO: support :subjectType
-    // TODO: support rdf:Property
-
     def getNonLanguageSpecific(targetSchema: ApiV2Schema): Map[IRI, JsonLDValue] = {
         // If this is an internal property IRI, convert it to an external one.
         val convertedPropertyIri = InputValidation.toExternalEntityIri(
@@ -643,17 +645,19 @@ case class PropertyEntityInfoV2(propertyIri: IRI,
             targetSchema = targetSchema
         )
 
+        // TODO: support knora-api:subjectType
+
         // Get the correct knora-api:objectType predicate for the target API schema.
         val objectTypePred: IRI = targetSchema match {
-            case ApiV2Simple => OntologyConstants.KnoraApiV2Simplified.ObjectType
-            case ApiV2WithValueObjects => OntologyConstants.KnoraApiV2WithValueObject.ObjectType
+            case ApiV2Simple => OntologyConstants.KnoraApiV2Simple.ObjectType
+            case ApiV2WithValueObjects => OntologyConstants.KnoraApiV2WithValueObjects.ObjectType
         }
 
         // If this is a built-in API ontology property, get its knora-api:objectType, if it has one.
         val maybeBuiltInObjectType: Option[IRI] = ontologySchema match {
             case InternalSchema => None
-            case ApiV2Simple => getPredicateObjectsWithoutLang(OntologyConstants.KnoraApiV2Simplified.ObjectType).headOption
-            case ApiV2WithValueObjects => getPredicateObjectsWithoutLang(OntologyConstants.KnoraApiV2WithValueObject.ObjectType).headOption
+            case ApiV2Simple => getPredicateObjectsWithoutLang(OntologyConstants.KnoraApiV2Simple.ObjectType).headOption
+            case ApiV2WithValueObjects => getPredicateObjectsWithoutLang(OntologyConstants.KnoraApiV2WithValueObjects.ObjectType).headOption
         }
 
         // If this is an internal ontology property, get its knora-base:objectClassConstraint, if it has one.
@@ -682,14 +686,14 @@ case class PropertyEntityInfoV2(propertyIri: IRI,
         // Make the property's knora-api:objectType statement.
         val objectTypeStatement: Option[(IRI, JsonLDString)] = maybeObjectTypeObj.map(objectTypeObj => (objectTypePred, JsonLDString(objectTypeObj)))
 
-        // Get the property's rdf:type, which should be owl:ObjectProperty or owl:DatatypeProperty.
+        // Get the property's rdf:type, which should be rdf:Property, owl:ObjectProperty, or owl:DatatypeProperty.
         val sourcePropertyType: IRI = getPredicateObjectsWithoutLang(OntologyConstants.Rdf.Type).headOption.getOrElse(throw InconsistentTriplestoreDataException(s"Property $propertyIri has no rdf:type"))
 
         // Determine the type that we will return as the property's JSON-LD @type.
         val convertedPropertyType: IRI = sourcePropertyType match {
-            case OntologyConstants.Owl.DatatypeProperty =>
+            case OntologyConstants.Owl.DatatypeProperty | OntologyConstants.Rdf.Property =>
                 // The property says it's a datatype property, so use that.
-                OntologyConstants.Owl.DatatypeProperty
+                sourcePropertyType
 
             case OntologyConstants.Owl.ObjectProperty =>
                 // The property says it's an object property. Are we using the simplified API?
@@ -704,25 +708,25 @@ case class PropertyEntityInfoV2(propertyIri: IRI,
                                     OntologyConstants.Owl.DatatypeProperty
                                 } else {
                                     // No. Say it's an object property.
-                                    OntologyConstants.Owl.ObjectProperty
+                                    sourcePropertyType
                                 }
 
                             case None =>
                                 // We don't know the property's object type, so leave it as an object property.
-                                OntologyConstants.Owl.ObjectProperty
+                                sourcePropertyType
                         }
 
                     case _ =>
                         // We're not using the simplified API, so leave it as an object property.
-                        OntologyConstants.Owl.ObjectProperty
+                        sourcePropertyType
                 }
 
             case other => throw InconsistentTriplestoreDataException(s"Unsupported rdf:type for property: $other")
         }
 
         val belongsToOntologyPred = targetSchema match {
-            case ApiV2Simple => OntologyConstants.KnoraApiV2Simplified.BelongsToOntology
-            case ApiV2WithValueObjects => OntologyConstants.KnoraApiV2WithValueObject.BelongsToOntology
+            case ApiV2Simple => OntologyConstants.KnoraApiV2Simple.BelongsToOntology
+            case ApiV2WithValueObjects => OntologyConstants.KnoraApiV2WithValueObjects.BelongsToOntology
         }
 
         val convertedOntologyIri = InputValidation.toExternalOntologyIri(
@@ -802,8 +806,8 @@ case class ClassEntityInfoV2(classIri: IRI,
         )
 
         val belongsToOntologyPred = targetSchema match {
-            case ApiV2Simple => OntologyConstants.KnoraApiV2Simplified.BelongsToOntology
-            case ApiV2WithValueObjects => OntologyConstants.KnoraApiV2WithValueObject.BelongsToOntology
+            case ApiV2Simple => OntologyConstants.KnoraApiV2Simple.BelongsToOntology
+            case ApiV2WithValueObjects => OntologyConstants.KnoraApiV2WithValueObjects.BelongsToOntology
         }
 
         val convertedOntologyIri = InputValidation.toExternalOntologyIri(
@@ -812,8 +816,8 @@ case class ClassEntityInfoV2(classIri: IRI,
         )
 
         val resourceIconPred = targetSchema match {
-            case ApiV2Simple => OntologyConstants.KnoraApiV2Simplified.ResourceIcon
-            case ApiV2WithValueObjects => OntologyConstants.KnoraApiV2WithValueObject.ResourceIcon
+            case ApiV2Simple => OntologyConstants.KnoraApiV2Simple.ResourceIcon
+            case ApiV2WithValueObjects => OntologyConstants.KnoraApiV2WithValueObjects.ResourceIcon
         }
 
         val resourceIconStatement: Option[(IRI, JsonLDString)] = getPredicateObjectsWithoutLang(OntologyConstants.KnoraBase.ResourceIcon).headOption.map {
@@ -824,7 +828,7 @@ case class ClassEntityInfoV2(classIri: IRI,
             "@id" -> JsonLDString(convertedResourceClassIri),
             belongsToOntologyPred -> JsonLDString(convertedOntologyIri),
             "@type" -> JsonLDString(OntologyConstants.Owl.Class),
-            OntologyConstants.Rdfs.SubClassOf -> JsonLDArray(owlCardinalities)
+            OntologyConstants.Rdfs.SubClassOf -> JsonLDArray(owlCardinalities) // TODO: add the other rdfs:subClassOf objects
         ) ++ resourceIconStatement
     }
 }
@@ -859,12 +863,12 @@ case class StandoffPropertyEntityInfoV2(standoffPropertyIri: IRI,
 /**
   * Represents the assertions about a given named graph entity.
   *
-  * @param namedGraphIri   the IRI of the named graph.
-  * @param resourceClasses the resource classes defined in the named graph.
-  * @param propertyIris    the properties defined in the named graph.
+  * @param namedGraphIri the IRI of the named graph.
+  * @param classIris     the classes defined in the named graph.
+  * @param propertyIris  the properties defined in the named graph.
   */
 case class NamedGraphEntityInfoV2(namedGraphIri: IRI,
-                                  resourceClasses: Set[IRI],
+                                  classIris: Set[IRI],
                                   propertyIris: Set[IRI])
 
 /**

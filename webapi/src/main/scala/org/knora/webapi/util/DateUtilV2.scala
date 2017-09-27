@@ -52,20 +52,20 @@ object DateUtilV2 {
 
                 case KnoraPrecisionV1.YEAR =>
                     Map(
-                        OntologyConstants.KnoraApiV2WithValueObject.DateValueHasStartYear -> year
+                        OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartYear -> year
                     )
 
                 case KnoraPrecisionV1.MONTH =>
                     Map(
-                        OntologyConstants.KnoraApiV2WithValueObject.DateValueHasStartYear -> year,
-                        OntologyConstants.KnoraApiV2WithValueObject.DateValueHasStartMonth -> month
+                        OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartYear -> year,
+                        OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartMonth -> month
                     )
 
                 case KnoraPrecisionV1.DAY =>
                     Map(
-                        OntologyConstants.KnoraApiV2WithValueObject.DateValueHasStartYear -> year,
-                        OntologyConstants.KnoraApiV2WithValueObject.DateValueHasStartMonth -> month,
-                        OntologyConstants.KnoraApiV2WithValueObject.DateValueHasStartDay -> day
+                        OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartYear -> year,
+                        OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartMonth -> month,
+                        OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartDay -> day
                     )
 
             }
@@ -83,20 +83,20 @@ object DateUtilV2 {
 
                 case KnoraPrecisionV1.YEAR =>
                     Map(
-                        OntologyConstants.KnoraApiV2WithValueObject.DateValueHasEndYear -> year
+                        OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndYear -> year
                     )
 
                 case KnoraPrecisionV1.MONTH =>
                     Map(
-                        OntologyConstants.KnoraApiV2WithValueObject.DateValueHasEndYear -> year,
-                        OntologyConstants.KnoraApiV2WithValueObject.DateValueHasEndMonth -> month
+                        OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndYear -> year,
+                        OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndMonth -> month
                     )
 
                 case KnoraPrecisionV1.DAY =>
                     Map(
-                        OntologyConstants.KnoraApiV2WithValueObject.DateValueHasEndYear -> year,
-                        OntologyConstants.KnoraApiV2WithValueObject.DateValueHasEndMonth -> month,
-                        OntologyConstants.KnoraApiV2WithValueObject.DateValueHasEndDay -> day
+                        OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndYear -> year,
+                        OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndMonth -> month,
+                        OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndDay -> day
                     )
 
             }

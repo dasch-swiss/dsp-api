@@ -212,7 +212,7 @@ object SearchParserV2 {
         val visitor = new SimpleConstructQueryModelVisitor
 
         val parsedQuery = try {
-            sparqlParser.parseQuery(query, OntologyConstants.KnoraApi.KnoraApiOntologyIri + OntologyConstants.KnoraApiV2Simplified.VersionSegment + "#")
+            sparqlParser.parseQuery(query, OntologyConstants.KnoraApiV2Simple.KnoraApiV2PrefixExpansion)
         } catch {
             case malformed: MalformedQueryException => throw SparqlSearchException(s"Invalid search query: ${malformed.getMessage}")
         }

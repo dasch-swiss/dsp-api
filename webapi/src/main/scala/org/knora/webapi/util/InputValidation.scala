@@ -141,14 +141,14 @@ object InputValidation {
     private val ExternalApiV2WithValueObjectOntologyRegex: Regex = (
         "^" + OntologyConstants.KnoraApi.ApiOntologyStart +
             "(" + NCNamePattern + ")" +
-            OntologyConstants.KnoraApiV2WithValueObject.VersionSegment + "$"
+            OntologyConstants.KnoraApiV2WithValueObjects.VersionSegment + "$"
         ).r
 
     // A regex for external knora-api v2 simple ontologies.
     private val ExternalApiV2SimpleOntologyRegex: Regex = (
         "^" + OntologyConstants.KnoraApi.ApiOntologyStart +
             "(" + NCNamePattern + ")" +
-            OntologyConstants.KnoraApiV2Simplified.VersionSegment + "$"
+            OntologyConstants.KnoraApiV2Simple.VersionSegment + "$"
         ).r
 
     // A regex for entity IRIs in project-specific internal ontologies.
@@ -161,35 +161,35 @@ object InputValidation {
     // This works for both cases: with value object and simple.
     private val KnoraApiOntologyEntityRegex = (
         "^" + OntologyConstants.KnoraApi.ApiOntologyStart +
-            "(" + NCNamePattern + ")" + "(" + OntologyConstants.KnoraApiV2WithValueObject.VersionSegment + "|" + OntologyConstants.KnoraApiV2Simplified.VersionSegment + ")" +
+            "(" + NCNamePattern + ")" + "(" + OntologyConstants.KnoraApiV2WithValueObjects.VersionSegment + "|" + OntologyConstants.KnoraApiV2Simple.VersionSegment + ")" +
             "#(" + NCNamePattern + ")$"
         ).r
 
     // A regex for entity IRIs in external ontologies using API v2 simplified schema.
     private val KnoraApiV2SimpleOntologyEntityRegex = (
         "^" + OntologyConstants.KnoraApi.ApiOntologyStart +
-            "(" + NCNamePattern + ")" + "(" + OntologyConstants.KnoraApiV2Simplified.VersionSegment + ")" +
+            "(" + NCNamePattern + ")" + "(" + OntologyConstants.KnoraApiV2Simple.VersionSegment + ")" +
             "#(" + NCNamePattern + ")$"
         ).r
 
     // A regex for entity IRIs in external ontologies using API v2 schema with value objects.
     private val KnoraApiV2WithValueObjectOntologyEntityRegex = (
         "^" + OntologyConstants.KnoraApi.ApiOntologyStart +
-            "(" + NCNamePattern + ")" + "(" + OntologyConstants.KnoraApiV2WithValueObject.VersionSegment + ")" +
+            "(" + NCNamePattern + ")" + "(" + OntologyConstants.KnoraApiV2WithValueObjects.VersionSegment + ")" +
             "#(" + NCNamePattern + ")$"
         ).r
 
     // A regex for external knora-api v2 with value object entity Iris.
     private val ExternalApiV2WithValueObjectOntologyEntityRegex: Regex = (
         "^" + OntologyConstants.KnoraApi.ApiOntologyStart +
-            "(" + NCNamePattern + ")" + OntologyConstants.KnoraApiV2WithValueObject.VersionSegment +
+            "(" + NCNamePattern + ")" + OntologyConstants.KnoraApiV2WithValueObjects.VersionSegment +
             "#(" + NCNamePattern + ")$"
         ).r
 
     // A regex for external knora-api v2 simple entity Iris.
     private val ExternalApiV2SimpleOntologyEntityRegex: Regex = (
         "^" + OntologyConstants.KnoraApi.ApiOntologyStart +
-            "(" + NCNamePattern + ")" + OntologyConstants.KnoraApiV2Simplified.VersionSegment +
+            "(" + NCNamePattern + ")" + OntologyConstants.KnoraApiV2Simple.VersionSegment +
             "#(" + NCNamePattern + ")$"
         ).r
 
@@ -745,7 +745,7 @@ object InputValidation {
         internalOntologyIri match {
             case ProjectSpecificInternalOntologyRegex(ontologyName) =>
                 val apiOntologyName = if (ontologyName == "knora-base") "knora-api" else ontologyName
-                OntologyConstants.KnoraApi.ApiOntologyStart + apiOntologyName + OntologyConstants.KnoraApiV2Simplified.VersionSegment
+                OntologyConstants.KnoraApi.ApiOntologyStart + apiOntologyName + OntologyConstants.KnoraApiV2Simple.VersionSegment
             case _ => errorFun()
         }
     }
@@ -762,7 +762,7 @@ object InputValidation {
         internalOntologyIri match {
             case ProjectSpecificInternalOntologyRegex(ontologyName) =>
                 val apiOntologyName = if (ontologyName == "knora-base") "knora-api" else ontologyName
-                OntologyConstants.KnoraApi.ApiOntologyStart + apiOntologyName + OntologyConstants.KnoraApiV2WithValueObject.VersionSegment
+                OntologyConstants.KnoraApi.ApiOntologyStart + apiOntologyName + OntologyConstants.KnoraApiV2WithValueObjects.VersionSegment
             case _ => errorFun()
         }
     }
@@ -823,7 +823,7 @@ object InputValidation {
         internalEntityIri match {
             case InternalOntologyEntityRegex(prefixLabel, entityName) =>
                 val apiPrefixLabel = if (prefixLabel == "knora-base") "knora-api" else prefixLabel
-                OntologyConstants.KnoraApi.ApiOntologyStart + apiPrefixLabel + OntologyConstants.KnoraApiV2WithValueObject.VersionSegment + "#" + entityName
+                OntologyConstants.KnoraApi.ApiOntologyStart + apiPrefixLabel + OntologyConstants.KnoraApiV2WithValueObjects.VersionSegment + "#" + entityName
             case _ => errorFun()
         }
     }
@@ -837,13 +837,13 @@ object InputValidation {
       * @return the corresponding simplified knora-api v2.
       */
     def internalEntityIriToApiV2SimpleEntityIri(internalEntityIri: IRI, errorFun: () => Nothing): IRI = {
-        OntologyConstants.KnoraApiV2Simplified.LiteralValueTypes.get(internalEntityIri) match {
+        OntologyConstants.KnoraApiV2Simple.LiteralValueTypes.get(internalEntityIri) match {
             case Some(xsdType) => xsdType
             case None =>
                 internalEntityIri match {
                     case InternalOntologyEntityRegex(prefixLabel, entityName) =>
                         val apiPrefixLabel = if (prefixLabel == "knora-base") "knora-api" else prefixLabel
-                        OntologyConstants.KnoraApi.ApiOntologyStart + apiPrefixLabel + OntologyConstants.KnoraApiV2Simplified.VersionSegment + "#" + entityName
+                        OntologyConstants.KnoraApi.ApiOntologyStart + apiPrefixLabel + OntologyConstants.KnoraApiV2Simple.VersionSegment + "#" + entityName
                     case _ => errorFun()
                 }
         }
@@ -878,7 +878,7 @@ object InputValidation {
     }
 
     /**
-      * Checks whether an IRI is the IRI of an external ontology entity (knora-api).
+      * Checks whether an IRI is the IRI of an external ontology entity.
       *
       * @param iri the IRI to be checked.
       * @return `true` if the IRI is the IRI of an external ontology entity.
@@ -886,6 +886,19 @@ object InputValidation {
     def isKnoraApiEntityIri(iri: IRI): Boolean = {
         iri match {
             case KnoraApiOntologyEntityRegex(_*) => true
+            case _ => false
+        }
+    }
+
+    /**
+      * Checks whether an IRI is the IRI of a knora-api ontology entity (knora-api).
+      *
+      * @param iri the IRI to be checked.
+      * @return `true` if the IRI is the IRI of a knora-api ontology entity.
+      */
+    def isBuiltInEntityIri(iri: IRI): Boolean = {
+        iri match {
+            case KnoraApiOntologyEntityRegex(ontology, _, _) if ontology == "knora-api" => true
             case _ => false
         }
     }
@@ -952,7 +965,7 @@ object InputValidation {
       * are identical external and extend [[ApiV2Schema]], the IRI is returned without conversion. Otherwise, an exception
       * is thrown.
       *
-      * @param entityIri the entity IRI to be converted.
+      * @param entityIri    the entity IRI to be converted.
       * @param targetSchema the target schema.
       * @return the converted IRI.
       */
@@ -983,25 +996,24 @@ object InputValidation {
     /**
       * Converts an ontology IRI from one ontology schema to another. If the source schema is [[InternalSchema]]
       * and the target schema extends [[ApiV2Schema]], the IRI is converted. If the ontology is a built-in API ontology
-      * it is returned unconverted. Otherwise, an exception is thrown.
+      * matching the target schema, it is returned unconverted. Otherwise, an exception is thrown.
       *
-      * @param ontologyIri the ontology IRI to be converted.
+      * @param ontologyIri  the ontology IRI to be converted.
       * @param targetSchema the target schema.
       * @return the converted IRI.
       */
     def toExternalOntologyIri(ontologyIri: IRI, targetSchema: ApiV2Schema): IRI = {
-        if (ontologyIri == OntologyConstants.KnoraApi.KnoraApiOntologyIri) {
-            ontologyIri
-        } else {
-            ontologyIri match {
-                case ProjectSpecificInternalOntologyRegex(_*) =>
-                    targetSchema match {
-                        case ApiV2Simple => internalOntologyIriToApiV2SimpleOntologyIri(ontologyIri, () => throw InconsistentTriplestoreDataException(s"Invalid internal ontology IRI: $ontologyIri"))
-                        case ApiV2WithValueObjects => internalOntologyIriToApiV2WithValueObjectOntologyIri(ontologyIri, () => throw InconsistentTriplestoreDataException(s"Invalid internal ontology IRI: $ontologyIri"))
-                    }
+        ontologyIri match {
+            case OntologyConstants.KnoraApiV2Simple.KnoraApiOntologyIri if targetSchema == ApiV2Simple => ontologyIri
+            case OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiOntologyIri if targetSchema == ApiV2WithValueObjects => ontologyIri
 
-                case _ => throw BadRequestException(s"Can't convert from $ontologyIri to $targetSchema")
-            }
+            case ProjectSpecificInternalOntologyRegex(_*) =>
+                targetSchema match {
+                    case ApiV2Simple => internalOntologyIriToApiV2SimpleOntologyIri(ontologyIri, () => throw InconsistentTriplestoreDataException(s"Invalid internal ontology IRI: $ontologyIri"))
+                    case ApiV2WithValueObjects => internalOntologyIriToApiV2WithValueObjectOntologyIri(ontologyIri, () => throw InconsistentTriplestoreDataException(s"Invalid internal ontology IRI: $ontologyIri"))
+                }
+
+            case _ => throw BadRequestException(s"Can't convert from $ontologyIri to $targetSchema")
         }
     }
 }

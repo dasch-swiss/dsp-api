@@ -105,7 +105,7 @@ class ExplicitTypeInspectorV2(apiType: ApiV2Schema) extends TypeInspectorV2 {
         import Ordering.Tuple2 // scala compiler issue: https://issues.scala-lang.org/browse/SI-8541
 
         val RDF_TYPE: Value = Value(0, OntologyConstants.Rdf.Type)
-        val OBJECT_TYPE: Value = Value(1, OntologyConstants.KnoraApiV2Simplified.ObjectType)
+        val OBJECT_TYPE: Value = Value(1, OntologyConstants.KnoraApiV2Simple.ObjectType)
 
         val valueMap: Map[IRI, Value] = values.map(v => (v.toString, v)).toMap
     }
@@ -122,11 +122,11 @@ class ExplicitTypeInspectorV2(apiType: ApiV2Schema) extends TypeInspectorV2 {
             OntologyConstants.Xsd.String,
             OntologyConstants.Xsd.Integer,
             OntologyConstants.Xsd.Decimal,
-            OntologyConstants.KnoraApiV2Simplified.Date,
-            OntologyConstants.KnoraApiV2Simplified.Resource,
-            OntologyConstants.KnoraApiV2Simplified.StillImageFile,
-            OntologyConstants.KnoraApiV2Simplified.Geom,
-            OntologyConstants.KnoraApiV2Simplified.Color
+            OntologyConstants.KnoraApiV2Simple.Date,
+            OntologyConstants.KnoraApiV2Simple.Resource,
+            OntologyConstants.KnoraApiV2Simple.StillImageFile,
+            OntologyConstants.KnoraApiV2Simple.Geom,
+            OntologyConstants.KnoraApiV2Simple.Color
         )
 
         /**

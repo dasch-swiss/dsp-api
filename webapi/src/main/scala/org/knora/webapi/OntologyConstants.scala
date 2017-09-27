@@ -469,18 +469,17 @@ object OntologyConstants {
         val ApiOntologyStart = "http://api.knora.org/ontology/"
 
         val KnoraApiOntologyLabel: String = "knora-api"
-        val KnoraApiOntologyIri: IRI = ApiOntologyStart + KnoraApiOntologyLabel
 
         val KnoraApiPrefix: String = KnoraApiOntologyLabel + ":"
-
-        // TODO: add constants here for the actual IRIs of Knora API v2 ontologies.
     }
 
-    object KnoraApiV2WithValueObject {
+    object KnoraApiV2WithValueObjects {
 
         val VersionSegment = "/v2"
 
-        val KnoraApiV2PrefixExpansion: IRI = KnoraApi.KnoraApiOntologyIri + VersionSegment + "#"
+        val KnoraApiOntologyIri: IRI = KnoraApi.ApiOntologyStart + KnoraApi.KnoraApiOntologyLabel + VersionSegment
+
+        val KnoraApiV2PrefixExpansion: IRI = KnoraApiOntologyIri + "#"
 
         val SubjectType: IRI = KnoraApiV2PrefixExpansion + "subjectType"
 
@@ -600,11 +599,13 @@ object OntologyConstants {
 
     }
 
-    object KnoraApiV2Simplified {
+    object KnoraApiV2Simple {
 
         val VersionSegment = "/simple/v2"
 
-        val KnoraApiV2PrefixExpansion: IRI = KnoraApi.KnoraApiOntologyIri + VersionSegment + "#"
+        val KnoraApiOntologyIri: IRI = KnoraApi.ApiOntologyStart + KnoraApi.KnoraApiOntologyLabel + VersionSegment
+
+        val KnoraApiV2PrefixExpansion: IRI = KnoraApiOntologyIri + VersionSegment + "#"
 
         val SubjectType: IRI = KnoraApiV2PrefixExpansion + "subjectType"
 
@@ -622,6 +623,8 @@ object OntologyConstants {
         val ResourceIcon: IRI = KnoraApiV2PrefixExpansion + "resourceIcon"
 
         val BelongsToOntology: IRI = KnoraApiV2PrefixExpansion + "belongsToOntology"
+
+        val HasOntologies: IRI = KnoraApiV2PrefixExpansion + "hasOntologies"
 
         val HasOntologiesWithClasses: IRI = KnoraApiV2PrefixExpansion + "hasOntologiesWithClasses"
 

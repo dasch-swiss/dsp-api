@@ -119,8 +119,8 @@ case class DateValueContentV2(valueHasString: String,
         // TODO: check targetSchema and return JSON-LD accordingly.
 
         JsonLDObject(Map(
-            OntologyConstants.KnoraApiV2WithValueObject.ValueAsString -> JsonLDString(valueHasString),
-            OntologyConstants.KnoraApiV2WithValueObject.DateValueHasCalendar -> JsonLDString(valueHasCalendar.toString)
+            OntologyConstants.KnoraApiV2WithValueObjects.ValueAsString -> JsonLDString(valueHasString),
+            OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasCalendar -> JsonLDString(valueHasCalendar.toString)
         ) ++ toKnoraApiDateValueAssertions)
     }
 
@@ -186,18 +186,18 @@ case class TextValueContentV2(valueHasString: String, standoff: Option[StandoffA
                 trans.transform()
 
                 // the xml was converted to HTML
-                Map(OntologyConstants.KnoraApiV2WithValueObject.TextValueAsHtml -> JsonLDString(xmlTransformedStr.toString))
+                Map(OntologyConstants.KnoraApiV2WithValueObjects.TextValueAsHtml -> JsonLDString(xmlTransformedStr.toString))
             } else {
                 // xml is returned
                 Map(
-                    OntologyConstants.KnoraApiV2WithValueObject.TextValueAsXml -> JsonLDString(xmlFromStandoff),
-                    OntologyConstants.KnoraApiV2WithValueObject.TextValueHasMapping -> JsonLDString(standoff.get.mappingIri)
+                    OntologyConstants.KnoraApiV2WithValueObjects.TextValueAsXml -> JsonLDString(xmlFromStandoff),
+                    OntologyConstants.KnoraApiV2WithValueObjects.TextValueHasMapping -> JsonLDString(standoff.get.mappingIri)
                 )
             }
 
         } else {
             // no markup given
-            Map(OntologyConstants.KnoraApiV2WithValueObject.ValueAsString -> JsonLDString(valueHasString))
+            Map(OntologyConstants.KnoraApiV2WithValueObjects.ValueAsString -> JsonLDString(valueHasString))
         }
 
         JsonLDObject(objectMap)
@@ -231,7 +231,7 @@ case class IntegerValueContentV2(valueHasString: String, valueHasInteger: Int, c
 
         // TODO: check targetSchema and return JSON-LD accordingly.
 
-        JsonLDObject(Map(OntologyConstants.KnoraApiV2WithValueObject.IntegerValueAsInteger -> JsonLDInt(valueHasInteger)))
+        JsonLDObject(Map(OntologyConstants.KnoraApiV2WithValueObjects.IntegerValueAsInteger -> JsonLDInt(valueHasInteger)))
     }
 
 }
@@ -251,7 +251,7 @@ case class DecimalValueContentV2(valueHasString: String, valueHasDecimal: BigDec
 
         // TODO: check targetSchema and return JSON-LD accordingly.
 
-        JsonLDObject(Map(OntologyConstants.KnoraApiV2WithValueObject.DecimalValueAsDecimal -> JsonLDDecimal(valueHasDecimal)))
+        JsonLDObject(Map(OntologyConstants.KnoraApiV2WithValueObjects.DecimalValueAsDecimal -> JsonLDDecimal(valueHasDecimal)))
     }
 
 }
@@ -270,7 +270,7 @@ case class BooleanValueContentV2(valueHasString: String, valueHasBoolean: Boolea
     def toJsonLDValue(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDValue = {
         // TODO: check targetSchema and return JSON-LD accordingly.
 
-        JsonLDObject(Map(OntologyConstants.KnoraApiV2WithValueObject.BooleanValueAsBoolean -> JsonLDBoolean(valueHasBoolean)))
+        JsonLDObject(Map(OntologyConstants.KnoraApiV2WithValueObjects.BooleanValueAsBoolean -> JsonLDBoolean(valueHasBoolean)))
     }
 }
 
@@ -288,7 +288,7 @@ case class GeomValueContentV2(valueHasString: String, valueHasGeometry: String, 
     def toJsonLDValue(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDValue = {
         // TODO: check targetSchema and return JSON-LD accordingly.
 
-        JsonLDObject(Map(OntologyConstants.KnoraApiV2WithValueObject.GeometryValueAsGeometry -> JsonLDString(valueHasGeometry)))
+        JsonLDObject(Map(OntologyConstants.KnoraApiV2WithValueObjects.GeometryValueAsGeometry -> JsonLDString(valueHasGeometry)))
     }
 }
 
@@ -309,8 +309,8 @@ case class IntervalValueContentV2(valueHasString: String, valueHasIntervalStart:
         // TODO: check targetSchema and return JSON-LD accordingly.
 
         JsonLDObject(Map(
-            OntologyConstants.KnoraApiV2WithValueObject.IntervalValueHasStart -> JsonLDDecimal(valueHasIntervalStart),
-            OntologyConstants.KnoraApiV2WithValueObject.IntervalValueHasEnd -> JsonLDDecimal(valueHasIntervalEnd)
+            OntologyConstants.KnoraApiV2WithValueObjects.IntervalValueHasStart -> JsonLDDecimal(valueHasIntervalStart),
+            OntologyConstants.KnoraApiV2WithValueObjects.IntervalValueHasEnd -> JsonLDDecimal(valueHasIntervalEnd)
         ))
     }
 
@@ -330,7 +330,7 @@ case class HierarchicalListValueContentV2(valueHasString: String, valueHasListNo
     def toJsonLDValue(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDValue = {
         // TODO: check targetSchema and return JSON-LD accordingly.
 
-        JsonLDObject(Map(OntologyConstants.KnoraApiV2WithValueObject.HierarchicalListValueAsListNode -> JsonLDString(valueHasListNode)))
+        JsonLDObject(Map(OntologyConstants.KnoraApiV2WithValueObjects.HierarchicalListValueAsListNode -> JsonLDString(valueHasListNode)))
     }
 
 }
@@ -349,7 +349,7 @@ case class ColorValueContentV2(valueHasString: String, valueHasColor: String, co
     def toJsonLDValue(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDValue = {
         // TODO: check targetSchema and return JSON-LD accordingly.
 
-        JsonLDObject(Map(OntologyConstants.KnoraApiV2WithValueObject.ColorValueAsColor -> JsonLDString(valueHasColor)))
+        JsonLDObject(Map(OntologyConstants.KnoraApiV2WithValueObjects.ColorValueAsColor -> JsonLDString(valueHasColor)))
     }
 
 }
@@ -368,7 +368,7 @@ case class UriValueContentV2(valueHasString: String, valueHasUri: String, commen
     def toJsonLDValue(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDValue = {
         // TODO: check targetSchema and return JSON-LD accordingly.
 
-        JsonLDObject(Map(OntologyConstants.KnoraApiV2WithValueObject.UriValueAsUri -> JsonLDString(valueHasUri)))
+        JsonLDObject(Map(OntologyConstants.KnoraApiV2WithValueObjects.UriValueAsUri -> JsonLDString(valueHasUri)))
     }
 }
 
@@ -387,7 +387,7 @@ case class GeonameValueContentV2(valueHasString: String, valueHasGeonameCode: St
     def toJsonLDValue(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDValue = {
         // TODO: check targetSchema and return JSON-LD accordingly.
 
-        JsonLDObject(Map(OntologyConstants.KnoraApiV2WithValueObject.GeonameValueAsGeonameCode -> JsonLDString(valueHasGeonameCode)))
+        JsonLDObject(Map(OntologyConstants.KnoraApiV2WithValueObjects.GeonameValueAsGeonameCode -> JsonLDString(valueHasGeonameCode)))
     }
 }
 
@@ -452,12 +452,12 @@ case class StillImageFileValueContentV2(valueHasString: String,
         val imagePath: String = toURL(settings)
 
         JsonLDObject(Map(
-            OntologyConstants.KnoraApiV2WithValueObject.FileValueAsUrl -> JsonLDString(imagePath),
-            OntologyConstants.KnoraApiV2WithValueObject.FileValueIsPreview -> JsonLDBoolean(isPreview),
-            OntologyConstants.KnoraApiV2WithValueObject.StillImageFileValueHasDimX -> JsonLDInt(dimX),
-            OntologyConstants.KnoraApiV2WithValueObject.StillImageFileValueHasDimY -> JsonLDInt(dimY),
-            OntologyConstants.KnoraApiV2WithValueObject.FileValueHasFilename -> JsonLDString(internalFilename),
-            OntologyConstants.KnoraApiV2WithValueObject.StillImageFileValueHasIIIFBaseUrl -> JsonLDString(settings.sipiIIIFGetUrl)
+            OntologyConstants.KnoraApiV2WithValueObjects.FileValueAsUrl -> JsonLDString(imagePath),
+            OntologyConstants.KnoraApiV2WithValueObjects.FileValueIsPreview -> JsonLDBoolean(isPreview),
+            OntologyConstants.KnoraApiV2WithValueObjects.StillImageFileValueHasDimX -> JsonLDInt(dimX),
+            OntologyConstants.KnoraApiV2WithValueObjects.StillImageFileValueHasDimY -> JsonLDInt(dimY),
+            OntologyConstants.KnoraApiV2WithValueObjects.FileValueHasFilename -> JsonLDString(internalFilename),
+            OntologyConstants.KnoraApiV2WithValueObjects.StillImageFileValueHasIIIFBaseUrl -> JsonLDString(settings.sipiIIIFGetUrl)
         ))
     }
 
@@ -496,8 +496,8 @@ case class TextFileValueContentV2(valueHasString: String, internalMimeType: Stri
         val imagePath: String = toURL(settings)
 
         JsonLDObject(Map(
-            OntologyConstants.KnoraApiV2WithValueObject.FileValueHasFilename -> JsonLDString(internalFilename),
-            OntologyConstants.KnoraApiV2WithValueObject.FileValueAsUrl -> JsonLDString(imagePath)
+            OntologyConstants.KnoraApiV2WithValueObjects.FileValueHasFilename -> JsonLDString(internalFilename),
+            OntologyConstants.KnoraApiV2WithValueObjects.FileValueAsUrl -> JsonLDString(imagePath)
         ))
     }
 
@@ -530,11 +530,11 @@ case class LinkValueContentV2(valueHasString: String, subject: IRI, predicate: I
                     settings = settings
                 )
 
-                Map(OntologyConstants.KnoraApiV2WithValueObject.LinkValueHasTarget -> referredResourceAsJsonLDValue)
+                Map(OntologyConstants.KnoraApiV2WithValueObjects.LinkValueHasTarget -> referredResourceAsJsonLDValue)
 
             case None =>
                 // just include the referred resource's IRI
-                Map(OntologyConstants.KnoraApiV2WithValueObject.LinkValueHasTargetIri -> JsonLDString(referredResourceIri))
+                Map(OntologyConstants.KnoraApiV2WithValueObjects.LinkValueHasTargetIri -> JsonLDString(referredResourceIri))
         }
 
         JsonLDObject(objectMap)
@@ -707,7 +707,7 @@ case class ReadResourcesSequenceV2(numberOfResources: Int, resources: Seq[ReadRe
 
         val context = JsonLDObject(Map(
             "schema" -> JsonLDString("http://schema.org/"),
-            OntologyConstants.KnoraApi.KnoraApiOntologyLabel -> JsonLDString(OntologyConstants.KnoraApiV2WithValueObject.KnoraApiV2PrefixExpansion),
+            OntologyConstants.KnoraApi.KnoraApiOntologyLabel -> JsonLDString(OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiV2PrefixExpansion),
             "rdf" -> JsonLDString("http://www.w3.org/1999/02/22-rdf-syntax-ns#"),
             "rdfs" -> JsonLDString("http://www.w3.org/2000/01/rdf-schema#")
         ) ++ projectSpecificOntologyPrefixes)

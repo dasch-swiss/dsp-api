@@ -872,7 +872,7 @@ class SearchResponderV2 extends Responder {
 
                                             ConvertedQueryPatterns(originalPatterns = acc.originalPatterns :+ filterPattern, additionalPatterns = acc.additionalPatterns :+ statement, typeInfoKeysProcessedInStatements = acc.typeInfoKeysProcessedInStatements)
 
-                                        case OntologyConstants.KnoraApiV2Simplified.Date =>
+                                        case OntologyConstants.KnoraApiV2Simple.Date =>
 
                                             // expect rightArg to be a string literal
                                             val dateStringLiteral = filterCompare.rightArg match {

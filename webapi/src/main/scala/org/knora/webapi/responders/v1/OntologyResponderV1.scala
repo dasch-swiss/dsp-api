@@ -93,7 +93,7 @@ class OntologyResponderV1 extends Responder {
     private def getEntityInfoResponseV1(resourceClassIris: Set[IRI] = Set.empty[IRI], propertyIris: Set[IRI] = Set.empty[IRI], userProfile: UserProfileV1): Future[EntityInfoGetResponseV1] = {
         for {
             response: EntityInfoGetResponseV2 <- (responderManager ? EntityInfoGetRequestV2(resourceClassIris, propertyIris, userProfile)).mapTo[EntityInfoGetResponseV2]
-        } yield EntityInfoGetResponseV1(resourceEntityInfoMap = response.resourceEntityInfoMap, propertyEntityInfoMap = response.propertyEntityInfoMap) // TODO: use V2 directly
+        } yield EntityInfoGetResponseV1(resourceEntityInfoMap = response.classEntityInfoMap, propertyEntityInfoMap = response.propertyEntityInfoMap) // TODO: use V2 directly
     }
 
 
@@ -268,7 +268,7 @@ class OntologyResponderV1 extends Responder {
     def getNamedGraphEntityInfoV1ForNamedGraph(namedGraphIri: IRI, userProfile: UserProfileV1): Future[NamedGraphEntityInfoV1] = {
         for {
             response: NamedGraphEntityInfoV2 <- (responderManager ? NamedGraphEntitiesRequestV2(namedGraphIri, userProfile)).mapTo[NamedGraphEntityInfoV2]
-        } yield NamedGraphEntityInfoV1(namedGraphIri = response.namedGraphIri, resourceClasses = response.resourceClasses, propertyIris = response.propertyIris) // TODO: use V2 directly
+        } yield NamedGraphEntityInfoV1(namedGraphIri = response.namedGraphIri, resourceClasses = response.classIris, propertyIris = response.propertyIris) // TODO: use V2 directly
     }
 
     /**

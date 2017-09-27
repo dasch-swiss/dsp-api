@@ -27,331 +27,331 @@ import org.knora.webapi._
   */
 object KnoraApiV2WithValueObjects {
     val Resource: ClassEntityInfoV2 = makeClass(
-        classIri = OntologyConstants.KnoraApiV2WithValueObject.Resource
+        classIri = OntologyConstants.KnoraApiV2WithValueObjects.Resource
     )
 
     val Region: ClassEntityInfoV2 = makeClass(
-        classIri = OntologyConstants.KnoraApiV2WithValueObject.Region,
+        classIri = OntologyConstants.KnoraApiV2WithValueObjects.Region,
         predicates = Seq(
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.SubClassOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObject.Resource)
+                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.Resource)
             )
         )
     )
 
     val Representation: ClassEntityInfoV2 = makeClass(
-        classIri = OntologyConstants.KnoraApiV2WithValueObject.Representation,
+        classIri = OntologyConstants.KnoraApiV2WithValueObjects.Representation,
         predicates = Seq(
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.SubClassOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObject.Resource)
+                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.Resource)
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
-                    "de" -> "Repräsentation",
-                    "en" -> "Representation",
-                    "fr" -> "Répresentation",
-                    "it" -> "Rappresentazione"
+                    LanguageCodes.DE -> "Repräsentation",
+                    LanguageCodes.EN -> "Representation",
+                    LanguageCodes.FR -> "Répresentation",
+                    LanguageCodes.IT -> "Rappresentazione"
                 )
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Comment,
                 objectsWithLang = Map(
-                    "en" -> "A Resource that can store one or more FileValues"
+                    LanguageCodes.EN -> "A Resource that can store one or more FileValues"
                 )
             )
         ),
         cardinalities = Map(
-            OntologyConstants.KnoraApiV2WithValueObject.HasFileValue -> Cardinality.MustHaveSome
+            OntologyConstants.KnoraApiV2WithValueObjects.HasFileValue -> Cardinality.MustHaveSome
         )
     )
 
     val StillImageRepresentation: ClassEntityInfoV2 = makeClass(
-        classIri = OntologyConstants.KnoraApiV2WithValueObject.StillImageRepresentation,
+        classIri = OntologyConstants.KnoraApiV2WithValueObjects.StillImageRepresentation,
         predicates = Seq(
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.SubClassOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObject.Representation)
+                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.Representation)
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
-                    "de" -> "Repräsentation (Bild)",
-                    "en" -> "Representation (Image)",
-                    "fr" -> "Répresentation (Image)",
-                    "it" -> "Rappresentazione (Immagine)"
+                    LanguageCodes.DE -> "Repräsentation (Bild)",
+                    LanguageCodes.EN -> "Representation (Image)",
+                    LanguageCodes.FR -> "Répresentation (Image)",
+                    LanguageCodes.IT -> "Rappresentazione (Immagine)"
                 )
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Comment,
                 objectsWithLang = Map(
-                    "en" -> "A Resource that can contain two-dimensional still image files"
+                    LanguageCodes.EN -> "A Resource that can contain two-dimensional still image files"
                 )
             )
         ),
         cardinalities = Map(
-            OntologyConstants.KnoraApiV2WithValueObject.HasStillImageFileValue -> Cardinality.MustHaveSome
+            OntologyConstants.KnoraApiV2WithValueObjects.HasStillImageFileValue -> Cardinality.MustHaveSome
         )
     )
 
     val MovingImageRepresentation: ClassEntityInfoV2 = makeClass(
-        classIri = OntologyConstants.KnoraApiV2WithValueObject.MovingImageRepresentation,
+        classIri = OntologyConstants.KnoraApiV2WithValueObjects.MovingImageRepresentation,
         predicates = Seq(
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.SubClassOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObject.Representation)
+                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.Representation)
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
-                    "de" -> "Repräsentation (Video)",
-                    "en" -> "Representation (Movie)",
-                    "fr" -> "Répresentation (Film)",
-                    "it" -> "Rappresentazione (Film)"
+                    LanguageCodes.DE -> "Repräsentation (Video)",
+                    LanguageCodes.EN -> "Representation (Movie)",
+                    LanguageCodes.FR -> "Répresentation (Film)",
+                    LanguageCodes.IT -> "Rappresentazione (Film)"
                 )
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Comment,
                 objectsWithLang = Map(
-                    "en" -> "A Resource containing moving image data"
+                    LanguageCodes.EN -> "A Resource containing moving image data"
                 )
             )
         ),
         cardinalities = Map(
-            OntologyConstants.KnoraApiV2WithValueObject.HasMovingImageFileValue -> Cardinality.MustHaveSome
+            OntologyConstants.KnoraApiV2WithValueObjects.HasMovingImageFileValue -> Cardinality.MustHaveSome
         )
     )
 
     val AudioRepresentation: ClassEntityInfoV2 = makeClass(
-        classIri = OntologyConstants.KnoraApiV2WithValueObject.AudioRepresentation,
+        classIri = OntologyConstants.KnoraApiV2WithValueObjects.AudioRepresentation,
         predicates = Seq(
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.SubClassOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObject.Representation)
+                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.Representation)
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
-                    "de" -> "Repräsentation (Audio)",
-                    "en" -> "Representation (Audio)",
-                    "fr" -> "Répresentation (Audio)",
-                    "it" -> "Rappresentazione (Audio)"
+                    LanguageCodes.DE -> "Repräsentation (Audio)",
+                    LanguageCodes.EN -> "Representation (Audio)",
+                    LanguageCodes.FR -> "Répresentation (Audio)",
+                    LanguageCodes.IT -> "Rappresentazione (Audio)"
                 )
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Comment,
                 objectsWithLang = Map(
-                    "en" -> "A Resource containing audio data"
+                    LanguageCodes.EN -> "A Resource containing audio data"
                 )
             )
         ),
         cardinalities = Map(
-            OntologyConstants.KnoraApiV2WithValueObject.HasAudioFileValue -> Cardinality.MustHaveSome
+            OntologyConstants.KnoraApiV2WithValueObjects.HasAudioFileValue -> Cardinality.MustHaveSome
         )
     )
 
     val DDDRepresentation: ClassEntityInfoV2 = makeClass(
-        classIri = OntologyConstants.KnoraApiV2WithValueObject.DDDRepresentation,
+        classIri = OntologyConstants.KnoraApiV2WithValueObjects.DDDRepresentation,
         predicates = Seq(
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.SubClassOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObject.Representation)
+                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.Representation)
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
-                    "de" -> "Repräsentation (3D)",
-                    "en" -> "Representation (3D)",
-                    "fr" -> "Répresentation (3D)",
-                    "it" -> "Rappresentazione (3D)"
+                    LanguageCodes.DE -> "Repräsentation (3D)",
+                    LanguageCodes.EN -> "Representation (3D)",
+                    LanguageCodes.FR -> "Répresentation (3D)",
+                    LanguageCodes.IT -> "Rappresentazione (3D)"
                 )
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Comment,
                 objectsWithLang = Map(
-                    "en" -> "A Resource containing 3D data"
+                    LanguageCodes.EN -> "A Resource containing 3D data"
                 )
             )
         ),
         cardinalities = Map(
-            OntologyConstants.KnoraApiV2WithValueObject.HasDDDFileValue -> Cardinality.MustHaveSome
+            OntologyConstants.KnoraApiV2WithValueObjects.HasDDDFileValue -> Cardinality.MustHaveSome
         )
     )
 
     val TextRepresentation: ClassEntityInfoV2 = makeClass(
-        classIri = OntologyConstants.KnoraApiV2WithValueObject.TextRepresentation,
+        classIri = OntologyConstants.KnoraApiV2WithValueObjects.TextRepresentation,
         predicates = Seq(
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.SubClassOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObject.Representation)
+                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.Representation)
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
-                    "de" -> "Repräsentation (Text)",
-                    "en" -> "Representation (Text)",
-                    "fr" -> "Répresentation (Texte)",
-                    "it" -> "Rappresentazione (Testo)"
+                    LanguageCodes.DE -> "Repräsentation (Text)",
+                    LanguageCodes.EN -> "Representation (Text)",
+                    LanguageCodes.FR -> "Répresentation (Texte)",
+                    LanguageCodes.IT -> "Rappresentazione (Testo)"
                 )
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Comment,
                 objectsWithLang = Map(
-                    "en" -> "A Resource containing text files"
+                    LanguageCodes.EN -> "A Resource containing text files"
                 )
             )
         ),
         cardinalities = Map(
-            OntologyConstants.KnoraApiV2WithValueObject.HasTextFileValue -> Cardinality.MustHaveSome
+            OntologyConstants.KnoraApiV2WithValueObjects.HasTextFileValue -> Cardinality.MustHaveSome
         )
     )
 
     val DocumentRepresentation: ClassEntityInfoV2 = makeClass(
-        classIri = OntologyConstants.KnoraApiV2WithValueObject.DocumentRepresentation,
+        classIri = OntologyConstants.KnoraApiV2WithValueObjects.DocumentRepresentation,
         predicates = Seq(
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.SubClassOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObject.Representation)
+                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.Representation)
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
-                    "de" -> "Repräsentation (Dokument)",
-                    "en" -> "Representation (Document)",
-                    "fr" -> "Répresentation (Document)",
-                    "it" -> "Rappresentazione (Documento)"
+                    LanguageCodes.DE -> "Repräsentation (Dokument)",
+                    LanguageCodes.EN -> "Representation (Document)",
+                    LanguageCodes.FR -> "Répresentation (Document)",
+                    LanguageCodes.IT -> "Rappresentazione (Documento)"
                 )
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Comment,
                 objectsWithLang = Map(
-                    "en" -> "A Resource containing documents"
+                    LanguageCodes.EN -> "A Resource containing documents"
                 )
             )
         ),
         cardinalities = Map(
-            OntologyConstants.KnoraApiV2WithValueObject.HasDocumentFileValue -> Cardinality.MustHaveSome
+            OntologyConstants.KnoraApiV2WithValueObjects.HasDocumentFileValue -> Cardinality.MustHaveSome
         )
     )
 
     // TODO: what should go here?
     val XMLToStandoffMapping: ClassEntityInfoV2 = makeClass(
-        classIri = OntologyConstants.KnoraApiV2WithValueObject.XMLToStandoffMapping
+        classIri = OntologyConstants.KnoraApiV2WithValueObjects.XMLToStandoffMapping
     )
 
     // TODO: what should go here?
     val ListNode: ClassEntityInfoV2 = makeClass(
-        classIri = OntologyConstants.KnoraApiV2WithValueObject.ListNode
+        classIri = OntologyConstants.KnoraApiV2WithValueObjects.ListNode
     )
 
     val ValueAsString: PropertyEntityInfoV2 = makeProperty(
-        propertyIri = OntologyConstants.KnoraApiV2WithValueObject.ValueAsString,
+        propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.ValueAsString,
         propertyType = OntologyConstants.Owl.ObjectProperty,
         predicates = Seq(
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Comment,
-                objectsWithLang = Map("en" -> "A plain string representation of a value")
+                objectsWithLang = Map(LanguageCodes.EN -> "A plain string representation of a value")
             )
         ),
-        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObject.Value),
+        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.Value),
         objectType = Some(OntologyConstants.Xsd.String)
     )
 
     val ValueHas: PropertyEntityInfoV2 = makeProperty(
-        propertyIri = OntologyConstants.KnoraApiV2WithValueObject.ValueHas,
+        propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.ValueHas,
         propertyType = OntologyConstants.Rdf.Property,
-        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObject.Value)
+        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.Value)
     )
 
     val Value: ClassEntityInfoV2 = makeClass(
-        classIri = OntologyConstants.KnoraApiV2WithValueObject.Value,
+        classIri = OntologyConstants.KnoraApiV2WithValueObjects.Value,
         cardinalities = Map(
-            OntologyConstants.KnoraApiV2WithValueObject.ValueAsString -> Cardinality.MayHaveOne
+            OntologyConstants.KnoraApiV2WithValueObjects.ValueAsString -> Cardinality.MayHaveOne
         )
     )
 
     val ResourceProperty: PropertyEntityInfoV2 = makeProperty(
-        propertyIri = OntologyConstants.KnoraApiV2WithValueObject.ResourceProperty,
+        propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.ResourceProperty,
         propertyType = OntologyConstants.Owl.ObjectProperty,
-        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObject.Resource)
+        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.Resource)
     )
 
     val HasValue: PropertyEntityInfoV2 = makeProperty(
-        propertyIri = OntologyConstants.KnoraApiV2WithValueObject.HasValue,
+        propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.HasValue,
         propertyType = OntologyConstants.Owl.ObjectProperty,
         predicates = Seq(
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.SubPropertyOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObject.ResourceProperty)
+                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.ResourceProperty)
             )
         ),
-        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObject.Resource),
-        objectType = Some(OntologyConstants.KnoraApiV2WithValueObject.Value)
+        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.Resource),
+        objectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.Value)
     )
 
     val HasLinkTo: PropertyEntityInfoV2 = makeProperty(
-        propertyIri = OntologyConstants.KnoraApiV2WithValueObject.HasLinkTo,
+        propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.HasLinkTo,
         propertyType = OntologyConstants.Owl.ObjectProperty,
         predicates = Seq(
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.SubPropertyOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObject.ResourceProperty)
+                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.ResourceProperty)
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
-                    "de" -> "hat Link zu",
-                    "en" -> "has Link to",
-                    "fr" -> "a lien vers",
-                    "it" -> "ha Link verso"
+                    LanguageCodes.DE -> "hat Link zu",
+                    LanguageCodes.EN -> "has Link to",
+                    LanguageCodes.FR -> "a lien vers",
+                    LanguageCodes.IT -> "ha Link verso"
                 )
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Comment,
                 objectsWithLang = Map(
-                    "en" -> "Represents a direct connection between two resources"
+                    LanguageCodes.EN -> "Represents a direct connection between two resources"
                 )
             )
         ),
-        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObject.Resource),
-        objectType = Some(OntologyConstants.KnoraApiV2WithValueObject.Resource)
+        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.Resource),
+        objectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.Resource)
     )
 
     val SubjectType: PropertyEntityInfoV2 = makeProperty(
-        propertyIri = OntologyConstants.KnoraApiV2WithValueObject.SubjectType,
+        propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.SubjectType,
         propertyType = OntologyConstants.Rdf.Property,
         predicates = Seq(
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
-                    "en" -> "Subject type"
+                    LanguageCodes.EN -> "Subject type"
                 )
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Comment,
                 objectsWithLang = Map(
-                    "en" -> "Specifies the required type of the subjects of a property"
+                    LanguageCodes.EN -> "Specifies the required type of the subjects of a property"
                 )
             )
         )
     )
 
     val ObjectType: PropertyEntityInfoV2 = makeProperty(
-        propertyIri = OntologyConstants.KnoraApiV2WithValueObject.ObjectType,
+        propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.ObjectType,
         propertyType = OntologyConstants.Rdf.Property,
         predicates = Seq(
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
-                    "en" -> "Object type"
+                    LanguageCodes.EN -> "Object type"
                 )
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Comment,
                 objectsWithLang = Map(
-                    "en" -> "Specifies the required type of the objects of a property"
+                    LanguageCodes.EN -> "Specifies the required type of the objects of a property"
                 )
             )
         )
@@ -359,7 +359,7 @@ object KnoraApiV2WithValueObjects {
     )
 
     val ResourceIcon: PropertyEntityInfoV2 = makeProperty(
-        propertyIri = OntologyConstants.KnoraApiV2WithValueObject.ResourceIcon,
+        propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.ResourceIcon,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
         subjectType = Some(OntologyConstants.Owl.Class),
         objectType = Some(OntologyConstants.Xsd.String),
@@ -367,27 +367,27 @@ object KnoraApiV2WithValueObjects {
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
-                    "en" -> "Resource icon"
+                    LanguageCodes.EN -> "Resource icon"
                 )
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Comment,
                 objectsWithLang = Map(
-                    "en" -> "Specifies an icon to be used to represent instances of a resource class"
+                    LanguageCodes.EN -> "Specifies an icon to be used to represent instances of a resource class"
                 )
             )
         )
     )
 
     val HasColor: PropertyEntityInfoV2 = makeProperty(
-        propertyIri = OntologyConstants.KnoraApiV2WithValueObject.HasColor,
+        propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.HasColor,
         propertyType = OntologyConstants.Owl.ObjectProperty,
-        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObject.Region),
-        objectType = Some(OntologyConstants.KnoraApiV2WithValueObject.ColorValue),
+        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.Region),
+        objectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.ColorValue),
         predicates = Seq(
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.SubPropertyOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObject.HasValue)
+                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasValue)
             ),
             makePredicate(
                 predicateIri = OntologyConstants.SalsahGui.GuiElement,
@@ -400,30 +400,30 @@ object KnoraApiV2WithValueObjects {
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
-                    "de" -> "Farbe",
-                    "en" -> "Color",
-                    "fr" -> "Couleur",
-                    "it" -> "Colore"
+                    LanguageCodes.DE -> "Farbe",
+                    LanguageCodes.EN -> "Color",
+                    LanguageCodes.FR -> "Couleur",
+                    LanguageCodes.IT -> "Colore"
                 )
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Comment,
                 objectsWithLang = Map(
-                    "en" -> "Specifies the color of a Region"
+                    LanguageCodes.EN -> "Specifies the color of a Region"
                 )
             )
         )
     )
 
     val HasComment: PropertyEntityInfoV2 = makeProperty(
-        propertyIri = OntologyConstants.KnoraApiV2WithValueObject.HasComment,
+        propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.HasComment,
         propertyType = OntologyConstants.Owl.ObjectProperty,
-        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObject.Resource),
-        objectType = Some(OntologyConstants.KnoraApiV2WithValueObject.TextValue),
+        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.Resource),
+        objectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.TextValue),
         predicates = Seq(
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.SubPropertyOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObject.HasValue)
+                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasValue)
             ),
             makePredicate(
                 predicateIri = OntologyConstants.SalsahGui.GuiElement,
@@ -432,30 +432,30 @@ object KnoraApiV2WithValueObjects {
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
-                    "de" -> "Kommentar",
-                    "en" -> "Comment",
-                    "fr" -> "Commentaire",
-                    "it" -> "Commento"
+                    LanguageCodes.DE -> "Kommentar",
+                    LanguageCodes.EN -> "Comment",
+                    LanguageCodes.FR -> "Commentaire",
+                    LanguageCodes.IT -> "Commento"
                 )
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Comment,
                 objectsWithLang = Map(
-                    "en" -> "Represents a comment on a Resource"
+                    LanguageCodes.EN -> "Represents a comment on a Resource"
                 )
             )
         )
     )
 
     val HasFileValue: PropertyEntityInfoV2 = makeProperty(
-        propertyIri = OntologyConstants.KnoraApiV2WithValueObject.HasFileValue,
+        propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.HasFileValue,
         propertyType = OntologyConstants.Owl.ObjectProperty,
-        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObject.Representation),
-        objectType = Some(OntologyConstants.KnoraApiV2WithValueObject.FileValue),
+        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.Representation),
+        objectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.FileValue),
         predicates = Seq(
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.SubPropertyOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObject.HasValue)
+                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasValue)
             ),
             makePredicate(
                 predicateIri = OntologyConstants.SalsahGui.GuiElement,
@@ -464,30 +464,30 @@ object KnoraApiV2WithValueObjects {
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
-                    "de" -> "hat Datei",
-                    "en" -> "has file",
-                    "fr" -> "a fichier",
-                    "it" -> "ha file"
+                    LanguageCodes.DE -> "hat Datei",
+                    LanguageCodes.EN -> "has file",
+                    LanguageCodes.FR -> "a fichier",
+                    LanguageCodes.IT -> "ha file"
                 )
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Comment,
                 objectsWithLang = Map(
-                    "en" -> "Connects a Representation to a file"
+                    LanguageCodes.EN -> "Connects a Representation to a file"
                 )
             )
         )
     )
 
     val HasStillImageFileValue: PropertyEntityInfoV2 = makeProperty(
-        propertyIri = OntologyConstants.KnoraApiV2WithValueObject.HasStillImageFileValue,
+        propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.HasStillImageFileValue,
         propertyType = OntologyConstants.Owl.ObjectProperty,
-        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObject.StillImageRepresentation),
-        objectType = Some(OntologyConstants.KnoraApiV2WithValueObject.StillImageFileValue),
+        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.StillImageRepresentation),
+        objectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.StillImageFileValue),
         predicates = Seq(
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.SubPropertyOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObject.HasFileValue)
+                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasFileValue)
             ),
             makePredicate(
                 predicateIri = OntologyConstants.SalsahGui.GuiElement,
@@ -496,30 +496,30 @@ object KnoraApiV2WithValueObjects {
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
-                    "de" -> "hat Bilddatei",
-                    "en" -> "has image file",
-                    "fr" -> "a fichier d'image",
-                    "it" -> "ha file immagine"
+                    LanguageCodes.DE -> "hat Bilddatei",
+                    LanguageCodes.EN -> "has image file",
+                    LanguageCodes.FR -> "a fichier d'image",
+                    LanguageCodes.IT -> "ha file immagine"
                 )
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Comment,
                 objectsWithLang = Map(
-                    "en" -> "Connects a Representation to an image file"
+                    LanguageCodes.EN -> "Connects a Representation to an image file"
                 )
             )
         )
     )
 
     val HasMovingImageFileValue: PropertyEntityInfoV2 = makeProperty(
-        propertyIri = OntologyConstants.KnoraApiV2WithValueObject.HasMovingImageFileValue,
+        propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.HasMovingImageFileValue,
         propertyType = OntologyConstants.Owl.ObjectProperty,
-        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObject.MovingImageRepresentation),
-        objectType = Some(OntologyConstants.KnoraApiV2WithValueObject.MovingImageFileValue),
+        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.MovingImageRepresentation),
+        objectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.MovingImageFileValue),
         predicates = Seq(
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.SubPropertyOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObject.HasFileValue)
+                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasFileValue)
             ),
             makePredicate(
                 predicateIri = OntologyConstants.SalsahGui.GuiElement,
@@ -528,30 +528,30 @@ object KnoraApiV2WithValueObjects {
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
-                    "de" -> "hat Filmdatei",
-                    "en" -> "has movie file",
-                    "fr" -> "a fichier de film",
-                    "it" -> "ha file film"
+                    LanguageCodes.DE -> "hat Filmdatei",
+                    LanguageCodes.EN -> "has movie file",
+                    LanguageCodes.FR -> "a fichier de film",
+                    LanguageCodes.IT -> "ha file film"
                 )
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Comment,
                 objectsWithLang = Map(
-                    "en" -> "Connects a Representation to a moving image file"
+                    LanguageCodes.EN -> "Connects a Representation to a moving image file"
                 )
             )
         )
     )
 
     val HasAudioImageFileValue: PropertyEntityInfoV2 = makeProperty(
-        propertyIri = OntologyConstants.KnoraApiV2WithValueObject.HasAudioFileValue,
+        propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.HasAudioFileValue,
         propertyType = OntologyConstants.Owl.ObjectProperty,
-        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObject.AudioRepresentation),
-        objectType = Some(OntologyConstants.KnoraApiV2WithValueObject.AudioFileValue),
+        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.AudioRepresentation),
+        objectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.AudioFileValue),
         predicates = Seq(
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.SubPropertyOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObject.HasFileValue)
+                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasFileValue)
             ),
             makePredicate(
                 predicateIri = OntologyConstants.SalsahGui.GuiElement,
@@ -560,30 +560,30 @@ object KnoraApiV2WithValueObjects {
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
-                    "de" -> "hat Audiodatei",
-                    "en" -> "has audio file",
-                    "fr" -> "a fichier d'audio",
-                    "it" -> "ha file audio"
+                    LanguageCodes.DE -> "hat Audiodatei",
+                    LanguageCodes.EN -> "has audio file",
+                    LanguageCodes.FR -> "a fichier d'audio",
+                    LanguageCodes.IT -> "ha file audio"
                 )
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Comment,
                 objectsWithLang = Map(
-                    "en" -> "Connects a Representation to an audio file"
+                    LanguageCodes.EN -> "Connects a Representation to an audio file"
                 )
             )
         )
     )
 
     val HasDDDFileValue: PropertyEntityInfoV2 = makeProperty(
-        propertyIri = OntologyConstants.KnoraApiV2WithValueObject.HasDDDFileValue,
+        propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.HasDDDFileValue,
         propertyType = OntologyConstants.Owl.ObjectProperty,
-        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObject.DDDRepresentation),
-        objectType = Some(OntologyConstants.KnoraApiV2WithValueObject.DDDFileValue),
+        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.DDDRepresentation),
+        objectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.DDDFileValue),
         predicates = Seq(
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.SubPropertyOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObject.HasFileValue)
+                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasFileValue)
             ),
             makePredicate(
                 predicateIri = OntologyConstants.SalsahGui.GuiElement,
@@ -592,30 +592,30 @@ object KnoraApiV2WithValueObjects {
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
-                    "de" -> "hat 3D-Datei",
-                    "en" -> "has 3D file",
-                    "fr" -> "a fichier 3D",
-                    "it" -> "ha file 3D"
+                    LanguageCodes.DE -> "hat 3D-Datei",
+                    LanguageCodes.EN -> "has 3D file",
+                    LanguageCodes.FR -> "a fichier 3D",
+                    LanguageCodes.IT -> "ha file 3D"
                 )
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Comment,
                 objectsWithLang = Map(
-                    "en" -> "Connects a Representation to a 3D file"
+                    LanguageCodes.EN -> "Connects a Representation to a 3D file"
                 )
             )
         )
     )
 
     val HasTextFileValue: PropertyEntityInfoV2 = makeProperty(
-        propertyIri = OntologyConstants.KnoraApiV2WithValueObject.HasTextFileValue,
+        propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.HasTextFileValue,
         propertyType = OntologyConstants.Owl.ObjectProperty,
-        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObject.TextRepresentation),
-        objectType = Some(OntologyConstants.KnoraApiV2WithValueObject.TextFileValue),
+        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.TextRepresentation),
+        objectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.TextFileValue),
         predicates = Seq(
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.SubPropertyOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObject.HasFileValue)
+                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasFileValue)
             ),
             makePredicate(
                 predicateIri = OntologyConstants.SalsahGui.GuiElement,
@@ -624,30 +624,30 @@ object KnoraApiV2WithValueObjects {
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
-                    "de" -> "hat Textdatei",
-                    "en" -> "has text file",
-                    "fr" -> "a fichier de texte",
-                    "it" -> "ha file testo"
+                    LanguageCodes.DE -> "hat Textdatei",
+                    LanguageCodes.EN -> "has text file",
+                    LanguageCodes.FR -> "a fichier de texte",
+                    LanguageCodes.IT -> "ha file testo"
                 )
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Comment,
                 objectsWithLang = Map(
-                    "en" -> "Connects a Representation to a text file"
+                    LanguageCodes.EN -> "Connects a Representation to a text file"
                 )
             )
         )
     )
 
     val HasDocumentFileValue: PropertyEntityInfoV2 = makeProperty(
-        propertyIri = OntologyConstants.KnoraApiV2WithValueObject.HasDocumentFileValue,
+        propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.HasDocumentFileValue,
         propertyType = OntologyConstants.Owl.ObjectProperty,
-        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObject.DocumentRepresentation),
-        objectType = Some(OntologyConstants.KnoraApiV2WithValueObject.DocumentFileValue),
+        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.DocumentRepresentation),
+        objectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.DocumentFileValue),
         predicates = Seq(
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.SubPropertyOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObject.HasFileValue)
+                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasFileValue)
             ),
             makePredicate(
                 predicateIri = OntologyConstants.SalsahGui.GuiElement,
@@ -656,1125 +656,1125 @@ object KnoraApiV2WithValueObjects {
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
-                    "de" -> "hat Dokument",
-                    "en" -> "has document",
-                    "fr" -> "a document",
-                    "it" -> "ha documento"
+                    LanguageCodes.DE -> "hat Dokument",
+                    LanguageCodes.EN -> "has document",
+                    LanguageCodes.FR -> "a document",
+                    LanguageCodes.IT -> "ha documento"
                 )
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Comment,
                 objectsWithLang = Map(
-                    "en" -> "Connects a Representation to a document"
+                    LanguageCodes.EN -> "Connects a Representation to a document"
                 )
             )
         )
     )
 
     val TextValue: ClassEntityInfoV2 = makeClass(
-        classIri = OntologyConstants.KnoraApiV2WithValueObject.TextValue,
+        classIri = OntologyConstants.KnoraApiV2WithValueObjects.TextValue,
         predicates = Seq(
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.SubClassOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObject.Value)
+                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.Value)
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
-                    "en" -> "Text value"
+                    LanguageCodes.EN -> "Text value"
                 )
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Comment,
                 objectsWithLang = Map(
-                    "en" -> "Represents text with optional markup."
+                    LanguageCodes.EN -> "Represents text with optional markup."
                 )
             )
         ),
         cardinalities = Map(
-            OntologyConstants.KnoraApiV2WithValueObject.ValueAsString -> Cardinality.MayHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObject.TextValueHasMapping -> Cardinality.MayHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObject.TextValueAsXml -> Cardinality.MayHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObject.TextValueAsHtml -> Cardinality.MayHaveOne
+            OntologyConstants.KnoraApiV2WithValueObjects.ValueAsString -> Cardinality.MayHaveOne,
+            OntologyConstants.KnoraApiV2WithValueObjects.TextValueHasMapping -> Cardinality.MayHaveOne,
+            OntologyConstants.KnoraApiV2WithValueObjects.TextValueAsXml -> Cardinality.MayHaveOne,
+            OntologyConstants.KnoraApiV2WithValueObjects.TextValueAsHtml -> Cardinality.MayHaveOne
         )
     )
 
     val TextValueAsXml: PropertyEntityInfoV2 = makeProperty(
-        propertyIri = OntologyConstants.KnoraApiV2WithValueObject.TextValueAsXml,
+        propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.TextValueAsXml,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
-        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObject.TextValue),
+        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.TextValue),
         objectType = Some(OntologyConstants.Xsd.String),
         predicates = Seq(
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.SubPropertyOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObject.ValueHas)
+                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas)
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
-                    "en" -> "Text value as XML"
+                    LanguageCodes.EN -> "Text value as XML"
                 )
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Comment,
                 objectsWithLang = Map(
-                    "en" -> "A Text value represented in XML."
+                    LanguageCodes.EN -> "A Text value represented in XML."
                 )
             )
         )
     )
 
     val TextValueHasMapping: PropertyEntityInfoV2 = makeProperty(
-        propertyIri = OntologyConstants.KnoraApiV2WithValueObject.TextValueHasMapping,
+        propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.TextValueHasMapping,
         propertyType = OntologyConstants.Owl.ObjectProperty,
-        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObject.TextValue),
-        objectType = Some(OntologyConstants.KnoraApiV2WithValueObject.XMLToStandoffMapping),
+        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.TextValue),
+        objectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.XMLToStandoffMapping),
         predicates = Seq(
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.SubPropertyOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObject.ValueHas)
+                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas)
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
-                    "en" -> "Text value has mapping"
+                    LanguageCodes.EN -> "Text value has mapping"
                 )
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Comment,
                 objectsWithLang = Map(
-                    "en" -> "The mapping used to turn standoff into XML and vice versa."
+                    LanguageCodes.EN -> "The mapping used to turn standoff into XML and vice versa."
                 )
             )
         )
     )
 
     val TextValueAsHtml: PropertyEntityInfoV2 = makeProperty(
-        propertyIri = OntologyConstants.KnoraApiV2WithValueObject.TextValueAsHtml,
+        propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.TextValueAsHtml,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
-        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObject.TextValue),
+        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.TextValue),
         objectType = Some(OntologyConstants.Xsd.String),
         predicates = Seq(
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.SubPropertyOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObject.ValueHas)
+                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas)
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
-                    "en" -> "Text value as HTML"
+                    LanguageCodes.EN -> "Text value as HTML"
                 )
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Comment,
                 objectsWithLang = Map(
-                    "en" -> "A text value represented in HTML."
+                    LanguageCodes.EN -> "A text value represented in HTML."
                 )
             )
         )
     )
 
     val DateValue: ClassEntityInfoV2 = makeClass(
-        classIri = OntologyConstants.KnoraApiV2WithValueObject.DateValue,
+        classIri = OntologyConstants.KnoraApiV2WithValueObjects.DateValue,
         predicates = Seq(
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.SubClassOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObject.Value)
+                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.Value)
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
-                    "en" -> "Date value"
+                    LanguageCodes.EN -> "Date value"
                 )
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Comment,
                 objectsWithLang = Map(
-                    "en" -> "Represents a date as a period with different possible precisions."
+                    LanguageCodes.EN -> "Represents a date as a period with different possible precisions."
                 )
             )
         ),
         cardinalities = Map(
-            OntologyConstants.KnoraApiV2WithValueObject.ValueAsString -> Cardinality.MayHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObject.DateValueHasStartYear -> Cardinality.MustHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObject.DateValueHasEndYear -> Cardinality.MustHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObject.DateValueHasStartMonth -> Cardinality.MayHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObject.DateValueHasEndMonth -> Cardinality.MayHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObject.DateValueHasStartDay -> Cardinality.MayHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObject.DateValueHasEndDay -> Cardinality.MayHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObject.DateValueHasCalendar -> Cardinality.MayHaveOne
+            OntologyConstants.KnoraApiV2WithValueObjects.ValueAsString -> Cardinality.MayHaveOne,
+            OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartYear -> Cardinality.MustHaveOne,
+            OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndYear -> Cardinality.MustHaveOne,
+            OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartMonth -> Cardinality.MayHaveOne,
+            OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndMonth -> Cardinality.MayHaveOne,
+            OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartDay -> Cardinality.MayHaveOne,
+            OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndDay -> Cardinality.MayHaveOne,
+            OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasCalendar -> Cardinality.MayHaveOne
         )
     )
 
     val DateValueHasStartYear: PropertyEntityInfoV2 = makeProperty(
-        propertyIri = OntologyConstants.KnoraApiV2WithValueObject.DateValueHasStartYear,
+        propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartYear,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
-        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObject.DateValue),
+        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.DateValue),
         objectType = Some(OntologyConstants.Xsd.Integer),
         predicates = Seq(
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.SubPropertyOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObject.ValueHas)
+                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas)
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
-                    "en" -> "Date value has start year"
+                    LanguageCodes.EN -> "Date value has start year"
                 )
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Comment,
                 objectsWithLang = Map(
-                    "en" -> "Represents the start year of a date value."
+                    LanguageCodes.EN -> "Represents the start year of a date value."
                 )
             )
         )
     )
 
     val DateValueHasEndYear: PropertyEntityInfoV2 = makeProperty(
-        propertyIri = OntologyConstants.KnoraApiV2WithValueObject.DateValueHasEndYear,
+        propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndYear,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
-        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObject.DateValue),
+        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.DateValue),
         objectType = Some(OntologyConstants.Xsd.Integer),
         predicates = Seq(
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.SubPropertyOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObject.ValueHas)
+                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas)
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
-                    "en" -> "Date value has end year"
+                    LanguageCodes.EN -> "Date value has end year"
                 )
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Comment,
                 objectsWithLang = Map(
-                    "en" -> "Represents the end year of a date value."
+                    LanguageCodes.EN -> "Represents the end year of a date value."
                 )
             )
         )
     )
 
     val DateValueHasStartMonth: PropertyEntityInfoV2 = makeProperty(
-        propertyIri = OntologyConstants.KnoraApiV2WithValueObject.DateValueHasStartMonth,
+        propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartMonth,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
-        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObject.DateValue),
+        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.DateValue),
         objectType = Some(OntologyConstants.Xsd.Integer),
         predicates = Seq(
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.SubPropertyOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObject.ValueHas)
+                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas)
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
-                    "en" -> "Date value has start month"
+                    LanguageCodes.EN -> "Date value has start month"
                 )
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Comment,
                 objectsWithLang = Map(
-                    "en" -> "Represents the start month of a date value."
+                    LanguageCodes.EN -> "Represents the start month of a date value."
                 )
             )
         )
     )
 
     val DateValueHasEndMonth: PropertyEntityInfoV2 = makeProperty(
-        propertyIri = OntologyConstants.KnoraApiV2WithValueObject.DateValueHasEndMonth,
+        propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndMonth,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
-        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObject.DateValue),
+        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.DateValue),
         objectType = Some(OntologyConstants.Xsd.Integer),
         predicates = Seq(
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.SubPropertyOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObject.ValueHas)
+                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas)
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
-                    "en" -> "Date value has end month"
+                    LanguageCodes.EN -> "Date value has end month"
                 )
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Comment,
                 objectsWithLang = Map(
-                    "en" -> "Represents the end month of a date value."
+                    LanguageCodes.EN -> "Represents the end month of a date value."
                 )
             )
         )
     )
 
     val DateValueHasStartDay: PropertyEntityInfoV2 = makeProperty(
-        propertyIri = OntologyConstants.KnoraApiV2WithValueObject.DateValueHasStartDay,
+        propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartDay,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
-        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObject.DateValue),
+        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.DateValue),
         objectType = Some(OntologyConstants.Xsd.Integer),
         predicates = Seq(
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.SubPropertyOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObject.ValueHas)
+                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas)
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
-                    "en" -> "Date value has start day"
+                    LanguageCodes.EN -> "Date value has start day"
                 )
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Comment,
                 objectsWithLang = Map(
-                    "en" -> "Represents the start day of a date value."
+                    LanguageCodes.EN -> "Represents the start day of a date value."
                 )
             )
         )
     )
 
     val DateValueHasEndDay: PropertyEntityInfoV2 = makeProperty(
-        propertyIri = OntologyConstants.KnoraApiV2WithValueObject.DateValueHasEndDay,
+        propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndDay,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
-        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObject.DateValue),
+        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.DateValue),
         objectType = Some(OntologyConstants.Xsd.Integer),
         predicates = Seq(
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.SubPropertyOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObject.ValueHas)
+                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas)
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
-                    "en" -> "Date value has end day"
+                    LanguageCodes.EN -> "Date value has end day"
                 )
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Comment,
                 objectsWithLang = Map(
-                    "en" -> "Represents the end day of a date value."
+                    LanguageCodes.EN -> "Represents the end day of a date value."
                 )
             )
         )
     )
 
     val DateValueHasCalendar: PropertyEntityInfoV2 = makeProperty(
-        propertyIri = OntologyConstants.KnoraApiV2WithValueObject.DateValueHasCalendar,
+        propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasCalendar,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
-        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObject.DateValue),
+        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.DateValue),
         objectType = Some(OntologyConstants.Xsd.String),
         predicates = Seq(
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.SubPropertyOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObject.ValueHas)
+                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas)
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
-                    "en" -> "Date value has calendar"
+                    LanguageCodes.EN -> "Date value has calendar"
                 )
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Comment,
                 objectsWithLang = Map(
-                    "en" -> "Represents the calendar of a date value."
+                    LanguageCodes.EN -> "Represents the calendar of a date value."
                 )
             )
         )
     )
 
     val LinkValue: ClassEntityInfoV2 = makeClass(
-        classIri = OntologyConstants.KnoraApiV2WithValueObject.LinkValue,
+        classIri = OntologyConstants.KnoraApiV2WithValueObjects.LinkValue,
         predicates = Seq(
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.SubClassOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObject.Value)
+                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.Value)
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
-                    "en" -> "Link value"
+                    LanguageCodes.EN -> "Link value"
                 )
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Comment,
                 objectsWithLang = Map(
-                    "en" -> "Represents a link from one resource to another."
+                    LanguageCodes.EN -> "Represents a link from one resource to another."
                 )
             )
         ),
         cardinalities = Map(
-            OntologyConstants.KnoraApiV2WithValueObject.ValueAsString -> Cardinality.MayHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObject.LinkValueHasTarget -> Cardinality.MayHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObject.LinkValueHasTargetIri -> Cardinality.MayHaveOne
+            OntologyConstants.KnoraApiV2WithValueObjects.ValueAsString -> Cardinality.MayHaveOne,
+            OntologyConstants.KnoraApiV2WithValueObjects.LinkValueHasTarget -> Cardinality.MayHaveOne,
+            OntologyConstants.KnoraApiV2WithValueObjects.LinkValueHasTargetIri -> Cardinality.MayHaveOne
         )
     )
 
     val LinkValueHasTarget: PropertyEntityInfoV2 = makeProperty(
-        propertyIri = OntologyConstants.KnoraApiV2WithValueObject.LinkValueHasTarget,
+        propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.LinkValueHasTarget,
         propertyType = OntologyConstants.Owl.ObjectProperty,
-        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObject.LinkValue),
-        objectType = Some(OntologyConstants.KnoraApiV2WithValueObject.Resource),
+        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.LinkValue),
+        objectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.Resource),
         predicates = Seq(
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.SubPropertyOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObject.ValueHas)
+                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas)
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
-                    "en" -> "Link value has target"
+                    LanguageCodes.EN -> "Link value has target"
                 )
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Comment,
                 objectsWithLang = Map(
-                    "en" -> "Represents the target resource of a link value."
+                    LanguageCodes.EN -> "Represents the target resource of a link value."
                 )
             )
         )
     )
 
     val LinkValueHasTargetIri: PropertyEntityInfoV2 = makeProperty(
-        propertyIri = OntologyConstants.KnoraApiV2WithValueObject.LinkValueHasTargetIri,
+        propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.LinkValueHasTargetIri,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
-        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObject.LinkValue),
+        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.LinkValue),
         objectType = Some(OntologyConstants.Xsd.Uri),
         predicates = Seq(
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.SubPropertyOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObject.ValueHas)
+                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas)
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
-                    "en" -> "Link value has target IRI"
+                    LanguageCodes.EN -> "Link value has target IRI"
                 )
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Comment,
                 objectsWithLang = Map(
-                    "en" -> "Represents the IRI of the target resource of a link value."
+                    LanguageCodes.EN -> "Represents the IRI of the target resource of a link value."
                 )
             )
         )
     )
 
     val IntegerValue: ClassEntityInfoV2 = makeClass(
-        classIri = OntologyConstants.KnoraApiV2WithValueObject.IntegerValue,
+        classIri = OntologyConstants.KnoraApiV2WithValueObjects.IntegerValue,
         predicates = Seq(
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.SubClassOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObject.Value)
+                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.Value)
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
-                    "en" -> "Integer value"
+                    LanguageCodes.EN -> "Integer value"
                 )
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Comment,
                 objectsWithLang = Map(
-                    "en" -> "Represents an integer value."
+                    LanguageCodes.EN -> "Represents an integer value."
                 )
             )
         ),
         cardinalities = Map(
-            OntologyConstants.KnoraApiV2WithValueObject.ValueAsString -> Cardinality.MayHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObject.IntegerValueAsInteger -> Cardinality.MustHaveOne
+            OntologyConstants.KnoraApiV2WithValueObjects.ValueAsString -> Cardinality.MayHaveOne,
+            OntologyConstants.KnoraApiV2WithValueObjects.IntegerValueAsInteger -> Cardinality.MustHaveOne
         )
     )
 
     val IntegerValueAsInteger: PropertyEntityInfoV2 = makeProperty(
-        propertyIri = OntologyConstants.KnoraApiV2WithValueObject.IntegerValueAsInteger,
+        propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.IntegerValueAsInteger,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
-        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObject.IntegerValue),
+        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.IntegerValue),
         objectType = Some(OntologyConstants.Xsd.Integer),
         predicates = Seq(
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.SubPropertyOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObject.ValueHas)
+                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas)
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
-                    "en" -> "Integer value as integer"
+                    LanguageCodes.EN -> "Integer value as integer"
                 )
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Comment,
                 objectsWithLang = Map(
-                    "en" -> "Represents the literal integer value of an IntegerValue."
+                    LanguageCodes.EN -> "Represents the literal integer value of an IntegerValue."
                 )
             )
         )
     )
 
     val DecimalValue: ClassEntityInfoV2 = makeClass(
-        classIri = OntologyConstants.KnoraApiV2WithValueObject.DecimalValue,
+        classIri = OntologyConstants.KnoraApiV2WithValueObjects.DecimalValue,
         predicates = Seq(
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.SubClassOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObject.Value)
+                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.Value)
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
-                    "en" -> "Decimal value"
+                    LanguageCodes.EN -> "Decimal value"
                 )
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Comment,
                 objectsWithLang = Map(
-                    "en" -> "Represents a decimal value."
+                    LanguageCodes.EN -> "Represents a decimal value."
                 )
             )
         ),
         cardinalities = Map(
-            OntologyConstants.KnoraApiV2WithValueObject.ValueAsString -> Cardinality.MayHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObject.DecimalValueAsDecimal -> Cardinality.MustHaveOne
+            OntologyConstants.KnoraApiV2WithValueObjects.ValueAsString -> Cardinality.MayHaveOne,
+            OntologyConstants.KnoraApiV2WithValueObjects.DecimalValueAsDecimal -> Cardinality.MustHaveOne
         )
     )
 
     val DecimalValueAsDecimal: PropertyEntityInfoV2 = makeProperty(
-        propertyIri = OntologyConstants.KnoraApiV2WithValueObject.DecimalValueAsDecimal,
+        propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.DecimalValueAsDecimal,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
-        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObject.DecimalValue),
+        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.DecimalValue),
         objectType = Some(OntologyConstants.Xsd.Decimal),
         predicates = Seq(
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.SubPropertyOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObject.ValueHas)
+                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas)
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
-                    "en" -> "Decimal value as decimal"
+                    LanguageCodes.EN -> "Decimal value as decimal"
                 )
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Comment,
                 objectsWithLang = Map(
-                    "en" -> "Represents the literal decimal value of a DecimalValue."
+                    LanguageCodes.EN -> "Represents the literal decimal value of a DecimalValue."
                 )
             )
         )
     )
 
     val BooleanValue: ClassEntityInfoV2 = makeClass(
-        classIri = OntologyConstants.KnoraApiV2WithValueObject.BooleanValue,
+        classIri = OntologyConstants.KnoraApiV2WithValueObjects.BooleanValue,
         predicates = Seq(
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.SubClassOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObject.Value)
+                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.Value)
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
-                    "en" -> "Boolean value"
+                    LanguageCodes.EN -> "Boolean value"
                 )
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Comment,
                 objectsWithLang = Map(
-                    "en" -> "Represents a boolean value."
+                    LanguageCodes.EN -> "Represents a boolean value."
                 )
             )
         ),
         cardinalities = Map(
-            OntologyConstants.KnoraApiV2WithValueObject.ValueAsString -> Cardinality.MayHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObject.BooleanValueAsBoolean -> Cardinality.MustHaveOne
+            OntologyConstants.KnoraApiV2WithValueObjects.ValueAsString -> Cardinality.MayHaveOne,
+            OntologyConstants.KnoraApiV2WithValueObjects.BooleanValueAsBoolean -> Cardinality.MustHaveOne
         )
     )
 
     val BooleanValueAsBoolean: PropertyEntityInfoV2 = makeProperty(
-        propertyIri = OntologyConstants.KnoraApiV2WithValueObject.BooleanValueAsBoolean,
+        propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.BooleanValueAsBoolean,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
-        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObject.BooleanValue),
+        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.BooleanValue),
         objectType = Some(OntologyConstants.Xsd.Boolean),
         predicates = Seq(
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.SubPropertyOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObject.ValueHas)
+                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas)
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
-                    "en" -> "Boolean value as decimal"
+                    LanguageCodes.EN -> "Boolean value as decimal"
                 )
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Comment,
                 objectsWithLang = Map(
-                    "en" -> "Represents the literal boolean value of a BooleanValue."
+                    LanguageCodes.EN -> "Represents the literal boolean value of a BooleanValue."
                 )
             )
         )
     )
 
     val GeomValue: ClassEntityInfoV2 = makeClass(
-        classIri = OntologyConstants.KnoraApiV2WithValueObject.GeomValue,
+        classIri = OntologyConstants.KnoraApiV2WithValueObjects.GeomValue,
         predicates = Seq(
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.SubClassOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObject.Value)
+                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.Value)
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
-                    "en" -> "Geometry value"
+                    LanguageCodes.EN -> "Geometry value"
                 )
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Comment,
                 objectsWithLang = Map(
-                    "en" -> "Represents a geometry value."
+                    LanguageCodes.EN -> "Represents a geometry value."
                 )
             )
         ),
         cardinalities = Map(
-            OntologyConstants.KnoraApiV2WithValueObject.ValueAsString -> Cardinality.MayHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObject.GeometryValueAsGeometry -> Cardinality.MustHaveOne
+            OntologyConstants.KnoraApiV2WithValueObjects.ValueAsString -> Cardinality.MayHaveOne,
+            OntologyConstants.KnoraApiV2WithValueObjects.GeometryValueAsGeometry -> Cardinality.MustHaveOne
         )
     )
 
     val GeometryValueAsGeometry: PropertyEntityInfoV2 = makeProperty(
-        propertyIri = OntologyConstants.KnoraApiV2WithValueObject.GeometryValueAsGeometry,
+        propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.GeometryValueAsGeometry,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
-        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObject.GeomValue),
+        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.GeomValue),
         objectType = Some(OntologyConstants.Xsd.String),
         predicates = Seq(
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.SubPropertyOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObject.ValueHas)
+                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas)
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
-                    "en" -> "Geometry value as JSON"
+                    LanguageCodes.EN -> "Geometry value as JSON"
                 )
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Comment,
                 objectsWithLang = Map(
-                    "en" -> "Represents a 2D geometry value as JSON."
+                    LanguageCodes.EN -> "Represents a 2D geometry value as JSON."
                 )
             )
         )
     )
 
     val IntervalValue: ClassEntityInfoV2 = makeClass(
-        classIri = OntologyConstants.KnoraApiV2WithValueObject.IntervalValue,
+        classIri = OntologyConstants.KnoraApiV2WithValueObjects.IntervalValue,
         predicates = Seq(
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.SubClassOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObject.Value)
+                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.Value)
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
-                    "en" -> "Interval value"
+                    LanguageCodes.EN -> "Interval value"
                 )
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Comment,
                 objectsWithLang = Map(
-                    "en" -> "Represents a time interval."
+                    LanguageCodes.EN -> "Represents a time interval."
                 )
             )
         ),
         cardinalities = Map(
-            OntologyConstants.KnoraApiV2WithValueObject.ValueAsString -> Cardinality.MayHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObject.IntervalValueHasStart -> Cardinality.MustHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObject.IntervalValueHasEnd -> Cardinality.MustHaveOne
+            OntologyConstants.KnoraApiV2WithValueObjects.ValueAsString -> Cardinality.MayHaveOne,
+            OntologyConstants.KnoraApiV2WithValueObjects.IntervalValueHasStart -> Cardinality.MustHaveOne,
+            OntologyConstants.KnoraApiV2WithValueObjects.IntervalValueHasEnd -> Cardinality.MustHaveOne
         )
     )
 
     val IntervalValueHasStart: PropertyEntityInfoV2 = makeProperty(
-        propertyIri = OntologyConstants.KnoraApiV2WithValueObject.IntervalValueHasStart,
+        propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.IntervalValueHasStart,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
-        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObject.IntervalValue),
+        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.IntervalValue),
         objectType = Some(OntologyConstants.Xsd.Decimal),
         predicates = Seq(
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.SubPropertyOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObject.ValueHas)
+                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas)
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
-                    "en" -> "Interval value has start"
+                    LanguageCodes.EN -> "Interval value has start"
                 )
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Comment,
                 objectsWithLang = Map(
-                    "en" -> "Represents the start of a time interval."
+                    LanguageCodes.EN -> "Represents the start of a time interval."
                 )
             )
         )
     )
 
     val IntervalValueHasEnd: PropertyEntityInfoV2 = makeProperty(
-        propertyIri = OntologyConstants.KnoraApiV2WithValueObject.IntervalValueHasEnd,
+        propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.IntervalValueHasEnd,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
-        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObject.IntervalValue),
+        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.IntervalValue),
         objectType = Some(OntologyConstants.Xsd.Decimal),
         predicates = Seq(
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.SubPropertyOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObject.ValueHas)
+                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas)
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
-                    "en" -> "Interval value has end"
+                    LanguageCodes.EN -> "Interval value has end"
                 )
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Comment,
                 objectsWithLang = Map(
-                    "en" -> "Represents the end of a time interval."
+                    LanguageCodes.EN -> "Represents the end of a time interval."
                 )
             )
         )
     )
 
     val ListValue: ClassEntityInfoV2 = makeClass(
-        classIri = OntologyConstants.KnoraApiV2WithValueObject.ListValue,
+        classIri = OntologyConstants.KnoraApiV2WithValueObjects.ListValue,
         predicates = Seq(
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.SubClassOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObject.Value)
+                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.Value)
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
-                    "en" -> "List value"
+                    LanguageCodes.EN -> "List value"
                 )
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Comment,
                 objectsWithLang = Map(
-                    "en" -> "Represents a value in a hierarchical list."
+                    LanguageCodes.EN -> "Represents a value in a hierarchical list."
                 )
             )
         ),
         cardinalities = Map(
-            OntologyConstants.KnoraApiV2WithValueObject.ValueAsString -> Cardinality.MayHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObject.HierarchicalListValueAsListNode -> Cardinality.MustHaveOne
+            OntologyConstants.KnoraApiV2WithValueObjects.ValueAsString -> Cardinality.MayHaveOne,
+            OntologyConstants.KnoraApiV2WithValueObjects.HierarchicalListValueAsListNode -> Cardinality.MustHaveOne
         )
     )
 
     val HierarchicalListValueAsListNode: PropertyEntityInfoV2 = makeProperty(
-        propertyIri = OntologyConstants.KnoraApiV2WithValueObject.HierarchicalListValueAsListNode,
+        propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.HierarchicalListValueAsListNode,
         propertyType = OntologyConstants.Owl.ObjectProperty,
-        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObject.ListValue),
-        objectType = Some(OntologyConstants.KnoraApiV2WithValueObject.ListNode),
+        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.ListValue),
+        objectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.ListNode),
         predicates = Seq(
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.SubPropertyOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObject.ValueHas)
+                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas)
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
-                    "en" -> "Hierarchical list value as list node"
+                    LanguageCodes.EN -> "Hierarchical list value as list node"
                 )
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Comment,
                 objectsWithLang = Map(
-                    "en" -> "Represents a reference to a hierarchical list node."
+                    LanguageCodes.EN -> "Represents a reference to a hierarchical list node."
                 )
             )
         )
     )
 
     val ColorValue: ClassEntityInfoV2 = makeClass(
-        classIri = OntologyConstants.KnoraApiV2WithValueObject.ColorValue,
+        classIri = OntologyConstants.KnoraApiV2WithValueObjects.ColorValue,
         predicates = Seq(
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.SubClassOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObject.Value)
+                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.Value)
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
-                    "en" -> "Color value"
+                    LanguageCodes.EN -> "Color value"
                 )
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Comment,
                 objectsWithLang = Map(
-                    "en" -> "Represents a color value."
+                    LanguageCodes.EN -> "Represents a color value."
                 )
             )
         ),
         cardinalities = Map(
-            OntologyConstants.KnoraApiV2WithValueObject.ValueAsString -> Cardinality.MayHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObject.BooleanValueAsBoolean -> Cardinality.MustHaveOne
+            OntologyConstants.KnoraApiV2WithValueObjects.ValueAsString -> Cardinality.MayHaveOne,
+            OntologyConstants.KnoraApiV2WithValueObjects.BooleanValueAsBoolean -> Cardinality.MustHaveOne
         )
     )
 
     val ColorValueAsColor: PropertyEntityInfoV2 = makeProperty(
-        propertyIri = OntologyConstants.KnoraApiV2WithValueObject.ColorValueAsColor,
+        propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.ColorValueAsColor,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
-        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObject.ColorValue),
+        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.ColorValue),
         objectType = Some(OntologyConstants.Xsd.String),
         predicates = Seq(
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.SubPropertyOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObject.ValueHas)
+                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas)
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
-                    "en" -> "Color value as color"
+                    LanguageCodes.EN -> "Color value as color"
                 )
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Comment,
                 objectsWithLang = Map(
-                    "en" -> "Represents the literal RGB value of a ColorValue."
+                    LanguageCodes.EN -> "Represents the literal RGB value of a ColorValue."
                 )
             )
         )
     )
 
     val UriValue: ClassEntityInfoV2 = makeClass(
-        classIri = OntologyConstants.KnoraApiV2WithValueObject.UriValue,
+        classIri = OntologyConstants.KnoraApiV2WithValueObjects.UriValue,
         predicates = Seq(
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.SubClassOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObject.Value)
+                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.Value)
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
-                    "en" -> "URI value"
+                    LanguageCodes.EN -> "URI value"
                 )
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Comment,
                 objectsWithLang = Map(
-                    "en" -> "Represents a URI value."
+                    LanguageCodes.EN -> "Represents a URI value."
                 )
             )
         ),
         cardinalities = Map(
-            OntologyConstants.KnoraApiV2WithValueObject.ValueAsString -> Cardinality.MayHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObject.UriValueAsUri -> Cardinality.MustHaveOne
+            OntologyConstants.KnoraApiV2WithValueObjects.ValueAsString -> Cardinality.MayHaveOne,
+            OntologyConstants.KnoraApiV2WithValueObjects.UriValueAsUri -> Cardinality.MustHaveOne
         )
     )
 
     val UriValueAsUri: PropertyEntityInfoV2 = makeProperty(
-        propertyIri = OntologyConstants.KnoraApiV2WithValueObject.UriValueAsUri,
+        propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.UriValueAsUri,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
-        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObject.UriValue),
+        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.UriValue),
         objectType = Some(OntologyConstants.Xsd.Uri),
         predicates = Seq(
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.SubPropertyOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObject.ValueHas)
+                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas)
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
-                    "en" -> "URI value as URI"
+                    LanguageCodes.EN -> "URI value as URI"
                 )
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Comment,
                 objectsWithLang = Map(
-                    "en" -> "Represents the literal URI value of a UriValue."
+                    LanguageCodes.EN -> "Represents the literal URI value of a UriValue."
                 )
             )
         )
     )
 
     val GeonameValue: ClassEntityInfoV2 = makeClass(
-        classIri = OntologyConstants.KnoraApiV2WithValueObject.GeonameValue,
+        classIri = OntologyConstants.KnoraApiV2WithValueObjects.GeonameValue,
         predicates = Seq(
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.SubClassOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObject.Value)
+                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.Value)
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
-                    "en" -> "Geoname value"
+                    LanguageCodes.EN -> "Geoname value"
                 )
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Comment,
                 objectsWithLang = Map(
-                    "en" -> "Represents a Geoname value."
+                    LanguageCodes.EN -> "Represents a Geoname value."
                 )
             )
         ),
         cardinalities = Map(
-            OntologyConstants.KnoraApiV2WithValueObject.ValueAsString -> Cardinality.MayHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObject.GeonameValueAsGeonameCode -> Cardinality.MustHaveOne
+            OntologyConstants.KnoraApiV2WithValueObjects.ValueAsString -> Cardinality.MayHaveOne,
+            OntologyConstants.KnoraApiV2WithValueObjects.GeonameValueAsGeonameCode -> Cardinality.MustHaveOne
         )
     )
 
     val GeonameValueAsGeonameCode: PropertyEntityInfoV2 = makeProperty(
-        propertyIri = OntologyConstants.KnoraApiV2WithValueObject.GeonameValueAsGeonameCode,
+        propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.GeonameValueAsGeonameCode,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
-        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObject.GeonameValue),
+        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.GeonameValue),
         objectType = Some(OntologyConstants.Xsd.String),
         predicates = Seq(
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.SubPropertyOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObject.ValueHas)
+                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas)
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
-                    "en" -> "Geoname value as Geoname code"
+                    LanguageCodes.EN -> "Geoname value as Geoname code"
                 )
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Comment,
                 objectsWithLang = Map(
-                    "en" -> "Represents the literal Geoname code of a GeonameValue."
+                    LanguageCodes.EN -> "Represents the literal Geoname code of a GeonameValue."
                 )
             )
         )
     )
 
     val FileValue: ClassEntityInfoV2 = makeClass(
-        classIri = OntologyConstants.KnoraApiV2WithValueObject.FileValue,
+        classIri = OntologyConstants.KnoraApiV2WithValueObjects.FileValue,
         predicates = Seq(
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.SubClassOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObject.Value)
+                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.Value)
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
-                    "en" -> "File value"
+                    LanguageCodes.EN -> "File value"
                 )
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Comment,
                 objectsWithLang = Map(
-                    "en" -> "Represents a file value."
+                    LanguageCodes.EN -> "Represents a file value."
                 )
             )
         ),
         cardinalities = Map(
-            OntologyConstants.KnoraApiV2WithValueObject.ValueAsString -> Cardinality.MayHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObject.FileValueIsPreview -> Cardinality.MustHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObject.FileValueAsUrl -> Cardinality.MustHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObject.FileValueHasFilename -> Cardinality.MustHaveOne
+            OntologyConstants.KnoraApiV2WithValueObjects.ValueAsString -> Cardinality.MayHaveOne,
+            OntologyConstants.KnoraApiV2WithValueObjects.FileValueIsPreview -> Cardinality.MustHaveOne,
+            OntologyConstants.KnoraApiV2WithValueObjects.FileValueAsUrl -> Cardinality.MustHaveOne,
+            OntologyConstants.KnoraApiV2WithValueObjects.FileValueHasFilename -> Cardinality.MustHaveOne
         )
     )
 
     val FileValueIsPreview: PropertyEntityInfoV2 = makeProperty(
-        propertyIri = OntologyConstants.KnoraApiV2WithValueObject.FileValueIsPreview,
+        propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.FileValueIsPreview,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
-        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObject.FileValue),
+        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.FileValue),
         objectType = Some(OntologyConstants.Xsd.Boolean),
         predicates = Seq(
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.SubPropertyOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObject.ValueHas)
+                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas)
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
-                    "en" -> "File value is preview"
+                    LanguageCodes.EN -> "File value is preview"
                 )
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Comment,
                 objectsWithLang = Map(
-                    "en" -> "Indicates whether this is file value is a preview."
+                    LanguageCodes.EN -> "Indicates whether this is file value is a preview."
                 )
             )
         )
     )
 
     val FileValueAsUrl: PropertyEntityInfoV2 = makeProperty(
-        propertyIri = OntologyConstants.KnoraApiV2WithValueObject.FileValueAsUrl,
+        propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.FileValueAsUrl,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
-        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObject.FileValue),
+        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.FileValue),
         objectType = Some(OntologyConstants.Xsd.Uri),
         predicates = Seq(
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.SubPropertyOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObject.ValueHas)
+                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas)
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
-                    "en" -> "File value as URL"
+                    LanguageCodes.EN -> "File value as URL"
                 )
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Comment,
                 objectsWithLang = Map(
-                    "en" -> "The URL at which the file can be accessed."
+                    LanguageCodes.EN -> "The URL at which the file can be accessed."
                 )
             )
         )
     )
 
     val FileValueHasFilename: PropertyEntityInfoV2 = makeProperty(
-        propertyIri = OntologyConstants.KnoraApiV2WithValueObject.FileValueHasFilename,
+        propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.FileValueHasFilename,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
-        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObject.FileValue),
+        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.FileValue),
         objectType = Some(OntologyConstants.Xsd.String),
         predicates = Seq(
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.SubPropertyOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObject.ValueHas)
+                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas)
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
-                    "en" -> "File value has filename"
+                    LanguageCodes.EN -> "File value has filename"
                 )
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Comment,
                 objectsWithLang = Map(
-                    "en" -> "The name of the file that a file value represents."
+                    LanguageCodes.EN -> "The name of the file that a file value represents."
                 )
             )
         )
     )
 
     val TextFileValue: ClassEntityInfoV2 = makeClass(
-        classIri = OntologyConstants.KnoraApiV2WithValueObject.TextFileValue,
+        classIri = OntologyConstants.KnoraApiV2WithValueObjects.TextFileValue,
         predicates = Seq(
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.SubClassOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObject.FileValue)
+                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.FileValue)
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
-                    "en" -> "Text file value"
+                    LanguageCodes.EN -> "Text file value"
                 )
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Comment,
                 objectsWithLang = Map(
-                    "en" -> "Represents a text file value."
+                    LanguageCodes.EN -> "Represents a text file value."
                 )
             )
         ),
         cardinalities = Map(
-            OntologyConstants.KnoraApiV2WithValueObject.ValueAsString -> Cardinality.MayHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObject.FileValueIsPreview -> Cardinality.MustHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObject.FileValueAsUrl -> Cardinality.MustHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObject.FileValueHasFilename -> Cardinality.MustHaveOne
+            OntologyConstants.KnoraApiV2WithValueObjects.ValueAsString -> Cardinality.MayHaveOne,
+            OntologyConstants.KnoraApiV2WithValueObjects.FileValueIsPreview -> Cardinality.MustHaveOne,
+            OntologyConstants.KnoraApiV2WithValueObjects.FileValueAsUrl -> Cardinality.MustHaveOne,
+            OntologyConstants.KnoraApiV2WithValueObjects.FileValueHasFilename -> Cardinality.MustHaveOne
         )
     )
 
     val StillImageFileValue: ClassEntityInfoV2 = makeClass(
-        classIri = OntologyConstants.KnoraApiV2WithValueObject.StillImageFileValue,
+        classIri = OntologyConstants.KnoraApiV2WithValueObjects.StillImageFileValue,
         predicates = Seq(
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.SubClassOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObject.FileValue)
+                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.FileValue)
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
-                    "en" -> "Still image file value"
+                    LanguageCodes.EN -> "Still image file value"
                 )
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Comment,
                 objectsWithLang = Map(
-                    "en" -> "Represents a still image file value."
+                    LanguageCodes.EN -> "Represents a still image file value."
                 )
             )
         ),
         cardinalities = Map(
-            OntologyConstants.KnoraApiV2WithValueObject.ValueAsString -> Cardinality.MayHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObject.FileValueIsPreview -> Cardinality.MustHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObject.FileValueAsUrl -> Cardinality.MustHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObject.FileValueHasFilename -> Cardinality.MustHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObject.StillImageFileValueHasDimX -> Cardinality.MustHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObject.StillImageFileValueHasDimY -> Cardinality.MustHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObject.StillImageFileValueHasIIIFBaseUrl -> Cardinality.MustHaveOne
+            OntologyConstants.KnoraApiV2WithValueObjects.ValueAsString -> Cardinality.MayHaveOne,
+            OntologyConstants.KnoraApiV2WithValueObjects.FileValueIsPreview -> Cardinality.MustHaveOne,
+            OntologyConstants.KnoraApiV2WithValueObjects.FileValueAsUrl -> Cardinality.MustHaveOne,
+            OntologyConstants.KnoraApiV2WithValueObjects.FileValueHasFilename -> Cardinality.MustHaveOne,
+            OntologyConstants.KnoraApiV2WithValueObjects.StillImageFileValueHasDimX -> Cardinality.MustHaveOne,
+            OntologyConstants.KnoraApiV2WithValueObjects.StillImageFileValueHasDimY -> Cardinality.MustHaveOne,
+            OntologyConstants.KnoraApiV2WithValueObjects.StillImageFileValueHasIIIFBaseUrl -> Cardinality.MustHaveOne
         )
     )
 
     val StillImageFileValueHasDimX: PropertyEntityInfoV2 = makeProperty(
-        propertyIri = OntologyConstants.KnoraApiV2WithValueObject.StillImageFileValueHasDimX,
+        propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.StillImageFileValueHasDimX,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
-        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObject.StillImageFileValue),
+        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.StillImageFileValue),
         objectType = Some(OntologyConstants.Xsd.Integer),
         predicates = Seq(
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.SubPropertyOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObject.ValueHas)
+                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas)
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
-                    "en" -> "Still image file value has X dimension"
+                    LanguageCodes.EN -> "Still image file value has X dimension"
                 )
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Comment,
                 objectsWithLang = Map(
-                    "en" -> "The horizontal dimension of a still image file value."
+                    LanguageCodes.EN -> "The horizontal dimension of a still image file value."
                 )
             )
         )
     )
 
     val StillImageFileValueHasDimY: PropertyEntityInfoV2 = makeProperty(
-        propertyIri = OntologyConstants.KnoraApiV2WithValueObject.StillImageFileValueHasDimY,
+        propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.StillImageFileValueHasDimY,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
-        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObject.StillImageFileValue),
+        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.StillImageFileValue),
         objectType = Some(OntologyConstants.Xsd.Integer),
         predicates = Seq(
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.SubPropertyOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObject.ValueHas)
+                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas)
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
-                    "en" -> "Still image file value has Y dimension"
+                    LanguageCodes.EN -> "Still image file value has Y dimension"
                 )
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Comment,
                 objectsWithLang = Map(
-                    "en" -> "The vertical dimension of a still image file value."
+                    LanguageCodes.EN -> "The vertical dimension of a still image file value."
                 )
             )
         )
     )
 
     val StillImageFileValueHasIIIFBaseUrl: PropertyEntityInfoV2 = makeProperty(
-        propertyIri = OntologyConstants.KnoraApiV2WithValueObject.StillImageFileValueHasIIIFBaseUrl,
+        propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.StillImageFileValueHasIIIFBaseUrl,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
-        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObject.StillImageFileValue),
+        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.StillImageFileValue),
         objectType = Some(OntologyConstants.Xsd.Uri),
         predicates = Seq(
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.SubPropertyOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObject.ValueHas)
+                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas)
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
-                    "en" -> "Still image file value has IIIF base URL"
+                    LanguageCodes.EN -> "Still image file value has IIIF base URL"
                 )
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Comment,
                 objectsWithLang = Map(
-                    "en" -> "The IIIF base URL of a still image file value."
+                    LanguageCodes.EN -> "The IIIF base URL of a still image file value."
                 )
             )
         )
@@ -1782,270 +1782,270 @@ object KnoraApiV2WithValueObjects {
 
 
     val MovingImageFileValue: ClassEntityInfoV2 = makeClass(
-        classIri = OntologyConstants.KnoraApiV2WithValueObject.MovingImageFileValue,
+        classIri = OntologyConstants.KnoraApiV2WithValueObjects.MovingImageFileValue,
         predicates = Seq(
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.SubClassOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObject.FileValue)
+                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.FileValue)
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
-                    "en" -> "Moving image file value"
+                    LanguageCodes.EN -> "Moving image file value"
                 )
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Comment,
                 objectsWithLang = Map(
-                    "en" -> "Represents a moving image file value."
+                    LanguageCodes.EN -> "Represents a moving image file value."
                 )
             )
         ),
         cardinalities = Map(
-            OntologyConstants.KnoraApiV2WithValueObject.ValueAsString -> Cardinality.MayHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObject.FileValueIsPreview -> Cardinality.MustHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObject.FileValueAsUrl -> Cardinality.MustHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObject.FileValueHasFilename -> Cardinality.MustHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObject.MovingImageFileValueHasDimX -> Cardinality.MustHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObject.MovingImageFileValueHasDimY -> Cardinality.MustHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObject.MovingImageFileValueHasFps -> Cardinality.MustHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObject.MovingImageFileValueHasQualityLevel -> Cardinality.MustHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObject.MovingImageFileValueHasDuration -> Cardinality.MustHaveOne
+            OntologyConstants.KnoraApiV2WithValueObjects.ValueAsString -> Cardinality.MayHaveOne,
+            OntologyConstants.KnoraApiV2WithValueObjects.FileValueIsPreview -> Cardinality.MustHaveOne,
+            OntologyConstants.KnoraApiV2WithValueObjects.FileValueAsUrl -> Cardinality.MustHaveOne,
+            OntologyConstants.KnoraApiV2WithValueObjects.FileValueHasFilename -> Cardinality.MustHaveOne,
+            OntologyConstants.KnoraApiV2WithValueObjects.MovingImageFileValueHasDimX -> Cardinality.MustHaveOne,
+            OntologyConstants.KnoraApiV2WithValueObjects.MovingImageFileValueHasDimY -> Cardinality.MustHaveOne,
+            OntologyConstants.KnoraApiV2WithValueObjects.MovingImageFileValueHasFps -> Cardinality.MustHaveOne,
+            OntologyConstants.KnoraApiV2WithValueObjects.MovingImageFileValueHasQualityLevel -> Cardinality.MustHaveOne,
+            OntologyConstants.KnoraApiV2WithValueObjects.MovingImageFileValueHasDuration -> Cardinality.MustHaveOne
         )
     )
 
     val MovingImageFileValueHasDimX: PropertyEntityInfoV2 = makeProperty(
-        propertyIri = OntologyConstants.KnoraApiV2WithValueObject.MovingImageFileValueHasDimX,
+        propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.MovingImageFileValueHasDimX,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
-        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObject.MovingImageFileValue),
+        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.MovingImageFileValue),
         objectType = Some(OntologyConstants.Xsd.Integer),
         predicates = Seq(
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.SubPropertyOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObject.ValueHas)
+                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas)
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
-                    "en" -> "Moving image file value has X dimension"
+                    LanguageCodes.EN -> "Moving image file value has X dimension"
                 )
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Comment,
                 objectsWithLang = Map(
-                    "en" -> "The horizontal dimension of a moving image file value."
+                    LanguageCodes.EN -> "The horizontal dimension of a moving image file value."
                 )
             )
         )
     )
 
     val MovingImageFileValueHasDimY: PropertyEntityInfoV2 = makeProperty(
-        propertyIri = OntologyConstants.KnoraApiV2WithValueObject.MovingImageFileValueHasDimY,
+        propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.MovingImageFileValueHasDimY,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
-        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObject.MovingImageFileValue),
+        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.MovingImageFileValue),
         objectType = Some(OntologyConstants.Xsd.Integer),
         predicates = Seq(
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.SubPropertyOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObject.ValueHas)
+                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas)
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
-                    "en" -> "Moving image file value has Y dimension"
+                    LanguageCodes.EN -> "Moving image file value has Y dimension"
                 )
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Comment,
                 objectsWithLang = Map(
-                    "en" -> "The vertical dimension of a moving image file value."
+                    LanguageCodes.EN -> "The vertical dimension of a moving image file value."
                 )
             )
         )
     )
 
     val MovingImageFileValueHasFps: PropertyEntityInfoV2 = makeProperty(
-        propertyIri = OntologyConstants.KnoraApiV2WithValueObject.MovingImageFileValueHasFps,
+        propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.MovingImageFileValueHasFps,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
-        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObject.MovingImageFileValue),
+        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.MovingImageFileValue),
         objectType = Some(OntologyConstants.Xsd.Integer),
         predicates = Seq(
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.SubPropertyOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObject.ValueHas)
+                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas)
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
-                    "en" -> "Moving image file value has frames per second"
+                    LanguageCodes.EN -> "Moving image file value has frames per second"
                 )
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Comment,
                 objectsWithLang = Map(
-                    "en" -> "The number of frames per second in a moving image file value."
+                    LanguageCodes.EN -> "The number of frames per second in a moving image file value."
                 )
             )
         )
     )
 
     val MovingImageFileValueHasQualityLevel: PropertyEntityInfoV2 = makeProperty(
-        propertyIri = OntologyConstants.KnoraApiV2WithValueObject.MovingImageFileValueHasQualityLevel,
+        propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.MovingImageFileValueHasQualityLevel,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
-        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObject.MovingImageFileValue),
+        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.MovingImageFileValue),
         objectType = Some(OntologyConstants.Xsd.Integer),
         predicates = Seq(
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.SubPropertyOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObject.ValueHas)
+                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas)
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
-                    "en" -> "Moving image file value has quality level"
+                    LanguageCodes.EN -> "Moving image file value has quality level"
                 )
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Comment,
                 objectsWithLang = Map(
-                    "en" -> "The quality level of a moving image file value."
+                    LanguageCodes.EN -> "The quality level of a moving image file value."
                 )
             )
         )
     )
 
     val MovingImageFileValueHasDuration: PropertyEntityInfoV2 = makeProperty(
-        propertyIri = OntologyConstants.KnoraApiV2WithValueObject.MovingImageFileValueHasDuration,
+        propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.MovingImageFileValueHasDuration,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
-        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObject.MovingImageFileValue),
+        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.MovingImageFileValue),
         objectType = Some(OntologyConstants.Xsd.Decimal),
         predicates = Seq(
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.SubPropertyOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObject.ValueHas)
+                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas)
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
-                    "en" -> "Moving image file value has duration"
+                    LanguageCodes.EN -> "Moving image file value has duration"
                 )
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Comment,
                 objectsWithLang = Map(
-                    "en" -> "The duration of a moving image file value."
+                    LanguageCodes.EN -> "The duration of a moving image file value."
                 )
             )
         )
     )
 
     val AudioFileValue: ClassEntityInfoV2 = makeClass(
-        classIri = OntologyConstants.KnoraApiV2WithValueObject.AudioFileValue,
+        classIri = OntologyConstants.KnoraApiV2WithValueObjects.AudioFileValue,
         predicates = Seq(
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.SubClassOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObject.FileValue)
+                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.FileValue)
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
-                    "en" -> "Audio file value"
+                    LanguageCodes.EN -> "Audio file value"
                 )
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Comment,
                 objectsWithLang = Map(
-                    "en" -> "Represents an audio file value."
+                    LanguageCodes.EN -> "Represents an audio file value."
                 )
             )
         ),
         cardinalities = Map(
-            OntologyConstants.KnoraApiV2WithValueObject.ValueAsString -> Cardinality.MayHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObject.FileValueIsPreview -> Cardinality.MustHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObject.FileValueAsUrl -> Cardinality.MustHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObject.FileValueHasFilename -> Cardinality.MustHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObject.AudioFileValueHasDuration -> Cardinality.MustHaveOne
+            OntologyConstants.KnoraApiV2WithValueObjects.ValueAsString -> Cardinality.MayHaveOne,
+            OntologyConstants.KnoraApiV2WithValueObjects.FileValueIsPreview -> Cardinality.MustHaveOne,
+            OntologyConstants.KnoraApiV2WithValueObjects.FileValueAsUrl -> Cardinality.MustHaveOne,
+            OntologyConstants.KnoraApiV2WithValueObjects.FileValueHasFilename -> Cardinality.MustHaveOne,
+            OntologyConstants.KnoraApiV2WithValueObjects.AudioFileValueHasDuration -> Cardinality.MustHaveOne
         )
     )
 
     val AudioFileValueHasDuration: PropertyEntityInfoV2 = makeProperty(
-        propertyIri = OntologyConstants.KnoraApiV2WithValueObject.AudioFileValueHasDuration,
+        propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.AudioFileValueHasDuration,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
-        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObject.AudioFileValue),
+        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.AudioFileValue),
         objectType = Some(OntologyConstants.Xsd.Decimal),
         predicates = Seq(
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.SubPropertyOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObject.ValueHas)
+                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas)
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
-                    "en" -> "Audio file value has duration"
+                    LanguageCodes.EN -> "Audio file value has duration"
                 )
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Comment,
                 objectsWithLang = Map(
-                    "en" -> "The duration of an audio file value."
+                    LanguageCodes.EN -> "The duration of an audio file value."
                 )
             )
         )
     )
 
     val DDDFileValue: ClassEntityInfoV2 = makeClass(
-        classIri = OntologyConstants.KnoraApiV2WithValueObject.DDDFileValue,
+        classIri = OntologyConstants.KnoraApiV2WithValueObjects.DDDFileValue,
         predicates = Seq(
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.SubClassOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObject.FileValue)
+                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.FileValue)
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
-                    "en" -> "3D file value"
+                    LanguageCodes.EN -> "3D file value"
                 )
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Comment,
                 objectsWithLang = Map(
-                    "en" -> "Represents a 3D file value."
+                    LanguageCodes.EN -> "Represents a 3D file value."
                 )
             )
         ),
         cardinalities = Map(
-            OntologyConstants.KnoraApiV2WithValueObject.ValueAsString -> Cardinality.MayHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObject.FileValueIsPreview -> Cardinality.MustHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObject.FileValueAsUrl -> Cardinality.MustHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObject.FileValueHasFilename -> Cardinality.MustHaveOne
+            OntologyConstants.KnoraApiV2WithValueObjects.ValueAsString -> Cardinality.MayHaveOne,
+            OntologyConstants.KnoraApiV2WithValueObjects.FileValueIsPreview -> Cardinality.MustHaveOne,
+            OntologyConstants.KnoraApiV2WithValueObjects.FileValueAsUrl -> Cardinality.MustHaveOne,
+            OntologyConstants.KnoraApiV2WithValueObjects.FileValueHasFilename -> Cardinality.MustHaveOne
         )
     )
 
     val DocumentFileValue: ClassEntityInfoV2 = makeClass(
-        classIri = OntologyConstants.KnoraApiV2WithValueObject.DocumentFileValue,
+        classIri = OntologyConstants.KnoraApiV2WithValueObjects.DocumentFileValue,
         predicates = Seq(
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.SubClassOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObject.FileValue)
+                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.FileValue)
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
-                    "en" -> "Document file value"
+                    LanguageCodes.EN -> "Document file value"
                 )
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Comment,
                 objectsWithLang = Map(
-                    "en" -> "Represents a document file value."
+                    LanguageCodes.EN -> "Represents a document file value."
                 )
             )
         ),
         cardinalities = Map(
-            OntologyConstants.KnoraApiV2WithValueObject.ValueAsString -> Cardinality.MayHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObject.FileValueIsPreview -> Cardinality.MustHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObject.FileValueAsUrl -> Cardinality.MustHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObject.FileValueHasFilename -> Cardinality.MustHaveOne
+            OntologyConstants.KnoraApiV2WithValueObjects.ValueAsString -> Cardinality.MayHaveOne,
+            OntologyConstants.KnoraApiV2WithValueObjects.FileValueIsPreview -> Cardinality.MustHaveOne,
+            OntologyConstants.KnoraApiV2WithValueObjects.FileValueAsUrl -> Cardinality.MustHaveOne,
+            OntologyConstants.KnoraApiV2WithValueObjects.FileValueHasFilename -> Cardinality.MustHaveOne
         )
     )
 
@@ -2159,7 +2159,7 @@ object KnoraApiV2WithValueObjects {
                               objectsWithLang: Map[String, String] = Map.empty[String, String]): PredicateInfoV2 = {
         PredicateInfoV2(
             predicateIri = predicateIri,
-            ontologyIri = OntologyConstants.KnoraApi.KnoraApiOntologyIri,
+            ontologyIri = OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiOntologyIri,
             objects = objects,
             objectsWithLang = objectsWithLang
         )
@@ -2188,7 +2188,7 @@ object KnoraApiV2WithValueObjects {
         val maybeSubjectTypePred = subjectType.map {
             subjType =>
                 makePredicate(
-                    predicateIri = OntologyConstants.KnoraApiV2WithValueObject.SubjectType,
+                    predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.SubjectType,
                     objects = Set(subjType)
                 )
         }
@@ -2196,7 +2196,7 @@ object KnoraApiV2WithValueObjects {
         val maybeObjectTypePred = objectType.map {
             objType =>
                 makePredicate(
-                    predicateIri = OntologyConstants.KnoraApiV2WithValueObject.ObjectType,
+                    predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.ObjectType,
                     objects = Set(objType)
                 )
         }
@@ -2205,7 +2205,7 @@ object KnoraApiV2WithValueObjects {
 
         PropertyEntityInfoV2(
             propertyIri = propertyIri,
-            ontologyIri = OntologyConstants.KnoraApi.KnoraApiOntologyIri,
+            ontologyIri = OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiOntologyIri,
             ontologySchema = ApiV2WithValueObjects,
             predicates = predsWithTypes.map {
                 pred => pred.predicateIri -> pred
@@ -2243,7 +2243,7 @@ object KnoraApiV2WithValueObjects {
             linkProperties = linkProperties,
             linkValueProperties = linkValueProperties,
             fileValueProperties = fileValueProperties,
-            ontologyIri = OntologyConstants.KnoraApi.KnoraApiOntologyIri,
+            ontologyIri = OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiOntologyIri,
             ontologySchema = ApiV2WithValueObjects
         )
     }
