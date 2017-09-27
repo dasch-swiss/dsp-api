@@ -37,6 +37,41 @@ import org.knora.webapi.util.{ConstructResponseUtilV2, DateUtilV1, InputValidati
 import scala.collection.mutable
 import scala.concurrent.Future
 
+/**
+  * Constants used in [[SearchResponderV2]].
+  */
+object SearchResponderV2Constants {
+
+    /**
+      * Constants for fulltext query.
+      */
+    object FullTextSearchConstants {
+
+    }
+
+    /**
+      * Constants for extended search.
+      */
+    object ExtendedSearchConstants {
+
+        val mainResourcePropVar = QueryVariable("mainResourceProp")
+        val mainResourceObjectVar = QueryVariable("mainResourceObj")
+        val mainResourceValueObject = QueryVariable("mainResourceValueObject")
+        val mainResourceValueProp = QueryVariable("mainResourceValueProp")
+        val mainResourceValueObjectProp = QueryVariable("mainResourceValueObjectProp")
+        val mainResourceValueObjectObj = QueryVariable("mainResourceValueObjectObj")
+
+        val dependentResourcePropVar = QueryVariable("dependentResourceProp")
+        val dependentResourceObjectVar = QueryVariable("dependentResourceObj")
+        val dependentResourceValueObject = QueryVariable("dependentResourceValueObject")
+        val dependentResourceValueProp = QueryVariable("dependentResourceValueProp")
+        val dependentResourceValueObjectProp = QueryVariable("dependentResourceValueObjectProp")
+        val dependentResourceValueObjectObj = QueryVariable("dependentResourceValueObjectObj")
+
+    }
+
+}
+
 class SearchResponderV2 extends Responder {
 
     def receive = {
@@ -1045,12 +1080,7 @@ class SearchResponderV2 extends Responder {
           */
         def createMainQuery(mainResourceVar: QueryVariable, valuesPatternForMainResources: ValuesPattern, dependentResourceVar: QueryVariable, valuesPatternForDependentResources: ValuesPattern): ConstructQuery = {
 
-            val mainResourcePropVar = QueryVariable("mainResourceProp")
-            val mainResourceObjectVar = QueryVariable("mainResourceObj")
-            val mainResourceValueObject = QueryVariable("mainResourceValueObject")
-            val mainResourceValueProp = QueryVariable("mainResourceValueProp")
-            val mainResourceValueObjectProp = QueryVariable("mainResourceValueObjectProp")
-            val mainResourceValueObjectObj = QueryVariable("mainResourceValueObjectObj")
+            import SearchResponderV2Constants.ExtendedSearchConstants._
 
             val wherePatternsForMainResources = Seq(
                 valuesPatternForMainResources,
@@ -1061,13 +1091,6 @@ class SearchResponderV2 extends Responder {
                 StatementPattern.makeExplicit(subj = mainResourceValueObject, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean)),
                 StatementPattern.makeExplicit(subj = mainResourceValueObject, pred = mainResourceValueObjectProp, obj = mainResourceValueObjectObj)
             )
-
-            val dependentResourcePropVar = QueryVariable("dependentResourceProp")
-            val dependentResourceObjectVar = QueryVariable("dependentResourceObj")
-            val dependentResourceValueObject = QueryVariable("dependentResourceValueObject")
-            val dependentResourceValueProp = QueryVariable("dependentResourceValueProp")
-            val dependentResourceValueObjectProp = QueryVariable("dependentResourceValueObjectProp")
-            val dependentResourceValueObjectObj = QueryVariable("dependentResourceValueObjectObj")
 
             val wherePatternsForDependentResources = Seq(
                 valuesPatternForDependentResources,
