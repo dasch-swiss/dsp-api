@@ -605,7 +605,7 @@ object OntologyConstants {
 
         val KnoraApiOntologyIri: IRI = KnoraApi.ApiOntologyStart + KnoraApi.KnoraApiOntologyLabel + VersionSegment
 
-        val KnoraApiV2PrefixExpansion: IRI = KnoraApiOntologyIri + VersionSegment + "#"
+        val KnoraApiV2PrefixExpansion: IRI = KnoraApiOntologyIri + "#"
 
         val SubjectType: IRI = KnoraApiV2PrefixExpansion + "subjectType"
 
