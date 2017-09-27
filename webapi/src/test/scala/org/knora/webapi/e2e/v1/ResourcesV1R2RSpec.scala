@@ -112,6 +112,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
     private val fifthThingIri = new MutableTestIri
     private val sixthThingIri = new MutableTestIri
     private val seventhThingIri = new MutableTestIri
+    private val eighthThingIri = new MutableTestIri
     private val abelAuthorIri = new MutableTestIri
     private val mathIntelligencerIri = new MutableTestIri
 
@@ -1178,6 +1179,85 @@ class ResourcesV1R2RSpec extends R2RSpec {
 
                 assert(utf8str == "another simple text")
             }
+        }
+
+        "create eighth resource of type anything:Thing with the date of the murder of Caesar" in {
+
+            val params =
+                s"""
+                   |{
+                   |    "restype_id": "http://www.knora.org/ontology/anything#Thing",
+                   |    "label": "A thing with a BCE date of the murder of Caesar",
+                   |    "project_id": "http://data.knora.org/projects/anything",
+                   |    "properties": {
+                   |        "http://www.knora.org/ontology/anything#hasDate": [{"date_value": "JULIAN:44-03-15 BCE"}]
+                   |    }
+                   }
+                """.stripMargin
+
+            Post("/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPath ~> check {
+                assert(status == StatusCodes.OK, response.toString)
+
+                val resId = getResIriFromJsonResponse(response)
+
+                eighthThingIri.set(resId)
+            }
+        }
+
+        "get the eighth resource and check its date" in {
+
+            Get("/v1/resources/" + URLEncoder.encode(eighthThingIri.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val dateObj: JsObject = getValuesForProp(response, "http://www.knora.org/ontology/anything#hasDate") match {
+                    case vals: JsArray =>
+                        vals.elements.head.asInstanceOf[JsObject]
+                    case _ =>
+                        throw new InvalidApiJsonException("values is not an array")
+                }
+
+                // expected result:
+                // {"dateval1":"0044-03-15","calendar":"JULIAN","era1":"BCE","dateval2":"0044-03-15","era2":"BCE"}
+
+                dateObj.fields.get("dateval1") match {
+                    case Some(JsString(dateval1)) => assert(dateval1 == "0044-03-15")
+
+                    case None => throw InvalidApiJsonException("No member 'dateval1' given for date value")
+
+                    case _ => throw InvalidApiJsonException("'dateval1' is not a JsString")
+
+                }
+
+                dateObj.fields.get("era1") match {
+                    case Some(JsString(era1)) => assert(era1 == "BCE")
+
+                    case None => throw InvalidApiJsonException("No member 'era1' given for date value")
+
+                    case _ => throw InvalidApiJsonException("'era1' is not a JsString")
+
+                }
+
+                dateObj.fields.get("dateval2") match {
+                    case Some(JsString(dateval1)) => assert(dateval1 == "0044-03-15")
+
+                    case None => throw InvalidApiJsonException("No member 'dateval1' given for date value")
+
+                    case _ => throw InvalidApiJsonException("'dateval1' is not a JsString")
+
+                }
+
+                dateObj.fields.get("era2") match {
+                    case Some(JsString(era2)) => assert(era2 == "BCE")
+
+                    case None => throw InvalidApiJsonException("No member 'era2' given for date value")
+
+                    case _ => throw InvalidApiJsonException("'era2' is not a JsString")
+
+                }
+
+            }
+
         }
 
         "create resources from an XML import" in {

@@ -114,7 +114,7 @@ object DateUtilV2 {
       * @param calendar the calendar to which the JDN should be converted.
       * @return a [[DateYearMonthDay]].
       */
-    private def convertJDNToDate(julianDayNumber: Int, precision: KnoraPrecisionV1.Value, calendar: KnoraCalendarV1.Value): DateYearMonthDay = {
+    def convertJDNToDate(julianDayNumber: Int, precision: KnoraPrecisionV1.Value, calendar: KnoraCalendarV1.Value): DateYearMonthDay = {
         val javaGregorianCalendarDate: GregorianCalendar = DateUtilV1.convertJulianDayNumberToJavaGregorianCalendar(julianDayNumber, calendar)
 
         val year: Int = javaGregorianCalendarDate.get(Calendar.YEAR)
@@ -122,21 +122,6 @@ object DateUtilV2 {
         val day: Int = javaGregorianCalendarDate.get(Calendar.DAY_OF_MONTH)
 
         DateYearMonthDay(year = year, month = month, day = day, precision = precision)
-
-    }
-
-    /**
-      * Converts a [[DateValueContentV2]] to knora-api assertions representing a date.
-      *
-      * @param dateValue the given date.
-      * @return a Map of knora api value properties to numbers (year, month, day)
-      */
-    def convertDateValueContentV2ToKnoraApiDateAssertions(dateValue: DateValueContentV2): Map[IRI, Int] = {
-        val startDateAssertions = convertJDNToDate(dateValue.valueHasStartJDN, dateValue.valueHasStartPrecision, dateValue.valueHasCalendar).toStartDateAssertions()
-
-        val endDateAssertions = convertJDNToDate(dateValue.valueHasEndJDN, dateValue.valueHasEndPrecision, dateValue.valueHasCalendar).toEndDateAssertions()
-
-        startDateAssertions ++ endDateAssertions
 
     }
 

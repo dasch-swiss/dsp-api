@@ -42,7 +42,7 @@ import org.knora.webapi.messages.v2.responder.persistentmapmessages.PersistentMa
 import org.knora.webapi.messages.v2.responder.resourcemessages.ResourcesResponderRequestV2
 import org.knora.webapi.messages.v2.responder.searchmessages.SearchResponderRequestV2
 import org.knora.webapi.responders.v1._
-import org.knora.webapi.responders.v2.{OntologiesResponderV2, PersistentMapResponderV2, ResourcesResponderV2, SearchResponderV2}
+import org.knora.webapi.responders.v2.{OntologyResponderV2, PersistentMapResponderV2, ResourcesResponderV2, SearchResponderV2}
 import org.knora.webapi.util.ActorUtil.handleUnexpectedMessage
 
 import scala.concurrent.ExecutionContextExecutor
@@ -215,9 +215,9 @@ class ResponderManager extends Actor with ActorLogging {
     //
 
     /**
-      * Constructs the default Akka routing actor that routes messages to [[OntologiesResponderV2]].
+      * Constructs the default Akka routing actor that routes messages to [[OntologyResponderV2]].
       */
-    protected final def makeDefaultOntologiesRouterV2: ActorRef = makeActor(FromConfig.props(Props[OntologiesResponderV2]), ONTOLOGIES_ROUTER_V2_ACTOR_NAME)
+    protected final def makeDefaultOntologiesRouterV2: ActorRef = makeActor(FromConfig.props(Props[OntologyResponderV2]), ONTOLOGY_ROUTER_V2_ACTOR_NAME)
 
     /**
       * Constructs the default Akka routing actor that routes messages to [[SearchResponderV2]].

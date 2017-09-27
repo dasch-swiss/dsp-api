@@ -1,6 +1,6 @@
 package org.knora.webapi.util.search.v2
 
-import org.knora.webapi.util.MessageUtil
+import org.knora.webapi.ApiV2Simple
 import org.scalatest.{Matchers, WordSpec}
 
 /**
@@ -10,14 +10,14 @@ class TypeInspectorV2Spec extends WordSpec with Matchers {
     "TypeInspectorV2" should {
         "get type information from a simple query" in {
             val parsedQuery = SearchParserV2.parseSearchQuery(SearchParserV2Spec.SimpleSparqlConstructQueryWithExplicitTypeAnnotations)
-            val typeInspector = new ExplicitTypeInspectorV2(ApiV2Schema.SIMPLE)
+            val typeInspector = new ExplicitTypeInspectorV2(ApiV2Simple)
             val typeInspectionResult = typeInspector.inspectTypes(parsedQuery.whereClause)
             typeInspectionResult should ===(SimpleTypeInspectionResult)
         }
 
         "remove the type annotations from a WHERE clause" in {
             val parsedQuery = SearchParserV2.parseSearchQuery(SearchParserV2Spec.SimpleSparqlConstructQueryWithExplicitTypeAnnotations)
-            val typeInspector = new ExplicitTypeInspectorV2(ApiV2Schema.SIMPLE)
+            val typeInspector = new ExplicitTypeInspectorV2(ApiV2Simple)
             val whereClauseWithoutAnnotations = typeInspector.removeTypeAnnotations(parsedQuery.whereClause)
             whereClauseWithoutAnnotations should ===(whereClauseWithoutAnnotations)
         }
