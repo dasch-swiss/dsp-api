@@ -1,4 +1,4 @@
-@*
+/*
  * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
  * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
  *
@@ -16,19 +16,22 @@
  *
  * You should have received a copy of the GNU Affero General Public
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
- *@
+ */
 
-@import org.knora.webapi.IRI
-@import org.knora.webapi.SparqlGenerationException
-@import org.knora.webapi.messages.v2.responder.searchmessages.ExtendedSearchQuery
+package org.knora.webapi.util.search
 
-@*
- * Performs an extended search.
- *
- * @param triplestore the name of the triplestore being used.
- * @param query the construct query provided by the client.
- *@
-@(triplestore: String,
-  query: ExtendedSearchQuery)
-
-@* TODO: To be implemented *@
+/**
+  * A trait for classes that can get type information from a parsed SPARQL search query in different ways.
+  */
+trait TypeInspector {
+    /**
+      * Given the WHERE clause from a parsed SPARQL search query, returns information about the types found
+      * in the query.
+      *
+      * TODO: change this method signature so it has a way of getting info about entity IRIs in the API ontologies.
+      *
+      * @param whereClause the SPARQL WHERE clause.
+      * @return information about the types that were found in the query.
+      */
+    def inspectTypes(whereClause: WhereClause): TypeInspectionResult
+}

@@ -536,7 +536,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                         id = "http://www.knora.org/ontology/incunabula#page_comment"
                     ),
                     PropertyTypeV1(
-                        label = "Urspr\u00FCnglicher Dateiname",
+                        label = "Original filename",
                         id = "http://www.knora.org/ontology/incunabula#origname"
                     ),
                     PropertyTypeV1(
