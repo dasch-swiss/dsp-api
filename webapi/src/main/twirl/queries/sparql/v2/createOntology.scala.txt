@@ -19,28 +19,37 @@
  *@
 
 @import org.knora.webapi.IRI
-@import org.knora.webapi.SparqlGenerationException
-@import org.knora.webapi.messages.v2.responder.searchmessages.ExtendedSearchQuery
 
 @*
- * Performs an extended search.
- *
- * If the triplestore type is GraphDB, this template delegates to searchExtendedGraphDB.sparql.txt, which is optimised
- * for GraphDB. Otherwise, it delegates to searchExtendedStandard.sparql.txt.
+ * Creates a new, empty ontology. If the ontology already exists, this update does nothing.
  *
  * @param triplestore the name of the triplestore being used.
- * @param query the construct query provided by the client.
+ * @param ontologyNamedGraphIri the IRI of the named graph where the ontology should be stored.
+ * @param ontologyIri the IRI of the ontology to be created.
  *@
 @(triplestore: String,
-  query: ExtendedSearchQuery)
+  ontologyNamedGraphIri: IRI,
+  ontologyIri: IRI)
 
-@if(triplestore.startsWith("graphdb")) {
-    @{
-        queries.sparql.v2.txt.searchExtendedGraphDB(query = query)
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+
+INSERT {
+    GRAPH ?ontologyNamedGraph {
+        ?ontology rdf:type owl:Ontology .
     }
-} else {
-    @{
-        queries.sparql.v2.txt.searchExtendedStandard(triplestore = triplestore,
-                                                     query = query)
+}
+@* Ensure that inference is not used in the WHERE clause of this update. *@
+@if(triplestore.startsWith("graphdb")) {
+    USING <http://www.ontotext.com/explicit>
+}
+WHERE {
+    BIND(IRI("@ontologyNamedGraphIri") AS ?ontologyNamedGraph)
+    BIND(IRI("@ontologyIri") AS ?ontology)
+
+    FILTER NOT EXISTS {
+        ?ontology rdf:type ?existingOntologyType .
     }
 }

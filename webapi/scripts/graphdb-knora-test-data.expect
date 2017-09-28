@@ -1,0 +1,49 @@
+#!/usr/bin/expect
+
+set timeout 120
+spawn openrdf-console/bin/console.sh --force --echo --serverURL [lindex $argv 0]
+set prompt "> "
+expect $prompt
+send "open knora-test .\r"
+expect $prompt
+send "load ../../knora-ontologies/knora-base.ttl into http://www.knora.org/ontology/knora-base .\r"
+expect $prompt
+send "load ../../knora-ontologies/knora-admin.ttl into http://www.knora.org/ontology/knora-base .\r"
+expect $prompt
+send "load ../../knora-ontologies/standoff-onto.ttl into http://www.knora.org/ontology/standoff .\r"
+expect $prompt
+send "load ../../knora-ontologies/standoff-data.ttl into http://www.knora.org/data/standoff .\r"
+expect $prompt
+send "load ../../knora-ontologies/knora-dc.ttl into http://www.knora.org/ontology/dc .\r"
+expect $prompt
+send "load ../../knora-ontologies/salsah-gui.ttl into http://www.knora.org/ontology/salsah-gui .\r"
+expect $prompt
+send "load ../_test_data/all_data/admin-data.ttl into http://www.knora.org/data/admin .\r"
+expect $prompt
+send "load ../_test_data/all_data/permissions-data.ttl into http://www.knora.org/data/permissions .\r"
+expect $prompt
+send "load ../_test_data/ontologies/incunabula-onto.ttl into http://www.knora.org/ontology/incunabula .\r"
+expect $prompt
+send "load ../_test_data/all_data/incunabula-data.ttl into http://www.knora.org/data/incunabula .\r"
+expect $prompt
+send "load ../_test_data/ontologies/dokubib-onto.ttl into http://www.knora.org/ontology/dokubib .\r"
+expect $prompt
+send "load ../_test_data/ontologies/images-onto.ttl into http://www.knora.org/ontology/images .\r"
+expect $prompt
+send "load ../_test_data/demo_data/images-demo-data.ttl into http://www.knora.org/data/images .\r"
+expect $prompt
+send "load ../_test_data/ontologies/anything-onto.ttl into http://www.knora.org/ontology/anything .\r"
+expect $prompt
+send "load ../_test_data/all_data/anything-data.ttl into http://www.knora.org/data/anything .\r"
+expect $prompt
+send "load ../_test_data/ontologies/beol-onto.ttl into http://www.knora.org/ontology/beol .\r"
+expect $prompt
+send "load ../_test_data/all_data/beol-data.ttl into http://www.knora.org/data/beol .\r"
+expect $prompt
+send "load ../_test_data/ontologies/biblio-onto.ttl into http://www.knora.org/ontology/biblio .\r"
+expect $prompt
+send "load ../_test_data/all_data/biblio-data.ttl into http://www.knora.org/data/biblio .\r"
+expect $prompt
+send "close .\r"
+expect $prompt
+send "exit .\r"

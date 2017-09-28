@@ -24,9 +24,10 @@ import java.util.UUID
 
 import akka.event.LoggingAdapter
 import org.knora.webapi._
-import org.knora.webapi.messages.v1.responder.ontologymessages.{Cardinality, StandoffEntityInfoGetResponseV1, StandoffPropertyEntityInfoV1}
+import org.knora.webapi.messages.v1.responder.ontologymessages.StandoffEntityInfoGetResponseV1
 import org.knora.webapi.messages.v1.responder.standoffmessages._
 import org.knora.webapi.messages.v1.responder.valuemessages._
+import org.knora.webapi.messages.v2.responder.ontologymessages.{Cardinality, StandoffPropertyEntityInfoV2}
 import org.knora.webapi.twirl._
 import org.knora.webapi.util.{DateUtilV1, InputValidation}
 
@@ -79,7 +80,7 @@ object StandoffTagUtilV1 {
       * @param standoffPropertyEntities the ontology information about the standoff properties.
       * @return a sequence of [[StandoffTagAttributeV1]]
       */
-    private def createAttributes(xmlToStandoffMapping: XMLTagToStandoffClass, classSpecificProps: Map[IRI, Cardinality.Value], existingXMLIDs: Seq[String], standoffNodeFromXML: StandoffTag, standoffPropertyEntities: Map[IRI, StandoffPropertyEntityInfoV1]): Seq[StandoffTagAttributeV1] = {
+    private def createAttributes(xmlToStandoffMapping: XMLTagToStandoffClass, classSpecificProps: Map[IRI, Cardinality.Value], existingXMLIDs: Seq[String], standoffNodeFromXML: StandoffTag, standoffPropertyEntities: Map[IRI, StandoffPropertyEntityInfoV2]): Seq[StandoffTagAttributeV1] = {
 
         if (classSpecificProps.nonEmpty) {
             // this standoff class requires additional standoff properties to the standoff data type properties (contained in `StandoffProperties.dataTypeProperties`).

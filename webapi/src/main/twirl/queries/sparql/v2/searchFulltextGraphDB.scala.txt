@@ -76,7 +76,10 @@ WHERE {
             }
 
             ?literal <http://www.ontotext.com/owlim/lucene#fullTextSearchIndex> '@searchTerms' .
-        } LIMIT 500
+        }
+        @* TODO: support paging using OFFSET *@
+        ORDER BY ?matchingSubject
+        LIMIT 500
     }
 
     OPTIONAL {

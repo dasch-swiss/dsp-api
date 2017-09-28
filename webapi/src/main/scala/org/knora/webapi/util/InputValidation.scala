@@ -53,6 +53,32 @@ object InputValidation {
       */
     val PrecisionSeparator: String = "-"
 
+    /**
+      * Separates a date (year, month, day) from the era in a Knora date.
+      */
+    val EraSeparator: String = " "
+
+    /**
+      * Before Christ (equivalent to BCE)
+      */
+    val Era_BC: String = "BC"
+
+    /**
+      * Before Common Era (equivalent to BC)
+      */
+    val Era_BCE: String = "BCE"
+
+    /**
+      * Anno Domini (equivalent to CE)
+      */
+    val Era_AD: String = "AD"
+
+    /**
+      * Common Era (equivalent to AD)
+      */
+    val Era_CE: String = "CE"
+
+
     // The expected format of a Knora date.
     // Calendar:YYYY[-MM[-DD]][ EE][:YYYY[-MM[-DD]][ EE]]
     // EE being the era: one of BC or AD
@@ -449,14 +475,21 @@ object InputValidation {
     }
 
     /**
-      * Turn a possibly empty value returned by the triplestore into a Boolean value.
-      * Returns false if the value is empty or if the given String is cannot be converted to a Boolean `true`.
+      * Turn a possibly empty string value into a boolean value.
+      * Returns false if the value is empty or if the given string is cannot be converted to a Boolean `true`.
       *
-      * @param maybe the value returned by the triplestore.
+      * @param maybe    an optional string representation of a boolean value.
+      * @param errorFun a function that throws an exception. It will be called if the string cannot be parsed
+      *                 as a boolean value.
       * @return a Boolean.
       */
-    def optionStringToBoolean(maybe: Option[String]): Boolean = maybe.exists(_.toBoolean)
-
+    def optionStringToBoolean(maybe: Option[String], errorFun: () => Nothing): Boolean = {
+        try {
+            maybe.exists(_.toBoolean)
+        } catch {
+            case _: IllegalArgumentException => errorFun()
+        }
+    }
 
     /**
       *
@@ -815,7 +848,7 @@ object InputValidation {
       * @param iri the IRI to be checked.
       * @return `true` if the IRI is the IRI of an external ontology entity.
       */
-    def isKnoraApiEntityIri(iri: IRI) = {
+    def isKnoraApiEntityIri(iri: IRI): Boolean = {
         iri match {
             case KnoraApiOntologyEntityRegex(_*) => true
             case _ => false
