@@ -92,6 +92,7 @@ class SettingsImpl(config: Config) extends Extension {
     val triplestorePort: Int = triplestoreType match {
         case HTTP_GRAPH_DB_TS_TYPE => config.getInt("app.triplestore.graphdb.port")
         case HTTP_GRAPH_DB_FREE_TS_TYPE => config.getInt("app.triplestore.graphdb-free.port")
+        case HTTP_STARDOG_TS_TYPE => config.getInt("app.triplestore.stardog.port")
         case HTTP_FUSEKI_TS_TYPE => config.getInt("app.triplestore.fuseki.port")
         case HTTP_VIRTUOSO_TYPE => config.getInt("app.triplestore.virtuoso.port")
         case other => 9999
@@ -100,6 +101,7 @@ class SettingsImpl(config: Config) extends Extension {
     val triplestoreDatabaseName: String = triplestoreType match {
         case HTTP_GRAPH_DB_TS_TYPE => config.getString("app.triplestore.graphdb.repository-name")
         case HTTP_GRAPH_DB_FREE_TS_TYPE => config.getString("app.triplestore.graphdb-free.repository-name")
+        case HTTP_STARDOG_TS_TYPE => config.getString("app.triplestore.stardog.repository-name")
         case HTTP_FUSEKI_TS_TYPE => config.getString("app.triplestore.fuseki.repository-name")
         case other => ""
     }
@@ -107,6 +109,7 @@ class SettingsImpl(config: Config) extends Extension {
     val triplestoreUsername: String = triplestoreType match {
         case HTTP_GRAPH_DB_TS_TYPE => config.getString("app.triplestore.graphdb.username")
         case HTTP_GRAPH_DB_FREE_TS_TYPE => config.getString("app.triplestore.graphdb-free.username")
+        case HTTP_STARDOG_TS_TYPE => config.getString("app.triplestore.stardog.username")
         case HTTP_VIRTUOSO_TYPE => config.getString("app.triplestore.virtuoso.username")
         case other => ""
     }
@@ -114,6 +117,7 @@ class SettingsImpl(config: Config) extends Extension {
     val triplestorePassword: String = triplestoreType match {
         case HTTP_GRAPH_DB_TS_TYPE => config.getString("app.triplestore.graphdb.password")
         case HTTP_GRAPH_DB_FREE_TS_TYPE => config.getString("app.triplestore.graphdb-free.password")
+        case HTTP_STARDOG_TS_TYPE => config.getString("app.triplestore.stardog.password")
         case HTTP_VIRTUOSO_TYPE => config.getString("app.triplestore.virtuoso.password")
         case other => ""
     }

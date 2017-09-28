@@ -31,8 +31,8 @@ import akka.stream.ActorMaterializer
 import org.knora.webapi.SettingsConstants._
 import org.knora.webapi.{BadRequestException, Settings, TriplestoreResponseException, TriplestoreUnsupportedFeatureException}
 
-import scala.concurrent.{Await, ExecutionContextExecutor}
 import scala.concurrent.duration._
+import scala.concurrent.{Await, ExecutionContextExecutor}
 
 
 /**
@@ -78,7 +78,9 @@ object GraphProtocolAccessor {
     }
 
     private def execute(method: String, graphName: String, filepath: String)(implicit _system: ActorSystem, materializer: ActorMaterializer): String = {
-        val file = new File(filepath)
+
+        // because of Stardog we need the absolute path
+        val file = new File(filepath).getCanonicalFile
 
         if (!file.exists) {
             throw BadRequestException(s"File ${file.getAbsolutePath} does not exist")
@@ -101,7 +103,7 @@ object GraphProtocolAccessor {
         // HTTP paths for the SPARQL 1.1 Graph Store HTTP Protocol
         val requestPath = settings.triplestoreType match {
             case HTTP_GRAPH_DB_TS_TYPE | HTTP_GRAPH_DB_FREE_TS_TYPE => s"/repositories/${settings.triplestoreDatabaseName}/rdf-graphs/service"
-            case HTTP_STARDOG_TS_TYPE => s"/${settings.triplestoreDatabaseName}/data"
+            case HTTP_STARDOG_TS_TYPE => s"/${settings.triplestoreDatabaseName}"
             case HTTP_FUSEKI_TS_TYPE => s"/${settings.triplestoreDatabaseName}/data"
             case HTTP_VIRTUOSO_TYPE => "/sparql-graph-crud-auth"
             case ts_type => throw TriplestoreUnsupportedFeatureException(s"GraphProtocolAccessor does not support: $ts_type")
@@ -123,8 +125,12 @@ object GraphProtocolAccessor {
             throw TriplestoreUnsupportedFeatureException("Only PUT or POST supported by the GraphProtocolAccessor")
         }
 
+        log.debug("execute - filePath: {}", filepath)
+
         // Stream the file data into the HTTP request.
-        val fileEntity = HttpEntity.fromPath(ContentType(MediaType.text("turtle"), HttpCharsets.`UTF-8`), file.toPath, chunkSize = 100000)
+        val fileEntity: RequestEntity = HttpEntity.fromPath(ContentType(MediaType.text("turtle"), HttpCharsets.`UTF-8`), file.toPath, chunkSize = 100000)
+
+        log.debug("execute - file: {}", file.toPath)
 
         val request = HttpRequest(
             method = requestMethod,
@@ -141,7 +147,7 @@ object GraphProtocolAccessor {
             responseString <- response.entity.toStrict(10.seconds).map(_.data.decodeString("UTF-8"))
 
             _ = if (!response.status.isSuccess) {
-                throw TriplestoreResponseException(s"Unable to load file $filepath; triplestore responded with HTTP code ${response.status}: $responseString")
+                throw TriplestoreResponseException(s"Unable to load file ${file.toPath.toString}; triplestore responded with HTTP code ${response.status}: $responseString")
             }
             responseMessage = response.status.intValue.toString
         } yield responseMessage

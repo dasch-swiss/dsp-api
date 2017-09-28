@@ -267,7 +267,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
       */
     def sparqlHttpAsk(sparql: String): Future[SparqlAskResponse] = {
         for {
-            resultString <- getTriplestoreHttpResponse(sparql, isUpdate = false)
+            resultString <- getTriplestoreHttpResponse(sparql, isUpdate = false, isAsk = true)
             _ = log.debug("sparqlHttpAsk - resultString: {}", resultString)
 
             result: Boolean = resultString.parseJson.asJsObject.getFields("boolean").head.convertTo[Boolean]
@@ -345,7 +345,18 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
 
             for (elem <- completeRdfDataObjectList) {
 
-                GraphProtocolAccessor.post(elem.name, elem.path)
+                // depending on the protocol implementation, a graph needs to exist before the post
+                val graphExistsSparqlString =
+                    s"""
+                        ASK WHERE { GRAPH <${elem.name}> { ?s ?p ?o } }
+                    """
+                val exists = Await.result(sparqlHttpAsk(graphExistsSparqlString), 3.seconds).result
+
+                if (exists) {
+                    GraphProtocolAccessor.post(elem.name, elem.path)
+                } else {
+                    GraphProtocolAccessor.put(elem.name, elem.path)
+                }
 
                 if (triplestoreType == HTTP_GRAPH_DB_TS_TYPE || triplestoreType == HTTP_GRAPH_DB_FREE_TS_TYPE) {
                     /* need to update the lucene index */
@@ -421,7 +432,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
       * @param isConstruct `true` if this is a CONSTRUCT request.
       * @return the triplestore's response.
       */
-    private def getTriplestoreHttpResponse(sparql: String, isUpdate: Boolean, isConstruct: Boolean = false): Future[String] = {
+    private def getTriplestoreHttpResponse(sparql: String, isUpdate: Boolean, isConstruct: Boolean = false, isAsk: Boolean = false): Future[String] = {
         val request = if (isUpdate) {
             // Send updates as application/sparql-update (as per SPARQL 1.1 Protocol §3.2.2, "UPDATE using POST directly").
 
@@ -440,6 +451,8 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
 
             val maybeInfer = if (triplestoreType == HTTP_GRAPH_DB_TS_TYPE || triplestoreType == HTTP_GRAPH_DB_FREE_TS_TYPE) {
                 Some("infer" -> "true")
+            } else if (triplestoreType == HTTP_STARDOG_TS_TYPE && !isAsk) {
+                Some("reasoning" -> "true")
             } else {
                 None
             }
