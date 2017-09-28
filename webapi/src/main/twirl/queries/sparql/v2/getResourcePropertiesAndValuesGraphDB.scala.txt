@@ -27,10 +27,10 @@
  * This template is used only by getResourcePropertiesAndValues.scala.txt.
  *
  *
- * @param resourceIri the Iri of the requested resource.
+ * @param resourceIris the Iris of the requested resources.
  * @param preview indicates if the request should only return preview information.
  *@
-@(resourceIri: String,
+@(resourceIris: Seq[IRI],
 preview: Boolean)
 
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -64,7 +64,7 @@ CONSTRUCT {
         knora-base:hasPermissions ?referredResourcePermissions ;
         knora-base:attachedToProject ?referredResourceProject .
 } WHERE {
-    BIND(IRI("@resourceIri") as ?resource)
+    VALUES ?resource { @for(resIri <- resourceIris) { <@resIri> } }
 
     ?resource rdf:type knora-base:Resource ;
         knora-base:isDeleted false ;

@@ -28,7 +28,7 @@ import org.knora.webapi.messages.v2.responder.searchmessages.{ExtendedSearchGetR
 import org.knora.webapi.routing.{Authenticator, RouteUtilV2}
 import org.knora.webapi.util.InputValidation
 import org.knora.webapi.util.search.v2.SearchParserV2
-import org.knora.webapi.{BadRequestException, SettingsImpl}
+import org.knora.webapi.{BadRequestException, IRI, SettingsImpl}
 
 import scala.language.postfixOps
 
@@ -36,7 +36,8 @@ import scala.language.postfixOps
   * Provides a spray-routing function for API routes that deal with search.
   */
 object SearchRouteV2 extends Authenticator {
-
+    val LIMIT_TO_PROJECT = "limitToProject"
+    val LIMIT_TO_RESOURCE_CLASS = "limitToResourceClass"
 
     def knoraApiPath(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter): Route = {
         implicit val system = _system
@@ -92,7 +93,36 @@ object SearchRouteV2 extends Authenticator {
 
                     val searchString = InputValidation.toSparqlEncodedString(searchval, () => throw BadRequestException(s"Invalid search string: '$searchval'"))
 
-                    val requestMessage = SearchResourceByLabelRequestV2(searchValue = searchString, userProfile = userProfile)
+                    val params: Map[String, String] = requestContext.request.uri.query().toMap
+
+                    val limitToProjectIriStr = params.get(LIMIT_TO_PROJECT)
+
+                    val limitToProject: Option[IRI] = limitToProjectIriStr match {
+
+                        case Some(projectIriStr: String) =>
+                            val projectIri = InputValidation.toIri(projectIriStr, () => throw BadRequestException(s"$projectIriStr is not a valid Iri"))
+
+                            Some(projectIri)
+
+                        case None => None
+
+                    }
+
+                    val limitToResourceClassIriStr = params.get(LIMIT_TO_RESOURCE_CLASS)
+
+                    val limitToResourceClass: Option[IRI] = limitToResourceClassIriStr match {
+
+                        case Some(resourceClassIriStr: String) =>
+
+                            val externalResourceClassIri = InputValidation.toIri(resourceClassIriStr, () => throw BadRequestException(s"$resourceClassIriStr is not a valid Iri"))
+
+                            Some(InputValidation.externalApiV2WithValueObjectEntityIriToInternalEntityIri(externalResourceClassIri, () => throw BadRequestException(s"$externalResourceClassIri is not a valid knora-api with value object resource class Iri")))
+
+                        case None => None
+
+                    }
+
+                    val requestMessage = SearchResourceByLabelRequestV2(searchValue = searchString, limitToProject = limitToProject, limitToResourceClass = limitToResourceClass,userProfile = userProfile)
 
                     RouteUtilV2.runJsonRoute(
                         requestMessage,
