@@ -262,7 +262,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
                 //log.debug("==>> " + responseAs[String])
                 assert(status === StatusCodes.OK)
                 assert(responseAs[String] contains "preview")
-                assert(responseAs[String] contains "Ursprünglicher Dateiname")
+                assert(responseAs[String] contains "Original filename")
                 assert(responseAs[String] contains "Page identifier")
             }
         }

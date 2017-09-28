@@ -457,7 +457,8 @@
 
           rdfs:subPropertyOf knora-base:hasValue ;
 
-          rdfs:label "Ursprünglicher Dateiname"@de ,
+          rdfs:label "Original filename"@en ,
+                     "Ursprünglicher Dateiname"@de ,
                      "Nom de fichier original"@fr ;
 
           rdfs:comment """Der originale Dateiname"""@de ;
