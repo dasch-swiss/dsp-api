@@ -394,6 +394,7 @@ class OntologyResponderV2 extends Responder {
                         linkProperties = linkProps,
                         linkValueProperties = linkValueProps,
                         fileValueProperties = fileValueProps,
+                        subClassOf = directResourceSubClassOfRelations.getOrElse(resourceClassIri, Set.empty[IRI]),
                         ontologySchema = InternalSchema
                     )
 
@@ -431,6 +432,7 @@ class OntologyResponderV2 extends Responder {
                         isLinkValueProp = linkValueProps.contains(propertyIri),
                         isFileValueProp = fileValueProps.contains(propertyIri),
                         predicates = predicates,
+                        subPropertyOf = directSubPropertyOfRelations.getOrElse(propertyIri, Set.empty[IRI]),
                         ontologySchema = InternalSchema
                     )
 
@@ -702,9 +704,25 @@ class OntologyResponderV2 extends Responder {
     private def getEntityInfoResponseV2(classIris: Set[IRI] = Set.empty[IRI], propertyIris: Set[IRI] = Set.empty[IRI], userProfile: UserProfileV1): Future[EntityInfoGetResponseV2] = {
         for {
             cacheData <- getCacheData
+
+            classDefsAvailable = cacheData.classDefs.filterKeys(classIris)
+            propertyDefsAvailable = cacheData.propertyDefs.filterKeys(propertyIris)
+
+            missingClassDefs = classIris -- classDefsAvailable.keySet
+
+            _ = if (missingClassDefs.nonEmpty) {
+                throw BadRequestException(s"One or more requested classes were not found: ${missingClassDefs.mkString(", ")}")
+            }
+
+            missingPropertyDefs = propertyIris -- propertyDefsAvailable.keySet
+
+            _ = if (missingPropertyDefs.nonEmpty) {
+                throw BadRequestException(s"One or more requested properties were not found: ${missingPropertyDefs.mkString(", ")}")
+            }
+
             response = EntityInfoGetResponseV2(
-                classEntityInfoMap = new ErrorHandlingMap(cacheData.classDefs.filterKeys(classIris), { key => s"Resource class $key not found" }),
-                propertyEntityInfoMap = new ErrorHandlingMap(cacheData.propertyDefs.filterKeys(propertyIris), { key => s"Property $key not found" })
+                classEntityInfoMap = new ErrorHandlingMap(classDefsAvailable, { key => s"Resource class $key not found" }),
+                propertyEntityInfoMap = new ErrorHandlingMap(propertyDefsAvailable, { key => s"Property $key not found" })
             )
         } yield response
     }

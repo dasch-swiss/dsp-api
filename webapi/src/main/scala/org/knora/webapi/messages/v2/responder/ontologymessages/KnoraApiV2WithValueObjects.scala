@@ -32,21 +32,13 @@ object KnoraApiV2WithValueObjects {
 
     val Region: ClassEntityInfoV2 = makeClass(
         classIri = OntologyConstants.KnoraApiV2WithValueObjects.Region,
-        predicates = Seq(
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.SubClassOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.Resource)
-            )
-        )
+        subClassOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.Resource)
     )
 
     val Representation: ClassEntityInfoV2 = makeClass(
         classIri = OntologyConstants.KnoraApiV2WithValueObjects.Representation,
+        subClassOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.Resource),
         predicates = Seq(
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.SubClassOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.Resource)
-            ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
@@ -70,11 +62,8 @@ object KnoraApiV2WithValueObjects {
 
     val StillImageRepresentation: ClassEntityInfoV2 = makeClass(
         classIri = OntologyConstants.KnoraApiV2WithValueObjects.StillImageRepresentation,
+        subClassOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.Representation),
         predicates = Seq(
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.SubClassOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.Representation)
-            ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
@@ -98,11 +87,8 @@ object KnoraApiV2WithValueObjects {
 
     val MovingImageRepresentation: ClassEntityInfoV2 = makeClass(
         classIri = OntologyConstants.KnoraApiV2WithValueObjects.MovingImageRepresentation,
+        subClassOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.Representation),
         predicates = Seq(
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.SubClassOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.Representation)
-            ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
@@ -126,11 +112,8 @@ object KnoraApiV2WithValueObjects {
 
     val AudioRepresentation: ClassEntityInfoV2 = makeClass(
         classIri = OntologyConstants.KnoraApiV2WithValueObjects.AudioRepresentation,
+        subClassOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.Representation),
         predicates = Seq(
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.SubClassOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.Representation)
-            ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
@@ -154,11 +137,8 @@ object KnoraApiV2WithValueObjects {
 
     val DDDRepresentation: ClassEntityInfoV2 = makeClass(
         classIri = OntologyConstants.KnoraApiV2WithValueObjects.DDDRepresentation,
+        subClassOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.Representation),
         predicates = Seq(
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.SubClassOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.Representation)
-            ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
@@ -182,11 +162,8 @@ object KnoraApiV2WithValueObjects {
 
     val TextRepresentation: ClassEntityInfoV2 = makeClass(
         classIri = OntologyConstants.KnoraApiV2WithValueObjects.TextRepresentation,
+        subClassOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.Representation),
         predicates = Seq(
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.SubClassOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.Representation)
-            ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
@@ -210,11 +187,8 @@ object KnoraApiV2WithValueObjects {
 
     val DocumentRepresentation: ClassEntityInfoV2 = makeClass(
         classIri = OntologyConstants.KnoraApiV2WithValueObjects.DocumentRepresentation,
+        subClassOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.Representation),
         predicates = Seq(
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.SubClassOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.Representation)
-            ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
@@ -281,12 +255,7 @@ object KnoraApiV2WithValueObjects {
     val HasValue: PropertyEntityInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.HasValue,
         propertyType = OntologyConstants.Owl.ObjectProperty,
-        predicates = Seq(
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.SubPropertyOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.ResourceProperty)
-            )
-        ),
+        subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.ResourceProperty),
         subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.Resource),
         objectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.Value)
     )
@@ -294,11 +263,8 @@ object KnoraApiV2WithValueObjects {
     val HasLinkTo: PropertyEntityInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.HasLinkTo,
         propertyType = OntologyConstants.Owl.ObjectProperty,
+        subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.ResourceProperty),
         predicates = Seq(
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.SubPropertyOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.ResourceProperty)
-            ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
@@ -384,11 +350,8 @@ object KnoraApiV2WithValueObjects {
         propertyType = OntologyConstants.Owl.ObjectProperty,
         subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.Region),
         objectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.ColorValue),
+        subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasValue),
         predicates = Seq(
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.SubPropertyOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasValue)
-            ),
             makePredicate(
                 predicateIri = OntologyConstants.SalsahGui.GuiElement,
                 objects = Set(OntologyConstants.SalsahGui.Colorpicker)
@@ -420,11 +383,8 @@ object KnoraApiV2WithValueObjects {
         propertyType = OntologyConstants.Owl.ObjectProperty,
         subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.Resource),
         objectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.TextValue),
+        subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasValue),
         predicates = Seq(
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.SubPropertyOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasValue)
-            ),
             makePredicate(
                 predicateIri = OntologyConstants.SalsahGui.GuiElement,
                 objects = Set(OntologyConstants.SalsahGui.Richtext)
@@ -452,11 +412,8 @@ object KnoraApiV2WithValueObjects {
         propertyType = OntologyConstants.Owl.ObjectProperty,
         subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.Representation),
         objectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.FileValue),
+        subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasValue),
         predicates = Seq(
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.SubPropertyOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasValue)
-            ),
             makePredicate(
                 predicateIri = OntologyConstants.SalsahGui.GuiElement,
                 objects = Set(OntologyConstants.SalsahGui.Fileupload)
@@ -484,11 +441,8 @@ object KnoraApiV2WithValueObjects {
         propertyType = OntologyConstants.Owl.ObjectProperty,
         subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.StillImageRepresentation),
         objectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.StillImageFileValue),
+        subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasFileValue),
         predicates = Seq(
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.SubPropertyOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasFileValue)
-            ),
             makePredicate(
                 predicateIri = OntologyConstants.SalsahGui.GuiElement,
                 objects = Set(OntologyConstants.SalsahGui.Fileupload)
@@ -516,11 +470,8 @@ object KnoraApiV2WithValueObjects {
         propertyType = OntologyConstants.Owl.ObjectProperty,
         subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.MovingImageRepresentation),
         objectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.MovingImageFileValue),
+        subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasFileValue),
         predicates = Seq(
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.SubPropertyOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasFileValue)
-            ),
             makePredicate(
                 predicateIri = OntologyConstants.SalsahGui.GuiElement,
                 objects = Set(OntologyConstants.SalsahGui.Fileupload)
@@ -548,11 +499,8 @@ object KnoraApiV2WithValueObjects {
         propertyType = OntologyConstants.Owl.ObjectProperty,
         subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.AudioRepresentation),
         objectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.AudioFileValue),
+        subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasFileValue),
         predicates = Seq(
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.SubPropertyOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasFileValue)
-            ),
             makePredicate(
                 predicateIri = OntologyConstants.SalsahGui.GuiElement,
                 objects = Set(OntologyConstants.SalsahGui.Fileupload)
@@ -580,11 +528,8 @@ object KnoraApiV2WithValueObjects {
         propertyType = OntologyConstants.Owl.ObjectProperty,
         subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.DDDRepresentation),
         objectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.DDDFileValue),
+        subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasFileValue),
         predicates = Seq(
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.SubPropertyOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasFileValue)
-            ),
             makePredicate(
                 predicateIri = OntologyConstants.SalsahGui.GuiElement,
                 objects = Set(OntologyConstants.SalsahGui.Fileupload)
@@ -612,11 +557,8 @@ object KnoraApiV2WithValueObjects {
         propertyType = OntologyConstants.Owl.ObjectProperty,
         subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.TextRepresentation),
         objectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.TextFileValue),
+        subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasFileValue),
         predicates = Seq(
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.SubPropertyOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasFileValue)
-            ),
             makePredicate(
                 predicateIri = OntologyConstants.SalsahGui.GuiElement,
                 objects = Set(OntologyConstants.SalsahGui.Fileupload)
@@ -644,11 +586,8 @@ object KnoraApiV2WithValueObjects {
         propertyType = OntologyConstants.Owl.ObjectProperty,
         subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.DocumentRepresentation),
         objectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.DocumentFileValue),
+        subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasFileValue),
         predicates = Seq(
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.SubPropertyOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasFileValue)
-            ),
             makePredicate(
                 predicateIri = OntologyConstants.SalsahGui.GuiElement,
                 objects = Set(OntologyConstants.SalsahGui.Fileupload)
@@ -673,11 +612,8 @@ object KnoraApiV2WithValueObjects {
 
     val TextValue: ClassEntityInfoV2 = makeClass(
         classIri = OntologyConstants.KnoraApiV2WithValueObjects.TextValue,
+        subClassOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.Value),
         predicates = Seq(
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.SubClassOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.Value)
-            ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
@@ -702,13 +638,10 @@ object KnoraApiV2WithValueObjects {
     val TextValueAsXml: PropertyEntityInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.TextValueAsXml,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
+        subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas),
         subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.TextValue),
         objectType = Some(OntologyConstants.Xsd.String),
         predicates = Seq(
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.SubPropertyOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas)
-            ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
@@ -727,13 +660,10 @@ object KnoraApiV2WithValueObjects {
     val TextValueHasMapping: PropertyEntityInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.TextValueHasMapping,
         propertyType = OntologyConstants.Owl.ObjectProperty,
+        subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas),
         subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.TextValue),
         objectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.XMLToStandoffMapping),
         predicates = Seq(
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.SubPropertyOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas)
-            ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
@@ -752,13 +682,10 @@ object KnoraApiV2WithValueObjects {
     val TextValueAsHtml: PropertyEntityInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.TextValueAsHtml,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
+        subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas),
         subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.TextValue),
         objectType = Some(OntologyConstants.Xsd.String),
         predicates = Seq(
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.SubPropertyOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas)
-            ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
@@ -776,11 +703,8 @@ object KnoraApiV2WithValueObjects {
 
     val DateValue: ClassEntityInfoV2 = makeClass(
         classIri = OntologyConstants.KnoraApiV2WithValueObjects.DateValue,
+        subClassOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.Value),
         predicates = Seq(
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.SubClassOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.Value)
-            ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
@@ -809,13 +733,10 @@ object KnoraApiV2WithValueObjects {
     val DateValueHasStartYear: PropertyEntityInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartYear,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
+        subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas),
         subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.DateValue),
         objectType = Some(OntologyConstants.Xsd.Integer),
         predicates = Seq(
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.SubPropertyOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas)
-            ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
@@ -834,13 +755,10 @@ object KnoraApiV2WithValueObjects {
     val DateValueHasEndYear: PropertyEntityInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndYear,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
+        subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas),
         subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.DateValue),
         objectType = Some(OntologyConstants.Xsd.Integer),
         predicates = Seq(
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.SubPropertyOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas)
-            ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
@@ -859,13 +777,10 @@ object KnoraApiV2WithValueObjects {
     val DateValueHasStartMonth: PropertyEntityInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartMonth,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
+        subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas),
         subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.DateValue),
         objectType = Some(OntologyConstants.Xsd.Integer),
         predicates = Seq(
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.SubPropertyOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas)
-            ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
@@ -884,13 +799,10 @@ object KnoraApiV2WithValueObjects {
     val DateValueHasEndMonth: PropertyEntityInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndMonth,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
+        subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas),
         subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.DateValue),
         objectType = Some(OntologyConstants.Xsd.Integer),
         predicates = Seq(
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.SubPropertyOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas)
-            ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
@@ -909,13 +821,10 @@ object KnoraApiV2WithValueObjects {
     val DateValueHasStartDay: PropertyEntityInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartDay,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
+        subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas),
         subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.DateValue),
         objectType = Some(OntologyConstants.Xsd.Integer),
         predicates = Seq(
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.SubPropertyOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas)
-            ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
@@ -934,13 +843,10 @@ object KnoraApiV2WithValueObjects {
     val DateValueHasEndDay: PropertyEntityInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndDay,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
+        subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas),
         subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.DateValue),
         objectType = Some(OntologyConstants.Xsd.Integer),
         predicates = Seq(
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.SubPropertyOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas)
-            ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
@@ -959,13 +865,10 @@ object KnoraApiV2WithValueObjects {
     val DateValueHasCalendar: PropertyEntityInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasCalendar,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
+        subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas),
         subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.DateValue),
         objectType = Some(OntologyConstants.Xsd.String),
         predicates = Seq(
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.SubPropertyOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas)
-            ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
@@ -983,11 +886,8 @@ object KnoraApiV2WithValueObjects {
 
     val LinkValue: ClassEntityInfoV2 = makeClass(
         classIri = OntologyConstants.KnoraApiV2WithValueObjects.LinkValue,
+        subClassOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.Value),
         predicates = Seq(
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.SubClassOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.Value)
-            ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
@@ -1011,13 +911,10 @@ object KnoraApiV2WithValueObjects {
     val LinkValueHasTarget: PropertyEntityInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.LinkValueHasTarget,
         propertyType = OntologyConstants.Owl.ObjectProperty,
+        subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas),
         subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.LinkValue),
         objectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.Resource),
         predicates = Seq(
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.SubPropertyOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas)
-            ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
@@ -1036,13 +933,10 @@ object KnoraApiV2WithValueObjects {
     val LinkValueHasTargetIri: PropertyEntityInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.LinkValueHasTargetIri,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
+        subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas),
         subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.LinkValue),
         objectType = Some(OntologyConstants.Xsd.Uri),
         predicates = Seq(
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.SubPropertyOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas)
-            ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
@@ -1060,11 +954,8 @@ object KnoraApiV2WithValueObjects {
 
     val IntegerValue: ClassEntityInfoV2 = makeClass(
         classIri = OntologyConstants.KnoraApiV2WithValueObjects.IntegerValue,
+        subClassOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.Value),
         predicates = Seq(
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.SubClassOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.Value)
-            ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
@@ -1087,13 +978,10 @@ object KnoraApiV2WithValueObjects {
     val IntegerValueAsInteger: PropertyEntityInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.IntegerValueAsInteger,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
+        subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas),
         subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.IntegerValue),
         objectType = Some(OntologyConstants.Xsd.Integer),
         predicates = Seq(
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.SubPropertyOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas)
-            ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
@@ -1111,11 +999,8 @@ object KnoraApiV2WithValueObjects {
 
     val DecimalValue: ClassEntityInfoV2 = makeClass(
         classIri = OntologyConstants.KnoraApiV2WithValueObjects.DecimalValue,
+        subClassOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.Value),
         predicates = Seq(
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.SubClassOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.Value)
-            ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
@@ -1138,13 +1023,10 @@ object KnoraApiV2WithValueObjects {
     val DecimalValueAsDecimal: PropertyEntityInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.DecimalValueAsDecimal,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
+        subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas),
         subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.DecimalValue),
         objectType = Some(OntologyConstants.Xsd.Decimal),
         predicates = Seq(
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.SubPropertyOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas)
-            ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
@@ -1162,11 +1044,8 @@ object KnoraApiV2WithValueObjects {
 
     val BooleanValue: ClassEntityInfoV2 = makeClass(
         classIri = OntologyConstants.KnoraApiV2WithValueObjects.BooleanValue,
+        subClassOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.Value),
         predicates = Seq(
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.SubClassOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.Value)
-            ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
@@ -1189,13 +1068,10 @@ object KnoraApiV2WithValueObjects {
     val BooleanValueAsBoolean: PropertyEntityInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.BooleanValueAsBoolean,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
+        subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas),
         subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.BooleanValue),
         objectType = Some(OntologyConstants.Xsd.Boolean),
         predicates = Seq(
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.SubPropertyOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas)
-            ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
@@ -1213,11 +1089,8 @@ object KnoraApiV2WithValueObjects {
 
     val GeomValue: ClassEntityInfoV2 = makeClass(
         classIri = OntologyConstants.KnoraApiV2WithValueObjects.GeomValue,
+        subClassOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.Value),
         predicates = Seq(
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.SubClassOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.Value)
-            ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
@@ -1240,13 +1113,10 @@ object KnoraApiV2WithValueObjects {
     val GeometryValueAsGeometry: PropertyEntityInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.GeometryValueAsGeometry,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
+        subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas),
         subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.GeomValue),
         objectType = Some(OntologyConstants.Xsd.String),
         predicates = Seq(
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.SubPropertyOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas)
-            ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
@@ -1264,11 +1134,8 @@ object KnoraApiV2WithValueObjects {
 
     val IntervalValue: ClassEntityInfoV2 = makeClass(
         classIri = OntologyConstants.KnoraApiV2WithValueObjects.IntervalValue,
+        subClassOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.Value),
         predicates = Seq(
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.SubClassOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.Value)
-            ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
@@ -1292,13 +1159,10 @@ object KnoraApiV2WithValueObjects {
     val IntervalValueHasStart: PropertyEntityInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.IntervalValueHasStart,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
+        subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas),
         subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.IntervalValue),
         objectType = Some(OntologyConstants.Xsd.Decimal),
         predicates = Seq(
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.SubPropertyOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas)
-            ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
@@ -1317,13 +1181,10 @@ object KnoraApiV2WithValueObjects {
     val IntervalValueHasEnd: PropertyEntityInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.IntervalValueHasEnd,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
+        subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas),
         subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.IntervalValue),
         objectType = Some(OntologyConstants.Xsd.Decimal),
         predicates = Seq(
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.SubPropertyOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas)
-            ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
@@ -1341,11 +1202,8 @@ object KnoraApiV2WithValueObjects {
 
     val ListValue: ClassEntityInfoV2 = makeClass(
         classIri = OntologyConstants.KnoraApiV2WithValueObjects.ListValue,
+        subClassOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.Value),
         predicates = Seq(
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.SubClassOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.Value)
-            ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
@@ -1368,13 +1226,10 @@ object KnoraApiV2WithValueObjects {
     val HierarchicalListValueAsListNode: PropertyEntityInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.HierarchicalListValueAsListNode,
         propertyType = OntologyConstants.Owl.ObjectProperty,
+        subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas),
         subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.ListValue),
         objectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.ListNode),
         predicates = Seq(
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.SubPropertyOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas)
-            ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
@@ -1392,11 +1247,8 @@ object KnoraApiV2WithValueObjects {
 
     val ColorValue: ClassEntityInfoV2 = makeClass(
         classIri = OntologyConstants.KnoraApiV2WithValueObjects.ColorValue,
+        subClassOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.Value),
         predicates = Seq(
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.SubClassOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.Value)
-            ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
@@ -1419,13 +1271,10 @@ object KnoraApiV2WithValueObjects {
     val ColorValueAsColor: PropertyEntityInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.ColorValueAsColor,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
+        subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas),
         subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.ColorValue),
         objectType = Some(OntologyConstants.Xsd.String),
         predicates = Seq(
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.SubPropertyOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas)
-            ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
@@ -1443,11 +1292,8 @@ object KnoraApiV2WithValueObjects {
 
     val UriValue: ClassEntityInfoV2 = makeClass(
         classIri = OntologyConstants.KnoraApiV2WithValueObjects.UriValue,
+        subClassOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.Value),
         predicates = Seq(
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.SubClassOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.Value)
-            ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
@@ -1470,13 +1316,10 @@ object KnoraApiV2WithValueObjects {
     val UriValueAsUri: PropertyEntityInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.UriValueAsUri,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
+        subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas),
         subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.UriValue),
         objectType = Some(OntologyConstants.Xsd.Uri),
         predicates = Seq(
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.SubPropertyOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas)
-            ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
@@ -1494,11 +1337,8 @@ object KnoraApiV2WithValueObjects {
 
     val GeonameValue: ClassEntityInfoV2 = makeClass(
         classIri = OntologyConstants.KnoraApiV2WithValueObjects.GeonameValue,
+        subClassOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.Value),
         predicates = Seq(
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.SubClassOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.Value)
-            ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
@@ -1521,13 +1361,10 @@ object KnoraApiV2WithValueObjects {
     val GeonameValueAsGeonameCode: PropertyEntityInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.GeonameValueAsGeonameCode,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
+        subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas),
         subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.GeonameValue),
         objectType = Some(OntologyConstants.Xsd.String),
         predicates = Seq(
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.SubPropertyOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas)
-            ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
@@ -1545,11 +1382,8 @@ object KnoraApiV2WithValueObjects {
 
     val FileValue: ClassEntityInfoV2 = makeClass(
         classIri = OntologyConstants.KnoraApiV2WithValueObjects.FileValue,
+        subClassOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.Value),
         predicates = Seq(
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.SubClassOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.Value)
-            ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
@@ -1574,13 +1408,10 @@ object KnoraApiV2WithValueObjects {
     val FileValueIsPreview: PropertyEntityInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.FileValueIsPreview,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
+        subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas),
         subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.FileValue),
         objectType = Some(OntologyConstants.Xsd.Boolean),
         predicates = Seq(
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.SubPropertyOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas)
-            ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
@@ -1599,13 +1430,10 @@ object KnoraApiV2WithValueObjects {
     val FileValueAsUrl: PropertyEntityInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.FileValueAsUrl,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
+        subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas),
         subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.FileValue),
         objectType = Some(OntologyConstants.Xsd.Uri),
         predicates = Seq(
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.SubPropertyOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas)
-            ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
@@ -1624,13 +1452,10 @@ object KnoraApiV2WithValueObjects {
     val FileValueHasFilename: PropertyEntityInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.FileValueHasFilename,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
+        subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas),
         subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.FileValue),
         objectType = Some(OntologyConstants.Xsd.String),
         predicates = Seq(
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.SubPropertyOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas)
-            ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
@@ -1648,6 +1473,7 @@ object KnoraApiV2WithValueObjects {
 
     val TextFileValue: ClassEntityInfoV2 = makeClass(
         classIri = OntologyConstants.KnoraApiV2WithValueObjects.TextFileValue,
+        subClassOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.Value),
         predicates = Seq(
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.SubClassOf,
@@ -1676,11 +1502,8 @@ object KnoraApiV2WithValueObjects {
 
     val StillImageFileValue: ClassEntityInfoV2 = makeClass(
         classIri = OntologyConstants.KnoraApiV2WithValueObjects.StillImageFileValue,
+        subClassOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.FileValue),
         predicates = Seq(
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.SubClassOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.FileValue)
-            ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
@@ -1708,13 +1531,10 @@ object KnoraApiV2WithValueObjects {
     val StillImageFileValueHasDimX: PropertyEntityInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.StillImageFileValueHasDimX,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
+        subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas),
         subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.StillImageFileValue),
         objectType = Some(OntologyConstants.Xsd.Integer),
         predicates = Seq(
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.SubPropertyOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas)
-            ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
@@ -1733,13 +1553,10 @@ object KnoraApiV2WithValueObjects {
     val StillImageFileValueHasDimY: PropertyEntityInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.StillImageFileValueHasDimY,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
+        subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas),
         subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.StillImageFileValue),
         objectType = Some(OntologyConstants.Xsd.Integer),
         predicates = Seq(
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.SubPropertyOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas)
-            ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
@@ -1758,13 +1575,10 @@ object KnoraApiV2WithValueObjects {
     val StillImageFileValueHasIIIFBaseUrl: PropertyEntityInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.StillImageFileValueHasIIIFBaseUrl,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
+        subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas),
         subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.StillImageFileValue),
         objectType = Some(OntologyConstants.Xsd.Uri),
         predicates = Seq(
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.SubPropertyOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas)
-            ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
@@ -1783,11 +1597,8 @@ object KnoraApiV2WithValueObjects {
 
     val MovingImageFileValue: ClassEntityInfoV2 = makeClass(
         classIri = OntologyConstants.KnoraApiV2WithValueObjects.MovingImageFileValue,
+        subClassOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.FileValue),
         predicates = Seq(
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.SubClassOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.FileValue)
-            ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
@@ -1817,13 +1628,10 @@ object KnoraApiV2WithValueObjects {
     val MovingImageFileValueHasDimX: PropertyEntityInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.MovingImageFileValueHasDimX,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
+        subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas),
         subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.MovingImageFileValue),
         objectType = Some(OntologyConstants.Xsd.Integer),
         predicates = Seq(
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.SubPropertyOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas)
-            ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
@@ -1842,13 +1650,10 @@ object KnoraApiV2WithValueObjects {
     val MovingImageFileValueHasDimY: PropertyEntityInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.MovingImageFileValueHasDimY,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
+        subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas),
         subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.MovingImageFileValue),
         objectType = Some(OntologyConstants.Xsd.Integer),
         predicates = Seq(
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.SubPropertyOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas)
-            ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
@@ -1867,13 +1672,10 @@ object KnoraApiV2WithValueObjects {
     val MovingImageFileValueHasFps: PropertyEntityInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.MovingImageFileValueHasFps,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
+        subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas),
         subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.MovingImageFileValue),
         objectType = Some(OntologyConstants.Xsd.Integer),
         predicates = Seq(
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.SubPropertyOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas)
-            ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
@@ -1892,13 +1694,10 @@ object KnoraApiV2WithValueObjects {
     val MovingImageFileValueHasQualityLevel: PropertyEntityInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.MovingImageFileValueHasQualityLevel,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
+        subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas),
         subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.MovingImageFileValue),
         objectType = Some(OntologyConstants.Xsd.Integer),
         predicates = Seq(
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.SubPropertyOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas)
-            ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
@@ -1917,13 +1716,10 @@ object KnoraApiV2WithValueObjects {
     val MovingImageFileValueHasDuration: PropertyEntityInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.MovingImageFileValueHasDuration,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
+        subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas),
         subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.MovingImageFileValue),
         objectType = Some(OntologyConstants.Xsd.Decimal),
         predicates = Seq(
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.SubPropertyOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas)
-            ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
@@ -1941,11 +1737,8 @@ object KnoraApiV2WithValueObjects {
 
     val AudioFileValue: ClassEntityInfoV2 = makeClass(
         classIri = OntologyConstants.KnoraApiV2WithValueObjects.AudioFileValue,
+        subClassOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.FileValue),
         predicates = Seq(
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.SubClassOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.FileValue)
-            ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
@@ -1971,13 +1764,10 @@ object KnoraApiV2WithValueObjects {
     val AudioFileValueHasDuration: PropertyEntityInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.AudioFileValueHasDuration,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
+        subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas),
         subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.AudioFileValue),
         objectType = Some(OntologyConstants.Xsd.Decimal),
         predicates = Seq(
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.SubPropertyOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas)
-            ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
@@ -1995,11 +1785,8 @@ object KnoraApiV2WithValueObjects {
 
     val DDDFileValue: ClassEntityInfoV2 = makeClass(
         classIri = OntologyConstants.KnoraApiV2WithValueObjects.DDDFileValue,
+        subClassOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.FileValue),
         predicates = Seq(
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.SubClassOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.FileValue)
-            ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
@@ -2023,11 +1810,8 @@ object KnoraApiV2WithValueObjects {
 
     val DocumentFileValue: ClassEntityInfoV2 = makeClass(
         classIri = OntologyConstants.KnoraApiV2WithValueObjects.DocumentFileValue,
+        subClassOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.FileValue),
         predicates = Seq(
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.SubClassOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.FileValue)
-            ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
@@ -2170,6 +1954,7 @@ object KnoraApiV2WithValueObjects {
       *
       * @param propertyIri  the IRI of the property.
       * @param propertyType the type of the property (owl:ObjectProperty, owl:DatatypeProperty, or rdf:Property).
+      * @param subPropertyOf the set of direct superproperties of this property.
       * @param predicates   the property's predicates.
       * @param subjectType  the required type of the property's subject.
       * @param objectType   the required type of the property's object.
@@ -2177,6 +1962,7 @@ object KnoraApiV2WithValueObjects {
       */
     private def makeProperty(propertyIri: IRI,
                              propertyType: IRI,
+                             subPropertyOf: Set[IRI] = Set.empty[IRI],
                              predicates: Seq[PredicateInfoV2] = Seq.empty[PredicateInfoV2],
                              subjectType: Option[IRI] = None,
                              objectType: Option[IRI] = None): PropertyEntityInfoV2 = {
@@ -2209,7 +1995,8 @@ object KnoraApiV2WithValueObjects {
             ontologySchema = ApiV2WithValueObjects,
             predicates = predsWithTypes.map {
                 pred => pred.predicateIri -> pred
-            }.toMap
+            }.toMap,
+            subPropertyOf = subPropertyOf
         )
     }
 
@@ -2217,6 +2004,7 @@ object KnoraApiV2WithValueObjects {
       * Makes a [[ClassEntityInfoV2]].
       *
       * @param classIri            the IRI of the class.
+      * @param subClassOf          the set of direct superclasses of this class.
       * @param predicates          the predicates of the class.
       * @param cardinalities       the cardinalities of the class.
       * @param linkProperties      the set of the class's link properties.
@@ -2225,6 +2013,7 @@ object KnoraApiV2WithValueObjects {
       * @return a [[ClassEntityInfoV2]].
       */
     private def makeClass(classIri: IRI,
+                          subClassOf: Set[IRI] = Set.empty[IRI],
                           predicates: Seq[PredicateInfoV2] = Seq.empty[PredicateInfoV2],
                           cardinalities: Map[IRI, Cardinality.Value] = Map.empty[IRI, Cardinality.Value],
                           linkProperties: Set[IRI] = Set.empty[IRI],
@@ -2243,8 +2032,10 @@ object KnoraApiV2WithValueObjects {
             linkProperties = linkProperties,
             linkValueProperties = linkValueProperties,
             fileValueProperties = fileValueProperties,
+            subClassOf = subClassOf,
             ontologyIri = OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiOntologyIri,
             ontologySchema = ApiV2WithValueObjects
         )
     }
+
 }

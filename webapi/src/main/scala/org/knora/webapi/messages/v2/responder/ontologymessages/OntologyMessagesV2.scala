@@ -21,11 +21,11 @@
 package org.knora.webapi.messages.v2.responder.ontologymessages
 
 
+import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.standoffmessages.StandoffDataTypeClasses
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v2.responder._
 import org.knora.webapi.util.InputValidation
-import org.knora.webapi._
 import org.knora.webapi.util.jsonld._
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -637,6 +637,7 @@ case class PropertyEntityInfoV2(propertyIri: IRI,
                                 isLinkValueProp: Boolean = false,
                                 isFileValueProp: Boolean = false,
                                 predicates: Map[IRI, PredicateInfoV2] = Map.empty[IRI, PredicateInfoV2],
+                                subPropertyOf: Set[IRI] = Set.empty[IRI],
                                 ontologySchema: OntologySchema) extends EntityInfoWithLabelAndCommentV2 {
     def getNonLanguageSpecific(targetSchema: ApiV2Schema): Map[IRI, JsonLDValue] = {
         // If this is an internal property IRI, convert it to an external one.
@@ -734,11 +735,27 @@ case class PropertyEntityInfoV2(propertyIri: IRI,
             targetSchema = targetSchema
         )
 
+        val jsonSubPropertyOf = subPropertyOf.toSeq.map {
+            superProperty =>
+                JsonLDString(
+                    InputValidation.toExternalEntityIri(
+                        entityIri = superProperty,
+                        targetSchema = targetSchema
+                    )
+                )
+        }
+
+        val jsonSubPropertyOfStatement: Option[(IRI, JsonLDArray)] = if (jsonSubPropertyOf.nonEmpty) {
+            Some(OntologyConstants.Rdfs.SubPropertyOf -> JsonLDArray(jsonSubPropertyOf))
+        } else {
+            None
+        }
+
         Map(
             "@id" -> JsonLDString(convertedPropertyIri),
             "@type" -> JsonLDString(convertedPropertyType),
             belongsToOntologyPred -> JsonLDString(convertedOntologyIri)
-        ) ++ objectTypeStatement
+        ) ++ jsonSubPropertyOfStatement ++ objectTypeStatement
     }
 }
 
@@ -755,6 +772,7 @@ case class PropertyEntityInfoV2(propertyIri: IRI,
   *                            that point to `LinkValue` objects.
   * @param fileValueProperties a [[Set]] of IRIs of properties of the class
   *                            that point to `FileValue` objects.
+  * @param subClassOf          the classes that this class is a subclass of.
   * @param ontologySchema      indicates whether this ontology entity belongs to an internal ontology (for use in the
   *                            triplestore) or an external one (for use in the Knora API).
   */
@@ -765,6 +783,7 @@ case class ClassEntityInfoV2(classIri: IRI,
                              linkProperties: Set[IRI] = Set.empty[IRI],
                              linkValueProperties: Set[IRI] = Set.empty[IRI],
                              fileValueProperties: Set[IRI] = Set.empty[IRI],
+                             subClassOf: Set[IRI] = Set.empty[IRI],
                              ontologySchema: OntologySchema) extends EntityInfoWithLabelAndCommentV2 {
 
     def getNonLanguageSpecific(targetSchema: ApiV2Schema): Map[IRI, JsonLDValue] = {
@@ -824,12 +843,27 @@ case class ClassEntityInfoV2(classIri: IRI,
             resIcon => resourceIconPred -> JsonLDString(resIcon)
         }
 
+        val jsonSubClassOf = subClassOf.toSeq.map {
+            superClass =>
+                JsonLDString(
+                    InputValidation.toExternalEntityIri(
+                        entityIri = superClass,
+                        targetSchema = targetSchema
+                    )
+                )
+        } ++ owlCardinalities
+
+        val jsonSubClassOfStatement: Option[(IRI, JsonLDArray)] = if (jsonSubClassOf.nonEmpty) {
+            Some(OntologyConstants.Rdfs.SubClassOf -> JsonLDArray(jsonSubClassOf))
+        } else {
+            None
+        }
+
         Map(
             "@id" -> JsonLDString(convertedResourceClassIri),
             belongsToOntologyPred -> JsonLDString(convertedOntologyIri),
-            "@type" -> JsonLDString(OntologyConstants.Owl.Class),
-            OntologyConstants.Rdfs.SubClassOf -> JsonLDArray(owlCardinalities) // TODO: add the other rdfs:subClassOf objects
-        ) ++ resourceIconStatement
+            "@type" -> JsonLDString(OntologyConstants.Owl.Class)
+        ) ++ jsonSubClassOfStatement ++ resourceIconStatement
     }
 }
 
