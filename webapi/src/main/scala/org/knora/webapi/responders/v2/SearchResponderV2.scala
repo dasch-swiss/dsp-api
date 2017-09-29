@@ -1083,6 +1083,8 @@ class SearchResponderV2 extends Responder {
 
             import SearchResponderV2Constants.ExtendedSearchConstants._
 
+            // TODO: check if any properties are requested for the main resource
+            // TODO: if not, do not get any properties
             val wherePatternsForMainResources = Seq(
                 valuesPatternForMainResources,
                 StatementPattern.makeExplicit(subj = mainResourceVar, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean)),
@@ -1093,6 +1095,7 @@ class SearchResponderV2 extends Responder {
                 StatementPattern.makeExplicit(subj = mainResourceValueObject, pred = mainResourceValueObjectProp, obj = mainResourceValueObjectObj)
             )
 
+            // TODO: make two separate sets of dependent properties: one for which properties have to be returned and one for which this is not the case
             val wherePatternsForDependentResources = Seq(
                 valuesPatternForDependentResources,
                 StatementPattern.makeExplicit(subj = dependentResourceVar, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean)),
