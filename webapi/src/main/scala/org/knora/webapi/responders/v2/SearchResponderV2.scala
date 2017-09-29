@@ -1079,21 +1079,78 @@ class SearchResponderV2 extends Responder {
           * @param valuesPatternForDependentResources Iris of the dependent resources.
           * @return the main [[ConstructQuery]] query to be executed.
           */
-        def createMainQuery(mainResourceVar: QueryVariable, valuesPatternForMainResources: ValuesPattern, dependentResourceVar: QueryVariable, valuesPatternForDependentResources: ValuesPattern): ConstructQuery = {
+        def createMainQuery(inputQuery: ConstructQuery, typeInspection: TypeInspectionResult, mainResourceVar: QueryVariable, valuesPatternForMainResources: ValuesPattern, dependentResourceVar: QueryVariable, valuesPatternForDependentResources: ValuesPattern): ConstructQuery = {
 
             import SearchResponderV2Constants.ExtendedSearchConstants._
 
-            // TODO: check if any properties are requested for the main resource
-            // TODO: if not, do not get any properties
-            val wherePatternsForMainResources = Seq(
+            // the information the user wants to get back about the resources searched for
+            val constructClause = inputQuery.constructClause
+
+            // get statements with the main resource as a subject
+            val expectedInformationAboutMainRes = constructClause.statements.filter {
+                (statementPattern: StatementPattern) =>
+                    statementPattern.subj == mainResourceVar
+            }
+
+            // check which properties are required by checking if the predicates have type annotations
+            // non Knora value or linking properties do not have type annotations (such as rdf:type or knora-api:isMainResource)
+            val requestedPropertiesTypeInfo: Set[PropertyTypeInfo] = expectedInformationAboutMainRes.foldLeft(Set.empty[PropertyTypeInfo]) {
+                (acc: Set[PropertyTypeInfo], statementPattern: StatementPattern) =>
+                    // check if the predicate is a Knora value  or linking property
+
+                    // create a key for the type annotations map
+                    val typeableEntity: TypeableEntity = statementPattern.pred match {
+                        case iri: IriRef =>
+                            val externalIri = if (InputValidation.isInternalEntityIri(iri.iri)) {
+                                InputValidation.internalEntityIriToSimpleApiV2EntityIri(iri.iri, () => throw BadRequestException(s"${iri.iri} is not a valid internal knora-api entity Iri"))
+                            } else {
+                                iri.iri
+                            }
+
+                            TypeableIri(externalIri)
+
+                        case variable: QueryVariable => TypeableVariable(variable.variableName)
+
+                        case other => throw SparqlSearchException(s"Expected an Iri or a variable as the predicate of a statement, but $other given")
+                    }
+
+                    // if the given key exists in the type annotations map, add it to the collection
+                    if (typeInspection.typedEntities.contains(typeableEntity)) {
+
+                        val propTypeInfo: PropertyTypeInfo = typeInspection.typedEntities(typeableEntity) match {
+                            case propType: PropertyTypeInfo => propType
+
+                            case nonPropType: NonPropertyTypeInfo =>
+                                throw SparqlSearchException(s"PropertyTypeInfo was expected for predicate ${statementPattern.pred} in type annotations, but NonPropertyTypeInfo given.")
+
+                        }
+
+                        acc + propTypeInfo
+
+                    } else {
+                        acc
+                    }
+
+            }
+
+            // patterns to get information about the resource itself (without properties)
+            val wherePatternsForMainResourcesInfo = Seq(
                 valuesPatternForMainResources,
                 StatementPattern.makeExplicit(subj = mainResourceVar, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean)),
-                StatementPattern.makeExplicit(subj = mainResourceVar, pred = mainResourcePropVar, obj = mainResourceObjectVar),
-                StatementPattern.makeInferred(subj = mainResourceVar, pred = IriRef(OntologyConstants.KnoraBase.HasValue), obj = mainResourceValueObject),
+                StatementPattern.makeExplicit(subj = mainResourceVar, pred = mainResourcePropVar, obj = mainResourceObjectVar)
+            )
+
+            // only get properties if they are requested in the construct clause of the input query
+            // if requestedPropertiesTypeInfo contains information, some properties are requested about the main resource
+            val wherePatternsForMainResources = if (requestedPropertiesTypeInfo.nonEmpty) {
+                wherePatternsForMainResourcesInfo ++
+                Seq(StatementPattern.makeInferred(subj = mainResourceVar, pred = IriRef(OntologyConstants.KnoraBase.HasValue), obj = mainResourceValueObject),
                 StatementPattern.makeExplicit(subj = mainResourceVar, pred = mainResourceValueProp, obj = mainResourceValueObject),
                 StatementPattern.makeExplicit(subj = mainResourceValueObject, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean)),
-                StatementPattern.makeExplicit(subj = mainResourceValueObject, pred = mainResourceValueObjectProp, obj = mainResourceValueObjectObj)
-            )
+                StatementPattern.makeExplicit(subj = mainResourceValueObject, pred = mainResourceValueObjectProp, obj = mainResourceValueObjectObj))
+            } else {
+                wherePatternsForMainResourcesInfo
+            }
 
             // TODO: make two separate sets of dependent properties: one for which properties have to be returned and one for which this is not the case
             val wherePatternsForDependentResources = Seq(
@@ -1213,6 +1270,8 @@ class SearchResponderV2 extends Responder {
             // create the main query
             // it is a Union of two sets: the main resources and the dependent resources
             mainQuery = createMainQuery(
+                inputQuery = preprocessedQuery,
+                typeInspection = typeInspectionResult,
                 mainResourceVar = mainResourceVar,
                 valuesPatternForMainResources = valuesPatternForMainResources,
                 dependentResourceVar = dependentResourceVar,
