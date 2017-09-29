@@ -34,4 +34,5 @@ object SettingsConstants {
     val HTTP_VIRTUOSO_TYPE = "virtuoso"
     val HTTP_FUSEKI_TS_TYPE = "fuseki"
     val HTTP_STARDOG_TS_TYPE = "stardog"
+    val HTTP_ALLEGRO_TS_TYPE = "allegro"
 }

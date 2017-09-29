@@ -104,6 +104,7 @@ object GraphProtocolAccessor {
         val requestPath = settings.triplestoreType match {
             case HTTP_GRAPH_DB_TS_TYPE | HTTP_GRAPH_DB_FREE_TS_TYPE => s"/repositories/${settings.triplestoreDatabaseName}/rdf-graphs/service"
             case HTTP_STARDOG_TS_TYPE => s"/${settings.triplestoreDatabaseName}"
+            case HTTP_ALLEGRO_TS_TYPE => s"/repositories/${settings.triplestoreDatabaseName}/statements"
             case HTTP_FUSEKI_TS_TYPE => s"/${settings.triplestoreDatabaseName}/data"
             case HTTP_VIRTUOSO_TYPE => "/sparql-graph-crud-auth"
             case ts_type => throw TriplestoreUnsupportedFeatureException(s"GraphProtocolAccessor does not support: $ts_type")

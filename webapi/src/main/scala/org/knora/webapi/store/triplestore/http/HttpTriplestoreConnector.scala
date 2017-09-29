@@ -30,7 +30,6 @@ import akka.http.scaladsl.model.headers.Accept
 import akka.http.scaladsl.util.FastFuture
 import akka.stream.ActorMaterializer
 import org.apache.commons.lang3.StringUtils
-import org.apache.jena.sparql.function.library.leviathan.log
 import org.eclipse.rdf4j.model.Statement
 import org.eclipse.rdf4j.rio.RDFHandler
 import org.eclipse.rdf4j.rio.turtle._
@@ -74,6 +73,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
     private val queryRequestPath = triplestoreType match {
         case HTTP_GRAPH_DB_TS_TYPE | HTTP_GRAPH_DB_FREE_TS_TYPE => s"/repositories/${settings.triplestoreDatabaseName}"
         case HTTP_STARDOG_TS_TYPE => s"/${settings.triplestoreDatabaseName}/query"
+        case HTTP_ALLEGRO_TS_TYPE => s"/repositories/${settings.triplestoreDatabaseName}"
         case HTTP_FUSEKI_TS_TYPE => s"/${settings.triplestoreDatabaseName}/query"
         case HTTP_VIRTUOSO_TYPE => "/sparql/"
     }
@@ -89,6 +89,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
     private val updateRequestPath = triplestoreType match {
         case HTTP_GRAPH_DB_TS_TYPE | HTTP_GRAPH_DB_FREE_TS_TYPE => s"/repositories/${settings.triplestoreDatabaseName}/statements"
         case HTTP_STARDOG_TS_TYPE => s"/${settings.triplestoreDatabaseName}/update"
+        case HTTP_ALLEGRO_TS_TYPE => s"/repositories/${settings.triplestoreDatabaseName}/statements"
         case HTTP_FUSEKI_TS_TYPE => s"/${settings.triplestoreDatabaseName}/update"
         case HTTP_VIRTUOSO_TYPE => "/sparql/"
     }
@@ -390,7 +391,6 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
 
 
         /* get a list of all graphs */
-
         val getKnoraGraphsSparqlString =
             """
                 SELECT DISTINCT ?g
@@ -407,6 +407,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
             case (g: IRI, rows: Seq[VariableResultsRow]) => g
         }.toSeq
 
+        // count triples in each graph
         val graphCounts: Map[String, Int] = graphs.map {
             g: String => {
                 val countQueryString = s"SELECT (COUNT(*) as ?count) FROM <$g> WHERE { ?s ?p ?o . }"
@@ -416,6 +417,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
             }
         }.toMap
 
+        // calculate total
         val result = TriplestoreStatusResponse(
             nrOfGraphs = graphs.size,
             nrOfTriples = graphCounts.foldLeft(0){ case (a, (k, v)) => a+v }
@@ -447,18 +449,22 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
             )
         } else {
             // Send queries as application/x-www-form-urlencoded (as per SPARQL 1.1 Protocol §2.1.2,
-            // "query via POST with URL-encoded parameters"), so we can include the "infer" parameter when using GraphDB.
+            // "query via POST with URL-encoded parameters"), so we can include the "infer" parameter when using GraphDB and AllegroGraph.
 
-            val maybeInfer = if (triplestoreType == HTTP_GRAPH_DB_TS_TYPE || triplestoreType == HTTP_GRAPH_DB_FREE_TS_TYPE) {
+            val maybeInfer = if (triplestoreType == HTTP_GRAPH_DB_TS_TYPE || triplestoreType == HTTP_GRAPH_DB_FREE_TS_TYPE || triplestoreType == HTTP_ALLEGRO_TS_TYPE) {
                 Some("infer" -> "true")
-            } else if (triplestoreType == HTTP_STARDOG_TS_TYPE && !isAsk) {
-                Some("reasoning" -> "true")
+            } else {
+                None
+            }
+
+            val maybeLang = if (triplestoreType == HTTP_ALLEGRO_TS_TYPE) {
+                Some("queryLn" -> "sparql")
             } else {
                 None
             }
 
             val formData = FormData(
-                Map("query" -> sparql) ++ maybeInfer
+                Map("query" -> sparql) ++ maybeInfer ++ maybeLang
             )
 
             // Construct the Accept header if needed.
@@ -479,6 +485,8 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
                 headers = headers
             )
         }
+
+        log.debug("getTriplestoreHttpResponse - request: {}", request)
 
         val triplestoreResponseFuture = for {
         // _ = println(request.toString())

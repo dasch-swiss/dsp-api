@@ -17,6 +17,8 @@ lazy val webapi = (project in file(".")).
             GraphDBFreeIntegrationTest,
             StardogTest,
             StardogIntegrationTest,
+            AllegroGraphTest,
+            AllegroGraphIntegrationTest,
             VirtuosoTest,
             VirtuosoIntegrationTest,
             EmbeddedJenaTDBTest,
@@ -69,6 +71,20 @@ lazy val webapi = (project in file(".")).
             Defaults.testTasks ++ Seq(
                 fork := true,
                 javaOptions ++= javaStardogIntegrationTestOptions,
+                testOptions += Tests.Argument("-oDF") // show full stack traces and test case durations
+            )
+        ): _*).
+        settings(inConfig(AllegroGraphTest)(
+            Defaults.testTasks ++ Seq(
+                fork := true,
+                javaOptions ++= javaAllegroGraphTestOptions,
+                testOptions += Tests.Argument("-oDF") // show full stack traces and test case durations
+            )
+        ): _*).
+        settings(inConfig(AllegroGraphIntegrationTest)(
+            Defaults.testTasks ++ Seq(
+                fork := true,
+                javaOptions ++= javaAllegroGraphIntegrationTestOptions,
                 testOptions += Tests.Argument("-oDF") // show full stack traces and test case durations
             )
         ): _*).
@@ -261,6 +277,16 @@ lazy val javaStardogTestOptions = Seq(
 lazy val StardogIntegrationTest = config("stardog-it") extend(IntegrationTest)
 lazy val javaStardogIntegrationTestOptions = Seq(
     "-Dconfig.resource=stardog.conf"
+) ++ javaTestOptions
+
+lazy val AllegroGraphTest = config("allegro") extend(Test)
+lazy val javaAllegroGraphTestOptions = Seq(
+    "-Dconfig.resource=allegro.conf"
+) ++ javaTestOptions
+
+lazy val AllegroGraphIntegrationTest = config("allegro-it") extend(IntegrationTest)
+lazy val javaAllegroGraphIntegrationTestOptions = Seq(
+    "-Dconfig.resource=allegro.conf"
 ) ++ javaTestOptions
 
 lazy val VirtuosoTest = config("virtuoso") extend(Test)
