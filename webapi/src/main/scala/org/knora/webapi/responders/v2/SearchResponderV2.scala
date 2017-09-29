@@ -1070,32 +1070,25 @@ class SearchResponderV2 extends Responder {
         }
 
         /**
-          * Creates the main query to be sent to the triplestore.
-          * Requests two sets of information: about the main resources and the dependent resources.
           *
-          * @param mainResourceVar                    the variable representing the main resources.
-          * @param valuesPatternForMainResources      Iris of the main reource variable.
-          * @param dependentResourceVar               the variable representing the dependent resources.
-          * @param valuesPatternForDependentResources Iris of the dependent resources.
-          * @return the main [[ConstructQuery]] query to be executed.
+          * Collects property type information for value or link properties requests present in the Construct clause for the given resource.
+          *
+          * @param constructClause the Construct clause to be looked at.
+          * @param resourceVariable the variable representing the resource whose properties are to be collected
+          * @param typeInspection results of type inspection.
+          * @return a Set of [[PropertyTypeInfo]] representing the value and link value properties to be returned to the client.
           */
-        def createMainQuery(inputQuery: ConstructQuery, typeInspection: TypeInspectionResult, mainResourceVar: QueryVariable, valuesPatternForMainResources: ValuesPattern, dependentResourceVar: QueryVariable, valuesPatternForDependentResources: ValuesPattern): ConstructQuery = {
-
-            import SearchResponderV2Constants.ExtendedSearchConstants._
-
-            // the information the user wants to get back about the resources searched for
-            val constructClause = inputQuery.constructClause
+        def collectPropertyTypeInfoForRequestedProperties(constructClause: ConstructClause, resourceVariable: QueryVariable, typeInspection: TypeInspectionResult): Set[PropertyTypeInfo] = {
 
             // get statements with the main resource as a subject
-            val expectedInformationAboutMainRes = constructClause.statements.filter {
+            val statementsWithResourceAsSubject = constructClause.statements.filter {
                 (statementPattern: StatementPattern) =>
-                    statementPattern.subj == mainResourceVar
+                    statementPattern.subj == resourceVariable
             }
 
-            // check which properties are required by checking if the predicates have type annotations
-            // non Knora value or linking properties do not have type annotations (such as rdf:type or knora-api:isMainResource)
-            val requestedPropertiesTypeInfo: Set[PropertyTypeInfo] = expectedInformationAboutMainRes.foldLeft(Set.empty[PropertyTypeInfo]) {
+            statementsWithResourceAsSubject.foldLeft(Set.empty[PropertyTypeInfo]) {
                 (acc: Set[PropertyTypeInfo], statementPattern: StatementPattern) =>
+
                     // check if the predicate is a Knora value  or linking property
 
                     // create a key for the type annotations map
@@ -1130,8 +1123,29 @@ class SearchResponderV2 extends Responder {
                     } else {
                         acc
                     }
-
             }
+        }
+
+        /**
+          * Creates the main query to be sent to the triplestore.
+          * Requests two sets of information: about the main resources and the dependent resources.
+          *
+          * @param mainResourceVar                    the variable representing the main resources.
+          * @param valuesPatternForMainResources      Iris of the main reource variable.
+          * @param dependentResourceVar               the variable representing the dependent resources.
+          * @param valuesPatternForDependentResources Iris of the dependent resources.
+          * @return the main [[ConstructQuery]] query to be executed.
+          */
+        def createMainQuery(inputQuery: ConstructQuery, typeInspection: TypeInspectionResult, mainResourceVar: QueryVariable, valuesPatternForMainResources: ValuesPattern, dependentResourceVar: QueryVariable, valuesPatternForDependentResources: ValuesPattern): ConstructQuery = {
+
+            import SearchResponderV2Constants.ExtendedSearchConstants._
+
+            // the information the user wants to get back about the resources searched for
+            val constructClause = inputQuery.constructClause
+
+            // check which properties are required by checking if the predicates have type annotations
+            // non Knora value or linking properties do not have type annotations (such as rdf:type or knora-api:isMainResource)
+            val requestedPropertiesTypeInfo: Set[PropertyTypeInfo] = collectPropertyTypeInfoForRequestedProperties(constructClause, mainResourceVar, typeInspection)
 
             // information about the main resources themselves (without properties) for Construct clause
             val constructPatternsForMainResourcesInfo = Seq(
