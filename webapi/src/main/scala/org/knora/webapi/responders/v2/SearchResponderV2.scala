@@ -1133,54 +1133,76 @@ class SearchResponderV2 extends Responder {
 
             }
 
-            // patterns to get information about the resource itself (without properties)
-            val wherePatternsForMainResourcesInfo = Seq(
+            // information about the main resources themselves (without properties) for Construct clause
+            val constructPatternsForMainResourcesInfo = Seq(
+                StatementPattern(subj = mainResourceVar, pred = IriRef(OntologyConstants.KnoraBase.IsMainResource), obj = XsdLiteral(value = "true", datatype = OntologyConstants.Xsd.Boolean)),
+                StatementPattern(subj = mainResourceVar, pred = IriRef(OntologyConstants.Rdf.Type), obj = IriRef(OntologyConstants.KnoraBase.Resource)),
+                StatementPattern(subj = mainResourceVar, pred = mainResourcePropVar, obj = mainResourceObjectVar)
+            )
+
+            // patterns to get information about the main resources themselves (without properties) for Where clause
+            val wherePatternsForMainResourcesInfo: Seq[QueryPattern] = Seq(
                 valuesPatternForMainResources,
                 StatementPattern.makeExplicit(subj = mainResourceVar, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean)),
                 StatementPattern.makeExplicit(subj = mainResourceVar, pred = mainResourcePropVar, obj = mainResourceObjectVar)
             )
 
-            // only get properties if they are requested in the construct clause of the input query
-            // if requestedPropertiesTypeInfo contains information, some properties are requested about the main resource
-            val wherePatternsForMainResources = if (requestedPropertiesTypeInfo.nonEmpty) {
-                wherePatternsForMainResourcesInfo ++
-                Seq(StatementPattern.makeInferred(subj = mainResourceVar, pred = IriRef(OntologyConstants.KnoraBase.HasValue), obj = mainResourceValueObject),
-                StatementPattern.makeExplicit(subj = mainResourceVar, pred = mainResourceValueProp, obj = mainResourceValueObject),
-                StatementPattern.makeExplicit(subj = mainResourceValueObject, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean)),
-                StatementPattern.makeExplicit(subj = mainResourceValueObject, pred = mainResourceValueObjectProp, obj = mainResourceValueObjectObj))
-            } else {
-                wherePatternsForMainResourcesInfo
-            }
-
-            // TODO: make two separate sets of dependent properties: one for which properties have to be returned and one for which this is not the case
-            val wherePatternsForDependentResources = Seq(
+            // patterns to get information about the dependent resources themselves (without properties) for Where Clause
+            val wherePatternsForDependentResourcesInfo: Seq[QueryPattern] = Seq(
                 valuesPatternForDependentResources,
                 StatementPattern.makeExplicit(subj = dependentResourceVar, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean)),
-                StatementPattern.makeExplicit(subj = dependentResourceVar, pred = dependentResourcePropVar, obj = dependentResourceObjectVar),
-                StatementPattern.makeInferred(subj = dependentResourceVar, pred = IriRef(OntologyConstants.KnoraBase.HasValue), obj = dependentResourceValueObject),
-                StatementPattern.makeExplicit(subj = dependentResourceVar, pred = dependentResourceValueProp, obj = dependentResourceValueObject),
-                StatementPattern.makeExplicit(subj = dependentResourceValueObject, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean)),
-                StatementPattern.makeExplicit(subj = dependentResourceValueObject, pred = dependentResourceValueObjectProp, obj = dependentResourceValueObjectObj)
+                StatementPattern.makeExplicit(subj = dependentResourceVar, pred = dependentResourcePropVar, obj = dependentResourceObjectVar)
             )
 
-            ConstructQuery(
-                constructClause = ConstructClause(
-                    Seq(
-                        StatementPattern(subj = mainResourceVar, pred = IriRef(OntologyConstants.KnoraBase.IsMainResource), obj = XsdLiteral(value = "true", datatype = OntologyConstants.Xsd.Boolean)),
-                        StatementPattern(subj = mainResourceVar, pred = IriRef(OntologyConstants.Rdf.Type), obj = IriRef(OntologyConstants.KnoraBase.Resource)),
-                        StatementPattern(subj = mainResourceVar, pred = mainResourcePropVar, obj = mainResourceObjectVar),
-                        StatementPattern(subj = mainResourceVar, pred = IriRef(OntologyConstants.KnoraBase.HasValue), obj = mainResourceValueObject),
-                        StatementPattern(subj = mainResourceVar, pred = mainResourceValueProp, obj = mainResourceValueObject),
-                        StatementPattern(subj = mainResourceValueObject, pred = mainResourceValueObjectProp, obj = mainResourceValueObjectObj),
-                        StatementPattern(subj = dependentResourceVar, pred = IriRef(OntologyConstants.Rdf.Type), obj = IriRef(OntologyConstants.KnoraBase.Resource)),
-                        StatementPattern(subj = dependentResourceVar, pred = dependentResourcePropVar, obj = dependentResourceObjectVar),
-                        StatementPattern(subj = dependentResourceVar, pred = IriRef(OntologyConstants.KnoraBase.HasValue), obj = dependentResourceValueObject),
-                        StatementPattern(subj = dependentResourceVar, pred = dependentResourceValueProp, obj = dependentResourceValueObject),
-                        StatementPattern(subj = dependentResourceValueObject, pred = dependentResourceValueObjectProp, obj = dependentResourceValueObjectObj)
-                    )
-                ),
-                whereClause = WhereClause(Seq(UnionPattern(Seq(wherePatternsForMainResources, wherePatternsForDependentResources))))
-            )
+            // only get properties if they are requested in the Construct clause of the input query
+            // if `requestedPropertiesTypeInfo` contains any information, some properties are requested about the main resource
+            // only query properties of dependent resources if any properties are requested for the main resources (dependent resources are nested into main resources' link value properties)
+            if (requestedPropertiesTypeInfo.nonEmpty) {
+
+                // request properties of main resource in Where patterns
+                val wherePatternsForMainResources = wherePatternsForMainResourcesInfo ++
+                    Seq(StatementPattern.makeInferred(subj = mainResourceVar, pred = IriRef(OntologyConstants.KnoraBase.HasValue), obj = mainResourceValueObject),
+                        StatementPattern.makeExplicit(subj = mainResourceVar, pred = mainResourceValueProp, obj = mainResourceValueObject),
+                        StatementPattern.makeExplicit(subj = mainResourceValueObject, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean)),
+                        StatementPattern.makeExplicit(subj = mainResourceValueObject, pred = mainResourceValueObjectProp, obj = mainResourceValueObjectObj))
+
+                // TODO: do some checks if properties are requested for the dependent resources -> only request properties of dependent resources if necessary (re-use logic used for main resources), make two sets of dependent resources
+                // request properties of dependent resources
+                val wherePatternsForDependentResources = wherePatternsForDependentResourcesInfo ++ Seq(
+                    StatementPattern.makeInferred(subj = dependentResourceVar, pred = IriRef(OntologyConstants.KnoraBase.HasValue), obj = dependentResourceValueObject),
+                    StatementPattern.makeExplicit(subj = dependentResourceVar, pred = dependentResourceValueProp, obj = dependentResourceValueObject),
+                    StatementPattern.makeExplicit(subj = dependentResourceValueObject, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean)),
+                    StatementPattern.makeExplicit(subj = dependentResourceValueObject, pred = dependentResourceValueObjectProp, obj = dependentResourceValueObjectObj)
+                )
+
+
+                ConstructQuery(
+                    constructClause = ConstructClause(
+                        constructPatternsForMainResourcesInfo ++ Seq(
+                            StatementPattern(subj = mainResourceVar, pred = IriRef(OntologyConstants.KnoraBase.HasValue), obj = mainResourceValueObject),
+                            StatementPattern(subj = mainResourceVar, pred = mainResourceValueProp, obj = mainResourceValueObject),
+                            StatementPattern(subj = mainResourceValueObject, pred = mainResourceValueObjectProp, obj = mainResourceValueObjectObj),
+                            StatementPattern(subj = dependentResourceVar, pred = IriRef(OntologyConstants.Rdf.Type), obj = IriRef(OntologyConstants.KnoraBase.Resource)),
+                            StatementPattern(subj = dependentResourceVar, pred = dependentResourcePropVar, obj = dependentResourceObjectVar),
+                            StatementPattern(subj = dependentResourceVar, pred = IriRef(OntologyConstants.KnoraBase.HasValue), obj = dependentResourceValueObject), // TODO: only do this if any properties are requested for dependent resources
+                            StatementPattern(subj = dependentResourceVar, pred = dependentResourceValueProp, obj = dependentResourceValueObject),
+                            StatementPattern(subj = dependentResourceValueObject, pred = dependentResourceValueObjectProp, obj = dependentResourceValueObjectObj)
+                        )
+                    ),
+                    whereClause = WhereClause(Seq(UnionPattern(Seq(wherePatternsForMainResources, wherePatternsForDependentResources))))
+                )
+            } else {
+
+
+                // only get information about the main resource without any properties (hence ignore dependent resources and their properties)
+                ConstructQuery(
+                    constructClause = ConstructClause(
+                        constructPatternsForMainResourcesInfo
+                    ),
+                    whereClause = WhereClause(wherePatternsForMainResourcesInfo)
+                )
+            }
+
         }
 
         for {
