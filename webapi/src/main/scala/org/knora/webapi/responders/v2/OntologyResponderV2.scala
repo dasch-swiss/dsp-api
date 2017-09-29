@@ -54,6 +54,7 @@ class OntologyResponderV2 extends Responder {
     /**
       * A container for all the cached ontology data.
       *
+      * @param namedGraphs                         the set of available named graphs.
       * @param namedGraphResourceClasses           a map of named graph IRIs to sets of resource IRIs defined in each named graph.
       * @param namedGraphProperties                a map of property IRIs to sets of property IRIs defined in each named graph.
       * @param resourceClassDefs                   a map of resource class IRIs to resource class definitions.
@@ -61,7 +62,8 @@ class OntologyResponderV2 extends Responder {
       * @param resourceSuperClassOfRelations       a map of IRIs of resource classes to sets of the IRIs of their subclasses.
       * @param propertyDefs                        a map of property IRIs to property definitions.
       */
-    case class OntologyCacheData(namedGraphResourceClasses: Map[IRI, Set[IRI]],
+    case class OntologyCacheData(namedGraphs: Set[IRI],
+                                 namedGraphResourceClasses: Map[IRI, Set[IRI]],
                                  namedGraphProperties: Map[IRI, Set[IRI]],
                                  resourceClassDefs: Map[IRI, ResourceEntityInfoV2],
                                  resourceAndValueSubClassOfRelations: Map[IRI, Set[IRI]],
@@ -191,7 +193,7 @@ class OntologyResponderV2 extends Responder {
         }
 
         for {
-        // Get all resource class definitions.
+            // Get all resource class definitions.
             resourceDefsSparql <- Future(queries.sparql.v2.txt.getResourceClassDefinitions(triplestore = settings.triplestoreType).toString())
             resourceDefsResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(resourceDefsSparql)).mapTo[SparqlSelectResponse]
             resourceDefsRows: Seq[VariableResultsRow] = resourceDefsResponse.results.bindings
@@ -651,6 +653,7 @@ class OntologyResponderV2 extends Responder {
             // Cache all the data.
 
             ontologyCacheData: OntologyCacheData = OntologyCacheData(
+                namedGraphs = graphClassMap.keySet ++ graphPropMap.keySet,
                 namedGraphResourceClasses = new ErrorHandlingMap[IRI, Set[IRI]](graphClassMap, { key => s"Named graph not found: $key" }),
                 namedGraphProperties = new ErrorHandlingMap[IRI, Set[IRI]](graphPropMap, { key => s"Named graph not found: $key" }),
                 resourceClassDefs = new ErrorHandlingMap[IRI, ResourceEntityInfoV2](resourceEntityInfos, { key => s"Resource class not found: $key" }),
@@ -803,17 +806,20 @@ class OntologyResponderV2 extends Responder {
     private def getNamedGraphEntityInfoV2ForNamedGraphV2(namedGraphIri: IRI, userProfile: UserProfileV1): Future[NamedGraphEntityInfoV2] = {
         for {
             cacheData <- getCacheData
-            response = NamedGraphEntityInfoV2(
-                namedGraphIri = namedGraphIri,
-                propertyIris = cacheData.namedGraphProperties(namedGraphIri),
-                resourceClasses = cacheData.namedGraphResourceClasses(namedGraphIri)
-            )
-        } yield response
+
+            _ = if (!cacheData.namedGraphs.contains(namedGraphIri)) {
+                throw InconsistentTriplestoreDataException(s"Named graph not found: $namedGraphIri")
+            }
+        } yield NamedGraphEntityInfoV2(
+            namedGraphIri = namedGraphIri,
+            propertyIris = cacheData.namedGraphProperties.getOrElse(namedGraphIri, Set.empty[IRI]),
+            resourceClasses = cacheData.namedGraphResourceClasses.getOrElse(namedGraphIri, Set.empty[IRI])
+        )
     }
 
     private def getNamedGraphsV2(userProfile: UserProfileV1) = {
         for {
-        // TODO: refactor this for V2
+            // TODO: refactor this for V2
             projectsNamedGraph: Seq[NamedGraphV1] <- (responderManager ? ProjectsNamedGraphGetV1(userProfile)).mapTo[Seq[NamedGraphV1]]
 
             response = ReadNamedGraphsV2(
@@ -833,7 +839,7 @@ class OntologyResponderV2 extends Responder {
 
         for {
 
-        // collect resource class IRIs from given named graphs
+            // collect resource class IRIs from given named graphs
             resourceClassesForNamedGraphWithFuture: Map[IRI, Future[Set[IRI]]] <- Future(namedGraphIris.foldLeft(Map.empty[IRI, Future[Set[IRI]]]) {
                 case (acc: Map[IRI, Future[Set[IRI]]], namedGraphIri: IRI) =>
                     val resourceClassesFuture: Future[Set[IRI]] = for {
@@ -871,7 +877,7 @@ class OntologyResponderV2 extends Responder {
     private def getResourceClassDefinitionsWithCardinalitiesV2(resourceClassIris: Set[IRI], allLanguages: Boolean, userProfile: UserProfileV1): Future[ReadEntityDefinitionsV2] = {
         for {
 
-        // request information about the given resource class Iris
+            // request information about the given resource class Iris
             resourceClassResponse: EntityInfoGetResponseV2 <- getEntityInfoResponseV2(resourceClassIris = resourceClassIris, userProfile = userProfile)
 
             cacheData <- getCacheData

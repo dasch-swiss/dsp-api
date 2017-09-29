@@ -1471,6 +1471,29 @@ class ResourcesV1R2RSpec extends R2RSpec {
             }
         }
 
+        "consider inherited cardinalities when generating XML schemas for referenced ontologies in an XML import" in {
+            val ontologyIri = URLEncoder.encode("http://www.knora.org/ontology/something", "UTF-8")
+
+            Get(s"/v1/resources/xmlimportschemas/$ontologyIri") ~> addCredentials(BasicHttpCredentials(biblioUserEmail, password)) ~> resourcesPath ~> check {
+                val responseBodyFuture: Future[Array[Byte]] = response.entity.toStrict(5.seconds).map(_.data.toArray)
+                val responseBytes: Array[Byte] = Await.result(responseBodyFuture, 5.seconds)
+                val zippedFilenames = collection.mutable.Set.empty[String]
+
+                for (zipInputStream <- managed(new ZipInputStream(new ByteArrayInputStream(responseBytes)))) {
+                    var zipEntry: ZipEntry = null
+
+                    while ( {
+                        zipEntry = zipInputStream.getNextEntry
+                        zipEntry != null
+                    }) {
+                        zippedFilenames.add(zipEntry.getName)
+                    }
+                }
+
+                assert(zippedFilenames == Set("something.xsd", "knoraXmlImport.xsd", "anything.xsd"))
+            }
+        }
+
         "create 10,000 anything:Thing resources with random contents" in {
             def maybeAppendValue(random: Random, xmlStringBuilder: StringBuilder, value: String): Unit = {
                 if (random.nextBoolean) {
