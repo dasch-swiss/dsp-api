@@ -20,13 +20,14 @@
 
 @import org.knora.webapi.IRI
 @import org.knora.webapi.SparqlGenerationException
+@import org.knora.webapi.util.search.ApacheLuceneSupport.MatchStringWhileTyping
 
 @*
  * Performs a search for resources by their label.
  *
  * @param searchTerms search terms to look for in the resources' label.
  *@
-@(searchTerms: String,
+@(searchTerm: MatchStringWhileTyping,
   limitToProject: Option[IRI],
   limitToResourceClass: Option[IRI])
 
@@ -64,7 +65,7 @@ CONSTRUCT {
                     ?resource rdfs:label ?label .
                 }
 
-            ?label <http://www.ontotext.com/owlim/lucene#fullTextSearchIndex> '@searchTerms' .
+            ?label <http://www.ontotext.com/owlim/lucene#fullTextSearchIndex> @searchTerm.generateLiteralForLuceneIndexWithoutExactSequence .
 
         }
         @* TODO: support paging (OFFSET) *@

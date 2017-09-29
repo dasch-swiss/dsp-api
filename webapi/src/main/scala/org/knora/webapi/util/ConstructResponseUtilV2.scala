@@ -530,6 +530,7 @@ object ConstructResponseUtilV2 {
                             acc :+ constructReadResourceV2(resourceIri, assertions, mappings = Map.empty[IRI, MappingAndXSLTransformation])
 
                         case None => acc // insufficient permissions on resource, skip it
+                            // TODO: include anonymous resource instead of skipping (the amount of results should be constant -> limit)
                     }
             }
         } else {

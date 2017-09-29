@@ -20,6 +20,7 @@
 
 @import org.knora.webapi.IRI
 @import org.knora.webapi.SparqlGenerationException
+@import org.knora.webapi.util.search.ApacheLuceneSupport.MatchStringWhileTyping
 
 @*
  * Performs a search for resources by their label.
@@ -31,14 +32,14 @@
  * @param searchTerms search terms.
  *@
 @(triplestore: String,
-  searchTerms: String,
+  searchTerm: MatchStringWhileTyping,
   limitToProject: Option[IRI],
   limitToResourceClass: Option[IRI])
 
 @if(triplestore.startsWith("graphdb")) {
     @{
         queries.sparql.v2.txt.searchResourceByLabelGraphDB(
-            searchTerms = searchTerms,
+            searchTerm = searchTerm,
             limitToProject = limitToProject,
             limitToResourceClass = limitToResourceClass
         )
@@ -47,7 +48,7 @@
     @{
         queries.sparql.v2.txt.searchResourceByLabelStandard(
             triplestore = triplestore,
-            searchTerms = searchTerms,
+            searchTerm = searchTerm,
             limitToProject = limitToProject,
             limitToResourceClass = limitToResourceClass
         )

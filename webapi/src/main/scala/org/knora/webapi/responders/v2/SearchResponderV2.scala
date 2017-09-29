@@ -30,6 +30,7 @@ import org.knora.webapi.messages.v2.responder._
 import org.knora.webapi.messages.v2.responder.searchmessages._
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.util.ActorUtil._
+import org.knora.webapi.util.search.ApacheLuceneSupport.MatchStringWhileTyping
 import org.knora.webapi.util.search._
 import org.knora.webapi.util.search.v2._
 import org.knora.webapi.util.{ConstructResponseUtilV2, DateUtilV1, InputValidation}
@@ -1240,10 +1241,10 @@ class SearchResponderV2 extends Responder {
             // separate main resources and value objects (dependent resources are nested)
             queryResultsSeparated: Map[IRI, ConstructResponseUtilV2.ResourceWithValueRdfData] = ConstructResponseUtilV2.splitMainResourcesAndValueRdfData(constructQueryResults = searchResponse, userProfile = userProfile)
 
-            // TODO: sort out those properties that the user did not ask for (look at preprocessedQuery.inputQuery)
-            // TODO: check that all properties from the Where clause are still in the results (after permission checks) -> a resource should only be returned if the user has the permissions to see all the properties contained in the Where clause
+        // TODO: sort out those properties that the user did not ask for (look at preprocessedQuery.inputQuery)
+        // TODO: check that all properties from the Where clause are still in the results (after permission checks) -> a resource should only be returned if the user has the permissions to see all the properties contained in the Where clause
 
-            // TODO: find a way to check for the property instance if a property has several values. For performance reasons, we query all the properties of a resource. How can we find the correct instance of a property?
+        // TODO: find a way to check for the property instance if a property has several values. For performance reasons, we query all the properties of a resource. How can we find the correct instance of a property?
 
         } yield ReadResourcesSequenceV2(numberOfResources = queryResultsSeparated.size, resources = ConstructResponseUtilV2.createSearchResponse(searchResults = queryResultsSeparated, orderByResourceIri = mainResourceIris))
     }
@@ -1251,21 +1252,25 @@ class SearchResponderV2 extends Responder {
     /**
       * Performs a search for resources by their rdf:label.
       *
-      * @param searchValue the values to search for.
-      * @param limitToProject limit search to given project.
+      * @param searchValue          the values to search for.
+      * @param limitToProject       limit search to given project.
       * @param limitToResourceClass limit search to given resource class.
-      * @param userProfile the profile of the client making the request.
+      * @param userProfile          the profile of the client making the request.
       * @return a [[ReadResourcesSequenceV2]] representing the resources that have been found.
       */
     private def searchResourcesByLabelV2(searchValue: String, limitToProject: Option[IRI], limitToResourceClass: Option[IRI], userProfile: UserProfileV1): Future[ReadResourcesSequenceV2] = {
 
+        val searchPhrase: MatchStringWhileTyping = MatchStringWhileTyping(searchValue)
+
         for {
             searchResourceByLabelSparql <- Future(queries.sparql.v2.txt.searchResourceByLabel(
                 triplestore = settings.triplestoreType,
-                searchTerms = searchValue,
+                searchTerm = searchPhrase,
                 limitToProject = limitToProject,
                 limitToResourceClass = limitToResourceClass
             ).toString())
+
+            // _ = println(searchResourceByLabelSparql)
 
             searchResourceByLabelResponse: SparqlConstructResponse <- (storeManager ? SparqlConstructRequest(searchResourceByLabelSparql)).mapTo[SparqlConstructResponse]
 
