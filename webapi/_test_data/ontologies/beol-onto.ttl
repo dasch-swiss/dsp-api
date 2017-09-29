@@ -1123,7 +1123,7 @@
 
 :StandoffFacsimileTag rdf:type owl:Class ;
 
-                      rdfs:subClassOf knora-base:StandoffUriTag ;
+                      rdfs:subClassOf knora-base:StandoffLinkTag ;
 
                       rdfs:comment "a URI referring to a facsimile"@en .
 
