@@ -286,7 +286,7 @@ The path segment ``graphdata`` returns a graph of resources that are reachable v
 
 ::
 
-    HTTP GET to http://host/v1/search/graphdata/resourceIRI?depth=Integer
+    HTTP GET to http://host/v1/graphdata/resourceIRI?depth=Integer
 
 The parameter ``depth`` specifies the maximum depth of the graph, and defaults to 4. If ``depth`` is 1, the operation will return only the initial resource and any resources that are directly linked to or from it.
 
