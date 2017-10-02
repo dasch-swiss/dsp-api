@@ -20,34 +20,56 @@
 
 package org.knora.webapi.store
 
+import akka.actor.Props
+import akka.testkit.ImplicitSender
+import com.typesafe.config.ConfigFactory
+import org.knora.webapi.messages.store.triplestoremessages._
+import org.knora.webapi.{CoreSpec, LiveActorMaker}
+
+import scala.concurrent.duration._
+
+object StoreManagerSpec {
+
+    private val config = ConfigFactory.parseString(
+        """
+         akka.loglevel = "DEBUG"
+         akka.stdout-loglevel = "DEBUG"
+        """.stripMargin)
+}
+
 /*
- * In this test case, our actor under test itself creates another actors. This
- * is why we need to instantiate the actor under test with TestProbeMake.
- * This allows us to get an ActorRef to this subactor by specifying his name.
+ * In this simple test case, we start our actor under test, send it a message, and test if the message
+ * we got in response is the one we expexted.
  *
- * The naming of the test classes is usualy the class name appended by the
- * word 'spec' all in camel case.
+ * The naming is usualy the class name appended by the word 'spec' all in camel case.
  *
  * All test cases are subclasses of CoreSpec and need to provide parameters
  * providing the actor system name and config.
  *
  * to execute, type 'test' in sbt
  */
+class StoreManagerSpec extends CoreSpec(StoreManagerSpec.config) with ImplicitSender {
 
-/*
-class StoreManagerSpec extends CoreSpec("StoreManagerTestSystem") with ImplicitSender {
+    private val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), STORE_MANAGER_ACTOR_NAME)
 
-    // here we start the actor under test with the TestProbeMaker trait
-    val actorUnderTest = TestActorRef(Props(new StoreManager with TestProbeMaker), name = STORE_MANAGER_ACTOR_NAME)
+    private val tsType = settings.triplestoreType
 
-    // here we get the ActorRef to a subactor with the name 'triplestoreManager' (ability provided by TestProbeMaker trait)
-    val mockTriplestoreManagerActor = actorUnderTest.underlyingActor.asInstanceOf[TestProbeMaker].probes.getOrElse(TRIPLESTORE_MANAGER_ACTOR_NAME, null)
+    s"The TriplestoreManager Actor (tsType: $tsType)" when {
+        "started by the StoreManager" should {
+            "only start answering after initialization has finished " in {
+                storeManager ! Initialized()
+                expectMsg(60.seconds, InitializedResponse(true))
+            }
+        }
 
-    "The StoreManager, depending on the configuration, " must {
-        "start the 'triplestoreManager' " in {
-            mockTriplestoreManagerActor.isInstanceOf[TestProbe] should === (true)
+        "forward a Hello to the triplestore connector" should {
+            "reply " in {
+                within(1.seconds) {
+                    storeManager ! HelloTriplestore(tsType)
+                    expectMsg(1.second, HelloTriplestore(tsType))
+                }
+            }
         }
     }
 
 }
-*/

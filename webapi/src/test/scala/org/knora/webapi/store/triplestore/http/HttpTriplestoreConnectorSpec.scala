@@ -25,12 +25,13 @@ import akka.testkit.ImplicitSender
 import com.typesafe.config.ConfigFactory
 import org.knora.webapi.SettingsConstants._
 import org.knora.webapi.messages.store.triplestoremessages._
-import org.knora.webapi.store.{StoreManager, _}
+import org.knora.webapi.store._
+import org.knora.webapi.store.triplestore.http.HttpTriplestoreConnector
 import org.knora.webapi.{CoreSpec, LiveActorMaker}
 
 import scala.concurrent.duration._
 
-object AllTriplestoreSpec {
+object HttpTriplestoreConnectorSpec {
 
     private val config = ConfigFactory.parseString(
         """
@@ -50,9 +51,9 @@ object AllTriplestoreSpec {
  *
  * to execute, type 'test' in sbt
  */
-class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with ImplicitSender {
+class HttpTriplestoreConnectorSpec extends CoreSpec(HttpTriplestoreConnectorSpec.config) with ImplicitSender {
 
-    private val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), STORE_MANAGER_ACTOR_NAME)
+    private val httpTriplestoreConnector = system.actorOf(Props(new HttpTriplestoreConnector), HTTP_TRIPLESTORE_ACTOR_NAME)
 
     private val timeout = 30.seconds
     private val tsType = settings.triplestoreType
@@ -186,30 +187,28 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
     * The Akka documentation describes a bunch of other methods
     * but this is the one I the most
     */
-    s"The Triplestore ($tsType) Actor " when {
-        "started " should {
-            "only start answering after initialization has finished " in {
-                storeManager ! Initialized()
-                expectMsg(60.seconds, InitializedResponse(true))
+    s"The HttpTriplestoreConnector Actor (tsType: $tsType)" when {
+        "receiving a 'TriplestoreStatusRequest'" should {
+            "send a reply" in {
+                httpTriplestoreConnector ! TriplestoreStatusRequest
+                expectMsgType[TriplestoreStatusResponse](60.seconds)
             }
         }
 
         "receiving a Hello " should {
-            "reply " in {
-                within(1.seconds) {
-                    storeManager ! HelloTriplestore(tsType)
-                    expectMsg(1.second, HelloTriplestore(tsType))
-                }
+            "send a reply" in {
+                httpTriplestoreConnector ! HelloTriplestore(tsType)
+                expectMsg(1.second, HelloTriplestore(tsType))
             }
         }
 
         "receiving a 'ResetTriplestoreContent' request " should {
             "reset the data " in {
 
-                storeManager ! DropAllTriplestoreContent()
+                httpTriplestoreConnector ! DropAllTriplestoreContent()
                 expectMsg(400.seconds, DropAllTriplestoreContentACK())
 
-                storeManager ! TriplestoreStatusRequest
+                httpTriplestoreConnector ! TriplestoreStatusRequest
                 val res1 = expectMsgType[TriplestoreStatusResponse]
                 val graphCountBefore = res1.nrOfGraphs
                 val tripleCountBefore = res1.nrOfTriples
@@ -217,10 +216,10 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
                 graphCountBefore should be (0)
                 tripleCountBefore should be (0)
 
-                storeManager ! ResetTriplestoreContent(rdfDataObjects)
+                httpTriplestoreConnector ! ResetTriplestoreContent(rdfDataObjects)
                 expectMsg(400.seconds, ResetTriplestoreContentACK())
 
-                storeManager ! TriplestoreStatusRequest
+                httpTriplestoreConnector ! TriplestoreStatusRequest
                 val res2 = expectMsgType[TriplestoreStatusResponse]
                 val graphCountAfter = res2.nrOfGraphs
                 val tripleCountAfter = res2.nrOfTriples
@@ -233,53 +232,54 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
 
         "receiving a Named Graph request " should {
             "provide data " in {
-                storeManager ! SparqlSelectRequest(namedGraphQuery)
+                httpTriplestoreConnector ! SparqlSelectRequest(namedGraphQuery)
                 expectMsgType[SparqlSelectResponse].results.bindings.nonEmpty should be (true)
             }
         }
 
         "receiving an update request " should {
             "execute the update " in {
-                storeManager ! TriplestoreStatusRequest
+                httpTriplestoreConnector ! TriplestoreStatusRequest
                 val tripleCountAfterLoad = expectMsgType[TriplestoreStatusResponse].nrOfTriples
                 tripleCountAfterLoad should be (afterLoadCount)
 
-                storeManager ! SparqlUpdateRequest(insertQuery)
+                httpTriplestoreConnector ! SparqlUpdateRequest(insertQuery)
                 expectMsg(SparqlUpdateResponse())
 
-                storeManager ! SparqlSelectRequest(checkInsertQuery)
+                httpTriplestoreConnector ! SparqlSelectRequest(checkInsertQuery)
                 expectMsgType[SparqlSelectResponse].results.bindings.size should be (3)
 
-                storeManager ! TriplestoreStatusRequest
+                httpTriplestoreConnector ! TriplestoreStatusRequest
                 afterChangeCount = expectMsgType[TriplestoreStatusResponse].nrOfTriples
 
                 afterChangeCount should be (afterLoadCount + 3)
             }
 
             "revert back " in {
-                storeManager ! TriplestoreStatusRequest
+                httpTriplestoreConnector ! TriplestoreStatusRequest
                 val beforeRevert = expectMsgType[TriplestoreStatusResponse].nrOfTriples
                 beforeRevert should be (afterChangeCount)
 
-                storeManager ! SparqlUpdateRequest(revertInsertQuery)
+                httpTriplestoreConnector ! SparqlUpdateRequest(revertInsertQuery)
                 expectMsg(SparqlUpdateResponse())
 
-                storeManager ! SparqlSelectRequest(checkInsertQuery)
+                httpTriplestoreConnector ! SparqlSelectRequest(checkInsertQuery)
                 expectMsgType[SparqlSelectResponse].results.bindings.size should be (0)
 
-                storeManager ! TriplestoreStatusRequest
+                httpTriplestoreConnector ! TriplestoreStatusRequest
                 val afterRevert = expectMsgType[TriplestoreStatusResponse].nrOfTriples
                 afterRevert should be (afterLoadCount)
 
                 //println("==>> Update 2 test case end")
             }
         }
-        "receiving a search request " should {
+
+        "receiving a search request" should {
             "execute the search with the lucene index for 'knora-base:valueHasString' properties" in {
                 within(1000.millis) {
                     tsType match {
-                        case HTTP_GRAPH_DB_TS_TYPE | HTTP_GRAPH_DB_FREE_TS_TYPE => storeManager ! SparqlSelectRequest(textSearchQueryGraphDBValueHasString)
-                        case _ => storeManager ! SparqlSelectRequest(textSearchQueryFusekiValueHasString)
+                        case HTTP_GRAPH_DB_TS_TYPE | HTTP_GRAPH_DB_FREE_TS_TYPE => httpTriplestoreConnector ! SparqlSelectRequest(textSearchQueryGraphDBValueHasString)
+                        case _ => httpTriplestoreConnector ! SparqlSelectRequest(textSearchQueryFusekiValueHasString)
                     }
                     expectMsgType[SparqlSelectResponse].results.bindings.size should be (35)
                 }
@@ -288,8 +288,8 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
             "execute the search with the lucene index for 'rdfs:label' properties" in {
                 within(1000.millis) {
                     tsType match {
-                        case HTTP_GRAPH_DB_TS_TYPE | HTTP_GRAPH_DB_FREE_TS_TYPE => storeManager ! SparqlSelectRequest(textSearchQueryGraphDBRDFLabel)
-                        case _ => storeManager ! SparqlSelectRequest(textSearchQueryFusekiDRFLabel)
+                        case HTTP_GRAPH_DB_TS_TYPE | HTTP_GRAPH_DB_FREE_TS_TYPE => httpTriplestoreConnector ! SparqlSelectRequest(textSearchQueryGraphDBRDFLabel)
+                        case _ => httpTriplestoreConnector ! SparqlSelectRequest(textSearchQueryFusekiDRFLabel)
                     }
                     expectMsgType[SparqlSelectResponse].results.bindings.size should be (1)
                 }

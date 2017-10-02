@@ -121,7 +121,7 @@ class SettingsImpl(config: Config) extends Extension {
         case HTTP_GRAPH_DB_TS_TYPE => config.getString("app.triplestore.graphdb.password")
         case HTTP_GRAPH_DB_FREE_TS_TYPE => config.getString("app.triplestore.graphdb-free.password")
         case HTTP_STARDOG_TS_TYPE => config.getString("app.triplestore.stardog.password")
-        case HTTP_ALLEGRO_TS_TYPE => config.getString("app.triplestore.stardog.password")
+        case HTTP_ALLEGRO_TS_TYPE => config.getString("app.triplestore.allegro.password")
         case HTTP_VIRTUOSO_TYPE => config.getString("app.triplestore.virtuoso.password")
         case other => ""
     }

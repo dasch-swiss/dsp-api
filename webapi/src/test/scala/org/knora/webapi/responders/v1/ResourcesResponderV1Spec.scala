@@ -858,14 +858,13 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
 
     "The resources responder" should {
 
-        /* */
         "return a description of the ZLLC book" in {
             actorUnderTest ! ResourceInfoGetRequestV1(iri = "http://data.knora.org/c5058f3a", userProfile = SharedAdminTestData.incunabulaMemberUser)
             val response = expectMsgType[ResourceInfoResponseV1]
             println(response.resource_info.get.toString)
         }
 
-        /*
+
         "return a full description of the book 'Zeitglöcklein des Lebens und Leidens Christi' in the Incunabula test data" in {
             // http://localhost:3333/v1/resources/http%3A%2F%2Fdata.knora.org%2Fc5058f3a
             actorUnderTest ! ResourceFullGetRequestV1(iri = "http://data.knora.org/c5058f3a", userProfile = SharedAdminTestData.incunabulaMemberUser)
@@ -884,7 +883,6 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
                 case response: ResourceFullResponseV1 => compareResourceFullResponses(received = response, expected = ResourcesResponderV1SpecFullData.expectedPageResourceFullResponse)
             }
         }
-
 
         "return a region with a comment containing standoff information" in {
             // http://localhost:3333/v1/resources/http%3A%2F%2Fdata.knora.org%2F047db418ae06
@@ -1554,6 +1552,5 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
                 case response: GraphDataGetResponseV1 => response should ===(graphWithOneNode)
             }
         }
-        */
     }
 }
