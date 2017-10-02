@@ -88,7 +88,7 @@
 
                                 @for((propertyIri, cardinality) <- resourceClassInfo.cardinalities.toVector.sortBy(_._1)) {
 
-                                    @defining(propertyEntityInfoMap(propertyIri)) { propertyInfo =>
+                                    @defining(propertyEntityInfoMap.getOrElse(propertyIri, throw AssertionException(s"The definition of the property $propertyIri is needed but was not read"))) { propertyInfo =>
 
                                         @if(!(propertyIri == OntologyConstants.KnoraBase.HasStandoffLinkTo || propertyInfo.isLinkValueProp || propertyInfo.isFileValueProp)) {
 
