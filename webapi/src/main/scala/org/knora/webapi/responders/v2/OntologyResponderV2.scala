@@ -221,17 +221,19 @@ class OntologyResponderV2 extends Responder {
                     graphIri -> (graphRows.map(_.rowMap("resourceClass")).toSet -- OntologyConstants.KnoraBase.AbstractResourceClasses)
             } + (OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiOntologyIri -> BuiltInApiV2WithValueObjectsClasses.keySet)
 
-            // Make a map of IRIs of named graphs to IRIs of properties defined in each one.
+            // Make a map of IRIs of named graphs to IRIs of properties defined in each one, excluding properties
+            // that can't be used directly.
             graphPropMap: Map[IRI, Set[IRI]] = propertyDefsRows.groupBy(_.rowMap("graph")).map {
                 case (graphIri, graphRows) =>
-                    graphIri -> graphRows.map(_.rowMap("prop")).toSet
+                    graphIri -> (graphRows.map(_.rowMap("prop")).toSet - OntologyConstants.KnoraBase.ResourceProperty - OntologyConstants.KnoraBase.HasValue)
             } + (OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiOntologyIri -> BuiltInApiV2WithValueObjectsProperties.keySet)
 
-            // Group the rows representing resource class definitions by resource class IRI.
+            // Group the rows representing resource class definitions by resource class IRI. This needs to include abstract resource classes such as
+            // knora-base:Resource, so cardinalities can be inherited from them.
             resourceDefsGrouped: Map[IRI, Seq[VariableResultsRow]] = resourceDefsRows.groupBy(_.rowMap("resourceClass"))
             resourceClassIris = resourceDefsGrouped.keySet
 
-            // Group the rows representing property definitions by property IRI. Exclude knora-base:resourceProperty and knora-base:hasValue, which is never used directly.
+            // Group the rows representing property definitions by property IRI, excluding knora-base:resoureceProperty and knora-base:hasValue, which are never used directly.
             propertyDefsGrouped: Map[IRI, Seq[VariableResultsRow]] = propertyDefsRows.groupBy(_.rowMap("prop")) - OntologyConstants.KnoraBase.ResourceProperty - OntologyConstants.KnoraBase.HasValue
             propertyIris = propertyDefsGrouped.keySet
 
@@ -711,13 +713,13 @@ class OntologyResponderV2 extends Responder {
             missingClassDefs = classIris -- classDefsAvailable.keySet
 
             _ = if (missingClassDefs.nonEmpty) {
-                throw BadRequestException(s"One or more requested classes were not found: ${missingClassDefs.mkString(", ")}")
+                throw NotFoundException(s"One or more requested classes were not found: ${missingClassDefs.mkString(", ")}")
             }
 
             missingPropertyDefs = propertyIris -- propertyDefsAvailable.keySet
 
             _ = if (missingPropertyDefs.nonEmpty) {
-                throw BadRequestException(s"One or more requested properties were not found: ${missingPropertyDefs.mkString(", ")}")
+                throw NotFoundException(s"One or more requested properties were not found: ${missingPropertyDefs.mkString(", ")}")
             }
 
             response = EntityInfoGetResponseV2(
