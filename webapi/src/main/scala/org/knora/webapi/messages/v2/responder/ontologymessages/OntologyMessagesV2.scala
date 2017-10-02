@@ -725,17 +725,17 @@ case class PropertyEntityInfoV2(propertyIri: IRI,
             case other => throw InconsistentTriplestoreDataException(s"Unsupported rdf:type for property: $other")
         }
 
-        val belongsToOntologyPred = targetSchema match {
+        val belongsToOntologyPred: IRI = targetSchema match {
             case ApiV2Simple => OntologyConstants.KnoraApiV2Simple.BelongsToOntology
             case ApiV2WithValueObjects => OntologyConstants.KnoraApiV2WithValueObjects.BelongsToOntology
         }
 
-        val convertedOntologyIri = InputValidation.toExternalOntologyIri(
+        val convertedOntologyIri: IRI = InputValidation.toExternalOntologyIri(
             ontologyIri = ontologyIri,
             targetSchema = targetSchema
         )
 
-        val jsonSubPropertyOf = subPropertyOf.toSeq.map {
+        val jsonSubPropertyOf: Seq[JsonLDString] = subPropertyOf.toSeq.map {
             superProperty =>
                 JsonLDString(
                     InputValidation.toExternalEntityIri(

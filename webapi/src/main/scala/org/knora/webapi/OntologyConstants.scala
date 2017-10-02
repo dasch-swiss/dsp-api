@@ -633,6 +633,9 @@ object OntologyConstants {
 
         val HasClasses: IRI = KnoraApiV2PrefixExpansion + "hasClasses"
 
+        val HasValue: IRI = KnoraApiV2PrefixExpansion + "hasValue"
+
+        val HasLinkTo: IRI = KnoraApiV2PrefixExpansion + "hasLinkTo"
 
         /**
           * Maps internal knora-base value types to the literal XSD types that represent them in the simplified API.

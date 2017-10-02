@@ -223,11 +223,10 @@ class OntologyResponderV2 extends Responder {
                     graphIri -> (graphRows.map(_.rowMap("resourceClass")).toSet -- OntologyConstants.KnoraBase.AbstractResourceClasses)
             } + (OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiOntologyIri -> BuiltInApiV2WithValueObjectsClasses.keySet)
 
-            // Make a map of IRIs of named graphs to IRIs of properties defined in each one, excluding properties
-            // that can't be used directly.
+            // Make a map of IRIs of named graphs to IRIs of properties defined in each one, knora-base:resourceProperty, which is never used directly.
             graphPropMap: Map[IRI, Set[IRI]] = propertyDefsRows.groupBy(_.rowMap("graph")).map {
                 case (graphIri, graphRows) =>
-                    graphIri -> (graphRows.map(_.rowMap("prop")).toSet - OntologyConstants.KnoraBase.ResourceProperty - OntologyConstants.KnoraBase.HasValue)
+                    graphIri -> (graphRows.map(_.rowMap("prop")).toSet - OntologyConstants.KnoraBase.ResourceProperty)
             } + (OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiOntologyIri -> BuiltInApiV2WithValueObjectsProperties.keySet)
 
             // Group the rows representing resource class definitions by resource class IRI. This needs to include abstract resource classes such as
@@ -235,8 +234,8 @@ class OntologyResponderV2 extends Responder {
             resourceDefsGrouped: Map[IRI, Seq[VariableResultsRow]] = resourceDefsRows.groupBy(_.rowMap("resourceClass"))
             resourceClassIris = resourceDefsGrouped.keySet
 
-            // Group the rows representing property definitions by property IRI, excluding knora-base:resoureceProperty and knora-base:hasValue, which are never used directly.
-            propertyDefsGrouped: Map[IRI, Seq[VariableResultsRow]] = propertyDefsRows.groupBy(_.rowMap("prop")) - OntologyConstants.KnoraBase.ResourceProperty - OntologyConstants.KnoraBase.HasValue
+            // Group the rows representing property definitions by property IRI, excluding knora-base:resourceProperty, which is never used directly.
+            propertyDefsGrouped: Map[IRI, Seq[VariableResultsRow]] = propertyDefsRows.groupBy(_.rowMap("prop")) - OntologyConstants.KnoraBase.ResourceProperty
             propertyIris = propertyDefsGrouped.keySet
 
             // Group the rows representing value class relations by value class IRI.

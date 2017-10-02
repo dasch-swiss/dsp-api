@@ -246,16 +246,9 @@ object KnoraApiV2WithValueObjects {
         )
     )
 
-    val ResourceProperty: PropertyEntityInfoV2 = makeProperty(
-        propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.ResourceProperty,
-        propertyType = OntologyConstants.Owl.ObjectProperty,
-        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.Resource)
-    )
-
     val HasValue: PropertyEntityInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.HasValue,
         propertyType = OntologyConstants.Owl.ObjectProperty,
-        subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.ResourceProperty),
         subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.Resource),
         objectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.Value)
     )
@@ -263,7 +256,6 @@ object KnoraApiV2WithValueObjects {
     val HasLinkTo: PropertyEntityInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.HasLinkTo,
         propertyType = OntologyConstants.Owl.ObjectProperty,
-        subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.ResourceProperty),
         predicates = Seq(
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
@@ -1876,7 +1868,6 @@ object KnoraApiV2WithValueObjects {
     val Properties = Set(
         ValueAsString,
         ValueHas,
-        ResourceProperty,
         HasValue,
         HasLinkTo,
         SubjectType,
