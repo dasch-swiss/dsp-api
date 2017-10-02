@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 /**
  * To be run with nodejs.
  */
@@ -157,8 +158,29 @@ CONSTRUCT {
 }
 `);
 
+// query all link objects that refer to an incunabula:book
+// Attention: link objects have several instances of knora-api:hasLinkTo
+queryArr.push(`
+    PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+    PREFIX incunabula: <http://api.knora.org/ontology/incunabula/simple/v2#>
+    
+    CONSTRUCT {
+        ?linkObj knora-api:isMainResource true .
+        
+        #?linkObj knora-api:hasLinkTo ?book .
+    } WHERE {
+        ?linkObj a knora-api:Resource .
+        ?linkObj a knora-api:LinkObj .
+        
+        ?linkObj knora-api:hasLinkTo ?book .
+        knora-api:hasLinkTo knora-api:objectType knora-api:Resource .
+        
+        ?book a knora-api:Resource .
+        ?book a incunabula:book . 
+        
+    }
 
-
+`);
 
 
 function runQuery(queryStrArr, index) {
@@ -231,5 +253,5 @@ function runQuery(queryStrArr, index) {
     });
 }
 
-runQuery(queryArr, 0);
+runQuery(queryArr, 4);
 
