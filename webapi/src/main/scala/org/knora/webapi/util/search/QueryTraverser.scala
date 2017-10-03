@@ -100,6 +100,17 @@ trait ConstructToSelectTransformer extends WhereTransformer {
     def getSelectVariables: Seq[SelectQueryColumn]
 
     /**
+      * Returns the variables that the query result rows are grouped by (aggregating rows into one).
+      * Variables returned by the SELECT query must either be present in the GROUP BY statement
+      * or be transformed by an aggregation function in SPARQL.
+      * This method will be called by [[QueryTraverser]] after the whole input query has been traversed.
+      *
+      * @param orderByCriteria the criteria used to sort the query results. They have to be included in the GROUP BY statement, otherwise they are unbound.
+      * @return a list of variables that the result rows are grouped by.
+      */
+    def getGroupBy(orderByCriteria: TransformedOrderBy): Seq[QueryVariable]
+
+    /**
       * Returns the criteria, if any, that should be used in the ORDER BY clause of the SELECT query. This method will be called
       * by [[QueryTraverser]] after the whole input query has been traversed.
       *
@@ -204,6 +215,8 @@ object QueryTraverser {
 
         val transformedOrderBy = transformer.getOrderBy(inputQuery.orderBy)
 
+        val groupBy: Seq[QueryVariable] = transformer.getGroupBy(transformedOrderBy)
+
         val limit: Int = transformer.getLimit
 
         val offset = transformer.getOffset(inputQuery.offset, limit)
@@ -212,6 +225,7 @@ object QueryTraverser {
             variables = transformer.getSelectVariables,
             useDistinct = true,
             whereClause = WhereClause(patterns = transformedWherePatterns ++ transformedOrderBy.statementPatterns),
+            groupBy = groupBy,
             orderBy = transformedOrderBy.orderBy,
             limit = Some(limit),
             offset = offset

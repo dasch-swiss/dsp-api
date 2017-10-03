@@ -983,6 +983,18 @@ class SearchResponderV2 extends Responder {
             }
 
             /**
+              * Creates the GROUP BY statement based on the ORDER BY statement.
+              *
+              * @param orderByCriteria the criteria used to sort the query results. They have to be included in the GROUP BY statement, otherwise they are unbound.
+              * @return a list of variables that the result rows are grouped by.
+              */
+            def getGroupBy(orderByCriteria: TransformedOrderBy): Seq[QueryVariable] = {
+                // get they query variables form the order by criteria and return them in reverse order:
+                // main resource variable first, followed by other sorting criteria, if any.
+                orderByCriteria.orderBy.map(_.queryVariable).reverse
+            }
+
+            /**
               * Gets the maximal amount of result rows to be returned by the prequery.
               *
               * @return the LIMIT, if any.
@@ -1268,18 +1280,13 @@ class SearchResponderV2 extends Responder {
                 }
             }
 
-            // TODO: move this logic to the transformer
-            groupByVars = nonTriplestoreSpecficPrequery.orderBy.map(_.queryVariable).reverse
-
             // Convert the preprocessed query to a non-triplestore-specific query.
             triplestoreSpecificPrequery = QueryTraverser.transformSelectToSelect(
-                inputQuery = nonTriplestoreSpecficPrequery.copy(
-                    groupBy = groupByVars
-                ),
+                inputQuery = nonTriplestoreSpecficPrequery,
                 transformer = triplestoreSpecificQueryPatternTransformerSelect
             )
 
-            // _ = println(triplestoreSpecificPrequery.toSparql)
+            _ = println(triplestoreSpecificPrequery.toSparql)
 
             prequeryResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(triplestoreSpecificPrequery.toSparql)).mapTo[SparqlSelectResponse]
 
