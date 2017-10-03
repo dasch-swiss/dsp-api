@@ -252,7 +252,8 @@ case class ReadEntityDefinitionsV2(ontologies: Map[IRI, Set[IRI]] = Map.empty[IR
             OntologyConstants.KnoraApi.KnoraApiOntologyLabel -> JsonLDString(knoraApiPrefixExpansion),
             "rdfs" -> JsonLDString("http://www.w3.org/2000/01/rdf-schema#"),
             "rdf" -> JsonLDString("http://www.w3.org/1999/02/22-rdf-syntax-ns#"),
-            "owl" -> JsonLDString("http://www.w3.org/2002/07/owl#")
+            "owl" -> JsonLDString("http://www.w3.org/2002/07/owl#"),
+            "xsd" -> JsonLDString("http://www.w3.org/2001/XMLSchema#")
         ) ++ projectSpecificOntologyPrefixes)
 
         // ontologies with their classes
@@ -490,19 +491,6 @@ sealed trait EntityInfoV2 {
     }
 
     /**
-      * Gets a predicate and its object from an entity, using the first object that doesn't have a language tag.
-      *
-      * @param predicateIri the IRI of the predicate.
-      * @return the requested predicate and object.
-      */
-    def getPredicateAndObjectWithoutLang(predicateIri: IRI): Option[(IRI, String)] = {
-        getPredicateObject(
-            predicateIri = predicateIri,
-            preferredLangs = None
-        ).map(obj => predicateIri -> obj)
-    }
-
-    /**
       * Returns an object for a given predicate. If requested, attempts to return the object in the user's preferred
       * language, in the system's default language, or in any language, in that order.
       *
@@ -646,23 +634,48 @@ case class PropertyEntityInfoV2(propertyIri: IRI,
             targetSchema = targetSchema
         )
 
-        // TODO: support knora-api:subjectType
-
-        // Get the correct knora-api:objectType predicate for the target API schema.
-        val objectTypePred: IRI = targetSchema match {
-            case ApiV2Simple => OntologyConstants.KnoraApiV2Simple.ObjectType
-            case ApiV2WithValueObjects => OntologyConstants.KnoraApiV2WithValueObjects.ObjectType
+        // Get the correct knora-api:subjectType and knora-api:objectType predicates for the target API schema.
+        val (subjectTypePred: IRI, objectTypePred: IRI) = targetSchema match {
+            case ApiV2Simple => (OntologyConstants.KnoraApiV2Simple.SubjectType, OntologyConstants.KnoraApiV2Simple.ObjectType)
+            case ApiV2WithValueObjects => (OntologyConstants.KnoraApiV2WithValueObjects.SubjectType, OntologyConstants.KnoraApiV2WithValueObjects.ObjectType)
         }
 
-        // If this is a built-in API ontology property, get its knora-api:objectType, if it has one.
-        val maybeBuiltInObjectType: Option[IRI] = ontologySchema match {
-            case InternalSchema => None
-            case ApiV2Simple => getPredicateObjectsWithoutLang(OntologyConstants.KnoraApiV2Simple.ObjectType).headOption
-            case ApiV2WithValueObjects => getPredicateObjectsWithoutLang(OntologyConstants.KnoraApiV2WithValueObjects.ObjectType).headOption
+        // If this is a built-in API ontology property, get its knora-api:subjectType and knora-api:objectType, if provided.
+        val (maybeBuiltInSubjectType: Option[IRI], maybeBuiltInObjectType: Option[IRI]) = ontologySchema match {
+            case InternalSchema => (None, None)
+
+            case ApiV2Simple =>
+                (getPredicateObjectsWithoutLang(OntologyConstants.KnoraApiV2Simple.SubjectType).headOption,
+                    getPredicateObjectsWithoutLang(OntologyConstants.KnoraApiV2Simple.ObjectType).headOption)
+
+            case ApiV2WithValueObjects =>
+                (getPredicateObjectsWithoutLang(OntologyConstants.KnoraApiV2WithValueObjects.SubjectType).headOption,
+                    getPredicateObjectsWithoutLang(OntologyConstants.KnoraApiV2WithValueObjects.ObjectType).headOption)
         }
 
-        // If this is an internal ontology property, get its knora-base:objectClassConstraint, if it has one.
+        // If this is an internal ontology property, get its knora-base:subjectClassConstraint and knora-base:objectClassConstraint, if provided.
+        val maybeInternalSubjectClassConstraint = getPredicateObjectsWithoutLang(OntologyConstants.KnoraBase.SubjectClassConstraint).headOption
         val maybeInternalObjectClassConstraint = getPredicateObjectsWithoutLang(OntologyConstants.KnoraBase.ObjectClassConstraint).headOption
+
+        // Determine the type that we will return as the property's subject type.
+        val maybeSubjectTypeObj: Option[IRI] = maybeBuiltInSubjectType match {
+            case Some(_) =>
+                // The property is from a built-in API ontology and declared a knora-api:subjectType, so use that.
+                maybeBuiltInSubjectType
+
+            case None =>
+                // The property is from an internal ontology. If it declared a knora-base:subjectClassConstraint, convert
+                // the specified type to an API type for the target schema.
+                maybeInternalSubjectClassConstraint match {
+                    case Some(internalSubjectClassConstraint) =>
+                        Some(InputValidation.toExternalEntityIri(
+                            entityIri = internalSubjectClassConstraint,
+                            targetSchema = targetSchema
+                        ))
+
+                    case None => None
+                }
+        }
 
         // Determine the type that we will return as the property's object type.
         val maybeObjectTypeObj: Option[IRI] = maybeBuiltInObjectType match {
@@ -684,7 +697,8 @@ case class PropertyEntityInfoV2(propertyIri: IRI,
                 }
         }
 
-        // Make the property's knora-api:objectType statement.
+        // Make the property's knora-api:subjectType and knora-api:objectType statements.
+        val subjectTypeStatement: Option[(IRI, JsonLDString)] = maybeSubjectTypeObj.map(subjectTypeObj => (subjectTypePred, JsonLDString(subjectTypeObj)))
         val objectTypeStatement: Option[(IRI, JsonLDString)] = maybeObjectTypeObj.map(objectTypeObj => (objectTypePred, JsonLDString(objectTypeObj)))
 
         // Get the property's rdf:type, which should be rdf:Property, owl:ObjectProperty, or owl:DatatypeProperty.
@@ -703,8 +717,8 @@ case class PropertyEntityInfoV2(propertyIri: IRI,
                         // Yes. Are we going to return an object type for the property?
                         maybeObjectTypeObj match {
                             case Some(objectTypeObj) =>
-                                // Yes. Are we going to use an XSD literal type as the object type?
-                                if (objectTypeObj.startsWith(OntologyConstants.Xsd.XsdPrefixExpansion)) {
+                                // Yes. Are we going to use an datatype as the object type?
+                                if (OntologyConstants.KnoraApiV2Simple.Datatypes.contains(objectTypeObj)) {
                                     // Yes. Say that this is a datatype property.
                                     OntologyConstants.Owl.DatatypeProperty
                                 } else {
@@ -755,31 +769,37 @@ case class PropertyEntityInfoV2(propertyIri: IRI,
             "@id" -> JsonLDString(convertedPropertyIri),
             "@type" -> JsonLDString(convertedPropertyType),
             belongsToOntologyPred -> JsonLDString(convertedOntologyIri)
-        ) ++ jsonSubPropertyOfStatement ++ objectTypeStatement
+        ) ++ jsonSubPropertyOfStatement ++ subjectTypeStatement ++ objectTypeStatement
     }
 }
 
 /**
   * Represents the assertions about a given OWL class.
   *
-  * @param classIri            the IRI of the class.
-  * @param ontologyIri         the IRI of the ontology in which the class is defined.
-  * @param predicates          a [[Map]] of predicate IRIs to [[PredicateInfoV2]] objects.
-  * @param cardinalities       a [[Map]] of properties to [[Cardinality.Value]] objects representing the class's
-  *                            cardinalities on those properties.
-  * @param linkProperties      a [[Set]] of IRIs of properties of the class that point to resources.
-  * @param linkValueProperties a [[Set]] of IRIs of properties of the class
-  *                            that point to `LinkValue` objects.
-  * @param fileValueProperties a [[Set]] of IRIs of properties of the class
-  *                            that point to `FileValue` objects.
-  * @param subClassOf          the classes that this class is a subclass of.
-  * @param ontologySchema      indicates whether this ontology entity belongs to an internal ontology (for use in the
-  *                            triplestore) or an external one (for use in the Knora API).
+  * @param classIri                    the IRI of the class.
+  * @param ontologyIri                 the IRI of the ontology in which the class is defined.
+  * @param rdfType                     the rdf:type of the class (defaults to owl:Class).
+  * @param predicates                  a [[Map]] of predicate IRIs to [[PredicateInfoV2]] objects.
+  * @param cardinalities               a [[Map]] of properties to [[Cardinality.Value]] objects representing the class's
+  *                                    cardinalities on those properties.
+  * @param xsdStringRestrictionPattern if the class's rdf:type is rdfs:Datatype, an optional xsd:pattern specifying
+  *                                    the regular expression that restricts its values. This has the effect of making the
+  *                                    class a subclass of a blank node with owl:onDatatype xsd:string.
+  * @param linkProperties              a [[Set]] of IRIs of properties of the class that point to resources.
+  * @param linkValueProperties         a [[Set]] of IRIs of properties of the class
+  *                                    that point to `LinkValue` objects.
+  * @param fileValueProperties         a [[Set]] of IRIs of properties of the class
+  *                                    that point to `FileValue` objects.
+  * @param subClassOf                  the classes that this class is a subclass of.
+  * @param ontologySchema              indicates whether this ontology entity belongs to an internal ontology (for use in the
+  *                                    triplestore) or an external one (for use in the Knora API).
   */
 case class ClassEntityInfoV2(classIri: IRI,
                              ontologyIri: IRI,
+                             rdfType: IRI = OntologyConstants.Owl.Class,
                              predicates: Map[IRI, PredicateInfoV2] = Map.empty[IRI, PredicateInfoV2],
                              cardinalities: Map[IRI, Cardinality.Value] = Map.empty[IRI, Cardinality.Value],
+                             xsdStringRestrictionPattern: Option[String] = None,
                              linkProperties: Set[IRI] = Set.empty[IRI],
                              linkValueProperties: Set[IRI] = Set.empty[IRI],
                              fileValueProperties: Set[IRI] = Set.empty[IRI],
@@ -843,6 +863,17 @@ case class ClassEntityInfoV2(classIri: IRI,
             resIcon => resourceIconPred -> JsonLDString(resIcon)
         }
 
+        val jsonRestriction: Option[JsonLDObject] = xsdStringRestrictionPattern.map {
+            (pattern: String) =>
+                JsonLDObject(Map(
+                    "@type" -> JsonLDString(OntologyConstants.Rdfs.Datatype),
+                    OntologyConstants.Owl.OnDatatype -> JsonLDString(OntologyConstants.Xsd.String),
+                    OntologyConstants.Owl.WithRestrictions -> JsonLDArray(Seq(
+                        JsonLDObject(Map(OntologyConstants.Xsd.Pattern -> JsonLDString(pattern))
+                    ))
+                )))
+        }
+
         val jsonSubClassOf = subClassOf.toSeq.map {
             superClass =>
                 JsonLDString(
@@ -851,7 +882,7 @@ case class ClassEntityInfoV2(classIri: IRI,
                         targetSchema = targetSchema
                     )
                 )
-        } ++ owlCardinalities
+        } ++ owlCardinalities ++ jsonRestriction
 
         val jsonSubClassOfStatement: Option[(IRI, JsonLDArray)] = if (jsonSubClassOf.nonEmpty) {
             Some(OntologyConstants.Rdfs.SubClassOf -> JsonLDArray(jsonSubClassOf))
@@ -862,7 +893,7 @@ case class ClassEntityInfoV2(classIri: IRI,
         Map(
             "@id" -> JsonLDString(convertedResourceClassIri),
             belongsToOntologyPred -> JsonLDString(convertedOntologyIri),
-            "@type" -> JsonLDString(OntologyConstants.Owl.Class)
+            "@type" -> JsonLDString(rdfType)
         ) ++ jsonSubClassOfStatement ++ resourceIconStatement
     }
 }

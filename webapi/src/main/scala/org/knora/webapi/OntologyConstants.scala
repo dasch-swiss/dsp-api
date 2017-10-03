@@ -42,6 +42,7 @@ object OntologyConstants {
         val Comment: IRI = RdfsPrefixExpansion + "comment"
         val SubClassOf: IRI = RdfsPrefixExpansion + "subClassOf"
         val SubPropertyOf: IRI = RdfsPrefixExpansion + "subPropertyOf"
+        val Datatype: IRI = RdfsPrefixExpansion + "Datatype"
     }
 
     object Owl {
@@ -57,6 +58,9 @@ object OntologyConstants {
         val DatatypeProperty: IRI = OwlPrefixExpansion + "DatatypeProperty"
 
         val Class: IRI = OwlPrefixExpansion + "Class"
+
+        val WithRestrictions: IRI = OwlPrefixExpansion + "withRestrictions"
+        val OnDatatype: IRI = OwlPrefixExpansion + "onDatatype"
 
         /**
           * Cardinality IRIs expressed as OWL restrictions, which specify the properties that resources of
@@ -77,6 +81,7 @@ object OntologyConstants {
         val Integer: IRI = XsdPrefixExpansion + "integer"
         val Decimal: IRI = XsdPrefixExpansion + "decimal"
         val Uri: IRI = XsdPrefixExpansion + "anyURI"
+        val Pattern: IRI = XsdPrefixExpansion + "pattern"
     }
 
     object KnoraInternal {
@@ -131,6 +136,7 @@ object OntologyConstants {
             TextRepresentation
         )
 
+        val SubjectClassConstraint: IRI = KnoraBasePrefixExpansion + "subjectClassConstraint"
         val ObjectClassConstraint: IRI = KnoraBasePrefixExpansion + "objectClassConstraint"
         val ObjectDatatypeConstraint: IRI = KnoraBasePrefixExpansion + "objectDatatypeConstraint"
 
@@ -612,14 +618,22 @@ object OntologyConstants {
 
         val ObjectType: IRI = KnoraApiV2PrefixExpansion + "objectType"
 
+        val Region: IRI = KnoraApiV2PrefixExpansion + "Region"
+        val Representation: IRI = KnoraApiV2PrefixExpansion + "Representation"
+        val StillImageRepresentation: IRI = KnoraApiV2PrefixExpansion + "StillImageRepresentation"
+        val MovingImageRepresentation: IRI = KnoraApiV2PrefixExpansion + "MovingImageRepresentation"
+        val AudioRepresentation: IRI = KnoraApiV2PrefixExpansion + "AudioRepresentation"
+        val DDDRepresentation: IRI = KnoraApiV2PrefixExpansion + "DDDRepresentation"
+        val TextRepresentation: IRI = KnoraApiV2PrefixExpansion + "TextRepresentation"
+        val DocumentRepresentation: IRI = KnoraApiV2PrefixExpansion + "DocumentRepresentation"
+
         val Date: IRI = KnoraApiV2PrefixExpansion + "Date"
-        val Resource: IRI = KnoraApiV2PrefixExpansion + "Resource"
-
-        val StillImageFile: IRI = KnoraApiV2PrefixExpansion + "StillImageFile"
-
         val Geom: IRI = KnoraApiV2PrefixExpansion + "Geom"
+        val Color: IRI = KnoraApiV2PrefixExpansion + "Color"
+        val Interval: IRI = KnoraApiV2PrefixExpansion + "Interval"
+        val Geoname: IRI = KnoraApiV2PrefixExpansion + "Geoname"
 
-        val Color: IRI =  KnoraApiV2PrefixExpansion + "Color"
+        val Resource: IRI = KnoraApiV2PrefixExpansion + "Resource"
 
         val ResourceIcon: IRI = KnoraApiV2PrefixExpansion + "resourceIcon"
 
@@ -637,10 +651,30 @@ object OntologyConstants {
 
         val HasLinkTo: IRI = KnoraApiV2PrefixExpansion + "hasLinkTo"
 
+        val HasColor: IRI = KnoraApiV2PrefixExpansion + "hasColor"
+        val HasComment: IRI = KnoraApiV2PrefixExpansion + "hasComment"
+
+        val HasFile: IRI = KnoraApiV2PrefixExpansion + "HasFile"
+
+        val HasStillImageFile: IRI = KnoraApiV2PrefixExpansion + "HasStillImageFile"
+        val HasMovingImageFile: IRI = KnoraApiV2PrefixExpansion + "HasMovingImageFile"
+        val HasAudioFile: IRI = KnoraApiV2PrefixExpansion + "hasAudioFile"
+        val HasDDDFile: IRI = KnoraApiV2PrefixExpansion + "hasDDDFile"
+        val HasTextFile: IRI = KnoraApiV2PrefixExpansion + "hasTextFile"
+        val HasDocumentFile: IRI = KnoraApiV2PrefixExpansion + "hasDocumentFile"
+
+        val File: IRI = KnoraApiV2PrefixExpansion + "File"
+
+        val StillImageFile: IRI = KnoraApiV2PrefixExpansion + "StillImageFile"
+        val MovingImageFile: IRI = KnoraApiV2PrefixExpansion + "MovingImageFile"
+        val AudioFile: IRI = KnoraApiV2PrefixExpansion + "AudioFile"
+        val DDDFile: IRI = KnoraApiV2PrefixExpansion + "DDDFile"
+        val TextFile: IRI = KnoraApiV2PrefixExpansion + "TextFile"
+        val DocumentFile: IRI = KnoraApiV2PrefixExpansion + "DocumentFile"
+
+
         /**
-          * Maps internal knora-base value types to the literal XSD types that represent them in the simplified API.
-          *
-          * TODO: decide whether this is correct. Should dates and intervals really be string literals?
+          * Maps internal knora-base value types to the datatypes that represent them in the simplified API.
           */
         val LiteralValueTypes: Map[IRI, IRI] = Map(
             KnoraBase.TextValue -> Xsd.String,
@@ -648,13 +682,25 @@ object OntologyConstants {
             KnoraBase.BooleanValue -> Xsd.Boolean,
             KnoraBase.UriValue -> Xsd.Uri,
             KnoraBase.DecimalValue -> Xsd.Decimal,
-            KnoraBase.DateValue -> Xsd.String,
-            KnoraBase.ColorValue -> Xsd.String,
-            KnoraBase.GeomValue -> Xsd.String,
+            KnoraBase.DateValue -> Date,
+            KnoraBase.ColorValue -> Color,
+            KnoraBase.GeomValue -> Geom,
             KnoraBase.ListValue -> Xsd.String,
-            KnoraBase.IntervalValue -> Xsd.String,
-            KnoraBase.GeonameValue -> Xsd.String
+            KnoraBase.IntervalValue -> Interval,
+            KnoraBase.GeonameValue -> Geoname,
+            KnoraBase.FileValue -> File,
+            KnoraBase.StillImageFileValue -> StillImageFile,
+            KnoraBase.MovingImageFileValue -> MovingImageFile,
+            KnoraBase.AudioFileValue -> AudioFile,
+            KnoraBase.DDDFileValue -> DDDFile,
+            KnoraBase.TextFileValue -> TextFile,
+            KnoraBase.DocumentFileValue -> DocumentFile
         )
+
+        /**
+          * The datatypes that are used in the simplified API.
+          */
+        val Datatypes: Set[IRI] = LiteralValueTypes.values.toSet
 
     }
 

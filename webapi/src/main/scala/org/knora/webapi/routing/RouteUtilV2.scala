@@ -39,9 +39,6 @@ import scala.concurrent.{ExecutionContext, Future}
   * Convenience methods for Knora routes.
   */
 object RouteUtilV2 {
-    // TODO: get this from the request.
-    val ResponseSchema: ApiV2Schema = ApiV2WithValueObjects
-    // val ResponseSchema: ApiV2Schema = ApiV2Simple
 
     /**
       * Sends a message to a responder and completes the HTTP request by returning the response as JSON.
@@ -51,6 +48,7 @@ object RouteUtilV2 {
       * @param settings         the application's settings.
       * @param responderManager a reference to the responder manager.
       * @param log              a logging adapter.
+      * @param responseSchema   the API schema that should be used in the response.
       * @param timeout          a timeout for `ask` messages.
       * @param executionContext an execution context for futures.
       * @return a [[Future]] containing a [[RouteResult]].
@@ -59,7 +57,8 @@ object RouteUtilV2 {
                      requestContext: RequestContext,
                      settings: SettingsImpl,
                      responderManager: ActorSelection,
-                     log: LoggingAdapter)
+                     log: LoggingAdapter,
+                     responseSchema: ApiV2Schema = ApiV2WithValueObjects)
                     (implicit timeout: Timeout, executionContext: ExecutionContext): Future[RouteResult] = {
         // Optionally log the request message. TODO: move this to the testing framework.
         if (settings.dumpMessages) {
@@ -85,7 +84,7 @@ object RouteUtilV2 {
             // TODO: check whether to send back JSON-LD or XML (content negotiation: HTTP accept header)
 
             // The request was successful
-            jsonLDDocument: JsonLDDocument = knoraResponse.toJsonLDDocument(ResponseSchema, settings)
+            jsonLDDocument: JsonLDDocument = knoraResponse.toJsonLDDocument(responseSchema, settings)
             contextAsJava = JavaUtil.deepScalaToJava(jsonLDDocument.context.toAny)
             jsonAsJava = JavaUtil.deepScalaToJava(jsonLDDocument.body.toAny)
             compacted = JsonLdProcessor.compact(jsonAsJava, contextAsJava, new JsonLdOptions())

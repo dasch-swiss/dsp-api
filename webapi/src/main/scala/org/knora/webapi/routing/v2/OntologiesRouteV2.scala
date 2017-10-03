@@ -28,7 +28,7 @@ import akka.util.Timeout
 import org.knora.webapi.messages.v2.responder.ontologymessages.{ClassesGetRequestV2, NamedGraphEntitiesGetRequestV2, NamedGraphsGetRequestV2, PropertyEntitiesGetRequestV2}
 import org.knora.webapi.routing.{Authenticator, RouteUtilV2}
 import org.knora.webapi.util.InputValidation
-import org.knora.webapi.{BadRequestException, IRI, OntologyConstants, SettingsImpl}
+import org.knora.webapi._
 
 import scala.concurrent.ExecutionContextExecutor
 import scala.language.postfixOps
@@ -68,25 +68,38 @@ object OntologiesRouteV2 extends Authenticator {
                 requestContext => {
                     val userProfile = getUserProfileV1(requestContext)
 
-                    val internalOntologyIris: Set[IRI] = externalOntologyIris.map {
+                    val ontologiesAndSchemas: Set[(IRI, ApiV2Schema)] = externalOntologyIris.map {
                         (namedGraph: String) =>
-                            if (namedGraph == OntologyConstants.KnoraApiV2Simple.KnoraApiOntologyIri || namedGraph == OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiOntologyIri) {
+                            val schema = InputValidation.getOntologyApiSchema(namedGraph, () => throw BadRequestException(s"Invalid external ontology IRI: $namedGraph"))
+
+                            val ontologyForResponder = if (namedGraph == OntologyConstants.KnoraApiV2Simple.KnoraApiOntologyIri || namedGraph == OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiOntologyIri) {
                                 // The client is asking about a built-in ontology, so don't translate its IRI.
                                 namedGraph
                             } else {
-                                // The client is asking about a project-specific ontology. Translate its IRI to an internal ontology IRI. // TODO: handle the simple API here.
-                                val internalOntologyIri = InputValidation.externalOntologyIriApiV2WithValueObjectToInternalOntologyIri(namedGraph, () => throw BadRequestException(s"given named graph $namedGraph is not a valid external ontology IRI"))
-
-                                InputValidation.toIri(internalOntologyIri, () => throw BadRequestException(s"Invalid named graph IRI: '$internalOntologyIri'"))
+                                // The client is asking about a project-specific ontology. Translate its IRI to an internal ontology IRI.
+                                val internalOntologyIri = InputValidation.externalToInternalOntologyIri(namedGraph, () => throw BadRequestException(s"Invalid external ontology IRI: $namedGraph"))
+                                InputValidation.toIri(internalOntologyIri, () => throw BadRequestException(s"Invalid named graph IRI: $internalOntologyIri"))
                             }
+
+                            (ontologyForResponder, schema)
                     }.toSet
+
+                    val (ontologiesForResponder: Set[IRI], schemas: Set[ApiV2Schema]) = ontologiesAndSchemas.unzip
+
+                    // Decide which API schema to use for the response.
+                    val responseSchema = if (schemas.size == 1) {
+                        schemas.head
+                    } else {
+                        // The client requested different schemas.
+                        throw BadRequestException("The request refers to multiple API schemas")
+                    }
 
                     val params: Map[String, String] = requestContext.request.uri.query().toMap
                     val allLanguagesStr = params.get(ALL_LANGUAGES)
                     val allLanguages = InputValidation.optionStringToBoolean(params.get(ALL_LANGUAGES), () => throw BadRequestException(s"Invalid boolean for $ALL_LANGUAGES: $allLanguagesStr"))
 
                     val requestMessage = NamedGraphEntitiesGetRequestV2(
-                        namedGraphIris = internalOntologyIris,
+                        namedGraphIris = ontologiesForResponder,
                         allLanguages = allLanguages,
                         userProfile = userProfile
                     )
@@ -96,7 +109,8 @@ object OntologiesRouteV2 extends Authenticator {
                         requestContext,
                         settings,
                         responderManager,
-                        log
+                        log,
+                        responseSchema = responseSchema
                     )
                 }
             }
@@ -105,25 +119,39 @@ object OntologiesRouteV2 extends Authenticator {
                 requestContext => {
                     val userProfile = getUserProfileV1(requestContext)
 
-                    val internalClassIris: Set[IRI] = externalResourceClassIris.map {
+                    val classesAndSchemas: Set[(IRI, ApiV2Schema)] = externalResourceClassIris.map {
                         (classIri: String) =>
-                            if (InputValidation.isBuiltInEntityIri(classIri)) {
+                            // Find out what schema the class IRI belongs to.
+                            val schema = InputValidation.getEntityApiSchema(classIri, () => throw BadRequestException(s"Invalid external class IRI: $classIri"))
+
+                            val classForResponder = if (InputValidation.isBuiltInEntityIri(classIri)) {
                                 // The client is asking about a built-in class, so don't translate its IRI.
                                 classIri
                             } else {
                                 // The client is asking about a project-specific class. Translate its IRI to an internal class IRI.
-                                val internalResClassIri = InputValidation.externalApiV2WithValueObjectEntityIriToInternalEntityIri(classIri, () => throw BadRequestException(s"invalid external resource class IRI: $classIri"))
-
-                                InputValidation.toIri(internalResClassIri, () => throw BadRequestException(s"Invalid resource class IRI: '$internalResClassIri'"))
+                                val internalResClassIri = InputValidation.externalToInternalEntityIri(classIri, () => throw BadRequestException(s"invalid external resource class IRI: $classIri"))
+                                InputValidation.toIri(internalResClassIri, () => throw BadRequestException(s"Invalid resource class IRI: $internalResClassIri"))
                             }
+
+                            (classForResponder, schema)
                     }.toSet
+
+                    val (classesForResponder: Set[IRI], schemas: Set[ApiV2Schema]) = classesAndSchemas.unzip
+
+                    // Decide which API schema to use for the response.
+                    val responseSchema = if (schemas.size == 1) {
+                        schemas.head
+                    } else {
+                        // The client requested different schemas.
+                        throw BadRequestException("The request refers to multiple API schemas")
+                    }
 
                     val params: Map[String, String] = requestContext.request.uri.query().toMap
                     val allLanguagesStr = params.get(ALL_LANGUAGES)
                     val allLanguages = InputValidation.optionStringToBoolean(params.get(ALL_LANGUAGES), () => throw BadRequestException(s"Invalid boolean for $ALL_LANGUAGES: $allLanguagesStr"))
 
                     val requestMessage = ClassesGetRequestV2(
-                        resourceClassIris = internalClassIris,
+                        resourceClassIris = classesForResponder,
                         allLanguages = allLanguages,
                         userProfile = userProfile
                     )
@@ -133,7 +161,8 @@ object OntologiesRouteV2 extends Authenticator {
                         requestContext,
                         settings,
                         responderManager,
-                        log
+                        log,
+                        responseSchema
                     )
                 }
             }
@@ -142,25 +171,39 @@ object OntologiesRouteV2 extends Authenticator {
                 requestContext => {
                     val userProfile = getUserProfileV1(requestContext)
 
-                    val internalPropertyIris: Set[IRI] = externalPropertyIris.map {
+                    val propsAndSchemas: Set[(IRI, ApiV2Schema)] = externalPropertyIris.map {
                         (propIri: String) =>
-                            if (InputValidation.isBuiltInEntityIri(propIri)) {
+                            // Find out what schema the property IRI belongs to.
+                            val schema = InputValidation.getEntityApiSchema(propIri, () => throw BadRequestException(s"Invalid external property IRI: $propIri"))
+
+                            val propForResponder = if (InputValidation.isBuiltInEntityIri(propIri)) {
                                 // The client is asking about a built-in property, so don't translate its IRI.
                                 propIri
                             } else {
                                 // The client is asking about a project-specific property. Translate its IRI to an internal property IRI.
-                                val internalPropIri = InputValidation.externalApiV2WithValueObjectEntityIriToInternalEntityIri(propIri, () => throw BadRequestException(s"invalid external property IRI: $propIri"))
-
-                                InputValidation.toIri(internalPropIri, () => throw BadRequestException(s"Invalid property IRI: '$internalPropIri'"))
+                                val internalPropIri = InputValidation.externalToInternalEntityIri(propIri, () => throw BadRequestException(s"invalid external property IRI: $propIri"))
+                                InputValidation.toIri(internalPropIri, () => throw BadRequestException(s"Invalid property IRI: $internalPropIri"))
                             }
+
+                            (propForResponder, schema)
                     }.toSet
+
+                    val (propsForResponder: Set[IRI], schemas: Set[ApiV2Schema]) = propsAndSchemas.unzip
+
+                    // Decide which API schema to use for the response.
+                    val responseSchema = if (schemas.size == 1) {
+                        schemas.head
+                    } else {
+                        // The client requested different schemas.
+                        throw BadRequestException("The request refers to multiple API schemas")
+                    }
 
                     val params: Map[String, String] = requestContext.request.uri.query().toMap
                     val allLanguagesStr = params.get(ALL_LANGUAGES)
                     val allLanguages = InputValidation.optionStringToBoolean(params.get(ALL_LANGUAGES), () => throw BadRequestException(s"Invalid boolean for $ALL_LANGUAGES: $allLanguagesStr"))
 
                     val requestMessage = PropertyEntitiesGetRequestV2(
-                        propertyIris = internalPropertyIris,
+                        propertyIris = propsForResponder,
                         allLanguages = allLanguages,
                         userProfile = userProfile
                     )
@@ -170,7 +213,8 @@ object OntologiesRouteV2 extends Authenticator {
                         requestContext,
                         settings,
                         responderManager,
-                        log
+                        log,
+                        responseSchema = responseSchema
                     )
                 }
             }

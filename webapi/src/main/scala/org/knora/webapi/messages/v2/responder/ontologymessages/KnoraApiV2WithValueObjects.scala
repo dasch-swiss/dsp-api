@@ -1465,12 +1465,8 @@ object KnoraApiV2WithValueObjects {
 
     val TextFileValue: ClassEntityInfoV2 = makeClass(
         classIri = OntologyConstants.KnoraApiV2WithValueObjects.TextFileValue,
-        subClassOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.Value),
+        subClassOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.FileValue),
         predicates = Seq(
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.SubClassOf,
-                objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.FileValue)
-            ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
@@ -2020,6 +2016,7 @@ object KnoraApiV2WithValueObjects {
             predicates = predicatesWithType.map {
                 pred => pred.predicateIri -> pred
             }.toMap,
+            cardinalities = cardinalities,
             linkProperties = linkProperties,
             linkValueProperties = linkValueProperties,
             fileValueProperties = fileValueProperties,

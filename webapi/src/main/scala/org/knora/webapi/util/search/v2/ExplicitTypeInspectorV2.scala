@@ -61,11 +61,19 @@ class ExplicitTypeInspectorV2(apiType: ApiV2Schema) extends TypeInspector {
             OntologyConstants.Xsd.String,
             OntologyConstants.Xsd.Integer,
             OntologyConstants.Xsd.Decimal,
-            OntologyConstants.KnoraApiV2Simple.Date,
             OntologyConstants.KnoraApiV2Simple.Resource,
-            OntologyConstants.KnoraApiV2Simple.StillImageFile,
+            OntologyConstants.KnoraApiV2Simple.Date,
             OntologyConstants.KnoraApiV2Simple.Geom,
-            OntologyConstants.KnoraApiV2Simple.Color
+            OntologyConstants.KnoraApiV2Simple.Geoname,
+            OntologyConstants.KnoraApiV2Simple.Interval,
+            OntologyConstants.KnoraApiV2Simple.Color,
+            OntologyConstants.KnoraApiV2Simple.File,
+            OntologyConstants.KnoraApiV2Simple.StillImageFile,
+            OntologyConstants.KnoraApiV2Simple.TextFile,
+            OntologyConstants.KnoraApiV2Simple.MovingImageFile,
+            OntologyConstants.KnoraApiV2Simple.AudioFile,
+            OntologyConstants.KnoraApiV2Simple.DDDFile,
+            OntologyConstants.KnoraApiV2Simple.DocumentFile
         )
 
         /**
