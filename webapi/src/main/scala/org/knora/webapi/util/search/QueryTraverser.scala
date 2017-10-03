@@ -97,7 +97,7 @@ trait ConstructToSelectTransformer extends WhereTransformer {
       *
       * @return the variables that should be returned by the SELECT.
       */
-    def getSelectVariables: Seq[QueryVariable]
+    def getSelectVariables: Seq[SelectQueryColumn]
 
     /**
       * Returns the criteria, if any, that should be used in the ORDER BY clause of the SELECT query. This method will be called

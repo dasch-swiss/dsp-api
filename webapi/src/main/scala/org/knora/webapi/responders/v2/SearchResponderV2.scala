@@ -33,7 +33,7 @@ import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.search.ApacheLuceneSupport.MatchStringWhileTyping
 import org.knora.webapi.util.search._
 import org.knora.webapi.util.search.v2._
-import org.knora.webapi.util.{ConstructResponseUtilV2, DateUtilV1, InputValidation}
+import org.knora.webapi.util.{ConstructResponseUtilV2, DateUtilV1, FormatConstants, InputValidation}
 
 import scala.collection.mutable
 import scala.concurrent.Future
@@ -713,6 +713,12 @@ class SearchResponderV2 extends Responder {
             // Contains the variables of dependent resources
             private var dependentResourceVariables = mutable.Set.empty[QueryVariable]
 
+            // separator used by GroupConcat
+            val groupConcatSeparator: Char = FormatConstants.INFORMATION_SEPARATOR_ONE
+
+            // Contains variables representing group concatenated dependent resources
+            var dependentResourceVariablesGroupConcat = Set.empty[QueryVariable]
+
             /**
               * Creates additional statements for a non property type (e.g., a resource).
               *
@@ -880,11 +886,22 @@ class SearchResponderV2 extends Responder {
               *
               * @return the variables that should be returned by the SELECT.
               */
-            override def getSelectVariables: Seq[QueryVariable] = {
+            override def getSelectVariables: Seq[SelectQueryColumn] = {
                 // Return the main resource variable and the generated variable that we're using for ordering.
 
+                val groupConcatVariableAppendix = "Concat"
+
+                val dependentResourceVarsGroupConcat: Set[GroupConcat] = dependentResourceVariables.map {
+                    (dependentResVar: QueryVariable) =>
+                        GroupConcat(inputVariable = dependentResVar,
+                            separator = groupConcatSeparator,
+                            outputVariableName = dependentResVar.variableName + groupConcatVariableAppendix)
+                }.toSet
+
+                dependentResourceVariablesGroupConcat = dependentResourceVarsGroupConcat.map(_.outputVariable)
+
                 mainResourceVariable match {
-                    case Some(mainVar: QueryVariable) => Seq(mainVar) ++ dependentResourceVariables
+                    case Some(mainVar: QueryVariable) => Seq(mainVar) ++ dependentResourceVarsGroupConcat
 
                     case None => throw SparqlSearchException(s"No ${OntologyConstants.KnoraBase.IsMainResource} found in CONSTRUCT query.")
                 }
@@ -958,11 +975,10 @@ class SearchResponderV2 extends Responder {
                         )
                 }.toSeq
 
-                // order by: user provided variables, main resource variable, dependent resource variables
-                // all variables must be included in the order by statements to make the results predictable for paging
-                // in case more than one value is returned for a dependent resource variable, there will be more than one row for the same main resource variable
+                // order by: user provided variables and main resource variable
+                // all variables present in the GROUP BY must be included in the order by statements to make the results predictable for paging
                 transformedOrderBy.copy(
-                    orderBy = transformedOrderBy.orderBy ++ (orderByMainResVar +: orderByDependentResVars)
+                    orderBy = transformedOrderBy.orderBy :+ orderByMainResVar
                 )
             }
 
@@ -1233,10 +1249,12 @@ class SearchResponderV2 extends Responder {
                 transformer = new Preprocessor
             )
 
+            nonTriplestoreSpecificConstructToSelectTransformer: NonTriplestoreSpecificConstructToSelectTransformer = new NonTriplestoreSpecificConstructToSelectTransformer(typeInspectionResult)
+
             // Create a Select prequery
             nonTriplestoreSpecficPrequery: SelectQuery = QueryTraverser.transformConstructToSelect(
                 inputQuery = preprocessedQuery.copy(orderBy = inputQuery.orderBy, offset = inputQuery.offset), // TODO: This is a workaround to get Order By and OFFSET into the transformer since the preprocessor does not know about it
-                transformer = new NonTriplestoreSpecificConstructToSelectTransformer(typeInspectionResult)
+                transformer = nonTriplestoreSpecificConstructToSelectTransformer
             )
 
             // Convert the non-triplestore-specific query to a triplestore-specific one.
@@ -1250,9 +1268,14 @@ class SearchResponderV2 extends Responder {
                 }
             }
 
+            // TODO: move this logic to the transformer
+            groupByVars = nonTriplestoreSpecficPrequery.orderBy.map(_.queryVariable).reverse
+
             // Convert the preprocessed query to a non-triplestore-specific query.
             triplestoreSpecificPrequery = QueryTraverser.transformSelectToSelect(
-                inputQuery = nonTriplestoreSpecficPrequery,
+                inputQuery = nonTriplestoreSpecficPrequery.copy(
+                    groupBy = groupByVars
+                ),
                 transformer = triplestoreSpecificQueryPatternTransformerSelect
             )
 
@@ -1284,9 +1307,10 @@ class SearchResponderV2 extends Responder {
             dependentResourceIrisFromPrequery: Set[IRI] = dependentResourceVariables.foldLeft(Set.empty[IRI]) {
                 case (acc, resVar) =>
                     // collect all the values for the current var from prequery response
-                    val resIris: Seq[IRI] = prequeryResponse.results.bindings.map {
+                    val resIris: Seq[IRI] = prequeryResponse.results.bindings.flatMap {
                         case resultRow: VariableResultsRow =>
-                            resultRow.rowMap(resVar)
+                            // Iris are concatenated, split them
+                            resultRow.rowMap(resVar).split(nonTriplestoreSpecificConstructToSelectTransformer.groupConcatSeparator).toSeq
                     }
 
                     acc ++ resIris
