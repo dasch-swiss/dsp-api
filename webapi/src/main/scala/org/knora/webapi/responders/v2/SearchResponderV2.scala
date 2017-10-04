@@ -708,7 +708,7 @@ class SearchResponderV2 extends Responder {
             private val processedTypeInformationKeysWhereClause = mutable.Set.empty[TypeableEntity]
 
             // Contains the variable representing the main resource: knora-base:isMainResource
-            private var mainResourceVariable: Option[QueryVariable] = None
+            var mainResourceVariable: Option[QueryVariable] = None
 
             // Contains the variables of dependent resources
             private var dependentResourceVariables = mutable.Set.empty[QueryVariable]
@@ -1294,11 +1294,11 @@ class SearchResponderV2 extends Responder {
             prequeryResultsVariableNames: Seq[String] = prequeryResponse.head.vars
 
             // variable representing the main resources
-            mainResourceVar: QueryVariable = QueryVariable(prequeryResultsVariableNames.headOption.getOrElse(throw SparqlSearchException("SELECT prequery returned no variable")))
+            mainResourceVar: QueryVariable = nonTriplestoreSpecificConstructToSelectTransformer.mainResourceVariable.getOrElse(throw SparqlSearchException("Could not get main resource variable from transformer"))
 
             // a sequence of resource Iris that match the search criteria
             // attention: no permission checking has been done so far
-            mainResourceIris: Seq[IRI] = prequeryResponse.results.bindings.map {
+            mainResourceIris = prequeryResponse.results.bindings.map {
                 case resultRow: VariableResultsRow =>
                     resultRow.rowMap(mainResourceVar.variableName)
             }
@@ -1306,18 +1306,18 @@ class SearchResponderV2 extends Responder {
             // a ValuePattern representing all the possible Iris for the main resource variable
             valuesPatternForMainResources: ValuesPattern = ValuesPattern(mainResourceVar, mainResourceIris.map(iri => IriRef(iri)).toSet)
 
-            // the tail of prequeryResultsVariableNames contains variables representing dependent resources
-            dependentResourceVariables: Seq[String] = prequeryResultsVariableNames.tail
+            // variables representing dependent resources
+            dependentResourceVariablesConcat: Set[QueryVariable] = nonTriplestoreSpecificConstructToSelectTransformer.dependentResourceVariablesGroupConcat
 
             // get all the Iris for variables representing dependent resources
             // iterate over all variables representing dependent resources
-            dependentResourceIrisFromPrequery: Set[IRI] = dependentResourceVariables.foldLeft(Set.empty[IRI]) {
-                case (acc, resVar) =>
+            dependentResourceIrisFromPrequery: Set[IRI] = dependentResourceVariablesConcat.foldLeft(Set.empty[IRI]) {
+                case (acc: Set[IRI], dependentResVarConcat: QueryVariable) =>
                     // collect all the values for the current var from prequery response
                     val resIris: Seq[IRI] = prequeryResponse.results.bindings.flatMap {
                         case resultRow: VariableResultsRow =>
                             // Iris are concatenated, split them
-                            resultRow.rowMap(resVar).split(nonTriplestoreSpecificConstructToSelectTransformer.groupConcatSeparator).toSeq
+                            resultRow.rowMap(dependentResVarConcat.variableName).split(nonTriplestoreSpecificConstructToSelectTransformer.groupConcatSeparator).toSeq
                     }
 
                     acc ++ resIris
