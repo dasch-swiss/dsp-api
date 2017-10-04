@@ -253,5 +253,5 @@ function runQuery(queryStrArr, index) {
     });
 }
 
-runQuery(queryArr, 4);
+runQuery(queryArr, 0);
 
