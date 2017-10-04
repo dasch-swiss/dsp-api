@@ -722,18 +722,6 @@ class OntologyResponderV2 extends Responder {
             classDefsAvailable = cacheData.classDefs.filterKeys(classIris)
             propertyDefsAvailable = cacheData.propertyDefs.filterKeys(propertyIris)
 
-            missingClassDefs = classIris -- classDefsAvailable.keySet
-
-            _ = if (missingClassDefs.nonEmpty) {
-                throw NotFoundException(s"One or more requested classes were not found: ${missingClassDefs.mkString(", ")}")
-            }
-
-            missingPropertyDefs = propertyIris -- propertyDefsAvailable.keySet
-
-            _ = if (missingPropertyDefs.nonEmpty) {
-                throw NotFoundException(s"One or more requested properties were not found: ${missingPropertyDefs.mkString(", ")}")
-            }
-
             response = EntityInfoGetResponseV2(
                 classEntityInfoMap = new ErrorHandlingMap(classDefsAvailable, { key => s"Resource class $key not found" }),
                 propertyEntityInfoMap = new ErrorHandlingMap(propertyDefsAvailable, { key => s"Property $key not found" })

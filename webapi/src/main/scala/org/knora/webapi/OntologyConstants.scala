@@ -82,6 +82,13 @@ object OntologyConstants {
         val Decimal: IRI = XsdPrefixExpansion + "decimal"
         val Uri: IRI = XsdPrefixExpansion + "anyURI"
         val Pattern: IRI = XsdPrefixExpansion + "pattern"
+        val DateTimeStamp: IRI = XsdPrefixExpansion + "dateTimeStamp"
+    }
+
+    object SchemaOrg {
+        val SchemaOrgPrefixExpansion: IRI = "http://schema.org/"
+
+        val Name: IRI = SchemaOrgPrefixExpansion + "name"
     }
 
     object KnoraInternal {
@@ -472,8 +479,11 @@ object OntologyConstants {
     }
 
     object KnoraApi {
+        // The hostname of a Knora API ontology IRI.
+        val ApiOntologyHostname: String = "http://api.knora.org"
+
         // The start and end of a Knora API ontology IRI.
-        val ApiOntologyStart = "http://api.knora.org/ontology/"
+        val ApiOntologyStart: String = ApiOntologyHostname + "/ontology/"
 
         val KnoraApiOntologyLabel: String = "knora-api"
 
@@ -503,6 +513,14 @@ object OntologyConstants {
         val HasClasses: IRI = KnoraApiV2PrefixExpansion + "hasClasses"
 
         val ValueAsString: IRI = KnoraApiV2PrefixExpansion + "valueAsString"
+        val ValueCreationDate: IRI = KnoraApiV2PrefixExpansion + "valueCreationDate"
+
+        val AttachedToUser: IRI = KnoraApiV2PrefixExpansion + "attachedToUser"
+        val AttachedToProject: IRI = KnoraApiV2PrefixExpansion + "attachedToProject"
+        val HasStandoffLinkTo: IRI = KnoraApiV2PrefixExpansion + "hasStandoffLinkTo"
+        val HasPermissions: IRI = KnoraApiV2PrefixExpansion + "hasPermissions"
+        val CreationDate: IRI = KnoraApiV2PrefixExpansion + "creationDate"
+        val LastModificationDate: IRI = KnoraApiV2PrefixExpansion + "lastModificationDate"
 
         val Resource: IRI = KnoraApiV2PrefixExpansion + "Resource"
         val Region: IRI = KnoraApiV2PrefixExpansion + "Region"
@@ -542,6 +560,8 @@ object OntologyConstants {
         val ValueHas: IRI = KnoraApiV2PrefixExpansion + "valueHas"
         val HasLinkTo: IRI = KnoraApiV2PrefixExpansion + "hasLinkTo"
 
+        val IsRegionOf: IRI = KnoraApiV2PrefixExpansion + "isRegionOf"
+        val HasGeometry: IRI = KnoraApiV2PrefixExpansion + "hasGeometry"
         val HasColor: IRI = KnoraApiV2PrefixExpansion + "hasColor"
         val HasComment: IRI = KnoraApiV2PrefixExpansion + "hasComment"
         val HasFileValue: IRI = KnoraApiV2PrefixExpansion + "hasFileValue"
@@ -651,6 +671,8 @@ object OntologyConstants {
 
         val HasLinkTo: IRI = KnoraApiV2PrefixExpansion + "hasLinkTo"
 
+        val IsRegionOf: IRI = KnoraApiV2PrefixExpansion + "isRegionOf"
+        val HasGeometry: IRI = KnoraApiV2PrefixExpansion + "hasGeometry"
         val HasColor: IRI = KnoraApiV2PrefixExpansion + "hasColor"
         val HasComment: IRI = KnoraApiV2PrefixExpansion + "hasComment"
 
@@ -672,6 +694,9 @@ object OntologyConstants {
         val TextFile: IRI = KnoraApiV2PrefixExpansion + "TextFile"
         val DocumentFile: IRI = KnoraApiV2PrefixExpansion + "DocumentFile"
 
+        val HasStandoffLinkTo: IRI = KnoraApiV2PrefixExpansion + "hasStandoffLinkTo"
+        val CreationDate: IRI = KnoraApiV2PrefixExpansion + "creationDate"
+        val LastModificationDate: IRI = KnoraApiV2PrefixExpansion + "lastModificationDate"
 
         /**
           * Maps internal knora-base value types to the datatypes that represent them in the simplified API.
@@ -700,7 +725,7 @@ object OntologyConstants {
         /**
           * The datatypes that are used in the simplified API.
           */
-        val Datatypes: Set[IRI] = LiteralValueTypes.values.toSet
+        val Datatypes: Set[IRI] = LiteralValueTypes.values.toSet + Xsd.DateTimeStamp
 
     }
 

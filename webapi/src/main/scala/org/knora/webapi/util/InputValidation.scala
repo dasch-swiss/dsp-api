@@ -1025,8 +1025,8 @@ object InputValidation {
       * @return the converted IRI.
       */
     def toExternalEntityIri(entityIri: IRI, targetSchema: ApiV2Schema): IRI = {
-        if (entityIri.startsWith(OntologyConstants.Xsd.XsdPrefixExpansion)) {
-            // It's an XSD datatype entity, so leave it as is.
+        if (entityIri.startsWith(OntologyConstants.Xsd.XsdPrefixExpansion) || entityIri.startsWith(OntologyConstants.SchemaOrg.SchemaOrgPrefixExpansion)) {
+            // It's an XSD or schema.org entity, so leave it as is.
             entityIri
         } else {
             entityIri match {
@@ -1074,6 +1074,40 @@ object InputValidation {
                 }
 
             case _ => throw BadRequestException(s"Can't convert from $ontologyIri to $targetSchema")
+        }
+    }
+
+    /**
+      * Given an ontology IRI requested by the user, converts it to the IRI of an ontology that the ontology responder knows about.
+      *
+      * @param requestedOntology the IRI of the ontology that the user requested.
+      * @return the IRI of an ontology that the ontology responder can provide.
+      */
+    def requestedOntologyToOntologyForResponder(requestedOntology: IRI): IRI = {
+        if (requestedOntology == OntologyConstants.KnoraApiV2Simple.KnoraApiOntologyIri || requestedOntology == OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiOntologyIri) {
+            // The client is asking about a built-in ontology, so don't translate its IRI.
+            requestedOntology
+        } else {
+            // The client is asking about a project-specific ontology. Translate its IRI to an internal ontology IRI.
+            val internalOntologyIri = externalToInternalOntologyIri(requestedOntology, () => throw BadRequestException(s"Invalid external ontology IRI: $requestedOntology"))
+            toIri(internalOntologyIri, () => throw BadRequestException(s"Invalid named graph IRI: $internalOntologyIri"))
+        }
+    }
+
+    /**
+      * Given an ontology entity IRI requested by the user, converts it to the IRI of an entity that the ontology responder knows about.
+      *
+      * @param requestedEntity the IRI of the entity that the user requested.
+      * @return the IRI of an entity that the ontology responder can provide.
+      */
+    def requestedEntityToEntityForResponder(requestedEntity: IRI): IRI = {
+        if (InputValidation.isBuiltInEntityIri(requestedEntity)) {
+            // The client is asking about a built-in class, so don't translate its IRI.
+            requestedEntity
+        } else {
+            // The client is asking about a project-specific class. Translate its IRI to an internal class IRI.
+            val internalEntityIri = externalToInternalEntityIri(requestedEntity, () => throw BadRequestException(s"invalid external entity IRI: $requestedEntity"))
+            toIri(internalEntityIri, () => throw BadRequestException(s"Invalid entity IRI: $internalEntityIri"))
         }
     }
 }
