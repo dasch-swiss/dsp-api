@@ -33,7 +33,7 @@ import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.search.ApacheLuceneSupport.MatchStringWhileTyping
 import org.knora.webapi.util.search._
 import org.knora.webapi.util.search.v2._
-import org.knora.webapi.util.{ConstructResponseUtilV2, DateUtilV1, FormatConstants, InputValidation}
+import org.knora.webapi.util._
 
 import scala.collection.mutable
 import scala.concurrent.Future
@@ -231,7 +231,7 @@ class SearchResponderV2 extends Responder {
             def escapeEntityForVariable(entity: Entity): String = {
                 val entityStr = entity match {
                     case QueryVariable(varName) => varName
-                    case IriRef(iriLiteral) => iriLiteral
+                    case IriRef(iriLiteral, _) => iriLiteral
                     case XsdLiteral(stringLiteral, _) => stringLiteral
                     case _ => throw SparqlSearchException(s"A unique variable could not be made for $entity")
                 }
@@ -679,7 +679,7 @@ class SearchResponderV2 extends Responder {
           */
         def isMainResourceVariable(statementPattern: StatementPattern): Option[QueryVariable] = {
             statementPattern.pred match {
-                case IriRef(OntologyConstants.KnoraBase.IsMainResource) =>
+                case IriRef(OntologyConstants.KnoraBase.IsMainResource, _) =>
                     statementPattern.obj match {
                         case XsdLiteral("true", OntologyConstants.Xsd.Boolean) =>
                             statementPattern.subj match {
@@ -716,8 +716,18 @@ class SearchResponderV2 extends Responder {
             // separator used by GroupConcat
             val groupConcatSeparator: Char = FormatConstants.INFORMATION_SEPARATOR_ONE
 
-            // Contains variables representing group concatenated dependent resources
+            // contains variables representing group concatenated dependent resource Iris
             var dependentResourceVariablesGroupConcat = Set.empty[QueryVariable]
+
+            // contains the variables of value objects (including those for link values)
+            private var valueObjectVariables = mutable.Set.empty[QueryVariable]
+
+            // contains variables representing group concatenated value objects Iris
+            var valueObjectVarsGroupConcat = Set.empty[QueryVariable]
+
+            val groupConcatVariableAppendix = "Concat"
+
+            val knoraIdUtil = new KnoraIdUtil
 
             /**
               * Creates additional statements for a non property type (e.g., a resource).
@@ -792,8 +802,46 @@ class SearchResponderV2 extends Responder {
                             case other => throw SparqlSearchException(s"Object of a linking statement must be an Iri or a QueryVariable, but $other given.")
                         }
 
+                        // create a variable representing the link value
+                        val linkValueObjVar: QueryVariable = createUniqueVariableNameFromEntityAndProperty(statementPattern.obj, OntologyConstants.KnoraBase.LinkValue)
+
+                        // add variable to collection representing value objects
+                        valueObjectVariables += linkValueObjVar
+
+                        val linkValueObjPredVar = createUniqueVariableNameFromEntityAndProperty(linkValueObjVar, OntologyConstants.Rdf.Predicate)
+
+                        val linkValueProp = statementPattern.pred match {
+                            case propQueryVar: QueryVariable => createUniqueVariableNameFromEntityAndProperty(propQueryVar, OntologyConstants.KnoraBase.HasLinkToValue) // TODO: find a way to restrict the value object's predicate in case the property is a variable
+                            case propIri: IriRef => IriRef(knoraIdUtil.linkPropertyIriToLinkValuePropertyIri(propIri.iri)) // only matches the linking property's link value
+                            case literal: XsdLiteral => throw SparqlSearchException(s"literal $literal cannot be used as a predicate")
+                            case other => throw SparqlSearchException(s"$other cannot be used as a predicate")
+                        }
+
+                        /*val linkValuePredicate: Seq[StatementPattern] = statementPattern.pred match {
+                            case propIri: IriRef =>
+                                // check that the link value object's predicate is a subproperty of the statement's predicate
+                                Seq(
+                                    StatementPattern.makeExplicit(subj = linkValueObjVar, pred = IriRef(OntologyConstants.Rdf.Predicate), obj = linkValueObjPredVar),
+                                    StatementPattern.makeInferred(subj = linkValueObjPredVar, pred = IriRef(iri = OntologyConstants.Rdfs.SubPropertyOf, propertyPathOperator = Some('*')), obj = statementPattern.pred)
+                                )
+                            case queryVar: QueryVariable =>
+                                // TODO: find a way to restrict the value object's predicate in case the property is a variable
+                                Seq.empty[StatementPattern]
+
+                            case other => throw SparqlSearchException(s"$other cannot be used as a predicate")
+                        }*/
+
+                        // create statements that represent the link value's properties for the given linking property
+                        val linkValueStatements = Seq(
+                            StatementPattern.makeInferred(subj = statementPattern.subj, pred = linkValueProp, obj = linkValueObjVar),
+                            StatementPattern.makeExplicit(subj = linkValueObjVar, pred = IriRef(OntologyConstants.Rdf.Type), obj = IriRef(OntologyConstants.KnoraBase.LinkValue)),
+                            StatementPattern.makeExplicit(subj = linkValueObjVar, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean)),
+                            StatementPattern.makeExplicit(subj = linkValueObjVar, pred = IriRef(OntologyConstants.Rdf.Subject), obj = statementPattern.subj),
+                            StatementPattern.makeExplicit(subj = linkValueObjVar, pred = IriRef(OntologyConstants.Rdf.Object), obj = statementPattern.obj)
+                        ) //++ linkValuePredicate
+
                         // linking property: just include the original statement relating the subject to the target of the link
-                        Seq(statementPattern)
+                        statementPattern +: linkValueStatements
                     }
 
                     case literalType: IRI => {
@@ -801,7 +849,7 @@ class SearchResponderV2 extends Responder {
 
                         // make sure that the object is a query variable (literals are not supported yet)
                         statementPattern.obj match {
-                            case queryVar: QueryVariable => ()
+                            case queryVar: QueryVariable => valueObjectVariables += queryVar // add variable to collection representing value objects
                             case other => throw SparqlSearchException(s"Object of a value property statement must be a QueryVariable, but $other given.")
                         }
 
@@ -889,19 +937,26 @@ class SearchResponderV2 extends Responder {
             override def getSelectVariables: Seq[SelectQueryColumn] = {
                 // Return the main resource variable and the generated variable that we're using for ordering.
 
-                val groupConcatVariableAppendix = "Concat"
-
-                val dependentResourceVarsGroupConcat: Set[GroupConcat] = dependentResourceVariables.map {
+                val dependentResourceGroupConcat: Set[GroupConcat] = dependentResourceVariables.map {
                     (dependentResVar: QueryVariable) =>
                         GroupConcat(inputVariable = dependentResVar,
                             separator = groupConcatSeparator,
                             outputVariableName = dependentResVar.variableName + groupConcatVariableAppendix)
                 }.toSet
 
-                dependentResourceVariablesGroupConcat = dependentResourceVarsGroupConcat.map(_.outputVariable)
+                dependentResourceVariablesGroupConcat = dependentResourceGroupConcat.map(_.outputVariable)
+
+                val valueObjectGroupConcat = valueObjectVariables.map {
+                    (valueObjVar: QueryVariable) =>
+                        GroupConcat(inputVariable = valueObjVar,
+                            separator = groupConcatSeparator,
+                            outputVariableName = valueObjVar.variableName + groupConcatVariableAppendix)
+                }.toSet
+
+                valueObjectVarsGroupConcat = valueObjectGroupConcat.map(_.outputVariable)
 
                 mainResourceVariable match {
-                    case Some(mainVar: QueryVariable) => Seq(mainVar) ++ dependentResourceVarsGroupConcat
+                    case Some(mainVar: QueryVariable) => Seq(mainVar) ++ dependentResourceGroupConcat ++ valueObjectGroupConcat
 
                     case None => throw SparqlSearchException(s"No ${OntologyConstants.KnoraBase.IsMainResource} found in CONSTRUCT query.")
                 }
@@ -1038,8 +1093,8 @@ class SearchResponderV2 extends Responder {
         def transformKnoraExplicitToGraphDBExplicit(statement: StatementPattern): Seq[StatementPattern] = {
             val transformedPattern = statement.copy(
                 namedGraph = statement.namedGraph match {
-                    case Some(IriRef(OntologyConstants.NamedGraphs.KnoraExplicitNamedGraph)) => Some(IriRef(OntologyConstants.NamedGraphs.GraphDBExplicitNamedGraph))
-                    case Some(IriRef(_)) => throw AssertionException(s"Named graphs other than ${OntologyConstants.NamedGraphs.KnoraExplicitNamedGraph} cannot occur in non-triplestore-specific generated search query SPARQL")
+                    case Some(IriRef(OntologyConstants.NamedGraphs.KnoraExplicitNamedGraph, _)) => Some(IriRef(OntologyConstants.NamedGraphs.GraphDBExplicitNamedGraph))
+                    case Some(IriRef(_, _)) => throw AssertionException(s"Named graphs other than ${OntologyConstants.NamedGraphs.KnoraExplicitNamedGraph} cannot occur in non-triplestore-specific generated search query SPARQL")
                     case None => None
                 }
             )
@@ -1101,9 +1156,9 @@ class SearchResponderV2 extends Responder {
           *
           * Collects property type information for value or link properties requests present in the Construct clause for the given resource.
           *
-          * @param constructClause the Construct clause to be looked at.
+          * @param constructClause  the Construct clause to be looked at.
           * @param resourceVariable the variable representing the resource whose properties are to be collected
-          * @param typeInspection results of type inspection.
+          * @param typeInspection   results of type inspection.
           * @return a Set of [[PropertyTypeInfo]] representing the value and link value properties to be returned to the client.
           */
         def collectPropertyTypeInfoForRequestedProperties(constructClause: ConstructClause, resourceVariable: QueryVariable, typeInspection: TypeInspectionResult): Set[PropertyTypeInfo] = {
@@ -1286,19 +1341,16 @@ class SearchResponderV2 extends Responder {
                 transformer = triplestoreSpecificQueryPatternTransformerSelect
             )
 
-            _ = println(triplestoreSpecificPrequery.toSparql)
+             _ = println(triplestoreSpecificPrequery.toSparql)
 
             prequeryResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(triplestoreSpecificPrequery.toSparql)).mapTo[SparqlSelectResponse]
-
-            // variables returned by prequery
-            prequeryResultsVariableNames: Seq[String] = prequeryResponse.head.vars
 
             // variable representing the main resources
             mainResourceVar: QueryVariable = nonTriplestoreSpecificConstructToSelectTransformer.mainResourceVariable.getOrElse(throw SparqlSearchException("Could not get main resource variable from transformer"))
 
             // a sequence of resource Iris that match the search criteria
             // attention: no permission checking has been done so far
-            mainResourceIris = prequeryResponse.results.bindings.map {
+            mainResourceIris: Seq[String] = prequeryResponse.results.bindings.map {
                 case resultRow: VariableResultsRow =>
                     resultRow.rowMap(mainResourceVar.variableName)
             }
@@ -1333,6 +1385,26 @@ class SearchResponderV2 extends Responder {
 
             // a ValuePattern representing all the possible Iris for dependent resources
             valuesPatternForDependentResources = ValuesPattern(dependentResourceVar, (dependentResourceIrisFromPrequery ++ dependentResourceIrisFromTypeInspection).map(iri => IriRef(iri)))
+
+            // value objects variables present in the preequery's WHERE clause
+            valueObjectVariablesConcat = nonTriplestoreSpecificConstructToSelectTransformer.valueObjectVarsGroupConcat
+
+            // for each main resource, create a Map of value object variables and their values
+            valueObjectIrisForMainResource = prequeryResponse.results.bindings.foldLeft(Map.empty[IRI, Map[QueryVariable, Set[IRI]]]) {
+                (acc: Map[IRI, Map[QueryVariable, Set[IRI]]], resultRow: VariableResultsRow) =>
+
+                    val mainResIri: String = resultRow.rowMap(mainResourceVar.variableName)
+
+                    val valueObjVarToIris: Map[QueryVariable, Set[IRI]] = valueObjectVariablesConcat.map {
+                        (valueObjVarConcat: QueryVariable) =>
+                            // TODO: recreate the original variable name by removin nonTriplestoreSpecificConstructToSelectTransformer.groupConcatVariableAppendix from its end
+                            valueObjVarConcat -> resultRow.rowMap(valueObjVarConcat.variableName).split(nonTriplestoreSpecificConstructToSelectTransformer.groupConcatSeparator).toSet
+                    }.toMap
+
+                    acc + (mainResIri -> valueObjVarToIris)
+            }
+
+            // _ = println(valueObjectIrisForMainResource)
 
             // create the main query
             // it is a Union of two sets: the main resources and the dependent resources

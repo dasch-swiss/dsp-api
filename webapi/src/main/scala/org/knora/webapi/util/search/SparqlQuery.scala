@@ -70,7 +70,7 @@ case class GroupConcat(inputVariable: QueryVariable, separator: Char, outputVari
   *
   * @param iri the IRI.
   */
-case class IriRef(iri: IRI) extends Entity {
+case class IriRef(iri: IRI, propertyPathOperator: Option[Char] = None) extends Entity {
     val isInternalEntityIri: Boolean = InputValidation.isInternalEntityIri(iri)
     val isApiEntityIri: Boolean = InputValidation.isKnoraApiEntityIri(iri)
     val isEntityIri: Boolean = isApiEntityIri || isInternalEntityIri
@@ -88,7 +88,14 @@ case class IriRef(iri: IRI) extends Entity {
         }
     }
 
-    def toSparql: String = s"<$iri>"
+    def toSparql: String = {
+
+        if (propertyPathOperator.nonEmpty) {
+            s"<$iri>${propertyPathOperator.get}"
+        } else {
+            s"<$iri>"
+        }
+    }
 }
 
 /**
