@@ -177,6 +177,31 @@ class HttpTriplestoreConnectorSpec extends CoreSpec(HttpTriplestoreConnectorSpec
         }
     """
 
+    val textSearchQueryAllegroValueHasString =
+        s"""
+        PREFIX fti: <http://franz.com/ns/allegrograph/2.2/textindex/>
+        PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+
+        SELECT DISTINCT *
+        WHERE {
+            ?iri fti:match 'narrenschiff' .
+            ?iri knora-base:valueHasString ?literal .
+        }
+    """
+
+    val textSearchQueryAllegroDRFLabel =
+        s"""
+        PREFIX fti: <http://franz.com/ns/allegrograph/2.2/textindex/>
+        PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+
+        SELECT DISTINCT *
+        WHERE {
+            ?iri fti:match 'Reise' .
+            ?iri rdfs:label ?literal .
+        }
+    """
+
+
     val afterLoadCount = 355082
     var afterChangeCount = -1
     var afterChangeRevertCount = -1
@@ -279,7 +304,9 @@ class HttpTriplestoreConnectorSpec extends CoreSpec(HttpTriplestoreConnectorSpec
                 within(1000.millis) {
                     tsType match {
                         case HTTP_GRAPH_DB_TS_TYPE | HTTP_GRAPH_DB_FREE_TS_TYPE => httpTriplestoreConnector ! SparqlSelectRequest(textSearchQueryGraphDBValueHasString)
-                        case _ => httpTriplestoreConnector ! SparqlSelectRequest(textSearchQueryFusekiValueHasString)
+                        case HTTP_FUSEKI_TS_TYPE => httpTriplestoreConnector ! SparqlSelectRequest(textSearchQueryFusekiValueHasString)
+                        case HTTP_ALLEGRO_TS_TYPE => httpTriplestoreConnector ! SparqlSelectRequest(textSearchQueryAllegroValueHasString)
+                        case _ => {}
                     }
                     expectMsgType[SparqlSelectResponse].results.bindings.size should be (35)
                 }
@@ -289,7 +316,9 @@ class HttpTriplestoreConnectorSpec extends CoreSpec(HttpTriplestoreConnectorSpec
                 within(1000.millis) {
                     tsType match {
                         case HTTP_GRAPH_DB_TS_TYPE | HTTP_GRAPH_DB_FREE_TS_TYPE => httpTriplestoreConnector ! SparqlSelectRequest(textSearchQueryGraphDBRDFLabel)
-                        case _ => httpTriplestoreConnector ! SparqlSelectRequest(textSearchQueryFusekiDRFLabel)
+                        case HTTP_FUSEKI_TS_TYPE => httpTriplestoreConnector ! SparqlSelectRequest(textSearchQueryFusekiDRFLabel)
+                        case HTTP_ALLEGRO_TS_TYPE => httpTriplestoreConnector ! SparqlSelectRequest(textSearchQueryAllegroDRFLabel)
+                        case _ => {}
                     }
                     expectMsgType[SparqlSelectResponse].results.bindings.size should be (1)
                 }
