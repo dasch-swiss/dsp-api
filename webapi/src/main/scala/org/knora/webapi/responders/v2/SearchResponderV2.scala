@@ -75,6 +75,8 @@ object SearchResponderV2Constants {
 
 class SearchResponderV2 extends Responder {
 
+    val knoraIdUtil = new KnoraIdUtil
+
     def receive = {
         case FulltextSearchGetRequestV2(searchValue, userProfile) => future2Message(sender(), fulltextSearchV2(searchValue, userProfile), log)
         case ExtendedSearchGetRequestV2(query, userProfile) => future2Message(sender(), extendedSearchV2(inputQuery = query, userProfile = userProfile), log)
@@ -347,6 +349,16 @@ class SearchResponderV2 extends Responder {
             )
 
             /**
+              * Given a variable representing a linking property, creates a variable respresenting the corresponding link value property.
+              *
+              * @param linkingPropertyQueryVariable variable representing a linking property.
+              * @return variable representing the corresponding link value property.
+              */
+            def createlinkValuePropertyVariableFromLinkingPropertyVariable(linkingPropertyQueryVariable: QueryVariable): QueryVariable = {
+                createUniqueVariableNameFromEntityAndProperty(linkingPropertyQueryVariable, OntologyConstants.KnoraBase.HasLinkToValue)
+            }
+
+            /**
               * Represents a transformed Filter expression and additional statement patterns that possibly had to be created during transformation.
               *
               * @param expression           the transformed Filter expression.
@@ -397,7 +409,36 @@ class SearchResponderV2 extends Responder {
                                             // make sure that the comparison operator is a `CompareExpressionOperator.EQUALS`
                                             if (filterCompare.operator != CompareExpressionOperator.EQUALS) throw SparqlSearchException(s"Comparison operator in a CompareExpression for a property type is expected to be ${CompareExpressionOperator.EQUALS}, but ${filterCompare.operator} given. For negations use 'FILTER NOT EXISTS' ")
 
-                                            TransformedFilterExpression(CompareExpression(filterCompare.leftArg, filterCompare.operator, filterCompare.rightArg))
+                                            val objectTypeIriInternal = if (InputValidation.isKnoraApiEntityIri(propInfo.objectTypeIri)) {
+                                                InputValidation.externalIriToInternalIri(propInfo.objectTypeIri, () => throw BadRequestException(s"${propInfo.objectTypeIri} is not a valid external knora-api entity Iri"))
+                                            } else {
+                                                propInfo.objectTypeIri
+                                            }
+
+                                            val userProvidedRestriction = CompareExpression(queryVar, filterCompare.operator, iriRef)
+
+                                            // check if the objectTypeIri of propInfo is knora-base:Resource
+                                            // if so, it is a linking property and its link value property must be restricted too
+                                            objectTypeIriInternal match {
+                                                case OntologyConstants.KnoraBase.Resource =>
+
+                                                    // it is a linking property, restrict the link value property
+
+                                                    val restrictionForLinkValueProp = CompareExpression(
+                                                        leftArg = createlinkValuePropertyVariableFromLinkingPropertyVariable(queryVar), // the same variable was created during statement processing in WHERE clause in `convertStatementForPropertyType`
+                                                        operator = filterCompare.operator,
+                                                        rightArg = IriRef(knoraIdUtil.linkPropertyIriToLinkValuePropertyIri(iriRef.iri))) // create link value property from linking property
+
+                                                    TransformedFilterExpression(AndExpression(
+                                                        leftArg = userProvidedRestriction,
+                                                        rightArg = restrictionForLinkValueProp)
+                                                    )
+
+                                                case other =>
+                                                    // not a linking property, just return the provided restriction
+                                                    TransformedFilterExpression(userProvidedRestriction)
+                                            }
+
 
                                         case other => throw SparqlSearchException(s"right argument of CompareExpression is expected to be an Iri representing a property, but $other is given")
                                     }
@@ -727,8 +768,6 @@ class SearchResponderV2 extends Responder {
 
             val groupConcatVariableAppendix = "Concat"
 
-            val knoraIdUtil = new KnoraIdUtil
-
             /**
               * Creates additional statements for a non property type (e.g., a resource).
               *
@@ -781,9 +820,6 @@ class SearchResponderV2 extends Responder {
             }
 
             def convertStatementForPropertyType(propertyTypeInfo: PropertyTypeInfo, statementPattern: StatementPattern): Seq[QueryPattern] = {
-                // decide whether to keep the originally given statement or not
-                // if pred is a valueProp and the simple api is used, do not return the original statement
-                // it had to be converted to comply with Knora's value object structure
 
                 // convert the type information into an internal Knora Iri if possible
                 val objectIri = if (InputValidation.isKnoraApiEntityIri(propertyTypeInfo.objectTypeIri)) {
@@ -794,6 +830,7 @@ class SearchResponderV2 extends Responder {
 
                 objectIri match {
                     case OntologyConstants.KnoraBase.Resource => {
+                        // linking property
 
                         // make sure that the object is either an Iri or a variable (cannot be a literal)
                         statementPattern.obj match {
@@ -802,43 +839,39 @@ class SearchResponderV2 extends Responder {
                             case other => throw SparqlSearchException(s"Object of a linking statement must be an Iri or a QueryVariable, but $other given.")
                         }
 
+                        // we are given a linking property
+                        // a variable representing the corresponding link value has to be created
+
                         // create a variable representing the link value
                         val linkValueObjVar: QueryVariable = createUniqueVariableNameFromEntityAndProperty(statementPattern.obj, OntologyConstants.KnoraBase.LinkValue)
 
                         // add variable to collection representing value objects
                         valueObjectVariables += linkValueObjVar
 
-                        val linkValueObjPredVar = createUniqueVariableNameFromEntityAndProperty(linkValueObjVar, OntologyConstants.Rdf.Predicate)
-
-                        val linkValueProp = statementPattern.pred match {
-                            case propQueryVar: QueryVariable => createUniqueVariableNameFromEntityAndProperty(propQueryVar, OntologyConstants.KnoraBase.HasLinkToValue) // TODO: find a way to restrict the value object's predicate in case the property is a variable
-                            case propIri: IriRef => IriRef(knoraIdUtil.linkPropertyIriToLinkValuePropertyIri(propIri.iri)) // only matches the linking property's link value
+                        // create an Entity that connects the subject of the linking property with the link value object
+                        val linkValueProp: Entity = statementPattern.pred match {
+                            case linkingPropQueryVar: QueryVariable =>
+                                // create a variable representing the link value property
+                                // in case FILTER patterns are given restricting the linking property's possible Iris, the same variable will recreated when processing FILTER patterns
+                                createlinkValuePropertyVariableFromLinkingPropertyVariable(linkingPropQueryVar)
+                            case propIri: IriRef =>
+                                // convert the given linking property Iri to the corresponding link value property Iri
+                                // only matches the linking property's link value
+                                IriRef(knoraIdUtil.linkPropertyIriToLinkValuePropertyIri(propIri.iri))
                             case literal: XsdLiteral => throw SparqlSearchException(s"literal $literal cannot be used as a predicate")
                             case other => throw SparqlSearchException(s"$other cannot be used as a predicate")
                         }
 
-                        /*val linkValuePredicate: Seq[StatementPattern] = statementPattern.pred match {
-                            case propIri: IriRef =>
-                                // check that the link value object's predicate is a subproperty of the statement's predicate
-                                Seq(
-                                    StatementPattern.makeExplicit(subj = linkValueObjVar, pred = IriRef(OntologyConstants.Rdf.Predicate), obj = linkValueObjPredVar),
-                                    StatementPattern.makeInferred(subj = linkValueObjPredVar, pred = IriRef(iri = OntologyConstants.Rdfs.SubPropertyOf, propertyPathOperator = Some('*')), obj = statementPattern.pred)
-                                )
-                            case queryVar: QueryVariable =>
-                                // TODO: find a way to restrict the value object's predicate in case the property is a variable
-                                Seq.empty[StatementPattern]
-
-                            case other => throw SparqlSearchException(s"$other cannot be used as a predicate")
-                        }*/
-
                         // create statements that represent the link value's properties for the given linking property
+                        // do not check for the predicate because inference would not work
+                        // instead, linkValueProp restricts the link value objects to be returned
                         val linkValueStatements = Seq(
                             StatementPattern.makeInferred(subj = statementPattern.subj, pred = linkValueProp, obj = linkValueObjVar),
                             StatementPattern.makeExplicit(subj = linkValueObjVar, pred = IriRef(OntologyConstants.Rdf.Type), obj = IriRef(OntologyConstants.KnoraBase.LinkValue)),
                             StatementPattern.makeExplicit(subj = linkValueObjVar, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean)),
                             StatementPattern.makeExplicit(subj = linkValueObjVar, pred = IriRef(OntologyConstants.Rdf.Subject), obj = statementPattern.subj),
                             StatementPattern.makeExplicit(subj = linkValueObjVar, pred = IriRef(OntologyConstants.Rdf.Object), obj = statementPattern.obj)
-                        ) //++ linkValuePredicate
+                        )
 
                         // linking property: just include the original statement relating the subject to the target of the link
                         statementPattern +: linkValueStatements
@@ -1316,7 +1349,7 @@ class SearchResponderV2 extends Responder {
                 transformer = new Preprocessor
             )
 
-            nonTriplestoreSpecificConstructToSelectTransformer: NonTriplestoreSpecificConstructToSelectTransformer = new NonTriplestoreSpecificConstructToSelectTransformer(typeInspectionResult)
+            nonTriplestoreSpecificConstructToSelectTransformer: NonTriplestoreSpecificConstructToSelectTransformer = new NonTriplestoreSpecificConstructToSelectTransformer(typeInspectionResult = typeInspectionResult)
 
             // Create a Select prequery
             nonTriplestoreSpecficPrequery: SelectQuery = QueryTraverser.transformConstructToSelect(
@@ -1341,7 +1374,7 @@ class SearchResponderV2 extends Responder {
                 transformer = triplestoreSpecificQueryPatternTransformerSelect
             )
 
-             _ = println(triplestoreSpecificPrequery.toSparql)
+            _ = println(triplestoreSpecificPrequery.toSparql)
 
             prequeryResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(triplestoreSpecificPrequery.toSparql)).mapTo[SparqlSelectResponse]
 
