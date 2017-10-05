@@ -69,14 +69,18 @@ class DrawingsGodsV1Spec extends CoreSpec(DrawingsGodsV1Spec.config) with Triple
     }
 
     /**
-      *
+      * issues:
+      * - https://github.com/dhlab-basel/Knora/issues/416
+      * - https://github.com/dhlab-basel/Knora/issues/610
       */
-    "issue: https://github.com/dhlab-basel/Knora/issues/416" should {
+    "Using the DrawingsGods project data" should {
 
         val drawingsGodsProjectIri = "http://data.knora.org/projects/drawings-gods"
-        val ddd1UserIri = "http://data.knora.org/users/drawings-gods-test-ddd1"
+        val rootUserIri = "http://data.knora.org/users/root"
+        val rootUser = new MutableUserProfileV1
+        val ddd1UserIri = "http://rdfh.ch/users/drawings-gods-test-ddd1"
         val ddd1 = new MutableUserProfileV1
-        val ddd2UserIri = "http://data.knora.org/users/drawings-gods-test-ddd2"
+        val ddd2UserIri = "http://rdfh.ch/users/drawings-gods-test-ddd2"
         val ddd2 = new MutableUserProfileV1
         val testPass = "test"
         val thingIri = new MutableTestIri
@@ -84,13 +88,14 @@ class DrawingsGodsV1Spec extends CoreSpec(DrawingsGodsV1Spec.config) with Triple
         val secondValueIri = new MutableTestIri
 
         "retrieve the drawings gods user's profile" in {
+            responderManager ! UserProfileByIRIGetV1(rootUserIri, UserProfileTypeV1.FULL)
+            rootUser.set(expectMsgType[Option[UserProfileV1]](timeout).get)
+
             responderManager ! UserProfileByIRIGetV1(ddd1UserIri, UserProfileTypeV1.FULL)
-            val response1 = expectMsgType[Option[UserProfileV1]](timeout)
-            ddd1.set(response1.get)
+            ddd1.set(expectMsgType[Option[UserProfileV1]](timeout).get)
 
             responderManager ! UserProfileByIRIGetV1(ddd2UserIri, UserProfileTypeV1.FULL)
-            val response2 = expectMsgType[Option[UserProfileV1]](timeout)
-            ddd2.set(response2.get)
+            ddd2.set(expectMsgType[Option[UserProfileV1]](timeout).get)
         }
 
         "return correct drawings-gods:QualityData resource permissions string for drawings-gods-test-ddd2 user" in {
@@ -130,7 +135,9 @@ class DrawingsGodsV1Spec extends CoreSpec(DrawingsGodsV1Spec.config) with Triple
 
             val valuesToBeCreated = Map(
                 "http://www.knora.org/ontology/drawings-gods#hasLastname" -> Vector(CreateValueV1WithComment(TextValueSimpleV1("PersonTest DDD1"))),
-                "http://www.knora.org/ontology/drawings-gods#hasCodePerson" -> Vector(CreateValueV1WithComment(TextValueSimpleV1("Code")))
+                "http://www.knora.org/ontology/drawings-gods#hasCodePerson" -> Vector(CreateValueV1WithComment(TextValueSimpleV1("Code"))),
+                "http://www.knora.org/ontology/drawings-gods#hasPersonGender" -> Vector(CreateValueV1WithComment(HierarchicalListValueV1("http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-polysexual"))),
+                "http://www.knora.org/ontology/drawings-gods#hasDrawingChildTotal" -> Vector(CreateValueV1WithComment(IntegerValueV1(99)))
             )
 
             responderManager ! ResourceCreateRequestV1(
@@ -157,6 +164,28 @@ class DrawingsGodsV1Spec extends CoreSpec(DrawingsGodsV1Spec.config) with Triple
             val maybeLastNameProp: Option[PropertyV1] = getResponse.props.get.properties.find(prop => prop.pid == "http://www.knora.org/ontology/drawings-gods#hasLastname")
             assert(maybeLastNameProp.isDefined, "Response returned no property hasLastname")
             assert(maybeLastNameProp.get.values.head.asInstanceOf[TextValueV1].utf8str == "PersonTest DDD1")
+        }
+
+        "allow root user to create a resource" in {
+
+            val valuesToBeCreated = Map(
+                "http://www.knora.org/ontology/drawings-gods#hasLastname" -> Vector(CreateValueV1WithComment(TextValueSimpleV1("PersonTest DDD1"))),
+                "http://www.knora.org/ontology/drawings-gods#hasCodePerson" -> Vector(CreateValueV1WithComment(TextValueSimpleV1("Code"))),
+                "http://www.knora.org/ontology/drawings-gods#hasPersonGender" -> Vector(CreateValueV1WithComment(HierarchicalListValueV1("http://data.knora.org/lists/drawings-gods-2016-list-FiguresHList-polysexual"))),
+                "http://www.knora.org/ontology/drawings-gods#hasDrawingChildTotal" -> Vector(CreateValueV1WithComment(IntegerValueV1(99)))
+            )
+
+            responderManager ! ResourceCreateRequestV1(
+                resourceTypeIri = "http://www.knora.org/ontology/drawings-gods#Person",
+                label = "Test-Person",
+                projectIri = drawingsGodsProjectIri,
+                values = valuesToBeCreated,
+                file = None,
+                userProfile = rootUser.get,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgType[ResourceCreateResponseV1](timeout)
         }
     }
 }
