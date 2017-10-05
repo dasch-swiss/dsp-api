@@ -30,10 +30,10 @@ import org.knora.webapi.messages.v2.responder._
 import org.knora.webapi.messages.v2.responder.searchmessages._
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.util.ActorUtil._
+import org.knora.webapi.util._
 import org.knora.webapi.util.search.ApacheLuceneSupport.MatchStringWhileTyping
 import org.knora.webapi.util.search._
 import org.knora.webapi.util.search.v2._
-import org.knora.webapi.util._
 
 import scala.collection.mutable
 import scala.concurrent.Future
@@ -55,6 +55,8 @@ object SearchResponderV2Constants {
       */
     object ExtendedSearchConstants {
 
+        // variables representing the main resource and its properties
+        //val mainResourceVar = QueryVariable("mainResourceVar")
         val mainResourcePropVar = QueryVariable("mainResourceProp")
         val mainResourceObjectVar = QueryVariable("mainResourceObj")
         val mainResourceValueObject = QueryVariable("mainResourceValueObject")
@@ -62,6 +64,8 @@ object SearchResponderV2Constants {
         val mainResourceValueObjectProp = QueryVariable("mainResourceValueObjectProp")
         val mainResourceValueObjectObj = QueryVariable("mainResourceValueObjectObj")
 
+        // variables representing dependent resources and their properties
+        val dependentResourceVar = QueryVariable("dependentResource")
         val dependentResourcePropVar = QueryVariable("dependentResourceProp")
         val dependentResourceObjectVar = QueryVariable("dependentResourceObj")
         val dependentResourceValueObject = QueryVariable("dependentResourceValueObject")
@@ -1248,11 +1252,10 @@ class SearchResponderV2 extends Responder {
           *
           * @param mainResourceVar                    the variable representing the main resources.
           * @param valuesPatternForMainResources      Iris of the main reource variable.
-          * @param dependentResourceVar               the variable representing the dependent resources.
           * @param valuesPatternForDependentResources Iris of the dependent resources.
           * @return the main [[ConstructQuery]] query to be executed.
           */
-        def createMainQuery(inputQuery: ConstructQuery, typeInspection: TypeInspectionResult, mainResourceVar: QueryVariable, valuesPatternForMainResources: ValuesPattern, dependentResourceVar: QueryVariable, valuesPatternForDependentResources: ValuesPattern): ConstructQuery = {
+        def createMainQuery(inputQuery: ConstructQuery, typeInspection: TypeInspectionResult, mainResourceVar: QueryVariable, valuesPatternForMainResources: ValuesPattern, valuesPatternForDependentResources: ValuesPattern): ConstructQuery = {
 
             import SearchResponderV2Constants.ExtendedSearchConstants._
 
@@ -1394,18 +1397,20 @@ class SearchResponderV2 extends Responder {
             // variables representing dependent resources
             dependentResourceVariablesConcat: Set[QueryVariable] = nonTriplestoreSpecificConstructToSelectTransformer.dependentResourceVariablesGroupConcat
 
-            // get all the Iris for variables representing dependent resources
-            // iterate over all variables representing dependent resources
-            dependentResourceIrisFromPrequery: Set[IRI] = dependentResourceVariablesConcat.foldLeft(Set.empty[IRI]) {
-                case (acc: Set[IRI], dependentResVarConcat: QueryVariable) =>
-                    // collect all the values for the current var from prequery response
-                    val resIris: Seq[IRI] = prequeryResponse.results.bindings.flatMap {
-                        case resultRow: VariableResultsRow =>
+            // get all the Iris for variables representing dependent resources per main resource
+            dependentResourceIrisPerMainResource: Map[IRI, Set[IRI]] = prequeryResponse.results.bindings.foldLeft(Map.empty[IRI, Set[IRI]]) {
+                case (acc: Map[IRI, Set[IRI]], resultRow: VariableResultsRow) =>
+                    // collect all the values for the current main resource from prequery response
+
+                    val mainResIri: String = resultRow.rowMap(mainResourceVar.variableName)
+
+                    val dependentResIris: Set[IRI] = dependentResourceVariablesConcat.flatMap {
+                        case dependentResVar: QueryVariable =>
                             // Iris are concatenated, split them
-                            resultRow.rowMap(dependentResVarConcat.variableName).split(nonTriplestoreSpecificConstructToSelectTransformer.groupConcatSeparator).toSeq
+                            resultRow.rowMap(dependentResVar.variableName).split(nonTriplestoreSpecificConstructToSelectTransformer.groupConcatSeparator).toSeq
                     }
 
-                    acc ++ resIris
+                    acc + (mainResIri -> dependentResIris)
             }
 
             // the user may have defined Iris of dependent resources in the input query (type annotations)
@@ -1413,31 +1418,29 @@ class SearchResponderV2 extends Responder {
                 case (iri: TypeableIri, nonPropTypeInfo: NonPropertyTypeInfo) => iri.iri
             }.toSet
 
-            // variable representing dependent resources
-            dependentResourceVar = QueryVariable("dependentResource")
+            // the Iris of all dependent resources for all main resources
+            allDependentResourceIris: Set[IriRef] = (dependentResourceIrisPerMainResource.values.flatten.toSet ++ dependentResourceIrisFromTypeInspection).map(iri => IriRef(iri))
 
             // a ValuePattern representing all the possible Iris for dependent resources
-            valuesPatternForDependentResources = ValuesPattern(dependentResourceVar, (dependentResourceIrisFromPrequery ++ dependentResourceIrisFromTypeInspection).map(iri => IriRef(iri)))
+            valuesPatternForDependentResources = ValuesPattern(SearchResponderV2Constants.ExtendedSearchConstants.dependentResourceVar, allDependentResourceIris)
 
             // value objects variables present in the preequery's WHERE clause
             valueObjectVariablesConcat = nonTriplestoreSpecificConstructToSelectTransformer.valueObjectVarsGroupConcat
 
             // for each main resource, create a Map of value object variables and their values
-            valueObjectIrisForMainResource = prequeryResponse.results.bindings.foldLeft(Map.empty[IRI, Map[QueryVariable, Set[IRI]]]) {
+            valueObjectIrisPerMainResource = prequeryResponse.results.bindings.foldLeft(Map.empty[IRI, Map[QueryVariable, Set[IRI]]]) {
                 (acc: Map[IRI, Map[QueryVariable, Set[IRI]]], resultRow: VariableResultsRow) =>
 
                     val mainResIri: String = resultRow.rowMap(mainResourceVar.variableName)
 
                     val valueObjVarToIris: Map[QueryVariable, Set[IRI]] = valueObjectVariablesConcat.map {
                         (valueObjVarConcat: QueryVariable) =>
-                            // TODO: recreate the original variable name by removin nonTriplestoreSpecificConstructToSelectTransformer.groupConcatVariableAppendix from its end
+                            // TODO: recreate the original variable name by removing nonTriplestoreSpecificConstructToSelectTransformer.groupConcatVariableAppendix from its end
                             valueObjVarConcat -> resultRow.rowMap(valueObjVarConcat.variableName).split(nonTriplestoreSpecificConstructToSelectTransformer.groupConcatSeparator).toSet
                     }.toMap
 
                     acc + (mainResIri -> valueObjVarToIris)
             }
-
-            // _ = println(valueObjectIrisForMainResource)
 
             // create the main query
             // it is a Union of two sets: the main resources and the dependent resources
@@ -1446,7 +1449,6 @@ class SearchResponderV2 extends Responder {
                 typeInspection = typeInspectionResult,
                 mainResourceVar = mainResourceVar,
                 valuesPatternForMainResources = valuesPatternForMainResources,
-                dependentResourceVar = dependentResourceVar,
                 valuesPatternForDependentResources = valuesPatternForDependentResources
             )
 
@@ -1468,17 +1470,17 @@ class SearchResponderV2 extends Responder {
             // Convert the result to a SPARQL string and send it to the triplestore.
             triplestoreSpecificSparql: String = triplestoreSpecificQuery.toSparql
 
-            // _ = println(triplestoreSpecificQuery.toSparql)
+             _ = println(triplestoreSpecificQuery.toSparql)
 
             searchResponse: SparqlConstructResponse <- (storeManager ? SparqlConstructRequest(triplestoreSpecificSparql)).mapTo[SparqlConstructResponse]
 
             // separate main resources and value objects (dependent resources are nested)
             queryResultsSeparated: Map[IRI, ConstructResponseUtilV2.ResourceWithValueRdfData] = ConstructResponseUtilV2.splitMainResourcesAndValueRdfData(constructQueryResults = searchResponse, userProfile = userProfile)
 
-        // TODO: sort out those properties that the user did not ask for (look at preprocessedQuery.inputQuery)
-        // TODO: check that all properties from the Where clause are still in the results (after permission checks) -> a resource should only be returned if the user has the permissions to see all the properties contained in the Where clause
+            // check for the presence of all resources contained in
 
-        // TODO: find a way to check for the property instance if a property has several values. For performance reasons, we query all the properties of a resource. How can we find the correct instance of a property?
+
+        // TODO: sort out those properties that the user did not ask for (look at preprocessedQuery.inputQuery)
 
         } yield ReadResourcesSequenceV2(numberOfResources = queryResultsSeparated.size, resources = ConstructResponseUtilV2.createSearchResponse(searchResults = queryResultsSeparated, orderByResourceIri = mainResourceIris))
     }
