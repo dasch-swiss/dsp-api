@@ -1455,17 +1455,104 @@ class SearchResponderV2 extends Responder {
 
                 // _ = println(triplestoreSpecificQuery.toSparql)
 
+                /**
+                  * Represents the Iris of resources and value objects.
+                  *
+                  * @param resourceIris resource Iris.
+                  * @param valueObjectIris value object Iris.
+                  */
+                case class ResourceIrisAndValueObjectIris(resourceIris: Set[IRI], valueObjectIris: Set[IRI])
+
+                /**
+                  * Traverses value property assertions and returns the Iris of the value objects and the dependent resources, recursively traversing their value properties as well .
+                  *
+                  * @param valuePropertyAssertions the assertions to be traversed.
+                  * @return a [[ResourceIrisAndValueObjectIris]] representing all resource and value object Iris that have been found in `valuePropertyAssertions`.
+                  */
+                def traverseValuePropertyAssertions(valuePropertyAssertions: Map[IRI, Seq[ConstructResponseUtilV2.ValueRdfData]]): ResourceIrisAndValueObjectIris = {
+
+                    // map over the given value property assertions
+                    val resAndValObjIris: Seq[ResourceIrisAndValueObjectIris] = valuePropertyAssertions.map {
+                        case (propIri: IRI, assertions: Seq[ConstructResponseUtilV2.ValueRdfData]) =>
+
+                            val resAndValObjIris: Seq[ResourceIrisAndValueObjectIris] = assertions.foldLeft(Seq.empty[ResourceIrisAndValueObjectIris]) {
+                                (acc: Seq[ResourceIrisAndValueObjectIris], assertion) =>
+
+                                    if (assertion.targetResource.nonEmpty) {
+                                        // this is a link value
+                                        // recursively traverse the dependent resource
+
+                                        val dependentRes: ConstructResponseUtilV2.ResourceWithValueRdfData = assertion.targetResource.get
+
+                                        // recursively traverse the link value's nested resource and its assertions
+                                        val resAndValObjIrisForDependentRes: ResourceIrisAndValueObjectIris = traverseValuePropertyAssertions(dependentRes.valuePropertyAssertions)
+                                        // get the dependent resource's Iri from the link value's rdf:object
+                                        val dependentResIri: IRI = assertion.assertions.getOrElse(OntologyConstants.Rdf.Object, throw InconsistentTriplestoreDataException(s"expected ${OntologyConstants.Rdf.Object} for link value ${assertion.valueObjectIri}"))
+
+                                        // append results from recursion and current value object
+                                        ResourceIrisAndValueObjectIris(resourceIris = resAndValObjIrisForDependentRes.resourceIris + dependentResIri, valueObjectIris = resAndValObjIrisForDependentRes.valueObjectIris + assertion.valueObjectIri) +: acc
+                                    } else {
+                                        // not a link value or no dependent resource given (in order to avoid infinite recursion)
+                                        // no dependent resource present
+                                        // append results for current value object
+                                        ResourceIrisAndValueObjectIris(resourceIris = Set.empty[IRI], valueObjectIris = Set(assertion.valueObjectIri)) +: acc
+                                    }
+                            }
+
+                            ResourceIrisAndValueObjectIris(
+                                resourceIris = resAndValObjIris.flatMap(_.resourceIris).toSet,
+                                valueObjectIris = resAndValObjIris.flatMap(_.valueObjectIris).toSet
+                            )
+                    }.toSeq
+
+                    ResourceIrisAndValueObjectIris(
+                        resourceIris = resAndValObjIris.flatMap(_.resourceIris).toSet,
+                        valueObjectIris = resAndValObjIris.flatMap(_.valueObjectIris).toSet
+                    )
+
+                }
+
                 for {
                     searchResponse: SparqlConstructResponse <- (storeManager ? SparqlConstructRequest(triplestoreSpecificSparql)).mapTo[SparqlConstructResponse]
 
                     // separate main resources and value objects (dependent resources are nested)
                     queryResultsSep: Map[IRI, ConstructResponseUtilV2.ResourceWithValueRdfData] = ConstructResponseUtilV2.splitMainResourcesAndValueRdfData(constructQueryResults = searchResponse, userProfile = userProfile)
 
-                    // check for the presence of all resources contained in
+                    // for each main resource check if all dependent resources and value objects are still present after permission checking
+                    // this ensures that the user has sufficient permissions on the whole query path
+                    queryResWithFullQueryPath = queryResultsSep.foldLeft(Map.empty[IRI, ConstructResponseUtilV2.ResourceWithValueRdfData]) {
+                        case (acc: Map[IRI, ConstructResponseUtilV2.ResourceWithValueRdfData], (mainResIri: IRI, values: ConstructResponseUtilV2.ResourceWithValueRdfData)) =>
+
+                            // check for presence of dependent resources:  dependentResourceIrisPerMainResource, dependentResourceIrisFromTypeInspection
+                            val expectedDependenResources: Set[IRI] = dependentResourceIrisPerMainResource(mainResIri) ++ dependentResourceIrisFromTypeInspection
+
+                            // check for presence of value objects: valueObjectIrisPerMainResource
+                            val expectedValueObjects: Set[IRI] = valueObjectIrisPerMainResource(mainResIri).values.flatten.toSet
+
+                            // value property assertions for the current main resource
+                            val valuePropAssertions: Map[IRI, Seq[ConstructResponseUtilV2.ValueRdfData]] = values.valuePropertyAssertions
+
+                            // all the Iris of dependent resources and value objects contained in `valuePropAssertions`
+                            val resAndValueObjIris: ResourceIrisAndValueObjectIris = traverseValuePropertyAssertions(valuePropAssertions)
+
+                            // check if the client has sufficient permissions on all dependent resources present in the query path
+                            val allDependentResources: Boolean = resAndValueObjIris.resourceIris.intersect(expectedDependenResources) == expectedDependenResources
+
+                            // check if the client has sufficient permissions on all value objects Iris present in the query path
+                            val allValueObjects: Boolean = resAndValueObjIris.valueObjectIris.intersect(expectedValueObjects) == expectedValueObjects
+
+                            if (allDependentResources && allValueObjects) {
+                                // sufficient permissions, include the main resource and its values
+                                acc + (mainResIri -> values)
+                            } else {
+                                // insufficient permissions, skip the resource
+                                acc
+                            }
+                    }
 
                     // TODO: sort out those properties that the user did not ask for (look at preprocessedQuery.inputQuery)
 
-                } yield queryResultsSep
+                } yield queryResWithFullQueryPath
 
             } else {
                 // the prequery returned no results, no further query is necessary
