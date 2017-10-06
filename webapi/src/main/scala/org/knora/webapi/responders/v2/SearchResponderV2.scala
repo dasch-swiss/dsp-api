@@ -57,21 +57,15 @@ object SearchResponderV2Constants {
 
         // variables representing the main resource and its properties
         val mainResourceVar = QueryVariable("mainResourceVar")
-        val mainResourcePropVar = QueryVariable("mainResourceProp")
-        val mainResourceObjectVar = QueryVariable("mainResourceObj")
-        val mainResourceValueObject = QueryVariable("mainResourceValueObject")
-        val mainResourceValueProp = QueryVariable("mainResourceValueProp")
-        val mainResourceValueObjectProp = QueryVariable("mainResourceValueObjectProp")
-        val mainResourceValueObjectObj = QueryVariable("mainResourceValueObjectObj")
 
-        // variables representing dependent resources and their properties
-        val dependentResourceVar = QueryVariable("dependentResource")
-        val dependentResourcePropVar = QueryVariable("dependentResourceProp")
-        val dependentResourceObjectVar = QueryVariable("dependentResourceObj")
-        val dependentResourceValueObject = QueryVariable("dependentResourceValueObject")
-        val dependentResourceValueProp = QueryVariable("dependentResourceValueProp")
-        val dependentResourceValueObjectProp = QueryVariable("dependentResourceValueObjectProp")
-        val dependentResourceValueObjectObj = QueryVariable("dependentResourceValueObjectObj")
+        // variables representing main and dependent resources. direct assertions about them as well as their values
+        val mainAndDependentResourceVar = QueryVariable("mainAndDependentResource")
+        val mainAndDependentResourcePropVar = QueryVariable("mainAndDependentResourceProp")
+        val mainAndDependentResourceObjectVar = QueryVariable("mainAndDependentResourceObj")
+        val mainAndDependentResourceValueObject = QueryVariable("mainAndDependentResourceValueObject")
+        val mainAndDependentResourceValueProp = QueryVariable("mainAndDependentResourceValueProp")
+        val mainAndDependentResourceValueObjectProp = QueryVariable("mainAndDependentResourceValueObjectProp")
+        val mainAndDependentResourceValueObjectObj = QueryVariable("mainAndDependentResourceValueObjectObj")
 
     }
 
@@ -1250,80 +1244,71 @@ class SearchResponderV2 extends Responder {
           * Creates the main query to be sent to the triplestore.
           * Requests two sets of information: about the main resources and the dependent resources.
           *
-          * @param mainResourceIris      Iris to be bound to the main resource variable.
-          * @param dependentResourceIris Iris to be bound to the the dependent resource variable.
+          * @param mainResourceIris      Iris of main resources to be queried.
+          * @param dependentResourceIris Iris of dependent resources to be queried.
+          * @param valueObjectIris       Iris of value objects to be queried (for both main and dependent resources)
           * @return the main [[ConstructQuery]] query to be executed.
           */
-        def createMainQuery(mainResourceIris: Set[IriRef], dependentResourceIris: Set[IriRef]): ConstructQuery = {
+        def createMainQuery(mainResourceIris: Set[IriRef], dependentResourceIris: Set[IriRef], valueObjectIris: Set[IRI]): ConstructQuery = {
 
             import SearchResponderV2Constants.ExtendedSearchConstants._
 
-            val wherePatternsForMainResources = Seq(
-                ValuesPattern(mainResourceVar, mainResourceIris), // a ValuePattern that bind the main resource Iris to the main resource variable
-                StatementPattern.makeExplicit(subj = mainResourceVar, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean)),
-                StatementPattern.makeExplicit(subj = mainResourceVar, pred = mainResourcePropVar, obj = mainResourceObjectVar),
-                StatementPattern.makeInferred(subj = mainResourceVar, pred = IriRef(OntologyConstants.KnoraBase.HasValue), obj = mainResourceValueObject),
-                StatementPattern.makeExplicit(subj = mainResourceVar, pred = mainResourceValueProp, obj = mainResourceValueObject),
-                StatementPattern.makeExplicit(subj = mainResourceValueObject, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean)),
-                StatementPattern.makeExplicit(subj = mainResourceValueObject, pred = mainResourceValueObjectProp, obj = mainResourceValueObjectObj)
+            // WHERE patterns for the main resource variable: check that main resource is a knora-base:Resource and that it is not marked as deleted
+            val wherePatternsForMainResource = Seq(
+                ValuesPattern(mainResourceVar, mainResourceIris), // a ValuePattern that binds the main resources' Iris to the main resource variable
+                StatementPattern.makeInferred(subj = mainResourceVar, pred = IriRef(OntologyConstants.Rdf.Type), obj = IriRef(OntologyConstants.KnoraBase.Resource)),
+                StatementPattern.makeExplicit(subj = mainResourceVar, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean))
             )
 
+            // mark main resource variable in CONSTRUCT clause
             val constructPatternsForMainResource = Seq(
-                StatementPattern(subj = mainResourceVar, pred = IriRef(OntologyConstants.KnoraBase.IsMainResource), obj = XsdLiteral(value = "true", datatype = OntologyConstants.Xsd.Boolean)),
-                StatementPattern(subj = mainResourceVar, pred = IriRef(OntologyConstants.Rdf.Type), obj = IriRef(OntologyConstants.KnoraBase.Resource)),
-                StatementPattern(subj = mainResourceVar, pred = mainResourcePropVar, obj = mainResourceObjectVar),
-                StatementPattern(subj = mainResourceVar, pred = IriRef(OntologyConstants.KnoraBase.HasValue), obj = mainResourceValueObject),
-                StatementPattern(subj = mainResourceVar, pred = mainResourceValueProp, obj = mainResourceValueObject),
-                StatementPattern(subj = mainResourceValueObject, pred = mainResourceValueObjectProp, obj = mainResourceValueObjectObj)
+                StatementPattern(subj = mainResourceVar, pred = IriRef(OntologyConstants.KnoraBase.IsMainResource), obj = XsdLiteral(value = "true", datatype = OntologyConstants.Xsd.Boolean))
             )
 
-            if (dependentResourceIris.nonEmpty) {
-                // there are dependent resources to be queried
+            // since a CONSTRUCT query returns a flat list of triples, we can handle main and dependent resources in the same way
 
-                val wherePatternsForDependentResources = Seq(
-                    ValuesPattern(dependentResourceVar, dependentResourceIris), // a ValuePattern that binds the dependent resource Iris to the dependent resource variable
-                    StatementPattern.makeExplicit(subj = dependentResourceVar, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean)),
-                    StatementPattern.makeExplicit(subj = dependentResourceVar, pred = dependentResourcePropVar, obj = dependentResourceObjectVar),
-                    StatementPattern.makeInferred(subj = dependentResourceVar, pred = IriRef(OntologyConstants.KnoraBase.HasValue), obj = dependentResourceValueObject),
-                    StatementPattern.makeExplicit(subj = dependentResourceVar, pred = dependentResourceValueProp, obj = dependentResourceValueObject),
-                    StatementPattern.makeExplicit(subj = dependentResourceValueObject, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean)),
-                    StatementPattern.makeExplicit(subj = dependentResourceValueObject, pred = dependentResourceValueObjectProp, obj = dependentResourceValueObjectObj)
-                )
+            // WHERE patterns for direct statements about the main resource and dependent resources
+            val wherePatternsForMainAndDependentResources = Seq(
+                ValuesPattern(mainAndDependentResourceVar, mainResourceIris ++ dependentResourceIris), // a ValuePattern that binds the main and dependent resources' Iris to a variable
+                StatementPattern.makeInferred(subj = mainAndDependentResourceVar, pred = IriRef(OntologyConstants.Rdf.Type), obj = IriRef(OntologyConstants.KnoraBase.Resource)),
+                StatementPattern.makeExplicit(subj = mainAndDependentResourceVar, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean)),
+                StatementPattern.makeExplicit(subj = mainAndDependentResourceVar, pred = mainAndDependentResourcePropVar, obj = mainAndDependentResourceObjectVar)
+            )
 
-                val constructPatternsForDependentResources = Seq(
-                    StatementPattern(subj = dependentResourceVar, pred = IriRef(OntologyConstants.Rdf.Type), obj = IriRef(OntologyConstants.KnoraBase.Resource)),
-                    StatementPattern(subj = dependentResourceVar, pred = dependentResourcePropVar, obj = dependentResourceObjectVar),
-                    StatementPattern(subj = dependentResourceVar, pred = IriRef(OntologyConstants.KnoraBase.HasValue), obj = dependentResourceValueObject),
-                    StatementPattern(subj = dependentResourceVar, pred = dependentResourceValueProp, obj = dependentResourceValueObject),
-                    StatementPattern(subj = dependentResourceValueObject, pred = dependentResourceValueObjectProp, obj = dependentResourceValueObjectObj)
-                )
+            // WHERE patterns for statements about the main and dependent resources' values
+            val wherePatternsForMainAndDependentResourcesValues = Seq(
+                ValuesPattern(mainAndDependentResourceValueObject, valueObjectIris.map(iri => IriRef(iri))),
+                StatementPattern.makeInferred(subj = mainAndDependentResourceVar, pred = IriRef(OntologyConstants.KnoraBase.HasValue), obj = mainAndDependentResourceValueObject),
+                StatementPattern.makeExplicit(subj = mainAndDependentResourceVar, pred = mainAndDependentResourceValueProp, obj = mainAndDependentResourceValueObject),
+                StatementPattern.makeExplicit(subj = mainAndDependentResourceValueObject, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean)),
+                StatementPattern.makeExplicit(subj = mainAndDependentResourceValueObject, pred = mainAndDependentResourceValueObjectProp, obj = mainAndDependentResourceValueObjectObj)
+            )
 
-                ConstructQuery(
-                    constructClause = ConstructClause(
-                        statements = constructPatternsForMainResource ++ constructPatternsForDependentResources
-                    ),
-                    whereClause = WhereClause(
-                        Seq(
-                            UnionPattern(
-                                Seq(wherePatternsForMainResources, wherePatternsForDependentResources)
-                            )
+            // mark main and dependent resources as a knora-base:Resource in CONSTRUCT clause and return direct assertions about all resources
+            val constructPatternsForMainAndDependentResources = Seq(
+                StatementPattern(subj = mainAndDependentResourceVar, pred = IriRef(OntologyConstants.Rdf.Type), obj = IriRef(OntologyConstants.KnoraBase.Resource)),
+                StatementPattern(subj = mainAndDependentResourceVar, pred = mainAndDependentResourcePropVar, obj = mainAndDependentResourceObjectVar)
+            )
+
+            // return assertions about the main and dependent resources' values in CONSTRUCT clause
+            val constructPatternsForMainAndDependentResourcesValues = Seq(
+                StatementPattern(subj = mainAndDependentResourceVar, pred = IriRef(OntologyConstants.KnoraBase.HasValue), obj = mainAndDependentResourceValueObject),
+                StatementPattern(subj = mainAndDependentResourceVar, pred = mainAndDependentResourceValueProp, obj = mainAndDependentResourceValueObject),
+                StatementPattern(subj = mainAndDependentResourceValueObject, pred = mainAndDependentResourceValueObjectProp, obj = mainAndDependentResourceValueObjectObj)
+            )
+
+            ConstructQuery(
+                constructClause = ConstructClause(
+                    statements = constructPatternsForMainResource ++ constructPatternsForMainAndDependentResources ++ constructPatternsForMainAndDependentResourcesValues
+                ),
+                whereClause = WhereClause(
+                    Seq(
+                        UnionPattern(
+                            Seq(wherePatternsForMainResource, wherePatternsForMainAndDependentResources, wherePatternsForMainAndDependentResourcesValues)
                         )
                     )
                 )
-
-            } else {
-                // there are no dependent resources to be queried
-
-                ConstructQuery(
-                    constructClause = ConstructClause(
-                        statements = constructPatternsForMainResource
-                    ),
-                    whereClause = WhereClause(
-                        patterns = wherePatternsForMainResources
-                    )
-                )
-            }
-
+            )
 
         }
 
@@ -1414,7 +1399,7 @@ class SearchResponderV2 extends Responder {
                 val valueObjectVariablesConcat = nonTriplestoreSpecificConstructToSelectTransformer.valueObjectVarsGroupConcat
 
                 // for each main resource, create a Map of value object variables and their values
-                val valueObjectIrisPerMainResource = prequeryResponse.results.bindings.foldLeft(Map.empty[IRI, Map[QueryVariable, Set[IRI]]]) {
+                val valueObjectIrisPerMainResource: Map[IRI, Map[QueryVariable, Set[IRI]]] = prequeryResponse.results.bindings.foldLeft(Map.empty[IRI, Map[QueryVariable, Set[IRI]]]) {
                     (acc: Map[IRI, Map[QueryVariable, Set[IRI]]], resultRow: VariableResultsRow) =>
 
                         val mainResIri: String = resultRow.rowMap(mainResourceVar.variableName)
@@ -1428,11 +1413,18 @@ class SearchResponderV2 extends Responder {
                         acc + (mainResIri -> valueObjVarToIris)
                 }
 
+                // collect all value objects Iris (for all main resources and for all value object variables)
+                val allValueObjectIris: Set[IRI] = valueObjectIrisPerMainResource.values.foldLeft(Set.empty[IRI]) {
+                    case (acc: Set[IRI], valObjIrisForQueryVar: Map[QueryVariable, Set[IRI]]) =>
+                        acc ++ valObjIrisForQueryVar.values.flatten.toSet
+                }
+
                 // create the main query
                 // it is a Union of two sets: the main resources and the dependent resources
                 val mainQuery = createMainQuery(
                     mainResourceIris = mainResourceIris.map(iri => IriRef(iri)).toSet,
-                    dependentResourceIris = allDependentResourceIris.map(iri => IriRef(iri))
+                    dependentResourceIris = allDependentResourceIris.map(iri => IriRef(iri)),
+                    valueObjectIris = allValueObjectIris
                 )
 
                 val triplestoreSpecificQueryPatternTransformerConstruct: ConstructToConstructTransformer = {
@@ -1453,7 +1445,8 @@ class SearchResponderV2 extends Responder {
                 // Convert the result to a SPARQL string and send it to the triplestore.
                 val triplestoreSpecificSparql: String = triplestoreSpecificQuery.toSparql
 
-                // _ = println(triplestoreSpecificQuery.toSparql)
+                //println("++++++++")
+                //println(triplestoreSpecificQuery.toSparql)
 
                 /**
                   * Represents the Iris of resources and value objects.
@@ -1477,13 +1470,13 @@ class SearchResponderV2 extends Responder {
 
                             if (assertion.targetResource.nonEmpty) {
                                 // this is a link value
-                                // recursively traverse the dependent resource
+                                // recursively traverse the dependent resource's values
 
                                 val dependentRes: ConstructResponseUtilV2.ResourceWithValueRdfData = assertion.targetResource.get
 
                                 // recursively traverse the link value's nested resource and its assertions
                                 val resAndValObjIrisForDependentRes: ResourceIrisAndValueObjectIris = traverseValuePropertyAssertions(dependentRes.valuePropertyAssertions)
-                                // get the dependent resource's Iri from the link value's rdf:object
+                                // get the dependent resource's Iri from the current link value's rdf:object
                                 val dependentResIri: IRI = assertion.assertions.getOrElse(OntologyConstants.Rdf.Object, throw InconsistentTriplestoreDataException(s"expected ${OntologyConstants.Rdf.Object} for link value ${assertion.valueObjectIri}"))
 
                                 // append results from recursion and current value object
@@ -1543,9 +1536,8 @@ class SearchResponderV2 extends Responder {
                             }
                     }
 
-                // TODO: sort out those properties that the user did not ask for (look at preprocessedQuery.inputQuery)
+                // TODO: sort out those value objects that the user did not ask for in the input query's CONSTRUCT clause
 
-                    
 
                 } yield queryResWithFullQueryPath
 
