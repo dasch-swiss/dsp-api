@@ -46,8 +46,6 @@ SELECT DISTINCT ?node ?nodeName ?label ?child
 }
 WHERE {
     BIND(IRI("@queryNodeIri") as ?leafNode)
-    BIND(str("@preferredLanguage") as ?preferredLanguage)
-    BIND(str("@fallbackLanguage") as ?fallbackLanguage)
 
     ?node knora-base:hasSubListNode* ?leafNode .
 
@@ -66,12 +64,12 @@ WHERE {
 
     OPTIONAL {
         ?node rdfs:label ?preferredLanguageLabel .
-        FILTER (LANG(?preferredLanguageLabel) = ?preferredLanguage) .
+        FILTER (LANG(?preferredLanguageLabel) = "@preferredLanguage") .
     }
 
     OPTIONAL {
         ?node rdfs:label ?fallbackLanguageLabel .
-        FILTER (LANG(?fallbackLanguageLabel) = ?fallbackLanguage) .
+        FILTER (LANG(?fallbackLanguageLabel) = "@fallbackLanguage") .
     }
 
     OPTIONAL {

@@ -143,7 +143,7 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
 
         "asked to create a new user" should {
 
-            "CREATE the user and return it's profile if the supplied email is unique " in {
+            "CREATE the user and return it's profile if the supplied email is unique" in {
                 actorUnderTest ! UserCreateRequestV1(
                     createRequest = CreateUserApiRequestV1(
                         email = "donald.duck@example.com",
@@ -170,8 +170,8 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
             "return a 'DuplicateValueException' if the supplied 'email' is not unique" in {
                 actorUnderTest ! UserCreateRequestV1(
                     createRequest = CreateUserApiRequestV1(
-                        email = "root@example.com",
-                        givenName = "Donal",
+                        email = "donald.duck@example.com",
+                        givenName = "Donal Jr.",
                         familyName = "Duck",
                         password = "test",
                         status = true,
@@ -181,7 +181,7 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
                     SharedAdminTestData.anonymousUser,
                     UUID.randomUUID
                 )
-                expectMsg(Failure(DuplicateValueException(s"User with the email: 'root@example.com' already exists")))
+                expectMsg(Failure(DuplicateValueException(s"User with the email: 'donald.duck@example.com' already exists")))
             }
 
             "return 'BadRequestException' if 'email' or 'password' or 'givenName' or 'familyName' are missing" in {
@@ -190,7 +190,7 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
                 actorUnderTest ! UserCreateRequestV1(
                     createRequest = CreateUserApiRequestV1(
                         email = "",
-                        givenName = "Donald",
+                        givenName = "Donald Jr.",
                         familyName = "Duck",
                         password = "test",
                         status = true,
@@ -206,7 +206,7 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
                 actorUnderTest ! UserCreateRequestV1(
                     createRequest = CreateUserApiRequestV1(
                         email = "donald.duck@example.com",
-                        givenName = "Donald",
+                        givenName = "Donald Jr.",
                         familyName = "Duck",
                         password = "",
                         status = true,
@@ -238,7 +238,7 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
                 actorUnderTest ! UserCreateRequestV1(
                     createRequest = CreateUserApiRequestV1(
                         email = "donald.duck@example.com",
-                        givenName = "Donald",
+                        givenName = "Donald Jr.",
                         familyName = "",
                         password = "test",
                         status = true,

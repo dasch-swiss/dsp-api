@@ -23,6 +23,7 @@ package org.knora.webapi.responders.v1
 
 import akka.actor.Props
 import akka.testkit._
+import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent, ResetTriplestoreContentACK}
 import org.knora.webapi.messages.v1.responder.listmessages._
@@ -38,12 +39,18 @@ import scala.concurrent.duration._
   */
 object ListsResponderV1Spec {
 
+    val config: Config = ConfigFactory.parseString(
+        """
+         akka.loglevel = "DEBUG"
+         akka.stdout-loglevel = "DEBUG"
+        """.stripMargin)
+
 }
 
 /**
   * Tests [[ListsResponderV1]].
   */
-class ListsResponderV1Spec extends CoreSpec() with ImplicitSender {
+class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with ImplicitSender {
 
     // Construct the actors needed for this test.
     private val actorUnderTest = TestActorRef[ListsResponderV1]

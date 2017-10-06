@@ -135,6 +135,9 @@ class ListsResponderV1 extends Responder {
                     fallbackLanguage = settings.fallbackLanguage
                 ).toString()
             }
+
+            _ = log.debug("getListResponseV1 - listQuery: {}", listQuery)
+
             listQueryResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(listQuery)).mapTo[SparqlSelectResponse]
 
             // Group the results to map each node to the SPARQL query results representing its children.
@@ -223,6 +226,9 @@ class ListsResponderV1 extends Responder {
                     fallbackLanguage = settings.fallbackLanguage
                 ).toString()
             }
+
+            _ = log.debug("getNodePathResponseV1 - nodePathQuery: {}", nodePathQuery)
+
             nodePathResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(nodePathQuery)).mapTo[SparqlSelectResponse]
 
             /*

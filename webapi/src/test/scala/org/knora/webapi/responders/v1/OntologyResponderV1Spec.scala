@@ -23,6 +23,7 @@ package org.knora.webapi.responders.v1
 
 import akka.actor.Props
 import akka.testkit._
+import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.ontologymessages._
 import org.knora.webapi.messages.store.triplestoremessages.{ResetTriplestoreContent, ResetTriplestoreContentACK}
@@ -36,6 +37,12 @@ import scala.concurrent.duration._
   * Static data for testing [[OntologyResponderV1]].
   */
 object OntologyResponderV1Spec {
+
+    val config: Config = ConfigFactory.parseString(
+        """
+         akka.loglevel = "DEBUG"
+         akka.stdout-loglevel = "DEBUG"
+        """.stripMargin)
 
     // A test user that prefers responses in German.
     private val userProfileWithGerman = SharedAdminTestData.incunabulaProjectAdminUser
@@ -52,7 +59,7 @@ object OntologyResponderV1Spec {
 /**
   * Tests [[OntologyResponderV1]].
   */
-class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
+class OntologyResponderV1Spec extends CoreSpec(OntologyResponderV1Spec.config) with ImplicitSender {
 
     // Construct the actors needed for this test.
     private val actorUnderTest = TestActorRef[OntologyResponderV1]
@@ -1088,6 +1095,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
 
             expectMsgPF(timeout) {
                 case msg: ResourceTypesForNamedGraphResponseV1 =>
+                    // FIXME: This fails with allegro because the values in different languages (de, fr) are not returned by the triplestore in the same order, so when the preferred language is en, the returned value are different.
                     checkResourceTypesForNamedGraphResponseV1(received = msg, expected = resourceTypesForNamedGraphIncunabula)
             }
 

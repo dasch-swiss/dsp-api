@@ -2091,11 +2091,11 @@ class ValuesResponderV1 extends Responder {
                 currentTime = currentTime
             ).toString()
 
-            /*
+
             _ = println("================ Create value ================")
             _ = println(sparqlUpdate)
             _ = println("==============================================")
-            */
+
 
             // Do the update.
             sparqlUpdateResponse <- (storeManager ? SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
