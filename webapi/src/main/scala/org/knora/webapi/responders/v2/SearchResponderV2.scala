@@ -27,6 +27,7 @@ import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.responder.valuemessages.JulianDayNumberValueV1
 import org.knora.webapi.messages.v2.responder._
+import org.knora.webapi.messages.v2.responder.resourcemessages.ResourcesGetRequestV2
 import org.knora.webapi.messages.v2.responder.searchmessages._
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.util.ActorUtil._
@@ -67,6 +68,8 @@ object SearchResponderV2Constants {
         val mainAndDependentResourceValueObjectProp = QueryVariable("mainAndDependentResourceValueObjectProp")
         val mainAndDependentResourceValueObjectObj = QueryVariable("mainAndDependentResourceValueObjectObj")
 
+        val forbiddenResourceIri = "http://data.knora.org/permissions/forbiddenResource"
+
     }
 
 }
@@ -80,6 +83,22 @@ class SearchResponderV2 extends Responder {
         case ExtendedSearchGetRequestV2(query, userProfile) => future2Message(sender(), extendedSearchV2(inputQuery = query, userProfile = userProfile), log)
         case SearchResourceByLabelRequestV2(searchValue, limitToProject, limitToResourceClass, userProfile) => future2Message(sender(), searchResourcesByLabelV2(searchValue, limitToProject, limitToResourceClass, userProfile), log)
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
+    }
+
+    /**
+      * Gets the forbidden resource.
+      *
+      * @param userProfile the user making the request.
+      * @return the forbidden resource.
+      */
+    private def getForbiddenResource(userProfile: UserProfileV1) = {
+        import SearchResponderV2Constants.ExtendedSearchConstants.forbiddenResourceIri
+
+        for {
+
+            forbiddenResSeq: ReadResourcesSequenceV2 <- (responderManager ? ResourcesGetRequestV2(resourceIris = Seq(forbiddenResourceIri), userProfile = userProfile)).mapTo[ReadResourcesSequenceV2]
+            forbiddenRes = forbiddenResSeq.resources.headOption.getOrElse(throw InconsistentTriplestoreDataException(s"$forbiddenResourceIri was not returned"))
+        } yield Some(forbiddenRes)
     }
 
     /**
@@ -102,7 +121,14 @@ class SearchResponderV2 extends Responder {
             // separate resources and value objects
             queryResultsSeparated = ConstructResponseUtilV2.splitMainResourcesAndValueRdfData(constructQueryResults = searchResponse, userProfile = userProfile)
 
-        } yield ReadResourcesSequenceV2(numberOfResources = queryResultsSeparated.size, resources = ConstructResponseUtilV2.createSearchResponse(queryResultsSeparated))
+        } yield ReadResourcesSequenceV2(
+            numberOfResources = queryResultsSeparated.size,
+            resources = ConstructResponseUtilV2.createSearchResponse(
+                searchResults = queryResultsSeparated,
+                orderByResourceIri = queryResultsSeparated.keysIterator.toSeq,
+                forbiddenResource = None
+            )
+        )
 
     }
 
@@ -1365,7 +1391,7 @@ class SearchResponderV2 extends Responder {
                     resultRow.rowMap(mainResourceVar.variableName)
             }
 
-            queryResultsSeparated <- if (mainResourceIris.nonEmpty) {
+            queryResultsSeparatedWithFullQueryPath <- if (mainResourceIris.nonEmpty) {
                 // at least one resource matched the prequery
 
                 // variables representing dependent resources
@@ -1546,7 +1572,25 @@ class SearchResponderV2 extends Responder {
                 Future(Map.empty[IRI, ConstructResponseUtilV2.ResourceWithValueRdfData])
             }
 
-        } yield ReadResourcesSequenceV2(numberOfResources = queryResultsSeparated.size, resources = ConstructResponseUtilV2.createSearchResponse(searchResults = queryResultsSeparated, orderByResourceIri = mainResourceIris))
+            // check if there are resources the user does not have sufficient permissions to see
+            forbiddenResourceOption: Option[ReadResourceV2] <- if (mainResourceIris.size > queryResultsSeparatedWithFullQueryPath.size) {
+                // some of the main resources have been suppressed, represent them using the forbidden resource
+
+                getForbiddenResource(userProfile)
+            } else {
+                // all resources visible, no need for the forbidden resource
+                Future(None)
+            }
+
+
+        } yield ReadResourcesSequenceV2(
+            numberOfResources = mainResourceIris.size,
+            resources = ConstructResponseUtilV2.createSearchResponse(
+                searchResults = queryResultsSeparatedWithFullQueryPath,
+                orderByResourceIri = mainResourceIris,
+                forbiddenResource = forbiddenResourceOption
+            )
+        )
     }
 
     /**
@@ -1579,7 +1623,10 @@ class SearchResponderV2 extends Responder {
 
         //_ = println(queryResultsSeparated)
 
-        } yield ReadResourcesSequenceV2(numberOfResources = queryResultsSeparated.size, resources = ConstructResponseUtilV2.createSearchResponse(queryResultsSeparated))
+        } yield ReadResourcesSequenceV2(
+            numberOfResources = queryResultsSeparated.size,
+            resources = ConstructResponseUtilV2.createSearchResponse(searchResults = queryResultsSeparated, orderByResourceIri = queryResultsSeparated.keysIterator.toSeq, forbiddenResource = None)
+        )
 
 
     }

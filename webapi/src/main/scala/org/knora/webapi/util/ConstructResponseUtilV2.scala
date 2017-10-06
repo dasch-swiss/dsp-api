@@ -507,41 +507,32 @@ object ConstructResponseUtilV2 {
     /**
       * Creates a response to a fulltext or extended search.
       *
-      * @param searchResults the results returned by the triplestore.
+      * @param searchResults      the resources that matched the query and the client has permissions to see.
       * @param orderByResourceIri the order in which the resources should be returned.
       * @return a collection of [[ReadResourceV2]] representing the search results.
       */
-    def createSearchResponse(searchResults: Map[IRI, ResourceWithValueRdfData], orderByResourceIri: Seq[IRI] = Seq.empty[IRI]): Vector[ReadResourceV2] = {
+    def createSearchResponse(searchResults: Map[IRI, ResourceWithValueRdfData], orderByResourceIri: Seq[IRI], forbiddenResource: Option[ReadResourceV2]): Vector[ReadResourceV2] = {
 
-        // if orderByResourceIris is given, use it to sort search results
-        // attention: orderByResourceIris does not consider permissions
-        if (orderByResourceIri.nonEmpty) {
+        if (orderByResourceIri.toSet != searchResults.keySet && forbiddenResource.isEmpty) throw AssertionException(s"Not all resources are visible, but forbiddenResource is None")
 
-            // iterate over orderByResourceIris and construct the response in the correct order
-            orderByResourceIri.foldLeft(Vector.empty[ReadResourceV2]) {
-                (acc: Vector[ReadResourceV2], resourceIri: IRI) =>
+        // iterate over orderByResourceIris and construct the response in the correct order
+        orderByResourceIri.map {
+            (resourceIri: IRI) =>
 
-                    // the user may not have the permissions to see the resource
-                    // i.e. it may not be contained in searchResults
-                    searchResults.get(resourceIri) match {
-                        case Some(assertions: ResourceWithValueRdfData) =>
-                            // sufficient permissions
-                            // add the resource to the list of results
-                            acc :+ constructReadResourceV2(resourceIri, assertions, mappings = Map.empty[IRI, MappingAndXSLTransformation])
+                // the user may not have the permissions to see the resource
+                // i.e. it may not be contained in searchResults
+                searchResults.get(resourceIri) match {
+                    case Some(assertions: ResourceWithValueRdfData) =>
+                        // sufficient permissions
+                        // add the resource to the list of results
+                        constructReadResourceV2(resourceIri, assertions, mappings = Map.empty[IRI, MappingAndXSLTransformation])
 
-                        case None => acc // insufficient permissions on resource, skip it
-                            // TODO: include anonymous resource instead of skipping (the amount of results should be constant -> limit)
-                    }
-            }
-        } else {
-            // no order given
-            searchResults.map {
-                case (resourceIri: IRI, assertions: ResourceWithValueRdfData) =>
-                    constructReadResourceV2(resourceIri, assertions, mappings = Map.empty[IRI, MappingAndXSLTransformation])
-            }.toVector
+                    case None =>
+                        // include the forbidden resource instead of skipping (the amount of results should be constant -> limit)
+                        forbiddenResource.getOrElse(throw AssertionException(s"Not all resources are visible, but forbiddenResource is None"))
 
-        }
-
+                }
+        }.toVector
 
     }
 }
