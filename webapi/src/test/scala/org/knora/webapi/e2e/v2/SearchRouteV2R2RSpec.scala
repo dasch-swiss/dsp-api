@@ -117,7 +117,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                checkNumberOfItems(responseAs[String], 210)
+                checkNumberOfItems(responseAs[String], 25)
 
             }
         }

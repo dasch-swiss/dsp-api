@@ -48,7 +48,15 @@ object SearchResponderV2Constants {
       * Constants for fulltext query.
       */
     object FullTextSearchConstants {
+        val resourceVar = QueryVariable("resource")
+        val resourcePropVar = QueryVariable("resourceProp")
+        val resourceObjectVar = QueryVariable("resourceObj")
+        val resourceValueObject = QueryVariable("resourceValueObject")
+        val resourceValueProp = QueryVariable("resourceValueProp")
+        val resourceValueObjectProp = QueryVariable("resourceValueObjectProp")
+        val resourceValueObjectObj = QueryVariable("resourceValueObjectObj")
 
+        val valueObjectConcatVar = QueryVariable("valueObjectConcat")
     }
 
     /**
@@ -86,6 +94,100 @@ class SearchResponderV2 extends Responder {
     }
 
     /**
+      * Transform the the Knora explicit graph name to GraphDB explicit graph name.
+      *
+      * @param statement the given statement whose graph name has to be renamed.
+      * @return the statement with the renamed graph, if given.
+      */
+    private def transformKnoraExplicitToGraphDBExplicit(statement: StatementPattern): Seq[StatementPattern] = {
+        val transformedPattern = statement.copy(
+            namedGraph = statement.namedGraph match {
+                case Some(IriRef(OntologyConstants.NamedGraphs.KnoraExplicitNamedGraph, _)) => Some(IriRef(OntologyConstants.NamedGraphs.GraphDBExplicitNamedGraph))
+                case Some(IriRef(_, _)) => throw AssertionException(s"Named graphs other than ${OntologyConstants.NamedGraphs.KnoraExplicitNamedGraph} cannot occur in non-triplestore-specific generated search query SPARQL")
+                case None => None
+            }
+        )
+
+        Seq(transformedPattern)
+    }
+
+    /**
+      * Transforms non-triplestore-specific query patterns to GraphDB-specific ones.
+      */
+    class GraphDBConstructToConstructTransformer extends ConstructToConstructTransformer {
+        def transformStatementInConstruct(statementPattern: StatementPattern): Seq[StatementPattern] = Seq(statementPattern)
+
+        def transformStatementInWhere(statementPattern: StatementPattern): Seq[StatementPattern] = {
+            transformKnoraExplicitToGraphDBExplicit(statementPattern)
+        }
+
+        def transformFilter(filterPattern: FilterPattern): Seq[QueryPattern] = Seq(filterPattern)
+    }
+
+    /**
+      * Transforms non-triplestore-specific query patterns for a triplestore that does not have inference enabled.
+      */
+    class NoInferenceConstructToConstructTransformer extends ConstructToConstructTransformer {
+        def transformStatementInConstruct(statementPattern: StatementPattern): Seq[StatementPattern] = Seq(statementPattern)
+
+        def transformStatementInWhere(statementPattern: StatementPattern): Seq[StatementPattern] = {
+            // TODO: if OntologyConstants.NamedGraphs.KnoraExplicitNamedGraph occurs, remove it and use property path syntax to emulate inference.
+            Seq(statementPattern)
+        }
+
+        def transformFilter(filterPattern: FilterPattern): Seq[QueryPattern] = Seq(filterPattern)
+    }
+
+    /**
+      * Represents the Iris of resources and value objects.
+      *
+      * @param resourceIris    resource Iris.
+      * @param valueObjectIris value object Iris.
+      */
+    case class ResourceIrisAndValueObjectIris(resourceIris: Set[IRI], valueObjectIris: Set[IRI])
+
+    /**
+      * Traverses value property assertions and returns the Iris of the value objects and the dependent resources, recursively traversing their value properties as well .
+      *
+      * @param valuePropertyAssertions the assertions to be traversed.
+      * @return a [[ResourceIrisAndValueObjectIris]] representing all resource and value object Iris that have been found in `valuePropertyAssertions`.
+      */
+    def traverseValuePropertyAssertions(valuePropertyAssertions: Map[IRI, Seq[ConstructResponseUtilV2.ValueRdfData]]): ResourceIrisAndValueObjectIris = {
+
+        // look at the value objects and ignore the property Iris (we are only interested in value instances)
+        val resAndValObjIris: Seq[ResourceIrisAndValueObjectIris] = valuePropertyAssertions.values.flatten.foldLeft(Seq.empty[ResourceIrisAndValueObjectIris]) {
+            (acc: Seq[ResourceIrisAndValueObjectIris], assertion) =>
+
+                if (assertion.targetResource.nonEmpty) {
+                    // this is a link value
+                    // recursively traverse the dependent resource's values
+
+                    val dependentRes: ConstructResponseUtilV2.ResourceWithValueRdfData = assertion.targetResource.get
+
+                    // recursively traverse the link value's nested resource and its assertions
+                    val resAndValObjIrisForDependentRes: ResourceIrisAndValueObjectIris = traverseValuePropertyAssertions(dependentRes.valuePropertyAssertions)
+                    // get the dependent resource's Iri from the current link value's rdf:object
+                    val dependentResIri: IRI = assertion.assertions.getOrElse(OntologyConstants.Rdf.Object, throw InconsistentTriplestoreDataException(s"expected ${OntologyConstants.Rdf.Object} for link value ${assertion.valueObjectIri}"))
+
+                    // append results from recursion and current value object
+                    ResourceIrisAndValueObjectIris(resourceIris = resAndValObjIrisForDependentRes.resourceIris + dependentResIri, valueObjectIris = resAndValObjIrisForDependentRes.valueObjectIris + assertion.valueObjectIri) +: acc
+                } else {
+                    // not a link value or no dependent resource given (in order to avoid infinite recursion)
+                    // no dependent resource present
+                    // append results for current value object
+                    ResourceIrisAndValueObjectIris(resourceIris = Set.empty[IRI], valueObjectIris = Set(assertion.valueObjectIri)) +: acc
+                }
+        }
+
+        // convert the collection of `ResourceIrisAndValueObjectIris` into one
+        ResourceIrisAndValueObjectIris(
+            resourceIris = resAndValObjIris.flatMap(_.resourceIris).toSet,
+            valueObjectIris = resAndValObjIris.flatMap(_.valueObjectIris).toSet
+        )
+
+    }
+
+    /**
       * Gets the forbidden resource.
       *
       * @param userProfile the user making the request.
@@ -110,25 +212,199 @@ class SearchResponderV2 extends Responder {
       */
     private def fulltextSearchV2(searchValue: String, userProfile: UserProfileV1): Future[ReadResourcesSequenceV2] = {
 
+        import SearchResponderV2Constants.FullTextSearchConstants._
+
+        val groupConcatSeparator = FormatConstants.INFORMATION_SEPARATOR_ONE
+
+        /**
+          * Creates a CONSTRUCT query for the given resource and value object Iris.
+          *
+          * @param resourceIris    the Iris of the resources to be queried.
+          * @param valueObjectIris the Iris of the value objects to be queried.
+          * @return a [[ConstructQuery]].
+          */
+        def createMainQuery(resourceIris: Set[IRI], valueObjectIris: Set[IRI]): ConstructQuery = {
+
+            // WHERE patterns for the resources: check that the resource are a knora-base:Resource and that it is not marked as deleted
+            val wherePatternsForResources = Seq(
+                ValuesPattern(resourceVar, resourceIris.map(IriRef(_))), // a ValuePattern that binds the resource Iris to the resource variable
+                StatementPattern.makeInferred(subj = resourceVar, pred = IriRef(OntologyConstants.Rdf.Type), obj = IriRef(OntologyConstants.KnoraBase.Resource)),
+                StatementPattern.makeExplicit(subj = resourceVar, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean)),
+                StatementPattern.makeExplicit(subj = resourceVar, pred = resourcePropVar, obj = resourceObjectVar)
+            )
+
+            //  mark resources as a knora-base:Resource in CONSTRUCT clause and return direct assertions about resources
+            val constructPatternsForResources = Seq(
+                StatementPattern(subj = resourceVar, pred = IriRef(OntologyConstants.KnoraBase.IsMainResource), obj = XsdLiteral(value = "true", datatype = OntologyConstants.Xsd.Boolean)),
+                StatementPattern(subj = resourceVar, pred = IriRef(OntologyConstants.Rdf.Type), obj = IriRef(OntologyConstants.KnoraBase.Resource)),
+                StatementPattern(subj = resourceVar, pred = resourcePropVar, obj = resourceObjectVar)
+            )
+
+            // TODO: check if value object Iris are given
+
+            // WHERE patterns for statements about the resources' values
+            val wherePatternsForValueObjects = Seq(
+                ValuesPattern(resourceValueObject, valueObjectIris.map(iri => IriRef(iri))),
+                StatementPattern.makeInferred(subj = resourceVar, pred = IriRef(OntologyConstants.KnoraBase.HasValue), obj = resourceValueObject),
+                StatementPattern.makeExplicit(subj = resourceVar, pred = resourceValueProp, obj = resourceValueObject),
+                StatementPattern.makeExplicit(subj = resourceValueObject, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean)),
+                StatementPattern.makeExplicit(subj = resourceValueObject, pred = resourceValueObjectProp, obj = resourceValueObjectObj)
+            )
+
+            // return assertions about value objects
+            val constructPatternsForValueObjects = Seq(
+                StatementPattern(subj = resourceVar, pred = IriRef(OntologyConstants.KnoraBase.HasValue), obj = resourceValueObject),
+                StatementPattern(subj = resourceVar, pred = resourceValueProp, obj = resourceValueObject),
+                StatementPattern(subj = resourceValueObject, pred = resourceValueObjectProp, obj = resourceValueObjectObj)
+            )
+
+            ConstructQuery(
+                constructClause = ConstructClause(
+                    statements = constructPatternsForResources ++ constructPatternsForValueObjects
+                ),
+                whereClause = WhereClause(
+                    Seq(
+                        UnionPattern(
+                            Seq(wherePatternsForResources, wherePatternsForValueObjects)
+                        )
+                    )
+                )
+            )
+
+        }
+
         for {
             searchSparql <- Future(queries.sparql.v2.txt.searchFulltext(
                 triplestore = settings.triplestoreType,
-                searchTerms = searchValue
+                searchTerms = searchValue,
+                separator = groupConcatSeparator
             ).toString())
 
-            searchResponse: SparqlConstructResponse <- (storeManager ? SparqlConstructRequest(searchSparql)).mapTo[SparqlConstructResponse]
+            // _ = println(searchSparql)
 
-            // separate resources and value objects
-            queryResultsSeparated = ConstructResponseUtilV2.splitMainResourcesAndValueRdfData(constructQueryResults = searchResponse, userProfile = userProfile)
+            prequeryResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(searchSparql)).mapTo[SparqlSelectResponse]
+
+            // _ = println(prequeryResponse)
+
+            // a sequence of resource Iris that match the search criteria
+            // attention: no permission checking has been done so far
+            resourceIris: Seq[IRI] = prequeryResponse.results.bindings.map {
+                case resultRow: VariableResultsRow =>
+                    resultRow.rowMap(resourceVar.variableName)
+            }
+
+            // make sure that the prequery returned some results
+            queryResultsSeparatedWithFullQueryPath: Map[IRI, ConstructResponseUtilV2.ResourceWithValueRdfData] <- if (resourceIris.nonEmpty) {
+
+                // for each resource, create a Set of value object Iris
+                val valueObjectIrisPerResource: Map[IRI, Set[IRI]] = prequeryResponse.results.bindings.foldLeft(Map.empty[IRI, Set[IRI]]) {
+                    (acc: Map[IRI, Set[IRI]], resultRow: VariableResultsRow) =>
+
+                        val mainResIri: String = resultRow.rowMap(resourceVar.variableName)
+
+                        resultRow.rowMap.get(valueObjectConcatVar.variableName) match {
+
+                            case Some(valObjIris) =>
+
+                                acc + (mainResIri -> valObjIris.split(groupConcatSeparator).toSet)
+
+
+                            case None => acc
+                        }
+                }
+
+                // println(valueObjectIrisPerResource)
+
+                // collect all value object Iris
+                val allValueObjectIris = valueObjectIrisPerResource.values.flatten.toSet
+
+                // create CONSTRUCT queries to query resources and their values
+                val mainQuery = createMainQuery(resourceIris.toSet, allValueObjectIris)
+
+                val triplestoreSpecificQueryPatternTransformerConstruct: ConstructToConstructTransformer = {
+                    if (settings.triplestoreType.startsWith("graphdb")) {
+                        // GraphDB
+                        new GraphDBConstructToConstructTransformer
+                    } else {
+                        // Other
+                        new NoInferenceConstructToConstructTransformer
+                    }
+                }
+
+                val triplestoreSpecificQuery = QueryTraverser.transformConstructToConstruct(
+                    inputQuery = mainQuery,
+                    transformer = triplestoreSpecificQueryPatternTransformerConstruct
+                )
+
+                // _ = println(triplestoreSpecificQuery.toSparql)
+
+                for {
+                    searchResponse: SparqlConstructResponse <- (storeManager ? SparqlConstructRequest(triplestoreSpecificQuery.toSparql)).mapTo[SparqlConstructResponse]
+
+                    // separate resources and value objects
+                    queryResultsSep = ConstructResponseUtilV2.splitMainResourcesAndValueRdfData(constructQueryResults = searchResponse, userProfile = userProfile)
+
+                    // for each main resource check if all dependent resources and value objects are still present after permission checking
+                    // this ensures that the user has sufficient permissions on the whole query path
+                    queryResWithFullQueryPath = queryResultsSep.foldLeft(Map.empty[IRI, ConstructResponseUtilV2.ResourceWithValueRdfData]) {
+                        case (acc: Map[IRI, ConstructResponseUtilV2.ResourceWithValueRdfData], (mainResIri: IRI, values: ConstructResponseUtilV2.ResourceWithValueRdfData)) =>
+
+                            valueObjectIrisPerResource.get(mainResIri) match {
+
+                                case Some(valObjIris) =>
+
+                                    // check for presence of value objects: valueObjectIrisPerResource
+                                    val expectedValueObjects: Set[IRI] = valueObjectIrisPerResource(mainResIri)
+
+                                    // value property assertions for the current resource
+                                    val valuePropAssertions: Map[IRI, Seq[ConstructResponseUtilV2.ValueRdfData]] = values.valuePropertyAssertions
+
+                                    // all value objects contained in `valuePropAssertions`
+                                    val resAndValueObjIris: ResourceIrisAndValueObjectIris = traverseValuePropertyAssertions(valuePropAssertions)
+
+                                    // check if the client has sufficient permissions on all value objects Iris present in the query path
+                                    val allValueObjects: Boolean = resAndValueObjIris.valueObjectIris.intersect(expectedValueObjects) == expectedValueObjects
+
+                                    if (allValueObjects) {
+                                        // sufficient permissions, include the main resource and its values
+                                        acc + (mainResIri -> values)
+                                    } else {
+                                        // insufficient permissions, skip the resource
+                                        acc
+                                    }
+
+                                case None =>
+                                    // no properties -> rfs:label matched
+                                    acc + (mainResIri -> values)
+                            }
+                    }
+
+                } yield queryResultsSep
+            } else {
+
+                // the prequery returned no results, no further query is necessary
+                Future(Map.empty[IRI, ConstructResponseUtilV2.ResourceWithValueRdfData])
+            }
+
+            // check if there are resources the user does not have sufficient permissions to see
+            forbiddenResourceOption: Option[ReadResourceV2] <- if (resourceIris.size > queryResultsSeparatedWithFullQueryPath.size) {
+                // some of the main resources have been suppressed, represent them using the forbidden resource
+
+                getForbiddenResource(userProfile)
+            } else {
+                // all resources visible, no need for the forbidden resource
+                Future(None)
+            }
 
         } yield ReadResourcesSequenceV2(
-            numberOfResources = queryResultsSeparated.size,
+            numberOfResources = resourceIris.size,
             resources = ConstructResponseUtilV2.createSearchResponse(
-                searchResults = queryResultsSeparated,
-                orderByResourceIri = queryResultsSeparated.keysIterator.toSeq,
-                forbiddenResource = None
+                searchResults = queryResultsSeparatedWithFullQueryPath,
+                orderByResourceIri = resourceIris,
+                forbiddenResource = forbiddenResourceOption
             )
         )
+
 
     }
 
@@ -1141,24 +1417,6 @@ class SearchResponderV2 extends Responder {
 
         }
 
-        /**
-          * Transform the the Knora explicit graph name to GraphDB explicit graph name.
-          *
-          * @param statement the given statement whose graph name has to be renamed.
-          * @return the statement with the renamed graph, if given.
-          */
-        def transformKnoraExplicitToGraphDBExplicit(statement: StatementPattern): Seq[StatementPattern] = {
-            val transformedPattern = statement.copy(
-                namedGraph = statement.namedGraph match {
-                    case Some(IriRef(OntologyConstants.NamedGraphs.KnoraExplicitNamedGraph, _)) => Some(IriRef(OntologyConstants.NamedGraphs.GraphDBExplicitNamedGraph))
-                    case Some(IriRef(_, _)) => throw AssertionException(s"Named graphs other than ${OntologyConstants.NamedGraphs.KnoraExplicitNamedGraph} cannot occur in non-triplestore-specific generated search query SPARQL")
-                    case None => None
-                }
-            )
-
-            Seq(transformedPattern)
-        }
-
         class GraphDBSelectToSelectTransformer extends SelectToSelectTransformer {
             def transformStatementInSelect(statementPattern: StatementPattern): Seq[StatementPattern] = Seq(statementPattern)
 
@@ -1180,33 +1438,6 @@ class SearchResponderV2 extends Responder {
 
             def transformFilter(filterPattern: FilterPattern): Seq[QueryPattern] = Seq(filterPattern)
 
-        }
-
-        /**
-          * Transforms non-triplestore-specific query patterns to GraphDB-specific ones.
-          */
-        class GraphDBConstructToConstructTransformer extends ConstructToConstructTransformer {
-            def transformStatementInConstruct(statementPattern: StatementPattern): Seq[StatementPattern] = Seq(statementPattern)
-
-            def transformStatementInWhere(statementPattern: StatementPattern): Seq[StatementPattern] = {
-                transformKnoraExplicitToGraphDBExplicit(statementPattern)
-            }
-
-            def transformFilter(filterPattern: FilterPattern): Seq[QueryPattern] = Seq(filterPattern)
-        }
-
-        /**
-          * Transforms non-triplestore-specific query patterns for a triplestore that does not have inference enabled.
-          */
-        class NoInferenceConstructToConstructTransformer extends ConstructToConstructTransformer {
-            def transformStatementInConstruct(statementPattern: StatementPattern): Seq[StatementPattern] = Seq(statementPattern)
-
-            def transformStatementInWhere(statementPattern: StatementPattern): Seq[StatementPattern] = {
-                // TODO: if OntologyConstants.NamedGraphs.KnoraExplicitNamedGraph occurs, remove it and use property path syntax to emulate inference.
-                Seq(statementPattern)
-            }
-
-            def transformFilter(filterPattern: FilterPattern): Seq[QueryPattern] = Seq(filterPattern)
         }
 
         /**
@@ -1473,56 +1704,6 @@ class SearchResponderV2 extends Responder {
 
                 //println("++++++++")
                 //println(triplestoreSpecificQuery.toSparql)
-
-                /**
-                  * Represents the Iris of resources and value objects.
-                  *
-                  * @param resourceIris    resource Iris.
-                  * @param valueObjectIris value object Iris.
-                  */
-                case class ResourceIrisAndValueObjectIris(resourceIris: Set[IRI], valueObjectIris: Set[IRI])
-
-                /**
-                  * Traverses value property assertions and returns the Iris of the value objects and the dependent resources, recursively traversing their value properties as well .
-                  *
-                  * @param valuePropertyAssertions the assertions to be traversed.
-                  * @return a [[ResourceIrisAndValueObjectIris]] representing all resource and value object Iris that have been found in `valuePropertyAssertions`.
-                  */
-                def traverseValuePropertyAssertions(valuePropertyAssertions: Map[IRI, Seq[ConstructResponseUtilV2.ValueRdfData]]): ResourceIrisAndValueObjectIris = {
-
-                    // look at the value objects and ignore the property Iris (we are only interested in value instances)
-                    val resAndValObjIris: Seq[ResourceIrisAndValueObjectIris] = valuePropertyAssertions.values.flatten.foldLeft(Seq.empty[ResourceIrisAndValueObjectIris]) {
-                        (acc: Seq[ResourceIrisAndValueObjectIris], assertion) =>
-
-                            if (assertion.targetResource.nonEmpty) {
-                                // this is a link value
-                                // recursively traverse the dependent resource's values
-
-                                val dependentRes: ConstructResponseUtilV2.ResourceWithValueRdfData = assertion.targetResource.get
-
-                                // recursively traverse the link value's nested resource and its assertions
-                                val resAndValObjIrisForDependentRes: ResourceIrisAndValueObjectIris = traverseValuePropertyAssertions(dependentRes.valuePropertyAssertions)
-                                // get the dependent resource's Iri from the current link value's rdf:object
-                                val dependentResIri: IRI = assertion.assertions.getOrElse(OntologyConstants.Rdf.Object, throw InconsistentTriplestoreDataException(s"expected ${OntologyConstants.Rdf.Object} for link value ${assertion.valueObjectIri}"))
-
-                                // append results from recursion and current value object
-                                ResourceIrisAndValueObjectIris(resourceIris = resAndValObjIrisForDependentRes.resourceIris + dependentResIri, valueObjectIris = resAndValObjIrisForDependentRes.valueObjectIris + assertion.valueObjectIri) +: acc
-                            } else {
-                                // not a link value or no dependent resource given (in order to avoid infinite recursion)
-                                // no dependent resource present
-                                // append results for current value object
-                                ResourceIrisAndValueObjectIris(resourceIris = Set.empty[IRI], valueObjectIris = Set(assertion.valueObjectIri)) +: acc
-                            }
-                    }
-
-                    // convert the collection of `ResourceIrisAndValueObjectIris` into one
-                    ResourceIrisAndValueObjectIris(
-                        resourceIris = resAndValObjIris.flatMap(_.resourceIris).toSet,
-                        valueObjectIris = resAndValObjIris.flatMap(_.valueObjectIris).toSet
-                    )
-
-
-                }
 
                 for {
                     searchResponse: SparqlConstructResponse <- (storeManager ? SparqlConstructRequest(triplestoreSpecificSparql)).mapTo[SparqlConstructResponse]

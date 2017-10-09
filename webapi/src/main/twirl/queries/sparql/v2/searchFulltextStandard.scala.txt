@@ -32,9 +32,11 @@
  *
  * @param triplestore the name of the triplestore being used.
  * @param searchTerms search terms.
+ * @param separator the separator to be used in aggregation functions.
  *@
 @(triplestore: String,
-  searchTerms: String)
+  searchTerms: String,
+  separator: Char)
 
 @*
 

@@ -32,44 +32,18 @@
  * we need to get explicit (non-inferred) statements.
  *
  * @param searchTerms search terms.
+ * @param separator the separator to be used in aggregation functions.
  *@
-@(searchTerms: String)
+@(searchTerms: String,
+  separator: Char)
 
 PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 
-CONSTRUCT {
-	?matchingSubject ?matchingProperty ?literal .
+SELECT DISTINCT ?resource (GROUP_CONCAT(?valueObject; separator="@separator") AS ?valueObjectConcat) WHERE {
 
-    # include this inferred information in the results, needed to identify value properties
-	?resource knora-base:hasValue ?valueObject .
-
-    ?valueObject knora-base:attachedToUser ?valueObjectCreator ;
-        knora-base:hasPermissions ?valueObjectPermissions ;
-        a ?valueObjectType ;
-        ?valueObjectProperty ?valueObjectValue .
-
-    # include this inferred information in the results, needed to identify resources
-    ?resource a knora-base:Resource ;
-        knora-base:isMainResource true ;
-        ?resourceProperty ?matchingSubject ;
-        rdfs:label ?label .
-
-    # indicates if the resource's label matched the search pattern
-    ?resource knora-base:labelMatched ?labelMatched .
-
-    ?resource a ?resourceType ;
-        knora-base:attachedToUser ?resourceCreator ;
-        knora-base:hasPermissions ?resourcePermissions ;
-        knora-base:attachedToProject ?referredResourceProject .
-}
-
-WHERE {
     {
-
-        # make a subquery to find triples matching the query string
-        # limit the number of results in order to prevent an error when writing the results back (may be too many)
-        SELECT DISTINCT ?matchingSubject ?matchingProperty ?literal WHERE {
+        SELECT DISTINCT ?matchingSubject WHERE {
 
             GRAPH <http://www.ontotext.com/explicit> {
                 ?matchingSubject ?matchingProperty ?literal .
@@ -77,35 +51,22 @@ WHERE {
 
             ?literal <http://www.ontotext.com/owlim/lucene#fullTextSearchIndex> '@searchTerms' .
         }
-        @* TODO: support paging using OFFSET *@
-        ORDER BY ?matchingSubject
-        LIMIT 500
-    }
-
-    OPTIONAL {
-        ?matchingSubject a knora-base:Resource .
-        BIND(true AS ?labelMatched)
     }
 
     OPTIONAL {
         ?matchingSubject a knora-base:Value .
-        ?containingResource knora-base:hasValue ?matchingSubject .
-
 
         GRAPH <http://www.ontotext.com/explicit> {
-            ?containingResource ?resourceProperty ?matchingSubject .
+            ?matchingSubject knora-base:isDeleted false .
             ?matchingSubject a ?valueObjectType .
-            ?matchingSubject ?valueObjectProperty ?valueObjectValue .
         }
-
 
         FILTER(?valueObjectType != knora-base:LinkValue)
 
-        BIND(?matchingSubject AS ?valueObject)
+        ?containingResource knora-base:hasValue ?matchingSubject .
 
-        ?valueObject knora-base:isDeleted false ;
-            knora-base:attachedToUser ?valueObjectCreator ;
-            knora-base:hasPermissions ?valueObjectPermissions .
+        # this variable will only be bound if the search matched a value object
+        BIND(?matchingSubject AS ?valueObject)
 
     }
 
@@ -116,14 +77,8 @@ WHERE {
     ?resource a knora-base:Resource ;
         knora-base:isDeleted false .
 
-    GRAPH <http://www.ontotext.com/explicit> {
-        ?resource a ?resourceType .
-    }
-
-    ?resource rdfs:label ?label .
-
-    ?resource knora-base:attachedToUser ?resourceCreator ;
-            knora-base:hasPermissions ?resourcePermissions ;
-            knora-base:attachedToProject ?referredResourceProject .
-
 }
+GROUP BY ?resource
+ORDER BY ?resource
+OFFSET 0
+LIMIT 25

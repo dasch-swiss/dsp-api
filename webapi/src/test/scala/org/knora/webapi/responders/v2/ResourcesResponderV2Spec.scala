@@ -73,7 +73,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
             actorUnderTest ! ResourcesGetRequestV2(Seq("http://data.knora.org/c5058f3a"), userProfile)
 
             expectMsgPF(timeout) {
-                case response: ReadResourcesSequenceV2 => compareReadResourcesSequenceV2Response(received = response, expected = ResourcesResponderV2SpecFullData.expectedFullResourceResponseForZeitgloecklein)
+                case response: ReadResourcesSequenceV2 => compareReadResourcesSequenceV2Response(expected = ResourcesResponderV2SpecFullData.expectedFullResourceResponseForZeitgloecklein, received = response)
             }
 
         }
@@ -83,7 +83,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
             actorUnderTest ! ResourcesGetRequestV2(Seq("http://data.knora.org/2a6221216701"), userProfile)
 
             expectMsgPF(timeout) {
-                case response: ReadResourcesSequenceV2 => compareReadResourcesSequenceV2Response(received = response, expected = ResourcesResponderV2SpecFullData.expectedFullResourceResponseForReise)
+                case response: ReadResourcesSequenceV2 => compareReadResourcesSequenceV2Response(expected = ResourcesResponderV2SpecFullData.expectedFullResourceResponseForReise, received = response)
             }
 
         }
@@ -93,7 +93,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
             actorUnderTest ! ResourcesGetRequestV2(Seq("http://data.knora.org/c5058f3a", "http://data.knora.org/2a6221216701"), userProfile)
 
             expectMsgPF(timeout) {
-                case response: ReadResourcesSequenceV2 => compareReadResourcesSequenceV2Response(received = response, expected = ResourcesResponderV2SpecFullData.expectedFullResourceResponseForZeitgloeckleinAndReise)
+                case response: ReadResourcesSequenceV2 => compareReadResourcesSequenceV2Response(expected = ResourcesResponderV2SpecFullData.expectedFullResourceResponseForZeitgloeckleinAndReise, received = response)
             }
 
         }
@@ -103,7 +103,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
             actorUnderTest ! ResourcesGetRequestV2(Seq("http://data.knora.org/2a6221216701", "http://data.knora.org/c5058f3a"), userProfile)
 
             expectMsgPF(timeout) {
-                case response: ReadResourcesSequenceV2 => compareReadResourcesSequenceV2Response(received = response, expected = ResourcesResponderV2SpecFullData.expectedFullResourceResponseForReiseInversedAndZeitgloeckleinInversedOrder)
+                case response: ReadResourcesSequenceV2 => compareReadResourcesSequenceV2Response(expected = ResourcesResponderV2SpecFullData.expectedFullResourceResponseForReiseInversedAndZeitgloeckleinInversedOrder, received = response)
             }
 
         }
@@ -114,7 +114,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             // the redundant Iri should be ignored (distinct)
             expectMsgPF(timeout) {
-                case response: ReadResourcesSequenceV2 => compareReadResourcesSequenceV2Response(received = response, expected = ResourcesResponderV2SpecFullData.expectedFullResourceResponseForZeitgloeckleinAndReise)
+                case response: ReadResourcesSequenceV2 => compareReadResourcesSequenceV2Response(expected = ResourcesResponderV2SpecFullData.expectedFullResourceResponseForZeitgloeckleinAndReise, received = response)
             }
 
         }

@@ -29,17 +29,20 @@
  *
  * @param triplestore the name of the triplestore being used.
  * @param searchTerms search terms.
+ * @param separator the separator to be used in aggregation functions.
  *@
 @(triplestore: String,
-  searchTerms: String)
+  searchTerms: String,
+  separator: Char)
 
 @if(triplestore.startsWith("graphdb")) {
     @{
-        queries.sparql.v2.txt.searchFulltextGraphDB(searchTerms = searchTerms)
+        queries.sparql.v2.txt.searchFulltextGraphDB(searchTerms = searchTerms, separator = separator)
     }
 } else {
     @{
         queries.sparql.v2.txt.searchFulltextStandard(triplestore = triplestore,
-                                                     searchTerms = searchTerms)
+                                                     searchTerms = searchTerms,
+                                                     separator = separator)
     }
 }

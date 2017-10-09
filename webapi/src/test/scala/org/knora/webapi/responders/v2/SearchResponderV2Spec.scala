@@ -77,15 +77,9 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
             expectMsgPF(timeout) {
                 case response: ReadResourcesSequenceV2 =>
 
-
-                    // TODO: since the order is not defined in the response of a fulltext search, sort received and expected resources by their Iri before comparing them
                     compareReadResourcesSequenceV2Response(
-                        received = response.copy(
-                            resources = response.resources.sortBy(_.resourceIri)
-                        ),
-                        expected = SearchResponderV2SpecFullData.fulltextSearchForNarr.copy(
-                            resources = SearchResponderV2SpecFullData.fulltextSearchForNarr.resources.sortBy(_.resourceIri)
-                        )
+                        expected = SearchResponderV2SpecFullData.fulltextSearchForNarr,
+                        received = response
                     )
             }
         }
@@ -94,10 +88,10 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             actorUnderTest ! FulltextSearchGetRequestV2("Dinge", SharedAdminTestData.anythingUser1)
 
-            // TODO: only one resource is expected, so order does not matter.
             expectMsgPF(timeout) {
                 case response: ReadResourcesSequenceV2 =>
-                    compareReadResourcesSequenceV2Response(received = response, expected = SearchResponderV2SpecFullData.fulltextSearchForDinge)
+
+                    compareReadResourcesSequenceV2Response(expected = SearchResponderV2SpecFullData.fulltextSearchForDinge, received = response)
             }
 
         }
@@ -110,7 +104,7 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
             // extended search sorty by resource Iri by default if no order criterion is indicated
             expectMsgPF(timeout) {
                 case response: ReadResourcesSequenceV2 =>
-                    compareReadResourcesSequenceV2Response(received = response, expected = SearchResponderV2SpecFullData.booksWithTitleZeitgloeckleinResponse)
+                    compareReadResourcesSequenceV2Response(expected = SearchResponderV2SpecFullData.booksWithTitleZeitgloeckleinResponse, received = response)
             }
 
         }
