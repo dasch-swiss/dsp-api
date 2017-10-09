@@ -2295,19 +2295,13 @@ object KnoraApiV2WithValueObjects {
       * @param predicates          the predicates of the class.
       * @param canBeInstantiated   true if this is a Knora resource class that can be instantiated via the Knora API.
       * @param cardinalities       the cardinalities of the class.
-      * @param linkProperties      the set of the class's link properties.
-      * @param linkValueProperties the set of the class's link value properties.
-      * @param fileValueProperties the set of the class's file value properties.
       * @return a [[ClassEntityInfoV2]].
       */
     private def makeClass(classIri: IRI,
                           subClassOf: Set[IRI] = Set.empty[IRI],
                           predicates: Seq[PredicateInfoV2] = Seq.empty[PredicateInfoV2],
                           canBeInstantiated: Boolean = false,
-                          cardinalities: Map[IRI, Cardinality.Value] = Map.empty[IRI, Cardinality.Value],
-                          linkProperties: Set[IRI] = Set.empty[IRI],
-                          linkValueProperties: Set[IRI] = Set.empty[IRI],
-                          fileValueProperties: Set[IRI] = Set.empty[IRI]): ClassEntityInfoV2 = {
+                          cardinalities: Map[IRI, Cardinality.Value] = Map.empty[IRI, Cardinality.Value]): ClassEntityInfoV2 = {
         val predicatesWithType = predicates :+ makePredicate(
             predicateIri = OntologyConstants.Rdf.Type,
             objects = Set(OntologyConstants.Owl.Class)
@@ -2320,9 +2314,6 @@ object KnoraApiV2WithValueObjects {
             }.toMap,
             canBeInstantiated = canBeInstantiated,
             cardinalities = cardinalities,
-            linkProperties = linkProperties,
-            linkValueProperties = linkValueProperties,
-            fileValueProperties = fileValueProperties,
             subClassOf = subClassOf,
             ontologyIri = OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiOntologyIri,
             ontologySchema = ApiV2WithValueObjects

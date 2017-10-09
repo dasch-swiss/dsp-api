@@ -1071,6 +1071,7 @@ object KnoraApiV2Simple {
             predicates = predicatesWithType.map {
                 pred => pred.predicateIri -> pred
             }.toMap,
+            cardinalities = cardinalities,
             linkProperties = linkProperties,
             subClassOf = subClassOf,
             ontologyIri = OntologyConstants.KnoraApiV2Simple.KnoraApiOntologyIri,
