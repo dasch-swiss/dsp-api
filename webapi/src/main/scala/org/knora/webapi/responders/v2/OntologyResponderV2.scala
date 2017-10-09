@@ -350,6 +350,8 @@ class OntologyResponderV2 extends Responder {
             // Construct a ClassEntityInfoV2 for each resource class.
             resourceEntityInfos: Map[IRI, ClassEntityInfoV2] = concreteResourceDefsGrouped.map {
                 case (resourceClassIri, resourceClassRows) =>
+                    val ontologyIri = getOntologyIri(resourceClassIri)
+
                     // Group the rows for each resource class by predicate IRI.
                     val groupedByPredicate: Map[IRI, Seq[VariableResultsRow]] = resourceClassRows.filter(_.rowMap.contains("resourceClassPred")).groupBy(_.rowMap("resourceClassPred")) - OntologyConstants.Rdfs.SubClassOf
 
@@ -392,6 +394,7 @@ class OntologyResponderV2 extends Responder {
                     val resourceEntityInfo = ClassEntityInfoV2(
                         classIri = resourceClassIri,
                         ontologyIri = getOntologyIri(resourceClassIri),
+                        canBeInstantiated = ontologyIri != OntologyConstants.KnoraBase.KnoraBaseOntologyIri, // Any resource class defined in a project-specific ontology can be instantiated.
                         predicates = new ErrorHandlingMap(predicates, { key: IRI => s"Predicate $key not found for resource class $resourceClassIri" }),
                         cardinalities = owlCardinalities.map {
                             owlCardinality =>
@@ -403,7 +406,7 @@ class OntologyResponderV2 extends Responder {
                                         owlCardinalityValue = owlCardinality.cardinalityValue
                                     )
                                 )
-                        }.toMap,
+                        }.toMap - OntologyConstants.KnoraBase.HasStandoffLinkToValue, // Don't return a cardinality for hasStandoffLinkToValue, because there's nothing the client can do with it.
                         linkProperties = linkProps,
                         linkValueProperties = linkValueProps,
                         fileValueProperties = fileValueProps,
@@ -441,6 +444,7 @@ class OntologyResponderV2 extends Responder {
                     val propertyEntityInfo = PropertyEntityInfoV2(
                         propertyIri = propertyIri,
                         ontologyIri = ontologyIri,
+                        isEditable = ontologyIri != OntologyConstants.KnoraBase.KnoraBaseOntologyIri, // Any property defined in a project-specific ontology is editable.
                         isLinkProp = linkProps.contains(propertyIri),
                         isLinkValueProp = linkValueProps.contains(propertyIri),
                         isFileValueProp = fileValueProps.contains(propertyIri),
@@ -720,7 +724,7 @@ class OntologyResponderV2 extends Responder {
             cacheData <- getCacheData
 
             classDefsAvailable = cacheData.classDefs.filterKeys(classIris)
-            propertyDefsAvailable = cacheData.propertyDefs.filterKeys(propertyIris)
+            propertyDefsAvailable = cacheData.propertyDefs.filterKeys(propertyIris  - OntologyConstants.KnoraBase.HasStandoffLinkToValue) // Don't return hasStandoffLinkToValue, because there's nothing a client can do with it.
 
             response = EntityInfoGetResponseV2(
                 classEntityInfoMap = new ErrorHandlingMap(classDefsAvailable, { key => s"Resource class $key not found" }),

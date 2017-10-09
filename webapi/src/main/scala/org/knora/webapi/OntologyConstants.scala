@@ -56,6 +56,7 @@ object OntologyConstants {
 
         val ObjectProperty: IRI = OwlPrefixExpansion + "ObjectProperty"
         val DatatypeProperty: IRI = OwlPrefixExpansion + "DatatypeProperty"
+        val AnnotationProperty: IRI = OwlPrefixExpansion + "AnnotationProperty"
 
         val Class: IRI = OwlPrefixExpansion + "Class"
 
@@ -509,6 +510,9 @@ object OntologyConstants {
         val HasProperties: IRI = KnoraApiV2PrefixExpansion + "hasProperties"
 
         val BelongsToOntology: IRI = KnoraApiV2PrefixExpansion + "belongsToOntology"
+
+        val IsEditable: IRI = KnoraApiV2PrefixExpansion + "isEditable"
+        val CanBeInstantiated: IRI = KnoraApiV2PrefixExpansion + "canBeInstantiated"
 
         val HasClasses: IRI = KnoraApiV2PrefixExpansion + "hasClasses"
 

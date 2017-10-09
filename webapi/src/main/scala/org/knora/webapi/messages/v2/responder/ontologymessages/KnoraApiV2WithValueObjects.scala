@@ -37,6 +37,46 @@ object KnoraApiV2WithValueObjects {
         )
     )
 
+    val IsEditable: PropertyEntityInfoV2 = makeProperty(
+        propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.IsEditable,
+        propertyType = OntologyConstants.Owl.AnnotationProperty,
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "is editable"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "Indicates whether a property of a Knora resource class be edited via the Knora API"
+                )
+            )
+        ),
+        objectType = Some(OntologyConstants.Xsd.Boolean)
+    )
+
+    val CanBeInstantiated: PropertyEntityInfoV2 = makeProperty(
+        propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.CanBeInstantiated,
+        propertyType = OntologyConstants.Owl.AnnotationProperty,
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "can be instantiated"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "Indicates whether a class is a Knora resource class that can be instantiated via the Knora API"
+                )
+            )
+        ),
+        objectType = Some(OntologyConstants.Xsd.Boolean)
+    )
+
     val HasPermissions: PropertyEntityInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.HasPermissions,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
@@ -87,7 +127,7 @@ object KnoraApiV2WithValueObjects {
         propertyType = OntologyConstants.Owl.DatatypeProperty,
         predicates = Seq(
             makePredicate(
-                predicateIri =  OntologyConstants.Rdfs.Label,
+                predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
                     LanguageCodes.EN -> "Creation date"
                 )
@@ -108,7 +148,7 @@ object KnoraApiV2WithValueObjects {
         propertyType = OntologyConstants.Owl.DatatypeProperty,
         predicates = Seq(
             makePredicate(
-                predicateIri =  OntologyConstants.Rdfs.Label,
+                predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
                     LanguageCodes.EN -> "Last modification date"
                 )
@@ -127,6 +167,7 @@ object KnoraApiV2WithValueObjects {
     val Region: ClassEntityInfoV2 = makeClass(
         classIri = OntologyConstants.KnoraApiV2WithValueObjects.Region,
         subClassOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.Resource),
+        canBeInstantiated = true,
         cardinalities = Map(
             OntologyConstants.SchemaOrg.Name -> Cardinality.MustHaveOne,
             OntologyConstants.KnoraApiV2WithValueObjects.HasStandoffLinkTo -> Cardinality.MayHaveMany,
@@ -146,6 +187,7 @@ object KnoraApiV2WithValueObjects {
         subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.Region),
         objectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.Representation),
         subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasLinkTo),
+        isEditable = true,
         predicates = Seq(
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
@@ -412,7 +454,7 @@ object KnoraApiV2WithValueObjects {
         propertyType = OntologyConstants.Owl.DatatypeProperty,
         predicates = Seq(
             makePredicate(
-                predicateIri =  OntologyConstants.Rdfs.Label,
+                predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
                     LanguageCodes.EN -> "Value creation date"
                 )
@@ -525,6 +567,7 @@ object KnoraApiV2WithValueObjects {
         subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.Region),
         objectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.ColorValue),
         subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasValue),
+        isEditable = true,
         predicates = Seq(
             makePredicate(
                 predicateIri = OntologyConstants.SalsahGui.GuiElement,
@@ -558,6 +601,7 @@ object KnoraApiV2WithValueObjects {
         subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.Region),
         objectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.GeomValue),
         subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasValue),
+        isEditable = true,
         predicates = Seq(
             makePredicate(
                 predicateIri = OntologyConstants.SalsahGui.GuiElement,
@@ -649,6 +693,7 @@ object KnoraApiV2WithValueObjects {
         subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.StillImageRepresentation),
         objectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.StillImageFileValue),
         subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasFileValue),
+        isEditable = true,
         predicates = Seq(
             makePredicate(
                 predicateIri = OntologyConstants.SalsahGui.GuiElement,
@@ -678,6 +723,7 @@ object KnoraApiV2WithValueObjects {
         subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.MovingImageRepresentation),
         objectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.MovingImageFileValue),
         subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasFileValue),
+        isEditable = true,
         predicates = Seq(
             makePredicate(
                 predicateIri = OntologyConstants.SalsahGui.GuiElement,
@@ -707,6 +753,7 @@ object KnoraApiV2WithValueObjects {
         subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.AudioRepresentation),
         objectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.AudioFileValue),
         subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasFileValue),
+        isEditable = true,
         predicates = Seq(
             makePredicate(
                 predicateIri = OntologyConstants.SalsahGui.GuiElement,
@@ -736,6 +783,7 @@ object KnoraApiV2WithValueObjects {
         subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.DDDRepresentation),
         objectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.DDDFileValue),
         subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasFileValue),
+        isEditable = true,
         predicates = Seq(
             makePredicate(
                 predicateIri = OntologyConstants.SalsahGui.GuiElement,
@@ -765,6 +813,7 @@ object KnoraApiV2WithValueObjects {
         subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.TextRepresentation),
         objectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.TextFileValue),
         subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasFileValue),
+        isEditable = true,
         predicates = Seq(
             makePredicate(
                 predicateIri = OntologyConstants.SalsahGui.GuiElement,
@@ -794,6 +843,7 @@ object KnoraApiV2WithValueObjects {
         subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.DocumentRepresentation),
         objectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.DocumentFileValue),
         subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasFileValue),
+        isEditable = true,
         predicates = Seq(
             makePredicate(
                 predicateIri = OntologyConstants.SalsahGui.GuiElement,
@@ -2096,6 +2146,8 @@ object KnoraApiV2WithValueObjects {
       * The set of all properties in the `knora-api` v2 ontology in the [[ApiV2WithValueObjects]] schema.
       */
     val Properties: Set[PropertyEntityInfoV2] = Set(
+        IsEditable,
+        CanBeInstantiated,
         HasPermissions,
         ValueAsString,
         ValueHas,
@@ -2180,17 +2232,19 @@ object KnoraApiV2WithValueObjects {
     /**
       * Makes a [[PropertyEntityInfoV2]].
       *
-      * @param propertyIri  the IRI of the property.
-      * @param propertyType the type of the property (owl:ObjectProperty, owl:DatatypeProperty, or rdf:Property).
+      * @param propertyIri   the IRI of the property.
+      * @param propertyType  the type of the property (owl:ObjectProperty, owl:DatatypeProperty, or rdf:Property).
       * @param subPropertyOf the set of direct superproperties of this property.
-      * @param predicates   the property's predicates.
-      * @param subjectType  the required type of the property's subject.
-      * @param objectType   the required type of the property's object.
+      * @param isEditable    true if this is a Knora resource property that can be edited via the Knora API.
+      * @param predicates    the property's predicates.
+      * @param subjectType   the required type of the property's subject.
+      * @param objectType    the required type of the property's object.
       * @return a [[PropertyEntityInfoV2]].
       */
     private def makeProperty(propertyIri: IRI,
                              propertyType: IRI,
                              subPropertyOf: Set[IRI] = Set.empty[IRI],
+                             isEditable: Boolean = false,
                              predicates: Seq[PredicateInfoV2] = Seq.empty[PredicateInfoV2],
                              subjectType: Option[IRI] = None,
                              objectType: Option[IRI] = None): PropertyEntityInfoV2 = {
@@ -2220,6 +2274,7 @@ object KnoraApiV2WithValueObjects {
         PropertyEntityInfoV2(
             propertyIri = propertyIri,
             ontologyIri = OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiOntologyIri,
+            isEditable = isEditable,
             ontologySchema = ApiV2WithValueObjects,
             predicates = predsWithTypes.map {
                 pred => pred.predicateIri -> pred
@@ -2234,6 +2289,7 @@ object KnoraApiV2WithValueObjects {
       * @param classIri            the IRI of the class.
       * @param subClassOf          the set of direct superclasses of this class.
       * @param predicates          the predicates of the class.
+      * @param canBeInstantiated   true if this is a Knora resource class that can be instantiated via the Knora API.
       * @param cardinalities       the cardinalities of the class.
       * @param linkProperties      the set of the class's link properties.
       * @param linkValueProperties the set of the class's link value properties.
@@ -2243,6 +2299,7 @@ object KnoraApiV2WithValueObjects {
     private def makeClass(classIri: IRI,
                           subClassOf: Set[IRI] = Set.empty[IRI],
                           predicates: Seq[PredicateInfoV2] = Seq.empty[PredicateInfoV2],
+                          canBeInstantiated: Boolean = false,
                           cardinalities: Map[IRI, Cardinality.Value] = Map.empty[IRI, Cardinality.Value],
                           linkProperties: Set[IRI] = Set.empty[IRI],
                           linkValueProperties: Set[IRI] = Set.empty[IRI],
@@ -2257,6 +2314,7 @@ object KnoraApiV2WithValueObjects {
             predicates = predicatesWithType.map {
                 pred => pred.predicateIri -> pred
             }.toMap,
+            canBeInstantiated = canBeInstantiated,
             cardinalities = cardinalities,
             linkProperties = linkProperties,
             linkValueProperties = linkValueProperties,

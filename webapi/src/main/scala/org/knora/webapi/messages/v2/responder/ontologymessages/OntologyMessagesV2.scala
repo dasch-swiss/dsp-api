@@ -528,7 +528,7 @@ sealed trait EntityInfoV2 {
                                             case None =>
                                                 // The object is not available without a language tag. Sort the
                                                 // available objects by language code to get a deterministic result,
-                                                // and return the object in the language code with the lowest sort
+                                                // and return the object in the language with the lowest sort
                                                 // order.
                                                 predicateInfo.objectsWithLang.toVector.sortBy {
                                                     case (lang, obj) => lang
@@ -627,6 +627,7 @@ sealed trait EntityInfoWithLabelAndCommentV2 extends EntityInfoV2 {
   */
 case class PropertyEntityInfoV2(propertyIri: IRI,
                                 ontologyIri: IRI,
+                                isEditable: Boolean = false,
                                 isLinkProp: Boolean = false,
                                 isLinkValueProp: Boolean = false,
                                 isFileValueProp: Boolean = false,
@@ -712,8 +713,8 @@ case class PropertyEntityInfoV2(propertyIri: IRI,
 
         // Determine the type that we will return as the property's JSON-LD @type.
         val convertedPropertyType: IRI = sourcePropertyType match {
-            case OntologyConstants.Owl.DatatypeProperty | OntologyConstants.Rdf.Property =>
-                // The property says it's a datatype property, so use that.
+            case OntologyConstants.Owl.DatatypeProperty | OntologyConstants.Rdf.Property | OntologyConstants.Owl.AnnotationProperty =>
+                // The property doesn't claim to be an object property, so use whatever type it provides.
                 sourcePropertyType
 
             case OntologyConstants.Owl.ObjectProperty =>
@@ -771,11 +772,17 @@ case class PropertyEntityInfoV2(propertyIri: IRI,
             None
         }
 
+        val isEditableStatement: Option[(IRI, JsonLDBoolean)] = if (isEditable && targetSchema == ApiV2WithValueObjects) {
+            Some(OntologyConstants.KnoraApiV2WithValueObjects.IsEditable -> JsonLDBoolean(true))
+        } else {
+            None
+        }
+
         Map(
             "@id" -> JsonLDString(convertedPropertyIri),
             "@type" -> JsonLDString(convertedPropertyType),
             belongsToOntologyPred -> JsonLDString(convertedOntologyIri)
-        ) ++ jsonSubPropertyOfStatement ++ subjectTypeStatement ++ objectTypeStatement
+        ) ++ jsonSubPropertyOfStatement ++ subjectTypeStatement ++ objectTypeStatement ++ isEditableStatement
     }
 }
 
@@ -803,6 +810,7 @@ case class PropertyEntityInfoV2(propertyIri: IRI,
 case class ClassEntityInfoV2(classIri: IRI,
                              ontologyIri: IRI,
                              rdfType: IRI = OntologyConstants.Owl.Class,
+                             canBeInstantiated: Boolean = false,
                              predicates: Map[IRI, PredicateInfoV2] = Map.empty[IRI, PredicateInfoV2],
                              cardinalities: Map[IRI, Cardinality.Value] = Map.empty[IRI, Cardinality.Value],
                              xsdStringRestrictionPattern: Option[String] = None,
@@ -813,17 +821,30 @@ case class ClassEntityInfoV2(classIri: IRI,
                              ontologySchema: OntologySchema) extends EntityInfoWithLabelAndCommentV2 {
 
     def getNonLanguageSpecific(targetSchema: ApiV2Schema): Map[IRI, JsonLDValue] = {
-        // If we're using the simplified API, don't return link value properties.
-        val filteredCardinalities = if (targetSchema == ApiV2Simple) {
-            cardinalities.filterNot {
-                case (propertyIri, _) => linkValueProperties.contains(propertyIri)
-            }
-        } else {
-            cardinalities
+        // Convert the property IRIs in the cardinalities according to the target schema.
+        val cardinalitiesWithTargetSchemaIris = cardinalities.map {
+            case (propertyIri: IRI, cardinality: Cardinality.Value) =>
+                val schemaPropertyIri: IRI = InputValidation.toExternalEntityIri(
+                    entityIri = propertyIri,
+                    targetSchema = targetSchema
+                )
+
+                (schemaPropertyIri, cardinality)
+        }
+
+        // Add the standard cardinalities from knora-api:Resource for the target schema.
+        val schemaSpecificCardinalities: Map[IRI, Cardinality.Value] = targetSchema match {
+            case ApiV2Simple =>
+                // If we're using the simplified API, don't return link value properties.
+                cardinalitiesWithTargetSchemaIris.filterNot {
+                    case (propertyIri, _) => linkValueProperties.contains(propertyIri)
+                } ++ KnoraApiV2Simple.Resource.cardinalities
+
+            case ApiV2WithValueObjects => cardinalitiesWithTargetSchemaIris ++ KnoraApiV2WithValueObjects.Resource.cardinalities
         }
 
         // Convert OWL cardinalities to JSON-LD.
-        val owlCardinalities: Seq[JsonLDObject] = filteredCardinalities.map {
+        val owlCardinalities: Seq[JsonLDObject] = schemaSpecificCardinalities.map {
             case (propertyIri: IRI, cardinality: Cardinality.Value) =>
 
                 val prop2card: (IRI, JsonLDInt) = cardinality match {
@@ -833,14 +854,9 @@ case class ClassEntityInfoV2(classIri: IRI,
                     case Cardinality.MustHaveSome => OntologyConstants.Owl.MinCardinality -> JsonLDInt(1)
                 }
 
-                val cardinalityPropertyIri: IRI = InputValidation.toExternalEntityIri(
-                    entityIri = propertyIri,
-                    targetSchema = targetSchema
-                )
-
                 JsonLDObject(Map(
                     "@type" -> JsonLDString(OntologyConstants.Owl.Restriction),
-                    OntologyConstants.Owl.OnProperty -> JsonLDString(cardinalityPropertyIri),
+                    OntologyConstants.Owl.OnProperty -> JsonLDString(propertyIri),
                     prop2card
                 ))
         }.toSeq
@@ -876,8 +892,8 @@ case class ClassEntityInfoV2(classIri: IRI,
                     OntologyConstants.Owl.OnDatatype -> JsonLDString(OntologyConstants.Xsd.String),
                     OntologyConstants.Owl.WithRestrictions -> JsonLDArray(Seq(
                         JsonLDObject(Map(OntologyConstants.Xsd.Pattern -> JsonLDString(pattern))
-                    ))
-                )))
+                        ))
+                    )))
         }
 
         val jsonSubClassOf = subClassOf.toSeq.map {
@@ -896,11 +912,17 @@ case class ClassEntityInfoV2(classIri: IRI,
             None
         }
 
+        val canBeInstantiatedStatement: Option[(IRI, JsonLDBoolean)] = if (canBeInstantiated && targetSchema == ApiV2WithValueObjects) {
+            Some(OntologyConstants.KnoraApiV2WithValueObjects.CanBeInstantiated -> JsonLDBoolean(true))
+        } else {
+            None
+        }
+
         Map(
             "@id" -> JsonLDString(convertedResourceClassIri),
             belongsToOntologyPred -> JsonLDString(convertedOntologyIri),
             "@type" -> JsonLDString(rdfType)
-        ) ++ jsonSubClassOfStatement ++ resourceIconStatement
+        ) ++ jsonSubClassOfStatement ++ resourceIconStatement ++ canBeInstantiatedStatement
     }
 }
 
