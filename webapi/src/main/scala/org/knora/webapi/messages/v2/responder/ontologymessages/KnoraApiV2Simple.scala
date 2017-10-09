@@ -918,9 +918,9 @@ object KnoraApiV2Simple {
     )
 
     /**
-      * The set of all classes in the `knora-api` v2 ontology in the [[ApiV2Simple]] schema.
+      * All the classes in the `knora-api` v2 ontology in the [[ApiV2Simple]] schema.
       */
-    val Classes: Set[ClassEntityInfoV2] = Set(
+    val Classes: Map[IRI, ClassEntityInfoV2] = Set(
         Resource,
         Region,
         Representation,
@@ -942,12 +942,14 @@ object KnoraApiV2Simple {
         Interval,
         Geoname,
         Geom
-    )
+    ).map {
+        classInfo => classInfo.classIri -> classInfo
+    }.toMap
 
     /**
-      * The set of all properties in the `knora-api` v2 ontology in the [[ApiV2Simple]] schema.
+      * All the properties in the `knora-api` v2 ontology in the [[ApiV2Simple]] schema.
       */
-    val Properties: Set[PropertyEntityInfoV2] = Set(
+    val Properties: Map[IRI, PropertyEntityInfoV2] = Set(
         CreationDate,
         LastModificationDate,
         HasValue,
@@ -967,7 +969,9 @@ object KnoraApiV2Simple {
         HasDDDFile,
         HasTextFile,
         HasDocumentFile
-    )
+    ).map {
+        propertyInfo => propertyInfo.propertyIri -> propertyInfo
+    }.toMap
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Convenience functions for building ontology entities, to make the code above more concise.

@@ -152,6 +152,7 @@ object OntologiesRouteV2 extends Authenticator {
                             // Find out what schema the class IRI belongs to.
                             val schema = InputValidation.getEntityApiSchema(classIri, () => throw BadRequestException(s"Invalid external class IRI: $classIri"))
                             val classForResponder = InputValidation.requestedEntityToEntityForResponder(classIri)
+
                             (classForResponder, schema)
                     }.toSet
 

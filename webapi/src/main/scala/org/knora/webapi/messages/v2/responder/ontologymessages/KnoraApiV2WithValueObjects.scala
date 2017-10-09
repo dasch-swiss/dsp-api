@@ -2106,9 +2106,9 @@ object KnoraApiV2WithValueObjects {
     )
 
     /**
-      * The set of all classes in the `knora-api` v2 ontology in the [[ApiV2WithValueObjects]] schema.
+      * All the classes in the `knora-api` v2 ontology in the [[ApiV2WithValueObjects]] schema.
       */
-    val Classes: Set[ClassEntityInfoV2] = Set(
+    val Classes: Map[IRI, ClassEntityInfoV2] = Set(
         Resource,
         Region,
         Representation,
@@ -2140,12 +2140,14 @@ object KnoraApiV2WithValueObjects {
         AudioFileValue,
         DDDFileValue,
         DocumentFileValue
-    )
+    ).map {
+        classInfo => classInfo.classIri -> classInfo
+    }.toMap
 
     /**
-      * The set of all properties in the `knora-api` v2 ontology in the [[ApiV2WithValueObjects]] schema.
+      * All the properties in the `knora-api` v2 ontology in the [[ApiV2WithValueObjects]] schema.
       */
-    val Properties: Set[PropertyEntityInfoV2] = Set(
+    val Properties: Map[IRI, PropertyEntityInfoV2] = Set(
         IsEditable,
         CanBeInstantiated,
         HasPermissions,
@@ -2205,7 +2207,9 @@ object KnoraApiV2WithValueObjects {
         MovingImageFileValueHasQualityLevel,
         MovingImageFileValueHasDuration,
         AudioFileValueHasDuration
-    )
+    ).map {
+        propertyInfo => propertyInfo.propertyIri -> propertyInfo
+    }.toMap
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Convenience functions for building ontology entities, to make the code above more concise.

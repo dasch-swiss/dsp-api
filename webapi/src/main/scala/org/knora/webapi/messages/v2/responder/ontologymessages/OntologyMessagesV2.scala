@@ -281,7 +281,7 @@ case class ReadEntityDefinitionsV2(ontologies: Map[IRI, Set[IRI]] = Map.empty[IR
 
         val jsonClasses: Map[IRI, JsonLDObject] = classes.map {
             case (classIri: IRI, resourceEntity: ClassEntityInfoV2) =>
-                val apiClassIri = InputValidation.toExternalEntityIri(
+                val externalClassIri = InputValidation.toExternalEntityIri(
                     entityIri = classIri,
                     targetSchema = targetSchema
                 )
@@ -291,7 +291,7 @@ case class ReadEntityDefinitionsV2(ontologies: Map[IRI, Set[IRI]] = Map.empty[IR
                     case None => resourceEntity.toJsonLDWithAllLanguages(targetSchema = targetSchema)
                 }
 
-                apiClassIri -> jsonClass
+                externalClassIri -> jsonClass
         }
 
         // properties
@@ -306,18 +306,23 @@ case class ReadEntityDefinitionsV2(ontologies: Map[IRI, Set[IRI]] = Map.empty[IR
         }
 
         val jsonProperties: Map[IRI, JsonLDObject] = filteredProperties.map {
-            case (propIri: IRI, propEntity: PropertyEntityInfoV2) =>
-                val apiPropIri = InputValidation.toExternalEntityIri(
-                    entityIri = propIri,
+            case (propertyIri, propertyInfo) =>
+                val externalPropertyIri = InputValidation.toExternalEntityIri(
+                    entityIri = propertyIri,
                     targetSchema = targetSchema
                 )
-
-                val propJson = userLang match {
-                    case Some(lang) => propEntity.toJsonLDWithSingleLanguage(targetSchema = targetSchema, userLang = lang, settings = settings)
-                    case None => propEntity.toJsonLDWithAllLanguages(targetSchema = targetSchema)
+                // If this is a built-in property, use its built-in definition, otherwise use the one we were given.
+                val schemaPropertyInfo = targetSchema match {
+                    case ApiV2Simple => KnoraApiV2Simple.Properties.getOrElse(externalPropertyIri, propertyInfo)
+                    case ApiV2WithValueObjects => KnoraApiV2WithValueObjects.Properties.getOrElse(externalPropertyIri, propertyInfo)
                 }
 
-                apiPropIri -> propJson
+                val propJson: JsonLDObject = userLang match {
+                    case Some(lang) => schemaPropertyInfo.toJsonLDWithSingleLanguage(targetSchema = targetSchema, userLang = lang, settings = settings)
+                    case None => schemaPropertyInfo.toJsonLDWithAllLanguages(targetSchema = targetSchema)
+                }
+
+                externalPropertyIri -> propJson
         }
 
         val hasOntologiesWithClassesProp = targetSchema match {

@@ -696,7 +696,7 @@ object InputValidation {
       * @return the internal ontology IRI.
       */
     private def externalOntologyNameToInternalOntologyIri(ontologyName: String): IRI = {
-        val internalOntologyName = if (ontologyName == "knora-api") "knora-base" else ontologyName
+        val internalOntologyName = if (ontologyName == OntologyConstants.KnoraApi.KnoraApiOntologyLabel) OntologyConstants.KnoraBase.KnoraBaseOntologyLabel else ontologyName
         OntologyConstants.KnoraInternal.InternalOntologyStart + internalOntologyName
     }
 
@@ -744,7 +744,7 @@ object InputValidation {
     def internalOntologyIriToApiV2SimpleOntologyIri(internalOntologyIri: IRI, errorFun: () => Nothing): IRI = {
         internalOntologyIri match {
             case ProjectSpecificInternalOntologyRegex(ontologyName) =>
-                val apiOntologyName = if (ontologyName == "knora-base") "knora-api" else ontologyName
+                val apiOntologyName = if (ontologyName == OntologyConstants.KnoraBase.KnoraBaseOntologyLabel) OntologyConstants.KnoraApi.KnoraApiOntologyLabel else ontologyName
                 OntologyConstants.KnoraApi.ApiOntologyStart + apiOntologyName + OntologyConstants.KnoraApiV2Simple.VersionSegment
             case _ => errorFun()
         }
@@ -761,7 +761,7 @@ object InputValidation {
     def internalOntologyIriToApiV2WithValueObjectOntologyIri(internalOntologyIri: IRI, errorFun: () => Nothing): IRI = {
         internalOntologyIri match {
             case ProjectSpecificInternalOntologyRegex(ontologyName) =>
-                val apiOntologyName = if (ontologyName == "knora-base") "knora-api" else ontologyName
+                val apiOntologyName = if (ontologyName == OntologyConstants.KnoraBase.KnoraBaseOntologyLabel) OntologyConstants.KnoraApi.KnoraApiOntologyLabel else ontologyName
                 OntologyConstants.KnoraApi.ApiOntologyStart + apiOntologyName + OntologyConstants.KnoraApiV2WithValueObjects.VersionSegment
             case _ => errorFun()
         }
@@ -775,7 +775,7 @@ object InputValidation {
       * @return the internal entity IRI.
       */
     private def externalEntityNameToInternalEntityIri(ontology: String, entityName: String) = {
-        val ontologyName = if (ontology == "knora-api") "knora-base" else ontology
+        val ontologyName = if (ontology == OntologyConstants.KnoraApi.KnoraApiOntologyLabel) OntologyConstants.KnoraBase.KnoraBaseOntologyLabel else ontology
         OntologyConstants.KnoraInternal.InternalOntologyStart + ontologyName + "#" + entityName
     }
 
@@ -822,7 +822,7 @@ object InputValidation {
     def internalEntityIriToApiV2WithValueObjectEntityIri(internalEntityIri: IRI, errorFun: () => Nothing): IRI = {
         internalEntityIri match {
             case InternalOntologyEntityRegex(prefixLabel, entityName) =>
-                val apiPrefixLabel = if (prefixLabel == "knora-base") "knora-api" else prefixLabel
+                val apiPrefixLabel = if (prefixLabel == OntologyConstants.KnoraBase.KnoraBaseOntologyLabel) OntologyConstants.KnoraApi.KnoraApiOntologyLabel else prefixLabel
                 OntologyConstants.KnoraApi.ApiOntologyStart + apiPrefixLabel + OntologyConstants.KnoraApiV2WithValueObjects.VersionSegment + "#" + entityName
             case _ => errorFun()
         }
@@ -842,7 +842,7 @@ object InputValidation {
             case None =>
                 internalEntityIri match {
                     case InternalOntologyEntityRegex(prefixLabel, entityName) =>
-                        val apiPrefixLabel = if (prefixLabel == "knora-base") "knora-api" else prefixLabel
+                        val apiPrefixLabel = if (prefixLabel == OntologyConstants.KnoraBase.KnoraBaseOntologyLabel) OntologyConstants.KnoraApi.KnoraApiOntologyLabel else prefixLabel
                         OntologyConstants.KnoraApi.ApiOntologyStart + apiPrefixLabel + OntologyConstants.KnoraApiV2Simple.VersionSegment + "#" + entityName
                     case _ => errorFun()
                 }
@@ -898,7 +898,7 @@ object InputValidation {
       */
     def isBuiltInEntityIri(iri: IRI): Boolean = {
         iri match {
-            case KnoraApiOntologyEntityRegex(ontology, _, _) if ontology == "knora-api" => true
+            case KnoraApiOntologyEntityRegex(ontology, _, _) if ontology == OntologyConstants.KnoraApi.KnoraApiOntologyLabel => true
             case _ => false
         }
     }
@@ -913,8 +913,8 @@ object InputValidation {
       */
     def getEntityApiSchema(entityIri: IRI, errorFun: () => Nothing): ApiV2Schema = {
         entityIri match {
-            case ExternalApiV2SimpleOntologyEntityRegex(_*) => ApiV2Simple
-            case ExternalApiV2WithValueObjectOntologyEntityRegex(_*) => ApiV2WithValueObjects
+            case ExternalApiV2SimpleOntologyEntityRegex(ontology, _) if ontology != OntologyConstants.KnoraBase.KnoraBaseOntologyLabel => ApiV2Simple
+            case ExternalApiV2WithValueObjectOntologyEntityRegex(ontology, _) if ontology != OntologyConstants.KnoraBase.KnoraBaseOntologyLabel => ApiV2WithValueObjects
             case _ => errorFun()
         }
     }

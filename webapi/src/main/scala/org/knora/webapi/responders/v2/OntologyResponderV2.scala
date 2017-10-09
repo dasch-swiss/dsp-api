@@ -51,22 +51,6 @@ class OntologyResponderV2 extends Responder {
       */
     private val OntologyCacheKey = "ontologyCacheData"
 
-    private val BuiltInApiV2WithValueObjectsClasses: Map[IRI, ClassEntityInfoV2] = KnoraApiV2WithValueObjects.Classes.map {
-        classEntity => classEntity.classIri -> classEntity
-    }.toMap
-
-    private val BuiltInApiV2WithValueObjectsProperties: Map[IRI, PropertyEntityInfoV2] = KnoraApiV2WithValueObjects.Properties.map {
-        propertyEntity => propertyEntity.propertyIri -> propertyEntity
-    }.toMap
-
-    private val BuiltInApiV2SimpleClasses: Map[IRI, ClassEntityInfoV2] = KnoraApiV2Simple.Classes.map {
-        classEntity => classEntity.classIri -> classEntity
-    }.toMap
-
-    private val BuiltInApiV2SimpleProperties: Map[IRI, PropertyEntityInfoV2] = KnoraApiV2Simple.Properties.map {
-        propertyEntity => propertyEntity.propertyIri -> propertyEntity
-    }.toMap
-
     /**
       * A container for all the cached ontology data.
       *
@@ -229,15 +213,15 @@ class OntologyResponderV2 extends Responder {
             graphClassMap: Map[IRI, Set[IRI]] = resourceDefsRows.groupBy(_.rowMap("graph")).map {
                 case (graphIri: IRI, graphRows: Seq[VariableResultsRow]) =>
                     graphIri -> (graphRows.map(_.rowMap("resourceClass")).toSet -- OntologyConstants.KnoraBase.AbstractResourceClasses)
-            } + (OntologyConstants.KnoraApiV2Simple.KnoraApiOntologyIri -> BuiltInApiV2SimpleClasses.keySet) +
-                (OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiOntologyIri -> BuiltInApiV2WithValueObjectsClasses.keySet)
+            } + (OntologyConstants.KnoraApiV2Simple.KnoraApiOntologyIri -> KnoraApiV2Simple.Classes.keySet) +
+                (OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiOntologyIri -> KnoraApiV2WithValueObjects.Classes.keySet)
 
             // Make a map of IRIs of named graphs to IRIs of properties defined in each one, knora-base:resourceProperty, which is never used directly.
             graphPropMap: Map[IRI, Set[IRI]] = propertyDefsRows.groupBy(_.rowMap("graph")).map {
                 case (graphIri, graphRows) =>
                     graphIri -> (graphRows.map(_.rowMap("prop")).toSet - OntologyConstants.KnoraBase.ResourceProperty)
-            } + (OntologyConstants.KnoraApiV2Simple.KnoraApiOntologyIri -> BuiltInApiV2SimpleProperties.keySet) +
-                (OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiOntologyIri -> BuiltInApiV2WithValueObjectsProperties.keySet)
+            } + (OntologyConstants.KnoraApiV2Simple.KnoraApiOntologyIri -> KnoraApiV2Simple.Properties.keySet) +
+                (OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiOntologyIri -> KnoraApiV2WithValueObjects.Properties.keySet)
 
             // Group the rows representing resource class definitions by resource class IRI. This needs to include abstract resource classes such as
             // knora-base:Resource, so cardinalities can be inherited from them.
@@ -675,8 +659,8 @@ class OntologyResponderV2 extends Responder {
                     entityInfo.dataType.isDefined
             }
 
-            allClassDefs = resourceEntityInfos ++ BuiltInApiV2WithValueObjectsClasses ++ BuiltInApiV2SimpleClasses
-            allPropertyDefs = propertyEntityInfos ++ BuiltInApiV2WithValueObjectsProperties ++ BuiltInApiV2SimpleProperties
+            allClassDefs = resourceEntityInfos ++ KnoraApiV2Simple.Classes ++ KnoraApiV2WithValueObjects.Classes
+            allPropertyDefs = propertyEntityInfos ++ KnoraApiV2Simple.Properties ++ KnoraApiV2WithValueObjects.Properties
 
             // Cache all the data.
 
