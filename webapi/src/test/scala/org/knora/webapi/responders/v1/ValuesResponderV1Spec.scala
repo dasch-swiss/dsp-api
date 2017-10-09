@@ -328,6 +328,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             }
         }
 
+        /*
         "query a standoff link as an ordinary value" in {
             actorUnderTest ! ValueGetRequestV1(
                 valueIri = "http://data.knora.org/a-thing-with-text-values/values/0",
@@ -1965,5 +1966,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
                     msg.cause.isInstanceOf[NotFoundException] should ===(true)
             }
         }
+        */
     }
 }

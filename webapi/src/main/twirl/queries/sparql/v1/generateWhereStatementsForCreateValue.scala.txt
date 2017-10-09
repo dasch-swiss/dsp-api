@@ -143,8 +143,10 @@
     {
         SELECT ((MAX(?order)) AS ?maxOrder) (IF(BOUND(?maxOrder), ?maxOrder + 1, 0) AS ?nextOrder)
         WHERE {
-            ?resource <@propertyIri> ?otherValue .
-            ?otherValue knora-base:valueHasOrder ?order ;
-                knora-base:isDeleted false .
+            OPTIONAL {
+                ?resource <@propertyIri> ?otherValue .
+                ?otherValue knora-base:valueHasOrder ?order ;
+                    knora-base:isDeleted false .
+            }
         }
     }
