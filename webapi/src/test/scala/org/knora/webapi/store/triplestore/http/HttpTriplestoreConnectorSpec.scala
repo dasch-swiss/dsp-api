@@ -202,7 +202,7 @@ class HttpTriplestoreConnectorSpec extends CoreSpec(HttpTriplestoreConnectorSpec
     """
 
 
-    val afterLoadCount = 355082
+    val afterLoadCount = 355097
     var afterChangeCount = -1
     var afterChangeRevertCount = -1
 
@@ -249,8 +249,8 @@ class HttpTriplestoreConnectorSpec extends CoreSpec(HttpTriplestoreConnectorSpec
                 val graphCountAfter = res2.nrOfGraphs
                 val tripleCountAfter = res2.nrOfTriples
 
-                graphCountAfter should be (15)
-                tripleCountAfter should be (355082)
+                graphCountAfter should be (16)
+                tripleCountAfter should be (afterLoadCount)
 
             }
         }
