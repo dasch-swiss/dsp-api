@@ -50,7 +50,13 @@ object ResponseCheckerV2 {
 
                         assert(expectedPropIri == receivedPropIri)
 
-                        assert(expectedPropValues.sortBy(_.valueIri) == receivedPropValues.sortBy(_.valueIri))
+                        expectedPropValues.sortBy(_.valueIri).zip(receivedPropValues.sortBy(_.valueIri)).foreach {
+                            case (expectedVal: ReadValueV2, receivedVal: ReadValueV2) =>
+
+                                assert(expectedVal == receivedVal,  s"value objects does not match: ${expectedVal} != ${receivedVal}")
+                        }
+
+
 
                 }
 

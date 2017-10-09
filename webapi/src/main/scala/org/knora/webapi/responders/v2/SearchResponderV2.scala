@@ -29,7 +29,7 @@ import org.knora.webapi.messages.v1.responder.valuemessages.JulianDayNumberValue
 import org.knora.webapi.messages.v2.responder._
 import org.knora.webapi.messages.v2.responder.resourcemessages.ResourcesGetRequestV2
 import org.knora.webapi.messages.v2.responder.searchmessages._
-import org.knora.webapi.responders.Responder
+import org.knora.webapi.responders.ResponderV2
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util._
 import org.knora.webapi.util.search.ApacheLuceneSupport.MatchStringWhileTyping
@@ -56,6 +56,10 @@ object SearchResponderV2Constants {
         val resourceValueObjectProp = QueryVariable("resourceValueObjectProp")
         val resourceValueObjectObj = QueryVariable("resourceValueObjectObj")
 
+        val standoffNodeVar = QueryVariable("standoffNode")
+        val standoffPropVar = QueryVariable("standoffProp")
+        val standoffValueVar = QueryVariable("standoffValue")
+
         val valueObjectConcatVar = QueryVariable("valueObjectConcat")
     }
 
@@ -76,13 +80,17 @@ object SearchResponderV2Constants {
         val mainAndDependentResourceValueObjectProp = QueryVariable("mainAndDependentResourceValueObjectProp")
         val mainAndDependentResourceValueObjectObj = QueryVariable("mainAndDependentResourceValueObjectObj")
 
+        val standoffNodeVar = QueryVariable("standoffNode")
+        val standoffPropVar = QueryVariable("standoffProp")
+        val standoffValueVar = QueryVariable("standoffValue")
+
         val forbiddenResourceIri = "http://data.knora.org/permissions/forbiddenResource"
 
     }
 
 }
 
-class SearchResponderV2 extends Responder {
+class SearchResponderV2 extends ResponderV2 {
 
     val knoraIdUtil = new KnoraIdUtil
 
@@ -258,14 +266,26 @@ class SearchResponderV2 extends Responder {
                 StatementPattern(subj = resourceValueObject, pred = resourceValueObjectProp, obj = resourceValueObjectObj)
             )
 
+            // get standoff for value objects (if any)
+            val wherePatternsForStandoff = Seq(
+                ValuesPattern(resourceValueObject, valueObjectIris.map(iri => IriRef(iri))),
+                StatementPattern.makeExplicit(subj = resourceValueObject, pred = IriRef(OntologyConstants.KnoraBase.ValueHasStandoff), obj = standoffNodeVar),
+                StatementPattern.makeExplicit(subj = standoffNodeVar, pred = standoffPropVar, obj = standoffValueVar)
+            )
+
+            val constructPatternsForStandoff = Seq(
+                StatementPattern(subj = resourceValueObject, pred = IriRef(OntologyConstants.KnoraBase.ValueHasStandoff), obj = standoffNodeVar),
+                StatementPattern(subj = standoffNodeVar, pred = standoffPropVar, obj = standoffValueVar)
+            )
+
             ConstructQuery(
                 constructClause = ConstructClause(
-                    statements = constructPatternsForResources ++ constructPatternsForValueObjects
+                    statements = constructPatternsForResources ++ constructPatternsForValueObjects ++ constructPatternsForStandoff
                 ),
                 whereClause = WhereClause(
                     Seq(
                         UnionPattern(
-                            Seq(wherePatternsForResources, wherePatternsForValueObjects)
+                            Seq(wherePatternsForResources, wherePatternsForValueObjects, wherePatternsForStandoff)
                         )
                     )
                 )
@@ -336,7 +356,7 @@ class SearchResponderV2 extends Responder {
                     transformer = triplestoreSpecificQueryPatternTransformerConstruct
                 )
 
-                // _ = println(triplestoreSpecificQuery.toSparql)
+                // println(triplestoreSpecificQuery.toSparql)
 
                 for {
                     searchResponse: SparqlConstructResponse <- (storeManager ? SparqlConstructRequest(triplestoreSpecificQuery.toSparql)).mapTo[SparqlConstructResponse]
@@ -379,7 +399,7 @@ class SearchResponderV2 extends Responder {
                             }
                     }
 
-                } yield queryResultsSep
+                } yield queryResWithFullQueryPath
             } else {
 
                 // the prequery returned no results, no further query is necessary
@@ -396,11 +416,18 @@ class SearchResponderV2 extends Responder {
                 Future(None)
             }
 
+            // get the mappings
+            mappingsAsMap <- getMappingsFromQueryResultsSeparated(queryResultsSeparatedWithFullQueryPath, userProfile)
+
+            // _ = println(mappingsAsMap)
+
+
         } yield ReadResourcesSequenceV2(
             numberOfResources = resourceIris.size,
             resources = ConstructResponseUtilV2.createSearchResponse(
                 searchResults = queryResultsSeparatedWithFullQueryPath,
                 orderByResourceIri = resourceIris,
+                mappings = mappingsAsMap,
                 forbiddenResource = forbiddenResourceOption
             )
         )
@@ -1532,6 +1559,12 @@ class SearchResponderV2 extends Responder {
                 StatementPattern.makeExplicit(subj = mainAndDependentResourceVar, pred = mainAndDependentResourcePropVar, obj = mainAndDependentResourceObjectVar)
             )
 
+            // mark main and dependent resources as a knora-base:Resource in CONSTRUCT clause and return direct assertions about all resources
+            val constructPatternsForMainAndDependentResources = Seq(
+                StatementPattern(subj = mainAndDependentResourceVar, pred = IriRef(OntologyConstants.Rdf.Type), obj = IriRef(OntologyConstants.KnoraBase.Resource)),
+                StatementPattern(subj = mainAndDependentResourceVar, pred = mainAndDependentResourcePropVar, obj = mainAndDependentResourceObjectVar)
+            )
+
             // WHERE patterns for statements about the main and dependent resources' values
             val wherePatternsForMainAndDependentResourcesValues = Seq(
                 ValuesPattern(mainAndDependentResourceValueObject, valueObjectIris.map(iri => IriRef(iri))),
@@ -1541,12 +1574,6 @@ class SearchResponderV2 extends Responder {
                 StatementPattern.makeExplicit(subj = mainAndDependentResourceValueObject, pred = mainAndDependentResourceValueObjectProp, obj = mainAndDependentResourceValueObjectObj)
             )
 
-            // mark main and dependent resources as a knora-base:Resource in CONSTRUCT clause and return direct assertions about all resources
-            val constructPatternsForMainAndDependentResources = Seq(
-                StatementPattern(subj = mainAndDependentResourceVar, pred = IriRef(OntologyConstants.Rdf.Type), obj = IriRef(OntologyConstants.KnoraBase.Resource)),
-                StatementPattern(subj = mainAndDependentResourceVar, pred = mainAndDependentResourcePropVar, obj = mainAndDependentResourceObjectVar)
-            )
-
             // return assertions about the main and dependent resources' values in CONSTRUCT clause
             val constructPatternsForMainAndDependentResourcesValues = Seq(
                 StatementPattern(subj = mainAndDependentResourceVar, pred = IriRef(OntologyConstants.KnoraBase.HasValue), obj = mainAndDependentResourceValueObject),
@@ -1554,14 +1581,27 @@ class SearchResponderV2 extends Responder {
                 StatementPattern(subj = mainAndDependentResourceValueObject, pred = mainAndDependentResourceValueObjectProp, obj = mainAndDependentResourceValueObjectObj)
             )
 
+            // get standoff for value objects (if any)
+            val wherePatternsForStandoff = Seq(
+                ValuesPattern(mainAndDependentResourceValueObject, valueObjectIris.map(iri => IriRef(iri))),
+                StatementPattern.makeExplicit(subj = mainAndDependentResourceValueObject, pred = IriRef(OntologyConstants.KnoraBase.ValueHasStandoff), obj = standoffNodeVar),
+                StatementPattern.makeExplicit(subj = standoffNodeVar, pred = standoffPropVar, obj = standoffValueVar)
+            )
+
+            // return standoff assertions
+            val constructPatternsForStandoff = Seq(
+                StatementPattern(subj = mainAndDependentResourceValueObject, pred = IriRef(OntologyConstants.KnoraBase.ValueHasStandoff), obj = standoffNodeVar),
+                StatementPattern(subj = standoffNodeVar, pred = standoffPropVar, obj = standoffValueVar)
+            )
+
             ConstructQuery(
                 constructClause = ConstructClause(
-                    statements = constructPatternsForMainResource ++ constructPatternsForMainAndDependentResources ++ constructPatternsForMainAndDependentResourcesValues
+                    statements = constructPatternsForMainResource ++ constructPatternsForMainAndDependentResources ++ constructPatternsForMainAndDependentResourcesValues ++ constructPatternsForStandoff
                 ),
                 whereClause = WhereClause(
                     Seq(
                         UnionPattern(
-                            Seq(wherePatternsForMainResource, wherePatternsForMainAndDependentResources, wherePatternsForMainAndDependentResourcesValues)
+                            Seq(wherePatternsForMainResource, wherePatternsForMainAndDependentResources, wherePatternsForMainAndDependentResourcesValues, wherePatternsForStandoff)
                         )
                     )
                 )
@@ -1763,12 +1803,16 @@ class SearchResponderV2 extends Responder {
                 Future(None)
             }
 
+            // get the mappings
+            mappingsAsMap <- getMappingsFromQueryResultsSeparated(queryResultsSeparatedWithFullQueryPath, userProfile)
+
 
         } yield ReadResourcesSequenceV2(
             numberOfResources = mainResourceIris.size,
             resources = ConstructResponseUtilV2.createSearchResponse(
                 searchResults = queryResultsSeparatedWithFullQueryPath,
                 orderByResourceIri = mainResourceIris,
+                mappings = mappingsAsMap,
                 forbiddenResource = forbiddenResourceOption
             )
         )

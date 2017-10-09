@@ -27,14 +27,14 @@ import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.store.triplestoremessages.{SparqlConstructRequest, SparqlConstructResponse}
 import org.knora.webapi.messages.v2.responder._
 import org.knora.webapi.messages.v2.responder.resourcemessages.{ResourcePreviewRequestV2, ResourcesGetRequestV2}
-import org.knora.webapi.responders.Responder
+import org.knora.webapi.responders.{Responder, ResponderV2}
 import org.knora.webapi.util.ActorUtil.{future2Message, handleUnexpectedMessage}
 import org.knora.webapi.util.ConstructResponseUtilV2
 import org.knora.webapi.util.ConstructResponseUtilV2.{MappingAndXSLTransformation, ResourceWithValueRdfData}
 
 import scala.concurrent.Future
 
-class ResourcesResponderV2 extends Responder {
+class ResourcesResponderV2 extends ResponderV2 {
 
     def receive = {
         case ResourcesGetRequestV2(resIris, userProfile) => future2Message(sender(), getResources(resIris, userProfile), log)
@@ -78,41 +78,8 @@ class ResourcesResponderV2 extends Responder {
 
             }
 
-            // collect the Iris of the mappings referred to in the resources' text values
-            mappingIris: Set[IRI] = resourceIrisDistinct.flatMap {
-                (resIri: IRI) =>
-                    ConstructResponseUtilV2.getMappingIrisFromValuePropertyAssertions(queryResultsSeparated(resIri).valuePropertyAssertions)
-            }.toSet
-
-            // get all the mappings
-            mappingResponsesFuture: Vector[Future[GetMappingResponseV1]] = mappingIris.map {
-                mappingIri =>
-                    for {
-                        mappingResponse: GetMappingResponseV1 <- (responderManager ? GetMappingRequestV1(mappingIri = mappingIris.head, userProfile = userProfile)).mapTo[GetMappingResponseV1]
-                    } yield mappingResponse
-            }.toVector
-
-            mappingResponses: Vector[GetMappingResponseV1] <- Future.sequence(mappingResponsesFuture)
-
-            // get the default XSL transformations
-            mappingsWithFuture: Vector[Future[(IRI, MappingAndXSLTransformation)]] = mappingResponses.map {
-                (mapping: GetMappingResponseV1) =>
-
-                    for {
-                    // if given, get the default XSL transformation
-                        xsltOption: Option[String] <- if (mapping.mapping.defaultXSLTransformation.nonEmpty) {
-                            for {
-                                xslTransformation: GetXSLTransformationResponseV1 <- (responderManager ? GetXSLTransformationRequestV1(mapping.mapping.defaultXSLTransformation.get, userProfile = userProfile)).mapTo[GetXSLTransformationResponseV1]
-                            } yield Some(xslTransformation.xslt)
-                        } else {
-                            Future(None)
-                        }
-                    } yield mapping.mappingIri -> MappingAndXSLTransformation(mapping = mapping.mapping, standoffEntities = mapping.standoffEntities, XSLTransformation = xsltOption)
-
-            }
-
-            mappings: Vector[(IRI, MappingAndXSLTransformation)] <- Future.sequence(mappingsWithFuture)
-            mappingsAsMap: Map[IRI, MappingAndXSLTransformation] = mappings.toMap
+            // get the mappings
+            mappingsAsMap <- getMappingsFromQueryResultsSeparated(queryResultsSeparated, userProfile)
 
             resourcesResponse: Vector[ReadResourceV2] = resourceIrisDistinct.map {
                 (resIri: IRI) =>

@@ -167,7 +167,6 @@ queryArr.push(`
     CONSTRUCT {
         ?linkObj knora-api:isMainResource true .
         
-        #?linkObj knora-api:hasLinkTo ?book .
     } WHERE {
         ?linkObj a knora-api:Resource .
         ?linkObj a knora-api:LinkObj .
@@ -177,10 +176,55 @@ queryArr.push(`
         
         ?book a knora-api:Resource .
         ?book a incunabula:book . 
+     
+        ?book incunabula:title ?title .
+        
+        incunabula:title knora-api:objectType xsd:string .
+
+        ?title a xsd:string .
         
     }
 
 `);
+
+// query all link objects that refer to an incunabula:book
+// Attention: link objects have several instances of knora-api:hasLinkTo
+queryArr.push(`
+    PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+    PREFIX incunabula: <http://api.knora.org/ontology/incunabula/simple/v2#>
+    
+    CONSTRUCT {
+        ?linkObj knora-api:isMainResource true .
+        
+    } WHERE {
+        ?linkObj a knora-api:Resource .
+        ?linkObj a incunabula:book .
+        
+    }
+
+`);
+
+queryArr.push(`
+    PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+    PREFIX beol: <http://api.knora.org/ontology/beol/simple/v2#>
+    
+    CONSTRUCT {
+        ?letter knora-api:isMainResource true .
+        
+    } WHERE {
+        ?letter a knora-api:Resource .
+        ?letter a beol:letter .
+        
+        ?letter beol:hasText ?text .
+        
+        beol:hasText knora-api:objectType xsd:string .
+
+        ?text a xsd:string .
+        
+    }
+
+`);
+
 
 
 function runQuery(queryStrArr, index) {
@@ -253,5 +297,5 @@ function runQuery(queryStrArr, index) {
     });
 }
 
-runQuery(queryArr, 0);
+runQuery(queryArr, 6);
 

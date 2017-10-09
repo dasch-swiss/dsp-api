@@ -511,7 +511,7 @@ object ConstructResponseUtilV2 {
       * @param orderByResourceIri the order in which the resources should be returned.
       * @return a collection of [[ReadResourceV2]] representing the search results.
       */
-    def createSearchResponse(searchResults: Map[IRI, ResourceWithValueRdfData], orderByResourceIri: Seq[IRI], forbiddenResource: Option[ReadResourceV2]): Vector[ReadResourceV2] = {
+    def createSearchResponse(searchResults: Map[IRI, ResourceWithValueRdfData], orderByResourceIri: Seq[IRI], mappings: Map[IRI, MappingAndXSLTransformation] = Map.empty[IRI, MappingAndXSLTransformation], forbiddenResource: Option[ReadResourceV2]): Vector[ReadResourceV2] = {
 
         if (orderByResourceIri.toSet != searchResults.keySet && forbiddenResource.isEmpty) throw AssertionException(s"Not all resources are visible, but forbiddenResource is None")
 
@@ -525,7 +525,7 @@ object ConstructResponseUtilV2 {
                     case Some(assertions: ResourceWithValueRdfData) =>
                         // sufficient permissions
                         // add the resource to the list of results
-                        constructReadResourceV2(resourceIri, assertions, mappings = Map.empty[IRI, MappingAndXSLTransformation])
+                        constructReadResourceV2(resourceIri, assertions, mappings = mappings)
 
                     case None =>
                         // include the forbidden resource instead of skipping (the amount of results should be constant -> limit)

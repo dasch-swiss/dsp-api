@@ -1,9 +1,12 @@
 package org.knora.webapi.responders.v2
 
 import akka.actor.ActorSystem
+import org.apache.jena.sparql.function.library.uuid
 import org.knora.webapi.Settings
+import org.knora.webapi.messages.v1.responder.standoffmessages._
 import org.knora.webapi.messages.v1.responder.valuemessages.{KnoraCalendarV1, KnoraPrecisionV1}
 import org.knora.webapi.messages.v2.responder._
+import org.knora.webapi.twirl.{StandoffTagIriAttributeV1, StandoffTagV1}
 import org.knora.webapi.util.search._
 
 object SearchResponderV2SpecFullData {
@@ -376,7 +379,315 @@ object SearchResponderV2SpecFullData {
                 ReadValueV2(
                     valueContent = TextValueContentV2(
                         comment = None,
-                        standoff = None,
+                        standoff = Some(StandoffAndMapping(
+                            XSLT = None,
+                            mapping = MappingXMLtoStandoff(
+                                defaultXSLTransformation = None,
+                                namespace = Map("noNamespace" -> Map(
+                                    "tbody" -> Map("noClass" -> XMLTag(
+                                        separatorRequired = true,
+                                        mapping = XMLTagToStandoffClass(
+                                            dataType = None,
+                                            attributesToProps = Map(),
+                                            standoffClassIri = "http://www.knora.org/ontology/standoff#StandoffTableBodyTag"
+                                        ),
+                                        name = "tbody"
+                                    )),
+                                    "pre" -> Map("noClass" -> XMLTag(
+                                        separatorRequired = true,
+                                        mapping = XMLTagToStandoffClass(
+                                            dataType = None,
+                                            attributesToProps = Map(),
+                                            standoffClassIri = "http://www.knora.org/ontology/standoff#StandoffPreTag"
+                                        ),
+                                        name = "pre"
+                                    )),
+                                    "ol" -> Map("noClass" -> XMLTag(
+                                        separatorRequired = true,
+                                        mapping = XMLTagToStandoffClass(
+                                            dataType = None,
+                                            attributesToProps = Map(),
+                                            standoffClassIri = "http://www.knora.org/ontology/standoff#StandoffOrderedListTag"
+                                        ),
+                                        name = "ol"
+                                    )),
+                                    "hr" -> Map("noClass" -> XMLTag(
+                                        separatorRequired = true,
+                                        mapping = XMLTagToStandoffClass(
+                                            dataType = None,
+                                            attributesToProps = Map(),
+                                            standoffClassIri = "http://www.knora.org/ontology/standoff#StandoffLineTag"
+                                        ),
+                                        name = "hr"
+                                    )),
+                                    "h4" -> Map("noClass" -> XMLTag(
+                                        separatorRequired = true,
+                                        mapping = XMLTagToStandoffClass(
+                                            dataType = None,
+                                            attributesToProps = Map(),
+                                            standoffClassIri = "http://www.knora.org/ontology/standoff#StandoffHeader4Tag"
+                                        ),
+                                        name = "h4"
+                                    )),
+                                    "h3" -> Map("noClass" -> XMLTag(
+                                        separatorRequired = true,
+                                        mapping = XMLTagToStandoffClass(
+                                            dataType = None,
+                                            attributesToProps = Map(),
+                                            standoffClassIri = "http://www.knora.org/ontology/standoff#StandoffHeader3Tag"
+                                        ),
+                                        name = "h3"
+                                    )),
+                                    "li" -> Map("noClass" -> XMLTag(
+                                        separatorRequired = true,
+                                        mapping = XMLTagToStandoffClass(
+                                            dataType = None,
+                                            attributesToProps = Map(),
+                                            standoffClassIri = "http://www.knora.org/ontology/standoff#StandoffListElementTag"
+                                        ),
+                                        name = "li"
+                                    )),
+                                    "br" -> Map("noClass" -> XMLTag(
+                                        separatorRequired = true,
+                                        mapping = XMLTagToStandoffClass(
+                                            dataType = None,
+                                            attributesToProps = Map(),
+                                            standoffClassIri = "http://www.knora.org/ontology/standoff#StandoffBrTag"
+                                        ),
+                                        name = "br"
+                                    )),
+                                    "u" -> Map("noClass" -> XMLTag(
+                                        separatorRequired = false,
+                                        mapping = XMLTagToStandoffClass(
+                                            dataType = None,
+                                            attributesToProps = Map(),
+                                            standoffClassIri = "http://www.knora.org/ontology/standoff#StandoffUnderlineTag"
+                                        ),
+                                        name = "u"
+                                    )),
+                                    "strike" -> Map("noClass" -> XMLTag(
+                                        separatorRequired = false,
+                                        mapping = XMLTagToStandoffClass(
+                                            dataType = None,
+                                            attributesToProps = Map(),
+                                            standoffClassIri = "http://www.knora.org/ontology/standoff#StandoffStrikethroughTag"
+                                        ),
+                                        name = "strike"
+                                    )),
+                                    "ul" -> Map("noClass" -> XMLTag(
+                                        separatorRequired = true,
+                                        mapping = XMLTagToStandoffClass(
+                                            dataType = None,
+                                            attributesToProps = Map(),
+                                            standoffClassIri = "http://www.knora.org/ontology/standoff#StandoffUnorderedListTag"
+                                        ),
+                                        name = "ul"
+                                    )),
+                                    "a" -> Map(
+                                        "noClass" -> XMLTag(
+                                            separatorRequired = false,
+                                            mapping = XMLTagToStandoffClass(
+                                                dataType = Some(XMLStandoffDataTypeClass(
+                                                    dataTypeXMLAttribute = "href",
+                                                    standoffDataTypeClass = StandoffDataTypeClasses.StandoffUriTag
+                                                )),
+                                                attributesToProps = Map(),
+                                                standoffClassIri = "http://www.knora.org/ontology/knora-base#StandoffUriTag"
+                                            ),
+                                            name = "a"
+                                        ),
+                                        "salsah-link" -> XMLTag(
+                                            separatorRequired = false,
+                                            mapping = XMLTagToStandoffClass(
+                                                dataType = Some(XMLStandoffDataTypeClass(
+                                                    dataTypeXMLAttribute = "href",
+                                                    standoffDataTypeClass = StandoffDataTypeClasses.StandoffLinkTag
+                                                )),
+                                                attributesToProps = Map(),
+                                                standoffClassIri = "http://www.knora.org/ontology/knora-base#StandoffLinkTag"
+                                            ),
+                                            name = "a"
+                                        )
+                                    ),
+                                    "text" -> Map("noClass" -> XMLTag(
+                                        separatorRequired = false,
+                                        mapping = XMLTagToStandoffClass(
+                                            dataType = None,
+                                            attributesToProps = Map("noNamespace" -> Map("documentType" -> "http://www.knora.org/ontology/standoff#standoffRootTagHasDocumentType")),
+                                            standoffClassIri = "http://www.knora.org/ontology/standoff#StandoffRootTag"
+                                        ),
+                                        name = "text"
+                                    )),
+                                    "strong" -> Map("noClass" -> XMLTag(
+                                        separatorRequired = false,
+                                        mapping = XMLTagToStandoffClass(
+                                            dataType = None,
+                                            attributesToProps = Map(),
+                                            standoffClassIri = "http://www.knora.org/ontology/standoff#StandoffBoldTag"
+                                        ),
+                                        name = "strong"
+                                    )),
+                                    "code" -> Map("noClass" -> XMLTag(
+                                        separatorRequired = true,
+                                        mapping = XMLTagToStandoffClass(
+                                            dataType = None,
+                                            attributesToProps = Map(),
+                                            standoffClassIri = "http://www.knora.org/ontology/standoff#StandoffCodeTag"
+                                        ),
+                                        name = "code"
+                                    )),
+                                    "h2" -> Map("noClass" -> XMLTag(
+                                        separatorRequired = true,
+                                        mapping = XMLTagToStandoffClass(
+                                            dataType = None,
+                                            attributesToProps = Map(),
+                                            standoffClassIri = "http://www.knora.org/ontology/standoff#StandoffHeader2Tag"
+                                        ),
+                                        name = "h2"
+                                    )),
+                                    "td" -> Map("noClass" -> XMLTag(
+                                        separatorRequired = true,
+                                        mapping = XMLTagToStandoffClass(
+                                            dataType = None,
+                                            attributesToProps = Map(),
+                                            standoffClassIri = "http://www.knora.org/ontology/standoff#StandoffTableCellTag"
+                                        ),
+                                        name = "td"
+                                    )),
+                                    "em" -> Map("noClass" -> XMLTag(
+                                        separatorRequired = false,
+                                        mapping = XMLTagToStandoffClass(
+                                            dataType = None,
+                                            attributesToProps = Map(),
+                                            standoffClassIri = "http://www.knora.org/ontology/standoff#StandoffItalicTag"
+                                        ),
+                                        name = "em"
+                                    )),
+                                    "tr" -> Map("noClass" -> XMLTag(
+                                        separatorRequired = true,
+                                        mapping = XMLTagToStandoffClass(
+                                            dataType = None,
+                                            attributesToProps = Map(),
+                                            standoffClassIri = "http://www.knora.org/ontology/standoff#StandoffTableRowTag"
+                                        ),
+                                        name = "tr"
+                                    )),
+                                    "cite" -> Map("noClass" -> XMLTag(
+                                        separatorRequired = true,
+                                        mapping = XMLTagToStandoffClass(
+                                            dataType = None,
+                                            attributesToProps = Map(),
+                                            standoffClassIri = "http://www.knora.org/ontology/standoff#StandoffCiteTag"
+                                        ),
+                                        name = "cite"
+                                    )),
+                                    "blockquote" -> Map("noClass" -> XMLTag(
+                                        separatorRequired = true,
+                                        mapping = XMLTagToStandoffClass(
+                                            dataType = None,
+                                            attributesToProps = Map(),
+                                            standoffClassIri = "http://www.knora.org/ontology/standoff#StandoffBlockquoteTag"
+                                        ),
+                                        name = "blockquote"
+                                    )),
+                                    "p" -> Map("noClass" -> XMLTag(
+                                        separatorRequired = true,
+                                        mapping = XMLTagToStandoffClass(
+                                            dataType = None,
+                                            attributesToProps = Map(),
+                                            standoffClassIri = "http://www.knora.org/ontology/standoff#StandoffParagraphTag"
+                                        ),
+                                        name = "p"
+                                    )),
+                                    "h6" -> Map("noClass" -> XMLTag(
+                                        separatorRequired = true,
+                                        mapping = XMLTagToStandoffClass(
+                                            dataType = None,
+                                            attributesToProps = Map(),
+                                            standoffClassIri = "http://www.knora.org/ontology/standoff#StandoffHeader6Tag"
+                                        ),
+                                        name = "h6"
+                                    )),
+                                    "h1" -> Map("noClass" -> XMLTag(
+                                        separatorRequired = true,
+                                        mapping = XMLTagToStandoffClass(
+                                            dataType = None,
+                                            attributesToProps = Map(),
+                                            standoffClassIri = "http://www.knora.org/ontology/standoff#StandoffHeader1Tag"
+                                        ),
+                                        name = "h1"
+                                    )),
+                                    "sub" -> Map("noClass" -> XMLTag(
+                                        separatorRequired = false,
+                                        mapping = XMLTagToStandoffClass(
+                                            dataType = None,
+                                            attributesToProps = Map(),
+                                            standoffClassIri = "http://www.knora.org/ontology/standoff#StandoffSubscriptTag"
+                                        ),
+                                        name = "sub"
+                                    )),
+                                    "sup" -> Map("noClass" -> XMLTag(
+                                        separatorRequired = false,
+                                        mapping = XMLTagToStandoffClass(
+                                            dataType = None,
+                                            attributesToProps = Map(),
+                                            standoffClassIri = "http://www.knora.org/ontology/standoff#StandoffSuperscriptTag"
+                                        ),
+                                        name = "sup"
+                                    )),
+                                    "h5" -> Map("noClass" -> XMLTag(
+                                        separatorRequired = true,
+                                        mapping = XMLTagToStandoffClass(
+                                            dataType = None,
+                                            attributesToProps = Map(),
+                                            standoffClassIri = "http://www.knora.org/ontology/standoff#StandoffHeader5Tag"
+                                        ),
+                                        name = "h5"
+                                    )),
+                                    "table" -> Map("noClass" -> XMLTag(
+                                        separatorRequired = true,
+                                        mapping = XMLTagToStandoffClass(
+                                            dataType = None,
+                                            attributesToProps = Map(),
+                                            standoffClassIri = "http://www.knora.org/ontology/standoff#StandoffTableTag"
+                                        ),
+                                        name = "table"
+                                    ))
+                                ))
+                            ),
+                            mappingIri = "http://data.knora.org/projects/standoff/mappings/StandardMapping",
+                            standoff = Vector(
+                                StandoffTagV1(
+                                    attributes = Vector(StandoffTagIriAttributeV1(
+                                        value = "http://data.knora.org/a-thing",
+                                        standoffPropertyIri = "http://www.knora.org/ontology/knora-base#standoffTagHasLink"
+                                    )),
+                                    endParentIndex = None,
+                                    startParentIndex = Some(0),
+                                    endIndex = None,
+                                    startIndex = 1,
+                                    endPosition = 19,
+                                    startPosition = 14,
+                                    originalXMLID = None,
+                                    uuid = "80133696-26a1-4941-967b-6bf210d7d5e1",
+                                    dataType = Some(StandoffDataTypeClasses.StandoffLinkTag),
+                                    standoffTagClassIri = "http://www.knora.org/ontology/knora-base#StandoffLinkTag"
+                                ),
+                                StandoffTagV1(
+                                    attributes = Nil,
+                                    endParentIndex = None,
+                                    startParentIndex = None,
+                                    endIndex = None,
+                                    startIndex = 0,
+                                    endPosition = 45,
+                                    startPosition = 0,
+                                    originalXMLID = None,
+                                    uuid = "2e136103-2a4b-4e59-ac8f-79a53f54b496",
+                                    dataType = None,
+                                    standoffTagClassIri = "http://www.knora.org/ontology/standoff#StandoffRootTag"
+                                )
+                            )
+                        )),
                         valueHasString = "Ich liebe die Dinge, sie sind alles f\u00FCr mich."
                     ),
                     valueIri = "http://data.knora.org/a-thing-with-text-values/values/1"
@@ -384,7 +695,315 @@ object SearchResponderV2SpecFullData {
                 ReadValueV2(
                     valueContent = TextValueContentV2(
                         comment = None,
-                        standoff = None,
+                        standoff = Some(StandoffAndMapping(
+                            XSLT = None,
+                            mapping = MappingXMLtoStandoff(
+                                defaultXSLTransformation = None,
+                                namespace = Map("noNamespace" -> Map(
+                                    "tbody" -> Map("noClass" -> XMLTag(
+                                        separatorRequired = true,
+                                        mapping = XMLTagToStandoffClass(
+                                            dataType = None,
+                                            attributesToProps = Map(),
+                                            standoffClassIri = "http://www.knora.org/ontology/standoff#StandoffTableBodyTag"
+                                        ),
+                                        name = "tbody"
+                                    )),
+                                    "pre" -> Map("noClass" -> XMLTag(
+                                        separatorRequired = true,
+                                        mapping = XMLTagToStandoffClass(
+                                            dataType = None,
+                                            attributesToProps = Map(),
+                                            standoffClassIri = "http://www.knora.org/ontology/standoff#StandoffPreTag"
+                                        ),
+                                        name = "pre"
+                                    )),
+                                    "ol" -> Map("noClass" -> XMLTag(
+                                        separatorRequired = true,
+                                        mapping = XMLTagToStandoffClass(
+                                            dataType = None,
+                                            attributesToProps = Map(),
+                                            standoffClassIri = "http://www.knora.org/ontology/standoff#StandoffOrderedListTag"
+                                        ),
+                                        name = "ol"
+                                    )),
+                                    "hr" -> Map("noClass" -> XMLTag(
+                                        separatorRequired = true,
+                                        mapping = XMLTagToStandoffClass(
+                                            dataType = None,
+                                            attributesToProps = Map(),
+                                            standoffClassIri = "http://www.knora.org/ontology/standoff#StandoffLineTag"
+                                        ),
+                                        name = "hr"
+                                    )),
+                                    "h4" -> Map("noClass" -> XMLTag(
+                                        separatorRequired = true,
+                                        mapping = XMLTagToStandoffClass(
+                                            dataType = None,
+                                            attributesToProps = Map(),
+                                            standoffClassIri = "http://www.knora.org/ontology/standoff#StandoffHeader4Tag"
+                                        ),
+                                        name = "h4"
+                                    )),
+                                    "h3" -> Map("noClass" -> XMLTag(
+                                        separatorRequired = true,
+                                        mapping = XMLTagToStandoffClass(
+                                            dataType = None,
+                                            attributesToProps = Map(),
+                                            standoffClassIri = "http://www.knora.org/ontology/standoff#StandoffHeader3Tag"
+                                        ),
+                                        name = "h3"
+                                    )),
+                                    "li" -> Map("noClass" -> XMLTag(
+                                        separatorRequired = true,
+                                        mapping = XMLTagToStandoffClass(
+                                            dataType = None,
+                                            attributesToProps = Map(),
+                                            standoffClassIri = "http://www.knora.org/ontology/standoff#StandoffListElementTag"
+                                        ),
+                                        name = "li"
+                                    )),
+                                    "br" -> Map("noClass" -> XMLTag(
+                                        separatorRequired = true,
+                                        mapping = XMLTagToStandoffClass(
+                                            dataType = None,
+                                            attributesToProps = Map(),
+                                            standoffClassIri = "http://www.knora.org/ontology/standoff#StandoffBrTag"
+                                        ),
+                                        name = "br"
+                                    )),
+                                    "u" -> Map("noClass" -> XMLTag(
+                                        separatorRequired = false,
+                                        mapping = XMLTagToStandoffClass(
+                                            dataType = None,
+                                            attributesToProps = Map(),
+                                            standoffClassIri = "http://www.knora.org/ontology/standoff#StandoffUnderlineTag"
+                                        ),
+                                        name = "u"
+                                    )),
+                                    "strike" -> Map("noClass" -> XMLTag(
+                                        separatorRequired = false,
+                                        mapping = XMLTagToStandoffClass(
+                                            dataType = None,
+                                            attributesToProps = Map(),
+                                            standoffClassIri = "http://www.knora.org/ontology/standoff#StandoffStrikethroughTag"
+                                        ),
+                                        name = "strike"
+                                    )),
+                                    "ul" -> Map("noClass" -> XMLTag(
+                                        separatorRequired = true,
+                                        mapping = XMLTagToStandoffClass(
+                                            dataType = None,
+                                            attributesToProps = Map(),
+                                            standoffClassIri = "http://www.knora.org/ontology/standoff#StandoffUnorderedListTag"
+                                        ),
+                                        name = "ul"
+                                    )),
+                                    "a" -> Map(
+                                        "noClass" -> XMLTag(
+                                            separatorRequired = false,
+                                            mapping = XMLTagToStandoffClass(
+                                                dataType = Some(XMLStandoffDataTypeClass(
+                                                    dataTypeXMLAttribute = "href",
+                                                    standoffDataTypeClass = StandoffDataTypeClasses.StandoffUriTag
+                                                )),
+                                                attributesToProps = Map(),
+                                                standoffClassIri = "http://www.knora.org/ontology/knora-base#StandoffUriTag"
+                                            ),
+                                            name = "a"
+                                        ),
+                                        "salsah-link" -> XMLTag(
+                                            separatorRequired = false,
+                                            mapping = XMLTagToStandoffClass(
+                                                dataType = Some(XMLStandoffDataTypeClass(
+                                                    dataTypeXMLAttribute = "href",
+                                                    standoffDataTypeClass = StandoffDataTypeClasses.StandoffLinkTag
+                                                )),
+                                                attributesToProps = Map(),
+                                                standoffClassIri = "http://www.knora.org/ontology/knora-base#StandoffLinkTag"
+                                            ),
+                                            name = "a"
+                                        )
+                                    ),
+                                    "text" -> Map("noClass" -> XMLTag(
+                                        separatorRequired = false,
+                                        mapping = XMLTagToStandoffClass(
+                                            dataType = None,
+                                            attributesToProps = Map("noNamespace" -> Map("documentType" -> "http://www.knora.org/ontology/standoff#standoffRootTagHasDocumentType")),
+                                            standoffClassIri = "http://www.knora.org/ontology/standoff#StandoffRootTag"
+                                        ),
+                                        name = "text"
+                                    )),
+                                    "strong" -> Map("noClass" -> XMLTag(
+                                        separatorRequired = false,
+                                        mapping = XMLTagToStandoffClass(
+                                            dataType = None,
+                                            attributesToProps = Map(),
+                                            standoffClassIri = "http://www.knora.org/ontology/standoff#StandoffBoldTag"
+                                        ),
+                                        name = "strong"
+                                    )),
+                                    "code" -> Map("noClass" -> XMLTag(
+                                        separatorRequired = true,
+                                        mapping = XMLTagToStandoffClass(
+                                            dataType = None,
+                                            attributesToProps = Map(),
+                                            standoffClassIri = "http://www.knora.org/ontology/standoff#StandoffCodeTag"
+                                        ),
+                                        name = "code"
+                                    )),
+                                    "h2" -> Map("noClass" -> XMLTag(
+                                        separatorRequired = true,
+                                        mapping = XMLTagToStandoffClass(
+                                            dataType = None,
+                                            attributesToProps = Map(),
+                                            standoffClassIri = "http://www.knora.org/ontology/standoff#StandoffHeader2Tag"
+                                        ),
+                                        name = "h2"
+                                    )),
+                                    "td" -> Map("noClass" -> XMLTag(
+                                        separatorRequired = true,
+                                        mapping = XMLTagToStandoffClass(
+                                            dataType = None,
+                                            attributesToProps = Map(),
+                                            standoffClassIri = "http://www.knora.org/ontology/standoff#StandoffTableCellTag"
+                                        ),
+                                        name = "td"
+                                    )),
+                                    "em" -> Map("noClass" -> XMLTag(
+                                        separatorRequired = false,
+                                        mapping = XMLTagToStandoffClass(
+                                            dataType = None,
+                                            attributesToProps = Map(),
+                                            standoffClassIri = "http://www.knora.org/ontology/standoff#StandoffItalicTag"
+                                        ),
+                                        name = "em"
+                                    )),
+                                    "tr" -> Map("noClass" -> XMLTag(
+                                        separatorRequired = true,
+                                        mapping = XMLTagToStandoffClass(
+                                            dataType = None,
+                                            attributesToProps = Map(),
+                                            standoffClassIri = "http://www.knora.org/ontology/standoff#StandoffTableRowTag"
+                                        ),
+                                        name = "tr"
+                                    )),
+                                    "cite" -> Map("noClass" -> XMLTag(
+                                        separatorRequired = true,
+                                        mapping = XMLTagToStandoffClass(
+                                            dataType = None,
+                                            attributesToProps = Map(),
+                                            standoffClassIri = "http://www.knora.org/ontology/standoff#StandoffCiteTag"
+                                        ),
+                                        name = "cite"
+                                    )),
+                                    "blockquote" -> Map("noClass" -> XMLTag(
+                                        separatorRequired = true,
+                                        mapping = XMLTagToStandoffClass(
+                                            dataType = None,
+                                            attributesToProps = Map(),
+                                            standoffClassIri = "http://www.knora.org/ontology/standoff#StandoffBlockquoteTag"
+                                        ),
+                                        name = "blockquote"
+                                    )),
+                                    "p" -> Map("noClass" -> XMLTag(
+                                        separatorRequired = true,
+                                        mapping = XMLTagToStandoffClass(
+                                            dataType = None,
+                                            attributesToProps = Map(),
+                                            standoffClassIri = "http://www.knora.org/ontology/standoff#StandoffParagraphTag"
+                                        ),
+                                        name = "p"
+                                    )),
+                                    "h6" -> Map("noClass" -> XMLTag(
+                                        separatorRequired = true,
+                                        mapping = XMLTagToStandoffClass(
+                                            dataType = None,
+                                            attributesToProps = Map(),
+                                            standoffClassIri = "http://www.knora.org/ontology/standoff#StandoffHeader6Tag"
+                                        ),
+                                        name = "h6"
+                                    )),
+                                    "h1" -> Map("noClass" -> XMLTag(
+                                        separatorRequired = true,
+                                        mapping = XMLTagToStandoffClass(
+                                            dataType = None,
+                                            attributesToProps = Map(),
+                                            standoffClassIri = "http://www.knora.org/ontology/standoff#StandoffHeader1Tag"
+                                        ),
+                                        name = "h1"
+                                    )),
+                                    "sub" -> Map("noClass" -> XMLTag(
+                                        separatorRequired = false,
+                                        mapping = XMLTagToStandoffClass(
+                                            dataType = None,
+                                            attributesToProps = Map(),
+                                            standoffClassIri = "http://www.knora.org/ontology/standoff#StandoffSubscriptTag"
+                                        ),
+                                        name = "sub"
+                                    )),
+                                    "sup" -> Map("noClass" -> XMLTag(
+                                        separatorRequired = false,
+                                        mapping = XMLTagToStandoffClass(
+                                            dataType = None,
+                                            attributesToProps = Map(),
+                                            standoffClassIri = "http://www.knora.org/ontology/standoff#StandoffSuperscriptTag"
+                                        ),
+                                        name = "sup"
+                                    )),
+                                    "h5" -> Map("noClass" -> XMLTag(
+                                        separatorRequired = true,
+                                        mapping = XMLTagToStandoffClass(
+                                            dataType = None,
+                                            attributesToProps = Map(),
+                                            standoffClassIri = "http://www.knora.org/ontology/standoff#StandoffHeader5Tag"
+                                        ),
+                                        name = "h5"
+                                    )),
+                                    "table" -> Map("noClass" -> XMLTag(
+                                        separatorRequired = true,
+                                        mapping = XMLTagToStandoffClass(
+                                            dataType = None,
+                                            attributesToProps = Map(),
+                                            standoffClassIri = "http://www.knora.org/ontology/standoff#StandoffTableTag"
+                                        ),
+                                        name = "table"
+                                    ))
+                                ))
+                            ),
+                            mappingIri = "http://data.knora.org/projects/standoff/mappings/StandardMapping",
+                            standoff = Vector(
+                                StandoffTagV1(
+                                    attributes = Vector(StandoffTagIriAttributeV1(
+                                        value = "http://data.knora.org/a-thing",
+                                        standoffPropertyIri = "http://www.knora.org/ontology/knora-base#standoffTagHasLink"
+                                    )),
+                                    endParentIndex = None,
+                                    startParentIndex = Some(0),
+                                    endIndex = None,
+                                    startIndex = 1,
+                                    endPosition = 16,
+                                    startPosition = 11,
+                                    originalXMLID = None,
+                                    uuid = "59a36237-95a9-4acc-8361-7c8fac311063",
+                                    dataType = Some(StandoffDataTypeClasses.StandoffLinkTag),
+                                    standoffTagClassIri = "http://www.knora.org/ontology/knora-base#StandoffLinkTag"
+                                ),
+                                StandoffTagV1(
+                                    attributes = Nil,
+                                    endParentIndex = None,
+                                    startParentIndex = None,
+                                    endIndex = None,
+                                    startIndex = 0,
+                                    endPosition = 25,
+                                    startPosition = 0,
+                                    originalXMLID = None,
+                                    uuid = "fd583868-2a3c-4941-a330-990f5a972f71",
+                                    dataType = None,
+                                    standoffTagClassIri = "http://www.knora.org/ontology/standoff#StandoffRootTag"
+                                )
+                            )
+                        )),
                         valueHasString = "Na ja, die Dinge sind OK."
                     ),
                     valueIri = "http://data.knora.org/a-thing-with-text-values/values/2"
