@@ -110,9 +110,9 @@ object OntologyConstants {
         val mappingElementRequiresSeparator: IRI = KnoraBasePrefixExpansion + "mappingElementRequiresSeparator"
 
         val XSLTransformation: IRI = KnoraBasePrefixExpansion + "XSLTransformation"
-        val mappingHasDefaultXSLTransformation = KnoraBasePrefixExpansion + "mappingHasDefaultXSLTransformation"
+        val mappingHasDefaultXSLTransformation: IRI = KnoraBasePrefixExpansion + "mappingHasDefaultXSLTransformation"
 
-        val IsMainResource = KnoraBasePrefixExpansion + "isMainResource"
+        val IsMainResource: IRI = KnoraBasePrefixExpansion + "isMainResource"
 
 
         val AbstractResourceClasses = Set(
@@ -136,6 +136,7 @@ object OntologyConstants {
         val Region: IRI = KnoraBasePrefixExpansion + "Region"
         val IsRegionOf: IRI = KnoraBasePrefixExpansion + "isRegionOf"
 
+        val Value: IRI = KnoraBasePrefixExpansion + "Value"
         val ValueHas: IRI = KnoraBasePrefixExpansion + "valueHas"
         val ObjectCannotBeMarkedAsDeleted: IRI = KnoraBasePrefixExpansion + "objectCannotBeMarkedAsDeleted"
 
@@ -478,6 +479,8 @@ object OntologyConstants {
 
         val KnoraApiV2PrefixExpansion: IRI = KnoraApi.KnoraApiOntologyIri + VersionSegment + "#"
 
+        val ObjectType: IRI = KnoraApiV2PrefixExpansion + "objectType"
+
         val HasOntologies = KnoraApiV2PrefixExpansion + "hasOntologies"
 
         val HasOntologiesWithResourceClasses = KnoraApiV2PrefixExpansion + "hasOntologiesWithResourceClasses"
@@ -555,5 +558,7 @@ object OntologyConstants {
     object NamedGraphs {
         val AdminNamedGraph: IRI = "http://www.knora.org/data/admin"
         val PersistentMapNamedGraph: IRI = "http://www.knora.org/data/maps"
+        val KnoraExplicitNamedGraph: IRI = "http://www.knora.org/explicit"
+        val GraphDBExplicitNamedGraph: IRI = "http://www.ontotext.com/explicit"
     }
 }

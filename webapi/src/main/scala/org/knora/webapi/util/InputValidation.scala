@@ -79,7 +79,6 @@ object InputValidation {
     val Era_CE: String = "CE"
 
 
-
     // The expected format of a Knora date.
     // Calendar:YYYY[-MM[-DD]][ EE][:YYYY[-MM[-DD]][ EE]]
     // EE being the era: one of BC or AD
@@ -481,13 +480,21 @@ object InputValidation {
 
 
     /**
-      * Turn a possibly empty value returned by the triplestore into a Boolean value.
-      * Returns false if the value is empty or if the given String is cannot be converted to a Boolean `true`.
+      * Turn a possibly empty string value into a boolean value.
+      * Returns false if the value is empty or if the given string is cannot be converted to a Boolean `true`.
       *
-      * @param maybe the value returned by the triplestore.
+      * @param maybe an optional string representation of a boolean value.
+      * @param errorFun a function that throws an exception. It will be called if the string does not contain
+      *                 a boolean value.
       * @return a Boolean.
       */
-    def optionStringToBoolean(maybe: Option[String]): Boolean = maybe.exists(_.toBooleanExtended)
+    def optionStringToBoolean(maybe: Option[String], errorFun: () => Nothing): Boolean = {
+        try {
+            maybe.exists(_.toBooleanExtended)
+        } catch {
+            case e: Exception => errorFun() // value could not be converted to Boolean
+        }
+    }
 
     /**
       *
@@ -846,7 +853,7 @@ object InputValidation {
       * @param iri the IRI to be checked.
       * @return `true` if the IRI is the IRI of an external ontology entity.
       */
-    def isKnoraApiEntityIri(iri: IRI) = {
+    def isKnoraApiEntityIri(iri: IRI): Boolean = {
         iri match {
             case KnoraApiOntologyEntityRegex(_*) => true
             case _ => false

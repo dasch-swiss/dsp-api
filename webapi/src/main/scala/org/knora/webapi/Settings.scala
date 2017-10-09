@@ -89,6 +89,8 @@ class SettingsImpl(config: Config) extends Extension {
     val triplestoreType: String = config.getString("app.triplestore.dbtype")
     val triplestoreHost: String = config.getString("app.triplestore.host")
 
+    val v2ExtendedSearchResultsPerPage: Int = config.getInt("app.v2.extended-search.results-per-page")
+
     val triplestorePort: Int = triplestoreType match {
         case HTTP_GRAPH_DB_TS_TYPE => config.getInt("app.triplestore.graphdb.port")
         case HTTP_GRAPH_DB_FREE_TS_TYPE => config.getInt("app.triplestore.graphdb-free.port")

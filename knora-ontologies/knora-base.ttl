@@ -365,6 +365,13 @@
 
                 rdfs:comment "Points to a LinkValue reification describing a link between two resources"@en ;
 
+                rdfs:label "hat Link zu"@de ,
+                           "has Link to"@en ,
+                           "a lien vers"@fr ,
+                           "ha Link verso"@it ;
+
+                rdfs:comment "Represents a direct connection between two resources"@en ;
+
                 :objectClassConstraint :LinkValue ;
 
                 :subjectClassConstraint :Resource ;

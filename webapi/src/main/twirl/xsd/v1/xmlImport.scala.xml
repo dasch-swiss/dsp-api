@@ -19,7 +19,7 @@
  *@
 
 @import org.knora.webapi._
-@import org.knora.webapi.messages.v1.responder.ontologymessages._
+@import org.knora.webapi.messages.v2.responder.ontologymessages._
 @import org.knora.webapi.util.InputValidation.XmlImportNamespaceInfoV1
 
 @**
@@ -36,8 +36,8 @@
 @(targetNamespaceInfo: XmlImportNamespaceInfoV1,
   importedNamespaces: Seq[XmlImportNamespaceInfoV1],
   knoraXmlImportNamespacePrefixLabel: String,
-  resourceEntityInfoMap: Map[IRI, ResourceEntityInfoV1],
-  propertyEntityInfoMap: Map[IRI, PropertyEntityInfoV1],
+  resourceEntityInfoMap: Map[IRI, ResourceEntityInfoV2],
+  propertyEntityInfoMap: Map[IRI, PropertyEntityInfoV2],
   getNamespacePrefixLabel: IRI => String,
   getEntityName: IRI => String)
 
@@ -88,7 +88,7 @@
 
                                 @for((propertyIri, cardinality) <- resourceClassInfo.cardinalities.toVector.sortBy(_._1)) {
 
-                                    @defining(propertyEntityInfoMap(propertyIri)) { propertyInfo =>
+                                    @defining(propertyEntityInfoMap.getOrElse(propertyIri, throw AssertionException(s"The definition of the property $propertyIri is needed but was not read"))) { propertyInfo =>
 
                                         @if(!(propertyIri == OntologyConstants.KnoraBase.HasStandoffLinkTo || propertyInfo.isLinkValueProp || propertyInfo.isFileValueProp)) {
 

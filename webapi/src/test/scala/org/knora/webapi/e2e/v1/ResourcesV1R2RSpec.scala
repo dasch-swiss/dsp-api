@@ -262,7 +262,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
                 //log.debug("==>> " + responseAs[String])
                 assert(status === StatusCodes.OK)
                 assert(responseAs[String] contains "preview")
-                assert(responseAs[String] contains "Ursprünglicher Dateiname")
+                assert(responseAs[String] contains "Original filename")
                 assert(responseAs[String] contains "Page identifier")
             }
         }
@@ -1468,6 +1468,29 @@ class ResourcesV1R2RSpec extends R2RSpec {
                 }
 
                 assert(zippedFilenames == Set("beol.xsd", "biblio.xsd", "knoraXmlImport.xsd"))
+            }
+        }
+
+        "consider inherited cardinalities when generating XML schemas for referenced ontologies in an XML import" in {
+            val ontologyIri = URLEncoder.encode("http://www.knora.org/ontology/something", "UTF-8")
+
+            Get(s"/v1/resources/xmlimportschemas/$ontologyIri") ~> addCredentials(BasicHttpCredentials(biblioUserEmail, password)) ~> resourcesPath ~> check {
+                val responseBodyFuture: Future[Array[Byte]] = response.entity.toStrict(5.seconds).map(_.data.toArray)
+                val responseBytes: Array[Byte] = Await.result(responseBodyFuture, 5.seconds)
+                val zippedFilenames = collection.mutable.Set.empty[String]
+
+                for (zipInputStream <- managed(new ZipInputStream(new ByteArrayInputStream(responseBytes)))) {
+                    var zipEntry: ZipEntry = null
+
+                    while ( {
+                        zipEntry = zipInputStream.getNextEntry
+                        zipEntry != null
+                    }) {
+                        zippedFilenames.add(zipEntry.getName)
+                    }
+                }
+
+                assert(zippedFilenames == Set("something.xsd", "knoraXmlImport.xsd", "anything.xsd"))
             }
         }
 

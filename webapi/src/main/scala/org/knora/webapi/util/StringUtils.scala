@@ -49,8 +49,10 @@ object StringUtils {
     def stringToBoolean(s: String): Boolean = {
         if (s == "true" ||  s == "1") {
             true
-        } else {
+        } else if (s == "false" || s == "0") {
             false
+        } else {
+            s.toBoolean
         }
     }
 

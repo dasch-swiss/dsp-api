@@ -16,8 +16,6 @@
 
 package org.knora.webapi.util
 
-import com.sun.xml.internal.bind.v2.TODO
-
 /**
   * Utility functions for converting to SPARQL literal strings.
   */
