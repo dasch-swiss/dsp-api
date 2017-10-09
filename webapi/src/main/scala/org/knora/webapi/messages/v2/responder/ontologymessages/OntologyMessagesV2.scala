@@ -526,9 +526,15 @@ sealed trait EntityInfoV2 {
                                                 // Yes.
                                                 Some(objectWithoutLang)
                                             case None =>
-                                                // The object is not available without a language tag. Return it in
-                                                // any other language.
-                                                predicateInfo.objectsWithLang.values.headOption
+                                                // The object is not available without a language tag. Sort the
+                                                // available objects by language code to get a deterministic result,
+                                                // and return the object in the language code with the lowest sort
+                                                // order.
+                                                predicateInfo.objectsWithLang.toVector.sortBy {
+                                                    case (lang, obj) => lang
+                                                }.headOption.map {
+                                                    case (lang, obj) => obj
+                                                }
                                         }
                                 }
                         }
