@@ -1017,8 +1017,8 @@ object InputValidation {
     /**
       * Converts an ontology entity IRI from one ontology schema to another. If the source schema is [[InternalSchema]]
       * and the target schema extends [[ApiV2Schema]], the IRI is converted. If the source and target schemas
-      * are identical external and extend [[ApiV2Schema]], the IRI is returned without conversion. Otherwise, an exception
-      * is thrown.
+      * are identical external and extend [[ApiV2Schema]], or if the source schema cannot be identified, the IRI is returned
+      * without conversion.
       *
       * @param entityIri    the entity IRI to be converted.
       * @param targetSchema the target schema.
@@ -1048,7 +1048,7 @@ object InputValidation {
                         case other => throw BadRequestException(s"Can't convert entity IRI to ontology schema $other: $entityIri")
                     }
 
-                case _ => throw BadRequestException(s"Can't identify schema of ontology entity $entityIri")
+                case _ => entityIri
             }
         }
     }
