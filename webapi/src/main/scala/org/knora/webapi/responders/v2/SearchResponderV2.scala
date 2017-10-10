@@ -1491,20 +1491,28 @@ class SearchResponderV2 extends ResponderV2 {
           * Collects property type information for value or link properties requests present in the Construct clause for the given resource.
           *
           * @param constructClause  the Construct clause to be looked at.
-          * @param resourceVariable the variable representing the resource whose properties are to be collected
+          * @param resource the [[Entity]] representing the resource whose properties are to be collected
           * @param typeInspection   results of type inspection.
           * @return a Set of [[PropertyTypeInfo]] representing the value and link value properties to be returned to the client.
           */
-        def collectPropertyTypeInfoForRequestedProperties(constructClause: ConstructClause, resourceVariable: QueryVariable, typeInspection: TypeInspectionResult): Set[PropertyTypeInfo] = {
+        def collectValueVariablesForResource(constructClause: ConstructClause, resource: Entity, typeInspection: TypeInspectionResult): Set[Entity] = {
 
-            // get statements with the main resource as a subject
-            val statementsWithResourceAsSubject = constructClause.statements.filter {
-                (statementPattern: StatementPattern) =>
-                    statementPattern.subj == resourceVariable
+            // make sure resource is a query variable or an Iri
+            resource match {
+                case queryVar: QueryVariable => ()
+                case iri: IriRef => ()
+                case literal: XsdLiteral => throw SparqlSearchException(s"literal $literal cannot represent a resource")
+                case other => throw SparqlSearchException(s"$other cannot represent a resource")
             }
 
-            statementsWithResourceAsSubject.foldLeft(Set.empty[PropertyTypeInfo]) {
-                (acc: Set[PropertyTypeInfo], statementPattern: StatementPattern) =>
+            // get statements with the main resource as a subject
+            val statementsWithResourceAsSubject: Seq[StatementPattern] = constructClause.statements.filter {
+                (statementPattern: StatementPattern) =>
+                    statementPattern.subj == resource
+            }
+
+            statementsWithResourceAsSubject.foldLeft(Set.empty[Entity]) {
+                (acc: Set[Entity], statementPattern: StatementPattern) =>
 
                     // check if the predicate is a Knora value  or linking property
 
@@ -1535,7 +1543,9 @@ class SearchResponderV2 extends ResponderV2 {
 
                         }
 
-                        acc + propTypeInfo
+                        // TODO: check the objectTypeIri and if this is a linking prop statement.obj represents a resource -> recursively look for values of statement.obj using this method
+
+                        acc + statementPattern.obj
 
                     } else {
                         acc
@@ -1821,7 +1831,11 @@ class SearchResponderV2 extends ResponderV2 {
                             }
                     }
 
-                // TODO: sort out those value objects that the user did not ask for in the input query's CONSTRUCT clause
+                    // TODO: sort out those value objects that the user did not ask for in the input query's CONSTRUCT clause
+                    // valueObjectVarsForMainRes = collectValueVariablesForResource(preprocessedQuery.constructClause, mainResourceVar, typeInspectionResult)
+
+                    // _ = println(valueObjectVarsForMainRes)
+
 
 
                 } yield queryResWithFullQueryPath
